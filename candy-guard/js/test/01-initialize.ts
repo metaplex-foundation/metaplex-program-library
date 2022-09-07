@@ -25,6 +25,7 @@ test('initialize: new candy guard (no guards)', async (t) => {
       endSettings: null,
       allowList: null,
       mintLimit: null,
+      nftPayment: null,
     },
     groups: null,
   };
@@ -75,6 +76,7 @@ test('initialize: new candy guard (with guards)', async (t) => {
       endSettings: null,
       allowList: null,
       mintLimit: null,
+      nftPayment: null,
     },
     groups: null,
   };
@@ -98,9 +100,14 @@ test('initialize: new candy guard (with guards)', async (t) => {
   const accountInfo = await connection.getAccountInfo(address);
   const candyGuardData = parseData(accountInfo?.data.subarray(DATA_OFFSET)!);
 
-  //spok(t, candyGuardData.default.liveDate, {
-  //  date: spokSameBignum(data.default.liveDate.date),
-  //});
+  spok(t, candyGuardData.default.botTax, {
+    lamports: spokSameBignum(data.default.botTax.lamports),
+    lastInstruction: true,
+  });
+
+  spok(t, candyGuardData.default.liveDate, {
+    date: null,
+  });
 
   spok(t, candyGuardData.default.lamports, {
     amount: spokSameBignum(data.default.lamports.amount),
@@ -109,16 +116,4 @@ test('initialize: new candy guard (with guards)', async (t) => {
   spok(t, candyGuardData.default.thirdPartySigner, {
     signerKey: spokSamePubkey(payerPair.publicKey),
   });
-
-  //let accountInfo = await connection.getAccountInfo(address);
-  //const candyGuardData = parseData(candyGuard, accountInfo?.data.subarray(DATA_OFFSET)!);
-  //console.log(candyGuardData);
-
-  // this is currently failing, most likely because the liveDate.date is set
-  // to null so the offset for the deserialization for the lamports guards
-  // is misalign with the account data buffer
-
-  // spok(t, candyGuardData.lamports, {
-  //   amount: spokSameBignum(data.lamports.amount),
-  // });
 });

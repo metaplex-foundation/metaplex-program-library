@@ -28,6 +28,7 @@ test('live date (null)', async (t) => {
       endSettings: null,
       allowList: null,
       mintLimit: null,
+      nftPayment: null,
     },
     groups: null,
   };
@@ -87,6 +88,7 @@ test('live date (in the past)', async (t) => {
       endSettings: null,
       allowList: null,
       mintLimit: null,
+      nftPayment: null,
     },
     groups: null,
   };
@@ -146,6 +148,7 @@ test('live date (in the future)', async (t) => {
       endSettings: null,
       allowList: null,
       mintLimit: null,
+      nftPayment: null,
     },
     groups: null,
   };

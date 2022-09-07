@@ -25,6 +25,7 @@ test('update: enable guards', async (t) => {
       endSettings: null,
       allowList: null,
       mintLimit: null,
+      nftPayment: null,
     },
     groups: null,
   };
@@ -60,6 +61,7 @@ test('update: enable guards', async (t) => {
       endSettings: null,
       allowList: null,
       mintLimit: null,
+      nftPayment: null,
     },
     groups: null,
   };
@@ -108,6 +110,7 @@ test('update: disable guards', async (t) => {
       endSettings: null,
       allowList: null,
       mintLimit: null,
+      nftPayment: null,
     },
     groups: [
       {
@@ -125,6 +128,7 @@ test('update: disable guards', async (t) => {
         endSettings: null,
         allowList: null,
         mintLimit: null,
+        nftPayment: null,
       }]
   };
 
@@ -162,6 +166,7 @@ test('update: disable guards', async (t) => {
       endSettings: null,
       allowList: null,
       mintLimit: null,
+      nftPayment: null,
     },
     groups: null,
   };

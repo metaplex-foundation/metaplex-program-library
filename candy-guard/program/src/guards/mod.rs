@@ -12,9 +12,9 @@ pub use gatekeeper::Gatekeeper;
 pub use lamports::Lamports;
 pub use live_date::LiveDate;
 pub use mint_limit::MintLimit;
+pub use nft_payment::NftPayment;
 pub use third_party_signer::ThirdPartySigner;
 pub use whitelist::Whitelist;
-pub use nft_payment::NftPayment;
 
 mod allow_list;
 mod bot_tax;
@@ -23,10 +23,10 @@ mod gatekeeper;
 mod lamports;
 mod live_date;
 mod mint_limit;
+mod nft_payment;
 mod spl_token;
 mod third_party_signer;
 mod whitelist;
-mod nft_payment;
 
 pub trait Condition {
     /// Validate the condition of the guard. When the guard condition is
@@ -153,5 +153,5 @@ pub struct EvaluationContext<'a> {
     pub amount: u64,
     // > whitelist
     /// Indicates whether the user is whitelisted or not.
-    pub whitelist: bool
+    pub whitelist: bool,
 }

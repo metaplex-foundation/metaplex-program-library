@@ -1,5 +1,5 @@
 import test from 'tape'
-import { InitTransactions, killStuckProcess } from './setup/'
+import { InitTransactions, killStuckProcess } from './setup'
 
 const init = new InitTransactions()
 

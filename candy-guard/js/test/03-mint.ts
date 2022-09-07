@@ -119,6 +119,7 @@ test('mint (CPI)', async (t) => {
             endSettings: null,
             allowList: null,
             mintLimit: null,
+            nftPayment: null,
         },
         groups: null,
     };

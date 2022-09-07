@@ -14,7 +14,8 @@ import { BN } from 'bn.js';
 import * as beet from '@metaplex-foundation/beet';
 import { logDebug } from './utils/log';
 import { mintLimitBeet } from './generated/types/MintLimit';
-import { GuardSet } from './generated/types/GuardSet';
+import { GuardSet, guardSetBeet } from './generated/types/GuardSet';
+import { nftPaymentBeet } from './generated/types/NftPayment';
 
 /**
  * Matching the guards of the related struct in the Rust program.
@@ -44,6 +45,7 @@ import { GuardSet } from './generated/types/GuardSet';
  * }
  * ```
  */
+
 type Guards = {
   /* 01 */ botTaxEnabled: boolean;
   /* 02 */ liveDateEnabled: boolean;
@@ -55,7 +57,9 @@ type Guards = {
   /* 08 */ endSettingsEnabled: boolean;
   /* 09 */ allowListEnabled: boolean;
   /* 10 */ mintLimitEnabled: boolean;
+  /* 11 */ nftPaymentEnabled: boolean;
 };
+
 const GUARDS_SIZE = {
   /* 01 */ botTax: 9,
   /* 02 */ liveDate: 9,
@@ -67,8 +71,9 @@ const GUARDS_SIZE = {
   /* 08 */ endSettings: 9,
   /* 09 */ allowList: 32,
   /* 10 */ mintLimit: 5,
+  /* 11 */ nftPayment: 33,
 };
-const GUARDS_COUNT = 10;
+const GUARDS_COUNT = 11;
 
 function determineGuards(buffer: Buffer): Guards {
   const enabled = new BN(beet.u64.read(buffer, 0)).toNumber();
@@ -89,6 +94,7 @@ function determineGuards(buffer: Buffer): Guards {
     endSettingsEnabled,
     allowListEnabled,
     mintLimitEnabled,
+    nftPaymentEnabled,
   ] = guards;
 
   return {
@@ -102,6 +108,7 @@ function determineGuards(buffer: Buffer): Guards {
     endSettingsEnabled,
     allowListEnabled,
     mintLimitEnabled,
+    nftPaymentEnabled,
   };
 }
 
@@ -139,86 +146,94 @@ function parseGuardSet(buffer: Buffer): { guardSet: GuardSet; offset: number } {
     endSettingsEnabled,
     allowListEnabled,
     mintLimitEnabled,
+    nftPaymentEnabled,
   } = guards;
   logDebug('Guards: %O', guards);
 
   // data offset for deserialization (skip u64 features flag)
   let cursor = beet.u64.byteSize;
   // deserialized guards
-  const data = {};
+  const data: Record<string, any> = {};
 
   if (botTaxEnabled) {
     const [botTax] = botTaxBeet.deserialize(buffer, cursor);
-    data['botTax'] = botTax;
+    data.botTax = botTax;
     cursor += GUARDS_SIZE.botTax;
   }
 
   if (liveDateEnabled) {
     const [liveDate] = liveDateBeet.deserialize(buffer, cursor);
-    data['liveDate'] = liveDate;
+    data.liveDate = liveDate;
     cursor += GUARDS_SIZE.liveDate;
   }
 
   if (lamportsEnabled) {
     const [lamports] = lamportsBeet.deserialize(buffer, cursor);
-    data['lamports'] = lamports;
+    data.lamports = lamports;
     cursor += GUARDS_SIZE.lamports;
   }
 
   if (splTokenEnabled) {
     const [splToken] = splTokenBeet.deserialize(buffer, cursor);
-    data['splToken'] = splToken;
+    data.splToken = splToken;
     cursor += GUARDS_SIZE.splToken;
   }
 
   if (thirdPartySignerEnabled) {
     const [thirdPartySigner] = thirdPartySignerBeet.deserialize(buffer, cursor);
-    data['thirdPartySigner'] = thirdPartySigner;
+    data.thirdPartySigner = thirdPartySigner;
     cursor += GUARDS_SIZE.thirdPartySigner;
   }
 
   if (whitelistEnabled) {
     const [whitelist] = whitelistBeet.deserialize(buffer, cursor);
-    data['whitelist'] = whitelist;
+    data.whitelist = whitelist;
     cursor += GUARDS_SIZE.whitelist;
   }
 
   if (gatekeeperEnabled) {
     const [gatekeeper] = gatekeeperBeet.deserialize(buffer, cursor);
-    data['gatekeeper'] = gatekeeper;
+    data.gatekeeper = gatekeeper;
     cursor += GUARDS_SIZE.gatekeeper;
   }
 
   if (endSettingsEnabled) {
     const [endSettings] = endSettingsBeet.deserialize(buffer, cursor);
-    data['endSettings'] = endSettings;
+    data.endSettings = endSettings;
     cursor += GUARDS_SIZE.endSettings;
   }
 
   if (allowListEnabled) {
     const [allowList] = allowListBeet.deserialize(buffer, cursor);
-    data['allowList'] = allowList;
+    data.allowList = allowList;
     cursor += GUARDS_SIZE.allowList;
   }
 
   if (mintLimitEnabled) {
     const [mintLimit] = mintLimitBeet.deserialize(buffer, cursor);
-    data['mintLimit'] = mintLimit;
+    data.mintLimit = mintLimit;
     cursor += GUARDS_SIZE.mintLimit;
+  }
+
+  if (nftPaymentEnabled) {
+    const [nftPayment] = nftPaymentBeet.deserialize(buffer, cursor);
+    data.nftPayment = nftPayment;
+    cursor += GUARDS_SIZE.nftPayment;
   }
 
   return {
     guardSet: {
-      botTax: data['botTax'] ?? null,
-      liveDate: data['liveDate'] ?? null,
-      lamports: data['lamports'] ?? null,
-      splToken: data['splToken'] ?? null,
-      thirdPartySigner: data['thirdPartySigner'] ?? null,
-      whitelist: data['whitelist'] ?? null,
-      gatekeeper: data['gateKeeper'] ?? null,
-      endSettings: data['endSettings'] ?? null,
-      allowList: data['allowList'] ?? null,
-      mintLimit: data['mintLimit'] ?? null,
+      botTax: data.botTax ?? null,
+      liveDate: data.liveDate ?? null,
+      lamports: data.lamports ?? null,
+      splToken: data.splToken ?? null,
+      thirdPartySigner: data.thirdPartySigner ?? null,
+      whitelist: data.whitelist ?? null,
+      gatekeeper: data.gateKeeper ?? null,
+      endSettings: data.endSettings ?? null,
+      allowList: data.allowList ?? null,
+      mintLimit: data.mintLimit ?? null,
+      nftPayment: data.nftPayment ?? null,
     },
     offset: cursor,
   };

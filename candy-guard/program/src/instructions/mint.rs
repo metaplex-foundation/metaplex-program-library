@@ -206,12 +206,9 @@ pub struct Mint<'info> {
     // collection_mint
     // collection_metadata
     // collection_master_edition
-    // > needed if spl_token guard enabled or nft payment guard
+    // > needed if spl_token guard enabled
     // token_account_info
     // transfer_authority_info
-    // > needed if NFT payment and burn is on
-    // payment_mint
-    // token_account_metadata_info
     // > needed if third_party_signer guard enabled
     // signer
     // > needed if whitelist guard enabled
@@ -224,4 +221,10 @@ pub struct Mint<'info> {
     // > needed if gatekeeper guard enabled and expire_on_use is true
     // gateway program
     // network_expire_feature
+    // > needed if nft_payment guard enabled
+    // token_account_info
+    // token_account_metadata_info
+    // transfer_authority_info
+    // > needed if nft_payment guard enabled and burn is on
+    // mint_account
 }

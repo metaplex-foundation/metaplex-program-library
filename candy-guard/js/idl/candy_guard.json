@@ -424,6 +424,22 @@
       }
     },
     {
+      "name": "NftPayment",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "burn",
+            "type": "bool"
+          },
+          {
+            "name": "requiredCollection",
+            "type": "publicKey"
+          }
+        ]
+      }
+    },
+    {
       "name": "SplToken",
       "type": {
         "kind": "struct",
@@ -617,6 +633,17 @@
                 "defined": "MintLimit"
               }
             }
+          },
+          {
+            "name": "nftPayment",
+            "docs": [
+              "NFT Payment"
+            ],
+            "type": {
+              "option": {
+                "defined": "NftPayment"
+              }
+            }
           }
         ]
       }
@@ -785,6 +812,11 @@
       "code": 6026,
       "name": "AllowedMintLimitReached",
       "msg": "The maximum number of allowed mints was reached"
+    },
+    {
+      "code": 6027,
+      "name": "InvalidNFTCollectionPayment",
+      "msg": "Invalid NFT Collection Payment"
     }
   ],
   "metadata": {

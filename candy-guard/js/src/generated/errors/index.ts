@@ -573,6 +573,29 @@ createErrorFromCodeLookup.set(0x178a, () => new AllowedMintLimitReachedError());
 createErrorFromNameLookup.set('AllowedMintLimitReached', () => new AllowedMintLimitReachedError());
 
 /**
+ * InvalidNFTCollectionPayment: 'Invalid NFT Collection Payment'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidNFTCollectionPaymentError extends Error {
+  readonly code: number = 0x178b;
+  readonly name: string = 'InvalidNFTCollectionPayment';
+  constructor() {
+    super('Invalid NFT Collection Payment');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidNFTCollectionPaymentError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x178b, () => new InvalidNFTCollectionPaymentError());
+createErrorFromNameLookup.set(
+  'InvalidNFTCollectionPayment',
+  () => new InvalidNFTCollectionPaymentError(),
+);
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

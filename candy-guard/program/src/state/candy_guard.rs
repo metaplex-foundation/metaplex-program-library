@@ -35,6 +35,7 @@ pub struct CandyGuard {
     //  8) end settings
     //  9) allow list
     // 10) mint limit
+    // 11) nft payment
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug)]
@@ -187,5 +188,5 @@ pub struct GuardSet {
     /// Mint limit guard
     pub mint_limit: Option<MintLimit>,
     /// NFT Payment
-    pub nft_payment: Option<NftPayment>
+    pub nft_payment: Option<NftPayment>,
 }

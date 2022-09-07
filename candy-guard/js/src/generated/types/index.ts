@@ -8,6 +8,7 @@ export * from './GuardSet';
 export * from './Lamports';
 export * from './LiveDate';
 export * from './MintLimit';
+export * from './NftPayment';
 export * from './SplToken';
 export * from './ThirdPartySigner';
 export * from './Whitelist';

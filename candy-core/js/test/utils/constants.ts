@@ -32,3 +32,5 @@ export const HIDDEN_SECTION = 8               // discriminator
     + 4 + MAX_NAME_LENGTH                     // u32 + max name length
     + 4 + MAX_URI_LENGTH                      // u32 + max uri length
     + 32;                                     // hash
+
+export const COLLECTION_METADATA = 'https://arweave.net/V1cFfj1Hl4edgdDMCRZiTm7FbRpbFQm8nyOYo9bCodw';
