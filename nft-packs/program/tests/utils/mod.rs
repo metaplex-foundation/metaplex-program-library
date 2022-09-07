@@ -23,11 +23,17 @@ pub use pack_voucher::TestPackVoucher;
 use solana_program::clock::Clock;
 use solana_program_test::*;
 use solana_sdk::{
-    account::Account, program_pack::Pack, pubkey::Pubkey, signature::Signer,
-    signer::keypair::Keypair, system_instruction, transaction::Transaction, transport::{self, TransportError},
+    account::Account,
+    program_pack::Pack,
+    pubkey::Pubkey,
+    signature::Signer,
+    signer::keypair::Keypair,
+    system_instruction,
+    transaction::Transaction,
+    transport::{self, TransportError},
 };
 use spl_token::state::Mint;
-use std::{time, env};
+use std::{env, time};
 pub use user::*;
 pub use vault::TestVault;
 
@@ -254,7 +260,7 @@ pub async fn create_store(
         context.last_blockhash,
     );
 
-    context.banks_client.process_transaction(tx).await.unwrap();
+    unwrap_ignoring_io_error_in_ci(context.banks_client.process_transaction(tx).await);
 
     Ok(store_key)
 }

@@ -415,7 +415,7 @@ mod buy {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await.unwrap();
+        unwrap_ignoring_io_error_in_ci(context.banks_client.process_transaction(tx).await);
 
         let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
         context.warp_to_slot(clock.slot + 1500).unwrap();
@@ -556,7 +556,7 @@ mod buy {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await.unwrap();
+        unwrap_ignoring_io_error_in_ci(context.banks_client.process_transaction(tx).await);
 
         let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
         context.warp_to_slot(clock.slot + 3).unwrap();
