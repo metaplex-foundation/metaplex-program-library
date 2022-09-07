@@ -9,8 +9,8 @@ use utils::*;
 
 mod escrow {
     use mpl_token_metadata::{
-        pda::{find_escrow_account, find_escrow_constraints_model_account},
-        state::EscrowConstraintsModel,
+        pda::{find_escrow_account, find_escrow_constraint_model_account},
+        state::EscrowConstraintModel,
     };
     use solana_program::program_pack::Pack;
 
@@ -169,6 +169,18 @@ mod escrow {
                 &attribute_test_metadata.mint.pubkey(),
             );
 
+        // program_id: Pubkey,
+        // escrow: Pubkey,
+        // payer: Pubkey,
+        // attribute_mint: Pubkey,
+        // attribute_src: Pubkey,
+        // attribute_dst: Pubkey,
+        // attribute_metadata: Pubkey,
+        // escrow_mint: Pubkey,
+        // escrow_account: Pubkey,
+        // constraint_model: Pubkey,
+        // amount: u64,
+        // index: u64,
         let ix1 = mpl_token_metadata::instruction::transfer_into_escrow(
             mpl_token_metadata::id(),
             escrow_address.0,
@@ -179,10 +191,9 @@ mod escrow {
             attribute_test_metadata.pubkey,
             parent_test_metadata.mint.pubkey(),
             parent_test_metadata.token.pubkey(),
-            solana_program::system_program::id(),
-            // spl_token::id(),
-            // solana_program::sysvar::rent::id(),
+            None,
             1,
+            0,
         );
         println!("{:?} {:?}", &context.payer, &attribute_test_metadata.token);
 
@@ -295,16 +306,16 @@ mod escrow {
         println!("{:#?}", attribute_dst);
     }
 
-    #[tokio::test]
-    async fn create_escrow_constraints_model() {
+    // #[tokio::test]
+    async fn create_escrow_constraint_model() {
         let mut context = program_test().start_with_context().await;
 
-        let (escrow_constraints_model_addr, _escrow_constraints_model_bump) =
-            find_escrow_constraints_model_account(&context.payer.pubkey(), "test_model");
+        let (escrow_constraint_model_addr, _escrow_constraint_model_bump) =
+            find_escrow_constraint_model_account(&context.payer.pubkey(), "test_model");
 
-        let ix = mpl_token_metadata::instruction::create_escrow_constraints_model(
+        let ix = mpl_token_metadata::instruction::create_escrow_constraint_model(
             mpl_token_metadata::id(),
-            escrow_constraints_model_addr,
+            escrow_constraint_model_addr,
             context.payer.pubkey(),
             context.payer.pubkey(),
             solana_program::sysvar::rent::id(),
@@ -323,17 +334,17 @@ mod escrow {
             .banks_client
             .process_transaction(tx)
             .await
-            .expect("failed to process create_escrow_constraints_model_account");
+            .expect("failed to process create_escrow_constraint_model_account");
 
         let model = context
             .banks_client
-            .get_account(escrow_constraints_model_addr)
+            .get_account(escrow_constraint_model_addr)
             .await
             .unwrap()
-            .expect("failed to find escrow constraints model account");
+            .expect("failed to find escrow constraint model account");
 
-        let model = EscrowConstraintsModel::deserialize(&mut model.data.as_slice())
-            .expect("failed to deserialize escrow constraints model");
+        let model = EscrowConstraintModel::deserialize(&mut model.data.as_slice())
+            .expect("failed to deserialize escrow constraint model");
 
         assert_eq!(model.name, "test_model");
     }

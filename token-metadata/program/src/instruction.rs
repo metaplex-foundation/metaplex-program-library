@@ -1,7 +1,7 @@
 use crate::{
     deprecated_instruction::{MintPrintingTokensViaTokenArgs, SetReservationListArgs},
     state::{
-        Collection, CollectionDetails, Creator, Data, DataV2, Uses, EDITION,
+        Collection, CollectionDetails, Creator, Data, DataV2, EscrowConstraint, Uses, EDITION,
         EDITION_MARKER_BIT_SIZE, PREFIX,
     },
 };
@@ -137,6 +137,7 @@ pub struct CloseEscrowAccountArgs {
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct TransferIntoEscrowArgs {
     pub amount: u64,
+    pub index: u64,
 }
 
 #[repr(C)]
@@ -149,8 +150,15 @@ pub struct TransferOutOfEscrowArgs {
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
-pub struct CreateEscrowConstraintsModelAccountArgs {
+pub struct CreateEscrowConstraintModelAccountArgs {
     pub name: String,
+}
+
+#[repr(C)]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+pub struct AddConstraintToEscrowConstraintModelArgs {
+    pub constraint: EscrowConstraint,
 }
 
 /// Instructions supported by the Metadata program.
@@ -613,13 +621,19 @@ pub enum MetadataInstruction {
     #[account(12, name="rent", desc="Rent info")]
     TransferOutOfEscrow(TransferOutOfEscrowArgs),
 
-    /// Create an constraints model to be used by one or many escrow accounts.
-    #[account(0, writable, name="escrow_constraints_model", desc="Constraints model account")]
-    #[account(1, writable, signer, name="payer", desc="Wallet paying for the transaction and new account, will be set as the creator of the constraints model")]
-    #[account(2, name="update_authority", desc="Update authority of the constraints model")]
+    /// Create an constraint model to be used by one or many escrow accounts.
+    #[account(0, writable, name="escrow_constraint_model", desc="Constraint model account")]
+    #[account(1, writable, signer, name="payer", desc="Wallet paying for the transaction and new account, will be set as the creator of the constraint model")]
+    #[account(2, name="update_authority", desc="Update authority of the constraint model")]
     #[account(3, name="system_program", desc="System program")]
     #[account(4, name="rent", desc="Rent info")]
-    CreateEscrowConstraintsModelAccount(CreateEscrowConstraintsModelAccountArgs),
+    CreateEscrowConstraintModelAccount(CreateEscrowConstraintModelAccountArgs),
+
+    /// Add a constraint to an escrow constraint model.
+    #[account(0, writable, name="escrow_constraint_model", desc="Constraint model account")]
+    #[account(1, writable, signer, name="payer", desc="Wallet paying for the transaction and new account, will be set as the creator of the constraint model")]
+    #[account(2, signer, name="update_authority", desc="Update authority of the constraint model")]
+    AddConstraintToEscrowConstraintModel(AddConstraintToEscrowConstraintModelArgs),
 }
 
 /// Creates an CreateMetadataAccounts instruction
@@ -1891,10 +1905,11 @@ pub fn transfer_into_escrow(
     attribute_metadata: Pubkey,
     escrow_mint: Pubkey,
     escrow_account: Pubkey,
-    constraint_model: Pubkey,
+    constraint_model: Option<Pubkey>,
     amount: u64,
+    index: u64,
 ) -> Instruction {
-    let accounts = vec![
+    let mut accounts = vec![
         AccountMeta::new(escrow, false),
         AccountMeta::new(payer, true),
         AccountMeta::new_readonly(attribute_mint, false),
@@ -1907,12 +1922,17 @@ pub fn transfer_into_escrow(
         AccountMeta::new_readonly(spl_associated_token_account::id(), false),
         AccountMeta::new_readonly(spl_token::id(), false),
         AccountMeta::new_readonly(solana_program::sysvar::rent::id(), false),
-        AccountMeta::new_readonly(constraint_model, false),
     ];
-    let data = MetadataInstruction::TransferIntoEscrow(TransferIntoEscrowArgs { amount })
+
+    if let Some(constraint_model) = constraint_model {
+        accounts.push(AccountMeta::new_readonly(constraint_model, false));
+    }
+
+    let data = MetadataInstruction::TransferIntoEscrow(TransferIntoEscrowArgs { amount, index })
         .try_to_vec()
         .unwrap();
 
+    println!("data?? {:?}", data);
     Instruction {
         program_id,
         accounts,
@@ -1959,9 +1979,9 @@ pub fn transfer_out_of_escrow(
     }
 }
 
-pub fn create_escrow_constraints_model(
+pub fn create_escrow_constraint_model(
     program_id: Pubkey,
-    escrow_constraints_model: Pubkey,
+    escrow_constraint_model: Pubkey,
     payer: Pubkey,
     update_authority: Pubkey,
     rent: Pubkey,
@@ -1970,15 +1990,41 @@ pub fn create_escrow_constraints_model(
 ) -> Instruction {
     let name = name.to_owned();
     let accounts = vec![
-        AccountMeta::new(escrow_constraints_model, false),
+        AccountMeta::new(escrow_constraint_model, false),
         AccountMeta::new(payer, true),
         AccountMeta::new_readonly(update_authority, false),
         AccountMeta::new_readonly(system_program, false),
         AccountMeta::new_readonly(rent, false),
     ];
 
-    let data = MetadataInstruction::CreateEscrowConstraintsModelAccount(
-        CreateEscrowConstraintsModelAccountArgs { name },
+    let data = MetadataInstruction::CreateEscrowConstraintModelAccount(
+        CreateEscrowConstraintModelAccountArgs { name },
+    )
+    .try_to_vec()
+    .unwrap();
+
+    Instruction {
+        program_id,
+        accounts,
+        data,
+    }
+}
+
+pub fn add_constraint_to_escrow_constraint_model(
+    program_id: Pubkey,
+    escrow_constraint_model: Pubkey,
+    payer: Pubkey,
+    update_authority: Pubkey,
+    constraint: EscrowConstraint,
+) -> Instruction {
+    let accounts = vec![
+        AccountMeta::new(escrow_constraint_model, false),
+        AccountMeta::new(payer, true),
+        AccountMeta::new_readonly(update_authority, false),
+    ];
+
+    let data = MetadataInstruction::AddConstraintToEscrowConstraintModel(
+        AddConstraintToEscrowConstraintModelArgs { constraint },
     )
     .try_to_vec()
     .unwrap();

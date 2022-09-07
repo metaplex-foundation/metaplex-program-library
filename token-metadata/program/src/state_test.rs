@@ -539,7 +539,7 @@ mod use_authority_record {
 
 mod collection_authority_record {
     use crate::state::{
-        EscrowConstraint, EscrowConstraintType, EscrowConstraintsModel, TokenMetadataAccount,
+        EscrowConstraint, EscrowConstraintModel, EscrowConstraintType, TokenMetadataAccount,
     };
 
     use super::*;
@@ -695,7 +695,7 @@ mod collection_authority_record {
             "EscrowConstraint::tokens length is not equal to serialized length"
         );
 
-        let escrow_constraints_model = EscrowConstraintsModel {
+        let escrow_constraints_model = EscrowConstraintModel {
             name: "test".to_string(),
             count: 0,
             update_authority: Keypair::new().pubkey(),
@@ -716,7 +716,63 @@ mod collection_authority_record {
         assert_eq!(
             escrow_constraints_model.try_len().unwrap(),
             buf_escrow_constraints_model.len(),
-            "EscrowConstraintsModel length is not equal to serialized length"
+            "EscrowConstraintModel length is not equal to serialized length"
         );
+    }
+
+    #[test]
+    fn test_validate_constraint() {
+        let keypair_1 = Keypair::new();
+        let keypair_2 = Keypair::new();
+        let keypair_3 = Keypair::new();
+
+        let ec_none = EscrowConstraint {
+            name: "test".to_string(),
+            constraint_type: EscrowConstraintType::None,
+            token_limit: 1,
+        };
+
+        let ec_collection = EscrowConstraint {
+            name: "test".to_string(),
+            constraint_type: EscrowConstraintType::Collection(keypair_1.pubkey()),
+            token_limit: 1,
+        };
+
+        let ec_tokens = EscrowConstraint {
+            name: "test".to_string(),
+            constraint_type: EscrowConstraintType::tokens_from_slice(&[
+                keypair_2.pubkey(),
+                keypair_3.pubkey(),
+            ]),
+
+            token_limit: 1,
+        };
+        let escrow_constraints_model = EscrowConstraintModel {
+            name: "test".to_string(),
+            count: 0,
+            update_authority: Keypair::new().pubkey(),
+            creator: Keypair::new().pubkey(),
+            constraints: vec![ec_none, ec_collection, ec_tokens],
+        };
+
+        escrow_constraints_model
+            .validate_at(&keypair_1.pubkey(), 0)
+            .expect("None constraint failed");
+
+        escrow_constraints_model
+            .validate_at(&keypair_1.pubkey(), 1)
+            .expect("Collection constraint failed");
+
+        escrow_constraints_model
+            .validate_at(&keypair_2.pubkey(), 1)
+            .expect_err("Collection constraint failed");
+
+        escrow_constraints_model
+            .validate_at(&keypair_2.pubkey(), 2)
+            .expect("Tokens constraint failed");
+
+        escrow_constraints_model
+            .validate_at(&keypair_1.pubkey(), 2)
+            .expect_err("Tokens constraint failed");
     }
 }

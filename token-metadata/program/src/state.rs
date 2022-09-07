@@ -992,10 +992,35 @@ impl TokenOwnedEscrow {
 
 impl TokenOwnedEscrowAccount for TokenOwnedEscrow {}
 
+pub trait EscrowConstraintModelAccount {
+    fn safe_deserialize<T: BorshDeserialize>(mut data: &[u8]) -> Result<T, BorshError> {
+        // if !is_correct_account_type(data, Self::key(), Self::size()) {
+        //     return Err(BorshError::new(ErrorKind::Other, "DataTypeMismatch"));
+        // }
+
+        let result: T = T::deserialize(&mut data)?;
+
+        Ok(result)
+    }
+
+    fn from_account_info<T: BorshDeserialize>(a: &AccountInfo) -> Result<T, ProgramError>
+where {
+        let ua: T = Self::safe_deserialize(&a.data.borrow_mut())
+            .map_err(|_| MetadataError::DataTypeMismatch)?;
+
+        // let ua: T = Self::deserialize(&a.data.borrow_mut());
+
+        // Check that this is a `token-metadata` owned account.
+        assert_owned_by(a, &ID)?;
+
+        Ok(ua)
+    }
+}
+
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone, Default)]
-pub struct EscrowConstraintsModel {
+pub struct EscrowConstraintModel {
     pub name: String,
     pub constraints: Vec<EscrowConstraint>,
     pub creator: Pubkey,
@@ -1004,7 +1029,7 @@ pub struct EscrowConstraintsModel {
     pub count: u64,
 }
 
-impl EscrowConstraintsModel {
+impl EscrowConstraintModel {
     pub fn try_len(&self) -> Result<usize, ProgramError> {
         let unknown_overhead = 8; // TODO: find out where this is coming from
         self.constraints
@@ -1022,7 +1047,22 @@ impl EscrowConstraintsModel {
                     + unknown_overhead
             })
     }
+
+    pub fn validate_at(&self, mint: &Pubkey, index: usize) -> Result<(), ProgramError> {
+        if let Some(constraint) = self.constraints.get(index) {
+            constraint.constraint_type.validate(mint)
+        } else {
+            return Err(MetadataError::InvalidEscrowConstraintIndex.into());
+        }
+        // self.constraints
+        //     .get(index)
+        //     .ok_or::<MetadataError>(MetadataError::InvalidEscrowConstraintIndex.into())?
+        //     .constraint_type
+        //     .validate(mint)
+    }
 }
+
+impl EscrowConstraintModelAccount for EscrowConstraintModel {}
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
@@ -1075,6 +1115,26 @@ impl EscrowConstraintType {
             hm.insert(*token, ());
         }
         EscrowConstraintType::Tokens(hm)
+    }
+
+    pub fn validate(&self, mint: &Pubkey) -> Result<(), ProgramError> {
+        match self {
+            EscrowConstraintType::None => Ok(()),
+            EscrowConstraintType::Collection(collection) => {
+                if collection == mint {
+                    Ok(())
+                } else {
+                    Err(MetadataError::EscrowConstraintViolation.into())
+                }
+            }
+            EscrowConstraintType::Tokens(tokens) => {
+                if tokens.contains_key(mint) {
+                    Ok(())
+                } else {
+                    Err(MetadataError::EscrowConstraintViolation.into())
+                }
+            }
+        }
     }
 }
 

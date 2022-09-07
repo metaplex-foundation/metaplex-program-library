@@ -78,7 +78,7 @@ pub fn find_escrow_account(mint: &Pubkey) -> (Pubkey, u8) {
     )
 }
 
-pub fn find_escrow_constraints_model_account(creator: &Pubkey, name: &str) -> (Pubkey, u8) {
+pub fn find_escrow_constraint_model_account(creator: &Pubkey, name: &str) -> (Pubkey, u8) {
     Pubkey::find_program_address(
         &[
             PREFIX.as_bytes(),
