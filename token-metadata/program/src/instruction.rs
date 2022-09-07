@@ -881,6 +881,7 @@ pub fn convert_master_edition_v1_to_v2(
 }
 
 /// creates a mint_edition_proxy instruction
+#[deprecated(since = "1.4.0")]
 #[allow(clippy::too_many_arguments)]
 pub fn mint_edition_from_master_edition_via_vault_proxy(
     program_id: Pubkey,

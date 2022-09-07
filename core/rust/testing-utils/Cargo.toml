@@ -30,5 +30,3 @@ num-derive = "~0.3"
 num-traits = "~0.2"
 borsh = "~0.9.1"
 
-[dev-dependencies]
-getrandom = { version = "0.2", features = ["js"] }

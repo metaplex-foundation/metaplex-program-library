@@ -1294,10 +1294,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "418d37c8b1d42553c93648be529cb70f920d3baf8ef469b74b9638df426e0b4c"
 dependencies = [
  "cfg-if",
- "js-sys",
  "libc",
  "wasi 0.10.2+wasi-snapshot-preview1",
- "wasm-bindgen",
 ]
 
 [[package]]
@@ -1793,21 +1791,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "mpl-auction"
-version = "0.0.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d8d763de66c9f224482208e621ef0e8e28056e0aeed2eb0ba796dead291a4985"
-dependencies = [
- "arrayref",
- "borsh 0.9.3",
- "num-derive",
- "num-traits",
- "solana-program",
- "spl-token",
- "thiserror",
-]
-
-[[package]]
 name = "mpl-fixed-price-sale"
 version = "0.2.3"
 dependencies = [
@@ -1831,28 +1814,9 @@ checksum = "426eee9c8c553b340db442bb3b3299ef97203c7a370a9cf819dbe1d3c7356a29"
 dependencies = [
  "arrayref",
  "borsh 0.9.3",
- "mpl-auction 0.0.2",
+ "mpl-auction",
  "mpl-token-metadata",
  "mpl-token-vault",
- "num-derive",
- "num-traits",
- "solana-program",
- "spl-associated-token-account",
- "spl-token",
- "thiserror",
-]
-
-[[package]]
-name = "mpl-metaplex"
-version = "0.0.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "426eee9c8c553b340db442bb3b3299ef97203c7a370a9cf819dbe1d3c7356a29"
-dependencies = [
- "arrayref",
- "borsh 0.9.3",
- "mpl-auction 0.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "mpl-token-metadata",
- "mpl-token-vault 0.1.0",
  "num-derive",
  "num-traits",
  "solana-program",
@@ -1867,7 +1831,6 @@ version = "0.1.0"
 dependencies = [
  "arrayref",
  "borsh 0.9.3",
- "getrandom 0.2.4",
  "mpl-metaplex",
  "mpl-token-metadata",
  "mpl-token-vault",
@@ -1890,7 +1853,6 @@ version = "0.0.2"
 dependencies = [
  "anchor-client",
  "borsh 0.9.3",
- "getrandom 0.2.4",
  "mpl-token-metadata",
  "mpl-token-vault",
  "num",
@@ -1913,7 +1875,6 @@ dependencies = [
  "anchor-lang",
  "anchor-spl",
  "arrayref",
- "getrandom 0.2.4",
  "mpl-token-metadata",
  "solana-program-test",
  "solana-sdk",

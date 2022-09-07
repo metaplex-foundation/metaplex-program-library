@@ -13,10 +13,10 @@ body:
         - core
         - fixed-price-sale
         - gumdrop
-        - token-entangler
-        - token-metadata
         - hydra
         - nft-packs
+        - token-entangler
+        - token-metadata
     validations:
       required: true
   - type: dropdown
