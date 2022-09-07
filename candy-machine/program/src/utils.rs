@@ -1,5 +1,3 @@
-use std::str::from_utf8_unchecked;
-
 use anchor_lang::prelude::*;
 use solana_program::{
     account_info::AccountInfo,
@@ -12,7 +10,7 @@ use solana_program::{
 };
 use spl_associated_token_account::get_associated_token_address;
 
-use crate::{CandyError, CandyMachine};
+use crate::{constants::*, CandyError, CandyMachine};
 
 pub fn assert_initialized<T: Pack + IsInitialized>(account_info: &AccountInfo) -> Result<T> {
     let account: T = T::unpack_unchecked(&account_info.data.borrow())?;
@@ -177,50 +175,41 @@ pub fn spl_token_burn(params: TokenBurnParams<'_, '_>) -> Result<()> {
 }
 
 pub fn is_feature_active(uuid: &str, feature_index: usize) -> bool {
-    uuid.as_bytes()[feature_index] == b"1"[0]
+    let uuid_bytes = uuid.as_bytes();
+    if feature_index == COLLECTIONS_FEATURE_INDEX && uuid_bytes[feature_index] == b'1' {
+        is_valid_uuid(uuid)
+    } else {
+        uuid_bytes[feature_index] == b'#'
+    }
+}
+
+fn is_valid_uuid(uuid: &str) -> bool {
+    !uuid.bytes().any(|b| b != b'1' && b != b'0' && b != b'#')
 }
 
 // string is 6 bytes long, can be any valid utf8 char coming in.
-// feature_index is between 0 and 5, inclusive. We set it to an array of utf8 "0"s first
-pub fn set_feature_flag(uuid: &mut String, feature_index: usize) {
-    let mut bytes: [u8; 6] = [b'0'; 6];
-    uuid.bytes().enumerate().for_each(|(i, byte)| {
-        if i == feature_index || byte == b'1' {
-            bytes[i] = b'1';
-        }
-    });
+// feature_index is between 0 and 5, inclusive.
+pub fn set_feature_flag(uuid: &mut str, feature_index: usize) {
+    if feature_index > 5 {
+        return;
+    }
 
-    // unsafe is fine because we know for a fact that the array will only
-    // contain valid UTF8 bytes since we fully ignore user inputted UUID and set
-    // it to an array of only valid bytes (b'0') and then only modify the bytes in
-    // that valid utf8 byte array to other valid utf8 characters (b'1')
-    // This saves a bit of compute from the overhead of using the from_utf8 or
-    // other similar methods that need to ensure that the bytes are valid
+    // its safe because the char boundaries for the normalized string are all 1 byte. trust me bro
     unsafe {
-        uuid.replace_range(.., from_utf8_unchecked(&bytes));
+        uuid.as_bytes_mut()[feature_index] = b'#';
     }
 }
 
 // string is 6 bytes long, can be any valid utf8 char coming in.
-// feature_index is between 0 and 5, inclusive. We set it to an array of utf8 "0"s first
-pub fn remove_feature_flag(uuid: &mut String, feature_index: usize) {
-    let mut bytes: [u8; 6] = [b'0'; 6];
-    uuid.bytes().enumerate().for_each(|(i, byte)| {
-        if i == feature_index {
-            bytes[i] = b'0';
-        } else if byte == b'1' {
-            bytes[i] = b'1';
-        }
-    });
+// feature_index is between 0 and 5, inclusive.
+pub fn remove_feature_flag(uuid: &mut str, feature_index: usize) {
+    if feature_index > 5 {
+        return;
+    }
 
-    // unsafe is fine because we know for a fact that the array will only
-    // contain valid UTF8 bytes since we fully ignore user inputted UUID and set
-    // it to an array of only valid bytes (b'0') and then only modify the bytes in
-    // that valid utf8 byte array to other valid utf8 characters (b'1')
-    // This saves a bit of compute from the overhead of using the from_utf8 or
-    // other similar methods that need to ensure that the bytes are valid
+    // its safe because the char boundaries for the normalized string are all 1 byte. trust me bro
     unsafe {
-        uuid.replace_range(.., from_utf8_unchecked(&bytes));
+        uuid.as_bytes_mut()[feature_index] = b'0';
     }
 }
 
@@ -247,8 +236,11 @@ pub fn punish_bots<'a>(
 
 #[cfg(test)]
 pub mod tests {
-    use super::*;
+    use std::{assert_eq, println};
+
     use crate::constants::COLLECTIONS_FEATURE_INDEX;
+
+    use super::*;
 
     #[test]
     fn feature_flag_working() {
@@ -257,22 +249,40 @@ pub mod tests {
             "Should be 65: {}",
             uuid.as_bytes()[COLLECTIONS_FEATURE_INDEX]
         );
+        remove_feature_flag(&mut uuid, COLLECTIONS_FEATURE_INDEX);
+        assert_eq!(uuid, "0BCDEF");
 
         uuid = String::from("01H333");
-        println!("Should be 01H333: {}", uuid);
-        set_feature_flag(&mut uuid, COLLECTIONS_FEATURE_INDEX + 1);
-        assert!(is_feature_active(&uuid, COLLECTIONS_FEATURE_INDEX + 1));
-        println!("Should be 010000: {}", uuid);
-        remove_feature_flag(&mut uuid, COLLECTIONS_FEATURE_INDEX + 1);
-        assert!(!is_feature_active(&uuid, COLLECTIONS_FEATURE_INDEX + 1));
-        println!("Should be 000000: {}", uuid);
+        assert!(!is_feature_active(&uuid, FREEZE_FEATURE_INDEX));
+        assert_eq!(uuid, "01H333");
+        set_feature_flag(&mut uuid, FREEZE_FEATURE_INDEX);
+        assert_eq!(uuid, "0#H333");
+        assert!(is_feature_active(&uuid, FREEZE_FEATURE_INDEX));
 
+        remove_feature_flag(&mut uuid, FREEZE_FEATURE_INDEX);
+        assert!(!is_feature_active(&uuid, FREEZE_FEATURE_INDEX));
+        println!("Should be 00H333: {}", uuid);
+
+        set_feature_flag(&mut uuid, FREEZE_LOCK_FEATURE_INDEX);
+        assert!(is_feature_active(&uuid, FREEZE_LOCK_FEATURE_INDEX));
+        assert_eq!(uuid, "00#333");
+
+        remove_feature_flag(&mut uuid, COLLECTIONS_FEATURE_INDEX);
+        assert_eq!(uuid, "00#333");
+        set_feature_flag(&mut uuid, FREEZE_FEATURE_INDEX);
+        assert!(is_feature_active(&uuid, FREEZE_FEATURE_INDEX));
+        assert_eq!(uuid, "0##333");
         set_feature_flag(&mut uuid, COLLECTIONS_FEATURE_INDEX);
         assert!(is_feature_active(&uuid, COLLECTIONS_FEATURE_INDEX));
-        println!("Should be 100000: {}", uuid);
-        remove_feature_flag(&mut uuid, COLLECTIONS_FEATURE_INDEX);
+        assert_eq!(uuid, "###333");
+
+        uuid = String::from("1ABCDE");
         assert!(!is_feature_active(&uuid, COLLECTIONS_FEATURE_INDEX));
-        println!("Should be 000000: {}", uuid);
+        uuid = String::from("100000");
+        assert!(is_feature_active(&uuid, COLLECTIONS_FEATURE_INDEX));
+
+        uuid = String::from("1##000");
+        assert!(is_feature_active(&uuid, COLLECTIONS_FEATURE_INDEX));
     }
 
     #[test]
