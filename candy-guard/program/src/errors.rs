@@ -21,8 +21,6 @@ pub enum CandyGuardError {
     // collection
     #[msg("Collection public key mismatch")]
     CollectionKeyMismatch,
-    #[msg("Missing collection accounts")]
-    MissingCollectionAccounts,
     #[msg("Collection update authority public key mismatch")]
     CollectionUpdateAuthorityKeyMismatch,
     // bot tax

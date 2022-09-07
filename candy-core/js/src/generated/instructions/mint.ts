@@ -5,9 +5,9 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as splToken from '@solana/spl-token'
-import * as beet from '@metaplex-foundation/beet'
-import * as web3 from '@solana/web3.js'
+import * as splToken from '@solana/spl-token';
+import * as beet from '@metaplex-foundation/beet';
+import * as web3 from '@solana/web3.js';
 
 /**
  * @category Instructions
@@ -15,8 +15,8 @@ import * as web3 from '@solana/web3.js'
  * @category generated
  */
 export type MintInstructionArgs = {
-  creatorBump: number
-}
+  creatorBump: number;
+};
 /**
  * @category Instructions
  * @category Mint
@@ -24,15 +24,15 @@ export type MintInstructionArgs = {
  */
 export const mintStruct = new beet.BeetArgsStruct<
   MintInstructionArgs & {
-    instructionDiscriminator: number[] /* size: 8 */
+    instructionDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
     ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
     ['creatorBump', beet.u8],
   ],
-  'MintInstructionArgs'
-)
+  'MintInstructionArgs',
+);
 /**
  * Accounts required by the _mint_ instruction
  *
@@ -41,38 +41,46 @@ export const mintStruct = new beet.BeetArgsStruct<
  * @property [**signer**] authority
  * @property [] updateAuthority
  * @property [_writable_, **signer**] payer
+ * @property [_writable_, **signer**] mint
+ * @property [_writable_] tokenAccount
  * @property [_writable_] metadata
- * @property [_writable_] mint
- * @property [**signer**] mintAuthority
- * @property [**signer**] mintUpdateAuthority
  * @property [_writable_] masterEdition
+ * @property [] collectionAuthority
+ * @property [] collectionAuthorityRecord
+ * @property [] collectionMint
+ * @property [_writable_] collectionMetadata
+ * @property [] collectionMasterEdition
  * @property [] tokenMetadataProgram
+ * @property [] associatedTokenProgram
  * @property [] recentSlothashes
  * @category Instructions
  * @category Mint
  * @category generated
  */
 export type MintInstructionAccounts = {
-  candyMachine: web3.PublicKey
-  candyMachineCreator: web3.PublicKey
-  authority: web3.PublicKey
-  updateAuthority: web3.PublicKey
-  payer: web3.PublicKey
-  metadata: web3.PublicKey
-  mint: web3.PublicKey
-  mintAuthority: web3.PublicKey
-  mintUpdateAuthority: web3.PublicKey
-  masterEdition: web3.PublicKey
-  tokenMetadataProgram: web3.PublicKey
-  tokenProgram?: web3.PublicKey
-  systemProgram?: web3.PublicKey
-  rent?: web3.PublicKey
-  recentSlothashes: web3.PublicKey
-}
+  candyMachine: web3.PublicKey;
+  candyMachineCreator: web3.PublicKey;
+  authority: web3.PublicKey;
+  updateAuthority: web3.PublicKey;
+  payer: web3.PublicKey;
+  mint: web3.PublicKey;
+  tokenAccount: web3.PublicKey;
+  metadata: web3.PublicKey;
+  masterEdition: web3.PublicKey;
+  collectionAuthority: web3.PublicKey;
+  collectionAuthorityRecord: web3.PublicKey;
+  collectionMint: web3.PublicKey;
+  collectionMetadata: web3.PublicKey;
+  collectionMasterEdition: web3.PublicKey;
+  tokenMetadataProgram: web3.PublicKey;
+  tokenProgram?: web3.PublicKey;
+  associatedTokenProgram: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
+  rent?: web3.PublicKey;
+  recentSlothashes: web3.PublicKey;
+};
 
-export const mintInstructionDiscriminator = [
-  51, 57, 225, 47, 182, 146, 137, 166,
-]
+export const mintInstructionDiscriminator = [51, 57, 225, 47, 182, 146, 137, 166];
 
 /**
  * Creates a _Mint_ instruction.
@@ -87,12 +95,12 @@ export const mintInstructionDiscriminator = [
 export function createMintInstruction(
   accounts: MintInstructionAccounts,
   args: MintInstructionArgs,
-  programId = new web3.PublicKey('cndy3CZK71ZHMp9ddpq5NVvQDx33o6cCYDf4JBAWCk7')
+  programId = new web3.PublicKey('cndy3CZK71ZHMp9ddpq5NVvQDx33o6cCYDf4JBAWCk7'),
 ) {
   const [data] = mintStruct.serialize({
     instructionDiscriminator: mintInstructionDiscriminator,
     ...args,
-  })
+  });
   const keys: web3.AccountMeta[] = [
     {
       pubkey: accounts.candyMachine,
@@ -120,28 +128,48 @@ export function createMintInstruction(
       isSigner: true,
     },
     {
+      pubkey: accounts.mint,
+      isWritable: true,
+      isSigner: true,
+    },
+    {
+      pubkey: accounts.tokenAccount,
+      isWritable: true,
+      isSigner: false,
+    },
+    {
       pubkey: accounts.metadata,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: accounts.mint,
+      pubkey: accounts.masterEdition,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: accounts.mintAuthority,
+      pubkey: accounts.collectionAuthority,
       isWritable: false,
-      isSigner: true,
+      isSigner: false,
     },
     {
-      pubkey: accounts.mintUpdateAuthority,
+      pubkey: accounts.collectionAuthorityRecord,
       isWritable: false,
-      isSigner: true,
+      isSigner: false,
     },
     {
-      pubkey: accounts.masterEdition,
+      pubkey: accounts.collectionMint,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.collectionMetadata,
       isWritable: true,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.collectionMasterEdition,
+      isWritable: false,
       isSigner: false,
     },
     {
@@ -151,6 +179,11 @@ export function createMintInstruction(
     },
     {
       pubkey: accounts.tokenProgram ?? splToken.TOKEN_PROGRAM_ID,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.associatedTokenProgram,
       isWritable: false,
       isSigner: false,
     },
@@ -169,12 +202,12 @@ export function createMintInstruction(
       isWritable: false,
       isSigner: false,
     },
-  ]
+  ];
 
   const ix = new web3.TransactionInstruction({
     programId,
     keys,
     data,
-  })
-  return ix
+  });
+  return ix;
 }

@@ -5,8 +5,8 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet'
-import * as web3 from '@solana/web3.js'
+import * as beet from '@metaplex-foundation/beet';
+import * as web3 from '@solana/web3.js';
 
 /**
  * @category Instructions
@@ -14,28 +14,26 @@ import * as web3 from '@solana/web3.js'
  * @category generated
  */
 export const withdrawStruct = new beet.BeetArgsStruct<{
-  instructionDiscriminator: number[] /* size: 8 */
+  instructionDiscriminator: number[] /* size: 8 */;
 }>(
   [['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)]],
-  'WithdrawInstructionArgs'
-)
+  'WithdrawInstructionArgs',
+);
 /**
  * Accounts required by the _withdraw_ instruction
  *
  * @property [_writable_] candyMachine
- * @property [**signer**] authority
+ * @property [_writable_, **signer**] authority
  * @category Instructions
  * @category Withdraw
  * @category generated
  */
 export type WithdrawInstructionAccounts = {
-  candyMachine: web3.PublicKey
-  authority: web3.PublicKey
-}
+  candyMachine: web3.PublicKey;
+  authority: web3.PublicKey;
+};
 
-export const withdrawInstructionDiscriminator = [
-  183, 18, 70, 156, 148, 109, 161, 34,
-]
+export const withdrawInstructionDiscriminator = [183, 18, 70, 156, 148, 109, 161, 34];
 
 /**
  * Creates a _Withdraw_ instruction.
@@ -47,11 +45,11 @@ export const withdrawInstructionDiscriminator = [
  */
 export function createWithdrawInstruction(
   accounts: WithdrawInstructionAccounts,
-  programId = new web3.PublicKey('cndy3CZK71ZHMp9ddpq5NVvQDx33o6cCYDf4JBAWCk7')
+  programId = new web3.PublicKey('cndy3CZK71ZHMp9ddpq5NVvQDx33o6cCYDf4JBAWCk7'),
 ) {
   const [data] = withdrawStruct.serialize({
     instructionDiscriminator: withdrawInstructionDiscriminator,
-  })
+  });
   const keys: web3.AccountMeta[] = [
     {
       pubkey: accounts.candyMachine,
@@ -60,15 +58,15 @@ export function createWithdrawInstruction(
     },
     {
       pubkey: accounts.authority,
-      isWritable: false,
+      isWritable: true,
       isSigner: true,
     },
-  ]
+  ];
 
   const ix = new web3.TransactionInstruction({
     programId,
     keys,
     data,
-  })
-  return ix
+  });
+  return ix;
 }

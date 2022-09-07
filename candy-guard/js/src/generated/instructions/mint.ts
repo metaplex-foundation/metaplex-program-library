@@ -45,12 +45,17 @@ export const mintStruct = new beet.FixableBeetArgsStruct<
  * @property [_writable_] candyMachineCreator
  * @property [_writable_, **signer**] payer
  * @property [_writable_] wallet
+ * @property [_writable_] tokenAccount
  * @property [_writable_] metadata
- * @property [_writable_] mint
- * @property [**signer**] mintAuthority
- * @property [**signer**] mintUpdateAuthority
+ * @property [] mint
  * @property [_writable_] masterEdition
+ * @property [] collectionAuthority
+ * @property [] collectionAuthorityRecord
+ * @property [] collectionMint
+ * @property [_writable_] collectionMetadata
+ * @property [] collectionMasterEdition
  * @property [] tokenMetadataProgram
+ * @property [] associatedTokenProgram
  * @property [] recentSlothashes
  * @property [] instructionSysvarAccount
  * @category Instructions
@@ -65,13 +70,18 @@ export type MintInstructionAccounts = {
   candyMachineCreator: web3.PublicKey;
   payer: web3.PublicKey;
   wallet: web3.PublicKey;
+  tokenAccount: web3.PublicKey;
   metadata: web3.PublicKey;
   mint: web3.PublicKey;
-  mintAuthority: web3.PublicKey;
-  mintUpdateAuthority: web3.PublicKey;
   masterEdition: web3.PublicKey;
+  collectionAuthority: web3.PublicKey;
+  collectionAuthorityRecord: web3.PublicKey;
+  collectionMint: web3.PublicKey;
+  collectionMetadata: web3.PublicKey;
+  collectionMasterEdition: web3.PublicKey;
   tokenMetadataProgram: web3.PublicKey;
   tokenProgram?: web3.PublicKey;
+  associatedTokenProgram: web3.PublicKey;
   systemProgram?: web3.PublicKey;
   rent?: web3.PublicKey;
   recentSlothashes: web3.PublicKey;
@@ -136,28 +146,48 @@ export function createMintInstruction(
       isSigner: false,
     },
     {
+      pubkey: accounts.tokenAccount,
+      isWritable: true,
+      isSigner: false,
+    },
+    {
       pubkey: accounts.metadata,
       isWritable: true,
       isSigner: false,
     },
     {
       pubkey: accounts.mint,
-      isWritable: true,
+      isWritable: false,
       isSigner: false,
-    },
-    {
-      pubkey: accounts.mintAuthority,
-      isWritable: false,
-      isSigner: true,
-    },
-    {
-      pubkey: accounts.mintUpdateAuthority,
-      isWritable: false,
-      isSigner: true,
     },
     {
       pubkey: accounts.masterEdition,
       isWritable: true,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.collectionAuthority,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.collectionAuthorityRecord,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.collectionMint,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.collectionMetadata,
+      isWritable: true,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.collectionMasterEdition,
+      isWritable: false,
       isSigner: false,
     },
     {
@@ -167,6 +197,11 @@ export function createMintInstruction(
     },
     {
       pubkey: accounts.tokenProgram ?? splToken.TOKEN_PROGRAM_ID,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.associatedTokenProgram,
       isWritable: false,
       isSigner: false,
     },

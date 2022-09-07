@@ -16,6 +16,7 @@ import { Gatekeeper, gatekeeperBeet } from './Gatekeeper';
 import { EndSettings, endSettingsBeet } from './EndSettings';
 import { AllowList, allowListBeet } from './AllowList';
 import { MintLimit, mintLimitBeet } from './MintLimit';
+import { NftPayment, nftPaymentBeet } from './NftPayment';
 export type GuardSet = {
   botTax: beet.COption<BotTax>;
   liveDate: beet.COption<LiveDate>;
@@ -27,6 +28,7 @@ export type GuardSet = {
   endSettings: beet.COption<EndSettings>;
   allowList: beet.COption<AllowList>;
   mintLimit: beet.COption<MintLimit>;
+  nftPayment: beet.COption<NftPayment>;
 };
 
 /**
@@ -45,6 +47,7 @@ export const guardSetBeet = new beet.FixableBeetArgsStruct<GuardSet>(
     ['endSettings', beet.coption(endSettingsBeet)],
     ['allowList', beet.coption(allowListBeet)],
     ['mintLimit', beet.coption(mintLimitBeet)],
+    ['nftPayment', beet.coption(nftPaymentBeet)],
   ],
   'GuardSet',
 );

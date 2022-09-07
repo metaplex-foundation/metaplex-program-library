@@ -5,11 +5,11 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet'
+import * as beet from '@metaplex-foundation/beet';
 export type ConfigLine = {
-  name: string
-  uri: string
-}
+  name: string;
+  uri: string;
+};
 
 /**
  * @category userTypes
@@ -20,5 +20,5 @@ export const configLineBeet = new beet.FixableBeetArgsStruct<ConfigLine>(
     ['name', beet.utf8String],
     ['uri', beet.utf8String],
   ],
-  'ConfigLine'
-)
+  'ConfigLine',
+);

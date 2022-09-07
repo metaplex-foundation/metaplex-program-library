@@ -46,10 +46,10 @@ pub mod candy_machine_core {
         instructions::mint(ctx, creator_bump)
     }
 
-    /// Remove the collection informatino from the candy machine.
-    pub fn remove_collection(ctx: Context<RemoveCollection>) -> Result<()> {
-        instructions::remove_collection(ctx)
-    }
+    // /// Remove the collection informatino from the candy machine.
+    // pub fn remove_collection(ctx: Context<RemoveCollection>) -> Result<()> {
+    //     instructions::remove_collection(ctx)
+    // }
 
     /// Set a new authority of the candy machine. Changing the authority has the
     /// effect of changing who can mint.

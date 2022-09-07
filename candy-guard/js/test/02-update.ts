@@ -25,6 +25,7 @@ test('update: enable guards', async (t) => {
       endSettings: null,
       allowList: null,
       mintLimit: null,
+      nftPayment: null,
     },
     groups: null,
   };
@@ -39,7 +40,7 @@ test('update: enable guards', async (t) => {
   await transaction.assertSuccess(t);
 
   let accountInfo = await connection.getAccountInfo(payerPair.publicKey);
-  const balance = accountInfo?.lamports!;
+  const balance = accountInfo?.lamports;
 
   const updateData = {
     default: {
@@ -60,6 +61,7 @@ test('update: enable guards', async (t) => {
       endSettings: null,
       allowList: null,
       mintLimit: null,
+      nftPayment: null,
     },
     groups: null,
   };
@@ -81,7 +83,7 @@ test('update: enable guards', async (t) => {
   });
 
   accountInfo = await connection.getAccountInfo(payerPair.publicKey);
-  const updatedBalance = accountInfo?.lamports!;
+  const updatedBalance = accountInfo?.lamports;
 
   t.true(updatedBalance < balance, 'balance after update must be lower');
 });
@@ -108,6 +110,7 @@ test('update: disable guards', async (t) => {
       endSettings: null,
       allowList: null,
       mintLimit: null,
+      nftPayment: null,
     },
     groups: [
       {
@@ -125,7 +128,9 @@ test('update: disable guards', async (t) => {
         endSettings: null,
         allowList: null,
         mintLimit: null,
-      }]
+        nftPayment: null,
+      },
+    ],
   };
 
   const { tx: transaction, candyGuard: address } = await API.initialize(
@@ -139,7 +144,7 @@ test('update: disable guards', async (t) => {
 
   // parse the guards configuration
   let accountInfo = await connection.getAccountInfo(address);
-  const candyGuardData = parseData(accountInfo?.data.subarray(DATA_OFFSET)!);
+  const candyGuardData = parseData(accountInfo?.data.subarray(DATA_OFFSET));
 
   t.true(candyGuardData.groups?.length === 1, 'expected 1 group');
 
@@ -148,7 +153,7 @@ test('update: disable guards', async (t) => {
   spok(t, guardSet?.lamports?.amount, spokSameBignum(500));
 
   accountInfo = await connection.getAccountInfo(payerPair.publicKey);
-  const balance = accountInfo?.lamports!;
+  const balance = accountInfo?.lamports;
 
   const updateData = {
     default: {
@@ -162,6 +167,7 @@ test('update: disable guards', async (t) => {
       endSettings: null,
       allowList: null,
       mintLimit: null,
+      nftPayment: null,
     },
     groups: null,
   };
@@ -183,7 +189,7 @@ test('update: disable guards', async (t) => {
   });
 
   accountInfo = await connection.getAccountInfo(payerPair.publicKey);
-  const updatedBalance = accountInfo?.lamports!;
+  const updatedBalance = accountInfo?.lamports;
 
   t.true(updatedBalance > balance, 'balance after update must be greater');
 });

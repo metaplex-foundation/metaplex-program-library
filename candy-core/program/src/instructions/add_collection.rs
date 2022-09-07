@@ -12,7 +12,10 @@ pub fn add_collection(ctx: Context<AddCollection>) -> Result<()> {
     let metadata: Metadata =
         Metadata::from_account_info(&ctx.accounts.collection_metadata.to_account_info())?;
 
-    if !cmp_pubkeys(&metadata.update_authority, &ctx.accounts.update_authority.key()) {
+    if !cmp_pubkeys(
+        &metadata.update_authority,
+        &ctx.accounts.update_authority.key(),
+    ) {
         return err!(CandyError::IncorrectCollectionAuthority);
     }
 
@@ -26,12 +29,6 @@ pub fn add_collection(ctx: Context<AddCollection>) -> Result<()> {
 
     if candy_machine.items_redeemed > 0 {
         return err!(CandyError::NoChangingCollectionDuringMint);
-    }
-
-    // the candy machine authority will become the collection update authority
-    // therefore we require that retain_authority is set to true
-    if !candy_machine.data.retain_authority {
-        return err!(CandyError::CandyCollectionRequiresRetainAuthority);
     }
 
     assert_master_edition(&metadata, &edition)?;
@@ -73,7 +70,7 @@ pub fn add_collection(ctx: Context<AddCollection>) -> Result<()> {
         );
     }
 
-    candy_machine.collection_mint = Some(mint.key());
+    candy_machine.collection_mint = mint.key();
 
     Ok(())
 }

@@ -25,6 +25,7 @@ test('initialize: new candy guard (no guards)', async (t) => {
       endSettings: null,
       allowList: null,
       mintLimit: null,
+      nftPayment: null,
     },
     groups: null,
   };
@@ -46,7 +47,7 @@ test('initialize: new candy guard (no guards)', async (t) => {
 
   // parse the guards configuration
   const accountInfo = await connection.getAccountInfo(address);
-  const candyGuardData = parseData(accountInfo?.data.subarray(DATA_OFFSET)!);
+  const candyGuardData = parseData(accountInfo?.data.subarray(DATA_OFFSET));
 
   spok(t, candyGuardData, data);
 });
@@ -75,6 +76,7 @@ test('initialize: new candy guard (with guards)', async (t) => {
       endSettings: null,
       allowList: null,
       mintLimit: null,
+      nftPayment: null,
     },
     groups: null,
   };
@@ -96,7 +98,7 @@ test('initialize: new candy guard (with guards)', async (t) => {
 
   // parse the guards configuration
   const accountInfo = await connection.getAccountInfo(address);
-  const candyGuardData = parseData(accountInfo?.data.subarray(DATA_OFFSET)!);
+  const candyGuardData = parseData(accountInfo?.data.subarray(DATA_OFFSET));
 
   //spok(t, candyGuardData.default.liveDate, {
   //  date: spokSameBignum(data.default.liveDate.date),

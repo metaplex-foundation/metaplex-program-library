@@ -5,9 +5,9 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as web3 from '@solana/web3.js'
-import * as beetSolana from '@metaplex-foundation/beet-solana'
-import * as beet from '@metaplex-foundation/beet'
+import * as web3 from '@solana/web3.js';
+import * as beetSolana from '@metaplex-foundation/beet-solana';
+import * as beet from '@metaplex-foundation/beet';
 
 /**
  * @category Instructions
@@ -15,9 +15,9 @@ import * as beet from '@metaplex-foundation/beet'
  * @category generated
  */
 export type SetAuthorityInstructionArgs = {
-  newAuthority: web3.PublicKey
-  newUpdateAuthority: web3.PublicKey
-}
+  newAuthority: web3.PublicKey;
+  newUpdateAuthority: web3.PublicKey;
+};
 /**
  * @category Instructions
  * @category SetAuthority
@@ -25,7 +25,7 @@ export type SetAuthorityInstructionArgs = {
  */
 export const setAuthorityStruct = new beet.BeetArgsStruct<
   SetAuthorityInstructionArgs & {
-    instructionDiscriminator: number[] /* size: 8 */
+    instructionDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
@@ -33,8 +33,8 @@ export const setAuthorityStruct = new beet.BeetArgsStruct<
     ['newAuthority', beetSolana.publicKey],
     ['newUpdateAuthority', beetSolana.publicKey],
   ],
-  'SetAuthorityInstructionArgs'
-)
+  'SetAuthorityInstructionArgs',
+);
 /**
  * Accounts required by the _setAuthority_ instruction
  *
@@ -45,13 +45,11 @@ export const setAuthorityStruct = new beet.BeetArgsStruct<
  * @category generated
  */
 export type SetAuthorityInstructionAccounts = {
-  candyMachine: web3.PublicKey
-  authority: web3.PublicKey
-}
+  candyMachine: web3.PublicKey;
+  authority: web3.PublicKey;
+};
 
-export const setAuthorityInstructionDiscriminator = [
-  133, 250, 37, 21, 110, 163, 26, 121,
-]
+export const setAuthorityInstructionDiscriminator = [133, 250, 37, 21, 110, 163, 26, 121];
 
 /**
  * Creates a _SetAuthority_ instruction.
@@ -66,12 +64,12 @@ export const setAuthorityInstructionDiscriminator = [
 export function createSetAuthorityInstruction(
   accounts: SetAuthorityInstructionAccounts,
   args: SetAuthorityInstructionArgs,
-  programId = new web3.PublicKey('cndy3CZK71ZHMp9ddpq5NVvQDx33o6cCYDf4JBAWCk7')
+  programId = new web3.PublicKey('cndy3CZK71ZHMp9ddpq5NVvQDx33o6cCYDf4JBAWCk7'),
 ) {
   const [data] = setAuthorityStruct.serialize({
     instructionDiscriminator: setAuthorityInstructionDiscriminator,
     ...args,
-  })
+  });
   const keys: web3.AccountMeta[] = [
     {
       pubkey: accounts.candyMachine,
@@ -83,12 +81,12 @@ export function createSetAuthorityInstruction(
       isWritable: false,
       isSigner: true,
     },
-  ]
+  ];
 
   const ix = new web3.TransactionInstruction({
     programId,
     keys,
     data,
-  })
-  return ix
+  });
+  return ix;
 }

@@ -26,14 +26,14 @@ export function spokSamePubkey(a: PublicKey | COption<PublicKey>): Specification
 
 export function spokSameBignum(a?: BN | bignum): Specification<bignum> {
   const same = (b?: BN | bignum) => {
-    if (a == null && b ==null) {      
+    if (a == null && b == null) {
       return true;
     }
     if (a == null) {
       return false;
     }
 
-    return (b != null && new BN(a).eq(new BN(b)));
+    return b != null && new BN(a).eq(new BN(b));
   };
 
   same.$spec = `spokSameBignum(${a})`;

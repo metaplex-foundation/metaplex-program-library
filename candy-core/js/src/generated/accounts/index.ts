@@ -1,5 +1,5 @@
-export * from './CandyMachine'
+export * from './CandyMachine';
 
-import { CandyMachine } from './CandyMachine'
+import { CandyMachine } from './CandyMachine';
 
-export const accountProviders = { CandyMachine }
+export const accountProviders = { CandyMachine };

@@ -15,7 +15,7 @@ pub fn initialize(ctx: Context<Initialize>, data: CandyMachineData) -> Result<()
         wallet: ctx.accounts.wallet.key(),
         authority: ctx.accounts.authority.key(),
         update_authority: ctx.accounts.update_authority.key(),
-        collection_mint: None,
+        collection_mint: Pubkey::default(),
         items_redeemed: 0,
     };
 

@@ -19,10 +19,6 @@ pub fn update(ctx: Context<Update>, data: CandyMachineData) -> Result<()> {
         return err!(CandyError::CannotSwitchToHiddenSettings);
     }
 
-    if candy_machine.collection_mint.is_some() && !data.retain_authority {
-        return err!(CandyError::CandyCollectionRequiresRetainAuthority);
-    }
-
     let symbol = fixed_length_string(data.symbol.clone(), MAX_SYMBOL_LENGTH)?;
     // validates the config data settings
     data.validate()?;

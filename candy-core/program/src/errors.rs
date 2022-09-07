@@ -28,8 +28,6 @@ pub enum CandyError {
     MetadataAccountMustBeEmpty,
     #[msg("Can't change collection settings after items have begun to be minted")]
     NoChangingCollectionDuringMint,
-    #[msg("Retain authority must be true for Candy Machines with a collection set")]
-    CandyCollectionRequiresRetainAuthority,
     #[msg("Value longer than expected maximum value")]
     ExceededLengthError,
     #[msg("Missing config lines settings")]
@@ -42,8 +40,6 @@ pub enum CandyError {
     CannotChangeSequentialIndexGeneration,
     #[msg("Collection public key mismatch")]
     CollectionKeyMismatch,
-    #[msg("Missing collection accounts")]
-    MissingCollectionAccounts,
     #[msg("Cannot change update authority if a collection mint is set")]
     CannotChangeUpdateAuthority,
 }

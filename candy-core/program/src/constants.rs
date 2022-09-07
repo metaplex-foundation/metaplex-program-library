@@ -20,9 +20,6 @@ pub const AUTHORITY_SEED: &str = "candy_machine";
 // Seed used to derive the collection authority PDA address.
 pub const COLLECTION_SEED: &str = "collection";
 
-// Number of expected remaining accounts for mints with collection.
-pub const COLLECTION_ACCOUNTS_COUNT: usize = 5;
-
 // Determine the start of the account hidden section.
 pub const HIDDEN_SECTION: usize = 8           // discriminator
     + 8                                       // features
