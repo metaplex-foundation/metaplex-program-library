@@ -5,26 +5,27 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet';
+import * as beet from '@metaplex-foundation/beet'
 export type ConfigLineSettings = {
-  prefixName: string;
-  nameLength: number;
-  prefixUri: string;
-  uriLength: number;
-  isSequential: boolean;
-};
+  prefixName: string
+  nameLength: number
+  prefixUri: string
+  uriLength: number
+  isSequential: boolean
+}
 
 /**
  * @category userTypes
  * @category generated
  */
-export const configLineSettingsBeet = new beet.FixableBeetArgsStruct<ConfigLineSettings>(
-  [
-    ['prefixName', beet.utf8String],
-    ['nameLength', beet.u32],
-    ['prefixUri', beet.utf8String],
-    ['uriLength', beet.u32],
-    ['isSequential', beet.bool],
-  ],
-  'ConfigLineSettings',
-);
+export const configLineSettingsBeet =
+  new beet.FixableBeetArgsStruct<ConfigLineSettings>(
+    [
+      ['prefixName', beet.utf8String],
+      ['nameLength', beet.u32],
+      ['prefixUri', beet.utf8String],
+      ['uriLength', beet.u32],
+      ['isSequential', beet.bool],
+    ],
+    'ConfigLineSettings'
+  )

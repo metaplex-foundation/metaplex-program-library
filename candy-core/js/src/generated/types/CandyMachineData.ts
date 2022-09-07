@@ -5,35 +5,39 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet';
-import { Creator, creatorBeet } from './Creator';
-import { ConfigLineSettings, configLineSettingsBeet } from './ConfigLineSettings';
-import { HiddenSettings, hiddenSettingsBeet } from './HiddenSettings';
+import * as beet from '@metaplex-foundation/beet'
+import { Creator, creatorBeet } from './Creator'
+import {
+  ConfigLineSettings,
+  configLineSettingsBeet,
+} from './ConfigLineSettings'
+import { HiddenSettings, hiddenSettingsBeet } from './HiddenSettings'
 export type CandyMachineData = {
-  itemsAvailable: beet.bignum;
-  symbol: string;
-  sellerFeeBasisPoints: number;
-  maxSupply: beet.bignum;
-  isMutable: boolean;
-  creators: Creator[];
-  configLineSettings: beet.COption<ConfigLineSettings>;
-  hiddenSettings: beet.COption<HiddenSettings>;
-};
+  itemsAvailable: beet.bignum
+  symbol: string
+  sellerFeeBasisPoints: number
+  maxSupply: beet.bignum
+  isMutable: boolean
+  creators: Creator[]
+  configLineSettings: beet.COption<ConfigLineSettings>
+  hiddenSettings: beet.COption<HiddenSettings>
+}
 
 /**
  * @category userTypes
  * @category generated
  */
-export const candyMachineDataBeet = new beet.FixableBeetArgsStruct<CandyMachineData>(
-  [
-    ['itemsAvailable', beet.u64],
-    ['symbol', beet.utf8String],
-    ['sellerFeeBasisPoints', beet.u16],
-    ['maxSupply', beet.u64],
-    ['isMutable', beet.bool],
-    ['creators', beet.array(creatorBeet)],
-    ['configLineSettings', beet.coption(configLineSettingsBeet)],
-    ['hiddenSettings', beet.coption(hiddenSettingsBeet)],
-  ],
-  'CandyMachineData',
-);
+export const candyMachineDataBeet =
+  new beet.FixableBeetArgsStruct<CandyMachineData>(
+    [
+      ['itemsAvailable', beet.u64],
+      ['symbol', beet.utf8String],
+      ['sellerFeeBasisPoints', beet.u16],
+      ['maxSupply', beet.u64],
+      ['isMutable', beet.bool],
+      ['creators', beet.array(creatorBeet)],
+      ['configLineSettings', beet.coption(configLineSettingsBeet)],
+      ['hiddenSettings', beet.coption(hiddenSettingsBeet)],
+    ],
+    'CandyMachineData'
+  )

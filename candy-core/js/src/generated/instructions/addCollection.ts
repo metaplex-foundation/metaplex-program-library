@@ -5,8 +5,8 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet';
-import * as web3 from '@solana/web3.js';
+import * as beet from '@metaplex-foundation/beet'
+import * as web3 from '@solana/web3.js'
 
 /**
  * @category Instructions
@@ -14,11 +14,11 @@ import * as web3 from '@solana/web3.js';
  * @category generated
  */
 export const addCollectionStruct = new beet.BeetArgsStruct<{
-  instructionDiscriminator: number[] /* size: 8 */;
+  instructionDiscriminator: number[] /* size: 8 */
 }>(
   [['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)]],
-  'AddCollectionInstructionArgs',
-);
+  'AddCollectionInstructionArgs'
+)
 /**
  * Accounts required by the _addCollection_ instruction
  *
@@ -37,21 +37,23 @@ export const addCollectionStruct = new beet.BeetArgsStruct<{
  * @category generated
  */
 export type AddCollectionInstructionAccounts = {
-  candyMachine: web3.PublicKey;
-  authority: web3.PublicKey;
-  updateAuthority: web3.PublicKey;
-  payer: web3.PublicKey;
-  collectionAuthority: web3.PublicKey;
-  collectionMetadata: web3.PublicKey;
-  collectionMint: web3.PublicKey;
-  collectionEdition: web3.PublicKey;
-  collectionAuthorityRecord: web3.PublicKey;
-  tokenMetadataProgram: web3.PublicKey;
-  systemProgram?: web3.PublicKey;
-  rent?: web3.PublicKey;
-};
+  candyMachine: web3.PublicKey
+  authority: web3.PublicKey
+  updateAuthority: web3.PublicKey
+  payer: web3.PublicKey
+  collectionAuthority: web3.PublicKey
+  collectionMetadata: web3.PublicKey
+  collectionMint: web3.PublicKey
+  collectionEdition: web3.PublicKey
+  collectionAuthorityRecord: web3.PublicKey
+  tokenMetadataProgram: web3.PublicKey
+  systemProgram?: web3.PublicKey
+  rent?: web3.PublicKey
+}
 
-export const addCollectionInstructionDiscriminator = [79, 172, 225, 142, 219, 192, 171, 80];
+export const addCollectionInstructionDiscriminator = [
+  79, 172, 225, 142, 219, 192, 171, 80,
+]
 
 /**
  * Creates a _AddCollection_ instruction.
@@ -63,11 +65,11 @@ export const addCollectionInstructionDiscriminator = [79, 172, 225, 142, 219, 19
  */
 export function createAddCollectionInstruction(
   accounts: AddCollectionInstructionAccounts,
-  programId = new web3.PublicKey('cndy3CZK71ZHMp9ddpq5NVvQDx33o6cCYDf4JBAWCk7'),
+  programId = new web3.PublicKey('cndy3CZK71ZHMp9ddpq5NVvQDx33o6cCYDf4JBAWCk7')
 ) {
   const [data] = addCollectionStruct.serialize({
     instructionDiscriminator: addCollectionInstructionDiscriminator,
-  });
+  })
   const keys: web3.AccountMeta[] = [
     {
       pubkey: accounts.candyMachine,
@@ -129,12 +131,12 @@ export function createAddCollectionInstruction(
       isWritable: false,
       isSigner: false,
     },
-  ];
+  ]
 
   const ix = new web3.TransactionInstruction({
     programId,
     keys,
     data,
-  });
-  return ix;
+  })
+  return ix
 }

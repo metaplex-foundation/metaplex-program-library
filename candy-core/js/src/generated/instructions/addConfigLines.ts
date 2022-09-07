@@ -5,9 +5,9 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet';
-import * as web3 from '@solana/web3.js';
-import { ConfigLine, configLineBeet } from '../types/ConfigLine';
+import * as beet from '@metaplex-foundation/beet'
+import * as web3 from '@solana/web3.js'
+import { ConfigLine, configLineBeet } from '../types/ConfigLine'
 
 /**
  * @category Instructions
@@ -15,9 +15,9 @@ import { ConfigLine, configLineBeet } from '../types/ConfigLine';
  * @category generated
  */
 export type AddConfigLinesInstructionArgs = {
-  index: number;
-  configLines: ConfigLine[];
-};
+  index: number
+  configLines: ConfigLine[]
+}
 /**
  * @category Instructions
  * @category AddConfigLines
@@ -25,7 +25,7 @@ export type AddConfigLinesInstructionArgs = {
  */
 export const addConfigLinesStruct = new beet.FixableBeetArgsStruct<
   AddConfigLinesInstructionArgs & {
-    instructionDiscriminator: number[] /* size: 8 */;
+    instructionDiscriminator: number[] /* size: 8 */
   }
 >(
   [
@@ -33,8 +33,8 @@ export const addConfigLinesStruct = new beet.FixableBeetArgsStruct<
     ['index', beet.u32],
     ['configLines', beet.array(configLineBeet)],
   ],
-  'AddConfigLinesInstructionArgs',
-);
+  'AddConfigLinesInstructionArgs'
+)
 /**
  * Accounts required by the _addConfigLines_ instruction
  *
@@ -45,11 +45,13 @@ export const addConfigLinesStruct = new beet.FixableBeetArgsStruct<
  * @category generated
  */
 export type AddConfigLinesInstructionAccounts = {
-  candyMachine: web3.PublicKey;
-  authority: web3.PublicKey;
-};
+  candyMachine: web3.PublicKey
+  authority: web3.PublicKey
+}
 
-export const addConfigLinesInstructionDiscriminator = [223, 50, 224, 227, 151, 8, 115, 106];
+export const addConfigLinesInstructionDiscriminator = [
+  223, 50, 224, 227, 151, 8, 115, 106,
+]
 
 /**
  * Creates a _AddConfigLines_ instruction.
@@ -64,12 +66,12 @@ export const addConfigLinesInstructionDiscriminator = [223, 50, 224, 227, 151, 8
 export function createAddConfigLinesInstruction(
   accounts: AddConfigLinesInstructionAccounts,
   args: AddConfigLinesInstructionArgs,
-  programId = new web3.PublicKey('cndy3CZK71ZHMp9ddpq5NVvQDx33o6cCYDf4JBAWCk7'),
+  programId = new web3.PublicKey('cndy3CZK71ZHMp9ddpq5NVvQDx33o6cCYDf4JBAWCk7')
 ) {
   const [data] = addConfigLinesStruct.serialize({
     instructionDiscriminator: addConfigLinesInstructionDiscriminator,
     ...args,
-  });
+  })
   const keys: web3.AccountMeta[] = [
     {
       pubkey: accounts.candyMachine,
@@ -81,12 +83,12 @@ export function createAddConfigLinesInstruction(
       isWritable: false,
       isSigner: true,
     },
-  ];
+  ]
 
   const ix = new web3.TransactionInstruction({
     programId,
     keys,
     data,
-  });
-  return ix;
+  })
+  return ix
 }
