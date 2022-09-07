@@ -16,7 +16,7 @@ pub fn delete_pack_config(program_id: &Pubkey, accounts: &[AccountInfo]) -> Prog
     let refunder_account = next_account_info(account_info_iter)?;
     let authority_account = next_account_info(account_info_iter)?;
 
-    assert_signer(&authority_account)?;
+    assert_signer(authority_account)?;
 
     let pack_set = PackSet::unpack(&pack_set_account.data.borrow_mut())?;
 

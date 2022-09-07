@@ -164,7 +164,17 @@ export class EntangledPair implements EntangledPairArgs {
       bump: this.bump,
       tokenAEscrowBump: this.tokenAEscrowBump,
       tokenBEscrowBump: this.tokenBEscrowBump,
-      price: this.price,
+      price: (() => {
+        const x = <{ toNumber: () => number }>this.price;
+        if (typeof x.toNumber === 'function') {
+          try {
+            return x.toNumber();
+          } catch (_) {
+            return x;
+          }
+        }
+        return x;
+      })(),
       paid: this.paid,
       paysEveryTime: this.paysEveryTime,
     };

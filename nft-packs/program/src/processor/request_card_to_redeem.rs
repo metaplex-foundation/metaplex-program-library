@@ -76,7 +76,7 @@ pub fn request_card_for_redeem(
     let store = Store::from_account_info(store_account)?;
 
     assert_owned_by(edition_data_account, &store.token_metadata_program)?;
-    assert_signer(&user_wallet_account)?;
+    assert_signer(user_wallet_account)?;
 
     let pack_set = PackSet::unpack(&pack_set_account.data.borrow())?;
     assert_account_key(store_account, &pack_set.store)?;

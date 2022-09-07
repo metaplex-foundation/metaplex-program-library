@@ -4,11 +4,15 @@ use anchor_client::solana_sdk::{
     pubkey::Pubkey,
     signer::{keypair::Keypair, Signer},
 };
+use mpl_testing_utils::assert_error;
 use mpl_token_metadata::state::Collection;
+use solana_program::instruction::InstructionError;
 use solana_program::{clock::Clock, system_instruction};
 use solana_program_test::*;
 use solana_sdk::{program_pack::Pack, transaction::Transaction};
+use solana_sdk::{transaction::TransactionError, transport::TransportError};
 use std::convert::TryFrom;
+use std::env;
 
 pub async fn mint_to(
     context: &mut ProgramTestContext,
@@ -61,7 +65,7 @@ pub async fn create_token_account(
             .unwrap(),
         ],
         Some(&context.payer.pubkey()),
-        &[&context.payer, &account],
+        &[&context.payer, account],
         context.last_blockhash,
     );
 
@@ -365,4 +369,57 @@ pub async fn create_master_nft(
     }
 
     (mint.pubkey(), token_account.pubkey(), metadata)
+}
+
+/// In CI we're running into IoError(the request exceeded its deadline) which is most likely a
+/// timing issue that happens due to decreased performance.
+/// Increasing compute limits seems to have made this happen less often, but for a few tests we
+/// still observe this behavior which makes tests fail in CI for the wrong reason.
+/// The below is a workaround to make it even less likely.
+/// Tests are still brittle, but fail much less often which is the best we can do for now aside
+/// from disabling the problematic tests in CI entirely.
+pub fn assert_error_ignoring_io_error_in_ci(error: &TransportError, error_code: u32) {
+    match error {
+        TransportError::IoError(err) if env::var("CI").is_ok() => {
+            match err.kind() {
+                std::io::ErrorKind::Other
+                    if &err.to_string() == "the request exceeded its deadline" =>
+                {
+                    eprintln!("Encountered {:#?} error", err);
+                    eprintln!("However since we are running in CI this is acceptable and we can ignore it");
+                }
+                _ => {
+                    eprintln!("Encountered {:#?} error ({})", err, err);
+                    panic!("Encountered unknown IoError");
+                }
+            }
+        }
+        _ => {
+            assert_error!(error, &error_code)
+        }
+    }
+}
+
+/// See `assert_error_ignoring_io_error_in_ci` for more details regarding this workaround
+pub fn unwrap_ignoring_io_error_in_ci(result: Result<(), TransportError>) {
+    match result {
+        Ok(()) => (),
+        Err(error) => match error {
+            TransportError::IoError(err) if env::var("CI").is_ok() => match err.kind() {
+                std::io::ErrorKind::Other
+                    if &err.to_string() == "the request exceeded its deadline" =>
+                {
+                    eprintln!("Encountered {:#?} error", err);
+                    eprintln!("However since we are running in CI this is acceptable and we can ignore it");
+                }
+                _ => {
+                    eprintln!("Encountered {:#?} error ({})", err, err);
+                    panic!("Encountered unknown IoError");
+                }
+            },
+            _ => {
+                panic!("Encountered: {:#?}", error);
+            }
+        },
+    }
 }

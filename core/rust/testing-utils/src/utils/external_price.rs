@@ -14,6 +14,12 @@ pub struct ExternalPrice {
     pub price_mint: Keypair,
 }
 
+impl Default for ExternalPrice {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ExternalPrice {
     pub fn new() -> Self {
         ExternalPrice {
@@ -52,7 +58,7 @@ impl ExternalPrice {
             context.last_blockhash,
         );
 
-        Ok(context.banks_client.process_transaction(tx).await?)
+        context.banks_client.process_transaction(tx).await
     }
 
     pub async fn create(&self, context: &mut ProgramTestContext) -> transport::Result<()> {
@@ -78,6 +84,6 @@ impl ExternalPrice {
             context.last_blockhash,
         );
 
-        Ok(context.banks_client.process_transaction(tx).await?)
+        context.banks_client.process_transaction(tx).await
     }
 }

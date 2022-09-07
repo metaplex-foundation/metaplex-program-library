@@ -39,7 +39,7 @@ impl<'info> Buy<'info> {
         let token_program = &self.token_program;
         let system_program = &self.system_program;
 
-        let metadata_mint = selling_resource.resource.clone();
+        let metadata_mint = selling_resource.resource;
         // do supply +1 to increase master edition supply
         let edition = get_supply_off_master_edition(&master_edition.to_account_info())?
             .checked_add(1)
@@ -85,7 +85,7 @@ impl<'info> Buy<'info> {
 
         Self::verify_gating_token(
             &market.gatekeeper,
-            &user_wallet,
+            user_wallet,
             remaining_accounts,
             clock.unix_timestamp as u64,
         )?;
@@ -137,7 +137,7 @@ impl<'info> Buy<'info> {
             &master_edition_metadata.to_account_info(),
             &master_edition.to_account_info(),
             &metadata_mint,
-            &edition_marker_info,
+            edition_marker_info,
             &token_program.to_account_info(),
             &system_program.to_account_info(),
             &rent.to_account_info(),
