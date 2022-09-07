@@ -7,6 +7,7 @@
 
 import * as beet from '@metaplex-foundation/beet';
 import * as web3 from '@solana/web3.js';
+import * as beetSolana from '@metaplex-foundation/beet-solana';
 import { Creator, creatorBeet } from '../types/Creator';
 
 /**
@@ -18,7 +19,7 @@ export type PrimaryMetadataCreatorsArgs = {
   creators: Creator[];
 };
 
-const primaryMetadataCreatorsDiscriminator = [66, 131, 48, 36, 100, 130, 177, 11];
+export const primaryMetadataCreatorsDiscriminator = [66, 131, 48, 36, 100, 130, 177, 11];
 /**
  * Holds the data for the {@link PrimaryMetadataCreators} Account and provides de/serialization
  * functionality for that data
@@ -62,6 +63,18 @@ export class PrimaryMetadataCreators implements PrimaryMetadataCreatorsArgs {
       throw new Error(`Unable to find PrimaryMetadataCreators account at ${address}`);
     }
     return PrimaryMetadataCreators.fromAccountInfo(accountInfo, 0)[0];
+  }
+
+  /**
+   * Provides a {@link web3.Connection.getProgramAccounts} config builder,
+   * to fetch accounts matching filters that can be specified via that builder.
+   *
+   * @param programId - the program that owns the accounts we are filtering
+   */
+  static gpaBuilder(
+    programId: web3.PublicKey = new web3.PublicKey('SaLeTjyUa5wXHnGuewUSyJ5JWZaHwz3TxqUntCE9czo'),
+  ) {
+    return beetSolana.GpaBuilder.fromStruct(programId, primaryMetadataCreatorsBeet);
   }
 
   /**

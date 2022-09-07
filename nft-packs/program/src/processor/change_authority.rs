@@ -19,7 +19,7 @@ pub fn transfer_authority(_program_id: &Pubkey, accounts: &[AccountInfo]) -> Pro
     let authority_account = next_account_info(account_info_iter)?;
     let new_authority_account = next_account_info(account_info_iter)?;
 
-    assert_signer(&authority_account)?;
+    assert_signer(authority_account)?;
 
     let mut pack_set = PackSet::unpack(&pack_set_account.data.borrow_mut())?;
     assert_account_key(authority_account, &pack_set.authority)?;

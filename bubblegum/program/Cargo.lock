@@ -387,14 +387,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "14c189c53d098945499cdfa7ecc63567cf3886b3332b312a5b4585d8d3a6a610"
 
 [[package]]
-name = "candy-wrapper"
-version = "0.1.0"
-source = "git+https://github.com/jarry-xiao/candyland.git#267add73f5edff33201f473fccc48687359302c4"
-dependencies = [
- "solana-program",
-]
-
-[[package]]
 name = "cc"
 version = "1.0.73"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -405,16 +397,6 @@ name = "cfg-if"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
-
-[[package]]
-name = "concurrent-merkle-tree"
-version = "0.1.0"
-source = "git+https://github.com/jarry-xiao/candyland.git#267add73f5edff33201f473fccc48687359302c4"
-dependencies = [
- "bytemuck",
- "solana-program",
- "thiserror",
-]
 
 [[package]]
 name = "console_error_panic_hook"
@@ -600,17 +582,6 @@ dependencies = [
  "cfg-if",
  "libc",
  "wasi 0.11.0+wasi-snapshot-preview1",
-]
-
-[[package]]
-name = "gummyroll"
-version = "0.1.0"
-source = "git+https://github.com/jarry-xiao/candyland.git#267add73f5edff33201f473fccc48687359302c4"
-dependencies = [
- "anchor-lang",
- "bytemuck",
- "candy-wrapper",
- "concurrent-merkle-tree",
 ]
 
 [[package]]
@@ -817,15 +788,18 @@ dependencies = [
  "anchor-lang",
  "anchor-spl",
  "bytemuck",
- "gummyroll",
  "mpl-token-metadata",
+ "solana-program",
  "spl-associated-token-account",
+ "spl-compression",
  "spl-token",
 ]
 
 [[package]]
 name = "mpl-token-metadata"
-version = "1.3.5"
+version = "1.3.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3af5d66f2608f309ae54488f5e5154c98a1a860a15018426620b8ace580ed685"
 dependencies = [
  "arrayref",
  "borsh",
@@ -1261,9 +1235,9 @@ checksum = "2fd0db749597d91ff862fd1d55ea87f7855a744a8425a64695b6fca237d1dad1"
 
 [[package]]
 name = "solana-frozen-abi"
-version = "1.10.34"
+version = "1.10.38"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "82e98bd52827bff5f57c7dad4a42163bceba92b8a330fde2edb000976146ca26"
+checksum = "95185172953a206d2aae8e4448d8f295c9b6e3304c43efded5192d3cc5b99d04"
 dependencies = [
  "bs58 0.4.0",
  "bv",
@@ -1283,9 +1257,9 @@ dependencies = [
 
 [[package]]
 name = "solana-frozen-abi-macro"
-version = "1.10.34"
+version = "1.10.38"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b45334ad9c4abcc2946c4de684616bb155d5b9c4705d22de9b7fb17a902bcc58"
+checksum = "289cfcb10682a5338f7eb2d6b1c3564975176ec7e4fb3ee1d3ff5c52f4c397fd"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1295,9 +1269,9 @@ dependencies = [
 
 [[package]]
 name = "solana-program"
-version = "1.10.34"
+version = "1.10.38"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ee21d6a0e27792587baf99e024938bc63d8ec7652ef0abfadb85814d616d8862"
+checksum = "7eca3c0f4eec9c7df7c950ac2410ccbbc9beecba19da3135c3ed68425242bb96"
 dependencies = [
  "base64 0.13.0",
  "bincode",
@@ -1337,9 +1311,9 @@ dependencies = [
 
 [[package]]
 name = "solana-sdk-macro"
-version = "1.10.34"
+version = "1.10.38"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "79cbfc2108bbe9f02851efc7b09f11b1eb9d9331eedbdf015b8815c9adf3b7aa"
+checksum = "dbabfc15b3d4ae7cb725b7959cf9de3ad29b53a76ec0babe6c2cb36049d2c582"
 dependencies = [
  "bs58 0.4.0",
  "proc-macro2",
@@ -1357,6 +1331,27 @@ dependencies = [
  "borsh",
  "solana-program",
  "spl-token",
+]
+
+[[package]]
+name = "spl-compression"
+version = "0.1.0"
+source = "git+https://github.com/solana-labs/solana-program-library?rev=7c7507f4ec1f320bbc33af459d4d8b5573a6a906#7c7507f4ec1f320bbc33af459d4d8b5573a6a906"
+dependencies = [
+ "anchor-lang",
+ "bytemuck",
+ "spl-concurrent-merkle-tree",
+ "wrapper",
+]
+
+[[package]]
+name = "spl-concurrent-merkle-tree"
+version = "0.1.0"
+source = "git+https://github.com/solana-labs/solana-program-library?rev=7c7507f4ec1f320bbc33af459d4d8b5573a6a906#7c7507f4ec1f320bbc33af459d4d8b5573a6a906"
+dependencies = [
+ "bytemuck",
+ "solana-program",
+ "thiserror",
 ]
 
 [[package]]
@@ -1562,6 +1557,14 @@ name = "windows_x86_64_msvc"
 version = "0.36.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c811ca4a8c853ef420abd8592ba53ddbbac90410fab6903b3e79972a631f7680"
+
+[[package]]
+name = "wrapper"
+version = "0.1.0"
+source = "git+https://github.com/solana-labs/solana-program-library?rev=7c7507f4ec1f320bbc33af459d4d8b5573a6a906#7c7507f4ec1f320bbc33af459d4d8b5573a6a906"
+dependencies = [
+ "solana-program",
+]
 
 [[package]]
 name = "yansi"

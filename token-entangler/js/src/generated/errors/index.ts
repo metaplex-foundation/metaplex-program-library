@@ -315,6 +315,26 @@ createErrorFromCodeLookup.set(0x177e, () => new MustHaveSupplyOneError());
 createErrorFromNameLookup.set('MustHaveSupplyOne', () => new MustHaveSupplyOneError());
 
 /**
+ * BumpSeedNotInHashMap: 'Bump seed not in hash map'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class BumpSeedNotInHashMapError extends Error {
+  readonly code: number = 0x177f;
+  readonly name: string = 'BumpSeedNotInHashMap';
+  constructor() {
+    super('Bump seed not in hash map');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, BumpSeedNotInHashMapError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x177f, () => new BumpSeedNotInHashMapError());
+createErrorFromNameLookup.set('BumpSeedNotInHashMap', () => new BumpSeedNotInHashMapError());
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

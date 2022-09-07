@@ -26,7 +26,7 @@ export type SellingResourceArgs = {
   state: SellingResourceState;
 };
 
-const sellingResourceDiscriminator = [15, 32, 69, 235, 249, 39, 18, 167];
+export const sellingResourceDiscriminator = [15, 32, 69, 235, 249, 39, 18, 167];
 /**
  * Holds the data for the {@link SellingResource} Account and provides de/serialization
  * functionality for that data
@@ -91,6 +91,18 @@ export class SellingResource implements SellingResourceArgs {
   }
 
   /**
+   * Provides a {@link web3.Connection.getProgramAccounts} config builder,
+   * to fetch accounts matching filters that can be specified via that builder.
+   *
+   * @param programId - the program that owns the accounts we are filtering
+   */
+  static gpaBuilder(
+    programId: web3.PublicKey = new web3.PublicKey('SaLeTjyUa5wXHnGuewUSyJ5JWZaHwz3TxqUntCE9czo'),
+  ) {
+    return beetSolana.GpaBuilder.fromStruct(programId, sellingResourceBeet);
+  }
+
+  /**
    * Deserializes the {@link SellingResource} from the provided data Buffer.
    * @returns a tuple of the account data and the offset up to which the buffer was read to obtain it.
    */
@@ -151,7 +163,17 @@ export class SellingResource implements SellingResourceArgs {
       resource: this.resource.toBase58(),
       vault: this.vault.toBase58(),
       vaultOwner: this.vaultOwner.toBase58(),
-      supply: this.supply,
+      supply: (() => {
+        const x = <{ toNumber: () => number }>this.supply;
+        if (typeof x.toNumber === 'function') {
+          try {
+            return x.toNumber();
+          } catch (_) {
+            return x;
+          }
+        }
+        return x;
+      })(),
       maxSupply: this.maxSupply,
       state: 'SellingResourceState.' + SellingResourceState[this.state],
     };

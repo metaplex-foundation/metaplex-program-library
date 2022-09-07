@@ -312,9 +312,9 @@ checksum = "d468802bab17cbc0cc575e9b053f41e72aa36bfa6b7f55e3529ffa43161b97fa"
 
 [[package]]
 name = "backtrace"
-version = "0.3.65"
+version = "0.3.66"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "11a17d453482a265fd5f8479f2a3f405566e6ca627837aaddb85af8b1ab8ef61"
+checksum = "cab84319d616cfb654d03394f38ab7e6f0919e181b1b57e1fd15e7fb4077d9a7"
 dependencies = [
  "addr2line",
  "cc",
@@ -1202,9 +1202,9 @@ dependencies = [
 
 [[package]]
 name = "gimli"
-version = "0.26.1"
+version = "0.26.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "78cc372d058dcf6d5ecd98510e7fbc9e5aec4d21de70f65fea8fecebcd881bd4"
+checksum = "22030e2c5a68ec659fde1e949a745124b48e6fa8b045b7ed5bd1fe4ccc5c4e5d"
 
 [[package]]
 name = "goblin"
@@ -1743,11 +1743,11 @@ dependencies = [
  "anchor-client",
  "borsh",
  "mpl-token-metadata",
- "mpl-token-vault 0.1.1",
+ "mpl-token-vault",
  "num",
  "num-derive",
  "num-traits",
- "rand 0.7.3",
+ "rand 0.8.5",
  "serde_json",
  "shellexpand",
  "solana-program",
@@ -1765,7 +1765,7 @@ checksum = "741990cd07cb31d009a345806f30ace8eab99c063cd9440eba8d3df7be2a6988"
 dependencies = [
  "arrayref",
  "borsh",
- "mpl-token-vault 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "mpl-token-vault",
  "num-derive",
  "num-traits",
  "shank",
@@ -1777,27 +1777,13 @@ dependencies = [
 
 [[package]]
 name = "mpl-token-vault"
-version = "0.1.1"
-dependencies = [
- "borsh",
- "num-derive",
- "num-traits",
- "shank",
- "solana-program",
- "spl-token",
- "thiserror",
-]
-
-[[package]]
-name = "mpl-token-vault"
-version = "0.1.1"
+version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "36789b99869391fcc1041509729db1183d2abb0ffe62b165fadd9fffba391fde"
+checksum = "7ade4ef15bc06a6033076c4ff28cba9b42521df5ec61211d6f419415ace2746a"
 dependencies = [
  "borsh",
  "num-derive",
  "num-traits",
- "shank",
  "solana-program",
  "spl-token",
  "thiserror",
@@ -1951,9 +1937,9 @@ checksum = "830b246a0e5f20af87141b25c173cd1b609bd7779a4617d6ec582abaf90870f3"
 
 [[package]]
 name = "object"
-version = "0.28.4"
+version = "0.29.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e42c982f2d955fac81dd7e1d0e1426a7d702acd9c98d19ab01083a6a0328c424"
+checksum = "21158b2c33aa6d4561f1c0a6ea283ca92bc54802a93b263e910746d679a7eb53"
 dependencies = [
  "memchr",
 ]
@@ -2635,18 +2621,18 @@ dependencies = [
 
 [[package]]
 name = "shank"
-version = "0.0.2"
+version = "0.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a9cfd616747d1ce69f15e62ea30589e393115e4b884d7c1cbceb751b8753e95d"
+checksum = "85a6c6cad96abd1fd950d1df186ec02e786566161f03adadbb7cf157ae9a82d8"
 dependencies = [
  "shank_macro",
 ]
 
 [[package]]
 name = "shank_macro"
-version = "0.0.2"
+version = "0.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0a27d3b536acc60a3ff359181d3a912d10b91539f85909447ca7d33ea0a91d56"
+checksum = "c0b3bf722b43cea02627c7fd89925f5861f7aa27604c1852720f8eee1a73523d"
 dependencies = [
  "proc-macro2 1.0.39",
  "quote 1.0.18",
@@ -2656,9 +2642,9 @@ dependencies = [
 
 [[package]]
 name = "shank_macro_impl"
-version = "0.0.2"
+version = "0.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c7466a15559fd11aeb5fe12a700923f75bb4eaa7bc90962f2bd822708698ab5d"
+checksum = "90a37f762b0529d64a9e3401ac3829e132f58fa9bc50b1fd6ad7b5a1a414a228"
 dependencies = [
  "anyhow",
  "proc-macro2 1.0.39",

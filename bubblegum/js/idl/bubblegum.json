@@ -31,12 +31,12 @@
           "isSigner": false
         },
         {
-          "name": "gummyrollProgram",
+          "name": "compressionProgram",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "merkleSlab",
+          "name": "merkleTree",
           "isMut": true,
           "isSigner": false
         }
@@ -85,7 +85,7 @@
           "isSigner": false
         },
         {
-          "name": "merkleSlab",
+          "name": "merkleTree",
           "isMut": false,
           "isSigner": false
         }
@@ -126,7 +126,7 @@
           "isSigner": false
         },
         {
-          "name": "merkleSlab",
+          "name": "merkleTree",
           "isMut": false,
           "isSigner": false
         }
@@ -157,7 +157,7 @@
           "isSigner": false
         },
         {
-          "name": "merkleSlab",
+          "name": "merkleTree",
           "isMut": false,
           "isSigner": false
         }
@@ -188,7 +188,7 @@
           "isSigner": false
         },
         {
-          "name": "merkleSlab",
+          "name": "merkleTree",
           "isMut": false,
           "isSigner": false
         }
@@ -209,7 +209,7 @@
           "isSigner": false
         },
         {
-          "name": "merkleSlab",
+          "name": "merkleTree",
           "isMut": false,
           "isSigner": false
         },
@@ -240,7 +240,7 @@
           "isSigner": false
         },
         {
-          "name": "gummyrollProgram",
+          "name": "compressionProgram",
           "isMut": false,
           "isSigner": false
         },
@@ -260,7 +260,7 @@
           "isSigner": false
         },
         {
-          "name": "merkleSlab",
+          "name": "merkleTree",
           "isMut": true,
           "isSigner": false
         }
@@ -308,12 +308,12 @@
           "isSigner": false
         },
         {
-          "name": "gummyrollProgram",
+          "name": "compressionProgram",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "merkleSlab",
+          "name": "merkleTree",
           "isMut": true,
           "isSigner": false
         }
@@ -396,12 +396,12 @@
           "isSigner": false
         },
         {
-          "name": "gummyrollProgram",
+          "name": "compressionProgram",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "merkleSlab",
+          "name": "merkleTree",
           "isMut": true,
           "isSigner": false
         }
@@ -513,12 +513,12 @@
           "isSigner": false
         },
         {
-          "name": "gummyrollProgram",
+          "name": "compressionProgram",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "merkleSlab",
+          "name": "merkleTree",
           "isMut": true,
           "isSigner": false
         },
@@ -635,12 +635,12 @@
           "isSigner": false
         },
         {
-          "name": "gummyrollProgram",
+          "name": "compressionProgram",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "merkleSlab",
+          "name": "merkleTree",
           "isMut": true,
           "isSigner": false
         },
@@ -757,12 +757,12 @@
           "isSigner": false
         },
         {
-          "name": "gummyrollProgram",
+          "name": "compressionProgram",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "merkleSlab",
+          "name": "merkleTree",
           "isMut": true,
           "isSigner": false
         },
@@ -854,12 +854,12 @@
           "isSigner": false
         },
         {
-          "name": "gummyrollProgram",
+          "name": "compressionProgram",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "merkleSlab",
+          "name": "merkleTree",
           "isMut": true,
           "isSigner": false
         }
@@ -931,12 +931,12 @@
           "isSigner": false
         },
         {
-          "name": "gummyrollProgram",
+          "name": "compressionProgram",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "merkleSlab",
+          "name": "merkleTree",
           "isMut": true,
           "isSigner": false
         }
@@ -993,7 +993,7 @@
           "isSigner": false
         },
         {
-          "name": "gummyrollProgram",
+          "name": "compressionProgram",
           "isMut": false,
           "isSigner": false
         },
@@ -1008,7 +1008,7 @@
           "isSigner": false
         },
         {
-          "name": "merkleSlab",
+          "name": "merkleTree",
           "isMut": true,
           "isSigner": false
         }
@@ -1065,7 +1065,7 @@
           "isSigner": false
         },
         {
-          "name": "gummyrollProgram",
+          "name": "compressionProgram",
           "isMut": false,
           "isSigner": false
         },
@@ -1080,7 +1080,7 @@
           "isSigner": false
         },
         {
-          "name": "merkleSlab",
+          "name": "merkleTree",
           "isMut": true,
           "isSigner": false
         },
@@ -1147,12 +1147,12 @@
           "isSigner": false
         },
         {
-          "name": "gummyrollProgram",
+          "name": "compressionProgram",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "merkleSlab",
+          "name": "merkleTree",
           "isMut": true,
           "isSigner": false
         },
@@ -1261,7 +1261,7 @@
           "isSigner": false
         },
         {
-          "name": "merkleSlab",
+          "name": "merkleTree",
           "isMut": false,
           "isSigner": false
         },
@@ -1321,7 +1321,7 @@
           "isSigner": false
         },
         {
-          "name": "gummyrollProgram",
+          "name": "compressionProgram",
           "isMut": false,
           "isSigner": false
         }
@@ -1394,7 +1394,7 @@
             "type": "u32"
           },
           {
-            "name": "merkleSlab",
+            "name": "merkleTree",
             "type": "publicKey"
           }
         ]
@@ -1700,6 +1700,24 @@
           },
           {
             "name": "Burn"
+          },
+          {
+            "name": "CreateTree"
+          },
+          {
+            "name": "VerifyCreator"
+          },
+          {
+            "name": "UnverifyCreator"
+          },
+          {
+            "name": "VerifyCollection"
+          },
+          {
+            "name": "UnverifyCollection"
+          },
+          {
+            "name": "SetAndVerifyCollection"
           }
         ]
       }
@@ -1835,88 +1853,108 @@
     },
     {
       "code": 6009,
+      "name": "CreatorHashMismatch",
+      "msg": "User-provided creator Vec must result in same user-provided creator hash"
+    },
+    {
+      "code": 6010,
+      "name": "DataHashMismatch",
+      "msg": "User-provided metadata must result in same user-provided data hash"
+    },
+    {
+      "code": 6011,
       "name": "CreatorsTooLong",
       "msg": "Creators list too long"
     },
     {
-      "code": 6010,
+      "code": 6012,
       "name": "MetadataNameTooLong",
       "msg": "Name in metadata is too long"
     },
     {
-      "code": 6011,
+      "code": 6013,
       "name": "MetadataSymbolTooLong",
       "msg": "Symbol in metadata is too long"
     },
     {
-      "code": 6012,
+      "code": 6014,
       "name": "MetadataUriTooLong",
       "msg": "Uri in metadata is too long"
     },
     {
-      "code": 6013,
+      "code": 6015,
       "name": "MetadataBasisPointsTooHigh",
       "msg": "Basis points in metadata cannot exceed 10000"
     },
     {
-      "code": 6014,
+      "code": 6016,
       "name": "InsufficientMintCapacity",
       "msg": "Not enough unapproved mints left"
     },
     {
-      "code": 6015,
+      "code": 6017,
       "name": "MintRequestNotApproved",
       "msg": "Mint request not approved"
     },
     {
-      "code": 6016,
+      "code": 6018,
       "name": "MintRequestKeyMismatch",
       "msg": "Mint authority key does not match request"
     },
     {
-      "code": 6017,
+      "code": 6019,
       "name": "MintRequestDiscriminatorMismatch",
       "msg": "Mint request data has incorrect disciminator"
     },
     {
-      "code": 6018,
+      "code": 6020,
       "name": "CloseMintRequestError",
       "msg": "Something went wrong closing mint request"
     },
     {
-      "code": 6019,
+      "code": 6021,
+      "name": "MintAuthorityMustSign",
+      "msg": "The mint authority must sign if it is not equal to the tree authority"
+    },
+    {
+      "code": 6022,
       "name": "NumericalOverflowError",
       "msg": "NumericalOverflowError"
     },
     {
-      "code": 6020,
+      "code": 6023,
       "name": "IncorrectOwner",
       "msg": "Incorrect account owner"
     },
     {
-      "code": 6021,
+      "code": 6024,
       "name": "CollectionCannotBeVerifiedInThisInstruction",
       "msg": "Cannot Verify Collection in this Instruction"
     },
     {
-      "code": 6022,
+      "code": 6025,
       "name": "CollectionNotFound",
       "msg": "Collection Not Found on Metadata"
     },
     {
-      "code": 6023,
+      "code": 6026,
       "name": "AlreadyVerified",
       "msg": "Collection item is already verified."
     },
     {
-      "code": 6024,
+      "code": 6027,
       "name": "AlreadyUnverified",
       "msg": "Collection item is already unverified."
     },
     {
-      "code": 6025,
+      "code": 6028,
       "name": "UpdateAuthorityIncorrect",
       "msg": "Incorrect leaf metadata update authority."
+    },
+    {
+      "code": 6029,
+      "name": "LeafAuthorityMustSign",
+      "msg": "This transaction must be signed by either the leaf owner or leaf delegate"
     }
   ],
   "metadata": {

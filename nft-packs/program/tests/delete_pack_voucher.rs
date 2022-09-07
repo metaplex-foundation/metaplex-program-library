@@ -235,7 +235,7 @@ async fn fail_invalid_state() {
 
     let result = test_pack_set
         .delete_voucher(&mut context, &test_pack_voucher, &payer_pubkey)
-        .await;
+        .await.unwrap_err();
 
-    assert_custom_error!(result.unwrap_err(), NFTPacksError::WrongPackState, 0);
+    assert_custom_error!(result, NFTPacksError::WrongPackState, 0);
 }

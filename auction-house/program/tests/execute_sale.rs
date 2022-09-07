@@ -4,7 +4,12 @@ pub mod common;
 pub mod utils;
 
 use common::*;
-use utils::{helpers::default_scopes, setup_functions::*};
+use utils::{
+    helpers::{
+        assert_error_ignoring_io_error_in_ci, default_scopes, unwrap_ignoring_io_error_in_ci,
+    },
+    setup_functions::*,
+};
 
 use anchor_lang::{AccountDeserialize, InstructionData, ToAccountMetas};
 use mpl_auction_house::pda::find_auctioneer_pda;
@@ -2223,7 +2228,7 @@ async fn execute_sale_partial_order_success() {
         .await
         .unwrap();
     assert!(!buyer_token_before.is_none());
-    context.banks_client.process_transaction(tx).await.unwrap();
+    unwrap_ignoring_io_error_in_ci(context.banks_client.process_transaction(tx).await);
 
     let seller_after = context
         .banks_client
@@ -2819,7 +2824,7 @@ async fn execute_sale_partial_order_order_exceeds_tokens() {
         .process_transaction(tx)
         .await
         .unwrap_err();
-    assert_error!(error, NOT_ENOUGH_TOKENS_AVAIL_FOR_PURCHASE);
+    assert_error_ignoring_io_error_in_ci(&error, NOT_ENOUGH_TOKENS_AVAIL_FOR_PURCHASE);
 }
 
 #[tokio::test]
@@ -3067,12 +3072,12 @@ async fn execute_sale_partial_order_fail_price_mismatch() {
         context.last_blockhash,
     );
 
-    let error = context
+    let error: TransportError = context
         .banks_client
         .process_transaction(tx)
         .await
         .unwrap_err();
-    assert_error!(error, PARTIAL_BUY_PRICE_MISMATCH);
+    assert_error_ignoring_io_error_in_ci(&error, PARTIAL_BUY_PRICE_MISMATCH);
 }
 
 #[tokio::test]

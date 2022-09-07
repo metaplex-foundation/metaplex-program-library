@@ -45,10 +45,10 @@ export const burnStruct = new beet.BeetArgsStruct<
  *
  * @property [] authority
  * @property [] candyWrapper
- * @property [] gummyrollProgram
+ * @property [] compressionProgram
  * @property [] owner
  * @property [] delegate
- * @property [_writable_] merkleSlab
+ * @property [_writable_] merkleTree
  * @category Instructions
  * @category Burn
  * @category generated
@@ -56,10 +56,10 @@ export const burnStruct = new beet.BeetArgsStruct<
 export type BurnInstructionAccounts = {
   authority: web3.PublicKey
   candyWrapper: web3.PublicKey
-  gummyrollProgram: web3.PublicKey
+  compressionProgram: web3.PublicKey
   owner: web3.PublicKey
   delegate: web3.PublicKey
-  merkleSlab: web3.PublicKey
+  merkleTree: web3.PublicKey
 }
 
 export const burnInstructionDiscriminator = [116, 110, 29, 56, 107, 219, 42, 93]
@@ -95,7 +95,7 @@ export function createBurnInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.gummyrollProgram,
+      pubkey: accounts.compressionProgram,
       isWritable: false,
       isSigner: false,
     },
@@ -110,7 +110,7 @@ export function createBurnInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.merkleSlab,
+      pubkey: accounts.merkleTree,
       isWritable: true,
       isSigner: false,
     },
