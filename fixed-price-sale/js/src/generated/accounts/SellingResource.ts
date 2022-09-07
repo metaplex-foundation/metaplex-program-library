@@ -26,7 +26,7 @@ export type SellingResourceArgs = {
   state: SellingResourceState;
 };
 
-const sellingResourceDiscriminator = [15, 32, 69, 235, 249, 39, 18, 167];
+export const sellingResourceDiscriminator = [15, 32, 69, 235, 249, 39, 18, 167];
 /**
  * Holds the data for the {@link SellingResource} Account and provides de/serialization
  * functionality for that data
@@ -88,6 +88,18 @@ export class SellingResource implements SellingResourceArgs {
       throw new Error(`Unable to find SellingResource account at ${address}`);
     }
     return SellingResource.fromAccountInfo(accountInfo, 0)[0];
+  }
+
+  /**
+   * Provides a {@link web3.Connection.getProgramAccounts} config builder,
+   * to fetch accounts matching filters that can be specified via that builder.
+   *
+   * @param programId - the program that owns the accounts we are filtering
+   */
+  static gpaBuilder(
+    programId: web3.PublicKey = new web3.PublicKey('SaLeTjyUa5wXHnGuewUSyJ5JWZaHwz3TxqUntCE9czo'),
+  ) {
+    return beetSolana.GpaBuilder.fromStruct(programId, sellingResourceBeet);
   }
 
   /**

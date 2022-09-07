@@ -1211,7 +1211,7 @@ __metadata:
     "@metaplex-foundation/beet-solana": ^0.1.1
     "@metaplex-foundation/mpl-core": ^0.0.5
     "@metaplex-foundation/mpl-token-metadata": 2.0.0
-    "@metaplex-foundation/solita": ^0.5.0
+    "@metaplex-foundation/solita": ^0.15.2
     "@solana/buffer-layout": ^4.0.0
     "@solana/spl-token": ^0.2.0
     "@solana/web3.js": ^1.37.0
