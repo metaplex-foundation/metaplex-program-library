@@ -7,6 +7,8 @@ use crate::{
     ID,
 };
 use borsh::{maybestd::io::Error as BorshError, BorshDeserialize, BorshSerialize};
+use num_derive::FromPrimitive;
+use num_traits::FromPrimitive;
 use shank::ShankAccount;
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
@@ -95,8 +97,13 @@ pub trait TokenMetadataAccount: BorshDeserialize {
     fn size() -> usize;
 
     fn is_correct_account_type(data: &[u8], data_type: Key, data_size: usize) -> bool {
-        (data[0] == data_type as u8 || data[0] == Key::Uninitialized as u8)
-            && (data.len() == data_size)
+        let key: Option<Key> = Key::from_u8(data[0]);
+        match key {
+            Some(key) => {
+                (key == data_type || key == Key::Uninitialized) && (data.len() == data_size)
+            }
+            None => false,
+        }
     }
 
     fn pad_length(buf: &mut Vec<u8>) -> Result<(), MetadataError> {
@@ -112,7 +119,7 @@ pub trait TokenMetadataAccount: BorshDeserialize {
             return Err(BorshError::new(ErrorKind::Other, "DataTypeMismatch"));
         }
 
-        let result: Self = Self::deserialize(&mut data)?;
+        let result = Self::deserialize(&mut data)?;
 
         Ok(result)
     }
@@ -131,7 +138,7 @@ where {
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, Copy)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, Copy, FromPrimitive)]
 pub enum Key {
     Uninitialized,
     EditionV1,
