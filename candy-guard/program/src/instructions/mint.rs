@@ -227,4 +227,6 @@ pub struct Mint<'info> {
     // transfer_authority_info
     // > needed if nft_payment guard enabled and burn is on
     // mint_account
+    // mint_master_edition
+    // mint_collection_metadata
 }

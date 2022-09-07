@@ -1,15 +1,13 @@
 use super::*;
 use crate::{
     errors::CandyGuardError,
-    utils::{
-        assert_is_token_account, assert_keys_equal, spl_token_burn, spl_token_transfer,
-        TokenBurnParams, TokenTransferParams,
-    },
+    utils::{assert_is_token_account, assert_keys_equal, spl_token_transfer, TokenTransferParams},
 };
 use mpl_token_metadata::{
     instruction::burn_nft,
     state::{Metadata, TokenMetadataAccount},
 };
+use solana_program::program::invoke;
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug)]
 pub struct NftPayment {
@@ -44,20 +42,24 @@ impl Condition for NftPayment {
         let _ = Self::get_account_info(ctx, token_account_index + 2)?;
         evaluation_context.account_cursor += 3;
 
-        // when burn is enabled, we need the mint_account
-        let mint_account = if self.burn {
-            Some(Self::get_account_info(ctx, token_account_index + 3)?)
+        // when burn is enabled, we need mint_account and mint_master_edition
+        let (mint_account, _mint_master_edition, _mint_collection_metadata) = if self.burn {
+            (
+                Some(Self::get_account_info(ctx, token_account_index + 3)?),
+                Some(Self::get_account_info(ctx, token_account_index + 4)?),
+                Some(Self::get_account_info(ctx, token_account_index + 5)?),
+            )
         } else {
-            None
+            (None, None, None)
         };
 
         let metadata: Metadata = Metadata::from_account_info(token_account_metadata)?;
         // validates the account information
         assert_keys_equal(token_account_metadata.owner, &mpl_token_metadata::id())?;
 
-        if let Some(mint_account) = mint_account {
-            evaluation_context.account_cursor += 1;
-            assert_keys_equal(&metadata.mint, mint_account.key)?;
+        if self.burn {
+            evaluation_context.account_cursor += 3;
+            assert_keys_equal(&metadata.mint, mint_account.unwrap().key)?;
         }
 
         let token_account = assert_is_token_account(
@@ -93,30 +95,37 @@ impl Condition for NftPayment {
         let index = evaluation_context.indices["nft_payment_index"];
         // the accounts have already been validated
         let token_account_info = Self::get_account_info(ctx, index)?;
+        let token_account_metadata = Self::get_account_info(ctx, index + 1)?;
         let transfer_authority_info = Self::get_account_info(ctx, index + 2)?;
 
         if self.burn {
             let mint_account = Self::get_account_info(ctx, index + 3)?;
-            spl_token_burn(TokenBurnParams {
-                mint: mint_account.to_account_info(),
-                source: token_account_info.to_account_info(),
-                authority: transfer_authority_info.to_account_info(),
-                authority_signer_seeds: None,
-                token_program: ctx.accounts.token_program.to_account_info(),
-                amount: evaluation_context.amount,
-            })?;
-            /*
+            let mint_master_edition = Self::get_account_info(ctx, index + 4)?;
+            let mint_collection_metadata = Self::get_account_info(ctx, index + 5)?;
+
             let burn_nft_infos = vec![
-                token_account_metadata,
-                &ctx.accounts.payer.to_account_info(),
-                mint_account,
-                token_account_info,
-            collection_mint.to_account_info(),
-            collection_metadata.to_account_info(),
-            collection_master_edition.to_account_info(),
-            collection_authority_record.to_account_info(),
+                token_account_metadata.to_account_info(),
+                ctx.accounts.payer.to_account_info(),
+                mint_account.to_account_info(),
+                token_account_info.to_account_info(),
+                mint_master_edition.to_account_info(),
+                ctx.accounts.token_program.to_account_info(),
+                mint_collection_metadata.to_account_info(),
             ];
-            */
+
+            invoke(
+                &burn_nft(
+                    mpl_token_metadata::ID,
+                    token_account_metadata.key(),
+                    ctx.accounts.payer.key(),
+                    mint_account.key(),
+                    token_account_info.key(),
+                    mint_master_edition.key(),
+                    ::spl_token::ID,
+                    Some(mint_collection_metadata.key()),
+                ),
+                burn_nft_infos.as_slice(),
+            )?;
         } else {
             spl_token_transfer(TokenTransferParams {
                 source: token_account_info.to_account_info(),
