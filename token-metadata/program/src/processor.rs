@@ -18,8 +18,8 @@ use crate::{
     solana_program::program_memory::sol_memset,
     state::{
         Collection, CollectionAuthorityRecord, CollectionDetails, DataV2, Key, MasterEditionV1,
-        MasterEditionV2, Metadata, TokenMetadataAccount, TokenOwnedEscrow, TokenOwnedEscrowAccount,
-        TokenStandard, UseAuthorityRecord, UseMethod, Uses, BURN, COLLECTION_AUTHORITY,
+        MasterEditionV2, Metadata, TokenMetadataAccount, TokenOwnedEscrow, TokenStandard,
+        UseAuthorityRecord, UseMethod, Uses, BURN, COLLECTION_AUTHORITY,
         COLLECTION_AUTHORITY_RECORD_SIZE, EDITION, ESCROW_PREFIX, MAX_MASTER_EDITION_LEN,
         MAX_METADATA_LEN, PREFIX, USER, USE_AUTHORITY_RECORD_SIZE,
     },

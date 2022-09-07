@@ -152,6 +152,7 @@ pub enum Key {
     EditionMarker,
     UseAuthorityRecord,
     CollectionAuthorityRecord,
+    TokenOwnedEscrow,
 }
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
@@ -938,36 +939,11 @@ impl EditionMarker {
     }
 }
 
-pub trait TokenOwnedEscrowAccount {
-    fn safe_deserialize<T: BorshDeserialize>(mut data: &[u8]) -> Result<T, BorshError> {
-        // if !is_correct_account_type(data, Self::key(), Self::size()) {
-        //     return Err(BorshError::new(ErrorKind::Other, "DataTypeMismatch"));
-        // }
-
-        let result: T = T::deserialize(&mut data)?;
-
-        Ok(result)
-    }
-
-    fn from_account_info<T: BorshDeserialize>(a: &AccountInfo) -> Result<T, ProgramError>
-where {
-        let ua: T = Self::safe_deserialize(&a.data.borrow_mut())
-            .map_err(|_| MetadataError::DataTypeMismatch)?;
-
-        // let ua: T = Self::deserialize(&a.data.borrow_mut());
-
-        // Check that this is a `token-metadata` owned account.
-        assert_owned_by(a, &ID)?;
-
-        Ok(ua)
-    }
-}
-
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, ShankAccount)]
 pub struct TokenOwnedEscrow {
-    pub discriminator: [u8; 8],
+    pub key: Key,
     pub tokens: Vec<Option<Pubkey>>,
     pub delegates: Vec<Pubkey>,
     pub model: Option<Pubkey>,
@@ -976,7 +952,7 @@ pub struct TokenOwnedEscrow {
 impl Default for TokenOwnedEscrow {
     fn default() -> Self {
         Self {
-            discriminator: "toescrow".as_bytes().try_into().unwrap(),
+            key: Key::TokenOwnedEscrow,
             tokens: vec![],
             delegates: vec![],
             model: None,
@@ -998,4 +974,20 @@ impl TokenOwnedEscrow {
     }
 }
 
-impl TokenOwnedEscrowAccount for TokenOwnedEscrow {}
+impl TokenMetadataAccount for TokenOwnedEscrow {
+    fn key() -> Key {
+        Key::TokenOwnedEscrow
+    }
+
+    fn size() -> usize {
+        0
+    }
+
+    fn is_correct_account_type(data: &[u8], data_type: Key, _data_size: usize) -> bool {
+        let key: Option<Key> = Key::from_u8(data[0]);
+        match key {
+            Some(key) => (key == data_type || key == Key::Uninitialized),
+            None => false,
+        }
+    }
+}
