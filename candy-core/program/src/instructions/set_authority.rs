@@ -9,6 +9,7 @@ pub fn set_authority(
 ) -> Result<()> {
     let candy_machine = &mut ctx.accounts.candy_machine;
 
+    // TODO: fix this to update approved collection auth if update auth is passed in!
     if !cmp_pubkeys(&new_update_authority, &candy_machine.update_authority) {
         return err!(CandyError::CannotChangeUpdateAuthority);
     }
