@@ -801,26 +801,26 @@ createErrorFromNameLookup.set(
 );
 
 /**
- * NoChangingAuthorityWithFreeze: 'Can't change authority while freeze is enabled. Disable freeze first.'
+ * NoChangingAuthorityWithCollection: 'Can't change authority while collection is enabled. Disable collection first.'
  *
  * @category Errors
  * @category generated
  */
-export class NoChangingAuthorityWithFreezeError extends Error {
+export class NoChangingAuthorityWithCollectionError extends Error {
   readonly code: number = 0x1795;
-  readonly name: string = 'NoChangingAuthorityWithFreeze';
+  readonly name: string = 'NoChangingAuthorityWithCollection';
   constructor() {
-    super("Can't change authority while freeze is enabled. Disable freeze first.");
+    super("Can't change authority while collection is enabled. Disable collection first.");
     if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, NoChangingAuthorityWithFreezeError);
+      Error.captureStackTrace(this, NoChangingAuthorityWithCollectionError);
     }
   }
 }
 
-createErrorFromCodeLookup.set(0x1795, () => new NoChangingAuthorityWithFreezeError());
+createErrorFromCodeLookup.set(0x1795, () => new NoChangingAuthorityWithCollectionError());
 createErrorFromNameLookup.set(
-  'NoChangingAuthorityWithFreeze',
-  () => new NoChangingAuthorityWithFreezeError(),
+  'NoChangingAuthorityWithCollection',
+  () => new NoChangingAuthorityWithCollectionError(),
 );
 
 /**
