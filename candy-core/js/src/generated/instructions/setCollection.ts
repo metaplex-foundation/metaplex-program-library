@@ -29,7 +29,7 @@ export const setCollectionStruct = new beet.BeetArgsStruct<{
  * @property [] collectionAuthority
  * @property [] collectionMetadata
  * @property [] collectionMint
- * @property [] collectionEdition
+ * @property [] collectionMasterEdition
  * @property [_writable_] collectionAuthorityRecord
  * @property [] tokenMetadataProgram
  * @category Instructions
@@ -44,7 +44,7 @@ export type SetCollectionInstructionAccounts = {
   collectionAuthority: web3.PublicKey
   collectionMetadata: web3.PublicKey
   collectionMint: web3.PublicKey
-  collectionEdition: web3.PublicKey
+  collectionMasterEdition: web3.PublicKey
   collectionAuthorityRecord: web3.PublicKey
   tokenMetadataProgram: web3.PublicKey
   systemProgram?: web3.PublicKey
@@ -107,7 +107,7 @@ export function createSetCollectionInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.collectionEdition,
+      pubkey: accounts.collectionMasterEdition,
       isWritable: false,
       isSigner: false,
     },

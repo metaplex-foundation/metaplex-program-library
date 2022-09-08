@@ -45,7 +45,7 @@ export const initializeStruct = new beet.FixableBeetArgsStruct<
  * @property [**signer**] payer
  * @property [] collectionMetadata
  * @property [] collectionMint
- * @property [] collectionEdition
+ * @property [] collectionMasterEdition
  * @property [_writable_] collectionAuthorityRecord
  * @property [] tokenMetadataProgram
  * @category Instructions
@@ -59,7 +59,7 @@ export type InitializeInstructionAccounts = {
   payer: web3.PublicKey
   collectionMetadata: web3.PublicKey
   collectionMint: web3.PublicKey
-  collectionEdition: web3.PublicKey
+  collectionMasterEdition: web3.PublicKey
   collectionAuthorityRecord: web3.PublicKey
   tokenMetadataProgram: web3.PublicKey
   systemProgram?: web3.PublicKey
@@ -121,7 +121,7 @@ export function createInitializeInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.collectionEdition,
+      pubkey: accounts.collectionMasterEdition,
       isWritable: false,
       isSigner: false,
     },

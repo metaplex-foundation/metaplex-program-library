@@ -105,13 +105,41 @@ export class InitTransactions {
   ): Promise<{ tx: ConfirmedTransactionAssertablePromise, candyMachine: PublicKey }> {
     const [_, candyMachine] = await this.getKeypair('Candy Machine Account')
 
+    let collectionMint = PublicKey.default;
+    amman.addr.addLabel('Collection Mint', collectionMint);
+
+
+    let updateAuthority = payer.publicKey;
+
+    let [collectionAuthorityRecord] = await PublicKey.findProgramAddress(
+        [
+          Buffer.from('metadata'),
+          METAPLEX_PROGRAM_ID.toBuffer(),
+          collectionMint.toBuffer(),
+          Buffer.from('collection_authority'),
+          updateAuthority.toBuffer()
+        ],
+        METAPLEX_PROGRAM_ID,
+    );
+    amman.addr.addLabel('Collection Authority Record Master Edition', collectionAuthorityRecord);
+
+    let [collectionMetadata] = await PublicKey.findProgramAddress(
+        [Buffer.from('metadata'), METAPLEX_PROGRAM_ID.toBuffer(), collectionMint.toBuffer()],
+        METAPLEX_PROGRAM_ID,
+    );
+    amman.addr.addLabel('Collection Metadata', collectionMetadata);
+
+    let [collectionMasterEdition,] = await PublicKey.findProgramAddress(
+        [Buffer.from('metadata'), METAPLEX_PROGRAM_ID.toBuffer(), collectionMint.toBuffer(), Buffer.from('edition')],
+        METAPLEX_PROGRAM_ID,
+    );
+    amman.addr.addLabel('Collection Master Edition', collectionMasterEdition);
+
     const accounts: program.InitializeInstructionAccounts = {
-      // TODO: fix collection accounts
-      collectionAuthority: undefined,
-      collectionAuthorityRecord: undefined,
-      collectionEdition: undefined,
-      collectionMetadata: undefined,
-      collectionMint: undefined,
+      collectionAuthorityRecord,
+      collectionMasterEdition,
+      collectionMetadata,
+      collectionMint,
       tokenMetadataProgram: candyMachine.publicKey,
       candyMachine: candyMachine.publicKey,
       authority: payer.publicKey,
@@ -249,13 +277,43 @@ export class InitTransactions {
     );
     amman.addr.addLabel('Mint Master Edition', masterEdition);
 
+    let collectionMint = PublicKey.default;
+    amman.addr.addLabel('Collection Mint', collectionMint);
+
+
+    let updateAuthority = payer.publicKey;
+
+    let [collectionAuthorityRecord] = await PublicKey.findProgramAddress(
+        [
+          Buffer.from('metadata'),
+          METAPLEX_PROGRAM_ID.toBuffer(),
+          collectionMint.toBuffer(),
+          Buffer.from('collection_authority'),
+          updateAuthority.toBuffer()
+        ],
+        METAPLEX_PROGRAM_ID,
+    );
+    amman.addr.addLabel('Collection Authority Record Master Edition', collectionAuthorityRecord);
+
+    let [collectionMetadata] = await PublicKey.findProgramAddress(
+        [Buffer.from('metadata'), METAPLEX_PROGRAM_ID.toBuffer(), collectionMint.toBuffer()],
+        METAPLEX_PROGRAM_ID,
+    );
+    amman.addr.addLabel('Collection Metadata', collectionMetadata);
+
+    let [collectionMasterEdition,] = await PublicKey.findProgramAddress(
+        [Buffer.from('metadata'), METAPLEX_PROGRAM_ID.toBuffer(), collectionMint.toBuffer(), Buffer.from('edition')],
+        METAPLEX_PROGRAM_ID,
+    );
+    amman.addr.addLabel('Collection Master Edition', collectionMasterEdition);
+
+
     const accounts: program.MintInstructionAccounts = {
       // TODO: fix the collection accounts
-      collectionAuthority: undefined,
-      collectionAuthorityRecord: undefined,
-      collectionMasterEdition: undefined,
-      collectionMetadata: undefined,
-      collectionMint: undefined,
+      collectionAuthorityRecord,
+      collectionMasterEdition,
+      collectionMetadata,
+      collectionMint,
       candyMachine: candyMachine,
       authority: candyMachineObject.authority,
       updateAuthority: candyMachineObject.updateAuthority,
