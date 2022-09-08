@@ -28,8 +28,6 @@ pub enum CandyGuardError {
     // bot tax
     #[msg("Mint must be the last instructions of the transaction")]
     MintNotLastTransaction,
-    #[msg("Missing set collection during mint IX")]
-    MissingCollectionInstruction,
     // live date
     #[msg("Mint is not live")]
     MintNotLive,
