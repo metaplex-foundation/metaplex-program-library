@@ -5,11 +5,11 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-type ErrorWithCode = Error & { code: number }
-type MaybeErrorWithCode = ErrorWithCode | null | undefined
+type ErrorWithCode = Error & { code: number };
+type MaybeErrorWithCode = ErrorWithCode | null | undefined;
 
-const createErrorFromCodeLookup: Map<number, () => ErrorWithCode> = new Map()
-const createErrorFromNameLookup: Map<string, () => ErrorWithCode> = new Map()
+const createErrorFromCodeLookup: Map<number, () => ErrorWithCode> = new Map();
+const createErrorFromNameLookup: Map<string, () => ErrorWithCode> = new Map();
 
 /**
  * IncorrectOwner: 'Account does not have correct owner'
@@ -18,18 +18,18 @@ const createErrorFromNameLookup: Map<string, () => ErrorWithCode> = new Map()
  * @category generated
  */
 export class IncorrectOwnerError extends Error {
-  readonly code: number = 0x1770
-  readonly name: string = 'IncorrectOwner'
+  readonly code: number = 0x1770;
+  readonly name: string = 'IncorrectOwner';
   constructor() {
-    super('Account does not have correct owner')
+    super('Account does not have correct owner');
     if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, IncorrectOwnerError)
+      Error.captureStackTrace(this, IncorrectOwnerError);
     }
   }
 }
 
-createErrorFromCodeLookup.set(0x1770, () => new IncorrectOwnerError())
-createErrorFromNameLookup.set('IncorrectOwner', () => new IncorrectOwnerError())
+createErrorFromCodeLookup.set(0x1770, () => new IncorrectOwnerError());
+createErrorFromNameLookup.set('IncorrectOwner', () => new IncorrectOwnerError());
 
 /**
  * Uninitialized: 'Account is not initialized'
@@ -38,18 +38,18 @@ createErrorFromNameLookup.set('IncorrectOwner', () => new IncorrectOwnerError())
  * @category generated
  */
 export class UninitializedError extends Error {
-  readonly code: number = 0x1771
-  readonly name: string = 'Uninitialized'
+  readonly code: number = 0x1771;
+  readonly name: string = 'Uninitialized';
   constructor() {
-    super('Account is not initialized')
+    super('Account is not initialized');
     if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, UninitializedError)
+      Error.captureStackTrace(this, UninitializedError);
     }
   }
 }
 
-createErrorFromCodeLookup.set(0x1771, () => new UninitializedError())
-createErrorFromNameLookup.set('Uninitialized', () => new UninitializedError())
+createErrorFromCodeLookup.set(0x1771, () => new UninitializedError());
+createErrorFromNameLookup.set('Uninitialized', () => new UninitializedError());
 
 /**
  * MintMismatch: 'Mint Mismatch'
@@ -58,18 +58,18 @@ createErrorFromNameLookup.set('Uninitialized', () => new UninitializedError())
  * @category generated
  */
 export class MintMismatchError extends Error {
-  readonly code: number = 0x1772
-  readonly name: string = 'MintMismatch'
+  readonly code: number = 0x1772;
+  readonly name: string = 'MintMismatch';
   constructor() {
-    super('Mint Mismatch')
+    super('Mint Mismatch');
     if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, MintMismatchError)
+      Error.captureStackTrace(this, MintMismatchError);
     }
   }
 }
 
-createErrorFromCodeLookup.set(0x1772, () => new MintMismatchError())
-createErrorFromNameLookup.set('MintMismatch', () => new MintMismatchError())
+createErrorFromCodeLookup.set(0x1772, () => new MintMismatchError());
+createErrorFromNameLookup.set('MintMismatch', () => new MintMismatchError());
 
 /**
  * IndexGreaterThanLength: 'Index greater than length'
@@ -78,21 +78,18 @@ createErrorFromNameLookup.set('MintMismatch', () => new MintMismatchError())
  * @category generated
  */
 export class IndexGreaterThanLengthError extends Error {
-  readonly code: number = 0x1773
-  readonly name: string = 'IndexGreaterThanLength'
+  readonly code: number = 0x1773;
+  readonly name: string = 'IndexGreaterThanLength';
   constructor() {
-    super('Index greater than length')
+    super('Index greater than length');
     if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, IndexGreaterThanLengthError)
+      Error.captureStackTrace(this, IndexGreaterThanLengthError);
     }
   }
 }
 
-createErrorFromCodeLookup.set(0x1773, () => new IndexGreaterThanLengthError())
-createErrorFromNameLookup.set(
-  'IndexGreaterThanLength',
-  () => new IndexGreaterThanLengthError()
-)
+createErrorFromCodeLookup.set(0x1773, () => new IndexGreaterThanLengthError());
+createErrorFromNameLookup.set('IndexGreaterThanLength', () => new IndexGreaterThanLengthError());
 
 /**
  * NumericalOverflowError: 'Numerical overflow error'
@@ -101,21 +98,18 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class NumericalOverflowErrorError extends Error {
-  readonly code: number = 0x1774
-  readonly name: string = 'NumericalOverflowError'
+  readonly code: number = 0x1774;
+  readonly name: string = 'NumericalOverflowError';
   constructor() {
-    super('Numerical overflow error')
+    super('Numerical overflow error');
     if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, NumericalOverflowErrorError)
+      Error.captureStackTrace(this, NumericalOverflowErrorError);
     }
   }
 }
 
-createErrorFromCodeLookup.set(0x1774, () => new NumericalOverflowErrorError())
-createErrorFromNameLookup.set(
-  'NumericalOverflowError',
-  () => new NumericalOverflowErrorError()
-)
+createErrorFromCodeLookup.set(0x1774, () => new NumericalOverflowErrorError());
+createErrorFromNameLookup.set('NumericalOverflowError', () => new NumericalOverflowErrorError());
 
 /**
  * TooManyCreators: 'Can only provide up to 4 creators to candy machine (because candy machine is one)'
@@ -124,23 +118,18 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class TooManyCreatorsError extends Error {
-  readonly code: number = 0x1775
-  readonly name: string = 'TooManyCreators'
+  readonly code: number = 0x1775;
+  readonly name: string = 'TooManyCreators';
   constructor() {
-    super(
-      'Can only provide up to 4 creators to candy machine (because candy machine is one)'
-    )
+    super('Can only provide up to 4 creators to candy machine (because candy machine is one)');
     if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, TooManyCreatorsError)
+      Error.captureStackTrace(this, TooManyCreatorsError);
     }
   }
 }
 
-createErrorFromCodeLookup.set(0x1775, () => new TooManyCreatorsError())
-createErrorFromNameLookup.set(
-  'TooManyCreators',
-  () => new TooManyCreatorsError()
-)
+createErrorFromCodeLookup.set(0x1775, () => new TooManyCreatorsError());
+createErrorFromNameLookup.set('TooManyCreators', () => new TooManyCreatorsError());
 
 /**
  * CandyMachineEmpty: 'Candy machine is empty'
@@ -149,21 +138,18 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class CandyMachineEmptyError extends Error {
-  readonly code: number = 0x1776
-  readonly name: string = 'CandyMachineEmpty'
+  readonly code: number = 0x1776;
+  readonly name: string = 'CandyMachineEmpty';
   constructor() {
-    super('Candy machine is empty')
+    super('Candy machine is empty');
     if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, CandyMachineEmptyError)
+      Error.captureStackTrace(this, CandyMachineEmptyError);
     }
   }
 }
 
-createErrorFromCodeLookup.set(0x1776, () => new CandyMachineEmptyError())
-createErrorFromNameLookup.set(
-  'CandyMachineEmpty',
-  () => new CandyMachineEmptyError()
-)
+createErrorFromCodeLookup.set(0x1776, () => new CandyMachineEmptyError());
+createErrorFromNameLookup.set('CandyMachineEmpty', () => new CandyMachineEmptyError());
 
 /**
  * HiddenSettingsDoNotHaveConfigLines: 'Candy machines using hidden uris do not have config lines, they have a single hash representing hashed order'
@@ -172,26 +158,23 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class HiddenSettingsDoNotHaveConfigLinesError extends Error {
-  readonly code: number = 0x1777
-  readonly name: string = 'HiddenSettingsDoNotHaveConfigLines'
+  readonly code: number = 0x1777;
+  readonly name: string = 'HiddenSettingsDoNotHaveConfigLines';
   constructor() {
     super(
-      'Candy machines using hidden uris do not have config lines, they have a single hash representing hashed order'
-    )
+      'Candy machines using hidden uris do not have config lines, they have a single hash representing hashed order',
+    );
     if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, HiddenSettingsDoNotHaveConfigLinesError)
+      Error.captureStackTrace(this, HiddenSettingsDoNotHaveConfigLinesError);
     }
   }
 }
 
-createErrorFromCodeLookup.set(
-  0x1777,
-  () => new HiddenSettingsDoNotHaveConfigLinesError()
-)
+createErrorFromCodeLookup.set(0x1777, () => new HiddenSettingsDoNotHaveConfigLinesError());
 createErrorFromNameLookup.set(
   'HiddenSettingsDoNotHaveConfigLines',
-  () => new HiddenSettingsDoNotHaveConfigLinesError()
-)
+  () => new HiddenSettingsDoNotHaveConfigLinesError(),
+);
 
 /**
  * CannotChangeNumberOfLines: 'Cannot change number of lines unless is a hidden config'
@@ -200,24 +183,21 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class CannotChangeNumberOfLinesError extends Error {
-  readonly code: number = 0x1778
-  readonly name: string = 'CannotChangeNumberOfLines'
+  readonly code: number = 0x1778;
+  readonly name: string = 'CannotChangeNumberOfLines';
   constructor() {
-    super('Cannot change number of lines unless is a hidden config')
+    super('Cannot change number of lines unless is a hidden config');
     if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, CannotChangeNumberOfLinesError)
+      Error.captureStackTrace(this, CannotChangeNumberOfLinesError);
     }
   }
 }
 
-createErrorFromCodeLookup.set(
-  0x1778,
-  () => new CannotChangeNumberOfLinesError()
-)
+createErrorFromCodeLookup.set(0x1778, () => new CannotChangeNumberOfLinesError());
 createErrorFromNameLookup.set(
   'CannotChangeNumberOfLines',
-  () => new CannotChangeNumberOfLinesError()
-)
+  () => new CannotChangeNumberOfLinesError(),
+);
 
 /**
  * CannotSwitchToHiddenSettings: 'Cannot switch to hidden settings after items available is greater than 0'
@@ -226,26 +206,21 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class CannotSwitchToHiddenSettingsError extends Error {
-  readonly code: number = 0x1779
-  readonly name: string = 'CannotSwitchToHiddenSettings'
+  readonly code: number = 0x1779;
+  readonly name: string = 'CannotSwitchToHiddenSettings';
   constructor() {
-    super(
-      'Cannot switch to hidden settings after items available is greater than 0'
-    )
+    super('Cannot switch to hidden settings after items available is greater than 0');
     if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, CannotSwitchToHiddenSettingsError)
+      Error.captureStackTrace(this, CannotSwitchToHiddenSettingsError);
     }
   }
 }
 
-createErrorFromCodeLookup.set(
-  0x1779,
-  () => new CannotSwitchToHiddenSettingsError()
-)
+createErrorFromCodeLookup.set(0x1779, () => new CannotSwitchToHiddenSettingsError());
 createErrorFromNameLookup.set(
   'CannotSwitchToHiddenSettings',
-  () => new CannotSwitchToHiddenSettingsError()
-)
+  () => new CannotSwitchToHiddenSettingsError(),
+);
 
 /**
  * IncorrectCollectionAuthority: 'Incorrect collection NFT authority'
@@ -254,24 +229,21 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class IncorrectCollectionAuthorityError extends Error {
-  readonly code: number = 0x177a
-  readonly name: string = 'IncorrectCollectionAuthority'
+  readonly code: number = 0x177a;
+  readonly name: string = 'IncorrectCollectionAuthority';
   constructor() {
-    super('Incorrect collection NFT authority')
+    super('Incorrect collection NFT authority');
     if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, IncorrectCollectionAuthorityError)
+      Error.captureStackTrace(this, IncorrectCollectionAuthorityError);
     }
   }
 }
 
-createErrorFromCodeLookup.set(
-  0x177a,
-  () => new IncorrectCollectionAuthorityError()
-)
+createErrorFromCodeLookup.set(0x177a, () => new IncorrectCollectionAuthorityError());
 createErrorFromNameLookup.set(
   'IncorrectCollectionAuthority',
-  () => new IncorrectCollectionAuthorityError()
-)
+  () => new IncorrectCollectionAuthorityError(),
+);
 
 /**
  * MetadataAccountMustBeEmpty: 'The metadata account has data in it, and this must be empty to mint a new NFT'
@@ -280,26 +252,21 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class MetadataAccountMustBeEmptyError extends Error {
-  readonly code: number = 0x177b
-  readonly name: string = 'MetadataAccountMustBeEmpty'
+  readonly code: number = 0x177b;
+  readonly name: string = 'MetadataAccountMustBeEmpty';
   constructor() {
-    super(
-      'The metadata account has data in it, and this must be empty to mint a new NFT'
-    )
+    super('The metadata account has data in it, and this must be empty to mint a new NFT');
     if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, MetadataAccountMustBeEmptyError)
+      Error.captureStackTrace(this, MetadataAccountMustBeEmptyError);
     }
   }
 }
 
-createErrorFromCodeLookup.set(
-  0x177b,
-  () => new MetadataAccountMustBeEmptyError()
-)
+createErrorFromCodeLookup.set(0x177b, () => new MetadataAccountMustBeEmptyError());
 createErrorFromNameLookup.set(
   'MetadataAccountMustBeEmpty',
-  () => new MetadataAccountMustBeEmptyError()
-)
+  () => new MetadataAccountMustBeEmptyError(),
+);
 
 /**
  * NoChangingCollectionDuringMint: 'Can't change collection settings after items have begun to be minted'
@@ -308,26 +275,21 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class NoChangingCollectionDuringMintError extends Error {
-  readonly code: number = 0x177c
-  readonly name: string = 'NoChangingCollectionDuringMint'
+  readonly code: number = 0x177c;
+  readonly name: string = 'NoChangingCollectionDuringMint';
   constructor() {
-    super(
-      "Can't change collection settings after items have begun to be minted"
-    )
+    super("Can't change collection settings after items have begun to be minted");
     if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, NoChangingCollectionDuringMintError)
+      Error.captureStackTrace(this, NoChangingCollectionDuringMintError);
     }
   }
 }
 
-createErrorFromCodeLookup.set(
-  0x177c,
-  () => new NoChangingCollectionDuringMintError()
-)
+createErrorFromCodeLookup.set(0x177c, () => new NoChangingCollectionDuringMintError());
 createErrorFromNameLookup.set(
   'NoChangingCollectionDuringMint',
-  () => new NoChangingCollectionDuringMintError()
-)
+  () => new NoChangingCollectionDuringMintError(),
+);
 
 /**
  * ExceededLengthError: 'Value longer than expected maximum value'
@@ -336,21 +298,18 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class ExceededLengthErrorError extends Error {
-  readonly code: number = 0x177d
-  readonly name: string = 'ExceededLengthError'
+  readonly code: number = 0x177d;
+  readonly name: string = 'ExceededLengthError';
   constructor() {
-    super('Value longer than expected maximum value')
+    super('Value longer than expected maximum value');
     if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, ExceededLengthErrorError)
+      Error.captureStackTrace(this, ExceededLengthErrorError);
     }
   }
 }
 
-createErrorFromCodeLookup.set(0x177d, () => new ExceededLengthErrorError())
-createErrorFromNameLookup.set(
-  'ExceededLengthError',
-  () => new ExceededLengthErrorError()
-)
+createErrorFromCodeLookup.set(0x177d, () => new ExceededLengthErrorError());
+createErrorFromNameLookup.set('ExceededLengthError', () => new ExceededLengthErrorError());
 
 /**
  * MissingConfigLinesSettings: 'Missing config lines settings'
@@ -359,24 +318,21 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class MissingConfigLinesSettingsError extends Error {
-  readonly code: number = 0x177e
-  readonly name: string = 'MissingConfigLinesSettings'
+  readonly code: number = 0x177e;
+  readonly name: string = 'MissingConfigLinesSettings';
   constructor() {
-    super('Missing config lines settings')
+    super('Missing config lines settings');
     if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, MissingConfigLinesSettingsError)
+      Error.captureStackTrace(this, MissingConfigLinesSettingsError);
     }
   }
 }
 
-createErrorFromCodeLookup.set(
-  0x177e,
-  () => new MissingConfigLinesSettingsError()
-)
+createErrorFromCodeLookup.set(0x177e, () => new MissingConfigLinesSettingsError());
 createErrorFromNameLookup.set(
   'MissingConfigLinesSettings',
-  () => new MissingConfigLinesSettingsError()
-)
+  () => new MissingConfigLinesSettingsError(),
+);
 
 /**
  * CannotIncreaseLength: 'Cannot increase the length in config lines settings'
@@ -385,21 +341,18 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class CannotIncreaseLengthError extends Error {
-  readonly code: number = 0x177f
-  readonly name: string = 'CannotIncreaseLength'
+  readonly code: number = 0x177f;
+  readonly name: string = 'CannotIncreaseLength';
   constructor() {
-    super('Cannot increase the length in config lines settings')
+    super('Cannot increase the length in config lines settings');
     if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, CannotIncreaseLengthError)
+      Error.captureStackTrace(this, CannotIncreaseLengthError);
     }
   }
 }
 
-createErrorFromCodeLookup.set(0x177f, () => new CannotIncreaseLengthError())
-createErrorFromNameLookup.set(
-  'CannotIncreaseLength',
-  () => new CannotIncreaseLengthError()
-)
+createErrorFromCodeLookup.set(0x177f, () => new CannotIncreaseLengthError());
+createErrorFromNameLookup.set('CannotIncreaseLength', () => new CannotIncreaseLengthError());
 
 /**
  * CannotSwitchFromHiddenSettings: 'Cannot switch from hidden settings'
@@ -408,24 +361,21 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class CannotSwitchFromHiddenSettingsError extends Error {
-  readonly code: number = 0x1780
-  readonly name: string = 'CannotSwitchFromHiddenSettings'
+  readonly code: number = 0x1780;
+  readonly name: string = 'CannotSwitchFromHiddenSettings';
   constructor() {
-    super('Cannot switch from hidden settings')
+    super('Cannot switch from hidden settings');
     if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, CannotSwitchFromHiddenSettingsError)
+      Error.captureStackTrace(this, CannotSwitchFromHiddenSettingsError);
     }
   }
 }
 
-createErrorFromCodeLookup.set(
-  0x1780,
-  () => new CannotSwitchFromHiddenSettingsError()
-)
+createErrorFromCodeLookup.set(0x1780, () => new CannotSwitchFromHiddenSettingsError());
 createErrorFromNameLookup.set(
   'CannotSwitchFromHiddenSettings',
-  () => new CannotSwitchFromHiddenSettingsError()
-)
+  () => new CannotSwitchFromHiddenSettingsError(),
+);
 
 /**
  * CannotChangeSequentialIndexGeneration: 'Cannot change sequential index generation after items have begun to be minted'
@@ -434,26 +384,21 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class CannotChangeSequentialIndexGenerationError extends Error {
-  readonly code: number = 0x1781
-  readonly name: string = 'CannotChangeSequentialIndexGeneration'
+  readonly code: number = 0x1781;
+  readonly name: string = 'CannotChangeSequentialIndexGeneration';
   constructor() {
-    super(
-      'Cannot change sequential index generation after items have begun to be minted'
-    )
+    super('Cannot change sequential index generation after items have begun to be minted');
     if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, CannotChangeSequentialIndexGenerationError)
+      Error.captureStackTrace(this, CannotChangeSequentialIndexGenerationError);
     }
   }
 }
 
-createErrorFromCodeLookup.set(
-  0x1781,
-  () => new CannotChangeSequentialIndexGenerationError()
-)
+createErrorFromCodeLookup.set(0x1781, () => new CannotChangeSequentialIndexGenerationError());
 createErrorFromNameLookup.set(
   'CannotChangeSequentialIndexGeneration',
-  () => new CannotChangeSequentialIndexGenerationError()
-)
+  () => new CannotChangeSequentialIndexGenerationError(),
+);
 
 /**
  * CollectionKeyMismatch: 'Collection public key mismatch'
@@ -462,21 +407,18 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class CollectionKeyMismatchError extends Error {
-  readonly code: number = 0x1782
-  readonly name: string = 'CollectionKeyMismatch'
+  readonly code: number = 0x1782;
+  readonly name: string = 'CollectionKeyMismatch';
   constructor() {
-    super('Collection public key mismatch')
+    super('Collection public key mismatch');
     if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, CollectionKeyMismatchError)
+      Error.captureStackTrace(this, CollectionKeyMismatchError);
     }
   }
 }
 
-createErrorFromCodeLookup.set(0x1782, () => new CollectionKeyMismatchError())
-createErrorFromNameLookup.set(
-  'CollectionKeyMismatch',
-  () => new CollectionKeyMismatchError()
-)
+createErrorFromCodeLookup.set(0x1782, () => new CollectionKeyMismatchError());
+createErrorFromNameLookup.set('CollectionKeyMismatch', () => new CollectionKeyMismatchError());
 
 /**
  * CannotChangeUpdateAuthority: 'Cannot change update authority if a collection mint is set'
@@ -485,24 +427,21 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class CannotChangeUpdateAuthorityError extends Error {
-  readonly code: number = 0x1783
-  readonly name: string = 'CannotChangeUpdateAuthority'
+  readonly code: number = 0x1783;
+  readonly name: string = 'CannotChangeUpdateAuthority';
   constructor() {
-    super('Cannot change update authority if a collection mint is set')
+    super('Cannot change update authority if a collection mint is set');
     if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, CannotChangeUpdateAuthorityError)
+      Error.captureStackTrace(this, CannotChangeUpdateAuthorityError);
     }
   }
 }
 
-createErrorFromCodeLookup.set(
-  0x1783,
-  () => new CannotChangeUpdateAuthorityError()
-)
+createErrorFromCodeLookup.set(0x1783, () => new CannotChangeUpdateAuthorityError());
 createErrorFromNameLookup.set(
   'CannotChangeUpdateAuthority',
-  () => new CannotChangeUpdateAuthorityError()
-)
+  () => new CannotChangeUpdateAuthorityError(),
+);
 
 /**
  * Attempts to resolve a custom program error from the provided error code.
@@ -510,8 +449,8 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export function errorFromCode(code: number): MaybeErrorWithCode {
-  const createError = createErrorFromCodeLookup.get(code)
-  return createError != null ? createError() : null
+  const createError = createErrorFromCodeLookup.get(code);
+  return createError != null ? createError() : null;
 }
 
 /**
@@ -520,6 +459,6 @@ export function errorFromCode(code: number): MaybeErrorWithCode {
  * @category generated
  */
 export function errorFromName(name: string): MaybeErrorWithCode {
-  const createError = createErrorFromNameLookup.get(name)
-  return createError != null ? createError() : null
+  const createError = createErrorFromNameLookup.get(name);
+  return createError != null ? createError() : null;
 }

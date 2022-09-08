@@ -1,6 +1,6 @@
 import test from 'tape';
 import { amman, InitTransactions, killStuckProcess } from './setup';
-import { Metaplex, keypairIdentity } from '@metaplex-foundation/js'
+import { Metaplex, keypairIdentity } from '@metaplex-foundation/js';
 import { COLLECTION_METADATA } from '../../../candy-core/js/test/utils';
 import { AccountMeta, PublicKey } from '@solana/web3.js';
 import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID } from '@solana/spl-token';
@@ -12,8 +12,7 @@ killStuckProcess();
 
 test('nft payment (burn)', async (t) => {
   const { fstTxHandler, payerPair, connection } = await API.payer();
-  const metaplex = Metaplex.make(connection)
-    .use(keypairIdentity(payerPair));
+  const metaplex = Metaplex.make(connection).use(keypairIdentity(payerPair));
 
   const { nft: collection } = await metaplex
     .nfts()
@@ -87,7 +86,7 @@ test('nft payment (burn)', async (t) => {
         burn: true,
         requiredCollection: collection.address,
         wallet: candyGuard,
-      }
+      },
     },
     groups: null,
   };
@@ -97,7 +96,11 @@ test('nft payment (burn)', async (t) => {
 
   // mint (as a minter)
 
-  const { fstTxHandler: minterHandler, minterPair: minter, connection: minterConnection } = await API.minter();
+  const {
+    fstTxHandler: minterHandler,
+    minterPair: minter,
+    connection: minterConnection,
+  } = await API.minter();
   const [, mintForMinter] = await amman.genLabeledKeypair('Mint Account (minter)');
   const { tx: minterMintTx } = await API.mint(
     t,
@@ -116,7 +119,11 @@ test('nft payment (burn)', async (t) => {
 
   // token account
   const [tokenAccount] = await PublicKey.findProgramAddress(
-    [payerPair.publicKey.toBuffer(), TOKEN_PROGRAM_ID.toBuffer(), mintForAuthority.publicKey.toBuffer()],
+    [
+      payerPair.publicKey.toBuffer(),
+      TOKEN_PROGRAM_ID.toBuffer(),
+      mintForAuthority.publicKey.toBuffer(),
+    ],
     ASSOCIATED_TOKEN_PROGRAM_ID,
   );
   paymentGuardAccounts.push({
@@ -171,13 +178,11 @@ test('nft payment (burn)', async (t) => {
     paymentGuardAccounts,
   );
   await authorityMintTx2.assertSuccess(t);
-
 });
 
 test('nft payment (transfer)', async (t) => {
   const { fstTxHandler, payerPair, connection } = await API.payer();
-  const metaplex = Metaplex.make(connection)
-    .use(keypairIdentity(payerPair));
+  const metaplex = Metaplex.make(connection).use(keypairIdentity(payerPair));
 
   const { nft: collection } = await metaplex
     .nfts()
@@ -218,7 +223,11 @@ test('nft payment (transfer)', async (t) => {
 
   // mint (as a minter)
 
-  const { fstTxHandler: minterHandler, minterPair: minter, connection: minterConnection } = await API.minter();
+  const {
+    fstTxHandler: minterHandler,
+    minterPair: minter,
+    connection: minterConnection,
+  } = await API.minter();
   const [, mintForMinter] = await amman.genLabeledKeypair('Mint Account (minter)');
   const { tx: minterMintTx } = await API.mint(
     t,
@@ -251,7 +260,7 @@ test('nft payment (transfer)', async (t) => {
       nftPayment: {
         burn: false,
         requiredCollection: collection.address,
-      }
+      },
     },
     groups: null,
   };

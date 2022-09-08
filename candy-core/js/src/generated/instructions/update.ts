@@ -5,12 +5,9 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet'
-import * as web3 from '@solana/web3.js'
-import {
-  CandyMachineData,
-  candyMachineDataBeet,
-} from '../types/CandyMachineData'
+import * as beet from '@metaplex-foundation/beet';
+import * as web3 from '@solana/web3.js';
+import { CandyMachineData, candyMachineDataBeet } from '../types/CandyMachineData';
 
 /**
  * @category Instructions
@@ -18,8 +15,8 @@ import {
  * @category generated
  */
 export type UpdateInstructionArgs = {
-  data: CandyMachineData
-}
+  data: CandyMachineData;
+};
 /**
  * @category Instructions
  * @category Update
@@ -27,15 +24,15 @@ export type UpdateInstructionArgs = {
  */
 export const updateStruct = new beet.FixableBeetArgsStruct<
   UpdateInstructionArgs & {
-    instructionDiscriminator: number[] /* size: 8 */
+    instructionDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
     ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
     ['data', candyMachineDataBeet],
   ],
-  'UpdateInstructionArgs'
-)
+  'UpdateInstructionArgs',
+);
 /**
  * Accounts required by the _update_ instruction
  *
@@ -46,13 +43,11 @@ export const updateStruct = new beet.FixableBeetArgsStruct<
  * @category generated
  */
 export type UpdateInstructionAccounts = {
-  candyMachine: web3.PublicKey
-  authority: web3.PublicKey
-}
+  candyMachine: web3.PublicKey;
+  authority: web3.PublicKey;
+};
 
-export const updateInstructionDiscriminator = [
-  219, 200, 88, 176, 158, 63, 253, 127,
-]
+export const updateInstructionDiscriminator = [219, 200, 88, 176, 158, 63, 253, 127];
 
 /**
  * Creates a _Update_ instruction.
@@ -67,12 +62,12 @@ export const updateInstructionDiscriminator = [
 export function createUpdateInstruction(
   accounts: UpdateInstructionAccounts,
   args: UpdateInstructionArgs,
-  programId = new web3.PublicKey('cndy3CZK71ZHMp9ddpq5NVvQDx33o6cCYDf4JBAWCk7')
+  programId = new web3.PublicKey('cndy3CZK71ZHMp9ddpq5NVvQDx33o6cCYDf4JBAWCk7'),
 ) {
   const [data] = updateStruct.serialize({
     instructionDiscriminator: updateInstructionDiscriminator,
     ...args,
-  })
+  });
   const keys: web3.AccountMeta[] = [
     {
       pubkey: accounts.candyMachine,
@@ -84,12 +79,12 @@ export function createUpdateInstruction(
       isWritable: false,
       isSigner: true,
     },
-  ]
+  ];
 
   const ix = new web3.TransactionInstruction({
     programId,
     keys,
     data,
-  })
-  return ix
+  });
+  return ix;
 }

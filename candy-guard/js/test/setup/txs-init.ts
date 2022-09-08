@@ -15,11 +15,16 @@ import {
   Transaction,
   TransactionInstruction,
   SYSVAR_INSTRUCTIONS_PUBKEY,
-  AccountMeta
+  AccountMeta,
 } from '@solana/web3.js';
-import {Test} from 'tape';
-import {amman} from '.';
-import {CANDY_MACHINE_PROGRAM, CandyMachineHelper, getCandyGuardPDA, METAPLEX_PROGRAM_ID} from '../utils';
+import { Test } from 'tape';
+import { amman } from '.';
+import {
+  CANDY_MACHINE_PROGRAM,
+  CandyMachineHelper,
+  getCandyGuardPDA,
+  METAPLEX_PROGRAM_ID,
+} from '../utils';
 import {
   CandyGuardData,
   createInitializeInstruction,
@@ -35,14 +40,14 @@ import {
   UpdateInstructionArgs,
   WrapInstructionAccounts,
 } from '../../src/generated';
-import {CandyMachine} from '../../../../candy-core/js/src/generated';
+import { CandyMachine } from '../../../../candy-core/js/src/generated';
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   createAssociatedTokenAccountInstruction,
   createInitializeMintInstruction,
   createMintToInstruction,
   MintLayout,
-  TOKEN_PROGRAM_ID
+  TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
 
 const HELPER = new CandyMachineHelper();
@@ -201,25 +206,21 @@ export class InitTransactions {
     amman.addr.addLabel('Mint Creator', candyMachineCreator);
 
     // associated token address
-    const [associatedToken,] = await PublicKey.findProgramAddress(
+    const [associatedToken] = await PublicKey.findProgramAddress(
       [payer.publicKey.toBuffer(), TOKEN_PROGRAM_ID.toBuffer(), mint.publicKey.toBuffer()],
       ASSOCIATED_TOKEN_PROGRAM_ID,
     );
     amman.addr.addLabel('Mint Associated Token', associatedToken);
 
     // metadata address
-    const [metadataAddress,] = await PublicKey.findProgramAddress(
-      [
-        Buffer.from('metadata'),
-        METAPLEX_PROGRAM_ID.toBuffer(),
-        mint.publicKey.toBuffer(),
-      ],
+    const [metadataAddress] = await PublicKey.findProgramAddress(
+      [Buffer.from('metadata'), METAPLEX_PROGRAM_ID.toBuffer(), mint.publicKey.toBuffer()],
       METAPLEX_PROGRAM_ID,
     );
     amman.addr.addLabel('Mint Metadata', metadataAddress);
 
     // master edition address
-    const [masterEdition,] = await PublicKey.findProgramAddress(
+    const [masterEdition] = await PublicKey.findProgramAddress(
       [
         Buffer.from('metadata'),
         METAPLEX_PROGRAM_ID.toBuffer(),
@@ -230,26 +231,31 @@ export class InitTransactions {
     );
     amman.addr.addLabel('Mint Master Edition', masterEdition);
 
-    let collectionMint = candyMachineObject.collectionMint;
+    const collectionMint = candyMachineObject.collectionMint;
 
-    let [collectionAuthorityRecord] = await PublicKey.findProgramAddress(
-        [
-          Buffer.from('metadata'),
-          METAPLEX_PROGRAM_ID.toBuffer(),
-          collectionMint.toBuffer(),
-          Buffer.from('collection_authority'),
-          candyMachineObject.updateAuthority.toBuffer()
-        ],
-        METAPLEX_PROGRAM_ID,
+    const [collectionAuthorityRecord] = await PublicKey.findProgramAddress(
+      [
+        Buffer.from('metadata'),
+        METAPLEX_PROGRAM_ID.toBuffer(),
+        collectionMint.toBuffer(),
+        Buffer.from('collection_authority'),
+        candyMachineObject.updateAuthority.toBuffer(),
+      ],
+      METAPLEX_PROGRAM_ID,
     );
 
-    let [collectionMetadata] = await PublicKey.findProgramAddress(
-        [Buffer.from('metadata'), METAPLEX_PROGRAM_ID.toBuffer(), collectionMint.toBuffer()],
-        METAPLEX_PROGRAM_ID,
+    const [collectionMetadata] = await PublicKey.findProgramAddress(
+      [Buffer.from('metadata'), METAPLEX_PROGRAM_ID.toBuffer(), collectionMint.toBuffer()],
+      METAPLEX_PROGRAM_ID,
     );
-    let [collectionMasterEdition,] = await PublicKey.findProgramAddress(
-        [Buffer.from('metadata'), METAPLEX_PROGRAM_ID.toBuffer(), collectionMint.toBuffer(), Buffer.from('edition')],
-        METAPLEX_PROGRAM_ID,
+    const [collectionMasterEdition] = await PublicKey.findProgramAddress(
+      [
+        Buffer.from('metadata'),
+        METAPLEX_PROGRAM_ID.toBuffer(),
+        collectionMint.toBuffer(),
+        Buffer.from('edition'),
+      ],
+      METAPLEX_PROGRAM_ID,
     );
     const accounts: MintInstructionAccounts = {
       collectionAuthorityRecord,
@@ -272,7 +278,7 @@ export class InitTransactions {
       systemProgram: SystemProgram.programId,
       rent: SYSVAR_RENT_PUBKEY,
       recentSlothashes: SYSVAR_SLOT_HASHES_PUBKEY,
-      instructionSysvarAccount: SYSVAR_INSTRUCTIONS_PUBKEY
+      instructionSysvarAccount: SYSVAR_INSTRUCTIONS_PUBKEY,
     };
 
     const args: MintInstructionArgs = {
@@ -281,17 +287,24 @@ export class InitTransactions {
     };
 
     const ixs: TransactionInstruction[] = [];
-    ixs.push(SystemProgram.createAccount({
-      fromPubkey: payer.publicKey,
-      newAccountPubkey: mint.publicKey,
-      lamports: await connection.getMinimumBalanceForRentExemption(
-        MintLayout.span,
-      ),
-      space: MintLayout.span,
-      programId: TOKEN_PROGRAM_ID,
-    }));
+    ixs.push(
+      SystemProgram.createAccount({
+        fromPubkey: payer.publicKey,
+        newAccountPubkey: mint.publicKey,
+        lamports: await connection.getMinimumBalanceForRentExemption(MintLayout.span),
+        space: MintLayout.span,
+        programId: TOKEN_PROGRAM_ID,
+      }),
+    );
     ixs.push(createInitializeMintInstruction(mint.publicKey, 0, payer.publicKey, payer.publicKey));
-    ixs.push(createAssociatedTokenAccountInstruction(payer.publicKey, associatedToken, payer.publicKey, mint.publicKey));
+    ixs.push(
+      createAssociatedTokenAccountInstruction(
+        payer.publicKey,
+        associatedToken,
+        payer.publicKey,
+        mint.publicKey,
+      ),
+    );
     ixs.push(createMintToInstruction(mint.publicKey, associatedToken, payer.publicKey, 1, []));
     ixs.push(createMintInstruction(accounts, args));
     const tx = new Transaction().add(...ixs);
@@ -314,34 +327,36 @@ export class InitTransactions {
     const items = 10;
 
     const candyMachineData = {
-        itemsAvailable: items,
-        symbol: 'CORE',
-        sellerFeeBasisPoints: 500,
-        maxSupply: 0,
-        isMutable: true,
-        retainAuthority: true,
-        creators: [{
-            address: payer.publicKey,
-            verified: false,
-            percentageShare: 100
-        }],
-        configLineSettings: {
-            prefixName: 'TEST ',
-            nameLength: 10,
-            prefixUri: 'https://arweave.net/',
-            uriLength: 50,
-            isSequential: false
+      itemsAvailable: items,
+      symbol: 'CORE',
+      sellerFeeBasisPoints: 500,
+      maxSupply: 0,
+      isMutable: true,
+      retainAuthority: true,
+      creators: [
+        {
+          address: payer.publicKey,
+          verified: false,
+          percentageShare: 100,
         },
-        hiddenSettings: null
+      ],
+      configLineSettings: {
+        prefixName: 'TEST ',
+        nameLength: 10,
+        prefixUri: 'https://arweave.net/',
+        uriLength: 50,
+        isSequential: false,
+      },
+      hiddenSettings: null,
     };
 
     const { tx: createTxCM } = await HELPER.create(
-        t,
-        payer,
-        candyMachine,
-        candyMachineData,
-        handler,
-        connection
+      t,
+      payer,
+      candyMachine,
+      candyMachineData,
+      handler,
+      connection,
     );
     // executes the transaction
     await createTxCM.assertSuccess(t);
@@ -349,21 +364,17 @@ export class InitTransactions {
     const lines: { name: string; uri: string }[] = [];
 
     for (let i = 0; i < items; i++) {
-        const line = {
-            name: `NFT #${i + 1}`,
-            uri: 'uJSdJIsz_tYTcjUEWdeVSj0aR90K-hjDauATWZSi-tQ'
-        };
+      const line = {
+        name: `NFT #${i + 1}`,
+        uri: 'uJSdJIsz_tYTcjUEWdeVSj0aR90K-hjDauATWZSi-tQ',
+      };
 
-        lines.push(line);
+      lines.push(line);
     }
     const { txs } = await HELPER.addConfigLines(t, candyMachine.publicKey, payer, lines, handler);
     // confirms that all lines have been written
     for (const tx of txs) {
-        await handler.sendAndConfirmTransaction(
-            tx,
-            [payer],
-            'tx: AddConfigLines'
-        ).assertNone();
+      await handler.sendAndConfirmTransaction(tx, [payer], 'tx: AddConfigLines').assertNone();
     }
 
     if (collection) {
@@ -373,7 +384,7 @@ export class InitTransactions {
         collection,
         payer,
         handler,
-        connection
+        connection,
       );
       await addCollectionTx.assertNone();
     }
@@ -381,21 +392,15 @@ export class InitTransactions {
     // candy guard
 
     const { tx: initializeTxCG, candyGuard: address } = await this.initialize(
-        t,
-        guards,
-        payer,
-        handler,
+      t,
+      guards,
+      payer,
+      handler,
     );
     // executes the transaction
     await initializeTxCG.assertSuccess(t);
 
-    const { tx: wrapTx } = await this.wrap(
-      t,
-      address,
-      candyMachine.publicKey,
-      payer,
-      handler
-    );
+    const { tx: wrapTx } = await this.wrap(t, address, candyMachine.publicKey, payer, handler);
 
     await wrapTx.assertSuccess(t, [/SetAuthority/i]);
 

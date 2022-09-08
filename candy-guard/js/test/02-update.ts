@@ -132,7 +132,8 @@ test('update: disable guards', async (t) => {
         allowList: null,
         mintLimit: null,
         nftPayment: null,
-      }]
+      },
+    ],
   };
 
   const { tx: transaction, candyGuard: address } = await API.initialize(
