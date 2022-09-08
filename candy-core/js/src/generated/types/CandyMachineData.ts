@@ -18,7 +18,6 @@ export type CandyMachineData = {
   sellerFeeBasisPoints: number
   maxSupply: beet.bignum
   isMutable: boolean
-  retainAuthority: boolean
   creators: Creator[]
   configLineSettings: beet.COption<ConfigLineSettings>
   hiddenSettings: beet.COption<HiddenSettings>
@@ -36,7 +35,6 @@ export const candyMachineDataBeet =
       ['sellerFeeBasisPoints', beet.u16],
       ['maxSupply', beet.u64],
       ['isMutable', beet.bool],
-      ['retainAuthority', beet.bool],
       ['creators', beet.array(creatorBeet)],
       ['configLineSettings', beet.coption(configLineSettingsBeet)],
       ['hiddenSettings', beet.coption(hiddenSettingsBeet)],

@@ -3,10 +3,226 @@
   "name": "candy_machine_core",
   "instructions": [
     {
-      "name": "addCollection",
+      "name": "addConfigLines",
       "docs": [
-        "Add the collection information to the candy machine. After this, any NFT minted",
-        "from the candy machine will be part of the specified collection."
+        "Add the configuration (name + uri) of each NFT to the account data."
+      ],
+      "accounts": [
+        {
+          "name": "candyMachine",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true
+        }
+      ],
+      "args": [
+        {
+          "name": "index",
+          "type": "u32"
+        },
+        {
+          "name": "configLines",
+          "type": {
+            "vec": {
+              "defined": "ConfigLine"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "initialize",
+      "docs": [
+        "Initialize the candy machine account with the specified data."
+      ],
+      "accounts": [
+        {
+          "name": "candyMachine",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "updateAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "payer",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "collectionAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "collectionMetadata",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "collectionMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "collectionEdition",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "collectionAuthorityRecord",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMetadataProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "data",
+          "type": {
+            "defined": "CandyMachineData"
+          }
+        }
+      ]
+    },
+    {
+      "name": "mint",
+      "docs": [
+        "Mint an NFT. Only the candy machine authority is allowed to mint."
+      ],
+      "accounts": [
+        {
+          "name": "candyMachine",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "candyMachineCreator",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "updateAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "mint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "mintAuthority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "metadata",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "masterEdition",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "collectionAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "collectionAuthorityRecord",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "collectionMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "collectionMetadata",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "collectionMasterEdition",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMetadataProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "recentSlothashes",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "creatorBump",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "setCollection",
+      "docs": [
+        "Set the collection mint for the candy machine."
       ],
       "accounts": [
         {
@@ -66,222 +282,6 @@
         },
         {
           "name": "rent",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "addConfigLines",
-      "docs": [
-        "Add the configuration (name + uri) of each NFT to the account data."
-      ],
-      "accounts": [
-        {
-          "name": "candyMachine",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "authority",
-          "isMut": false,
-          "isSigner": true
-        }
-      ],
-      "args": [
-        {
-          "name": "index",
-          "type": "u32"
-        },
-        {
-          "name": "configLines",
-          "type": {
-            "vec": {
-              "defined": "ConfigLine"
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "initialize",
-      "docs": [
-        "Initialize the candy machine account with the specified data."
-      ],
-      "accounts": [
-        {
-          "name": "candyMachine",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "authority",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "updateAuthority",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "payer",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "data",
-          "type": {
-            "defined": "CandyMachineData"
-          }
-        }
-      ]
-    },
-    {
-      "name": "mint",
-      "docs": [
-        "Mint an NFT. Only the candy machine authority is allowed to mint."
-      ],
-      "accounts": [
-        {
-          "name": "candyMachine",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "candyMachineCreator",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "authority",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "updateAuthority",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "payer",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "metadata",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "mint",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "mintAuthority",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "mintUpdateAuthority",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "masterEdition",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "tokenMetadataProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "recentSlothashes",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "creatorBump",
-          "type": "u8"
-        }
-      ]
-    },
-    {
-      "name": "removeCollection",
-      "docs": [
-        "Remove the collection informatino from the candy machine."
-      ],
-      "accounts": [
-        {
-          "name": "candyMachine",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "authority",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "updateAuthority",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "collectionAuthority",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "collectionMint",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "collectionMetadata",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "collectionAuthorityRecord",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "tokenMetadataProgram",
           "isMut": false,
           "isSigner": false
         }
@@ -356,7 +356,7 @@
         },
         {
           "name": "authority",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true
         }
       ],
@@ -396,11 +396,9 @@
           {
             "name": "collectionMint",
             "docs": [
-              "Indicates whether the minted NFTs are part of a collection or not."
+              "The collection mint for the candy machine."
             ],
-            "type": {
-              "option": "publicKey"
-            }
+            "type": "publicKey"
           },
           {
             "name": "itemsRedeemed",
@@ -463,13 +461,6 @@
             "name": "isMutable",
             "docs": [
               "Indicates if the asset is mutable or not (default yes)"
-            ],
-            "type": "bool"
-          },
-          {
-            "name": "retainAuthority",
-            "docs": [
-              "Indicates whether to retain the update authority or not"
             ],
             "type": "bool"
           },
@@ -712,46 +703,36 @@
     },
     {
       "code": 6013,
-      "name": "CandyCollectionRequiresRetainAuthority",
-      "msg": "Retain authority must be true for Candy Machines with a collection set"
-    },
-    {
-      "code": 6014,
       "name": "ExceededLengthError",
       "msg": "Value longer than expected maximum value"
     },
     {
-      "code": 6015,
+      "code": 6014,
       "name": "MissingConfigLinesSettings",
       "msg": "Missing config lines settings"
     },
     {
-      "code": 6016,
+      "code": 6015,
       "name": "CannotIncreaseLength",
       "msg": "Cannot increase the length in config lines settings"
     },
     {
-      "code": 6017,
+      "code": 6016,
       "name": "CannotSwitchFromHiddenSettings",
       "msg": "Cannot switch from hidden settings"
     },
     {
-      "code": 6018,
+      "code": 6017,
       "name": "CannotChangeSequentialIndexGeneration",
       "msg": "Cannot change sequential index generation after items have begun to be minted"
     },
     {
-      "code": 6019,
+      "code": 6018,
       "name": "CollectionKeyMismatch",
       "msg": "Collection public key mismatch"
     },
     {
-      "code": 6020,
-      "name": "MissingCollectionAccounts",
-      "msg": "Missing collection accounts"
-    },
-    {
-      "code": 6021,
+      "code": 6019,
       "name": "CannotChangeUpdateAuthority",
       "msg": "Cannot change update authority if a collection mint is set"
     }

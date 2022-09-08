@@ -23,7 +23,7 @@ export const withdrawStruct = new beet.BeetArgsStruct<{
  * Accounts required by the _withdraw_ instruction
  *
  * @property [_writable_] candyMachine
- * @property [**signer**] authority
+ * @property [_writable_, **signer**] authority
  * @category Instructions
  * @category Withdraw
  * @category generated
@@ -60,7 +60,7 @@ export function createWithdrawInstruction(
     },
     {
       pubkey: accounts.authority,
-      isWritable: false,
+      isWritable: true,
       isSigner: true,
     },
   ]

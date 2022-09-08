@@ -43,6 +43,12 @@ export const initializeStruct = new beet.FixableBeetArgsStruct<
  * @property [] authority
  * @property [] updateAuthority
  * @property [**signer**] payer
+ * @property [] collectionAuthority
+ * @property [] collectionMetadata
+ * @property [] collectionMint
+ * @property [] collectionEdition
+ * @property [_writable_] collectionAuthorityRecord
+ * @property [] tokenMetadataProgram
  * @category Instructions
  * @category Initialize
  * @category generated
@@ -52,6 +58,12 @@ export type InitializeInstructionAccounts = {
   authority: web3.PublicKey
   updateAuthority: web3.PublicKey
   payer: web3.PublicKey
+  collectionAuthority: web3.PublicKey
+  collectionMetadata: web3.PublicKey
+  collectionMint: web3.PublicKey
+  collectionEdition: web3.PublicKey
+  collectionAuthorityRecord: web3.PublicKey
+  tokenMetadataProgram: web3.PublicKey
   systemProgram?: web3.PublicKey
   rent?: web3.PublicKey
 }
@@ -99,6 +111,36 @@ export function createInitializeInstruction(
       pubkey: accounts.payer,
       isWritable: false,
       isSigner: true,
+    },
+    {
+      pubkey: accounts.collectionAuthority,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.collectionMetadata,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.collectionMint,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.collectionEdition,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.collectionAuthorityRecord,
+      isWritable: true,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.tokenMetadataProgram,
+      isWritable: false,
+      isSigner: false,
     },
     {
       pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,

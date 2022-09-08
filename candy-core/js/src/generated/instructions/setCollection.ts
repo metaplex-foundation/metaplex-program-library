@@ -10,59 +10,65 @@ import * as web3 from '@solana/web3.js'
 
 /**
  * @category Instructions
- * @category RemoveCollection
+ * @category SetCollection
  * @category generated
  */
-export const removeCollectionStruct = new beet.BeetArgsStruct<{
+export const setCollectionStruct = new beet.BeetArgsStruct<{
   instructionDiscriminator: number[] /* size: 8 */
 }>(
   [['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)]],
-  'RemoveCollectionInstructionArgs'
+  'SetCollectionInstructionArgs'
 )
 /**
- * Accounts required by the _removeCollection_ instruction
+ * Accounts required by the _setCollection_ instruction
  *
  * @property [_writable_] candyMachine
  * @property [**signer**] authority
  * @property [] updateAuthority
+ * @property [**signer**] payer
  * @property [] collectionAuthority
- * @property [] collectionMint
  * @property [] collectionMetadata
+ * @property [] collectionMint
+ * @property [] collectionEdition
  * @property [_writable_] collectionAuthorityRecord
  * @property [] tokenMetadataProgram
  * @category Instructions
- * @category RemoveCollection
+ * @category SetCollection
  * @category generated
  */
-export type RemoveCollectionInstructionAccounts = {
+export type SetCollectionInstructionAccounts = {
   candyMachine: web3.PublicKey
   authority: web3.PublicKey
   updateAuthority: web3.PublicKey
+  payer: web3.PublicKey
   collectionAuthority: web3.PublicKey
-  collectionMint: web3.PublicKey
   collectionMetadata: web3.PublicKey
+  collectionMint: web3.PublicKey
+  collectionEdition: web3.PublicKey
   collectionAuthorityRecord: web3.PublicKey
   tokenMetadataProgram: web3.PublicKey
+  systemProgram?: web3.PublicKey
+  rent?: web3.PublicKey
 }
 
-export const removeCollectionInstructionDiscriminator = [
-  223, 52, 106, 217, 61, 220, 36, 160,
+export const setCollectionInstructionDiscriminator = [
+  192, 254, 206, 76, 168, 182, 59, 223,
 ]
 
 /**
- * Creates a _RemoveCollection_ instruction.
+ * Creates a _SetCollection_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
  * @category Instructions
- * @category RemoveCollection
+ * @category SetCollection
  * @category generated
  */
-export function createRemoveCollectionInstruction(
-  accounts: RemoveCollectionInstructionAccounts,
+export function createSetCollectionInstruction(
+  accounts: SetCollectionInstructionAccounts,
   programId = new web3.PublicKey('cndy3CZK71ZHMp9ddpq5NVvQDx33o6cCYDf4JBAWCk7')
 ) {
-  const [data] = removeCollectionStruct.serialize({
-    instructionDiscriminator: removeCollectionInstructionDiscriminator,
+  const [data] = setCollectionStruct.serialize({
+    instructionDiscriminator: setCollectionInstructionDiscriminator,
   })
   const keys: web3.AccountMeta[] = [
     {
@@ -81,7 +87,17 @@ export function createRemoveCollectionInstruction(
       isSigner: false,
     },
     {
+      pubkey: accounts.payer,
+      isWritable: false,
+      isSigner: true,
+    },
+    {
       pubkey: accounts.collectionAuthority,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.collectionMetadata,
       isWritable: false,
       isSigner: false,
     },
@@ -91,7 +107,7 @@ export function createRemoveCollectionInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.collectionMetadata,
+      pubkey: accounts.collectionEdition,
       isWritable: false,
       isSigner: false,
     },
@@ -102,6 +118,16 @@ export function createRemoveCollectionInstruction(
     },
     {
       pubkey: accounts.tokenMetadataProgram,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.rent ?? web3.SYSVAR_RENT_PUBKEY,
       isWritable: false,
       isSigner: false,
     },

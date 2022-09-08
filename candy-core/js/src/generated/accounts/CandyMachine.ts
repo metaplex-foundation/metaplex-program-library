@@ -22,7 +22,7 @@ export type CandyMachineArgs = {
   features: beet.bignum
   authority: web3.PublicKey
   updateAuthority: web3.PublicKey
-  collectionMint: beet.COption<web3.PublicKey>
+  collectionMint: web3.PublicKey
   itemsRedeemed: beet.bignum
   data: CandyMachineData
 }
@@ -40,7 +40,7 @@ export class CandyMachine implements CandyMachineArgs {
     readonly features: beet.bignum,
     readonly authority: web3.PublicKey,
     readonly updateAuthority: web3.PublicKey,
-    readonly collectionMint: beet.COption<web3.PublicKey>,
+    readonly collectionMint: web3.PublicKey,
     readonly itemsRedeemed: beet.bignum,
     readonly data: CandyMachineData
   ) {}
@@ -173,7 +173,7 @@ export class CandyMachine implements CandyMachineArgs {
       })(),
       authority: this.authority.toBase58(),
       updateAuthority: this.updateAuthority.toBase58(),
-      collectionMint: this.collectionMint,
+      collectionMint: this.collectionMint.toBase58(),
       itemsRedeemed: (() => {
         const x = <{ toNumber: () => number }>this.itemsRedeemed
         if (typeof x.toNumber === 'function') {
@@ -205,7 +205,7 @@ export const candyMachineBeet = new beet.FixableBeetStruct<
     ['features', beet.u64],
     ['authority', beetSolana.publicKey],
     ['updateAuthority', beetSolana.publicKey],
-    ['collectionMint', beet.coption(beetSolana.publicKey)],
+    ['collectionMint', beetSolana.publicKey],
     ['itemsRedeemed', beet.u64],
     ['data', candyMachineDataBeet],
   ],

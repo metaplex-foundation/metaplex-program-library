@@ -330,41 +330,13 @@ createErrorFromNameLookup.set(
 )
 
 /**
- * CandyCollectionRequiresRetainAuthority: 'Retain authority must be true for Candy Machines with a collection set'
- *
- * @category Errors
- * @category generated
- */
-export class CandyCollectionRequiresRetainAuthorityError extends Error {
-  readonly code: number = 0x177d
-  readonly name: string = 'CandyCollectionRequiresRetainAuthority'
-  constructor() {
-    super(
-      'Retain authority must be true for Candy Machines with a collection set'
-    )
-    if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, CandyCollectionRequiresRetainAuthorityError)
-    }
-  }
-}
-
-createErrorFromCodeLookup.set(
-  0x177d,
-  () => new CandyCollectionRequiresRetainAuthorityError()
-)
-createErrorFromNameLookup.set(
-  'CandyCollectionRequiresRetainAuthority',
-  () => new CandyCollectionRequiresRetainAuthorityError()
-)
-
-/**
  * ExceededLengthError: 'Value longer than expected maximum value'
  *
  * @category Errors
  * @category generated
  */
 export class ExceededLengthErrorError extends Error {
-  readonly code: number = 0x177e
+  readonly code: number = 0x177d
   readonly name: string = 'ExceededLengthError'
   constructor() {
     super('Value longer than expected maximum value')
@@ -374,7 +346,7 @@ export class ExceededLengthErrorError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x177e, () => new ExceededLengthErrorError())
+createErrorFromCodeLookup.set(0x177d, () => new ExceededLengthErrorError())
 createErrorFromNameLookup.set(
   'ExceededLengthError',
   () => new ExceededLengthErrorError()
@@ -387,7 +359,7 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class MissingConfigLinesSettingsError extends Error {
-  readonly code: number = 0x177f
+  readonly code: number = 0x177e
   readonly name: string = 'MissingConfigLinesSettings'
   constructor() {
     super('Missing config lines settings')
@@ -398,7 +370,7 @@ export class MissingConfigLinesSettingsError extends Error {
 }
 
 createErrorFromCodeLookup.set(
-  0x177f,
+  0x177e,
   () => new MissingConfigLinesSettingsError()
 )
 createErrorFromNameLookup.set(
@@ -413,7 +385,7 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class CannotIncreaseLengthError extends Error {
-  readonly code: number = 0x1780
+  readonly code: number = 0x177f
   readonly name: string = 'CannotIncreaseLength'
   constructor() {
     super('Cannot increase the length in config lines settings')
@@ -423,7 +395,7 @@ export class CannotIncreaseLengthError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x1780, () => new CannotIncreaseLengthError())
+createErrorFromCodeLookup.set(0x177f, () => new CannotIncreaseLengthError())
 createErrorFromNameLookup.set(
   'CannotIncreaseLength',
   () => new CannotIncreaseLengthError()
@@ -436,7 +408,7 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class CannotSwitchFromHiddenSettingsError extends Error {
-  readonly code: number = 0x1781
+  readonly code: number = 0x1780
   readonly name: string = 'CannotSwitchFromHiddenSettings'
   constructor() {
     super('Cannot switch from hidden settings')
@@ -447,7 +419,7 @@ export class CannotSwitchFromHiddenSettingsError extends Error {
 }
 
 createErrorFromCodeLookup.set(
-  0x1781,
+  0x1780,
   () => new CannotSwitchFromHiddenSettingsError()
 )
 createErrorFromNameLookup.set(
@@ -462,7 +434,7 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class CannotChangeSequentialIndexGenerationError extends Error {
-  readonly code: number = 0x1782
+  readonly code: number = 0x1781
   readonly name: string = 'CannotChangeSequentialIndexGeneration'
   constructor() {
     super(
@@ -475,7 +447,7 @@ export class CannotChangeSequentialIndexGenerationError extends Error {
 }
 
 createErrorFromCodeLookup.set(
-  0x1782,
+  0x1781,
   () => new CannotChangeSequentialIndexGenerationError()
 )
 createErrorFromNameLookup.set(
@@ -490,7 +462,7 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class CollectionKeyMismatchError extends Error {
-  readonly code: number = 0x1783
+  readonly code: number = 0x1782
   readonly name: string = 'CollectionKeyMismatch'
   constructor() {
     super('Collection public key mismatch')
@@ -500,36 +472,10 @@ export class CollectionKeyMismatchError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x1783, () => new CollectionKeyMismatchError())
+createErrorFromCodeLookup.set(0x1782, () => new CollectionKeyMismatchError())
 createErrorFromNameLookup.set(
   'CollectionKeyMismatch',
   () => new CollectionKeyMismatchError()
-)
-
-/**
- * MissingCollectionAccounts: 'Missing collection accounts'
- *
- * @category Errors
- * @category generated
- */
-export class MissingCollectionAccountsError extends Error {
-  readonly code: number = 0x1784
-  readonly name: string = 'MissingCollectionAccounts'
-  constructor() {
-    super('Missing collection accounts')
-    if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, MissingCollectionAccountsError)
-    }
-  }
-}
-
-createErrorFromCodeLookup.set(
-  0x1784,
-  () => new MissingCollectionAccountsError()
-)
-createErrorFromNameLookup.set(
-  'MissingCollectionAccounts',
-  () => new MissingCollectionAccountsError()
 )
 
 /**
@@ -539,7 +485,7 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class CannotChangeUpdateAuthorityError extends Error {
-  readonly code: number = 0x1785
+  readonly code: number = 0x1783
   readonly name: string = 'CannotChangeUpdateAuthority'
   constructor() {
     super('Cannot change update authority if a collection mint is set')
@@ -550,7 +496,7 @@ export class CannotChangeUpdateAuthorityError extends Error {
 }
 
 createErrorFromCodeLookup.set(
-  0x1785,
+  0x1783,
   () => new CannotChangeUpdateAuthorityError()
 )
 createErrorFromNameLookup.set(
