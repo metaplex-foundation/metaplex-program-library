@@ -24,7 +24,9 @@ use mpl_candy_machine::{
 
 use crate::core::helpers::create_associated_token_account;
 use crate::utils::helpers::CandyTestLogger;
-use crate::utils::{remove_freeze, set_freeze, thaw_nft, unlock_funds, withdraw_funds};
+use crate::utils::{
+    remove_freeze, set_freeze, thaw_nft, unlock_funds, update_authority, withdraw_funds,
+};
 use crate::{
     core::{
         helpers::{
@@ -817,6 +819,24 @@ impl CandyManager {
             new_data,
             &self.wallet,
             token_info,
+        )
+        .await?;
+        logger.end();
+        Ok(())
+    }
+
+    pub async fn update_authority(
+        &mut self,
+        context: &mut ProgramTestContext,
+        new_authority: Pubkey,
+    ) -> transport::Result<()> {
+        let logger = CandyTestLogger::new_start("Update Candy Machine Authority");
+        update_authority(
+            context,
+            &self.candy_machine.pubkey(),
+            &self.authority,
+            &self.wallet,
+            &new_authority,
         )
         .await?;
         logger.end();

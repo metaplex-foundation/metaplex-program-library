@@ -127,6 +127,40 @@ pub async fn update_candy_machine(
     context.banks_client.process_transaction(tx).await
 }
 
+pub async fn update_authority(
+    context: &mut ProgramTestContext,
+    candy_machine: &Pubkey,
+    authority: &Keypair,
+    wallet: &Pubkey,
+    new_authority: &Pubkey,
+) -> transport::Result<()> {
+    let accounts = mpl_candy_machine::accounts::UpdateCandyMachine {
+        candy_machine: *candy_machine,
+        authority: authority.pubkey(),
+        wallet: *wallet,
+    }
+    .to_account_metas(None);
+    let data = mpl_candy_machine::instruction::UpdateAuthority {
+        new_authority: Some(*new_authority),
+    }
+    .data();
+    let update_ix = Instruction {
+        program_id: mpl_candy_machine::id(),
+        data,
+        accounts,
+    };
+
+    update_blockhash(context).await?;
+    let tx = Transaction::new_signed_with_payer(
+        &[update_ix],
+        Some(&authority.pubkey()),
+        &[authority],
+        context.last_blockhash,
+    );
+
+    context.banks_client.process_transaction(tx).await
+}
+
 pub async fn add_config_lines(
     context: &mut ProgramTestContext,
     candy_machine: &Pubkey,
