@@ -11,6 +11,7 @@ use mpl_auction_house::{
     cpi::accounts::{AuctioneerDeposit, AuctioneerPublicBuy},
     program::AuctionHouse as AuctionHouseProgram,
     AuctionHouse,
+    Auctioneer,
 };
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
@@ -137,9 +138,9 @@ pub struct CreateOffer<'info> {
             reward_center.key().as_ref()
         ],
         seeds::program = auction_house_program,
-        bump = auction_house.auctioneer_pda_bump
+        bump = ah_auctioneer_pda.bump
     )]
-    pub ah_auctioneer_pda: UncheckedAccount<'info>,
+    pub ah_auctioneer_pda: Box<Account<'info, Auctioneer>>,
 
     pub auction_house_program: Program<'info, AuctionHouseProgram>,
     pub token_program: Program<'info, Token>,

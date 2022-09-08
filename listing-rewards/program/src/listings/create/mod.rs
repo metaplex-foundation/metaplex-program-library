@@ -14,6 +14,7 @@ use mpl_auction_house::{
     instruction::AuctioneerSell as AuctioneerSellParams,
     program::AuctionHouse as AuctionHouseProgram,
     AuctionHouse,
+    Auctioneer
 };
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
@@ -153,9 +154,9 @@ pub struct CreateListing<'info> {
             reward_center.key().as_ref()
         ],
         seeds::program = auction_house_program,
-        bump = auction_house.auctioneer_pda_bump
+        bump = ah_auctioneer_pda.bump,
     )]
-    pub ah_auctioneer_pda: UncheckedAccount<'info>,
+    pub ah_auctioneer_pda: Box<Account<'info, Auctioneer>>,
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     #[account(
@@ -186,6 +187,8 @@ pub fn handler(
     let metadata = &ctx.accounts.metadata;
     let reward_center = &ctx.accounts.reward_center;
     let auction_house = &ctx.accounts.auction_house;
+    let ah_auctioneer_pda = &ctx.accounts.ah_auctioneer_pda;
+
     let wallet = &ctx.accounts.wallet;
     let clock = Clock::get()?;
     let listing = &mut ctx.accounts.listing;
