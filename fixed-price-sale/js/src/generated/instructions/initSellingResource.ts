@@ -24,7 +24,7 @@ export type InitSellingResourceInstructionArgs = {
  * @category InitSellingResource
  * @category generated
  */
-const initSellingResourceStruct = new beet.FixableBeetArgsStruct<
+export const initSellingResourceStruct = new beet.FixableBeetArgsStruct<
   InitSellingResourceInstructionArgs & {
     instructionDiscriminator: number[] /* size: 8 */;
   }
@@ -39,6 +39,17 @@ const initSellingResourceStruct = new beet.FixableBeetArgsStruct<
 );
 /**
  * Accounts required by the _initSellingResource_ instruction
+ *
+ * @property [] store
+ * @property [_writable_, **signer**] admin
+ * @property [_writable_, **signer**] sellingResource
+ * @property [] sellingResourceOwner
+ * @property [] resourceMint
+ * @property [] masterEdition
+ * @property [] metadata
+ * @property [_writable_] vault
+ * @property [] owner
+ * @property [_writable_] resourceToken
  * @category Instructions
  * @category InitSellingResource
  * @category generated
@@ -54,9 +65,13 @@ export type InitSellingResourceInstructionAccounts = {
   vault: web3.PublicKey;
   owner: web3.PublicKey;
   resourceToken: web3.PublicKey;
+  rent?: web3.PublicKey;
+  tokenProgram?: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
 };
 
-const initSellingResourceInstructionDiscriminator = [56, 15, 222, 211, 147, 205, 4, 145];
+export const initSellingResourceInstructionDiscriminator = [56, 15, 222, 211, 147, 205, 4, 145];
 
 /**
  * Creates a _InitSellingResource_ instruction.
@@ -71,94 +86,88 @@ const initSellingResourceInstructionDiscriminator = [56, 15, 222, 211, 147, 205,
 export function createInitSellingResourceInstruction(
   accounts: InitSellingResourceInstructionAccounts,
   args: InitSellingResourceInstructionArgs,
+  programId = new web3.PublicKey('SaLeTjyUa5wXHnGuewUSyJ5JWZaHwz3TxqUntCE9czo'),
 ) {
-  const {
-    store,
-    admin,
-    sellingResource,
-    sellingResourceOwner,
-    resourceMint,
-    masterEdition,
-    metadata,
-    vault,
-    owner,
-    resourceToken,
-  } = accounts;
-
   const [data] = initSellingResourceStruct.serialize({
     instructionDiscriminator: initSellingResourceInstructionDiscriminator,
     ...args,
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: store,
+      pubkey: accounts.store,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: admin,
+      pubkey: accounts.admin,
       isWritable: true,
       isSigner: true,
     },
     {
-      pubkey: sellingResource,
+      pubkey: accounts.sellingResource,
       isWritable: true,
       isSigner: true,
     },
     {
-      pubkey: sellingResourceOwner,
+      pubkey: accounts.sellingResourceOwner,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: resourceMint,
+      pubkey: accounts.resourceMint,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: masterEdition,
+      pubkey: accounts.masterEdition,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: metadata,
+      pubkey: accounts.metadata,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: vault,
+      pubkey: accounts.vault,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: owner,
+      pubkey: accounts.owner,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: resourceToken,
+      pubkey: accounts.resourceToken,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: web3.SYSVAR_RENT_PUBKEY,
+      pubkey: accounts.rent ?? web3.SYSVAR_RENT_PUBKEY,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: splToken.TOKEN_PROGRAM_ID,
+      pubkey: accounts.tokenProgram ?? splToken.TOKEN_PROGRAM_ID,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: web3.SystemProgram.programId,
+      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
       isWritable: false,
       isSigner: false,
     },
   ];
 
+  if (accounts.anchorRemainingAccounts != null) {
+    for (const acc of accounts.anchorRemainingAccounts) {
+      keys.push(acc);
+    }
+  }
+
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey('SaLeTjyUa5wXHnGuewUSyJ5JWZaHwz3TxqUntCE9czo'),
+    programId,
     keys,
     data,
   });

@@ -33,6 +33,7 @@ export type FreezeDelegatedAccountInstructionAccounts = {
   tokenAccount: web3.PublicKey;
   edition: web3.PublicKey;
   mint: web3.PublicKey;
+  tokenProgram?: web3.PublicKey;
 };
 
 export const freezeDelegatedAccountInstructionDiscriminator = 26;
@@ -47,42 +48,41 @@ export const freezeDelegatedAccountInstructionDiscriminator = 26;
  */
 export function createFreezeDelegatedAccountInstruction(
   accounts: FreezeDelegatedAccountInstructionAccounts,
+  programId = new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
 ) {
-  const { delegate, tokenAccount, edition, mint } = accounts;
-
   const [data] = FreezeDelegatedAccountStruct.serialize({
     instructionDiscriminator: freezeDelegatedAccountInstructionDiscriminator,
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: delegate,
+      pubkey: accounts.delegate,
       isWritable: true,
       isSigner: true,
     },
     {
-      pubkey: tokenAccount,
+      pubkey: accounts.tokenAccount,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: edition,
+      pubkey: accounts.edition,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: mint,
+      pubkey: accounts.mint,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: splToken.TOKEN_PROGRAM_ID,
+      pubkey: accounts.tokenProgram ?? splToken.TOKEN_PROGRAM_ID,
       isWritable: false,
       isSigner: false,
     },
   ];
 
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
+    programId,
     keys,
     data,
   });

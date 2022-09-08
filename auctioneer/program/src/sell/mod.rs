@@ -84,8 +84,16 @@ pub struct AuctioneerSell<'info> {
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// The auctioneer PDA owned by Auction House storing scopes.
-    #[account(seeds = [AUCTIONEER.as_bytes(), auction_house.key().as_ref(), auctioneer_authority.key().as_ref()], seeds::program=auction_house_program, bump = auction_house.auctioneer_pda_bump)]
-    pub ah_auctioneer_pda: UncheckedAccount<'info>,
+    #[account(
+        seeds = [
+            AUCTIONEER.as_bytes(),
+            auction_house.key().as_ref(),
+            auctioneer_authority.key().as_ref()
+            ],
+        seeds::program=auction_house_program,
+        bump = ah_auctioneer_pda.bump,
+    )]
+    pub ah_auctioneer_pda: Account<'info, mpl_auction_house::Auctioneer>,
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     #[account(seeds=[PREFIX.as_bytes(), SIGNER.as_bytes()], seeds::program=auction_house_program, bump=program_as_signer_bump)]
@@ -110,6 +118,7 @@ pub fn auctioneer_sell<'info>(
     min_bid_increment: Option<u64>,
     time_ext_period: Option<u32>,
     time_ext_delta: Option<u32>,
+    allow_high_bid_cancel: Option<bool>,
 ) -> Result<()> {
     ctx.accounts.listing_config.version = ListingConfigVersion::V0;
     ctx.accounts.listing_config.highest_bid.version = ListingConfigVersion::V0;
@@ -119,6 +128,7 @@ pub fn auctioneer_sell<'info>(
     ctx.accounts.listing_config.min_bid_increment = min_bid_increment.unwrap_or(0);
     ctx.accounts.listing_config.time_ext_period = time_ext_period.unwrap_or(0);
     ctx.accounts.listing_config.time_ext_delta = time_ext_delta.unwrap_or(0);
+    ctx.accounts.listing_config.allow_high_bid_cancel = allow_high_bid_cancel.unwrap_or(false);
     ctx.accounts.listing_config.bump = *ctx
         .bumps
         .get("listing_config")

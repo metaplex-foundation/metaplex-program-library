@@ -2354,6 +2354,155 @@ createErrorFromCodeLookup.set(0x6c, () => new MissingEditionAccountError());
 createErrorFromNameLookup.set('MissingEditionAccount', () => new MissingEditionAccountError());
 
 /**
+ * NotAMasterEdition: 'This edition is not a Master Edition'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class NotAMasterEditionError extends Error {
+  readonly code: number = 0x6d;
+  readonly name: string = 'NotAMasterEdition';
+  constructor() {
+    super('This edition is not a Master Edition');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, NotAMasterEditionError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x6d, () => new NotAMasterEditionError());
+createErrorFromNameLookup.set('NotAMasterEdition', () => new NotAMasterEditionError());
+
+/**
+ * MasterEditionHasPrints: 'This Master Edition has existing prints'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MasterEditionHasPrintsError extends Error {
+  readonly code: number = 0x6e;
+  readonly name: string = 'MasterEditionHasPrints';
+  constructor() {
+    super('This Master Edition has existing prints');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MasterEditionHasPrintsError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x6e, () => new MasterEditionHasPrintsError());
+createErrorFromNameLookup.set('MasterEditionHasPrints', () => new MasterEditionHasPrintsError());
+
+/**
+ * BorshDeserializationError: 'Borsh Deserialization Error'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class BorshDeserializationErrorError extends Error {
+  readonly code: number = 0x6f;
+  readonly name: string = 'BorshDeserializationError';
+  constructor() {
+    super('Borsh Deserialization Error');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, BorshDeserializationErrorError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x6f, () => new BorshDeserializationErrorError());
+createErrorFromNameLookup.set(
+  'BorshDeserializationError',
+  () => new BorshDeserializationErrorError(),
+);
+
+/**
+ * CannotUpdateVerifiedCollection: 'Cannot update a verified colleciton in this command'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class CannotUpdateVerifiedCollectionError extends Error {
+  readonly code: number = 0x70;
+  readonly name: string = 'CannotUpdateVerifiedCollection';
+  constructor() {
+    super('Cannot update a verified colleciton in this command');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, CannotUpdateVerifiedCollectionError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x70, () => new CannotUpdateVerifiedCollectionError());
+createErrorFromNameLookup.set(
+  'CannotUpdateVerifiedCollection',
+  () => new CannotUpdateVerifiedCollectionError(),
+);
+
+/**
+ * CollectionMasterEditionAccountInvalid: 'Edition account aoesnt match collection '
+ *
+ * @category Errors
+ * @category generated
+ */
+export class CollectionMasterEditionAccountInvalidError extends Error {
+  readonly code: number = 0x71;
+  readonly name: string = 'CollectionMasterEditionAccountInvalid';
+  constructor() {
+    super('Edition account aoesnt match collection ');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, CollectionMasterEditionAccountInvalidError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x71, () => new CollectionMasterEditionAccountInvalidError());
+createErrorFromNameLookup.set(
+  'CollectionMasterEditionAccountInvalid',
+  () => new CollectionMasterEditionAccountInvalidError(),
+);
+
+/**
+ * AlreadyVerified: 'Item is already verified.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class AlreadyVerifiedError extends Error {
+  readonly code: number = 0x72;
+  readonly name: string = 'AlreadyVerified';
+  constructor() {
+    super('Item is already verified.');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, AlreadyVerifiedError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x72, () => new AlreadyVerifiedError());
+createErrorFromNameLookup.set('AlreadyVerified', () => new AlreadyVerifiedError());
+
+/**
+ * AlreadyUnverified: 'Item is already unverified.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class AlreadyUnverifiedError extends Error {
+  readonly code: number = 0x73;
+  readonly name: string = 'AlreadyUnverified';
+  constructor() {
+    super('Item is already unverified.');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, AlreadyUnverifiedError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x73, () => new AlreadyUnverifiedError());
+createErrorFromNameLookup.set('AlreadyUnverified', () => new AlreadyUnverifiedError());
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

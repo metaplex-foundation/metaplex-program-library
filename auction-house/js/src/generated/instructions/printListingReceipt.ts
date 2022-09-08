@@ -21,7 +21,7 @@ export type PrintListingReceiptInstructionArgs = {
  * @category PrintListingReceipt
  * @category generated
  */
-const printListingReceiptStruct = new beet.BeetArgsStruct<
+export const printListingReceiptStruct = new beet.BeetArgsStruct<
   PrintListingReceiptInstructionArgs & {
     instructionDiscriminator: number[] /* size: 8 */;
   }
@@ -45,10 +45,13 @@ const printListingReceiptStruct = new beet.BeetArgsStruct<
 export type PrintListingReceiptInstructionAccounts = {
   receipt: web3.PublicKey;
   bookkeeper: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
+  rent?: web3.PublicKey;
   instruction: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
 };
 
-const printListingReceiptInstructionDiscriminator = [207, 107, 44, 160, 75, 222, 195, 27];
+export const printListingReceiptInstructionDiscriminator = [207, 107, 44, 160, 75, 222, 195, 27];
 
 /**
  * Creates a _PrintListingReceipt_ instruction.
@@ -63,43 +66,48 @@ const printListingReceiptInstructionDiscriminator = [207, 107, 44, 160, 75, 222,
 export function createPrintListingReceiptInstruction(
   accounts: PrintListingReceiptInstructionAccounts,
   args: PrintListingReceiptInstructionArgs,
+  programId = new web3.PublicKey('hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk'),
 ) {
-  const { receipt, bookkeeper, instruction } = accounts;
-
   const [data] = printListingReceiptStruct.serialize({
     instructionDiscriminator: printListingReceiptInstructionDiscriminator,
     ...args,
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: receipt,
+      pubkey: accounts.receipt,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: bookkeeper,
+      pubkey: accounts.bookkeeper,
       isWritable: true,
       isSigner: true,
     },
     {
-      pubkey: web3.SystemProgram.programId,
+      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: web3.SYSVAR_RENT_PUBKEY,
+      pubkey: accounts.rent ?? web3.SYSVAR_RENT_PUBKEY,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: instruction,
+      pubkey: accounts.instruction,
       isWritable: false,
       isSigner: false,
     },
   ];
 
+  if (accounts.anchorRemainingAccounts != null) {
+    for (const acc of accounts.anchorRemainingAccounts) {
+      keys.push(acc);
+    }
+  }
+
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey('hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk'),
+    programId,
     keys,
     data,
   });

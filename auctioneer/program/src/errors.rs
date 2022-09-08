@@ -37,4 +37,8 @@ pub enum AuctioneerError {
     // 6008
     #[msg("The bid must match the highest bid plus the minimum bid increment")]
     BelowBidIncrement,
+
+    // 6009
+    #[msg("The highest bidder is not allowed to cancel")]
+    CannotCancelHighestBid,
 }

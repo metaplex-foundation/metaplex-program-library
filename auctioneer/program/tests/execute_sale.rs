@@ -67,6 +67,7 @@ async fn execute_sale_early_failure() {
         None,
         None,
         None,
+        None,
     );
     context
         .banks_client
@@ -124,7 +125,7 @@ async fn execute_sale_early_failure() {
         system_program: system_program::id(),
         ata_program: spl_associated_token_account::id(),
         rent: sysvar::rent::id(),
-        auctioneer_authority: auctioneer_authority,
+        auctioneer_authority,
         ah_auctioneer_pda: auctioneer_pda,
     }
     .to_account_metas(None);
@@ -168,7 +169,7 @@ async fn execute_sale_early_failure() {
         .get_account(buyer_token_account)
         .await
         .unwrap();
-    assert_eq!(buyer_token_before.is_none(), true);
+    assert!(buyer_token_before.is_none());
 
     let result = context
         .banks_client
@@ -217,6 +218,7 @@ async fn execute_sale_success() {
             .expect("Time went backwards")
             .as_secs()
             + 60) as i64,
+        None,
         None,
         None,
         None,
@@ -279,7 +281,7 @@ async fn execute_sale_success() {
         system_program: system_program::id(),
         ata_program: spl_associated_token_account::id(),
         rent: sysvar::rent::id(),
-        auctioneer_authority: auctioneer_authority,
+        auctioneer_authority,
         ah_auctioneer_pda: auctioneer_pda,
     }
     .to_account_metas(None);
@@ -330,7 +332,14 @@ async fn execute_sale_success() {
         .get_account(buyer_token_account)
         .await
         .unwrap();
-    assert_eq!(buyer_token_before.is_none(), true);
+    assert!(buyer_token_before.is_none());
+
+    let listing_config_account = context
+        .banks_client
+        .get_account(listing_config_address)
+        .await
+        .unwrap()
+        .unwrap();
 
     context.banks_client.process_transaction(tx).await.unwrap();
 
@@ -341,7 +350,7 @@ async fn execute_sale_success() {
         .unwrap()
         .unwrap();
     let buyer_token_after = Account::unpack_from_slice(
-        &context
+        context
             .banks_client
             .get_account(buyer_token_account)
             .await
@@ -352,9 +361,24 @@ async fn execute_sale_success() {
     )
     .unwrap();
     let fee_minus: u64 = 100_000_000 - ((ah.seller_fee_basis_points as u64 * 100_000_000) / 10000);
-    assert_eq!(seller_before.lamports + fee_minus, seller_after.lamports);
-    assert_eq!(seller_before.lamports < seller_after.lamports, true);
+    assert!(seller_before.lamports < seller_after.lamports);
     assert_eq!(buyer_token_after.amount, 1);
+
+    let rent = context.banks_client.get_rent().await.unwrap();
+    let rent_exempt_min: u64 = rent.minimum_balance(listing_config_account.data.len());
+
+    assert_eq!(
+        seller_before.lamports + fee_minus + rent_exempt_min,
+        seller_after.lamports
+    );
+
+    let listing_config_closed = context
+        .banks_client
+        .get_account(listing_config_address)
+        .await
+        .unwrap();
+
+    assert!(listing_config_closed.is_none());
 }
 
 #[tokio::test]
@@ -396,6 +420,7 @@ async fn execute_sale_two_bids_success() {
             .expect("Time went backwards")
             .as_secs()
             + 60) as i64,
+        None,
         None,
         None,
         None,
@@ -481,7 +506,7 @@ async fn execute_sale_two_bids_success() {
         system_program: system_program::id(),
         ata_program: spl_associated_token_account::id(),
         rent: sysvar::rent::id(),
-        auctioneer_authority: auctioneer_authority,
+        auctioneer_authority,
         ah_auctioneer_pda: auctioneer_pda,
     }
     .to_account_metas(None);
@@ -531,7 +556,14 @@ async fn execute_sale_two_bids_success() {
         .get_account(buyer1_token_account)
         .await
         .unwrap();
-    assert_eq!(buyer1_token_before.is_none(), true);
+    assert!(buyer1_token_before.is_none());
+
+    let listing_config_account = context
+        .banks_client
+        .get_account(listing_config_address)
+        .await
+        .unwrap()
+        .unwrap();
 
     context.banks_client.process_transaction(tx).await.unwrap();
 
@@ -542,7 +574,7 @@ async fn execute_sale_two_bids_success() {
         .unwrap()
         .unwrap();
     let buyer1_token_after = Account::unpack_from_slice(
-        &context
+        context
             .banks_client
             .get_account(buyer1_token_account)
             .await
@@ -553,9 +585,24 @@ async fn execute_sale_two_bids_success() {
     )
     .unwrap();
     let fee_minus: u64 = 100_000_001 - ((ah.seller_fee_basis_points as u64 * 100_000_000) / 10000);
-    assert_eq!(seller_before.lamports + fee_minus, seller_after.lamports);
-    assert_eq!(seller_before.lamports < seller_after.lamports, true);
+    assert!(seller_before.lamports < seller_after.lamports);
     assert_eq!(buyer1_token_after.amount, 1);
+
+    let rent = context.banks_client.get_rent().await.unwrap();
+    let rent_exempt_min: u64 = rent.minimum_balance(listing_config_account.data.len());
+
+    assert_eq!(
+        seller_before.lamports + fee_minus + rent_exempt_min,
+        seller_after.lamports
+    );
+
+    let listing_config_closed = context
+        .banks_client
+        .get_account(listing_config_address)
+        .await
+        .unwrap();
+
+    assert!(listing_config_closed.is_none());
 }
 
 #[tokio::test]
@@ -597,6 +644,7 @@ async fn execute_sale_two_bids_failure() {
             .expect("Time went backwards")
             .as_secs()
             + 60) as i64,
+        None,
         None,
         None,
         None,
@@ -682,7 +730,7 @@ async fn execute_sale_two_bids_failure() {
         system_program: system_program::id(),
         ata_program: spl_associated_token_account::id(),
         rent: sysvar::rent::id(),
-        auctioneer_authority: auctioneer_authority,
+        auctioneer_authority,
         ah_auctioneer_pda: auctioneer_pda,
     }
     .to_account_metas(None);

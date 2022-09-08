@@ -9,7 +9,7 @@ pub use assert::*;
 pub use edition_marker::EditionMarker;
 pub use external_price::ExternalPrice;
 pub use master_edition_v2::MasterEditionV2;
-pub use metadata::Metadata;
+pub use metadata::{assert_collection_size, Metadata};
 pub use mpl_token_metadata::instruction;
 use mpl_token_metadata::state::CollectionDetails;
 use solana_program_test::*;

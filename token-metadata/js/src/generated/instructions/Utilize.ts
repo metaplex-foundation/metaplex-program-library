@@ -54,6 +54,10 @@ export type UtilizeInstructionAccounts = {
   mint: web3.PublicKey;
   useAuthority: web3.PublicKey;
   owner: web3.PublicKey;
+  tokenProgram?: web3.PublicKey;
+  ataProgram?: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
+  rent?: web3.PublicKey;
   useAuthorityRecord?: web3.PublicKey;
   burner?: web3.PublicKey;
 };
@@ -73,85 +77,83 @@ export const utilizeInstructionDiscriminator = 19;
 export function createUtilizeInstruction(
   accounts: UtilizeInstructionAccounts,
   args: UtilizeInstructionArgs,
+  programId = new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
 ) {
-  const { metadata, tokenAccount, mint, useAuthority, owner, useAuthorityRecord, burner } =
-    accounts;
-
   const [data] = UtilizeStruct.serialize({
     instructionDiscriminator: utilizeInstructionDiscriminator,
     ...args,
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: metadata,
+      pubkey: accounts.metadata,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: tokenAccount,
+      pubkey: accounts.tokenAccount,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: mint,
+      pubkey: accounts.mint,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: useAuthority,
+      pubkey: accounts.useAuthority,
       isWritable: true,
       isSigner: true,
     },
     {
-      pubkey: owner,
+      pubkey: accounts.owner,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: splToken.TOKEN_PROGRAM_ID,
+      pubkey: accounts.tokenProgram ?? splToken.TOKEN_PROGRAM_ID,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
+      pubkey: accounts.ataProgram ?? splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: web3.SystemProgram.programId,
+      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: web3.SYSVAR_RENT_PUBKEY,
+      pubkey: accounts.rent ?? web3.SYSVAR_RENT_PUBKEY,
       isWritable: false,
       isSigner: false,
     },
   ];
 
-  if (useAuthorityRecord != null) {
+  if (accounts.useAuthorityRecord != null) {
     keys.push({
-      pubkey: useAuthorityRecord,
+      pubkey: accounts.useAuthorityRecord,
       isWritable: true,
       isSigner: false,
     });
   }
 
-  if (burner != null) {
-    if (useAuthorityRecord == null) {
+  if (accounts.burner != null) {
+    if (accounts.useAuthorityRecord == null) {
       throw new Error(
-        "When providing 'burner' then 'useAuthorityRecord' need(s) to be provided as well.",
+        "When providing 'burner' then 'accounts.useAuthorityRecord' need(s) to be provided as well.",
       );
     }
     keys.push({
-      pubkey: burner,
+      pubkey: accounts.burner,
       isWritable: false,
       isSigner: false,
     });
   }
 
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
+    programId,
     keys,
     data,
   });

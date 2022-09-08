@@ -2,6 +2,7 @@
 
 use super::*;
 use borsh::{BorshDeserialize, BorshSerialize};
+use shank::ShankAccount;
 use solana_program::{
     msg,
     program_error::ProgramError,
@@ -11,7 +12,9 @@ use solana_program::{
 
 /// Pack voucher
 #[repr(C)]
-#[derive(Debug, Clone, PartialEq, BorshSerialize, BorshDeserialize, BorshSchema, Default)]
+#[derive(
+    Debug, Clone, PartialEq, BorshSerialize, BorshDeserialize, BorshSchema, Default, ShankAccount,
+)]
 pub struct PackVoucher {
     /// Account type - PackVoucher
     pub account_type: AccountType,

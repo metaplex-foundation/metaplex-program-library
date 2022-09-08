@@ -3,3 +3,6 @@ members=[
   "program",
   "cli"
 ]
+
+[profile.release]
+overflow-checks = true

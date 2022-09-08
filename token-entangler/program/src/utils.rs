@@ -36,14 +36,13 @@ pub fn make_ata<'a>(
     rent: AccountInfo<'a>,
     fee_payer_seeds: &[&[u8]],
 ) -> Result<()> {
-    let seeds: &[&[&[u8]]];
     let as_arr = [fee_payer_seeds];
 
-    if fee_payer_seeds.len() > 0 {
-        seeds = &as_arr;
+    let seeds: &[&[&[u8]]] = if !fee_payer_seeds.is_empty() {
+        &as_arr
     } else {
-        seeds = &[];
-    }
+        &[]
+    };
 
     invoke_signed(
         &spl_associated_token_account::create_associated_token_account(
@@ -67,7 +66,7 @@ pub fn make_ata<'a>(
     Ok(())
 }
 
-pub fn assert_metadata_valid<'a>(
+pub fn assert_metadata_valid(
     metadata: &UncheckedAccount,
     edition: Option<&UncheckedAccount>,
     mint: &Pubkey,
@@ -147,8 +146,8 @@ pub fn create_program_token_account_if_not_present<'a>(
             *token_program.key,
             &program_account.to_account_info(),
             &rent.to_account_info(),
-            &system_program,
-            &fee_payer,
+            system_program,
+            fee_payer,
             spl_token::state::Account::LEN,
             fee_seeds,
             signer_seeds,
@@ -156,7 +155,7 @@ pub fn create_program_token_account_if_not_present<'a>(
 
         invoke_signed(
             &initialize_account2(
-                &token_program.key,
+                token_program.key,
                 &program_account.key(),
                 &mint.key(),
                 &owner.key(),
@@ -169,7 +168,7 @@ pub fn create_program_token_account_if_not_present<'a>(
                 rent.to_account_info(),
                 owner.clone(),
             ],
-            &[&signer_seeds],
+            &[signer_seeds],
         )?;
     }
 
@@ -228,7 +227,7 @@ pub fn pay_creator_fees<'a>(
                         invoke(
                             &spl_token::instruction::transfer(
                                 token_program.key,
-                                &payment_account.key,
+                                payment_account.key,
                                 current_creator_token_account_info.key,
                                 payment_account_owner.key,
                                 &[],
@@ -245,7 +244,7 @@ pub fn pay_creator_fees<'a>(
                 } else if creator_fee > 0 {
                     invoke(
                         &system_instruction::transfer(
-                            &payment_account.key,
+                            payment_account.key,
                             current_creator_info.key,
                             creator_fee,
                         ),
@@ -286,16 +285,17 @@ pub fn create_or_allocate_account_raw<'a>(
 
     if required_lamports > 0 {
         msg!("Transfer {} lamports to the new account", required_lamports);
-        let seeds: &[&[&[u8]]];
+
         let as_arr = [signer_seeds];
 
-        if signer_seeds.len() > 0 {
-            seeds = &as_arr;
+        let seeds: &[&[&[u8]]] = if !signer_seeds.is_empty() {
+            &as_arr
         } else {
-            seeds = &[];
-        }
+            &[]
+        };
+
         invoke_signed(
-            &system_instruction::transfer(&payer_info.key, new_account_info.key, required_lamports),
+            &system_instruction::transfer(payer_info.key, new_account_info.key, required_lamports),
             &[
                 payer_info.clone(),
                 new_account_info.clone(),
@@ -311,14 +311,14 @@ pub fn create_or_allocate_account_raw<'a>(
     invoke_signed(
         &system_instruction::allocate(new_account_info.key, size.try_into().unwrap()),
         accounts,
-        &[&new_acct_seeds],
+        &[new_acct_seeds],
     )?;
 
     msg!("Assign the account to the owning program");
     invoke_signed(
         &system_instruction::assign(new_account_info.key, &program_id),
         accounts,
-        &[&new_acct_seeds],
+        &[new_acct_seeds],
     )?;
     msg!("Completed assignation!");
 
@@ -326,7 +326,7 @@ pub fn create_or_allocate_account_raw<'a>(
 }
 
 pub fn assert_derivation(program_id: &Pubkey, account: &AccountInfo, path: &[&[u8]]) -> Result<u8> {
-    let (key, bump) = Pubkey::find_program_address(&path, program_id);
+    let (key, bump) = Pubkey::find_program_address(path, program_id);
     if key != *account.key {
         return Err(ErrorCode::DerivedKeyInvalid.into());
     }

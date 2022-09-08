@@ -30,10 +30,11 @@ export type AuctionHouseArgs = {
   canChangeSalePrice: boolean;
   escrowPaymentBump: number;
   hasAuctioneer: boolean;
-  auctioneerPdaBump: number;
+  auctioneerAddress: web3.PublicKey;
+  scopes: boolean[] /* size: 7 */;
 };
 
-const auctionHouseDiscriminator = [40, 108, 215, 107, 213, 85, 245, 48];
+export const auctionHouseDiscriminator = [40, 108, 215, 107, 213, 85, 245, 48];
 /**
  * Holds the data for the {@link AuctionHouse} Account and provides de/serialization
  * functionality for that data
@@ -58,7 +59,8 @@ export class AuctionHouse implements AuctionHouseArgs {
     readonly canChangeSalePrice: boolean,
     readonly escrowPaymentBump: number,
     readonly hasAuctioneer: boolean,
-    readonly auctioneerPdaBump: number,
+    readonly auctioneerAddress: web3.PublicKey,
+    readonly scopes: boolean[] /* size: 7 */,
   ) {}
 
   /**
@@ -81,7 +83,8 @@ export class AuctionHouse implements AuctionHouseArgs {
       args.canChangeSalePrice,
       args.escrowPaymentBump,
       args.hasAuctioneer,
-      args.auctioneerPdaBump,
+      args.auctioneerAddress,
+      args.scopes,
     );
   }
 
@@ -111,6 +114,18 @@ export class AuctionHouse implements AuctionHouseArgs {
       throw new Error(`Unable to find AuctionHouse account at ${address}`);
     }
     return AuctionHouse.fromAccountInfo(accountInfo, 0)[0];
+  }
+
+  /**
+   * Provides a {@link web3.Connection.getProgramAccounts} config builder,
+   * to fetch accounts matching filters that can be specified via that builder.
+   *
+   * @param programId - the program that owns the accounts we are filtering
+   */
+  static gpaBuilder(
+    programId: web3.PublicKey = new web3.PublicKey('hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk'),
+  ) {
+    return beetSolana.GpaBuilder.fromStruct(programId, auctionHouseBeet);
   }
 
   /**
@@ -182,7 +197,8 @@ export class AuctionHouse implements AuctionHouseArgs {
       canChangeSalePrice: this.canChangeSalePrice,
       escrowPaymentBump: this.escrowPaymentBump,
       hasAuctioneer: this.hasAuctioneer,
-      auctioneerPdaBump: this.auctioneerPdaBump,
+      auctioneerAddress: this.auctioneerAddress.toBase58(),
+      scopes: this.scopes,
     };
   }
 }
@@ -214,7 +230,8 @@ export const auctionHouseBeet = new beet.BeetStruct<
     ['canChangeSalePrice', beet.bool],
     ['escrowPaymentBump', beet.u8],
     ['hasAuctioneer', beet.bool],
-    ['auctioneerPdaBump', beet.u8],
+    ['auctioneerAddress', beetSolana.publicKey],
+    ['scopes', beet.uniformFixedSizeArray(beet.bool, 7)],
   ],
   AuctionHouse.fromArgs,
   'AuctionHouse',

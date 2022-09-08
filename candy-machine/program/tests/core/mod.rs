@@ -1,6 +1,6 @@
-pub use master_edition_v2::*;
-pub use metadata::*;
+pub use master_edition_manager::*;
+pub use metadata_manager::*;
 
 pub mod helpers;
-mod master_edition_v2;
-mod metadata;
+mod master_edition_manager;
+mod metadata_manager;

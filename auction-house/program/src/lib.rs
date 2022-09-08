@@ -239,8 +239,28 @@ pub mod auction_house {
             .bumps
             .get("auction_house")
             .ok_or(AuctionHouseError::BumpSeedNotInHashMap)?;
+
+        // Check that bumps passed in are canonical.
+        if fee_payer_bump
+            != *ctx
+                .bumps
+                .get("auction_house_fee_account")
+                .ok_or(AuctionHouseError::BumpSeedNotInHashMap)?
+        {
+            return Err(AuctionHouseError::BumpSeedNotInHashMap.into());
+        }
         auction_house.fee_payer_bump = fee_payer_bump;
+
+        if treasury_bump
+            != *ctx
+                .bumps
+                .get("auction_house_treasury")
+                .ok_or(AuctionHouseError::BumpSeedNotInHashMap)?
+        {
+            return Err(AuctionHouseError::BumpSeedNotInHashMap.into());
+        }
         auction_house.treasury_bump = treasury_bump;
+
         if seller_fee_basis_points > 10000 {
             return Err(AuctionHouseError::InvalidBasisPoints.into());
         }
@@ -419,10 +439,28 @@ pub mod auction_house {
         program_as_signer_bump: u8,
         buyer_price: u64,
         token_size: u64,
+    ) -> Result<()> {
+        execute_sale::execute_sale(
+            ctx,
+            escrow_payment_bump,
+            _free_trade_state_bump,
+            program_as_signer_bump,
+            buyer_price,
+            token_size,
+        )
+    }
+
+    pub fn execute_partial_sale<'info>(
+        ctx: Context<'_, '_, '_, 'info, ExecutePartialSale<'info>>,
+        escrow_payment_bump: u8,
+        _free_trade_state_bump: u8,
+        program_as_signer_bump: u8,
+        buyer_price: u64,
+        token_size: u64,
         partial_order_size: Option<u64>,
         partial_order_price: Option<u64>,
     ) -> Result<()> {
-        execute_sale::execute_sale(
+        execute_sale::execute_partial_sale(
             ctx,
             escrow_payment_bump,
             _free_trade_state_bump,
@@ -449,6 +487,28 @@ pub mod auction_house {
             program_as_signer_bump,
             buyer_price,
             token_size,
+        )
+    }
+
+    pub fn auctioneer_execute_partial_sale<'info>(
+        ctx: Context<'_, '_, '_, 'info, AuctioneerExecutePartialSale<'info>>,
+        escrow_payment_bump: u8,
+        _free_trade_state_bump: u8,
+        program_as_signer_bump: u8,
+        buyer_price: u64,
+        token_size: u64,
+        partial_order_size: Option<u64>,
+        partial_order_price: Option<u64>,
+    ) -> Result<()> {
+        execute_sale::auctioneer_execute_partial_sale(
+            ctx,
+            escrow_payment_bump,
+            _free_trade_state_bump,
+            program_as_signer_bump,
+            buyer_price,
+            token_size,
+            partial_order_size,
+            partial_order_price,
         )
     }
 
@@ -623,12 +683,12 @@ pub struct CreateAuctionHouse<'info> {
 
     /// Auction House instance fee account.
     /// CHECK: Not dangerous. Account seeds checked in constraint.
-    #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), FEE_PAYER.as_bytes()], bump=fee_payer_bump)]
+    #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), FEE_PAYER.as_bytes()], bump)]
     pub auction_house_fee_account: UncheckedAccount<'info>,
 
     /// Auction House instance treasury PDA account.
     /// CHECK: Not dangerous. Account seeds checked in constraint.
-    #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), TREASURY.as_bytes()], bump=treasury_bump)]
+    #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), TREASURY.as_bytes()], bump)]
     pub auction_house_treasury: UncheckedAccount<'info>,
 
     pub token_program: Program<'info, Token>,

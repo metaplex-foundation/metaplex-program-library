@@ -29,6 +29,7 @@ use spl_associated_token_account::get_associated_token_address;
 pub fn auction_house_program_test() -> ProgramTest {
     let mut program = ProgramTest::new("mpl_auction_house", mpl_auction_house::id(), None);
     program.add_program("mpl_token_metadata", mpl_token_metadata::id(), None);
+    program.set_compute_max_units(u64::MAX);
     program
 }
 
@@ -559,8 +560,6 @@ pub fn execute_sale(
     buyer_trade_state: &Pubkey,
     token_size: u64,
     buyer_price: u64,
-    partial_order_size: Option<u64>,
-    partial_order_price: Option<u64>,
 ) -> (
     (
         mpl_auction_house::accounts::ExecuteSale,
@@ -621,8 +620,6 @@ pub fn execute_sale(
             program_as_signer_bump: pas_bump,
             token_size,
             buyer_price,
-            partial_order_size,
-            partial_order_price,
         }
         .data(),
         accounts: execute_sale_account_metas,

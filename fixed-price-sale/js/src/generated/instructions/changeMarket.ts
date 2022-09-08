@@ -25,7 +25,7 @@ export type ChangeMarketInstructionArgs = {
  * @category ChangeMarket
  * @category generated
  */
-const changeMarketStruct = new beet.FixableBeetArgsStruct<
+export const changeMarketStruct = new beet.FixableBeetArgsStruct<
   ChangeMarketInstructionArgs & {
     instructionDiscriminator: number[] /* size: 8 */;
   }
@@ -42,6 +42,10 @@ const changeMarketStruct = new beet.FixableBeetArgsStruct<
 );
 /**
  * Accounts required by the _changeMarket_ instruction
+ *
+ * @property [_writable_] market
+ * @property [**signer**] owner
+ * @property [] clock
  * @category Instructions
  * @category ChangeMarket
  * @category generated
@@ -50,9 +54,10 @@ export type ChangeMarketInstructionAccounts = {
   market: web3.PublicKey;
   owner: web3.PublicKey;
   clock: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
 };
 
-const changeMarketInstructionDiscriminator = [130, 59, 109, 101, 85, 226, 37, 88];
+export const changeMarketInstructionDiscriminator = [130, 59, 109, 101, 85, 226, 37, 88];
 
 /**
  * Creates a _ChangeMarket_ instruction.
@@ -67,33 +72,38 @@ const changeMarketInstructionDiscriminator = [130, 59, 109, 101, 85, 226, 37, 88
 export function createChangeMarketInstruction(
   accounts: ChangeMarketInstructionAccounts,
   args: ChangeMarketInstructionArgs,
+  programId = new web3.PublicKey('SaLeTjyUa5wXHnGuewUSyJ5JWZaHwz3TxqUntCE9czo'),
 ) {
-  const { market, owner, clock } = accounts;
-
   const [data] = changeMarketStruct.serialize({
     instructionDiscriminator: changeMarketInstructionDiscriminator,
     ...args,
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: market,
+      pubkey: accounts.market,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: owner,
+      pubkey: accounts.owner,
       isWritable: false,
       isSigner: true,
     },
     {
-      pubkey: clock,
+      pubkey: accounts.clock,
       isWritable: false,
       isSigner: false,
     },
   ];
 
+  if (accounts.anchorRemainingAccounts != null) {
+    for (const acc of accounts.anchorRemainingAccounts) {
+      keys.push(acc);
+    }
+  }
+
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey('SaLeTjyUa5wXHnGuewUSyJ5JWZaHwz3TxqUntCE9czo'),
+    programId,
     keys,
     data,
   });

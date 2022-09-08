@@ -22,6 +22,7 @@ pub struct AuctioneerExecuteSale<'info> {
     // Accounts used for Auctioneer
     /// The Listing Config used for listing settings
     #[account(
+        mut,
         seeds=[
             LISTING_CONFIG.as_bytes(),
             seller.key().as_ref(),
@@ -120,8 +121,16 @@ pub struct AuctioneerExecuteSale<'info> {
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// The auctioneer PDA owned by Auction House storing scopes.
-    #[account(seeds = [AUCTIONEER.as_bytes(), auction_house.key().as_ref(), auctioneer_authority.key().as_ref()], seeds::program=auction_house_program, bump = auction_house.auctioneer_pda_bump)]
-    pub ah_auctioneer_pda: UncheckedAccount<'info>,
+    #[account(
+        seeds = [
+            AUCTIONEER.as_bytes(),
+            auction_house.key().as_ref(),
+            auctioneer_authority.key().as_ref()
+            ],
+        seeds::program=auction_house_program,
+        bump = ah_auctioneer_pda.bump,
+    )]
+    pub ah_auctioneer_pda: Account<'info, mpl_auction_house::Auctioneer>,
 
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
@@ -187,20 +196,24 @@ pub fn auctioneer_execute_sale<'info>(
         token_size,
     };
 
+    let mut cpi_account_metas: Vec<AccountMeta> = cpi_accounts
+        .to_account_metas(None)
+        .into_iter()
+        .zip(cpi_accounts.to_account_infos())
+        .map(|mut pair| {
+            pair.0.is_signer = pair.1.is_signer;
+            if pair.0.pubkey == ctx.accounts.auctioneer_authority.key() {
+                pair.0.is_signer = true;
+            }
+            pair.0
+        })
+        .collect();
+
+    cpi_account_metas.append(&mut ctx.remaining_accounts.to_vec().to_account_metas(None));
+
     let ix = solana_program::instruction::Instruction {
         program_id: cpi_program.key(),
-        accounts: cpi_accounts
-            .to_account_metas(None)
-            .into_iter()
-            .zip(cpi_accounts.to_account_infos())
-            .map(|mut pair| {
-                pair.0.is_signer = pair.1.is_signer;
-                if pair.0.pubkey == ctx.accounts.auctioneer_authority.key() {
-                    pair.0.is_signer = true;
-                }
-                pair.0
-            })
-            .collect(),
+        accounts: cpi_account_metas,
         data: execute_sale_data.data(),
     };
 
@@ -216,6 +229,19 @@ pub fn auctioneer_execute_sale<'info>(
     ];
 
     invoke_signed(&ix, &cpi_accounts.to_account_infos(), &[&auctioneer_seeds])?;
+
+    let listing_config = &ctx.accounts.listing_config.to_account_info();
+    let seller = &ctx.accounts.seller.to_account_info();
+
+    let listing_config_lamports = listing_config.lamports();
+    **seller.lamports.borrow_mut() = seller
+        .lamports()
+        .checked_add(listing_config_lamports)
+        .unwrap();
+    **listing_config.lamports.borrow_mut() = 0;
+
+    let mut source_data = listing_config.data.borrow_mut();
+    source_data.fill(0);
 
     Ok(())
 }

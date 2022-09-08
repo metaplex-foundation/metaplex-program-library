@@ -44,32 +44,31 @@ export const updatePrimarySaleHappenedViaTokenInstructionDiscriminator = 4;
  */
 export function createUpdatePrimarySaleHappenedViaTokenInstruction(
   accounts: UpdatePrimarySaleHappenedViaTokenInstructionAccounts,
+  programId = new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
 ) {
-  const { metadata, owner, token } = accounts;
-
   const [data] = UpdatePrimarySaleHappenedViaTokenStruct.serialize({
     instructionDiscriminator: updatePrimarySaleHappenedViaTokenInstructionDiscriminator,
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: metadata,
+      pubkey: accounts.metadata,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: owner,
+      pubkey: accounts.owner,
       isWritable: false,
       isSigner: true,
     },
     {
-      pubkey: token,
+      pubkey: accounts.token,
       isWritable: false,
       isSigner: false,
     },
   ];
 
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
+    programId,
     keys,
     data,
   });
