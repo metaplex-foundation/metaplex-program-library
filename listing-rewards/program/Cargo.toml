@@ -31,7 +31,7 @@ mpl-token-metadata = { version="~1.2.7", features = [ "no-entrypoint" ] }
 anchor-client = "~0.24.2"
 shellexpand = "~2.1.0"
 serde_json = "~1.0"
-mpl-testing-utils= {path="../../core/rust/testing-utils", version="0.0.2"}
+mpl-testing-utils= { path="../../core/rust/testing-utils" }
 mpl-auction-house-sdk = { path = "./../../auction-house/sdk" }
 mpl-listing-rewards-sdk = {path="./../sdk"}
 solana-program-test = "~1.9.15"
