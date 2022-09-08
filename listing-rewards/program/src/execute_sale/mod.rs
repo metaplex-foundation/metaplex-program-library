@@ -365,7 +365,7 @@ pub fn handler(
     invoke_signed(
         &execute_sale_ix,
         &execute_sale_ctx_accounts.to_account_infos(),
-        &reward_center_signer_seeds,
+        reward_center_signer_seeds,
     )?;
 
     let (seller_payout, buyer_payout) = reward_center.payouts(price)?;
@@ -384,7 +384,7 @@ pub fn handler(
                         .to_account_info(),
                     to: ctx.accounts.buyer_reward_token_account.to_account_info(),
                 },
-                &reward_center_signer_seeds,
+                reward_center_signer_seeds,
             ),
             buyer_payout,
         )?;
@@ -405,7 +405,7 @@ pub fn handler(
                         .to_account_info(),
                     to: ctx.accounts.seller_reward_token_account.to_account_info(),
                 },
-                &reward_center_signer_seeds,
+                reward_center_signer_seeds,
             ),
             seller_payout,
         )?

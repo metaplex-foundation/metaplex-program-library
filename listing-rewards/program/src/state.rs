@@ -54,7 +54,7 @@ impl RewardCenter {
             .checked_sub(seller_payout)
             .ok_or(ListingRewardsError::NumericalOverflowError)?;
 
-        return Ok((seller_payout, buyer_payout));
+        Ok((seller_payout, buyer_payout))
     }
 }
 

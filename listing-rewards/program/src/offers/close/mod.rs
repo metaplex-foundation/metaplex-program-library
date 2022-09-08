@@ -237,7 +237,7 @@ pub fn handler(
     invoke_signed(
         &close_offer_ix,
         &close_offer_ctx_accounts.to_account_infos(),
-        &reward_center_signer_seeds,
+        reward_center_signer_seeds,
     )?;
 
     Ok(())

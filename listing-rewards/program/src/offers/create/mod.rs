@@ -165,7 +165,7 @@ pub fn handler(
     let clock = Clock::get()?;
     let offer = &mut ctx.accounts.offer;
 
-    assert_offer_init_eligibility(&offer)?;
+    assert_offer_init_eligibility(offer)?;
     
     let auction_house_key = auction_house.key();
 
