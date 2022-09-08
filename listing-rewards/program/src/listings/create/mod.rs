@@ -189,8 +189,6 @@ pub fn handler(
     let auction_house = &ctx.accounts.auction_house;
     let ah_auctioneer_pda = &ctx.accounts.ah_auctioneer_pda;
 
-    msg!("Bump: {}", ah_auctioneer_pda.bump);
-
     let wallet = &ctx.accounts.wallet;
     let clock = Clock::get()?;
     let listing = &mut ctx.accounts.listing;
