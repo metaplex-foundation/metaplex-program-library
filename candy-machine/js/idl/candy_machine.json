@@ -363,7 +363,7 @@
         },
         {
           "name": "collectionMetadata",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -1114,5 +1114,11 @@
       "name": "SizedCollectionMetadataMustBeMutable",
       "msg": "Setting a sized collection requires the collection metadata to be mutable."
     }
-  ]
+  ],
+  "metadata": {
+    "address": "cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ",
+    "origin": "anchor",
+    "binaryVersion": "0.24.2",
+    "libVersion": "0.24.2"
+  }
 }
