@@ -20,6 +20,7 @@ use crate::{
     common::*,
     config::{get_config_data, Cluster},
     pdas::{find_candy_machine_creator_pda, find_metadata_pda},
+    setup::get_rpc_url,
     utils::*,
 };
 
@@ -97,20 +98,16 @@ pub async fn process_reveal(args: RevealArgs) -> Result<()> {
     let spinner = spinner_with_style();
     spinner.set_message("Loading...");
     let solana_cluster: Cluster = get_cluster(program.rpc())?;
-
-    #[allow(unused_assignments)]
-    let mut rpc_url = String::new();
+    let rpc_url = get_rpc_url(args.rpc_url);
 
     let metadata_pubkeys = match solana_cluster {
         Cluster::Devnet => {
-            rpc_url = String::from("https://devnet.genesysgo.net/");
             let client = RpcClient::new(&rpc_url);
             let (creator, _) = find_candy_machine_creator_pda(&candy_machine_id);
             let creator = bs58::encode(creator).into_string();
             get_cm_creator_accounts(&client, &creator, 0)?
         }
         Cluster::Mainnet => {
-            rpc_url = String::from("https://ssc-dao.genesysgo.net");
             let client = RpcClient::new(&rpc_url);
             let crawled_accounts = Crawler::get_cmv2_mints(client, candy_machine_id).await?;
             match crawled_accounts.get("metadata") {

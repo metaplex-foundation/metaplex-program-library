@@ -76,9 +76,6 @@ pub const BUNDLR_DEVNET: &str = "https://devnet.bundlr.network";
 /// Bundlr mainnet endpoint.
 pub const BUNDLR_MAINNET: &str = "https://node1.bundlr.network";
 
-/// Default RPC endpoint for devnet.
-pub const DEFAULT_RPC_DEVNET: &str = "https://devnet.genesysgo.net";
-
 pub const CIVIC_NETWORK: &str = "ignREusXmGrscGNUesoU9mxfds9AiYTezUKex2PsZV6";
 
 pub const ENCORE_NETWORK: &str = "tibePmPaoTgrs929rWpu755EXaxC7M3SthVCf6GzjZt";

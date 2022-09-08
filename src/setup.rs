@@ -8,13 +8,10 @@ use anchor_client::{
     Client, Cluster,
 };
 use anyhow::{anyhow, Result};
+use console::style;
 use tracing::error;
 
-use crate::{
-    config::data::SugarConfig,
-    constants::{DEFAULT_KEYPATH, DEFAULT_RPC_DEVNET},
-    parse::*,
-};
+use crate::{config::data::SugarConfig, constants::DEFAULT_KEYPATH, parse::*};
 
 pub fn setup_client(sugar_config: &SugarConfig) -> Result<Client> {
     let rpc_url = sugar_config.rpc_url.clone();
@@ -34,13 +31,7 @@ pub fn sugar_setup(
 ) -> Result<SugarConfig> {
     let sol_config_option = parse_solana_config();
 
-    let rpc_url = match rpc_url_opt {
-        Some(rpc_url) => rpc_url,
-        None => match sol_config_option {
-            Some(ref sol_config) => sol_config.json_rpc_url.clone(),
-            None => String::from(DEFAULT_RPC_DEVNET),
-        },
-    };
+    let rpc_url = get_rpc_url(rpc_url_opt);
 
     let keypair = match keypair_opt {
         Some(keypair_path) => match read_keypair_file(&keypair_path) {
@@ -85,4 +76,24 @@ pub fn sugar_setup(
     };
 
     Ok(SugarConfig { rpc_url, keypair })
+}
+
+pub fn get_rpc_url(rpc_url_opt: Option<String>) -> String {
+    let sol_config_option = parse_solana_config();
+
+    match rpc_url_opt {
+        Some(rpc_url) => rpc_url,
+        None => match sol_config_option {
+            Some(ref sol_config) => sol_config.json_rpc_url.clone(),
+            None => {
+                println!(
+                    "{}",
+                    style("No RPCL URL found in Solana config file.")
+                        .bold()
+                        .red(),
+                );
+                std::process::exit(1);
+            }
+        },
+    }
 }

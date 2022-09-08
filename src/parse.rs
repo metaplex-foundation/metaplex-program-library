@@ -1,6 +1,7 @@
 use std::{env, fs::File, path::Path};
 
 use anyhow::{anyhow, Result};
+use console::style;
 use lazy_static::lazy_static;
 use regex::Regex;
 
@@ -27,7 +28,14 @@ pub fn parse_solana_config() -> Option<SolanaConfig> {
 
     let conf_file = match File::open(config_path) {
         Ok(f) => f,
-        Err(_) => return None,
+        Err(e) => {
+            println!(
+                "{} {}",
+                style("Failed to open Solana config file:").bold().red(),
+                style(e).bold().red(),
+            );
+            std::process::exit(1);
+        }
     };
     serde_yaml::from_reader(&conf_file).ok()
 }
