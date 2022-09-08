@@ -23,7 +23,7 @@ export type SavePrimaryMetadataCreatorsInstructionArgs = {
  * @category SavePrimaryMetadataCreators
  * @category generated
  */
-const savePrimaryMetadataCreatorsStruct = new beet.FixableBeetArgsStruct<
+export const savePrimaryMetadataCreatorsStruct = new beet.FixableBeetArgsStruct<
   SavePrimaryMetadataCreatorsInstructionArgs & {
     instructionDiscriminator: number[] /* size: 8 */;
   }
@@ -37,6 +37,10 @@ const savePrimaryMetadataCreatorsStruct = new beet.FixableBeetArgsStruct<
 );
 /**
  * Accounts required by the _savePrimaryMetadataCreators_ instruction
+ *
+ * @property [_writable_, **signer**] admin
+ * @property [_writable_] metadata
+ * @property [_writable_] primaryMetadataCreators
  * @category Instructions
  * @category SavePrimaryMetadataCreators
  * @category generated
@@ -45,9 +49,13 @@ export type SavePrimaryMetadataCreatorsInstructionAccounts = {
   admin: web3.PublicKey;
   metadata: web3.PublicKey;
   primaryMetadataCreators: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
 };
 
-const savePrimaryMetadataCreatorsInstructionDiscriminator = [66, 240, 213, 46, 185, 60, 192, 254];
+export const savePrimaryMetadataCreatorsInstructionDiscriminator = [
+  66, 240, 213, 46, 185, 60, 192, 254,
+];
 
 /**
  * Creates a _SavePrimaryMetadataCreators_ instruction.
@@ -62,38 +70,43 @@ const savePrimaryMetadataCreatorsInstructionDiscriminator = [66, 240, 213, 46, 1
 export function createSavePrimaryMetadataCreatorsInstruction(
   accounts: SavePrimaryMetadataCreatorsInstructionAccounts,
   args: SavePrimaryMetadataCreatorsInstructionArgs,
+  programId = new web3.PublicKey('SaLeTjyUa5wXHnGuewUSyJ5JWZaHwz3TxqUntCE9czo'),
 ) {
-  const { admin, metadata, primaryMetadataCreators } = accounts;
-
   const [data] = savePrimaryMetadataCreatorsStruct.serialize({
     instructionDiscriminator: savePrimaryMetadataCreatorsInstructionDiscriminator,
     ...args,
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: admin,
+      pubkey: accounts.admin,
       isWritable: true,
       isSigner: true,
     },
     {
-      pubkey: metadata,
+      pubkey: accounts.metadata,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: primaryMetadataCreators,
+      pubkey: accounts.primaryMetadataCreators,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: web3.SystemProgram.programId,
+      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
       isWritable: false,
       isSigner: false,
     },
   ];
 
+  if (accounts.anchorRemainingAccounts != null) {
+    for (const acc of accounts.anchorRemainingAccounts) {
+      keys.push(acc);
+    }
+  }
+
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey('SaLeTjyUa5wXHnGuewUSyJ5JWZaHwz3TxqUntCE9czo'),
+    programId,
     keys,
     data,
   });

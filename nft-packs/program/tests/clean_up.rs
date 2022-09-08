@@ -323,6 +323,6 @@ async fn success_clean_up_sort() {
     let pack_config_account = get_account(&mut context, &pack_config_key).await;
     let pack_config = PackConfig::unpack_from_slice(&pack_config_account.data).unwrap();
 
-    assert_eq!(pack_config.action_to_do == CleanUpActions::None, true);
+    assert!(pack_config.action_to_do == CleanUpActions::None, "{}", true);
     assert_eq!(pack_config.weights[0] == (2, 60, 5), true);
 }

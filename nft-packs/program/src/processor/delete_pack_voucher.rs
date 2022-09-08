@@ -25,7 +25,7 @@ pub fn delete_pack_voucher(program_id: &Pubkey, accounts: &[AccountInfo]) -> Pro
     assert_owned_by(pack_set_account, program_id)?;
     assert_owned_by(pack_voucher_account, program_id)?;
 
-    assert_signer(&authority_account)?;
+    assert_signer(authority_account)?;
 
     // Obtain PackSet instance
     let mut pack_set = PackSet::unpack(&pack_set_account.data.borrow_mut())?;

@@ -23,7 +23,7 @@ export type BuyInstructionArgs = {
  * @category Buy
  * @category generated
  */
-const buyStruct = new beet.BeetArgsStruct<
+export const buyStruct = new beet.BeetArgsStruct<
   BuyInstructionArgs & {
     instructionDiscriminator: number[] /* size: 8 */;
   }
@@ -37,6 +37,24 @@ const buyStruct = new beet.BeetArgsStruct<
 );
 /**
  * Accounts required by the _buy_ instruction
+ *
+ * @property [_writable_] market
+ * @property [_writable_] sellingResource
+ * @property [_writable_] userTokenAccount
+ * @property [_writable_, **signer**] userWallet
+ * @property [_writable_] tradeHistory
+ * @property [_writable_] treasuryHolder
+ * @property [_writable_] newMetadata
+ * @property [_writable_] newEdition
+ * @property [_writable_] masterEdition
+ * @property [_writable_] newMint
+ * @property [_writable_] editionMarker
+ * @property [_writable_] vault
+ * @property [] owner
+ * @property [_writable_] newTokenAccount
+ * @property [_writable_] masterEditionMetadata
+ * @property [] clock
+ * @property [] tokenMetadataProgram
  * @category Instructions
  * @category Buy
  * @category generated
@@ -58,11 +76,14 @@ export type BuyInstructionAccounts = {
   newTokenAccount: web3.PublicKey;
   masterEditionMetadata: web3.PublicKey;
   clock: web3.PublicKey;
+  rent?: web3.PublicKey;
   tokenMetadataProgram: web3.PublicKey;
-  additionalKeys?: web3.AccountMeta[];
+  tokenProgram?: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
 };
 
-const buyInstructionDiscriminator = [102, 6, 61, 18, 1, 218, 235, 234];
+export const buyInstructionDiscriminator = [102, 6, 61, 18, 1, 218, 235, 234];
 
 /**
  * Creates a _Buy_ instruction.
@@ -74,143 +95,126 @@ const buyInstructionDiscriminator = [102, 6, 61, 18, 1, 218, 235, 234];
  * @category Buy
  * @category generated
  */
-export function createBuyInstruction(accounts: BuyInstructionAccounts, args: BuyInstructionArgs) {
-  const {
-    market,
-    sellingResource,
-    userTokenAccount,
-    userWallet,
-    tradeHistory,
-    treasuryHolder,
-    newMetadata,
-    newEdition,
-    masterEdition,
-    newMint,
-    editionMarker,
-    vault,
-    owner,
-    newTokenAccount,
-    masterEditionMetadata,
-    clock,
-    tokenMetadataProgram,
-    additionalKeys,
-  } = accounts;
-
+export function createBuyInstruction(
+  accounts: BuyInstructionAccounts,
+  args: BuyInstructionArgs,
+  programId = new web3.PublicKey('SaLeTjyUa5wXHnGuewUSyJ5JWZaHwz3TxqUntCE9czo'),
+) {
   const [data] = buyStruct.serialize({
     instructionDiscriminator: buyInstructionDiscriminator,
     ...args,
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: market,
+      pubkey: accounts.market,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: sellingResource,
+      pubkey: accounts.sellingResource,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: userTokenAccount,
+      pubkey: accounts.userTokenAccount,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: userWallet,
+      pubkey: accounts.userWallet,
       isWritable: true,
       isSigner: true,
     },
     {
-      pubkey: tradeHistory,
+      pubkey: accounts.tradeHistory,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: treasuryHolder,
+      pubkey: accounts.treasuryHolder,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: newMetadata,
+      pubkey: accounts.newMetadata,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: newEdition,
+      pubkey: accounts.newEdition,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: masterEdition,
+      pubkey: accounts.masterEdition,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: newMint,
+      pubkey: accounts.newMint,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: editionMarker,
+      pubkey: accounts.editionMarker,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: vault,
+      pubkey: accounts.vault,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: owner,
+      pubkey: accounts.owner,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: newTokenAccount,
+      pubkey: accounts.newTokenAccount,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: masterEditionMetadata,
+      pubkey: accounts.masterEditionMetadata,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: clock,
+      pubkey: accounts.clock,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: web3.SYSVAR_RENT_PUBKEY,
+      pubkey: accounts.rent ?? web3.SYSVAR_RENT_PUBKEY,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: tokenMetadataProgram,
+      pubkey: accounts.tokenMetadataProgram,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: splToken.TOKEN_PROGRAM_ID,
+      pubkey: accounts.tokenProgram ?? splToken.TOKEN_PROGRAM_ID,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: web3.SystemProgram.programId,
+      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
       isWritable: false,
       isSigner: false,
     },
   ];
 
-  if (additionalKeys && additionalKeys.length > 0) {
-    additionalKeys.forEach((account) => {
-      keys.push(account);
-    });
+  if (accounts.anchorRemainingAccounts != null) {
+    for (const acc of accounts.anchorRemainingAccounts) {
+      keys.push(acc);
+    }
   }
 
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey('SaLeTjyUa5wXHnGuewUSyJ5JWZaHwz3TxqUntCE9czo'),
+    programId,
     keys,
     data,
   });

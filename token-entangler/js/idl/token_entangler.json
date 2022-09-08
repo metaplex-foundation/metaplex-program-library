@@ -1,5 +1,5 @@
 {
-  "version": "0.1.2",
+  "version": "0.1.3",
   "name": "token_entangler",
   "instructions": [
     {
@@ -378,12 +378,17 @@
       "code": 6014,
       "name": "MustHaveSupplyOne",
       "msg": "Must have supply one!"
+    },
+    {
+      "code": 6015,
+      "name": "BumpSeedNotInHashMap",
+      "msg": "Bump seed not in hash map"
     }
   ],
   "metadata": {
     "address": "qntmGodpGkrM42mN68VCZHXnKqDCT8rdY23wFcXCLPd",
     "origin": "anchor",
     "binaryVersion": "0.24.2",
-    "libVersion": "~0.24.1"
+    "libVersion": "~0.24.2"
   }
 }

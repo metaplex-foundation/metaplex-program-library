@@ -3,10 +3,12 @@ use std::io::ErrorKind;
 use crate::{
     deser::meta_deser_unchecked,
     error::MetadataError,
-    utils::{assert_owned_by, is_correct_account_type, try_from_slice_checked},
+    utils::{assert_owned_by, try_from_slice_checked},
     ID,
 };
 use borsh::{maybestd::io::Error as BorshError, BorshDeserialize, BorshSerialize};
+use num_derive::FromPrimitive;
+use num_traits::FromPrimitive;
 use shank::ShankAccount;
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
@@ -89,10 +91,20 @@ pub const USE_AUTHORITY_RECORD_SIZE: usize = 18; //8 byte padding
 
 pub const COLLECTION_AUTHORITY_RECORD_SIZE: usize = 11; //10 byte padding
 
-pub trait TokenMetadataAccount {
+pub trait TokenMetadataAccount: BorshDeserialize {
     fn key() -> Key;
 
     fn size() -> usize;
+
+    fn is_correct_account_type(data: &[u8], data_type: Key, data_size: usize) -> bool {
+        let key: Option<Key> = Key::from_u8(data[0]);
+        match key {
+            Some(key) => {
+                (key == data_type || key == Key::Uninitialized) && (data.len() == data_size)
+            }
+            None => false,
+        }
+    }
 
     fn pad_length(buf: &mut Vec<u8>) -> Result<(), MetadataError> {
         let padding_length = Self::size()
@@ -102,19 +114,19 @@ pub trait TokenMetadataAccount {
         Ok(())
     }
 
-    fn safe_deserialize<T: BorshDeserialize>(mut data: &[u8]) -> Result<T, BorshError> {
-        if !is_correct_account_type(data, Self::key(), Self::size()) {
+    fn safe_deserialize(mut data: &[u8]) -> Result<Self, BorshError> {
+        if !Self::is_correct_account_type(data, Self::key(), Self::size()) {
             return Err(BorshError::new(ErrorKind::Other, "DataTypeMismatch"));
         }
 
-        let result: T = T::deserialize(&mut data)?;
+        let result = Self::deserialize(&mut data)?;
 
         Ok(result)
     }
 
-    fn from_account_info<T: BorshDeserialize>(a: &AccountInfo) -> Result<T, ProgramError>
+    fn from_account_info(a: &AccountInfo) -> Result<Self, ProgramError>
 where {
-        let ua: T = Self::safe_deserialize(&a.data.borrow_mut())
+        let ua = Self::safe_deserialize(&a.data.borrow_mut())
             .map_err(|_| MetadataError::DataTypeMismatch)?;
 
         // Check that this is a `token-metadata` owned account.
@@ -126,7 +138,7 @@ where {
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, Copy)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, Copy, FromPrimitive)]
 pub enum Key {
     Uninitialized,
     EditionV1,
@@ -387,11 +399,11 @@ pub fn get_master_edition(account: &AccountInfo) -> Result<Box<dyn MasterEdition
     // For some reason when converting Key to u8 here, it becomes unreachable. Use direct constant instead.
     let master_edition_result: Result<Box<dyn MasterEdition>, ProgramError> = match version {
         2 => {
-            let me: MasterEditionV1 = MasterEditionV1::from_account_info(account)?;
+            let me = MasterEditionV1::from_account_info(account)?;
             Ok(Box::new(me))
         }
         6 => {
-            let me: MasterEditionV2 = MasterEditionV2::from_account_info(account)?;
+            let me = MasterEditionV2::from_account_info(account)?;
             Ok(Box::new(me))
         }
         _ => Err(MetadataError::DataTypeMismatch.into()),
@@ -589,15 +601,11 @@ pub fn get_reservation_list(
     // For some reason when converting Key to u8 here, it becomes unreachable. Use direct constant instead.
     let reservation_list_result: Result<Box<dyn ReservationList>, ProgramError> = match version {
         3 => {
-            let reservation_list = Box::new(ReservationListV1::from_account_info::<
-                ReservationListV1,
-            >(account)?);
+            let reservation_list = Box::new(ReservationListV1::from_account_info(account)?);
             Ok(reservation_list)
         }
         5 => {
-            let reservation_list = Box::new(ReservationListV2::from_account_info::<
-                ReservationListV2,
-            >(account)?);
+            let reservation_list = Box::new(ReservationListV2::from_account_info(account)?);
             Ok(reservation_list)
         }
         _ => Err(MetadataError::DataTypeMismatch.into()),
