@@ -1,7 +1,7 @@
 [workspace]
 [package]
 name = "mpl-listing-rewards"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 description = "Default Auctioneer implementation"
 authors = ["Metaplex Developers <dev@metaplex.com>", "Holaplex Developers <hola@holaplex.com>"]
@@ -21,7 +21,7 @@ cpi = ["no-entrypoint"]
 default = []
 
 [dependencies]
-solana-program = "~1.9.15"
+solana-program = "~1.9.28"
 anchor-lang = { version = "~0.24.2", features = ["init-if-needed"] }
 anchor-spl = "~0.24.2"
 mpl-auction-house = { version="~1.2.4",path = "./../../auction-house/program", features = ["cpi", "no-entrypoint"] }
