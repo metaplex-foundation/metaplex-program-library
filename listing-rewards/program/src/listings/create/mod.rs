@@ -193,7 +193,7 @@ pub fn handler(
     let listing = &mut ctx.accounts.listing;
     let auction_house_key = auction_house.key();
 
-    assert_listing_init_eligibility(&listing)?;
+    assert_listing_init_eligibility(listing)?;
 
     listing.is_initialized = true;
     listing.reward_center = reward_center.key();
@@ -262,7 +262,7 @@ pub fn handler(
     invoke_signed(
         &create_listing_ix,
         &create_listing_ctx_accounts.to_account_infos(),
-        &reward_center_signer_seeds,
+        reward_center_signer_seeds,
     )?;
 
     Ok(())

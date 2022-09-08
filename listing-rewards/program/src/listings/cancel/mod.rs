@@ -174,7 +174,7 @@ pub fn handler(
     invoke_signed(
         &cancel_listing_ix,
         &cancel_listing_ctx_accounts.to_account_infos(),
-        &reward_center_signer_seeds,
+        reward_center_signer_seeds,
     )?;
 
     Ok(())
