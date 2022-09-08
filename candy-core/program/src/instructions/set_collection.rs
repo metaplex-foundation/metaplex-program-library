@@ -21,7 +21,6 @@ pub fn set_collection(ctx: Context<SetCollection>) -> Result<()> {
         collection_mint: ctx.accounts.collection_mint.to_account_info(),
         collection_metadata: ctx.accounts.collection_metadata.to_account_info(),
         collection_edition: ctx.accounts.collection_edition.to_account_info(),
-        collection_authority: ctx.accounts.collection_authority.to_account_info(),
         collection_authority_record: ctx.accounts.collection_authority_record.to_account_info(),
         token_metadata_program: ctx.accounts.token_metadata_program.to_account_info(),
         system_program: ctx.accounts.system_program.to_account_info(),
@@ -53,7 +52,7 @@ pub fn set_collection_helper(accounts: SetCollectionHelperAccounts) -> Result<()
     if authority_record.data_is_empty() {
         let approve_collection_infos = vec![
             authority_record.clone(),
-            accounts.collection_authority.to_account_info(),
+            accounts.update_authority.to_account_info(),
             accounts.update_authority.to_account_info(),
             accounts.payer.to_account_info(),
             accounts.collection_metadata.to_account_info(),
@@ -66,7 +65,7 @@ pub fn set_collection_helper(accounts: SetCollectionHelperAccounts) -> Result<()
             &approve_collection_authority(
                 accounts.token_metadata_program.key(),
                 authority_record.key(),
-                accounts.collection_authority.key(),
+                accounts.update_authority.key(),
                 accounts.update_authority.key(),
                 accounts.payer.key(),
                 accounts.collection_metadata.key(),
@@ -90,8 +89,6 @@ pub struct SetCollectionHelperAccounts<'info> {
     pub collection_metadata: AccountInfo<'info>,
     /// CHECK:
     pub collection_edition: AccountInfo<'info>,
-    /// CHECK:
-    pub collection_authority: AccountInfo<'info>,
     /// CHECK:
     pub collection_authority_record: AccountInfo<'info>,
     /// CHECK:

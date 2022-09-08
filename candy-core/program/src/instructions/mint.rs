@@ -164,7 +164,6 @@ pub fn mint<'info>(ctx: Context<'_, '_, '_, 'info, Mint<'info>>, creator_bump: u
         &[&authority_seeds],
     )?;
 
-    let collection_authority = &ctx.accounts.collection_authority;
     let collection_authority_record = &ctx.accounts.collection_authority_record;
     let collection_mint = &ctx.accounts.collection_mint;
     let collection_metadata = &ctx.accounts.collection_metadata;
@@ -175,7 +174,7 @@ pub fn mint<'info>(ctx: Context<'_, '_, '_, 'info, Mint<'info>>, creator_bump: u
         set_and_verify_sized_collection_item(
             ctx.accounts.token_metadata_program.key(),
             ctx.accounts.metadata.key(),
-            collection_authority.key(),
+            ctx.accounts.update_authority.key(),
             ctx.accounts.payer.key(),
             ctx.accounts.update_authority.key(),
             collection_mint.key(),
@@ -187,7 +186,7 @@ pub fn mint<'info>(ctx: Context<'_, '_, '_, 'info, Mint<'info>>, creator_bump: u
         set_and_verify_collection(
             ctx.accounts.token_metadata_program.key(),
             ctx.accounts.metadata.key(),
-            collection_authority.key(),
+            ctx.accounts.update_authority.key(),
             ctx.accounts.payer.key(),
             ctx.accounts.update_authority.key(),
             collection_mint.key(),
@@ -199,7 +198,7 @@ pub fn mint<'info>(ctx: Context<'_, '_, '_, 'info, Mint<'info>>, creator_bump: u
 
     let set_collection_infos = vec![
         ctx.accounts.metadata.to_account_info(),
-        collection_authority.to_account_info(),
+        ctx.accounts.update_authority.to_account_info(),
         ctx.accounts.payer.to_account_info(),
         ctx.accounts.update_authority.to_account_info(),
         collection_mint.to_account_info(),
@@ -327,8 +326,6 @@ pub struct Mint<'info> {
     /// CHECK: account checked in CPI
     #[account(mut)]
     master_edition: UncheckedAccount<'info>,
-    /// CHECK: account checked in CPI
-    collection_authority: UncheckedAccount<'info>,
     /// CHECK: account checked in CPI
     collection_authority_record: UncheckedAccount<'info>,
     /// CHECK: account checked in CPI
