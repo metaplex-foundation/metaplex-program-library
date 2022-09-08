@@ -122,7 +122,6 @@ fn cpi_mint<'info>(ctx: &Context<'_, '_, '_, 'info, Mint<'info>>, creator_bump: 
         mint: ctx.accounts.mint.to_account_info(),
         mint_authority: ctx.accounts.mint_authority.to_account_info(),
         master_edition: ctx.accounts.master_edition.to_account_info(),
-        collection_authority: ctx.accounts.collection_authority.to_account_info(),
         collection_authority_record: ctx.accounts.collection_authority_record.to_account_info(),
         collection_mint: ctx.accounts.collection_mint.to_account_info(),
         collection_metadata: ctx.accounts.collection_metadata.to_account_info(),
@@ -175,8 +174,6 @@ pub struct Mint<'info> {
     /// CHECK: account checked in CPI
     #[account(mut)]
     pub master_edition: UncheckedAccount<'info>,
-    /// CHECK: account checked in CPI
-    pub collection_authority: UncheckedAccount<'info>,
     /// CHECK: account checked in CPI
     pub collection_authority_record: UncheckedAccount<'info>,
     /// CHECK: account checked in CPI
