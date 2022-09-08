@@ -6,19 +6,15 @@
  */
 
 import * as beet from '@metaplex-foundation/beet';
-export type ListingRewardRules = {
-  sellerRewardPayoutBasisPoints: number;
-  payoutDivider: number;
+export type UpdateListingParams = {
+  newPrice: beet.bignum;
 };
 
 /**
  * @category userTypes
  * @category generated
  */
-export const listingRewardRulesBeet = new beet.BeetArgsStruct<ListingRewardRules>(
-  [
-    ['sellerRewardPayoutBasisPoints', beet.u16],
-    ['payoutDivider', beet.u16],
-  ],
-  'ListingRewardRules',
+export const updateListingParamsBeet = new beet.BeetArgsStruct<UpdateListingParams>(
+  [['newPrice', beet.u64]],
+  'UpdateListingParams',
 );

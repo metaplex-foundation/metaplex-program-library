@@ -38,8 +38,7 @@ const cancelListingStruct = new beet.BeetArgsStruct<
  * Accounts required by the _cancelListing_ instruction
  *
  * @property [_writable_, **signer**] wallet
- * @property [] listing
- * @property [] rewardableCollection
+ * @property [_writable_] listing
  * @property [] metadata
  * @property [_writable_] tokenAccount
  * @property [] tokenMint
@@ -57,7 +56,6 @@ const cancelListingStruct = new beet.BeetArgsStruct<
 export type CancelListingInstructionAccounts = {
   wallet: web3.PublicKey;
   listing: web3.PublicKey;
-  rewardableCollection: web3.PublicKey;
   metadata: web3.PublicKey;
   tokenAccount: web3.PublicKey;
   tokenMint: web3.PublicKey;
@@ -89,7 +87,6 @@ export function createCancelListingInstruction(
   const {
     wallet,
     listing,
-    rewardableCollection,
     metadata,
     tokenAccount,
     tokenMint,
@@ -114,12 +111,7 @@ export function createCancelListingInstruction(
     },
     {
       pubkey: listing,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: rewardableCollection,
-      isWritable: false,
+      isWritable: true,
       isSigner: false,
     },
     {

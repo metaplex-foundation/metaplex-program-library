@@ -8,112 +8,115 @@
 import * as splToken from '@solana/spl-token';
 import * as beet from '@metaplex-foundation/beet';
 import * as web3 from '@solana/web3.js';
-import { CreateListingParams, createListingParamsBeet } from '../types/CreateListingParams';
+import { UpdateOfferParams, updateOfferParamsBeet } from '../types/UpdateOfferParams';
 
 /**
  * @category Instructions
- * @category CreateListing
+ * @category UpdateOffer
  * @category generated
  */
-export type CreateListingInstructionArgs = {
-  createListingParams: CreateListingParams;
+export type UpdateOfferInstructionArgs = {
+  updateOfferParams: UpdateOfferParams;
 };
 /**
  * @category Instructions
- * @category CreateListing
+ * @category UpdateOffer
  * @category generated
  */
-const createListingStruct = new beet.BeetArgsStruct<
-  CreateListingInstructionArgs & {
+const updateOfferStruct = new beet.BeetArgsStruct<
+  UpdateOfferInstructionArgs & {
     instructionDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
     ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
-    ['createListingParams', createListingParamsBeet],
+    ['updateOfferParams', updateOfferParamsBeet],
   ],
-  'CreateListingInstructionArgs',
+  'UpdateOfferInstructionArgs',
 );
 /**
- * Accounts required by the _createListing_ instruction
+ * Accounts required by the _updateOffer_ instruction
  *
- * @property [] auctionHouseProgram
- * @property [_writable_] listing
- * @property [] rewardCenter
  * @property [_writable_, **signer**] wallet
- * @property [_writable_] tokenAccount
- * @property [] metadata
- * @property [] authority
+ * @property [_writable_] offer
+ * @property [] rewardCenter
  * @property [] auctionHouse
+ * @property [] authority
+ * @property [_writable_] buyerTokenAccount
+ * @property [] transferAuthority
+ * @property [] treasuryMint
+ * @property [] tokenAccount
  * @property [_writable_] auctionHouseFeeAccount
- * @property [_writable_] sellerTradeState
- * @property [_writable_] freeSellerTradeState
+ * @property [] metadata
+ * @property [_writable_] escrowPaymentAccount
  * @property [] ahAuctioneerPda
- * @property [] programAsSigner
+ * @property [] auctionHouseProgram
  * @category Instructions
- * @category CreateListing
+ * @category UpdateOffer
  * @category generated
  */
-export type CreateListingInstructionAccounts = {
-  auctionHouseProgram: web3.PublicKey;
-  listing: web3.PublicKey;
-  rewardCenter: web3.PublicKey;
+export type UpdateOfferInstructionAccounts = {
   wallet: web3.PublicKey;
-  tokenAccount: web3.PublicKey;
-  metadata: web3.PublicKey;
-  authority: web3.PublicKey;
+  offer: web3.PublicKey;
+  rewardCenter: web3.PublicKey;
   auctionHouse: web3.PublicKey;
+  authority: web3.PublicKey;
+  buyerTokenAccount: web3.PublicKey;
+  transferAuthority: web3.PublicKey;
+  treasuryMint: web3.PublicKey;
+  tokenAccount: web3.PublicKey;
   auctionHouseFeeAccount: web3.PublicKey;
-  sellerTradeState: web3.PublicKey;
-  freeSellerTradeState: web3.PublicKey;
+  metadata: web3.PublicKey;
+  escrowPaymentAccount: web3.PublicKey;
   ahAuctioneerPda: web3.PublicKey;
-  programAsSigner: web3.PublicKey;
+  auctionHouseProgram: web3.PublicKey;
 };
 
-const createListingInstructionDiscriminator = [18, 168, 45, 24, 191, 31, 117, 54];
+const updateOfferInstructionDiscriminator = [191, 70, 15, 66, 224, 2, 249, 223];
 
 /**
- * Creates a _CreateListing_ instruction.
+ * Creates a _UpdateOffer_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
  * @param args to provide as instruction data to the program
  *
  * @category Instructions
- * @category CreateListing
+ * @category UpdateOffer
  * @category generated
  */
-export function createCreateListingInstruction(
-  accounts: CreateListingInstructionAccounts,
-  args: CreateListingInstructionArgs,
+export function createUpdateOfferInstruction(
+  accounts: UpdateOfferInstructionAccounts,
+  args: UpdateOfferInstructionArgs,
 ) {
   const {
-    auctionHouseProgram,
-    listing,
-    rewardCenter,
     wallet,
-    tokenAccount,
-    metadata,
-    authority,
+    offer,
+    rewardCenter,
     auctionHouse,
+    authority,
+    buyerTokenAccount,
+    transferAuthority,
+    treasuryMint,
+    tokenAccount,
     auctionHouseFeeAccount,
-    sellerTradeState,
-    freeSellerTradeState,
+    metadata,
+    escrowPaymentAccount,
     ahAuctioneerPda,
-    programAsSigner,
+    auctionHouseProgram,
   } = accounts;
 
-  const [data] = createListingStruct.serialize({
-    instructionDiscriminator: createListingInstructionDiscriminator,
+  const [data] = updateOfferStruct.serialize({
+    instructionDiscriminator: updateOfferInstructionDiscriminator,
     ...args,
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: auctionHouseProgram,
-      isWritable: false,
-      isSigner: false,
+      pubkey: wallet,
+      isWritable: true,
+      isSigner: true,
     },
     {
-      pubkey: listing,
+      pubkey: offer,
       isWritable: true,
       isSigner: false,
     },
@@ -123,17 +126,7 @@ export function createCreateListingInstruction(
       isSigner: false,
     },
     {
-      pubkey: wallet,
-      isWritable: true,
-      isSigner: true,
-    },
-    {
-      pubkey: tokenAccount,
-      isWritable: true,
-      isSigner: false,
-    },
-    {
-      pubkey: metadata,
+      pubkey: auctionHouse,
       isWritable: false,
       isSigner: false,
     },
@@ -143,7 +136,22 @@ export function createCreateListingInstruction(
       isSigner: false,
     },
     {
-      pubkey: auctionHouse,
+      pubkey: buyerTokenAccount,
+      isWritable: true,
+      isSigner: false,
+    },
+    {
+      pubkey: transferAuthority,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: treasuryMint,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: tokenAccount,
       isWritable: false,
       isSigner: false,
     },
@@ -153,12 +161,12 @@ export function createCreateListingInstruction(
       isSigner: false,
     },
     {
-      pubkey: sellerTradeState,
-      isWritable: true,
+      pubkey: metadata,
+      isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: freeSellerTradeState,
+      pubkey: escrowPaymentAccount,
       isWritable: true,
       isSigner: false,
     },
@@ -168,7 +176,12 @@ export function createCreateListingInstruction(
       isSigner: false,
     },
     {
-      pubkey: programAsSigner,
+      pubkey: auctionHouseProgram,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
       isWritable: false,
       isSigner: false,
     },

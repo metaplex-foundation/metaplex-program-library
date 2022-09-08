@@ -15,6 +15,7 @@ import * as beetSolana from '@metaplex-foundation/beet-solana';
  * @category generated
  */
 export type ListingArgs = {
+  isInitialized: boolean;
   rewardCenter: web3.PublicKey;
   seller: web3.PublicKey;
   metadata: web3.PublicKey;
@@ -24,7 +25,6 @@ export type ListingArgs = {
   createdAt: beet.bignum;
   canceledAt: beet.COption<beet.bignum>;
   purchasedAt: beet.COption<beet.bignum>;
-  rewardableCollection: web3.PublicKey;
   rewardRedeemedAt: beet.COption<beet.bignum>;
 };
 
@@ -38,6 +38,7 @@ const listingDiscriminator = [218, 32, 50, 73, 43, 134, 26, 58];
  */
 export class Listing implements ListingArgs {
   private constructor(
+    readonly isInitialized: boolean,
     readonly rewardCenter: web3.PublicKey,
     readonly seller: web3.PublicKey,
     readonly metadata: web3.PublicKey,
@@ -47,7 +48,6 @@ export class Listing implements ListingArgs {
     readonly createdAt: beet.bignum,
     readonly canceledAt: beet.COption<beet.bignum>,
     readonly purchasedAt: beet.COption<beet.bignum>,
-    readonly rewardableCollection: web3.PublicKey,
     readonly rewardRedeemedAt: beet.COption<beet.bignum>,
   ) {}
 
@@ -56,6 +56,7 @@ export class Listing implements ListingArgs {
    */
   static fromArgs(args: ListingArgs) {
     return new Listing(
+      args.isInitialized,
       args.rewardCenter,
       args.seller,
       args.metadata,
@@ -65,7 +66,6 @@ export class Listing implements ListingArgs {
       args.createdAt,
       args.canceledAt,
       args.purchasedAt,
-      args.rewardableCollection,
       args.rewardRedeemedAt,
     );
   }
@@ -151,6 +151,7 @@ export class Listing implements ListingArgs {
    */
   pretty() {
     return {
+      isInitialized: this.isInitialized,
       rewardCenter: this.rewardCenter.toBase58(),
       seller: this.seller.toBase58(),
       metadata: this.metadata.toBase58(),
@@ -190,7 +191,6 @@ export class Listing implements ListingArgs {
       })(),
       canceledAt: this.canceledAt,
       purchasedAt: this.purchasedAt,
-      rewardableCollection: this.rewardableCollection.toBase58(),
       rewardRedeemedAt: this.rewardRedeemedAt,
     };
   }
@@ -208,6 +208,7 @@ export const listingBeet = new beet.FixableBeetStruct<
 >(
   [
     ['accountDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
+    ['isInitialized', beet.bool],
     ['rewardCenter', beetSolana.publicKey],
     ['seller', beetSolana.publicKey],
     ['metadata', beetSolana.publicKey],
@@ -217,7 +218,6 @@ export const listingBeet = new beet.FixableBeetStruct<
     ['createdAt', beet.i64],
     ['canceledAt', beet.coption(beet.i64)],
     ['purchasedAt', beet.coption(beet.i64)],
-    ['rewardableCollection', beetSolana.publicKey],
     ['rewardRedeemedAt', beet.coption(beet.i64)],
   ],
   Listing.fromArgs,

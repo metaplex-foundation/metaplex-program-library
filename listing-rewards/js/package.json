@@ -1,5 +1,5 @@
 {
-  "name": "@metaplex-foundation/listing-rewards",
+  "name": "@holaplex/mpl-listing-rewards",
   "version": "0.1.0",
   "description": "MPL Auction House JavaScript API.",
   "main": "dist/src/listing-rewards.js",

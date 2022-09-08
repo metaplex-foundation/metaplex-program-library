@@ -30,7 +30,6 @@ const redeemRewardsStruct = new beet.BeetArgsStruct<{
  * @property [_writable_] walletAssociatedTokenAccount
  * @property [] mint
  * @property [] rewardCenter
- * @property [] rewardableCollection
  * @property [] associatedTokenProgram
  * @category Instructions
  * @category RedeemRewards
@@ -44,7 +43,6 @@ export type RedeemRewardsInstructionAccounts = {
   walletAssociatedTokenAccount: web3.PublicKey;
   mint: web3.PublicKey;
   rewardCenter: web3.PublicKey;
-  rewardableCollection: web3.PublicKey;
   associatedTokenProgram: web3.PublicKey;
 };
 
@@ -67,7 +65,6 @@ export function createRedeemRewardsInstruction(accounts: RedeemRewardsInstructio
     walletAssociatedTokenAccount,
     mint,
     rewardCenter,
-    rewardableCollection,
     associatedTokenProgram,
   } = accounts;
 
@@ -107,11 +104,6 @@ export function createRedeemRewardsInstruction(accounts: RedeemRewardsInstructio
     },
     {
       pubkey: rewardCenter,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: rewardableCollection,
       isWritable: false,
       isSigner: false,
     },

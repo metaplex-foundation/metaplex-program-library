@@ -178,50 +178,184 @@ createErrorFromCodeLookup.set(0x1777, () => new IneligibaleForRewardsError());
 createErrorFromNameLookup.set('IneligibaleForRewards', () => new IneligibaleForRewardsError());
 
 /**
- * RewardableCollectionAlreadyDeleted: 'Cannot delete an already flushed out rewardable collection'
+ * NumericalOverflowError: 'Math numerical overflow'
  *
  * @category Errors
  * @category generated
  */
-export class RewardableCollectionAlreadyDeletedError extends Error {
+export class NumericalOverflowErrorError extends Error {
   readonly code: number = 0x1778;
-  readonly name: string = 'RewardableCollectionAlreadyDeleted';
+  readonly name: string = 'NumericalOverflowError';
   constructor() {
-    super('Cannot delete an already flushed out rewardable collection');
+    super('Math numerical overflow');
     if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, RewardableCollectionAlreadyDeletedError);
+      Error.captureStackTrace(this, NumericalOverflowErrorError);
     }
   }
 }
 
-createErrorFromCodeLookup.set(0x1778, () => new RewardableCollectionAlreadyDeletedError());
-createErrorFromNameLookup.set(
-  'RewardableCollectionAlreadyDeleted',
-  () => new RewardableCollectionAlreadyDeletedError(),
-);
+createErrorFromCodeLookup.set(0x1778, () => new NumericalOverflowErrorError());
+createErrorFromNameLookup.set('NumericalOverflowError', () => new NumericalOverflowErrorError());
 
 /**
- * RewardableCollectionAlreadyActive: 'The rewardable collection is already created/active'
+ * MintMismatch: 'The mints do not match'
  *
  * @category Errors
  * @category generated
  */
-export class RewardableCollectionAlreadyActiveError extends Error {
+export class MintMismatchError extends Error {
   readonly code: number = 0x1779;
-  readonly name: string = 'RewardableCollectionAlreadyActive';
+  readonly name: string = 'MintMismatch';
   constructor() {
-    super('The rewardable collection is already created/active');
+    super('The mints do not match');
     if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, RewardableCollectionAlreadyActiveError);
+      Error.captureStackTrace(this, MintMismatchError);
     }
   }
 }
 
-createErrorFromCodeLookup.set(0x1779, () => new RewardableCollectionAlreadyActiveError());
-createErrorFromNameLookup.set(
-  'RewardableCollectionAlreadyActive',
-  () => new RewardableCollectionAlreadyActiveError(),
-);
+createErrorFromCodeLookup.set(0x1779, () => new MintMismatchError());
+createErrorFromNameLookup.set('MintMismatch', () => new MintMismatchError());
+
+/**
+ * PriceMismatch: 'Listing and offer prices do not match'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class PriceMismatchError extends Error {
+  readonly code: number = 0x177a;
+  readonly name: string = 'PriceMismatch';
+  constructor() {
+    super('Listing and offer prices do not match');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, PriceMismatchError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x177a, () => new PriceMismatchError());
+createErrorFromNameLookup.set('PriceMismatch', () => new PriceMismatchError());
+
+/**
+ * ListingAlreadyCancelled: 'Cannot update price on an already cancelled listing'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class ListingAlreadyCancelledError extends Error {
+  readonly code: number = 0x177b;
+  readonly name: string = 'ListingAlreadyCancelled';
+  constructor() {
+    super('Cannot update price on an already cancelled listing');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, ListingAlreadyCancelledError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x177b, () => new ListingAlreadyCancelledError());
+createErrorFromNameLookup.set('ListingAlreadyCancelled', () => new ListingAlreadyCancelledError());
+
+/**
+ * ListingAlreadyPurchased: 'Cannot update price on an already purchased listing'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class ListingAlreadyPurchasedError extends Error {
+  readonly code: number = 0x177c;
+  readonly name: string = 'ListingAlreadyPurchased';
+  constructor() {
+    super('Cannot update price on an already purchased listing');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, ListingAlreadyPurchasedError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x177c, () => new ListingAlreadyPurchasedError());
+createErrorFromNameLookup.set('ListingAlreadyPurchased', () => new ListingAlreadyPurchasedError());
+
+/**
+ * OfferAlreadyCancelled: 'Cannot update price on an already cancelled offer'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class OfferAlreadyCancelledError extends Error {
+  readonly code: number = 0x177d;
+  readonly name: string = 'OfferAlreadyCancelled';
+  constructor() {
+    super('Cannot update price on an already cancelled offer');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, OfferAlreadyCancelledError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x177d, () => new OfferAlreadyCancelledError());
+createErrorFromNameLookup.set('OfferAlreadyCancelled', () => new OfferAlreadyCancelledError());
+
+/**
+ * OfferAlreadyPurchased: 'Cannot update price on an already purchased offer'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class OfferAlreadyPurchasedError extends Error {
+  readonly code: number = 0x177e;
+  readonly name: string = 'OfferAlreadyPurchased';
+  constructor() {
+    super('Cannot update price on an already purchased offer');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, OfferAlreadyPurchasedError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x177e, () => new OfferAlreadyPurchasedError());
+createErrorFromNameLookup.set('OfferAlreadyPurchased', () => new OfferAlreadyPurchasedError());
+
+/**
+ * ListingAlreadyExists: 'Cannot re-initialize an existing listing'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class ListingAlreadyExistsError extends Error {
+  readonly code: number = 0x177f;
+  readonly name: string = 'ListingAlreadyExists';
+  constructor() {
+    super('Cannot re-initialize an existing listing');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, ListingAlreadyExistsError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x177f, () => new ListingAlreadyExistsError());
+createErrorFromNameLookup.set('ListingAlreadyExists', () => new ListingAlreadyExistsError());
+
+/**
+ * OfferAlreadyExists: 'Cannot re-initialize an existing offer'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class OfferAlreadyExistsError extends Error {
+  readonly code: number = 0x1780;
+  readonly name: string = 'OfferAlreadyExists';
+  constructor() {
+    super('Cannot re-initialize an existing offer');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, OfferAlreadyExistsError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1780, () => new OfferAlreadyExistsError());
+createErrorFromNameLookup.set('OfferAlreadyExists', () => new OfferAlreadyExistsError());
 
 /**
  * Attempts to resolve a custom program error from the provided error code.

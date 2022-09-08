@@ -39,7 +39,6 @@ const createOfferStruct = new beet.BeetArgsStruct<
  *
  * @property [_writable_, **signer**] wallet
  * @property [_writable_] offer
- * @property [] rewardableCollection
  * @property [_writable_] paymentAccount
  * @property [] transferAuthority
  * @property [] treasuryMint
@@ -60,7 +59,6 @@ const createOfferStruct = new beet.BeetArgsStruct<
 export type CreateOfferInstructionAccounts = {
   wallet: web3.PublicKey;
   offer: web3.PublicKey;
-  rewardableCollection: web3.PublicKey;
   paymentAccount: web3.PublicKey;
   transferAuthority: web3.PublicKey;
   treasuryMint: web3.PublicKey;
@@ -95,7 +93,6 @@ export function createCreateOfferInstruction(
   const {
     wallet,
     offer,
-    rewardableCollection,
     paymentAccount,
     transferAuthority,
     treasuryMint,
@@ -124,11 +121,6 @@ export function createCreateOfferInstruction(
     {
       pubkey: offer,
       isWritable: true,
-      isSigner: false,
-    },
-    {
-      pubkey: rewardableCollection,
-      isWritable: false,
       isSigner: false,
     },
     {

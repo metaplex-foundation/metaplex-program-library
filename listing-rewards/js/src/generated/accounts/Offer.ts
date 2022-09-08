@@ -15,6 +15,7 @@ import * as beetSolana from '@metaplex-foundation/beet-solana';
  * @category generated
  */
 export type OfferArgs = {
+  isInitialized: boolean;
   rewardCenter: web3.PublicKey;
   buyer: web3.PublicKey;
   metadata: web3.PublicKey;
@@ -24,7 +25,6 @@ export type OfferArgs = {
   createdAt: beet.bignum;
   canceledAt: beet.COption<beet.bignum>;
   purchasedAt: beet.COption<beet.bignum>;
-  rewardableCollection: web3.PublicKey;
 };
 
 const offerDiscriminator = [215, 88, 60, 71, 170, 162, 73, 229];
@@ -37,6 +37,7 @@ const offerDiscriminator = [215, 88, 60, 71, 170, 162, 73, 229];
  */
 export class Offer implements OfferArgs {
   private constructor(
+    readonly isInitialized: boolean,
     readonly rewardCenter: web3.PublicKey,
     readonly buyer: web3.PublicKey,
     readonly metadata: web3.PublicKey,
@@ -46,7 +47,6 @@ export class Offer implements OfferArgs {
     readonly createdAt: beet.bignum,
     readonly canceledAt: beet.COption<beet.bignum>,
     readonly purchasedAt: beet.COption<beet.bignum>,
-    readonly rewardableCollection: web3.PublicKey,
   ) {}
 
   /**
@@ -54,6 +54,7 @@ export class Offer implements OfferArgs {
    */
   static fromArgs(args: OfferArgs) {
     return new Offer(
+      args.isInitialized,
       args.rewardCenter,
       args.buyer,
       args.metadata,
@@ -63,7 +64,6 @@ export class Offer implements OfferArgs {
       args.createdAt,
       args.canceledAt,
       args.purchasedAt,
-      args.rewardableCollection,
     );
   }
 
@@ -148,6 +148,7 @@ export class Offer implements OfferArgs {
    */
   pretty() {
     return {
+      isInitialized: this.isInitialized,
       rewardCenter: this.rewardCenter.toBase58(),
       buyer: this.buyer.toBase58(),
       metadata: this.metadata.toBase58(),
@@ -187,7 +188,6 @@ export class Offer implements OfferArgs {
       })(),
       canceledAt: this.canceledAt,
       purchasedAt: this.purchasedAt,
-      rewardableCollection: this.rewardableCollection.toBase58(),
     };
   }
 }
@@ -204,6 +204,7 @@ export const offerBeet = new beet.FixableBeetStruct<
 >(
   [
     ['accountDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
+    ['isInitialized', beet.bool],
     ['rewardCenter', beetSolana.publicKey],
     ['buyer', beetSolana.publicKey],
     ['metadata', beetSolana.publicKey],
@@ -213,7 +214,6 @@ export const offerBeet = new beet.FixableBeetStruct<
     ['createdAt', beet.i64],
     ['canceledAt', beet.coption(beet.i64)],
     ['purchasedAt', beet.coption(beet.i64)],
-    ['rewardableCollection', beetSolana.publicKey],
   ],
   Offer.fromArgs,
   'Offer',
