@@ -2,10 +2,8 @@ use std::{
     ffi::OsStr,
     fs::{self, DirEntry, File, OpenOptions},
     io::{BufReader, Read},
-    sync::Arc,
 };
 
-use bundlr_sdk::{tags::Tag, Bundlr, Ed25519Signer as SolanaSigner};
 use data_encoding::HEXLOWER;
 use glob::glob;
 use regex::{Regex, RegexBuilder};
@@ -14,14 +12,6 @@ use serde::Serialize;
 use serde_json;
 
 use crate::{common::*, validate::format::Metadata};
-
-pub struct UploadDataArgs<'a> {
-    pub bundlr_client: Arc<Bundlr<SolanaSigner>>,
-    pub assets_dir: &'a Path,
-    pub extension_glob: &'a str,
-    pub tags: Vec<Tag>,
-    pub data_type: DataType,
-}
 
 #[derive(Debug, Clone)]
 pub enum DataType {
@@ -194,7 +184,7 @@ pub fn get_asset_pairs(assets_dir: &str) -> Result<HashMap<isize, AssetPair>> {
             .filter(|p| img_regex.is_match(p))
             .collect::<Vec<String>>();
 
-        let img_filename = if img_filenames.is_empty() {
+        let img_filename = if img_filenames.len() != 1 {
             let error = if is_collection_index {
                 anyhow!("Couldn't find the collection image filename.")
             } else {
@@ -242,7 +232,7 @@ pub fn get_asset_pairs(assets_dir: &str) -> Result<HashMap<isize, AssetPair>> {
             .expect("Failed to convert image path from unicode.")
             .to_string();
 
-        let animation_filename = if !animation_filenames.is_empty() {
+        let animation_filename = if animation_filenames.len() == 1 {
             let animation_filepath = Path::new(assets_dir)
                 .join(&animation_filenames[0])
                 .to_str()

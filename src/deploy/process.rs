@@ -123,28 +123,20 @@ pub async fn process_deploy(args: DeployArgs) -> Result<()> {
 
         let treasury_wallet = match config_data.spl_token {
             Some(spl_token) => {
-                let spl_token_account_figured = if config_data.spl_token_account.is_some() {
-                    config_data.spl_token_account
-                } else {
-                    Some(get_associated_token_address(&program.payer(), &spl_token))
-                };
-
                 if config_data.sol_treasury_account.is_some() {
                     return Err(anyhow!("If spl-token-account or spl-token is set then sol-treasury-account cannot be set"));
                 }
 
+                let token_account = config_data
+                    .spl_token_account
+                    .unwrap_or_else(|| get_associated_token_address(&program.payer(), &spl_token));
+
                 // validates the mint address of the token accepted as payment
                 check_spl_token(&program, &spl_token.to_string())?;
 
-                if let Some(token_account) = spl_token_account_figured {
-                    // validates the spl token wallet to receive proceedings from SPL token payments
-                    check_spl_token_account(&program, &token_account.to_string())?;
-                    token_account
-                } else {
-                    return Err(anyhow!(
-                        "If spl-token is set, spl-token-account must also be set"
-                    ));
-                }
+                // validates the spl token wallet to receive proceedings from SPL token payments
+                check_spl_token_account(&program, &token_account.to_string())?;
+                token_account
             }
             None => match config_data.sol_treasury_account {
                 Some(sol_treasury_account) => sol_treasury_account,
