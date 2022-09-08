@@ -417,6 +417,38 @@ pub async fn unlock_funds(
     context.banks_client.process_transaction(tx).await
 }
 
+pub async fn withdraw_funds(
+    context: &mut ProgramTestContext,
+    candy_machine: &Pubkey,
+    authority: &Keypair,
+    collection_info: &CollectionInfo,
+) -> transport::Result<()> {
+    let mut accounts = mpl_candy_machine::accounts::WithdrawFunds {
+        candy_machine: *candy_machine,
+        authority: authority.pubkey(),
+    }
+    .to_account_metas(None);
+    if collection_info.set {
+        accounts.push(AccountMeta::new(collection_info.pda, false));
+    }
+
+    let data = mpl_candy_machine::instruction::WithdrawFunds {}.data();
+    let set_ix = Instruction {
+        program_id: mpl_candy_machine::id(),
+        data,
+        accounts,
+    };
+    update_blockhash(context).await?;
+    let tx = Transaction::new_signed_with_payer(
+        &[set_ix],
+        Some(&authority.pubkey()),
+        &[authority],
+        context.last_blockhash,
+    );
+
+    context.banks_client.process_transaction(tx).await
+}
+
 #[allow(clippy::too_many_arguments)]
 pub fn mint_nft_ix(
     candy_machine: &Pubkey,

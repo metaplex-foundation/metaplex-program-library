@@ -24,7 +24,7 @@ use mpl_candy_machine::{
 
 use crate::core::helpers::create_associated_token_account;
 use crate::utils::helpers::CandyTestLogger;
-use crate::utils::{remove_freeze, set_freeze, thaw_nft, unlock_funds};
+use crate::utils::{remove_freeze, set_freeze, thaw_nft, unlock_funds, withdraw_funds};
 use crate::{
     core::{
         helpers::{
@@ -913,6 +913,23 @@ impl CandyManager {
             self.collection_info.clone(),
             self.gateway_info.clone(),
             self.freeze_info.clone(),
+        )
+        .await?;
+        logger.end();
+        Ok(nft_info)
+    }
+
+    pub async fn withdraw(
+        &mut self,
+        context: &mut ProgramTestContext,
+    ) -> transport::Result<MasterEditionManager> {
+        let logger = CandyTestLogger::new_start("Mint NFT");
+        let nft_info = prepare_nft(context, &self.minter).await;
+        withdraw_funds(
+            context,
+            &self.candy_machine.pubkey(),
+            &self.authority,
+            &self.collection_info,
         )
         .await?;
         logger.end();
