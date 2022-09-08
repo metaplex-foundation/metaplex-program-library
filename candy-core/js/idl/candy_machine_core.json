@@ -236,11 +236,6 @@
           "isSigner": true
         },
         {
-          "name": "collectionAuthority",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
           "name": "collectionMetadata",
           "isMut": false,
           "isSigner": false

@@ -194,7 +194,6 @@ export class CandyMachineHelper {
       authority: payer.publicKey,
       updateAuthority: candyMachineObject.updateAuthority,
       payer: payer.publicKey,
-      collectionAuthority,
       collectionAuthorityRecord,
       collectionMasterEdition,
       collectionMetadata,

@@ -26,7 +26,6 @@ export const setCollectionStruct = new beet.BeetArgsStruct<{
  * @property [**signer**] authority
  * @property [] updateAuthority
  * @property [**signer**] payer
- * @property [] collectionAuthority
  * @property [] collectionMetadata
  * @property [] collectionMint
  * @property [] collectionMasterEdition
@@ -41,7 +40,6 @@ export type SetCollectionInstructionAccounts = {
   authority: web3.PublicKey;
   updateAuthority: web3.PublicKey;
   payer: web3.PublicKey;
-  collectionAuthority: web3.PublicKey;
   collectionMetadata: web3.PublicKey;
   collectionMint: web3.PublicKey;
   collectionMasterEdition: web3.PublicKey;
@@ -88,11 +86,6 @@ export function createSetCollectionInstruction(
       pubkey: accounts.payer,
       isWritable: false,
       isSigner: true,
-    },
-    {
-      pubkey: accounts.collectionAuthority,
-      isWritable: false,
-      isSigner: false,
     },
     {
       pubkey: accounts.collectionMetadata,

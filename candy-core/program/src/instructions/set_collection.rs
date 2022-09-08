@@ -115,8 +115,6 @@ pub struct SetCollection<'info> {
     bump
     )]
     /// CHECK: account checked in CPI
-    collection_authority: UncheckedAccount<'info>,
-    /// CHECK: account checked in CPI
     collection_metadata: UncheckedAccount<'info>,
     /// CHECK: account checked in CPI
     collection_mint: UncheckedAccount<'info>,
