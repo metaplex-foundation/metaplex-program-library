@@ -22,7 +22,7 @@ export type ClaimResourceInstructionArgs = {
  * @category ClaimResource
  * @category generated
  */
-const claimResourceStruct = new beet.BeetArgsStruct<
+export const claimResourceStruct = new beet.BeetArgsStruct<
   ClaimResourceInstructionArgs & {
     instructionDiscriminator: number[] /* size: 8 */;
   }
@@ -35,6 +35,17 @@ const claimResourceStruct = new beet.BeetArgsStruct<
 );
 /**
  * Accounts required by the _claimResource_ instruction
+ *
+ * @property [] market
+ * @property [] treasuryHolder
+ * @property [] sellingResource
+ * @property [**signer**] sellingResourceOwner
+ * @property [_writable_] vault
+ * @property [_writable_] metadata
+ * @property [] owner
+ * @property [_writable_] destination
+ * @property [] clock
+ * @property [] tokenMetadataProgram
  * @category Instructions
  * @category ClaimResource
  * @category generated
@@ -49,10 +60,13 @@ export type ClaimResourceInstructionAccounts = {
   owner: web3.PublicKey;
   destination: web3.PublicKey;
   clock: web3.PublicKey;
+  tokenProgram?: web3.PublicKey;
   tokenMetadataProgram: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
 };
 
-const claimResourceInstructionDiscriminator = [0, 160, 164, 96, 237, 118, 74, 27];
+export const claimResourceInstructionDiscriminator = [0, 160, 164, 96, 237, 118, 74, 27];
 
 /**
  * Creates a _ClaimResource_ instruction.
@@ -67,89 +81,83 @@ const claimResourceInstructionDiscriminator = [0, 160, 164, 96, 237, 118, 74, 27
 export function createClaimResourceInstruction(
   accounts: ClaimResourceInstructionAccounts,
   args: ClaimResourceInstructionArgs,
+  programId = new web3.PublicKey('SaLeTjyUa5wXHnGuewUSyJ5JWZaHwz3TxqUntCE9czo'),
 ) {
-  const {
-    market,
-    treasuryHolder,
-    sellingResource,
-    sellingResourceOwner,
-    vault,
-    metadata,
-    owner,
-    destination,
-    clock,
-    tokenMetadataProgram,
-  } = accounts;
-
   const [data] = claimResourceStruct.serialize({
     instructionDiscriminator: claimResourceInstructionDiscriminator,
     ...args,
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: market,
+      pubkey: accounts.market,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: treasuryHolder,
+      pubkey: accounts.treasuryHolder,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: sellingResource,
+      pubkey: accounts.sellingResource,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: sellingResourceOwner,
+      pubkey: accounts.sellingResourceOwner,
       isWritable: false,
       isSigner: true,
     },
     {
-      pubkey: vault,
+      pubkey: accounts.vault,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: metadata,
+      pubkey: accounts.metadata,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: owner,
+      pubkey: accounts.owner,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: destination,
+      pubkey: accounts.destination,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: clock,
+      pubkey: accounts.clock,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: splToken.TOKEN_PROGRAM_ID,
+      pubkey: accounts.tokenProgram ?? splToken.TOKEN_PROGRAM_ID,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: tokenMetadataProgram,
+      pubkey: accounts.tokenMetadataProgram,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: web3.SystemProgram.programId,
+      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
       isWritable: false,
       isSigner: false,
     },
   ];
 
+  if (accounts.anchorRemainingAccounts != null) {
+    for (const acc of accounts.anchorRemainingAccounts) {
+      keys.push(acc);
+    }
+  }
+
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey('SaLeTjyUa5wXHnGuewUSyJ5JWZaHwz3TxqUntCE9czo'),
+    programId,
     keys,
     data,
   });

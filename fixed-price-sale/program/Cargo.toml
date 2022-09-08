@@ -28,3 +28,4 @@ solana-program-test = "~1.9.28"
 solana-program = "~1.9.28"
 solana-sdk = "~1.9.28"
 spl-associated-token-account = "~1.0.3"
+mpl-testing-utils= {path="../../core/rust/testing-utils" }

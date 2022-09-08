@@ -18,4 +18,4 @@ runs:
       uses: actions-rs/cargo@v1
       with:
         command: clippy
-        args: --all-targets --all-features --no-deps --manifest-path ${{ inputs.working-directory }}/Cargo.toml -- -D warnings
+        args: --all-targets --all-features --no-deps --manifest-path ${{ inputs.working-directory }}/Cargo.toml

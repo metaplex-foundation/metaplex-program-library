@@ -190,7 +190,7 @@ pub fn spl_token_metadata_mint_new_edition_from_master_edition_via_token<'a>(
             system_program_account.clone(),
             rent_program_account.clone(),
         ],
-        &[&signers_seeds],
+        &[signers_seeds],
     )?;
 
     Ok(())
