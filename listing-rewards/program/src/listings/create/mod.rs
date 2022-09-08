@@ -187,7 +187,6 @@ pub fn handler(
     let metadata = &ctx.accounts.metadata;
     let reward_center = &ctx.accounts.reward_center;
     let auction_house = &ctx.accounts.auction_house;
-    let ah_auctioneer_pda = &ctx.accounts.ah_auctioneer_pda;
 
     let wallet = &ctx.accounts.wallet;
     let clock = Clock::get()?;
