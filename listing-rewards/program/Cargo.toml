@@ -24,7 +24,7 @@ default = []
 solana-program = "~1.9.15"
 anchor-lang = { version = "~0.24.2", features = ["init-if-needed"] }
 anchor-spl = "~0.24.2"
-mpl-auction-house = { path = "./../../auction-house/program", features = ["cpi", "no-entrypoint"]}
+mpl-auction-house = { version="~1.2.4",path = "./../../auction-house/program", features = ["cpi", "no-entrypoint"] }
 mpl-token-metadata = { version="~1.2.7", features = [ "no-entrypoint" ] }
 
 [dev-dependencies]
