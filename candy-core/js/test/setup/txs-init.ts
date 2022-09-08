@@ -106,12 +106,19 @@ export class InitTransactions {
     const [_, candyMachine] = await this.getKeypair('Candy Machine Account')
 
     const accounts: program.InitializeInstructionAccounts = {
+      // TODO: fix collection accounts
+      collectionAuthority: candyMachine.publicKey,
+      collectionAuthorityRecord: candyMachine.publicKey,
+      collectionEdition: candyMachine.publicKey,
+      collectionMetadata: candyMachine.publicKey,
+      collectionMint: candyMachine.publicKey,
+      tokenMetadataProgram: candyMachine.publicKey,
       candyMachine: candyMachine.publicKey,
       authority: payer.publicKey,
       updateAuthority: payer.publicKey,
       payer: payer.publicKey,
       systemProgram: SystemProgram.programId,
-      rent: SYSVAR_RENT_PUBKEY,
+      rent: SYSVAR_RENT_PUBKEY
     };
 
     const args: program.InitializeInstructionArgs = {
@@ -243,6 +250,12 @@ export class InitTransactions {
     amman.addr.addLabel('Mint Master Edition', masterEdition);
 
     const accounts: program.MintInstructionAccounts = {
+      // TODO: fix the collection accounts
+      collectionAuthority: candyMachine,
+      collectionAuthorityRecord: candyMachine,
+      collectionMasterEdition: candyMachine,
+      collectionMetadata: candyMachine,
+      collectionMint: candyMachine,
       candyMachine: candyMachine,
       authority: candyMachineObject.authority,
       updateAuthority: candyMachineObject.updateAuthority,
@@ -251,7 +264,6 @@ export class InitTransactions {
       metadata: metadataAddress,
       mint: mint,
       mintAuthority: payer.publicKey,
-      mintUpdateAuthority: payer.publicKey,
       payer: payer.publicKey,
       tokenMetadataProgram: METAPLEX_PROGRAM_ID,
       tokenProgram: TOKEN_PROGRAM_ID,

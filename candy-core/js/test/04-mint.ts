@@ -15,7 +15,6 @@ test('mint (authority)', async (t) => {
         sellerFeeBasisPoints: 500,
         maxSupply: 0,
         isMutable: true,
-        retainAuthority: true,
         creators: [{
             address: payerPair.publicKey,
             verified: false,
@@ -82,7 +81,6 @@ test('mint (minter)', async (t) => {
         sellerFeeBasisPoints: 500,
         maxSupply: 0,
         isMutable: true,
-        retainAuthority: true,
         creators: [{
             address: payerPair.publicKey,
             verified: false,

@@ -49,7 +49,6 @@ test('update', async (t) => {
     spok(t, candyMachine.data, {
         sellerFeeBasisPoints: 500,
         isMutable: true,
-        retainAuthority: true,
         configLineSettings: {
             prefixName: 'TEST ',
             nameLength: 10,
@@ -77,7 +76,6 @@ test('update', async (t) => {
     spok(t, updatedCandyMachine.data, {
         sellerFeeBasisPoints: 1000,
         isMutable: false,
-        retainAuthority: false,
         configLineSettings: data.configLineSettings
     });
 
@@ -147,7 +145,6 @@ test('update (hidden settings)', async (t) => {
     spok(t, candyMachine.data, {
         sellerFeeBasisPoints: 500,
         isMutable: true,
-        retainAuthority: true,
         hiddenSettings: data.hiddenSettings
     });
 

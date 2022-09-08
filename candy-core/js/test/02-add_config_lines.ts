@@ -15,7 +15,6 @@ test('add_config_lines', async (t) => {
         sellerFeeBasisPoints: 500,
         maxSupply: 0,
         isMutable: true,
-        retainAuthority: true,
         creators: [{
             address: payerPair.publicKey,
             verified: false,
@@ -72,7 +71,6 @@ test('add_config_lines (hidden settings)', async (t) => {
         sellerFeeBasisPoints: 500,
         maxSupply: 0,
         isMutable: true,
-        retainAuthority: true,
         creators: [{
             address: payerPair.publicKey,
             verified: false,

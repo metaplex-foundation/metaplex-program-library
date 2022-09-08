@@ -54,7 +54,6 @@ test('initialize: new candy machine', async (t) => {
             itemsAvailable: spokSameBignum(items),
             maxSupply: spokSameBignum(0),
             isMutable: true,
-            retainAuthority: true,
             creators: data.creators,
             configLineSettings: data.configLineSettings
         }
@@ -111,7 +110,6 @@ test('initialize: new candy machine (hidden settings)', async (t) => {
             itemsAvailable: spokSameBignum(items),
             maxSupply: spokSameBignum(0),
             isMutable: true,
-            retainAuthority: true,
             creators: data.creators,
             hiddenSettings: data.hiddenSettings
         }

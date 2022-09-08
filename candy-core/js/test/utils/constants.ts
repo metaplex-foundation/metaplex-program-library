@@ -10,10 +10,9 @@ export const MAX_CREATOR_LIMIT = 5;
 
 export const HIDDEN_SECTION = 8               // discriminator
     + 8                                       // features
-    + 32                                      // wallet
     + 32                                      // authority
     + 32                                      // update_authority
-    + 33                                      // (optional) collection mint
+    + 32                                      // collection mint
     + 8                                       // items redeemed
     + 8                                       // items available (config data)
     + 4 + MAX_SYMBOL_LENGTH                   // u32 + max symbol length
