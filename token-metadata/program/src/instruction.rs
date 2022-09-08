@@ -301,7 +301,7 @@ pub enum MetadataInstruction {
     #[account(14, name="token_vault_program", desc="Token vault program")]
     #[account(15, name="system_program", desc="System program")]
     #[account(16, name="rent", desc="Rent info")]
-    DeprecatedMintNewEditionFromMasterEditionViaVaultProxy(MintNewEditionFromMasterEditionViaTokenArgs),
+    MintNewEditionFromMasterEditionViaVaultProxy(MintNewEditionFromMasterEditionViaTokenArgs),
 
     /// Puff a Metadata - make all of it's variable length fields (name/uri/symbol) a fixed length using a null character
     /// so that it can be found using offset searches by the RPC to make client lookups cheaper.
@@ -925,7 +925,7 @@ pub fn mint_edition_from_master_edition_via_vault_proxy(
     Instruction {
         program_id,
         accounts,
-        data: MetadataInstruction::DeprecatedMintNewEditionFromMasterEditionViaVaultProxy(
+        data: MetadataInstruction::MintNewEditionFromMasterEditionViaVaultProxy(
             MintNewEditionFromMasterEditionViaTokenArgs { edition },
         )
         .try_to_vec()

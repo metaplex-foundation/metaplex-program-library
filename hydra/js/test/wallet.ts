@@ -11,6 +11,7 @@ use(ChaiAsPromised);
 
 describe('fanout', async () => {
   const connection = new Connection(LOCALHOST, 'confirmed');
+  const lamportsNeeded = 10000000000;
   let authorityWallet: Keypair;
   let fanoutSdk: FanoutClient;
   beforeEach(async () => {
@@ -129,9 +130,8 @@ describe('fanout', async () => {
       expect(builtFanout.fanoutAccountData.totalMembers.toString()).to.equal('5');
       expect(builtFanout.fanoutAccountData.lastSnapshotAmount.toString()).to.equal('0');
       const distBot = new Keypair();
-      const sent = 10;
-      await connection.requestAirdrop(builtFanout.fanoutAccountData.accountKey, sent);
-      await connection.requestAirdrop(distBot.publicKey, 1);
+      await connection.requestAirdrop(builtFanout.fanoutAccountData.accountKey, lamportsNeeded);
+      await connection.requestAirdrop(distBot.publicKey, lamportsNeeded);
 
       const member1 = builtFanout.members[0];
       const member2 = builtFanout.members[1];
@@ -155,8 +155,10 @@ describe('fanout', async () => {
       );
       expect(memberDataBefore2).to.be.null;
       expect(memberDataBefore1).to.be.null;
-      const firstSnapshot = sent * LAMPORTS_PER_SOL;
-      expect(holdingAccountBefore?.lamports).to.equal(firstSnapshot + holdingAccountReserved);
+      const firstSnapshot = lamportsNeeded;
+      expect(holdingAccountBefore?.lamports + lamportsNeeded).to.equal(
+        firstSnapshot + holdingAccountReserved,
+      );
       const tx = await fanoutSdk.sendInstructions(
         [...distMember1.instructions, ...distMember2.instructions],
         [distBot],

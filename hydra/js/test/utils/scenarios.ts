@@ -1,18 +1,8 @@
 import { Fanout, FanoutClient, MembershipModel } from '../../src';
 import { createMasterEdition } from './metaplex';
-import { DataV2 } from '@metaplex-foundation/mpl-token-metadata';
-import {
-  Account,
-  Connection,
-  Keypair,
-  LAMPORTS_PER_SOL,
-  PublicKey,
-  TransactionInstruction,
-} from '@solana/web3.js';
+import { deprecated } from '@metaplex-foundation/mpl-token-metadata';
+import { Keypair, PublicKey, TransactionInstruction } from '@solana/web3.js';
 import { Token } from '@solana/spl-token';
-import { NodeWallet } from '@project-serum/common'; //TODO remove this
-import { LOCALHOST } from '@metaplex-foundation/amman';
-import { PayerTransactionHandler } from '@metaplex-foundation/amman-client';
 type BuiltNftFanout = {
   fanout: PublicKey;
   name: string;
@@ -50,23 +40,6 @@ type BuiltTokenFanout = {
   members: StakedMembers[];
 };
 
-export async function nftSetup() {
-  const connection = new Connection(LOCALHOST, {
-    commitment: 'confirmed',
-  });
-
-  const authorityWallet: Keypair = Keypair.generate();
-  await connection.requestAirdrop(authorityWallet.publicKey, LAMPORTS_PER_SOL * 10);
-  const fanoutSdk: FanoutClient = new FanoutClient(
-    connection,
-    new NodeWallet(new Account(authorityWallet.secretKey)),
-  );
-  await connection.requestAirdrop(authorityWallet.publicKey, LAMPORTS_PER_SOL * 10000000000);
-
-  const transactionHandler = new PayerTransactionHandler(connection, authorityWallet);
-  return { fanoutSdk, connection, authorityWallet, transactionHandler };
-}
-
 export async function builtTokenFanout(
   mint: Token,
   mintAuth: Keypair,
@@ -87,7 +60,7 @@ export async function builtTokenFanout(
   const members: StakedMembers[] = [];
   for (let i = 0; i < numberMembers; i++) {
     const memberWallet = new Keypair();
-    await fanoutSdk.connection.requestAirdrop(memberWallet.publicKey, 1);
+    await fanoutSdk.connection.requestAirdrop(memberWallet.publicKey, 10000000000);
     const ata = await mint.createAssociatedTokenAccount(memberWallet.publicKey);
     await mint.mintTo(ata, mintAuth, [], memberNumber);
     const ix = await fanoutSdk.stakeTokenMemberInstructions({
@@ -184,7 +157,7 @@ export async function builtNftFanout(
   const members: NftFanoutMember[] = [];
   for (let i = 0; i < numberMembers; i++) {
     const memberWallet = new Keypair();
-    const initMetadataData = new DataV2({
+    const initMetadataData = new deprecated.DataV2({
       uri: 'URI' + i,
       name: 'NAME' + i,
       symbol: 'SYMBOL' + i,
@@ -197,6 +170,7 @@ export async function builtNftFanout(
       fanoutSdk.connection,
       //@ts-ignore
       fanoutSdk.wallet.payer,
+      //@ts-ignore
       initMetadataData,
       0,
     );

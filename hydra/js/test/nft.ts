@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Account, Connection, Keypair, LAMPORTS_PER_SOL } from '@solana/web3.js';
+import { Account, Connection, Keypair } from '@solana/web3.js';
 import { NodeWallet } from '@project-serum/common'; //TODO remove this
 import {
   NATIVE_MINT,
@@ -18,7 +18,7 @@ import {
   MembershipModel,
 } from '../src';
 import { createMasterEdition } from './utils/metaplex';
-import { DataV2 } from '@metaplex-foundation/mpl-token-metadata';
+import { deprecated } from '@metaplex-foundation/mpl-token-metadata';
 import { LOCALHOST } from '@metaplex-foundation/amman';
 import { builtNftFanout } from './utils/scenarios';
 
@@ -26,16 +26,19 @@ use(ChaiAsPromised);
 
 describe('fanout', async () => {
   const connection = new Connection(LOCALHOST, 'confirmed');
+  const lamportsNeeded = 10000000000;
   let authorityWallet: Keypair;
   let fanoutSdk: FanoutClient;
   beforeEach(async () => {
     authorityWallet = Keypair.generate();
-    await connection.requestAirdrop(authorityWallet.publicKey, LAMPORTS_PER_SOL * 10);
+    let signature = await connection.requestAirdrop(authorityWallet.publicKey, 1000000000);
+    await connection.confirmTransaction(signature);
     fanoutSdk = new FanoutClient(
       connection,
       new NodeWallet(new Account(authorityWallet.secretKey)),
     );
-    await connection.requestAirdrop(authorityWallet.publicKey, LAMPORTS_PER_SOL * 10);
+    signature = await connection.requestAirdrop(authorityWallet.publicKey, 1000000000);
+    await connection.confirmTransaction(signature);
   });
 
   describe('NFT membership model', () => {
@@ -93,7 +96,7 @@ describe('fanout', async () => {
           name: `Test${Date.now()}`,
           membershipModel: MembershipModel.NFT,
         });
-        const initMetadataData = new DataV2({
+        const initMetadataData = new deprecated.DataV2({
           uri: 'URI',
           name: 'NAME',
           symbol: 'SYMBOL',
@@ -140,7 +143,7 @@ describe('fanout', async () => {
           name: `Test${Date.now()}`,
           membershipModel: MembershipModel.NFT,
         });
-        const initMetadataData = new DataV2({
+        const initMetadataData = new deprecated.DataV2({
           uri: 'URI',
           name: 'NAME',
           symbol: 'SYMBOL',
@@ -157,7 +160,7 @@ describe('fanout', async () => {
           0,
         );
 
-        const initMetadataData1 = new DataV2({
+        const initMetadataData1 = new deprecated.DataV2({
           uri: 'URI1',
           name: 'NAME1',
           symbol: 'SYMBOL1',
@@ -206,9 +209,8 @@ describe('fanout', async () => {
       expect(builtFanout.fanoutAccountData.totalMembers.toString()).to.equal('5');
       expect(builtFanout.fanoutAccountData.lastSnapshotAmount.toString()).to.equal('0');
       const distBot = new Keypair();
-      const sent = 10;
-      await connection.requestAirdrop(builtFanout.fanoutAccountData.accountKey, sent);
-      await connection.requestAirdrop(distBot.publicKey, 1);
+      await connection.requestAirdrop(builtFanout.fanoutAccountData.accountKey, lamportsNeeded);
+      await connection.requestAirdrop(distBot.publicKey, 1000000000);
 
       const member1 = builtFanout.members[0];
       const member2 = builtFanout.members[1];
@@ -234,8 +236,10 @@ describe('fanout', async () => {
       expect(memberDataBefore2).to.be.null;
       expect(memberDataBefore1).to.be.null;
       const holdingAccountReserved = await connection.getMinimumBalanceForRentExemption(1);
-      const firstSnapshot = sent * LAMPORTS_PER_SOL;
-      expect(holdingAccountBefore?.lamports).to.equal(firstSnapshot + holdingAccountReserved);
+      const firstSnapshot = lamportsNeeded;
+      expect(holdingAccountBefore?.lamports + lamportsNeeded).to.equal(
+        firstSnapshot + holdingAccountReserved,
+      );
       const tx = await fanoutSdk.sendInstructions(
         [...distMember1.instructions, ...distMember2.instructions],
         [distBot],
@@ -282,10 +286,10 @@ describe('fanout', async () => {
         FanoutMembershipVoucher,
       );
       expect(membershipAccountAgain1.totalInflow.toString()).to.equal(`${firstSnapshot * 0.2}`);
-      const sent2 = 10;
+      const sent2 = lamportsNeeded;
 
       await connection.requestAirdrop(builtFanout.fanoutAccountData.accountKey, sent2);
-      const secondInflow = sent2 * LAMPORTS_PER_SOL;
+      const secondInflow = sent2;
       await fanoutSdk.distributeAll({
         fanout: builtFanout.fanout,
         payer: fanoutSdk.wallet.publicKey,
@@ -308,6 +312,7 @@ describe('fanout', async () => {
 
     it('Distributes a Fanout under a certain mint for NFT Members', async () => {
       const builtFanout = await builtNftFanout(fanoutSdk, 100, 5);
+
       const mint = await Token.createMint(
         connection,
         authorityWallet,
@@ -322,7 +327,7 @@ describe('fanout', async () => {
       });
       const fanoutForMintAccountData = await fanoutSdk.fetch<FanoutMint>(fanoutForMint, FanoutMint);
       const distBot = new Keypair();
-      await connection.requestAirdrop(distBot.publicKey, 1);
+      await connection.requestAirdrop(distBot.publicKey, lamportsNeeded);
       const sent = 112 * 1000000;
       await mint.mintTo(fanoutForMintAccountData.tokenAccount, authorityWallet, [], sent);
       const member1 = builtFanout.members[0];

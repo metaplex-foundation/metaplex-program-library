@@ -13,16 +13,19 @@ use(ChaiAsPromised);
 
 describe('fanout', async () => {
   const connection = new Connection(LOCALHOST, 'confirmed');
+  const lamportsNeeded = 10000000000;
   let authorityWallet: Keypair;
   let fanoutSdk: FanoutClient;
   beforeEach(async () => {
     authorityWallet = Keypair.generate();
-    await connection.requestAirdrop(authorityWallet.publicKey, LAMPORTS_PER_SOL * 10);
+    let signature = await connection.requestAirdrop(authorityWallet.publicKey, lamportsNeeded);
+    await connection.confirmTransaction(signature);
     fanoutSdk = new FanoutClient(
       connection,
       new NodeWallet(new Account(authorityWallet.secretKey)),
     );
-    await connection.requestAirdrop(authorityWallet.publicKey, LAMPORTS_PER_SOL * 10);
+    signature = await connection.requestAirdrop(authorityWallet.publicKey, lamportsNeeded);
+    await connection.confirmTransaction(signature);
   });
 
   describe('Token membership model', () => {
@@ -36,7 +39,7 @@ describe('fanout', async () => {
         TOKEN_PROGRAM_ID,
       );
       const distBot = new Keypair();
-      await connection.requestAirdrop(distBot.publicKey, 1);
+      await connection.requestAirdrop(distBot.publicKey, lamportsNeeded);
       const supply = 1000000 * 10 ** 6;
       const tokenAcct = await membershipMint.createAccount(authorityWallet.publicKey);
       const { fanout } = await fanoutSdk.initializeFanout({
@@ -72,7 +75,7 @@ describe('fanout', async () => {
       for (let index = 0; index <= 4; index++) {
         const member = new Keypair();
         const pseudoRng = Math.floor(supply * Math.random() * 0.138);
-        await connection.requestAirdrop(member.publicKey, 1);
+        await connection.requestAirdrop(member.publicKey, lamportsNeeded);
         const tokenAcctMember = await membershipMint.createAssociatedTokenAccount(member.publicKey);
         const mintAcctMember = await mint.createAssociatedTokenAccount(member.publicKey);
         await membershipMint.transfer(
@@ -230,7 +233,7 @@ describe('fanout', async () => {
       );
       const supply = 1000000 * 10 ** 6;
       const member = new Keypair();
-      await connection.requestAirdrop(member.publicKey, 1);
+      await connection.requestAirdrop(member.publicKey, lamportsNeeded);
       const tokenAcct = await membershipMint.createAccount(authorityWallet.publicKey);
       const tokenAcctMember = await membershipMint.createAssociatedTokenAccount(member.publicKey);
       await membershipMint.mintTo(tokenAcct, authorityWallet.publicKey, [], supply);
@@ -287,7 +290,7 @@ describe('fanout', async () => {
       );
       const supply = 1000000 * 10 ** 6;
       const member = new Keypair();
-      await connection.requestAirdrop(member.publicKey, 1);
+      await connection.requestAirdrop(member.publicKey, lamportsNeeded);
       const tokenAcct = await membershipMint.createAccount(authorityWallet.publicKey);
       await membershipMint.mintTo(tokenAcct, authorityWallet.publicKey, [], supply);
 
@@ -336,7 +339,7 @@ describe('fanout', async () => {
         TOKEN_PROGRAM_ID,
       );
       const distBot = new Keypair();
-      await connection.requestAirdrop(distBot.publicKey, 1);
+      await connection.requestAirdrop(distBot.publicKey, lamportsNeeded);
       const builtFanout = await builtTokenFanout(
         membershipMint,
         authorityWallet,
@@ -349,9 +352,8 @@ describe('fanout', async () => {
       expect(builtFanout.fanoutAccountData.totalShares?.toString()).to.equal(`${100 ** 6}`);
       expect(builtFanout.fanoutAccountData.totalStakedShares?.toString()).to.equal(`${100 ** 6}`);
       expect(builtFanout.fanoutAccountData.lastSnapshotAmount.toString()).to.equal('0');
-      const sent = 10;
-      await connection.requestAirdrop(builtFanout.fanoutAccountData.accountKey, sent);
-      const firstSnapshot = sent * LAMPORTS_PER_SOL;
+      await connection.requestAirdrop(builtFanout.fanoutAccountData.accountKey, lamportsNeeded);
+      const firstSnapshot = lamportsNeeded;
       const firstMemberAmount = firstSnapshot * 0.2;
       const member1 = builtFanout.members[0];
       const ix = await fanoutSdk.distributeTokenMemberInstructions({
@@ -389,7 +391,8 @@ describe('fanout', async () => {
         TOKEN_PROGRAM_ID,
       );
       const distBot = new Keypair();
-      await connection.requestAirdrop(distBot.publicKey, 1);
+      const signature = await connection.requestAirdrop(distBot.publicKey, 1);
+      await connection.confirmTransaction(signature);
       const builtFanout = await builtTokenFanout(
         membershipMint,
         authorityWallet,

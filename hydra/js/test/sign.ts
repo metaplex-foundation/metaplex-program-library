@@ -5,7 +5,7 @@ import { expect, use } from 'chai';
 import ChaiAsPromised from 'chai-as-promised';
 import { Fanout, FanoutClient, MembershipModel } from '../src';
 import { createMasterEdition } from './utils/metaplex';
-import { DataV2, Creator, Metadata } from '@metaplex-foundation/mpl-token-metadata';
+import { deprecated } from '@metaplex-foundation/mpl-token-metadata';
 import { LOCALHOST } from '@metaplex-foundation/amman';
 
 use(ChaiAsPromised);
@@ -33,14 +33,18 @@ describe('fanout', async () => {
       });
 
       const fanoutAccount = await fanoutSdk.fetch<Fanout>(fanout, Fanout);
-      const initMetadataData = new DataV2({
+      const initMetadataData = new deprecated.DataV2({
         uri: 'URI',
         name: 'NAME',
         symbol: 'SYMBOL',
         sellerFeeBasisPoints: 1000,
         creators: [
-          new Creator({ address: authorityWallet.publicKey.toBase58(), share: 0, verified: true }),
-          new Creator({
+          new deprecated.Creator({
+            address: authorityWallet.publicKey.toBase58(),
+            share: 0,
+            verified: true,
+          }),
+          new deprecated.Creator({
             address: fanoutAccount.accountKey.toBase58(),
             share: 100,
             verified: false,
@@ -63,7 +67,7 @@ describe('fanout', async () => {
         metadata: nft.metadata,
       });
 
-      const meta = await Metadata.findByMint(connection, nft.mint.publicKey);
+      const meta = await deprecated.Metadata.findByMint(connection, nft.mint.publicKey);
       expect(meta?.data?.data?.creators?.at(1)?.verified).to.equal(1);
       expect(meta?.data?.data?.creators?.at(1)?.address).to.equal(
         fanoutAccount.accountKey.toBase58(),

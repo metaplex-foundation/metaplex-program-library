@@ -1,11 +1,5 @@
 import { Connection, Keypair, PublicKey } from '@solana/web3.js';
-import {
-  CreateMasterEditionV3,
-  CreateMetadataV2,
-  DataV2,
-  MasterEdition,
-  Metadata,
-} from '@metaplex-foundation/mpl-token-metadata';
+import { DataV2, deprecated } from '@metaplex-foundation/mpl-token-metadata';
 import BN from 'bn.js';
 import * as spl from '@solana/spl-token';
 // -----------------
@@ -30,11 +24,12 @@ export async function createMetadataV2({
   updateAuthority,
   payer,
 }: CreateMetadataV2Params) {
-  const metadata = await Metadata.getPDA(mint);
-  const createMetadataTx = new CreateMetadataV2(
+  const metadata = await deprecated.Metadata.getPDA(mint);
+  const createMetadataTx = new deprecated.CreateMetadataV2(
     { feePayer: publicKey },
     {
       metadata,
+      //@ts-ignore
       metadataData,
       updateAuthority: updateAuthority ?? publicKey,
       mint: mint,
@@ -93,8 +88,8 @@ export async function createMasterEdition(
 ) {
   const { mint, metadata } = await mintAndCreateMetadataV2(connection, payer, args);
 
-  const masterEditionPubkey = await MasterEdition.getPDA(mint.publicKey);
-  const createMev3 = new CreateMasterEditionV3(
+  const masterEditionPubkey = await deprecated.MasterEdition.getPDA(mint.publicKey);
+  const createMev3 = new deprecated.CreateMasterEditionV3(
     { feePayer: payer.publicKey },
     {
       edition: masterEditionPubkey,

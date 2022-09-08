@@ -38,7 +38,7 @@ import {
 } from './generated/instructions';
 import { MembershipModel } from './generated/types';
 import { Fanout } from './generated/accounts';
-import { MetadataProgram } from '@metaplex-foundation/mpl-token-metadata';
+import { deprecated } from '@metaplex-foundation/mpl-token-metadata';
 import {
   BigInstructionResult,
   InstructionResult,
@@ -137,7 +137,7 @@ interface RemoveMemberArgs {
   destination: PublicKey;
 }
 
-const MPL_TM_BUF = MetadataProgram.PUBKEY.toBuffer();
+const MPL_TM_BUF = deprecated.MetadataProgram.PUBKEY.toBuffer();
 const MPL_TM_PREFIX = 'metadata';
 
 export interface TransactionResult {
@@ -479,7 +479,7 @@ export class FanoutClient {
     const signers: Signer[] = [];
     const [metadata, _md] = await PublicKey.findProgramAddress(
       [Buffer.from(MPL_TM_PREFIX), MPL_TM_BUF, opts.membershipKey.toBuffer()],
-      MetadataProgram.PUBKEY,
+      deprecated.MetadataProgram.PUBKEY,
     );
     instructions.push(
       createProcessAddMemberNftInstruction(
@@ -731,7 +731,7 @@ export class FanoutClient {
         authority: authority,
         holdingAccount: holdingAccount,
         metadata: opts.metadata,
-        tokenMetadataProgram: MetadataProgram.PUBKEY,
+        tokenMetadataProgram: deprecated.MetadataProgram.PUBKEY,
       }),
     );
     return {
