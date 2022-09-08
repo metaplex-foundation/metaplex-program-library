@@ -1,10 +1,7 @@
 use super::*;
 use crate::{
     errors::CandyGuardError,
-    utils::{
-        assert_is_ata, assert_is_token_account, assert_keys_equal, spl_token_transfer,
-        TokenTransferParams,
-    },
+    utils::{assert_is_token_account, assert_keys_equal, spl_token_transfer, TokenTransferParams},
 };
 use mpl_token_metadata::{
     instruction::burn_nft,
@@ -74,10 +71,8 @@ impl Condition for NftPayment {
             assert_keys_equal(&metadata.mint, mint_account.key)?;
         } else {
             let _transfer_authority = Self::get_account_info(ctx, index + 2)?;
-            let destination_ata = Self::get_account_info(ctx, index + 3)?;
+            let _destination_ata = Self::get_account_info(ctx, index + 3)?;
             evaluation_context.account_cursor += 2;
-
-            assert_is_ata(destination_ata, &ctx.accounts.payer.key(), &metadata.mint)?;
         }
 
         evaluation_context
