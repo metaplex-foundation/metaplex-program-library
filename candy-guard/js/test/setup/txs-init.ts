@@ -10,16 +10,16 @@ import {
   Keypair,
   PublicKey,
   SystemProgram,
-  Transaction,
-  TransactionInstruction,
   SYSVAR_RENT_PUBKEY,
   SYSVAR_SLOT_HASHES_PUBKEY,
+  Transaction,
+  TransactionInstruction,
   SYSVAR_INSTRUCTIONS_PUBKEY,
   AccountMeta
 } from '@solana/web3.js';
-import { Test } from 'tape';
-import { amman } from '.';
-import { CandyMachineHelper, CANDY_MACHINE_PROGRAM, getCandyGuardPDA, METAPLEX_PROGRAM_ID } from '../utils';
+import {Test} from 'tape';
+import {amman} from '.';
+import {CANDY_MACHINE_PROGRAM, CandyMachineHelper, getCandyGuardPDA, METAPLEX_PROGRAM_ID} from '../utils';
 import {
   CandyGuardData,
   createInitializeInstruction,
@@ -35,7 +35,7 @@ import {
   UpdateInstructionArgs,
   WrapInstructionAccounts,
 } from '../../src/generated';
-import { CandyMachine } from '../../../../candy-core/js/src/generated';
+import {CandyMachine} from '../../../../candy-core/js/src/generated';
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   createAssociatedTokenAccountInstruction,
@@ -230,66 +230,32 @@ export class InitTransactions {
     );
     amman.addr.addLabel('Mint Master Edition', masterEdition);
 
-    const accountMetas: AccountMeta[] = [];
+    let collectionMint = candyMachineObject.collectionMint;
 
-    if (collection) {
-        let [collectionAuthority] = await PublicKey.findProgramAddress(
-            [Buffer.from('collection'), candyMachine.toBuffer()],
-            CANDY_MACHINE_PROGRAM,
-        );
+    let [collectionAuthorityRecord] = await PublicKey.findProgramAddress(
+        [
+          Buffer.from('metadata'),
+          METAPLEX_PROGRAM_ID.toBuffer(),
+          collectionMint.toBuffer(),
+          Buffer.from('collection_authority'),
+          candyMachineObject.updateAuthority.toBuffer()
+        ],
+        METAPLEX_PROGRAM_ID,
+    );
 
-        let [collectionAuthorityRecord] = await PublicKey.findProgramAddress(
-            [
-                Buffer.from('metadata'),
-                METAPLEX_PROGRAM_ID.toBuffer(),
-                collection.toBuffer(),
-                Buffer.from('collection_authority'),
-                collectionAuthority.toBuffer()
-            ],
-            METAPLEX_PROGRAM_ID,
-        );
-
-        let [collectionMetadata] = await PublicKey.findProgramAddress(
-            [Buffer.from('metadata'), METAPLEX_PROGRAM_ID.toBuffer(), collection.toBuffer()],
-            METAPLEX_PROGRAM_ID,
-        );
-        let [collectionMasterEdition,] = await PublicKey.findProgramAddress(
-            [Buffer.from('metadata'), METAPLEX_PROGRAM_ID.toBuffer(), collection.toBuffer(), Buffer.from('edition')],
-            METAPLEX_PROGRAM_ID,
-        );
-
-        accountMetas.push({
-            pubkey: collectionAuthority,
-            isSigner: false,
-            isWritable: true,
-        });
-        accountMetas.push({
-            pubkey: collectionAuthorityRecord,
-            isSigner: false,
-            isWritable: false,
-        });
-        accountMetas.push({
-            pubkey: collection,
-            isSigner: false,
-            isWritable: false,
-        });
-        accountMetas.push({
-            pubkey: collectionMetadata,
-            isSigner: false,
-            isWritable: false,
-        });
-        accountMetas.push({
-            pubkey: collectionMasterEdition,
-            isSigner: false,
-            isWritable: false,
-        });
-    }
-
-    if (remainingAccounts) {
-      accountMetas.push(...remainingAccounts);
-    }
-
+    let [collectionMetadata] = await PublicKey.findProgramAddress(
+        [Buffer.from('metadata'), METAPLEX_PROGRAM_ID.toBuffer(), collectionMint.toBuffer()],
+        METAPLEX_PROGRAM_ID,
+    );
+    let [collectionMasterEdition,] = await PublicKey.findProgramAddress(
+        [Buffer.from('metadata'), METAPLEX_PROGRAM_ID.toBuffer(), collectionMint.toBuffer(), Buffer.from('edition')],
+        METAPLEX_PROGRAM_ID,
+    );
     const accounts: MintInstructionAccounts = {
+      collectionAuthorityRecord,
+      collectionMasterEdition,
+      collectionMetadata,
+      collectionMint,
       candyGuard: candyGuard,
       candyMachineProgram: CANDY_MACHINE_PROGRAM,
       candyMachine: candyMachine,
@@ -306,7 +272,7 @@ export class InitTransactions {
       systemProgram: SystemProgram.programId,
       rent: SYSVAR_RENT_PUBKEY,
       recentSlothashes: SYSVAR_SLOT_HASHES_PUBKEY,
-      instructionSysvarAccount: SYSVAR_INSTRUCTIONS_PUBKEY,
+      instructionSysvarAccount: SYSVAR_INSTRUCTIONS_PUBKEY
     };
 
     const args: MintInstructionArgs = {
@@ -327,11 +293,7 @@ export class InitTransactions {
     ixs.push(createInitializeMintInstruction(mint.publicKey, 0, payer.publicKey, payer.publicKey));
     ixs.push(createAssociatedTokenAccountInstruction(payer.publicKey, associatedToken, payer.publicKey, mint.publicKey));
     ixs.push(createMintToInstruction(mint.publicKey, associatedToken, payer.publicKey, 1, []));
-    // candy guard mint instruction
-    const ixMint = createMintInstruction(accounts, args);
-    ixMint.keys.push(...accountMetas);
-    ixs.push(ixMint);
-
+    ixs.push(createMintInstruction(accounts, args));
     const tx = new Transaction().add(...ixs);
 
     return { tx: handler.sendAndConfirmTransaction(tx, [payer, mint], 'tx: Candy Guard Mint') };
@@ -405,7 +367,7 @@ export class InitTransactions {
     }
 
     if (collection) {
-      const { tx: addCollectionTx } = await HELPER.addCollection(
+      const { tx: addCollectionTx } = await HELPER.setCollection(
         t,
         candyMachine.publicKey,
         collection,

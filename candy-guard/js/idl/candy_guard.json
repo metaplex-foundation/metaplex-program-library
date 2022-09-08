@@ -105,11 +105,6 @@
           "isSigner": false
         },
         {
-          "name": "collectionAuthority",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
           "name": "collectionAuthorityRecord",
           "isMut": false,
           "isSigner": false
