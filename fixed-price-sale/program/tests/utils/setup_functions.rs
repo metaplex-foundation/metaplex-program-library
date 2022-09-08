@@ -26,6 +26,7 @@ macro_rules! setup_context {
         let mut program_test = ProgramTest::default();
         $(
             program_test.add_program(stringify!($program_name), $program_name::id(), None);
+            program_test.set_compute_max_units(u64::MAX);
         )+
         let mut $context = program_test.start_with_context().await;
     };

@@ -2688,5 +2688,11 @@
       "name": "InsufficientFunds",
       "msg": "Insufficient funds in escrow account to purchase."
     }
-  ]
+  ],
+  "metadata": {
+    "address": "hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk",
+    "origin": "anchor",
+    "binaryVersion": "0.24.2",
+    "libVersion": "~0.24.2"
+  }
 }

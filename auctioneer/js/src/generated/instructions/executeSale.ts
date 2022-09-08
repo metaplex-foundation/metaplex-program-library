@@ -47,7 +47,7 @@ const executeSaleStruct = new beet.BeetArgsStruct<
  * Accounts required by the _executeSale_ instruction
  *
  * @property [] auctionHouseProgram
- * @property [] listingConfig
+ * @property [_writable_] listingConfig
  * @property [_writable_] buyer
  * @property [_writable_] seller
  * @property [_writable_] tokenAccount
@@ -147,7 +147,7 @@ export function createExecuteSaleInstruction(
     },
     {
       pubkey: listingConfig,
-      isWritable: false,
+      isWritable: true,
       isSigner: false,
     },
     {

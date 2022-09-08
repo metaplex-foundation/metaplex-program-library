@@ -19,9 +19,9 @@ default = []
 [dependencies]
 anchor-lang = "~0.25"
 anchor-spl = "~0.25"
-spl-token = {version = "~3.3.0", features = ["no-entrypoint"]}
+spl-token = {version = "~3.5.0", features = ["no-entrypoint"]}
 spl-associated-token-account = {version = "~1.0.5", features = ["no-entrypoint"]}
-mpl-token-metadata = {path = "../../token-metadata/program", features = ["no-entrypoint"]}
+mpl-token-metadata = { version="~1.2.10", features = [ "no-entrypoint" ] }
 thiserror = "~1.0"
 arrayref = "~0.3.6"
 

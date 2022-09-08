@@ -29,6 +29,7 @@ use spl_associated_token_account::get_associated_token_address;
 pub fn auction_house_program_test() -> ProgramTest {
     let mut program = ProgramTest::new("mpl_auction_house", mpl_auction_house::id(), None);
     program.add_program("mpl_token_metadata", mpl_token_metadata::id(), None);
+    program.set_compute_max_units(u64::MAX);
     program
 }
 

@@ -12,7 +12,7 @@ export * from './instructions';
 export const PROGRAM_ADDRESS = 'qntmGodpGkrM42mN68VCZHXnKqDCT8rdY23wFcXCLPd';
 
 /**
- * Program publick key
+ * Program public key
  *
  * @category constants
  * @category generated

@@ -4,6 +4,7 @@ use crate::{error::NFTPacksError, math::SafeMath};
 use super::*;
 use borsh::{BorshDeserialize, BorshSerialize};
 use num_traits::ToPrimitive;
+use shank::ShankAccount;
 use solana_program::{
     msg,
     program_error::ProgramError,
@@ -12,7 +13,7 @@ use solana_program::{
 
 /// Pack config. PDA (["config", pack_key], program_id)
 #[repr(C)]
-#[derive(Debug, Clone, PartialEq, BorshSerialize, BorshDeserialize)]
+#[derive(Debug, Clone, PartialEq, BorshSerialize, BorshDeserialize, ShankAccount)]
 pub struct PackConfig {
     /// account type - PackConfig
     pub account_type: AccountType,
@@ -123,7 +124,7 @@ impl PackConfig {
         };
         for i in self.weights.iter() {
             bound = bound.error_sub(i.1).unwrap_or(0);
-            if bound <= 0 {
+            if bound == 0 {
                 return Ok(*i);
             }
         }

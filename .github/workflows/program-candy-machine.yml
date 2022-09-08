@@ -26,9 +26,10 @@ jobs:
       with:
         filters: |
           core:
-            - 'core/**'
+            - 'core/rust/**'
           package:
-            - 'candy-machine/**'
+            - 'candy-machine/program/**'
+
   build-and-test-candy-machine:
     needs: changes
     if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' }}

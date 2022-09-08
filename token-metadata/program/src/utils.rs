@@ -12,7 +12,7 @@ use crate::{
     },
 };
 use arrayref::{array_mut_ref, array_ref, array_refs, mut_array_refs};
-use borsh::{BorshDeserialize, BorshSerialize};
+use borsh::BorshSerialize;
 use solana_program::{
     account_info::AccountInfo,
     borsh::try_from_slice_unchecked,
@@ -853,16 +853,12 @@ pub fn assert_token_program_matches_package(token_program_info: &AccountInfo) ->
     Ok(())
 }
 
-pub fn is_correct_account_type(data: &[u8], data_type: Key, data_size: usize) -> bool {
-    (data[0] == data_type as u8 || data[0] == Key::Uninitialized as u8) && (data.len() == data_size)
-}
-
-pub fn try_from_slice_checked<T: BorshDeserialize>(
+pub fn try_from_slice_checked<T: TokenMetadataAccount>(
     data: &[u8],
     data_type: Key,
     data_size: usize,
 ) -> Result<T, ProgramError> {
-    if !is_correct_account_type(data, data_type, data_size) {
+    if !T::is_correct_account_type(data, data_type, data_size) {
         return Err(MetadataError::DataTypeMismatch.into());
     }
 
@@ -891,6 +887,18 @@ pub const SEED_AUTHORITY: Pubkey = Pubkey::new_from_array([
     0x92, 0x17, 0x2c, 0xc4, 0x72, 0x5d, 0xc0, 0x41, 0xf9, 0xdd, 0x8c, 0x51, 0x52, 0x60, 0x04, 0x26,
     0x00, 0x93, 0xa3, 0x0b, 0x02, 0x73, 0xdc, 0xfa, 0x74, 0x92, 0x17, 0xfc, 0x94, 0xa2, 0x40, 0x49,
 ]);
+
+// This equals the program address of the Bubblegum program:
+// "BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY"
+// This allows the Bubblegum program to add verified creators since they were verified as part of
+// the Bubblegum program.
+pub const BUBBLEGUM_PROGRAM_ADDRESS: Pubkey = Pubkey::new_from_array([
+    0x98, 0x8b, 0x80, 0xeb, 0x79, 0x35, 0x28, 0x69, 0xb2, 0x24, 0x74, 0x5f, 0x59, 0xdd, 0xbf, 0x8a,
+    0x26, 0x58, 0xca, 0x13, 0xdc, 0x68, 0x81, 0x21, 0x26, 0x35, 0x1c, 0xae, 0x07, 0xc1, 0xa5, 0xa5,
+]);
+// This flag activates certain program authority features of the Bubblegum program.
+pub const BUBBLEGUM_ACTIVATED: bool = false;
+
 /// Create a new account instruction
 pub fn process_create_metadata_accounts_logic(
     program_id: &Pubkey,
@@ -961,8 +969,20 @@ pub fn process_create_metadata_accounts_logic(
         metadata_authority_signer_seeds,
     )?;
 
-    let mut metadata: Metadata = Metadata::from_account_info(metadata_account_info)?;
+    let mut metadata = Metadata::from_account_info(metadata_account_info)?;
     let compatible_data = data.to_v1();
+
+    // This allows the Bubblegum program to create metadata with verified creators since they were
+    // verified already by the Bubblegum program.
+    let allow_direct_creator_writes = if BUBBLEGUM_ACTIVATED
+        && mint_authority_info.owner == &BUBBLEGUM_PROGRAM_ADDRESS
+        && mint_authority_info.is_signer
+    {
+        true
+    } else {
+        allow_direct_creator_writes
+    };
+
     assert_data_valid(
         &compatible_data,
         &update_authority_key,
@@ -1101,7 +1121,7 @@ pub fn process_mint_new_edition_from_master_edition_via_token_logic<'a>(
     assert_owned_by(master_edition_account_info, program_id)?;
     assert_owned_by(master_metadata_account_info, program_id)?;
 
-    let master_metadata: Metadata = Metadata::from_account_info(master_metadata_account_info)?;
+    let master_metadata = Metadata::from_account_info(master_metadata_account_info)?;
     let token_account: Account = assert_initialized(token_account_info)?;
 
     if !ignore_owner_signer {
@@ -1164,8 +1184,7 @@ pub fn process_mint_new_edition_from_master_edition_via_token_logic<'a>(
         )?;
     }
 
-    let mut edition_marker =
-        EditionMarker::from_account_info::<EditionMarker>(edition_marker_info)?;
+    let mut edition_marker = EditionMarker::from_account_info(edition_marker_info)?;
     edition_marker.key = Key::EditionMarker;
     if edition_marker.edition_taken(edition)? {
         return Err(MetadataError::AlreadyInitialized.into());
@@ -1366,8 +1385,7 @@ pub fn is_master_edition(
     mint_decimals: u8,
     mint_supply: u64,
 ) -> bool {
-    let is_correct_type =
-        MasterEditionV2::from_account_info::<MasterEditionV2>(edition_account_info).is_ok();
+    let is_correct_type = MasterEditionV2::from_account_info(edition_account_info).is_ok();
 
     is_correct_type && mint_decimals == 0 && mint_supply == 1
 }
@@ -1377,7 +1395,7 @@ pub fn is_print_edition(
     mint_decimals: u8,
     mint_supply: u64,
 ) -> bool {
-    let is_correct_type = Edition::from_account_info::<Edition>(edition_account_info).is_ok();
+    let is_correct_type = Edition::from_account_info(edition_account_info).is_ok();
 
     is_correct_type && mint_decimals == 0 && mint_supply == 1
 }

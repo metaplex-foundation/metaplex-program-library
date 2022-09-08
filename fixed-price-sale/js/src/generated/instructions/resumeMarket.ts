@@ -13,7 +13,7 @@ import * as web3 from '@solana/web3.js';
  * @category ResumeMarket
  * @category generated
  */
-const resumeMarketStruct = new beet.BeetArgsStruct<{
+export const resumeMarketStruct = new beet.BeetArgsStruct<{
   instructionDiscriminator: number[] /* size: 8 */;
 }>(
   [['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)]],
@@ -21,6 +21,10 @@ const resumeMarketStruct = new beet.BeetArgsStruct<{
 );
 /**
  * Accounts required by the _resumeMarket_ instruction
+ *
+ * @property [_writable_] market
+ * @property [**signer**] owner
+ * @property [] clock
  * @category Instructions
  * @category ResumeMarket
  * @category generated
@@ -29,45 +33,52 @@ export type ResumeMarketInstructionAccounts = {
   market: web3.PublicKey;
   owner: web3.PublicKey;
   clock: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
 };
 
-const resumeMarketInstructionDiscriminator = [198, 120, 104, 87, 44, 103, 108, 143];
+export const resumeMarketInstructionDiscriminator = [198, 120, 104, 87, 44, 103, 108, 143];
 
 /**
  * Creates a _ResumeMarket_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
- *
  * @category Instructions
  * @category ResumeMarket
  * @category generated
  */
-export function createResumeMarketInstruction(accounts: ResumeMarketInstructionAccounts) {
-  const { market, owner, clock } = accounts;
-
+export function createResumeMarketInstruction(
+  accounts: ResumeMarketInstructionAccounts,
+  programId = new web3.PublicKey('SaLeTjyUa5wXHnGuewUSyJ5JWZaHwz3TxqUntCE9czo'),
+) {
   const [data] = resumeMarketStruct.serialize({
     instructionDiscriminator: resumeMarketInstructionDiscriminator,
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: market,
+      pubkey: accounts.market,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: owner,
+      pubkey: accounts.owner,
       isWritable: false,
       isSigner: true,
     },
     {
-      pubkey: clock,
+      pubkey: accounts.clock,
       isWritable: false,
       isSigner: false,
     },
   ];
 
+  if (accounts.anchorRemainingAccounts != null) {
+    for (const acc of accounts.anchorRemainingAccounts) {
+      keys.push(acc);
+    }
+  }
+
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey('SaLeTjyUa5wXHnGuewUSyJ5JWZaHwz3TxqUntCE9czo'),
+    programId,
     keys,
     data,
   });

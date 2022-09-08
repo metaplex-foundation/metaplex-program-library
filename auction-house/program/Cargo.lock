@@ -1888,48 +1888,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "merlin"
-version = "3.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "58c38e2799fc0978b65dfff8023ec7843e2330bb462f19198840b34b6582397d"
-dependencies = [
- "byteorder",
- "keccak",
- "rand_core 0.6.3",
- "zeroize",
-]
-
-[[package]]
-name = "metaplex-token-metadata"
-version = "0.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "abcc939f0afdc6db054b9998a1292d0a016244b382462e61cfc7c570624982cb"
-dependencies = [
- "arrayref",
- "borsh",
- "metaplex-token-vault",
- "num-derive",
- "num-traits",
- "solana-program",
- "spl-token",
- "thiserror",
-]
-
-[[package]]
-name = "metaplex-token-vault"
-version = "0.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a5211991ba3273df89cd5e0f6f558bc8d7453c87c0546f915b4a319e1541df33"
-dependencies = [
- "borsh",
- "num-derive",
- "num-traits",
- "solana-program",
- "spl-token",
- "thiserror",
-]
-
-[[package]]
 name = "mime"
 version = "0.3.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2002,7 +1960,6 @@ dependencies = [
  "anchor-spl",
  "arrayref",
  "env_logger",
- "metaplex-token-metadata",
  "mpl-testing-utils",
  "mpl-token-metadata",
  "serde_json",
@@ -2022,11 +1979,11 @@ dependencies = [
  "anchor-client",
  "borsh",
  "mpl-token-metadata",
- "mpl-token-vault 0.1.1",
- "num 0.4.0",
+ "mpl-token-vault",
+ "num",
  "num-derive",
  "num-traits",
- "rand 0.7.3",
+ "rand 0.8.5",
  "serde_json",
  "shellexpand",
  "solana-program",
@@ -2042,7 +1999,7 @@ version = "1.3.3"
 dependencies = [
  "arrayref",
  "borsh",
- "mpl-token-vault 0.1.0",
+ "mpl-token-vault",
  "num-derive",
  "num-traits",
  "shank 0.0.4",
@@ -2061,19 +2018,6 @@ dependencies = [
  "borsh",
  "num-derive",
  "num-traits",
- "solana-program",
- "spl-token",
- "thiserror",
-]
-
-[[package]]
-name = "mpl-token-vault"
-version = "0.1.1"
-dependencies = [
- "borsh",
- "num-derive",
- "num-traits",
- "shank 0.0.2",
  "solana-program",
  "spl-token",
  "thiserror",

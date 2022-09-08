@@ -1,5 +1,5 @@
 import { AccountInfo, Keypair, PublicKey } from '@solana/web3.js';
-import { AuctionHouse, AuctionHouseArgs } from 'src/generated';
+import { AuctionHouse, AuctionHouseArgs } from '../src/generated';
 import test from 'tape';
 import spok from 'spok';
 
@@ -32,7 +32,7 @@ test('account auction-house: round trip serilization', async (t) => {
     escrowPaymentBump: 255,
     hasAuctioneer: false,
     auctioneerAddress: PublicKey.default,
-    scopes: [],
+    scopes: [true, false, true, false, true, true, false],
   };
 
   const expected = AuctionHouse.fromArgs(args);
