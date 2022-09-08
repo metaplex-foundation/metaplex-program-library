@@ -20,7 +20,7 @@ pub fn set_collection(ctx: Context<SetCollection>) -> Result<()> {
         update_authority: ctx.accounts.update_authority.to_account_info(),
         collection_mint: ctx.accounts.collection_mint.to_account_info(),
         collection_metadata: ctx.accounts.collection_metadata.to_account_info(),
-        collection_edition: ctx.accounts.collection_edition.to_account_info(),
+        collection_master_edition: ctx.accounts.collection_master_edition.to_account_info(),
         collection_authority_record: ctx.accounts.collection_authority_record.to_account_info(),
         token_metadata_program: ctx.accounts.token_metadata_program.to_account_info(),
         system_program: ctx.accounts.system_program.to_account_info(),
@@ -44,7 +44,7 @@ pub fn set_collection_helper(accounts: SetCollectionHelperAccounts) -> Result<()
         return err!(CandyError::MintMismatch);
     }
 
-    let edition = accounts.collection_edition.to_account_info();
+    let edition = accounts.collection_master_edition.to_account_info();
     let authority_record = accounts.collection_authority_record.to_account_info();
 
     assert_master_edition(&metadata, &edition)?;
@@ -88,7 +88,7 @@ pub struct SetCollectionHelperAccounts<'info> {
     /// CHECK:
     pub collection_metadata: AccountInfo<'info>,
     /// CHECK:
-    pub collection_edition: AccountInfo<'info>,
+    pub collection_master_edition: AccountInfo<'info>,
     /// CHECK:
     pub collection_authority_record: AccountInfo<'info>,
     /// CHECK:
@@ -121,7 +121,7 @@ pub struct SetCollection<'info> {
     /// CHECK: account checked in CPI
     collection_mint: UncheckedAccount<'info>,
     /// CHECK: account checked in CPI
-    collection_edition: UncheckedAccount<'info>,
+    collection_master_edition: UncheckedAccount<'info>,
     /// CHECK: account checked in CPI
     #[account(mut)]
     collection_authority_record: UncheckedAccount<'info>,
