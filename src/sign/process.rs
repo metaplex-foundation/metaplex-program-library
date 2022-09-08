@@ -104,8 +104,14 @@ pub async fn process_sign(args: SignArgs) -> Result<()> {
         let solana_cluster: Cluster = get_cluster(program.rpc())?;
         let rpc_url = get_rpc_url(args.rpc_url);
 
+        let solana_cluster = if rpc_url.ends_with("8899") {
+            Cluster::Localnet
+        } else {
+            solana_cluster
+        };
+
         let account_keys = match solana_cluster {
-            Cluster::Devnet => {
+            Cluster::Devnet | Cluster::Localnet => {
                 let client = RpcClient::new(&rpc_url);
                 let (creator, _) = find_candy_machine_creator_pda(&candy_machine_id);
                 let creator = bs58::encode(creator).into_string();

@@ -47,7 +47,7 @@ pub async fn process_bundlr(args: BundlrArgs) -> Result<()> {
     let bundlr_node = match solana_cluster {
         Cluster::Devnet => BUNDLR_DEVNET,
         Cluster::Mainnet => BUNDLR_MAINNET,
-        Cluster::Unknown => {
+        Cluster::Unknown | Cluster::Localnet => {
             return Err(anyhow!("Bundlr is only supported on devnet or mainnet"));
         }
     };

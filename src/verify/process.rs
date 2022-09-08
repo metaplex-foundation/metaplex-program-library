@@ -214,6 +214,7 @@ pub fn process_verify(args: VerifyArgs) -> Result<()> {
     let cluster = match get_cluster(program.rpc())? {
         Cluster::Devnet => "devnet",
         Cluster::Mainnet => "mainnet",
+        Cluster::Localnet => "",
         Cluster::Unknown => "",
     };
 
