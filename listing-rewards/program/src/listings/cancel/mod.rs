@@ -11,6 +11,7 @@ use mpl_auction_house::{
     instruction::AuctioneerCancel as AuctioneerCancelParams,
     program::AuctionHouse as AuctionHouseProgram,
     AuctionHouse,
+    Auctioneer
 };
 use solana_program::{instruction::Instruction, program::invoke_signed};
 
@@ -106,9 +107,9 @@ pub struct CancelListing<'info> {
             reward_center.key().as_ref()
         ],
         seeds::program = auction_house_program,
-        bump = auction_house.auctioneer_pda_bump
+        bump = ah_auctioneer_pda.bump
     )]
-    pub ah_auctioneer_pda: UncheckedAccount<'info>,
+    pub ah_auctioneer_pda: Box<Account<'info, Auctioneer>>,
 
     pub token_program: Program<'info, Token>,
     pub auction_house_program: Program<'info, AuctionHouseProgram>,
