@@ -16,8 +16,6 @@ pub struct CandyMachineData {
     pub max_supply: u64,
     /// Indicates if the asset is mutable or not (default yes)
     pub is_mutable: bool,
-    /// Indicates whether to retain the update authority or not
-    pub retain_authority: bool,
     /// List of creators
     pub creators: Vec<Creator>,
     /// Config line settings

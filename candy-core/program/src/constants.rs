@@ -20,23 +20,18 @@ pub const AUTHORITY_SEED: &str = "candy_machine";
 // Seed used to derive the collection authority PDA address.
 pub const COLLECTION_SEED: &str = "collection";
 
-// Number of expected remaining accounts for mints with collection.
-pub const COLLECTION_ACCOUNTS_COUNT: usize = 5;
-
 // Determine the start of the account hidden section.
 pub const HIDDEN_SECTION: usize = 8           // discriminator
     + 8                                       // features
-    + 32                                      // wallet
     + 32                                      // authority
     + 32                                      // update_authority
-    + 33                                      // (optional) collection mint
+    + 32                                      // collection mint
     + 8                                       // items redeemed
     + 8                                       // items available (config data)
     + 4 + MAX_SYMBOL_LENGTH                   // u32 + max symbol length
     + 2                                       // seller fee basis points
     + 8                                       // max supply
     + 1                                       // is mutable
-    + 1                                       // retain authority
     + 4 + MAX_CREATOR_LIMIT * MAX_CREATOR_LEN // u32 + creators vec
     + 1                                       // option (config lines settings)
     + 4 + MAX_NAME_LENGTH                     // u32 + max name length

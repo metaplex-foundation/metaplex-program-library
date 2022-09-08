@@ -9,9 +9,8 @@ pub fn set_authority(
 ) -> Result<()> {
     let candy_machine = &mut ctx.accounts.candy_machine;
 
-    if !cmp_pubkeys(&new_update_authority, &candy_machine.update_authority)
-        && candy_machine.collection_mint.is_some()
-    {
+    // TODO: handle this
+    if !cmp_pubkeys(&new_update_authority, &candy_machine.update_authority) {
         return err!(CandyError::CannotChangeUpdateAuthority);
     }
 

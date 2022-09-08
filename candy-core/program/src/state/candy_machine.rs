@@ -12,8 +12,8 @@ pub struct CandyMachine {
     pub authority: Pubkey,
     /// Update authority address to use when retaining authority.
     pub update_authority: Pubkey,
-    /// Indicates whether the minted NFTs are part of a collection or not.
-    pub collection_mint: Option<Pubkey>,
+    /// The collection mint for the candy machine.
+    pub collection_mint: Pubkey,
     /// Number of assets redeemed.
     pub items_redeemed: u64,
     /// Candy machine configuration data.
