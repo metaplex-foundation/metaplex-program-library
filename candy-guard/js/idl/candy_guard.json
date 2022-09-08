@@ -105,6 +105,31 @@
           "isSigner": false
         },
         {
+          "name": "collectionAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "collectionAuthorityRecord",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "collectionMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "collectionMetadata",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "collectionMasterEdition",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "tokenMetadataProgram",
           "isMut": false,
           "isSigner": false
@@ -743,81 +768,76 @@
     },
     {
       "code": 6012,
-      "name": "MissingCollectionInstruction",
-      "msg": "Missing set collection during mint IX"
-    },
-    {
-      "code": 6013,
       "name": "MintNotLive",
       "msg": "Mint is not live"
     },
     {
-      "code": 6014,
+      "code": 6013,
       "name": "NotEnoughSOL",
       "msg": "Not enough SOL to pay for the mint"
     },
     {
-      "code": 6015,
+      "code": 6014,
       "name": "TokenTransferFailed",
       "msg": "Token transfer failed"
     },
     {
-      "code": 6016,
+      "code": 6015,
       "name": "NotEnoughTokens",
       "msg": "Not enough tokens to pay for this minting"
     },
     {
-      "code": 6017,
+      "code": 6016,
       "name": "MissingRequiredSignature",
       "msg": "A signature was required but not found"
     },
     {
-      "code": 6018,
+      "code": 6017,
       "name": "TokenBurnFailed",
       "msg": "Token burn failed"
     },
     {
-      "code": 6019,
+      "code": 6018,
       "name": "NoWhitelistToken",
       "msg": "No whitelist token present"
     },
     {
-      "code": 6020,
+      "code": 6019,
       "name": "GatewayTokenInvalid",
       "msg": "Gateway token is not valid"
     },
     {
-      "code": 6021,
+      "code": 6020,
       "name": "AfterEndSettingsDate",
       "msg": "Current time is after the set end settings date"
     },
     {
-      "code": 6022,
+      "code": 6021,
       "name": "AfterEndSettingsMintAmount",
       "msg": "Current items minted is at the set end settings amount"
     },
     {
-      "code": 6023,
+      "code": 6022,
       "name": "InvalidMintTime",
       "msg": "Current time is not within the allowed mint time"
     },
     {
-      "code": 6024,
+      "code": 6023,
       "name": "AddressNotFoundInAllowedList",
       "msg": "Address not found on the allowed list"
     },
     {
-      "code": 6025,
+      "code": 6024,
       "name": "MissingAllowedListProof",
       "msg": "Missing allowed list proof"
     },
     {
-      "code": 6026,
+      "code": 6025,
       "name": "AllowedMintLimitReached",
       "msg": "The maximum number of allowed mints was reached"
     },
     {
-      "code": 6027,
+      "code": 6026,
       "name": "InvalidNFTCollectionPayment",
       "msg": "Invalid NFT Collection Payment"
     }

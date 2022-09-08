@@ -261,36 +261,13 @@ createErrorFromCodeLookup.set(0x177b, () => new MintNotLastTransactionError());
 createErrorFromNameLookup.set('MintNotLastTransaction', () => new MintNotLastTransactionError());
 
 /**
- * MissingCollectionInstruction: 'Missing set collection during mint IX'
- *
- * @category Errors
- * @category generated
- */
-export class MissingCollectionInstructionError extends Error {
-  readonly code: number = 0x177c;
-  readonly name: string = 'MissingCollectionInstruction';
-  constructor() {
-    super('Missing set collection during mint IX');
-    if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, MissingCollectionInstructionError);
-    }
-  }
-}
-
-createErrorFromCodeLookup.set(0x177c, () => new MissingCollectionInstructionError());
-createErrorFromNameLookup.set(
-  'MissingCollectionInstruction',
-  () => new MissingCollectionInstructionError(),
-);
-
-/**
  * MintNotLive: 'Mint is not live'
  *
  * @category Errors
  * @category generated
  */
 export class MintNotLiveError extends Error {
-  readonly code: number = 0x177d;
+  readonly code: number = 0x177c;
   readonly name: string = 'MintNotLive';
   constructor() {
     super('Mint is not live');
@@ -300,7 +277,7 @@ export class MintNotLiveError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x177d, () => new MintNotLiveError());
+createErrorFromCodeLookup.set(0x177c, () => new MintNotLiveError());
 createErrorFromNameLookup.set('MintNotLive', () => new MintNotLiveError());
 
 /**
@@ -310,7 +287,7 @@ createErrorFromNameLookup.set('MintNotLive', () => new MintNotLiveError());
  * @category generated
  */
 export class NotEnoughSOLError extends Error {
-  readonly code: number = 0x177e;
+  readonly code: number = 0x177d;
   readonly name: string = 'NotEnoughSOL';
   constructor() {
     super('Not enough SOL to pay for the mint');
@@ -320,7 +297,7 @@ export class NotEnoughSOLError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x177e, () => new NotEnoughSOLError());
+createErrorFromCodeLookup.set(0x177d, () => new NotEnoughSOLError());
 createErrorFromNameLookup.set('NotEnoughSOL', () => new NotEnoughSOLError());
 
 /**
@@ -330,7 +307,7 @@ createErrorFromNameLookup.set('NotEnoughSOL', () => new NotEnoughSOLError());
  * @category generated
  */
 export class TokenTransferFailedError extends Error {
-  readonly code: number = 0x177f;
+  readonly code: number = 0x177e;
   readonly name: string = 'TokenTransferFailed';
   constructor() {
     super('Token transfer failed');
@@ -340,7 +317,7 @@ export class TokenTransferFailedError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x177f, () => new TokenTransferFailedError());
+createErrorFromCodeLookup.set(0x177e, () => new TokenTransferFailedError());
 createErrorFromNameLookup.set('TokenTransferFailed', () => new TokenTransferFailedError());
 
 /**
@@ -350,7 +327,7 @@ createErrorFromNameLookup.set('TokenTransferFailed', () => new TokenTransferFail
  * @category generated
  */
 export class NotEnoughTokensError extends Error {
-  readonly code: number = 0x1780;
+  readonly code: number = 0x177f;
   readonly name: string = 'NotEnoughTokens';
   constructor() {
     super('Not enough tokens to pay for this minting');
@@ -360,7 +337,7 @@ export class NotEnoughTokensError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x1780, () => new NotEnoughTokensError());
+createErrorFromCodeLookup.set(0x177f, () => new NotEnoughTokensError());
 createErrorFromNameLookup.set('NotEnoughTokens', () => new NotEnoughTokensError());
 
 /**
@@ -370,7 +347,7 @@ createErrorFromNameLookup.set('NotEnoughTokens', () => new NotEnoughTokensError(
  * @category generated
  */
 export class MissingRequiredSignatureError extends Error {
-  readonly code: number = 0x1781;
+  readonly code: number = 0x1780;
   readonly name: string = 'MissingRequiredSignature';
   constructor() {
     super('A signature was required but not found');
@@ -380,7 +357,7 @@ export class MissingRequiredSignatureError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x1781, () => new MissingRequiredSignatureError());
+createErrorFromCodeLookup.set(0x1780, () => new MissingRequiredSignatureError());
 createErrorFromNameLookup.set(
   'MissingRequiredSignature',
   () => new MissingRequiredSignatureError(),
@@ -393,7 +370,7 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class TokenBurnFailedError extends Error {
-  readonly code: number = 0x1782;
+  readonly code: number = 0x1781;
   readonly name: string = 'TokenBurnFailed';
   constructor() {
     super('Token burn failed');
@@ -403,7 +380,7 @@ export class TokenBurnFailedError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x1782, () => new TokenBurnFailedError());
+createErrorFromCodeLookup.set(0x1781, () => new TokenBurnFailedError());
 createErrorFromNameLookup.set('TokenBurnFailed', () => new TokenBurnFailedError());
 
 /**
@@ -413,7 +390,7 @@ createErrorFromNameLookup.set('TokenBurnFailed', () => new TokenBurnFailedError(
  * @category generated
  */
 export class NoWhitelistTokenError extends Error {
-  readonly code: number = 0x1783;
+  readonly code: number = 0x1782;
   readonly name: string = 'NoWhitelistToken';
   constructor() {
     super('No whitelist token present');
@@ -423,7 +400,7 @@ export class NoWhitelistTokenError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x1783, () => new NoWhitelistTokenError());
+createErrorFromCodeLookup.set(0x1782, () => new NoWhitelistTokenError());
 createErrorFromNameLookup.set('NoWhitelistToken', () => new NoWhitelistTokenError());
 
 /**
@@ -433,7 +410,7 @@ createErrorFromNameLookup.set('NoWhitelistToken', () => new NoWhitelistTokenErro
  * @category generated
  */
 export class GatewayTokenInvalidError extends Error {
-  readonly code: number = 0x1784;
+  readonly code: number = 0x1783;
   readonly name: string = 'GatewayTokenInvalid';
   constructor() {
     super('Gateway token is not valid');
@@ -443,7 +420,7 @@ export class GatewayTokenInvalidError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x1784, () => new GatewayTokenInvalidError());
+createErrorFromCodeLookup.set(0x1783, () => new GatewayTokenInvalidError());
 createErrorFromNameLookup.set('GatewayTokenInvalid', () => new GatewayTokenInvalidError());
 
 /**
@@ -453,7 +430,7 @@ createErrorFromNameLookup.set('GatewayTokenInvalid', () => new GatewayTokenInval
  * @category generated
  */
 export class AfterEndSettingsDateError extends Error {
-  readonly code: number = 0x1785;
+  readonly code: number = 0x1784;
   readonly name: string = 'AfterEndSettingsDate';
   constructor() {
     super('Current time is after the set end settings date');
@@ -463,7 +440,7 @@ export class AfterEndSettingsDateError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x1785, () => new AfterEndSettingsDateError());
+createErrorFromCodeLookup.set(0x1784, () => new AfterEndSettingsDateError());
 createErrorFromNameLookup.set('AfterEndSettingsDate', () => new AfterEndSettingsDateError());
 
 /**
@@ -473,7 +450,7 @@ createErrorFromNameLookup.set('AfterEndSettingsDate', () => new AfterEndSettings
  * @category generated
  */
 export class AfterEndSettingsMintAmountError extends Error {
-  readonly code: number = 0x1786;
+  readonly code: number = 0x1785;
   readonly name: string = 'AfterEndSettingsMintAmount';
   constructor() {
     super('Current items minted is at the set end settings amount');
@@ -483,7 +460,7 @@ export class AfterEndSettingsMintAmountError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x1786, () => new AfterEndSettingsMintAmountError());
+createErrorFromCodeLookup.set(0x1785, () => new AfterEndSettingsMintAmountError());
 createErrorFromNameLookup.set(
   'AfterEndSettingsMintAmount',
   () => new AfterEndSettingsMintAmountError(),
@@ -496,7 +473,7 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class InvalidMintTimeError extends Error {
-  readonly code: number = 0x1787;
+  readonly code: number = 0x1786;
   readonly name: string = 'InvalidMintTime';
   constructor() {
     super('Current time is not within the allowed mint time');
@@ -506,7 +483,7 @@ export class InvalidMintTimeError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x1787, () => new InvalidMintTimeError());
+createErrorFromCodeLookup.set(0x1786, () => new InvalidMintTimeError());
 createErrorFromNameLookup.set('InvalidMintTime', () => new InvalidMintTimeError());
 
 /**
@@ -516,7 +493,7 @@ createErrorFromNameLookup.set('InvalidMintTime', () => new InvalidMintTimeError(
  * @category generated
  */
 export class AddressNotFoundInAllowedListError extends Error {
-  readonly code: number = 0x1788;
+  readonly code: number = 0x1787;
   readonly name: string = 'AddressNotFoundInAllowedList';
   constructor() {
     super('Address not found on the allowed list');
@@ -526,7 +503,7 @@ export class AddressNotFoundInAllowedListError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x1788, () => new AddressNotFoundInAllowedListError());
+createErrorFromCodeLookup.set(0x1787, () => new AddressNotFoundInAllowedListError());
 createErrorFromNameLookup.set(
   'AddressNotFoundInAllowedList',
   () => new AddressNotFoundInAllowedListError(),
@@ -539,7 +516,7 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class MissingAllowedListProofError extends Error {
-  readonly code: number = 0x1789;
+  readonly code: number = 0x1788;
   readonly name: string = 'MissingAllowedListProof';
   constructor() {
     super('Missing allowed list proof');
@@ -549,7 +526,7 @@ export class MissingAllowedListProofError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x1789, () => new MissingAllowedListProofError());
+createErrorFromCodeLookup.set(0x1788, () => new MissingAllowedListProofError());
 createErrorFromNameLookup.set('MissingAllowedListProof', () => new MissingAllowedListProofError());
 
 /**
@@ -559,7 +536,7 @@ createErrorFromNameLookup.set('MissingAllowedListProof', () => new MissingAllowe
  * @category generated
  */
 export class AllowedMintLimitReachedError extends Error {
-  readonly code: number = 0x178a;
+  readonly code: number = 0x1789;
   readonly name: string = 'AllowedMintLimitReached';
   constructor() {
     super('The maximum number of allowed mints was reached');
@@ -569,7 +546,7 @@ export class AllowedMintLimitReachedError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x178a, () => new AllowedMintLimitReachedError());
+createErrorFromCodeLookup.set(0x1789, () => new AllowedMintLimitReachedError());
 createErrorFromNameLookup.set('AllowedMintLimitReached', () => new AllowedMintLimitReachedError());
 
 /**
@@ -579,7 +556,7 @@ createErrorFromNameLookup.set('AllowedMintLimitReached', () => new AllowedMintLi
  * @category generated
  */
 export class InvalidNFTCollectionPaymentError extends Error {
-  readonly code: number = 0x178b;
+  readonly code: number = 0x178a;
   readonly name: string = 'InvalidNFTCollectionPayment';
   constructor() {
     super('Invalid NFT Collection Payment');
@@ -589,7 +566,7 @@ export class InvalidNFTCollectionPaymentError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x178b, () => new InvalidNFTCollectionPaymentError());
+createErrorFromCodeLookup.set(0x178a, () => new InvalidNFTCollectionPaymentError());
 createErrorFromNameLookup.set(
   'InvalidNFTCollectionPayment',
   () => new InvalidNFTCollectionPaymentError(),

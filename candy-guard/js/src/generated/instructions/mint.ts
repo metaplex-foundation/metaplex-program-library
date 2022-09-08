@@ -49,6 +49,11 @@ export const mintStruct = new beet.FixableBeetArgsStruct<
  * @property [**signer**] mintAuthority
  * @property [**signer**] mintUpdateAuthority
  * @property [_writable_] masterEdition
+ * @property [] collectionAuthority
+ * @property [] collectionAuthorityRecord
+ * @property [] collectionMint
+ * @property [_writable_] collectionMetadata
+ * @property [] collectionMasterEdition
  * @property [] tokenMetadataProgram
  * @property [] recentSlothashes
  * @property [] instructionSysvarAccount
@@ -68,6 +73,11 @@ export type MintInstructionAccounts = {
   mintAuthority: web3.PublicKey;
   mintUpdateAuthority: web3.PublicKey;
   masterEdition: web3.PublicKey;
+  collectionAuthority: web3.PublicKey;
+  collectionAuthorityRecord: web3.PublicKey;
+  collectionMint: web3.PublicKey;
+  collectionMetadata: web3.PublicKey;
+  collectionMasterEdition: web3.PublicKey;
   tokenMetadataProgram: web3.PublicKey;
   tokenProgram?: web3.PublicKey;
   systemProgram?: web3.PublicKey;
@@ -151,6 +161,31 @@ export function createMintInstruction(
     {
       pubkey: accounts.masterEdition,
       isWritable: true,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.collectionAuthority,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.collectionAuthorityRecord,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.collectionMint,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.collectionMetadata,
+      isWritable: true,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.collectionMasterEdition,
+      isWritable: false,
       isSigner: false,
     },
     {
