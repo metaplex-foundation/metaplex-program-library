@@ -11,7 +11,7 @@ import * as beetSolana from '@metaplex-foundation/beet-solana';
 export type SplToken = {
   amount: beet.bignum;
   tokenMint: web3.PublicKey;
-  wallet: web3.PublicKey;
+  destinationAta: web3.PublicKey;
 };
 
 /**
@@ -22,7 +22,7 @@ export const splTokenBeet = new beet.BeetArgsStruct<SplToken>(
   [
     ['amount', beet.u64],
     ['tokenMint', beetSolana.publicKey],
-    ['wallet', beetSolana.publicKey],
+    ['destinationAta', beetSolana.publicKey],
   ],
   'SplToken',
 );

@@ -1,7 +1,10 @@
 use super::*;
 use crate::{
     errors::CandyGuardError,
-    utils::{assert_is_token_account, assert_keys_equal, spl_token_transfer, TokenTransferParams},
+    utils::{
+        assert_is_ata, assert_is_token_account, assert_keys_equal, spl_token_transfer,
+        TokenTransferParams,
+    },
 };
 use mpl_token_metadata::{
     instruction::burn_nft,
@@ -19,7 +22,6 @@ impl Guard for NftPayment {
     fn size() -> usize {
         1    // burn or transfer
         + 32 // required_collection
-        + 32 // wallet
     }
 
     fn mask() -> u64 {
@@ -51,7 +53,7 @@ impl Condition for NftPayment {
             &metadata.mint,
         )?;
 
-        if token_account.amount == 1 {
+        if token_account.amount < 1 {
             return err!(CandyGuardError::NotEnoughTokens);
         }
 
@@ -72,8 +74,10 @@ impl Condition for NftPayment {
             assert_keys_equal(&metadata.mint, mint_account.key)?;
         } else {
             let _transfer_authority = Self::get_account_info(ctx, index + 2)?;
-            let _wallet = Self::get_account_info(ctx, index + 3)?;
+            let destination_ata = Self::get_account_info(ctx, index + 3)?;
             evaluation_context.account_cursor += 2;
+
+            assert_is_ata(destination_ata, &ctx.accounts.payer.key(), &metadata.mint)?;
         }
 
         evaluation_context
@@ -124,15 +128,15 @@ impl Condition for NftPayment {
             )?;
         } else {
             let transfer_authority = Self::get_account_info(ctx, index + 2)?;
-            let wallet = Self::get_account_info(ctx, index + 3)?;
+            let destination_ata = Self::get_account_info(ctx, index + 3)?;
 
             spl_token_transfer(TokenTransferParams {
                 source: token_account.to_account_info(),
-                destination: wallet.to_account_info(),
+                destination: destination_ata.to_account_info(),
                 authority: transfer_authority.to_account_info(),
                 authority_signer_seeds: &[],
                 token_program: ctx.accounts.token_program.to_account_info(),
-                amount: evaluation_context.amount,
+                amount: 1, // fixed to always require 1 NFT
             })?;
         }
 

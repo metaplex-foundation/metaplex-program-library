@@ -2,21 +2,21 @@ use super::*;
 
 use crate::{
     errors::CandyGuardError,
-    utils::{assert_is_ata, spl_token_transfer, TokenTransferParams},
+    utils::{assert_is_ata, assert_keys_equal, spl_token_transfer, TokenTransferParams},
 };
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug)]
 pub struct SplToken {
     pub amount: u64,
     pub token_mint: Pubkey,
-    pub wallet: Pubkey,
+    pub destination_ata: Pubkey,
 }
 
 impl Guard for SplToken {
     fn size() -> usize {
         8    // amount
         + 32 // token mint
-        + 32 // wallet
+        + 32 // destination ata
     }
 
     fn mask() -> u64 {
@@ -36,8 +36,10 @@ impl Condition for SplToken {
         let token_account_index = evaluation_context.account_cursor;
         let token_account_info = Self::get_account_info(ctx, token_account_index)?;
         let _transfer_authority_info = Self::get_account_info(ctx, token_account_index + 1)?;
-        let _wallet = Self::get_account_info(ctx, token_account_index + 2)?;
+        let destination_ata = Self::get_account_info(ctx, token_account_index + 2)?;
         evaluation_context.account_cursor += 3;
+
+        assert_keys_equal(destination_ata.key, &self.destination_ata)?;
 
         let token_account = assert_is_ata(
             token_account_info,
@@ -68,11 +70,11 @@ impl Condition for SplToken {
         // the accounts have already been validated
         let token_account_info = Self::get_account_info(ctx, index)?;
         let transfer_authority_info = Self::get_account_info(ctx, index + 1)?;
-        let wallet = Self::get_account_info(ctx, index + 2)?;
+        let destination_ata = Self::get_account_info(ctx, index + 2)?;
 
         spl_token_transfer(TokenTransferParams {
             source: token_account_info.to_account_info(),
-            destination: wallet.to_account_info(),
+            destination: destination_ata.to_account_info(),
             authority: transfer_authority_info.to_account_info(),
             authority_signer_seeds: &[],
             token_program: ctx.accounts.token_program.to_account_info(),

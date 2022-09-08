@@ -10,7 +10,7 @@ import * as web3 from '@solana/web3.js';
 import * as beetSolana from '@metaplex-foundation/beet-solana';
 export type Lamports = {
   amount: beet.bignum;
-  wallet: web3.PublicKey;
+  destination: web3.PublicKey;
 };
 
 /**
@@ -20,7 +20,7 @@ export type Lamports = {
 export const lamportsBeet = new beet.BeetArgsStruct<Lamports>(
   [
     ['amount', beet.u64],
-    ['wallet', beetSolana.publicKey],
+    ['destination', beetSolana.publicKey],
   ],
   'Lamports',
 );

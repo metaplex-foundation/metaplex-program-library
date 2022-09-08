@@ -53,7 +53,7 @@ test('update: enable guards', async (t) => {
       },
       lamports: {
         amount: new BN(100000000),
-        wallet: address,
+        destination: address,
       },
       splToken: null,
       thirdPartySigner: null,
@@ -103,7 +103,7 @@ test('update: disable guards', async (t) => {
       },
       lamports: {
         amount: new BN(100000000),
-        wallet: payerPair.publicKey,
+        destination: payerPair.publicKey,
       },
       splToken: null,
       thirdPartySigner: null,
@@ -122,7 +122,7 @@ test('update: disable guards', async (t) => {
         },
         lamports: {
           amount: new BN(500),
-          wallet: payerPair.publicKey,
+          destination: payerPair.publicKey,
         },
         splToken: null,
         thirdPartySigner: null,

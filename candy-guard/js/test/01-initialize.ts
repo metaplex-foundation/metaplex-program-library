@@ -63,7 +63,7 @@ test('initialize: new candy guard (with guards)', async (t) => {
       },
       lamports: {
         amount: new BN(100000000),
-        wallet: payerPair.publicKey,
+        destination: payerPair.publicKey,
       },
       splToken: null,
       liveDate: {

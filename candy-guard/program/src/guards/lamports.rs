@@ -2,18 +2,18 @@ use super::*;
 
 use solana_program::{program::invoke, system_instruction};
 
-use crate::errors::CandyGuardError;
+use crate::{errors::CandyGuardError, utils::assert_keys_equal};
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug)]
 pub struct Lamports {
     pub amount: u64,
-    pub wallet: Pubkey,
+    pub destination: Pubkey,
 }
 
 impl Guard for Lamports {
     fn size() -> usize {
         8    // amount
-        + 32 // wallet
+        + 32 // destination
     }
 
     fn mask() -> u64 {
@@ -29,13 +29,16 @@ impl Condition for Lamports {
         _guard_set: &GuardSet,
         evaluation_context: &mut EvaluationContext,
     ) -> Result<()> {
-        let wallet_index = evaluation_context.account_cursor;
+        let index = evaluation_context.account_cursor;
         // validates that we received all required accounts
-        let _wallet = Self::get_account_info(ctx, wallet_index)?;
+        let destination = Self::get_account_info(ctx, index)?;
+        evaluation_context.account_cursor += 1;
+        // validates the account information
+        assert_keys_equal(destination.key, &self.destination)?;
+
         evaluation_context
             .indices
-            .insert("lamports_wallet", wallet_index);
-        evaluation_context.account_cursor += 1;
+            .insert("lamports_destination", index);
 
         if ctx.accounts.payer.lamports() < self.amount {
             msg!(
@@ -70,17 +73,18 @@ impl Condition for Lamports {
             return err!(CandyGuardError::NotEnoughSOL);
         }
 
-        let wallet = Self::get_account_info(ctx, evaluation_context.indices["lamports_wallet"])?;
+        let destination =
+            Self::get_account_info(ctx, evaluation_context.indices["lamports_destination"])?;
 
         invoke(
             &system_instruction::transfer(
                 &ctx.accounts.payer.key(),
-                &wallet.key(),
+                &destination.key(),
                 evaluation_context.lamports,
             ),
             &[
                 ctx.accounts.payer.to_account_info(),
-                wallet.to_account_info(),
+                destination.to_account_info(),
                 ctx.accounts.system_program.to_account_info(),
             ],
         )?;

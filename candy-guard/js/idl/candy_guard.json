@@ -377,7 +377,7 @@
             "type": "u64"
           },
           {
-            "name": "wallet",
+            "name": "destination",
             "type": "publicKey"
           }
         ]
@@ -452,7 +452,7 @@
             "type": "publicKey"
           },
           {
-            "name": "wallet",
+            "name": "destinationAta",
             "type": "publicKey"
           }
         ]

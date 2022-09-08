@@ -14,7 +14,8 @@ import {
   TransactionInstruction,
   SYSVAR_RENT_PUBKEY,
   SYSVAR_SLOT_HASHES_PUBKEY,
-  SYSVAR_INSTRUCTIONS_PUBKEY
+  SYSVAR_INSTRUCTIONS_PUBKEY,
+  AccountMeta
 } from '@solana/web3.js';
 import { Test } from 'tape';
 import { amman } from '.';
@@ -184,6 +185,8 @@ export class InitTransactions {
     mint: Keypair,
     handler: PayerTransactionHandler,
     connection: Connection,
+    collection?: PublicKey | null,
+    remainingAccounts?: AccountMeta[] | null,
   ): Promise<{ tx: ConfirmedTransactionAssertablePromise }> {
     // candy machine object
     const candyMachineObject = await CandyMachine.fromAccountAddress(connection, candyMachine);
@@ -227,13 +230,71 @@ export class InitTransactions {
     );
     amman.addr.addLabel('Mint Master Edition', masterEdition);
 
+    const accountMetas: AccountMeta[] = [];
+
+    if (collection) {
+        let [collectionAuthority] = await PublicKey.findProgramAddress(
+            [Buffer.from('collection'), candyMachine.toBuffer()],
+            CANDY_MACHINE_PROGRAM,
+        );
+
+        let [collectionAuthorityRecord] = await PublicKey.findProgramAddress(
+            [
+                Buffer.from('metadata'),
+                METAPLEX_PROGRAM_ID.toBuffer(),
+                collection.toBuffer(),
+                Buffer.from('collection_authority'),
+                collectionAuthority.toBuffer()
+            ],
+            METAPLEX_PROGRAM_ID,
+        );
+
+        let [collectionMetadata] = await PublicKey.findProgramAddress(
+            [Buffer.from('metadata'), METAPLEX_PROGRAM_ID.toBuffer(), collection.toBuffer()],
+            METAPLEX_PROGRAM_ID,
+        );
+        let [collectionMasterEdition,] = await PublicKey.findProgramAddress(
+            [Buffer.from('metadata'), METAPLEX_PROGRAM_ID.toBuffer(), collection.toBuffer(), Buffer.from('edition')],
+            METAPLEX_PROGRAM_ID,
+        );
+
+        accountMetas.push({
+            pubkey: collectionAuthority,
+            isSigner: false,
+            isWritable: true,
+        });
+        accountMetas.push({
+            pubkey: collectionAuthorityRecord,
+            isSigner: false,
+            isWritable: false,
+        });
+        accountMetas.push({
+            pubkey: collection,
+            isSigner: false,
+            isWritable: false,
+        });
+        accountMetas.push({
+            pubkey: collectionMetadata,
+            isSigner: false,
+            isWritable: false,
+        });
+        accountMetas.push({
+            pubkey: collectionMasterEdition,
+            isSigner: false,
+            isWritable: false,
+        });
+    }
+
+    if (remainingAccounts) {
+      accountMetas.push(...remainingAccounts);
+    }
+
     const accounts: MintInstructionAccounts = {
       candyGuard: candyGuard,
       candyMachineProgram: CANDY_MACHINE_PROGRAM,
       candyMachine: candyMachine,
       updateAuthority: candyMachineObject.updateAuthority,
       payer: payer.publicKey,
-      wallet: candyMachineObject.wallet,
       candyMachineCreator: candyMachineCreator,
       masterEdition: masterEdition,
       metadata: metadataAddress,
@@ -267,7 +328,10 @@ export class InitTransactions {
     ixs.push(createAssociatedTokenAccountInstruction(payer.publicKey, associatedToken, payer.publicKey, mint.publicKey));
     ixs.push(createMintToInstruction(mint.publicKey, associatedToken, payer.publicKey, 1, []));
     // candy guard mint instruction
-    ixs.push(createMintInstruction(accounts, args));
+    const ixMint = createMintInstruction(accounts, args);
+    ixMint.keys.push(...accountMetas);
+    ixs.push(ixMint);
+
     const tx = new Transaction().add(...ixs);
 
     return { tx: handler.sendAndConfirmTransaction(tx, [payer, mint], 'tx: Candy Guard Mint') };

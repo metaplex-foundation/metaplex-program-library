@@ -71,7 +71,7 @@ const GUARDS_SIZE = {
   /* 08 */ endSettings: 9,
   /* 09 */ allowList: 32,
   /* 10 */ mintLimit: 5,
-  /* 11 */ nftPayment: 65,
+  /* 11 */ nftPayment: 33,
 };
 const GUARDS_COUNT = 11;
 

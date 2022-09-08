@@ -203,11 +203,11 @@ pub struct Mint<'info> {
     // collection_metadata
     // collection_master_edition
     // > needed if lamports guard enabled
-    // lamports_wallet
+    // destination
     // > needed if spl_token guard enabled
     // token_account_info
     // transfer_authority_info
-    // token_wallet
+    // destination_ata
     // > needed if third_party_signer guard enabled
     // signer
     // > needed if whitelist guard enabled
@@ -229,5 +229,5 @@ pub struct Mint<'info> {
     // mint_collection_metadata
     // > needed if nft_payment guard enabled and burn is false (transfer)
     // transfer_authority
-    // wallet
+    // destination_ata
 }
