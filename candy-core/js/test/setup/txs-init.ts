@@ -107,11 +107,11 @@ export class InitTransactions {
 
     const accounts: program.InitializeInstructionAccounts = {
       // TODO: fix collection accounts
-      collectionAuthority: candyMachine.publicKey,
-      collectionAuthorityRecord: candyMachine.publicKey,
-      collectionEdition: candyMachine.publicKey,
-      collectionMetadata: candyMachine.publicKey,
-      collectionMint: candyMachine.publicKey,
+      collectionAuthority: undefined,
+      collectionAuthorityRecord: undefined,
+      collectionEdition: undefined,
+      collectionMetadata: undefined,
+      collectionMint: undefined,
       tokenMetadataProgram: candyMachine.publicKey,
       candyMachine: candyMachine.publicKey,
       authority: payer.publicKey,
@@ -251,11 +251,11 @@ export class InitTransactions {
 
     const accounts: program.MintInstructionAccounts = {
       // TODO: fix the collection accounts
-      collectionAuthority: candyMachine,
-      collectionAuthorityRecord: candyMachine,
-      collectionMasterEdition: candyMachine,
-      collectionMetadata: candyMachine,
-      collectionMint: candyMachine,
+      collectionAuthority: undefined,
+      collectionAuthorityRecord: undefined,
+      collectionMasterEdition: undefined,
+      collectionMetadata: undefined,
+      collectionMint: undefined,
       candyMachine: candyMachine,
       authority: candyMachineObject.authority,
       updateAuthority: candyMachineObject.updateAuthority,
