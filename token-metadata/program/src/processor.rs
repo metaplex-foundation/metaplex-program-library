@@ -1079,7 +1079,7 @@ pub fn process_approve_use_authority(
     let token_program_account_info = next_account_info(account_info_iter)?;
     let system_account_info = next_account_info(account_info_iter)?;
     let metadata: Metadata = Metadata::from_account_info(metadata_info)?;
-    
+
     if metadata.uses.is_none() {
         return Err(MetadataError::Unusable.into());
     }
