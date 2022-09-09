@@ -982,6 +982,7 @@ impl TokenOwnedEscrow {
         len += 4 + self.tokens.len() * mem::size_of::<Pubkey>();
         len += 4 + self.delegates.len() * mem::size_of::<Pubkey>();
         len += mem::size_of::<Option<Pubkey>>();
+        len += 1; // TODO: unknown_overhead
         len
     }
 

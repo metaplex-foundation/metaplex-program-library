@@ -121,13 +121,6 @@ pub struct SetCollectionSizeArgs {
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
-pub struct CreateEscrowAccountArgs {
-    pub constraint_model: Option<Pubkey>,
-}
-
-#[repr(C)]
-#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct CloseEscrowAccountArgs {
     pub _padding: u8,
 }
@@ -577,7 +570,8 @@ pub enum MetadataInstruction {
     #[account(4, writable, signer, name="payer", desc="Wallet paying for the transaction and new account")]
     #[account(5, name="system_program", desc="System program")]
     #[account(6, name="rent", desc="Rent info")]
-    CreateEscrowAccount(CreateEscrowAccountArgs),
+    #[account(7, writable, name="escrow_constraints_model", desc="Optional Escrow Constraints Model")]
+    CreateEscrowAccount,
 
     /// Close the escrow account.
     #[account(0, writable, name="escrow", desc="Escrow account")]
@@ -633,6 +627,7 @@ pub enum MetadataInstruction {
     #[account(0, writable, name="escrow_constraint_model", desc="Constraint model account")]
     #[account(1, writable, signer, name="payer", desc="Wallet paying for the transaction and new account, will be set as the creator of the constraint model")]
     #[account(2, signer, name="update_authority", desc="Update authority of the constraint model")]
+    #[account(3, name="system_program", desc="System program")]
     AddConstraintToEscrowConstraintModel(AddConstraintToEscrowConstraintModelArgs),
 }
 
@@ -1840,11 +1835,9 @@ pub fn create_escrow_account(
     mint_account: Pubkey,
     edition_account: Pubkey,
     payer_account: Pubkey,
-    // system_account: Pubkey,
-    // rent: Pubkey,
     constraint_model: Option<Pubkey>,
 ) -> Instruction {
-    let accounts = vec![
+    let mut accounts = vec![
         AccountMeta::new(escrow_account, false),
         AccountMeta::new_readonly(metadata_account, false),
         AccountMeta::new_readonly(mint_account, false),
@@ -1853,10 +1846,14 @@ pub fn create_escrow_account(
         AccountMeta::new_readonly(solana_program::system_program::id(), false),
         AccountMeta::new_readonly(solana_program::sysvar::rent::id(), false),
     ];
-    let data =
-        MetadataInstruction::CreateEscrowAccount(CreateEscrowAccountArgs { constraint_model })
-            .try_to_vec()
-            .unwrap();
+
+    if let Some(constraint_model) = constraint_model {
+        accounts.push(AccountMeta::new(constraint_model, false));
+    }
+
+    let data = MetadataInstruction::CreateEscrowAccount
+        .try_to_vec()
+        .unwrap();
 
     Instruction {
         program_id,
@@ -2021,6 +2018,7 @@ pub fn add_constraint_to_escrow_constraint_model(
         AccountMeta::new(escrow_constraint_model, false),
         AccountMeta::new(payer, true),
         AccountMeta::new_readonly(update_authority, false),
+        AccountMeta::new_readonly(solana_program::system_program::id(), false),
     ];
 
     let data = MetadataInstruction::AddConstraintToEscrowConstraintModel(

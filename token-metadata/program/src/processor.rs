@@ -12,7 +12,7 @@ use crate::{
     deser::clean_write_metadata,
     error::MetadataError,
     instruction::{
-        AddConstraintToEscrowConstraintModelArgs, CloseEscrowAccountArgs, CreateEscrowAccountArgs,
+        AddConstraintToEscrowConstraintModelArgs, CloseEscrowAccountArgs,
         CreateEscrowConstraintModelAccountArgs, MetadataInstruction, SetCollectionSizeArgs,
         TransferIntoEscrowArgs, TransferOutOfEscrowArgs,
     },
@@ -246,9 +246,9 @@ pub fn process_instruction<'a>(
             msg!("Instruction: Bubblegum Program Set Collection Size");
             bubblegum_set_collection_size(program_id, accounts, args)
         }
-        MetadataInstruction::CreateEscrowAccount(args) => {
+        MetadataInstruction::CreateEscrowAccount => {
             msg!("Instruction: Create Escrow Account");
-            create_escrow_account(program_id, accounts, args)
+            create_escrow_account(program_id, accounts)
         }
         MetadataInstruction::CloseEscrowAccount(args) => {
             msg!("Instruction: Close Escrow Account");
@@ -2033,11 +2033,7 @@ pub fn set_token_standard(program_id: &Pubkey, accounts: &[AccountInfo]) -> Prog
     Ok(())
 }
 
-pub fn create_escrow_account(
-    program_id: &Pubkey,
-    accounts: &[AccountInfo],
-    args: CreateEscrowAccountArgs,
-) -> ProgramResult {
+pub fn create_escrow_account(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
     let account_info_iter = &mut accounts.iter();
 
     let escrow_account_info = next_account_info(account_info_iter)?;
@@ -2047,6 +2043,7 @@ pub fn create_escrow_account(
     let payer_account_info = next_account_info(account_info_iter)?;
     let system_account_info = next_account_info(account_info_iter)?;
     let rent_info = next_account_info(account_info_iter)?;
+    let maybe_escrow_constraint_model_account = next_account_info(account_info_iter);
 
     // Owned by token-metadata program.
     assert_owned_by(metadata_account_info, program_id)?;
@@ -2090,9 +2087,18 @@ pub fn create_escrow_account(
     let mut toe = TokenOwnedEscrow::default();
 
     // If there is a constraint model and the signer is the update authority, then add the model to the TOE.
-    if args.constraint_model.is_some() {
+    if maybe_escrow_constraint_model_account.is_ok() {
+        let escrow_constraint_model_account = maybe_escrow_constraint_model_account.unwrap();
+        let mut escrow_constraint_model: EscrowConstraintModel =
+            EscrowConstraintModel::from_account_info(escrow_constraint_model_account)?;
+        // let escrow_constraint_model = EscrowConstraintModel::safe_deserialize(maybe_escrow_constraint_model.data)?;
         if *payer_account_info.key == metadata.update_authority {
-            toe.model = args.constraint_model;
+            toe.model = Some(escrow_constraint_model_account.key.to_owned());
+
+            escrow_constraint_model.count += 1;
+
+            escrow_constraint_model
+                .serialize(&mut *escrow_constraint_model_account.data.borrow_mut())?;
         } else {
             return Err(MetadataError::MustBeUpdateAuthToSetModel.into());
         }
@@ -2277,6 +2283,8 @@ pub fn transfer_into_escrow(
         // deserialize the constraint model
         let model: EscrowConstraintModel =
             EscrowConstraintModel::from_account_info(escrow_constraint_model)?;
+
+        msg!("EscrowConstraintModel: {:#?}", model);
         model.validate_at(attribute_mint_info.key, args.index as usize)?;
     }
 
@@ -2529,6 +2537,7 @@ fn add_constraint_to_escrow_constraint_model(
     let escrow_constraint_model_account = next_account_info(account_info_iter)?;
     let payer = next_account_info(account_info_iter)?;
     let update_authority = next_account_info(account_info_iter)?;
+    let system_program = next_account_info(account_info_iter)?;
 
     let mut escrow_constraint_model: EscrowConstraintModel =
         EscrowConstraintModel::from_account_info(escrow_constraint_model_account)?;
@@ -2537,7 +2546,7 @@ fn add_constraint_to_escrow_constraint_model(
         return Err(MetadataError::UpdateAuthorityIncorrect.into());
     }
 
-    let bump = assert_derivation(
+    assert_derivation(
         program_id,
         escrow_constraint_model_account,
         &[
@@ -2550,6 +2559,13 @@ fn add_constraint_to_escrow_constraint_model(
     )?;
 
     escrow_constraint_model.constraints.push(args.constraint);
+
+    resize_or_reallocate_account_raw(
+        escrow_constraint_model_account,
+        payer,
+        system_program,
+        escrow_constraint_model.try_len()?,
+    )?;
 
     escrow_constraint_model
         .serialize(&mut *escrow_constraint_model_account.try_borrow_mut_data()?)?;
