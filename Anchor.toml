@@ -29,11 +29,17 @@ program = "target/deploy/mpl_fixed_price_sale.so"
 address = "gdrpGjVffourzkdDRrQmySw4aTHr8a3xmQzzxSwFD1a"
 program = "target/deploy/mpl_gumdrop.so"
 
+[[test.genesis]]
+address = "hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg"
+program = "target/deploy/mpl_hydra.so"
+
 [workspace]
 members = [
   "token-entangler/program",
   "token-metadata/program",
   "auction-house/program",
   "fixed-price-sale/program",
-  "bubblegum/program"
+  "hydra/program",
+  "bubblegum/program",
+  "candy-wrapper/program"
 ]

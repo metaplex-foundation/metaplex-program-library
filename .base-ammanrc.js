@@ -24,7 +24,12 @@ const programs = {
         label: "Candy Machine",
         programId: 'cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ',
         deployPath: localDeployPath('mpl_candy_machine'),
-    },
+  },
+     hydra: {
+    label: 'Hydra',
+    programId: 'hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg',
+    deployPath: localDeployPath('mpl_hydra'),
+  },
 };
 
 const validator = {

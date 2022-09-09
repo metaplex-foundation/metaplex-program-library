@@ -13,6 +13,7 @@ body:
         - core
         - fixed-price-sale
         - gumdrop
+        - hydra
         - nft-packs
         - token-entangler
         - token-metadata

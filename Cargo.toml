@@ -8,6 +8,7 @@ exclude = [
   "fixed-price-sale/cli",
   "token-metadata",
   "auction-house/program",
+  "hydra/program",
   "candy-machine/program",
   "bubblegum/program",
   "candy-wrapper/program",

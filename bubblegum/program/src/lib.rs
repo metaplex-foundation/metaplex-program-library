@@ -689,7 +689,7 @@ fn process_creator_verification<'info>(
         .collect::<Vec<Creator>>();
 
     // Calculate new creator hash.
-    let updated_creator_hash = hash_creators(&updated_creator_vec)?;
+    let updated_creator_hash = hash_creators(&message.creators)?;
 
     // Update creator Vec in metadata args.
     message.creators = updated_creator_vec;
