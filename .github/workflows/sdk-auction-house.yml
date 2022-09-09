@@ -21,9 +21,9 @@ jobs:
       with:
         filters: |
           core:
-            - 'core/**'
+            - 'core/js/**'
           package:
-            - 'auction-house/**'
+            - 'auction-house/js/**'
 
   build-lint-and-test-auction-house:
     needs: changes
@@ -36,4 +36,4 @@ jobs:
         with: 
           cache_id: sdk-auction-house
           working_dir: ./auction-house/js
-          skip_test: true
+          skip_test: false

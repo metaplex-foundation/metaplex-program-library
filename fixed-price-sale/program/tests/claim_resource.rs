@@ -265,7 +265,7 @@ mod claim_resource {
         let primary_royalties_holder = Keypair::new();
 
         let data = mpl_fixed_price_sale_instruction::SavePrimaryMetadataCreators {
-            primary_metadata_creators_bump: primary_metadata_creators_bump,
+            primary_metadata_creators_bump,
             creators: vec![mpl_fixed_price_sale::state::Creator {
                 address: primary_royalties_holder.pubkey(),
                 verified: false,
@@ -498,7 +498,7 @@ mod claim_resource {
         let (treasury_owner, treasyry_owner_bump) =
             find_treasury_owner_address(&treasury_mint, &selling_resource_keypair.pubkey());
 
-        let treasury_holder = treasury_owner.clone();
+        let treasury_holder = treasury_owner;
 
         let start_date = context
             .banks_client
@@ -669,7 +669,7 @@ mod claim_resource {
         let primary_royalties_receiver = Keypair::new();
 
         let data = mpl_fixed_price_sale_instruction::SavePrimaryMetadataCreators {
-            primary_metadata_creators_bump: primary_metadata_creators_bump,
+            primary_metadata_creators_bump,
             creators: vec![mpl_fixed_price_sale::state::Creator {
                 address: primary_royalties_receiver.pubkey(),
                 verified: false,
@@ -1099,7 +1099,7 @@ mod claim_resource {
         .to_account_metas(None);
 
         let data = mpl_fixed_price_sale_instruction::SavePrimaryMetadataCreators {
-            primary_metadata_creators_bump: primary_metadata_creators_bump,
+            primary_metadata_creators_bump,
             creators: vec![mpl_fixed_price_sale::state::Creator {
                 address: context.payer.pubkey(),
                 verified: false,

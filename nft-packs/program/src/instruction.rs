@@ -85,7 +85,7 @@ pub enum NFTPacksInstruction {
     /// Initialize created account.
     ///
     /// Parameters:
-    /// - name	[u8; 32]
+    /// - name [u8; 32]
     /// - description String
     /// - URI String
     /// - mutable	bool

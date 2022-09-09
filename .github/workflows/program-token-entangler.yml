@@ -8,7 +8,7 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  SOLANA_VERSION: 1.9.15
+  SOLANA_VERSION: 1.10.25
   RUST_TOOLCHAIN: stable
 
 jobs:
@@ -26,9 +26,9 @@ jobs:
         with:
           filters: |
             core:
-              - 'core/**'
+              - 'core/rust/**'
             package:
-              - 'token-entangler/**'
+              - 'token-entangler/program/**'
 
   build-and-test-token-entangler:
     needs: changes
@@ -62,7 +62,6 @@ jobs:
             env.RUSTC_HASH }}
 
       # Build deps
-      - uses: ./.github/actions/build-metaplex
       - uses: ./.github/actions/build-token-metadata
 
       # Run test

@@ -36,6 +36,10 @@ const updateEntangledPairStruct = new beet.BeetArgsStruct<
 );
 /**
  * Accounts required by the _updateEntangledPair_ instruction
+ *
+ * @property [**signer**] authority
+ * @property [] newAuthority
+ * @property [_writable_] entangledPair
  * @category Instructions
  * @category UpdateEntangledPair
  * @category generated

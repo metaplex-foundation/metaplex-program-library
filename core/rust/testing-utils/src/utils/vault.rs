@@ -15,6 +15,12 @@ pub struct Vault {
     pub fraction_treasury: Keypair,
 }
 
+impl Default for Vault {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Vault {
     pub fn new() -> Self {
         Vault {
@@ -39,14 +45,14 @@ impl Vault {
 
         let seeds = &[
             PREFIX.as_bytes(),
-            &vault_pubkey.as_ref(),
-            &token_mint_pubkey.as_ref(),
+            vault_pubkey.as_ref(),
+            token_mint_pubkey.as_ref(),
         ];
         let (safety_deposit_box, _) = Pubkey::find_program_address(seeds, &metaplex_token_vault_id);
         let seeds = &[
             PREFIX.as_bytes(),
-            &metaplex_token_vault_id.as_ref(),
-            &vault_pubkey.as_ref(),
+            metaplex_token_vault_id.as_ref(),
+            vault_pubkey.as_ref(),
         ];
         let (authority, _) = Pubkey::find_program_address(seeds, &metaplex_token_vault_id);
         create_token_account(context, &store, &token_mint_pubkey, &authority).await?;
@@ -82,8 +88,8 @@ impl Vault {
 
         let seeds = &[
             PREFIX.as_bytes(),
-            &metaplex_token_vault_id.as_ref(),
-            &vault_pubkey.as_ref(),
+            metaplex_token_vault_id.as_ref(),
+            vault_pubkey.as_ref(),
         ];
         let (authority, _) = Pubkey::find_program_address(seeds, &metaplex_token_vault_id);
 
@@ -102,7 +108,7 @@ impl Vault {
             context.last_blockhash,
         );
 
-        Ok(context.banks_client.process_transaction(tx).await?)
+        context.banks_client.process_transaction(tx).await
     }
 
     pub async fn combine(
@@ -133,8 +139,8 @@ impl Vault {
 
         let seeds = &[
             PREFIX.as_bytes(),
-            &metaplex_token_vault_id.as_ref(),
-            &vault_pubkey.as_ref(),
+            metaplex_token_vault_id.as_ref(),
+            vault_pubkey.as_ref(),
         ];
         let (authority, _) = Pubkey::find_program_address(seeds, &metaplex_token_vault_id);
 
@@ -158,7 +164,7 @@ impl Vault {
             context.last_blockhash,
         );
 
-        Ok(context.banks_client.process_transaction(tx).await?)
+        context.banks_client.process_transaction(tx).await
     }
 
     pub async fn create(
@@ -171,8 +177,8 @@ impl Vault {
 
         let seeds = &[
             PREFIX.as_bytes(),
-            &metaplex_token_vault_id.as_ref(),
-            &vault_pubkey.as_ref(),
+            metaplex_token_vault_id.as_ref(),
+            vault_pubkey.as_ref(),
         ];
         let (authority, _) = Pubkey::find_program_address(seeds, &metaplex_token_vault_id);
 
@@ -218,6 +224,6 @@ impl Vault {
             context.last_blockhash,
         );
 
-        Ok(context.banks_client.process_transaction(tx).await?)
+        context.banks_client.process_transaction(tx).await
     }
 }

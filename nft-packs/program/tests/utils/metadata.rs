@@ -88,7 +88,7 @@ impl TestMetadata {
             context.last_blockhash,
         );
 
-        Ok(context.banks_client.process_transaction(tx).await?)
+        context.banks_client.process_transaction(tx).await
     }
 
     pub async fn update_primary_sale_happened_via_token(
@@ -107,7 +107,7 @@ impl TestMetadata {
             context.last_blockhash,
         );
 
-        Ok(context.banks_client.process_transaction(tx).await?)
+        context.banks_client.process_transaction(tx).await
     }
 
     pub async fn update(
@@ -139,6 +139,6 @@ impl TestMetadata {
             context.last_blockhash,
         );
 
-        Ok(context.banks_client.process_transaction(tx).await?)
+        context.banks_client.process_transaction(tx).await
     }
 }

@@ -86,7 +86,7 @@ export const createBuyTransaction = async ({
       // metaplex token metadata program address
       tokenMetadataProgram: PROGRAM_ID,
       clock: SYSVAR_CLOCK_PUBKEY,
-      additionalKeys,
+      anchorRemainingAccounts: additionalKeys,
     },
     { tradeHistoryBump, vaultOwnerBump },
   );
