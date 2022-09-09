@@ -18,7 +18,6 @@ export type TreeConfigArgs = {
   creator: web3.PublicKey
   delegate: web3.PublicKey
   totalMintCapacity: beet.bignum
-  numMintsApproved: beet.bignum
   numMinted: beet.bignum
 }
 
@@ -35,7 +34,6 @@ export class TreeConfig implements TreeConfigArgs {
     readonly creator: web3.PublicKey,
     readonly delegate: web3.PublicKey,
     readonly totalMintCapacity: beet.bignum,
-    readonly numMintsApproved: beet.bignum,
     readonly numMinted: beet.bignum
   ) {}
 
@@ -47,7 +45,6 @@ export class TreeConfig implements TreeConfigArgs {
       args.creator,
       args.delegate,
       args.totalMintCapacity,
-      args.numMintsApproved,
       args.numMinted
     )
   }
@@ -164,17 +161,6 @@ export class TreeConfig implements TreeConfigArgs {
         }
         return x
       })(),
-      numMintsApproved: (() => {
-        const x = <{ toNumber: () => number }>this.numMintsApproved
-        if (typeof x.toNumber === 'function') {
-          try {
-            return x.toNumber()
-          } catch (_) {
-            return x
-          }
-        }
-        return x
-      })(),
       numMinted: (() => {
         const x = <{ toNumber: () => number }>this.numMinted
         if (typeof x.toNumber === 'function') {
@@ -205,7 +191,6 @@ export const treeConfigBeet = new beet.BeetStruct<
     ['creator', beetSolana.publicKey],
     ['delegate', beetSolana.publicKey],
     ['totalMintCapacity', beet.u64],
-    ['numMintsApproved', beet.u64],
     ['numMinted', beet.u64],
   ],
   TreeConfig.fromArgs,
