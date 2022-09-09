@@ -1,7 +1,6 @@
 pub mod leaf_schema;
 pub mod metaplex_adapter;
 pub mod metaplex_anchor;
-pub mod request;
 
 use anchor_lang::prelude::*;
 use leaf_schema::LeafSchema;

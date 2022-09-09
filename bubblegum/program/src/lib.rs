@@ -5,7 +5,6 @@ use {
         leaf_schema::{LeafSchema, Version},
         metaplex_adapter::{self, Creator, MetadataArgs, TokenProgramVersion},
         metaplex_anchor::{MasterEdition, TokenMetadata},
-        request::{MintRequest, MINT_REQUEST_SIZE},
         NFTDecompressionEvent, NewNFTEvent, TreeConfig, Voucher, ASSET_PREFIX,
         COLLECTION_CPI_PREFIX, TREE_AUTHORITY_SIZE, VOUCHER_PREFIX, VOUCHER_SIZE,
     },
@@ -69,8 +68,8 @@ pub struct CreateTree<'info> {
 
 #[derive(Accounts)]
 pub struct MintV1<'info> {
-    /// CHECK: This is checked in the instruction. Must be signer if it is not equal to the `authority`
-    pub mint_authority: AccountInfo<'info>,
+    pub payer: Signer<'info>,
+    pub tree_delegate: Signer<'info>,
     #[account(
         mut,
         seeds = [merkle_tree.key().as_ref()],
@@ -83,12 +82,6 @@ pub struct MintV1<'info> {
     pub owner: AccountInfo<'info>,
     /// CHECK: This account is neither written to nor read from.
     pub delegate: AccountInfo<'info>,
-    #[account(
-        mut,
-        seeds=[merkle_tree.key().as_ref(), mint_authority.key().as_ref()],
-        bump,
-    )]
-    pub mint_authority_request: Account<'info, MintRequest>,
     #[account(mut)]
     /// CHECK: unsafe
     pub merkle_tree: UncheckedAccount<'info>,
@@ -363,98 +356,6 @@ pub struct Compress<'info> {
 }
 
 #[derive(Accounts)]
-pub struct SetMintRequest<'info> {
-    #[account(
-        init_if_needed,
-        space=MINT_REQUEST_SIZE,
-        seeds=[merkle_tree.key().as_ref(), mint_authority.key().as_ref()],
-        payer=payer,
-        bump
-    )]
-    pub mint_authority_request: Account<'info, MintRequest>,
-    #[account(mut)]
-    pub payer: Signer<'info>,
-    pub mint_authority: Signer<'info>,
-    #[account(
-        mut,
-        seeds = [merkle_tree.key().as_ref()],
-        bump
-    )]
-    pub tree_authority: Account<'info, TreeConfig>,
-    pub system_program: Program<'info, System>,
-    /// CHECK: this account is neither read from or written to
-    pub merkle_tree: UncheckedAccount<'info>,
-}
-
-#[derive(Accounts)]
-pub struct SetDefaultMintRequest<'info> {
-    #[account(
-        init_if_needed,
-        space=MINT_REQUEST_SIZE,
-        seeds=[merkle_tree.key().as_ref(), tree_authority.key().as_ref()],
-        payer=payer,
-        bump
-    )]
-    pub mint_authority_request: Account<'info, MintRequest>,
-    #[account(mut)]
-    pub payer: Signer<'info>,
-    pub creator: Signer<'info>,
-    #[account(
-        mut,
-        seeds = [merkle_tree.key().as_ref()],
-        bump,
-        has_one = creator,
-    )]
-    pub tree_authority: Account<'info, TreeConfig>,
-    pub system_program: Program<'info, System>,
-    /// CHECK: this account is neither read from or written to
-    pub merkle_tree: UncheckedAccount<'info>,
-}
-
-#[derive(Accounts)]
-pub struct ApproveMintRequest<'info> {
-    #[account(
-        mut,
-        seeds = [merkle_tree.key().as_ref(), mint_authority_request.mint_authority.as_ref()],
-        bump
-    )]
-    pub mint_authority_request: Account<'info, MintRequest>,
-    #[account(
-        constraint= *tree_delegate.key == tree_authority.creator || *tree_delegate.key == tree_authority.delegate
-    )]
-    pub tree_delegate: Signer<'info>,
-    #[account(
-        mut,
-        seeds = [merkle_tree.key().as_ref()],
-        bump
-    )]
-    pub tree_authority: Account<'info, TreeConfig>,
-    /// CHECK: this account is neither read from or written to
-    pub merkle_tree: UncheckedAccount<'info>,
-}
-
-#[derive(Accounts)]
-pub struct CloseMintRequest<'info> {
-    #[account(
-        mut,
-        close = mint_authority,
-        seeds = [merkle_tree.key().as_ref(), mint_authority.key().as_ref()],
-        bump
-    )]
-    pub mint_authority_request: Account<'info, MintRequest>,
-    #[account(mut)]
-    pub mint_authority: Signer<'info>,
-    #[account(
-        mut,
-        seeds = [merkle_tree.key().as_ref()],
-        bump
-    )]
-    pub tree_authority: Account<'info, TreeConfig>,
-    /// CHECK: this account is neither read from or written to
-    pub merkle_tree: UncheckedAccount<'info>,
-}
-
-#[derive(Accounts)]
 pub struct SetTreeDelegate<'info> {
     pub creator: Signer<'info>,
     /// CHECK: this account is neither read from or written to
@@ -538,13 +439,6 @@ pub fn get_instruction_type(full_bytes: &[u8]) -> InstructionName {
         [235, 242, 121, 216, 158, 234, 180, 234] => InstructionName::SetAndVerifyCollection,
         _ => InstructionName::Unknown,
     }
-}
-
-fn assert_enough_mints_to_approve(authority: &Account<TreeConfig>, to_approve: u64) -> Result<()> {
-    if !authority.contains_mint_capacity(to_approve) {
-        return Err(BubblegumError::InsufficientMintCapacity.into());
-    }
-    Ok(())
 }
 
 fn process_mint_v1<'info>(
@@ -935,46 +829,6 @@ pub mod bubblegum {
         spl_compression::cpi::init_empty_merkle_tree(cpi_ctx, max_depth, max_buffer_size)
     }
 
-    /// Creates a special mint request the tree_authority PDA. This allows permissionless minting without
-    /// requiring a higher level CPI
-    pub fn create_default_mint_request(
-        ctx: Context<SetDefaultMintRequest>,
-        mint_capacity: u64,
-    ) -> Result<()> {
-        let request = &mut ctx.accounts.mint_authority_request;
-        assert_enough_mints_to_approve(&ctx.accounts.tree_authority, mint_capacity)?;
-        request.init_or_set(ctx.accounts.tree_authority.key(), mint_capacity);
-        Ok(())
-    }
-
-    pub fn request_mint_authority(ctx: Context<SetMintRequest>, mint_capacity: u64) -> Result<()> {
-        let request = &mut ctx.accounts.mint_authority_request;
-        assert_enough_mints_to_approve(&ctx.accounts.tree_authority, mint_capacity)?;
-        request.init_or_set(ctx.accounts.mint_authority.key(), mint_capacity);
-        Ok(())
-    }
-
-    pub fn approve_mint_authority_request(
-        ctx: Context<ApproveMintRequest>,
-        num_mints_to_approve: u64,
-    ) -> Result<()> {
-        let authority = &mut ctx.accounts.tree_authority;
-        let request = &mut ctx.accounts.mint_authority_request;
-        // Check that there are enough valid mints left in tree to approve
-        assert_enough_mints_to_approve(authority, num_mints_to_approve)?;
-        authority.approve_mint_capacity(num_mints_to_approve);
-        request.approve(num_mints_to_approve)?;
-        Ok(())
-    }
-
-    pub fn close_mint_request(ctx: Context<CloseMintRequest>) -> Result<()> {
-        let authority = &mut ctx.accounts.tree_authority;
-        let request = &ctx.accounts.mint_authority_request;
-        // Transfer remaining mint capacity to authority
-        authority.restore_mint_capacity(request.num_mints_approved);
-        Ok(())
-    }
-
     pub fn set_tree_delegate(ctx: Context<SetTreeDelegate>) -> Result<()> {
         ctx.accounts.tree_authority.delegate = ctx.accounts.new_delegate.key();
         Ok(())
@@ -982,21 +836,25 @@ pub mod bubblegum {
 
     pub fn mint_v1(ctx: Context<MintV1>, message: MetadataArgs) -> Result<()> {
         // TODO -> Separate V1 / V1 into seperate instructions
+        let payer = ctx.accounts.payer.key();
+        let incoming_tree_delegate = ctx.accounts.tree_delegate.key();
+        let tree_creator = ctx.accounts.authority.creator;
+        let tree_delegate = ctx.accounts.authority.delegate;
         let owner = ctx.accounts.owner.key();
         let delegate = ctx.accounts.delegate.key();
-        let mint_authority = &mut ctx.accounts.mint_authority;
+        let authority = &mut ctx.accounts.authority;
         let merkle_tree = &ctx.accounts.merkle_tree;
 
-        // The mint authority must sign if it is not equal to the tree authority.  Also, if the
-        // mint authority is a signer it can be used for creator validation.
+        require!(
+            incoming_tree_delegate == tree_creator || incoming_tree_delegate == tree_delegate,
+            BubblegumError::TreeAuthorityIncorrect,
+        );
+
+        // Create a HashSet to store signers to use with creator validation.  Any signer can be
+        // counted as a validated creator.
         let mut metadata_auth = HashSet::<Pubkey>::new();
-        if mint_authority.key() != ctx.accounts.authority.key() {
-            require!(
-                mint_authority.is_signer,
-                BubblegumError::MintAuthorityMustSign
-            );
-            metadata_auth.insert(mint_authority.key());
-        }
+        metadata_auth.insert(payer);
+        metadata_auth.insert(tree_delegate);
 
         // If there are any remaining accounts that are also signers, they can also be used for
         // creator validation.
@@ -1007,10 +865,6 @@ pub mod bubblegum {
                 .map(|a| a.key()),
         );
 
-        let authority = &mut ctx.accounts.authority;
-        let request = &mut ctx.accounts.mint_authority_request;
-
-        request.decrement_approvals()?;
         process_mint_v1(
             message,
             owner,
@@ -1022,15 +876,7 @@ pub mod bubblegum {
             &ctx.accounts.candy_wrapper,
             &ctx.accounts.compression_program,
         )?;
-        if request.num_mints_approved == 0 && request.num_mints_requested == 0 {
-            // Transfer lamports
-            let request_info = request.to_account_info();
-            **mint_authority.lamports.borrow_mut() = mint_authority
-                .lamports()
-                .checked_add(request_info.lamports())
-                .ok_or(BubblegumError::CloseMintRequestError)?;
-            **request_info.lamports.borrow_mut() = 0;
-        }
+
         Ok(())
     }
 
