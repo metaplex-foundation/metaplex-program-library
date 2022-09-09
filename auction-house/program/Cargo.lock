@@ -1711,11 +1711,11 @@ dependencies = [
  "anchor-client",
  "borsh",
  "mpl-token-metadata",
- "mpl-token-vault 0.1.1",
+ "mpl-token-vault",
  "num",
  "num-derive",
  "num-traits",
- "rand 0.7.3",
+ "rand 0.8.5",
  "serde_json",
  "shellexpand",
  "solana-program",
@@ -1733,7 +1733,7 @@ checksum = "741990cd07cb31d009a345806f30ace8eab99c063cd9440eba8d3df7be2a6988"
 dependencies = [
  "arrayref",
  "borsh",
- "mpl-token-vault 0.1.0",
+ "mpl-token-vault",
  "num-derive",
  "num-traits",
  "shank",
@@ -1752,19 +1752,6 @@ dependencies = [
  "borsh",
  "num-derive",
  "num-traits",
- "solana-program",
- "spl-token",
- "thiserror",
-]
-
-[[package]]
-name = "mpl-token-vault"
-version = "0.1.1"
-dependencies = [
- "borsh",
- "num-derive",
- "num-traits",
- "shank",
  "solana-program",
  "spl-token",
  "thiserror",

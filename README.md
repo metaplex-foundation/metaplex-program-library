@@ -7,13 +7,10 @@ Metaplex smart contracts and SDK.
 | Name                                   | Program                                                                       | SDK                                                                           | Integration Test                                                                   |
 | :------------------------------------- | :---------------------------------------------------------------------------- | :---------------------------------------------------------------------------  | :--------------------------------------------------------------------------------- |
 | [Candy Machine](./candy-machine)       | [![Program Candy Machine][p-candy-machine-svg]][p-candy-machine-yml]          | [![SDK Candy Machine][sdk-candy-machine-svg]][sdk-candy-machine-yml]          |                                                                                    |
-| [Token Vault](./token-vault)           | [![Program Token Vault][p-token-vault-svg]][p-token-vault-yml]                | [![SDK Token Vault][sdk-token-vault-svg]][sdk-token-vault-yml]                | [![Integration Token Vault][i-token-vault-svg]][i-token-vault-yml]                 |
 | [Token Entangler](./token-entangler)   | [![Program Token Entangler][p-token-entangler-svg]][p-token-entangler-yml]    | [![SDK Token Entangler][sdk-token-entangler-svg]][sdk-token-entangler-yml]    |                                                                                    |
 | [Token Metadata](./token-metadata)     | [![Program Token Metadata][p-token-metadata-svg]][p-token-metadata-yml]       | [![SDK Token Metadata][sdk-token-metadata-svg]][sdk-token-metadata-yml]       |                                                                                    |
-| [Auction](./auction)                   | [![Program Auction][p-auction-svg]][p-auction-yml]                            | [![SDK Auction][sdk-auction-svg]][sdk-auction-yml]                            |                                                                                    |
 | [Auction House](./auction-house)       | [![Program Auction House][p-auction-house-svg]][p-auction-house-yml]          | [![SDK Auction House][sdk-auction-house-svg]][sdk-auction-house-yml]          |                                                                                    |
-| [Metaplex](./metaplex)                 | [![Program Metaplex][p-metaplex-svg]][p-metaplex-yml]                         | [![SDK Metaplex][sdk-metaplex-svg]][sdk-metaplex-yml]                         |                                                                                    |
-| [NFT-Packs](./nft-packs)               | [![Program NFT-Packs][p-nft-packs-svg]][p-nft-packs-yml]                      | [![SDK NFT-Packs][sdk-nft-packs-svg]][sdk-nft-packs-yml]                      |                                                                                    |
+| [NFT-Packs](./nft-packs)               | [![Program NFT-Packs][p-nft-packs-svg]][p-nft-packs-yml]                      |                                                                               |                                                                                    |
 | [Gumdrop](./gumdrop)                   | [![Program Gumdrop][p-gumdrop-svg]][p-gumdrop-yml]                            | [![SDK Gumdrop][sdk-gumdrop-svg]][sdk-gumdrop-yml]                            |                                                                                    |
 | [Fixed price sale](./fixed-price-sale) | [![Program Fixed Price Sale][p-fixed-price-sale-svg]][p-fixed-price-sale-yml] | [![SDK Fixed Price Sale][sdk-fixed-price-sale-svg]][sdk-fixed-price-sale-yml] | [![Integration Fixed Price Sale][i-fixed-price-sale-svg]][i-fixed-price-sale-yml]  |
 
@@ -51,7 +48,6 @@ merged.
 | :--------------- | :---------------------------------------------- | :------------------------------------------------------------- |
 | Candy Machine    | [mpl-candy-machine][mpl-candy-machine-crate]    | [![Crate][mpl-candy-machine-img]][mpl-candy-machine-crate]     |
 | Token Metadata   | [mpl-token-metadata][mpl-token-metadata-crate]  | [![Crate][mpl-token-metadata-img]][mpl-token-metadata-crate]   |
-| Token Vault      | [mpl-token-vault][mpl-token-vault-crate]        | [![Crate][mpl-token-vault-img]][mpl-token-vault-crate]         |
 | Auction House    | [mpl-auction-house][mpl-auction-house-crate]    | [![Crate][mpl-auction-house-img]][mpl-auction-house-crate]     |
 | Testing Utils    | [mpl-testing-utils][mpl-testing-utils-crate]    | [![Crate][mpl-testing-utils-img]][mpl-testing-utils-crate]     |
 
@@ -81,18 +77,12 @@ The Rust/Cargo programs are licensed under the [AGPLv3](https://www.gnu.org/lice
 <!-- Program Badges -->
 [p-candy-machine-yml]:https://github.com/metaplex/teamplex/actions/workflows/program-candy-machine.yml
 [p-candy-machine-svg]:https://github.com/metaplex/metaplex-program-library/actions/workflows/program-candy-machine.yml/badge.svg
-[p-token-vault-yml]:https://github.com/metaplex/teamplex/actions/workflows/program-token-vault.yml
-[p-token-vault-svg]:https://github.com/metaplex/metaplex-program-library/actions/workflows/program-token-vault.yml/badge.svg
 [p-token-entangler-yml]:https://github.com/metaplex/teamplex/actions/workflows/program-token-entangler.yml
 [p-token-entangler-svg]:https://github.com/metaplex/metaplex-program-library/actions/workflows/program-token-entangler.yml/badge.svg
 [p-token-metadata-yml]:https://github.com/metaplex/teamplex/actions/workflows/program-token-metadata.yml
 [p-token-metadata-svg]:https://github.com/metaplex/metaplex-program-library/actions/workflows/program-token-metadata.yml/badge.svg
-[p-auction-yml]:https://github.com/metaplex/teamplex/actions/workflows/program-auction.yml
-[p-auction-svg]:https://github.com/metaplex/metaplex-program-library/actions/workflows/program-auction.yml/badge.svg
 [p-auction-house-yml]:https://github.com/metaplex/teamplex/actions/workflows/program-auction-house.yml
 [p-auction-house-svg]:https://github.com/metaplex/metaplex-program-library/actions/workflows/program-auction-house.yml/badge.svg
-[p-metaplex-yml]:https://github.com/metaplex/teamplex/actions/workflows/program-metaplex.yml
-[p-metaplex-svg]:https://github.com/metaplex/metaplex-program-library/actions/workflows/program-metaplex.yml/badge.svg
 [p-nft-packs-yml]:https://github.com/metaplex/metaplex-program-library/actions/workflows/program-nft-packs.yml
 [p-nft-packs-svg]:https://github.com/metaplex/metaplex-program-library/actions/workflows/program-nft-packs.yml/badge.svg
 [p-gumdrop-yml]:https://github.com/metaplex/teamplex/actions/workflows/program-gumdrop.yml
@@ -103,18 +93,12 @@ The Rust/Cargo programs are licensed under the [AGPLv3](https://www.gnu.org/lice
 <!-- SDK Badges  -->
 [sdk-candy-machine-yml]:https://github.com/metaplex/metaplex-program-library/actions/workflows/sdk-candy-machine.yml
 [sdk-candy-machine-svg]:https://github.com/metaplex/metaplex-program-library/actions/workflows/sdk-candy-machine.yml/badge.svg
-[sdk-token-vault-yml]:https://github.com/metaplex/metaplex-program-library/actions/workflows/sdk-token-vault.yml
-[sdk-token-vault-svg]:https://github.com/metaplex/metaplex-program-library/actions/workflows/sdk-token-vault.yml/badge.svg
 [sdk-token-entangler-yml]:https://github.com/metaplex/metaplex-program-library/actions/workflows/sdk-token-entangler.yml
 [sdk-token-entangler-svg]:https://github.com/metaplex/metaplex-program-library/actions/workflows/sdk-token-entangler.yml/badge.svg
 [sdk-token-metadata-yml]:https://github.com/metaplex/metaplex-program-library/actions/workflows/sdk-token-metadata.yml
 [sdk-token-metadata-svg]:https://github.com/metaplex/metaplex-program-library/actions/workflows/sdk-token-metadata.yml/badge.svg
-[sdk-auction-yml]:https://github.com/metaplex/metaplex-program-library/actions/workflows/sdk-auction.yml
-[sdk-auction-svg]:https://github.com/metaplex/metaplex-program-library/actions/workflows/sdk-auction.yml/badge.svg
 [sdk-auction-house-yml]:https://github.com/metaplex/metaplex-program-library/actions/workflows/sdk-auction-house.yml
 [sdk-auction-house-svg]:https://github.com/metaplex/metaplex-program-library/actions/workflows/sdk-auction-house.yml/badge.svg
-[sdk-metaplex-yml]:https://github.com/metaplex/metaplex-program-library/actions/workflows/sdk-metaplex.yml
-[sdk-metaplex-svg]:https://github.com/metaplex/metaplex-program-library/actions/workflows/sdk-metaplex.yml/badge.svg
 [sdk-gumdrop-yml]:https://github.com/metaplex/metaplex-program-library/actions/workflows/sdk-gumdrop.yml
 [sdk-gumdrop-svg]:https://github.com/metaplex/metaplex-program-library/actions/workflows/sdk-gumdrop.yml/badge.svg
 [sdk-fixed-price-sale-yml]:https://github.com/metaplex-foundation/metaplex-program-library/actions/workflows/sdk-fixed-price-sale.yml
@@ -123,20 +107,16 @@ The Rust/Cargo programs are licensed under the [AGPLv3](https://www.gnu.org/lice
 [sdk-nft-packs-svg]:https://github.com/metaplex/metaplex-program-library/actions/workflows/sdk-nft-packs.yml/badge.svg
 
 <!-- Integration Badges -->
-[i-token-vault-svg]:https://github.com/metaplex-foundation/metaplex-program-library/actions/workflows/integration-token-vault.yml/badge.svg
-[i-token-vault-yml]:https://github.com/metaplex-foundation/metaplex-program-library/actions/workflows/integration-token-vault.yml
 [i-fixed-price-sale-svg]:https://github.com/metaplex-foundation/metaplex-program-library/actions/workflows/integration-fixed-price-sale.yml/badge.svg
 [i-fixed-price-sale-yml]:https://github.com/metaplex-foundation/metaplex-program-library/actions/workflows/integration-fixed-price-sale.yml
 
 <!-- Crates -->
 [mpl-candy-machine-crate]:https://crates.io/crates/mpl-candy-machine
 [mpl-token-metadata-crate]:https://crates.io/crates/mpl-token-metadata
-[mpl-token-vault-crate]:https://crates.io/crates/mpl-token-vault
 [mpl-auction-house-crate]:https://crates.io/crates/mpl-auction-house
 [mpl-testing-utils-crate]:https://crates.io/crates/mpl-testing-utils
 [mpl-candy-machine-img]:https://img.shields.io/crates/v/mpl-candy-machine
 [mpl-token-metadata-img]:https://img.shields.io/crates/v/mpl-token-metadata
-[mpl-token-vault-img]:https://img.shields.io/crates/v/mpl-token-vault
 [mpl-auction-house-img]:https://img.shields.io/crates/v/mpl-auction-house
 [mpl-testing-utils-img]:https://img.shields.io/crates/v/mpl-testing-utils
 

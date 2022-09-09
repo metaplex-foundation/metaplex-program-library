@@ -47,7 +47,7 @@ pub fn claim_pack(
     // Validate owners
     assert_owned_by(pack_set_account, program_id)?;
 
-    assert_signer(&user_wallet_account)?;
+    assert_signer(user_wallet_account)?;
 
     let pack_set = PackSet::unpack(&pack_set_account.data.borrow())?;
     let mut proving_process = ProvingProcess::unpack(&proving_process_account.data.borrow_mut())?;

@@ -20,6 +20,20 @@ const swapStruct = new beet.BeetArgsStruct<{ instructionDiscriminator: number[] 
 );
 /**
  * Accounts required by the _swap_ instruction
+ *
+ * @property [] treasuryMint
+ * @property [**signer**] payer
+ * @property [_writable_] paymentAccount
+ * @property [] paymentTransferAuthority
+ * @property [_writable_] token
+ * @property [] tokenMint
+ * @property [] replacementTokenMetadata
+ * @property [] replacementTokenMint
+ * @property [_writable_] replacementToken
+ * @property [**signer**] transferAuthority
+ * @property [_writable_] tokenAEscrow
+ * @property [_writable_] tokenBEscrow
+ * @property [_writable_] entangledPair
  * @category Instructions
  * @category Swap
  * @category generated
@@ -46,7 +60,6 @@ const swapInstructionDiscriminator = [248, 198, 158, 145, 225, 117, 135, 200];
  * Creates a _Swap_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
- *
  * @category Instructions
  * @category Swap
  * @category generated

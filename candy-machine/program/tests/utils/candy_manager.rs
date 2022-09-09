@@ -24,7 +24,9 @@ use mpl_candy_machine::{
 
 use crate::core::helpers::create_associated_token_account;
 use crate::utils::helpers::CandyTestLogger;
-use crate::utils::{remove_freeze, set_freeze, thaw_nft, unlock_funds};
+use crate::utils::{
+    remove_freeze, set_freeze, thaw_nft, unlock_funds, update_authority, withdraw_funds,
+};
 use crate::{
     core::{
         helpers::{
@@ -823,6 +825,24 @@ impl CandyManager {
         Ok(())
     }
 
+    pub async fn update_authority(
+        &mut self,
+        context: &mut ProgramTestContext,
+        new_authority: Pubkey,
+    ) -> transport::Result<()> {
+        let logger = CandyTestLogger::new_start("Update Candy Machine Authority");
+        update_authority(
+            context,
+            &self.candy_machine.pubkey(),
+            &self.authority,
+            &self.wallet,
+            &new_authority,
+        )
+        .await?;
+        logger.end();
+        Ok(())
+    }
+
     pub async fn set_freeze(&mut self, context: &mut ProgramTestContext) -> transport::Result<()> {
         let logger = CandyTestLogger::new_start("Set freeze");
         set_freeze(
@@ -913,6 +933,23 @@ impl CandyManager {
             self.collection_info.clone(),
             self.gateway_info.clone(),
             self.freeze_info.clone(),
+        )
+        .await?;
+        logger.end();
+        Ok(nft_info)
+    }
+
+    pub async fn withdraw(
+        &mut self,
+        context: &mut ProgramTestContext,
+    ) -> transport::Result<MasterEditionManager> {
+        let logger = CandyTestLogger::new_start("Mint NFT");
+        let nft_info = prepare_nft(context, &self.minter).await;
+        withdraw_funds(
+            context,
+            &self.candy_machine.pubkey(),
+            &self.authority,
+            &self.collection_info,
         )
         .await?;
         logger.end();

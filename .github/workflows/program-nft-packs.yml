@@ -8,7 +8,7 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  SOLANA_VERSION: 1.9.14
+  SOLANA_VERSION: 1.10.25
   RUST_TOOLCHAIN: stable
 
 jobs:
@@ -60,7 +60,6 @@ jobs:
           key: ${{ env.cache_id }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{ env.RUSTC_HASH }}
 
       # Build deps
-      - uses: ./.github/actions/build-metaplex
       - uses: ./.github/actions/build-token-metadata
       # Run test
       - name: test-nft-packs-program

@@ -22,7 +22,7 @@ pub fn close_pack(_program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResu
     let clock_info = next_account_info(account_info_iter)?;
     let clock = Clock::from_account_info(clock_info)?;
 
-    assert_signer(&authority_account)?;
+    assert_signer(authority_account)?;
 
     let mut pack_set = PackSet::unpack(&pack_set_account.data.borrow_mut())?;
     assert_account_key(authority_account, &pack_set.authority)?;

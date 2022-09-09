@@ -82,7 +82,7 @@ pub fn init_pack(
         mutable: args.mutable,
         distribution_type: args.distribution_type,
         allowed_amount_to_redeem: args.allowed_amount_to_redeem,
-        redeem_start_date: redeem_start_date,
+        redeem_start_date,
         redeem_end_date: args.redeem_end_date,
     });
 
