@@ -123,15 +123,12 @@ impl PackConfig {
             (rndp * weight_sum as f64).round().to_u32().unwrap()
         };
         for i in self.weights.iter() {
-            bound = match bound.error_sub(i.1) {
-                Ok(num) => num,
-                Err(_) => 0,
-            };
-            if bound <= 0 {
-                return Ok(i.clone());
+            bound = bound.error_sub(i.1).unwrap_or(0);
+            if bound == 0 {
+                return Ok(*i);
             }
         }
-        return Ok(selected.clone());
+        Ok(*selected)
     }
 }
 

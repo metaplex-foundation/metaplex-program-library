@@ -45,6 +45,22 @@ const createEntangledPairStruct = new beet.BeetArgsStruct<
 );
 /**
  * Accounts required by the _createEntangledPair_ instruction
+ *
+ * @property [] treasuryMint
+ * @property [_writable_, **signer**] payer
+ * @property [**signer**] transferAuthority
+ * @property [] authority
+ * @property [] mintA
+ * @property [] metadataA
+ * @property [] editionA
+ * @property [] mintB
+ * @property [] metadataB
+ * @property [] editionB
+ * @property [_writable_] tokenB
+ * @property [_writable_] tokenAEscrow
+ * @property [_writable_] tokenBEscrow
+ * @property [_writable_] entangledPair
+ * @property [_writable_] reverseEntangledPair
  * @category Instructions
  * @category CreateEntangledPair
  * @category generated

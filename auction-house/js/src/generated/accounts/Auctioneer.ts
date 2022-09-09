@@ -20,7 +20,7 @@ export type AuctioneerArgs = {
   bump: number;
 };
 
-const auctioneerDiscriminator = [46, 101, 92, 150, 138, 30, 245, 120];
+export const auctioneerDiscriminator = [46, 101, 92, 150, 138, 30, 245, 120];
 /**
  * Holds the data for the {@link Auctioneer} Account and provides de/serialization
  * functionality for that data
@@ -65,6 +65,18 @@ export class Auctioneer implements AuctioneerArgs {
       throw new Error(`Unable to find Auctioneer account at ${address}`);
     }
     return Auctioneer.fromAccountInfo(accountInfo, 0)[0];
+  }
+
+  /**
+   * Provides a {@link web3.Connection.getProgramAccounts} config builder,
+   * to fetch accounts matching filters that can be specified via that builder.
+   *
+   * @param programId - the program that owns the accounts we are filtering
+   */
+  static gpaBuilder(
+    programId: web3.PublicKey = new web3.PublicKey('hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk'),
+  ) {
+    return beetSolana.GpaBuilder.fromStruct(programId, auctioneerBeet);
   }
 
   /**

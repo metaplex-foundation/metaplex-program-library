@@ -1,12 +1,12 @@
 use anchor_lang::prelude::*;
 
-#[derive(AnchorSerialize, AnchorDeserialize, PartialEq, Copy, Clone)]
+#[derive(AnchorSerialize, AnchorDeserialize, PartialEq, Eq, Copy, Clone)]
 pub enum TokenProgramVersion {
     Original,
     Token2022,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, PartialEq, Copy, Clone)]
+#[derive(AnchorSerialize, AnchorDeserialize, PartialEq, Eq, Copy, Clone)]
 pub struct Creator {
     pub address: Pubkey,
     pub verified: bool,
@@ -24,7 +24,7 @@ impl Creator {
     }
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, PartialEq, Debug, Clone)]
+#[derive(AnchorSerialize, AnchorDeserialize, PartialEq, Eq, Debug, Clone)]
 pub enum TokenStandard {
     NonFungible,        // This is a master edition
     FungibleAsset,      // A token with metadata that can also have attrributes
@@ -32,14 +32,14 @@ pub enum TokenStandard {
     NonFungibleEdition, // This is a limited edition
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, PartialEq, Debug, Clone)]
+#[derive(AnchorSerialize, AnchorDeserialize, PartialEq, Eq, Debug, Clone)]
 pub enum UseMethod {
     Burn,
     Multiple,
     Single,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, PartialEq, Debug, Clone)]
+#[derive(AnchorSerialize, AnchorDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct Uses {
     // 17 bytes + Option byte
     pub use_method: UseMethod, //1
@@ -62,7 +62,7 @@ impl Uses {
 }
 
 #[repr(C)]
-#[derive(AnchorSerialize, AnchorDeserialize, PartialEq, Debug, Clone)]
+#[derive(AnchorSerialize, AnchorDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct Collection {
     pub verified: bool,
     pub key: Pubkey,
@@ -77,7 +77,7 @@ impl Collection {
     }
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, PartialEq, Clone)]
+#[derive(AnchorSerialize, AnchorDeserialize, PartialEq, Eq, Clone)]
 pub struct MetadataArgs {
     /// The name of the asset
     pub name: String,

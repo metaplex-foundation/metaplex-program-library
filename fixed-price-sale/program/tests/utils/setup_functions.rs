@@ -26,6 +26,7 @@ macro_rules! setup_context {
         let mut program_test = ProgramTest::default();
         $(
             program_test.add_program(stringify!($program_name), $program_name::id(), None);
+            program_test.set_compute_max_units(u64::MAX);
         )+
         let mut $context = program_test.start_with_context().await;
     };
@@ -108,7 +109,7 @@ pub async fn setup_selling_resource(
         context,
         &resource_mint.pubkey(),
         &resource_token.pubkey(),
-        &admin_wallet,
+        admin_wallet,
         1,
     )
     .await;
@@ -117,7 +118,7 @@ pub async fn setup_selling_resource(
     let mut actual_update_authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
     if selling_resource_owner_creator {
         if let Some(creators_captured) = creators {
-            let mut cr = creators_captured.clone();
+            let mut cr = creators_captured;
             cr.push(mpl_token_metadata::state::Creator {
                 address: selling_resource_owner_keypair.pubkey(),
                 share: 100,
@@ -140,7 +141,7 @@ pub async fn setup_selling_resource(
     let metadata = create_token_metadata(
         context,
         &resource_mint.pubkey(),
-        &admin_wallet,
+        admin_wallet,
         &actual_update_authority,
         String::from("TEST"),
         String::from("TST"),
@@ -158,7 +159,7 @@ pub async fn setup_selling_resource(
         context,
         &resource_mint.pubkey(),
         &actual_update_authority,
-        &admin_wallet,
+        admin_wallet,
         &metadata,
         Some(1),
     )
@@ -189,8 +190,8 @@ pub async fn setup_selling_resource(
     .to_account_metas(None);
 
     let data = mpl_fixed_price_sale_instruction::InitSellingResource {
-        master_edition_bump: master_edition_bump,
-        vault_owner_bump: vault_owner_bump,
+        master_edition_bump,
+        vault_owner_bump,
         max_supply: Some(1),
     }
     .data();
@@ -204,7 +205,7 @@ pub async fn setup_selling_resource(
     let tx = Transaction::new_signed_with_payer(
         &[instruction],
         Some(&context.payer.pubkey()),
-        &[&context.payer, &admin_wallet, &selling_resource_keypair],
+        &[&context.payer, admin_wallet, &selling_resource_keypair],
         context.last_blockhash,
     );
 
@@ -294,7 +295,7 @@ pub async fn setup_market(
         &[
             &context.payer,
             &market_keypair,
-            &selling_resource_owner_keypair,
+            selling_resource_owner_keypair,
         ],
         context.last_blockhash,
     );

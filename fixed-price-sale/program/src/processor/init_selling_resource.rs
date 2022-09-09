@@ -50,7 +50,7 @@ impl<'info> InitSellingResource<'info> {
         // Check, that at least one creator exists in primary sale
         if !metadata.primary_sale_happened {
             if let Some(creators) = metadata.data.creators {
-                if creators.len() == 0 {
+                if creators.is_empty() {
                     return Err(ErrorCode::MetadataCreatorsIsEmpty.into());
                 }
             } else {

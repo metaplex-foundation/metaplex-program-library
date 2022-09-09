@@ -30,7 +30,7 @@ export type BidReceiptArgs = {
   canceledAt: beet.COption<beet.bignum>;
 };
 
-const bidReceiptDiscriminator = [186, 150, 141, 135, 59, 122, 39, 99];
+export const bidReceiptDiscriminator = [186, 150, 141, 135, 59, 122, 39, 99];
 /**
  * Holds the data for the {@link BidReceipt} Account and provides de/serialization
  * functionality for that data
@@ -99,6 +99,18 @@ export class BidReceipt implements BidReceiptArgs {
       throw new Error(`Unable to find BidReceipt account at ${address}`);
     }
     return BidReceipt.fromAccountInfo(accountInfo, 0)[0];
+  }
+
+  /**
+   * Provides a {@link web3.Connection.getProgramAccounts} config builder,
+   * to fetch accounts matching filters that can be specified via that builder.
+   *
+   * @param programId - the program that owns the accounts we are filtering
+   */
+  static gpaBuilder(
+    programId: web3.PublicKey = new web3.PublicKey('hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk'),
+  ) {
+    return beetSolana.GpaBuilder.fromStruct(programId, bidReceiptBeet);
   }
 
   /**

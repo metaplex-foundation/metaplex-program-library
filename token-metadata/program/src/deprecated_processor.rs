@@ -69,7 +69,7 @@ pub fn process_deprecated_update_metadata_accounts(
 
     let metadata_account_info = next_account_info(account_info_iter)?;
     let update_authority_info = next_account_info(account_info_iter)?;
-    let mut metadata: Metadata = Metadata::from_account_info(metadata_account_info)?;
+    let mut metadata = Metadata::from_account_info(metadata_account_info)?;
 
     assert_owned_by(metadata_account_info, program_id)?;
     assert_update_authority_is_correct(&metadata, update_authority_info)?;

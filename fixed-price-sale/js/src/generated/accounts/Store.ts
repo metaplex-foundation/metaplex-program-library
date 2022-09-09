@@ -20,7 +20,7 @@ export type StoreArgs = {
   description: string;
 };
 
-const storeDiscriminator = [130, 48, 247, 244, 182, 191, 30, 26];
+export const storeDiscriminator = [130, 48, 247, 244, 182, 191, 30, 26];
 /**
  * Holds the data for the {@link Store} Account and provides de/serialization
  * functionality for that data
@@ -65,6 +65,18 @@ export class Store implements StoreArgs {
       throw new Error(`Unable to find Store account at ${address}`);
     }
     return Store.fromAccountInfo(accountInfo, 0)[0];
+  }
+
+  /**
+   * Provides a {@link web3.Connection.getProgramAccounts} config builder,
+   * to fetch accounts matching filters that can be specified via that builder.
+   *
+   * @param programId - the program that owns the accounts we are filtering
+   */
+  static gpaBuilder(
+    programId: web3.PublicKey = new web3.PublicKey('SaLeTjyUa5wXHnGuewUSyJ5JWZaHwz3TxqUntCE9czo'),
+  ) {
+    return beetSolana.GpaBuilder.fromStruct(programId, storeBeet);
   }
 
   /**

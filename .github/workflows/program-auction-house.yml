@@ -64,9 +64,9 @@ jobs:
         with:
           filters: |
             core:
-              - 'core/**'
+              - 'core/rust/**'
             package:
-              - 'auction-house/**'
+              - 'auction-house/program/**'
 
   build-and-test-auction-house:
     needs: [changes, setup-versions, setup-tests]
