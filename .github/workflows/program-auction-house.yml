@@ -13,7 +13,7 @@ env:
 
 jobs:
   setup-versions:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     outputs:
       versions: ${{ steps.matrix.outputs.value }}
     steps:
