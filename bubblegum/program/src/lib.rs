@@ -514,7 +514,6 @@ fn process_mint_v1<'info>(
 
     emit!(leaf.to_event());
 
-    authority.num_minted = authority.num_minted.saturating_add(1);
     append_leaf(
         &merkle_tree.key(),
         authority_bump,
@@ -813,7 +812,6 @@ pub mod bubblegum {
             creator: ctx.accounts.tree_creator.key(),
             delegate: ctx.accounts.tree_creator.key(),
             total_mint_capacity: 1 << max_depth,
-            num_mints_approved: 0,
             num_minted: 0,
         });
         let authority_pda_signer = &[&seeds[..]];
@@ -849,6 +847,12 @@ pub mod bubblegum {
             incoming_tree_delegate == tree_creator || incoming_tree_delegate == tree_delegate,
             BubblegumError::TreeAuthorityIncorrect,
         );
+
+        if !authority.contains_mint_capacity(1) {
+            return Err(BubblegumError::InsufficientMintCapacity.into());
+        }
+
+        authority.increment_mint_count();
 
         // Create a HashSet to store signers to use with creator validation.  Any signer can be
         // counted as a validated creator.

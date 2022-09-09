@@ -19,7 +19,6 @@ pub struct TreeConfig {
     pub creator: Pubkey,
     pub delegate: Pubkey,
     pub total_mint_capacity: u64,
-    pub num_mints_approved: u64,
     pub num_minted: u64,
 }
 
@@ -28,18 +27,9 @@ impl TreeConfig {
         self.num_minted = self.num_minted.saturating_add(1);
     }
 
-    pub fn approve_mint_capacity(&mut self, capacity: u64) {
-        self.num_mints_approved = self.num_mints_approved.saturating_add(capacity);
-    }
-
     pub fn contains_mint_capacity(&self, requested_capacity: u64) -> bool {
         let remaining_mints = self.total_mint_capacity.saturating_sub(self.num_minted);
-        let remaining_mints_to_approve = remaining_mints.saturating_sub(self.num_mints_approved);
-        requested_capacity <= remaining_mints_to_approve
-    }
-
-    pub fn restore_mint_capacity(&mut self, capacity: u64) {
-        self.num_mints_approved = self.num_mints_approved.saturating_sub(capacity);
+        requested_capacity <= remaining_mints
     }
 }
 

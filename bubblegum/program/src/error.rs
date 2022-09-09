@@ -36,6 +36,8 @@ pub enum BubblegumError {
     MetadataBasisPointsTooHigh,
     #[msg("Tree creator or tree delegate must sign.")]
     TreeAuthorityIncorrect,
+    #[msg("Not enough unapproved mints left")]
+    InsufficientMintCapacity,
     #[msg("NumericalOverflowError")]
     NumericalOverflowError,
     #[msg("Incorrect account owner")]
