@@ -783,7 +783,7 @@ fn process_collection_verification<'info>(
     emit!(new_leaf.to_event());
     replace_leaf(
         &merkle_tree.key(),
-        *ctx.bumps.get("authority").unwrap(),
+        *ctx.bumps.get("tree_authority").unwrap(),
         &ctx.accounts.compression_program.to_account_info(),
         &ctx.accounts.tree_authority.to_account_info(),
         &ctx.accounts.merkle_tree.to_account_info(),
