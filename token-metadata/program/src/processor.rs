@@ -257,7 +257,6 @@ pub fn process_create_metadata_accounts_v2<'a>(
     let payer_account_info = next_account_info(account_info_iter)?;
     let update_authority_info = next_account_info(account_info_iter)?;
     let system_account_info = next_account_info(account_info_iter)?;
-    let _rent_info = next_account_info(account_info_iter)?;
 
     process_create_metadata_accounts_logic(
         program_id,
