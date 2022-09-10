@@ -54,37 +54,37 @@ pub struct CreateTree<'info> {
         space = TREE_AUTHORITY_SIZE,
         bump,
     )]
-    pub authority: Account<'info, TreeConfig>,
-    #[account(mut)]
-    pub payer: Signer<'info>,
-    pub tree_creator: Signer<'info>,
-    pub candy_wrapper: Program<'info, Wrapper>,
-    pub system_program: Program<'info, System>,
-    pub compression_program: Program<'info, SplCompression>,
+    pub tree_authority: Account<'info, TreeConfig>,
     #[account(zero)]
     /// CHECK: This account must be all zeros
     pub merkle_tree: UncheckedAccount<'info>,
+    #[account(mut)]
+    pub payer: Signer<'info>,
+    pub tree_creator: Signer<'info>,
+    pub log_wrapper: Program<'info, Wrapper>,
+    pub compression_program: Program<'info, SplCompression>,
+    pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]
 pub struct MintV1<'info> {
-    pub payer: Signer<'info>,
-    pub tree_delegate: Signer<'info>,
     #[account(
         mut,
         seeds = [merkle_tree.key().as_ref()],
         bump,
     )]
-    pub authority: Account<'info, TreeConfig>,
-    pub candy_wrapper: Program<'info, Wrapper>,
-    pub compression_program: Program<'info, SplCompression>,
+    pub tree_authority: Account<'info, TreeConfig>,
     /// CHECK: This account is neither written to nor read from.
-    pub owner: AccountInfo<'info>,
+    pub leaf_owner: AccountInfo<'info>,
     /// CHECK: This account is neither written to nor read from.
-    pub delegate: AccountInfo<'info>,
+    pub leaf_delegate: AccountInfo<'info>,
     #[account(mut)]
     /// CHECK: unsafe
     pub merkle_tree: UncheckedAccount<'info>,
+    pub payer: Signer<'info>,
+    pub tree_delegate: Signer<'info>,
+    pub log_wrapper: Program<'info, Wrapper>,
+    pub compression_program: Program<'info, SplCompression>,
 }
 
 #[derive(Accounts)]
@@ -93,16 +93,16 @@ pub struct Burn<'info> {
         seeds = [merkle_tree.key().as_ref()],
         bump,
     )]
-    pub authority: Account<'info, TreeConfig>,
-    pub candy_wrapper: Program<'info, Wrapper>,
-    pub compression_program: Program<'info, SplCompression>,
+    pub tree_authority: Account<'info, TreeConfig>,
     /// CHECK: This account is checked in the instruction
-    pub owner: UncheckedAccount<'info>,
+    pub leaf_owner: UncheckedAccount<'info>,
     /// CHECK: This account is checked in the instruction
-    pub delegate: UncheckedAccount<'info>,
+    pub leaf_delegate: UncheckedAccount<'info>,
     #[account(mut)]
     /// CHECK: This account is modified in the downstream program
     pub merkle_tree: UncheckedAccount<'info>,
+    pub log_wrapper: Program<'info, Wrapper>,
+    pub compression_program: Program<'info, SplCompression>,
 }
 
 #[derive(Accounts)]
@@ -111,18 +111,18 @@ pub struct CreatorVerification<'info> {
         seeds = [merkle_tree.key().as_ref()],
         bump,
     )]
-    pub authority: Account<'info, TreeConfig>,
+    pub tree_authority: Account<'info, TreeConfig>,
     /// CHECK: This account is checked in the instruction
-    pub owner: UncheckedAccount<'info>,
+    pub leaf_owner: UncheckedAccount<'info>,
     /// CHECK: This account is chekced in the instruction
-    pub delegate: UncheckedAccount<'info>,
-    pub payer: Signer<'info>,
-    pub creator: Signer<'info>,
-    pub candy_wrapper: Program<'info, Wrapper>,
-    pub compression_program: Program<'info, SplCompression>,
+    pub leaf_delegate: UncheckedAccount<'info>,
     #[account(mut)]
     /// CHECK: This account is modified in the downstream program
     pub merkle_tree: UncheckedAccount<'info>,
+    pub payer: Signer<'info>,
+    pub creator: Signer<'info>,
+    pub log_wrapper: Program<'info, Wrapper>,
+    pub compression_program: Program<'info, SplCompression>,
 }
 
 #[derive(Accounts)]
@@ -131,11 +131,14 @@ pub struct CollectionVerification<'info> {
         seeds = [merkle_tree.key().as_ref()],
         bump,
     )]
-    pub authority: Account<'info, TreeConfig>,
+    pub tree_authority: Account<'info, TreeConfig>,
     /// CHECK: This account is checked in the instruction
-    pub owner: UncheckedAccount<'info>,
+    pub leaf_owner: UncheckedAccount<'info>,
     /// CHECK: This account is checked in the instruction
-    pub delegate: UncheckedAccount<'info>,
+    pub leaf_delegate: UncheckedAccount<'info>,
+    #[account(mut)]
+    /// CHECK: This account is modified in the downstream program
+    pub merkle_tree: UncheckedAccount<'info>,
     pub payer: Signer<'info>,
     /// CHECK: This account is checked to be a signer in
     /// the case of `set_and_verify_collection` where
@@ -153,11 +156,8 @@ pub struct CollectionVerification<'info> {
         bump,
     )]
     pub bubblegum_signer: UncheckedAccount<'info>,
-    pub candy_wrapper: Program<'info, Wrapper>,
+    pub log_wrapper: Program<'info, Wrapper>,
     pub compression_program: Program<'info, SplCompression>,
-    #[account(mut)]
-    /// CHECK: This account is modified in the downstream program
-    pub merkle_tree: UncheckedAccount<'info>,
     pub token_metadata_program: Program<'info, MplTokenMetadata>,
 }
 
@@ -168,18 +168,18 @@ pub struct Transfer<'info> {
         bump,
     )]
     /// CHECK: This account is neither written to nor read from.
-    pub authority: Account<'info, TreeConfig>,
+    pub tree_authority: Account<'info, TreeConfig>,
     /// CHECK: This account is checked in the instruction
-    pub owner: UncheckedAccount<'info>,
+    pub leaf_owner: UncheckedAccount<'info>,
     /// CHECK: This account is chekced in the instruction
-    pub delegate: UncheckedAccount<'info>,
+    pub leaf_delegate: UncheckedAccount<'info>,
     /// CHECK: This account is neither written to nor read from.
-    pub new_owner: UncheckedAccount<'info>,
-    pub candy_wrapper: Program<'info, Wrapper>,
-    pub compression_program: Program<'info, SplCompression>,
+    pub new_leaf_owner: UncheckedAccount<'info>,
     #[account(mut)]
     /// CHECK: This account is modified in the downstream program
     pub merkle_tree: UncheckedAccount<'info>,
+    pub log_wrapper: Program<'info, Wrapper>,
+    pub compression_program: Program<'info, SplCompression>,
 }
 
 #[derive(Accounts)]
@@ -189,17 +189,17 @@ pub struct Delegate<'info> {
         bump,
     )]
     /// CHECK: This account is neither written to nor read from.
-    pub authority: Account<'info, TreeConfig>,
-    pub owner: Signer<'info>,
+    pub tree_authority: Account<'info, TreeConfig>,
+    pub leaf_owner: Signer<'info>,
     /// CHECK: This account is neither written to nor read from.
-    pub previous_delegate: UncheckedAccount<'info>,
+    pub previous_leaf_delegate: UncheckedAccount<'info>,
     /// CHECK: This account is neither written to nor read from.
-    pub new_delegate: UncheckedAccount<'info>,
-    pub candy_wrapper: Program<'info, Wrapper>,
-    pub compression_program: Program<'info, SplCompression>,
+    pub new_leaf_delegate: UncheckedAccount<'info>,
     #[account(mut)]
     /// CHECK: This account is modified in the downstream program
     pub merkle_tree: UncheckedAccount<'info>,
+    pub log_wrapper: Program<'info, Wrapper>,
+    pub compression_program: Program<'info, SplCompression>,
 }
 
 #[derive(Accounts)]
@@ -216,13 +216,11 @@ pub struct Redeem<'info> {
         bump,
     )]
     /// CHECK: This account is neither written to nor read from.
-    pub authority: Account<'info, TreeConfig>,
-    pub candy_wrapper: Program<'info, Wrapper>,
-    pub compression_program: Program<'info, SplCompression>,
+    pub tree_authority: Account<'info, TreeConfig>,
     #[account(mut)]
-    pub owner: Signer<'info>,
+    pub leaf_owner: Signer<'info>,
     /// CHECK: This account is chekced in the instruction
-    pub delegate: UncheckedAccount<'info>,
+    pub leaf_delegate: UncheckedAccount<'info>,
     #[account(mut)]
     /// CHECK: checked in cpi
     pub merkle_tree: UncheckedAccount<'info>,
@@ -233,11 +231,13 @@ pub struct Redeem<'info> {
         merkle_tree.key().as_ref(),
         & nonce.to_le_bytes()
     ],
-    payer = owner,
+    payer = leaf_owner,
     space = VOUCHER_SIZE,
     bump
     )]
     pub voucher: Account<'info, Voucher>,
+    pub log_wrapper: Program<'info, Wrapper>,
+    pub compression_program: Program<'info, SplCompression>,
     pub system_program: Program<'info, System>,
 }
 
@@ -248,15 +248,15 @@ pub struct CancelRedeem<'info> {
         bump,
     )]
     /// CHECK: This account is neither written to nor read from.
-    pub authority: Account<'info, TreeConfig>,
-    pub candy_wrapper: Program<'info, Wrapper>,
-    pub compression_program: Program<'info, SplCompression>,
+    pub tree_authority: Account<'info, TreeConfig>,
+    #[account(mut)]
+    pub leaf_owner: Signer<'info>,
     #[account(mut)]
     /// CHECK: unsafe
     pub merkle_tree: UncheckedAccount<'info>,
     #[account(
         mut,
-        close = owner,
+        close = leaf_owner,
         seeds = [
         VOUCHER_PREFIX.as_ref(),
         merkle_tree.key().as_ref(),
@@ -265,15 +265,15 @@ pub struct CancelRedeem<'info> {
     bump
     )]
     pub voucher: Account<'info, Voucher>,
-    #[account(mut)]
-    pub owner: Signer<'info>,
+    pub log_wrapper: Program<'info, Wrapper>,
+    pub compression_program: Program<'info, SplCompression>,
 }
 
 #[derive(Accounts)]
 pub struct DecompressV1<'info> {
     #[account(
         mut,
-        close = owner,
+        close = leaf_owner,
         seeds = [
             VOUCHER_PREFIX.as_ref(),
             voucher.merkle_tree.as_ref(),
@@ -283,7 +283,7 @@ pub struct DecompressV1<'info> {
     )]
     pub voucher: Box<Account<'info, Voucher>>,
     #[account(mut)]
-    pub owner: Signer<'info>,
+    pub leaf_owner: Signer<'info>,
     /// CHECK: versioning is handled in the instruction
     #[account(mut)]
     pub token_account: UncheckedAccount<'info>,
@@ -327,13 +327,14 @@ pub struct Compress<'info> {
         bump,
     )]
     /// CHECK: This account is neither written to nor read from.
-    pub authority: UncheckedAccount<'info>,
+    pub tree_authority: UncheckedAccount<'info>,
+    /// CHECK: This account is checked in the instruction
+    pub leaf_owner: Signer<'info>,
+    /// CHECK: This account is chekced in the instruction
+    pub leaf_delegate: UncheckedAccount<'info>,
     /// CHECK: This account is not read
     pub merkle_tree: UncheckedAccount<'info>,
-    /// CHECK: This account is checked in the instruction
-    pub owner: Signer<'info>,
-    /// CHECK: This account is chekced in the instruction
-    pub delegate: UncheckedAccount<'info>,
+
     /// CHECK: versioning is handled in the instruction
     #[account(mut)]
     pub token_account: AccountInfo<'info>,
@@ -346,29 +347,29 @@ pub struct Compress<'info> {
     pub master_edition: Box<Account<'info, MasterEdition>>,
     #[account(mut)]
     pub payer: Signer<'info>,
-    pub system_program: Program<'info, System>,
-    /// CHECK:
-    pub token_metadata_program: UncheckedAccount<'info>,
+    pub log_wrapper: Program<'info, Wrapper>,
+    pub compression_program: Program<'info, SplCompression>,
     /// CHECK:
     pub token_program: UncheckedAccount<'info>,
-    pub candy_wrapper: Program<'info, Wrapper>,
-    pub compression_program: Program<'info, SplCompression>,
+    /// CHECK:
+    pub token_metadata_program: UncheckedAccount<'info>,
+    pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]
 pub struct SetTreeDelegate<'info> {
-    pub creator: Signer<'info>,
-    /// CHECK: this account is neither read from or written to
-    pub new_delegate: UncheckedAccount<'info>,
-    /// CHECK: this account is neither read from or written to
-    pub merkle_tree: UncheckedAccount<'info>,
     #[account(
         mut,
         seeds = [merkle_tree.key().as_ref()],
         bump,
-        has_one = creator
+        has_one = tree_creator
     )]
     pub tree_authority: Account<'info, TreeConfig>,
+    pub tree_creator: Signer<'info>,
+    /// CHECK: this account is neither read from or written to
+    pub new_tree_delegate: UncheckedAccount<'info>,
+    /// CHECK: this account is neither read from or written to
+    pub merkle_tree: UncheckedAccount<'info>,
 }
 
 pub fn hash_creators(creators: &[Creator]) -> Result<[u8; 32]> {
@@ -449,7 +450,7 @@ fn process_mint_v1<'info>(
     authority_bump: u8,
     authority: &mut Account<'info, TreeConfig>,
     merkle_tree: &AccountInfo<'info>,
-    candy_wrapper: &Program<'info, Wrapper>,
+    wrapper: &Program<'info, Wrapper>,
     compression_program: &AccountInfo<'info>,
 ) -> Result<()> {
     assert_metadata_is_mpl_compatible(&message)?;
@@ -510,7 +511,7 @@ fn process_mint_v1<'info>(
     };
 
     emit!(new_nft);
-    wrap_event(new_nft.try_to_vec()?, candy_wrapper)?;
+    wrap_event(new_nft.try_to_vec()?, wrapper)?;
 
     emit!(leaf.to_event());
 
@@ -520,7 +521,7 @@ fn process_mint_v1<'info>(
         &compression_program.to_account_info(),
         &authority.to_account_info(),
         &merkle_tree.to_account_info(),
-        &candy_wrapper.to_account_info(),
+        &wrapper.to_account_info(),
         leaf.to_node(),
     )
 }
@@ -535,8 +536,8 @@ fn process_creator_verification<'info>(
     mut message: MetadataArgs,
     verify: bool,
 ) -> Result<()> {
-    let owner = ctx.accounts.owner.to_account_info();
-    let delegate = ctx.accounts.delegate.to_account_info();
+    let owner = ctx.accounts.leaf_owner.to_account_info();
+    let delegate = ctx.accounts.leaf_delegate.to_account_info();
     let merkle_tree = ctx.accounts.merkle_tree.to_account_info();
 
     let creator = ctx.accounts.creator.key();
@@ -611,11 +612,11 @@ fn process_creator_verification<'info>(
     emit!(new_leaf.to_event());
     replace_leaf(
         &merkle_tree.key(),
-        *ctx.bumps.get("authority").unwrap(),
+        *ctx.bumps.get("tree_authority").unwrap(),
         &ctx.accounts.compression_program.to_account_info(),
-        &ctx.accounts.authority.to_account_info(),
+        &ctx.accounts.tree_authority.to_account_info(),
         &ctx.accounts.merkle_tree.to_account_info(),
-        &ctx.accounts.candy_wrapper.to_account_info(),
+        &ctx.accounts.log_wrapper.to_account_info(),
         ctx.remaining_accounts,
         root,
         previous_leaf.to_node(),
@@ -635,8 +636,8 @@ fn process_collection_verification<'info>(
     verify: bool,
     new_collection: Option<[u8; 32]>,
 ) -> Result<()> {
-    let owner = ctx.accounts.owner.to_account_info();
-    let delegate = ctx.accounts.delegate.to_account_info();
+    let owner = ctx.accounts.leaf_owner.to_account_info();
+    let delegate = ctx.accounts.leaf_delegate.to_account_info();
     let merkle_tree = ctx.accounts.merkle_tree.to_account_info();
     let collection_metadata = &ctx.accounts.collection_metadata;
     let collection_mint = ctx.accounts.collection_mint.to_account_info();
@@ -784,9 +785,9 @@ fn process_collection_verification<'info>(
         &merkle_tree.key(),
         *ctx.bumps.get("authority").unwrap(),
         &ctx.accounts.compression_program.to_account_info(),
-        &ctx.accounts.authority.to_account_info(),
+        &ctx.accounts.tree_authority.to_account_info(),
         &ctx.accounts.merkle_tree.to_account_info(),
-        &ctx.accounts.candy_wrapper.to_account_info(),
+        &ctx.accounts.log_wrapper.to_account_info(),
         ctx.remaining_accounts,
         root,
         previous_leaf.to_node(),
@@ -806,11 +807,11 @@ pub mod bubblegum {
     ) -> Result<()> {
         let merkle_tree = ctx.accounts.merkle_tree.to_account_info();
         let seed = merkle_tree.key();
-        let seeds = &[seed.as_ref(), &[*ctx.bumps.get("authority").unwrap()]];
-        let authority = &mut ctx.accounts.authority;
+        let seeds = &[seed.as_ref(), &[*ctx.bumps.get("tree_authority").unwrap()]];
+        let authority = &mut ctx.accounts.tree_authority;
         authority.set_inner(TreeConfig {
-            creator: ctx.accounts.tree_creator.key(),
-            delegate: ctx.accounts.tree_creator.key(),
+            tree_creator: ctx.accounts.tree_creator.key(),
+            tree_delegate: ctx.accounts.tree_creator.key(),
             total_mint_capacity: 1 << max_depth,
             num_minted: 0,
         });
@@ -818,9 +819,9 @@ pub mod bubblegum {
         let cpi_ctx = CpiContext::new_with_signer(
             ctx.accounts.compression_program.to_account_info(),
             spl_compression::cpi::accounts::Initialize {
-                authority: ctx.accounts.authority.to_account_info(),
+                authority: ctx.accounts.tree_authority.to_account_info(),
                 merkle_tree,
-                log_wrapper: ctx.accounts.candy_wrapper.to_account_info(),
+                log_wrapper: ctx.accounts.log_wrapper.to_account_info(),
             },
             authority_pda_signer,
         );
@@ -828,7 +829,7 @@ pub mod bubblegum {
     }
 
     pub fn set_tree_delegate(ctx: Context<SetTreeDelegate>) -> Result<()> {
-        ctx.accounts.tree_authority.delegate = ctx.accounts.new_delegate.key();
+        ctx.accounts.tree_authority.tree_delegate = ctx.accounts.new_tree_delegate.key();
         Ok(())
     }
 
@@ -836,11 +837,12 @@ pub mod bubblegum {
         // TODO -> Separate V1 / V1 into seperate instructions
         let payer = ctx.accounts.payer.key();
         let incoming_tree_delegate = ctx.accounts.tree_delegate.key();
-        let tree_creator = ctx.accounts.authority.creator;
-        let tree_delegate = ctx.accounts.authority.delegate;
-        let owner = ctx.accounts.owner.key();
-        let delegate = ctx.accounts.delegate.key();
-        let authority = &mut ctx.accounts.authority;
+
+        let owner = ctx.accounts.leaf_owner.key();
+        let delegate = ctx.accounts.leaf_delegate.key();
+        let authority = &mut ctx.accounts.tree_authority;
+        let tree_creator = authority.tree_creator;
+        let tree_delegate = authority.tree_delegate;
         let merkle_tree = &ctx.accounts.merkle_tree;
 
         require!(
@@ -874,10 +876,10 @@ pub mod bubblegum {
             owner,
             delegate,
             metadata_auth,
-            *ctx.bumps.get("authority").unwrap(),
+            *ctx.bumps.get("tree_authority").unwrap(),
             authority,
             merkle_tree,
-            &ctx.accounts.candy_wrapper,
+            &ctx.accounts.log_wrapper,
             &ctx.accounts.compression_program,
         )?;
 
@@ -981,8 +983,8 @@ pub mod bubblegum {
         collection: [u8; 32],
     ) -> Result<()> {
         let incoming_tree_delegate = &ctx.accounts.tree_delegate;
-        let tree_creator = ctx.accounts.authority.creator;
-        let tree_delegate = ctx.accounts.authority.delegate;
+        let tree_creator = ctx.accounts.tree_authority.tree_creator;
+        let tree_delegate = ctx.accounts.tree_authority.tree_delegate;
         let collection_metadata = &ctx.accounts.collection_metadata;
 
         // Require that either the tree authority signed this transaction, or the tree authority is
@@ -1029,15 +1031,15 @@ pub mod bubblegum {
     ) -> Result<()> {
         // TODO add back version to select hash schema
         let merkle_tree = ctx.accounts.merkle_tree.to_account_info();
-        let owner = ctx.accounts.owner.to_account_info();
-        let delegate = ctx.accounts.delegate.to_account_info();
+        let owner = ctx.accounts.leaf_owner.to_account_info();
+        let delegate = ctx.accounts.leaf_delegate.to_account_info();
 
         // Transfers must be initiated by either the leaf owner or leaf delegate.
         require!(
             owner.is_signer || delegate.is_signer,
             BubblegumError::LeafAuthorityMustSign
         );
-        let new_owner = ctx.accounts.new_owner.key();
+        let new_owner = ctx.accounts.new_leaf_owner.key();
         let asset_id = get_asset_id(&merkle_tree.key(), nonce);
         let previous_leaf = LeafSchema::new_v0(
             asset_id,
@@ -1059,11 +1061,11 @@ pub mod bubblegum {
         emit!(new_leaf.to_event());
         replace_leaf(
             &merkle_tree.key(),
-            *ctx.bumps.get("authority").unwrap(),
+            *ctx.bumps.get("tree_authority").unwrap(),
             &ctx.accounts.compression_program.to_account_info(),
-            &ctx.accounts.authority.to_account_info(),
+            &ctx.accounts.tree_authority.to_account_info(),
             &ctx.accounts.merkle_tree.to_account_info(),
-            &ctx.accounts.candy_wrapper.to_account_info(),
+            &ctx.accounts.log_wrapper.to_account_info(),
             ctx.remaining_accounts,
             root,
             previous_leaf.to_node(),
@@ -1081,9 +1083,9 @@ pub mod bubblegum {
         index: u32,
     ) -> Result<()> {
         let merkle_tree = ctx.accounts.merkle_tree.to_account_info();
-        let owner = ctx.accounts.owner.key();
-        let previous_delegate = ctx.accounts.previous_delegate.key();
-        let new_delegate = ctx.accounts.new_delegate.key();
+        let owner = ctx.accounts.leaf_owner.key();
+        let previous_delegate = ctx.accounts.previous_leaf_delegate.key();
+        let new_delegate = ctx.accounts.new_leaf_delegate.key();
         let asset_id = get_asset_id(&merkle_tree.key(), nonce);
         let previous_leaf = LeafSchema::new_v0(
             asset_id,
@@ -1101,15 +1103,15 @@ pub mod bubblegum {
             data_hash,
             creator_hash,
         );
-        wrap_event(new_leaf.try_to_vec()?, &ctx.accounts.candy_wrapper)?;
+        wrap_event(new_leaf.try_to_vec()?, &ctx.accounts.log_wrapper)?;
         emit!(new_leaf.to_event());
         replace_leaf(
             &merkle_tree.key(),
-            *ctx.bumps.get("authority").unwrap(),
+            *ctx.bumps.get("tree_authority").unwrap(),
             &ctx.accounts.compression_program.to_account_info(),
-            &ctx.accounts.authority.to_account_info(),
+            &ctx.accounts.tree_authority.to_account_info(),
             &ctx.accounts.merkle_tree.to_account_info(),
-            &ctx.accounts.candy_wrapper.to_account_info(),
+            &ctx.accounts.log_wrapper.to_account_info(),
             ctx.remaining_accounts,
             root,
             previous_leaf.to_node(),
@@ -1126,8 +1128,8 @@ pub mod bubblegum {
         nonce: u64,
         index: u32,
     ) -> Result<()> {
-        let owner = ctx.accounts.owner.to_account_info();
-        let delegate = ctx.accounts.delegate.to_account_info();
+        let owner = ctx.accounts.leaf_owner.to_account_info();
+        let delegate = ctx.accounts.leaf_delegate.to_account_info();
 
         // Burn must be initiated by either the leaf owner or leaf delegate.
         require!(
@@ -1147,14 +1149,14 @@ pub mod bubblegum {
         );
         emit!(previous_leaf.to_event());
         let new_leaf = Node::default();
-        wrap_event(new_leaf.try_to_vec()?, &ctx.accounts.candy_wrapper)?;
+        wrap_event(new_leaf.try_to_vec()?, &ctx.accounts.log_wrapper)?;
         replace_leaf(
             &merkle_tree.key(),
-            *ctx.bumps.get("authority").unwrap(),
+            *ctx.bumps.get("tree_authority").unwrap(),
             &ctx.accounts.compression_program.to_account_info(),
-            &ctx.accounts.authority.to_account_info(),
+            &ctx.accounts.tree_authority.to_account_info(),
             &ctx.accounts.merkle_tree.to_account_info(),
-            &ctx.accounts.candy_wrapper.to_account_info(),
+            &ctx.accounts.log_wrapper.to_account_info(),
             ctx.remaining_accounts,
             root,
             previous_leaf.to_node(),
@@ -1171,22 +1173,22 @@ pub mod bubblegum {
         nonce: u64,
         index: u32,
     ) -> Result<()> {
-        let owner = ctx.accounts.owner.key();
-        let delegate = ctx.accounts.delegate.key();
+        let owner = ctx.accounts.leaf_owner.key();
+        let delegate = ctx.accounts.leaf_delegate.key();
         let merkle_tree = ctx.accounts.merkle_tree.to_account_info();
         let asset_id = get_asset_id(&merkle_tree.key(), nonce);
         let previous_leaf =
             LeafSchema::new_v0(asset_id, owner, delegate, nonce, data_hash, creator_hash);
         emit!(previous_leaf.to_event());
         let new_leaf = Node::default();
-        wrap_event(new_leaf.try_to_vec()?, &ctx.accounts.candy_wrapper)?;
+        wrap_event(new_leaf.try_to_vec()?, &ctx.accounts.log_wrapper)?;
         replace_leaf(
             &merkle_tree.key(),
-            *ctx.bumps.get("authority").unwrap(),
+            *ctx.bumps.get("tree_authority").unwrap(),
             &ctx.accounts.compression_program.to_account_info(),
-            &ctx.accounts.authority.to_account_info(),
+            &ctx.accounts.tree_authority.to_account_info(),
             &ctx.accounts.merkle_tree.to_account_info(),
-            &ctx.accounts.candy_wrapper.to_account_info(),
+            &ctx.accounts.log_wrapper.to_account_info(),
             ctx.remaining_accounts,
             root,
             previous_leaf.to_node(),
@@ -1207,25 +1209,22 @@ pub mod bubblegum {
         let voucher = &ctx.accounts.voucher;
         match ctx.accounts.voucher.leaf_schema {
             LeafSchema::V1 { owner, .. } => assert_pubkey_equal(
-                &ctx.accounts.owner.key(),
+                &ctx.accounts.leaf_owner.key(),
                 &owner,
                 Some(BubblegumError::AssetOwnerMismatch.into()),
             ),
         }?;
         let merkle_tree = ctx.accounts.merkle_tree.to_account_info();
         emit!(voucher.leaf_schema.to_event());
-        wrap_event(
-            voucher.leaf_schema.try_to_vec()?,
-            &ctx.accounts.candy_wrapper,
-        )?;
+        wrap_event(voucher.leaf_schema.try_to_vec()?, &ctx.accounts.log_wrapper)?;
 
         replace_leaf(
             &merkle_tree.key(),
-            *ctx.bumps.get("authority").unwrap(),
+            *ctx.bumps.get("tree_authority").unwrap(),
             &ctx.accounts.compression_program.to_account_info(),
-            &ctx.accounts.authority.to_account_info(),
+            &ctx.accounts.tree_authority.to_account_info(),
             &ctx.accounts.merkle_tree.to_account_info(),
-            &ctx.accounts.candy_wrapper.to_account_info(),
+            &ctx.accounts.log_wrapper.to_account_info(),
             ctx.remaining_accounts,
             root,
             [0; 32],
@@ -1247,7 +1246,7 @@ pub mod bubblegum {
                 if !cmp_bytes(&data_hash, &incoming_data_hash, 32) {
                     return Err(BubblegumError::HashingMismatch.into());
                 }
-                if !cmp_pubkeys(&owner, ctx.accounts.owner.key) {
+                if !cmp_pubkeys(&owner, ctx.accounts.leaf_owner.key) {
                     return Err(BubblegumError::AssetOwnerMismatch.into());
                 }
                 NFTDecompressionEvent {
@@ -1264,14 +1263,14 @@ pub mod bubblegum {
                 if ctx.accounts.mint.data_is_empty() {
                     invoke_signed(
                         &system_instruction::create_account(
-                            &ctx.accounts.owner.key(),
+                            &ctx.accounts.leaf_owner.key(),
                             &ctx.accounts.mint.key(),
                             Rent::get()?.minimum_balance(SplMint::LEN),
                             SplMint::LEN as u64,
                             &spl_token::id(),
                         ),
                         &[
-                            ctx.accounts.owner.to_account_info(),
+                            ctx.accounts.leaf_owner.to_account_info(),
                             ctx.accounts.mint.to_account_info(),
                             ctx.accounts.system_program.to_account_info(),
                         ],
@@ -1299,12 +1298,12 @@ pub mod bubblegum {
                 if ctx.accounts.token_account.data_is_empty() {
                     invoke(
                         &spl_associated_token_account::instruction::create_associated_token_account(
-                            &ctx.accounts.owner.key(),
-                            &ctx.accounts.owner.key(),
+                            &ctx.accounts.leaf_owner.key(),
+                            &ctx.accounts.leaf_owner.key(),
                             &ctx.accounts.mint.key(),
                         ),
                         &[
-                            ctx.accounts.owner.to_account_info(),
+                            ctx.accounts.leaf_owner.to_account_info(),
                             ctx.accounts.mint.to_account_info(),
                             ctx.accounts.token_account.to_account_info(),
                             ctx.accounts.token_program.to_account_info(),
@@ -1342,7 +1341,7 @@ pub mod bubblegum {
             ctx.accounts.metadata.to_account_info(),
             ctx.accounts.mint.to_account_info(),
             ctx.accounts.mint_authority.to_account_info(),
-            ctx.accounts.owner.to_account_info(),
+            ctx.accounts.leaf_owner.to_account_info(),
             ctx.accounts.token_metadata_program.to_account_info(),
             ctx.accounts.token_program.to_account_info(),
             ctx.accounts.system_program.to_account_info(),
@@ -1353,7 +1352,7 @@ pub mod bubblegum {
             ctx.accounts.master_edition.to_account_info(),
             ctx.accounts.mint.to_account_info(),
             ctx.accounts.mint_authority.to_account_info(),
-            ctx.accounts.owner.to_account_info(),
+            ctx.accounts.leaf_owner.to_account_info(),
             ctx.accounts.metadata.to_account_info(),
             ctx.accounts.token_metadata_program.to_account_info(),
             ctx.accounts.token_program.to_account_info(),
@@ -1368,7 +1367,7 @@ pub mod bubblegum {
                 ctx.accounts.metadata.key(),
                 ctx.accounts.mint.key(),
                 ctx.accounts.mint_authority.key(),
-                ctx.accounts.owner.key(),
+                ctx.accounts.leaf_owner.key(),
                 ctx.accounts.mint_authority.key(),
                 metadata.name.clone(),
                 metadata.symbol.clone(),
@@ -1411,7 +1410,7 @@ pub mod bubblegum {
                 ctx.accounts.mint_authority.key(),
                 ctx.accounts.mint_authority.key(),
                 ctx.accounts.metadata.key(),
-                ctx.accounts.owner.key(),
+                ctx.accounts.leaf_owner.key(),
                 Some(0),
             ),
             master_edition_infos.as_slice(),

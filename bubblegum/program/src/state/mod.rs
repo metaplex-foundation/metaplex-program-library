@@ -16,8 +16,8 @@ pub const COLLECTION_CPI_PREFIX: &str = "collection_cpi";
 #[account]
 #[derive(Copy)]
 pub struct TreeConfig {
-    pub creator: Pubkey,
-    pub delegate: Pubkey,
+    pub tree_creator: Pubkey,
+    pub tree_delegate: Pubkey,
     pub total_mint_capacity: u64,
     pub num_minted: u64,
 }
