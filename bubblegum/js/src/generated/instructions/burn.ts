@@ -43,23 +43,23 @@ export const burnStruct = new beet.BeetArgsStruct<
 /**
  * Accounts required by the _burn_ instruction
  *
- * @property [] authority
- * @property [] candyWrapper
- * @property [] compressionProgram
- * @property [] owner
- * @property [] delegate
+ * @property [] treeAuthority
+ * @property [] leafOwner
+ * @property [] leafDelegate
  * @property [_writable_] merkleTree
+ * @property [] logWrapper
+ * @property [] compressionProgram
  * @category Instructions
  * @category Burn
  * @category generated
  */
 export type BurnInstructionAccounts = {
-  authority: web3.PublicKey
-  candyWrapper: web3.PublicKey
-  compressionProgram: web3.PublicKey
-  owner: web3.PublicKey
-  delegate: web3.PublicKey
+  treeAuthority: web3.PublicKey
+  leafOwner: web3.PublicKey
+  leafDelegate: web3.PublicKey
   merkleTree: web3.PublicKey
+  logWrapper: web3.PublicKey
+  compressionProgram: web3.PublicKey
 }
 
 export const burnInstructionDiscriminator = [116, 110, 29, 56, 107, 219, 42, 93]
@@ -85,33 +85,33 @@ export function createBurnInstruction(
   })
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: accounts.authority,
+      pubkey: accounts.treeAuthority,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: accounts.candyWrapper,
+      pubkey: accounts.leafOwner,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: accounts.compressionProgram,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.owner,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.delegate,
+      pubkey: accounts.leafDelegate,
       isWritable: false,
       isSigner: false,
     },
     {
       pubkey: accounts.merkleTree,
       isWritable: true,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.logWrapper,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.compressionProgram,
+      isWritable: false,
       isSigner: false,
     },
   ]

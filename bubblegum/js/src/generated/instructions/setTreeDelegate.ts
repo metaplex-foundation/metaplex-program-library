@@ -22,19 +22,19 @@ export const setTreeDelegateStruct = new beet.BeetArgsStruct<{
 /**
  * Accounts required by the _setTreeDelegate_ instruction
  *
- * @property [**signer**] creator
- * @property [] newDelegate
- * @property [] merkleTree
  * @property [_writable_] treeAuthority
+ * @property [**signer**] treeCreator
+ * @property [] newTreeDelegate
+ * @property [] merkleTree
  * @category Instructions
  * @category SetTreeDelegate
  * @category generated
  */
 export type SetTreeDelegateInstructionAccounts = {
-  creator: web3.PublicKey
-  newDelegate: web3.PublicKey
-  merkleTree: web3.PublicKey
   treeAuthority: web3.PublicKey
+  treeCreator: web3.PublicKey
+  newTreeDelegate: web3.PublicKey
+  merkleTree: web3.PublicKey
 }
 
 export const setTreeDelegateInstructionDiscriminator = [
@@ -58,23 +58,23 @@ export function createSetTreeDelegateInstruction(
   })
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: accounts.creator,
+      pubkey: accounts.treeAuthority,
+      isWritable: true,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.treeCreator,
       isWritable: false,
       isSigner: true,
     },
     {
-      pubkey: accounts.newDelegate,
+      pubkey: accounts.newTreeDelegate,
       isWritable: false,
       isSigner: false,
     },
     {
       pubkey: accounts.merkleTree,
       isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.treeAuthority,
-      isWritable: true,
       isSigner: false,
     },
   ]
