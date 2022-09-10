@@ -12,6 +12,7 @@ use mpl_token_metadata;
 use std::io::Write;
 
 pub mod merkle_proof;
+// comment/change to trigger workflow
 
 declare_id!("gdrpGjVffourzkdDRrQmySw4aTHr8a3xmQzzxSwFD1a");
 pub const CANDY_MACHINE_V1_PROGRAM_ID: Pubkey = Pubkey::new_from_array([

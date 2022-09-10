@@ -21,7 +21,7 @@ export type ClaimStatusArgs = {
   amount: beet.bignum;
 };
 
-const claimStatusDiscriminator = [22, 183, 249, 157, 247, 95, 150, 96];
+export const claimStatusDiscriminator = [22, 183, 249, 157, 247, 95, 150, 96];
 /**
  * Holds the data for the {@link ClaimStatus} Account and provides de/serialization
  * functionality for that data
@@ -67,6 +67,18 @@ export class ClaimStatus implements ClaimStatusArgs {
       throw new Error(`Unable to find ClaimStatus account at ${address}`);
     }
     return ClaimStatus.fromAccountInfo(accountInfo, 0)[0];
+  }
+
+  /**
+   * Provides a {@link web3.Connection.getProgramAccounts} config builder,
+   * to fetch accounts matching filters that can be specified via that builder.
+   *
+   * @param programId - the program that owns the accounts we are filtering
+   */
+  static gpaBuilder(
+    programId: web3.PublicKey = new web3.PublicKey('gdrpGjVffourzkdDRrQmySw4aTHr8a3xmQzzxSwFD1a'),
+  ) {
+    return beetSolana.GpaBuilder.fromStruct(programId, claimStatusBeet);
   }
 
   /**
@@ -125,8 +137,28 @@ export class ClaimStatus implements ClaimStatusArgs {
     return {
       isClaimed: this.isClaimed,
       claimant: this.claimant.toBase58(),
-      claimedAt: this.claimedAt,
-      amount: this.amount,
+      claimedAt: (() => {
+        const x = <{ toNumber: () => number }>this.claimedAt;
+        if (typeof x.toNumber === 'function') {
+          try {
+            return x.toNumber();
+          } catch (_) {
+            return x;
+          }
+        }
+        return x;
+      })(),
+      amount: (() => {
+        const x = <{ toNumber: () => number }>this.amount;
+        if (typeof x.toNumber === 'function') {
+          try {
+            return x.toNumber();
+          } catch (_) {
+            return x;
+          }
+        }
+        return x;
+      })(),
     };
   }
 }

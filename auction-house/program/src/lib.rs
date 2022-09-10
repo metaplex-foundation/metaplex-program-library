@@ -2,6 +2,7 @@
 //! AuctionHouse is a protocol for marketplaces to implement a decentralized sales contract. It is simple, fast and very cheap. AuctionHouse is a Solana program available on Mainnet Beta and Devnet. Anyone can create an AuctionHouse and accept any SPL token they wish.
 //!
 //! Full docs can be found [here](https://docs.metaplex.com/auction-house/definition).
+// comment/change to trigger workflow
 
 pub mod auctioneer;
 pub mod bid;

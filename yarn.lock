@@ -1219,9 +1219,10 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@metaplex-foundation/mpl-gumdrop@workspace:gumdrop/js"
   dependencies:
-    "@metaplex-foundation/beet": ^0.1.0
-    "@metaplex-foundation/beet-solana": ^0.1.1
-    "@metaplex-foundation/solita": ^0.2.0
+    "@metaplex-foundation/beet": ^0.6.1
+    "@metaplex-foundation/beet-solana": ^0.3.1
+    "@metaplex-foundation/cusper": ^0.0.2
+    "@metaplex-foundation/solita": ^0.15.2
     "@solana/web3.js": ^1.35.1
     "@types/tape": ^4.13.2
     eslint: ^8.3.0
@@ -1440,23 +1441,6 @@ __metadata:
   bin:
     solita: dist/src/cli/solita.js
   checksum: d38eb725b874cac09685b484d603cd0c215bb74c2e8c5a7481f06dd464686a078a0bd74954675fa5265352fbe92deaa6f397f6b99fd178930a3b813ea392c325
-  languageName: node
-  linkType: hard
-
-"@metaplex-foundation/solita@npm:^0.2.0":
-  version: 0.2.1
-  resolution: "@metaplex-foundation/solita@npm:0.2.1"
-  dependencies:
-    "@metaplex-foundation/beet": ^0.1.0
-    "@metaplex-foundation/beet-solana": ^0.1.1
-    "@solana/web3.js": ^1.36.0
-    camelcase: ^6.2.1
-    debug: ^4.3.3
-    js-sha256: ^0.9.0
-    prettier: ^2.5.1
-    snake-case: ^3.0.4
-    spok: ^1.4.3
-  checksum: 807e3ef055f6234e1784143da54a20c80ad3f6614b483773b82c57b20a814d2a33dfeff21a2b854e85b8d238ceccfc7711e7349b6bcbbb77cc3381e8b7505f2f
   languageName: node
   linkType: hard
 

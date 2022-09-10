@@ -21,7 +21,7 @@ export type MerkleDistributorArgs = {
   temporal: web3.PublicKey;
 };
 
-const merkleDistributorDiscriminator = [77, 119, 139, 70, 84, 247, 12, 26];
+export const merkleDistributorDiscriminator = [77, 119, 139, 70, 84, 247, 12, 26];
 /**
  * Holds the data for the {@link MerkleDistributor} Account and provides de/serialization
  * functionality for that data
@@ -70,6 +70,18 @@ export class MerkleDistributor implements MerkleDistributorArgs {
       throw new Error(`Unable to find MerkleDistributor account at ${address}`);
     }
     return MerkleDistributor.fromAccountInfo(accountInfo, 0)[0];
+  }
+
+  /**
+   * Provides a {@link web3.Connection.getProgramAccounts} config builder,
+   * to fetch accounts matching filters that can be specified via that builder.
+   *
+   * @param programId - the program that owns the accounts we are filtering
+   */
+  static gpaBuilder(
+    programId: web3.PublicKey = new web3.PublicKey('gdrpGjVffourzkdDRrQmySw4aTHr8a3xmQzzxSwFD1a'),
+  ) {
+    return beetSolana.GpaBuilder.fromStruct(programId, merkleDistributorBeet);
   }
 
   /**
