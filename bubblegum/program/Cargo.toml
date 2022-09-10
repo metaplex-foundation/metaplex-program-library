@@ -20,7 +20,7 @@ anchor-spl = { version = "0.25.0" }
 spl-token = { version = "3.3.0", features = ["no-entrypoint"] }
 spl-associated-token-account = { version = "1.0.5", features = ["no-entrypoint"] }
 mpl-token-metadata = { version = "1.3.6", features = ["no-entrypoint"] }
-spl-compression = { git = "https://github.com/solana-labs/solana-program-library", rev = "7c7507f4ec1f320bbc33af459d4d8b5573a6a906", features = ["cpi"] }
+spl-compression = { version="0.1.0", git = "https://github.com/solana-labs/solana-program-library", rev = "7c7507f4ec1f320bbc33af459d4d8b5573a6a906", features = ["cpi"] }
 bytemuck = "1.8.0"
 solana-program = "1.10.29"
 
