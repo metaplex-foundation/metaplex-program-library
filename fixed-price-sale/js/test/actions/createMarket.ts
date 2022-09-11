@@ -1,9 +1,11 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import test from 'tape';
 import {
   assertConfirmedTransaction,
   defaultSendOptions,
   PayerTransactionHandler,
 } from '@metaplex-foundation/amman';
+import * as web3 from '@solana/web3.js';
 import { Connection, Keypair, PublicKey, Transaction } from '@solana/web3.js';
 
 import { createTokenAccount } from '../transactions';
@@ -68,6 +70,12 @@ export const createMarket = async ({
 
   const market = Keypair.generate();
 
+  const remainingAccounts: web3.AccountMeta[] = [];
+
+  if (collectionMint) {
+    remainingAccounts.push({ pubkey: collectionMint!, isWritable: true, isSigner: false });
+  }
+
   const instruction = createCreateMarketInstruction(
     {
       market: market.publicKey,
@@ -77,7 +85,7 @@ export const createMarket = async ({
       mint: treasuryMint,
       treasuryHolder: treasuryHolder.publicKey,
       owner: treasuryOwner,
-      collectionMint,
+      anchorRemainingAccounts: remainingAccounts,
     },
     {
       treasuryOwnerBump,

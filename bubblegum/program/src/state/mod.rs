@@ -49,15 +49,15 @@ impl TreeConfig {
 pub struct Voucher {
     pub leaf_schema: LeafSchema,
     pub index: u32,
-    pub merkle_slab: Pubkey,
+    pub merkle_tree: Pubkey,
 }
 
 impl Voucher {
-    pub fn new(leaf_schema: LeafSchema, index: u32, merkle_slab: Pubkey) -> Self {
+    pub fn new(leaf_schema: LeafSchema, index: u32, merkle_tree: Pubkey) -> Self {
         Self {
             leaf_schema,
             index,
-            merkle_slab,
+            merkle_tree,
         }
     }
 }

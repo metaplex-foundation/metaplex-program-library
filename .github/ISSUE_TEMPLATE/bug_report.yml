@@ -9,16 +9,14 @@ body:
       label: Which package is this bug report for?
       options:
         - auction-house
-        - auction
         - candy-machine
         - core
         - fixed-price-sale
         - gumdrop
-        - metaplex
+        - hydra
         - nft-packs
         - token-entangler
         - token-metadata
-        - token-vault
     validations:
       required: true
   - type: dropdown

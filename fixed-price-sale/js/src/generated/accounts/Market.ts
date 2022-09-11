@@ -35,7 +35,7 @@ export type MarketArgs = {
   gatekeeper: beet.COption<GatingConfig>;
 };
 
-const marketDiscriminator = [219, 190, 213, 55, 0, 227, 198, 154];
+export const marketDiscriminator = [219, 190, 213, 55, 0, 227, 198, 154];
 /**
  * Holds the data for the {@link Market} Account and provides de/serialization
  * functionality for that data
@@ -113,6 +113,18 @@ export class Market implements MarketArgs {
   }
 
   /**
+   * Provides a {@link web3.Connection.getProgramAccounts} config builder,
+   * to fetch accounts matching filters that can be specified via that builder.
+   *
+   * @param programId - the program that owns the accounts we are filtering
+   */
+  static gpaBuilder(
+    programId: web3.PublicKey = new web3.PublicKey('SaLeTjyUa5wXHnGuewUSyJ5JWZaHwz3TxqUntCE9czo'),
+  ) {
+    return beetSolana.GpaBuilder.fromStruct(programId, marketBeet);
+  }
+
+  /**
    * Deserializes the {@link Market} from the provided data Buffer.
    * @returns a tuple of the account data and the offset up to which the buffer was read to obtain it.
    */
@@ -177,12 +189,42 @@ export class Market implements MarketArgs {
       name: this.name,
       description: this.description,
       mutable: this.mutable,
-      price: this.price,
+      price: (() => {
+        const x = <{ toNumber: () => number }>this.price;
+        if (typeof x.toNumber === 'function') {
+          try {
+            return x.toNumber();
+          } catch (_) {
+            return x;
+          }
+        }
+        return x;
+      })(),
       piecesInOneWallet: this.piecesInOneWallet,
-      startDate: this.startDate,
+      startDate: (() => {
+        const x = <{ toNumber: () => number }>this.startDate;
+        if (typeof x.toNumber === 'function') {
+          try {
+            return x.toNumber();
+          } catch (_) {
+            return x;
+          }
+        }
+        return x;
+      })(),
       endDate: this.endDate,
       state: 'MarketState.' + MarketState[this.state],
-      fundsCollected: this.fundsCollected,
+      fundsCollected: (() => {
+        const x = <{ toNumber: () => number }>this.fundsCollected;
+        if (typeof x.toNumber === 'function') {
+          try {
+            return x.toNumber();
+          } catch (_) {
+            return x;
+          }
+        }
+        return x;
+      })(),
       gatekeeper: this.gatekeeper,
     };
   }

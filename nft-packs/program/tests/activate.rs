@@ -204,8 +204,8 @@ async fn fail_invalid_state() {
 
     context.warp_to_slot(3).unwrap();
 
-    let result = test_pack_set.activate(&mut context).await;
-    assert_custom_error!(result.unwrap_err(), NFTPacksError::CantActivatePack, 0);
+    let result = test_pack_set.activate(&mut context).await.unwrap_err();
+    assert_custom_error!(result, NFTPacksError::CantActivatePack, 0);
 }
 
 #[tokio::test]
@@ -219,6 +219,6 @@ async fn fail_activate_after_close() {
 
     context.warp_to_slot(6).unwrap();
 
-    let result = test_pack_set.activate(&mut context).await;
-    assert_custom_error!(result.unwrap_err(), NFTPacksError::CantActivatePack, 0);
+    let result = test_pack_set.activate(&mut context).await.unwrap_err();
+    assert_custom_error!(result, NFTPacksError::CantActivatePack, 0);
 }

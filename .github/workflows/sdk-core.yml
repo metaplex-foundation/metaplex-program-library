@@ -20,7 +20,7 @@ jobs:
       with:
         filters: |
           core:
-            - 'core/**'
+            - 'core/js/**'
 
   build-lint-and-test-core:
     needs: changes

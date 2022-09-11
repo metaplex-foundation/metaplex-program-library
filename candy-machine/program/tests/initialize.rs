@@ -27,6 +27,7 @@ use mpl_candy_machine::{
 };
 use utils::{custom_config, GatekeeperInfo};
 
+use crate::core::helpers::{assert_account_empty, get_balance};
 use crate::utils::helpers::test_start;
 use crate::{
     core::helpers::airdrop,
@@ -85,6 +86,12 @@ async fn init_default_success() {
         .mint_and_assert_successful(context, Some(1), true)
         .await
         .unwrap();
+    let pre_balance = get_balance(context, &candy_manager.authority.pubkey()).await;
+    candy_manager.withdraw(context).await.unwrap();
+    let post_balance = get_balance(context, &candy_manager.authority.pubkey()).await;
+    assert_account_empty(context, &candy_manager.candy_machine.pubkey()).await;
+    assert_account_empty(context, &candy_manager.collection_info.pda).await;
+    assert!(post_balance > pre_balance);
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]

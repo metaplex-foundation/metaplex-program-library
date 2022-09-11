@@ -109,8 +109,8 @@ mod init_selling_resource {
         .to_account_metas(None);
 
         let data = mpl_fixed_price_sale_instruction::InitSellingResource {
-            master_edition_bump: master_edition_bump,
-            vault_owner_bump: vault_owner_bump,
+            master_edition_bump,
+            vault_owner_bump,
             max_supply: Some(1),
         }
         .data();
@@ -243,8 +243,8 @@ mod init_selling_resource {
         .to_account_metas(None);
 
         let data = mpl_fixed_price_sale_instruction::InitSellingResource {
-            master_edition_bump: master_edition_bump,
-            vault_owner_bump: vault_owner_bump,
+            master_edition_bump,
+            vault_owner_bump,
             max_supply: Some(1337),
         }
         .data();
@@ -367,8 +367,8 @@ mod init_selling_resource {
         .to_account_metas(None);
 
         let data = mpl_fixed_price_sale_instruction::InitSellingResource {
-            master_edition_bump: master_edition_bump,
-            vault_owner_bump: vault_owner_bump,
+            master_edition_bump,
+            vault_owner_bump,
             max_supply: None,
         }
         .data();

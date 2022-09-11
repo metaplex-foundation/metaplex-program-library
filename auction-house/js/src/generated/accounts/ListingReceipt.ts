@@ -29,7 +29,7 @@ export type ListingReceiptArgs = {
   canceledAt: beet.COption<beet.bignum>;
 };
 
-const listingReceiptDiscriminator = [240, 71, 225, 94, 200, 75, 84, 231];
+export const listingReceiptDiscriminator = [240, 71, 225, 94, 200, 75, 84, 231];
 /**
  * Holds the data for the {@link ListingReceipt} Account and provides de/serialization
  * functionality for that data
@@ -99,6 +99,18 @@ export class ListingReceipt implements ListingReceiptArgs {
       throw new Error(`Unable to find ListingReceipt account at ${address}`);
     }
     return ListingReceipt.fromAccountInfo(accountInfo, 0)[0];
+  }
+
+  /**
+   * Provides a {@link web3.Connection.getProgramAccounts} config builder,
+   * to fetch accounts matching filters that can be specified via that builder.
+   *
+   * @param programId - the program that owns the accounts we are filtering
+   */
+  static gpaBuilder(
+    programId: web3.PublicKey = new web3.PublicKey('hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk'),
+  ) {
+    return beetSolana.GpaBuilder.fromStruct(programId, listingReceiptBeet);
   }
 
   /**

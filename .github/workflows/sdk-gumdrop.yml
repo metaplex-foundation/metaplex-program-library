@@ -21,9 +21,9 @@ jobs:
       with:
         filters: |
           core:
-            - 'core/**'
+            - 'core/js/**'
           package:
-            - 'gumdrop/**'
+            - 'gumdrop/js/**'
 
   build-lint-and-test-gumdrop:
     needs: changes
