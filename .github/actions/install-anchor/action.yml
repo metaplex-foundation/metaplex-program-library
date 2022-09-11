@@ -16,6 +16,6 @@ runs:
           ./target/
         key: anchor-cli-${{ runner.os }}-v0000-${{ env.ANCHOR_VERSION }}
     - run:
-        cargo install --git https://github.com/project-serum/anchor --tag "v$ANCHOR_VERSION" anchor-cli --locked
+        cargo install --git https://github.com/coral-xyz/anchor --tag "v$ANCHOR_VERSION" anchor-cli --locked
       shell: bash
       if: steps.cache-anchor-cli.outputs.cache-hit != 'true'

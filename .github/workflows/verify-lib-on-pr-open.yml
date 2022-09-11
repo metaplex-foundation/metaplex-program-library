@@ -14,7 +14,7 @@ permissions:
 
 env:
   NODE_VERSION: 17.0.1
-  ANCHOR_VERSION: 0.22.0
+  ANCHOR_VERSION: 0.24.2
   SOLANA_VERSION_STABLE: 1.9.22
   RUST_TOOLCHAIN: stable
 
@@ -95,7 +95,7 @@ jobs:
       - uses: ./.github/actions/install-solana
         with:
           solana_version: ${{ env.SOLANA_VERSION_STABLE }}
-
+      - uses: ./.github/actions/install-anchor
       - name: Generate library for modified packages
         id: generate-package-lib
         # YARN_ENABLE_IMMUTABLE_INSTALLS=false is needed otherwise, we get this error:
