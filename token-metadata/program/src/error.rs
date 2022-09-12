@@ -460,6 +460,22 @@ pub enum MetadataError {
     /// 116 - Must be Update Authority to set the Constraint Model.
     #[error("Must be Update Authority to set the Constraint Model.")]
     MustBeUpdateAuthToSetModel,
+
+    /// 117 - Missing EscrowConstraintModel.
+    #[error("Missing EscrowConstraintModel.")]
+    MissingEscrowConstraintModel,
+
+    /// 118 - Invalid EscrowConstraintModel.
+    #[error("Invalid EscrowConstraintModel.")]
+    InvalidEscrowConstraintModel,
+
+    /// 119 - Escrow Constraint Violation
+    #[error("Escrow Constraint Violation")]
+    EscrowConstraintViolation,
+
+    /// 120 - Invalid Escrow Constraint Index
+    #[error("Invalid Escrow Constraint Index")]
+    InvalidEscrowConstraintIndex,
 }
 
 impl PrintProgramError for MetadataError {
