@@ -2648,13 +2648,14 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "discriminator",
+            "name": "key",
             "type": {
-              "array": [
-                "u8",
-                8
-              ]
+              "defined": "Key"
             }
+          },
+          {
+            "name": "baseToken",
+            "type": "publicKey"
           },
           {
             "name": "tokens",
@@ -3175,6 +3176,9 @@
           },
           {
             "name": "CollectionAuthorityRecord"
+          },
+          {
+            "name": "TokenOwnedEscrow"
           }
         ]
       }

@@ -8,6 +8,7 @@
 import * as web3 from '@solana/web3.js';
 import * as beet from '@metaplex-foundation/beet';
 import * as beetSolana from '@metaplex-foundation/beet-solana';
+import { Key, keyBeet } from '../types/Key';
 
 /**
  * Arguments used to create {@link TokenOwnedEscrow}
@@ -15,7 +16,8 @@ import * as beetSolana from '@metaplex-foundation/beet-solana';
  * @category generated
  */
 export type TokenOwnedEscrowArgs = {
-  discriminator: number[] /* size: 8 */;
+  key: Key;
+  baseToken: web3.PublicKey;
   tokens: beet.COption<web3.PublicKey>[];
   delegates: web3.PublicKey[];
   model: beet.COption<web3.PublicKey>;
@@ -29,7 +31,8 @@ export type TokenOwnedEscrowArgs = {
  */
 export class TokenOwnedEscrow implements TokenOwnedEscrowArgs {
   private constructor(
-    readonly discriminator: number[] /* size: 8 */,
+    readonly key: Key,
+    readonly baseToken: web3.PublicKey,
     readonly tokens: beet.COption<web3.PublicKey>[],
     readonly delegates: web3.PublicKey[],
     readonly model: beet.COption<web3.PublicKey>,
@@ -39,7 +42,7 @@ export class TokenOwnedEscrow implements TokenOwnedEscrowArgs {
    * Creates a {@link TokenOwnedEscrow} instance from the provided args.
    */
   static fromArgs(args: TokenOwnedEscrowArgs) {
-    return new TokenOwnedEscrow(args.discriminator, args.tokens, args.delegates, args.model);
+    return new TokenOwnedEscrow(args.key, args.baseToken, args.tokens, args.delegates, args.model);
   }
 
   /**
@@ -135,7 +138,8 @@ export class TokenOwnedEscrow implements TokenOwnedEscrowArgs {
    */
   pretty() {
     return {
-      discriminator: this.discriminator,
+      key: 'Key.' + Key[this.key],
+      baseToken: this.baseToken.toBase58(),
       tokens: this.tokens,
       delegates: this.delegates,
       model: this.model,
@@ -152,7 +156,8 @@ export const tokenOwnedEscrowBeet = new beet.FixableBeetStruct<
   TokenOwnedEscrowArgs
 >(
   [
-    ['discriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
+    ['key', keyBeet],
+    ['baseToken', beetSolana.publicKey],
     ['tokens', beet.array(beet.coption(beetSolana.publicKey))],
     ['delegates', beet.array(beetSolana.publicKey)],
     ['model', beet.coption(beetSolana.publicKey)],
