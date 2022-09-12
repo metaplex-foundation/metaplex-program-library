@@ -945,29 +945,19 @@ impl EditionMarker {
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, ShankAccount)]
 pub struct TokenOwnedEscrow {
     pub key: Key,
+    pub base_token: Pubkey,
     pub tokens: Vec<Option<Pubkey>>,
     pub delegates: Vec<Pubkey>,
     pub model: Option<Pubkey>,
 }
 
-impl Default for TokenOwnedEscrow {
-    fn default() -> Self {
-        Self {
-            key: Key::TokenOwnedEscrow,
-            tokens: vec![],
-            delegates: vec![],
-            model: None,
-        }
-    }
-}
-
 impl TokenOwnedEscrow {
     pub fn len(&self) -> usize {
-        let mut len = 8;
-        len += 4 + self.tokens.len() * mem::size_of::<Pubkey>();
+        let mut len = mem::size_of::<Key>();
+        len += mem::size_of::<Pubkey>();
+        len += 4 + self.tokens.len() * mem::size_of::<Option<Pubkey>>();
         len += 4 + self.delegates.len() * mem::size_of::<Pubkey>();
         len += mem::size_of::<Option<Pubkey>>();
-        len += 1; // TODO: unknown_overhead
         len
     }
 

@@ -2082,7 +2082,13 @@ pub fn create_escrow_account(program_id: &Pubkey, accounts: &[AccountInfo]) -> P
     ];
 
     // Initialize a default (empty) escrow structure.
-    let mut toe = TokenOwnedEscrow::default();
+    let mut toe = TokenOwnedEscrow {
+        key: Key::TokenOwnedEscrow,
+        base_token: *mint_account_info.key,
+        tokens: vec![],
+        delegates: vec![],
+        model: None,
+    };
 
     // If there is a constraint model and the signer is the update authority, then add the model to the TOE.
     if maybe_escrow_constraint_model_account.is_ok() {
