@@ -974,7 +974,8 @@
           "name": "rent",
           "isMut": false,
           "isSigner": false,
-          "desc": "Rent info"
+          "desc": "Rent info",
+          "optional": true
         }
       ],
       "args": [

@@ -320,7 +320,7 @@ pub enum MetadataInstruction {
     #[account(3, signer, writable, name="payer", desc="payer")]
     #[account(4, name="update_authority", desc="update authority info")]
     #[account(5, name="system_program", desc="System program")]
-    #[account(6, name="rent", desc="Rent info")]
+    #[account(6, optional, name="rent", desc="Rent info")]
     CreateMetadataAccountV2(CreateMetadataAccountArgsV2),
 
     /// Register a Metadata as a Master Edition V2, which means Edition V2s can be minted.
@@ -602,7 +602,6 @@ pub fn create_metadata_accounts_v2(
             AccountMeta::new(payer, true),
             AccountMeta::new_readonly(update_authority, update_authority_is_signer),
             AccountMeta::new_readonly(solana_program::system_program::id(), false),
-            AccountMeta::new_readonly(sysvar::rent::id(), false),
         ],
         data: MetadataInstruction::CreateMetadataAccountV2(CreateMetadataAccountArgsV2 {
             data: DataV2 {
