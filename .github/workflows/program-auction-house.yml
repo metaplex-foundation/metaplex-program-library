@@ -7,6 +7,8 @@ on:
   pull_request:
     branches: [master]
 
+concurrency: lock
+
 env:
   CARGO_TERM_COLOR: always
   RUST_TOOLCHAIN: stable
