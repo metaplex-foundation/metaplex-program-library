@@ -53,10 +53,10 @@ pub fn assert_metadata_is_mpl_compatible(metadata: &MetadataArgs) -> Result<()> 
 pub fn replace_leaf<'info>(
     seed: &Pubkey,
     bump: u8,
-    gummyroll_program: &AccountInfo<'info>,
+    compression_program: &AccountInfo<'info>,
     authority: &AccountInfo<'info>,
-    merkle_roll: &AccountInfo<'info>,
-    candy_wrapper: &AccountInfo<'info>,
+    merkle_tree: &AccountInfo<'info>,
+    log_wrapper: &AccountInfo<'info>,
     remaining_accounts: &[AccountInfo<'info>],
     root_node: Node,
     previous_leaf: Node,
@@ -66,11 +66,11 @@ pub fn replace_leaf<'info>(
     let seeds = &[seed.as_ref(), &[bump]];
     let authority_pda_signer = &[&seeds[..]];
     let cpi_ctx = CpiContext::new_with_signer(
-        gummyroll_program.clone(),
+        compression_program.clone(),
         spl_compression::cpi::accounts::Modify {
             authority: authority.clone(),
-            merkle_tree: merkle_roll.clone(),
-            log_wrapper: candy_wrapper.clone(),
+            merkle_tree: merkle_tree.clone(),
+            log_wrapper: log_wrapper.clone(),
         },
         authority_pda_signer,
     )
@@ -81,19 +81,19 @@ pub fn replace_leaf<'info>(
 pub fn append_leaf<'info>(
     seed: &Pubkey,
     bump: u8,
-    gummyroll_program: &AccountInfo<'info>,
+    compression_program: &AccountInfo<'info>,
     authority: &AccountInfo<'info>,
-    merkle_roll: &AccountInfo<'info>,
+    merkle_tree: &AccountInfo<'info>,
     log_wrapper: &AccountInfo<'info>,
     leaf_node: Node,
 ) -> Result<()> {
     let seeds = &[seed.as_ref(), &[bump]];
     let authority_pda_signer = &[&seeds[..]];
     let cpi_ctx = CpiContext::new_with_signer(
-        gummyroll_program.clone(),
+        compression_program.clone(),
         spl_compression::cpi::accounts::Modify {
             authority: authority.clone(),
-            merkle_tree: merkle_roll.clone(),
+            merkle_tree: merkle_tree.clone(),
             log_wrapper: log_wrapper.clone(),
         },
         authority_pda_signer,
