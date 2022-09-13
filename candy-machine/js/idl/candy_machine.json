@@ -1,5 +1,5 @@
 {
-  "version": "4.3.1",
+  "version": "4.3.2",
   "name": "candy_machine",
   "instructions": [
     {
@@ -1046,8 +1046,8 @@
     },
     {
       "code": 6037,
-      "name": "NoChangingAuthorityWithFreeze",
-      "msg": "Can't change authority while freeze is enabled. Disable freeze first."
+      "name": "NoChangingAuthorityWithCollection",
+      "msg": "Can't change authority while collection is enabled. Disable collection first."
     },
     {
       "code": 6038,

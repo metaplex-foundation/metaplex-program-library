@@ -1,0 +1,25 @@
+[package]
+name = "mpl-hydra"
+version = "0.3.0"
+edition = "2021"
+description = "Collective account pooling, fan out wallet, dao treasury, all of the things you need to FAN OUT"
+authors = ["Metaplex Developers <dev@metaplex.com>"]
+repository = "https://github.com/metaplex-foundation/metaplex-program-library"
+license = "AGPL-3.0"
+readme = "README.md"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[features]
+no-entrypoint = []
+test-bpf = []
+no-idl = []
+cpi = ["no-entrypoint"]
+default = []
+
+[dependencies]
+anchor-lang = "0.24.2"
+anchor-spl = "0.24.2"
+spl-token = {version="3.2.0", features = [ "no-entrypoint" ]}
+mpl-token-metadata = {version="1.2.7", features = [ "no-entrypoint" ]}

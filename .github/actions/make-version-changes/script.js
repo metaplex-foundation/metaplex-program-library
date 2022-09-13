@@ -41,6 +41,10 @@ const MPL_PROGRAM_CONFIG = {
     has_idl: true,
     uses_anchor: false,
   },
+  'hydra': {
+    has_idl: true,
+    uses_anchor: true,
+  },
 };
 
 const wrappedExec = (cmd, cwd) => {

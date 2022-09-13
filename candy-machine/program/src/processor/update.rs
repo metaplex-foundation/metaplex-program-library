@@ -27,15 +27,14 @@ pub fn handle_update_authority(
 ) -> Result<()> {
     let candy_machine = &mut ctx.accounts.candy_machine;
 
+    // Do not allow changing update authority if collections is active
     if let Some(new_auth) = new_authority {
-        if is_feature_active(&candy_machine.data.uuid, FREEZE_FEATURE_INDEX)
-            && candy_machine.authority != new_auth
-        {
-            return err!(CandyError::NoChangingAuthorityWithFreeze);
+        if is_feature_active(&candy_machine.data.uuid, COLLECTIONS_FEATURE_INDEX) {
+            return err!(CandyError::NoChangingAuthorityWithCollection);
+        } else {
+            candy_machine.authority = new_auth;
         }
-        candy_machine.authority = new_auth;
     }
-
     Ok(())
 }
 
