@@ -43,25 +43,25 @@ export const redeemStruct = new beet.BeetArgsStruct<
 /**
  * Accounts required by the _redeem_ instruction
  *
- * @property [] authority
- * @property [] candyWrapper
- * @property [] compressionProgram
- * @property [_writable_, **signer**] owner
- * @property [] delegate
+ * @property [] treeAuthority
+ * @property [_writable_, **signer**] leafOwner
+ * @property [] leafDelegate
  * @property [_writable_] merkleTree
  * @property [_writable_] voucher
+ * @property [] logWrapper
+ * @property [] compressionProgram
  * @category Instructions
  * @category Redeem
  * @category generated
  */
 export type RedeemInstructionAccounts = {
-  authority: web3.PublicKey
-  candyWrapper: web3.PublicKey
-  compressionProgram: web3.PublicKey
-  owner: web3.PublicKey
-  delegate: web3.PublicKey
+  treeAuthority: web3.PublicKey
+  leafOwner: web3.PublicKey
+  leafDelegate: web3.PublicKey
   merkleTree: web3.PublicKey
   voucher: web3.PublicKey
+  logWrapper: web3.PublicKey
+  compressionProgram: web3.PublicKey
   systemProgram?: web3.PublicKey
 }
 
@@ -90,27 +90,17 @@ export function createRedeemInstruction(
   })
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: accounts.authority,
+      pubkey: accounts.treeAuthority,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: accounts.candyWrapper,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.compressionProgram,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.owner,
+      pubkey: accounts.leafOwner,
       isWritable: true,
       isSigner: true,
     },
     {
-      pubkey: accounts.delegate,
+      pubkey: accounts.leafDelegate,
       isWritable: false,
       isSigner: false,
     },
@@ -122,6 +112,16 @@ export function createRedeemInstruction(
     {
       pubkey: accounts.voucher,
       isWritable: true,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.logWrapper,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.compressionProgram,
+      isWritable: false,
       isSigner: false,
     },
     {

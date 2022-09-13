@@ -48,9 +48,10 @@ export const setAndVerifyCollectionStruct = new beet.FixableBeetArgsStruct<
 /**
  * Accounts required by the _setAndVerifyCollection_ instruction
  *
- * @property [] authority
- * @property [] owner
- * @property [] delegate
+ * @property [] treeAuthority
+ * @property [] leafOwner
+ * @property [] leafDelegate
+ * @property [_writable_] merkleTree
  * @property [**signer**] payer
  * @property [] treeDelegate
  * @property [**signer**] collectionAuthority
@@ -58,18 +59,18 @@ export const setAndVerifyCollectionStruct = new beet.FixableBeetArgsStruct<
  * @property [] collectionMetadata
  * @property [] editionAccount
  * @property [] bubblegumSigner
- * @property [] candyWrapper
+ * @property [] logWrapper
  * @property [] compressionProgram
- * @property [_writable_] merkleTree
  * @property [] tokenMetadataProgram
  * @category Instructions
  * @category SetAndVerifyCollection
  * @category generated
  */
 export type SetAndVerifyCollectionInstructionAccounts = {
-  authority: web3.PublicKey
-  owner: web3.PublicKey
-  delegate: web3.PublicKey
+  treeAuthority: web3.PublicKey
+  leafOwner: web3.PublicKey
+  leafDelegate: web3.PublicKey
+  merkleTree: web3.PublicKey
   payer: web3.PublicKey
   treeDelegate: web3.PublicKey
   collectionAuthority: web3.PublicKey
@@ -77,9 +78,8 @@ export type SetAndVerifyCollectionInstructionAccounts = {
   collectionMetadata: web3.PublicKey
   editionAccount: web3.PublicKey
   bubblegumSigner: web3.PublicKey
-  candyWrapper: web3.PublicKey
+  logWrapper: web3.PublicKey
   compressionProgram: web3.PublicKey
-  merkleTree: web3.PublicKey
   tokenMetadataProgram: web3.PublicKey
 }
 
@@ -108,18 +108,23 @@ export function createSetAndVerifyCollectionInstruction(
   })
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: accounts.authority,
+      pubkey: accounts.treeAuthority,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: accounts.owner,
+      pubkey: accounts.leafOwner,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: accounts.delegate,
+      pubkey: accounts.leafDelegate,
       isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.merkleTree,
+      isWritable: true,
       isSigner: false,
     },
     {
@@ -158,18 +163,13 @@ export function createSetAndVerifyCollectionInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.candyWrapper,
+      pubkey: accounts.logWrapper,
       isWritable: false,
       isSigner: false,
     },
     {
       pubkey: accounts.compressionProgram,
       isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.merkleTree,
-      isWritable: true,
       isSigner: false,
     },
     {

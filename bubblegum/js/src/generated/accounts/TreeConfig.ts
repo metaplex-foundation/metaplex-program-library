@@ -15,8 +15,8 @@ import * as beetSolana from '@metaplex-foundation/beet-solana'
  * @category generated
  */
 export type TreeConfigArgs = {
-  creator: web3.PublicKey
-  delegate: web3.PublicKey
+  treeCreator: web3.PublicKey
+  treeDelegate: web3.PublicKey
   totalMintCapacity: beet.bignum
   numMinted: beet.bignum
 }
@@ -31,8 +31,8 @@ export const treeConfigDiscriminator = [122, 245, 175, 248, 171, 34, 0, 207]
  */
 export class TreeConfig implements TreeConfigArgs {
   private constructor(
-    readonly creator: web3.PublicKey,
-    readonly delegate: web3.PublicKey,
+    readonly treeCreator: web3.PublicKey,
+    readonly treeDelegate: web3.PublicKey,
     readonly totalMintCapacity: beet.bignum,
     readonly numMinted: beet.bignum
   ) {}
@@ -42,8 +42,8 @@ export class TreeConfig implements TreeConfigArgs {
    */
   static fromArgs(args: TreeConfigArgs) {
     return new TreeConfig(
-      args.creator,
-      args.delegate,
+      args.treeCreator,
+      args.treeDelegate,
       args.totalMintCapacity,
       args.numMinted
     )
@@ -148,8 +148,8 @@ export class TreeConfig implements TreeConfigArgs {
    */
   pretty() {
     return {
-      creator: this.creator.toBase58(),
-      delegate: this.delegate.toBase58(),
+      treeCreator: this.treeCreator.toBase58(),
+      treeDelegate: this.treeDelegate.toBase58(),
       totalMintCapacity: (() => {
         const x = <{ toNumber: () => number }>this.totalMintCapacity
         if (typeof x.toNumber === 'function') {
@@ -188,8 +188,8 @@ export const treeConfigBeet = new beet.BeetStruct<
 >(
   [
     ['accountDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
-    ['creator', beetSolana.publicKey],
-    ['delegate', beetSolana.publicKey],
+    ['treeCreator', beetSolana.publicKey],
+    ['treeDelegate', beetSolana.publicKey],
     ['totalMintCapacity', beet.u64],
     ['numMinted', beet.u64],
   ],

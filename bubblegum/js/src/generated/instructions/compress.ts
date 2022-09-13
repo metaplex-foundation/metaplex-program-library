@@ -23,37 +23,37 @@ export const compressStruct = new beet.BeetArgsStruct<{
 /**
  * Accounts required by the _compress_ instruction
  *
- * @property [] authority
+ * @property [] treeAuthority
+ * @property [**signer**] leafOwner
+ * @property [] leafDelegate
  * @property [] merkleTree
- * @property [**signer**] owner
- * @property [] delegate
  * @property [_writable_] tokenAccount
  * @property [_writable_] mint
  * @property [_writable_] metadata
  * @property [_writable_] masterEdition
  * @property [_writable_, **signer**] payer
- * @property [] tokenMetadataProgram
- * @property [] candyWrapper
+ * @property [] logWrapper
  * @property [] compressionProgram
+ * @property [] tokenMetadataProgram
  * @category Instructions
  * @category Compress
  * @category generated
  */
 export type CompressInstructionAccounts = {
-  authority: web3.PublicKey
+  treeAuthority: web3.PublicKey
+  leafOwner: web3.PublicKey
+  leafDelegate: web3.PublicKey
   merkleTree: web3.PublicKey
-  owner: web3.PublicKey
-  delegate: web3.PublicKey
   tokenAccount: web3.PublicKey
   mint: web3.PublicKey
   metadata: web3.PublicKey
   masterEdition: web3.PublicKey
   payer: web3.PublicKey
-  systemProgram?: web3.PublicKey
-  tokenMetadataProgram: web3.PublicKey
-  tokenProgram?: web3.PublicKey
-  candyWrapper: web3.PublicKey
+  logWrapper: web3.PublicKey
   compressionProgram: web3.PublicKey
+  tokenProgram?: web3.PublicKey
+  tokenMetadataProgram: web3.PublicKey
+  systemProgram?: web3.PublicKey
 }
 
 export const compressInstructionDiscriminator = [
@@ -77,22 +77,22 @@ export function createCompressInstruction(
   })
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: accounts.authority,
+      pubkey: accounts.treeAuthority,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.leafOwner,
+      isWritable: false,
+      isSigner: true,
+    },
+    {
+      pubkey: accounts.leafDelegate,
       isWritable: false,
       isSigner: false,
     },
     {
       pubkey: accounts.merkleTree,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.owner,
-      isWritable: false,
-      isSigner: true,
-    },
-    {
-      pubkey: accounts.delegate,
       isWritable: false,
       isSigner: false,
     },
@@ -122,12 +122,12 @@ export function createCompressInstruction(
       isSigner: true,
     },
     {
-      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
+      pubkey: accounts.logWrapper,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: accounts.tokenMetadataProgram,
+      pubkey: accounts.compressionProgram,
       isWritable: false,
       isSigner: false,
     },
@@ -137,12 +137,12 @@ export function createCompressInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.candyWrapper,
+      pubkey: accounts.tokenMetadataProgram,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: accounts.compressionProgram,
+      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
       isWritable: false,
       isSigner: false,
     },

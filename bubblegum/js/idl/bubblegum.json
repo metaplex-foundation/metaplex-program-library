@@ -6,7 +6,12 @@
       "name": "createTree",
       "accounts": [
         {
-          "name": "authority",
+          "name": "treeAuthority",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "merkleTree",
           "isMut": true,
           "isSigner": false
         },
@@ -21,12 +26,7 @@
           "isSigner": true
         },
         {
-          "name": "candyWrapper",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
+          "name": "logWrapper",
           "isMut": false,
           "isSigner": false
         },
@@ -36,8 +36,8 @@
           "isSigner": false
         },
         {
-          "name": "merkleTree",
-          "isMut": true,
+          "name": "systemProgram",
+          "isMut": false,
           "isSigner": false
         }
       ],
@@ -56,23 +56,23 @@
       "name": "setTreeDelegate",
       "accounts": [
         {
-          "name": "creator",
+          "name": "treeAuthority",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "treeCreator",
           "isMut": false,
           "isSigner": true
         },
         {
-          "name": "newDelegate",
+          "name": "newTreeDelegate",
           "isMut": false,
           "isSigner": false
         },
         {
           "name": "merkleTree",
           "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "treeAuthority",
-          "isMut": true,
           "isSigner": false
         }
       ],
@@ -81,6 +81,26 @@
     {
       "name": "mintV1",
       "accounts": [
+        {
+          "name": "treeAuthority",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "leafOwner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "leafDelegate",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "merkleTree",
+          "isMut": true,
+          "isSigner": false
+        },
         {
           "name": "payer",
           "isMut": false,
@@ -92,33 +112,13 @@
           "isSigner": true
         },
         {
-          "name": "authority",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "candyWrapper",
+          "name": "logWrapper",
           "isMut": false,
           "isSigner": false
         },
         {
           "name": "compressionProgram",
           "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "owner",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "delegate",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "merkleTree",
-          "isMut": true,
           "isSigner": false
         }
       ],
@@ -135,18 +135,23 @@
       "name": "verifyCreator",
       "accounts": [
         {
-          "name": "authority",
+          "name": "treeAuthority",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "owner",
+          "name": "leafOwner",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "delegate",
+          "name": "leafDelegate",
           "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "merkleTree",
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -160,18 +165,13 @@
           "isSigner": true
         },
         {
-          "name": "candyWrapper",
+          "name": "logWrapper",
           "isMut": false,
           "isSigner": false
         },
         {
           "name": "compressionProgram",
           "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "merkleTree",
-          "isMut": true,
           "isSigner": false
         }
       ],
@@ -223,18 +223,23 @@
       "name": "unverifyCreator",
       "accounts": [
         {
-          "name": "authority",
+          "name": "treeAuthority",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "owner",
+          "name": "leafOwner",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "delegate",
+          "name": "leafDelegate",
           "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "merkleTree",
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -248,18 +253,13 @@
           "isSigner": true
         },
         {
-          "name": "candyWrapper",
+          "name": "logWrapper",
           "isMut": false,
           "isSigner": false
         },
         {
           "name": "compressionProgram",
           "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "merkleTree",
-          "isMut": true,
           "isSigner": false
         }
       ],
@@ -311,18 +311,23 @@
       "name": "verifyCollection",
       "accounts": [
         {
-          "name": "authority",
+          "name": "treeAuthority",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "owner",
+          "name": "leafOwner",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "delegate",
+          "name": "leafDelegate",
           "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "merkleTree",
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -365,18 +370,13 @@
           "isSigner": false
         },
         {
-          "name": "candyWrapper",
+          "name": "logWrapper",
           "isMut": false,
           "isSigner": false
         },
         {
           "name": "compressionProgram",
           "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "merkleTree",
-          "isMut": true,
           "isSigner": false
         },
         {
@@ -433,18 +433,23 @@
       "name": "unverifyCollection",
       "accounts": [
         {
-          "name": "authority",
+          "name": "treeAuthority",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "owner",
+          "name": "leafOwner",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "delegate",
+          "name": "leafDelegate",
           "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "merkleTree",
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -487,18 +492,13 @@
           "isSigner": false
         },
         {
-          "name": "candyWrapper",
+          "name": "logWrapper",
           "isMut": false,
           "isSigner": false
         },
         {
           "name": "compressionProgram",
           "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "merkleTree",
-          "isMut": true,
           "isSigner": false
         },
         {
@@ -555,18 +555,23 @@
       "name": "setAndVerifyCollection",
       "accounts": [
         {
-          "name": "authority",
+          "name": "treeAuthority",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "owner",
+          "name": "leafOwner",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "delegate",
+          "name": "leafDelegate",
           "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "merkleTree",
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -609,18 +614,13 @@
           "isSigner": false
         },
         {
-          "name": "candyWrapper",
+          "name": "logWrapper",
           "isMut": false,
           "isSigner": false
         },
         {
           "name": "compressionProgram",
           "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "merkleTree",
-          "isMut": true,
           "isSigner": false
         },
         {
@@ -686,38 +686,38 @@
       "name": "transfer",
       "accounts": [
         {
-          "name": "authority",
+          "name": "treeAuthority",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "owner",
+          "name": "leafOwner",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "delegate",
+          "name": "leafDelegate",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "newOwner",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "candyWrapper",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "compressionProgram",
+          "name": "newLeafOwner",
           "isMut": false,
           "isSigner": false
         },
         {
           "name": "merkleTree",
           "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "logWrapper",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "compressionProgram",
+          "isMut": false,
           "isSigner": false
         }
       ],
@@ -763,38 +763,38 @@
       "name": "delegate",
       "accounts": [
         {
-          "name": "authority",
+          "name": "treeAuthority",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "owner",
+          "name": "leafOwner",
           "isMut": false,
           "isSigner": true
         },
         {
-          "name": "previousDelegate",
+          "name": "previousLeafDelegate",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "newDelegate",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "candyWrapper",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "compressionProgram",
+          "name": "newLeafDelegate",
           "isMut": false,
           "isSigner": false
         },
         {
           "name": "merkleTree",
           "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "logWrapper",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "compressionProgram",
+          "isMut": false,
           "isSigner": false
         }
       ],
@@ -840,33 +840,33 @@
       "name": "burn",
       "accounts": [
         {
-          "name": "authority",
+          "name": "treeAuthority",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "candyWrapper",
+          "name": "leafOwner",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "compressionProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "owner",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "delegate",
+          "name": "leafDelegate",
           "isMut": false,
           "isSigner": false
         },
         {
           "name": "merkleTree",
           "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "logWrapper",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "compressionProgram",
+          "isMut": false,
           "isSigner": false
         }
       ],
@@ -912,27 +912,17 @@
       "name": "redeem",
       "accounts": [
         {
-          "name": "authority",
+          "name": "treeAuthority",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "candyWrapper",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "compressionProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "owner",
+          "name": "leafOwner",
           "isMut": true,
           "isSigner": true
         },
         {
-          "name": "delegate",
+          "name": "leafDelegate",
           "isMut": false,
           "isSigner": false
         },
@@ -944,6 +934,16 @@
         {
           "name": "voucher",
           "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "logWrapper",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "compressionProgram",
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -994,19 +994,14 @@
       "name": "cancelRedeem",
       "accounts": [
         {
-          "name": "authority",
+          "name": "treeAuthority",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "candyWrapper",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "compressionProgram",
-          "isMut": false,
-          "isSigner": false
+          "name": "leafOwner",
+          "isMut": true,
+          "isSigner": true
         },
         {
           "name": "merkleTree",
@@ -1019,9 +1014,14 @@
           "isSigner": false
         },
         {
-          "name": "owner",
-          "isMut": true,
-          "isSigner": true
+          "name": "logWrapper",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "compressionProgram",
+          "isMut": false,
+          "isSigner": false
         }
       ],
       "args": [
@@ -1045,7 +1045,7 @@
           "isSigner": false
         },
         {
-          "name": "owner",
+          "name": "leafOwner",
           "isMut": true,
           "isSigner": true
         },
@@ -1113,22 +1113,22 @@
       "name": "compress",
       "accounts": [
         {
-          "name": "authority",
+          "name": "treeAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "leafOwner",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "leafDelegate",
           "isMut": false,
           "isSigner": false
         },
         {
           "name": "merkleTree",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "owner",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "delegate",
           "isMut": false,
           "isSigner": false
         },
@@ -1158,12 +1158,12 @@
           "isSigner": true
         },
         {
-          "name": "systemProgram",
+          "name": "logWrapper",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "tokenMetadataProgram",
+          "name": "compressionProgram",
           "isMut": false,
           "isSigner": false
         },
@@ -1173,12 +1173,12 @@
           "isSigner": false
         },
         {
-          "name": "candyWrapper",
+          "name": "tokenMetadataProgram",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "compressionProgram",
+          "name": "systemProgram",
           "isMut": false,
           "isSigner": false
         }
@@ -1193,11 +1193,11 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "creator",
+            "name": "treeCreator",
             "type": "publicKey"
           },
           {
-            "name": "delegate",
+            "name": "treeDelegate",
             "type": "publicKey"
           },
           {
