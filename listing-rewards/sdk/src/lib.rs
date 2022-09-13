@@ -17,7 +17,10 @@ use mpl_listing_rewards::{
         cancel::CancelListingParams, create::CreateListingParams, update::UpdateListingParams,
     },
     offers::{close::CloseOfferParams, create::CreateOfferParams, update::UpdateOfferParams},
-    pda::{self, find_listing_address, find_offer_address, find_reward_center_address},
+    pda::{
+        self, find_listing_address, find_offer_address, find_purchase_ticket_address,
+        find_reward_center_address,
+    },
     reward_center::{create::CreateRewardCenterParams, edit::EditRewardCenterParams},
 };
 use spl_associated_token_account::get_associated_token_address;
@@ -453,6 +456,7 @@ pub fn execute_sale(
         auction_house,
         seller,
         buyer,
+        payer,
         authority,
         treasury_mint,
         token_mint,
@@ -470,6 +474,7 @@ pub fn execute_sale(
     let (reward_center, _) = find_reward_center_address(&auction_house);
     let (offer, _) = find_offer_address(&buyer, &metadata, &reward_center);
     let (listing, _) = find_listing_address(&seller, &metadata, &reward_center);
+    let (purchase_ticket, _) = find_purchase_ticket_address(&listing, &offer);
 
     let (auction_house_fee_account, _) =
         mpl_auction_house::pda::find_auction_house_fee_account_address(&auction_house);
@@ -522,6 +527,8 @@ pub fn execute_sale(
         seller_reward_token_account,
         listing,
         offer,
+        payer,
+        purchase_ticket,
         authority,
         treasury_mint,
         token_mint,

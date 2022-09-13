@@ -40,7 +40,7 @@ pub struct UpdateOffer<'info> {
         has_one = reward_center,
         has_one = metadata,
         constraint = offer.canceled_at.is_none() @ ListingRewardsError::OfferAlreadyCancelled,
-        constraint = offer.purchased_at.is_none() @ ListingRewardsError::OfferAlreadyPurchased,
+        constraint = offer.purchase_ticket.is_none() @ ListingRewardsError::OfferAlreadyPurchased,
         seeds = [
             OFFER.as_bytes(),
             wallet.key().as_ref(),

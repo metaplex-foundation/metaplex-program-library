@@ -71,6 +71,7 @@ pub struct CloseOfferAccounts {
 pub struct ExecuteSaleAccounts {
     pub buyer: Pubkey,
     pub seller: Pubkey,
+    pub payer: Pubkey,
     pub authority: Pubkey,
     pub auction_house: Pubkey,
     pub treasury_mint: Pubkey,

@@ -1,6 +1,6 @@
-use crate::constants::{LISTING, OFFER, REWARD_CENTER};
+use crate::constants::{LISTING, OFFER, REWARD_CENTER, PURCHASE_TICKET};
 use crate::errors::ListingRewardsError;
-use crate::state::{Listing, Offer};
+use crate::state::{Listing, Offer, PurchaseTicket};
 use crate::{state::RewardCenter, MetadataAccount};
 use anchor_lang::{prelude::*, InstructionData};
 use anchor_spl::token::{transfer, Transfer};
@@ -81,6 +81,24 @@ pub struct ExecuteSale<'info> {
         bump = offer.bump
     )]
     pub offer: Box<Account<'info, Offer>>,
+
+    /// Payer account for initializing purchase_receipt_account
+    #[account(mut)]
+    pub payer: Signer<'info>,
+
+    /// The purchase ticket that would be initialized to record an executed sale
+    #[account(
+        init,
+        space = PurchaseTicket::size(),
+        payer = payer,
+        seeds = [
+            PURCHASE_TICKET.as_bytes(),
+            listing.key().as_ref(),
+            offer.key().as_ref(),
+        ],
+        bump,
+    )]
+    pub purchase_ticket: Box<Account<'info, PurchaseTicket>>,
 
     ///Token account where the SPL token is stored.
     #[account(
@@ -280,12 +298,16 @@ pub fn handler(
         ..
     }: ExecuteSaleParams,
 ) -> Result<()> {
+    let buyer = &ctx.accounts.buyer;
+    let seller = &ctx.accounts.seller;
     let seller_listing = &mut ctx.accounts.listing;
     let buyer_offer = &mut ctx.accounts.offer;
+    let purchase_ticket = &mut ctx.accounts.purchase_ticket;
 
     let auction_house = &ctx.accounts.auction_house;
     let reward_center = &ctx.accounts.reward_center;
     let auction_house_program = &ctx.accounts.auction_house_program;
+    let metadata = &ctx.accounts.metadata;
 
     let auction_house_key = auction_house.key();
 
@@ -303,9 +325,9 @@ pub fn handler(
         &[reward_center.bump],
     ]];
 
-    // Updating purchased_at for listing and offer
-    seller_listing.purchased_at = Some(clock.unix_timestamp);
-    buyer_offer.purchased_at = Some(clock.unix_timestamp);
+    // Setting purchase_ticket for listing and offer
+    seller_listing.purchase_ticket = Some(purchase_ticket.key());
+    buyer_offer.purchase_ticket = Some(purchase_ticket.key());
 
     // Auction house CPI
     let execute_sale_ctx_accounts = AuctioneerExecuteSale {
@@ -410,6 +432,15 @@ pub fn handler(
             seller_payout,
         )?
     };
+
+    // Initialize Purchase receipt
+    purchase_ticket.buyer = buyer.key();
+    purchase_ticket.seller = seller.key();
+    purchase_ticket.metadata = metadata.key();
+    purchase_ticket.reward_center = reward_center.key();
+    purchase_ticket.token_size = token_size;
+    purchase_ticket.price = price;
+    purchase_ticket.created_at = clock.unix_timestamp;
 
     Ok(())
 }
