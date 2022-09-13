@@ -124,12 +124,15 @@ export function createCreateMasterEditionV3Instruction(
       isWritable: false,
       isSigner: false,
     },
-    {
-      pubkey: accounts.rent ?? web3.SYSVAR_RENT_PUBKEY,
+  ];
+
+  if (accounts.rent != null) {
+    keys.push({
+      pubkey: accounts.rent,
       isWritable: false,
       isSigner: false,
-    },
-  ];
+    });
+  }
 
   const ix = new web3.TransactionInstruction({
     programId,

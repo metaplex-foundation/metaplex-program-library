@@ -36,6 +36,8 @@ use crate::{
 use arrayref::array_ref;
 use borsh::{BorshDeserialize, BorshSerialize};
 use mpl_token_vault::{error::VaultError, state::VaultState};
+use solana_program::rent::Rent;
+use solana_program::sysvar::SysvarId;
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
@@ -255,7 +257,6 @@ pub fn process_create_metadata_accounts_v2<'a>(
     let payer_account_info = next_account_info(account_info_iter)?;
     let update_authority_info = next_account_info(account_info_iter)?;
     let system_account_info = next_account_info(account_info_iter)?;
-    let rent_info = next_account_info(account_info_iter)?;
 
     process_create_metadata_accounts_logic(
         program_id,
@@ -266,7 +267,6 @@ pub fn process_create_metadata_accounts_v2<'a>(
             payer_account_info,
             update_authority_info,
             system_account_info,
-            rent_info,
         },
         data,
         false,
@@ -291,7 +291,6 @@ pub fn process_create_metadata_accounts_v3<'a>(
     let payer_account_info = next_account_info(account_info_iter)?;
     let update_authority_info = next_account_info(account_info_iter)?;
     let system_account_info = next_account_info(account_info_iter)?;
-    let rent_info = next_account_info(account_info_iter)?;
 
     process_create_metadata_accounts_logic(
         program_id,
@@ -302,7 +301,6 @@ pub fn process_create_metadata_accounts_v3<'a>(
             payer_account_info,
             update_authority_info,
             system_account_info,
-            rent_info,
         },
         data,
         false,
@@ -510,7 +508,6 @@ pub fn process_create_master_edition(
     let metadata_account_info = next_account_info(account_info_iter)?;
     let token_program_info = next_account_info(account_info_iter)?;
     let system_account_info = next_account_info(account_info_iter)?;
-    let rent_info = next_account_info(account_info_iter)?;
 
     let metadata = Metadata::from_account_info(metadata_account_info)?;
     let mint: Mint = assert_initialized(mint_info)?;
@@ -556,7 +553,6 @@ pub fn process_create_master_edition(
     create_or_allocate_account_raw(
         *program_id,
         edition_account_info,
-        rent_info,
         system_account_info,
         payer_account_info,
         MAX_MASTER_EDITION_LEN,
@@ -609,7 +605,6 @@ pub fn process_mint_new_edition_from_master_edition_via_token<'a>(
     let master_metadata_account_info = next_account_info(account_info_iter)?;
     let token_program_account_info = next_account_info(account_info_iter)?;
     let system_account_info = next_account_info(account_info_iter)?;
-    let rent_info = next_account_info(account_info_iter)?;
 
     process_mint_new_edition_from_master_edition_via_token_logic(
         program_id,
@@ -627,7 +622,6 @@ pub fn process_mint_new_edition_from_master_edition_via_token<'a>(
             master_metadata_account_info,
             token_program_account_info,
             system_account_info,
-            rent_info,
         },
         edition,
         ignore_owner_signer,
@@ -705,7 +699,6 @@ pub fn process_deprecated_mint_new_edition_from_master_edition_via_vault_proxy<'
     // not sure how they would get away with it - they'd need to actually own that account! - J.
     let token_vault_program_info = next_account_info(account_info_iter)?;
     let system_account_info = next_account_info(account_info_iter)?;
-    let rent_info = next_account_info(account_info_iter)?;
 
     let vault_data = vault_info.data.borrow();
     let safety_deposit_data = safety_deposit_info.data.borrow();
@@ -785,7 +778,6 @@ pub fn process_deprecated_mint_new_edition_from_master_edition_via_vault_proxy<'
         master_metadata_account_info,
         token_program_account_info,
         system_account_info,
-        rent_info,
     };
 
     process_mint_new_edition_from_master_edition_via_token_logic(program_id, args, edition, true)
@@ -1085,8 +1077,8 @@ pub fn process_approve_use_authority(
     let program_as_burner = next_account_info(account_info_iter)?;
     let token_program_account_info = next_account_info(account_info_iter)?;
     let system_account_info = next_account_info(account_info_iter)?;
-    let rent_info = next_account_info(account_info_iter)?;
-    let metadata = Metadata::from_account_info(metadata_info)?;
+    let metadata: Metadata = Metadata::from_account_info(metadata_info)?;
+
     if metadata.uses.is_none() {
         return Err(MetadataError::Unusable.into());
     }
@@ -1122,7 +1114,6 @@ pub fn process_approve_use_authority(
     create_or_allocate_account_raw(
         *program_id,
         use_authority_record_info,
-        rent_info,
         system_account_info,
         payer,
         USE_AUTHORITY_RECORD_SIZE,
@@ -1234,7 +1225,7 @@ pub fn process_utilize(
     accounts: &[AccountInfo],
     number_of_uses: u64,
 ) -> ProgramResult {
-    let account_info_iter = &mut accounts.iter();
+    let account_info_iter = &mut accounts.iter().peekable();
     let metadata_info = next_account_info(account_info_iter)?;
     let token_account_info = next_account_info(account_info_iter)?;
     let mint_info = next_account_info(account_info_iter)?;
@@ -1243,9 +1234,19 @@ pub fn process_utilize(
     let token_program_account_info = next_account_info(account_info_iter)?;
     let _ata_program_account_info = next_account_info(account_info_iter)?;
     let _system_account_info = next_account_info(account_info_iter)?;
-    let _rent_info = next_account_info(account_info_iter)?;
-    let metadata = Metadata::from_account_info(metadata_info)?;
-    let approved_authority_is_using = accounts.len() == 11;
+    // consume the next account only if it is Rent
+    let approved_authority_is_using = if account_info_iter
+        .next_if(|info| info.key == &Rent::id())
+        .is_some()
+    {
+        // rent was passed in
+        accounts.len() == 11
+    } else {
+        // necessary accounts is one less if rent isn't passed in.
+        accounts.len() == 10
+    };
+
+    let metadata: Metadata = Metadata::from_account_info(metadata_info)?;
     if metadata.uses.is_none() {
         return Err(MetadataError::Unusable.into());
     }
@@ -1346,7 +1347,6 @@ pub fn process_approve_collection_authority(
     let metadata_info = next_account_info(account_info_iter)?;
     let mint_info = next_account_info(account_info_iter)?;
     let system_account_info = next_account_info(account_info_iter)?;
-    let rent_info = next_account_info(account_info_iter)?;
 
     let metadata = Metadata::from_account_info(metadata_info)?;
     assert_owned_by(metadata_info, program_id)?;
@@ -1380,7 +1380,6 @@ pub fn process_approve_collection_authority(
     create_or_allocate_account_raw(
         *program_id,
         collection_authority_record,
-        rent_info,
         system_account_info,
         payer,
         COLLECTION_AUTHORITY_RECORD_SIZE,
