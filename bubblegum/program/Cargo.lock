@@ -790,8 +790,8 @@ dependencies = [
  "bytemuck",
  "mpl-token-metadata",
  "solana-program",
+ "spl-account-compression",
  "spl-associated-token-account",
- "spl-compression",
  "spl-token",
 ]
 
@@ -1323,6 +1323,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "spl-account-compression"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a9fe548ab94493a49ecd68496439998a74784a9c4ec43fe9ec7364e2e53c9001"
+dependencies = [
+ "anchor-lang",
+ "bytemuck",
+ "spl-concurrent-merkle-tree",
+ "spl-noop",
+]
+
+[[package]]
 name = "spl-associated-token-account"
 version = "1.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1334,24 +1346,23 @@ dependencies = [
 ]
 
 [[package]]
-name = "spl-compression"
-version = "0.1.0"
-source = "git+https://github.com/solana-labs/solana-program-library?rev=7c7507f4ec1f320bbc33af459d4d8b5573a6a906#7c7507f4ec1f320bbc33af459d4d8b5573a6a906"
-dependencies = [
- "anchor-lang",
- "bytemuck",
- "spl-concurrent-merkle-tree",
- "wrapper",
-]
-
-[[package]]
 name = "spl-concurrent-merkle-tree"
 version = "0.1.0"
-source = "git+https://github.com/solana-labs/solana-program-library?rev=7c7507f4ec1f320bbc33af459d4d8b5573a6a906#7c7507f4ec1f320bbc33af459d4d8b5573a6a906"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "df4d5f6daaf91a5e2618a2ecc3ea74b2c6cab92cf4595c77d444802874df153a"
 dependencies = [
  "bytemuck",
  "solana-program",
  "thiserror",
+]
+
+[[package]]
+name = "spl-noop"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fc0a0e73ff74f170d538773dd4ddccbac224ca1db478488abaa70f30da20bd7b"
+dependencies = [
+ "solana-program",
 ]
 
 [[package]]
@@ -1557,14 +1568,6 @@ name = "windows_x86_64_msvc"
 version = "0.36.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c811ca4a8c853ef420abd8592ba53ddbbac90410fab6903b3e79972a631f7680"
-
-[[package]]
-name = "wrapper"
-version = "0.1.0"
-source = "git+https://github.com/solana-labs/solana-program-library?rev=7c7507f4ec1f320bbc33af459d4d8b5573a6a906#7c7507f4ec1f320bbc33af459d4d8b5573a6a906"
-dependencies = [
- "solana-program",
-]
 
 [[package]]
 name = "yansi"
