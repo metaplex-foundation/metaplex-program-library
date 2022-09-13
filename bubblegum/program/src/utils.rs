@@ -6,7 +6,7 @@ use {
         prelude::*, solana_program::program_memory::sol_memcmp,
         solana_program::pubkey::PUBKEY_BYTES,
     },
-    spl_compression::Node,
+    spl_account_compression::Node,
 };
 
 /// Assert that the provided MetadataArgs are compatible with MPL `Data`
@@ -67,7 +67,7 @@ pub fn replace_leaf<'info>(
     let authority_pda_signer = &[&seeds[..]];
     let cpi_ctx = CpiContext::new_with_signer(
         compression_program.clone(),
-        spl_compression::cpi::accounts::Modify {
+        spl_account_compression::cpi::accounts::Modify {
             authority: authority.clone(),
             merkle_tree: merkle_tree.clone(),
             log_wrapper: log_wrapper.clone(),
@@ -75,7 +75,7 @@ pub fn replace_leaf<'info>(
         authority_pda_signer,
     )
     .with_remaining_accounts(remaining_accounts.to_vec());
-    spl_compression::cpi::replace_leaf(cpi_ctx, root_node, previous_leaf, new_leaf, index)
+    spl_account_compression::cpi::replace_leaf(cpi_ctx, root_node, previous_leaf, new_leaf, index)
 }
 
 pub fn append_leaf<'info>(
@@ -91,14 +91,14 @@ pub fn append_leaf<'info>(
     let authority_pda_signer = &[&seeds[..]];
     let cpi_ctx = CpiContext::new_with_signer(
         compression_program.clone(),
-        spl_compression::cpi::accounts::Modify {
+        spl_account_compression::cpi::accounts::Modify {
             authority: authority.clone(),
             merkle_tree: merkle_tree.clone(),
             log_wrapper: log_wrapper.clone(),
         },
         authority_pda_signer,
     );
-    spl_compression::cpi::append(cpi_ctx, leaf_node)
+    spl_account_compression::cpi::append(cpi_ctx, leaf_node)
 }
 
 pub fn cmp_pubkeys(a: &Pubkey, b: &Pubkey) -> bool {

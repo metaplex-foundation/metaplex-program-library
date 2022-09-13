@@ -30,9 +30,9 @@ use {
         },
         state::CollectionDetails,
     },
-    spl_compression::{
+    spl_account_compression::{
         data_wrapper::{wrap_event, Wrapper},
-        program::SplCompression,
+        program::SplAccountCompression,
         Node,
     },
     spl_token::state::Mint as SplMint,
@@ -62,7 +62,7 @@ pub struct CreateTree<'info> {
     pub payer: Signer<'info>,
     pub tree_creator: Signer<'info>,
     pub log_wrapper: Program<'info, Wrapper>,
-    pub compression_program: Program<'info, SplCompression>,
+    pub compression_program: Program<'info, SplAccountCompression>,
     pub system_program: Program<'info, System>,
 }
 
@@ -84,7 +84,7 @@ pub struct MintV1<'info> {
     pub payer: Signer<'info>,
     pub tree_delegate: Signer<'info>,
     pub log_wrapper: Program<'info, Wrapper>,
-    pub compression_program: Program<'info, SplCompression>,
+    pub compression_program: Program<'info, SplAccountCompression>,
 }
 
 #[derive(Accounts)]
@@ -102,7 +102,7 @@ pub struct Burn<'info> {
     /// CHECK: This account is modified in the downstream program
     pub merkle_tree: UncheckedAccount<'info>,
     pub log_wrapper: Program<'info, Wrapper>,
-    pub compression_program: Program<'info, SplCompression>,
+    pub compression_program: Program<'info, SplAccountCompression>,
 }
 
 #[derive(Accounts)]
@@ -122,7 +122,7 @@ pub struct CreatorVerification<'info> {
     pub payer: Signer<'info>,
     pub creator: Signer<'info>,
     pub log_wrapper: Program<'info, Wrapper>,
-    pub compression_program: Program<'info, SplCompression>,
+    pub compression_program: Program<'info, SplAccountCompression>,
 }
 
 #[derive(Accounts)]
@@ -157,7 +157,7 @@ pub struct CollectionVerification<'info> {
     )]
     pub bubblegum_signer: UncheckedAccount<'info>,
     pub log_wrapper: Program<'info, Wrapper>,
-    pub compression_program: Program<'info, SplCompression>,
+    pub compression_program: Program<'info, SplAccountCompression>,
     pub token_metadata_program: Program<'info, MplTokenMetadata>,
 }
 
@@ -179,7 +179,7 @@ pub struct Transfer<'info> {
     /// CHECK: This account is modified in the downstream program
     pub merkle_tree: UncheckedAccount<'info>,
     pub log_wrapper: Program<'info, Wrapper>,
-    pub compression_program: Program<'info, SplCompression>,
+    pub compression_program: Program<'info, SplAccountCompression>,
 }
 
 #[derive(Accounts)]
@@ -199,7 +199,7 @@ pub struct Delegate<'info> {
     /// CHECK: This account is modified in the downstream program
     pub merkle_tree: UncheckedAccount<'info>,
     pub log_wrapper: Program<'info, Wrapper>,
-    pub compression_program: Program<'info, SplCompression>,
+    pub compression_program: Program<'info, SplAccountCompression>,
 }
 
 #[derive(Accounts)]
@@ -237,7 +237,7 @@ pub struct Redeem<'info> {
     )]
     pub voucher: Account<'info, Voucher>,
     pub log_wrapper: Program<'info, Wrapper>,
-    pub compression_program: Program<'info, SplCompression>,
+    pub compression_program: Program<'info, SplAccountCompression>,
     pub system_program: Program<'info, System>,
 }
 
@@ -266,7 +266,7 @@ pub struct CancelRedeem<'info> {
     )]
     pub voucher: Account<'info, Voucher>,
     pub log_wrapper: Program<'info, Wrapper>,
-    pub compression_program: Program<'info, SplCompression>,
+    pub compression_program: Program<'info, SplAccountCompression>,
 }
 
 #[derive(Accounts)]
@@ -348,7 +348,7 @@ pub struct Compress<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
     pub log_wrapper: Program<'info, Wrapper>,
-    pub compression_program: Program<'info, SplCompression>,
+    pub compression_program: Program<'info, SplAccountCompression>,
     /// CHECK:
     pub token_program: UncheckedAccount<'info>,
     /// CHECK:
@@ -818,14 +818,14 @@ pub mod bubblegum {
         let authority_pda_signer = &[&seeds[..]];
         let cpi_ctx = CpiContext::new_with_signer(
             ctx.accounts.compression_program.to_account_info(),
-            spl_compression::cpi::accounts::Initialize {
+            spl_account_compression::cpi::accounts::Initialize {
                 authority: ctx.accounts.tree_authority.to_account_info(),
                 merkle_tree,
                 log_wrapper: ctx.accounts.log_wrapper.to_account_info(),
             },
             authority_pda_signer,
         );
-        spl_compression::cpi::init_empty_merkle_tree(cpi_ctx, max_depth, max_buffer_size)
+        spl_account_compression::cpi::init_empty_merkle_tree(cpi_ctx, max_depth, max_buffer_size)
     }
 
     pub fn set_tree_delegate(ctx: Context<SetTreeDelegate>) -> Result<()> {

@@ -1,5 +1,5 @@
 use anchor_lang::{prelude::*, solana_program::keccak};
-use spl_compression::Node;
+use spl_account_compression::Node;
 
 #[event]
 pub struct LeafSchemaEvent {
