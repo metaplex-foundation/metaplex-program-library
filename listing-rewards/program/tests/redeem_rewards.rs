@@ -106,7 +106,6 @@ async fn redeem_rewards_success() {
     let treasury_withdraw_desintiation = get_associated_token_address(&wallet, &mint.pubkey());
 
     let reward_center_params = reward_center::create::CreateRewardCenterParams {
-        collection_oracle: None,
         listing_reward_rules: state::ListingRewardRules {
             seller_reward_payout_basis_points: 1000,
             payout_divider: 5,

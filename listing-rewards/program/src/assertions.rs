@@ -14,10 +14,6 @@ pub fn assert_listing_reward_redemption_eligibility(
 
     let eligibility_timestamp = listing.created_at;
 
-    if listing.reward_redeemed_at.is_some() {
-        return err!(ListingRewardsError::RewardsAlreadyClaimed);
-    }
-
     if eligibility_timestamp >= current_timestamp || listing.purchase_ticket.is_some() {
         return Ok(());
     }

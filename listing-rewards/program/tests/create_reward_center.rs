@@ -80,7 +80,6 @@ async fn create_reward_center_success() {
     .unwrap();
 
     let reward_center_params = reward_center::create::CreateRewardCenterParams {
-        collection_oracle: None,
         listing_reward_rules: state::ListingRewardRules {
             seller_reward_payout_basis_points: 1000,
             payout_divider: 5,

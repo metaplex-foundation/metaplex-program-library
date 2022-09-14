@@ -15,7 +15,6 @@ use crate::{
 /// Options to set on the reward center
 #[derive(AnchorDeserialize, AnchorSerialize)]
 pub struct CreateRewardCenterParams {
-    pub collection_oracle: Option<Pubkey>,
     pub listing_reward_rules: ListingRewardRules,
 }
 
@@ -84,7 +83,6 @@ pub fn handler(
 
     reward_center.token_mint = mint.key();
     reward_center.auction_house = auction_house.key();
-    reward_center.collection_oracle = reward_center_params.collection_oracle;
     reward_center.listing_reward_rules = reward_center_params.listing_reward_rules;
     reward_center.bump = *ctx
         .bumps

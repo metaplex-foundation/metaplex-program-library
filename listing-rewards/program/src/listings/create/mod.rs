@@ -208,7 +208,6 @@ pub fn handler(
     listing.created_at = clock.unix_timestamp;
     listing.canceled_at = None;
     listing.purchase_ticket = None;
-    listing.reward_redeemed_at = None;
 
     let reward_center_signer_seeds: &[&[&[u8]]] = &[&[
         REWARD_CENTER.as_bytes(),
