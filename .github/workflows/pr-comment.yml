@@ -72,9 +72,11 @@ jobs:
       # GH doesn't process or format body fields, so we do some light processing so that multiline comments will break inputs
       - name: Process content body
         id: process-content-body
+        env:
+          REVIEW_BODY: ${{ github.event.review.body }}
         run: |
           REVIEW_CONTENT=$(cat << EOF
-          ${{ github.event.review.body }}
+          $REVIEW_BODY
           EOF
           )
           REVIEW_CONTENT="${REVIEW_CONTENT//\'/}"
