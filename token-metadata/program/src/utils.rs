@@ -171,13 +171,12 @@ pub fn assert_initialized<T: Pack + IsInitialized>(
 pub fn create_or_allocate_account_raw<'a>(
     program_id: Pubkey,
     new_account_info: &AccountInfo<'a>,
-    rent_sysvar_info: &AccountInfo<'a>,
     system_program_info: &AccountInfo<'a>,
     payer_info: &AccountInfo<'a>,
     size: usize,
     signer_seeds: &[&[u8]],
 ) -> ProgramResult {
-    let rent = &Rent::from_account_info(rent_sysvar_info)?;
+    let rent = &Rent::get()?;
     let required_lamports = rent
         .minimum_balance(size)
         .max(1)
@@ -579,7 +578,6 @@ pub fn mint_limited_edition<'a>(
     update_authority_info: &'a AccountInfo<'a>,
     token_program_account_info: &'a AccountInfo<'a>,
     system_account_info: &'a AccountInfo<'a>,
-    rent_info: &'a AccountInfo<'a>,
     // Only present with MasterEditionV1 calls, if present, use edition based off address in res list,
     // otherwise, pull off the top
     reservation_list_info: Option<&'a AccountInfo<'a>>,
@@ -650,7 +648,6 @@ pub fn mint_limited_edition<'a>(
             payer_account_info,
             update_authority_info,
             system_account_info,
-            rent_info,
         },
         data_v2,
         true,
@@ -670,7 +667,6 @@ pub fn mint_limited_edition<'a>(
     create_or_allocate_account_raw(
         *program_id,
         new_edition_account_info,
-        rent_info,
         system_account_info,
         payer_account_info,
         MAX_EDITION_LEN,
@@ -891,7 +887,6 @@ pub struct CreateMetadataAccountsLogicArgs<'a> {
     pub payer_account_info: &'a AccountInfo<'a>,
     pub update_authority_info: &'a AccountInfo<'a>,
     pub system_account_info: &'a AccountInfo<'a>,
-    pub rent_info: &'a AccountInfo<'a>,
 }
 
 // This equals the program address of the metadata program:
@@ -934,7 +929,6 @@ pub fn process_create_metadata_accounts_logic(
         payer_account_info,
         update_authority_info,
         system_account_info,
-        rent_info,
     } = accounts;
 
     let mut update_authority_key = *update_authority_info.key;
@@ -979,7 +973,6 @@ pub fn process_create_metadata_accounts_logic(
     create_or_allocate_account_raw(
         *program_id,
         metadata_account_info,
-        rent_info,
         system_account_info,
         payer_account_info,
         MAX_METADATA_LEN,
@@ -1106,7 +1099,6 @@ pub struct MintNewEditionFromMasterEditionViaTokenLogicArgs<'a> {
     pub master_metadata_account_info: &'a AccountInfo<'a>,
     pub token_program_account_info: &'a AccountInfo<'a>,
     pub system_account_info: &'a AccountInfo<'a>,
-    pub rent_info: &'a AccountInfo<'a>,
 }
 
 pub fn process_mint_new_edition_from_master_edition_via_token_logic<'a>(
@@ -1129,7 +1121,6 @@ pub fn process_mint_new_edition_from_master_edition_via_token_logic<'a>(
         master_metadata_account_info,
         token_program_account_info,
         system_account_info,
-        rent_info,
     } = accounts;
 
     assert_token_program_matches_package(token_program_account_info)?;
@@ -1193,7 +1184,6 @@ pub fn process_mint_new_edition_from_master_edition_via_token_logic<'a>(
         create_or_allocate_account_raw(
             *program_id,
             edition_marker_info,
-            rent_info,
             system_account_info,
             payer_account_info,
             MAX_EDITION_MARKER_SIZE,
@@ -1222,7 +1212,6 @@ pub fn process_mint_new_edition_from_master_edition_via_token_logic<'a>(
         update_authority_info,
         token_program_account_info,
         system_account_info,
-        rent_info,
         None,
         Some(edition),
     )?;

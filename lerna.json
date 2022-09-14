@@ -6,6 +6,11 @@
     "token-metadata/js",
     "auction-house/js",
     "fixed-price-sale/js",
+    "hydra/js",
+    "auction/js",
+    "token-vault/js",
+    "token-metadata/js",
+    "metaplex/js",
     "bubblegum/js",
     "nft-packs-wrapper/js"
   ],

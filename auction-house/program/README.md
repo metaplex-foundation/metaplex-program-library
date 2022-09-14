@@ -4,7 +4,7 @@ title: Auction House
 
 ## Background
 
-To know more about the Auction House, see https://docs.metaplex.com/auction-house/definition
+To know more about the Auction House program, see https://docs.metaplex.com/auction-house/definition
 
 ## Running the tests
 
