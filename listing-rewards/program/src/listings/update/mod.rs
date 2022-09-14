@@ -7,7 +7,10 @@ use mpl_auction_house::{
 use crate::{
     constants::{LISTING, REWARD_CENTER},
     errors::ListingRewardsError,
-    state::{listing_rewards::{Listing, RewardCenter}, metaplex_anchor::TokenMetadata}
+    state::{
+        listing_rewards::{Listing, RewardCenter},
+        metaplex_anchor::TokenMetadata,
+    },
 };
 
 #[derive(AnchorSerialize, AnchorDeserialize)]

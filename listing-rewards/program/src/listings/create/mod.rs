@@ -3,17 +3,20 @@ use anchor_spl::token::{Token, TokenAccount};
 use solana_program::{instruction::Instruction, program::invoke_signed};
 
 use crate::{
+    assertions::assert_listing_init_eligibility,
     constants::{LISTING, REWARD_CENTER},
     errors::ListingRewardsError,
-    state::{listing_rewards::{Listing, RewardCenter}, metaplex_anchor::TokenMetadata}, assertions::assert_listing_init_eligibility,
+    state::{
+        listing_rewards::{Listing, RewardCenter},
+        metaplex_anchor::TokenMetadata,
+    }, cpi::auction_house::{make_auctioneer_instruction, AuctioneerInstructionArgs},
 };
 use mpl_auction_house::{
     constants::{AUCTIONEER, FEE_PAYER, PREFIX, SIGNER},
     cpi::accounts::AuctioneerSell,
     instruction::AuctioneerSell as AuctioneerSellParams,
     program::AuctionHouse as AuctionHouseProgram,
-    AuctionHouse,
-    Auctioneer
+    AuctionHouse, Auctioneer,
 };
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
@@ -240,26 +243,15 @@ pub fn handler(
         token_size,
     };
 
-    let create_listing_ix = Instruction {
-        program_id: auction_house_program.key(),
-        data: create_listing_params.data(),
-        accounts: create_listing_ctx_accounts
-            .to_account_metas(None)
-            .into_iter()
-            .zip(create_listing_ctx_accounts.to_account_infos())
-            .map(|mut pair| {
-                pair.0.is_signer = pair.1.is_signer;
-                if pair.0.pubkey == ctx.accounts.reward_center.key() {
-                    pair.0.is_signer = true;
-                }
-                pair.0
-            })
-            .collect(),
-    };
+    let (create_listing_ix, create_listing_account_infos) = make_auctioneer_instruction(AuctioneerInstructionArgs {
+        accounts: create_listing_ctx_accounts,
+        instruction_data: create_listing_params.data(),
+        auctioneer_authority: ctx.accounts.reward_center.key()
+    });
 
     invoke_signed(
         &create_listing_ix,
-        &create_listing_ctx_accounts.to_account_infos(),
+        &create_listing_account_infos,
         reward_center_signer_seeds,
     )?;
 

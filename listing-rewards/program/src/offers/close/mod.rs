@@ -6,15 +6,19 @@ use anchor_spl::{
 use mpl_auction_house::{
     constants::{AUCTIONEER, FEE_PAYER, PREFIX},
     cpi::accounts::{AuctioneerCancel, AuctioneerWithdraw},
-    instruction::{AuctioneerCancel as AuctioneerCancelParams, AuctioneerWithdraw as AuctioneerWithdrawParams},
+    instruction::{
+        AuctioneerCancel as AuctioneerCancelParams, AuctioneerWithdraw as AuctioneerWithdrawParams,
+    },
     program::AuctionHouse as AuctionHouseProgram,
-    AuctionHouse,
-    Auctioneer,
+    AuctionHouse, Auctioneer,
 };
 
 use crate::{
     constants::{OFFER, REWARD_CENTER},
-    state::{listing_rewards::{Offer, RewardCenter}, metaplex_anchor::TokenMetadata},
+    state::{
+        listing_rewards::{Offer, RewardCenter},
+        metaplex_anchor::TokenMetadata,
+    }, cpi::auction_house::{make_auctioneer_instruction, AuctioneerInstructionArgs},
 };
 use solana_program::{instruction::Instruction, program::invoke_signed};
 
@@ -156,7 +160,6 @@ pub fn handler(
     let reward_center = &ctx.accounts.reward_center;
     let auction_house = &ctx.accounts.auction_house;
     let wallet = &ctx.accounts.wallet;
-    let auction_house_program = ctx.accounts.auction_house_program.to_account_info();
     let auction_house_key = auction_house.key();
 
     let clock = Clock::get()?;
@@ -192,27 +195,15 @@ pub fn handler(
         amount: buyer_price,
     };
 
-
-    let withdraw_offer_ix = Instruction {
-        program_id: auction_house_program.key(),
-        data: withdraw_offer_params.data(),
-        accounts: withdraw_offer_ctx_accounts
-            .to_account_metas(None)
-            .into_iter()
-            .zip(withdraw_offer_ctx_accounts.to_account_infos())
-            .map(|mut pair| {
-                pair.0.is_signer = pair.1.is_signer;
-                if pair.0.pubkey == ctx.accounts.reward_center.key() {
-                    pair.0.is_signer = true;
-                }
-                pair.0
-            })
-            .collect(),
-    };
+    let (withdraw_offer_ix, withdraw_offer_account_infos) = make_auctioneer_instruction(AuctioneerInstructionArgs {
+        accounts: withdraw_offer_ctx_accounts,
+        instruction_data: withdraw_offer_params.data(),
+        auctioneer_authority: ctx.accounts.reward_center.key()
+    });
 
     invoke_signed(
         &withdraw_offer_ix,
-        &withdraw_offer_ctx_accounts.to_account_infos(),
+        &withdraw_offer_account_infos,
         reward_center_signer_seeds,
     )?;
 
@@ -235,26 +226,15 @@ pub fn handler(
         token_size,
     };
 
-    let close_offer_ix = Instruction {
-        program_id: auction_house_program.key(),
-        data: close_offer_params.data(),
-        accounts: close_offer_ctx_accounts
-            .to_account_metas(None)
-            .into_iter()
-            .zip(close_offer_ctx_accounts.to_account_infos())
-            .map(|mut pair| {
-                pair.0.is_signer = pair.1.is_signer;
-                if pair.0.pubkey == ctx.accounts.reward_center.key() {
-                    pair.0.is_signer = true;
-                }
-                pair.0
-            })
-            .collect(),
-    };
+    let (close_offer_ix, close_offer_account_infos) = make_auctioneer_instruction(AuctioneerInstructionArgs {
+        accounts: close_offer_ctx_accounts,
+        instruction_data: close_offer_params.data(),
+        auctioneer_authority: ctx.accounts.reward_center.key()
+    });
 
     invoke_signed(
         &close_offer_ix,
-        &close_offer_ctx_accounts.to_account_infos(),
+        &close_offer_account_infos,
         reward_center_signer_seeds,
     )?;
 

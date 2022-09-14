@@ -1,7 +1,9 @@
 use crate::{
     constants::{LISTING, REWARD_CENTER},
-    state::{listing_rewards::{Listing, RewardCenter},
-    metaplex_anchor::TokenMetadata}
+    state::{
+        listing_rewards::{Listing, RewardCenter},
+        metaplex_anchor::TokenMetadata,
+    }, cpi::auction_house::{make_auctioneer_instruction, AuctioneerInstructionArgs},
 };
 use anchor_lang::{prelude::*, InstructionData};
 use anchor_spl::token::{Mint, Token, TokenAccount};
@@ -10,8 +12,7 @@ use mpl_auction_house::{
     cpi::accounts::AuctioneerCancel,
     instruction::AuctioneerCancel as AuctioneerCancelParams,
     program::AuctionHouse as AuctionHouseProgram,
-    AuctionHouse,
-    Auctioneer
+    AuctionHouse, Auctioneer,
 };
 use solana_program::{instruction::Instruction, program::invoke_signed};
 
@@ -123,7 +124,7 @@ pub fn handler(
     let auction_house = &ctx.accounts.auction_house;
     let clock = Clock::get()?;
     let listing = &mut ctx.accounts.listing;
-    
+
     let auction_house_key = auction_house.key();
 
     listing.canceled_at = Some(clock.unix_timestamp);
@@ -154,26 +155,15 @@ pub fn handler(
         token_size,
     };
 
-    let cancel_listing_ix = Instruction {
-        program_id: auction_house_program.key(),
-        data: cancel_listing_params.data(),
-        accounts: cancel_listing_ctx_accounts
-            .to_account_metas(None)
-            .into_iter()
-            .zip(cancel_listing_ctx_accounts.to_account_infos())
-            .map(|mut pair| {
-                pair.0.is_signer = pair.1.is_signer;
-                if pair.0.pubkey == ctx.accounts.reward_center.key() {
-                    pair.0.is_signer = true;
-                }
-                pair.0
-            })
-            .collect(),
-    };
+    let (cancel_listing_ix, cancel_listing_account_infos) = make_auctioneer_instruction(AuctioneerInstructionArgs {
+        accounts: cancel_listing_ctx_accounts,
+        instruction_data: cancel_listing_params.data(),
+        auctioneer_authority: ctx.accounts.reward_center.key()
+    });
 
     invoke_signed(
         &cancel_listing_ix,
-        &cancel_listing_ctx_accounts.to_account_infos(),
+        &cancel_listing_account_infos,
         reward_center_signer_seeds,
     )?;
 

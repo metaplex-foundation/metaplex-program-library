@@ -1,5 +1,6 @@
 pub mod assertions;
 pub mod constants;
+pub mod cpi;
 pub mod errors;
 pub mod execute_sale;
 pub mod listings;
