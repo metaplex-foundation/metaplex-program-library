@@ -582,7 +582,7 @@ mod burn_edition_nft {
             .await
             .unwrap();
 
-        context.warp_to_slot(100).unwrap();
+        context.warp_to_slot(10).unwrap();
 
         second_print_edition
             .transfer(&mut context, &user.pubkey())
@@ -701,7 +701,6 @@ mod burn_edition_nft {
         let ledger = &edition_marker_account.data[1..];
 
         assert!(ledger[0] == 0b0111_1111);
-        println!("{:?}", ledger[1]);
         assert!(ledger[1] == 0b1110_0000);
 
         // Burn the second one
@@ -808,7 +807,7 @@ mod burn_edition_nft {
             .await
             .unwrap();
 
-        context.warp_to_slot(100).unwrap();
+        context.warp_to_slot(10).unwrap();
 
         user_print_edition
             .transfer(&mut context, &user.pubkey())
