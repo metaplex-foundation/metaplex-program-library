@@ -1,9 +1,10 @@
 use crate::{
     constants::{LISTING, REWARD_CENTER},
+    cpi::auction_house::{make_auctioneer_instruction, AuctioneerInstructionArgs},
     state::{
         listing_rewards::{Listing, RewardCenter},
         metaplex_anchor::TokenMetadata,
-    }, cpi::auction_house::{make_auctioneer_instruction, AuctioneerInstructionArgs},
+    },
 };
 use anchor_lang::{prelude::*, InstructionData};
 use anchor_spl::token::{Mint, Token, TokenAccount};
@@ -14,7 +15,7 @@ use mpl_auction_house::{
     program::AuctionHouse as AuctionHouseProgram,
     AuctionHouse, Auctioneer,
 };
-use solana_program::{instruction::Instruction, program::invoke_signed};
+use solana_program::program::invoke_signed;
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct CancelListingParams {
@@ -135,8 +136,6 @@ pub fn handler(
         &[reward_center.bump],
     ]];
 
-    let auction_house_program = ctx.accounts.auction_house_program.to_account_info();
-
     let cancel_listing_ctx_accounts = AuctioneerCancel {
         wallet: ctx.accounts.wallet.to_account_info(),
         token_account: ctx.accounts.token_account.to_account_info(),
@@ -155,11 +154,12 @@ pub fn handler(
         token_size,
     };
 
-    let (cancel_listing_ix, cancel_listing_account_infos) = make_auctioneer_instruction(AuctioneerInstructionArgs {
-        accounts: cancel_listing_ctx_accounts,
-        instruction_data: cancel_listing_params.data(),
-        auctioneer_authority: ctx.accounts.reward_center.key()
-    });
+    let (cancel_listing_ix, cancel_listing_account_infos) =
+        make_auctioneer_instruction(AuctioneerInstructionArgs {
+            accounts: cancel_listing_ctx_accounts,
+            instruction_data: cancel_listing_params.data(),
+            auctioneer_authority: ctx.accounts.reward_center.key(),
+        });
 
     invoke_signed(
         &cancel_listing_ix,

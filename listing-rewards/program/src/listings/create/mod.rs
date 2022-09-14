@@ -1,15 +1,16 @@
 use anchor_lang::{context::Context, prelude::*, AnchorDeserialize, InstructionData};
 use anchor_spl::token::{Token, TokenAccount};
-use solana_program::{instruction::Instruction, program::invoke_signed};
+use solana_program::program::invoke_signed;
 
 use crate::{
     assertions::assert_listing_init_eligibility,
     constants::{LISTING, REWARD_CENTER},
+    cpi::auction_house::{make_auctioneer_instruction, AuctioneerInstructionArgs},
     errors::ListingRewardsError,
     state::{
         listing_rewards::{Listing, RewardCenter},
         metaplex_anchor::TokenMetadata,
-    }, cpi::auction_house::{make_auctioneer_instruction, AuctioneerInstructionArgs},
+    },
 };
 use mpl_auction_house::{
     constants::{AUCTIONEER, FEE_PAYER, PREFIX, SIGNER},
@@ -217,8 +218,6 @@ pub fn handler(
         &[reward_center.bump],
     ]];
 
-    let auction_house_program = ctx.accounts.auction_house_program.to_account_info();
-
     let create_listing_ctx_accounts = AuctioneerSell {
         metadata: metadata.to_account_info(),
         wallet: ctx.accounts.wallet.to_account_info(),
@@ -243,11 +242,12 @@ pub fn handler(
         token_size,
     };
 
-    let (create_listing_ix, create_listing_account_infos) = make_auctioneer_instruction(AuctioneerInstructionArgs {
-        accounts: create_listing_ctx_accounts,
-        instruction_data: create_listing_params.data(),
-        auctioneer_authority: ctx.accounts.reward_center.key()
-    });
+    let (create_listing_ix, create_listing_account_infos) =
+        make_auctioneer_instruction(AuctioneerInstructionArgs {
+            accounts: create_listing_ctx_accounts,
+            instruction_data: create_listing_params.data(),
+            auctioneer_authority: ctx.accounts.reward_center.key(),
+        });
 
     invoke_signed(
         &create_listing_ix,

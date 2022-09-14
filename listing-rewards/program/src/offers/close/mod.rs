@@ -15,12 +15,13 @@ use mpl_auction_house::{
 
 use crate::{
     constants::{OFFER, REWARD_CENTER},
+    cpi::auction_house::{make_auctioneer_instruction, AuctioneerInstructionArgs},
     state::{
         listing_rewards::{Offer, RewardCenter},
         metaplex_anchor::TokenMetadata,
-    }, cpi::auction_house::{make_auctioneer_instruction, AuctioneerInstructionArgs},
+    },
 };
-use solana_program::{instruction::Instruction, program::invoke_signed};
+use solana_program::program::invoke_signed;
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct CloseOfferParams {
@@ -195,11 +196,12 @@ pub fn handler(
         amount: buyer_price,
     };
 
-    let (withdraw_offer_ix, withdraw_offer_account_infos) = make_auctioneer_instruction(AuctioneerInstructionArgs {
-        accounts: withdraw_offer_ctx_accounts,
-        instruction_data: withdraw_offer_params.data(),
-        auctioneer_authority: ctx.accounts.reward_center.key()
-    });
+    let (withdraw_offer_ix, withdraw_offer_account_infos) =
+        make_auctioneer_instruction(AuctioneerInstructionArgs {
+            accounts: withdraw_offer_ctx_accounts,
+            instruction_data: withdraw_offer_params.data(),
+            auctioneer_authority: ctx.accounts.reward_center.key(),
+        });
 
     invoke_signed(
         &withdraw_offer_ix,
@@ -226,11 +228,12 @@ pub fn handler(
         token_size,
     };
 
-    let (close_offer_ix, close_offer_account_infos) = make_auctioneer_instruction(AuctioneerInstructionArgs {
-        accounts: close_offer_ctx_accounts,
-        instruction_data: close_offer_params.data(),
-        auctioneer_authority: ctx.accounts.reward_center.key()
-    });
+    let (close_offer_ix, close_offer_account_infos) =
+        make_auctioneer_instruction(AuctioneerInstructionArgs {
+            accounts: close_offer_ctx_accounts,
+            instruction_data: close_offer_params.data(),
+            auctioneer_authority: ctx.accounts.reward_center.key(),
+        });
 
     invoke_signed(
         &close_offer_ix,

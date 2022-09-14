@@ -12,15 +12,16 @@ use mpl_auction_house::{
     program::AuctionHouse as AuctionHouseProgram,
     AuctionHouse, Auctioneer,
 };
-use solana_program::{instruction::Instruction, program::invoke_signed};
+use solana_program::program::invoke_signed;
 
 use crate::{
     constants::{OFFER, REWARD_CENTER},
+    cpi::auction_house::{make_auctioneer_instruction, AuctioneerInstructionArgs},
     errors::ListingRewardsError,
     state::{
         listing_rewards::{Offer, RewardCenter},
         metaplex_anchor::TokenMetadata,
-    }, cpi::auction_house::{make_auctioneer_instruction, AuctioneerInstructionArgs},
+    },
 };
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
@@ -155,7 +156,6 @@ pub fn handler(
         escrow_payment_bump,
     }: UpdateOfferParams,
 ) -> Result<()> {
-    let auction_house_program = &ctx.accounts.auction_house_program;
     let auction_house = &ctx.accounts.auction_house;
     let reward_center = &ctx.accounts.reward_center;
     let offer = &mut ctx.accounts.offer;
@@ -164,10 +164,10 @@ pub fn handler(
     let old_buyer_price = offer.price;
 
     let reward_center_signer_seeds: &[&[&[u8]]] = &[&[
-            REWARD_CENTER.as_bytes(),
-            auction_house_key.as_ref(),
-            &[reward_center.bump],
-        ]];
+        REWARD_CENTER.as_bytes(),
+        auction_house_key.as_ref(),
+        &[reward_center.bump],
+    ]];
 
     if new_buyer_price != old_buyer_price {
         let (ix, account_infos) = if new_buyer_price > old_buyer_price {
@@ -192,8 +192,12 @@ pub fn handler(
 
             make_auctioneer_instruction(AuctioneerInstructionArgs {
                 accounts: deposit_cpi_accounts,
-                instruction_data: AuctioneerDepositData { escrow_payment_bump, amount: amount_to_deposit }.data(),
-                auctioneer_authority: ctx.accounts.reward_center.key()
+                instruction_data: AuctioneerDepositData {
+                    escrow_payment_bump,
+                    amount: amount_to_deposit,
+                }
+                .data(),
+                auctioneer_authority: ctx.accounts.reward_center.key(),
             })
         } else {
             let amount_to_withdraw = old_buyer_price.saturating_sub(new_buyer_price);
@@ -217,12 +221,15 @@ pub fn handler(
 
             make_auctioneer_instruction(AuctioneerInstructionArgs {
                 accounts: withdraw_cpi_accounts,
-                instruction_data: AuctioneerDepositData { escrow_payment_bump, amount: amount_to_withdraw }.data(),
-                auctioneer_authority: ctx.accounts.reward_center.key()
+                instruction_data: AuctioneerWithdrawData {
+                    escrow_payment_bump,
+                    amount: amount_to_withdraw,
+                }
+                .data(),
+                auctioneer_authority: ctx.accounts.reward_center.key(),
             })
         };
 
-        
         invoke_signed(&ix, &account_infos, reward_center_signer_seeds)?;
 
         offer.price = new_buyer_price;

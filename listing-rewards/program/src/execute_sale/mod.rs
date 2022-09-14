@@ -309,7 +309,6 @@ pub fn handler(
 
     let auction_house = &ctx.accounts.auction_house;
     let reward_center = &ctx.accounts.reward_center;
-    let auction_house_program = &ctx.accounts.auction_house_program;
     let metadata = &ctx.accounts.metadata;
 
     let auction_house_key = auction_house.key();
