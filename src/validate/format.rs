@@ -2,7 +2,7 @@ use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
 use super::ValidateParserError;
-use crate::validate::parser;
+use crate::{common::*, validate::parser};
 
 #[derive(Debug, Clone, Deserialize, Default, Serialize)]
 pub struct Metadata {
@@ -21,7 +21,7 @@ pub struct Metadata {
 }
 
 impl Metadata {
-    pub fn validate(&self) -> Result<(), ValidateParserError> {
+    pub fn validate(&mut self) -> Result<(), ValidateParserError> {
         parser::check_name(&self.name)?;
         parser::check_url(&self.image)?;
 
@@ -37,6 +37,25 @@ impl Metadata {
             parser::check_creators_shares(creators)?;
             parser::check_creators_addresses(creators)?;
         }
+
+        if self.properties.category.is_none() {
+            let category = match &self.animation_url {
+                Some(_) => "video",
+                None => "image",
+            };
+            self.properties.category = Some(category.to_string());
+
+            println!(
+                "{} missing `properties.creator` for nft {}, defaulting to {}",
+                WARNING_EMOJI, &self.name, category
+            );
+        }
+        parser::check_category(
+            self.properties
+                .category
+                .as_ref()
+                .expect("unreachable, should never throw"),
+        )?;
 
         if let Some(animation_url) = &self.animation_url {
             parser::check_url(animation_url)?;
@@ -55,6 +74,7 @@ pub struct Property {
     pub files: Vec<FileAttr>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub creators: Option<Vec<Creator>>,
+    pub category: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize, Default, Serialize)]

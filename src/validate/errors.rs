@@ -41,4 +41,7 @@ pub enum ValidateParserError {
 
     #[error("Missing seller fee basis points field")]
     MissingSellerFeeBasisPoints,
+
+    #[error("Invalid category '{0}': must be one of: {1}")]
+    InvalidCategory(String, String),
 }

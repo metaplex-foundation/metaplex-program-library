@@ -3,7 +3,10 @@ use std::str::FromStr;
 use anchor_lang::prelude::Pubkey;
 pub use mpl_token_metadata::state::{MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH};
 
-use crate::validate::{errors::ValidateParserError, Creator};
+use crate::{
+    common::*,
+    validate::{errors::ValidateParserError, Creator},
+};
 
 pub fn check_name(name: &str) -> Result<(), ValidateParserError> {
     if name.len() > MAX_NAME_LENGTH {
@@ -53,6 +56,17 @@ pub fn check_creators_addresses(creators: &[Creator]) -> Result<(), ValidatePars
     for creator in creators {
         Pubkey::from_str(&creator.address)
             .map_err(|_| ValidateParserError::InvalidCreatorAddress(creator.address.clone()))?;
+    }
+
+    Ok(())
+}
+
+pub fn check_category(category: &str) -> Result<(), ValidateParserError> {
+    if !VALID_CATEGORIES.contains(&category) {
+        return Err(ValidateParserError::InvalidCategory(
+            category.to_string(),
+            format!("{:?}", VALID_CATEGORIES),
+        ));
     }
 
     Ok(())

@@ -100,7 +100,7 @@ pub fn process_validate(args: ValidateArgs) -> Result<()> {
             }
         };
 
-        let metadata = match serde_json::from_reader::<File, Metadata>(f) {
+        let mut metadata = match serde_json::from_reader::<File, Metadata>(f) {
             Ok(metadata) => metadata,
             Err(error) => {
                 error!("{}: {}", path.display(), error);

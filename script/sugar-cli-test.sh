@@ -485,7 +485,7 @@ read -r -d $'\0' METADATA <<-EOM
             "uri": "%s",
             "type": "%s"
         }%b
-        "category": "Sugar Test"
+        "category": "%s"
     }
 }
 EOM
@@ -504,7 +504,7 @@ read -r -d $'\0' COLLECTION <<-EOM
             "uri": "collection.png",
             "type": "image/png"
         }],
-        "category": "Sugar Test Collection"
+        "category": "image"
     }
 }
 EOM
@@ -548,13 +548,15 @@ if [ $RESUME -eq 0 ]; then
             MEDIA_TYPE="image/$EXT"
             ANIMATION_URL=","
             ANIMATION_FILE="],"
+            CATEGORY="image"
             cp "$ASSETS_DIR/template_image.$EXT" "$ASSETS_DIR/$i.$EXT"
             if [ "$ANIMATION" = 1 ]; then
                 cp "$ASSETS_DIR/template_animation.mp4" "$ASSETS_DIR/$i.mp4"
                 ANIMATION_URL=",\n\t\"animation_url\": \"$i.mp4\","
                 ANIMATION_FILE=",\n\t\t{\n\t\t\t\"uri\": \"$i.mp4\",\n\t\t\t\"type\": \"video/mp4\"\n\t\t}],"
+                CATEGORY="video"
             fi
-            printf "$METADATA" "$NAME" "$NAME" "$MEDIA_NAME" "$ANIMATION_URL" "$MEDIA_NAME" "$MEDIA_TYPE" "$ANIMATION_FILE" > "$ASSETS_DIR/$i.json"
+            printf "$METADATA" "$NAME" "$NAME" "$MEDIA_NAME" "$ANIMATION_URL" "$MEDIA_NAME" "$MEDIA_TYPE" "$ANIMATION_FILE" "$CATEGORY" > "$ASSETS_DIR/$i.json"
         done
         rm "$ASSETS_DIR/template_image.$EXT"
         # quietly removes the animation template (it might not exist)
