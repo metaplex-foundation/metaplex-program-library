@@ -2051,7 +2051,7 @@ pub fn process_burn_edition_nft(program_id: &Pubkey, accounts: &[AccountInfo]) -
     }
 
     // Decrement the suppply on the master edition now that we've successfully burned a print.
-    // Decrement max_supply if Master Edition owner is the same as Print Edition owner.
+    // Decrement max_supply if Master Edition owner is not the same as Print Edition owner.
     msg!("Decrementing master edition supply");
     let mut master_edition: MasterEditionV2 =
         MasterEditionV2::from_account_info(master_edition_info)?;
@@ -2061,7 +2061,7 @@ pub fn process_burn_edition_nft(program_id: &Pubkey, accounts: &[AccountInfo]) -
         .ok_or(MetadataError::NumericalOverflowError)?;
 
     if let Some(max_supply) = master_edition.max_supply {
-        if owner_is_the_same {
+        if !owner_is_the_same {
             master_edition.max_supply = Some(
                 max_supply
                     .checked_sub(1)

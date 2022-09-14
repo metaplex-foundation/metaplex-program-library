@@ -620,9 +620,9 @@ mod burn_edition_nft {
         let master_edition_struct: ProgramMasterEdition =
             ProgramMasterEdition::safe_deserialize(&master_edition_account.data).unwrap();
 
-        // Master edition owner burning should decrement both supply and max_supply.
+        // Master edition owner burning should decrement only the supply.
         assert!(master_edition_struct.supply == 1);
-        assert!(master_edition_struct.max_supply == Some(9));
+        assert!(master_edition_struct.max_supply == Some(10));
 
         // Second owner burning.
         burn_edition(
@@ -650,7 +650,7 @@ mod burn_edition_nft {
         let master_edition_struct: ProgramMasterEdition =
             ProgramMasterEdition::safe_deserialize(&master_edition_account.data).unwrap();
 
-        // Second owner burning should decrement only supply.
+        // Second owner burning should decrement both supply and max_supply.
         assert!(master_edition_struct.supply == 0);
         assert!(master_edition_struct.max_supply == Some(9));
     }
