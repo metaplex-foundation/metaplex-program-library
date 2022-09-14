@@ -2543,6 +2543,29 @@ createErrorFromCodeLookup.set(0x75, () => new InvalidEditionMarkerError());
 createErrorFromNameLookup.set('InvalidEditionMarker', () => new InvalidEditionMarkerError());
 
 /**
+ * ReservationListDeprecated: 'Reservation List is Deprecated'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class ReservationListDeprecatedError extends Error {
+  readonly code: number = 0x76;
+  readonly name: string = 'ReservationListDeprecated';
+  constructor() {
+    super('Reservation List is Deprecated');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, ReservationListDeprecatedError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x76, () => new ReservationListDeprecatedError());
+createErrorFromNameLookup.set(
+  'ReservationListDeprecated',
+  () => new ReservationListDeprecatedError(),
+);
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

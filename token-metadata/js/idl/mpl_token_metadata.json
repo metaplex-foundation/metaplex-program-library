@@ -2087,6 +2087,12 @@
           "desc": "Token account the print edition NFT is in"
         },
         {
+          "name": "originalTokenAccount",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Token account the Master Edition NFT is in"
+        },
+        {
           "name": "masterEditionAccount",
           "isMut": true,
           "isSigner": false,
@@ -2114,7 +2120,7 @@
       "args": [],
       "discriminant": {
         "type": "u8",
-        "value": 36
+        "value": 37
       }
     }
   ],
@@ -3501,6 +3507,11 @@
       "code": 117,
       "name": "InvalidEditionMarker",
       "msg": "Invalid Edition Marker"
+    },
+    {
+      "code": 118,
+      "name": "ReservationListDeprecated",
+      "msg": "Reservation List is Deprecated"
     }
   ],
   "metadata": {
