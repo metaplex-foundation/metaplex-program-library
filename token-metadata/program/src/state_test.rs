@@ -597,7 +597,7 @@ mod collection_authority_record {
     }
 
     #[test]
-    fn test_escrow_constraints_model_len() {
+    fn test_escrow_constraint_model_len() {
         let ect_none = EscrowConstraintType::None;
         let ect_collection = EscrowConstraintType::Collection(Keypair::new().pubkey());
         let ect_tokens = EscrowConstraintType::tokens_from_slice(&[
@@ -685,7 +685,7 @@ mod collection_authority_record {
             "EscrowConstraint::tokens length is not equal to serialized length"
         );
 
-        let escrow_constraints_model = EscrowConstraintModel {
+        let escrow_constraint_model = EscrowConstraintModel {
             key: Key::EscrowConstraintModel,
             name: "test".to_string(),
             count: 0,
@@ -698,15 +698,15 @@ mod collection_authority_record {
             ],
         };
 
-        let mut buf_escrow_constraints_model = Vec::new();
+        let mut buf_escrow_constraint_model = Vec::new();
 
-        escrow_constraints_model
-            .serialize(&mut buf_escrow_constraints_model)
+        escrow_constraint_model
+            .serialize(&mut buf_escrow_constraint_model)
             .unwrap();
 
         assert_eq!(
-            escrow_constraints_model.try_len().unwrap(),
-            buf_escrow_constraints_model.len(),
+            escrow_constraint_model.try_len().unwrap(),
+            buf_escrow_constraint_model.len(),
             "EscrowConstraintModel length is not equal to serialized length"
         );
     }
@@ -738,7 +738,7 @@ mod collection_authority_record {
 
             token_limit: 1,
         };
-        let escrow_constraints_model = EscrowConstraintModel {
+        let escrow_constraint_model = EscrowConstraintModel {
             key: Key::EscrowConstraintModel,
             name: "test".to_string(),
             count: 0,
@@ -747,23 +747,23 @@ mod collection_authority_record {
             constraints: vec![ec_none, ec_collection, ec_tokens],
         };
 
-        escrow_constraints_model
+        escrow_constraint_model
             .validate_at(&keypair_1.pubkey(), 0)
             .expect("None constraint failed");
 
-        escrow_constraints_model
+        escrow_constraint_model
             .validate_at(&keypair_1.pubkey(), 1)
             .expect("Collection constraint failed");
 
-        escrow_constraints_model
+        escrow_constraint_model
             .validate_at(&keypair_2.pubkey(), 1)
             .expect_err("Collection constraint failed");
 
-        escrow_constraints_model
+        escrow_constraint_model
             .validate_at(&keypair_2.pubkey(), 2)
             .expect("Tokens constraint failed");
 
-        escrow_constraints_model
+        escrow_constraint_model
             .validate_at(&keypair_1.pubkey(), 2)
             .expect_err("Tokens constraint failed");
     }
