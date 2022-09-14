@@ -8,8 +8,10 @@ use crate::{
     assertions::assert_listing_reward_redemption_eligibility,
     constants::{LISTING, REWARD_CENTER},
     errors::ListingRewardsError,
-    state::{Listing, RewardCenter},
-    MetadataAccount,
+    state::{
+        listing_rewards::{Listing, RewardCenter},
+        metaplex_anchor::TokenMetadata,
+    },
 };
 
 /// Accounts for the [`redeem_rewards` handler](listing_rewards/fn.redeem_rewards.html).
@@ -42,7 +44,7 @@ pub struct RedemRewards<'info> {
     ]
     pub reward_center_associated_token_account: Account<'info, TokenAccount>,
 
-    pub metadata: Account<'info, MetadataAccount>,
+    pub metadata: Account<'info, TokenMetadata>,
 
     #[account(
       init_if_needed,

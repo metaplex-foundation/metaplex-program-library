@@ -17,8 +17,8 @@ use solana_program::{instruction::Instruction, program::invoke_signed};
 
 use crate::{
     constants::{OFFER, REWARD_CENTER},
-    state::{Offer, RewardCenter},
-    MetadataAccount, errors::ListingRewardsError,
+    state::{listing_rewards::{Offer, RewardCenter}, metaplex_anchor::TokenMetadata},
+    errors::ListingRewardsError,
 };
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
@@ -111,7 +111,7 @@ pub struct UpdateOffer<'info> {
     #[account(
         constraint = metadata.mint.eq(&token_account.mint)
     )]
-    pub metadata: Box<Account<'info, MetadataAccount>>,
+    pub metadata: Box<Account<'info, TokenMetadata>>,
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     #[account(

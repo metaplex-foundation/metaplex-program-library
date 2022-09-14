@@ -1,7 +1,7 @@
 use crate::{
     constants::{LISTING, REWARD_CENTER},
-    state::{Listing, RewardCenter},
-    MetadataAccount,
+    state::{listing_rewards::{Listing, RewardCenter},
+    metaplex_anchor::TokenMetadata}
 };
 use anchor_lang::{prelude::*, InstructionData};
 use anchor_spl::token::{Mint, Token, TokenAccount};
@@ -42,7 +42,7 @@ pub struct CancelListing<'info> {
     pub listing: Account<'info, Listing>,
 
     /// Metaplex metadata account decorating SPL mint account.
-    pub metadata: Box<Account<'info, MetadataAccount>>,
+    pub metadata: Box<Account<'info, TokenMetadata>>,
 
     /// SPL token account containing the token of the sale to be canceled.
     #[account(mut)]

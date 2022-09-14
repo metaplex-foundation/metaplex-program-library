@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 
 use crate::{
     errors::ListingRewardsError,
-    state::{Listing, Offer, RewardCenter},
+    state::listing_rewards::{Listing, Offer, RewardCenter},
 };
 
 pub fn assert_listing_reward_redemption_eligibility(

@@ -1,7 +1,6 @@
 use crate::constants::{LISTING, OFFER, REWARD_CENTER, PURCHASE_TICKET};
 use crate::errors::ListingRewardsError;
-use crate::state::{Listing, Offer, PurchaseTicket};
-use crate::{state::RewardCenter, MetadataAccount};
+use crate::state::{listing_rewards::{Listing, Offer, PurchaseTicket, RewardCenter}, metaplex_anchor::TokenMetadata};
 use anchor_lang::{prelude::*, InstructionData};
 use anchor_spl::token::{transfer, Transfer};
 use anchor_spl::{
@@ -111,7 +110,7 @@ pub struct ExecuteSale<'info> {
     pub token_mint: Box<Account<'info, Mint>>,
 
     /// Metaplex metadata account decorating SPL mint account.
-    pub metadata: Box<Account<'info, MetadataAccount>>,
+    pub metadata: Box<Account<'info, TokenMetadata>>,
 
     /// Auction House treasury mint account.
     pub treasury_mint: Box<Account<'info, Mint>>,

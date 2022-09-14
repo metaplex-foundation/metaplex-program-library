@@ -14,8 +14,7 @@ use mpl_auction_house::{
 
 use crate::{
     constants::{OFFER, REWARD_CENTER},
-    state::{Offer, RewardCenter},
-    MetadataAccount,
+    state::{listing_rewards::{Offer, RewardCenter}, metaplex_anchor::TokenMetadata},
 };
 use solana_program::{instruction::Instruction, program::invoke_signed};
 
@@ -72,7 +71,7 @@ pub struct CloseOffer<'info> {
     pub escrow_payment_account: UncheckedAccount<'info>,
 
     /// Metaplex metadata account decorating SPL mint account.
-    pub metadata: Box<Account<'info, MetadataAccount>>,
+    pub metadata: Box<Account<'info, TokenMetadata>>,
 
     /// Token mint account of SPL token.
     pub token_mint: Box<Account<'info, Mint>>,

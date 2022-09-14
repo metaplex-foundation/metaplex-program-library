@@ -5,8 +5,7 @@ use solana_program::{instruction::Instruction, program::invoke_signed};
 use crate::{
     constants::{LISTING, REWARD_CENTER},
     errors::ListingRewardsError,
-    state::{Listing, RewardCenter},
-    MetadataAccount, assertions::assert_listing_init_eligibility,
+    state::{listing_rewards::{Listing, RewardCenter}, metaplex_anchor::TokenMetadata}, assertions::assert_listing_init_eligibility,
 };
 use mpl_auction_house::{
     constants::{AUCTIONEER, FEE_PAYER, PREFIX, SIGNER},
@@ -74,7 +73,7 @@ pub struct CreateListing<'info> {
     pub token_account: Box<Account<'info, TokenAccount>>,
 
     /// Metaplex metadata account decorating SPL mint account.
-    pub metadata: Box<Account<'info, MetadataAccount>>,
+    pub metadata: Box<Account<'info, TokenMetadata>>,
 
     /// CHECK: Verified through CPI
     /// Auction House authority account.

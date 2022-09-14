@@ -1,8 +1,7 @@
 use crate::{
     constants::{OFFER, REWARD_CENTER},
     errors::ListingRewardsError,
-    state::{Offer, RewardCenter},
-    MetadataAccount, assertions::assert_offer_init_eligibility,
+    state::{listing_rewards::{Offer, RewardCenter}, metaplex_anchor::TokenMetadata}, assertions::assert_offer_init_eligibility,
 };
 use anchor_lang::prelude::{Result, *};
 use anchor_spl::token::{Mint, Token, TokenAccount};
@@ -55,7 +54,7 @@ pub struct CreateOffer<'info> {
     pub token_account: Box<Account<'info, TokenAccount>>,
 
     /// Metaplex metadata account decorating SPL mint account.
-    pub metadata: Box<Account<'info, MetadataAccount>>,
+    pub metadata: Box<Account<'info, TokenMetadata>>,
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     #[account(

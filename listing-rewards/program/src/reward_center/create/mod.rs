@@ -9,7 +9,7 @@ use mpl_auction_house::{constants::PREFIX, AuctionHouse};
 use crate::{
     constants::REWARD_CENTER,
     errors::ListingRewardsError,
-    state::{ListingRewardRules, RewardCenter},
+    state::listing_rewards::{ListingRewardRules, RewardCenter},
 };
 
 /// Options to set on the reward center
