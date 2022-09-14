@@ -178,7 +178,7 @@ mod burn_edition_nft {
         .unwrap_err();
 
         // We've passed in the correct token account associated with the new owner but
-        // the old owner is not the current owner of the account so this shuld fail with
+        // the old owner is not the current owner of the account so this should fail with
         // InvalidOwner error.
         assert_custom_error!(err, MetadataError::InvalidOwner);
 
@@ -561,7 +561,7 @@ mod burn_edition_nft {
         assert!(master_edition_struct.supply == 1);
         assert!(master_edition_struct.max_supply == Some(10));
 
-        let second_print_edition = EditionMarker::new(&original_nft, &master_edition, 2);
+        let mut second_print_edition = EditionMarker::new(&original_nft, &master_edition, 2);
         second_print_edition.create(&mut context).await.unwrap();
 
         let master_edition_account = context
@@ -576,9 +576,25 @@ mod burn_edition_nft {
 
         assert!(master_edition_struct.supply == 2);
 
+        // Transfer second edition to a different owner.
+        let user = Keypair::new();
+        airdrop(&mut context, &user.pubkey(), 1_000_000_000)
+            .await
+            .unwrap();
+
+        context.warp_to_slot(100).unwrap();
+
+        second_print_edition
+            .transfer(&mut context, &user.pubkey())
+            .await
+            .unwrap();
+        let new_owner_token_account =
+            get_associated_token_address(&user.pubkey(), &second_print_edition.mint.pubkey());
+
         let kpbytes = &context.payer;
         let payer = Keypair::from_bytes(&kpbytes.to_bytes()).unwrap();
 
+        // Master edition owner burning.
         burn_edition(
             &mut context,
             print_edition.new_metadata_pubkey,
@@ -604,16 +620,18 @@ mod burn_edition_nft {
         let master_edition_struct: ProgramMasterEdition =
             ProgramMasterEdition::safe_deserialize(&master_edition_account.data).unwrap();
 
+        // Master edition owner burning should decrement both supply and max_supply.
         assert!(master_edition_struct.supply == 1);
         assert!(master_edition_struct.max_supply == Some(9));
 
+        // Second owner burning.
         burn_edition(
             &mut context,
             second_print_edition.new_metadata_pubkey,
-            &payer,
+            &user,
             second_print_edition.mint.pubkey(),
             original_nft.mint.pubkey(),
-            second_print_edition.token.pubkey(),
+            new_owner_token_account,
             original_nft.token.pubkey(),
             master_edition.pubkey,
             second_print_edition.new_edition_pubkey,
@@ -632,8 +650,9 @@ mod burn_edition_nft {
         let master_edition_struct: ProgramMasterEdition =
             ProgramMasterEdition::safe_deserialize(&master_edition_account.data).unwrap();
 
+        // Second owner burning should decrement only supply.
         assert!(master_edition_struct.supply == 0);
-        assert!(master_edition_struct.max_supply == Some(8));
+        assert!(master_edition_struct.max_supply == Some(9));
     }
 
     #[tokio::test]
@@ -797,8 +816,6 @@ mod burn_edition_nft {
             .unwrap();
         let new_owner_token_account =
             get_associated_token_address(&user.pubkey(), &user_print_edition.mint.pubkey());
-
-        context.warp_to_slot(5000).unwrap();
 
         // Metadata, Print Edition and token account exist.
         assert!(print_edition.exists_on_chain(&mut context).await);

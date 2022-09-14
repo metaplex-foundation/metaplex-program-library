@@ -512,7 +512,7 @@ pub fn calculate_supply_change<'a>(
     master_edition_account_info: &AccountInfo<'a>,
     reservation_list_info: Option<&AccountInfo<'a>>,
     edition_override: Option<u64>,
-    me_supply: u64,
+    current_supply: u64,
 ) -> ProgramResult {
     // Reservation lists are deprecated.
     if reservation_list_info.is_some() {
@@ -537,15 +537,15 @@ pub fn calculate_supply_change<'a>(
     // This allows users to mint out missing edition numbers that are less than the supply, but
     // tracks the supply correctly once all missing editions are minted.
     let new_supply = if let Some(max_supply) = max_supply {
-        if edition < max_supply {
-            me_supply
+        if current_supply < max_supply {
+            current_supply
                 .checked_add(1)
                 .ok_or(MetadataError::NumericalOverflowError)?
         } else {
-            me_supply
+            current_supply
         }
     } else {
-        me_supply
+        current_supply
             .checked_add(1)
             .ok_or(MetadataError::NumericalOverflowError)?
     };

@@ -402,7 +402,7 @@ mod mint_new_edition_from_master_edition_via_token {
         assert!(master_edition_struct.supply == 8);
         assert!(master_edition_struct.max_supply == Some(10));
 
-        // Mint edition number 2 and supply should stay at 8.
+        // Mint edition number 2, this will succeed but supply will incremement.
         let print_edition = EditionMarker::new(&original_nft, &master_edition, 2);
         print_edition.create(&mut context).await.unwrap();
 
@@ -416,10 +416,10 @@ mod mint_new_edition_from_master_edition_via_token {
         let master_edition_struct: ProgramMasterEdition =
             ProgramMasterEdition::safe_deserialize(&master_edition_account.data).unwrap();
 
-        assert!(master_edition_struct.supply == 8);
+        assert!(master_edition_struct.supply == 9);
         assert!(master_edition_struct.max_supply == Some(10));
 
-        // Finally mint edition number 10 and supply should increase by 1 to 9.
+        // Mint edition number 10 and supply should increase by 1 to 10.
         let print_edition = EditionMarker::new(&original_nft, &master_edition, 10);
         print_edition.create(&mut context).await.unwrap();
 
@@ -433,7 +433,26 @@ mod mint_new_edition_from_master_edition_via_token {
         let master_edition_struct: ProgramMasterEdition =
             ProgramMasterEdition::safe_deserialize(&master_edition_account.data).unwrap();
 
-        assert!(master_edition_struct.supply == 9);
+        assert!(master_edition_struct.supply == 10);
+        assert!(master_edition_struct.max_supply == Some(10));
+
+        // Mint another edition and it should succeed, but supply should stay the same since it's already reached max supply.
+        // This allows minting missing editions even when the supply has erraneously reached
+        // the max supply.
+        let print_edition = EditionMarker::new(&original_nft, &master_edition, 6);
+        print_edition.create(&mut context).await.unwrap();
+
+        let master_edition_account = context
+            .banks_client
+            .get_account(master_edition.pubkey)
+            .await
+            .unwrap()
+            .unwrap();
+
+        let master_edition_struct: ProgramMasterEdition =
+            ProgramMasterEdition::safe_deserialize(&master_edition_account.data).unwrap();
+
+        assert!(master_edition_struct.supply == 10);
         assert!(master_edition_struct.max_supply == Some(10));
     }
 }
