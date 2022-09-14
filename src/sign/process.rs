@@ -115,7 +115,7 @@ pub async fn process_sign(args: SignArgs) -> Result<()> {
                 let client = RpcClient::new(&rpc_url);
                 let (creator, _) = find_candy_machine_creator_pda(&candy_machine_id);
                 let creator = bs58::encode(creator).into_string();
-                get_cm_creator_accounts(&client, &creator, 0)?
+                get_cm_creator_metadata_accounts(&client, &creator, 0)?
             }
             Cluster::Mainnet => {
                 let client = RpcClient::new(&rpc_url);

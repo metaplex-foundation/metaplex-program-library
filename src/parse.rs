@@ -50,8 +50,9 @@ pub fn path_to_string(path: &Path) -> Result<String> {
 pub fn parse_sugar_errors(msg: &str) -> String {
     lazy_static! {
         static ref RE: Regex =
-            Regex::new(r"(0x[A-Za-z1-9]+)").expect("Failed to compile parse_client_error regex.");
+            Regex::new(r"(0x[A-Za-z0-9]+)").expect("Failed to compile parse_client_error regex.");
     }
+
     let mat = RE.find(msg);
 
     // If there's an RPC error code match in the message, try to parse it, otherwise return the message back.
@@ -81,5 +82,18 @@ fn find_external_program_error(code: String) -> String {
         format!("Candy Machine Error: {e}")
     } else {
         format!("Unknown error. Code: {code}")
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_sugar_errors() {
+        let expected_error = String::from("Candy Machine Error: NoWithdrawWithFrozenFunds");
+        let msg = String::from("Error: RPC response error -32002: Transaction simulation failed: Error processing Instruction 0: custom program error: 0x179e");
+        let parsed = parse_sugar_errors(&msg);
+        assert_eq!(parsed, expected_error);
     }
 }

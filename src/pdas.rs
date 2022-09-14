@@ -84,6 +84,13 @@ pub fn find_collection_pda(candy_machine_id: &Pubkey) -> (Pubkey, u8) {
     Pubkey::find_program_address(collection_seeds, &CANDY_MACHINE_ID)
 }
 
+pub fn find_freeze_pda(candy_machine_id: &Pubkey) -> (Pubkey, u8) {
+    // Derive freeze PDA address
+    let freeze_seeds = &["freeze".as_bytes(), candy_machine_id.as_ref()];
+
+    Pubkey::find_program_address(freeze_seeds, &CANDY_MACHINE_ID)
+}
+
 pub fn get_collection_pda(
     candy_machine: &Pubkey,
     program: &Program,

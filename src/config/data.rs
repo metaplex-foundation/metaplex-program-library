@@ -59,6 +59,8 @@ pub struct ConfigData {
 
     pub hidden_settings: Option<HiddenSettings>,
 
+    pub freeze_time: Option<i64>,
+
     pub upload_method: UploadMethod,
 
     pub retain_authority: bool,

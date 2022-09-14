@@ -13,13 +13,14 @@ use clap::Parser;
 use console::style;
 use sugar_cli::{
     bundlr::{process_bundlr, BundlrArgs},
-    cli::{Cli, CollectionSubcommands, Commands},
+    cli::{Cli, CollectionSubcommands, Commands, FreezeSubcommands},
     collections::{
         process_remove_collection, process_set_collection, RemoveCollectionArgs, SetCollectionArgs,
     },
     constants::{COMPLETE_EMOJI, ERROR_EMOJI},
     create_config::{process_create_config, CreateConfigArgs},
     deploy::{process_deploy, DeployArgs},
+    freeze::*,
     hash::{process_hash, HashArgs},
     launch::{process_launch, LaunchArgs},
     mint::{process_mint, MintArgs},
@@ -202,6 +203,34 @@ async fn run() -> Result<()> {
             })
             .await?
         }
+        Commands::Freeze { command } => match command {
+            FreezeSubcommands::Disable {
+                keypair,
+                rpc_url,
+                cache,
+                candy_machine,
+            } => process_disable_freeze(DisableFreezeArgs {
+                keypair,
+                rpc_url,
+                cache,
+                candy_machine,
+            })?,
+            FreezeSubcommands::Enable {
+                keypair,
+                rpc_url,
+                cache,
+                config,
+                candy_machine,
+                freeze_days,
+            } => process_enable_freeze(EnableFreezeArgs {
+                keypair,
+                rpc_url,
+                cache,
+                config,
+                candy_machine,
+                freeze_days,
+            })?,
+        },
         Commands::Hash {
             config,
             cache,
@@ -276,6 +305,37 @@ async fn run() -> Result<()> {
             cache,
             candy_machine,
             unminted,
+        })?,
+        Commands::Thaw {
+            keypair,
+            rpc_url,
+            cache,
+            config,
+            all,
+            candy_machine,
+            nft_mint,
+        } => {
+            process_thaw(ThawArgs {
+                keypair,
+                rpc_url,
+                cache,
+                config,
+                all,
+                candy_machine,
+                nft_mint,
+            })
+            .await?
+        }
+        Commands::UnfreezeFunds {
+            keypair,
+            rpc_url,
+            cache,
+            candy_machine,
+        } => process_unfreeze_funds(UnlockFundsArgs {
+            keypair,
+            rpc_url,
+            cache,
+            candy_machine,
         })?,
         Commands::Update {
             config,

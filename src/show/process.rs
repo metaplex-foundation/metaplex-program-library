@@ -6,7 +6,13 @@ use chrono::NaiveDateTime;
 use console::style;
 use mpl_candy_machine::{utils::is_feature_active, EndSettingType, WhitelistMintMode};
 
-use crate::{cache::load_cache, candy_machine::*, common::*, pdas::get_collection_pda, utils::*};
+use crate::{
+    cache::load_cache,
+    candy_machine::*,
+    common::*,
+    pdas::{find_freeze_pda, get_collection_pda},
+    utils::*,
+};
 
 pub struct ShowArgs {
     pub keypair: Option<String>,
@@ -18,7 +24,7 @@ pub struct ShowArgs {
 
 // TODO: change the value '1' for the corresponding constant once the
 // new version of the mpl_candy_machine crate is published
-const SWAP_REMOVE_FEATURE_INDEX: usize = 1;
+const SWAP_REMOVE_FEATURE_INDEX: usize = 255;
 // number of indices per line
 const PER_LINE: usize = 11;
 
@@ -67,6 +73,7 @@ pub fn process_show(args: ShowArgs) -> Result<()> {
 
     let cndy_state = get_candy_machine_state(&sugar_config, &candy_machine_id)?;
     let cndy_data = cndy_state.data;
+    let freeze_pda = get_freeze_pda_account(&sugar_config, &candy_machine_id).ok();
 
     pb.finish_and_clear();
 
@@ -227,6 +234,24 @@ pub fn process_show(args: ShowArgs) -> Result<()> {
         print_with_style("", "gatekeeper", "none".to_string());
     }
 
+    // freeze pda
+    if let Some(freeze_pda) = freeze_pda {
+        let (pda, _) = find_freeze_pda(&candy_machine_id);
+        print_with_style("", "freeze pda", pda.to_string());
+        print_with_style(
+            "    ",
+            "candy_machine",
+            freeze_pda.candy_machine.to_string(),
+        );
+        print_with_style("    ", "allow_thaw", freeze_pda.allow_thaw.to_string());
+        print_with_style("    ", "frozen_count", freeze_pda.frozen_count.to_string());
+        print_with_style("    ", "mint_start", freeze_pda.mint_start);
+        print_with_style("    ", "freeze_time", freeze_pda.freeze_time.to_string());
+        print_with_style("    ", "freeze_fee", freeze_pda.freeze_fee.to_string());
+    } else {
+        print_with_style("", "freeze pda", "none".to_string());
+    }
+
     // unminted indices
 
     if args.unminted {
@@ -327,9 +352,12 @@ pub fn process_show(args: ShowArgs) -> Result<()> {
     Ok(())
 }
 
-fn print_with_style(indent: &str, key: &str, value: String) {
+fn print_with_style<S>(indent: &str, key: &str, value: S)
+where
+    S: core::fmt::Debug,
+{
     println!(
-        " {} {}",
+        " {} {:?}",
         style(format!("{}:.. {}:", indent, key)).dim(),
         value
     );

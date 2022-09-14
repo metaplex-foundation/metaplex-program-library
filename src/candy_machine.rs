@@ -1,12 +1,16 @@
 use anchor_client::{solana_sdk::pubkey::Pubkey, Client, ClientError};
 use anyhow::{anyhow, Result};
 pub use mpl_candy_machine::ID as CANDY_MACHINE_ID;
-use mpl_candy_machine::{CandyMachine, CandyMachineData, WhitelistMintMode, WhitelistMintSettings};
+use mpl_candy_machine::{
+    constants::FREEZE_FEATURE_INDEX, is_feature_active, CandyMachine, CandyMachineData, FreezePDA,
+    WhitelistMintMode, WhitelistMintSettings,
+};
 use spl_token::id as token_program_id;
 
 use crate::{
     common::FloatConversionError,
     config::{data::SugarConfig, price_as_lamports, ConfigData},
+    pdas::find_freeze_pda,
     setup::setup_client,
     utils::{check_spl_token, f64_to_u64_safe},
 };
@@ -83,6 +87,37 @@ pub fn get_candy_machine_data(
 ) -> Result<CandyMachineData> {
     let candy_machine = get_candy_machine_state(sugar_config, candy_machine_id)?;
     Ok(candy_machine.data)
+}
+
+pub fn is_freeze_enabled(sugar_config: &SugarConfig, candy_machine_id: &Pubkey) -> Result<bool> {
+    let client = setup_client(sugar_config)?;
+    let _program = client.program(CANDY_MACHINE_ID);
+
+    let candy_machine_data = get_candy_machine_data(sugar_config, candy_machine_id)?;
+
+    Ok(is_feature_active(
+        &candy_machine_data.uuid,
+        FREEZE_FEATURE_INDEX,
+    ))
+}
+
+pub fn get_freeze_pda_account(
+    sugar_config: &SugarConfig,
+    candy_machine_id: &Pubkey,
+) -> Result<FreezePDA> {
+    let client = setup_client(sugar_config)?;
+    let program = client.program(CANDY_MACHINE_ID);
+
+    let (pda, _) = find_freeze_pda(candy_machine_id);
+
+    program.account(pda).map_err(|e| match e {
+        ClientError::AccountNotFound => anyhow!("Freeze PDA does not exist!"),
+        _ => anyhow!(
+            "Failed to deserialize Freeze PDA account {}: {}",
+            pda.to_string(),
+            e
+        ),
+    })
 }
 
 pub fn print_candy_machine_state(state: CandyMachine) {

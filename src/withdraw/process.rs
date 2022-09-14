@@ -23,6 +23,7 @@ use solana_client::{
 use crate::{
     candy_machine::CANDY_MACHINE_ID,
     common::*,
+    parse::parse_sugar_errors,
     setup::{setup_client, sugar_setup},
     utils::*,
 };
@@ -32,6 +33,12 @@ pub struct WithdrawArgs {
     pub keypair: Option<String>,
     pub rpc_url: Option<String>,
     pub list: bool,
+}
+
+#[derive(Debug)]
+struct WithdrawError {
+    candy_machine: String,
+    error_message: String,
 }
 
 pub fn process_withdraw(args: WithdrawArgs) -> Result<()> {
@@ -152,12 +159,18 @@ pub fn process_withdraw(args: WithdrawArgs) -> Result<()> {
 
                     let pb = progress_bar_with_style(accounts.len() as u64);
                     let mut not_drained = 0;
+                    let mut error_messages = Vec::new();
 
                     accounts.iter().for_each(|account| {
                         let (candy_machine, _account) = account;
                         do_withdraw(program.clone(), *candy_machine, payer).unwrap_or_else(|e| {
                             not_drained += 1;
                             error!("Error: {}", e);
+                            let error_message = parse_sugar_errors(&e.to_string());
+                            error_messages.push(WithdrawError {
+                                candy_machine: candy_machine.to_string(),
+                                error_message,
+                            });
                         });
                         pb.inc(1);
                     });
@@ -172,6 +185,16 @@ pub fn process_withdraw(args: WithdrawArgs) -> Result<()> {
                                 .bold()
                                 .dim()
                         );
+                        println!("{}", style("Errors:").red().bold().dim());
+                        for error in error_messages {
+                            println!(
+                                "{} {}\n{} {}",
+                                style("Candy Machine:").bold().dim(),
+                                style(error.candy_machine).bold().red(),
+                                style("Error:").bold().dim(),
+                                style(error.error_message).bold().red()
+                            );
+                        }
                     }
                 }
             }

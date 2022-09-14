@@ -137,7 +137,7 @@ pub async fn process_mint(args: MintArgs) -> Result<()> {
         let pb = progress_bar_with_style(number);
 
         let mut tasks = Vec::new();
-        let semaphore = Arc::new(Semaphore::new(100));
+        let semaphore = Arc::new(Semaphore::new(10));
         let config = Arc::new(sugar_config);
 
         for _i in 0..number {
@@ -375,6 +375,34 @@ pub async fn mint(
             is_signer: true,
             is_writable: false,
         });
+    }
+
+    // If the freeze PDA exists, add the additional account.
+    let (pda, _) = find_freeze_pda(&candy_machine_id);
+    let freeze_pda_opt = get_freeze_pda_account(&config, &candy_machine_id).ok();
+    if freeze_pda_opt.is_some() {
+        additional_accounts.push(AccountMeta {
+            pubkey: pda,
+            is_signer: false,
+            is_writable: true,
+        });
+        let nft_token_account = get_associated_token_address(&payer, &nft_mint.pubkey());
+
+        additional_accounts.push(AccountMeta {
+            pubkey: nft_token_account,
+            is_signer: false,
+            is_writable: false,
+        });
+
+        // Add freeze ata if SPL token mint is enabled.
+        if let Some(token_mint) = candy_machine_state.token_mint {
+            let freeze_ata = get_associated_token_address(&pda, &token_mint);
+            additional_accounts.push(AccountMeta {
+                pubkey: freeze_ata,
+                is_signer: false,
+                is_writable: true,
+            });
+        }
     }
 
     let metadata_pda = find_metadata_pda(&nft_mint.pubkey());
