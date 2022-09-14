@@ -38,7 +38,7 @@ export const decompressV1Struct = new beet.FixableBeetArgsStruct<
  * Accounts required by the _decompressV1_ instruction
  *
  * @property [_writable_] voucher
- * @property [_writable_, **signer**] owner
+ * @property [_writable_, **signer**] leafOwner
  * @property [_writable_] tokenAccount
  * @property [_writable_] mint
  * @property [] mintAuthority
@@ -53,7 +53,7 @@ export const decompressV1Struct = new beet.FixableBeetArgsStruct<
  */
 export type DecompressV1InstructionAccounts = {
   voucher: web3.PublicKey
-  owner: web3.PublicKey
+  leafOwner: web3.PublicKey
   tokenAccount: web3.PublicKey
   mint: web3.PublicKey
   mintAuthority: web3.PublicKey
@@ -96,7 +96,7 @@ export function createDecompressV1Instruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.owner,
+      pubkey: accounts.leafOwner,
       isWritable: true,
       isSigner: true,
     },
