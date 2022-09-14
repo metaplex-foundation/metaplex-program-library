@@ -1,11 +1,7 @@
 use crate::{
     error::MetadataError,
-    escrow::{
-        state::{EscrowConstraintModel, ESCROW_PREFIX},
-        EscrowConstraint,
-    },
     instruction::MetadataInstruction,
-    state::{TokenMetadataAccount, PREFIX},
+    state::{EscrowConstraint, EscrowConstraintModel, TokenMetadataAccount, ESCROW_PREFIX, PREFIX},
     utils::{assert_derivation, resize_or_reallocate_account_raw},
 };
 use borsh::{BorshDeserialize, BorshSerialize};

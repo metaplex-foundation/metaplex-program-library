@@ -1,4 +1,4 @@
-use crate::{escrow::state::ESCROW_PREFIX, state::PREFIX};
+use crate::state::{ESCROW_PREFIX, PREFIX};
 use solana_program::pubkey::Pubkey;
 
 pub fn find_escrow_account(mint: &Pubkey) -> (Pubkey, u8) {

@@ -2526,6 +2526,98 @@ createErrorFromNameLookup.set(
 );
 
 /**
+ * MissingEscrowConstraintModel: 'Missing EscrowConstraintModel.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MissingEscrowConstraintModelError extends Error {
+  readonly code: number = 0x75;
+  readonly name: string = 'MissingEscrowConstraintModel';
+  constructor() {
+    super('Missing EscrowConstraintModel.');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MissingEscrowConstraintModelError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x75, () => new MissingEscrowConstraintModelError());
+createErrorFromNameLookup.set(
+  'MissingEscrowConstraintModel',
+  () => new MissingEscrowConstraintModelError(),
+);
+
+/**
+ * InvalidEscrowConstraintModel: 'Invalid EscrowConstraintModel.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidEscrowConstraintModelError extends Error {
+  readonly code: number = 0x76;
+  readonly name: string = 'InvalidEscrowConstraintModel';
+  constructor() {
+    super('Invalid EscrowConstraintModel.');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidEscrowConstraintModelError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x76, () => new InvalidEscrowConstraintModelError());
+createErrorFromNameLookup.set(
+  'InvalidEscrowConstraintModel',
+  () => new InvalidEscrowConstraintModelError(),
+);
+
+/**
+ * EscrowConstraintViolation: 'Escrow Constraint Violation'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class EscrowConstraintViolationError extends Error {
+  readonly code: number = 0x77;
+  readonly name: string = 'EscrowConstraintViolation';
+  constructor() {
+    super('Escrow Constraint Violation');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, EscrowConstraintViolationError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x77, () => new EscrowConstraintViolationError());
+createErrorFromNameLookup.set(
+  'EscrowConstraintViolation',
+  () => new EscrowConstraintViolationError(),
+);
+
+/**
+ * InvalidEscrowConstraintIndex: 'Invalid Escrow Constraint Index'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidEscrowConstraintIndexError extends Error {
+  readonly code: number = 0x78;
+  readonly name: string = 'InvalidEscrowConstraintIndex';
+  constructor() {
+    super('Invalid Escrow Constraint Index');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidEscrowConstraintIndexError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x78, () => new InvalidEscrowConstraintIndexError());
+createErrorFromNameLookup.set(
+  'InvalidEscrowConstraintIndex',
+  () => new InvalidEscrowConstraintIndexError(),
+);
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

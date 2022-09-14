@@ -6,19 +6,16 @@
  */
 
 import * as beet from '@metaplex-foundation/beet';
-export type TransferIntoEscrowArgs = {
-  amount: beet.bignum;
-  index: beet.bignum;
+export type CreateEscrowConstraintModelAccountArgs = {
+  name: string;
 };
 
 /**
  * @category userTypes
  * @category generated
  */
-export const transferIntoEscrowArgsBeet = new beet.BeetArgsStruct<TransferIntoEscrowArgs>(
-  [
-    ['amount', beet.u64],
-    ['index', beet.u64],
-  ],
-  'TransferIntoEscrowArgs',
-);
+export const createEscrowConstraintModelAccountArgsBeet =
+  new beet.FixableBeetArgsStruct<CreateEscrowConstraintModelAccountArgs>(
+    [['name', beet.utf8String]],
+    'CreateEscrowConstraintModelAccountArgs',
+  );

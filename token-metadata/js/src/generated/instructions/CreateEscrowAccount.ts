@@ -7,35 +7,15 @@
 
 import * as beet from '@metaplex-foundation/beet';
 import * as web3 from '@solana/web3.js';
-import {
-  CreateEscrowAccountArgs,
-  createEscrowAccountArgsBeet,
-} from '../types/CreateEscrowAccountArgs';
 
 /**
  * @category Instructions
  * @category CreateEscrowAccount
  * @category generated
  */
-export type CreateEscrowAccountInstructionArgs = {
-  createEscrowAccountArgs: CreateEscrowAccountArgs;
-};
-/**
- * @category Instructions
- * @category CreateEscrowAccount
- * @category generated
- */
-export const CreateEscrowAccountStruct = new beet.FixableBeetArgsStruct<
-  CreateEscrowAccountInstructionArgs & {
-    instructionDiscriminator: number;
-  }
->(
-  [
-    ['instructionDiscriminator', beet.u8],
-    ['createEscrowAccountArgs', createEscrowAccountArgsBeet],
-  ],
-  'CreateEscrowAccountInstructionArgs',
-);
+export const CreateEscrowAccountStruct = new beet.BeetArgsStruct<{
+  instructionDiscriminator: number;
+}>([['instructionDiscriminator', beet.u8]], 'CreateEscrowAccountInstructionArgs');
 /**
  * Accounts required by the _CreateEscrowAccount_ instruction
  *
@@ -44,6 +24,7 @@ export const CreateEscrowAccountStruct = new beet.FixableBeetArgsStruct<
  * @property [] mint Mint account
  * @property [] edition Edition account
  * @property [_writable_, **signer**] payer Wallet paying for the transaction and new account
+ * @property [_writable_] escrowConstraintModel (optional) Optional Escrow Constraints Model
  * @category Instructions
  * @category CreateEscrowAccount
  * @category generated
@@ -55,7 +36,7 @@ export type CreateEscrowAccountInstructionAccounts = {
   edition: web3.PublicKey;
   payer: web3.PublicKey;
   systemProgram?: web3.PublicKey;
-  rent?: web3.PublicKey;
+  escrowConstraintModel?: web3.PublicKey;
 };
 
 export const createEscrowAccountInstructionDiscriminator = 37;
@@ -64,20 +45,16 @@ export const createEscrowAccountInstructionDiscriminator = 37;
  * Creates a _CreateEscrowAccount_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
- * @param args to provide as instruction data to the program
- *
  * @category Instructions
  * @category CreateEscrowAccount
  * @category generated
  */
 export function createCreateEscrowAccountInstruction(
   accounts: CreateEscrowAccountInstructionAccounts,
-  args: CreateEscrowAccountInstructionArgs,
   programId = new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
 ) {
   const [data] = CreateEscrowAccountStruct.serialize({
     instructionDiscriminator: createEscrowAccountInstructionDiscriminator,
-    ...args,
   });
   const keys: web3.AccountMeta[] = [
     {
@@ -110,12 +87,15 @@ export function createCreateEscrowAccountInstruction(
       isWritable: false,
       isSigner: false,
     },
-    {
-      pubkey: accounts.rent ?? web3.SYSVAR_RENT_PUBKEY,
-      isWritable: false,
-      isSigner: false,
-    },
   ];
+
+  if (accounts.escrowConstraintModel != null) {
+    keys.push({
+      pubkey: accounts.escrowConstraintModel,
+      isWritable: true,
+      isSigner: false,
+    });
+  }
 
   const ix = new web3.TransactionInstruction({
     programId,

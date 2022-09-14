@@ -8,8 +8,8 @@ use solana_sdk::{signer::Signer, transaction::Transaction};
 use utils::*;
 
 mod escrow {
-    use mpl_token_metadata::escrow::{
-        find_escrow_account, find_escrow_constraint_model_account,
+    use mpl_token_metadata::{
+        escrow::{find_escrow_account, find_escrow_constraint_model_account},
         state::{EscrowConstraint, EscrowConstraintModel, EscrowConstraintType},
     };
     use solana_program::program_pack::Pack;
@@ -70,7 +70,7 @@ mod escrow {
 
         let _metadata = parent_test_metadata.get_data(&mut context).await;
         let escrow_account = get_account(&mut context, &escrow_address.0).await;
-        let escrow: mpl_token_metadata::escrow::state::TokenOwnedEscrow =
+        let escrow: mpl_token_metadata::state::TokenOwnedEscrow =
             try_from_slice_unchecked(&escrow_account.data).unwrap();
         print!("\n{:#?}\n", escrow);
         assert!(escrow.tokens.is_empty());
@@ -158,7 +158,7 @@ mod escrow {
 
         let _metadata = attribute_test_metadata.get_data(&mut context).await;
         let escrow_account = get_account(&mut context, &escrow_address.0).await;
-        let escrow: mpl_token_metadata::escrow::state::TokenOwnedEscrow =
+        let escrow: mpl_token_metadata::state::TokenOwnedEscrow =
             try_from_slice_unchecked(&escrow_account.data).unwrap();
 
         print!("\n{:#?}\n", escrow);
@@ -223,7 +223,7 @@ mod escrow {
 
         let _metadata = attribute_test_metadata.get_data(&mut context).await;
         let escrow_account = get_account(&mut context, &escrow_address.0).await;
-        let escrow: mpl_token_metadata::escrow::state::TokenOwnedEscrow =
+        let escrow: mpl_token_metadata::state::TokenOwnedEscrow =
             try_from_slice_unchecked(&escrow_account.data).unwrap();
 
         print!("\n{:#?}\n", escrow);
@@ -413,7 +413,7 @@ mod escrow {
 
         let _metadata = parent_test_metadata.get_data(&mut context).await;
         let escrow_account = get_account(&mut context, &escrow_address.0).await;
-        let escrow: mpl_token_metadata::escrow::state::TokenOwnedEscrow =
+        let escrow: mpl_token_metadata::state::TokenOwnedEscrow =
             try_from_slice_unchecked(&escrow_account.data).unwrap();
         print!("\n{:#?}\n", escrow);
         assert!(escrow.tokens.is_empty());

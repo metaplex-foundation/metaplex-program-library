@@ -1,8 +1,9 @@
 use crate::{
     error::MetadataError,
-    escrow::{state::ESCROW_PREFIX, TokenOwnedEscrow},
     instruction::MetadataInstruction,
-    state::{Metadata, TokenMetadataAccount, TokenStandard, PREFIX},
+    state::{
+        Metadata, TokenMetadataAccount, TokenOwnedEscrow, TokenStandard, ESCROW_PREFIX, PREFIX,
+    },
     utils::{assert_derivation, assert_owned_by, check_token_standard, close_account_raw},
 };
 use borsh::BorshSerialize;

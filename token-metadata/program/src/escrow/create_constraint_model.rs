@@ -1,7 +1,6 @@
 use crate::{
-    escrow::state::{EscrowConstraintModel, ESCROW_PREFIX},
     instruction::MetadataInstruction,
-    state::{Key, PREFIX},
+    state::{EscrowConstraintModel, Key, ESCROW_PREFIX, PREFIX},
     utils::{assert_derivation, create_or_allocate_account_raw},
 };
 use borsh::{BorshDeserialize, BorshSerialize};

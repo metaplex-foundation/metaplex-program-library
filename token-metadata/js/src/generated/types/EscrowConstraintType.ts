@@ -6,15 +6,20 @@
  */
 
 import * as beet from '@metaplex-foundation/beet';
-export type CloseEscrowAccountArgs = {
-  padding: number;
-};
+/**
+ * @category enums
+ * @category generated
+ */
+export enum EscrowConstraintType {
+  None,
+  Collection,
+  Tokens,
+}
 
 /**
  * @category userTypes
  * @category generated
  */
-export const closeEscrowAccountArgsBeet = new beet.BeetArgsStruct<CloseEscrowAccountArgs>(
-  [['padding', beet.u8]],
-  'CloseEscrowAccountArgs',
-);
+export const escrowConstraintTypeBeet = beet.fixedScalarEnum(
+  EscrowConstraintType,
+) as beet.FixedSizeBeet<EscrowConstraintType, EscrowConstraintType>;

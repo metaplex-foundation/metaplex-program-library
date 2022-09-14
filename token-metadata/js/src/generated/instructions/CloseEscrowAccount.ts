@@ -7,35 +7,15 @@
 
 import * as beet from '@metaplex-foundation/beet';
 import * as web3 from '@solana/web3.js';
-import {
-  CloseEscrowAccountArgs,
-  closeEscrowAccountArgsBeet,
-} from '../types/CloseEscrowAccountArgs';
 
 /**
  * @category Instructions
  * @category CloseEscrowAccount
  * @category generated
  */
-export type CloseEscrowAccountInstructionArgs = {
-  closeEscrowAccountArgs: CloseEscrowAccountArgs;
-};
-/**
- * @category Instructions
- * @category CloseEscrowAccount
- * @category generated
- */
-export const CloseEscrowAccountStruct = new beet.BeetArgsStruct<
-  CloseEscrowAccountInstructionArgs & {
-    instructionDiscriminator: number;
-  }
->(
-  [
-    ['instructionDiscriminator', beet.u8],
-    ['closeEscrowAccountArgs', closeEscrowAccountArgsBeet],
-  ],
-  'CloseEscrowAccountInstructionArgs',
-);
+export const CloseEscrowAccountStruct = new beet.BeetArgsStruct<{
+  instructionDiscriminator: number;
+}>([['instructionDiscriminator', beet.u8]], 'CloseEscrowAccountInstructionArgs');
 /**
  * Accounts required by the _CloseEscrowAccount_ instruction
  *
@@ -55,7 +35,6 @@ export type CloseEscrowAccountInstructionAccounts = {
   edition: web3.PublicKey;
   payer: web3.PublicKey;
   systemProgram?: web3.PublicKey;
-  rent?: web3.PublicKey;
 };
 
 export const closeEscrowAccountInstructionDiscriminator = 38;
@@ -64,20 +43,16 @@ export const closeEscrowAccountInstructionDiscriminator = 38;
  * Creates a _CloseEscrowAccount_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
- * @param args to provide as instruction data to the program
- *
  * @category Instructions
  * @category CloseEscrowAccount
  * @category generated
  */
 export function createCloseEscrowAccountInstruction(
   accounts: CloseEscrowAccountInstructionAccounts,
-  args: CloseEscrowAccountInstructionArgs,
   programId = new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
 ) {
   const [data] = CloseEscrowAccountStruct.serialize({
     instructionDiscriminator: closeEscrowAccountInstructionDiscriminator,
-    ...args,
   });
   const keys: web3.AccountMeta[] = [
     {
@@ -107,11 +82,6 @@ export function createCloseEscrowAccountInstruction(
     },
     {
       pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.rent ?? web3.SYSVAR_RENT_PUBKEY,
       isWritable: false,
       isSigner: false,
     },

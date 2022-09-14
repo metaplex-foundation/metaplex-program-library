@@ -1,6 +1,7 @@
 export * from './CollectionAuthorityRecord';
 export * from './Edition';
 export * from './EditionMarker';
+export * from './EscrowConstraintModel';
 export * from './MasterEditionV1';
 export * from './MasterEditionV2';
 export * from './Metadata';
@@ -19,6 +20,7 @@ import { ReservationListV2 } from './ReservationListV2';
 import { ReservationListV1 } from './ReservationListV1';
 import { EditionMarker } from './EditionMarker';
 import { TokenOwnedEscrow } from './TokenOwnedEscrow';
+import { EscrowConstraintModel } from './EscrowConstraintModel';
 
 export const accountProviders = {
   UseAuthorityRecord,
@@ -31,4 +33,5 @@ export const accountProviders = {
   ReservationListV1,
   EditionMarker,
   TokenOwnedEscrow,
+  EscrowConstraintModel,
 };

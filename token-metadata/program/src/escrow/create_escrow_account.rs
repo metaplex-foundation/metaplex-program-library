@@ -1,8 +1,10 @@
 use crate::{
     error::MetadataError,
-    escrow::{EscrowConstraintModel, TokenOwnedEscrow, ESCROW_PREFIX},
     instruction::MetadataInstruction,
-    state::{Key, Metadata, TokenMetadataAccount, TokenStandard, PREFIX},
+    state::{
+        EscrowConstraintModel, Key, Metadata, TokenMetadataAccount, TokenOwnedEscrow,
+        TokenStandard, ESCROW_PREFIX, PREFIX,
+    },
     utils::{
         assert_derivation, assert_owned_by, check_token_standard, create_or_allocate_account_raw,
     },

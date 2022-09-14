@@ -2093,20 +2093,14 @@
           "desc": "System program"
         },
         {
-          "name": "rent",
-          "isMut": false,
+          "name": "escrowConstraintModel",
+          "isMut": true,
           "isSigner": false,
-          "desc": "Rent info"
+          "desc": "Optional Escrow Constraints Model",
+          "optional": true
         }
       ],
-      "args": [
-        {
-          "name": "createEscrowAccountArgs",
-          "type": {
-            "defined": "CreateEscrowAccountArgs"
-          }
-        }
-      ],
+      "args": [],
       "discriminant": {
         "type": "u8",
         "value": 37
@@ -2150,22 +2144,9 @@
           "isMut": false,
           "isSigner": false,
           "desc": "System program"
-        },
-        {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "Rent info"
         }
       ],
-      "args": [
-        {
-          "name": "closeEscrowAccountArgs",
-          "type": {
-            "defined": "CloseEscrowAccountArgs"
-          }
-        }
-      ],
+      "args": [],
       "discriminant": {
         "type": "u8",
         "value": 38
@@ -2239,12 +2220,6 @@
           "isMut": false,
           "isSigner": false,
           "desc": "Token program"
-        },
-        {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "Rent info"
         },
         {
           "name": "constraintModel",
@@ -2340,12 +2315,6 @@
           "isMut": false,
           "isSigner": false,
           "desc": "Token program"
-        },
-        {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "Rent info"
         }
       ],
       "args": [
@@ -2359,6 +2328,88 @@
       "discriminant": {
         "type": "u8",
         "value": 40
+      }
+    },
+    {
+      "name": "CreateEscrowConstraintModelAccount",
+      "accounts": [
+        {
+          "name": "escrowConstraintModel",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Constraint model account"
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "desc": "Wallet paying for the transaction and new account, will be set as the creator of the constraint model"
+        },
+        {
+          "name": "updateAuthority",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Update authority of the constraint model"
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "System program"
+        }
+      ],
+      "args": [
+        {
+          "name": "createEscrowConstraintModelAccountArgs",
+          "type": {
+            "defined": "CreateEscrowConstraintModelAccountArgs"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 41
+      }
+    },
+    {
+      "name": "AddConstraintToEscrowConstraintModel",
+      "accounts": [
+        {
+          "name": "escrowConstraintModel",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Constraint model account"
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "desc": "Wallet paying for the transaction and new account, will be set as the creator of the constraint model"
+        },
+        {
+          "name": "updateAuthority",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "Update authority of the constraint model"
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "System program"
+        }
+      ],
+      "args": [
+        {
+          "name": "addConstraintToEscrowConstraintModelArgs",
+          "type": {
+            "defined": "AddConstraintToEscrowConstraintModelArgs"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 42
       }
     }
   ],
@@ -2687,9 +2738,73 @@
           }
         ]
       }
+    },
+    {
+      "name": "EscrowConstraintModel",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "key",
+            "type": {
+              "defined": "Key"
+            }
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "constraints",
+            "type": {
+              "vec": {
+                "defined": "EscrowConstraint"
+              }
+            }
+          },
+          {
+            "name": "creator",
+            "type": "publicKey"
+          },
+          {
+            "name": "updateAuthority",
+            "type": "publicKey"
+          },
+          {
+            "name": "count",
+            "type": "u64"
+          }
+        ]
+      }
     }
   ],
   "types": [
+    {
+      "name": "AddConstraintToEscrowConstraintModelArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "constraint",
+            "type": {
+              "defined": "EscrowConstraint"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "CreateEscrowConstraintModelAccountArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string"
+          }
+        ]
+      }
+    },
     {
       "name": "MintPrintingTokensViaTokenArgs",
       "type": {
@@ -2919,56 +3034,6 @@
       }
     },
     {
-      "name": "CreateEscrowAccountArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "constraintModel",
-            "type": {
-              "option": "publicKey"
-            }
-          }
-        ]
-      }
-    },
-    {
-      "name": "CloseEscrowAccountArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "padding",
-            "type": "u8"
-          }
-        ]
-      }
-    },
-    {
-      "name": "TransferIntoEscrowArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "amount",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "TransferOutOfEscrowArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "amount",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
       "name": "Data",
       "type": {
         "kind": "struct",
@@ -3151,6 +3216,56 @@
       }
     },
     {
+      "name": "EscrowConstraint",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "tokenLimit",
+            "type": "u64"
+          },
+          {
+            "name": "constraintType",
+            "type": {
+              "defined": "EscrowConstraintType"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "TransferIntoEscrowArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "index",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TransferOutOfEscrowArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "amount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
       "name": "Key",
       "type": {
         "kind": "enum",
@@ -3187,6 +3302,9 @@
           },
           {
             "name": "TokenOwnedEscrow"
+          },
+          {
+            "name": "EscrowConstraintModel"
           }
         ]
       }
@@ -3241,6 +3359,34 @@
           },
           {
             "name": "NonFungibleEdition"
+          }
+        ]
+      }
+    },
+    {
+      "name": "EscrowConstraintType",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "None"
+          },
+          {
+            "name": "Collection",
+            "fields": [
+              "publicKey"
+            ]
+          },
+          {
+            "name": "Tokens",
+            "fields": [
+              {
+                "hashMap": [
+                  "publicKey",
+                  "bool"
+                ]
+              }
+            ]
           }
         ]
       }
@@ -3831,6 +3977,26 @@
       "code": 116,
       "name": "MustBeUpdateAuthToSetModel",
       "msg": "Must be Update Authority to set the Constraint Model."
+    },
+    {
+      "code": 117,
+      "name": "MissingEscrowConstraintModel",
+      "msg": "Missing EscrowConstraintModel."
+    },
+    {
+      "code": 118,
+      "name": "InvalidEscrowConstraintModel",
+      "msg": "Invalid EscrowConstraintModel."
+    },
+    {
+      "code": 119,
+      "name": "EscrowConstraintViolation",
+      "msg": "Escrow Constraint Violation"
+    },
+    {
+      "code": 120,
+      "name": "InvalidEscrowConstraintIndex",
+      "msg": "Invalid Escrow Constraint Index"
     }
   ],
   "metadata": {
