@@ -1,7 +1,11 @@
 use crate::{
     deprecated_instruction::{MintPrintingTokensViaTokenArgs, SetReservationListArgs},
+    escrow::{
+        AddConstraintToEscrowConstraintModelArgs, CreateEscrowConstraintModelAccountArgs,
+        TransferIntoEscrowArgs, TransferOutOfEscrowArgs,
+    },
     state::{
-        Collection, CollectionDetails, Creator, Data, DataV2, EscrowConstraint, Uses, EDITION,
+        Collection, CollectionDetails, Creator, Data, DataV2, Uses, EDITION,
         EDITION_MARKER_BIT_SIZE, PREFIX,
     },
 };
@@ -116,42 +120,6 @@ pub struct UtilizeArgs {
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct SetCollectionSizeArgs {
     pub size: u64,
-}
-
-#[repr(C)]
-#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
-pub struct CloseEscrowAccountArgs {
-    pub _padding: u8,
-}
-
-#[repr(C)]
-#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
-pub struct TransferIntoEscrowArgs {
-    pub amount: u64,
-    pub index: u64,
-}
-
-#[repr(C)]
-#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
-pub struct TransferOutOfEscrowArgs {
-    pub amount: u64,
-}
-
-#[repr(C)]
-#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
-pub struct CreateEscrowConstraintModelAccountArgs {
-    pub name: String,
-}
-
-#[repr(C)]
-#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
-pub struct AddConstraintToEscrowConstraintModelArgs {
-    pub constraint: EscrowConstraint,
 }
 
 /// Instructions supported by the Metadata program.
@@ -571,8 +539,7 @@ pub enum MetadataInstruction {
     #[account(3, name="edition", desc="Edition account")]
     #[account(4, writable, signer, name="payer", desc="Wallet paying for the transaction and new account")]
     #[account(5, name="system_program", desc="System program")]
-    #[account(6, name="rent", desc="Rent info")]
-    #[account(7, writable, name="escrow_constraints_model", desc="Optional Escrow Constraints Model")]
+    #[account(6, writable, name="escrow_constraints_model", desc="Optional Escrow Constraints Model")]
     CreateEscrowAccount,
 
     /// Close the escrow account.
@@ -582,8 +549,7 @@ pub enum MetadataInstruction {
     #[account(3, name="edition", desc="Edition account")]
     #[account(4, writable, signer, name="payer", desc="Wallet paying for the transaction and new account")]
     #[account(5, name="system_program", desc="System program")]
-    #[account(6, name="rent", desc="Rent info")]
-    CloseEscrowAccount(CloseEscrowAccountArgs),
+    CloseEscrowAccount,
 
     /// Transfer tokens into the escrow account.
     #[account(0, writable, name="escrow", desc="Escrow account")]
@@ -597,8 +563,7 @@ pub enum MetadataInstruction {
     #[account(8, name="system_program", desc="System program")]
     #[account(9, name="ata_program", desc="Associated Token program")]
     #[account(10, name="token_program", desc="Token program")]
-    #[account(11, name="rent", desc="Rent info")]
-    #[account(12, name="constraint_model", desc="The constraint model to check against")]
+    #[account(11, name="constraint_model", desc="The constraint model to check against")]
     TransferIntoEscrow(TransferIntoEscrowArgs),
 
     /// Create an escrow account to hold tokens.
@@ -614,7 +579,6 @@ pub enum MetadataInstruction {
     #[account(9, name="system_program", desc="System program")]
     #[account(10, name="ata_program", desc="Associated Token program")]
     #[account(11, name="token_program", desc="Token program")]
-    #[account(12, name="rent", desc="Rent info")]
     TransferOutOfEscrow(TransferOutOfEscrowArgs),
 
     /// Create an constraint model to be used by one or many escrow accounts.
@@ -622,7 +586,6 @@ pub enum MetadataInstruction {
     #[account(1, writable, signer, name="payer", desc="Wallet paying for the transaction and new account, will be set as the creator of the constraint model")]
     #[account(2, name="update_authority", desc="Update authority of the constraint model")]
     #[account(3, name="system_program", desc="System program")]
-    #[account(4, name="rent", desc="Rent info")]
     CreateEscrowConstraintModelAccount(CreateEscrowConstraintModelAccountArgs),
 
     /// Add a constraint to an escrow constraint model.
@@ -1814,212 +1777,6 @@ pub fn set_token_standard(
     if let Some(edition_account) = edition_account {
         accounts.push(AccountMeta::new_readonly(edition_account, false));
     }
-
-    Instruction {
-        program_id,
-        accounts,
-        data,
-    }
-}
-
-pub fn create_escrow_account(
-    program_id: Pubkey,
-    escrow_account: Pubkey,
-    metadata_account: Pubkey,
-    mint_account: Pubkey,
-    edition_account: Pubkey,
-    payer_account: Pubkey,
-    constraint_model: Option<Pubkey>,
-) -> Instruction {
-    let mut accounts = vec![
-        AccountMeta::new(escrow_account, false),
-        AccountMeta::new_readonly(metadata_account, false),
-        AccountMeta::new_readonly(mint_account, false),
-        AccountMeta::new_readonly(edition_account, false),
-        AccountMeta::new(payer_account, true),
-        AccountMeta::new_readonly(solana_program::system_program::id(), false),
-        AccountMeta::new_readonly(solana_program::sysvar::rent::id(), false),
-    ];
-
-    if let Some(constraint_model) = constraint_model {
-        accounts.push(AccountMeta::new(constraint_model, false));
-    }
-
-    let data = MetadataInstruction::CreateEscrowAccount
-        .try_to_vec()
-        .unwrap();
-
-    Instruction {
-        program_id,
-        accounts,
-        data,
-    }
-}
-
-pub fn close_escrow_account(
-    program_id: Pubkey,
-    escrow_account: Pubkey,
-    metadata_account: Pubkey,
-    mint_account: Pubkey,
-    edition_account: Pubkey,
-    payer_account: Pubkey,
-    // system_account: Pubkey,
-    // rent: Pubkey,
-) -> Instruction {
-    let accounts = vec![
-        AccountMeta::new(escrow_account, false),
-        AccountMeta::new_readonly(metadata_account, false),
-        AccountMeta::new_readonly(mint_account, false),
-        AccountMeta::new_readonly(edition_account, false),
-        AccountMeta::new(payer_account, true),
-        AccountMeta::new_readonly(solana_program::system_program::id(), false),
-        AccountMeta::new_readonly(solana_program::sysvar::rent::id(), false),
-    ];
-    let data = MetadataInstruction::CloseEscrowAccount(CloseEscrowAccountArgs { _padding: 0 })
-        .try_to_vec()
-        .unwrap();
-
-    Instruction {
-        program_id,
-        accounts,
-        data,
-    }
-}
-
-pub fn transfer_into_escrow(
-    program_id: Pubkey,
-    escrow: Pubkey,
-    payer: Pubkey,
-    attribute_mint: Pubkey,
-    attribute_src: Pubkey,
-    attribute_dst: Pubkey,
-    attribute_metadata: Pubkey,
-    escrow_mint: Pubkey,
-    escrow_account: Pubkey,
-    constraint_model: Option<Pubkey>,
-    amount: u64,
-    index: u64,
-) -> Instruction {
-    let mut accounts = vec![
-        AccountMeta::new(escrow, false),
-        AccountMeta::new(payer, true),
-        AccountMeta::new_readonly(attribute_mint, false),
-        AccountMeta::new(attribute_src, false),
-        AccountMeta::new(attribute_dst, false),
-        AccountMeta::new_readonly(attribute_metadata, false),
-        AccountMeta::new_readonly(escrow_mint, false),
-        AccountMeta::new_readonly(escrow_account, false),
-        AccountMeta::new_readonly(solana_program::system_program::id(), false),
-        AccountMeta::new_readonly(spl_associated_token_account::id(), false),
-        AccountMeta::new_readonly(spl_token::id(), false),
-        AccountMeta::new_readonly(solana_program::sysvar::rent::id(), false),
-    ];
-
-    if let Some(constraint_model) = constraint_model {
-        accounts.push(AccountMeta::new_readonly(constraint_model, false));
-    }
-
-    let data = MetadataInstruction::TransferIntoEscrow(TransferIntoEscrowArgs { amount, index })
-        .try_to_vec()
-        .unwrap();
-
-    println!("data?? {:?}", data);
-    Instruction {
-        program_id,
-        accounts,
-        data,
-    }
-}
-
-pub fn transfer_out_of_escrow(
-    program_id: Pubkey,
-    escrow: Pubkey,
-    payer: Pubkey,
-    attribute_mint: Pubkey,
-    attribute_src: Pubkey,
-    attribute_dst: Pubkey,
-    attribute_metadata: Pubkey,
-    escrow_mint: Pubkey,
-    escrow_account: Pubkey,
-    constraint_model: Pubkey,
-    amount: u64,
-) -> Instruction {
-    let accounts = vec![
-        AccountMeta::new(escrow, false),
-        AccountMeta::new(payer, true),
-        AccountMeta::new_readonly(attribute_mint, false),
-        AccountMeta::new(attribute_src, false),
-        AccountMeta::new(attribute_dst, false),
-        AccountMeta::new_readonly(attribute_metadata, false),
-        AccountMeta::new_readonly(escrow_mint, false),
-        AccountMeta::new_readonly(escrow_account, false),
-        AccountMeta::new_readonly(constraint_model, false),
-        AccountMeta::new_readonly(solana_program::system_program::id(), false),
-        AccountMeta::new_readonly(spl_associated_token_account::id(), false),
-        AccountMeta::new_readonly(spl_token::id(), false),
-        AccountMeta::new_readonly(solana_program::sysvar::rent::id(), false),
-    ];
-    let data = MetadataInstruction::TransferOutOfEscrow(TransferOutOfEscrowArgs { amount })
-        .try_to_vec()
-        .unwrap();
-
-    Instruction {
-        program_id,
-        accounts,
-        data,
-    }
-}
-
-pub fn create_escrow_constraint_model(
-    program_id: Pubkey,
-    escrow_constraint_model: Pubkey,
-    payer: Pubkey,
-    update_authority: Pubkey,
-    rent: Pubkey,
-    system_program: Pubkey,
-    name: &str,
-) -> Instruction {
-    let name = name.to_owned();
-    let accounts = vec![
-        AccountMeta::new(escrow_constraint_model, false),
-        AccountMeta::new(payer, true),
-        AccountMeta::new_readonly(update_authority, false),
-        AccountMeta::new_readonly(system_program, false),
-        AccountMeta::new_readonly(rent, false),
-    ];
-
-    let data = MetadataInstruction::CreateEscrowConstraintModelAccount(
-        CreateEscrowConstraintModelAccountArgs { name },
-    )
-    .try_to_vec()
-    .unwrap();
-
-    Instruction {
-        program_id,
-        accounts,
-        data,
-    }
-}
-
-pub fn add_constraint_to_escrow_constraint_model(
-    program_id: Pubkey,
-    escrow_constraint_model: Pubkey,
-    payer: Pubkey,
-    update_authority: Pubkey,
-    constraint: EscrowConstraint,
-) -> Instruction {
-    let accounts = vec![
-        AccountMeta::new(escrow_constraint_model, false),
-        AccountMeta::new(payer, true),
-        AccountMeta::new_readonly(update_authority, false),
-        AccountMeta::new_readonly(solana_program::system_program::id(), false),
-    ];
-
-    let data = MetadataInstruction::AddConstraintToEscrowConstraintModel(
-        AddConstraintToEscrowConstraintModelArgs { constraint },
-    )
-    .try_to_vec()
-    .unwrap();
 
     Instruction {
         program_id,

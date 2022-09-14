@@ -1,6 +1,6 @@
 use solana_program::pubkey::Pubkey;
 
-use crate::state::{BURN, COLLECTION_AUTHORITY, EDITION, ESCROW_PREFIX, PREFIX, USER};
+use crate::state::{BURN, COLLECTION_AUTHORITY, EDITION, PREFIX, USER};
 
 pub fn find_edition_account(mint: &Pubkey, edition_number: String) -> (Pubkey, u8) {
     Pubkey::find_program_address(
@@ -62,31 +62,6 @@ pub fn find_collection_authority_account(mint: &Pubkey, authority: &Pubkey) -> (
 pub fn find_program_as_burner_account() -> (Pubkey, u8) {
     Pubkey::find_program_address(
         &[PREFIX.as_bytes(), crate::id().as_ref(), BURN.as_bytes()],
-        &crate::id(),
-    )
-}
-
-pub fn find_escrow_account(mint: &Pubkey) -> (Pubkey, u8) {
-    Pubkey::find_program_address(
-        &[
-            PREFIX.as_bytes(),
-            crate::id().as_ref(),
-            mint.as_ref(),
-            ESCROW_PREFIX.as_ref(),
-        ],
-        &crate::id(),
-    )
-}
-
-pub fn find_escrow_constraint_model_account(creator: &Pubkey, name: &str) -> (Pubkey, u8) {
-    Pubkey::find_program_address(
-        &[
-            PREFIX.as_bytes(),
-            crate::id().as_ref(),
-            ESCROW_PREFIX.as_ref(),
-            creator.as_ref(),
-            name.as_bytes(),
-        ],
         &crate::id(),
     )
 }

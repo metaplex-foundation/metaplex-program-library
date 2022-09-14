@@ -535,9 +535,8 @@ mod use_authority_record {
 }
 
 mod collection_authority_record {
-    use crate::state::{
-        EscrowConstraint, EscrowConstraintModel, EscrowConstraintType, TokenMetadataAccount,
-    };
+    use crate::escrow::state::{EscrowConstraint, EscrowConstraintModel, EscrowConstraintType};
+    use crate::state::TokenMetadataAccount;
 
     use super::*;
 
