@@ -539,7 +539,7 @@ pub enum MetadataInstruction {
     #[account(3, name="edition", desc="Edition account")]
     #[account(4, writable, signer, name="payer", desc="Wallet paying for the transaction and new account")]
     #[account(5, name="system_program", desc="System program")]
-    #[account(6, writable, name="escrow_constraints_model", desc="Optional Escrow Constraints Model")]
+    #[account(6, optional, writable, name="escrow_constraint_model", desc="Optional Escrow Constraints Model")]
     CreateEscrowAccount,
 
     /// Close the escrow account.
