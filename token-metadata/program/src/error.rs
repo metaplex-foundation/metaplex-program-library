@@ -464,6 +464,10 @@ pub enum MetadataError {
     /// 117 - Invalid Edition Marker
     #[error("Invalid Edition Marker")]
     InvalidEditionMarker,
+
+    /// 118 - Reservation List is Deprecated
+    #[error("Reservation List is Deprecated")]
+    ReservationListDeprecated,
 }
 
 impl PrintProgramError for MetadataError {

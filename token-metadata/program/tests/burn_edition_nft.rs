@@ -61,6 +61,7 @@ mod burn_edition_nft {
             print_edition.mint.pubkey(),
             original_nft.mint.pubkey(),
             print_edition.token.pubkey(),
+            original_nft.token.pubkey(),
             master_edition.pubkey,
             print_edition.new_edition_pubkey,
             print_edition.pubkey,
@@ -144,6 +145,7 @@ mod burn_edition_nft {
             print_edition.mint.pubkey(),
             original_nft.mint.pubkey(),
             print_edition.token.pubkey(),
+            original_nft.token.pubkey(),
             master_edition.pubkey,
             print_edition.new_edition_pubkey,
             print_edition.pubkey,
@@ -167,6 +169,7 @@ mod burn_edition_nft {
             print_edition.mint.pubkey(),
             original_nft.mint.pubkey(),
             new_owner_token_account,
+            original_nft.token.pubkey(),
             master_edition.pubkey,
             print_edition.new_edition_pubkey,
             print_edition.pubkey,
@@ -187,6 +190,7 @@ mod burn_edition_nft {
             print_edition.mint.pubkey(),
             original_nft.mint.pubkey(),
             new_owner_token_account,
+            original_nft.token.pubkey(),
             master_edition.pubkey,
             print_edition.new_edition_pubkey,
             print_edition.pubkey,
@@ -242,6 +246,7 @@ mod burn_edition_nft {
             print_edition.mint.pubkey(),
             original_nft.mint.pubkey(),
             print_edition.token.pubkey(),
+            original_nft.token.pubkey(),
             master_edition.pubkey,
             print_edition.new_edition_pubkey,
             print_edition.pubkey,
@@ -301,6 +306,7 @@ mod burn_edition_nft {
             print_edition.mint.pubkey(),
             original_nft.mint.pubkey(),
             print_edition.token.pubkey(),
+            original_nft.token.pubkey(),
             master_edition.pubkey,
             print_edition.new_edition_pubkey,
             print_edition.pubkey,
@@ -371,6 +377,7 @@ mod burn_edition_nft {
             second_nft.mint.pubkey(),
             original_nft.mint.pubkey(),
             second_nft.token.pubkey(),
+            original_nft.token.pubkey(),
             master_edition.pubkey,
             second_nft.pubkey,
             Pubkey::new_unique(), // throwaway key since it will fail before it gets to this check
@@ -424,6 +431,7 @@ mod burn_edition_nft {
             print_edition.mint.pubkey(),
             original_nft.mint.pubkey(),
             print_edition.token.pubkey(),
+            original_nft.token.pubkey(),
             second_print_edition.pubkey,
             print_edition.pubkey,
             Pubkey::new_unique(), // throwaway key since it will fail before it gets to this check
@@ -474,6 +482,7 @@ mod burn_edition_nft {
             print_edition.mint.pubkey(),
             original_nft.mint.pubkey(),
             print_edition.token.pubkey(),
+            original_nft.token.pubkey(),
             master_edition.pubkey,
             print_edition.new_edition_pubkey,
             Pubkey::new_unique(),
@@ -498,6 +507,7 @@ mod burn_edition_nft {
             print_edition.mint.pubkey(),
             original_nft.mint.pubkey(),
             print_edition.token.pubkey(),
+            original_nft.token.pubkey(),
             master_edition.pubkey,
             print_edition.new_edition_pubkey,
             second_print_edition.new_edition_pubkey,
@@ -576,6 +586,7 @@ mod burn_edition_nft {
             print_edition.mint.pubkey(),
             original_nft.mint.pubkey(),
             print_edition.token.pubkey(),
+            original_nft.token.pubkey(),
             master_edition.pubkey,
             print_edition.new_edition_pubkey,
             print_edition.pubkey,
@@ -603,6 +614,7 @@ mod burn_edition_nft {
             second_print_edition.mint.pubkey(),
             original_nft.mint.pubkey(),
             second_print_edition.token.pubkey(),
+            original_nft.token.pubkey(),
             master_edition.pubkey,
             second_print_edition.new_edition_pubkey,
             second_print_edition.pubkey,
@@ -681,6 +693,7 @@ mod burn_edition_nft {
             print_editions[1].mint.pubkey(),
             original_nft.mint.pubkey(),
             print_editions[1].token.pubkey(),
+            original_nft.token.pubkey(),
             master_edition.pubkey,
             print_editions[1].new_edition_pubkey,
             print_editions[1].pubkey,
@@ -711,6 +724,7 @@ mod burn_edition_nft {
             print_editions[9].mint.pubkey(),
             original_nft.mint.pubkey(),
             print_editions[9].token.pubkey(),
+            original_nft.token.pubkey(),
             master_edition.pubkey,
             print_editions[9].new_edition_pubkey,
             print_editions[9].pubkey,
@@ -736,6 +750,8 @@ mod burn_edition_nft {
 
     #[tokio::test]
     pub async fn reprint_burned_edition() {
+        // Reprinting a burned edition should work when the owner is the same for
+        // the master edition and print edition. Otherwise, it should fail.
         let mut context = program_test().start_with_context().await;
 
         let original_nft = Metadata::new();
@@ -764,12 +780,34 @@ mod burn_edition_nft {
         let print_edition = EditionMarker::new(&original_nft, &master_edition, 1);
         print_edition.create(&mut context).await.unwrap();
 
+        // Print a new edition and transfer to a user.
+        let mut user_print_edition = EditionMarker::new(&original_nft, &master_edition, 2);
+        user_print_edition.create(&mut context).await.unwrap();
+
+        let user = Keypair::new();
+        airdrop(&mut context, &user.pubkey(), 1_000_000_000)
+            .await
+            .unwrap();
+
+        context.warp_to_slot(100).unwrap();
+
+        user_print_edition
+            .transfer(&mut context, &user.pubkey())
+            .await
+            .unwrap();
+        let new_owner_token_account =
+            get_associated_token_address(&user.pubkey(), &user_print_edition.mint.pubkey());
+
+        context.warp_to_slot(5000).unwrap();
+
         // Metadata, Print Edition and token account exist.
         assert!(print_edition.exists_on_chain(&mut context).await);
+        assert!(user_print_edition.exists_on_chain(&mut context).await);
 
         let kpbytes = &context.payer;
         let payer = Keypair::from_bytes(&kpbytes.to_bytes()).unwrap();
 
+        // Burn owner's edition.
         burn_edition(
             &mut context,
             print_edition.new_metadata_pubkey,
@@ -777,6 +815,7 @@ mod burn_edition_nft {
             print_edition.mint.pubkey(),
             original_nft.mint.pubkey(),
             print_edition.token.pubkey(),
+            original_nft.token.pubkey(),
             master_edition.pubkey,
             print_edition.new_edition_pubkey,
             print_edition.pubkey,
@@ -784,14 +823,37 @@ mod burn_edition_nft {
         .await
         .unwrap();
 
+        // Burn user's edition.
+        burn_edition(
+            &mut context,
+            user_print_edition.new_metadata_pubkey,
+            &user,
+            user_print_edition.mint.pubkey(),
+            original_nft.mint.pubkey(),
+            new_owner_token_account,
+            original_nft.token.pubkey(),
+            master_edition.pubkey,
+            user_print_edition.new_edition_pubkey,
+            user_print_edition.pubkey,
+        )
+        .await
+        .unwrap();
+
         // Metadata, Print Edition and token account do not exist.
         assert!(!print_edition.exists_on_chain(&mut context).await);
+        assert!(!user_print_edition.exists_on_chain(&mut context).await);
 
-        // Reprint burned edition
+        // Reprint owner's burned edition
         let print_edition = EditionMarker::new(&original_nft, &master_edition, 1);
         print_edition.create(&mut context).await.unwrap();
 
         // Metadata, Print Edition and token account exist.
         assert!(print_edition.exists_on_chain(&mut context).await);
+
+        // Reprint user's burned edition: this should fail.
+        let user_print_edition = EditionMarker::new(&original_nft, &master_edition, 2);
+        let err = user_print_edition.create(&mut context).await.unwrap_err();
+
+        assert_custom_error!(err, MetadataError::AlreadyInitialized);
     }
 }

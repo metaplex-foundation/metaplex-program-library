@@ -515,42 +515,53 @@ pub fn calculate_supply_change<'a>(
     edition_override: Option<u64>,
     me_supply: u64,
 ) -> ProgramResult {
-    if reservation_list_info.is_none() {
-        let new_supply: u64;
-        if let Some(edition) = edition_override {
-            if edition == 0 {
-                return Err(MetadataError::EditionOverrideCannotBeZero.into());
-            }
-
-            if edition > me_supply {
-                // Instead of using edition override to set the supply to the highest edition number minted,
-                // we increment this by one if the edition number is greater than the current supply.
-                // This allows users to mint out missing edition numbers that are less than the supply, but
-                // tracks the supply correctly once all missing editions are minted.
-                new_supply = me_supply
-                    .checked_add(1)
-                    .ok_or(MetadataError::NumericalOverflowError)?;
-            } else {
-                new_supply = me_supply;
-            }
-        } else {
-            new_supply = me_supply
-                .checked_add(1)
-                .ok_or(MetadataError::NumericalOverflowError)?;
-        }
-
-        if let Some(max) = get_max_supply_off_master_edition(master_edition_account_info)? {
-            if new_supply > max {
-                return Err(MetadataError::MaxEditionsMintedAlready.into());
-            }
-        }
-        // Doing old school serialization to protect CPU credits.
-        let edition_data = &mut master_edition_account_info.data.borrow_mut();
-        let output = array_mut_ref![edition_data, 0, MAX_MASTER_EDITION_LEN];
-
-        let (_key, supply, _the_rest) = mut_array_refs![output, 1, 8, 273];
-        *supply = new_supply.to_le_bytes();
+    // Reservation lists are deprecated.
+    if reservation_list_info.is_some() {
+        return Err(MetadataError::ReservationListDeprecated.into());
     }
+
+    // This function requires passing in the editon number.
+    if edition_override.is_none() {
+        return Err(MetadataError::EditionOverrideCannotBeZero.into());
+    }
+
+    let edition = edition_override.unwrap();
+
+    if edition == 0 {
+        return Err(MetadataError::EditionOverrideCannotBeZero.into());
+    }
+
+    let max_supply = get_max_supply_off_master_edition(master_edition_account_info)?;
+
+    // Instead of using edition override to set the supply to the highest edition number minted,
+    // we increment this by one if the edition number is less than the max supply.
+    // This allows users to mint out missing edition numbers that are less than the supply, but
+    // tracks the supply correctly once all missing editions are minted.
+    let new_supply = if let Some(max_supply) = max_supply {
+        if edition < max_supply {
+            me_supply
+                .checked_add(1)
+                .ok_or(MetadataError::NumericalOverflowError)?
+        } else {
+            me_supply
+        }
+    } else {
+        me_supply
+            .checked_add(1)
+            .ok_or(MetadataError::NumericalOverflowError)?
+    };
+
+    if let Some(max) = get_max_supply_off_master_edition(master_edition_account_info)? {
+        if new_supply > max {
+            return Err(MetadataError::MaxEditionsMintedAlready.into());
+        }
+    }
+    // Doing old school serialization to protect CPU credits.
+    let edition_data = &mut master_edition_account_info.data.borrow_mut();
+    let output = array_mut_ref![edition_data, 0, MAX_MASTER_EDITION_LEN];
+
+    let (_key, supply, _the_rest) = mut_array_refs![output, 1, 8, 273];
+    *supply = new_supply.to_le_bytes();
 
     Ok(())
 }
