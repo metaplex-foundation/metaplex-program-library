@@ -1,6 +1,6 @@
 pub mod add_constraint;
 pub mod close_escrow_account;
-pub mod create_constraints_model;
+pub mod create_constraint_model;
 pub mod create_escrow_account;
 pub mod pda;
 pub mod state;
@@ -9,7 +9,7 @@ pub mod transfer_out;
 
 pub use add_constraint::*;
 pub use close_escrow_account::*;
-pub use create_constraints_model::*;
+pub use create_constraint_model::*;
 pub use create_escrow_account::*;
 pub use pda::*;
 pub use state::*;

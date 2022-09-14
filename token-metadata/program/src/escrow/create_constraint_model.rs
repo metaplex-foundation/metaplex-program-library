@@ -52,7 +52,7 @@ pub fn create_escrow_constraint_model(
     }
 }
 
-pub fn process_create_escrow_constraints_model_account(
+pub fn process_create_escrow_constraint_model_account(
     program_id: &Pubkey,
     accounts: &[AccountInfo],
     args: CreateEscrowConstraintModelAccountArgs,

@@ -126,7 +126,7 @@ impl EscrowConstraint {
 pub enum EscrowConstraintType {
     None,
     Collection(Pubkey),
-    Tokens(HashMap<Pubkey, ()>),
+    Tokens(HashMap<Pubkey, bool>),
 }
 
 impl EscrowConstraintType {
@@ -135,7 +135,7 @@ impl EscrowConstraintType {
             EscrowConstraintType::None => Ok(1),
             EscrowConstraintType::Collection(_) => Ok(1 + mem::size_of::<Pubkey>()),
             EscrowConstraintType::Tokens(hm) => {
-                if let Some(len) = hm.len().checked_mul(mem::size_of::<Pubkey>()) {
+                if let Some(len) = hm.len().checked_mul(mem::size_of::<Pubkey>() + 1) {
                     len.checked_add(1) // enum overhead
                         .ok_or(MetadataError::NumericalOverflowError)?
                         .checked_add(4) // map overhead
@@ -150,7 +150,7 @@ impl EscrowConstraintType {
     pub fn tokens_from_slice(tokens: &[Pubkey]) -> EscrowConstraintType {
         let mut hm = HashMap::new();
         for token in tokens {
-            hm.insert(*token, ());
+            hm.insert(*token, false);
         }
         EscrowConstraintType::Tokens(hm)
     }

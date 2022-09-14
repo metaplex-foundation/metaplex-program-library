@@ -13,7 +13,7 @@ use crate::{
     error::MetadataError,
     escrow::{
         process_add_constraint_to_escrow_constraint_model, process_close_escrow_account,
-        process_create_escrow_account, process_create_escrow_constraints_model_account,
+        process_create_escrow_account, process_create_escrow_constraint_model_account,
         process_transfer_into_escrow, process_transfer_out_of_escrow,
     },
     instruction::{MetadataInstruction, SetCollectionSizeArgs},
@@ -264,7 +264,7 @@ pub fn process_instruction<'a>(
         }
         MetadataInstruction::CreateEscrowConstraintModelAccount(args) => {
             msg!("Instruction: Create Escrow Constraint Model Account");
-            process_create_escrow_constraints_model_account(program_id, accounts, args)
+            process_create_escrow_constraint_model_account(program_id, accounts, args)
         }
         MetadataInstruction::AddConstraintToEscrowConstraintModel(args) => {
             msg!("Instruction: Add Constraint To Escrow Constraint Model");
