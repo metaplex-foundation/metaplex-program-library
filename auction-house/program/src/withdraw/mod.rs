@@ -8,7 +8,7 @@ use crate::{constants::*, errors::*, utils::*, AuctionHouse, AuthorityScope, *};
 pub struct Withdraw<'info> {
     /// CHECK: Validated in withdraw_logic.
     /// User wallet account.
-    pub wallet: Signer<'info>,
+    pub wallet: UncheckedAccount<'info>,
 
     /// CHECK: Validated in withdraw_logic.
     /// SPL token account or native SOL account to transfer funds to. If the account is a native SOL account, this is the same as the wallet address.
@@ -117,7 +117,7 @@ pub fn withdraw<'info>(
 pub struct AuctioneerWithdraw<'info> {
     /// CHECK: Validated in withdraw_logic.
     /// User wallet account.
-    pub wallet: Signer<'info>,
+    pub wallet: UncheckedAccount<'info>,
 
     /// CHECK: Validated in withdraw_logic.
     /// SPL token account or native SOL account to transfer funds to. If the account is a native SOL account, this is the same as the wallet address.

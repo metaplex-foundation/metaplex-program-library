@@ -6,7 +6,7 @@ use anchor_spl::{
 use mpl_auction_house::{
     constants::{AUCTIONEER, FEE_PAYER, PREFIX},
     cpi::accounts::{AuctioneerCancel, AuctioneerWithdraw},
-    instruction::AuctioneerCancel as AuctioneerCancelParams,
+    instruction::{AuctioneerCancel as AuctioneerCancelParams, AuctioneerWithdraw as AuctioneerWithdrawParams},
     program::AuctionHouse as AuctionHouseProgram,
     AuctionHouse,
     Auctioneer,
@@ -157,6 +157,7 @@ pub fn handler(
     let reward_center = &ctx.accounts.reward_center;
     let auction_house = &ctx.accounts.auction_house;
     let wallet = &ctx.accounts.wallet;
+    let auction_house_program = ctx.accounts.auction_house_program.to_account_info();
     let auction_house_key = auction_house.key();
 
     let clock = Clock::get()?;
@@ -170,35 +171,53 @@ pub fn handler(
         &[reward_center.bump],
     ]];
 
-    let withdraw_accounts_ctx = CpiContext::new_with_signer(
-        ctx.accounts.auction_house_program.to_account_info(),
-        AuctioneerWithdraw {
-            wallet: wallet.to_account_info(),
-            rent: ctx.accounts.rent.to_account_info(),
-            ah_auctioneer_pda: ctx.accounts.ah_auctioneer_pda.to_account_info(),
-            ata_program: ctx.accounts.ata_program.to_account_info(),
-            auction_house: ctx.accounts.auction_house.to_account_info(),
-            auction_house_fee_account: ctx.accounts.auction_house_fee_account.to_account_info(),
-            auctioneer_authority: ctx.accounts.reward_center.to_account_info(),
-            authority: ctx.accounts.authority.to_account_info(),
-            escrow_payment_account: ctx.accounts.escrow_payment_account.to_account_info(),
-            receipt_account: ctx.accounts.receipt_account.to_account_info(),
-            system_program: ctx.accounts.system_program.to_account_info(),
-            token_program: ctx.accounts.token_program.to_account_info(),
-            treasury_mint: ctx.accounts.treasury_mint.to_account_info(),
-        },
-        reward_center_signer_seeds,
-    );
+    // Withdraw offer transaction via invoke_signed
+    let withdraw_offer_ctx_accounts = AuctioneerWithdraw {
+        wallet: wallet.to_account_info(),
+        rent: ctx.accounts.rent.to_account_info(),
+        ah_auctioneer_pda: ctx.accounts.ah_auctioneer_pda.to_account_info(),
+        ata_program: ctx.accounts.ata_program.to_account_info(),
+        auction_house: ctx.accounts.auction_house.to_account_info(),
+        auction_house_fee_account: ctx.accounts.auction_house_fee_account.to_account_info(),
+        auctioneer_authority: ctx.accounts.reward_center.to_account_info(),
+        authority: ctx.accounts.authority.to_account_info(),
+        escrow_payment_account: ctx.accounts.escrow_payment_account.to_account_info(),
+        receipt_account: ctx.accounts.receipt_account.to_account_info(),
+        system_program: ctx.accounts.system_program.to_account_info(),
+        token_program: ctx.accounts.token_program.to_account_info(),
+        treasury_mint: ctx.accounts.treasury_mint.to_account_info(),
+    };
 
-    mpl_auction_house::cpi::auctioneer_withdraw(
-        withdraw_accounts_ctx,
+    let withdraw_offer_params = AuctioneerWithdrawParams {
         escrow_payment_bump,
-        buyer_price,
+        amount: buyer_price,
+    };
+
+
+    let withdraw_offer_ix = Instruction {
+        program_id: auction_house_program.key(),
+        data: withdraw_offer_params.data(),
+        accounts: withdraw_offer_ctx_accounts
+            .to_account_metas(None)
+            .into_iter()
+            .zip(withdraw_offer_ctx_accounts.to_account_infos())
+            .map(|mut pair| {
+                pair.0.is_signer = pair.1.is_signer;
+                if pair.0.pubkey == ctx.accounts.reward_center.key() {
+                    pair.0.is_signer = true;
+                }
+                pair.0
+            })
+            .collect(),
+    };
+
+    invoke_signed(
+        &withdraw_offer_ix,
+        &withdraw_offer_ctx_accounts.to_account_infos(),
+        reward_center_signer_seeds,
     )?;
 
     // Cancel (Close Offer) instruction via invoke_signed
-
-    let auction_house_program = ctx.accounts.auction_house_program.to_account_info();
     let close_offer_ctx_accounts = AuctioneerCancel {
         wallet: ctx.accounts.wallet.to_account_info(),
         token_account: ctx.accounts.token_account.to_account_info(),
