@@ -5,7 +5,7 @@ use solana_program::program::invoke_signed;
 use crate::{
     assertions::assert_listing_init_eligibility,
     constants::{LISTING, REWARD_CENTER},
-    cpi::auction_house::{make_auctioneer_instruction, AuctioneerInstructionArgs},
+    metaplex_cpi::auction_house::{make_auctioneer_instruction, AuctioneerInstructionArgs},
     errors::ListingRewardsError,
     state::{
         listing_rewards::{Listing, RewardCenter},

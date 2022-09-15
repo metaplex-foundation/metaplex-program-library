@@ -16,7 +16,7 @@ use solana_program::program::invoke_signed;
 
 use crate::{
     constants::{OFFER, REWARD_CENTER},
-    cpi::auction_house::{make_auctioneer_instruction, AuctioneerInstructionArgs},
+    metaplex_cpi::auction_house::{make_auctioneer_instruction, AuctioneerInstructionArgs},
     errors::ListingRewardsError,
     state::{
         listing_rewards::{Offer, RewardCenter},

@@ -1,5 +1,5 @@
 use crate::constants::{LISTING, OFFER, PURCHASE_TICKET, REWARD_CENTER};
-use crate::cpi::auction_house::{make_auctioneer_instruction, AuctioneerInstructionArgs};
+use crate::metaplex_cpi::auction_house::{make_auctioneer_instruction, AuctioneerInstructionArgs};
 use crate::errors::ListingRewardsError;
 use crate::state::{
     listing_rewards::{Listing, Offer, PurchaseTicket, RewardCenter},

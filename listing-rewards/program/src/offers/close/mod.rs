@@ -15,7 +15,7 @@ use mpl_auction_house::{
 
 use crate::{
     constants::{OFFER, REWARD_CENTER},
-    cpi::auction_house::{make_auctioneer_instruction, AuctioneerInstructionArgs},
+    metaplex_cpi::auction_house::{make_auctioneer_instruction, AuctioneerInstructionArgs},
     state::{
         listing_rewards::{Offer, RewardCenter},
         metaplex_anchor::TokenMetadata,

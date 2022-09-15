@@ -1,9 +1,9 @@
 pub mod assertions;
 pub mod constants;
-pub mod cpi;
 pub mod errors;
 pub mod execute_sale;
 pub mod listings;
+pub mod metaplex_cpi;
 pub mod offers;
 pub mod pda;
 pub mod reward_center;
