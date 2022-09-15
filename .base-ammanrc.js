@@ -30,6 +30,11 @@ const programs = {
     programId: 'hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg',
     deployPath: localDeployPath('mpl_hydra'),
   },
+  candy_machine_core: {
+    label: "Candy Machine Core",
+    programId: 'cndy3CZK71ZHMp9ddpq5NVvQDx33o6cCYDf4JBAWCk7',
+    deployPath: localDeployPath('mpl_candy_machine_core'),
+  },
 };
 
 const validator = {

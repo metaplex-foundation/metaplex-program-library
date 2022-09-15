@@ -1,5 +1,5 @@
 {
-  "name": "@lorisleiva/mpl-candy-machine-core",
+  "name": "@metaplex-foundation/mpl-candy-machine-core",
   "version": "0.0.4",
   "programVersion": "0.0.1",
   "description": "MPL Candy Machine Core JavaScript API. This MPL package is for the current generation of the Candy Machine Core (a.k.a. Candy Machine V3).",
@@ -46,6 +46,7 @@
     "@metaplex-foundation/beet": "^0.4.0",
     "@metaplex-foundation/beet-solana": "^0.3.0",
     "@metaplex-foundation/cusper": "^0.0.2",
+    "@metaplex-foundation/mpl-candy-machine": "^4.6.0",
     "@solana/web3.js": "^1.56.2",
     "bn.js": "^5.2.0"
   },

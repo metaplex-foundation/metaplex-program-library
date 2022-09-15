@@ -196,7 +196,7 @@ test('mint (random)', async (t) => {
   await mintTransaction.assertError(t, /Candy machine is empty/i);
 });
 
-test.only('mint (hidden settings)', async (t) => {
+test('mint (hidden settings)', async (t) => {
   const { fstTxHandler, payerPair, connection } = await API.payer();
   const items = 10;
 

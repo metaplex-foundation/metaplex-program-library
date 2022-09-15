@@ -1347,31 +1347,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@lorisleiva/mpl-candy-machine-core@workspace:candy-core/js":
-  version: 0.0.0-use.local
-  resolution: "@lorisleiva/mpl-candy-machine-core@workspace:candy-core/js"
-  dependencies:
-    "@metaplex-foundation/amman": ^0.11.0
-    "@metaplex-foundation/beet": ^0.4.0
-    "@metaplex-foundation/beet-solana": ^0.3.0
-    "@metaplex-foundation/cusper": ^0.0.2
-    "@metaplex-foundation/js": ^0.15.0
-    "@metaplex-foundation/solita": ^0.12.0
-    "@solana/web3.js": ^1.56.2
-    "@types/bn.js": ^5.1.0
-    bn.js: ^5.2.0
-    esbuild: ^0.15.7
-    eslint: ^8.3.0
-    prettier: ^2.5.1
-    rimraf: ^3.0.2
-    spok: ^1.4.3
-    tap-spec: ^5.0.0
-    tape: ^5.5.0
-    typedoc: ^0.22.11
-    typescript: ^4.6.2
-  languageName: unknown
-  linkType: soft
-
 "@metaplex-foundation/amman-client@npm:^0.1.0":
   version: 0.1.0
   resolution: "@metaplex-foundation/amman-client@npm:0.1.0"
@@ -1674,7 +1649,33 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@metaplex-foundation/mpl-candy-machine@^4.4.1, @metaplex-foundation/mpl-candy-machine@workspace:candy-machine/js":
+"@metaplex-foundation/mpl-candy-machine-core@workspace:candy-machine-core/js":
+  version: 0.0.0-use.local
+  resolution: "@metaplex-foundation/mpl-candy-machine-core@workspace:candy-machine-core/js"
+  dependencies:
+    "@metaplex-foundation/amman": ^0.11.0
+    "@metaplex-foundation/beet": ^0.4.0
+    "@metaplex-foundation/beet-solana": ^0.3.0
+    "@metaplex-foundation/cusper": ^0.0.2
+    "@metaplex-foundation/js": ^0.15.0
+    "@metaplex-foundation/mpl-candy-machine": ^4.6.0
+    "@metaplex-foundation/solita": ^0.12.0
+    "@solana/web3.js": ^1.56.2
+    "@types/bn.js": ^5.1.0
+    bn.js: ^5.2.0
+    esbuild: ^0.15.7
+    eslint: ^8.3.0
+    prettier: ^2.5.1
+    rimraf: ^3.0.2
+    spok: ^1.4.3
+    tap-spec: ^5.0.0
+    tape: ^5.5.0
+    typedoc: ^0.22.11
+    typescript: ^4.6.2
+  languageName: unknown
+  linkType: soft
+
+"@metaplex-foundation/mpl-candy-machine@^4.4.1, @metaplex-foundation/mpl-candy-machine@^4.6.0, @metaplex-foundation/mpl-candy-machine@workspace:candy-machine/js":
   version: 0.0.0-use.local
   resolution: "@metaplex-foundation/mpl-candy-machine@workspace:candy-machine/js"
   dependencies:

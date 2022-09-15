@@ -23,7 +23,7 @@
     "hydra/js",
     "bubblegum/js",
     "nft-packs/js",
-    "candy-core/js"
+    "candy-machine-core/js"
   ],
   "repository": "git@github.com:metaplex-foundation/metaplex-program-library.git",
   "author": "Metaplex Maintainers <contact@metaplex.com>",

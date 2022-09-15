@@ -1,6 +1,6 @@
 [workspace]
 members=[
-  "candy-core/program"
+  "candy-machine-core/program"
 ]
 exclude = [
   "fixed-price-sale/cli",
