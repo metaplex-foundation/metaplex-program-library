@@ -1,5 +1,5 @@
 {
-  "version": "0.1.0",
+  "version": "0.1.1",
   "name": "listing_rewards",
   "instructions": [
     {
@@ -655,6 +655,16 @@
           "isSigner": false
         },
         {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "purchaseTicket",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
           "name": "tokenAccount",
           "isMut": true,
           "isSigner": false
@@ -778,67 +788,6 @@
           }
         }
       ]
-    },
-    {
-      "name": "redeemRewards",
-      "accounts": [
-        {
-          "name": "listing",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "wallet",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "rewardCenterAssociatedTokenAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "metadata",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "walletAssociatedTokenAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "mint",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "rewardCenter",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "associatedTokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": []
     }
   ],
   "accounts": [
@@ -856,15 +805,9 @@
             "type": "publicKey"
           },
           {
-            "name": "collectionOracle",
+            "name": "rewardRules",
             "type": {
-              "option": "publicKey"
-            }
-          },
-          {
-            "name": "listingRewardRules",
-            "type": {
-              "defined": "ListingRewardRules"
+              "defined": "RewardRules"
             }
           },
           {
@@ -918,15 +861,9 @@
             }
           },
           {
-            "name": "purchasedAt",
+            "name": "purchaseTicket",
             "type": {
-              "option": "i64"
-            }
-          },
-          {
-            "name": "rewardRedeemedAt",
-            "type": {
-              "option": "i64"
+              "option": "publicKey"
             }
           }
         ]
@@ -976,10 +913,46 @@
             }
           },
           {
-            "name": "purchasedAt",
+            "name": "purchaseTicket",
             "type": {
-              "option": "i64"
+              "option": "publicKey"
             }
+          }
+        ]
+      }
+    },
+    {
+      "name": "PurchaseTicket",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "buyer",
+            "type": "publicKey"
+          },
+          {
+            "name": "seller",
+            "type": "publicKey"
+          },
+          {
+            "name": "metadata",
+            "type": "publicKey"
+          },
+          {
+            "name": "rewardCenter",
+            "type": "publicKey"
+          },
+          {
+            "name": "tokenSize",
+            "type": "u64"
+          },
+          {
+            "name": "price",
+            "type": "u64"
+          },
+          {
+            "name": "createdAt",
+            "type": "i64"
           }
         ]
       }
@@ -1144,15 +1117,9 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "collectionOracle",
+            "name": "rewardRules",
             "type": {
-              "option": "publicKey"
-            }
-          },
-          {
-            "name": "listingRewardRules",
-            "type": {
-              "defined": "ListingRewardRules"
+              "defined": "RewardRules"
             }
           }
         ]
@@ -1164,22 +1131,16 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "collectionOracle",
+            "name": "rewardRules",
             "type": {
-              "option": "publicKey"
-            }
-          },
-          {
-            "name": "listingRewardRules",
-            "type": {
-              "defined": "ListingRewardRules"
+              "defined": "RewardRules"
             }
           }
         ]
       }
     },
     {
-      "name": "ListingRewardRules",
+      "name": "RewardRules",
       "type": {
         "kind": "struct",
         "fields": [

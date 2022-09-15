@@ -6,7 +6,6 @@ pub mod execute_sale;
 pub mod listings;
 pub mod offers;
 pub mod pda;
-pub mod redeem_rewards;
 pub mod reward_center;
 pub mod state;
 
@@ -16,7 +15,6 @@ use crate::{
     execute_sale::*,
     listings::{cancel::*, create::*, update::*},
     offers::{close::*, create::*, update::*},
-    redeem_rewards::*,
     reward_center::{create::*, edit::*},
 };
 
@@ -87,9 +85,5 @@ pub mod listing_rewards {
         execute_sale_params: ExecuteSaleParams,
     ) -> Result<()> {
         execute_sale::handler(ctx, execute_sale_params)
-    }
-
-    pub fn redeem_rewards(ctx: Context<RedemRewards>) -> Result<()> {
-        redeem_rewards::redeem_rewards(ctx)
     }
 }

@@ -127,7 +127,7 @@ async fn cancel_listing_success() {
     .unwrap();
 
     let reward_center_params = reward_center::create::CreateRewardCenterParams {
-        listing_reward_rules: ListingRewardRules {
+        reward_rules: RewardRules {
             seller_reward_payout_basis_points: 1000,
             payout_divider: 5,
         },

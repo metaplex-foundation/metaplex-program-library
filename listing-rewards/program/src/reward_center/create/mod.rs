@@ -9,13 +9,13 @@ use mpl_auction_house::{constants::PREFIX, AuctionHouse};
 use crate::{
     constants::REWARD_CENTER,
     errors::ListingRewardsError,
-    state::listing_rewards::{ListingRewardRules, RewardCenter},
+    state::listing_rewards::{RewardRules, RewardCenter},
 };
 
 /// Options to set on the reward center
 #[derive(AnchorDeserialize, AnchorSerialize)]
 pub struct CreateRewardCenterParams {
-    pub listing_reward_rules: ListingRewardRules,
+    pub reward_rules: RewardRules,
 }
 
 /// Accounts for the [`create_reward_center` handler](listing_rewards/fn.create_reward_center.html).
@@ -83,7 +83,7 @@ pub fn handler(
 
     reward_center.token_mint = mint.key();
     reward_center.auction_house = auction_house.key();
-    reward_center.listing_reward_rules = reward_center_params.listing_reward_rules;
+    reward_center.reward_rules = reward_center_params.reward_rules;
     reward_center.bump = *ctx
         .bumps
         .get(REWARD_CENTER)

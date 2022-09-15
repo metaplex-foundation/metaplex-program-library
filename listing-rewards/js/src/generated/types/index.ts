@@ -5,6 +5,6 @@ export * from './CreateOfferParams';
 export * from './CreateRewardCenterParams';
 export * from './EditRewardCenterParams';
 export * from './ExecuteSaleParams';
-export * from './ListingRewardRules';
+export * from './RewardRules';
 export * from './UpdateListingParams';
 export * from './UpdateOfferParams';
