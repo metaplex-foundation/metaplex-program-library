@@ -1,5 +1,6 @@
 use std::fmt::Display;
 
+use mpl_bubblegum::state::metaplex_adapter::{Creator, MetadataArgs, TokenProgramVersion};
 use solana_program::pubkey::Pubkey;
 use solana_program_test::{BanksClient, ProgramTestContext};
 use solana_sdk::{
@@ -8,8 +9,7 @@ use solana_sdk::{
     transaction::Transaction,
 };
 
-use crate::state::metaplex_adapter::{Creator, MetadataArgs, TokenProgramVersion};
-use crate::tests::{clone_keypair, program_test, Error, LeafArgs, Result, Tree};
+use super::{clone_keypair, program_test, Error, LeafArgs, Result, Tree};
 
 pub struct BubblegumTestContext {
     program_context: ProgramTestContext,

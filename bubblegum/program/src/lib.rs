@@ -43,9 +43,6 @@ pub mod error;
 pub mod state;
 pub mod utils;
 
-#[cfg(test)]
-pub mod tests;
-
 declare_id!("BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY");
 
 #[derive(Accounts)]

@@ -1,12 +1,11 @@
-mod context;
-mod simple;
+pub mod context;
 
-use crate::{
+use anchor_lang::{self, AccountDeserialize, InstructionData, ToAccountMetas};
+use bytemuck::{try_from_bytes, PodCastError};
+use mpl_bubblegum::{
     hash_creators, hash_metadata,
     state::{metaplex_adapter::MetadataArgs, TreeConfig},
 };
-use anchor_lang::{self, AccountDeserialize, InstructionData, ToAccountMetas};
-use bytemuck::{try_from_bytes, PodCastError};
 use solana_program::{
     instruction::Instruction, pubkey::Pubkey, rent::Rent, system_instruction, system_program,
 };
@@ -39,7 +38,7 @@ pub enum Error {
 pub type Result<T> = result::Result<T, Error>;
 
 pub fn program_test() -> ProgramTest {
-    let mut test = ProgramTest::new("mpl_bubblegum", crate::id(), None);
+    let mut test = ProgramTest::new("mpl_bubblegum", mpl_bubblegum::id(), None);
     test.add_program(
         "WRAPYChf58WFCnyjXKJHtrPgzKXgHp6MD9aVDqJBbGh",
         spl_noop::id(),
@@ -59,7 +58,7 @@ where
     U: InstructionData,
 {
     Instruction {
-        program_id: crate::id(),
+        program_id: mpl_bubblegum::id(),
         accounts: accounts.to_account_metas(None),
         data: data.data(),
     }
@@ -174,24 +173,34 @@ where
 // The types below have "builder" in their names because we're essentially
 // implementing a lightweight builder patter to instantiate, customize, and
 // execute transactions.
-pub type CreateBuilder = TxBuilder<crate::accounts::CreateTree, crate::instruction::CreateTree>;
+pub type CreateBuilder =
+    TxBuilder<mpl_bubblegum::accounts::CreateTree, mpl_bubblegum::instruction::CreateTree>;
 
-pub type MintV1Builder = TxBuilder<crate::accounts::MintV1, crate::instruction::MintV1>;
+pub type MintV1Builder =
+    TxBuilder<mpl_bubblegum::accounts::MintV1, mpl_bubblegum::instruction::MintV1>;
 
-pub type BurnBuilder = TxBuilder<crate::accounts::Burn, crate::instruction::Burn>;
+pub type BurnBuilder = TxBuilder<mpl_bubblegum::accounts::Burn, mpl_bubblegum::instruction::Burn>;
 
-pub type TransferBuilder = TxBuilder<crate::accounts::Transfer, crate::instruction::Transfer>;
+pub type TransferBuilder =
+    TxBuilder<mpl_bubblegum::accounts::Transfer, mpl_bubblegum::instruction::Transfer>;
 
-pub type DelegateBuilder = TxBuilder<crate::accounts::Delegate, crate::instruction::Delegate>;
+pub type DelegateBuilder =
+    TxBuilder<mpl_bubblegum::accounts::Delegate, mpl_bubblegum::instruction::Delegate>;
 
-pub type SetTreeDelegateBuilder =
-    TxBuilder<crate::accounts::SetTreeDelegate, crate::instruction::SetTreeDelegate>;
+pub type SetTreeDelegateBuilder = TxBuilder<
+    mpl_bubblegum::accounts::SetTreeDelegate,
+    mpl_bubblegum::instruction::SetTreeDelegate,
+>;
 
-pub type VerifyCreatorBuilder =
-    TxBuilder<crate::accounts::CreatorVerification, crate::instruction::VerifyCreator>;
+pub type VerifyCreatorBuilder = TxBuilder<
+    mpl_bubblegum::accounts::CreatorVerification,
+    mpl_bubblegum::instruction::VerifyCreator,
+>;
 
-pub type UnverifyCreatorBuilder =
-    TxBuilder<crate::accounts::CreatorVerification, crate::instruction::UnverifyCreator>;
+pub type UnverifyCreatorBuilder = TxBuilder<
+    mpl_bubblegum::accounts::CreatorVerification,
+    mpl_bubblegum::instruction::UnverifyCreator,
+>;
 
 pub struct LeafArgs {
     pub owner: Keypair,
@@ -269,13 +278,13 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
     }
 
     pub fn authority(&self) -> Pubkey {
-        Pubkey::find_program_address(&[self.tree_pubkey().as_ref()], &crate::id()).0
+        Pubkey::find_program_address(&[self.tree_pubkey().as_ref()], &mpl_bubblegum::id()).0
     }
 
     pub fn mint_authority_request(&self, authority: &Pubkey) -> Pubkey {
         Pubkey::find_program_address(
             &[self.tree_pubkey().as_ref(), authority.as_ref()],
-            &crate::id(),
+            &mpl_bubblegum::id(),
         )
         .0
     }
@@ -367,7 +376,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
     // Moreover executions don't consume the builder, which can be modified
     // some more and executed again etc.
     pub fn create_tree_tx(&self, payer: &Keypair) -> CreateBuilder {
-        let accounts = crate::accounts::CreateTree {
+        let accounts = mpl_bubblegum::accounts::CreateTree {
             tree_authority: self.authority(),
             payer: payer.pubkey(),
             tree_creator: self.creator_pubkey(),
@@ -378,7 +387,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
         };
 
         // The conversions below should not fail.
-        let data = crate::instruction::CreateTree {
+        let data = mpl_bubblegum::instruction::CreateTree {
             max_depth: u32::try_from(MAX_DEPTH).unwrap(),
             max_buffer_size: u32::try_from(MAX_BUFFER_SIZE).unwrap(),
         };
@@ -393,7 +402,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
     }
 
     pub fn mint_v1_tx(&self, tree_delegate: &Keypair, args: &LeafArgs) -> MintV1Builder {
-        let accounts = crate::accounts::MintV1 {
+        let accounts = mpl_bubblegum::accounts::MintV1 {
             tree_authority: self.authority(),
             tree_delegate: tree_delegate.pubkey(),
             payer: args.owner.pubkey(),
@@ -404,7 +413,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             merkle_tree: self.tree_pubkey(),
         };
 
-        let data = crate::instruction::MintV1 {
+        let data = mpl_bubblegum::instruction::MintV1 {
             message: args.metadata.clone(),
         };
 
@@ -445,7 +454,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
 
         let (data_hash, creator_hash) = compute_metadata_hashes(&args.metadata)?;
 
-        let accounts = crate::accounts::Burn {
+        let accounts = mpl_bubblegum::accounts::Burn {
             tree_authority: self.authority(),
             log_wrapper: spl_noop::id(),
             compression_program: spl_account_compression::id(),
@@ -454,7 +463,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             merkle_tree: self.tree_pubkey(),
         };
 
-        let data = crate::instruction::Burn {
+        let data = mpl_bubblegum::instruction::Burn {
             root,
             data_hash,
             creator_hash,
@@ -477,7 +486,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
         let root = self.decode_root().await?;
         let (data_hash, creator_hash) = compute_metadata_hashes(&args.metadata)?;
 
-        let accounts = crate::accounts::CreatorVerification {
+        let accounts = mpl_bubblegum::accounts::CreatorVerification {
             tree_authority: self.authority(),
             leaf_owner: args.owner.pubkey(),
             leaf_delegate: args.delegate.pubkey(),
@@ -488,7 +497,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             merkle_tree: self.tree_pubkey(),
         };
 
-        let data = crate::instruction::VerifyCreator {
+        let data = mpl_bubblegum::instruction::VerifyCreator {
             root,
             data_hash,
             creator_hash,
@@ -512,7 +521,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
         let root = self.decode_root().await?;
         let (data_hash, creator_hash) = compute_metadata_hashes(&args.metadata)?;
 
-        let accounts = crate::accounts::CreatorVerification {
+        let accounts = mpl_bubblegum::accounts::CreatorVerification {
             tree_authority: self.authority(),
             leaf_owner: args.owner.pubkey(),
             leaf_delegate: args.delegate.pubkey(),
@@ -523,7 +532,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             merkle_tree: self.tree_pubkey(),
         };
 
-        let data = crate::instruction::UnverifyCreator {
+        let data = mpl_bubblegum::instruction::UnverifyCreator {
             root,
             data_hash,
             creator_hash,
@@ -550,7 +559,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
         let root = self.decode_root().await?;
         let (data_hash, creator_hash) = compute_metadata_hashes(&args.metadata)?;
 
-        let accounts = crate::accounts::Transfer {
+        let accounts = mpl_bubblegum::accounts::Transfer {
             tree_authority: self.authority(),
             leaf_owner: args.owner.pubkey(),
             leaf_delegate: args.delegate.pubkey(),
@@ -560,7 +569,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             merkle_tree: self.tree_pubkey(),
         };
 
-        let data = crate::instruction::Transfer {
+        let data = mpl_bubblegum::instruction::Transfer {
             root,
             data_hash,
             creator_hash,
@@ -583,7 +592,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
         let root = self.decode_root().await?;
         let (data_hash, creator_hash) = compute_metadata_hashes(&args.metadata)?;
 
-        let accounts = crate::accounts::Delegate {
+        let accounts = mpl_bubblegum::accounts::Delegate {
             tree_authority: self.authority(),
             leaf_owner: args.owner.pubkey(),
             previous_leaf_delegate: args.delegate.pubkey(),
@@ -593,7 +602,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             merkle_tree: self.tree_pubkey(),
         };
 
-        let data = crate::instruction::Delegate {
+        let data = mpl_bubblegum::instruction::Delegate {
             root,
             data_hash,
             creator_hash,
@@ -610,14 +619,14 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
     }
 
     pub fn set_tree_delegate_tx(&self, new_tree_delegate: Pubkey) -> SetTreeDelegateBuilder {
-        let accounts = crate::accounts::SetTreeDelegate {
+        let accounts = mpl_bubblegum::accounts::SetTreeDelegate {
             tree_creator: self.creator_pubkey(),
             new_tree_delegate,
             merkle_tree: self.tree_pubkey(),
             tree_authority: self.authority(),
         };
 
-        let data = crate::instruction::SetTreeDelegate;
+        let data = mpl_bubblegum::instruction::SetTreeDelegate;
 
         self.tx_builder(accounts, data, self.creator_pubkey(), &[&self.tree_creator])
     }
