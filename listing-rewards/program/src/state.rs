@@ -69,7 +69,7 @@ pub struct Listing {
     pub bump: u8,
     pub created_at: i64,
     pub canceled_at: Option<i64>,
-    pub purchased_at: Option<i64>,
+    pub purchase_ticket: Option<Pubkey>,
     pub reward_redeemed_at: Option<i64>,
 }
 
@@ -85,7 +85,7 @@ impl Listing {
         1 + // bump
         8 + // created_at
         1 + 8 + // canceled_at
-        1 + 8 + // purchased_at
+        1 + 32 + // purchase_ticket
         1 + 8 // reward_redeemed_at
     }
 }
@@ -101,7 +101,7 @@ pub struct Offer {
     pub bump: u8,
     pub created_at: i64,
     pub canceled_at: Option<i64>,
-    pub purchased_at: Option<i64>,
+    pub purchase_ticket: Option<Pubkey>,
 }
 
 impl Offer {
@@ -116,6 +116,30 @@ impl Offer {
         1 + // bump
         8 + // created_at
         1 + 8 + // canceled_at
-        1 + 8 // purchased_at
+        1 + 32 // purchase_ticket
+    }
+}
+
+#[account]
+pub struct PurchaseTicket {
+    pub buyer: Pubkey,
+    pub seller: Pubkey,
+    pub metadata: Pubkey,
+    pub reward_center: Pubkey,
+    pub token_size: u64,
+    pub price: u64,
+    pub created_at: i64,
+}
+
+impl PurchaseTicket {
+    pub fn size() -> usize {
+        8 + // delimiter
+        32 + // buyer
+        32 + // seller
+        32 + // metadata
+        32 + // reward_center
+        32 + // token_size
+        8 + // price
+        8 // created_at
     }
 }

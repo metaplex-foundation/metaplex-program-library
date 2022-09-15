@@ -181,7 +181,7 @@ pub fn handler(
         .ok_or(ListingRewardsError::BumpSeedNotInHashMap)?;
     offer.created_at = clock.unix_timestamp;
     offer.canceled_at = None;
-    offer.purchased_at = None;
+    offer.purchase_ticket = None;
 
     let reward_center_signer_seeds: &[&[&[u8]]] = &[&[
         REWARD_CENTER.as_bytes(),

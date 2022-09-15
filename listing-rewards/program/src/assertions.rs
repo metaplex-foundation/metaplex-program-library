@@ -18,7 +18,7 @@ pub fn assert_listing_reward_redemption_eligibility(
         return err!(ListingRewardsError::RewardsAlreadyClaimed);
     }
 
-    if eligibility_timestamp >= current_timestamp || listing.purchased_at.is_some() {
+    if eligibility_timestamp >= current_timestamp || listing.purchase_ticket.is_some() {
         return Ok(());
     }
 
@@ -26,7 +26,9 @@ pub fn assert_listing_reward_redemption_eligibility(
 }
 
 pub fn assert_listing_init_eligibility(listing: &Account<Listing>) -> Result<()> {
-    if listing.is_initialized && (listing.canceled_at.is_none() && listing.purchased_at.is_none()) {
+    if listing.is_initialized
+        && (listing.canceled_at.is_none() && listing.purchase_ticket.is_none())
+    {
         return err!(ListingRewardsError::ListingAlreadyExists);
     }
 
@@ -34,7 +36,7 @@ pub fn assert_listing_init_eligibility(listing: &Account<Listing>) -> Result<()>
 }
 
 pub fn assert_offer_init_eligibility(offer: &Account<Offer>) -> Result<()> {
-    if offer.is_initialized && (offer.canceled_at.is_none() && offer.purchased_at.is_none()) {
+    if offer.is_initialized && (offer.canceled_at.is_none() && offer.purchase_ticket.is_none()) {
         return err!(ListingRewardsError::OfferAlreadyExists);
     }
     Ok(())

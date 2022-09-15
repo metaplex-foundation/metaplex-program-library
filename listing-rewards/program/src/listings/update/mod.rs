@@ -29,7 +29,7 @@ pub struct UpdateListing<'info> {
         has_one = metadata,
         has_one = reward_center,
         constraint = listing.canceled_at.is_none() @ ListingRewardsError::ListingAlreadyCancelled,
-        constraint = listing.purchased_at.is_none() @ ListingRewardsError::ListingAlreadyPurchased,
+        constraint = listing.purchase_ticket.is_none() @ ListingRewardsError::ListingAlreadyPurchased,
         seeds = [
             LISTING.as_bytes(),
             wallet.key().as_ref(),
