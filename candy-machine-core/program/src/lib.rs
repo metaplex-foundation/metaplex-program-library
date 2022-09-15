@@ -31,7 +31,7 @@ pub mod candy_machine_core {
         instructions::initialize(ctx, data)
     }
 
-    /// Mint an NFT. Only the candy machine authority is allowed to mint.
+    /// Mint an NFT. Only the candy machine mint authority is allowed to mint.
     pub fn mint<'info>(ctx: Context<'_, '_, '_, 'info, Mint<'info>>) -> Result<()> {
         instructions::mint(ctx)
     }
@@ -46,8 +46,7 @@ pub mod candy_machine_core {
         instructions::set_collection(ctx)
     }
 
-    /// Set a new mint authority of the candy machine. Only the mint authority can mint
-    /// from the candy machine.
+    /// Set a new mint authority of the candy machine.
     pub fn set_mint_authority(ctx: Context<SetMintAuthority>) -> Result<()> {
         instructions::set_mint_authority(ctx)
     }
