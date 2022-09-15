@@ -1607,7 +1607,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "mpl-listing-rewards"
+name = "mpl-reward-center"
 version = "0.1.1"
 dependencies = [
  "anchor-lang",
@@ -1618,13 +1618,13 @@ dependencies = [
 ]
 
 [[package]]
-name = "mpl-listing-rewards-sdk"
+name = "mpl-reward-center-sdk"
 version = "0.1.0"
 dependencies = [
  "anchor-client",
  "anchor-lang",
  "mpl-auction-house",
- "mpl-listing-rewards",
+ "mpl-reward-center",
  "spl-associated-token-account",
  "spl-token",
 ]
