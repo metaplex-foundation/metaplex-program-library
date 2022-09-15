@@ -8,7 +8,7 @@ const binaryInstallDir = path.join(__dirname, '.crates');
 module.exports = {
     idlGenerator: 'anchor',
     programName: 'candy_machine_core',
-    programId: 'cndy3CZK71ZHMp9ddpq5NVvQDx33o6cCYDf4JBAWCk7',
+    programId: 'CndyV3LdqHUfDLmE5naZjVN8rBZz4tqhdefbAnjHG3JR',
     idlDir,
     sdkDir,
     binaryInstallDir,

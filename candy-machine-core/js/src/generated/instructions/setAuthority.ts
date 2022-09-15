@@ -62,7 +62,7 @@ export const setAuthorityInstructionDiscriminator = [133, 250, 37, 21, 110, 163,
 export function createSetAuthorityInstruction(
   accounts: SetAuthorityInstructionAccounts,
   args: SetAuthorityInstructionArgs,
-  programId = new web3.PublicKey('cndy3CZK71ZHMp9ddpq5NVvQDx33o6cCYDf4JBAWCk7'),
+  programId = new web3.PublicKey('CndyV3LdqHUfDLmE5naZjVN8rBZz4tqhdefbAnjHG3JR'),
 ) {
   const [data] = setAuthorityStruct.serialize({
     instructionDiscriminator: setAuthorityInstructionDiscriminator,

@@ -421,26 +421,26 @@ createErrorFromCodeLookup.set(0x1782, () => new CollectionKeyMismatchError());
 createErrorFromNameLookup.set('CollectionKeyMismatch', () => new CollectionKeyMismatchError());
 
 /**
- * CannotChangeUpdateAuthority: 'Cannot change update authority if a collection mint is set'
+ * CouldNotRetrieveConfigLineData: 'Could not retrive config line data'
  *
  * @category Errors
  * @category generated
  */
-export class CannotChangeUpdateAuthorityError extends Error {
+export class CouldNotRetrieveConfigLineDataError extends Error {
   readonly code: number = 0x1783;
-  readonly name: string = 'CannotChangeUpdateAuthority';
+  readonly name: string = 'CouldNotRetrieveConfigLineData';
   constructor() {
-    super('Cannot change update authority if a collection mint is set');
+    super('Could not retrive config line data');
     if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, CannotChangeUpdateAuthorityError);
+      Error.captureStackTrace(this, CouldNotRetrieveConfigLineDataError);
     }
   }
 }
 
-createErrorFromCodeLookup.set(0x1783, () => new CannotChangeUpdateAuthorityError());
+createErrorFromCodeLookup.set(0x1783, () => new CouldNotRetrieveConfigLineDataError());
 createErrorFromNameLookup.set(
-  'CannotChangeUpdateAuthority',
-  () => new CannotChangeUpdateAuthorityError(),
+  'CouldNotRetrieveConfigLineData',
+  () => new CouldNotRetrieveConfigLineDataError(),
 );
 
 /**

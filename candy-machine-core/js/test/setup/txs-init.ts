@@ -293,7 +293,10 @@ export class InitTransactions {
     ixs.push(program.createMintInstruction(accounts));
     const tx = new Transaction().add(...ixs);
 
-    return { tx: handler.sendAndConfirmTransaction(tx, [payer, mintPair], 'tx: Mint'), mintAddress: nftMint };
+    return {
+      tx: handler.sendAndConfirmTransaction(tx, [payer, mintPair], 'tx: Mint'),
+      mintAddress: nftMint,
+    };
   }
 
   async withdraw(

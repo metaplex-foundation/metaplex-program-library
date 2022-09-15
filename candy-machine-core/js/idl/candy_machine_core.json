@@ -113,7 +113,7 @@
     {
       "name": "mint",
       "docs": [
-        "Mint an NFT. Only the candy machine authority is allowed to mint."
+        "Mint an NFT. Only the candy machine mint authority is allowed to mint."
       ],
       "accounts": [
         {
@@ -320,8 +320,7 @@
     {
       "name": "setMintAuthority",
       "docs": [
-        "Set a new mint authority of the candy machine. Only the mint authority can mint",
-        "from the candy machine."
+        "Set a new mint authority of the candy machine."
       ],
       "accounts": [
         {
@@ -758,12 +757,12 @@
     },
     {
       "code": 6019,
-      "name": "CannotChangeUpdateAuthority",
-      "msg": "Cannot change update authority if a collection mint is set"
+      "name": "CouldNotRetrieveConfigLineData",
+      "msg": "Could not retrive config line data"
     }
   ],
   "metadata": {
-    "address": "cndy3CZK71ZHMp9ddpq5NVvQDx33o6cCYDf4JBAWCk7",
+    "address": "CndyV3LdqHUfDLmE5naZjVN8rBZz4tqhdefbAnjHG3JR",
     "origin": "anchor",
     "binaryVersion": "0.25.0",
     "libVersion": "0.25.0"

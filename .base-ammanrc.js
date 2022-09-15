@@ -32,7 +32,7 @@ const programs = {
   },
   candy_machine_core: {
     label: "Candy Machine Core",
-    programId: 'cndy3CZK71ZHMp9ddpq5NVvQDx33o6cCYDf4JBAWCk7',
+    programId: 'CndyV3LdqHUfDLmE5naZjVN8rBZz4tqhdefbAnjHG3JR',
     deployPath: localDeployPath('mpl_candy_machine_core'),
   },
 };
