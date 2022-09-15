@@ -29,7 +29,7 @@ pub struct CreateListingParams {
     pub program_as_signer_bump: u8,
 }
 
-/// Accounts for the [`sell` handler](listing_rewards/fn.sell.html).
+/// Accounts for the [`sell` handler](reward_center/fn.sell.html).
 #[derive(Accounts, Clone)]
 #[instruction(create_listing_params: CreateListingParams)]
 pub struct CreateListing<'info> {

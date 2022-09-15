@@ -1,10 +1,9 @@
 #![cfg(feature = "test-bpf")]
 
-pub mod listing_rewards_test;
+pub mod reward_center_test;
 
 use crate::state::base::*;
 use anchor_client::solana_sdk::{pubkey::Pubkey, signature::Signer, transaction::Transaction};
-use listing_rewards_test::fixtures::metadata;
 use mpl_auction_house::{
     pda::{
         find_auction_house_address, find_auctioneer_trade_state_address, find_trade_state_address,
@@ -12,9 +11,11 @@ use mpl_auction_house::{
     AuthorityScope,
 };
 use mpl_reward_center::{
+    mut_reward_center,
     pda::{find_listing_address, find_reward_center_address},
-    reward_center, state,
+    state,
 };
+use reward_center_test::fixtures::metadata;
 
 use mpl_reward_center_sdk::{
     accounts::{CreateListingAccounts, UpdateListingAccounts},
@@ -38,12 +39,12 @@ use spl_token::{
 
 #[tokio::test]
 async fn update_listing_success() {
-    let program = listing_rewards_test::setup_program();
+    let program = reward_center_test::setup_program();
     let mut context = program.start_with_context().await;
     let rent = context.banks_client.get_rent().await.unwrap();
     let wallet = context.payer.pubkey();
     let mint = native_mint::id();
-    let collection = Pubkey::from_str(listing_rewards_test::TEST_COLLECTION).unwrap();
+    let collection = Pubkey::from_str(reward_center_test::TEST_COLLECTION).unwrap();
 
     let metadata = metadata::create(
         &mut context,
@@ -85,7 +86,7 @@ async fn update_listing_success() {
     airdrop(
         &mut context,
         &reward_mint_authority_pubkey,
-        listing_rewards_test::TEN_SOL,
+        reward_center_test::TEN_SOL,
     )
     .await
     .unwrap();
@@ -125,7 +126,7 @@ async fn update_listing_success() {
     )
     .unwrap();
 
-    let reward_center_params = reward_center::create::CreateRewardCenterParams {
+    let reward_center_params = mut_reward_center::create::CreateRewardCenterParams {
         reward_rules: RewardRules {
             seller_reward_payout_basis_points: 1000,
             payout_divider: 5,
@@ -218,7 +219,7 @@ async fn update_listing_success() {
     };
 
     let create_listing_params = CreateListingData {
-        price: listing_rewards_test::ONE_SOL,
+        price: reward_center_test::ONE_SOL,
         token_size: 1,
         trade_state_bump,
         free_trade_state_bump,
@@ -236,7 +237,7 @@ async fn update_listing_success() {
     };
 
     let update_listing_params = UpdateListingData {
-        new_price: listing_rewards_test::ONE_SOL * 2,
+        new_price: reward_center_test::ONE_SOL * 2,
     };
 
     let update_listing_ix = update_listing(update_listing_accounts, update_listing_params);

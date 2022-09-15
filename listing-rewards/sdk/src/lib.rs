@@ -16,12 +16,12 @@ use mpl_reward_center::{
     listings::{
         cancel::CancelListingParams, create::CreateListingParams, update::UpdateListingParams,
     },
+    mut_reward_center::{create::CreateRewardCenterParams, edit::EditRewardCenterParams},
     offers::{close::CloseOfferParams, create::CreateOfferParams, update::UpdateOfferParams},
     pda::{
         self, find_listing_address, find_offer_address, find_purchase_ticket_address,
         find_reward_center_address,
     },
-    reward_center::{create::CreateRewardCenterParams, edit::EditRewardCenterParams},
 };
 use spl_associated_token_account::get_associated_token_address;
 

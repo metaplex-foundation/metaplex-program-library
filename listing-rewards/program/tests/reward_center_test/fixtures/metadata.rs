@@ -3,7 +3,7 @@ use mpl_token_metadata::state::{Collection, Creator, Uses};
 use solana_program_test::ProgramTestContext;
 use solana_sdk::signature::Signer;
 
-use crate::listing_rewards_test::TEN_SOL;
+use crate::reward_center_test::TEN_SOL;
 
 #[derive(Clone, Debug)]
 pub struct Params<'a> {

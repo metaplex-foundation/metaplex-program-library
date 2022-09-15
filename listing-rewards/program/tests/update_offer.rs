@@ -1,10 +1,9 @@
 #![cfg(feature = "test-bpf")]
 
-pub mod listing_rewards_test;
+pub mod reward_center_test;
 
 use crate::state::base::*;
 use anchor_client::solana_sdk::{pubkey::Pubkey, signature::Signer, transaction::Transaction};
-use listing_rewards_test::fixtures::metadata;
 use mpl_auction_house::{
     pda::{
         find_auction_house_address, find_auctioneer_trade_state_address, find_trade_state_address,
@@ -12,9 +11,11 @@ use mpl_auction_house::{
     AuthorityScope,
 };
 use mpl_reward_center::{
+    mut_reward_center,
     pda::{find_listing_address, find_reward_center_address},
-    reward_center, state,
+    state,
 };
+use reward_center_test::fixtures::metadata;
 
 use mpl_reward_center_sdk::{
     accounts::{CreateListingAccounts, CreateOfferAccounts, UpdateOfferAccounts},
@@ -38,12 +39,12 @@ use spl_token::{
 
 #[tokio::test]
 async fn create_offer_success() {
-    let program = listing_rewards_test::setup_program();
+    let program = reward_center_test::setup_program();
     let mut context = program.start_with_context().await;
     let rent = context.banks_client.get_rent().await.unwrap();
     let wallet = context.payer.pubkey();
     let mint = native_mint::id();
-    let collection = Pubkey::from_str(listing_rewards_test::TEST_COLLECTION).unwrap();
+    let collection = Pubkey::from_str(reward_center_test::TEST_COLLECTION).unwrap();
 
     let metadata = metadata::create(
         &mut context,
@@ -85,7 +86,7 @@ async fn create_offer_success() {
     airdrop(
         &mut context,
         &reward_mint_authority_pubkey,
-        listing_rewards_test::TEN_SOL,
+        reward_center_test::TEN_SOL,
     )
     .await
     .unwrap();
@@ -125,7 +126,7 @@ async fn create_offer_success() {
     )
     .unwrap();
 
-    let reward_center_params = reward_center::create::CreateRewardCenterParams {
+    let reward_center_params = mut_reward_center::create::CreateRewardCenterParams {
         reward_rules: RewardRules {
             seller_reward_payout_basis_points: 1000,
             payout_divider: 5,
@@ -216,7 +217,7 @@ async fn create_offer_success() {
     };
 
     let create_listing_params = CreateListingData {
-        price: listing_rewards_test::ONE_SOL,
+        price: reward_center_test::ONE_SOL,
         token_size: 1,
         trade_state_bump,
         free_trade_state_bump,
@@ -261,7 +262,7 @@ async fn create_offer_success() {
 
     let buyer = Keypair::new();
     let buyer_pubkey = &buyer.pubkey();
-    airdrop(&mut context, buyer_pubkey, listing_rewards_test::TEN_SOL)
+    airdrop(&mut context, buyer_pubkey, reward_center_test::TEN_SOL)
         .await
         .unwrap();
 
@@ -280,7 +281,7 @@ async fn create_offer_success() {
 
     let create_offer_params = CreateOfferData {
         token_size: 1,
-        buyer_price: listing_rewards_test::ONE_SOL,
+        buyer_price: reward_center_test::ONE_SOL,
     };
 
     let create_offer_ix = create_offer(create_offer_accounts, create_offer_params);
@@ -300,7 +301,7 @@ async fn create_offer_success() {
     };
 
     let update_offer_inc_params = UpdateOfferData {
-        new_buyer_price: listing_rewards_test::ONE_SOL * 2,
+        new_buyer_price: reward_center_test::ONE_SOL * 2,
     };
 
     let update_offer_dec_accounts = UpdateOfferAccounts {
@@ -316,7 +317,7 @@ async fn create_offer_success() {
     };
 
     let update_offer_dec_params = UpdateOfferData {
-        new_buyer_price: listing_rewards_test::ONE_SOL,
+        new_buyer_price: reward_center_test::ONE_SOL,
     };
 
     let update_offer_inc_ix = update_offer(update_offer_inc_accounts, update_offer_inc_params);
