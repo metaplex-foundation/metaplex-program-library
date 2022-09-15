@@ -2,9 +2,9 @@
 
 pub mod listing_rewards_test;
 
-use listing_rewards_test::fixtures::metadata;
-
+use crate::state::listing_rewards::*;
 use anchor_client::solana_sdk::{pubkey::Pubkey, signature::Signer, transaction::Transaction};
+use listing_rewards_test::fixtures::metadata;
 use mpl_auction_house::{
     pda::{
         find_auction_house_address, find_auction_house_fee_account_address,
@@ -127,8 +127,7 @@ async fn reopen_purchased_listing_success() {
     .unwrap();
 
     let reward_center_params = reward_center::create::CreateRewardCenterParams {
-        collection_oracle: None,
-        listing_reward_rules: state::ListingRewardRules {
+        listing_reward_rules: ListingRewardRules {
             seller_reward_payout_basis_points: 1000,
             payout_divider: 5,
         },
@@ -327,6 +326,7 @@ async fn reopen_purchased_listing_success() {
         buyer: buyer.pubkey(),
         payer: wallet,
         seller: metadata_owner.pubkey(),
+        payer: wallet,
         authority: wallet,
         token_mint: metadata_mint_address,
         treasury_mint: mint,

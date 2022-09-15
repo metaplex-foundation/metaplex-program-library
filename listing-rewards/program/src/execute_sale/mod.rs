@@ -1,7 +1,10 @@
-use crate::constants::{LISTING, OFFER, REWARD_CENTER, PURCHASE_TICKET};
+use crate::constants::{LISTING, OFFER, PURCHASE_TICKET, REWARD_CENTER};
+use crate::cpi::auction_house::{make_auctioneer_instruction, AuctioneerInstructionArgs};
 use crate::errors::ListingRewardsError;
-use crate::state::{Listing, Offer, PurchaseTicket};
-use crate::{state::RewardCenter, MetadataAccount};
+use crate::state::{
+    listing_rewards::{Listing, Offer, PurchaseTicket, RewardCenter},
+    metaplex_anchor::TokenMetadata,
+};
 use anchor_lang::{prelude::*, InstructionData};
 use anchor_spl::token::{transfer, Transfer};
 use anchor_spl::{
@@ -15,7 +18,7 @@ use mpl_auction_house::{
     program::AuctionHouse as AuctionHouseProgram,
     AuctionHouse, Auctioneer,
 };
-use solana_program::{instruction::Instruction, program::invoke_signed};
+use solana_program::program::invoke_signed;
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct ExecuteSaleParams {
@@ -111,7 +114,7 @@ pub struct ExecuteSale<'info> {
     pub token_mint: Box<Account<'info, Mint>>,
 
     /// Metaplex metadata account decorating SPL mint account.
-    pub metadata: Box<Account<'info, MetadataAccount>>,
+    pub metadata: Box<Account<'info, TokenMetadata>>,
 
     /// Auction House treasury mint account.
     pub treasury_mint: Box<Account<'info, Mint>>,
@@ -306,7 +309,6 @@ pub fn handler(
 
     let auction_house = &ctx.accounts.auction_house;
     let reward_center = &ctx.accounts.reward_center;
-    let auction_house_program = &ctx.accounts.auction_house_program;
     let metadata = &ctx.accounts.metadata;
 
     let auction_house_key = auction_house.key();
@@ -367,26 +369,16 @@ pub fn handler(
         _free_trade_state_bump: free_trade_state_bump,
     };
 
-    let execute_sale_ix = Instruction {
-        program_id: auction_house_program.key(),
-        data: execute_sale_params.data(),
-        accounts: execute_sale_ctx_accounts
-            .to_account_metas(None)
-            .into_iter()
-            .zip(execute_sale_ctx_accounts.to_account_infos())
-            .map(|mut pair| {
-                pair.0.is_signer = pair.1.is_signer;
-                if pair.0.pubkey == ctx.accounts.reward_center.key() {
-                    pair.0.is_signer = true;
-                }
-                pair.0
-            })
-            .collect(),
-    };
+    let (execute_sale_ix, execute_sale_account_infos) =
+        make_auctioneer_instruction(AuctioneerInstructionArgs {
+            accounts: execute_sale_ctx_accounts,
+            instruction_data: execute_sale_params.data(),
+            auctioneer_authority: ctx.accounts.reward_center.key(),
+        });
 
     invoke_signed(
         &execute_sale_ix,
-        &execute_sale_ctx_accounts.to_account_infos(),
+        &execute_sale_account_infos,
         reward_center_signer_seeds,
     )?;
 

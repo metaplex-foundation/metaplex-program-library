@@ -10,15 +10,18 @@ use mpl_auction_house::{
         AuctioneerDeposit as AuctioneerDepositData, AuctioneerWithdraw as AuctioneerWithdrawData,
     },
     program::AuctionHouse as AuctionHouseProgram,
-    AuctionHouse,
-    Auctioneer,
+    AuctionHouse, Auctioneer,
 };
-use solana_program::{instruction::Instruction, program::invoke_signed};
+use solana_program::program::invoke_signed;
 
 use crate::{
     constants::{OFFER, REWARD_CENTER},
-    state::{Offer, RewardCenter},
-    MetadataAccount, errors::ListingRewardsError,
+    cpi::auction_house::{make_auctioneer_instruction, AuctioneerInstructionArgs},
+    errors::ListingRewardsError,
+    state::{
+        listing_rewards::{Offer, RewardCenter},
+        metaplex_anchor::TokenMetadata,
+    },
 };
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
@@ -89,7 +92,7 @@ pub struct UpdateOffer<'info> {
     pub treasury_mint: Box<Account<'info, Mint>>,
 
     /// SPL token account containing token for sale.
-     #[account(
+    #[account(
         constraint = token_account.amount == 1
     )]
     pub token_account: Box<Account<'info, TokenAccount>>,
@@ -111,7 +114,7 @@ pub struct UpdateOffer<'info> {
     #[account(
         constraint = metadata.mint.eq(&token_account.mint)
     )]
-    pub metadata: Box<Account<'info, MetadataAccount>>,
+    pub metadata: Box<Account<'info, TokenMetadata>>,
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     #[account(
@@ -153,7 +156,6 @@ pub fn handler(
         escrow_payment_bump,
     }: UpdateOfferParams,
 ) -> Result<()> {
-    let auction_house_program = &ctx.accounts.auction_house_program;
     let auction_house = &ctx.accounts.auction_house;
     let reward_center = &ctx.accounts.reward_center;
     let offer = &mut ctx.accounts.offer;
@@ -161,8 +163,14 @@ pub fn handler(
     let auction_house_key = auction_house.key();
     let old_buyer_price = offer.price;
 
+    let reward_center_signer_seeds: &[&[&[u8]]] = &[&[
+        REWARD_CENTER.as_bytes(),
+        auction_house_key.as_ref(),
+        &[reward_center.bump],
+    ]];
+
     if new_buyer_price != old_buyer_price {
-        let (account_metas, account_infos, ix_data) = if new_buyer_price > old_buyer_price {
+        let (ix, account_infos) = if new_buyer_price > old_buyer_price {
             let amount_to_deposit = new_buyer_price.saturating_sub(old_buyer_price);
             msg!("Depositing {} tokens", amount_to_deposit);
 
@@ -182,17 +190,15 @@ pub fn handler(
                 rent: ctx.accounts.rent.to_account_info(),
             };
 
-            let cpi_data = AuctioneerDepositData {
-                amount: amount_to_deposit,
-                escrow_payment_bump,
-            }
-            .data();
-
-            (
-                deposit_cpi_accounts.to_account_metas(None),
-                deposit_cpi_accounts.to_account_infos(),
-                cpi_data,
-            )
+            make_auctioneer_instruction(AuctioneerInstructionArgs {
+                accounts: deposit_cpi_accounts,
+                instruction_data: AuctioneerDepositData {
+                    escrow_payment_bump,
+                    amount: amount_to_deposit,
+                }
+                .data(),
+                auctioneer_authority: ctx.accounts.reward_center.key(),
+            })
         } else {
             let amount_to_withdraw = old_buyer_price.saturating_sub(new_buyer_price);
             msg!("Withdrawing {} tokens", amount_to_withdraw);
@@ -213,40 +219,17 @@ pub fn handler(
                 rent: ctx.accounts.rent.to_account_info(),
             };
 
-            let cpi_data = AuctioneerWithdrawData {
-                amount: amount_to_withdraw,
-                escrow_payment_bump,
-            }
-            .data();
-
-            (
-                withdraw_cpi_accounts.to_account_metas(None),
-                withdraw_cpi_accounts.to_account_infos(),
-                cpi_data,
-            )
+            make_auctioneer_instruction(AuctioneerInstructionArgs {
+                accounts: withdraw_cpi_accounts,
+                instruction_data: AuctioneerWithdrawData {
+                    escrow_payment_bump,
+                    amount: amount_to_withdraw,
+                }
+                .data(),
+                auctioneer_authority: ctx.accounts.reward_center.key(),
+            })
         };
 
-        let ix = Instruction {
-            program_id: auction_house_program.key(),
-            accounts: account_metas
-                .into_iter()
-                .zip(account_infos.clone())
-                .map(|mut pair| {
-                    pair.0.is_signer = pair.1.is_signer;
-                    if pair.0.pubkey == ctx.accounts.reward_center.key() {
-                        pair.0.is_signer = true;
-                    }
-                    pair.0
-                })
-                .collect(),
-            data: ix_data,
-        };
-
-        let reward_center_signer_seeds: &[&[&[u8]]] = &[&[
-            REWARD_CENTER.as_bytes(),
-            auction_house_key.as_ref(),
-            &[reward_center.bump],
-        ]];
         invoke_signed(&ix, &account_infos, reward_center_signer_seeds)?;
 
         offer.price = new_buyer_price;

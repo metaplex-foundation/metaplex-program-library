@@ -5,13 +5,12 @@ use mpl_auction_house::{constants::PREFIX, AuctionHouse};
 use crate::{
     constants::REWARD_CENTER,
     errors::ListingRewardsError,
-    state::{ListingRewardRules, RewardCenter},
+    state::listing_rewards::{ListingRewardRules, RewardCenter},
 };
 
 /// Options to set on the reward center
 #[derive(AnchorDeserialize, AnchorSerialize)]
 pub struct EditRewardCenterParams {
-    pub collection_oracle: Option<Pubkey>,
     pub listing_reward_rules: ListingRewardRules,
 }
 
@@ -54,7 +53,6 @@ pub fn handler(
     reward_center_params: EditRewardCenterParams,
 ) -> Result<()> {
     let reward_center = &mut ctx.accounts.reward_center;
-    reward_center.collection_oracle = reward_center_params.collection_oracle;
     reward_center.listing_reward_rules = reward_center_params.listing_reward_rules;
 
     Ok(())

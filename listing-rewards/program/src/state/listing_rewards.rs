@@ -17,8 +17,6 @@ pub struct RewardCenter {
     pub token_mint: Pubkey,
     /// the auction house associated to the reward center
     pub auction_house: Pubkey,
-    /// the oracle allowed to adjust rewardable collections
-    pub collection_oracle: Option<Pubkey>,
     /// rules for listing rewards
     pub listing_reward_rules: ListingRewardRules,
     /// the bump of the pda
@@ -70,7 +68,6 @@ pub struct Listing {
     pub created_at: i64,
     pub canceled_at: Option<i64>,
     pub purchase_ticket: Option<Pubkey>,
-    pub reward_redeemed_at: Option<i64>,
 }
 
 impl Listing {
@@ -85,8 +82,7 @@ impl Listing {
         1 + // bump
         8 + // created_at
         1 + 8 + // canceled_at
-        1 + 32 + // purchase_ticket
-        1 + 8 // reward_redeemed_at
+        1 + 32 // purchase_ticket
     }
 }
 

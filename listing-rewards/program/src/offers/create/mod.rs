@@ -1,8 +1,11 @@
 use crate::{
+    assertions::assert_offer_init_eligibility,
     constants::{OFFER, REWARD_CENTER},
     errors::ListingRewardsError,
-    state::{Offer, RewardCenter},
-    MetadataAccount, assertions::assert_offer_init_eligibility,
+    state::{
+        listing_rewards::{Offer, RewardCenter},
+        metaplex_anchor::TokenMetadata,
+    },
 };
 use anchor_lang::prelude::{Result, *};
 use anchor_spl::token::{Mint, Token, TokenAccount};
@@ -10,8 +13,7 @@ use mpl_auction_house::{
     constants::{AUCTIONEER, FEE_PAYER, PREFIX},
     cpi::accounts::{AuctioneerDeposit, AuctioneerPublicBuy},
     program::AuctionHouse as AuctionHouseProgram,
-    AuctionHouse,
-    Auctioneer,
+    AuctionHouse, Auctioneer,
 };
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
@@ -55,7 +57,7 @@ pub struct CreateOffer<'info> {
     pub token_account: Box<Account<'info, TokenAccount>>,
 
     /// Metaplex metadata account decorating SPL mint account.
-    pub metadata: Box<Account<'info, MetadataAccount>>,
+    pub metadata: Box<Account<'info, TokenMetadata>>,
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     #[account(
@@ -166,7 +168,7 @@ pub fn handler(
     let offer = &mut ctx.accounts.offer;
 
     assert_offer_init_eligibility(offer)?;
-    
+
     let auction_house_key = auction_house.key();
 
     offer.is_initialized = true;

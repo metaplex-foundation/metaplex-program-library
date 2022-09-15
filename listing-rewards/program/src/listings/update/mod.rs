@@ -7,8 +7,10 @@ use mpl_auction_house::{
 use crate::{
     constants::{LISTING, REWARD_CENTER},
     errors::ListingRewardsError,
-    state::{Listing, RewardCenter},
-    MetadataAccount,
+    state::{
+        listing_rewards::{Listing, RewardCenter},
+        metaplex_anchor::TokenMetadata,
+    },
 };
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
@@ -67,7 +69,7 @@ pub struct UpdateListing<'info> {
     #[account(
         constraint = metadata.mint.eq(&token_account.mint)
     )]
-    pub metadata: Box<Account<'info, MetadataAccount>>,
+    pub metadata: Box<Account<'info, TokenMetadata>>,
 
     /// SPL token account containing token for sale.
     #[account(

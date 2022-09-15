@@ -1,20 +1,23 @@
 use anchor_lang::{context::Context, prelude::*, AnchorDeserialize, InstructionData};
 use anchor_spl::token::{Token, TokenAccount};
-use solana_program::{instruction::Instruction, program::invoke_signed};
+use solana_program::program::invoke_signed;
 
 use crate::{
+    assertions::assert_listing_init_eligibility,
     constants::{LISTING, REWARD_CENTER},
+    cpi::auction_house::{make_auctioneer_instruction, AuctioneerInstructionArgs},
     errors::ListingRewardsError,
-    state::{Listing, RewardCenter},
-    MetadataAccount, assertions::assert_listing_init_eligibility,
+    state::{
+        listing_rewards::{Listing, RewardCenter},
+        metaplex_anchor::TokenMetadata,
+    },
 };
 use mpl_auction_house::{
     constants::{AUCTIONEER, FEE_PAYER, PREFIX, SIGNER},
     cpi::accounts::AuctioneerSell,
     instruction::AuctioneerSell as AuctioneerSellParams,
     program::AuctionHouse as AuctionHouseProgram,
-    AuctionHouse,
-    Auctioneer
+    AuctionHouse, Auctioneer,
 };
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
@@ -74,7 +77,7 @@ pub struct CreateListing<'info> {
     pub token_account: Box<Account<'info, TokenAccount>>,
 
     /// Metaplex metadata account decorating SPL mint account.
-    pub metadata: Box<Account<'info, MetadataAccount>>,
+    pub metadata: Box<Account<'info, TokenMetadata>>,
 
     /// CHECK: Verified through CPI
     /// Auction House authority account.
@@ -208,15 +211,12 @@ pub fn handler(
     listing.created_at = clock.unix_timestamp;
     listing.canceled_at = None;
     listing.purchase_ticket = None;
-    listing.reward_redeemed_at = None;
 
     let reward_center_signer_seeds: &[&[&[u8]]] = &[&[
         REWARD_CENTER.as_bytes(),
         auction_house_key.as_ref(),
         &[reward_center.bump],
     ]];
-
-    let auction_house_program = ctx.accounts.auction_house_program.to_account_info();
 
     let create_listing_ctx_accounts = AuctioneerSell {
         metadata: metadata.to_account_info(),
@@ -242,26 +242,16 @@ pub fn handler(
         token_size,
     };
 
-    let create_listing_ix = Instruction {
-        program_id: auction_house_program.key(),
-        data: create_listing_params.data(),
-        accounts: create_listing_ctx_accounts
-            .to_account_metas(None)
-            .into_iter()
-            .zip(create_listing_ctx_accounts.to_account_infos())
-            .map(|mut pair| {
-                pair.0.is_signer = pair.1.is_signer;
-                if pair.0.pubkey == ctx.accounts.reward_center.key() {
-                    pair.0.is_signer = true;
-                }
-                pair.0
-            })
-            .collect(),
-    };
+    let (create_listing_ix, create_listing_account_infos) =
+        make_auctioneer_instruction(AuctioneerInstructionArgs {
+            accounts: create_listing_ctx_accounts,
+            instruction_data: create_listing_params.data(),
+            auctioneer_authority: ctx.accounts.reward_center.key(),
+        });
 
     invoke_signed(
         &create_listing_ix,
-        &create_listing_ctx_accounts.to_account_infos(),
+        &create_listing_account_infos,
         reward_center_signer_seeds,
     )?;
 
