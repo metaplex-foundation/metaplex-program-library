@@ -724,7 +724,7 @@ function verify {
 
 # extracts the collection mint from the output of show command
 function collection_mint() {
-    local RESULT=`$SUGAR_BIN show --keypair $WALLET_KEY --cache $CACHE_FILE -r $RPC | grep "collection" | cut -d ':' -f 3`
+    local RESULT=`$SUGAR_BIN show --keypair $WALLET_KEY --cache $CACHE_FILE -r $RPC | grep "collection" | cut -d ':' -f 3 | tr -d '"'`
     EXIT_CODE=$?
     if [ ! $EXIT_CODE -eq 0 ]; then
         MAG "<<<"
