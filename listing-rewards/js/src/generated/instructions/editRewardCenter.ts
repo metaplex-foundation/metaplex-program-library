@@ -25,7 +25,7 @@ export type EditRewardCenterInstructionArgs = {
  * @category EditRewardCenter
  * @category generated
  */
-const editRewardCenterStruct = new beet.FixableBeetArgsStruct<
+const editRewardCenterStruct = new beet.BeetArgsStruct<
   EditRewardCenterInstructionArgs & {
     instructionDiscriminator: number[] /* size: 8 */;
   }

@@ -6,9 +6,9 @@
  */
 
 import * as web3 from '@solana/web3.js';
-import * as beet from '@metaplex-foundation/beet';
 import * as beetSolana from '@metaplex-foundation/beet-solana';
-import { ListingRewardRules, listingRewardRulesBeet } from '../types/ListingRewardRules';
+import * as beet from '@metaplex-foundation/beet';
+import { RewardRules, rewardRulesBeet } from '../types/RewardRules';
 
 /**
  * Arguments used to create {@link RewardCenter}
@@ -18,8 +18,7 @@ import { ListingRewardRules, listingRewardRulesBeet } from '../types/ListingRewa
 export type RewardCenterArgs = {
   tokenMint: web3.PublicKey;
   auctionHouse: web3.PublicKey;
-  collectionOracle: beet.COption<web3.PublicKey>;
-  listingRewardRules: ListingRewardRules;
+  rewardRules: RewardRules;
   bump: number;
 };
 
@@ -35,8 +34,7 @@ export class RewardCenter implements RewardCenterArgs {
   private constructor(
     readonly tokenMint: web3.PublicKey,
     readonly auctionHouse: web3.PublicKey,
-    readonly collectionOracle: beet.COption<web3.PublicKey>,
-    readonly listingRewardRules: ListingRewardRules,
+    readonly rewardRules: RewardRules,
     readonly bump: number,
   ) {}
 
@@ -44,13 +42,7 @@ export class RewardCenter implements RewardCenterArgs {
    * Creates a {@link RewardCenter} instance from the provided args.
    */
   static fromArgs(args: RewardCenterArgs) {
-    return new RewardCenter(
-      args.tokenMint,
-      args.auctionHouse,
-      args.collectionOracle,
-      args.listingRewardRules,
-      args.bump,
-    );
+    return new RewardCenter(args.tokenMint, args.auctionHouse, args.rewardRules, args.bump);
   }
 
   /**
@@ -102,33 +94,31 @@ export class RewardCenter implements RewardCenterArgs {
 
   /**
    * Returns the byteSize of a {@link Buffer} holding the serialized data of
-   * {@link RewardCenter} for the provided args.
-   *
-   * @param args need to be provided since the byte size for this account
-   * depends on them
+   * {@link RewardCenter}
    */
-  static byteSize(args: RewardCenterArgs) {
-    const instance = RewardCenter.fromArgs(args);
-    return rewardCenterBeet.toFixedFromValue({
-      accountDiscriminator: rewardCenterDiscriminator,
-      ...instance,
-    }).byteSize;
+  static get byteSize() {
+    return rewardCenterBeet.byteSize;
   }
 
   /**
    * Fetches the minimum balance needed to exempt an account holding
    * {@link RewardCenter} data from rent
    *
-   * @param args need to be provided since the byte size for this account
-   * depends on them
    * @param connection used to retrieve the rent exemption information
    */
   static async getMinimumBalanceForRentExemption(
-    args: RewardCenterArgs,
     connection: web3.Connection,
     commitment?: web3.Commitment,
   ): Promise<number> {
-    return connection.getMinimumBalanceForRentExemption(RewardCenter.byteSize(args), commitment);
+    return connection.getMinimumBalanceForRentExemption(RewardCenter.byteSize, commitment);
+  }
+
+  /**
+   * Determines if the provided {@link Buffer} has the correct byte size to
+   * hold {@link RewardCenter} data.
+   */
+  static hasCorrectByteSize(buf: Buffer, offset = 0) {
+    return buf.byteLength - offset === RewardCenter.byteSize;
   }
 
   /**
@@ -139,8 +129,7 @@ export class RewardCenter implements RewardCenterArgs {
     return {
       tokenMint: this.tokenMint.toBase58(),
       auctionHouse: this.auctionHouse.toBase58(),
-      collectionOracle: this.collectionOracle,
-      listingRewardRules: this.listingRewardRules,
+      rewardRules: this.rewardRules,
       bump: this.bump,
     };
   }
@@ -150,7 +139,7 @@ export class RewardCenter implements RewardCenterArgs {
  * @category Accounts
  * @category generated
  */
-export const rewardCenterBeet = new beet.FixableBeetStruct<
+export const rewardCenterBeet = new beet.BeetStruct<
   RewardCenter,
   RewardCenterArgs & {
     accountDiscriminator: number[] /* size: 8 */;
@@ -160,8 +149,7 @@ export const rewardCenterBeet = new beet.FixableBeetStruct<
     ['accountDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
     ['tokenMint', beetSolana.publicKey],
     ['auctionHouse', beetSolana.publicKey],
-    ['collectionOracle', beet.coption(beetSolana.publicKey)],
-    ['listingRewardRules', listingRewardRulesBeet],
+    ['rewardRules', rewardRulesBeet],
     ['bump', beet.u8],
   ],
   RewardCenter.fromArgs,

@@ -5,23 +5,17 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as web3 from '@solana/web3.js';
 import * as beet from '@metaplex-foundation/beet';
-import * as beetSolana from '@metaplex-foundation/beet-solana';
-import { ListingRewardRules, listingRewardRulesBeet } from './ListingRewardRules';
+import { RewardRules, rewardRulesBeet } from './RewardRules';
 export type EditRewardCenterParams = {
-  collectionOracle: beet.COption<web3.PublicKey>;
-  listingRewardRules: ListingRewardRules;
+  rewardRules: RewardRules;
 };
 
 /**
  * @category userTypes
  * @category generated
  */
-export const editRewardCenterParamsBeet = new beet.FixableBeetArgsStruct<EditRewardCenterParams>(
-  [
-    ['collectionOracle', beet.coption(beetSolana.publicKey)],
-    ['listingRewardRules', listingRewardRulesBeet],
-  ],
+export const editRewardCenterParamsBeet = new beet.BeetArgsStruct<EditRewardCenterParams>(
+  [['rewardRules', rewardRulesBeet]],
   'EditRewardCenterParams',
 );

@@ -24,7 +24,7 @@ export type OfferArgs = {
   bump: number;
   createdAt: beet.bignum;
   canceledAt: beet.COption<beet.bignum>;
-  purchasedAt: beet.COption<beet.bignum>;
+  purchaseTicket: beet.COption<web3.PublicKey>;
 };
 
 const offerDiscriminator = [215, 88, 60, 71, 170, 162, 73, 229];
@@ -46,7 +46,7 @@ export class Offer implements OfferArgs {
     readonly bump: number,
     readonly createdAt: beet.bignum,
     readonly canceledAt: beet.COption<beet.bignum>,
-    readonly purchasedAt: beet.COption<beet.bignum>,
+    readonly purchaseTicket: beet.COption<web3.PublicKey>,
   ) {}
 
   /**
@@ -63,7 +63,7 @@ export class Offer implements OfferArgs {
       args.bump,
       args.createdAt,
       args.canceledAt,
-      args.purchasedAt,
+      args.purchaseTicket,
     );
   }
 
@@ -187,7 +187,7 @@ export class Offer implements OfferArgs {
         return x;
       })(),
       canceledAt: this.canceledAt,
-      purchasedAt: this.purchasedAt,
+      purchaseTicket: this.purchaseTicket,
     };
   }
 }
@@ -213,7 +213,7 @@ export const offerBeet = new beet.FixableBeetStruct<
     ['bump', beet.u8],
     ['createdAt', beet.i64],
     ['canceledAt', beet.coption(beet.i64)],
-    ['purchasedAt', beet.coption(beet.i64)],
+    ['purchaseTicket', beet.coption(beetSolana.publicKey)],
   ],
   Offer.fromArgs,
   'Offer',

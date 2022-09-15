@@ -6,7 +6,7 @@
  */
 
 import * as beet from '@metaplex-foundation/beet';
-export type ListingRewardRules = {
+export type RewardRules = {
   sellerRewardPayoutBasisPoints: number;
   payoutDivider: number;
 };
@@ -15,10 +15,10 @@ export type ListingRewardRules = {
  * @category userTypes
  * @category generated
  */
-export const listingRewardRulesBeet = new beet.BeetArgsStruct<ListingRewardRules>(
+export const rewardRulesBeet = new beet.BeetArgsStruct<RewardRules>(
   [
     ['sellerRewardPayoutBasisPoints', beet.u16],
     ['payoutDivider', beet.u16],
   ],
-  'ListingRewardRules',
+  'RewardRules',
 );

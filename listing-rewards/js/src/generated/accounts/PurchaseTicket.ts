@@ -10,159 +10,140 @@ import * as beet from '@metaplex-foundation/beet';
 import * as beetSolana from '@metaplex-foundation/beet-solana';
 
 /**
- * Arguments used to create {@link Listing}
+ * Arguments used to create {@link PurchaseTicket}
  * @category Accounts
  * @category generated
  */
-export type ListingArgs = {
-  isInitialized: boolean;
-  rewardCenter: web3.PublicKey;
+export type PurchaseTicketArgs = {
+  buyer: web3.PublicKey;
   seller: web3.PublicKey;
   metadata: web3.PublicKey;
-  price: beet.bignum;
+  rewardCenter: web3.PublicKey;
   tokenSize: beet.bignum;
-  bump: number;
+  price: beet.bignum;
   createdAt: beet.bignum;
-  canceledAt: beet.COption<beet.bignum>;
-  purchaseTicket: beet.COption<web3.PublicKey>;
 };
 
-const listingDiscriminator = [218, 32, 50, 73, 43, 134, 26, 58];
+const purchaseTicketDiscriminator = [253, 34, 93, 204, 5, 153, 33, 126];
 /**
- * Holds the data for the {@link Listing} Account and provides de/serialization
+ * Holds the data for the {@link PurchaseTicket} Account and provides de/serialization
  * functionality for that data
  *
  * @category Accounts
  * @category generated
  */
-export class Listing implements ListingArgs {
+export class PurchaseTicket implements PurchaseTicketArgs {
   private constructor(
-    readonly isInitialized: boolean,
-    readonly rewardCenter: web3.PublicKey,
+    readonly buyer: web3.PublicKey,
     readonly seller: web3.PublicKey,
     readonly metadata: web3.PublicKey,
-    readonly price: beet.bignum,
+    readonly rewardCenter: web3.PublicKey,
     readonly tokenSize: beet.bignum,
-    readonly bump: number,
+    readonly price: beet.bignum,
     readonly createdAt: beet.bignum,
-    readonly canceledAt: beet.COption<beet.bignum>,
-    readonly purchaseTicket: beet.COption<web3.PublicKey>,
   ) {}
 
   /**
-   * Creates a {@link Listing} instance from the provided args.
+   * Creates a {@link PurchaseTicket} instance from the provided args.
    */
-  static fromArgs(args: ListingArgs) {
-    return new Listing(
-      args.isInitialized,
-      args.rewardCenter,
+  static fromArgs(args: PurchaseTicketArgs) {
+    return new PurchaseTicket(
+      args.buyer,
       args.seller,
       args.metadata,
-      args.price,
+      args.rewardCenter,
       args.tokenSize,
-      args.bump,
+      args.price,
       args.createdAt,
-      args.canceledAt,
-      args.purchaseTicket,
     );
   }
 
   /**
-   * Deserializes the {@link Listing} from the data of the provided {@link web3.AccountInfo}.
+   * Deserializes the {@link PurchaseTicket} from the data of the provided {@link web3.AccountInfo}.
    * @returns a tuple of the account data and the offset up to which the buffer was read to obtain it.
    */
-  static fromAccountInfo(accountInfo: web3.AccountInfo<Buffer>, offset = 0): [Listing, number] {
-    return Listing.deserialize(accountInfo.data, offset);
+  static fromAccountInfo(
+    accountInfo: web3.AccountInfo<Buffer>,
+    offset = 0,
+  ): [PurchaseTicket, number] {
+    return PurchaseTicket.deserialize(accountInfo.data, offset);
   }
 
   /**
    * Retrieves the account info from the provided address and deserializes
-   * the {@link Listing} from its data.
+   * the {@link PurchaseTicket} from its data.
    *
    * @throws Error if no account info is found at the address or if deserialization fails
    */
   static async fromAccountAddress(
     connection: web3.Connection,
     address: web3.PublicKey,
-  ): Promise<Listing> {
+  ): Promise<PurchaseTicket> {
     const accountInfo = await connection.getAccountInfo(address);
     if (accountInfo == null) {
-      throw new Error(`Unable to find Listing account at ${address}`);
+      throw new Error(`Unable to find PurchaseTicket account at ${address}`);
     }
-    return Listing.fromAccountInfo(accountInfo, 0)[0];
+    return PurchaseTicket.fromAccountInfo(accountInfo, 0)[0];
   }
 
   /**
-   * Deserializes the {@link Listing} from the provided data Buffer.
+   * Deserializes the {@link PurchaseTicket} from the provided data Buffer.
    * @returns a tuple of the account data and the offset up to which the buffer was read to obtain it.
    */
-  static deserialize(buf: Buffer, offset = 0): [Listing, number] {
-    return listingBeet.deserialize(buf, offset);
+  static deserialize(buf: Buffer, offset = 0): [PurchaseTicket, number] {
+    return purchaseTicketBeet.deserialize(buf, offset);
   }
 
   /**
-   * Serializes the {@link Listing} into a Buffer.
+   * Serializes the {@link PurchaseTicket} into a Buffer.
    * @returns a tuple of the created Buffer and the offset up to which the buffer was written to store it.
    */
   serialize(): [Buffer, number] {
-    return listingBeet.serialize({
-      accountDiscriminator: listingDiscriminator,
+    return purchaseTicketBeet.serialize({
+      accountDiscriminator: purchaseTicketDiscriminator,
       ...this,
     });
   }
 
   /**
    * Returns the byteSize of a {@link Buffer} holding the serialized data of
-   * {@link Listing} for the provided args.
-   *
-   * @param args need to be provided since the byte size for this account
-   * depends on them
+   * {@link PurchaseTicket}
    */
-  static byteSize(args: ListingArgs) {
-    const instance = Listing.fromArgs(args);
-    return listingBeet.toFixedFromValue({
-      accountDiscriminator: listingDiscriminator,
-      ...instance,
-    }).byteSize;
+  static get byteSize() {
+    return purchaseTicketBeet.byteSize;
   }
 
   /**
    * Fetches the minimum balance needed to exempt an account holding
-   * {@link Listing} data from rent
+   * {@link PurchaseTicket} data from rent
    *
-   * @param args need to be provided since the byte size for this account
-   * depends on them
    * @param connection used to retrieve the rent exemption information
    */
   static async getMinimumBalanceForRentExemption(
-    args: ListingArgs,
     connection: web3.Connection,
     commitment?: web3.Commitment,
   ): Promise<number> {
-    return connection.getMinimumBalanceForRentExemption(Listing.byteSize(args), commitment);
+    return connection.getMinimumBalanceForRentExemption(PurchaseTicket.byteSize, commitment);
   }
 
   /**
-   * Returns a readable version of {@link Listing} properties
+   * Determines if the provided {@link Buffer} has the correct byte size to
+   * hold {@link PurchaseTicket} data.
+   */
+  static hasCorrectByteSize(buf: Buffer, offset = 0) {
+    return buf.byteLength - offset === PurchaseTicket.byteSize;
+  }
+
+  /**
+   * Returns a readable version of {@link PurchaseTicket} properties
    * and can be used to convert to JSON and/or logging
    */
   pretty() {
     return {
-      isInitialized: this.isInitialized,
-      rewardCenter: this.rewardCenter.toBase58(),
+      buyer: this.buyer.toBase58(),
       seller: this.seller.toBase58(),
       metadata: this.metadata.toBase58(),
-      price: (() => {
-        const x = <{ toNumber: () => number }>this.price;
-        if (typeof x.toNumber === 'function') {
-          try {
-            return x.toNumber();
-          } catch (_) {
-            return x;
-          }
-        }
-        return x;
-      })(),
+      rewardCenter: this.rewardCenter.toBase58(),
       tokenSize: (() => {
         const x = <{ toNumber: () => number }>this.tokenSize;
         if (typeof x.toNumber === 'function') {
@@ -174,7 +155,17 @@ export class Listing implements ListingArgs {
         }
         return x;
       })(),
-      bump: this.bump,
+      price: (() => {
+        const x = <{ toNumber: () => number }>this.price;
+        if (typeof x.toNumber === 'function') {
+          try {
+            return x.toNumber();
+          } catch (_) {
+            return x;
+          }
+        }
+        return x;
+      })(),
       createdAt: (() => {
         const x = <{ toNumber: () => number }>this.createdAt;
         if (typeof x.toNumber === 'function') {
@@ -186,8 +177,6 @@ export class Listing implements ListingArgs {
         }
         return x;
       })(),
-      canceledAt: this.canceledAt,
-      purchaseTicket: this.purchaseTicket,
     };
   }
 }
@@ -196,25 +185,22 @@ export class Listing implements ListingArgs {
  * @category Accounts
  * @category generated
  */
-export const listingBeet = new beet.FixableBeetStruct<
-  Listing,
-  ListingArgs & {
+export const purchaseTicketBeet = new beet.BeetStruct<
+  PurchaseTicket,
+  PurchaseTicketArgs & {
     accountDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
     ['accountDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
-    ['isInitialized', beet.bool],
-    ['rewardCenter', beetSolana.publicKey],
+    ['buyer', beetSolana.publicKey],
     ['seller', beetSolana.publicKey],
     ['metadata', beetSolana.publicKey],
-    ['price', beet.u64],
+    ['rewardCenter', beetSolana.publicKey],
     ['tokenSize', beet.u64],
-    ['bump', beet.u8],
+    ['price', beet.u64],
     ['createdAt', beet.i64],
-    ['canceledAt', beet.coption(beet.i64)],
-    ['purchaseTicket', beet.coption(beetSolana.publicKey)],
   ],
-  Listing.fromArgs,
-  'Listing',
+  PurchaseTicket.fromArgs,
+  'PurchaseTicket',
 );

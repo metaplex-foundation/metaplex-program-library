@@ -5,6 +5,5 @@ export * from './createOffer';
 export * from './createRewardCenter';
 export * from './editRewardCenter';
 export * from './executeSale';
-export * from './redeemRewards';
 export * from './updateListing';
 export * from './updateOffer';

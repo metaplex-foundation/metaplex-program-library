@@ -43,6 +43,8 @@ const executeSaleStruct = new beet.BeetArgsStruct<
  * @property [_writable_] sellerRewardTokenAccount
  * @property [_writable_] listing
  * @property [_writable_] offer
+ * @property [_writable_, **signer**] payer
+ * @property [_writable_] purchaseTicket
  * @property [_writable_] tokenAccount
  * @property [] tokenMint
  * @property [] metadata
@@ -73,6 +75,8 @@ export type ExecuteSaleInstructionAccounts = {
   sellerRewardTokenAccount: web3.PublicKey;
   listing: web3.PublicKey;
   offer: web3.PublicKey;
+  payer: web3.PublicKey;
+  purchaseTicket: web3.PublicKey;
   tokenAccount: web3.PublicKey;
   tokenMint: web3.PublicKey;
   metadata: web3.PublicKey;
@@ -117,6 +121,8 @@ export function createExecuteSaleInstruction(
     sellerRewardTokenAccount,
     listing,
     offer,
+    payer,
+    purchaseTicket,
     tokenAccount,
     tokenMint,
     metadata,
@@ -170,6 +176,16 @@ export function createExecuteSaleInstruction(
     },
     {
       pubkey: offer,
+      isWritable: true,
+      isSigner: false,
+    },
+    {
+      pubkey: payer,
+      isWritable: true,
+      isSigner: true,
+    },
+    {
+      pubkey: purchaseTicket,
       isWritable: true,
       isSigner: false,
     },
