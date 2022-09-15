@@ -2,7 +2,7 @@
 
 pub mod listing_rewards_test;
 
-use crate::state::listing_rewards::*;
+use crate::state::base::*;
 use anchor_client::solana_sdk::{pubkey::Pubkey, signature::Signer, transaction::Transaction};
 use listing_rewards_test::fixtures::metadata;
 use mpl_auction_house::{

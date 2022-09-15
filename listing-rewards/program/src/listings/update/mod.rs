@@ -8,7 +8,7 @@ use crate::{
     constants::{LISTING, REWARD_CENTER},
     errors::ListingRewardsError,
     state::{
-        listing_rewards::{Listing, RewardCenter},
+        base::{Listing, RewardCenter},
         metaplex_anchor::TokenMetadata,
     },
 };

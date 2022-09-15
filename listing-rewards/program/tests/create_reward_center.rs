@@ -2,7 +2,7 @@
 
 pub mod listing_rewards_test;
 
-use crate::state::listing_rewards::*;
+use crate::state::base::*;
 use anchor_client::solana_sdk::{signature::Signer, transaction::Transaction};
 use mpl_auction_house::pda::find_auction_house_address;
 use mpl_reward_center::{pda::find_reward_center_address, reward_center, state};

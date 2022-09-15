@@ -1,2 +1,2 @@
-pub mod listing_rewards;
+pub mod base;
 pub mod metaplex_anchor;
