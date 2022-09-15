@@ -5,7 +5,7 @@ pub mod listing_rewards_test;
 use crate::state::listing_rewards::*;
 use anchor_client::solana_sdk::{signature::Signer, transaction::Transaction};
 use mpl_auction_house::pda::find_auction_house_address;
-use mpl_listing_rewards::{pda::find_reward_center_address, reward_center, state};
+use mpl_reward_center::{pda::find_reward_center_address, reward_center, state};
 
 use mpl_testing_utils::solana::airdrop;
 use solana_program_test::*;
@@ -106,7 +106,7 @@ async fn create_reward_center_success() {
         create_auction_house_data,
     );
 
-    let create_reward_center_ix = mpl_listing_rewards_sdk::create_reward_center(
+    let create_reward_center_ix = mpl_reward_center_sdk::create_reward_center(
         wallet,
         reward_mint_keypair.pubkey(),
         auction_house,

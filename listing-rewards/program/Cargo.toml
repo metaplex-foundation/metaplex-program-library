@@ -1,6 +1,6 @@
 [workspace]
 [package]
-name = "mpl-listing-rewards"
+name = "mpl-reward-center"
 version = "0.1.1"
 edition = "2021"
 description = "Default Auctioneer implementation"
@@ -33,7 +33,7 @@ shellexpand = "~2.1.0"
 serde_json = "~1.0"
 mpl-testing-utils= { path="../../core/rust/testing-utils" }
 mpl-auction-house-sdk = { path = "./../../auction-house/sdk" }
-mpl-listing-rewards-sdk = {path="./../sdk"}
+mpl-reward-center-sdk = {path="./../sdk"}
 solana-program-test = "~1.9.15"
 solana-sdk = "~1.9.15"
 env_logger="~0.9.0"

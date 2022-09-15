@@ -11,12 +11,12 @@ use mpl_auction_house::{
     },
     AuthorityScope,
 };
-use mpl_listing_rewards::{
+use mpl_reward_center::{
     pda::{find_listing_address, find_reward_center_address},
     reward_center, state,
 };
 
-use mpl_listing_rewards_sdk::{
+use mpl_reward_center_sdk::{
     accounts::{CloseOfferAccounts, *},
     args::{CloseOfferData, *},
     *,
@@ -151,7 +151,7 @@ async fn reopned_closed_offer_success() {
         create_auction_house_data,
     );
 
-    let create_reward_center_ix = mpl_listing_rewards_sdk::create_reward_center(
+    let create_reward_center_ix = mpl_reward_center_sdk::create_reward_center(
         wallet,
         reward_mint_keypair.pubkey(),
         auction_house,

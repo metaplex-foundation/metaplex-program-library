@@ -1702,7 +1702,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "mpl-listing-rewards"
+name = "mpl-reward-center"
 version = "0.1.1"
 dependencies = [
  "anchor-client",
@@ -1711,7 +1711,7 @@ dependencies = [
  "env_logger",
  "mpl-auction-house",
  "mpl-auction-house-sdk",
- "mpl-listing-rewards-sdk",
+ "mpl-reward-center-sdk",
  "mpl-testing-utils",
  "mpl-token-metadata",
  "serde_json",
@@ -1724,13 +1724,13 @@ dependencies = [
 ]
 
 [[package]]
-name = "mpl-listing-rewards-sdk"
+name = "mpl-reward-center-sdk"
 version = "0.1.0"
 dependencies = [
  "anchor-client",
  "anchor-lang",
  "mpl-auction-house",
- "mpl-listing-rewards",
+ "mpl-reward-center",
  "spl-associated-token-account",
  "spl-token",
 ]
