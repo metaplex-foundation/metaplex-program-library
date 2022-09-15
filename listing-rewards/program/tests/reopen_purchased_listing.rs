@@ -327,6 +327,7 @@ async fn reopen_purchased_listing_success() {
         seller: metadata_owner.pubkey(),
         payer: wallet,
         authority: wallet,
+        payer: wallet,
         token_mint: metadata_mint_address,
         treasury_mint: mint,
         buyer_receipt_token_account: buyer_token_account,

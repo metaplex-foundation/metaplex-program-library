@@ -91,7 +91,7 @@ pub struct ExecuteSale<'info> {
 
     /// The purchase ticket that would be initialized to record an executed sale
     #[account(
-        init,
+        init_if_needed,
         space = PurchaseTicket::size(),
         payer = payer,
         seeds = [
