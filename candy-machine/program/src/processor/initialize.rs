@@ -1,4 +1,5 @@
 use anchor_lang::{prelude::*, Discriminator};
+use mpl_candy_machine_state::CandyMachine as CandyMachineState;
 use mpl_token_metadata::state::{MAX_CREATOR_LIMIT, MAX_SYMBOL_LENGTH};
 use spl_token::state::Mint;
 
@@ -34,13 +35,13 @@ pub fn handle_initialize_candy_machine(
         return err!(CandyError::UuidMustBeExactly6Length);
     }
 
-    let mut candy_machine = CandyMachine {
-        data,
+    let mut candy_machine = CandyMachine::new(CandyMachineState {
+        data: data.0,
         authority: ctx.accounts.authority.key(),
         wallet: ctx.accounts.wallet.key(),
         token_mint: None,
         items_redeemed: 0,
-    };
+    });
 
     candy_machine.data.uuid = "000000".to_string();
 

@@ -71,7 +71,7 @@ pub fn handle_update_candy_machine(
     }
 
     candy_machine.wallet = ctx.accounts.wallet.key();
-    candy_machine.data = data;
+    candy_machine.data = data.0;
     candy_machine.data.uuid = old_uuid;
     candy_machine.token_mint = token_mint;
 

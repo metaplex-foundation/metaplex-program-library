@@ -1,3 +1,5 @@
+use crate::*;
+
 use std::{cell::RefMut, ops::Deref};
 
 use anchor_lang::prelude::*;
@@ -30,8 +32,7 @@ use crate::{
         CONFIG_LINE_SIZE, CUPCAKE_ID, EXPIRE_OFFSET, GUMDROP_ID, PREFIX,
     },
     utils::*,
-    CandyError, CandyMachine, CandyMachineData, ConfigLine, EndSettingType, FreezePDA,
-    WhitelistMintMode, WhitelistMintSettings,
+    CandyError, CandyMachine, ConfigLine, FreezePDA,
 };
 
 /// Mint a new NFT pseudo-randomly from the config array.
@@ -264,9 +265,9 @@ pub fn handle_mint_nft<'info>(
         let eval_function =
             |token: &InPlaceGatewayToken<&[u8]>| match (&candy_machine.data, token.expire_time()) {
                 (
-                    CandyMachineData {
+                    CandyMachineDataState {
                         go_live_date: Some(go_live_date),
-                        whitelist_mint_settings: Some(WhitelistMintSettings { presale, .. }),
+                        whitelist_mint_settings: Some(WhitelistMintSettingsState { presale, .. }),
                         ..
                     },
                     Some(expire_time),

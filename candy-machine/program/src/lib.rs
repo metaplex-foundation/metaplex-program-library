@@ -9,6 +9,15 @@ pub use errors::CandyError;
 pub use processor::*;
 pub use state::*;
 pub use utils::*;
+
+pub use mpl_candy_machine_state::{
+    CandyMachine as CandyMachineState, CandyMachineData as CandyMachineDataState,
+    CollectionPDA as CollectionPDAState, ConfigLine, ConfigLine as ConfigLineState,
+    Creator as CreatorState, EndSettingType, EndSettings as EndSettingsState,
+    FreezePDA as FreezePDAState, GatekeeperConfig as GatekeeperConfigState,
+    HiddenSettings as HiddenSettingsState, WhitelistMintMode,
+    WhitelistMintSettings as WhitelistMintSettingsState,
+};
 declare_id!("cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ");
 
 #[program]

@@ -10,6 +10,7 @@ exclude = [
   "auction-house/program",
   "hydra/program",
   "candy-machine/program",
+  "candy-machine/state",
   "bubblegum/program",
   "candy-wrapper/program",
 ]
