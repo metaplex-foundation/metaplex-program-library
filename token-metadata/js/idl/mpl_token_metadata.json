@@ -2222,10 +2222,17 @@
           "desc": "Token program"
         },
         {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Rent info"
+        },
+        {
           "name": "constraintModel",
           "isMut": false,
           "isSigner": false,
-          "desc": "The constraint model to check against"
+          "desc": "The constraint model to check against",
+          "optional": true
         }
       ],
       "args": [
@@ -2293,12 +2300,6 @@
           "desc": "Token account that holds the token the escrow is attached to"
         },
         {
-          "name": "constraintModel",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "The constraint model to check against"
-        },
-        {
           "name": "systemProgram",
           "isMut": false,
           "isSigner": false,
@@ -2315,6 +2316,19 @@
           "isMut": false,
           "isSigner": false,
           "desc": "Token program"
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Rent info"
+        },
+        {
+          "name": "constraintModel",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "The constraint model to check against",
+          "optional": true
         }
       ],
       "args": [
@@ -3260,6 +3274,10 @@
         "fields": [
           {
             "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "index",
             "type": "u64"
           }
         ]

@@ -195,8 +195,9 @@ mod escrow {
             attribute_test_metadata.pubkey,
             parent_test_metadata.mint.pubkey(),
             parent_test_metadata.token.pubkey(),
-            solana_program::system_program::id(),
+            None,
             1,
+            0,
         );
         println!("{:?} {:?}", &context.payer, &attribute_test_metadata.token);
 

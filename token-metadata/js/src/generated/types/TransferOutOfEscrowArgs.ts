@@ -8,6 +8,7 @@
 import * as beet from '@metaplex-foundation/beet';
 export type TransferOutOfEscrowArgs = {
   amount: beet.bignum;
+  index: beet.bignum;
 };
 
 /**
@@ -15,6 +16,9 @@ export type TransferOutOfEscrowArgs = {
  * @category generated
  */
 export const transferOutOfEscrowArgsBeet = new beet.BeetArgsStruct<TransferOutOfEscrowArgs>(
-  [['amount', beet.u64]],
+  [
+    ['amount', beet.u64],
+    ['index', beet.u64],
+  ],
   'TransferOutOfEscrowArgs',
 );

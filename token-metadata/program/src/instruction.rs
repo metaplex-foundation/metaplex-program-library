@@ -563,7 +563,8 @@ pub enum MetadataInstruction {
     #[account(8, name="system_program", desc="System program")]
     #[account(9, name="ata_program", desc="Associated Token program")]
     #[account(10, name="token_program", desc="Token program")]
-    #[account(11, name="constraint_model", desc="The constraint model to check against")]
+    #[account(11, name="rent", desc="Rent info")]
+    #[account(12, optional, name="constraint_model", desc="The constraint model to check against")]
     TransferIntoEscrow(TransferIntoEscrowArgs),
 
     /// Create an escrow account to hold tokens.
@@ -575,10 +576,11 @@ pub enum MetadataInstruction {
     #[account(5, name="attribute_metadata", desc="Metadata account of the new attribute")]
     #[account(6, name="escrow_mint", desc="Mint account that the escrow is attached")]
     #[account(7, name="escrow_account", desc="Token account that holds the token the escrow is attached to")]
-    #[account(8, name="constraint_model", desc="The constraint model to check against")]
-    #[account(9, name="system_program", desc="System program")]
-    #[account(10, name="ata_program", desc="Associated Token program")]
-    #[account(11, name="token_program", desc="Token program")]
+    #[account(8, name="system_program", desc="System program")]
+    #[account(9, name="ata_program", desc="Associated Token program")]
+    #[account(10, name="token_program", desc="Token program")]
+    #[account(11, name="rent", desc="Rent info")]
+    #[account(12, optional, name="constraint_model", desc="The constraint model to check against")]
     TransferOutOfEscrow(TransferOutOfEscrowArgs),
 
     /// Create an constraint model to be used by one or many escrow accounts.

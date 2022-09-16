@@ -1,6 +1,10 @@
 use crate::{
+    error::MetadataError,
     instruction::MetadataInstruction,
-    state::{Metadata, TokenMetadataAccount, TokenOwnedEscrow, ESCROW_PREFIX, PREFIX},
+    state::{
+        EscrowConstraintModel, Metadata, TokenMetadataAccount, TokenOwnedEscrow, ESCROW_PREFIX,
+        PREFIX,
+    },
     utils::{assert_derivation, assert_owned_by, assert_signer, resize_or_reallocate_account_raw},
 };
 use borsh::{BorshDeserialize, BorshSerialize};
@@ -8,6 +12,7 @@ use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
     instruction::{AccountMeta, Instruction},
+    msg,
     program::{invoke, invoke_signed},
     program_pack::Pack,
     pubkey::Pubkey,
@@ -21,6 +26,7 @@ use serde::{Deserialize, Serialize};
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct TransferOutOfEscrowArgs {
     pub amount: u64,
+    pub index: u64,
 }
 
 pub fn transfer_out_of_escrow(
@@ -33,10 +39,11 @@ pub fn transfer_out_of_escrow(
     attribute_metadata: Pubkey,
     escrow_mint: Pubkey,
     escrow_account: Pubkey,
-    constraint_model: Pubkey,
+    constraint_model: Option<Pubkey>,
     amount: u64,
+    index: u64,
 ) -> Instruction {
-    let accounts = vec![
+    let mut accounts = vec![
         AccountMeta::new(escrow, false),
         AccountMeta::new(payer, true),
         AccountMeta::new_readonly(attribute_mint, false),
@@ -45,13 +52,17 @@ pub fn transfer_out_of_escrow(
         AccountMeta::new_readonly(attribute_metadata, false),
         AccountMeta::new_readonly(escrow_mint, false),
         AccountMeta::new_readonly(escrow_account, false),
-        AccountMeta::new_readonly(constraint_model, false),
         AccountMeta::new_readonly(solana_program::system_program::id(), false),
         AccountMeta::new_readonly(spl_associated_token_account::id(), false),
         AccountMeta::new_readonly(spl_token::id(), false),
         AccountMeta::new_readonly(solana_program::sysvar::rent::id(), false),
     ];
-    let data = MetadataInstruction::TransferOutOfEscrow(TransferOutOfEscrowArgs { amount })
+
+    if let Some(constraint_model) = constraint_model {
+        accounts.push(AccountMeta::new_readonly(constraint_model, false));
+    }
+
+    let data = MetadataInstruction::TransferOutOfEscrow(TransferOutOfEscrowArgs { amount, index })
         .try_to_vec()
         .unwrap();
 
@@ -77,11 +88,11 @@ pub fn process_transfer_out_of_escrow(
     let attribute_metadata_info = next_account_info(account_info_iter)?;
     let escrow_mint_info = next_account_info(account_info_iter)?;
     let escrow_account_info = next_account_info(account_info_iter)?;
-    let _constraint_model_info = next_account_info(account_info_iter)?;
     let system_account_info = next_account_info(account_info_iter)?;
     let ata_program_info = next_account_info(account_info_iter)?;
     let token_program_info = next_account_info(account_info_iter)?;
     let rent_info = next_account_info(account_info_iter)?;
+    let maybe_escrow_constraint_model = next_account_info(account_info_iter);
 
     // Owned by token-metadata program.
     assert_owned_by(attribute_metadata_info, program_id)?;
@@ -197,6 +208,28 @@ pub fn process_transfer_out_of_escrow(
 
     // Update the TOE to point to the token it now owns.
     let mut toe: TokenOwnedEscrow = TokenOwnedEscrow::from_account_info(escrow_info)?;
+
+    // if we expect a constraint model, check it
+    if toe.model.is_some() {
+        // check to see if a constraint model was even passed in.
+        let escrow_constraint_model = maybe_escrow_constraint_model
+            .map_err(|_| MetadataError::MissingEscrowConstraintModel)?;
+
+        assert_owned_by(escrow_constraint_model, program_id)?;
+
+        // make sure the constraint model's key matches the one set on the toe.
+        if toe.model.unwrap() != *escrow_constraint_model.key {
+            return Err(MetadataError::InvalidEscrowConstraintModel.into());
+        }
+
+        // deserialize the constraint model
+        let model: EscrowConstraintModel =
+            EscrowConstraintModel::from_account_info(escrow_constraint_model)?;
+
+        msg!("EscrowConstraintModel: {:#?}", model);
+        model.validate_at(attribute_mint_info.key, args.index as usize)?;
+    }
+
     for token in toe.tokens.iter_mut() {
         *token = None;
     }
