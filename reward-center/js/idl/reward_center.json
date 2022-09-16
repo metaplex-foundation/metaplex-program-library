@@ -1,6 +1,6 @@
 {
   "version": "0.1.1",
-  "name": "listing_rewards",
+  "name": "reward_center",
   "instructions": [
     {
       "name": "createRewardCenter",
@@ -1048,6 +1048,34 @@
       }
     },
     {
+      "name": "CreateRewardCenterParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "rewardRules",
+            "type": {
+              "defined": "RewardRules"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "EditRewardCenterParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "rewardRules",
+            "type": {
+              "defined": "RewardRules"
+            }
+          }
+        ]
+      }
+    },
+    {
       "name": "CloseOfferParams",
       "type": {
         "kind": "struct",
@@ -1107,34 +1135,6 @@
           {
             "name": "escrowPaymentBump",
             "type": "u8"
-          }
-        ]
-      }
-    },
-    {
-      "name": "CreateRewardCenterParams",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "rewardRules",
-            "type": {
-              "defined": "RewardRules"
-            }
-          }
-        ]
-      }
-    },
-    {
-      "name": "EditRewardCenterParams",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "rewardRules",
-            "type": {
-              "defined": "RewardRules"
-            }
           }
         ]
       }

@@ -1,7 +1,7 @@
 [workspace]
 [package]
 name = "mpl-reward-center"
-version = "0.1.1"
+version = "0.1.0"
 edition = "2021"
 description = "Default Auctioneer implementation"
 authors = ["Metaplex Developers <dev@metaplex.com>", "Holaplex Developers <hola@holaplex.com>"]

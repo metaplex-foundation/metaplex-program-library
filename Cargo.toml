@@ -10,8 +10,8 @@ exclude = [
   "auction-house/program",
   "auction-house/sdk",
   "candy-machine/program",
-  "listing-rewards/program",
-  "listing-rewards/sdk",
+  "reward-center/program",
+  "reward-center/sdk",
   "bubblegum/program",
   "candy-wrapper/program"
 ]

@@ -6,7 +6,7 @@
     "token-metadata/js",
     "auction-house/js",
     "fixed-price-sale/js",
-    "listing-rewards/js",
+    "reward-center/js",
     "bubblegum/js",
     "nft-packs-wrapper/js"
   ],

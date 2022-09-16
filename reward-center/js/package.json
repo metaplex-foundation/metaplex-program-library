@@ -1,6 +1,6 @@
 {
-  "name": "@holaplex/mpl-listing-rewards",
-  "version": "0.2.0",
+  "name": "@holaplex/mpl-reward-center",
+  "version": "0.1.0",
   "description": "MPL Auction House JavaScript API.",
   "main": "dist/src/generated/index.js",
   "types": "dist/src/generated/index.d.ts",
