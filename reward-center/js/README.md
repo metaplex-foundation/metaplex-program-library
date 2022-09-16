@@ -1,6 +1,6 @@
-# mpl-listing-rewards
+# mpl-reward-center
 
-This package contains the listing rewards contract SDK code.
+This package contains the reward center contract SDK code.
 
 ## Developing
 

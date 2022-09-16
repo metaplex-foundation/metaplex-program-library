@@ -81,9 +81,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@holaplex/mpl-listing-rewards@workspace:listing-rewards/js":
+"@holaplex/mpl-reward-center@workspace:reward-center/js":
   version: 0.0.0-use.local
-  resolution: "@holaplex/mpl-listing-rewards@workspace:listing-rewards/js"
+  resolution: "@holaplex/mpl-reward-center@workspace:reward-center/js"
   dependencies:
     "@metaplex-foundation/beet": ^0.1.0
     "@metaplex-foundation/beet-solana": ^0.1.1

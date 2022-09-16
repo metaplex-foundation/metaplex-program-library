@@ -1,5 +1,5 @@
 {
-  "entryPoints": ["src/listing-rewards.ts"],
+  "entryPoints": ["src/reward-center.ts"],
   "excludeInternal": true,
   "excludePrivate": true,
   "out": "./docs"
