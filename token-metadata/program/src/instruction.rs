@@ -531,12 +531,12 @@ pub enum MetadataInstruction {
     /// Completely burn a print edition NFT.
     #[account(0, writable, name="metadata", desc="Metadata (pda of ['metadata', program id, mint id])")]
     #[account(1, signer, writable, name="owner", desc="NFT owner")]
-    #[account(2, writable, name="mint", desc="Mint of the print edition NFT")]
-    #[account(3, writable, name="original_mint", desc="Mint of the original/master NFT")]
-    #[account(4, writable, name="token_account", desc="Token account the print edition NFT is in")]
-    #[account(5, name="original_token_account", desc="Token account the Master Edition NFT is in")]
+    #[account(2, writable, name="print_edition_mint", desc="Mint of the print edition NFT")]
+    #[account(3, writable, name="master_edition_mint", desc="Mint of the original/master NFT")]
+    #[account(4, writable, name="print_edition_token_account", desc="Token account the print edition NFT is in")]
+    #[account(5, name="master_edition_token_account", desc="Token account the Master Edition NFT is in")]
     #[account(6, writable, name="master_edition_account", desc="MasterEdition2 of the original NFT")]
-    #[account(7, writable, name="edition_account", desc="Print Edition account of the NFT")]
+    #[account(7, writable, name="print_edition_account", desc="Print Edition account of the NFT")]
     #[account(8, writable, name="edition_marker_account", desc="Edition Marker PDA of the NFT")]
     #[account(9, name="spl token program", desc="SPL Token Program")]
     BurnEditionNft,
@@ -1438,38 +1438,38 @@ pub fn burn_nft(
     }
 }
 
-// #[account(0, writable, name="metadata", desc="Metadata (pda of ['metadata', program id, mint id])")]
-// #[account(1, signer, writable, name="owner", desc="NFT owner")]
-// #[account(2, writable, name="mint", desc="Mint of the print edition NFT")]
-// #[account(3, writable, name="original_mint", desc="Mint of the original/master NFT")]
-// #[account(4, writable, name="token_account", desc="Token account the print edition NFT is in")]
-// #[account(5, name="original_token_account", desc="Token account the Master Edition NFT is in")]
-// #[account(6, writable, name="master_edition_account", desc="MasterEdition2 of the original NFT")]
-// #[account(7, writable, name="edition_account", desc="Print Edition account of the NFT")]
-// #[account(8, writable, name="edition_marker_account", desc="Edition Marker PDA of the NFT")]
-// #[account(9, name="spl token program", desc="SPL Token Program")]
+/// #[account(0, writable, name="metadata", desc="Metadata (pda of ['metadata', program id, mint id])")]
+/// #[account(1, signer, writable, name="owner", desc="NFT owner")]
+/// #[account(2, writable, name="print_edition_mint", desc="Mint of the print edition NFT")]
+/// #[account(3, writable, name="master_edition_mint", desc="Mint of the original/master NFT")]
+/// #[account(4, writable, name="print_edition_token_account", desc="Token account the print edition NFT is in")]
+/// #[account(5, name="master_edition_token_account", desc="Token account the Master Edition NFT is in")]
+/// #[account(6, writable, name="master_edition_account", desc="MasterEdition2 of the original NFT")]
+/// #[account(7, writable, name="print_edition_account", desc="Print Edition account of the NFT")]
+/// #[account(8, writable, name="edition_marker_account", desc="Edition Marker PDA of the NFT")]
+/// #[account(9, name="spl token program", desc="SPL Token Program")]
 pub fn burn_edition_nft(
     program_id: Pubkey,
     metadata: Pubkey,
     owner: Pubkey,
-    mint: Pubkey,
-    original_mint: Pubkey,
-    token: Pubkey,
-    original_token: Pubkey,
+    print_edition_mint: Pubkey,
+    master_edition_mint: Pubkey,
+    print_edition_token: Pubkey,
+    master_edition_token: Pubkey,
     master_edition: Pubkey,
-    edition: Pubkey,
+    print_edition: Pubkey,
     edition_marker: Pubkey,
     spl_token: Pubkey,
 ) -> Instruction {
     let accounts = vec![
         AccountMeta::new(metadata, false),
         AccountMeta::new(owner, true),
-        AccountMeta::new(mint, false),
-        AccountMeta::new(original_mint, false),
-        AccountMeta::new(token, false),
-        AccountMeta::new(original_token, false),
+        AccountMeta::new(print_edition_mint, false),
+        AccountMeta::new(master_edition_mint, false),
+        AccountMeta::new(print_edition_token, false),
+        AccountMeta::new(master_edition_token, false),
         AccountMeta::new(master_edition, false),
-        AccountMeta::new(edition, false),
+        AccountMeta::new(print_edition, false),
         AccountMeta::new(edition_marker, false),
         AccountMeta::new_readonly(spl_token, false),
     ];

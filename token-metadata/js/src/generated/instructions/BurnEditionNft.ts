@@ -22,12 +22,12 @@ export const BurnEditionNftStruct = new beet.BeetArgsStruct<{ instructionDiscrim
  *
  * @property [_writable_] metadata Metadata (pda of ['metadata', program id, mint id])
  * @property [_writable_, **signer**] owner NFT owner
- * @property [_writable_] mint Mint of the print edition NFT
- * @property [_writable_] originalMint Mint of the original/master NFT
- * @property [_writable_] tokenAccount Token account the print edition NFT is in
- * @property [] originalTokenAccount Token account the Master Edition NFT is in
+ * @property [_writable_] printEditionMint Mint of the print edition NFT
+ * @property [_writable_] masterEditionMint Mint of the original/master NFT
+ * @property [_writable_] printEditionTokenAccount Token account the print edition NFT is in
+ * @property [] masterEditionTokenAccount Token account the Master Edition NFT is in
  * @property [_writable_] masterEditionAccount MasterEdition2 of the original NFT
- * @property [_writable_] editionAccount Print Edition account of the NFT
+ * @property [_writable_] printEditionAccount Print Edition account of the NFT
  * @property [_writable_] editionMarkerAccount Edition Marker PDA of the NFT
  * @property [] splTokenProgram SPL Token Program
  * @category Instructions
@@ -37,12 +37,12 @@ export const BurnEditionNftStruct = new beet.BeetArgsStruct<{ instructionDiscrim
 export type BurnEditionNftInstructionAccounts = {
   metadata: web3.PublicKey;
   owner: web3.PublicKey;
-  mint: web3.PublicKey;
-  originalMint: web3.PublicKey;
-  tokenAccount: web3.PublicKey;
-  originalTokenAccount: web3.PublicKey;
+  printEditionMint: web3.PublicKey;
+  masterEditionMint: web3.PublicKey;
+  printEditionTokenAccount: web3.PublicKey;
+  masterEditionTokenAccount: web3.PublicKey;
   masterEditionAccount: web3.PublicKey;
-  editionAccount: web3.PublicKey;
+  printEditionAccount: web3.PublicKey;
   editionMarkerAccount: web3.PublicKey;
   splTokenProgram: web3.PublicKey;
 };
@@ -76,22 +76,22 @@ export function createBurnEditionNftInstruction(
       isSigner: true,
     },
     {
-      pubkey: accounts.mint,
+      pubkey: accounts.printEditionMint,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: accounts.originalMint,
+      pubkey: accounts.masterEditionMint,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: accounts.tokenAccount,
+      pubkey: accounts.printEditionTokenAccount,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: accounts.originalTokenAccount,
+      pubkey: accounts.masterEditionTokenAccount,
       isWritable: false,
       isSigner: false,
     },
@@ -101,7 +101,7 @@ export function createBurnEditionNftInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.editionAccount,
+      pubkey: accounts.printEditionAccount,
       isWritable: true,
       isSigner: false,
     },

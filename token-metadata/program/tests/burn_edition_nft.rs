@@ -872,4 +872,89 @@ mod burn_edition_nft {
 
         assert_custom_error!(err, MetadataError::AlreadyInitialized);
     }
+
+    #[tokio::test]
+    async fn cannot_modify_wrong_master_edition() {
+        let mut context = program_test().start_with_context().await;
+
+        // Someone else's NFT
+        let other_nft = Metadata::new();
+        other_nft
+            .create_v2(
+                &mut context,
+                "Test".to_string(),
+                "TST".to_string(),
+                "uri".to_string(),
+                None,
+                10,
+                false,
+                None,
+                None,
+                None,
+            )
+            .await
+            .unwrap();
+
+        let other_master_edition = MasterEditionV2::new(&other_nft);
+        other_master_edition
+            .create_v3(&mut context, Some(10))
+            .await
+            .unwrap();
+
+        let new_update_authority = Keypair::new();
+        other_nft
+            .change_update_authority(&mut context, new_update_authority.pubkey())
+            .await
+            .unwrap();
+
+        let other_print_edition = EditionMarker::new(&other_nft, &other_master_edition, 1);
+        other_print_edition.create(&mut context).await.unwrap();
+
+        let our_nft = Metadata::new();
+        our_nft
+            .create_v2(
+                &mut context,
+                "Test".to_string(),
+                "TST".to_string(),
+                "uri".to_string(),
+                None,
+                10,
+                false,
+                None,
+                None,
+                None,
+            )
+            .await
+            .unwrap();
+
+        let master_edition = MasterEditionV2::new(&our_nft);
+        master_edition
+            .create_v3(&mut context, Some(10))
+            .await
+            .unwrap();
+
+        let print_edition = EditionMarker::new(&our_nft, &master_edition, 1);
+        print_edition.create(&mut context).await.unwrap();
+
+        let kpbytes = &context.payer;
+        let payer = Keypair::from_bytes(&kpbytes.to_bytes()).unwrap();
+
+        // We pass in our edition NFT and someone else's master edition and try to modify their supply.
+        let err = burn_edition(
+            &mut context,
+            print_edition.new_metadata_pubkey,
+            &payer,
+            print_edition.mint.pubkey(),
+            other_nft.mint.pubkey(),
+            print_edition.token.pubkey(),
+            other_nft.token.pubkey(),
+            other_master_edition.pubkey,
+            print_edition.new_edition_pubkey,
+            other_print_edition.pubkey,
+        )
+        .await
+        .unwrap_err();
+
+        assert_custom_error!(err, MetadataError::PrintEditionDoesntMatchMasterEdition);
+    }
 }

@@ -2069,25 +2069,25 @@
           "desc": "NFT owner"
         },
         {
-          "name": "mint",
+          "name": "printEditionMint",
           "isMut": true,
           "isSigner": false,
           "desc": "Mint of the print edition NFT"
         },
         {
-          "name": "originalMint",
+          "name": "masterEditionMint",
           "isMut": true,
           "isSigner": false,
           "desc": "Mint of the original/master NFT"
         },
         {
-          "name": "tokenAccount",
+          "name": "printEditionTokenAccount",
           "isMut": true,
           "isSigner": false,
           "desc": "Token account the print edition NFT is in"
         },
         {
-          "name": "originalTokenAccount",
+          "name": "masterEditionTokenAccount",
           "isMut": false,
           "isSigner": false,
           "desc": "Token account the Master Edition NFT is in"
@@ -2099,7 +2099,7 @@
           "desc": "MasterEdition2 of the original NFT"
         },
         {
-          "name": "editionAccount",
+          "name": "printEditionAccount",
           "isMut": true,
           "isSigner": false,
           "desc": "Print Edition account of the NFT"
@@ -3486,7 +3486,7 @@
     {
       "code": 113,
       "name": "CollectionMasterEditionAccountInvalid",
-      "msg": "Edition account aoesnt match collection "
+      "msg": "Edition account doesnt match collection "
     },
     {
       "code": 114,
@@ -3512,6 +3512,11 @@
       "code": 118,
       "name": "ReservationListDeprecated",
       "msg": "Reservation List is Deprecated"
+    },
+    {
+      "code": 119,
+      "name": "PrintEditionDoesntMatchMasterEdition",
+      "msg": "Print Edition doesn't match Master Edition"
     }
   ],
   "metadata": {

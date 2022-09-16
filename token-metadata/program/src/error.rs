@@ -446,7 +446,7 @@ pub enum MetadataError {
     CannotUpdateVerifiedCollection,
 
     /// 113 - Edition Account Doesnt Match Collection
-    #[error("Edition account aoesnt match collection ")]
+    #[error("Edition account doesnt match collection ")]
     CollectionMasterEditionAccountInvalid,
 
     /// 114 - Item is already verified.
@@ -468,6 +468,10 @@ pub enum MetadataError {
     /// 118 - Reservation List is Deprecated
     #[error("Reservation List is Deprecated")]
     ReservationListDeprecated,
+
+    /// 119 - Print Edition doesn't match Master Edition
+    #[error("Print Edition doesn't match Master Edition")]
+    PrintEditionDoesntMatchMasterEdition,
 }
 
 impl PrintProgramError for MetadataError {

@@ -2440,7 +2440,7 @@ createErrorFromNameLookup.set(
 );
 
 /**
- * CollectionMasterEditionAccountInvalid: 'Edition account aoesnt match collection '
+ * CollectionMasterEditionAccountInvalid: 'Edition account doesnt match collection '
  *
  * @category Errors
  * @category generated
@@ -2449,7 +2449,7 @@ export class CollectionMasterEditionAccountInvalidError extends Error {
   readonly code: number = 0x71;
   readonly name: string = 'CollectionMasterEditionAccountInvalid';
   constructor() {
-    super('Edition account aoesnt match collection ');
+    super('Edition account doesnt match collection ');
     if (typeof Error.captureStackTrace === 'function') {
       Error.captureStackTrace(this, CollectionMasterEditionAccountInvalidError);
     }
@@ -2563,6 +2563,29 @@ createErrorFromCodeLookup.set(0x76, () => new ReservationListDeprecatedError());
 createErrorFromNameLookup.set(
   'ReservationListDeprecated',
   () => new ReservationListDeprecatedError(),
+);
+
+/**
+ * PrintEditionDoesntMatchMasterEdition: 'Print Edition doesn't match Master Edition'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class PrintEditionDoesntMatchMasterEditionError extends Error {
+  readonly code: number = 0x77;
+  readonly name: string = 'PrintEditionDoesntMatchMasterEdition';
+  constructor() {
+    super("Print Edition doesn't match Master Edition");
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, PrintEditionDoesntMatchMasterEditionError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x77, () => new PrintEditionDoesntMatchMasterEditionError());
+createErrorFromNameLookup.set(
+  'PrintEditionDoesntMatchMasterEdition',
+  () => new PrintEditionDoesntMatchMasterEditionError(),
 );
 
 /**
