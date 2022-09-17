@@ -981,7 +981,6 @@ pub struct EscrowConstraintModel {
 
 impl EscrowConstraintModel {
     pub fn try_len(&self) -> Result<usize, ProgramError> {
-        let unknown_overhead = 8; // TODO: find out where this is coming from
         self.constraints
             .iter()
             .try_fold(0usize, |acc, ec| {
@@ -989,13 +988,12 @@ impl EscrowConstraintModel {
                     .ok_or_else(|| MetadataError::NumericalOverflowError.into())
             })
             .map(|ecs_len| {
-                ecs_len
-                    + 1 // key
-                    + self.name.len()
+                1 // key
+                    + 4 + self.name.len()
+                    + 4 + ecs_len
                     + std::mem::size_of::<Pubkey>()
                     + std::mem::size_of::<Pubkey>()
                     + std::mem::size_of::<u64>()
-                    + unknown_overhead
             })
     }
 
