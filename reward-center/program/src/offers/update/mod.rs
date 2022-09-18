@@ -19,7 +19,7 @@ use crate::{
     metaplex_cpi::auction_house::{make_auctioneer_instruction, AuctioneerInstructionArgs},
     errors::ListingRewardsError,
     state::{
-        base::{Offer, RewardCenter},
+        Offer, RewardCenter,
         metaplex_anchor::TokenMetadata,
     },
 };

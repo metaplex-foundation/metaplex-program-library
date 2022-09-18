@@ -3,7 +3,7 @@ use crate::{
     constants::{OFFER, REWARD_CENTER},
     errors::ListingRewardsError,
     state::{
-        base::{Offer, RewardCenter},
+        Offer, RewardCenter,
         metaplex_anchor::TokenMetadata,
     },
 };

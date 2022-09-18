@@ -2,7 +2,7 @@ use crate::{
     constants::{LISTING, REWARD_CENTER},
     metaplex_cpi::auction_house::{make_auctioneer_instruction, AuctioneerInstructionArgs},
     state::{
-        base::{Listing, RewardCenter},
+        Listing, RewardCenter,
         metaplex_anchor::TokenMetadata,
     },
 };

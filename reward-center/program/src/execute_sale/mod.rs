@@ -2,7 +2,7 @@ use crate::constants::{LISTING, OFFER, PURCHASE_TICKET, REWARD_CENTER};
 use crate::metaplex_cpi::auction_house::{make_auctioneer_instruction, AuctioneerInstructionArgs};
 use crate::errors::ListingRewardsError;
 use crate::state::{
-    base::{Listing, Offer, PurchaseTicket, RewardCenter},
+    Listing, Offer, PurchaseTicket, RewardCenter,
     metaplex_anchor::TokenMetadata,
 };
 use anchor_lang::{prelude::*, InstructionData};

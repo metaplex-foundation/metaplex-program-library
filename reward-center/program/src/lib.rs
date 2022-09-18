@@ -4,7 +4,7 @@ pub mod errors;
 pub mod execute_sale;
 pub mod listings;
 pub mod metaplex_cpi;
-pub mod mut_reward_center;
+pub mod reward_centers;
 pub mod offers;
 pub mod pda;
 pub mod state;
@@ -14,7 +14,7 @@ use anchor_lang::prelude::*;
 use crate::{
     execute_sale::*,
     listings::{cancel::*, create::*, update::*},
-    mut_reward_center::{create::*, edit::*},
+    reward_centers::{create::*, edit::*},
     offers::{close::*, create::*, update::*},
 };
 
@@ -28,14 +28,14 @@ pub mod reward_center {
         ctx: Context<CreateRewardCenter>,
         create_reward_center_params: CreateRewardCenterParams,
     ) -> Result<()> {
-        mut_reward_center::create::handler(ctx, create_reward_center_params)
+        reward_centers::create::handler(ctx, create_reward_center_params)
     }
 
     pub fn edit_reward_center(
         ctx: Context<EditRewardCenter>,
         edit_reward_center_params: EditRewardCenterParams,
     ) -> Result<()> {
-        mut_reward_center::edit::handler(ctx, edit_reward_center_params)
+        reward_centers::edit::handler(ctx, edit_reward_center_params)
     }
 
     pub fn create_listing(

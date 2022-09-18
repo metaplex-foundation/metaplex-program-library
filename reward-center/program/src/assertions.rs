@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 
 use crate::{
     errors::ListingRewardsError,
-    state::base::{Listing, Offer},
+    state::{Listing, Offer},
 };
 
 pub fn assert_listing_init_eligibility(listing: &Account<Listing>) -> Result<()> {
