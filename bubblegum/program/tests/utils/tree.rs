@@ -1,4 +1,4 @@
-use anchor_lang::{self, AccountDeserialize};
+use anchor_lang::{self, AccountDeserialize, Key};
 use bytemuck::try_from_bytes;
 use mpl_bubblegum::{
     state::{leaf_schema::LeafSchema, TreeConfig},
@@ -16,7 +16,8 @@ use solana_sdk::{
 };
 use spl_account_compression::state::ConcurrentMerkleTreeHeader;
 use spl_concurrent_merkle_tree::concurrent_merkle_tree::ConcurrentMerkleTree;
-use spl_merkle_tree_reference::Node;
+use spl_merkle_tree_reference::{MerkleTree, Node};
+use std::ops::Deref;
 use std::{
     cell::{RefCell, RefMut},
     convert::TryFrom,
@@ -26,8 +27,9 @@ use std::{
 use super::{
     clone_keypair, compute_metadata_hashes,
     tx_builder::{
-        BurnBuilder, CreateBuilder, DelegateBuilder, MintV1Builder, SetTreeDelegateBuilder,
-        TransferBuilder, TxBuilder, UnverifyCreatorBuilder, VerifyCreatorBuilder,
+        BurnBuilder, CreateBuilder, CreatorVerificationInner, DelegateBuilder, DelegateInner,
+        MintV1Builder, SetTreeDelegateBuilder, TransferBuilder, TransferInner, TxBuilder,
+        UnverifyCreatorBuilder, VerifyCreatorBuilder,
     },
     Error, LeafArgs, Result,
 };
@@ -38,10 +40,18 @@ use super::{
 // TODO: finish implementing all operations.
 pub struct Tree<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> {
     pub tree_creator: Keypair,
-    pub tree_delegate: Keypair,
+    pub tree_delegate: RefCell<Keypair>,
     pub merkle_tree: Keypair,
     pub canopy_depth: u32,
     client: RefCell<BanksClient>,
+    // The will be kept in sync with changes to the leaves. Setting it up initially
+    // can take quite a lot of time for large depths (unless we add an alternative/
+    // optimization), so we'll generally use trees with less than the maximum possible
+    // depth for testing for now.
+    proof_tree: RefCell<MerkleTree>,
+    // Keep track of how many mint TXs executed successfully such that we can automatically
+    // populate the `nonce` and `index` of leaf args instead of having to do it manually.
+    num_minted: RefCell<u64>,
 }
 
 impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_BUFFER_SIZE> {
@@ -53,12 +63,19 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
     }
 
     pub fn with_creator(tree_creator: &Keypair, client: BanksClient) -> Self {
+        // Default proof tree construction.
+        let proof_tree = RefCell::new(MerkleTree::new(
+            vec![Node::default(); 1 << MAX_DEPTH].as_slice(),
+        ));
+
         Tree {
             tree_creator: clone_keypair(tree_creator),
-            tree_delegate: clone_keypair(tree_creator),
+            tree_delegate: RefCell::new(clone_keypair(tree_creator)),
             merkle_tree: Keypair::new(),
             canopy_depth: 0,
             client: RefCell::new(client),
+            proof_tree,
+            num_minted: RefCell::new(0),
         }
     }
 
@@ -67,7 +84,16 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
     }
 
     pub fn delegate_pubkey(&self) -> Pubkey {
-        self.tree_delegate.pubkey()
+        self.tree_delegate.borrow().pubkey()
+    }
+
+    pub fn clone_delegate(&self) -> Keypair {
+        clone_keypair(self.tree_delegate.borrow().deref())
+    }
+
+    // Not to be confused with the `set_tree_delegate` below.
+    pub fn replace_tree_delegate(&self, key: &Keypair) {
+        *self.tree_delegate.borrow_mut() = clone_keypair(key);
     }
 
     pub fn tree_pubkey(&self) -> Pubkey {
@@ -201,10 +227,10 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
         self.create_tree_tx(payer).execute().await
     }
 
-    pub fn mint_v1_tx(
-        &self,
+    pub fn mint_v1_tx<'a>(
+        &'a self,
         tree_delegate: &Keypair,
-        args: &LeafArgs,
+        args: &'a mut LeafArgs,
     ) -> MintV1Builder<MAX_DEPTH, MAX_BUFFER_SIZE> {
         let accounts = mpl_bubblegum::accounts::MintV1 {
             tree_authority: self.authority(),
@@ -221,18 +247,20 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             message: args.metadata.clone(),
         };
 
+        let owner = clone_keypair(&args.owner);
+
         self.tx_builder(
             accounts,
             data,
-            (),
-            args.owner.pubkey(),
-            &[tree_delegate, &args.owner],
+            args,
+            owner.pubkey(),
+            &[tree_delegate, &owner],
         )
     }
 
     // This assumes the owner is the account paying for the tx. We can make things
     // more configurable for any of the methods.
-    pub async fn mint_v1(&self, tree_delegate: &Keypair, args: &LeafArgs) -> Result<()> {
+    pub async fn mint_v1(&self, tree_delegate: &Keypair, args: &mut LeafArgs) -> Result<()> {
         self.mint_v1_tx(tree_delegate, args).execute().await
     }
 
@@ -254,9 +282,9 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
     }
 
     // This is currently async due to calling `decode_root` (same goes for a bunch of others).
-    pub async fn burn_tx(
-        &self,
-        args: &LeafArgs,
+    pub async fn burn_tx<'a>(
+        &'a self,
+        args: &'a LeafArgs,
     ) -> Result<BurnBuilder<MAX_DEPTH, MAX_BUFFER_SIZE>> {
         let root = self.decode_root().await?;
 
@@ -279,16 +307,16 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             index: args.index,
         };
 
-        Ok(self.tx_builder(accounts, data, (), args.owner.pubkey(), &[&args.owner]))
+        Ok(self.tx_builder(accounts, data, args, args.owner.pubkey(), &[&args.owner]))
     }
 
     pub async fn burn(&self, args: &LeafArgs) -> Result<()> {
         self.burn_tx(args).await?.execute().await
     }
 
-    pub async fn verify_creator_tx(
-        &self,
-        args: &LeafArgs,
+    pub async fn verify_creator_tx<'a>(
+        &'a self,
+        args: &'a mut LeafArgs,
         creator: &Keypair,
     ) -> Result<VerifyCreatorBuilder<MAX_DEPTH, MAX_BUFFER_SIZE>> {
         let root = self.decode_root().await?;
@@ -314,16 +342,21 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             message: args.metadata.clone(),
         };
 
-        Ok(self.tx_builder(accounts, data, (), creator.pubkey(), &[creator]))
+        let inner = CreatorVerificationInner {
+            args,
+            creator_key: creator.pubkey(),
+        };
+
+        Ok(self.tx_builder(accounts, data, inner, creator.pubkey(), &[creator]))
     }
 
-    pub async fn verify_creator(&self, args: &LeafArgs, creator: &Keypair) -> Result<()> {
+    pub async fn verify_creator(&self, args: &mut LeafArgs, creator: &Keypair) -> Result<()> {
         self.verify_creator_tx(args, creator).await?.execute().await
     }
 
-    pub async fn unverify_creator_tx(
-        &self,
-        args: &LeafArgs,
+    pub async fn unverify_creator_tx<'a>(
+        &'a self,
+        args: &'a mut LeafArgs,
         creator: &Keypair,
     ) -> Result<UnverifyCreatorBuilder<MAX_DEPTH, MAX_BUFFER_SIZE>> {
         let root = self.decode_root().await?;
@@ -349,20 +382,25 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             message: args.metadata.clone(),
         };
 
-        Ok(self.tx_builder(accounts, data, (), creator.pubkey(), &[creator]))
+        let inner = CreatorVerificationInner {
+            args,
+            creator_key: creator.pubkey(),
+        };
+
+        Ok(self.tx_builder(accounts, data, inner, creator.pubkey(), &[creator]))
     }
 
-    pub async fn unverify_creator(&self, args: &LeafArgs, creator: &Keypair) -> Result<()> {
+    pub async fn unverify_creator(&self, args: &mut LeafArgs, creator: &Keypair) -> Result<()> {
         self.unverify_creator_tx(args, creator)
             .await?
             .execute()
             .await
     }
 
-    pub async fn transfer_tx(
-        &self,
-        args: &LeafArgs,
-        new_leaf_owner: Pubkey,
+    pub async fn transfer_tx<'a>(
+        &'a self,
+        args: &'a mut LeafArgs,
+        new_leaf_owner: &Keypair,
     ) -> Result<TransferBuilder<MAX_DEPTH, MAX_BUFFER_SIZE>> {
         let root = self.decode_root().await?;
         let (data_hash, creator_hash) = compute_metadata_hashes(&args.metadata)?;
@@ -371,7 +409,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             tree_authority: self.authority(),
             leaf_owner: args.owner.pubkey(),
             leaf_delegate: args.delegate.pubkey(),
-            new_leaf_owner,
+            new_leaf_owner: new_leaf_owner.pubkey(),
             log_wrapper: spl_noop::id(),
             compression_program: spl_account_compression::id(),
             merkle_tree: self.tree_pubkey(),
@@ -385,17 +423,24 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             index: args.index,
         };
 
-        Ok(self.tx_builder(accounts, data, (), args.owner.pubkey(), &[&args.owner]))
+        // Cloning to avoid issues with the borrow checker when passing `&mut args`
+        // to the builder below.
+        let owner = clone_keypair(&args.owner);
+        let new_owner = clone_keypair(new_leaf_owner);
+
+        let inner = TransferInner { args, new_owner };
+
+        Ok(self.tx_builder(accounts, data, inner, owner.pubkey(), &[&owner]))
     }
 
-    pub async fn transfer(&self, args: &LeafArgs, new_owner: Pubkey) -> Result<()> {
+    pub async fn transfer(&self, args: &mut LeafArgs, new_owner: &Keypair) -> Result<()> {
         self.transfer_tx(args, new_owner).await?.execute().await
     }
 
-    pub async fn delegate_tx(
-        &self,
-        args: &LeafArgs,
-        new_leaf_delegate: Pubkey,
+    pub async fn delegate_tx<'a>(
+        &'a self,
+        args: &'a mut LeafArgs,
+        new_leaf_delegate: &Keypair,
     ) -> Result<DelegateBuilder<MAX_DEPTH, MAX_BUFFER_SIZE>> {
         let root = self.decode_root().await?;
         let (data_hash, creator_hash) = compute_metadata_hashes(&args.metadata)?;
@@ -404,7 +449,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             tree_authority: self.authority(),
             leaf_owner: args.owner.pubkey(),
             previous_leaf_delegate: args.delegate.pubkey(),
-            new_leaf_delegate,
+            new_leaf_delegate: new_leaf_delegate.pubkey(),
             log_wrapper: spl_noop::id(),
             compression_program: spl_account_compression::id(),
             merkle_tree: self.tree_pubkey(),
@@ -418,21 +463,27 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             index: args.index,
         };
 
-        Ok(self.tx_builder(accounts, data, (), args.owner.pubkey(), &[&args.owner]))
+        let owner = clone_keypair(&args.owner);
+        let inner = DelegateInner {
+            args,
+            new_delegate: clone_keypair(new_leaf_delegate),
+        };
+
+        Ok(self.tx_builder(accounts, data, inner, owner.pubkey(), &[&owner]))
     }
 
     // Does the prev delegate need to sign as well?
-    pub async fn delegate(&self, args: &LeafArgs, new_delegate: Pubkey) -> Result<()> {
+    pub async fn delegate(&self, args: &mut LeafArgs, new_delegate: &Keypair) -> Result<()> {
         self.delegate_tx(args, new_delegate).await?.execute().await
     }
 
     pub fn set_tree_delegate_tx(
         &self,
-        new_tree_delegate: Pubkey,
+        new_tree_delegate: &Keypair,
     ) -> SetTreeDelegateBuilder<MAX_DEPTH, MAX_BUFFER_SIZE> {
         let accounts = mpl_bubblegum::accounts::SetTreeDelegate {
             tree_creator: self.creator_pubkey(),
-            new_tree_delegate,
+            new_tree_delegate: new_tree_delegate.pubkey(),
             merkle_tree: self.tree_pubkey(),
             tree_authority: self.authority(),
         };
@@ -442,17 +493,16 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
         self.tx_builder(
             accounts,
             data,
-            (),
+            clone_keypair(new_tree_delegate),
             self.creator_pubkey(),
             &[&self.tree_creator],
         )
     }
 
-    pub async fn set_tree_delegate(&mut self, new_delegate: &Keypair) -> Result<()> {
-        self.set_tree_delegate_tx(new_delegate.pubkey())
+    pub async fn set_tree_delegate(&self, new_tree_delegate: &Keypair) -> Result<()> {
+        self.set_tree_delegate_tx(new_tree_delegate)
             .execute()
             .await?;
-        self.tree_delegate = clone_keypair(new_delegate);
         Ok(())
     }
 
@@ -494,5 +544,32 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
         );
 
         Ok(leaf.to_node())
+    }
+
+    pub fn num_minted(&self) -> u64 {
+        *self.num_minted.borrow()
+    }
+
+    pub fn inc_num_minted(&self) {
+        *self.num_minted.borrow_mut() += 1;
+    }
+
+    // Updates the inner `MerkleTree` when the given leaf has changed.
+    pub fn leaf_changed(&self, args: &LeafArgs) -> Result<()> {
+        let node = self.leaf_node(args)?;
+        self.proof_tree
+            .borrow_mut()
+            // The conversion below should never fail.
+            .add_leaf(node, usize::try_from(args.index).unwrap());
+        Ok(())
+    }
+
+    pub fn leaf_zeroed(&self, index: u32) -> Result<()> {
+        let node = [0u8; 32];
+        // The conversion below should never fail.
+        self.proof_tree
+            .borrow_mut()
+            .add_leaf(node, usize::try_from(index).unwrap());
+        Ok(())
     }
 }
