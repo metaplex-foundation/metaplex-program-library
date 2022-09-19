@@ -132,7 +132,7 @@ pub fn get_asset_pairs(assets_dir: &str) -> Result<HashMap<isize, AssetPair>> {
     let paths_ref = &paths;
 
     let animation_exists_regex =
-        Regex::new("^(.+)\\.((mp3)|(mp4)|(mov)|(webm))$").expect("Failed to create regex.");
+        Regex::new("^(.+)\\.((mp3)|(mp4)|(mov)|(webm)|(glb))$").expect("Failed to create regex.");
 
     // since there doesn't have to be video for each image/json pair, need to get rid of
     // invalid file names before entering metadata filename loop
@@ -202,7 +202,7 @@ pub fn get_asset_pairs(assets_dir: &str) -> Result<HashMap<isize, AssetPair>> {
         // need a similar check for animation as above, this one checking if there is animation
         // on specific index
 
-        let animation_pattern = format!("^{}\\.((mp3)|(mp4)|(mov)|(webm))$", i);
+        let animation_pattern = format!("^{}\\.((mp3)|(mp4)|(mov)|(webm)|(glb))$", i);
         let animation_regex = RegexBuilder::new(&animation_pattern)
             .case_insensitive(true)
             .build()
