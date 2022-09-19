@@ -1,4 +1,4 @@
-# Bundt Cake (Token Owned Escrow)
+# Bundt Cake (Composable NFTs via a Token Owned Escrow)
 ## Overview
 This extension of the Token Metadata contract was created as a new feature primitive that could optionally be added to all NFTs. At its core it is simply an escrow account attached to an NFT, enabling NFTs to become owners of other tokens.
 
