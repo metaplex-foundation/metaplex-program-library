@@ -490,15 +490,15 @@ mod burn_edition_nft {
         .await
         .unwrap_err();
 
-        // The error will be IncorrectOwner since the random pubkey we generated is not a PDA owned
-        // by the token metadata program.
-        assert_custom_error!(err, MetadataError::IncorrectOwner);
+        // The random pubkey will have a data len of zero so is not a Master Edition.
+        assert_custom_error!(err, MetadataError::NotAMasterEdition);
 
         // Create a second master edition to try to pass off as the correct one. It's owned by token metadata
-        // so will pass that check but will fail with IncorrectMasterEdition.
+        // and has the right len of data, so will pass that check but will fail with InvalidMasterEdition because
+        // it's derivation is incorrect.
 
-        let original_nft = Metadata::new();
-        original_nft
+        let new_nft = Metadata::new();
+        new_nft
             .create_v2(
                 &mut context,
                 "Test".to_string(),
@@ -514,7 +514,7 @@ mod burn_edition_nft {
             .await
             .unwrap();
 
-        let incorrect_master_edition = MasterEditionV2::new(&original_nft);
+        let incorrect_master_edition = MasterEditionV2::new(&new_nft);
         incorrect_master_edition
             .create_v3(&mut context, Some(10))
             .await
@@ -586,12 +586,12 @@ mod burn_edition_nft {
         .await
         .unwrap_err();
 
-        // The error will be IncorrectOwner since the random pubkey we generated is not a PDA owned
-        // by the token metadata program.
-        assert_custom_error!(err, MetadataError::IncorrectOwner);
+        // The random pubkey will have a data len of zero so is not a Print Edition.
+        assert_custom_error!(err, MetadataError::NotAPrintEdition);
 
         // Create a second print edition to try to pass off as the correct one. It's owned by token metadata
-        // so will pass that check but will fail with IncorrectPrintEdition.
+        // and has the right data length, so will pass those checks, but will fail with InvalidPrintEdition
+        // because the derivation will be incorrect.
 
         let second_print_edition = EditionMarker::new(&original_nft, &master_edition, 2);
         second_print_edition.create(&mut context).await.unwrap();
@@ -1127,6 +1127,6 @@ mod burn_edition_nft {
         .await
         .unwrap_err();
 
-        assert_custom_error!(err, MetadataError::PrintEditionDoesntMatchMasterEdition);
+        assert_custom_error!(err, MetadataError::PrintEditionDoesNotMatchMasterEdition);
     }
 }

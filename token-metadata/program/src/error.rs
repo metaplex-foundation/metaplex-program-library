@@ -479,7 +479,7 @@ pub enum MetadataError {
 
     /// 121 - Print Edition doesn't match Master Edition
     #[error("Print Edition does not match Master Edition")]
-    PrintEditionDoesntMatchMasterEdition,
+    PrintEditionDoesNotMatchMasterEdition,
 }
 
 impl PrintProgramError for MetadataError {

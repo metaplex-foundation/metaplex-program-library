@@ -270,7 +270,7 @@ pub fn get_mint_freeze_authority(
 pub fn get_mint_supply(account_info: &AccountInfo) -> Result<u64, ProgramError> {
     // In token program, 36, 8, 1, 1 is the layout, where the first 8 is supply u64.
     // so we start at 36.
-    let data = account_info.try_borrow_data().unwrap();
+    let data = account_info.try_borrow_data()?;
     let bytes = array_ref![data, 36, 8];
 
     Ok(u64::from_le_bytes(*bytes))
@@ -280,7 +280,8 @@ pub fn get_mint_supply(account_info: &AccountInfo) -> Result<u64, ProgramError> 
 pub fn get_mint_decimals(account_info: &AccountInfo) -> Result<u8, ProgramError> {
     // In token program, 36, 8, 1, 1, is the layout, where the first 1 is decimals u8.
     // so we start at 36.
-    let data = account_info.try_borrow_data().unwrap();
+    let data = account_info.try_borrow_data()?;
+
     Ok(data[44])
 }
 

@@ -1952,7 +1952,7 @@ pub fn process_burn_edition_nft(program_id: &Pubkey, accounts: &[AccountInfo]) -
 
     // Print Edition actually belongs to the master edition.
     if print_edition.parent != *master_edition_info.key {
-        return Err(MetadataError::PrintEditionDoesntMatchMasterEdition.into());
+        return Err(MetadataError::PrintEditionDoesNotMatchMasterEdition.into());
     }
 
     // Which edition marker is this edition in

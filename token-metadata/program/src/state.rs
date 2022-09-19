@@ -97,6 +97,10 @@ pub trait TokenMetadataAccount: BorshDeserialize {
     fn size() -> usize;
 
     fn is_correct_account_type(data: &[u8], data_type: Key, data_size: usize) -> bool {
+        if data.len() == 0 {
+            return false;
+        }
+
         let key: Option<Key> = Key::from_u8(data[0]);
         match key {
             Some(key) => {
