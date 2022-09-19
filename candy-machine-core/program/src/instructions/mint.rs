@@ -258,12 +258,10 @@ pub fn get_config_line(
         let indices_start = HIDDEN_SECTION
             + 4
             + (items_available as usize) * candy_machine.data.get_config_line_size()
-            + 4
-            + ((items_available
+            + (items_available
                 .checked_div(8)
                 .ok_or(CandyError::NumericalOverflowError)?
-                + 1) as usize)
-            + 4;
+                + 1) as usize;
         // calculates the mint index and retrieves the value at that position
         let mint_index = indices_start + index * 4;
         let value_to_use = u32::from_le_bytes(*array_ref![account_data, mint_index, 4]) as usize;

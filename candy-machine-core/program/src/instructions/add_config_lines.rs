@@ -76,7 +76,7 @@ pub fn add_config_lines(
 
     // bit-mask
     let bit_mask_start =
-        HIDDEN_SECTION + 4 + (candy_machine.data.items_available as usize) * config_line_length + 4;
+        HIDDEN_SECTION + 4 + (candy_machine.data.items_available as usize) * config_line_length;
     // (unordered) indices for the mint
     let indices_start = bit_mask_start
         + (candy_machine
@@ -84,8 +84,7 @@ pub fn add_config_lines(
             .items_available
             .checked_div(8)
             .ok_or(CandyError::NumericalOverflowError)?
-            + 1) as usize
-        + 4;
+            + 1) as usize;
 
     // holds the total number of config lines
     let mut count = get_config_count(&data)?;

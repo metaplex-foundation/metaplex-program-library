@@ -69,13 +69,11 @@ impl CandyMachineData {
             HIDDEN_SECTION
                 + 4
                 + (self.items_available as usize) * self.get_config_line_size()
-                + 4
-                + ((self
+                + (self
                     .items_available
                     .checked_div(8)
                     .ok_or(CandyError::NumericalOverflowError)?
-                    + 1) as usize)
-                + 4
+                    + 1) as usize
                 + (self.items_available as usize) * 4
         })
     }

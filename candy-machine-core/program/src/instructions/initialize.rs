@@ -74,8 +74,6 @@ pub struct Initialize<'info> {
     authority_pda: UncheckedAccount<'info>,
     /// CHECK: authority can be any account and is not written to or read
     authority: UncheckedAccount<'info>,
-    // The update authority is used when retain authority is true (in most cases it will
-    // be the same as the authority)
     // payer of the transaction
     payer: Signer<'info>,
     /// CHECK: account checked in CPI

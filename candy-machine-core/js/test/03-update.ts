@@ -1,6 +1,6 @@
 import test from 'tape';
 import spok from 'spok';
-import { CandyMachine } from 'src/generated';
+import { CandyMachine } from '../src/generated';
 import { InitTransactions, killStuckProcess } from './setup/';
 import { spokSameBignum } from './utils';
 import * as program from '../src/generated';
@@ -56,13 +56,16 @@ test('update', async (t) => {
       nameLength: 10,
       prefixUri: 'https://arweave.net/',
       uriLength: 50,
+      isSequential: false,
     },
   });
 
   data.sellerFeeBasisPoints = 1000;
   data.isMutable = false;
-  data.configLineSettings.nameLength = 5;
-  data.configLineSettings.uriLength = 25;
+  if (data.configLineSettings) {
+    data.configLineSettings.nameLength = 5;
+    data.configLineSettings.uriLength = 25;
+  }
 
   const { tx: updateTransaction1 } = await init.updateCandyMachine(
     t,
@@ -80,8 +83,10 @@ test('update', async (t) => {
     configLineSettings: data.configLineSettings,
   });
 
-  data.configLineSettings.nameLength = 15;
-  data.configLineSettings.uriLength = 100;
+  if (data.configLineSettings) {
+    data.configLineSettings.nameLength = 15;
+    data.configLineSettings.uriLength = 100;
+  }
   // should fail since length is greater than the original allocated value
   const { tx: updateTransaction2 } = await init.updateCandyMachine(
     t,
@@ -93,8 +98,10 @@ test('update', async (t) => {
   await updateTransaction2.assertError(t);
 
   data.itemsAvailable = 100;
-  data.configLineSettings.nameLength = 5;
-  data.configLineSettings.uriLength = 10;
+  if (data.configLineSettings) {
+    data.configLineSettings.nameLength = 5;
+    data.configLineSettings.uriLength = 10;
+  }
   // should fail since it is not possible to change the itemsAvailable when
   // config lines are used
   const { tx: updateTransaction3 } = await init.updateCandyMachine(
