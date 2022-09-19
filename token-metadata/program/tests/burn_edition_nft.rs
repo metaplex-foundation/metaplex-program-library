@@ -1129,4 +1129,100 @@ mod burn_edition_nft {
 
         assert_custom_error!(err, MetadataError::PrintEditionDoesNotMatchMasterEdition);
     }
+
+    #[tokio::test]
+    async fn mint_mismatches() {
+        let mut context = program_test().start_with_context().await;
+
+        let nft = Metadata::new();
+        nft.create_v2(
+            &mut context,
+            "Test".to_string(),
+            "TST".to_string(),
+            "uri".to_string(),
+            None,
+            10,
+            false,
+            None,
+            None,
+            None,
+        )
+        .await
+        .unwrap();
+
+        let master_edition = MasterEditionV2::new(&nft);
+        master_edition
+            .create_v3(&mut context, Some(10))
+            .await
+            .unwrap();
+
+        let print_edition = EditionMarker::new(&nft, &master_edition, 1);
+        print_edition.create(&mut context).await.unwrap();
+        let second_print_edition = EditionMarker::new(&nft, &master_edition, 2);
+        second_print_edition.create(&mut context).await.unwrap();
+
+        let kpbytes = &context.payer;
+        let payer = Keypair::from_bytes(&kpbytes.to_bytes()).unwrap();
+
+        // Wrong print edition mint account.
+        let err = burn_edition(
+            &mut context,
+            print_edition.new_metadata_pubkey,
+            &payer,
+            second_print_edition.mint.pubkey(),
+            nft.mint.pubkey(),
+            print_edition.token.pubkey(),
+            nft.token.pubkey(),
+            master_edition.pubkey,
+            print_edition.new_edition_pubkey,
+            print_edition.pubkey,
+        )
+        .await
+        .unwrap_err();
+
+        assert_custom_error!(err, MetadataError::MintMismatch);
+
+        // Wrong master edition mint account.
+
+        let other_nft = Metadata::new();
+        other_nft
+            .create_v2(
+                &mut context,
+                "Test".to_string(),
+                "TST".to_string(),
+                "uri".to_string(),
+                None,
+                10,
+                false,
+                None,
+                None,
+                None,
+            )
+            .await
+            .unwrap();
+
+        let other_master_edition = MasterEditionV2::new(&other_nft);
+        other_master_edition
+            .create_v3(&mut context, Some(10))
+            .await
+            .unwrap();
+
+        // Wrong master edition mint account.
+        let err = burn_edition(
+            &mut context,
+            print_edition.new_metadata_pubkey,
+            &payer,
+            print_edition.mint.pubkey(),
+            other_nft.mint.pubkey(), // wrong
+            print_edition.token.pubkey(),
+            nft.token.pubkey(),
+            master_edition.pubkey,
+            print_edition.new_edition_pubkey,
+            print_edition.pubkey,
+        )
+        .await
+        .unwrap_err();
+
+        assert_custom_error!(err, MetadataError::MintMismatch);
+    }
 }
