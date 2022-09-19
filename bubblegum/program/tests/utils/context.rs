@@ -141,9 +141,9 @@ impl BubblegumTestContext {
 
         let payer = self.payer();
 
-        let args = LeafArgs::new(&payer, self.default_metadata_args("test", "tst"));
+        let mut args = LeafArgs::new(&payer, self.default_metadata_args("test", "tst"));
 
-        tree.mint_v1(&tree.tree_delegate, &args).await?;
+        tree.mint_v1(&payer, &mut args).await?;
 
         Ok((tree, args))
     }

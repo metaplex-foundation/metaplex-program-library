@@ -1,11 +1,11 @@
+use std::cell::{RefCell, RefMut};
+
 use anchor_lang::{self, InstructionData, ToAccountMetas};
 use solana_program::pubkey::Pubkey;
 use solana_program_test::BanksClient;
 use solana_sdk::{instruction::AccountMeta, signature::Keypair, transaction::Transaction};
 
-use std::cell::{RefCell, RefMut};
-
-use super::{clone_keypair, instruction, tree::Tree, Error, Result};
+use super::{clone_keypair, instruction, tree::Tree, Error, LeafArgs, Result};
 
 // Helper object to execute and easily alter characteristics of transactions
 // which contain a Bubblegum instruction. There's one instantiation for each
@@ -39,7 +39,7 @@ pub struct TxBuilder<'a, T, U, V, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE:
 }
 
 pub trait OnSuccessfulTxExec {
-    fn on_successful_execute(&mut self);
+    fn on_successful_execute(&mut self) -> Result<()>;
 }
 
 impl<'a, T, U, V, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize>
@@ -79,9 +79,7 @@ where
             .await
             .map_err(Error::BanksClient)?;
 
-        self.on_successful_execute();
-
-        Ok(())
+        self.on_successful_execute()
     }
 
     // Returning `&mut Self` to allow method chaining.
@@ -121,16 +119,6 @@ where
     }
 }
 
-// TODO: Temporary implementation so things still build properly.
-// Will be removed in a following commit.
-impl<'a, T, U, V, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExec
-    for TxBuilder<'a, T, U, V, MAX_DEPTH, MAX_BUFFER_SIZE>
-{
-    fn on_successful_execute(&mut self) {
-        // Do nothing.
-    }
-}
-
 // The types below have "builder" in their names because we're essentially
 // implementing a lightweight builder patter to instantiate, customize, and
 // execute transactions.
@@ -143,67 +131,170 @@ pub type CreateBuilder<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize>
     MAX_BUFFER_SIZE,
 >;
 
+impl<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExec
+    for CreateBuilder<'a, MAX_DEPTH, MAX_BUFFER_SIZE>
+{
+    fn on_successful_execute(&mut self) -> Result<()> {
+        // Do nothing here.
+        Ok(())
+    }
+}
+
 pub type MintV1Builder<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> = TxBuilder<
     'a,
     mpl_bubblegum::accounts::MintV1,
     mpl_bubblegum::instruction::MintV1,
-    (),
+    &'a mut LeafArgs,
     MAX_DEPTH,
     MAX_BUFFER_SIZE,
 >;
+
+impl<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExec
+    for MintV1Builder<'a, MAX_DEPTH, MAX_BUFFER_SIZE>
+{
+    fn on_successful_execute(&mut self) -> Result<()> {
+        // Set the index and nonce for the leaf. We're effectively using `self.num_minted` as
+        // the next index to simplify things. Just panic if the conversion fails, as it normally
+        // shouldn't during the tests.
+        self.inner.index = u32::try_from(self.tree.num_minted()).unwrap();
+        self.inner.nonce = self.tree.num_minted();
+        self.tree.inc_num_minted();
+        self.tree.leaf_changed(self.inner)
+    }
+}
 
 pub type BurnBuilder<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> = TxBuilder<
     'a,
     mpl_bubblegum::accounts::Burn,
     mpl_bubblegum::instruction::Burn,
-    (),
+    &'a LeafArgs,
     MAX_DEPTH,
     MAX_BUFFER_SIZE,
 >;
+
+impl<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExec
+    for BurnBuilder<'a, MAX_DEPTH, MAX_BUFFER_SIZE>
+{
+    fn on_successful_execute(&mut self) -> Result<()> {
+        self.tree.leaf_zeroed(self.inner.index)
+    }
+}
+
+pub struct TransferInner<'a> {
+    pub args: &'a mut LeafArgs,
+    pub new_owner: Keypair,
+}
 
 pub type TransferBuilder<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> = TxBuilder<
     'a,
     mpl_bubblegum::accounts::Transfer,
     mpl_bubblegum::instruction::Transfer,
-    (),
+    TransferInner<'a>,
     MAX_DEPTH,
     MAX_BUFFER_SIZE,
 >;
+
+impl<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExec
+    for TransferBuilder<'a, MAX_DEPTH, MAX_BUFFER_SIZE>
+{
+    fn on_successful_execute(&mut self) -> Result<()> {
+        // After transfer, the new owner is also the new delegate IIUC.
+        self.inner.args.owner = clone_keypair(&self.inner.new_owner);
+        self.inner.args.delegate = clone_keypair(&self.inner.new_owner);
+        self.tree.leaf_changed(self.inner.args)
+    }
+}
+
+pub struct DelegateInner<'a> {
+    pub args: &'a mut LeafArgs,
+    pub new_delegate: Keypair,
+}
 
 pub type DelegateBuilder<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> = TxBuilder<
     'a,
     mpl_bubblegum::accounts::Delegate,
     mpl_bubblegum::instruction::Delegate,
-    (),
+    DelegateInner<'a>,
     MAX_DEPTH,
     MAX_BUFFER_SIZE,
 >;
+
+impl<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExec
+    for DelegateBuilder<'a, MAX_DEPTH, MAX_BUFFER_SIZE>
+{
+    fn on_successful_execute(&mut self) -> Result<()> {
+        self.inner.args.delegate = clone_keypair(&self.inner.new_delegate);
+        self.tree.leaf_changed(self.inner.args)
+    }
+}
 
 pub type SetTreeDelegateBuilder<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> =
     TxBuilder<
         'a,
         mpl_bubblegum::accounts::SetTreeDelegate,
         mpl_bubblegum::instruction::SetTreeDelegate,
-        (),
+        Keypair,
         MAX_DEPTH,
         MAX_BUFFER_SIZE,
     >;
+
+impl<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExec
+    for SetTreeDelegateBuilder<'a, MAX_DEPTH, MAX_BUFFER_SIZE>
+{
+    fn on_successful_execute(&mut self) -> Result<()> {
+        *self.tree.tree_delegate.borrow_mut() = clone_keypair(&self.inner);
+        Ok(())
+    }
+}
+
+pub struct CreatorVerificationInner<'a> {
+    pub args: &'a mut LeafArgs,
+    pub creator_key: Pubkey,
+}
 
 pub type VerifyCreatorBuilder<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> = TxBuilder<
     'a,
     mpl_bubblegum::accounts::CreatorVerification,
     mpl_bubblegum::instruction::VerifyCreator,
-    (),
+    CreatorVerificationInner<'a>,
     MAX_DEPTH,
     MAX_BUFFER_SIZE,
 >;
+
+impl<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExec
+    for VerifyCreatorBuilder<'a, MAX_DEPTH, MAX_BUFFER_SIZE>
+{
+    fn on_successful_execute(&mut self) -> Result<()> {
+        for creator in self.inner.args.metadata.creators.iter_mut() {
+            if creator.address == self.inner.creator_key {
+                creator.verified = true;
+                break;
+            }
+        }
+        self.tree.leaf_changed(self.inner.args)
+    }
+}
 
 pub type UnverifyCreatorBuilder<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> =
     TxBuilder<
         'a,
         mpl_bubblegum::accounts::CreatorVerification,
         mpl_bubblegum::instruction::UnverifyCreator,
-        (),
+        CreatorVerificationInner<'a>,
         MAX_DEPTH,
         MAX_BUFFER_SIZE,
     >;
+
+impl<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExec
+    for UnverifyCreatorBuilder<'a, MAX_DEPTH, MAX_BUFFER_SIZE>
+{
+    fn on_successful_execute(&mut self) -> Result<()> {
+        for creator in self.inner.args.metadata.creators.iter_mut() {
+            if creator.address == self.inner.creator_key {
+                creator.verified = false;
+                break;
+            }
+        }
+        self.tree.leaf_changed(self.inner.args)
+    }
+}

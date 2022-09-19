@@ -4,7 +4,6 @@ use solana_program_test::tokio;
 use solana_sdk::signature::{Keypair, Signer};
 
 use utils::{
-    clone_keypair,
     context::{BubblegumTestContext, DEFAULT_LAMPORTS_FUND_AMOUNT},
     tree::Tree,
     LeafArgs, Result,
@@ -53,24 +52,13 @@ async fn test_create_tree_and_mint_passes() {
 async fn test_creator_verify_and_unverify_passes() {
     let (context, tree, mut leaf) = context_tree_and_leaf().await.unwrap();
 
-    tree.verify_creator(&leaf, &context.default_creators[0])
+    tree.verify_creator(&mut leaf, &context.default_creators[0])
         .await
         .unwrap();
 
-    // Calling unverify now fails because the creator info in `args` has not been updated
-    // and the hashes will no longer match.
-    tree.unverify_creator(&leaf, &context.default_creators[0])
-        .await
-        .unwrap_err();
-
-    // Update args post verification.
-    leaf.metadata.creators[0].verified = true;
-
-    // Unverify works now.
-    tree.unverify_creator(&leaf, &context.default_creators[0])
+    tree.unverify_creator(&mut leaf, &context.default_creators[0])
         .await
         .unwrap();
-    leaf.metadata.creators[0].verified = false;
 }
 
 #[tokio::test]
@@ -78,9 +66,7 @@ async fn test_delegate_passes() {
     let (_, tree, mut leaf) = context_tree_and_leaf().await.unwrap();
     let new_delegate = Keypair::new();
 
-    tree.delegate(&leaf, new_delegate.pubkey()).await.unwrap();
-    // Reflect changes.
-    leaf.delegate = new_delegate;
+    tree.delegate(&mut leaf, &new_delegate).await.unwrap();
 }
 
 #[tokio::test]
@@ -93,10 +79,7 @@ async fn test_transfer_passes() {
         .await
         .unwrap();
 
-    tree.transfer(&leaf, new_owner.pubkey()).await.unwrap();
-    // Both owner and delegate change post transfer.
-    leaf.owner = clone_keypair(&new_owner);
-    leaf.delegate = new_owner;
+    tree.transfer(&mut leaf, &new_owner).await.unwrap();
 }
 
 #[tokio::test]
@@ -107,7 +90,7 @@ async fn test_burn_passes() {
 
 #[tokio::test]
 async fn test_set_tree_delegate_passes() {
-    let (_, mut tree, _) = context_tree_and_leaf().await.unwrap();
+    let (_, tree, _) = context_tree_and_leaf().await.unwrap();
     let new_tree_delegate = Keypair::new();
 
     tree.set_tree_delegate(&new_tree_delegate).await.unwrap();
