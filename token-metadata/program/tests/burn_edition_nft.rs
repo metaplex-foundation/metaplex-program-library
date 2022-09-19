@@ -443,6 +443,178 @@ mod burn_edition_nft {
     }
 
     #[tokio::test]
+    async fn invalid_master_edition() {
+        let mut context = program_test().start_with_context().await;
+
+        let original_nft = Metadata::new();
+        original_nft
+            .create_v2(
+                &mut context,
+                "Test".to_string(),
+                "TST".to_string(),
+                "uri".to_string(),
+                None,
+                10,
+                false,
+                None,
+                None,
+                None,
+            )
+            .await
+            .unwrap();
+
+        let master_edition = MasterEditionV2::new(&original_nft);
+        master_edition
+            .create_v3(&mut context, Some(10))
+            .await
+            .unwrap();
+
+        let print_edition = EditionMarker::new(&original_nft, &master_edition, 1);
+        print_edition.create(&mut context).await.unwrap();
+
+        let kpbytes = &context.payer;
+        let payer = Keypair::from_bytes(&kpbytes.to_bytes()).unwrap();
+
+        let err = burn_edition(
+            &mut context,
+            print_edition.new_metadata_pubkey,
+            &payer,
+            print_edition.mint.pubkey(),
+            original_nft.mint.pubkey(),
+            print_edition.token.pubkey(),
+            original_nft.token.pubkey(),
+            Pubkey::new_unique(),
+            print_edition.new_edition_pubkey,
+            print_edition.pubkey,
+        )
+        .await
+        .unwrap_err();
+
+        // The error will be IncorrectOwner since the random pubkey we generated is not a PDA owned
+        // by the token metadata program.
+        assert_custom_error!(err, MetadataError::IncorrectOwner);
+
+        // Create a second master edition to try to pass off as the correct one. It's owned by token metadata
+        // so will pass that check but will fail with IncorrectMasterEdition.
+
+        let original_nft = Metadata::new();
+        original_nft
+            .create_v2(
+                &mut context,
+                "Test".to_string(),
+                "TST".to_string(),
+                "uri".to_string(),
+                None,
+                10,
+                false,
+                None,
+                None,
+                None,
+            )
+            .await
+            .unwrap();
+
+        let incorrect_master_edition = MasterEditionV2::new(&original_nft);
+        incorrect_master_edition
+            .create_v3(&mut context, Some(10))
+            .await
+            .unwrap();
+
+        let err = burn_edition(
+            &mut context,
+            print_edition.new_metadata_pubkey,
+            &payer,
+            print_edition.mint.pubkey(),
+            original_nft.mint.pubkey(),
+            print_edition.token.pubkey(),
+            original_nft.token.pubkey(),
+            incorrect_master_edition.pubkey,
+            print_edition.new_edition_pubkey,
+            print_edition.pubkey,
+        )
+        .await
+        .unwrap_err();
+
+        assert_custom_error!(err, MetadataError::InvalidMasterEdition);
+    }
+
+    #[tokio::test]
+    pub async fn invalid_print_edition() {
+        let mut context = program_test().start_with_context().await;
+
+        let original_nft = Metadata::new();
+        original_nft
+            .create_v2(
+                &mut context,
+                "Test".to_string(),
+                "TST".to_string(),
+                "uri".to_string(),
+                None,
+                10,
+                false,
+                None,
+                None,
+                None,
+            )
+            .await
+            .unwrap();
+
+        let master_edition = MasterEditionV2::new(&original_nft);
+        master_edition
+            .create_v3(&mut context, Some(10))
+            .await
+            .unwrap();
+
+        let print_edition = EditionMarker::new(&original_nft, &master_edition, 1);
+        print_edition.create(&mut context).await.unwrap();
+
+        let kpbytes = &context.payer;
+        let payer = Keypair::from_bytes(&kpbytes.to_bytes()).unwrap();
+
+        let err = burn_edition(
+            &mut context,
+            print_edition.new_metadata_pubkey,
+            &payer,
+            print_edition.mint.pubkey(),
+            original_nft.mint.pubkey(),
+            print_edition.token.pubkey(),
+            original_nft.token.pubkey(),
+            master_edition.pubkey,
+            Pubkey::new_unique(),
+            print_edition.pubkey,
+        )
+        .await
+        .unwrap_err();
+
+        // The error will be IncorrectOwner since the random pubkey we generated is not a PDA owned
+        // by the token metadata program.
+        assert_custom_error!(err, MetadataError::IncorrectOwner);
+
+        // Create a second print edition to try to pass off as the correct one. It's owned by token metadata
+        // so will pass that check but will fail with IncorrectPrintEdition.
+
+        let second_print_edition = EditionMarker::new(&original_nft, &master_edition, 2);
+        second_print_edition.create(&mut context).await.unwrap();
+
+        let err = burn_edition(
+            &mut context,
+            print_edition.new_metadata_pubkey,
+            &payer,
+            print_edition.mint.pubkey(),
+            original_nft.mint.pubkey(),
+            print_edition.token.pubkey(),
+            original_nft.token.pubkey(),
+            master_edition.pubkey,
+            second_print_edition.new_edition_pubkey,
+            print_edition.new_edition_pubkey,
+        )
+        .await
+        .unwrap_err();
+
+        assert_custom_error!(err, MetadataError::InvalidPrintEdition);
+    }
+
+    #[tokio::test]
     pub async fn invalid_edition_marker() {
         let mut context = program_test().start_with_context().await;
 
@@ -495,7 +667,7 @@ mod burn_edition_nft {
         assert_custom_error!(err, MetadataError::IncorrectOwner);
 
         // Create a second print edition to try to pass off as the edition marker. It's owned by token metadata
-        // so will pass that check but will fail with IncorrectEditonMarker.
+        // so will pass that check but will fail with IncorrectEditionMarker.
 
         let second_print_edition = EditionMarker::new(&original_nft, &master_edition, 2);
         second_print_edition.create(&mut context).await.unwrap();

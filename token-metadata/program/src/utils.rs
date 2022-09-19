@@ -519,7 +519,7 @@ pub fn calculate_supply_change<'a>(
         return Err(MetadataError::ReservationListDeprecated.into());
     }
 
-    // This function requires passing in the editon number.
+    // This function requires passing in the edition number.
     if edition_override.is_none() {
         return Err(MetadataError::EditionOverrideCannotBeZero.into());
     }
@@ -532,8 +532,9 @@ pub fn calculate_supply_change<'a>(
 
     let max_supply = get_max_supply_off_master_edition(master_edition_account_info)?;
 
-    // Instead of using edition override to set the supply to the highest edition number minted,
-    // we increment this by one if the edition number is less than the max supply.
+    // Previously, the code used edition override to set the supply to the highest edition number minted,
+    // instead of properly tracking the supply.
+    // Now, we increment this by one if the edition number is less than the max supply.
     // This allows users to mint out missing edition numbers that are less than the supply, but
     // tracks the supply correctly once all missing editions are minted.
     let new_supply = if let Some(max_supply) = max_supply {

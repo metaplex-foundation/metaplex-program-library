@@ -462,15 +462,23 @@ pub enum MetadataError {
     NotAPrintEdition,
 
     /// 117 - Invalid Edition Marker
+    #[error("Invalid Master Edition")]
+    InvalidMasterEdition,
+
+    /// 118 - Invalid Edition Marker
+    #[error("Invalid Print Edition")]
+    InvalidPrintEdition,
+
+    /// 119 - Invalid Edition Marker
     #[error("Invalid Edition Marker")]
     InvalidEditionMarker,
 
-    /// 118 - Reservation List is Deprecated
+    /// 120 - Reservation List is Deprecated
     #[error("Reservation List is Deprecated")]
     ReservationListDeprecated,
 
-    /// 119 - Print Edition doesn't match Master Edition
-    #[error("Print Edition doesn't match Master Edition")]
+    /// 121 - Print Edition doesn't match Master Edition
+    #[error("Print Edition does not match Master Edition")]
     PrintEditionDoesntMatchMasterEdition,
 }
 

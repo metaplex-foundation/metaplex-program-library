@@ -1886,7 +1886,7 @@ pub fn process_burn_edition_nft(program_id: &Pubkey, accounts: &[AccountInfo]) -
         return Err(MetadataError::NotAPrintEdition.into());
     }
 
-    let metadata: Metadata = Metadata::from_account_info(metadata_info)?;
+    let metadata = Metadata::from_account_info(metadata_info)?;
 
     // Checks:
     // * Metadata is owned by the token-metadata program
@@ -1936,7 +1936,8 @@ pub fn process_burn_edition_nft(program_id: &Pubkey, accounts: &[AccountInfo]) -
         master_edition_mint_info.key.as_ref(),
         EDITION.as_bytes(),
     ]);
-    assert_derivation(program_id, master_edition_info, &master_edition_info_path)?;
+    assert_derivation(program_id, master_edition_info, &master_edition_info_path)
+        .map_err(|_| MetadataError::InvalidMasterEdition)?;
 
     let print_edition_info_path = Vec::from([
         PREFIX.as_bytes(),
@@ -1944,9 +1945,10 @@ pub fn process_burn_edition_nft(program_id: &Pubkey, accounts: &[AccountInfo]) -
         print_edition_mint_info.key.as_ref(),
         EDITION.as_bytes(),
     ]);
-    assert_derivation(program_id, print_edition_info, &print_edition_info_path)?;
+    assert_derivation(program_id, print_edition_info, &print_edition_info_path)
+        .map_err(|_| MetadataError::InvalidPrintEdition)?;
 
-    let print_edition: Edition = Edition::from_account_info(print_edition_info)?;
+    let print_edition = Edition::from_account_info(print_edition_info)?;
 
     // Print Edition actually belongs to the master edition.
     if print_edition.parent != *master_edition_info.key {
