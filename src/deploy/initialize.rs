@@ -12,13 +12,14 @@ use mpl_candy_machine::{
 pub use mpl_token_metadata::state::{
     MAX_CREATOR_LIMIT, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH,
 };
-use solana_program::{native_token::LAMPORTS_PER_SOL, program_pack::Pack};
+use solana_program::native_token::LAMPORTS_PER_SOL;
 
 use crate::{
     candy_machine::{parse_config_price, CANDY_MACHINE_ID},
     common::*,
     config::data::*,
     deploy::errors::*,
+    utils::get_mint_decimals,
 };
 
 /// Create the candy machine data struct.
@@ -36,14 +37,8 @@ pub fn create_candy_machine_data(
         None
     };
 
-    // If SPL token is used, get the decimals from the token account, otherwise use 9 for SOL.
-    let decimals = if let Some(token_account) = &config.spl_token {
-        let token_account = program.rpc().get_account(token_account)?;
-        let token_account = spl_token::state::Mint::unpack(&token_account.data)?;
-        token_account.decimals
-    } else {
-        9
-    };
+    // If SPL token is used, get the decimals from the token mint account, otherwise use 9 for SOL.
+    let decimals = get_mint_decimals(&program, config)?;
 
     let whitelist_mint_settings = config
         .whitelist_mint_settings
