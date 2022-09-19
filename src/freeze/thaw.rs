@@ -179,8 +179,14 @@ pub async fn process_thaw(args: ThawArgs) -> Result<()> {
     let rpc_url = get_rpc_url(args.rpc_url);
     let client = RpcClient::new(&rpc_url);
 
+    let solana_cluster = if rpc_url.ends_with("8899") {
+        Cluster::Localnet
+    } else {
+        solana_cluster
+    };
+
     let mint_pubkeys = match solana_cluster {
-        Cluster::Devnet => {
+        Cluster::Devnet | Cluster::Localnet => {
             let (creator, _) = find_candy_machine_creator_pda(&candy_pubkey);
             let creator = bs58::encode(creator).into_string();
             get_cm_creator_mint_accounts(&client, &creator, 0)?
