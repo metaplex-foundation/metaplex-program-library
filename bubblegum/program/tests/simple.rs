@@ -6,11 +6,12 @@ use solana_sdk::signature::{Keypair, Signer};
 use utils::{
     clone_keypair,
     context::{BubblegumTestContext, DEFAULT_LAMPORTS_FUND_AMOUNT},
-    LeafArgs, Result, Tree,
+    tree::Tree,
+    LeafArgs, Result,
 };
 
 // Test for multiple combinations?
-const MAX_DEPTH: usize = 20;
+const MAX_DEPTH: usize = 14;
 const MAX_BUF_SIZE: usize = 64;
 
 // TODO: test signer conditions on mint_authority and other stuff that's manually checked
@@ -37,7 +38,15 @@ async fn context_tree_and_leaf() -> Result<(
 
 #[tokio::test]
 async fn test_create_tree_and_mint_passes() {
-    context_tree_and_leaf().await.unwrap();
+    let (context, tree, _) = context_tree_and_leaf().await.unwrap();
+
+    let payer = context.payer();
+
+    let cfg = tree.read_tree_config().await.unwrap();
+    assert_eq!(cfg.tree_creator, payer.pubkey());
+    assert_eq!(cfg.tree_delegate, payer.pubkey());
+    assert_eq!(cfg.total_mint_capacity, 1 << MAX_DEPTH);
+    assert_eq!(cfg.num_minted, 1);
 }
 
 #[tokio::test]
@@ -47,9 +56,17 @@ async fn test_creator_verify_and_unverify_passes() {
     tree.verify_creator(&leaf, &context.default_creators[0])
         .await
         .unwrap();
-    // Reflect change.
+
+    // Calling unverify now fails because the creator info in `args` has not been updated
+    // and the hashes will no longer match.
+    tree.unverify_creator(&leaf, &context.default_creators[0])
+        .await
+        .unwrap_err();
+
+    // Update args post verification.
     leaf.metadata.creators[0].verified = true;
 
+    // Unverify works now.
     tree.unverify_creator(&leaf, &context.default_creators[0])
         .await
         .unwrap();

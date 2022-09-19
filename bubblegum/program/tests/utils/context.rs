@@ -9,7 +9,7 @@ use solana_sdk::{
     transaction::Transaction,
 };
 
-use super::{clone_keypair, program_test, Error, LeafArgs, Result, Tree};
+use super::{clone_keypair, program_test, tree::Tree, Error, LeafArgs, Result};
 
 pub struct BubblegumTestContext {
     program_context: ProgramTestContext,
