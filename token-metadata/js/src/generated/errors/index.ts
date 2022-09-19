@@ -2523,13 +2523,53 @@ createErrorFromCodeLookup.set(0x74, () => new NotAPrintEditionError());
 createErrorFromNameLookup.set('NotAPrintEdition', () => new NotAPrintEditionError());
 
 /**
+ * InvalidMasterEdition: 'Invalid Master Edition'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidMasterEditionError extends Error {
+  readonly code: number = 0x75;
+  readonly name: string = 'InvalidMasterEdition';
+  constructor() {
+    super('Invalid Master Edition');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidMasterEditionError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x75, () => new InvalidMasterEditionError());
+createErrorFromNameLookup.set('InvalidMasterEdition', () => new InvalidMasterEditionError());
+
+/**
+ * InvalidPrintEdition: 'Invalid Print Edition'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidPrintEditionError extends Error {
+  readonly code: number = 0x76;
+  readonly name: string = 'InvalidPrintEdition';
+  constructor() {
+    super('Invalid Print Edition');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidPrintEditionError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x76, () => new InvalidPrintEditionError());
+createErrorFromNameLookup.set('InvalidPrintEdition', () => new InvalidPrintEditionError());
+
+/**
  * InvalidEditionMarker: 'Invalid Edition Marker'
  *
  * @category Errors
  * @category generated
  */
 export class InvalidEditionMarkerError extends Error {
-  readonly code: number = 0x75;
+  readonly code: number = 0x77;
   readonly name: string = 'InvalidEditionMarker';
   constructor() {
     super('Invalid Edition Marker');
@@ -2539,7 +2579,7 @@ export class InvalidEditionMarkerError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x75, () => new InvalidEditionMarkerError());
+createErrorFromCodeLookup.set(0x77, () => new InvalidEditionMarkerError());
 createErrorFromNameLookup.set('InvalidEditionMarker', () => new InvalidEditionMarkerError());
 
 /**
@@ -2549,7 +2589,7 @@ createErrorFromNameLookup.set('InvalidEditionMarker', () => new InvalidEditionMa
  * @category generated
  */
 export class ReservationListDeprecatedError extends Error {
-  readonly code: number = 0x76;
+  readonly code: number = 0x78;
   readonly name: string = 'ReservationListDeprecated';
   constructor() {
     super('Reservation List is Deprecated');
@@ -2559,33 +2599,33 @@ export class ReservationListDeprecatedError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x76, () => new ReservationListDeprecatedError());
+createErrorFromCodeLookup.set(0x78, () => new ReservationListDeprecatedError());
 createErrorFromNameLookup.set(
   'ReservationListDeprecated',
   () => new ReservationListDeprecatedError(),
 );
 
 /**
- * PrintEditionDoesntMatchMasterEdition: 'Print Edition doesn't match Master Edition'
+ * PrintEditionDoesNotMatchMasterEdition: 'Print Edition does not match Master Edition'
  *
  * @category Errors
  * @category generated
  */
-export class PrintEditionDoesntMatchMasterEditionError extends Error {
-  readonly code: number = 0x77;
-  readonly name: string = 'PrintEditionDoesntMatchMasterEdition';
+export class PrintEditionDoesNotMatchMasterEditionError extends Error {
+  readonly code: number = 0x79;
+  readonly name: string = 'PrintEditionDoesNotMatchMasterEdition';
   constructor() {
-    super("Print Edition doesn't match Master Edition");
+    super('Print Edition does not match Master Edition');
     if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, PrintEditionDoesntMatchMasterEditionError);
+      Error.captureStackTrace(this, PrintEditionDoesNotMatchMasterEditionError);
     }
   }
 }
 
-createErrorFromCodeLookup.set(0x77, () => new PrintEditionDoesntMatchMasterEditionError());
+createErrorFromCodeLookup.set(0x79, () => new PrintEditionDoesNotMatchMasterEditionError());
 createErrorFromNameLookup.set(
-  'PrintEditionDoesntMatchMasterEdition',
-  () => new PrintEditionDoesntMatchMasterEditionError(),
+  'PrintEditionDoesNotMatchMasterEdition',
+  () => new PrintEditionDoesNotMatchMasterEditionError(),
 );
 
 /**

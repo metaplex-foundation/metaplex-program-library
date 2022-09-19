@@ -3505,18 +3505,28 @@
     },
     {
       "code": 117,
+      "name": "InvalidMasterEdition",
+      "msg": "Invalid Master Edition"
+    },
+    {
+      "code": 118,
+      "name": "InvalidPrintEdition",
+      "msg": "Invalid Print Edition"
+    },
+    {
+      "code": 119,
       "name": "InvalidEditionMarker",
       "msg": "Invalid Edition Marker"
     },
     {
-      "code": 118,
+      "code": 120,
       "name": "ReservationListDeprecated",
       "msg": "Reservation List is Deprecated"
     },
     {
-      "code": 119,
-      "name": "PrintEditionDoesntMatchMasterEdition",
-      "msg": "Print Edition doesn't match Master Edition"
+      "code": 121,
+      "name": "PrintEditionDoesNotMatchMasterEdition",
+      "msg": "Print Edition does not match Master Edition"
     }
   ],
   "metadata": {
