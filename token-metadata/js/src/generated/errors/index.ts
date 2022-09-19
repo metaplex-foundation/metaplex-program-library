@@ -2440,7 +2440,7 @@ createErrorFromNameLookup.set(
 );
 
 /**
- * CollectionMasterEditionAccountInvalid: 'Edition account aoesnt match collection '
+ * CollectionMasterEditionAccountInvalid: 'Edition account doesnt match collection '
  *
  * @category Errors
  * @category generated
@@ -2449,7 +2449,7 @@ export class CollectionMasterEditionAccountInvalidError extends Error {
   readonly code: number = 0x71;
   readonly name: string = 'CollectionMasterEditionAccountInvalid';
   constructor() {
-    super('Edition account aoesnt match collection ');
+    super('Edition account doesnt match collection ');
     if (typeof Error.captureStackTrace === 'function') {
       Error.captureStackTrace(this, CollectionMasterEditionAccountInvalidError);
     }
@@ -2501,6 +2501,132 @@ export class AlreadyUnverifiedError extends Error {
 
 createErrorFromCodeLookup.set(0x73, () => new AlreadyUnverifiedError());
 createErrorFromNameLookup.set('AlreadyUnverified', () => new AlreadyUnverifiedError());
+
+/**
+ * NotAPrintEdition: 'This edition is not a Print Edition'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class NotAPrintEditionError extends Error {
+  readonly code: number = 0x74;
+  readonly name: string = 'NotAPrintEdition';
+  constructor() {
+    super('This edition is not a Print Edition');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, NotAPrintEditionError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x74, () => new NotAPrintEditionError());
+createErrorFromNameLookup.set('NotAPrintEdition', () => new NotAPrintEditionError());
+
+/**
+ * InvalidMasterEdition: 'Invalid Master Edition'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidMasterEditionError extends Error {
+  readonly code: number = 0x75;
+  readonly name: string = 'InvalidMasterEdition';
+  constructor() {
+    super('Invalid Master Edition');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidMasterEditionError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x75, () => new InvalidMasterEditionError());
+createErrorFromNameLookup.set('InvalidMasterEdition', () => new InvalidMasterEditionError());
+
+/**
+ * InvalidPrintEdition: 'Invalid Print Edition'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidPrintEditionError extends Error {
+  readonly code: number = 0x76;
+  readonly name: string = 'InvalidPrintEdition';
+  constructor() {
+    super('Invalid Print Edition');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidPrintEditionError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x76, () => new InvalidPrintEditionError());
+createErrorFromNameLookup.set('InvalidPrintEdition', () => new InvalidPrintEditionError());
+
+/**
+ * InvalidEditionMarker: 'Invalid Edition Marker'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidEditionMarkerError extends Error {
+  readonly code: number = 0x77;
+  readonly name: string = 'InvalidEditionMarker';
+  constructor() {
+    super('Invalid Edition Marker');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidEditionMarkerError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x77, () => new InvalidEditionMarkerError());
+createErrorFromNameLookup.set('InvalidEditionMarker', () => new InvalidEditionMarkerError());
+
+/**
+ * ReservationListDeprecated: 'Reservation List is Deprecated'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class ReservationListDeprecatedError extends Error {
+  readonly code: number = 0x78;
+  readonly name: string = 'ReservationListDeprecated';
+  constructor() {
+    super('Reservation List is Deprecated');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, ReservationListDeprecatedError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x78, () => new ReservationListDeprecatedError());
+createErrorFromNameLookup.set(
+  'ReservationListDeprecated',
+  () => new ReservationListDeprecatedError(),
+);
+
+/**
+ * PrintEditionDoesNotMatchMasterEdition: 'Print Edition does not match Master Edition'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class PrintEditionDoesNotMatchMasterEditionError extends Error {
+  readonly code: number = 0x79;
+  readonly name: string = 'PrintEditionDoesNotMatchMasterEdition';
+  constructor() {
+    super('Print Edition does not match Master Edition');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, PrintEditionDoesNotMatchMasterEditionError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x79, () => new PrintEditionDoesNotMatchMasterEditionError());
+createErrorFromNameLookup.set(
+  'PrintEditionDoesNotMatchMasterEdition',
+  () => new PrintEditionDoesNotMatchMasterEditionError(),
+);
 
 /**
  * Attempts to resolve a custom program error from the provided error code.

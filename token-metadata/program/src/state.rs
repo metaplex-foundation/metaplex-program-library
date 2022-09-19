@@ -97,6 +97,10 @@ pub trait TokenMetadataAccount: BorshDeserialize {
     fn size() -> usize;
 
     fn is_correct_account_type(data: &[u8], data_type: Key, data_size: usize) -> bool {
+        if data.len() == 0 {
+            return false;
+        }
+
         let key: Option<Key> = Key::from_u8(data[0]);
         match key {
             Some(key) => {
@@ -901,7 +905,7 @@ impl EditionMarker {
             .ok_or(MetadataError::NumericalOverflowError)? as u32)
     }
 
-    fn get_index_and_mask(edition: u64) -> Result<(usize, u8), ProgramError> {
+    pub fn get_index_and_mask(edition: u64) -> Result<(usize, u8), ProgramError> {
         // How many editions off we are from edition at 0th index
         let offset_from_start = EditionMarker::get_edition_offset_from_starting_index(edition)?;
 
