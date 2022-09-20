@@ -33,6 +33,12 @@ pub struct TxBuilder<'a, T, U, V, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE:
     // signers for now; can make this more generic if needed.
     pub signers: Vec<Keypair>,
     pub tree: &'a Tree<MAX_DEPTH, MAX_BUFFER_SIZE>,
+    // When some, indicates that a proof for the specified leaf index should
+    // be computed from the inner tree and attached in the form of additional
+    // accounts (but only if `self.additional_accounts.len() == 0`, so we
+    // dont override a sequence of additional accounts explicitly set for
+    // testing purposes).
+    pub need_proof: Option<u32>,
     // This member holds data of a custom type that can be specific to each kind
     // of transaction.
     pub inner: V,
@@ -64,8 +70,17 @@ where
 
         let mut ix = instruction(&self.accounts, &self.data);
 
-        // Add the additional accounts metas (if any) as well.
-        ix.accounts.append(&mut self.additional_accounts.clone());
+        if self.additional_accounts.is_empty() {
+            // We're only automatically adding the proof if there are no additional
+            // accounts explicitly configured.
+            if let Some(leaf_idx) = self.need_proof {
+                ix.accounts
+                    .append(&mut self.tree.proof_of_leaf_metas(leaf_idx))
+            }
+        } else {
+            // Add the additional accounts metas (if any).
+            ix.accounts.append(&mut self.additional_accounts.clone());
+        }
 
         let mut tx = Transaction::new_with_payer(&[ix], Some(&self.payer));
 

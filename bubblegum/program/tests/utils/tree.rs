@@ -1,11 +1,14 @@
-use anchor_lang::{self, AccountDeserialize, Key};
+use anchor_lang::{self, AccountDeserialize};
 use bytemuck::try_from_bytes;
 use mpl_bubblegum::{
     state::{leaf_schema::LeafSchema, TreeConfig},
     utils::get_asset_id,
 };
 use solana_program::{
-    instruction::Instruction, pubkey::Pubkey, rent::Rent, system_instruction, system_program,
+    instruction::{AccountMeta, Instruction},
+    pubkey::Pubkey,
+    rent::Rent,
+    system_instruction, system_program,
 };
 use solana_program_test::BanksClient;
 use solana_sdk::{
@@ -17,11 +20,11 @@ use solana_sdk::{
 use spl_account_compression::state::ConcurrentMerkleTreeHeader;
 use spl_concurrent_merkle_tree::concurrent_merkle_tree::ConcurrentMerkleTree;
 use spl_merkle_tree_reference::{MerkleTree, Node};
-use std::ops::Deref;
 use std::{
     cell::{RefCell, RefMut},
     convert::TryFrom,
     mem::size_of,
+    ops::Deref,
 };
 
 use super::{
@@ -104,14 +107,6 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
         Pubkey::find_program_address(&[self.tree_pubkey().as_ref()], &mpl_bubblegum::id()).0
     }
 
-    pub fn mint_authority_request(&self, authority: &Pubkey) -> Pubkey {
-        Pubkey::find_program_address(
-            &[self.tree_pubkey().as_ref(), authority.as_ref()],
-            &mpl_bubblegum::id(),
-        )
-        .0
-    }
-
     pub fn merkle_tree_account_size(&self) -> usize {
         size_of::<ConcurrentMerkleTreeHeader>()
             + size_of::<ConcurrentMerkleTree<MAX_DEPTH, MAX_BUFFER_SIZE>>()
@@ -177,6 +172,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
         &self,
         accounts: T,
         data: U,
+        need_proof: Option<u32>,
         inner: V,
         payer: Pubkey,
         default_signers: &[&Keypair],
@@ -191,6 +187,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             client: self.client.clone(),
             signers: def_signers,
             tree: self,
+            need_proof,
             inner,
         }
     }
@@ -218,7 +215,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             max_buffer_size: u32::try_from(MAX_BUFFER_SIZE).unwrap(),
         };
 
-        self.tx_builder(accounts, data, (), payer.pubkey(), &[payer])
+        self.tx_builder(accounts, data, None, (), payer.pubkey(), &[payer])
     }
 
     // Shorthand method for executing a create tree tx with the default config
@@ -252,6 +249,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
         self.tx_builder(
             accounts,
             data,
+            None,
             args,
             owner.pubkey(),
             &[tree_delegate, &owner],
@@ -307,7 +305,16 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             index: args.index,
         };
 
-        Ok(self.tx_builder(accounts, data, args, args.owner.pubkey(), &[&args.owner]))
+        let need_proof = Some(args.index);
+
+        Ok(self.tx_builder(
+            accounts,
+            data,
+            need_proof,
+            args,
+            args.owner.pubkey(),
+            &[&args.owner],
+        ))
     }
 
     pub async fn burn(&self, args: &LeafArgs) -> Result<()> {
@@ -342,12 +349,21 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             message: args.metadata.clone(),
         };
 
+        let need_proof = Some(args.index);
+
         let inner = CreatorVerificationInner {
             args,
             creator_key: creator.pubkey(),
         };
 
-        Ok(self.tx_builder(accounts, data, inner, creator.pubkey(), &[creator]))
+        Ok(self.tx_builder(
+            accounts,
+            data,
+            need_proof,
+            inner,
+            creator.pubkey(),
+            &[creator],
+        ))
     }
 
     pub async fn verify_creator(&self, args: &mut LeafArgs, creator: &Keypair) -> Result<()> {
@@ -382,12 +398,21 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             message: args.metadata.clone(),
         };
 
+        let need_proof = Some(args.index);
+
         let inner = CreatorVerificationInner {
             args,
             creator_key: creator.pubkey(),
         };
 
-        Ok(self.tx_builder(accounts, data, inner, creator.pubkey(), &[creator]))
+        Ok(self.tx_builder(
+            accounts,
+            data,
+            need_proof,
+            inner,
+            creator.pubkey(),
+            &[creator],
+        ))
     }
 
     pub async fn unverify_creator(&self, args: &mut LeafArgs, creator: &Keypair) -> Result<()> {
@@ -428,9 +453,10 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
         let owner = clone_keypair(&args.owner);
         let new_owner = clone_keypair(new_leaf_owner);
 
+        let need_proof = Some(args.index);
         let inner = TransferInner { args, new_owner };
 
-        Ok(self.tx_builder(accounts, data, inner, owner.pubkey(), &[&owner]))
+        Ok(self.tx_builder(accounts, data, need_proof, inner, owner.pubkey(), &[&owner]))
     }
 
     pub async fn transfer(&self, args: &mut LeafArgs, new_owner: &Keypair) -> Result<()> {
@@ -464,12 +490,13 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
         };
 
         let owner = clone_keypair(&args.owner);
+        let need_proof = Some(args.index);
         let inner = DelegateInner {
             args,
             new_delegate: clone_keypair(new_leaf_delegate),
         };
 
-        Ok(self.tx_builder(accounts, data, inner, owner.pubkey(), &[&owner]))
+        Ok(self.tx_builder(accounts, data, need_proof, inner, owner.pubkey(), &[&owner]))
     }
 
     // Does the prev delegate need to sign as well?
@@ -493,6 +520,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
         self.tx_builder(
             accounts,
             data,
+            None,
             clone_keypair(new_tree_delegate),
             self.creator_pubkey(),
             &[&self.tree_creator],
@@ -564,6 +592,8 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
         Ok(())
     }
 
+    // Updates the inner `MerkleTree` with the fact that we zeroed the leaf present
+    // at the given index.
     pub fn leaf_zeroed(&self, index: u32) -> Result<()> {
         let node = [0u8; 32];
         // The conversion below should never fail.
@@ -571,5 +601,23 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             .borrow_mut()
             .add_leaf(node, usize::try_from(index).unwrap());
         Ok(())
+    }
+
+    // Using `u32` for the idx because that's the datatype chosen for the index upstream
+    // for some reason.
+    pub fn proof_of_leaf(&self, index: u32) -> Vec<Node> {
+        // The conversion below should not fail.
+        self.proof_tree
+            .borrow()
+            .get_proof_of_leaf(usize::try_from(index).unwrap())
+    }
+
+    // Useful when adding proofs as additional accounts to an instruction.
+    pub fn proof_of_leaf_metas(&self, index: u32) -> Vec<AccountMeta> {
+        let nodes = self.proof_of_leaf(index);
+        nodes
+            .into_iter()
+            .map(|node| AccountMeta::new_readonly(Pubkey::new_from_array(node), false))
+            .collect()
     }
 }
