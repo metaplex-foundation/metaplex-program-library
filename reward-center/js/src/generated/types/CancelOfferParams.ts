@@ -6,7 +6,7 @@
  */
 
 import * as beet from '@metaplex-foundation/beet';
-export type CloseOfferParams = {
+export type CancelOfferParams = {
   tradeStateBump: number;
   escrowPaymentBump: number;
   buyerPrice: beet.bignum;
@@ -17,12 +17,12 @@ export type CloseOfferParams = {
  * @category userTypes
  * @category generated
  */
-export const closeOfferParamsBeet = new beet.BeetArgsStruct<CloseOfferParams>(
+export const cancelOfferParamsBeet = new beet.BeetArgsStruct<CancelOfferParams>(
   [
     ['tradeStateBump', beet.u8],
     ['escrowPaymentBump', beet.u8],
     ['buyerPrice', beet.u64],
     ['tokenSize', beet.u64],
   ],
-  'CloseOfferParams',
+  'CancelOfferParams',
 );

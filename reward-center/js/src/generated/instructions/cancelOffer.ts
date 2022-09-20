@@ -8,34 +8,34 @@
 import * as splToken from '@solana/spl-token';
 import * as beet from '@metaplex-foundation/beet';
 import * as web3 from '@solana/web3.js';
-import { CloseOfferParams, closeOfferParamsBeet } from '../types/CloseOfferParams';
+import { CancelOfferParams, cancelOfferParamsBeet } from '../types/CancelOfferParams';
 
 /**
  * @category Instructions
- * @category CloseOffer
+ * @category CancelOffer
  * @category generated
  */
-export type CloseOfferInstructionArgs = {
-  closeOfferParams: CloseOfferParams;
+export type CancelOfferInstructionArgs = {
+  cancelOfferParams: CancelOfferParams;
 };
 /**
  * @category Instructions
- * @category CloseOffer
+ * @category CancelOffer
  * @category generated
  */
-const closeOfferStruct = new beet.BeetArgsStruct<
-  CloseOfferInstructionArgs & {
+const cancelOfferStruct = new beet.BeetArgsStruct<
+  CancelOfferInstructionArgs & {
     instructionDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
     ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
-    ['closeOfferParams', closeOfferParamsBeet],
+    ['cancelOfferParams', cancelOfferParamsBeet],
   ],
-  'CloseOfferInstructionArgs',
+  'CancelOfferInstructionArgs',
 );
 /**
- * Accounts required by the _closeOffer_ instruction
+ * Accounts required by the _cancelOffer_ instruction
  *
  * @property [_writable_, **signer**] wallet
  * @property [_writable_] offer
@@ -53,10 +53,10 @@ const closeOfferStruct = new beet.BeetArgsStruct<
  * @property [] ahAuctioneerPda
  * @property [] auctionHouseProgram
  * @category Instructions
- * @category CloseOffer
+ * @category CancelOffer
  * @category generated
  */
-export type CloseOfferInstructionAccounts = {
+export type CancelOfferInstructionAccounts = {
   wallet: web3.PublicKey;
   offer: web3.PublicKey;
   treasuryMint: web3.PublicKey;
@@ -74,21 +74,21 @@ export type CloseOfferInstructionAccounts = {
   auctionHouseProgram: web3.PublicKey;
 };
 
-const closeOfferInstructionDiscriminator = [191, 72, 67, 35, 239, 209, 97, 132];
+const cancelOfferInstructionDiscriminator = [92, 203, 223, 40, 92, 89, 53, 119];
 
 /**
- * Creates a _CloseOffer_ instruction.
+ * Creates a _CancelOffer_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
  * @param args to provide as instruction data to the program
  *
  * @category Instructions
- * @category CloseOffer
+ * @category CancelOffer
  * @category generated
  */
-export function createCloseOfferInstruction(
-  accounts: CloseOfferInstructionAccounts,
-  args: CloseOfferInstructionArgs,
+export function createCancelOfferInstruction(
+  accounts: CancelOfferInstructionAccounts,
+  args: CancelOfferInstructionArgs,
 ) {
   const {
     wallet,
@@ -108,8 +108,8 @@ export function createCloseOfferInstruction(
     auctionHouseProgram,
   } = accounts;
 
-  const [data] = closeOfferStruct.serialize({
-    instructionDiscriminator: closeOfferInstructionDiscriminator,
+  const [data] = cancelOfferStruct.serialize({
+    instructionDiscriminator: cancelOfferInstructionDiscriminator,
     ...args,
   });
   const keys: web3.AccountMeta[] = [

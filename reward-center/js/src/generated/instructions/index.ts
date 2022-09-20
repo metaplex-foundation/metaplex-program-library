@@ -1,5 +1,5 @@
 export * from './cancelListing';
-export * from './closeOffer';
+export * from './cancelOffer';
 export * from './createListing';
 export * from './createOffer';
 export * from './createRewardCenter';

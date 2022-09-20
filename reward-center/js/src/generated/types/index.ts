@@ -1,5 +1,5 @@
 export * from './CancelListingParams';
-export * from './CloseOfferParams';
+export * from './CancelOfferParams';
 export * from './CreateListingParams';
 export * from './CreateOfferParams';
 export * from './CreateRewardCenterParams';
