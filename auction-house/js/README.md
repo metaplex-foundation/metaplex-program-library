@@ -7,7 +7,7 @@ This package contains the auction house contract SDK code.
 In order to update the generated SDK when the rust contract was updated please run:
 
 ```
-yarn gen:api
+yarn api:gen
 ```
 
 NOTE: at this point this only generates the IDL json file but later will generate TypeScript
