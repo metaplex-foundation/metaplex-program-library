@@ -69,6 +69,7 @@ pub struct ExecuteSale<'info> {
             reward_center.key().as_ref(),
         ],
         bump,
+        constraint = listing.price == offer.price @ ListingRewardsError::PriceMismatch
     )]
     pub listing: Box<Account<'info, Listing>>,
 
@@ -314,12 +315,6 @@ pub fn handler(
     let auction_house_key = auction_house.key();
 
     let clock = Clock::get()?;
-
-    // Checking if price is equal
-    require!(
-        seller_listing.price == buyer_offer.price,
-        ListingRewardsError::PriceMismatch
-    );
 
     let reward_center_signer_seeds: &[&[&[u8]]] = &[&[
         REWARD_CENTER.as_bytes(),

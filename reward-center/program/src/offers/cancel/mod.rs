@@ -24,7 +24,7 @@ use crate::{
 use solana_program::program::invoke_signed;
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
-pub struct CloseOfferParams {
+pub struct CancelOfferParams {
     pub trade_state_bump: u8,
     pub escrow_payment_bump: u8,
     pub buyer_price: u64,
@@ -32,8 +32,8 @@ pub struct CloseOfferParams {
 }
 
 #[derive(Accounts, Clone)]
-#[instruction(close_offer_params: CloseOfferParams)]
-pub struct CloseOffer<'info> {
+#[instruction(cancel_offer_params: CancelOfferParams)]
+pub struct CancelOffer<'info> {
     /// User wallet account.
     #[account(mut)]
     pub wallet: Signer<'info>,
@@ -71,7 +71,7 @@ pub struct CloseOffer<'info> {
             wallet.key().as_ref()
         ],
         seeds::program = auction_house_program,
-        bump = close_offer_params.escrow_payment_bump
+        bump = cancel_offer_params.escrow_payment_bump
     )]
     pub escrow_payment_account: UncheckedAccount<'info>,
 
@@ -150,13 +150,13 @@ pub struct CloseOffer<'info> {
 }
 
 pub fn handler(
-    ctx: Context<CloseOffer>,
-    CloseOfferParams {
+    ctx: Context<CancelOffer>,
+    CancelOfferParams {
         buyer_price,
         token_size,
         escrow_payment_bump,
         ..
-    }: CloseOfferParams,
+    }: CancelOfferParams,
 ) -> Result<()> {
     let reward_center = &ctx.accounts.reward_center;
     let auction_house = &ctx.accounts.auction_house;
@@ -210,7 +210,7 @@ pub fn handler(
     )?;
 
     // Cancel (Close Offer) instruction via invoke_signed
-    let close_offer_ctx_accounts = AuctioneerCancel {
+    let cancel_offer_ctx_accounts = AuctioneerCancel {
         wallet: ctx.accounts.wallet.to_account_info(),
         token_account: ctx.accounts.token_account.to_account_info(),
         token_mint: ctx.accounts.token_mint.to_account_info(),
@@ -223,21 +223,21 @@ pub fn handler(
         token_program: ctx.accounts.token_program.to_account_info(),
     };
 
-    let close_offer_params = AuctioneerCancelParams {
+    let cancel_offer_params = AuctioneerCancelParams {
         buyer_price,
         token_size,
     };
 
-    let (close_offer_ix, close_offer_account_infos) =
+    let (cancel_offer_ix, cancel_offer_account_infos) =
         make_auctioneer_instruction(AuctioneerInstructionArgs {
-            accounts: close_offer_ctx_accounts,
-            instruction_data: close_offer_params.data(),
+            accounts: cancel_offer_ctx_accounts,
+            instruction_data: cancel_offer_params.data(),
             auctioneer_authority: ctx.accounts.reward_center.key(),
         });
 
     invoke_signed(
-        &close_offer_ix,
-        &close_offer_account_infos,
+        &cancel_offer_ix,
+        &cancel_offer_account_infos,
         reward_center_signer_seeds,
     )?;
 

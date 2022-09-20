@@ -56,7 +56,7 @@ pub struct UpdateOfferAccounts {
     pub auction_house: Pubkey,
 }
 
-pub struct CloseOfferAccounts {
+pub struct CancelOfferAccounts {
     pub wallet: Pubkey,
     pub receipt_account: Pubkey,
     pub treasury_mint: Pubkey,

@@ -25,7 +25,7 @@ pub struct UpdateOfferData {
     pub new_buyer_price: u64,
 }
 
-pub struct CloseOfferData {
+pub struct CancelOfferData {
     pub buyer_price: u64,
     pub token_size: u64,
 }

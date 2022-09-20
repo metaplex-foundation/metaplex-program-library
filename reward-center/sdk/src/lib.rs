@@ -17,7 +17,7 @@ use mpl_reward_center::{
         cancel::CancelListingParams, create::CreateListingParams, update::UpdateListingParams,
     },
     mut_reward_center::{create::CreateRewardCenterParams, edit::EditRewardCenterParams},
-    offers::{close::CloseOfferParams, create::CreateOfferParams, update::UpdateOfferParams},
+    offers::{close::CancelOfferParams, create::CreateOfferParams, update::UpdateOfferParams},
     pda::{
         self, find_listing_address, find_offer_address, find_purchase_ticket_address,
         find_reward_center_address,
@@ -376,8 +376,8 @@ pub fn update_offer(
     }
 }
 
-pub fn close_offer(
-    CloseOfferAccounts {
+pub fn cancel_offer(
+    CancelOfferAccounts {
         auction_house,
         authority,
         metadata,
@@ -387,11 +387,11 @@ pub fn close_offer(
         token_mint,
         treasury_mint,
         wallet,
-    }: CloseOfferAccounts,
-    CloseOfferData {
+    }: CancelOfferAccounts,
+    CancelOfferData {
         buyer_price,
         token_size,
-    }: CloseOfferData,
+    }: CancelOfferData,
 ) -> Instruction {
     let (auction_house_fee_account, _) =
         mpl_auction_house::pda::find_auction_house_fee_account_address(&auction_house);
@@ -411,7 +411,7 @@ pub fn close_offer(
 
     let (offer, _) = pda::find_offer_address(&wallet, &metadata, &reward_center);
 
-    let accounts = rewards_accounts::CloseOffer {
+    let accounts = rewards_accounts::CancelOffer {
         wallet,
         ah_auctioneer_pda,
         auction_house,
@@ -434,8 +434,8 @@ pub fn close_offer(
     }
     .to_account_metas(None);
 
-    let data = instruction::CloseOffer {
-        close_offer_params: CloseOfferParams {
+    let data = instruction::CancelOffer {
+        close_offer_params: CancelOfferParams {
             buyer_price,
             escrow_payment_bump,
             token_size,

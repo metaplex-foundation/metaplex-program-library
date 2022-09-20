@@ -15,7 +15,7 @@ use crate::{
     execute_sale::*,
     listings::{cancel::*, create::*, update::*},
     reward_centers::{create::*, edit::*},
-    offers::{close::*, create::*, update::*},
+    offers::{cancel::*, create::*, update::*},
 };
 
 declare_id!("rwdLstiU8aJU1DPdoPtocaNKApMhCFdCg283hz8dd3u");
@@ -73,11 +73,11 @@ pub mod reward_center {
         offers::update::handler(ctx, update_offer_params)
     }
 
-    pub fn close_offer(
-        ctx: Context<CloseOffer>,
-        close_offer_params: CloseOfferParams,
+    pub fn cancel_offer(
+        ctx: Context<CancelOffer>,
+        cancel_offer_params: CancelOfferParams,
     ) -> Result<()> {
-        offers::close::handler(ctx, close_offer_params)
+        offers::cancel::handler(ctx, cancel_offer_params)
     }
 
     pub fn execute_sale(

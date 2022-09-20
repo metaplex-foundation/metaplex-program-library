@@ -18,8 +18,8 @@ use mpl_reward_center::{
 use reward_center_test::fixtures::metadata;
 
 use mpl_reward_center_sdk::{
-    accounts::{CloseOfferAccounts, *},
-    args::{CloseOfferData, *},
+    accounts::{CancelOfferAccounts, *},
+    args::{CancelOfferData, *},
     *,
 };
 
@@ -38,7 +38,7 @@ use spl_token::{
 };
 
 #[tokio::test]
-async fn close_offer_success() {
+async fn cancel_offer_success() {
     let program = reward_center_test::setup_program();
     let mut context = program.start_with_context().await;
     let rent = context.banks_client.get_rent().await.unwrap();
@@ -297,9 +297,9 @@ async fn close_offer_success() {
 
     assert!(tx_response.is_ok());
 
-    // CLOSE OFFER TEST
+    // CANCEL OFFER TEST
 
-    let close_offer_accounts = CloseOfferAccounts {
+    let cancel_offer_accounts = CancelOfferAccounts {
         wallet: *buyer_pubkey,
         treasury_mint: mint,
         token_mint: metadata_mint_address,
@@ -311,15 +311,15 @@ async fn close_offer_success() {
         reward_center,
     };
 
-    let close_offer_params = CloseOfferData {
+    let cancel_offer_params = CancelOfferData {
         token_size: 1,
         buyer_price: reward_center_test::ONE_SOL,
     };
 
-    let close_offer_ix = close_offer(close_offer_accounts, close_offer_params);
+    let cancel_offer_ix = cancel_offer(cancel_offer_accounts, cancel_offer_params);
 
     let tx = Transaction::new_signed_with_payer(
-        &[close_offer_ix],
+        &[cancel_offer_ix],
         Some(buyer_pubkey),
         &[&buyer],
         context.last_blockhash,

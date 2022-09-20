@@ -58,7 +58,8 @@
             "defined": "CreateRewardCenterParams"
           }
         }
-      ]
+      ],
+      "returns": null
     },
     {
       "name": "editRewardCenter",
@@ -86,7 +87,8 @@
             "defined": "EditRewardCenterParams"
           }
         }
-      ]
+      ],
+      "returns": null
     },
     {
       "name": "createListing",
@@ -179,7 +181,8 @@
             "defined": "CreateListingParams"
           }
         }
-      ]
+      ],
+      "returns": null
     },
     {
       "name": "updateListing",
@@ -227,7 +230,8 @@
             "defined": "UpdateListingParams"
           }
         }
-      ]
+      ],
+      "returns": null
     },
     {
       "name": "cancelListing",
@@ -305,7 +309,8 @@
             "defined": "CancelListingParams"
           }
         }
-      ]
+      ],
+      "returns": null
     },
     {
       "name": "createOffer",
@@ -408,7 +413,8 @@
             "defined": "CreateOfferParams"
           }
         }
-      ]
+      ],
+      "returns": null
     },
     {
       "name": "updateOffer",
@@ -511,10 +517,11 @@
             "defined": "UpdateOfferParams"
           }
         }
-      ]
+      ],
+      "returns": null
     },
     {
-      "name": "closeOffer",
+      "name": "cancelOffer",
       "accounts": [
         {
           "name": "wallet",
@@ -614,12 +621,13 @@
       ],
       "args": [
         {
-          "name": "closeOfferParams",
+          "name": "cancelOfferParams",
           "type": {
-            "defined": "CloseOfferParams"
+            "defined": "CancelOfferParams"
           }
         }
-      ]
+      ],
+      "returns": null
     },
     {
       "name": "executeSale",
@@ -787,7 +795,8 @@
             "defined": "ExecuteSaleParams"
           }
         }
-      ]
+      ],
+      "returns": null
     }
   ],
   "accounts": [
@@ -1048,35 +1057,7 @@
       }
     },
     {
-      "name": "CreateRewardCenterParams",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "rewardRules",
-            "type": {
-              "defined": "RewardRules"
-            }
-          }
-        ]
-      }
-    },
-    {
-      "name": "EditRewardCenterParams",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "rewardRules",
-            "type": {
-              "defined": "RewardRules"
-            }
-          }
-        ]
-      }
-    },
-    {
-      "name": "CloseOfferParams",
+      "name": "CancelOfferParams",
       "type": {
         "kind": "struct",
         "fields": [
@@ -1135,6 +1116,34 @@
           {
             "name": "escrowPaymentBump",
             "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CreateRewardCenterParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "rewardRules",
+            "type": {
+              "defined": "RewardRules"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "EditRewardCenterParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "rewardRules",
+            "type": {
+              "defined": "RewardRules"
+            }
           }
         ]
       }
@@ -1242,11 +1251,5 @@
       "name": "OfferAlreadyExists",
       "msg": "Cannot re-initialize an existing offer"
     }
-  ],
-  "metadata": {
-    "address": "rwdLstiU8aJU1DPdoPtocaNKApMhCFdCg283hz8dd3u",
-    "origin": "anchor",
-    "binaryVersion": "0.24.2",
-    "libVersion": "~0.24.2"
-  }
+  ]
 }
