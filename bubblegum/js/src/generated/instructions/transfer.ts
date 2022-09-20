@@ -43,25 +43,25 @@ export const transferStruct = new beet.BeetArgsStruct<
 /**
  * Accounts required by the _transfer_ instruction
  *
- * @property [] authority
- * @property [] owner
- * @property [] delegate
- * @property [] newOwner
- * @property [] candyWrapper
- * @property [] compressionProgram
+ * @property [] treeAuthority
+ * @property [] leafOwner
+ * @property [] leafDelegate
+ * @property [] newLeafOwner
  * @property [_writable_] merkleTree
+ * @property [] logWrapper
+ * @property [] compressionProgram
  * @category Instructions
  * @category Transfer
  * @category generated
  */
 export type TransferInstructionAccounts = {
-  authority: web3.PublicKey
-  owner: web3.PublicKey
-  delegate: web3.PublicKey
-  newOwner: web3.PublicKey
-  candyWrapper: web3.PublicKey
-  compressionProgram: web3.PublicKey
+  treeAuthority: web3.PublicKey
+  leafOwner: web3.PublicKey
+  leafDelegate: web3.PublicKey
+  newLeafOwner: web3.PublicKey
   merkleTree: web3.PublicKey
+  logWrapper: web3.PublicKey
+  compressionProgram: web3.PublicKey
 }
 
 export const transferInstructionDiscriminator = [
@@ -89,38 +89,38 @@ export function createTransferInstruction(
   })
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: accounts.authority,
+      pubkey: accounts.treeAuthority,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: accounts.owner,
+      pubkey: accounts.leafOwner,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: accounts.delegate,
+      pubkey: accounts.leafDelegate,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: accounts.newOwner,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.candyWrapper,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.compressionProgram,
+      pubkey: accounts.newLeafOwner,
       isWritable: false,
       isSigner: false,
     },
     {
       pubkey: accounts.merkleTree,
       isWritable: true,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.logWrapper,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.compressionProgram,
+      isWritable: false,
       isSigner: false,
     },
   ]

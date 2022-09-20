@@ -6,9 +6,14 @@
     "token-metadata/js",
     "auction-house/js",
     "fixed-price-sale/js",
-    "reward-center/js",
+    "hydra/js",
+    "auction/js",
+    "token-vault/js",
+    "token-metadata/js",
+    "metaplex/js",
     "bubblegum/js",
-    "nft-packs-wrapper/js"
+    "nft-packs-wrapper/js",
+    "reward-center/js"
   ],
   "useWorkspaces": true,
   "version": "independent",

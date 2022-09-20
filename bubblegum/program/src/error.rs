@@ -34,18 +34,10 @@ pub enum BubblegumError {
     MetadataUriTooLong,
     #[msg("Basis points in metadata cannot exceed 10000")]
     MetadataBasisPointsTooHigh,
+    #[msg("Tree creator or tree delegate must sign.")]
+    TreeAuthorityIncorrect,
     #[msg("Not enough unapproved mints left")]
     InsufficientMintCapacity,
-    #[msg("Mint request not approved")]
-    MintRequestNotApproved,
-    #[msg("Mint authority key does not match request")]
-    MintRequestKeyMismatch,
-    #[msg("Mint request data has incorrect disciminator")]
-    MintRequestDiscriminatorMismatch,
-    #[msg("Something went wrong closing mint request")]
-    CloseMintRequestError,
-    #[msg("The mint authority must sign if it is not equal to the tree authority")]
-    MintAuthorityMustSign,
     #[msg("NumericalOverflowError")]
     NumericalOverflowError,
     #[msg("Incorrect account owner")]

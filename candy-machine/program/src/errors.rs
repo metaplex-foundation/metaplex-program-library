@@ -78,8 +78,8 @@ pub enum CandyError {
         "Can't change freeze settings after items have begun to be minted. You can only disable."
     )]
     NoChangingFreezeDuringMint,
-    #[msg("Can't change authority while freeze is enabled. Disable freeze first.")]
-    NoChangingAuthorityWithFreeze,
+    #[msg("Can't change authority while collection is enabled. Disable collection first.")]
+    NoChangingAuthorityWithCollection,
     #[msg("Can't change token while freeze is enabled. Disable freeze first.")]
     NoChangingTokenWithFreeze,
     #[msg("Cannot thaw NFT unless all NFTs are minted or Candy Machine authority enables thawing")]

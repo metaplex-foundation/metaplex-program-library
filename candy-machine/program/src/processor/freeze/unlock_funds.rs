@@ -2,8 +2,10 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{close_account, CloseAccount, Token};
 
 use crate::{
-    assert_is_ata, constants::FREEZE_FEATURE_INDEX, remove_feature_flag, spl_token_transfer,
-    CandyError, CandyMachine, FreezePDA, TokenTransferParams,
+    assert_is_ata,
+    constants::{FREEZE_FEATURE_INDEX, FREEZE_LOCK_FEATURE_INDEX},
+    remove_feature_flag, spl_token_transfer, CandyError, CandyMachine, FreezePDA,
+    TokenTransferParams,
 };
 
 /// Unlocks the funds from mint stuck in the FreezePDA
@@ -81,6 +83,6 @@ pub fn handle_unlock_funds<'info>(
     }
 
     remove_feature_flag(&mut candy_machine.data.uuid, FREEZE_FEATURE_INDEX);
-    remove_feature_flag(&mut candy_machine.data.uuid, FREEZE_FEATURE_INDEX);
+    remove_feature_flag(&mut candy_machine.data.uuid, FREEZE_LOCK_FEATURE_INDEX);
     Ok(())
 }

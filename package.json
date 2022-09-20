@@ -12,17 +12,18 @@
     "fix": "lerna run --parallel fix"
   },
   "workspaces": [
-    "core/js",
-    "token-metadata/js",
-    "token-entangler/js",
-    "auctioneer/js",
     "auction-house/js",
-    "gumdrop/js",
-    "candy-machine/js",
-    "fixed-price-sale/js",
-    "reward-center/js",
+    "auctioneer/js",
     "bubblegum/js",
-    "nft-packs/js"
+    "candy-machine/js",
+    "core/js",
+    "fixed-price-sale/js",
+    "gumdrop/js",
+    "hydra/js",
+    "nft-packs/js",
+    "reward-center/js",
+    "token-entangler/js",
+    "token-metadata/js"
   ],
   "repository": "git@github.com:metaplex-foundation/metaplex-program-library.git",
   "author": "Metaplex Maintainers <contact@metaplex.com>",

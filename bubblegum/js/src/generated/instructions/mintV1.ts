@@ -36,27 +36,27 @@ export const mintV1Struct = new beet.FixableBeetArgsStruct<
 /**
  * Accounts required by the _mintV1_ instruction
  *
- * @property [] mintAuthority
- * @property [_writable_] authority
- * @property [] candyWrapper
- * @property [] compressionProgram
- * @property [] owner
- * @property [] delegate
- * @property [_writable_] mintAuthorityRequest
+ * @property [_writable_] treeAuthority
+ * @property [] leafOwner
+ * @property [] leafDelegate
  * @property [_writable_] merkleTree
+ * @property [**signer**] payer
+ * @property [**signer**] treeDelegate
+ * @property [] logWrapper
+ * @property [] compressionProgram
  * @category Instructions
  * @category MintV1
  * @category generated
  */
 export type MintV1InstructionAccounts = {
-  mintAuthority: web3.PublicKey
-  authority: web3.PublicKey
-  candyWrapper: web3.PublicKey
-  compressionProgram: web3.PublicKey
-  owner: web3.PublicKey
-  delegate: web3.PublicKey
-  mintAuthorityRequest: web3.PublicKey
+  treeAuthority: web3.PublicKey
+  leafOwner: web3.PublicKey
+  leafDelegate: web3.PublicKey
   merkleTree: web3.PublicKey
+  payer: web3.PublicKey
+  treeDelegate: web3.PublicKey
+  logWrapper: web3.PublicKey
+  compressionProgram: web3.PublicKey
 }
 
 export const mintV1InstructionDiscriminator = [
@@ -84,43 +84,43 @@ export function createMintV1Instruction(
   })
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: accounts.mintAuthority,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.authority,
+      pubkey: accounts.treeAuthority,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: accounts.candyWrapper,
+      pubkey: accounts.leafOwner,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.leafDelegate,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.merkleTree,
+      isWritable: true,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.payer,
+      isWritable: false,
+      isSigner: true,
+    },
+    {
+      pubkey: accounts.treeDelegate,
+      isWritable: false,
+      isSigner: true,
+    },
+    {
+      pubkey: accounts.logWrapper,
       isWritable: false,
       isSigner: false,
     },
     {
       pubkey: accounts.compressionProgram,
       isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.owner,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.delegate,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.mintAuthorityRequest,
-      isWritable: true,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.merkleTree,
-      isWritable: true,
       isSigner: false,
     },
   ]
