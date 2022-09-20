@@ -1,13 +1,9 @@
-use {
-    crate::error::BubblegumError,
-    crate::state::metaplex_adapter::MetadataArgs,
-    crate::ASSET_PREFIX,
-    anchor_lang::{
-        prelude::*, solana_program::program_memory::sol_memcmp,
-        solana_program::pubkey::PUBKEY_BYTES,
-    },
-    spl_account_compression::Node,
+use crate::{error::BubblegumError, state::metaplex_adapter::MetadataArgs, ASSET_PREFIX};
+use anchor_lang::{
+    prelude::*,
+    solana_program::{program_memory::sol_memcmp, pubkey::PUBKEY_BYTES},
 };
+use spl_account_compression::Node;
 
 /// Assert that the provided MetadataArgs are compatible with MPL `Data`
 pub fn assert_metadata_is_mpl_compatible(metadata: &MetadataArgs) -> Result<()> {
