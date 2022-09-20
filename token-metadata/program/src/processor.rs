@@ -12,9 +12,7 @@ use crate::{
     deser::clean_write_metadata,
     error::MetadataError,
     escrow::{
-        process_add_constraint_to_escrow_constraint_model, process_close_escrow_account,
-        process_create_escrow_account, process_create_escrow_constraint_model_account,
-        process_transfer_into_escrow, process_transfer_out_of_escrow,
+        process_close_escrow_account, process_create_escrow_account, process_transfer_out_of_escrow,
     },
     instruction::{MetadataInstruction, SetCollectionSizeArgs},
     solana_program::program_memory::sol_memset,
@@ -254,21 +252,9 @@ pub fn process_instruction<'a>(
             msg!("Instruction: Close Escrow Account");
             process_close_escrow_account(program_id, accounts)
         }
-        MetadataInstruction::TransferIntoEscrow(args) => {
-            msg!("Instruction: Transfer Into Escrow");
-            process_transfer_into_escrow(program_id, accounts, args)
-        }
         MetadataInstruction::TransferOutOfEscrow(args) => {
             msg!("Instruction: Transfer Out Of Escrow");
             process_transfer_out_of_escrow(program_id, accounts, args)
-        }
-        MetadataInstruction::CreateEscrowConstraintModelAccount(args) => {
-            msg!("Instruction: Create Escrow Constraint Model Account");
-            process_create_escrow_constraint_model_account(program_id, accounts, args)
-        }
-        MetadataInstruction::AddConstraintToEscrowConstraintModel(args) => {
-            msg!("Instruction: Add Constraint To Escrow Constraint Model");
-            process_add_constraint_to_escrow_constraint_model(program_id, accounts, args)
         }
     }
 }

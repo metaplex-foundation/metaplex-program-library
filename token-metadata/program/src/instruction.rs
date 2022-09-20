@@ -1,9 +1,6 @@
 use crate::{
     deprecated_instruction::{MintPrintingTokensViaTokenArgs, SetReservationListArgs},
-    escrow::{
-        AddConstraintToEscrowConstraintModelArgs, CreateEscrowConstraintModelAccountArgs,
-        TransferIntoEscrowArgs, TransferOutOfEscrowArgs,
-    },
+    escrow::TransferOutOfEscrowArgs,
     state::{
         Collection, CollectionDetails, Creator, Data, DataV2, Uses, EDITION,
         EDITION_MARKER_BIT_SIZE, PREFIX,
@@ -539,7 +536,6 @@ pub enum MetadataInstruction {
     #[account(3, name="edition", desc="Edition account")]
     #[account(4, writable, signer, name="payer", desc="Wallet paying for the transaction and new account")]
     #[account(5, name="system_program", desc="System program")]
-    #[account(6, optional, writable, name="escrow_constraint_model", desc="Optional Escrow Constraints Model")]
     CreateEscrowAccount,
 
     /// Close the escrow account.
@@ -550,22 +546,6 @@ pub enum MetadataInstruction {
     #[account(4, writable, signer, name="payer", desc="Wallet paying for the transaction and new account")]
     #[account(5, name="system_program", desc="System program")]
     CloseEscrowAccount,
-
-    /// Transfer tokens into the escrow account.
-    #[account(0, writable, name="escrow", desc="Escrow account")]
-    #[account(1, writable, signer, name="payer", desc="Wallet paying for the transaction and new account")]
-    #[account(2, name="attribute_mint", desc="Mint account for the new attribute")]
-    #[account(3, writable, name="attribute_src", desc="Token account source for the new attribute")]
-    #[account(4, writable, name="attribute_dst", desc="Token account, owned by TM, destination for the new attribute")]
-    #[account(5, name="attribute_metadata", desc="Metadata account of the new attribute")]
-    #[account(6, name="escrow_mint", desc="Mint account that the escrow is attached")]
-    #[account(7, name="escrow_account", desc="Token account that holds the token the escrow is attached to")]
-    #[account(8, name="system_program", desc="System program")]
-    #[account(9, name="ata_program", desc="Associated Token program")]
-    #[account(10, name="token_program", desc="Token program")]
-    #[account(11, name="rent", desc="Rent info")]
-    #[account(12, optional, name="constraint_model", desc="The constraint model to check against")]
-    TransferIntoEscrow(TransferIntoEscrowArgs),
 
     /// Create an escrow account to hold tokens.
     #[account(0, writable, name="escrow", desc="Escrow account")]
@@ -580,22 +560,7 @@ pub enum MetadataInstruction {
     #[account(9, name="ata_program", desc="Associated Token program")]
     #[account(10, name="token_program", desc="Token program")]
     #[account(11, name="rent", desc="Rent info")]
-    #[account(12, optional, name="constraint_model", desc="The constraint model to check against")]
     TransferOutOfEscrow(TransferOutOfEscrowArgs),
-
-    /// Create an constraint model to be used by one or many escrow accounts.
-    #[account(0, writable, name="escrow_constraint_model", desc="Constraint model account")]
-    #[account(1, writable, signer, name="payer", desc="Wallet paying for the transaction and new account, will be set as the creator of the constraint model")]
-    #[account(2, name="update_authority", desc="Update authority of the constraint model")]
-    #[account(3, name="system_program", desc="System program")]
-    CreateEscrowConstraintModelAccount(CreateEscrowConstraintModelAccountArgs),
-
-    /// Add a constraint to an escrow constraint model.
-    #[account(0, writable, name="escrow_constraint_model", desc="Constraint model account")]
-    #[account(1, writable, signer, name="payer", desc="Wallet paying for the transaction and new account, will be set as the creator of the constraint model")]
-    #[account(2, signer, name="update_authority", desc="Update authority of the constraint model")]
-    #[account(3, name="system_program", desc="System program")]
-    AddConstraintToEscrowConstraintModel(AddConstraintToEscrowConstraintModelArgs),
 }
 
 /// Creates an CreateMetadataAccounts instruction

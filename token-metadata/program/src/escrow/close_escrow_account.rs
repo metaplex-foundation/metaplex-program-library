@@ -1,9 +1,7 @@
 use crate::{
     error::MetadataError,
     instruction::MetadataInstruction,
-    state::{
-        Metadata, TokenMetadataAccount, TokenOwnedEscrow, TokenStandard, ESCROW_PREFIX, PREFIX,
-    },
+    state::{Metadata, TokenMetadataAccount, TokenStandard, ESCROW_PREFIX, PREFIX},
     utils::{assert_derivation, assert_owned_by, check_token_standard, close_account_raw},
 };
 use borsh::BorshSerialize;
@@ -21,8 +19,6 @@ pub fn close_escrow_account(
     mint_account: Pubkey,
     edition_account: Pubkey,
     payer_account: Pubkey,
-    // system_account: Pubkey,
-    // rent: Pubkey,
 ) -> Instruction {
     let accounts = vec![
         AccountMeta::new(escrow_account, false),
@@ -92,9 +88,6 @@ pub fn process_close_escrow_account(
         ESCROW_PREFIX.as_bytes(),
         &[bump_seed],
     ];
-
-    let toe: TokenOwnedEscrow = TokenOwnedEscrow::from_account_info(escrow_account_info)?;
-    assert!(!toe.tokens.is_empty());
 
     // Close the account.
     close_account_raw(payer_account_info, escrow_account_info)?;
