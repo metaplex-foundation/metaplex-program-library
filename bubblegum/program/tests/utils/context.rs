@@ -131,20 +131,31 @@ impl BubblegumTestContext {
         Ok(tree)
     }
 
-    // The owner of the tree and leaf is `self.payer()`.
+    // The owner of the tree and leaves is `self.payer()`.
     pub async fn default_create_and_mint<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize>(
         &self,
-    ) -> Result<(Tree<MAX_DEPTH, MAX_BUFFER_SIZE>, LeafArgs)> {
+        num_mints: u64,
+    ) -> Result<(Tree<MAX_DEPTH, MAX_BUFFER_SIZE>, Vec<LeafArgs>)> {
         let tree = self
             .default_create_tree::<MAX_DEPTH, MAX_BUFFER_SIZE>()
             .await?;
 
         let payer = self.payer();
 
-        let mut args = LeafArgs::new(&payer, self.default_metadata_args("test", "tst"));
+        let mut leaves = Vec::new();
 
-        tree.mint_v1(&payer, &mut args).await?;
+        for i in 0..num_mints {
+            let name = format!("test{}", i);
+            let symbol = format!("tst{}", i);
+            let mut args = LeafArgs::new(&payer, self.default_metadata_args(name, symbol));
 
-        Ok((tree, args))
+            tree.mint_v1(&payer, &mut args).await?;
+            assert_eq!(args.index, u32::try_from(i).unwrap());
+            assert_eq!(args.nonce, i);
+
+            leaves.push(args);
+        }
+
+        Ok((tree, leaves))
     }
 }
