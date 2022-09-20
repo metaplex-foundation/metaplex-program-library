@@ -10,9 +10,9 @@ reward - Is the payout of some amount of tokens from the reward center treasury 
 
 reward rules - There are currently 2 configuration options the authority of the reward center can adjust to reward payout for a sale. They are the seller reward payout basis points and payout divider.
 
-    payout divider - The amount to divide from the sale amount that will result in the number of tokens to payout to the buyer and the seller. For example, a divider of 2 will payout half the amount sale amount as tokens. Its important that the purchase and reward token use the same number of decimals to ensure the math aligns.
+payout divider - The amount to divide from the sale amount which will result in the number of tokens to payout to the buyer and the seller. For example, a divider of 2 will payout half the amount sale amount as tokens. Its important that the purchase and reward token use the same number of decimals to ensure the math aligns.
 
-    seller reward payout basis points - The ratio of rewards to be sent to the seller. The rest of the rewards are claimed by the buyer. For example, 5,000 basis points will result in a 50-50 split of rewards to the buyer and the seller.
+seller reward payout basis points - The ratio of rewards to be sent to the seller. The rest of the rewards are claimed by the buyer. For example, 5,000 basis points will result in a 50-50 split of rewards to the buyer and the seller.
 
 
 
