@@ -67,4 +67,4 @@ jobs:
         id: run_test
         working-directory: ./fixed-price-sale/program
         run: |
-          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf -- --test-threads 1
+          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf
