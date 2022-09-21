@@ -2440,7 +2440,7 @@ createErrorFromNameLookup.set(
 );
 
 /**
- * CollectionMasterEditionAccountInvalid: 'Edition account aoesnt match collection '
+ * CollectionMasterEditionAccountInvalid: 'Edition account doesnt match collection '
  *
  * @category Errors
  * @category generated
@@ -2449,7 +2449,7 @@ export class CollectionMasterEditionAccountInvalidError extends Error {
   readonly code: number = 0x71;
   readonly name: string = 'CollectionMasterEditionAccountInvalid';
   constructor() {
-    super('Edition account aoesnt match collection ');
+    super('Edition account doesnt match collection ');
     if (typeof Error.captureStackTrace === 'function') {
       Error.captureStackTrace(this, CollectionMasterEditionAccountInvalidError);
     }
@@ -2503,118 +2503,129 @@ createErrorFromCodeLookup.set(0x73, () => new AlreadyUnverifiedError());
 createErrorFromNameLookup.set('AlreadyUnverified', () => new AlreadyUnverifiedError());
 
 /**
- * MustBeUpdateAuthToSetModel: 'Must be Update Authority to set the Constraint Model.'
+ * NotAPrintEdition: 'This edition is not a Print Edition'
  *
  * @category Errors
  * @category generated
  */
-export class MustBeUpdateAuthToSetModelError extends Error {
+export class NotAPrintEditionError extends Error {
   readonly code: number = 0x74;
-  readonly name: string = 'MustBeUpdateAuthToSetModel';
+  readonly name: string = 'NotAPrintEdition';
   constructor() {
-    super('Must be Update Authority to set the Constraint Model.');
+    super('This edition is not a Print Edition');
     if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, MustBeUpdateAuthToSetModelError);
+      Error.captureStackTrace(this, NotAPrintEditionError);
     }
   }
 }
 
-createErrorFromCodeLookup.set(0x74, () => new MustBeUpdateAuthToSetModelError());
-createErrorFromNameLookup.set(
-  'MustBeUpdateAuthToSetModel',
-  () => new MustBeUpdateAuthToSetModelError(),
-);
+createErrorFromCodeLookup.set(0x74, () => new NotAPrintEditionError());
+createErrorFromNameLookup.set('NotAPrintEdition', () => new NotAPrintEditionError());
 
 /**
- * MissingEscrowConstraintModel: 'Missing EscrowConstraintModel.'
+ * InvalidMasterEdition: 'Invalid Master Edition'
  *
  * @category Errors
  * @category generated
  */
-export class MissingEscrowConstraintModelError extends Error {
+export class InvalidMasterEditionError extends Error {
   readonly code: number = 0x75;
-  readonly name: string = 'MissingEscrowConstraintModel';
+  readonly name: string = 'InvalidMasterEdition';
   constructor() {
-    super('Missing EscrowConstraintModel.');
+    super('Invalid Master Edition');
     if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, MissingEscrowConstraintModelError);
+      Error.captureStackTrace(this, InvalidMasterEditionError);
     }
   }
 }
 
-createErrorFromCodeLookup.set(0x75, () => new MissingEscrowConstraintModelError());
-createErrorFromNameLookup.set(
-  'MissingEscrowConstraintModel',
-  () => new MissingEscrowConstraintModelError(),
-);
+createErrorFromCodeLookup.set(0x75, () => new InvalidMasterEditionError());
+createErrorFromNameLookup.set('InvalidMasterEdition', () => new InvalidMasterEditionError());
 
 /**
- * InvalidEscrowConstraintModel: 'Invalid EscrowConstraintModel.'
+ * InvalidPrintEdition: 'Invalid Print Edition'
  *
  * @category Errors
  * @category generated
  */
-export class InvalidEscrowConstraintModelError extends Error {
+export class InvalidPrintEditionError extends Error {
   readonly code: number = 0x76;
-  readonly name: string = 'InvalidEscrowConstraintModel';
+  readonly name: string = 'InvalidPrintEdition';
   constructor() {
-    super('Invalid EscrowConstraintModel.');
+    super('Invalid Print Edition');
     if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, InvalidEscrowConstraintModelError);
+      Error.captureStackTrace(this, InvalidPrintEditionError);
     }
   }
 }
 
-createErrorFromCodeLookup.set(0x76, () => new InvalidEscrowConstraintModelError());
-createErrorFromNameLookup.set(
-  'InvalidEscrowConstraintModel',
-  () => new InvalidEscrowConstraintModelError(),
-);
+createErrorFromCodeLookup.set(0x76, () => new InvalidPrintEditionError());
+createErrorFromNameLookup.set('InvalidPrintEdition', () => new InvalidPrintEditionError());
 
 /**
- * EscrowConstraintViolation: 'Escrow Constraint Violation'
+ * InvalidEditionMarker: 'Invalid Edition Marker'
  *
  * @category Errors
  * @category generated
  */
-export class EscrowConstraintViolationError extends Error {
+export class InvalidEditionMarkerError extends Error {
   readonly code: number = 0x77;
-  readonly name: string = 'EscrowConstraintViolation';
+  readonly name: string = 'InvalidEditionMarker';
   constructor() {
-    super('Escrow Constraint Violation');
+    super('Invalid Edition Marker');
     if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, EscrowConstraintViolationError);
+      Error.captureStackTrace(this, InvalidEditionMarkerError);
     }
   }
 }
 
-createErrorFromCodeLookup.set(0x77, () => new EscrowConstraintViolationError());
-createErrorFromNameLookup.set(
-  'EscrowConstraintViolation',
-  () => new EscrowConstraintViolationError(),
-);
+createErrorFromCodeLookup.set(0x77, () => new InvalidEditionMarkerError());
+createErrorFromNameLookup.set('InvalidEditionMarker', () => new InvalidEditionMarkerError());
 
 /**
- * InvalidEscrowConstraintIndex: 'Invalid Escrow Constraint Index'
+ * ReservationListDeprecated: 'Reservation List is Deprecated'
  *
  * @category Errors
  * @category generated
  */
-export class InvalidEscrowConstraintIndexError extends Error {
+export class ReservationListDeprecatedError extends Error {
   readonly code: number = 0x78;
-  readonly name: string = 'InvalidEscrowConstraintIndex';
+  readonly name: string = 'ReservationListDeprecated';
   constructor() {
-    super('Invalid Escrow Constraint Index');
+    super('Reservation List is Deprecated');
     if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, InvalidEscrowConstraintIndexError);
+      Error.captureStackTrace(this, ReservationListDeprecatedError);
     }
   }
 }
 
-createErrorFromCodeLookup.set(0x78, () => new InvalidEscrowConstraintIndexError());
+createErrorFromCodeLookup.set(0x78, () => new ReservationListDeprecatedError());
 createErrorFromNameLookup.set(
-  'InvalidEscrowConstraintIndex',
-  () => new InvalidEscrowConstraintIndexError(),
+  'ReservationListDeprecated',
+  () => new ReservationListDeprecatedError(),
+);
+
+/**
+ * PrintEditionDoesNotMatchMasterEdition: 'Print Edition does not match Master Edition'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class PrintEditionDoesNotMatchMasterEditionError extends Error {
+  readonly code: number = 0x79;
+  readonly name: string = 'PrintEditionDoesNotMatchMasterEdition';
+  constructor() {
+    super('Print Edition does not match Master Edition');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, PrintEditionDoesNotMatchMasterEditionError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x79, () => new PrintEditionDoesNotMatchMasterEditionError());
+createErrorFromNameLookup.set(
+  'PrintEditionDoesNotMatchMasterEdition',
+  () => new PrintEditionDoesNotMatchMasterEditionError(),
 );
 
 /**

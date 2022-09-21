@@ -668,7 +668,7 @@ programCommand('execute_sale')
   .option('-m, --mint <string>', 'Mint of the token to purchase')
   .option('-t, --token-size <string>', 'Amount of tokens you want to sell')
   .option('-bw, --buyer-wallet <string>', 'Buyer wallet')
-  .option('-sw, --seller-wallet <string>', 'Buyer wallet')
+  .option('-sw, --seller-wallet <string>', 'Seller wallet')
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   .action(async (directory, cmd) => {
     const {

@@ -1,5 +1,5 @@
 {
-  "version": "1.3.6",
+  "version": "1.4.0",
   "name": "mpl_token_metadata",
   "instructions": [
     {
@@ -2054,376 +2054,73 @@
       }
     },
     {
-      "name": "CreateEscrowAccount",
+      "name": "BurnEditionNft",
       "accounts": [
         {
-          "name": "escrow",
+          "name": "metadata",
           "isMut": true,
           "isSigner": false,
-          "desc": "Escrow account"
+          "desc": "Metadata (pda of ['metadata', program id, mint id])"
         },
         {
-          "name": "metadata",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "Metadata account"
-        },
-        {
-          "name": "mint",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "Mint account"
-        },
-        {
-          "name": "edition",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "Edition account"
-        },
-        {
-          "name": "payer",
+          "name": "owner",
           "isMut": true,
           "isSigner": true,
-          "desc": "Wallet paying for the transaction and new account"
+          "desc": "NFT owner"
         },
         {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "System program"
-        },
-        {
-          "name": "escrowConstraintModel",
+          "name": "printEditionMint",
           "isMut": true,
           "isSigner": false,
-          "desc": "Optional Escrow Constraints Model",
-          "optional": true
+          "desc": "Mint of the print edition NFT"
+        },
+        {
+          "name": "masterEditionMint",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Mint of the original/master NFT"
+        },
+        {
+          "name": "printEditionTokenAccount",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Token account the print edition NFT is in"
+        },
+        {
+          "name": "masterEditionTokenAccount",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Token account the Master Edition NFT is in"
+        },
+        {
+          "name": "masterEditionAccount",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "MasterEdition2 of the original NFT"
+        },
+        {
+          "name": "printEditionAccount",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Print Edition account of the NFT"
+        },
+        {
+          "name": "editionMarkerAccount",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Edition Marker PDA of the NFT"
+        },
+        {
+          "name": "splTokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "SPL Token Program"
         }
       ],
       "args": [],
       "discriminant": {
         "type": "u8",
         "value": 37
-      }
-    },
-    {
-      "name": "CloseEscrowAccount",
-      "accounts": [
-        {
-          "name": "escrow",
-          "isMut": true,
-          "isSigner": false,
-          "desc": "Escrow account"
-        },
-        {
-          "name": "metadata",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "Metadata account"
-        },
-        {
-          "name": "mint",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "Mint account"
-        },
-        {
-          "name": "edition",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "Edition account"
-        },
-        {
-          "name": "payer",
-          "isMut": true,
-          "isSigner": true,
-          "desc": "Wallet paying for the transaction and new account"
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "System program"
-        }
-      ],
-      "args": [],
-      "discriminant": {
-        "type": "u8",
-        "value": 38
-      }
-    },
-    {
-      "name": "TransferIntoEscrow",
-      "accounts": [
-        {
-          "name": "escrow",
-          "isMut": true,
-          "isSigner": false,
-          "desc": "Escrow account"
-        },
-        {
-          "name": "payer",
-          "isMut": true,
-          "isSigner": true,
-          "desc": "Wallet paying for the transaction and new account"
-        },
-        {
-          "name": "attributeMint",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "Mint account for the new attribute"
-        },
-        {
-          "name": "attributeSrc",
-          "isMut": true,
-          "isSigner": false,
-          "desc": "Token account source for the new attribute"
-        },
-        {
-          "name": "attributeDst",
-          "isMut": true,
-          "isSigner": false,
-          "desc": "Token account, owned by TM, destination for the new attribute"
-        },
-        {
-          "name": "attributeMetadata",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "Metadata account of the new attribute"
-        },
-        {
-          "name": "escrowMint",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "Mint account that the escrow is attached"
-        },
-        {
-          "name": "escrowAccount",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "Token account that holds the token the escrow is attached to"
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "System program"
-        },
-        {
-          "name": "ataProgram",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "Associated Token program"
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "Token program"
-        },
-        {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "Rent info"
-        },
-        {
-          "name": "constraintModel",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "The constraint model to check against",
-          "optional": true
-        }
-      ],
-      "args": [
-        {
-          "name": "transferIntoEscrowArgs",
-          "type": {
-            "defined": "TransferIntoEscrowArgs"
-          }
-        }
-      ],
-      "discriminant": {
-        "type": "u8",
-        "value": 39
-      }
-    },
-    {
-      "name": "TransferOutOfEscrow",
-      "accounts": [
-        {
-          "name": "escrow",
-          "isMut": true,
-          "isSigner": false,
-          "desc": "Escrow account"
-        },
-        {
-          "name": "payer",
-          "isMut": true,
-          "isSigner": true,
-          "desc": "Wallet paying for the transaction and new account"
-        },
-        {
-          "name": "attributeMint",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "Mint account for the new attribute"
-        },
-        {
-          "name": "attributeSrc",
-          "isMut": true,
-          "isSigner": false,
-          "desc": "Token account source for the new attribute"
-        },
-        {
-          "name": "attributeDst",
-          "isMut": true,
-          "isSigner": false,
-          "desc": "Token account, owned by TM, destination for the new attribute"
-        },
-        {
-          "name": "attributeMetadata",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "Metadata account of the new attribute"
-        },
-        {
-          "name": "escrowMint",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "Mint account that the escrow is attached"
-        },
-        {
-          "name": "escrowAccount",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "Token account that holds the token the escrow is attached to"
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "System program"
-        },
-        {
-          "name": "ataProgram",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "Associated Token program"
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "Token program"
-        },
-        {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "Rent info"
-        },
-        {
-          "name": "constraintModel",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "The constraint model to check against",
-          "optional": true
-        }
-      ],
-      "args": [
-        {
-          "name": "transferOutOfEscrowArgs",
-          "type": {
-            "defined": "TransferOutOfEscrowArgs"
-          }
-        }
-      ],
-      "discriminant": {
-        "type": "u8",
-        "value": 40
-      }
-    },
-    {
-      "name": "CreateEscrowConstraintModelAccount",
-      "accounts": [
-        {
-          "name": "escrowConstraintModel",
-          "isMut": true,
-          "isSigner": false,
-          "desc": "Constraint model account"
-        },
-        {
-          "name": "payer",
-          "isMut": true,
-          "isSigner": true,
-          "desc": "Wallet paying for the transaction and new account, will be set as the creator of the constraint model"
-        },
-        {
-          "name": "updateAuthority",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "Update authority of the constraint model"
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "System program"
-        }
-      ],
-      "args": [
-        {
-          "name": "createEscrowConstraintModelAccountArgs",
-          "type": {
-            "defined": "CreateEscrowConstraintModelAccountArgs"
-          }
-        }
-      ],
-      "discriminant": {
-        "type": "u8",
-        "value": 41
-      }
-    },
-    {
-      "name": "AddConstraintToEscrowConstraintModel",
-      "accounts": [
-        {
-          "name": "escrowConstraintModel",
-          "isMut": true,
-          "isSigner": false,
-          "desc": "Constraint model account"
-        },
-        {
-          "name": "payer",
-          "isMut": true,
-          "isSigner": true,
-          "desc": "Wallet paying for the transaction and new account, will be set as the creator of the constraint model"
-        },
-        {
-          "name": "updateAuthority",
-          "isMut": false,
-          "isSigner": true,
-          "desc": "Update authority of the constraint model"
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "System program"
-        }
-      ],
-      "args": [
-        {
-          "name": "addConstraintToEscrowConstraintModelArgs",
-          "type": {
-            "defined": "AddConstraintToEscrowConstraintModelArgs"
-          }
-        }
-      ],
-      "discriminant": {
-        "type": "u8",
-        "value": 42
       }
     }
   ],
@@ -3979,7 +3676,7 @@
     {
       "code": 113,
       "name": "CollectionMasterEditionAccountInvalid",
-      "msg": "Edition account aoesnt match collection "
+      "msg": "Edition account doesnt match collection "
     },
     {
       "code": 114,
@@ -3993,28 +3690,33 @@
     },
     {
       "code": 116,
-      "name": "MustBeUpdateAuthToSetModel",
-      "msg": "Must be Update Authority to set the Constraint Model."
+      "name": "NotAPrintEdition",
+      "msg": "This edition is not a Print Edition"
     },
     {
       "code": 117,
-      "name": "MissingEscrowConstraintModel",
-      "msg": "Missing EscrowConstraintModel."
+      "name": "InvalidMasterEdition",
+      "msg": "Invalid Master Edition"
     },
     {
       "code": 118,
-      "name": "InvalidEscrowConstraintModel",
-      "msg": "Invalid EscrowConstraintModel."
+      "name": "InvalidPrintEdition",
+      "msg": "Invalid Print Edition"
     },
     {
       "code": 119,
-      "name": "EscrowConstraintViolation",
-      "msg": "Escrow Constraint Violation"
+      "name": "InvalidEditionMarker",
+      "msg": "Invalid Edition Marker"
     },
     {
       "code": 120,
-      "name": "InvalidEscrowConstraintIndex",
-      "msg": "Invalid Escrow Constraint Index"
+      "name": "ReservationListDeprecated",
+      "msg": "Reservation List is Deprecated"
+    },
+    {
+      "code": 121,
+      "name": "PrintEditionDoesNotMatchMasterEdition",
+      "msg": "Print Edition does not match Master Edition"
     }
   ],
   "metadata": {

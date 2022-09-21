@@ -446,7 +446,7 @@ pub enum MetadataError {
     CannotUpdateVerifiedCollection,
 
     /// 113 - Edition Account Doesnt Match Collection
-    #[error("Edition account aoesnt match collection ")]
+    #[error("Edition account doesnt match collection ")]
     CollectionMasterEditionAccountInvalid,
 
     /// 114 - Item is already verified.
@@ -457,25 +457,29 @@ pub enum MetadataError {
     #[error("Item is already unverified.")]
     AlreadyUnverified,
 
-    /// 116 - Must be Update Authority to set the Constraint Model.
-    #[error("Must be Update Authority to set the Constraint Model.")]
-    MustBeUpdateAuthToSetModel,
+    /// 116 - Not a Print Edition
+    #[error("This edition is not a Print Edition")]
+    NotAPrintEdition,
 
-    /// 117 - Missing EscrowConstraintModel.
-    #[error("Missing EscrowConstraintModel.")]
-    MissingEscrowConstraintModel,
+    /// 117 - Invalid Edition Marker
+    #[error("Invalid Master Edition")]
+    InvalidMasterEdition,
 
-    /// 118 - Invalid EscrowConstraintModel.
-    #[error("Invalid EscrowConstraintModel.")]
-    InvalidEscrowConstraintModel,
+    /// 118 - Invalid Edition Marker
+    #[error("Invalid Print Edition")]
+    InvalidPrintEdition,
 
-    /// 119 - Escrow Constraint Violation
-    #[error("Escrow Constraint Violation")]
-    EscrowConstraintViolation,
+    /// 119 - Invalid Edition Marker
+    #[error("Invalid Edition Marker")]
+    InvalidEditionMarker,
 
-    /// 120 - Invalid Escrow Constraint Index
-    #[error("Invalid Escrow Constraint Index")]
-    InvalidEscrowConstraintIndex,
+    /// 120 - Reservation List is Deprecated
+    #[error("Reservation List is Deprecated")]
+    ReservationListDeprecated,
+
+    /// 121 - Print Edition doesn't match Master Edition
+    #[error("Print Edition does not match Master Edition")]
+    PrintEditionDoesNotMatchMasterEdition,
 }
 
 impl PrintProgramError for MetadataError {

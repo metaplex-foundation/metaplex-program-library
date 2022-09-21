@@ -1,3 +1,4 @@
+# if referencing from a workflow, ANCHOR_VERSION environment variable must be defined
 name: Setup Anchor CLI
 description: 'Setup Anchor CLI'
 

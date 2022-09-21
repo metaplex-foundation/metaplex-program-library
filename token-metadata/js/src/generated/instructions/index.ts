@@ -2,6 +2,7 @@ export * from './AddConstraintToEscrowConstraintModel';
 export * from './ApproveCollectionAuthority';
 export * from './ApproveUseAuthority';
 export * from './BubblegumSetCollectionSize';
+export * from './BurnEditionNft';
 export * from './BurnNft';
 export * from './CloseEscrowAccount';
 export * from './ConvertMasterEditionV1ToV2';
