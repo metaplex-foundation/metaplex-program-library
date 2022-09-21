@@ -66,7 +66,7 @@ The `Candy Machine` configuration is stored in a single account, which includes 
 ## Instructions
 
 
-### `add_config_lines`
+### 📄 `add_config_lines`
 
 This instruction adds config lines to the hidden data section of the account. It can only be used if the candy machine has `config_line_settings`.
 
@@ -89,7 +89,7 @@ This instruction adds config lines to the hidden data section of the account. It
 </details>
 
 
-### `initialize`
+### 📄 `initialize`
 
 This instruction creates and initializes a new `CandyMachine` account. It requires that the CandyMachine account has been created with the expected size before executing this instruction.
 
@@ -121,7 +121,7 @@ This instruction creates and initializes a new `CandyMachine` account. It requir
 </details>
 
 
-### `mint`
+### 📄 `mint`
 
 This instruction mints an NFT from the Candy Machine. Only the mint authority is able to mint from the Candy Machine.
 
@@ -133,17 +133,18 @@ This instruction mints an NFT from the Candy Machine. Only the mint authority is
 | `candy_machine`               | ✅       |        | The `CandyMachine` account. |
 | `authority_pda`               | ✅       |        | Authority PDA key (seeds `["candy_machine", candy_machine pubkey]`). |
 | `mint_authority`              |          | ✅     | Public key of the candy machine mint authority. |
-| `payer`                       |          | ✅     | Payer of the transaction. |
-| `nft_mint`                    |          | ✅     | Mint account for the NFT. The account should be created before executing the instruction. |
+| `payer`                       | ✅       | ✅     | Payer of the transaction. |
+| `nft_mint`                    | ✅       |        | Mint account for the NFT. The account should be created before executing the instruction. |
 | `nft_mint_authority`          |          | ✅     | Mint authority of the NFT. |
-| `nft_metadata`                |          | ✅     | Metadata account of the NFT. |
-| `nft_master_edition`          |          | ✅     | Master Edition account of the NFT. |
-| `collection_metadata`         |          |        | Metadata account of the collection. |
+| `nft_metadata`                | ✅       |        | Metadata account of the NFT. |
+| `nft_master_edition`          | ✅       |        | Master Edition account of the NFT. |
+| `collection_authority_record` |          |        | Authority Record PDA of the collection. |
 | `collection_mint`             |          |        | Mint account of the collection. |
+| `collection_metadata`         | ✅       |        | Metadata account of the collection. |
 | `collection_master_edition`   |          |        | Master Edition account of the collection. |
-| `collection_update_authority` | ✅       | ✅      | Update authority of the collection. |
-| `collection_authority_record` | ✅       |        | Authority Record PDA of the collection. |
+| `collection_update_authority` |          |        | Update authority of the collection. |
 | `token_metadata_program`      |          |        | Metaplex `TokenMetadata` program ID. |
+| `token_program`               |          |        | `spl-token` program ID. |
 | `system_program`              |          |        | `SystemProgram` account. |
 | `rent`                        |          |        | `Rent` account. |
 </details>
@@ -155,7 +156,7 @@ None.
 </details>
 
 
-### `set_authority`
+### 📄 `set_authority`
 
 This instruction changes the authority of the candy machine. Note that this operation is irreversible, once you change the authority of the Candy Machine, the current authority will lose the right to operate it.
 
@@ -177,7 +178,7 @@ This instruction changes the authority of the candy machine. Note that this oper
 </details>
 
 
-### `set_collection`
+### 📄 `set_collection`
 
 This instruction sets the collection to be used by the Candy Machine. The collection can only be changed if no NFTs have been minted.
 
@@ -210,7 +211,7 @@ None.
 </details>
 
 
-### `set_mint_authority`
+### 📄 `set_mint_authority`
 
 This instruction changes the mint authority of the Candy Machine. Note that this operation is irreversible, once you change the mint authority of the Candy Machine, the current mint authority will lose the right to mint from the Candy Machine.
 
@@ -231,7 +232,7 @@ None.
 </details>
 
 
-### `update`
+### 📄 `update`
 
 This instruction updates the configuration of the Candy Machine. There are restrictions on which configuration can be updated:
 * `items_available`: can only be updated when `hidden_settings` are used.
@@ -257,7 +258,7 @@ This instruction updates the configuration of the Candy Machine. There are restr
 </details>
 
 
-### `withdraw`
+### 📄 `withdraw`
 
 This instruction withdraws the rent lamports from the account and closes it. After executing this instruction, the Candy Machine will not be operational.
 
