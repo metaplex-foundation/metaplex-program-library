@@ -20,7 +20,7 @@ env:
 
 jobs:
   dump-context:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - name: Dump GitHub context
@@ -31,7 +31,7 @@ jobs:
   get-changes-scope:
     # only listen for PRs opened against master
     if: contains(github.base_ref, 'master')
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     outputs:
       packages: ${{ steps.filter-out-excluded-pkgs.outputs.result }}
     steps:
@@ -80,7 +80,7 @@ jobs:
     needs: [get-changes-scope]
     # note: checking for empty string just doesn't work, so we explicitly return and check null in the case that there's nothing to verify
     if: ${{ needs.get-changes-scope.outputs.packages != 'null' }}
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       # branch should be the branch from which the PR is opened
       - uses: actions/checkout@v3
