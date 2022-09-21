@@ -11,6 +11,8 @@ input=$1
 
 programs="auction-house auctioneer bubblegum candy-machine fixed-price-sale gumdrop hydra nft-packs token-entangler token-metadata"
 
+mkdir -p test-programs
+
 if exists_in_list "$programs" " " $input; then
     echo "building $input"
     cd $input/program
