@@ -60,5 +60,218 @@ The `Candy Machine` configuration is stored in a single account, which includes 
 | *hidden section*            | 850    | ~    | (optional) Hidden data section to avoid unnecessary deserialisation. This section of the account is not represented by structs and data is store/retrieved using byte offsets. The hidden data section is not present when `hiddenSettings` are used, since there is no need to store config line settings. |
 | - *items*</div>             | 850    | 4    | Number of NFTs (items) added to the candy machine; eventually this will be the same as `items_available`. |
 | - *config lines*</div>      | 854    | ~    | A sequence of name and uri pairs representing each NFT; the length of these are determined by `name_length + uri_length`; there will `items_available * (name + uri)` pairs in total. |
-| - *byte mask*</div>         | ~      | ~    | A byte section of length equal to `(items_available / 8) + 1` with binary flag to indicate which config lines have been added. |
-| - *mint indices*</div>      | ~      | ~    | A sequence of `u32` values representing the available mint indices; the usable indices are determined by: valid indices start at the mint number (`items_redeemed`) if `is_sequential` is `true`; valid mint indices start from offset 0 until the offset determined by `items_available - items_redeemed`. |
+| - *byte mask*</div>         | ~      | ~    | A byte section of length equal to `(items_available / 8) + 1` with binary flags to indicate which config lines have been added. |
+| - *mint indices*</div>      | ~      | ~    | A sequence of `u32` values representing the available mint indices; the usable indices are determined by: valid indices start at the mint number (`items_redeemed`) if `is_sequential` is `true`; otherwise, valid mint indices start from offset 0 until the offset determined by `items_available - items_redeemed`. |
+
+## Instructions
+
+
+### `add_config_lines`
+
+This instruction adds config lines to the hidden data section of the account. It can only be used if the candy machine has `config_line_settings`.
+
+<details>
+  <summary>Accounts</summary>
+
+| Name                          | Writable | Signer | Description |
+| ----------------------------- | :------: | :----: | ----------- |
+| `candy_machine`               | ✅       |        | The `CandyMachine` account. |
+| `authority`                   |          | ✅     | Public key of the candy machine authority. |
+</details>
+
+<details>
+  <summary>Arguments</summary>
+  
+| Argument                      | Offset | Size | Description               |
+| ----------------------------- | ------ | ---- | ------------------------- |
+| `index`                       | 0      | 4    | Index from which the lines will be added. |
+| `config_lines`                | 4      | ~    | Array of [`ConfigLine`](https://github.com/metaplex-foundation/metaplex-program-library/blob/febo/candy-machine-core/candy-machine-core/program/src/state/candy_machine.rs#L33) objects representing the lines to be added. |
+</details>
+
+
+### `initialize`
+
+This instruction creates and initializes a new `CandyMachine` account. It requires that the CandyMachine account has been created with the expected size before executing this instruction.
+
+<details>
+  <summary>Accounts</summary>
+
+| Name                          | Writable | Signer | Description |
+| ----------------------------- | :------: | :----: | ----------- |
+| `candy_machine`               | ✅       |        | The `CandyMachine` account. |
+| `authority_pda`               | ✅       |        | Authority PDA key (seeds `["candy_machine", candy_machine pubkey]`). |
+| `authority`                   |          |        | Public key of the candy machine authority. |
+| `payer`                       |          | ✅     | Payer of the transaction. |
+| `collection_metadata`         |          |        | Metadata account of the collection. |
+| `collection_mint`             |          |        | Mint account of the collection. |
+| `collection_master_edition`   |          |        | Master Edition account of the collection. |
+| `collection_update_authority` | ✅       | ✅      | Update authority of the collection. |
+| `collection_authority_record` | ✅       |        | Authority Record PDA of the collection. |
+| `token_metadata_program`      |          |        | Metaplex `TokenMetadata` program ID. |
+| `system_program`              |          |        | `SystemProgram` account. |
+| `rent`                        |          |        | `Rent` account. |
+</details>
+
+<details>
+  <summary>Arguments</summary>
+  
+| Argument                      | Offset | Size | Description               |
+| ----------------------------- | ------ | ---- | ------------------------- |
+| `data`                        | 0      | ~    | `CandyMachineData` object. |
+</details>
+
+
+### `mint`
+
+This instruction mints an NFT from the Candy Machine. Only the mint authority is able to mint from the Candy Machine.
+
+<details>
+  <summary>Accounts</summary>
+
+| Name                          | Writable | Signer | Description |
+| ----------------------------- | :------: | :----: | ----------- |
+| `candy_machine`               | ✅       |        | The `CandyMachine` account. |
+| `authority_pda`               | ✅       |        | Authority PDA key (seeds `["candy_machine", candy_machine pubkey]`). |
+| `mint_authority`              |          | ✅     | Public key of the candy machine mint authority. |
+| `payer`                       |          | ✅     | Payer of the transaction. |
+| `nft_mint`                    |          | ✅     | Mint account for the NFT. The account should be created before executing the instruction. |
+| `nft_mint_authority`          |          | ✅     | Mint authority of the NFT. |
+| `nft_metadata`                |          | ✅     | Metadata account of the NFT. |
+| `nft_master_edition`          |          | ✅     | Master Edition account of the NFT. |
+| `collection_metadata`         |          |        | Metadata account of the collection. |
+| `collection_mint`             |          |        | Mint account of the collection. |
+| `collection_master_edition`   |          |        | Master Edition account of the collection. |
+| `collection_update_authority` | ✅       | ✅      | Update authority of the collection. |
+| `collection_authority_record` | ✅       |        | Authority Record PDA of the collection. |
+| `token_metadata_program`      |          |        | Metaplex `TokenMetadata` program ID. |
+| `system_program`              |          |        | `SystemProgram` account. |
+| `rent`                        |          |        | `Rent` account. |
+</details>
+
+<details>
+  <summary>Arguments</summary>
+  
+None.
+</details>
+
+
+### `set_authority`
+
+This instruction changes the authority of the candy machine. Note that this operation is irreversible, once you change the authority of the Candy Machine, the current authority will lose the right to operate it.
+
+<details>
+  <summary>Accounts</summary>
+
+| Name                          | Writable | Signer | Description |
+| ----------------------------- | :------: | :----: | ----------- |
+| `candy_machine`               | ✅       |        | The `CandyMachine` account. |
+| `authority`                   |          | ✅     | Public key of the candy machine authority. |
+</details>
+
+<details>
+  <summary>Arguments</summary>
+  
+| Argument                      | Offset | Size | Description               |
+| ----------------------------- | ------ | ---- | ------------------------- |
+| `new_authority`               | 0      | 32    | Public key of the new authority. |
+</details>
+
+
+### `set_collection`
+
+This instruction sets the collection to be used by the Candy Machine. The collection can only be changed if no NFTs have been minted.
+
+<details>
+  <summary>Accounts</summary>
+
+| Name                              | Writable | Signer | Description |
+| --------------------------------- | :------: | :----: | ----------- |
+| `candy_machine`                   | ✅       |        | The `CandyMachine` account. |
+| `authority`                       |          | ✅     | Public key of the candy machine authority. |
+| `authority_pda`                   | ✅       |        | Authority PDA key (seeds `["candy_machine", candy_machine pubkey]`). |
+| `payer`                           |          | ✅     | Payer of the transaction. |
+| `collection_mint`                 |          |        | Mint account of the current collection. |
+| `collection_metadata`             |          |        | Metadata account of the current collection. |
+| `collection_authority_record`     | ✅       |        | Authority Record PDA of the current collection. |
+| `new_collection_update_authority` | ✅       | ✅      | Authority Record PDA of the new collection. |
+| `new_collection_metadata`         |          |        | Metadata account of the new collection. |
+| `new_collection_mint`             |          |        | Mint account of the new collection. |
+| `new_collection_master_edition`   |          |        | Master Edition account of the new collection. |
+| `new_collection_authority_record` | ✅       |        | Authority Record PDA of the new collection. |
+| `token_metadata_program`          |          |        | Metaplex `TokenMetadata` program ID. |
+| `system_program`                  |          |        | `SystemProgram` account. |
+| `rent`                            |          |        | `Rent` account. |
+</details>
+
+<details>
+  <summary>Arguments</summary>
+  
+None.
+</details>
+
+
+### `set_mint_authority`
+
+This instruction changes the mint authority of the Candy Machine. Note that this operation is irreversible, once you change the mint authority of the Candy Machine, the current mint authority will lose the right to mint from the Candy Machine.
+
+<details>
+  <summary>Accounts</summary>
+
+| Name                          | Writable | Signer | Description |
+| ----------------------------- | :------: | :----: | ----------- |
+| `candy_machine`               | ✅       |        | The `CandyMachine` account. |
+| `authority`                   |          | ✅     | Public key of the candy machine authority. |
+| `mint_authority`              |          | ✅     | Public key of the new mint authority. |
+</details>
+
+<details>
+  <summary>Arguments</summary>
+  
+None.
+</details>
+
+
+### `update`
+
+This instruction updates the configuration of the Candy Machine. There are restrictions on which configuration can be updated:
+* `items_available`: can only be updated when `hidden_settings` are used.
+* `hidden_settings`: it is not possible to switch to `hidden_settings` if the number of `items_available` is greater than `0`; it is not possuble to swith from `hidden_settings` to `config_line_settings`.
+* `name_length` and `uri_length` in `config_line_settings`: can only be updated with values that are smaller that current values used.
+* `is_sequential`: can only be changed is the number of `items_redemmed` is equal to `0`.
+
+<details>
+  <summary>Accounts</summary>
+
+| Name                          | Writable | Signer | Description |
+| ----------------------------- | :------: | :----: | ----------- |
+| `candy_machine`               | ✅       |        | The `CandyMachine` account. |
+| `authority`                   |          | ✅      | Public key of the candy machine authority. |
+</details>
+
+<details>
+  <summary>Arguments</summary>
+  
+| Argument                      | Offset | Size | Description               |
+| ----------------------------- | ------ | ---- | ------------------------- |
+| `data`                        | 0      | ~    | `CandyMachineData` object. |
+</details>
+
+
+### `withdraw`
+
+This instruction withdraws the rent lamports from the account and closes it. After executing this instruction, the Candy Machine will not be operational.
+
+<details>
+  <summary>Accounts</summary>
+
+| Name                          | Writable | Signer | Description |
+| ----------------------------- | :------: | :----: | ----------- |
+| `candy_machine`               | ✅       |        | The `CandyMachine` account. |
+| `authority`                   | ✅       | ✅      | Public key of the candy machine authority. |
+</details>
+
+<details>
+  <summary>Arguments</summary>
+  
+None.
+</details>
