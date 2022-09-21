@@ -6,8 +6,8 @@
  */
 
 import * as web3 from '@solana/web3.js';
-import * as beet from '@metaplex-foundation/beet';
 import * as beetSolana from '@metaplex-foundation/beet-solana';
+import * as beet from '@metaplex-foundation/beet';
 import { Key, keyBeet } from '../types/Key';
 
 /**
@@ -18,9 +18,7 @@ import { Key, keyBeet } from '../types/Key';
 export type TokenOwnedEscrowArgs = {
   key: Key;
   baseToken: web3.PublicKey;
-  tokens: beet.COption<web3.PublicKey>[];
   delegates: web3.PublicKey[];
-  model: beet.COption<web3.PublicKey>;
 };
 /**
  * Holds the data for the {@link TokenOwnedEscrow} Account and provides de/serialization
@@ -33,16 +31,14 @@ export class TokenOwnedEscrow implements TokenOwnedEscrowArgs {
   private constructor(
     readonly key: Key,
     readonly baseToken: web3.PublicKey,
-    readonly tokens: beet.COption<web3.PublicKey>[],
     readonly delegates: web3.PublicKey[],
-    readonly model: beet.COption<web3.PublicKey>,
   ) {}
 
   /**
    * Creates a {@link TokenOwnedEscrow} instance from the provided args.
    */
   static fromArgs(args: TokenOwnedEscrowArgs) {
-    return new TokenOwnedEscrow(args.key, args.baseToken, args.tokens, args.delegates, args.model);
+    return new TokenOwnedEscrow(args.key, args.baseToken, args.delegates);
   }
 
   /**
@@ -140,9 +136,7 @@ export class TokenOwnedEscrow implements TokenOwnedEscrowArgs {
     return {
       key: 'Key.' + Key[this.key],
       baseToken: this.baseToken.toBase58(),
-      tokens: this.tokens,
       delegates: this.delegates,
-      model: this.model,
     };
   }
 }
@@ -158,9 +152,7 @@ export const tokenOwnedEscrowBeet = new beet.FixableBeetStruct<
   [
     ['key', keyBeet],
     ['baseToken', beetSolana.publicKey],
-    ['tokens', beet.array(beet.coption(beetSolana.publicKey))],
     ['delegates', beet.array(beetSolana.publicKey)],
-    ['model', beet.coption(beetSolana.publicKey)],
   ],
   TokenOwnedEscrow.fromArgs,
   'TokenOwnedEscrow',

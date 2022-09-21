@@ -37,7 +37,7 @@ export type CloseEscrowAccountInstructionAccounts = {
   systemProgram?: web3.PublicKey;
 };
 
-export const closeEscrowAccountInstructionDiscriminator = 38;
+export const closeEscrowAccountInstructionDiscriminator = 39;
 
 /**
  * Creates a _CloseEscrowAccount_ instruction.

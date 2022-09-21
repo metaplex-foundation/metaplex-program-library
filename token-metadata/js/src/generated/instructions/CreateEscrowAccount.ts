@@ -24,7 +24,6 @@ export const CreateEscrowAccountStruct = new beet.BeetArgsStruct<{
  * @property [] mint Mint account
  * @property [] edition Edition account
  * @property [_writable_, **signer**] payer Wallet paying for the transaction and new account
- * @property [_writable_] escrowConstraintModel (optional) Optional Escrow Constraints Model
  * @category Instructions
  * @category CreateEscrowAccount
  * @category generated
@@ -36,10 +35,9 @@ export type CreateEscrowAccountInstructionAccounts = {
   edition: web3.PublicKey;
   payer: web3.PublicKey;
   systemProgram?: web3.PublicKey;
-  escrowConstraintModel?: web3.PublicKey;
 };
 
-export const createEscrowAccountInstructionDiscriminator = 37;
+export const createEscrowAccountInstructionDiscriminator = 38;
 
 /**
  * Creates a _CreateEscrowAccount_ instruction.
@@ -88,14 +86,6 @@ export function createCreateEscrowAccountInstruction(
       isSigner: false,
     },
   ];
-
-  if (accounts.escrowConstraintModel != null) {
-    keys.push({
-      pubkey: accounts.escrowConstraintModel,
-      isWritable: true,
-      isSigner: false,
-    });
-  }
 
   const ix = new web3.TransactionInstruction({
     programId,

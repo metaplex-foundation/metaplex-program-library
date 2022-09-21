@@ -48,7 +48,6 @@ export const TransferOutOfEscrowStruct = new beet.BeetArgsStruct<
  * @property [] attributeMetadata Metadata account of the new attribute
  * @property [] escrowMint Mint account that the escrow is attached
  * @property [] escrowAccount Token account that holds the token the escrow is attached to
- * @property [] constraintModel (optional) The constraint model to check against
  * @category Instructions
  * @category TransferOutOfEscrow
  * @category generated
@@ -66,7 +65,6 @@ export type TransferOutOfEscrowInstructionAccounts = {
   ataProgram?: web3.PublicKey;
   tokenProgram?: web3.PublicKey;
   rent?: web3.PublicKey;
-  constraintModel?: web3.PublicKey;
 };
 
 export const transferOutOfEscrowInstructionDiscriminator = 40;
@@ -152,14 +150,6 @@ export function createTransferOutOfEscrowInstruction(
       isSigner: false,
     },
   ];
-
-  if (accounts.constraintModel != null) {
-    keys.push({
-      pubkey: accounts.constraintModel,
-      isWritable: false,
-      isSigner: false,
-    });
-  }
 
   const ix = new web3.TransactionInstruction({
     programId,
