@@ -1,43 +1,40 @@
-use {
-    crate::error::BubblegumError,
-    crate::state::metaplex_anchor::MplTokenMetadata,
-    crate::state::{
+use crate::{
+    error::BubblegumError,
+    state::{
         leaf_schema::{LeafSchema, Version},
         metaplex_adapter::{self, Creator, MetadataArgs, TokenProgramVersion},
-        metaplex_anchor::{MasterEdition, TokenMetadata},
+        metaplex_anchor::{MasterEdition, MplTokenMetadata, TokenMetadata},
         NFTDecompressionEvent, NewNFTEvent, TreeConfig, Voucher, ASSET_PREFIX,
         COLLECTION_CPI_PREFIX, TREE_AUTHORITY_SIZE, VOUCHER_PREFIX, VOUCHER_SIZE,
     },
-    crate::utils::{
+    utils::{
         append_leaf, assert_metadata_is_mpl_compatible, assert_pubkey_equal, cmp_bytes,
         cmp_pubkeys, get_asset_id, replace_leaf,
     },
-    anchor_lang::{
-        prelude::*,
-        solana_program::{
-            account_info::AccountInfo,
-            keccak,
-            program::{invoke, invoke_signed},
-            program_error::ProgramError,
-            program_pack::Pack,
-            system_instruction,
-        },
-        system_program::System,
-    },
-    mpl_token_metadata::{
-        assertions::collection::{
-            assert_collection_verify_is_valid, assert_has_collection_authority,
-        },
-        state::CollectionDetails,
-    },
-    spl_account_compression::{
-        data_wrapper::{wrap_event, Wrapper},
-        program::SplAccountCompression,
-        Node,
-    },
-    spl_token::state::Mint as SplMint,
-    std::collections::HashSet,
 };
+use anchor_lang::{
+    prelude::*,
+    solana_program::{
+        account_info::AccountInfo,
+        keccak,
+        program::{invoke, invoke_signed},
+        program_error::ProgramError,
+        program_pack::Pack,
+        system_instruction,
+    },
+    system_program::System,
+};
+use mpl_token_metadata::{
+    assertions::collection::{assert_collection_verify_is_valid, assert_has_collection_authority},
+    state::CollectionDetails,
+};
+use spl_account_compression::{
+    data_wrapper::{wrap_event, Wrapper},
+    program::SplAccountCompression,
+    Node,
+};
+use spl_token::state::Mint as SplMint;
+use std::collections::HashSet;
 
 pub mod error;
 pub mod state;
@@ -1301,6 +1298,7 @@ pub mod bubblegum {
                             &ctx.accounts.leaf_owner.key(),
                             &ctx.accounts.leaf_owner.key(),
                             &ctx.accounts.mint.key(),
+                            &spl_token::id(),
                         ),
                         &[
                             ctx.accounts.leaf_owner.to_account_info(),

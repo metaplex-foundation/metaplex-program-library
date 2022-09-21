@@ -3,8 +3,7 @@ pub mod metaplex_adapter;
 pub mod metaplex_anchor;
 
 use anchor_lang::prelude::*;
-use leaf_schema::LeafSchema;
-use leaf_schema::Version;
+use leaf_schema::{LeafSchema, Version};
 use metaplex_adapter::MetadataArgs;
 
 pub const TREE_AUTHORITY_SIZE: usize = 88 + 8;
