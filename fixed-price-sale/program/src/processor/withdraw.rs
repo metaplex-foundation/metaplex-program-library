@@ -1,4 +1,3 @@
-use crate::state::from_mpl_creators;
 use crate::{
     error::ErrorCode,
     state::{Creator, MarketState, PrimaryMetadataCreators},

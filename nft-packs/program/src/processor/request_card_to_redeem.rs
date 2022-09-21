@@ -254,7 +254,9 @@ pub fn get_proving_process_data<'a>(
 ) -> Result<ProvingProcess, ProgramError> {
     let unpack = ProvingProcess::unpack(&account_info.data.borrow_mut());
 
-    let proving_process = match unpack {
+    
+
+    match unpack {
         Ok(data) => Ok(data),
         Err(_) => {
             // Burn PackVoucher tokens
@@ -285,7 +287,5 @@ pub fn get_proving_process_data<'a>(
 
             Ok(data)
         }
-    };
-
-    proving_process
+    }
 }

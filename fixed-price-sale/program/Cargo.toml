@@ -1,3 +1,4 @@
+[workspace]
 [package]
 name = "mpl-fixed-price-sale"
 version = "0.2.3"

@@ -1698,32 +1698,14 @@ dependencies = [
 ]
 
 [[package]]
-name = "mpl-auction-house"
-version = "1.2.4"
-dependencies = [
- "anchor-lang",
- "anchor-spl",
- "arrayref",
- "mpl-token-metadata",
- "solana-program",
- "spl-associated-token-account",
- "spl-token",
- "thiserror",
-]
-
-[[package]]
-name = "mpl-auctioneer"
-version = "0.1.0"
+name = "mpl-fixed-price-sale"
+version = "0.2.3"
 dependencies = [
  "anchor-client",
  "anchor-lang",
  "anchor-spl",
- "env_logger",
- "mpl-auction-house",
  "mpl-testing-utils",
  "mpl-token-metadata",
- "serde_json",
- "shellexpand",
  "solana-program",
  "solana-program-test",
  "solana-sdk",
