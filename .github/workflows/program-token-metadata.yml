@@ -13,7 +13,7 @@ env:
 
 jobs:
   setup-versions:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     outputs:
       versions: ${{ steps.matrix.outputs.value }}
     steps:
@@ -30,7 +30,7 @@ jobs:
         shell: bash
   
   setup-tests:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     outputs:
       tests: ${{ steps.matrix.outputs.value }}
     steps:
@@ -51,7 +51,7 @@ jobs:
         shell: bash
 
   changes:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     # Set job outputs to values from filter step
     outputs:
       core: ${{ steps.filter.outputs.core }}
@@ -71,7 +71,7 @@ jobs:
   build-and-test-token-metadata:
     needs: [changes, setup-versions, setup-tests]
     if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' }}
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     strategy:
       fail-fast: false
       matrix:
