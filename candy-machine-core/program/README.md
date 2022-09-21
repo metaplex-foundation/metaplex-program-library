@@ -29,36 +29,36 @@ The `mint_authority` is the only address that is able to mint from a candy machi
 
 The `Candy Machine` configuration is stored in a single account, which includes settings that control the behaviour of the candy machine and metadata information for the NFTs minted through it. The account data is represented by the [`CandyMachine`](https://github.com/metaplex-foundation/metaplex-program-library/blob/febo/candy-machine-core/candy-machine-core/program/src/state/candy_machine.rs) struct, which include references to auxiliary structs [`Creator`](https://github.com/metaplex-foundation/metaplex-program-library/blob/febo/candy-machine-core/candy-machine-core/program/src/state/candy_machine_data.rs), [`ConfigLineSettings`](https://github.com/metaplex-foundation/metaplex-program-library/blob/febo/candy-machine-core/candy-machine-core/program/src/state/candy_machine_data.rs) and [`HiddenSettings`](https://github.com/metaplex-foundation/metaplex-program-library/blob/febo/candy-machine-core/candy-machine-core/program/src/state/candy_machine_data.rs).
 
-| Field                     | Offset | Size  | Description                  |
-| ------------------------- | ------ | ----- | ---------------------------- |
-| &mdash;                                                                      | 0      | 8     | Anchor account discriminator
-| `features`                                                             | 8      | 8     | `u64` field to be used as a binary flag to support future features while maintaing backwards compatibility |
-| `authority`                                                            | 16     | 32    | `PubKey` of the authority address that controls the candy machine |
-| `mint_authority`                                                       | 48     | 32    | `PubKey` of the address allowed to mint from the candy machine |
-| `collection_mint`                                                      | 80     | 32    | `PubKey` of the collection NFT; each NFT minted from the candy machine will be part of this collection |
-| `items_redeemed`                                                       | 112    | 8     | Number of NFTs minted |
-| `data`        |        |       |  [`CandyMachineData`](https://github.com/metaplex-foundation/metaplex-program-library/blob/febo/candy-machine-core/candy-machine-core/program/src/state/candy_machine_data.rs)         |
-| <div style="margin-left:1rem">&#x25AB; `items_available`</div>         | 120    | 8     | Total number of NFTs available |
-| <div style="margin-left:1rem">&#x25AB; `symbol`</div>                  | 128    | 14    | `string` representing the token symbol: `length` (4 bytes) + `symbol` (10 bytes) |
-| <div style="margin-left:1rem">&#x25AB; `seller_fee_basis_points`</div> | 142    | 2     | Royalties percentage awarded to creators (value between 0 and 1000) |
-| <div style="margin-left:1rem">&#x25AB; `max_supply`</div>              | 144    | 8     | Indicates how many copies (editions) of an NFT can be created after it is minted; this is usually set to `0` |
-| <div style="margin-left:1rem">&#x25AB; `is_mutable`</div>              | 152    | 1     | Indicates whether the minted NFT is mutable or not |
-| <div style="margin-left:1rem">&#x25AB; `creators`</div>                | 153    | ~     | An array of [`Creator`](https://github.com/metaplex-foundation/metaplex-program-library/blob/febo/candy-machine-core/candy-machine-core/program/src/state/candy_machine_data.rs#L29) and their share of the royalties; this array is limited to 5 creators. **Note:** since the `creators` field is an array of variable length, we cannot guarantee the byte position of any field that follows (Notice the tilde ~ in the fields below). Each creator contains the following fields: |
-| <div style="margin-left:2rem">`- address`</div>                        | ~      | 32    | The public key of the creator |
-| <div style="margin-left:2rem">`- verified`</div>                       | ~      | 1     | The public key of the creator |
-| <div style="margin-left:2rem">`- share`</div>                          | ~      | 1     | The public key of the creator |
-| <div style="margin-left:1rem">&#x25AB; `config_line_settings`</div>    | ~      | 1     | (optional) [`ConfigLineSettings`](https://github.com/metaplex-foundation/metaplex-program-library/blob/febo/candy-machine-core/candy-machine-core/program/src/state/candy_machine_data.rs#L51)                             |
-|  <div style="margin-left:2rem">`- prefix_name`</div>                   | ~      | 36    | `string` representing the common part of the name of NFTs |
-|  <div style="margin-left:2rem">`- name_length`</div>                   | ~      | 4     | `u32` specifying the number of bytes for the remaining part of the name |
-|  <div style="margin-left:2rem">`- prefix_uri`</div>                    | ~      | 204   | `string` representing the common part of the URI of NFTs |
-|  <div style="margin-left:2rem">`- uri_length`</div>                    | ~      | 4     | `u32` specifying the number of bytes for the remaining part of the URI |
-|  <div style="margin-left:2rem">`- is_sequential`</div>                 | ~      | 1     | Indicates whether the mint index generation is sequential or not |
-| <div style="margin-left:1rem">&#x25AB; `hidden_settings`</div>         | ~      | 1     | (optional) [`HiddenSettings`](https://github.com/metaplex-foundation/metaplex-program-library/blob/febo/candy-machine-core/candy-machine-core/program/src/state/candy_machine_data.rs#L40) |
-|  <div style="margin-left:2rem">`- name`</div>                          | ~      | 36    | `string` representing the name of NFTs |
-|  <div style="margin-left:2rem">`- uri`</div>                           | ~      | 204   | `uri` for the metadata of NFTs         |
-|  <div style="margin-left:2rem">`- hash`</div>                          | ~      | 32    | `string` representing the hash value of the file that contain the mapping of (mint index, NFT metadata) |
-|  *hidden section*                          | 850      | ~    | (optional) Hidden data section to avoid unnecessary deserialisation. This section of the account is not represented by structs and data is store/retrieved using byte offsets. |
-|  <div style="margin-left:2rem">- *items*</div> | 850      | 4    | Number of NFTs (items) added to the candy machine; eventually this will be the same as `items_available` |
-|  <div style="margin-left:2rem">- *config lines*</div> | 854      | ~    | A sequence of name and uri pairs representing each NFT; the length of these are determined by `name_length + uri_length`; there will `items_available * (name + uri)` pairs in total |
-|  <div style="margin-left:2rem">- *byte mask*</div> | ~      | ~    | A byte section of length equal to `(items_available / 8) + 1` with binary flag to indicate which config lines have been added |
-|  <div style="margin-left:2rem">- *mint indices*</div> | ~      | ~    | A sequence of `u32` values representing the available mint indices; the usable indices are determined by: valid indices start at the mint number (`items_redeemed`) if `is_sequential` is `true`; valid mint indices start from offset 0 until the offset determined by `items_available - items_redeemed` |
+| Field                       | Offset | Size  | Description                  |
+| --------------------------- | ------ | ----- | ---------------------------- |
+| &mdash;                     | 0      | 8     | Anchor account discriminator.
+| `features`                  | 8      | 8     | `u64` field to be used as a binary flag to support future features while maintaing backwards compatibility. |
+| `authority`                 | 16     | 32    | `PubKey` of the authority address that controls the candy machine. |
+| `mint_authority`            | 48     | 32    | `PubKey` of the address allowed to mint from the candy machine. |
+| `collection_mint`           | 80     | 32    | `PubKey` of the collection NFT; each NFT minted from the candy machine will be part of this collection. |
+| `items_redeemed`            | 112    | 8     | Number of NFTs minted. |
+| `data`                      |        |       |  [`CandyMachineData`](https://github.com/metaplex-foundation/metaplex-program-library/blob/febo/candy-machine-core/candy-machine-core/program/src/state/candy_machine_data.rs)         |
+| - `items_available`         | 120    | 8     | Total number of NFTs available. |
+| - `symbol`                  | 128    | 14    | `string` representing the token symbol: `length` (4 bytes) + `symbol` (10 bytes). |
+| - `seller_fee_basis_points` | 142    | 2     | Royalties percentage awarded to creators (value between 0 and 1000). |
+| - `max_supply`              | 144    | 8     | Indicates how many copies (editions) of an NFT can be created after it is minted; this is usually set to `0`. |
+| - `is_mutable`              | 152    | 1     | Indicates whether the minted NFT is mutable or not. |
+| - `creators`                | 153    | ~     | An array of [`Creator`](https://github.com/metaplex-foundation/metaplex-program-library/blob/febo/candy-machine-core/candy-machine-core/program/src/state/candy_machine_data.rs#L29) and their share of the royalties; this array is limited to 5 creators. **Note:** since the `creators` field is an array of variable length, we cannot guarantee the byte position of any field that follows (Notice the tilde ~ in the fields below). Each creator contains the following fields: |
+| -- `address`                | ~      | 32    | The public key of the creator |
+| -- `verified`               | ~      | 1     | The public key of the creator |
+| -- `share`                  | ~      | 1     | The public key of the creator |
+| - `config_line_settings`    | ~      | 1     | (optional) [`ConfigLineSettings`](https://github.com/metaplex-foundation/metaplex-program-library/blob/febo/candy-machine-core/candy-machine-core/program/src/state/candy_machine_data.rs#L51)                             |
+| -- `prefix_name`            | ~      | 36    | `string` representing the common part of the name of NFTs. |
+| -- `name_length`            | ~      | 4     | `u32` specifying the number of bytes for the remaining part of the name. |
+| -- `prefix_uri`             | ~      | 204   | `string` representing the common part of the URI of NFTs. |
+| -- `uri_length`             | ~      | 4     | `u32` specifying the number of bytes for the remaining part of the URI. |
+| -- `is_sequential`          | ~      | 1     | Indicates whether the mint index generation is sequential or not. |
+| - `hidden_settings`         | ~      | 1     | (optional) [`HiddenSettings`](https://github.com/metaplex-foundation/metaplex-program-library/blob/febo/candy-machine-core/candy-machine-core/program/src/state/candy_machine_data.rs#L40) |
+| -- `name`                   | ~      | 36    | `string` representing the name of NFTs. |
+| -- `uri`                    | ~      | 204   | `uri` for the metadata of NFTs.         |
+| -- `hash`                   | ~      | 32    | `string` representing the hash value of the file that contain the mapping of (mint index, NFT metadata). |
+| *hidden section*            | 850    | ~    | (optional) Hidden data section to avoid unnecessary deserialisation. This section of the account is not represented by structs and data is store/retrieved using byte offsets. The hidden data section is not present when `hiddenSettings` are used, since there is no need to store config line settings. |
+| - *items*</div>             | 850    | 4    | Number of NFTs (items) added to the candy machine; eventually this will be the same as `items_available`. |
+| - *config lines*</div>      | 854    | ~    | A sequence of name and uri pairs representing each NFT; the length of these are determined by `name_length + uri_length`; there will `items_available * (name + uri)` pairs in total. |
+| - *byte mask*</div>         | ~      | ~    | A byte section of length equal to `(items_available / 8) + 1` with binary flag to indicate which config lines have been added. |
+| - *mint indices*</div>      | ~      | ~    | A sequence of `u32` values representing the available mint indices; the usable indices are determined by: valid indices start at the mint number (`items_redeemed`) if `is_sequential` is `true`; valid mint indices start from offset 0 until the offset determined by `items_available - items_redeemed`. |
