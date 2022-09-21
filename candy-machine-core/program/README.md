@@ -293,7 +293,7 @@ When a storage with deterministic URI generation &mdash; e.g., AWS S3 and Shadow
 A prefix_uri can include `$ID$` or `$ID+1$` patterns, which are automatically substituted for the `mint index` or `mint index + 1` to generate a valid uri:
 * `https://shdw-drive.genesysgo.net/DCG6qThfZE8xbM72RoFRLwRSrhNVjeWE1gVPPCGvLYSS/$ID$.png` gets expanded to `https://shdw-drive.genesysgo.net/DCG6qThfZE8xbM72RoFRLwRSrhNVjeWE1gVPPCGvLYSS/0.png` when the first NFT is minted.
 
-This also applied to the `prefix_name`: `My NFT #$ID+1$` gets expanded to `My NFT #1` whtn the fist NFT is minted.
+This also applied to the `prefix_name`: `My NFT #$ID+1$` gets expanded to `My NFT #1` when the fist NFT is minted.
 
 ### Hidden settings with "automatic" reveal
 
