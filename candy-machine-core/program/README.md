@@ -276,3 +276,35 @@ This instruction withdraws the rent lamports from the account and closes it. Aft
   
 None.
 </details>
+
+
+## Features
+
+Main improvements over the previous Candy Machine program.
+
+### Account space utilization
+
+It is now possible to define a pattern to store the `name` and `uri` configuration in the format of `prefix_name + name` and `prefix_uri + uri`, where both `prefix_name` and `prefix_uri` are shared among all config lines. This provides account space saving, since there is no need to store repeated bytes in the account, leading to the possibility of creating larger Candy Machines and reducing the cost of deployment.
+
+> Instead of storing full URIs &mdash; e.g.,  `https://arweave.net/yFoNLhe6cBK-wj0n_Wu-XuX7DC75VbMsNKwVbRSz4iQ?ext=png` &mdash; for each config line, the `prefix_uri` is set to `https://arweave.net/` and each config line only stores the different values in the `uri` space. This also applies to the `prefix_name` and `name` pair.
+
+When a storage with deterministic URI generation &mdash; e.g., AWS S3 and Shadow Drive &mdash; is used, a significant space saving can be achieved by using replacement patterns in the `prefix_name` and `prefix_uri`, leaving each individual `name` and `uri` empty. In this case, the only space needed is to store the index representing the id for the random mint index generation.
+
+> A prefix_uri can include `$ID$` or `$ID+1$` patterns, which are automatically substituted for the `mint index` or `mint index + 1` to generate a valid uri:
+> * `https://shdw-drive.genesysgo.net/DCG6qThfZE8xbM72RoFRLwRSrhNVjeWE1gVPPCGvLYSS/$ID$.png` gets expanded to `https://shdw-drive.genesysgo.net/DCG6qThfZE8xbM72RoFRLwRSrhNVjeWE1gVPPCGvLYSS/0.png` when the first NFT is minted.
+>
+>This also applied to the `prefix_name`: `My NFT #$ID+1$` gets expanded to `My NFT #1` whtn the fist NFT is minted.
+
+### Hidden settings with "automatic" reveal
+
+Hidden settings are the most space efficient way to create a `Candy Machine` since no config lines are stored on the account. At the same time, it is necessary to run an update metadata procedure &mdash; dubbed **reveal** &mdash; after the mint to set each individual name and URI on the metadata of minted NFTs. 
+
+When a storage with deterministic URI generation is used, the **reveal** is not required as one can use the same `$ID$`or `$ID+1$` replacement patterns in the **name** and **uri** fields of hidden settings.
+
+> 💡 The difference between using config lines with patterns and hidden settings with patterns is that in the former, the index generation for the mint is **random** while in the later the index generation is **sequential**.
+
+### Random Index Generation
+
+Currently the random index generation uses a sequential procedure to find the next available mint index. While this procedure works for most cases, it is not efficient (in terms of compute units) and it can reach the limit of compute units on large Candy Machine deploys.
+
+The new Candy Machine uses an improved procedure that consumes a fixed amount of compute units regardless of the number of items and, at the same time, shuffles the values to improve their unpredictability.
