@@ -1046,8 +1046,7 @@
           "name": "rent",
           "isMut": false,
           "isSigner": false,
-          "desc": "Rent info",
-          "optional": true
+          "desc": "Rent info"
         }
       ],
       "args": [
@@ -3532,7 +3531,7 @@
   "metadata": {
     "origin": "shank",
     "address": "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s",
-    "binaryVersion": "0.0.8",
+    "binaryVersion": "0.0.9",
     "libVersion": "~0.0.4"
   }
 }

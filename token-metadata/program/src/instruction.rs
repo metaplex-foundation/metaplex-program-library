@@ -334,7 +334,7 @@ pub enum MetadataInstruction {
     #[account(5, writable, name="metadata", desc="Metadata account")]
     #[account(6, name="token_program", desc="Token program")]
     #[account(7, name="system_program", desc="System program")]
-    #[account(8, optional, name="rent", desc="Rent info")]
+    #[account(8, name="rent", desc="Rent info")]
     CreateMasterEditionV3(CreateMasterEditionArgs),
 
     /// If a MetadataAccount Has a Collection allow the UpdateAuthority of the Collection to Verify the NFT Belongs in the Collection.
