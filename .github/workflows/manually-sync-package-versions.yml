@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   dump-context:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted 
     steps:
       - uses: actions/checkout@v3
       - name: Dump GitHub context
@@ -22,7 +22,7 @@ jobs:
         run: echo "$GITHUB_CONTEXT"
 
   sync-package-versions:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - uses: actions/checkout@v3
       - name: Publish version changes
