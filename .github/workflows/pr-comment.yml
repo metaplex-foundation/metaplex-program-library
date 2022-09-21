@@ -19,7 +19,7 @@ env:
 
 jobs:
   dump-context:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - name: Dump GitHub context
@@ -29,7 +29,7 @@ jobs:
 
   get-changes-scope:
     if: contains(fromJson('["OWNER", "MEMBER", "CONTRIBUTOR"]'), github.event.review.author_association) == true && contains(fromJson('["approved", "commented"]'), github.event.review.state) == true
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     outputs:
       changed-packages: ${{ steps.get-changed-package-scope.outputs.result }}
     steps:
@@ -62,7 +62,7 @@ jobs:
 
   get-version-scope:
     if: contains(fromJson('["OWNER", "MEMBER", "CONTRIBUTOR"]'), github.event.review.author_association) == true && contains(fromJson('["approved", "commented"]'), github.event.review.state) == true
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     outputs:
       versioning: ${{ steps.parse-version-info.outputs.versioning }}
       has-versioning: ${{ steps.parse-version-info.outputs.has-versioning }}
@@ -98,7 +98,7 @@ jobs:
   update-pr-with-changes:
     needs: [get-changes-scope, get-version-scope]
     if: ${{ needs.get-version-scope.outputs.has-versioning == 'true' }}
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/actions/install-linux-build-deps
