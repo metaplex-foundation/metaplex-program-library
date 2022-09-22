@@ -132,7 +132,13 @@ export function createCreateMasterEditionV3Instruction(
       isWritable: false,
       isSigner: false,
     });
-  }
+  } else {
+    keys.push({
+        pubkey: web3.SYSVAR_RENT_PUBKEY,
+        isWritable: false,
+        isSigner: false
+    })
+}
 
   const ix = new web3.TransactionInstruction({
     programId,
