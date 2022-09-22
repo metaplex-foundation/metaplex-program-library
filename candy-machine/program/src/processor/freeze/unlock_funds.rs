@@ -11,11 +11,13 @@ use crate::{
 /// Unlocks the funds from mint stuck in the FreezePDA
 #[derive(Accounts)]
 pub struct UnlockFunds<'info> {
-    #[account(mut, has_one = authority)]
+    #[account(mut, has_one = authority, has_one = wallet)]
     candy_machine: Account<'info, CandyMachine>,
     #[account(mut)]
+    wallet: UncheckedAccount<'info>,
+    #[account(mut)]
     authority: Signer<'info>,
-    #[account(mut, close = authority, seeds = [FreezePDA::PREFIX.as_bytes(), candy_machine.to_account_info().key.as_ref()], bump)]
+    #[account(mut, close = wallet, seeds = [FreezePDA::PREFIX.as_bytes(), candy_machine.to_account_info().key.as_ref()], bump)]
     freeze_pda: Account<'info, FreezePDA>,
     system_program: Program<'info, System>,
     // > Only needed if candy machine has a mint set
