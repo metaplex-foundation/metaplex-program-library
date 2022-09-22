@@ -7,7 +7,7 @@ use solana_sdk::{signer::Signer, transaction::Transaction};
 use utils::*;
 
 mod escrow {
-    use mpl_token_metadata::escrow::find_escrow_account;
+    use mpl_token_metadata::{escrow::find_escrow_account, state::EscrowAuthority};
     use solana_program::program_pack::Pack;
 
     use super::*;
@@ -41,7 +41,10 @@ mod escrow {
             .await
             .unwrap();
 
-        let escrow_address = find_escrow_account(&parent_test_metadata.mint.pubkey());
+        let escrow_address = find_escrow_account(
+            &parent_test_metadata.mint.pubkey(),
+            &EscrowAuthority::TokenOwner,
+        );
         print!("\nEscrow Address: {:#?}\n", escrow_address);
 
         let ix0 = mpl_token_metadata::escrow::create_escrow_account(
@@ -49,8 +52,10 @@ mod escrow {
             escrow_address.0,
             parent_test_metadata.pubkey,
             parent_test_metadata.mint.pubkey(),
+            parent_test_metadata.token.pubkey(),
             parent_test_master_edition.pubkey,
             context.payer.pubkey(),
+            None,
         );
         println!("{:?} {:?}", &context.payer, &parent_test_metadata.token);
 
@@ -170,6 +175,7 @@ mod escrow {
             attribute_test_metadata.pubkey,
             parent_test_metadata.mint.pubkey(),
             parent_test_metadata.token.pubkey(),
+            None,
             1,
         );
         println!("{:?} {:?}", &context.payer, &attribute_test_metadata.token);

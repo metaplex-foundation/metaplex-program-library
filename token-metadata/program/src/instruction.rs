@@ -546,9 +546,11 @@ pub enum MetadataInstruction {
     #[account(0, writable, name="escrow", desc="Escrow account")]
     #[account(1, name="metadata", desc="Metadata account")]
     #[account(2, name="mint", desc="Mint account")]
-    #[account(3, name="edition", desc="Edition account")]
-    #[account(4, writable, signer, name="payer", desc="Wallet paying for the transaction and new account")]
-    #[account(5, name="system_program", desc="System program")]
+    #[account(3, writable, name="token_account", desc="Token account to close")]
+    #[account(4, name="edition", desc="Edition account")]
+    #[account(5, writable, signer, name="payer", desc="Wallet paying for the transaction and new account")]
+    #[account(6, name="system_program", desc="System program")]
+    #[account(7, optional, signer, name="authority", desc="Authority/creator of the escrow account")]
     CreateEscrowAccount,
 
     /// Close the escrow account.
@@ -558,10 +560,11 @@ pub enum MetadataInstruction {
     #[account(3, name="edition", desc="Edition account")]
     #[account(4, writable, signer, name="payer", desc="Wallet paying for the transaction and new account")]
     #[account(5, name="system_program", desc="System program")]
+    #[account(6, optional, signer, name="authority", desc="Authority/creator of the escrow account")]
     CloseEscrowAccount,
 
     /// Create an escrow account to hold tokens.
-    #[account(0, writable, name="escrow", desc="Escrow account")]
+    #[account(0, name="escrow", desc="Escrow account")]
     #[account(1, writable, signer, name="payer", desc="Wallet paying for the transaction and new account")]
     #[account(2, name="attribute_mint", desc="Mint account for the new attribute")]
     #[account(3, writable, name="attribute_src", desc="Token account source for the new attribute")]
@@ -573,6 +576,7 @@ pub enum MetadataInstruction {
     #[account(9, name="ata_program", desc="Associated Token program")]
     #[account(10, name="token_program", desc="Token program")]
     #[account(11, name="rent", desc="Rent info")]
+    #[account(12, optional, signer, name="authority", desc="Authority/creator of the escrow account")]
     TransferOutOfEscrow(TransferOutOfEscrowArgs),
 }
 

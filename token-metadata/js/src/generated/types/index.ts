@@ -8,6 +8,7 @@ export * from './CreateMetadataAccountArgsV3';
 export * from './Creator';
 export * from './Data';
 export * from './DataV2';
+export * from './EscrowAuthority';
 export * from './Key';
 export * from './MintNewEditionFromMasterEditionViaTokenArgs';
 export * from './MintPrintingTokensViaTokenArgs';

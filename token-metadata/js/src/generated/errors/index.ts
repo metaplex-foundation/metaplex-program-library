@@ -2629,6 +2629,69 @@ createErrorFromNameLookup.set(
 );
 
 /**
+ * MustBeDelegate: 'Must be delegate to transfer out of Token Owned Escrow'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MustBeDelegateError extends Error {
+  readonly code: number = 0x7a;
+  readonly name: string = 'MustBeDelegate';
+  constructor() {
+    super('Must be delegate to transfer out of Token Owned Escrow');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MustBeDelegateError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x7a, () => new MustBeDelegateError());
+createErrorFromNameLookup.set('MustBeDelegate', () => new MustBeDelegateError());
+
+/**
+ * InvalidEscrowBumpSeed: 'Invalid Escrow Account Bump Seed'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidEscrowBumpSeedError extends Error {
+  readonly code: number = 0x7b;
+  readonly name: string = 'InvalidEscrowBumpSeed';
+  constructor() {
+    super('Invalid Escrow Account Bump Seed');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidEscrowBumpSeedError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x7b, () => new InvalidEscrowBumpSeedError());
+createErrorFromNameLookup.set('InvalidEscrowBumpSeed', () => new InvalidEscrowBumpSeedError());
+
+/**
+ * MustBeEscrowUpdateAuthority: 'Must be Update Authority on Escrow Account'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MustBeEscrowUpdateAuthorityError extends Error {
+  readonly code: number = 0x7c;
+  readonly name: string = 'MustBeEscrowUpdateAuthority';
+  constructor() {
+    super('Must be Update Authority on Escrow Account');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MustBeEscrowUpdateAuthorityError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x7c, () => new MustBeEscrowUpdateAuthorityError());
+createErrorFromNameLookup.set(
+  'MustBeEscrowUpdateAuthority',
+  () => new MustBeEscrowUpdateAuthorityError(),
+);
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

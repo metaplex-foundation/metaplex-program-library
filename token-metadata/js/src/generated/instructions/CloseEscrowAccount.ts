@@ -24,6 +24,7 @@ export const CloseEscrowAccountStruct = new beet.BeetArgsStruct<{
  * @property [] mint Mint account
  * @property [] edition Edition account
  * @property [_writable_, **signer**] payer Wallet paying for the transaction and new account
+ * @property [**signer**] authority (optional) Authority/creator of the escrow account
  * @category Instructions
  * @category CloseEscrowAccount
  * @category generated
@@ -35,6 +36,7 @@ export type CloseEscrowAccountInstructionAccounts = {
   edition: web3.PublicKey;
   payer: web3.PublicKey;
   systemProgram?: web3.PublicKey;
+  authority?: web3.PublicKey;
 };
 
 export const closeEscrowAccountInstructionDiscriminator = 39;
@@ -86,6 +88,14 @@ export function createCloseEscrowAccountInstruction(
       isSigner: false,
     },
   ];
+
+  if (accounts.authority != null) {
+    keys.push({
+      pubkey: accounts.authority,
+      isWritable: false,
+      isSigner: true,
+    });
+  }
 
   const ix = new web3.TransactionInstruction({
     programId,

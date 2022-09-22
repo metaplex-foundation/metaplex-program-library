@@ -1,4 +1,4 @@
-use std::io::ErrorKind;
+use std::{collections::HashSet, io::ErrorKind};
 
 use crate::{
     deser::meta_deser_unchecked,
@@ -946,11 +946,20 @@ pub const ESCROW_PREFIX: &str = "escrow";
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, Copy)]
+pub enum EscrowAuthority {
+    TokenOwner,
+    Creator(Pubkey),
+}
+
+#[repr(C)]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, ShankAccount)]
 pub struct TokenOwnedEscrow {
     pub key: Key,
     pub base_token: Pubkey,
-    pub delegates: Vec<Pubkey>,
+    pub authority: EscrowAuthority,
+    pub bump: u8,
 }
 
 impl TokenMetadataAccount for TokenOwnedEscrow {

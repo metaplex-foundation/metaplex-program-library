@@ -1,6 +1,7 @@
 use crate::{
+    error::MetadataError,
     instruction::MetadataInstruction,
-    state::{Metadata, TokenMetadataAccount, ESCROW_PREFIX, PREFIX},
+    state::{Metadata, TokenMetadataAccount, TokenOwnedEscrow, ESCROW_PREFIX, PREFIX},
     utils::{assert_derivation, assert_owned_by, assert_signer},
 };
 use borsh::{BorshDeserialize, BorshSerialize};
@@ -33,9 +34,10 @@ pub fn transfer_out_of_escrow(
     attribute_metadata: Pubkey,
     escrow_mint: Pubkey,
     escrow_account: Pubkey,
+    authority: Option<Pubkey>,
     amount: u64,
 ) -> Instruction {
-    let accounts = vec![
+    let mut accounts = vec![
         AccountMeta::new(escrow, false),
         AccountMeta::new(payer, true),
         AccountMeta::new_readonly(attribute_mint, false),
@@ -49,6 +51,10 @@ pub fn transfer_out_of_escrow(
         AccountMeta::new_readonly(spl_token::id(), false),
         AccountMeta::new_readonly(solana_program::sysvar::rent::id(), false),
     ];
+
+    if let Some(authority) = authority {
+        accounts.push(AccountMeta::new_readonly(authority, true));
+    }
 
     let data = MetadataInstruction::TransferOutOfEscrow(TransferOutOfEscrowArgs { amount })
         .try_to_vec()
@@ -81,9 +87,20 @@ pub fn process_transfer_out_of_escrow(
     let token_program_info = next_account_info(account_info_iter)?;
     let rent_info = next_account_info(account_info_iter)?;
 
+    let is_using_authority = account_info_iter.len() == 13;
+
+    let maybe_authority_info: Option<&AccountInfo> = if is_using_authority {
+        Some(next_account_info(account_info_iter)?)
+    } else {
+        None
+    };
+
+    let toe = TokenOwnedEscrow::from_account_info(escrow_info).unwrap();
+
     // Owned by token-metadata program.
     assert_owned_by(attribute_metadata_info, program_id)?;
     let _attribute_metadata: Metadata = Metadata::from_account_info(attribute_metadata_info)?;
+    let authority_primitive: Vec<u8> = toe.authority.try_to_vec().unwrap();
 
     let bump_seed = assert_derivation(
         program_id,
@@ -92,6 +109,7 @@ pub fn process_transfer_out_of_escrow(
             PREFIX.as_bytes(),
             program_id.as_ref(),
             escrow_mint_info.key.as_ref(),
+            authority_primitive.as_ref(),
             ESCROW_PREFIX.as_bytes(),
         ],
     )?;
@@ -101,6 +119,7 @@ pub fn process_transfer_out_of_escrow(
         PREFIX.as_bytes(),
         program_id.as_ref(),
         escrow_mint_info.key.as_ref(),
+        authority_primitive.as_ref(),
         ESCROW_PREFIX.as_bytes(),
         &[bump_seed],
     ];

@@ -1,26 +1,16 @@
-use crate::state::{ESCROW_PREFIX, PREFIX};
+use crate::state::{EscrowAuthority, ESCROW_PREFIX, PREFIX};
+use borsh::BorshSerialize;
 use solana_program::pubkey::Pubkey;
 
-pub fn find_escrow_account(mint: &Pubkey) -> (Pubkey, u8) {
+pub fn find_escrow_account(mint: &Pubkey, authority: &EscrowAuthority) -> (Pubkey, u8) {
+    let authority_primitive = authority.try_to_vec().unwrap();
     Pubkey::find_program_address(
         &[
             PREFIX.as_bytes(),
             crate::id().as_ref(),
             mint.as_ref(),
+            authority_primitive.as_ref(),
             ESCROW_PREFIX.as_ref(),
-        ],
-        &crate::id(),
-    )
-}
-
-pub fn find_escrow_constraint_model_account(creator: &Pubkey, name: &str) -> (Pubkey, u8) {
-    Pubkey::find_program_address(
-        &[
-            PREFIX.as_bytes(),
-            crate::id().as_ref(),
-            ESCROW_PREFIX.as_ref(),
-            creator.as_ref(),
-            name.as_bytes(),
         ],
         &crate::id(),
     )

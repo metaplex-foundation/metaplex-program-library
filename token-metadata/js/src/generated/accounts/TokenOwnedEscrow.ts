@@ -9,6 +9,7 @@ import * as web3 from '@solana/web3.js';
 import * as beetSolana from '@metaplex-foundation/beet-solana';
 import * as beet from '@metaplex-foundation/beet';
 import { Key, keyBeet } from '../types/Key';
+import { EscrowAuthority, escrowAuthorityBeet } from '../types/EscrowAuthority';
 
 /**
  * Arguments used to create {@link TokenOwnedEscrow}
@@ -18,7 +19,8 @@ import { Key, keyBeet } from '../types/Key';
 export type TokenOwnedEscrowArgs = {
   key: Key;
   baseToken: web3.PublicKey;
-  delegates: web3.PublicKey[];
+  authority: EscrowAuthority;
+  bump: number;
 };
 /**
  * Holds the data for the {@link TokenOwnedEscrow} Account and provides de/serialization
@@ -31,14 +33,15 @@ export class TokenOwnedEscrow implements TokenOwnedEscrowArgs {
   private constructor(
     readonly key: Key,
     readonly baseToken: web3.PublicKey,
-    readonly delegates: web3.PublicKey[],
+    readonly authority: EscrowAuthority,
+    readonly bump: number,
   ) {}
 
   /**
    * Creates a {@link TokenOwnedEscrow} instance from the provided args.
    */
   static fromArgs(args: TokenOwnedEscrowArgs) {
-    return new TokenOwnedEscrow(args.key, args.baseToken, args.delegates);
+    return new TokenOwnedEscrow(args.key, args.baseToken, args.authority, args.bump);
   }
 
   /**
@@ -99,33 +102,31 @@ export class TokenOwnedEscrow implements TokenOwnedEscrowArgs {
 
   /**
    * Returns the byteSize of a {@link Buffer} holding the serialized data of
-   * {@link TokenOwnedEscrow} for the provided args.
-   *
-   * @param args need to be provided since the byte size for this account
-   * depends on them
+   * {@link TokenOwnedEscrow}
    */
-  static byteSize(args: TokenOwnedEscrowArgs) {
-    const instance = TokenOwnedEscrow.fromArgs(args);
-    return tokenOwnedEscrowBeet.toFixedFromValue(instance).byteSize;
+  static get byteSize() {
+    return tokenOwnedEscrowBeet.byteSize;
   }
 
   /**
    * Fetches the minimum balance needed to exempt an account holding
    * {@link TokenOwnedEscrow} data from rent
    *
-   * @param args need to be provided since the byte size for this account
-   * depends on them
    * @param connection used to retrieve the rent exemption information
    */
   static async getMinimumBalanceForRentExemption(
-    args: TokenOwnedEscrowArgs,
     connection: web3.Connection,
     commitment?: web3.Commitment,
   ): Promise<number> {
-    return connection.getMinimumBalanceForRentExemption(
-      TokenOwnedEscrow.byteSize(args),
-      commitment,
-    );
+    return connection.getMinimumBalanceForRentExemption(TokenOwnedEscrow.byteSize, commitment);
+  }
+
+  /**
+   * Determines if the provided {@link Buffer} has the correct byte size to
+   * hold {@link TokenOwnedEscrow} data.
+   */
+  static hasCorrectByteSize(buf: Buffer, offset = 0) {
+    return buf.byteLength - offset === TokenOwnedEscrow.byteSize;
   }
 
   /**
@@ -136,7 +137,8 @@ export class TokenOwnedEscrow implements TokenOwnedEscrowArgs {
     return {
       key: 'Key.' + Key[this.key],
       baseToken: this.baseToken.toBase58(),
-      delegates: this.delegates,
+      authority: 'EscrowAuthority.' + EscrowAuthority[this.authority],
+      bump: this.bump,
     };
   }
 }
@@ -145,14 +147,12 @@ export class TokenOwnedEscrow implements TokenOwnedEscrowArgs {
  * @category Accounts
  * @category generated
  */
-export const tokenOwnedEscrowBeet = new beet.FixableBeetStruct<
-  TokenOwnedEscrow,
-  TokenOwnedEscrowArgs
->(
+export const tokenOwnedEscrowBeet = new beet.BeetStruct<TokenOwnedEscrow, TokenOwnedEscrowArgs>(
   [
     ['key', keyBeet],
     ['baseToken', beetSolana.publicKey],
-    ['delegates', beet.array(beetSolana.publicKey)],
+    ['authority', escrowAuthorityBeet],
+    ['bump', beet.u8],
   ],
   TokenOwnedEscrow.fromArgs,
   'TokenOwnedEscrow',

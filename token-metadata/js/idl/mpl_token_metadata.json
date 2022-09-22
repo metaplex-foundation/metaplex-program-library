@@ -2145,6 +2145,12 @@
           "desc": "Mint account"
         },
         {
+          "name": "tokenAccount",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Token account to close"
+        },
+        {
           "name": "edition",
           "isMut": false,
           "isSigner": false,
@@ -2161,6 +2167,13 @@
           "isMut": false,
           "isSigner": false,
           "desc": "System program"
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "Authority/creator of the escrow account",
+          "optional": true
         }
       ],
       "args": [],
@@ -2207,6 +2220,13 @@
           "isMut": false,
           "isSigner": false,
           "desc": "System program"
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "Authority/creator of the escrow account",
+          "optional": true
         }
       ],
       "args": [],
@@ -2220,7 +2240,7 @@
       "accounts": [
         {
           "name": "escrow",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false,
           "desc": "Escrow account"
         },
@@ -2289,6 +2309,13 @@
           "isMut": false,
           "isSigner": false,
           "desc": "Rent info"
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "Authority/creator of the escrow account",
+          "optional": true
         }
       ],
       "args": [
@@ -2609,10 +2636,14 @@
             "type": "publicKey"
           },
           {
-            "name": "delegates",
+            "name": "authority",
             "type": {
-              "vec": "publicKey"
+              "defined": "EscrowAuthority"
             }
+          },
+          {
+            "name": "bump",
+            "type": "u8"
           }
         ]
       }
@@ -3135,6 +3166,23 @@
           },
           {
             "name": "NonFungibleEdition"
+          }
+        ]
+      }
+    },
+    {
+      "name": "EscrowAuthority",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "TokenOwner"
+          },
+          {
+            "name": "Creator",
+            "fields": [
+              "publicKey"
+            ]
           }
         ]
       }
@@ -3750,12 +3798,27 @@
       "code": 121,
       "name": "PrintEditionDoesNotMatchMasterEdition",
       "msg": "Print Edition does not match Master Edition"
+    },
+    {
+      "code": 122,
+      "name": "MustBeDelegate",
+      "msg": "Must be delegate to transfer out of Token Owned Escrow"
+    },
+    {
+      "code": 123,
+      "name": "InvalidEscrowBumpSeed",
+      "msg": "Invalid Escrow Account Bump Seed"
+    },
+    {
+      "code": 124,
+      "name": "MustBeEscrowUpdateAuthority",
+      "msg": "Must be Update Authority on Escrow Account"
     }
   ],
   "metadata": {
     "origin": "shank",
     "address": "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s",
-    "binaryVersion": "0.0.8",
-    "libVersion": "~0.0.4"
+    "binaryVersion": "0.0.9",
+    "libVersion": "~0.0.9"
   }
 }
