@@ -327,6 +327,19 @@ pub struct Collection {
     pub key: Pubkey,
 }
 
+#[repr(u8)]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
+#[derive(BorshSerialize, BorshDeserialize, Copy, Clone, Debug, Eq, PartialEq)]
+pub enum JsonSchema {
+    Core = 1,
+    MultiMedia = 2,
+    SimpleImage = 3,
+    SimpleAudio = 4,
+    Simple3D = 5,
+    SimpleText = 6,
+    MusicRecording = 7,
+}
+
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(Clone, BorshSerialize, Debug, PartialEq, Eq, ShankAccount)]
@@ -349,6 +362,8 @@ pub struct Metadata {
     pub uses: Option<Uses>,
     /// Item Details
     pub collection_details: Option<CollectionDetails>,
+    /// JSON schema.
+    pub json_schema: Option<JsonSchema>,
 }
 
 impl Default for Metadata {
@@ -365,6 +380,7 @@ impl Default for Metadata {
             collection: None,
             uses: None,
             collection_details: None,
+            json_schema: None,
         }
     }
 }

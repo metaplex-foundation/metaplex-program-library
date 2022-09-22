@@ -4,7 +4,7 @@ mod puff_out_test {
     pub use solana_program::pubkey::Pubkey;
 
     pub use crate::{
-        state::{Data, Key, Metadata},
+        state::{Data, JsonSchema, Key, Metadata},
         utils::{puff_out_data_fields, puffed_out_string},
     };
 
@@ -46,6 +46,7 @@ mod puff_out_test {
             uses: None,
             token_standard: None,
             collection_details: None,
+            json_schema: None,
         };
 
         puff_out_data_fields(&mut metadata);

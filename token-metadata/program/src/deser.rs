@@ -1,4 +1,6 @@
-use crate::state::{Collection, CollectionDetails, Data, Key, Metadata, TokenStandard, Uses};
+use crate::state::{
+    Collection, CollectionDetails, Data, JsonSchema, Key, Metadata, TokenStandard, Uses,
+};
 use borsh::{maybestd::io::Error as BorshError, BorshDeserialize, BorshSerialize};
 use solana_program::{account_info::AccountInfo, entrypoint::ProgramResult, pubkey::Pubkey};
 
@@ -29,6 +31,9 @@ pub fn meta_deser_unchecked(buf: &mut &[u8]) -> Result<Metadata, BorshError> {
     let collection_details_res: Result<Option<CollectionDetails>, BorshError> =
         BorshDeserialize::deserialize(buf);
 
+    let json_schema_res: Result<Option<JsonSchema>, BorshError> =
+        BorshDeserialize::deserialize(buf);
+
     /* We can have accidentally valid, but corrupted data, particularly on the Collection struct,
     so to increase probability of catching errors If any of these deserializations fail, set all values to None.
     */
@@ -45,6 +50,8 @@ pub fn meta_deser_unchecked(buf: &mut &[u8]) -> Result<Metadata, BorshError> {
         Err(_) => None,
     };
 
+    let json_schema = json_schema_res.unwrap_or(None);
+
     let metadata = Metadata {
         key,
         update_authority,
@@ -57,6 +64,7 @@ pub fn meta_deser_unchecked(buf: &mut &[u8]) -> Result<Metadata, BorshError> {
         collection,
         uses,
         collection_details,
+        json_schema,
     };
 
     Ok(metadata)
@@ -80,7 +88,10 @@ pub mod tests {
     use solana_program::pubkey;
 
     use super::*;
-    pub use crate::{state::Creator, utils::puff_out_data_fields};
+    pub use crate::{
+        state::{Creator, JsonSchema},
+        utils::puff_out_data_fields,
+    };
 
     // Pesky Penguins #8060 (NOOT!)
     // Corrupted data that can't be deserialized with the standard BoshDeserialization implementation.
@@ -158,6 +169,7 @@ pub mod tests {
             collection: None,
             uses: None,
             collection_details: None,
+            json_schema: None,
         };
 
         puff_out_data_fields(&mut metadata);
