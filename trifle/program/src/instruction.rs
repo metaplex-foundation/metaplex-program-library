@@ -64,22 +64,31 @@ pub enum TrifleInstruction {
     AddConstraintToEscrowConstraintModel(AddConstraintToEscrowConstraintModelArgs),
 
     /// Creates a Trifle Account -- used to model token inventory in a Token Escrow account.
-    #[account(0, writable, name = "trifle_account", desc = "Trifle account")]
-    #[account(1, name = "token_escrow_account", desc = "Token escrow account")]
+    #[account(0, writable, name = "escrow", desc = "Escrow account")]
+    #[account(1, name = "metadata", desc = "Metadata account")]
+    #[account(2, name = "mint", desc = "Mint account")]
     #[account(
-        2,
-        signer,
-        name = "token_escrow_authority",
-        desc = "Token escrow authority"
+        3,
+        writable,
+        name = "token_account",
+        desc = "Token account (base token)"
     )]
-    #[account(3, name = "escrow_constraint_model", desc = "Escrow constraint model")]
+    #[account(4, name = "edition", desc = "Edition account")]
+    #[account(5, writable, name = "trifle_account", desc = "Trifle account")]
     #[account(
-        4,
+        6,
+        signer,
+        name = "trifle_authority",
+        desc = "Trifle Authority - the account that can sign transactions for the trifle account"
+    )]
+    #[account(7, name = "escrow_constraint_model", desc = "Escrow constraint model")]
+    #[account(
+        8,
         writable,
         signer,
         name = "payer",
         desc = "Wallet paying for the transaction"
     )]
-    #[account(5, name = "system_program", desc = "System program")]
+    #[account(9, name = "system_program", desc = "System program")]
     CreateTrifleAccount,
 }

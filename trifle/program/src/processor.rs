@@ -6,7 +6,9 @@ use crate::{
         AddConstraintToEscrowConstraintModelArgs, CreateEscrowConstraintModelAccountArgs,
         TrifleInstruction,
     },
-    state::{escrow_constraints::EscrowConstraintModel, trifle::Trifle, Key, ESCROW_PREFIX},
+    state::{
+        escrow_constraints::EscrowConstraintModel, trifle::Trifle, Key, ESCROW_SEED, TRIFLE_SEED,
+    },
     util::resize_or_reallocate_account_raw,
 };
 use borsh::{BorshDeserialize, BorshSerialize};
@@ -15,8 +17,16 @@ use mpl_token_metadata::{
     utils::{assert_derivation, assert_owned_by, assert_signer, create_or_allocate_account_raw},
 };
 use solana_program::{
-    account_info::next_account_info, account_info::AccountInfo, entrypoint::ProgramResult, msg,
-    program::invoke, pubkey::Pubkey, rent::Rent, system_instruction, sysvar::Sysvar,
+    account_info::next_account_info,
+    account_info::AccountInfo,
+    entrypoint::ProgramResult,
+    msg,
+    program::{invoke, invoke_signed},
+    pubkey::Pubkey,
+    rent::Rent,
+    slot_hashes::MAX_ENTRIES,
+    system_instruction,
+    sysvar::Sysvar,
 };
 
 pub fn process_instruction(
@@ -48,6 +58,7 @@ fn create_escrow_contstraints_model_account(
 ) -> ProgramResult {
     let account_info_iter = &mut accounts.iter();
 
+    // TODO: make account info names end in _info
     let escrow_constraint_model_account = next_account_info(account_info_iter)?;
     let payer = next_account_info(account_info_iter)?;
     let update_authority = next_account_info(account_info_iter)?;
@@ -62,19 +73,21 @@ fn create_escrow_contstraints_model_account(
         count: 0,
     };
 
+    // TODO: seeds
     let bump = assert_derivation(
         program_id,
         escrow_constraint_model_account,
         &[
-            ESCROW_PREFIX.as_bytes(),
+            ESCROW_SEED.as_bytes(),
             program_id.as_ref(),
             payer.key.as_ref(),
             args.name.as_bytes(),
         ],
     )?;
 
+    // TODO: seeds
     let escrow_constraint_model_seeds = &[
-        ESCROW_PREFIX.as_ref(),
+        ESCROW_SEED.as_ref(),
         program_id.as_ref(),
         payer.key.as_ref(),
         args.name.as_ref(),
@@ -103,6 +116,7 @@ fn add_constraint_to_escrow_constraint_model(
 ) -> ProgramResult {
     let account_info_iter = &mut accounts.iter();
 
+    // TODO: make account info names end in _info
     let escrow_constraint_model_account = next_account_info(account_info_iter)?;
     let payer = next_account_info(account_info_iter)?;
     let update_authority = next_account_info(account_info_iter)?;
@@ -119,7 +133,7 @@ fn add_constraint_to_escrow_constraint_model(
         program_id,
         escrow_constraint_model_account,
         &[
-            ESCROW_PREFIX.as_bytes(),
+            ESCROW_SEED.as_bytes(),
             program_id.as_ref(),
             payer.key.as_ref(),
             escrow_constraint_model.name.as_bytes(),
@@ -141,56 +155,99 @@ fn add_constraint_to_escrow_constraint_model(
     Ok(())
 }
 
-fn create_token_escrow() -> ProgramResult {
-    Ok(())
-}
-
 fn create_trifle_account(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
     let account_info_iter = &mut accounts.iter();
 
-    let trifle_account = next_account_info(account_info_iter)?;
-    let token_escrow_account = next_account_info(account_info_iter)?;
-    let token_escrow_authority = next_account_info(account_info_iter)?;
-    let escrow_constraint_model_account = next_account_info(account_info_iter)?;
-    let payer = next_account_info(account_info_iter)?;
-    let system_program = next_account_info(account_info_iter)?;
+    let escrow_info = next_account_info(account_info_iter)?;
+    let metadata_info = next_account_info(account_info_iter)?;
+    let mint_info = next_account_info(account_info_iter)?;
+    let token_account_info = next_account_info(account_info_iter)?;
+    let edition_info = next_account_info(account_info_iter)?;
+    let trifle_info = next_account_info(account_info_iter)?;
+    let trifle_authority_info = next_account_info(account_info_iter)?;
+    let escrow_constraint_model_info = next_account_info(account_info_iter)?;
+    let payer_info = next_account_info(account_info_iter)?;
+    let system_program_info = next_account_info(account_info_iter)?;
 
-    assert_signer(payer)?;
-    assert_signer(token_escrow_authority)?;
-    assert_owned_by(token_escrow_account, &token_metadata_program_id())?;
-    assert_owned_by(escrow_constraint_model_account, program_id)?;
+    let trifle_pda_bump = assert_derivation(
+        program_id,
+        trifle_info,
+        &[
+            TRIFLE_SEED.as_bytes(),
+            escrow_info.key.as_ref(),
+            trifle_authority_info.key.as_ref(),
+            escrow_constraint_model_info.key.as_ref(),
+        ],
+    )?;
+
+    assert_signer(payer_info)?;
+    assert_signer(trifle_authority_info)?;
+    assert_owned_by(escrow_info, &token_metadata_program_id())?;
+    assert_owned_by(escrow_constraint_model_info, program_id)?;
+    assert_owned_by(metadata_info, &token_metadata_program_id())?;
+    assert_owned_by(mint_info, &spl_token::id())?;
+    assert_owned_by(token_account_info, &spl_token::id())?;
 
     let escrow_constraint_model_key =
-        Key::try_from_slice(&escrow_constraint_model_account.data.borrow()[0..1])?;
+        Key::try_from_slice(&escrow_constraint_model_info.data.borrow()[0..1])?;
 
     if escrow_constraint_model_key != Key::EscrowConstraintModel {
         return Err(TrifleError::InvalidEscrowConstraintModel.into());
     }
 
+    let create_escrow_account_ix = mpl_token_metadata::escrow::create_escrow_account(
+        token_metadata_program_id(),
+        *escrow_info.key,
+        *metadata_info.key,
+        *mint_info.key,
+        *token_account_info.key,
+        *edition_info.key,
+        *payer_info.key,
+        Some(*trifle_info.key),
+    );
+
+    let account_infos = vec![
+        escrow_info.clone(),
+        metadata_info.clone(),
+        mint_info.clone(),
+        token_account_info.clone(),
+        edition_info.clone(),
+        payer_info.clone(),
+        system_program_info.clone(),
+        trifle_info.clone(),
+    ];
+
+    let trifle_signer_seeds = &[
+        TRIFLE_SEED.as_bytes(),
+        escrow_info.key.as_ref(),
+        trifle_authority_info.key.as_ref(),
+        escrow_constraint_model_info.key.as_ref(),
+        &[trifle_pda_bump],
+    ];
+
+    invoke_signed(
+        &create_escrow_account_ix,
+        &account_infos,
+        &[trifle_signer_seeds],
+    )?;
+
     let trifle = Trifle {
         key: Key::Trifle,
-        token_escrow: token_escrow_account.key.to_owned(),
-        escrow_constraint_model: escrow_constraint_model_account.key.to_owned(),
+        token_escrow: escrow_info.key.to_owned(),
+        escrow_constraint_model: escrow_constraint_model_info.key.to_owned(),
         tokens: HashMap::new(),
     };
 
-    let signer_seeds = &[
-        ESCROW_PREFIX.as_ref(),
-        program_id.as_ref(),
-        payer.key.as_ref(),
-        trifle.token_escrow.as_ref(),
-    ];
-
     create_or_allocate_account_raw(
         *program_id,
-        trifle_account,
-        system_program,
-        payer,
+        trifle_info,
+        system_program_info,
+        payer_info,
         trifle.try_len()?,
-        signer_seeds,
+        trifle_signer_seeds,
     )?;
 
-    trifle.serialize(&mut *trifle_account.try_borrow_mut_data()?)?;
+    trifle.serialize(&mut *trifle_info.try_borrow_mut_data()?)?;
 
     Ok(())
 }

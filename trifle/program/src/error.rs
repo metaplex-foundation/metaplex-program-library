@@ -20,6 +20,8 @@ pub enum TrifleError {
     EscrowConstraintViolation,
     #[error("Invalid Update Authority")]
     InvalidUpdateAuthority,
+    #[error("Failed to create pubkey")]
+    FailedToCreatePubkey,
 }
 
 impl From<TrifleError> for ProgramError {
