@@ -46,7 +46,7 @@ impl Metadata {
             self.properties.category = Some(category.to_string());
 
             println!(
-                "{} missing `properties.creator` for nft {}, defaulting to {}",
+                "{} missing `properties.category` for nft {}, defaulting to {}",
                 WARNING_EMOJI, &self.name, category
             );
         }
