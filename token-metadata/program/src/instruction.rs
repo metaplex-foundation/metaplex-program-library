@@ -1674,6 +1674,7 @@ pub fn create_metadata_accounts_v3(
             AccountMeta::new(payer, true),
             AccountMeta::new_readonly(update_authority, update_authority_is_signer),
             AccountMeta::new_readonly(solana_program::system_program::id(), false),
+            AccountMeta::new_readonly(sysvar::rent::id(), false),
         ],
         data: MetadataInstruction::CreateMetadataAccountV3(CreateMetadataAccountArgsV3 {
             data: DataV2 {
