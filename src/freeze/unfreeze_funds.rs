@@ -61,7 +61,7 @@ pub fn process_unfreeze_funds(args: UnlockFundsArgs) -> Result<()> {
     let pb = spinner_with_style();
     pb.set_message("Sending unlock funds transaction...");
 
-    let signature = unlock_funds(&program, &candy_pubkey)?;
+    let signature = unlock_funds(&program, &candy_pubkey, candy_machine_state.wallet)?;
 
     pb.finish_with_message(format!(
         "{} {}",
@@ -72,7 +72,11 @@ pub fn process_unfreeze_funds(args: UnlockFundsArgs) -> Result<()> {
     Ok(())
 }
 
-pub fn unlock_funds(program: &Program, candy_machine_id: &Pubkey) -> Result<Signature> {
+pub fn unlock_funds(
+    program: &Program,
+    candy_machine_id: &Pubkey,
+    treasury: Pubkey,
+) -> Result<Signature> {
     let (freeze_pda, _) = find_freeze_pda(candy_machine_id);
 
     let builder = program
@@ -80,6 +84,7 @@ pub fn unlock_funds(program: &Program, candy_machine_id: &Pubkey) -> Result<Sign
         .accounts(nft_accounts::UnlockFunds {
             candy_machine: *candy_machine_id,
             authority: program.payer(),
+            wallet: treasury,
             freeze_pda,
             system_program: system_program::ID,
         })

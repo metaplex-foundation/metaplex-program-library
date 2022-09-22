@@ -34,8 +34,8 @@ indexmap = { version = "1.9.1", features = ["serde"] }
 indicatif = { version = "0.16.2", features = ["rayon"] }
 ini = "1.3.0"
 lazy_static = "1.4.0"
-mpl-candy-machine = { version = "4.3.2", features = ["no-entrypoint"] }
-mpl-token-metadata = "1.3.4"
+mpl-candy-machine = { version = "4.4", features = ["no-entrypoint"] }
+mpl-token-metadata = "~1.3.6"
 num_cpus = "1.13.1"
 phf = { version = "0.10", features = ["macros"] }
 rand = "0.8.5"
