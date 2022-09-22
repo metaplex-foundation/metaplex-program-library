@@ -1,5 +1,4 @@
-use anchor_lang::prelude::*;
-use anchor_lang::solana_program::pubkey::Pubkey;
+use anchor_lang::{prelude::*, solana_program::pubkey::Pubkey};
 
 use mpl_token_metadata::{
     state::{MAX_MASTER_EDITION_LEN, MAX_METADATA_LEN},

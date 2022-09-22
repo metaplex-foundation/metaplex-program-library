@@ -480,6 +480,18 @@ pub enum MetadataError {
     /// 121 - Print Edition doesn't match Master Edition
     #[error("Print Edition does not match Master Edition")]
     PrintEditionDoesNotMatchMasterEdition,
+
+    /// 122 - Must be delegate
+    #[error("Must be delegate to transfer out of Token Owned Escrow")]
+    MustBeDelegate,
+
+    /// 123 - Invalid Escrow Account Bump Seed
+    #[error("Invalid Escrow Account Bump Seed")]
+    InvalidEscrowBumpSeed,
+
+    /// 124 - Must be Update Authority on Escrow Account
+    #[error("Must be Update Authority on Escrow Account")]
+    MustBeEscrowUpdateAuthority,
 }
 
 impl PrintProgramError for MetadataError {

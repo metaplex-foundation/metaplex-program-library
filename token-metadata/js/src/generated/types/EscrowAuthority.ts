@@ -10,23 +10,16 @@ import * as beet from '@metaplex-foundation/beet';
  * @category enums
  * @category generated
  */
-export enum Key {
-  Uninitialized,
-  EditionV1,
-  MasterEditionV1,
-  ReservationListV1,
-  MetadataV1,
-  ReservationListV2,
-  MasterEditionV2,
-  EditionMarker,
-  UseAuthorityRecord,
-  CollectionAuthorityRecord,
-  TokenOwnedEscrow,
-  EscrowConstraintModel,
+export enum EscrowAuthority {
+  TokenOwner,
+  Creator,
 }
 
 /**
  * @category userTypes
  * @category generated
  */
-export const keyBeet = beet.fixedScalarEnum(Key) as beet.FixedSizeBeet<Key, Key>;
+export const escrowAuthorityBeet = beet.fixedScalarEnum(EscrowAuthority) as beet.FixedSizeBeet<
+  EscrowAuthority,
+  EscrowAuthority
+>;
