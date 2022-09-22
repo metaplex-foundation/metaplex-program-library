@@ -1,5 +1,4 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::Token;
 use arrayref::array_ref;
 use mpl_token_metadata::{
     instruction::{
@@ -306,6 +305,15 @@ pub fn get_config_line(
         name: complete_name,
         uri: complete_uri,
     })
+}
+
+#[derive(Debug, Clone)]
+pub struct Token;
+
+impl anchor_lang::Id for Token {
+    fn id() -> Pubkey {
+        spl_token::id()
+    }
 }
 
 /// Mint a new NFT pseudo-randomly from the config array.
