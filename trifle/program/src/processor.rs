@@ -1,14 +1,18 @@
+use std::collections::HashMap;
+
 use crate::{
     error::TrifleError,
     instruction::{
         AddConstraintToEscrowConstraintModelArgs, CreateEscrowConstraintModelAccountArgs,
         TrifleInstruction,
     },
-    state::{EscrowConstraintModel, Key, ESCROW_PREFIX},
+    state::{escrow_constraints::EscrowConstraintModel, trifle::Trifle, Key, ESCROW_PREFIX},
+    util::resize_or_reallocate_account_raw,
 };
 use borsh::{BorshDeserialize, BorshSerialize};
-use mpl_token_metadata::utils::{
-    assert_derivation, assert_owned_by, assert_signer, create_or_allocate_account_raw,
+use mpl_token_metadata::{
+    id as token_metadata_program_id,
+    utils::{assert_derivation, assert_owned_by, assert_signer, create_or_allocate_account_raw},
 };
 use solana_program::{
     account_info::next_account_info, account_info::AccountInfo, entrypoint::ProgramResult, msg,
@@ -30,6 +34,10 @@ pub fn process_instruction(
             msg!("Instruction: Add Constraint To Escrow Constraint Model");
             add_constraint_to_escrow_constraint_model(program_id, accounts, args)
         }
+        TrifleInstruction::CreateTrifleAccount => {
+            msg!("Instruction: Create Trifle Account");
+            create_trifle_account(program_id, accounts)
+        }
     }
 }
 
@@ -44,7 +52,6 @@ fn create_escrow_contstraints_model_account(
     let payer = next_account_info(account_info_iter)?;
     let update_authority = next_account_info(account_info_iter)?;
     let system_program = next_account_info(account_info_iter)?;
-    let rent = next_account_info(account_info_iter)?;
 
     let escrow_constraint_model = EscrowConstraintModel {
         key: Key::EscrowConstraintModel,
@@ -134,28 +141,59 @@ fn add_constraint_to_escrow_constraint_model(
     Ok(())
 }
 
-/// Resize an account using realloc, lifted from Solana Cookbook
-#[inline(always)]
-pub fn resize_or_reallocate_account_raw<'a>(
-    target_account: &AccountInfo<'a>,
-    funding_account: &AccountInfo<'a>,
-    system_program: &AccountInfo<'a>,
-    new_size: usize,
-) -> ProgramResult {
-    let rent = Rent::get()?;
-    let new_minimum_balance = rent.minimum_balance(new_size);
+fn create_token_escrow() -> ProgramResult {
+    Ok(())
+}
 
-    let lamports_diff = new_minimum_balance.saturating_sub(target_account.lamports());
-    invoke(
-        &system_instruction::transfer(funding_account.key, target_account.key, lamports_diff),
-        &[
-            funding_account.clone(),
-            target_account.clone(),
-            system_program.clone(),
-        ],
+fn create_trifle_account(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
+    let account_info_iter = &mut accounts.iter();
+
+    let trifle_account = next_account_info(account_info_iter)?;
+    let token_escrow_account = next_account_info(account_info_iter)?;
+    let token_escrow_authority = next_account_info(account_info_iter)?;
+    let escrow_constraint_model_account = next_account_info(account_info_iter)?;
+    let payer = next_account_info(account_info_iter)?;
+    let system_program = next_account_info(account_info_iter)?;
+
+    assert_signer(payer)?;
+    assert_signer(token_escrow_authority)?;
+    assert_owned_by(token_escrow_account, &token_metadata_program_id())?;
+    assert_owned_by(escrow_constraint_model_account, program_id)?;
+
+    let escrow_constraint_model_key =
+        Key::try_from_slice(&escrow_constraint_model_account.data.borrow()[0..1])?;
+
+    if escrow_constraint_model_key != Key::EscrowConstraintModel {
+        return Err(TrifleError::InvalidEscrowConstraintModel.into());
+    }
+
+    let trifle = Trifle {
+        key: Key::Trifle,
+        token_escrow: token_escrow_account.key.to_owned(),
+        escrow_constraint_model: escrow_constraint_model_account.key.to_owned(),
+        tokens: HashMap::new(),
+    };
+
+    let signer_seeds = &[
+        ESCROW_PREFIX.as_ref(),
+        program_id.as_ref(),
+        payer.key.as_ref(),
+        trifle.token_escrow.as_ref(),
+    ];
+
+    create_or_allocate_account_raw(
+        *program_id,
+        trifle_account,
+        system_program,
+        payer,
+        trifle.try_len()?,
+        signer_seeds,
     )?;
 
-    target_account.realloc(new_size, false)?;
+    trifle.serialize(&mut *trifle_account.try_borrow_mut_data()?)?;
 
     Ok(())
 }
+
+// proxy transfer_in
+// proxy transfer_out

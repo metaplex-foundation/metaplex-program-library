@@ -1,16 +1,10 @@
-use crate::error::TrifleError;
+use std::{collections::HashMap, mem};
+
 use borsh::{BorshDeserialize, BorshSerialize};
 use shank::ShankAccount;
 use solana_program::{program_error::ProgramError, pubkey::Pubkey};
-use std::{collections::HashMap, mem};
 
-pub const ESCROW_PREFIX: &str = "escrow";
-
-#[repr(C)]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, Copy)]
-pub enum Key {
-    EscrowConstraintModel,
-}
+use crate::{error::TrifleError, state::Key};
 
 #[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone, ShankAccount)]
@@ -20,7 +14,6 @@ pub struct EscrowConstraintModel {
     pub constraints: Vec<EscrowConstraint>,
     pub creator: Pubkey,
     pub update_authority: Pubkey,
-    /// The number of Token Owned Escrow accounts that are using this model.
     pub count: u64,
 }
 
@@ -97,14 +90,14 @@ impl EscrowConstraintType {
             EscrowConstraintType::None => Ok(1),
             EscrowConstraintType::Collection(_) => Ok(1 + mem::size_of::<Pubkey>()),
             EscrowConstraintType::Tokens(hm) => {
-                return if let Some(len) = hm.len().checked_mul(mem::size_of::<Pubkey>()) {
+                if let Some(len) = hm.len().checked_mul(mem::size_of::<Pubkey>()) {
                     len.checked_add(1) // enum overhead
                         .ok_or(TrifleError::NumericalOverflow)?
                         .checked_add(4) // map overhead
-                        .ok_or(TrifleError::NumericalOverflow.into())
+                        .ok_or_else(|| TrifleError::NumericalOverflow.into())
                 } else {
                     Err(TrifleError::NumericalOverflow.into())
-                };
+                }
             }
         }
     }

@@ -12,6 +12,8 @@ pub enum TrifleError {
     NumericalOverflow,
     #[error("Invalid account")]
     InvalidAccount,
+    #[error("Invalid Escrow Constraint Model")]
+    InvalidEscrowConstraintModel,
     #[error("Invalid Escrow Constraint Index")]
     InvalidEscrowConstraintIndex,
     #[error("Escrow Constraint Violation")]

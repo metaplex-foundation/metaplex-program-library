@@ -1,4 +1,4 @@
-use crate::state::EscrowConstraint;
+use crate::state::escrow_constraints::EscrowConstraint;
 use borsh::{BorshDeserialize, BorshSerialize};
 use shank::ShankInstruction;
 
@@ -38,7 +38,6 @@ pub enum TrifleInstruction {
         desc = "Update authority of the constraint model"
     )]
     #[account(3, name = "system_program", desc = "System program")]
-    #[account(4, name = "rent", desc = "Rent info")]
     CreateEscrowConstraintModelAccount(CreateEscrowConstraintModelAccountArgs),
 
     /// Add a constraint to an escrow constraint model.
@@ -63,4 +62,24 @@ pub enum TrifleInstruction {
     )]
     #[account(3, name = "system_program", desc = "System program")]
     AddConstraintToEscrowConstraintModel(AddConstraintToEscrowConstraintModelArgs),
+
+    /// Creates a Trifle Account -- used to model token inventory in a Token Escrow account.
+    #[account(0, writable, name = "trifle_account", desc = "Trifle account")]
+    #[account(1, name = "token_escrow_account", desc = "Token escrow account")]
+    #[account(
+        2,
+        signer,
+        name = "token_escrow_authority",
+        desc = "Token escrow authority"
+    )]
+    #[account(3, name = "escrow_constraint_model", desc = "Escrow constraint model")]
+    #[account(
+        4,
+        writable,
+        signer,
+        name = "payer",
+        desc = "Wallet paying for the transaction"
+    )]
+    #[account(5, name = "system_program", desc = "System program")]
+    CreateTrifleAccount,
 }

@@ -1,9 +1,11 @@
-use borsh::{BorshDeserialize, BorshSerialize};
-use solana_program::account_info::AccountInfo;
+use borsh::BorshSerialize;
 use solana_sdk::{signature::Keypair, signer::Signer};
 
 mod escrow {
-    use crate::state::{EscrowConstraint, EscrowConstraintModel, EscrowConstraintType, Key};
+    use crate::state::{
+        escrow_constraints::{EscrowConstraint, EscrowConstraintModel, EscrowConstraintType},
+        Key,
+    };
 
     use super::*;
 
