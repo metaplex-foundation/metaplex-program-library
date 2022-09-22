@@ -243,6 +243,40 @@ impl<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExe
     }
 }
 
+pub type RedeemBuilder<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> = TxBuilder<
+    'a,
+    mpl_bubblegum::accounts::Redeem,
+    mpl_bubblegum::instruction::Redeem,
+    &'a LeafArgs,
+    MAX_DEPTH,
+    MAX_BUFFER_SIZE,
+>;
+
+impl<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExec
+    for RedeemBuilder<'a, MAX_DEPTH, MAX_BUFFER_SIZE>
+{
+    fn on_successful_execute(&mut self) -> Result<()> {
+        self.tree.leaf_zeroed(self.inner.index)
+    }
+}
+
+pub type CancelRedeemBuilder<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> = TxBuilder<
+    'a,
+    mpl_bubblegum::accounts::CancelRedeem,
+    mpl_bubblegum::instruction::CancelRedeem,
+    &'a LeafArgs,
+    MAX_DEPTH,
+    MAX_BUFFER_SIZE,
+>;
+
+impl<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExec
+    for CancelRedeemBuilder<'a, MAX_DEPTH, MAX_BUFFER_SIZE>
+{
+    fn on_successful_execute(&mut self) -> Result<()> {
+        self.tree.leaf_changed(self.inner)
+    }
+}
+
 pub type SetTreeDelegateBuilder<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> =
     TxBuilder<
         'a,

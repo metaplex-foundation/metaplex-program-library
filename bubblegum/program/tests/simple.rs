@@ -105,3 +105,12 @@ async fn test_set_tree_delegate_passes() {
 
     tree.set_tree_delegate(&new_tree_delegate).await.unwrap();
 }
+
+#[tokio::test]
+async fn test_reedem_and_cancel_redeem_passes() {
+    let (_, tree, leaves) = context_tree_and_leaves().await.unwrap();
+    let leaf = leaves.last().unwrap();
+
+    tree.redeem(leaf).await.unwrap();
+    tree.cancel_redeem(leaf).await.unwrap();
+}

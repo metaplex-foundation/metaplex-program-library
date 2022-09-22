@@ -1,7 +1,7 @@
 use anchor_lang::{self, AccountDeserialize};
 use bytemuck::try_from_bytes;
 use mpl_bubblegum::{
-    state::{leaf_schema::LeafSchema, TreeConfig},
+    state::{leaf_schema::LeafSchema, TreeConfig, VOUCHER_PREFIX},
     utils::get_asset_id,
 };
 use solana_program::{
@@ -30,9 +30,9 @@ use std::{
 use super::{
     clone_keypair, compute_metadata_hashes,
     tx_builder::{
-        BurnBuilder, CreateBuilder, CreatorVerificationInner, DelegateBuilder, DelegateInner,
-        MintV1Builder, SetTreeDelegateBuilder, TransferBuilder, TransferInner, TxBuilder,
-        UnverifyCreatorBuilder, VerifyCreatorBuilder,
+        BurnBuilder, CancelRedeemBuilder, CreateBuilder, CreatorVerificationInner, DelegateBuilder,
+        DelegateInner, MintV1Builder, RedeemBuilder, SetTreeDelegateBuilder, TransferBuilder,
+        TransferInner, TxBuilder, UnverifyCreatorBuilder, VerifyCreatorBuilder,
     },
     Error, LeafArgs, Result,
 };
@@ -105,6 +105,18 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
 
     pub fn authority(&self) -> Pubkey {
         Pubkey::find_program_address(&[self.tree_pubkey().as_ref()], &mpl_bubblegum::id()).0
+    }
+
+    pub fn voucher(&self, nonce: u64) -> Pubkey {
+        Pubkey::find_program_address(
+            &[
+                VOUCHER_PREFIX.as_ref(),
+                self.tree_pubkey().as_ref(),
+                &nonce.to_le_bytes(),
+            ],
+            &mpl_bubblegum::id(),
+        )
+        .0
     }
 
     pub fn merkle_tree_account_size(&self) -> usize {
@@ -502,6 +514,77 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
     // Does the prev delegate need to sign as well?
     pub async fn delegate(&self, args: &mut LeafArgs, new_delegate: &Keypair) -> Result<()> {
         self.delegate_tx(args, new_delegate).await?.execute().await
+    }
+
+    pub async fn redeem_tx<'a>(
+        &'a self,
+        args: &'a LeafArgs,
+    ) -> Result<RedeemBuilder<MAX_DEPTH, MAX_BUFFER_SIZE>> {
+        let root = self.decode_root().await?;
+        let (data_hash, creator_hash) = compute_metadata_hashes(&args.metadata)?;
+
+        let accounts = mpl_bubblegum::accounts::Redeem {
+            tree_authority: self.authority(),
+            leaf_owner: args.owner.pubkey(),
+            leaf_delegate: args.delegate.pubkey(),
+            merkle_tree: self.tree_pubkey(),
+            voucher: self.voucher(args.nonce),
+            log_wrapper: spl_noop::id(),
+            compression_program: spl_account_compression::id(),
+            system_program: system_program::id(),
+        };
+
+        let data = mpl_bubblegum::instruction::Redeem {
+            root,
+            data_hash,
+            creator_hash,
+            nonce: args.nonce,
+            index: args.index,
+        };
+
+        Ok(self.tx_builder(
+            accounts,
+            data,
+            Some(args.index),
+            args,
+            args.owner.pubkey(),
+            &[&args.owner],
+        ))
+    }
+
+    pub async fn redeem(&self, args: &LeafArgs) -> Result<()> {
+        self.redeem_tx(args).await?.execute().await
+    }
+
+    pub async fn cancel_redeem_tx<'a>(
+        &'a self,
+        args: &'a LeafArgs,
+    ) -> Result<CancelRedeemBuilder<MAX_DEPTH, MAX_BUFFER_SIZE>> {
+        let root = self.decode_root().await?;
+
+        let accounts = mpl_bubblegum::accounts::CancelRedeem {
+            tree_authority: self.authority(),
+            leaf_owner: args.owner.pubkey(),
+            merkle_tree: self.tree_pubkey(),
+            voucher: self.voucher(args.nonce),
+            log_wrapper: spl_noop::id(),
+            compression_program: spl_account_compression::id(),
+        };
+
+        let data = mpl_bubblegum::instruction::CancelRedeem { root };
+
+        Ok(self.tx_builder(
+            accounts,
+            data,
+            Some(args.index),
+            args,
+            args.owner.pubkey(),
+            &[&args.owner],
+        ))
+    }
+
+    pub async fn cancel_redeem(&self, args: &LeafArgs) -> Result<()> {
+        self.cancel_redeem_tx(args).await?.execute().await
     }
 
     pub fn set_tree_delegate_tx(
