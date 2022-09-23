@@ -248,6 +248,12 @@ pub fn get_config_line(
     let account_info = candy_machine.to_account_info();
     let mut account_data = account_info.data.borrow_mut();
 
+    // validates that all config lines were added to the candy machine
+    let config_count = get_config_count(&account_data)? as u64;
+    if config_count != candy_machine.data.items_available {
+        return err!(CandyError::NotFullyLoaded);
+    }
+
     // (1) determine the mint index (index is a random index on the available indices array)
 
     let value_to_use = if settings.is_sequential {

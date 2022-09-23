@@ -111,3 +111,60 @@ test('add_config_lines (hidden settings)', async (t) => {
       .assertError(t, /do not have config lines/i);
   }
 });
+
+test('add_config_lines (incomplete)', async (t) => {
+  const { fstTxHandler, payerPair, connection } = await init.payer();
+  const items = 10;
+
+  const data: program.CandyMachineData = {
+    itemsAvailable: items,
+    symbol: 'CORE',
+    sellerFeeBasisPoints: 500,
+    maxSupply: 0,
+    isMutable: true,
+    creators: [
+      {
+        address: payerPair.publicKey,
+        verified: false,
+        percentageShare: 100,
+      },
+    ],
+    configLineSettings: {
+      prefixName: 'TEST ',
+      nameLength: 10,
+      prefixUri: 'https://arweave.net/',
+      uriLength: 50,
+      isSequential: false,
+    },
+    hiddenSettings: null,
+  };
+
+  const { tx: transaction, candyMachine: address } = await init.initialize(
+    t,
+    payerPair,
+    data,
+    fstTxHandler,
+    connection,
+  );
+  // executes the transaction
+  await transaction.assertSuccess(t);
+
+  const lines: program.ConfigLine[] = [];
+
+  for (let i = 0; i < items - 5; i++) {
+    lines[i] = {
+      name: `NFT #${i + 1}`,
+      uri: 'uJSdJIsz_tYTcjUEWdeVSj0aR90K-hjDauATWZSi-tQ',
+    };
+  }
+  const { txs } = await init.addConfigLines(t, address, payerPair, lines);
+  // confirms that all lines have been written
+  for (const tx of txs) {
+    await fstTxHandler
+      .sendAndConfirmTransaction(tx, [payerPair], 'tx: AddConfigLines')
+      .assertSuccess(t, [/New config line added/i]);
+  }
+
+  const { tx: mintTransaction } = await init.mint(t, address, payerPair, fstTxHandler, connection);
+  await mintTransaction.assertError(t, /Not all config lines were added/i);
+});

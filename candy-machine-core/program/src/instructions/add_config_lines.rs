@@ -1,12 +1,10 @@
 use anchor_lang::prelude::*;
-use arrayref::array_ref;
-use std::cell::RefMut;
 
 use crate::{
     constants::HIDDEN_SECTION,
     state::{CandyMachine, ConfigLine},
     utils::fixed_length_string,
-    CandyError,
+    CandyError, get_config_count,
 };
 
 pub fn add_config_lines(
@@ -137,11 +135,6 @@ pub fn add_config_lines(
     data[HIDDEN_SECTION..HIDDEN_SECTION + 4].copy_from_slice(&(count as u32).to_le_bytes());
 
     Ok(())
-}
-
-/// Return the current number of lines written to the account.
-pub fn get_config_count(data: &RefMut<&mut [u8]>) -> Result<usize> {
-    Ok(u32::from_le_bytes(*array_ref![data, HIDDEN_SECTION, 4]) as usize)
 }
 
 /// Add multiple config lines to the candy machine.

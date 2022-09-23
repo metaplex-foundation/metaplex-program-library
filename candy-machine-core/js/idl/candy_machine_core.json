@@ -759,6 +759,11 @@
       "code": 6019,
       "name": "CouldNotRetrieveConfigLineData",
       "msg": "Could not retrive config line data"
+    },
+    {
+      "code": 6020,
+      "name": "NotFullyLoaded",
+      "msg": "Not all config lines were added to the candy machine"
     }
   ],
   "metadata": {
