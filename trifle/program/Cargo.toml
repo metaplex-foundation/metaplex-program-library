@@ -14,7 +14,7 @@ solana-program = "1.14.1"
 spl-token = { version = "3.5.0", features = ["no-entrypoint"] }
 thiserror = "1.0.35"
 # mpl-token-metadata = { version = "1.4.0", features = ["no-entrypoint"] }
-mpl-token-metadata = { path = "../../token-metadata/program" }
+mpl-token-metadata = { path = "../../token-metadata/program", features = ["no-entrypoint"] }
 num-derive = "0.3.3"
 num-traits = "0.2.14"
 
