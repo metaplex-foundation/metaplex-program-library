@@ -118,7 +118,7 @@ test('mint (sequential)', async (t) => {
       .assertSuccess(t);
   }
 
-  // darining the candy machine
+  // draining the candy machine
   const indices = await drain(t, address, payerPair, fstTxHandler, connection);
   const expected = Array.from({ length: indices.length }, (x, i) => i + 1);
   spok(t, indices, expected);
@@ -181,7 +181,7 @@ test('mint (random)', async (t) => {
       .assertSuccess(t);
   }
 
-  // darining the candy machine
+  // draining the candy machine
   const indices = await drain(t, address, payerPair, fstTxHandler, connection);
   const expected = Array.from({ length: indices.length }, (x, i) => i + 1);
   t.notDeepEqual(indices, expected);
@@ -231,7 +231,7 @@ test('mint (hidden settings)', async (t) => {
   // executes the transaction
   await transaction.assertSuccess(t);
 
-  // darining the candy machine
+  // draining the candy machine
   const indices = await drain(t, address, payerPair, fstTxHandler, connection);
   const expected = Array.from({ length: indices.length }, (x, i) => i + 1);
   spok(t, indices, expected);
