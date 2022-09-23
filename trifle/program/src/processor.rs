@@ -174,7 +174,7 @@ fn create_trifle_account(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progr
         trifle_info,
         &[
             TRIFLE_SEED.as_bytes(),
-            escrow_info.key.as_ref(),
+            mint_info.key.as_ref(),
             trifle_authority_info.key.as_ref(),
             escrow_constraint_model_info.key.as_ref(),
         ],
@@ -194,6 +194,32 @@ fn create_trifle_account(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progr
     if escrow_constraint_model_key != Key::EscrowConstraintModel {
         return Err(TrifleError::InvalidEscrowConstraintModel.into());
     }
+
+    let trifle_signer_seeds = &[
+        TRIFLE_SEED.as_bytes(),
+        mint_info.key.as_ref(),
+        trifle_authority_info.key.as_ref(),
+        escrow_constraint_model_info.key.as_ref(),
+        &[trifle_pda_bump],
+    ];
+
+    let trifle = Trifle {
+        key: Key::Trifle,
+        token_escrow: escrow_info.key.to_owned(),
+        escrow_constraint_model: escrow_constraint_model_info.key.to_owned(),
+        tokens: HashMap::new(),
+    };
+
+    create_or_allocate_account_raw(
+        *program_id,
+        trifle_info,
+        system_program_info,
+        payer_info,
+        trifle.try_len()?,
+        trifle_signer_seeds,
+    )?;
+
+    trifle.serialize(&mut *trifle_info.try_borrow_mut_data()?)?;
 
     let create_escrow_account_ix = mpl_token_metadata::escrow::create_escrow_account(
         token_metadata_program_id(),
@@ -217,37 +243,11 @@ fn create_trifle_account(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progr
         trifle_info.clone(),
     ];
 
-    let trifle_signer_seeds = &[
-        TRIFLE_SEED.as_bytes(),
-        escrow_info.key.as_ref(),
-        trifle_authority_info.key.as_ref(),
-        escrow_constraint_model_info.key.as_ref(),
-        &[trifle_pda_bump],
-    ];
-
     invoke_signed(
         &create_escrow_account_ix,
         &account_infos,
         &[trifle_signer_seeds],
     )?;
-
-    let trifle = Trifle {
-        key: Key::Trifle,
-        token_escrow: escrow_info.key.to_owned(),
-        escrow_constraint_model: escrow_constraint_model_info.key.to_owned(),
-        tokens: HashMap::new(),
-    };
-
-    create_or_allocate_account_raw(
-        *program_id,
-        trifle_info,
-        system_program_info,
-        payer_info,
-        trifle.try_len()?,
-        trifle_signer_seeds,
-    )?;
-
-    trifle.serialize(&mut *trifle_info.try_borrow_mut_data()?)?;
 
     Ok(())
 }
