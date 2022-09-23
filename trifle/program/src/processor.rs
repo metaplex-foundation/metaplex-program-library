@@ -19,6 +19,7 @@ use mpl_token_metadata::{
 use solana_program::{
     account_info::next_account_info,
     account_info::AccountInfo,
+    borsh::try_from_slice_unchecked,
     entrypoint::ProgramResult,
     msg,
     program::{invoke, invoke_signed},
@@ -34,9 +35,38 @@ pub fn process_instruction(
     accounts: &[AccountInfo],
     input: &[u8],
 ) -> ProgramResult {
-    let instruction = TrifleInstruction::try_from_slice(input)?;
-    match instruction {
+    msg!("before");
+    msg!("before");
+    msg!("before");
+    msg!("before");
+    msg!("before");
+    msg!("before");
+    msg!("before");
+    msg!("before");
+    let instruction = TrifleInstruction::try_from_slice(input);
+
+    if instruction.is_err() {
+        msg!("instruction is err");
+        msg!("instruction is err");
+        msg!("instruction is err");
+        msg!("instruction is err");
+        msg!("instruction is err");
+        msg!("instruction is err");
+        msg!("instruction is err");
+        msg!("instruction is err");
+        msg!("instruction is err");
+        msg!("instruction is err");
+    }
+
+    match instruction.unwrap() {
         TrifleInstruction::CreateEscrowConstraintModelAccount(args) => {
+            msg!("Instruction: Create Escrow Constraint Model Account");
+            msg!("Instruction: Create Escrow Constraint Model Account");
+            msg!("Instruction: Create Escrow Constraint Model Account");
+            msg!("Instruction: Create Escrow Constraint Model Account");
+            msg!("Instruction: Create Escrow Constraint Model Account");
+            msg!("Instruction: Create Escrow Constraint Model Account");
+            msg!("Instruction: Create Escrow Constraint Model Account");
             msg!("Instruction: Create Escrow Constraint Model Account");
             create_escrow_contstraints_model_account(program_id, accounts, args)
         }

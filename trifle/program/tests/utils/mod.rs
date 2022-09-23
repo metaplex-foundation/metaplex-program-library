@@ -18,7 +18,9 @@ pub const DEFAULT_COLLECTION_DETAILS: Option<CollectionDetails> =
     Some(CollectionDetails::V1 { size: 0 });
 
 pub fn program_test() -> ProgramTest {
-    ProgramTest::new("mpl_trifle", mpl_trifle::id(), None)
+    let mut test = ProgramTest::new("mpl_trifle", mpl_trifle::id(), None);
+    test.add_program("mpl_token_metadata", mpl_token_metadata::id(), None);
+    test
 }
 
 pub async fn get_account(context: &mut ProgramTestContext, pubkey: &Pubkey) -> Account {

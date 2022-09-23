@@ -1,11 +1,11 @@
-mod entrypoint;
-mod error;
-mod instruction;
-mod pda;
-mod processor;
-mod state;
+pub mod entrypoint;
+pub mod error;
+pub mod instruction;
+pub mod pda;
+pub mod processor;
+pub mod state;
 mod tests;
-mod util;
+pub mod util;
 
 mod bpf;
 

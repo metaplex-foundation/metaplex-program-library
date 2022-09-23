@@ -1,4 +1,4 @@
-use crate::state::TRIFLE_SEED;
+use crate::state::{ESCROW_SEED, TRIFLE_SEED};
 use solana_program::pubkey::Pubkey;
 /// Trifle account PDA seeds
 ///     "trifle",
@@ -11,11 +11,28 @@ pub fn find_trifle_address(
     escrow_constraint_model: &Pubkey,
     program_id: &Pubkey,
 ) -> (Pubkey, u8) {
-    let seeds = [
-        TRIFLE_SEED.as_bytes(),
-        mint.as_ref(),
-        trifle_authority.as_ref(),
-        escrow_constraint_model.as_ref(),
-    ];
-    Pubkey::find_program_address(&seeds, program_id)
+    Pubkey::find_program_address(
+        &[
+            TRIFLE_SEED.as_bytes(),
+            mint.as_ref(),
+            trifle_authority.as_ref(),
+            escrow_constraint_model.as_ref(),
+        ],
+        program_id,
+    )
+}
+
+/// Escrow constraint model PDA seeds
+///    "escrow",
+///    creator.key.as_ref(),
+///    name.as_bytes(),
+pub fn find_escrow_constraint_model_address(
+    creator: &Pubkey,
+    name: &str,
+    program_id: &Pubkey,
+) -> (Pubkey, u8) {
+    Pubkey::find_program_address(
+        &[ESCROW_SEED.as_bytes(), creator.as_ref(), name.as_bytes()],
+        program_id,
+    )
 }
