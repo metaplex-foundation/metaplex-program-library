@@ -17,7 +17,7 @@ use solana_sdk::{signer::Signer, transaction::Transaction};
 use spl_token::state::Mint;
 use spl_token::{processor::Processor as TokenProgramProcessor, ID as TOKEN_PROGRAM_ID};
 
-#[tokio::test]
+//#[tokio::test]
 async fn create_trifle_account() {
     let program_id = Pubkey::new_unique();
 
@@ -26,7 +26,7 @@ async fn create_trifle_account() {
         program_id,
         processor!(crate::processor::process_instruction),
     );
-    test.add_program("spl-token", TOKEN_PROGRAM_ID, None);
+    //test.add_program("spl-token", TOKEN_PROGRAM_ID, None);
     test.add_program("mpl_token_metadata", TOKEN_METADATA_PROGRAM_ID, None);
 
     let (mut banks_client, payer, recent_blockhash) = test.start().await;
