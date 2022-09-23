@@ -97,9 +97,11 @@ pub fn add_constraint_to_escrow_constraint_model(
     Instruction {
         program_id: *program_id,
         accounts,
-        data: AddConstraintToEscrowConstraintModelArgs { constraint }
-            .try_to_vec()
-            .unwrap(),
+        data: TrifleInstruction::AddConstraintToEscrowConstraintModel(
+            AddConstraintToEscrowConstraintModelArgs { constraint },
+        )
+        .try_to_vec()
+        .unwrap(),
     }
 }
 
@@ -131,6 +133,6 @@ pub fn create_trifle_account(
     Instruction {
         program_id: *program_id,
         accounts,
-        data: vec![],
+        data: TrifleInstruction::CreateTrifleAccount.try_to_vec().unwrap(),
     }
 }

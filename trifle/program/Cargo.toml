@@ -19,6 +19,9 @@ borsh = "0.9.3"
 shank = "0.0.9"
 solana-program = "1.10.40"
 spl-token = { version = "3.5.0", features = ["no-entrypoint"] }
+spl-associated-token-account = { version = "1.0.3", features = [
+    "no-entrypoint",
+] }
 thiserror = "1.0.35"
 # mpl-token-metadata = { version = "1.4.0", features = ["no-entrypoint"] }
 mpl-token-metadata = { path = "../../token-metadata/program", features = [

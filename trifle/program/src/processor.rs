@@ -73,7 +73,6 @@ fn create_escrow_contstraints_model_account(
         count: 0,
     };
 
-    // TODO: seeds
     let bump = assert_derivation(
         program_id,
         escrow_constraint_model_info,
@@ -84,7 +83,6 @@ fn create_escrow_contstraints_model_account(
         ],
     )?;
 
-    // TODO: seeds
     let escrow_constraint_model_seeds = &[
         ESCROW_SEED.as_ref(),
         payer_info.key.as_ref(),
@@ -113,26 +111,28 @@ fn add_constraint_to_escrow_constraint_model(
 ) -> ProgramResult {
     let account_info_iter = &mut accounts.iter();
 
-    // TODO: make account info names end in _info
-    let escrow_constraint_model_account = next_account_info(account_info_iter)?;
-    let payer = next_account_info(account_info_iter)?;
-    let update_authority = next_account_info(account_info_iter)?;
-    let system_program = next_account_info(account_info_iter)?;
+    let escrow_constraint_model_info = next_account_info(account_info_iter)?;
+    let payer_info = next_account_info(account_info_iter)?;
+    let update_authority_info = next_account_info(account_info_iter)?;
+    let system_program_info = next_account_info(account_info_iter)?;
+
+    assert_owned_by(escrow_constraint_model_info, program_id)?;
+    assert_signer(payer_info)?;
+    assert_signer(update_authority_info)?;
 
     let mut escrow_constraint_model: EscrowConstraintModel =
-        EscrowConstraintModel::try_from_slice(&escrow_constraint_model_account.data.borrow())?;
+        EscrowConstraintModel::try_from_slice(&escrow_constraint_model_info.data.borrow())?;
 
-    if escrow_constraint_model.update_authority != *update_authority.key {
+    if escrow_constraint_model.update_authority != *update_authority_info.key {
         return Err(TrifleError::InvalidUpdateAuthority.into());
     }
 
     assert_derivation(
         program_id,
-        escrow_constraint_model_account,
+        escrow_constraint_model_info,
         &[
             ESCROW_SEED.as_bytes(),
-            program_id.as_ref(),
-            payer.key.as_ref(),
+            payer_info.key.as_ref(),
             escrow_constraint_model.name.as_bytes(),
         ],
     )?;
@@ -140,14 +140,13 @@ fn add_constraint_to_escrow_constraint_model(
     escrow_constraint_model.constraints.push(args.constraint);
 
     resize_or_reallocate_account_raw(
-        escrow_constraint_model_account,
-        payer,
-        system_program,
+        escrow_constraint_model_info,
+        payer_info,
+        system_program_info,
         escrow_constraint_model.try_len()?,
     )?;
 
-    escrow_constraint_model
-        .serialize(&mut *escrow_constraint_model_account.try_borrow_mut_data()?)?;
+    escrow_constraint_model.serialize(&mut *escrow_constraint_model_info.try_borrow_mut_data()?)?;
 
     Ok(())
 }

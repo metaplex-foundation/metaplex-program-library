@@ -9,7 +9,6 @@ pub fn find_trifle_address(
     mint: &Pubkey,
     trifle_authority: &Pubkey,
     escrow_constraint_model: &Pubkey,
-    program_id: &Pubkey,
 ) -> (Pubkey, u8) {
     Pubkey::find_program_address(
         &[
@@ -18,7 +17,7 @@ pub fn find_trifle_address(
             trifle_authority.as_ref(),
             escrow_constraint_model.as_ref(),
         ],
-        program_id,
+        &crate::id(),
     )
 }
 
@@ -26,13 +25,9 @@ pub fn find_trifle_address(
 ///    "escrow",
 ///    creator.key.as_ref(),
 ///    name.as_bytes(),
-pub fn find_escrow_constraint_model_address(
-    creator: &Pubkey,
-    name: &str,
-    program_id: &Pubkey,
-) -> (Pubkey, u8) {
+pub fn find_escrow_constraint_model_address(creator: &Pubkey, name: &str) -> (Pubkey, u8) {
     Pubkey::find_program_address(
         &[ESCROW_SEED.as_bytes(), creator.as_ref(), name.as_bytes()],
-        program_id,
+        &crate::id(),
     )
 }
