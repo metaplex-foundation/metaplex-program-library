@@ -17,17 +17,8 @@ use mpl_token_metadata::{
     utils::{assert_derivation, assert_owned_by, assert_signer, create_or_allocate_account_raw},
 };
 use solana_program::{
-    account_info::next_account_info,
-    account_info::AccountInfo,
-    borsh::try_from_slice_unchecked,
-    entrypoint::ProgramResult,
-    msg,
-    program::{invoke, invoke_signed},
-    pubkey::Pubkey,
-    rent::Rent,
-    slot_hashes::MAX_ENTRIES,
-    system_instruction,
-    sysvar::Sysvar,
+    account_info::next_account_info, account_info::AccountInfo, entrypoint::ProgramResult, msg,
+    program::invoke_signed, pubkey::Pubkey,
 };
 
 pub fn process_instruction(
@@ -35,38 +26,10 @@ pub fn process_instruction(
     accounts: &[AccountInfo],
     input: &[u8],
 ) -> ProgramResult {
-    msg!("before");
-    msg!("before");
-    msg!("before");
-    msg!("before");
-    msg!("before");
-    msg!("before");
-    msg!("before");
-    msg!("before");
-    let instruction = TrifleInstruction::try_from_slice(input);
+    let instruction = TrifleInstruction::try_from_slice(input)?;
 
-    if instruction.is_err() {
-        msg!("instruction is err");
-        msg!("instruction is err");
-        msg!("instruction is err");
-        msg!("instruction is err");
-        msg!("instruction is err");
-        msg!("instruction is err");
-        msg!("instruction is err");
-        msg!("instruction is err");
-        msg!("instruction is err");
-        msg!("instruction is err");
-    }
-
-    match instruction.unwrap() {
+    match instruction {
         TrifleInstruction::CreateEscrowConstraintModelAccount(args) => {
-            msg!("Instruction: Create Escrow Constraint Model Account");
-            msg!("Instruction: Create Escrow Constraint Model Account");
-            msg!("Instruction: Create Escrow Constraint Model Account");
-            msg!("Instruction: Create Escrow Constraint Model Account");
-            msg!("Instruction: Create Escrow Constraint Model Account");
-            msg!("Instruction: Create Escrow Constraint Model Account");
-            msg!("Instruction: Create Escrow Constraint Model Account");
             msg!("Instruction: Create Escrow Constraint Model Account");
             create_escrow_contstraints_model_account(program_id, accounts, args)
         }
@@ -78,6 +41,14 @@ pub fn process_instruction(
             msg!("Instruction: Create Trifle Account");
             create_trifle_account(program_id, accounts)
         }
+        TrifleInstruction::TransferIn => {
+            msg!("Instruction: Transfer In");
+            transfer_in(program_id, accounts)
+        }
+        TrifleInstruction::TransferOut => {
+            msg!("Instruction: Transfer Out");
+            transfer_out(program_id, accounts)
+        }
     }
 }
 
@@ -88,17 +59,16 @@ fn create_escrow_contstraints_model_account(
 ) -> ProgramResult {
     let account_info_iter = &mut accounts.iter();
 
-    // TODO: make account info names end in _info
-    let escrow_constraint_model_account = next_account_info(account_info_iter)?;
-    let payer = next_account_info(account_info_iter)?;
-    let update_authority = next_account_info(account_info_iter)?;
-    let system_program = next_account_info(account_info_iter)?;
+    let escrow_constraint_model_info = next_account_info(account_info_iter)?;
+    let payer_info = next_account_info(account_info_iter)?;
+    let update_authority_info = next_account_info(account_info_iter)?;
+    let system_program_info = next_account_info(account_info_iter)?;
 
     let escrow_constraint_model = EscrowConstraintModel {
         key: Key::EscrowConstraintModel,
         name: args.name.to_owned(),
-        creator: payer.key.to_owned(),
-        update_authority: update_authority.key.to_owned(),
+        creator: payer_info.key.to_owned(),
+        update_authority: update_authority_info.key.to_owned(),
         constraints: vec![],
         count: 0,
     };
@@ -106,11 +76,10 @@ fn create_escrow_contstraints_model_account(
     // TODO: seeds
     let bump = assert_derivation(
         program_id,
-        escrow_constraint_model_account,
+        escrow_constraint_model_info,
         &[
             ESCROW_SEED.as_bytes(),
-            program_id.as_ref(),
-            payer.key.as_ref(),
+            payer_info.key.as_ref(),
             args.name.as_bytes(),
         ],
     )?;
@@ -118,23 +87,21 @@ fn create_escrow_contstraints_model_account(
     // TODO: seeds
     let escrow_constraint_model_seeds = &[
         ESCROW_SEED.as_ref(),
-        program_id.as_ref(),
-        payer.key.as_ref(),
+        payer_info.key.as_ref(),
         args.name.as_ref(),
         &[bump],
     ];
 
     create_or_allocate_account_raw(
         *program_id,
-        escrow_constraint_model_account,
-        system_program,
-        payer,
+        escrow_constraint_model_info,
+        system_program_info,
+        payer_info,
         escrow_constraint_model.try_len()?,
         escrow_constraint_model_seeds,
     )?;
 
-    escrow_constraint_model
-        .serialize(&mut *escrow_constraint_model_account.try_borrow_mut_data()?)?;
+    escrow_constraint_model.serialize(&mut *escrow_constraint_model_info.try_borrow_mut_data()?)?;
 
     Ok(())
 }
@@ -282,5 +249,12 @@ fn create_trifle_account(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progr
     Ok(())
 }
 
+fn transfer_in(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
+    Ok(())
+}
+
+fn transfer_out(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
+    Ok(())
+}
 // proxy transfer_in
 // proxy transfer_out

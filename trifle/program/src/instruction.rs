@@ -6,7 +6,6 @@ use solana_program::{
     pubkey::Pubkey,
 };
 
-#[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct CreateEscrowConstraintModelAccountArgs {
@@ -50,6 +49,9 @@ pub enum TrifleInstruction {
     #[account(8, writable, signer, name = "payer", desc = "Wallet paying for the transaction")]
     #[account(9, name = "system_program", desc = "System program")]
     CreateTrifleAccount,
+
+    TransferIn,
+    TransferOut,
 }
 
 pub fn create_escrow_constraint_model_account(
@@ -69,9 +71,11 @@ pub fn create_escrow_constraint_model_account(
     Instruction {
         program_id: *program_id,
         accounts,
-        data: CreateEscrowConstraintModelAccountArgs { name }
-            .try_to_vec()
-            .unwrap(),
+        data: TrifleInstruction::CreateEscrowConstraintModelAccount(
+            CreateEscrowConstraintModelAccountArgs { name },
+        )
+        .try_to_vec()
+        .unwrap(),
     }
 }
 
