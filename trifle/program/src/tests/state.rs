@@ -1,13 +1,11 @@
-use borsh::BorshSerialize;
-use solana_sdk::{signature::Keypair, signer::Signer};
-
+#[cfg(test)]
 mod escrow {
     use crate::state::{
         escrow_constraints::{EscrowConstraint, EscrowConstraintModel, EscrowConstraintType},
         Key,
     };
-
-    use super::*;
+    use borsh::BorshSerialize;
+    use solana_sdk::{signature::Keypair, signer::Signer};
 
     #[test]
     fn test_escrow_constraints_model_len() {

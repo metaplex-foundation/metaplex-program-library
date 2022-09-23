@@ -132,7 +132,6 @@ pub fn process_transfer_out_of_escrow(
             payer_info.key,
             payer_info.key,
             attribute_mint_info.key,
-            &spl_token::id(),
         );
 
     invoke(

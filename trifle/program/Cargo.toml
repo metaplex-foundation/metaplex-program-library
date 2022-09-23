@@ -7,6 +7,10 @@ edition = "2021"
 crate-type = ["cdylib", "lib"]
 name = "mpl_trifle"
 
+[features]
+no-entrypoint = []
+test-bpf = []
+
 [dependencies]
 borsh = "0.9.3"
 shank = "0.0.9"
@@ -14,10 +18,15 @@ solana-program = "1.14.1"
 spl-token = { version = "3.5.0", features = ["no-entrypoint"] }
 thiserror = "1.0.35"
 # mpl-token-metadata = { version = "1.4.0", features = ["no-entrypoint"] }
-mpl-token-metadata = { path = "../../token-metadata/program" }
+mpl-token-metadata = { path = "../../token-metadata/program", features = [
+    "no-entrypoint",
+] }
 num-derive = "0.3.3"
 num-traits = "0.2.14"
 
 [dev-dependencies]
+solana-program = "1.14.1"
 solana-sdk = "1.14.1"
 solana-program-test = "1.14.1"
+spl-token = "3.5.0"
+mpl-token-metadata = { path = "../../token-metadata/program" }

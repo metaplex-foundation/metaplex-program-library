@@ -1,6 +1,10 @@
 use crate::state::escrow_constraints::EscrowConstraint;
 use borsh::{BorshDeserialize, BorshSerialize};
 use shank::ShankInstruction;
+use solana_program::{
+    instruction::{AccountMeta, Instruction},
+    pubkey::Pubkey,
+};
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
@@ -77,7 +81,6 @@ pub enum TrifleInstruction {
     #[account(5, writable, name = "trifle_account", desc = "Trifle account")]
     #[account(
         6,
-        signer,
         name = "trifle_authority",
         desc = "Trifle Authority - the account that can sign transactions for the trifle account"
     )]
@@ -91,4 +94,83 @@ pub enum TrifleInstruction {
     )]
     #[account(9, name = "system_program", desc = "System program")]
     CreateTrifleAccount,
+}
+
+pub fn create_escrow_constraint_model_account(
+    program_id: &Pubkey,
+    escrow_constraint_model: &Pubkey,
+    payer: &Pubkey,
+    update_authority: &Pubkey,
+    name: String,
+) -> Instruction {
+    let accounts = vec![
+        AccountMeta::new(*escrow_constraint_model, false),
+        AccountMeta::new(*payer, true),
+        AccountMeta::new_readonly(*update_authority, false),
+        AccountMeta::new_readonly(solana_program::system_program::id(), false),
+    ];
+
+    Instruction {
+        program_id: *program_id,
+        accounts,
+        data: CreateEscrowConstraintModelAccountArgs { name }
+            .try_to_vec()
+            .unwrap(),
+    }
+}
+
+// TODO: make the args more approachable for clients.
+pub fn add_constraint_to_escrow_constraint_model(
+    program_id: &Pubkey,
+    escrow_constraint_model: &Pubkey,
+    payer: &Pubkey,
+    update_authority: &Pubkey,
+    constraint: EscrowConstraint,
+) -> Instruction {
+    let accounts = vec![
+        AccountMeta::new(*escrow_constraint_model, false),
+        AccountMeta::new(*payer, true),
+        AccountMeta::new_readonly(*update_authority, true),
+        AccountMeta::new_readonly(solana_program::system_program::id(), false),
+    ];
+
+    Instruction {
+        program_id: *program_id,
+        accounts,
+        data: AddConstraintToEscrowConstraintModelArgs { constraint }
+            .try_to_vec()
+            .unwrap(),
+    }
+}
+
+pub fn create_trifle_account(
+    program_id: &Pubkey,
+    escrow: &Pubkey,
+    metadata: &Pubkey,
+    mint: &Pubkey,
+    token_account: &Pubkey,
+    edition: &Pubkey,
+    trifle_account: &Pubkey,
+    trifle_authority: &Pubkey,
+    escrow_constraint_model: &Pubkey,
+    payer: &Pubkey,
+) -> Instruction {
+    let accounts = vec![
+        AccountMeta::new(*escrow, false),
+        AccountMeta::new_readonly(*metadata, false),
+        AccountMeta::new_readonly(*mint, false),
+        AccountMeta::new_readonly(*token_account, false),
+        AccountMeta::new_readonly(*edition, false),
+        AccountMeta::new(*trifle_account, false),
+        AccountMeta::new_readonly(*trifle_authority, false),
+        AccountMeta::new_readonly(*escrow_constraint_model, false),
+        AccountMeta::new(*payer, true),
+        AccountMeta::new_readonly(solana_program::system_program::id(), false),
+    ];
+
+    Instruction {
+        program_id: *program_id,
+        accounts,
+        data: vec![],
+    }
 }

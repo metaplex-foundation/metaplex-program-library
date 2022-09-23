@@ -7,4 +7,6 @@ mod state;
 mod tests;
 mod util;
 
+mod bpf;
+
 solana_program::declare_id!("6PLSD84fn6MVb3XdPYAiX33X8jgfCPXeqYUmfnYndU3X");
