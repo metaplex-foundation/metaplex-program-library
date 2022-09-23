@@ -13,6 +13,7 @@ use crate::{
 pub struct UnlockFunds<'info> {
     #[account(mut, has_one = authority, has_one = wallet)]
     candy_machine: Account<'info, CandyMachine>,
+    /// CHECK: wallet is the treasure account of the candy_machine
     #[account(mut)]
     wallet: UncheckedAccount<'info>,
     #[account(mut)]
