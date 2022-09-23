@@ -1,4 +1,4 @@
-use std::{collections::HashSet, io::ErrorKind};
+use std::io::ErrorKind;
 
 use crate::{
     deser::meta_deser_unchecked,
@@ -974,7 +974,7 @@ impl TokenMetadataAccount for TokenOwnedEscrow {
     fn is_correct_account_type(data: &[u8], data_type: Key, _data_size: usize) -> bool {
         let key: Option<Key> = Key::from_u8(data[0]);
         match key {
-            Some(key) => (key == data_type || key == Key::Uninitialized),
+            Some(key) => key == data_type || key == Key::Uninitialized,
             None => false,
         }
     }

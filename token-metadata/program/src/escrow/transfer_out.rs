@@ -1,7 +1,8 @@
 use crate::{
-    error::MetadataError,
     instruction::MetadataInstruction,
-    state::{Metadata, TokenMetadataAccount, TokenOwnedEscrow, ESCROW_PREFIX, PREFIX},
+    state::{
+        EscrowAuthority, Metadata, TokenMetadataAccount, TokenOwnedEscrow, ESCROW_PREFIX, PREFIX,
+    },
     utils::{assert_derivation, assert_owned_by, assert_signer},
 };
 use borsh::{BorshDeserialize, BorshSerialize};
@@ -95,6 +96,8 @@ pub fn process_transfer_out_of_escrow(
         None
     };
 
+    let authority = maybe_authority_info.unwrap_or(payer_info);
+
     let toe = TokenOwnedEscrow::from_account_info(escrow_info).unwrap();
 
     // Owned by token-metadata program.
@@ -127,12 +130,12 @@ pub fn process_transfer_out_of_escrow(
     assert_signer(payer_info)?;
 
     // Allocate the escrow accounts new ATA.
-    let create_escrow_ata_ix =
-        spl_associated_token_account::instruction::create_associated_token_account(
-            payer_info.key,
-            payer_info.key,
-            attribute_mint_info.key,
-        );
+    #[allow(deprecated)]
+    let create_escrow_ata_ix = spl_associated_token_account::create_associated_token_account(
+        payer_info.key,
+        payer_info.key,
+        attribute_mint_info.key,
+    );
 
     invoke(
         &create_escrow_ata_ix,
@@ -152,12 +155,21 @@ pub fn process_transfer_out_of_escrow(
     assert!(attribute_src.mint == *attribute_mint_info.key);
     assert!(attribute_src.delegate.is_none());
     assert!(attribute_src.amount >= args.amount);
+
+    // Check that the authority matches based on the authority type.
+    let escrow_account = spl_token::state::Account::unpack(&escrow_account_info.data.borrow())?;
+    match toe.authority {
+        EscrowAuthority::TokenOwner => {
+            assert!(escrow_account.owner == *authority.key);
+        }
+        EscrowAuthority::Creator(creator) => {
+            assert!(creator == *authority.key);
+        }
+    }
+
     let attribute_dst = spl_token::state::Account::unpack(&attribute_dst_info.data.borrow())?;
     assert!(attribute_dst.mint == *attribute_mint_info.key);
     assert!(attribute_dst.delegate.is_none());
-    let escrow_account = spl_token::state::Account::unpack(&escrow_account_info.data.borrow())?;
-
-    assert!(attribute_dst.owner == escrow_account.owner);
 
     // Transfer the token from the current owner into the escrow.
     let transfer_ix = spl_token::instruction::transfer(
