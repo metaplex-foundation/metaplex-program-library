@@ -952,6 +952,15 @@ pub enum EscrowAuthority {
     Creator(Pubkey),
 }
 
+impl EscrowAuthority {
+    pub fn to_seeds(&self) -> Vec<&[u8]> {
+        match self {
+            EscrowAuthority::TokenOwner => vec![&[0]],
+            EscrowAuthority::Creator(creator) => vec![&[1], creator.as_ref()],
+        }
+    }
+}
+
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, ShankAccount)]

@@ -11,6 +11,7 @@ use crate::{
     },
 };
 use borsh::BorshSerialize;
+use mpl_token_vault::solana_program::msg;
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
@@ -115,30 +116,25 @@ pub fn process_create_escrow_account(
         EscrowAuthority::Creator(*creator.key)
     };
 
-    let authority_primitive: Vec<u8> = creator_type.try_to_vec().unwrap();
-
-    // Assert that this is the canonical PDA for this mint.
-    let bump_seed = assert_derivation(
-        program_id,
-        escrow_account_info,
-        &[
-            PREFIX.as_bytes(),
-            program_id.as_ref(),
-            mint_account_info.key.as_ref(),
-            authority_primitive.as_ref(),
-            ESCROW_PREFIX.as_bytes(),
-        ],
-    )?;
-
     // Derive the seeds for PDA signing.
-    let escrow_authority_seeds = &[
+    let mut escrow_authority_seeds = vec![
         PREFIX.as_bytes(),
         program_id.as_ref(),
         metadata.mint.as_ref(),
-        authority_primitive.as_ref(),
-        ESCROW_PREFIX.as_bytes(),
-        &[bump_seed],
     ];
+
+    for seed in creator_type.to_seeds() {
+        escrow_authority_seeds.push(seed);
+    }
+
+    escrow_authority_seeds.push(ESCROW_PREFIX.as_bytes());
+
+    msg!("Escrow authority seeds: {:#?}", escrow_authority_seeds);
+    // Assert that this is the canonical PDA for this mint.
+    let bump_seed = assert_derivation(program_id, escrow_account_info, &escrow_authority_seeds)?;
+
+    let binding = [bump_seed];
+    escrow_authority_seeds.push(&binding);
 
     // Initialize a default (empty) escrow structure.
     let toe = TokenOwnedEscrow {
@@ -156,7 +152,7 @@ pub fn process_create_escrow_account(
         system_account_info,
         payer_account_info,
         serialized_data.len(),
-        escrow_authority_seeds,
+        &escrow_authority_seeds,
     )?;
 
     sol_memcpy(
