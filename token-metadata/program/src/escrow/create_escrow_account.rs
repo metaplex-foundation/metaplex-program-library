@@ -11,7 +11,6 @@ use crate::{
     },
 };
 use borsh::BorshSerialize;
-use mpl_token_vault::solana_program::msg;
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
@@ -129,7 +128,6 @@ pub fn process_create_escrow_account(
 
     escrow_authority_seeds.push(ESCROW_PREFIX.as_bytes());
 
-    msg!("Escrow authority seeds: {:#?}", escrow_authority_seeds);
     // Assert that this is the canonical PDA for this mint.
     let bump_seed = assert_derivation(program_id, escrow_account_info, &escrow_authority_seeds)?;
 

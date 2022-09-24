@@ -11,7 +11,5 @@ pub fn find_escrow_account(mint: &Pubkey, authority: &EscrowAuthority) -> (Pubke
 
     seeds.push(ESCROW_PREFIX.as_bytes());
 
-    println!("Seeds: {:#?}", seeds);
-
     Pubkey::find_program_address(&seeds, &crate::id())
 }
