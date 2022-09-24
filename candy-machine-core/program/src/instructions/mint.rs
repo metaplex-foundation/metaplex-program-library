@@ -59,8 +59,11 @@ pub fn mint<'info>(ctx: Context<'_, '_, '_, 'info, Mint<'info>>) -> Result<()> {
     let data = recent_slothashes.data.borrow();
     let most_recent = array_ref![data, 12, 8];
 
-    let numerator = u64::from_le_bytes(*most_recent);
-    let remainder: usize = numerator
+    let clock = Clock::get()?;
+    // seed for the random number is a combination of the slot_hash + timestamp
+    let seed = u64::from_le_bytes(*most_recent).saturating_add(clock.unix_timestamp as u64);
+
+    let remainder: usize = seed
         .checked_rem(candy_machine.data.items_available - candy_machine.items_redeemed)
         .ok_or(CandyError::NumericalOverflowError)? as usize;
 
