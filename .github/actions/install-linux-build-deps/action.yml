@@ -9,7 +9,7 @@ runs:
         sudo apt-get update
       shell: bash
 
-    - name: apt-get install clang 
+    - name: apt-get install build-essential 
       run: |
         sudo apt-get install build-essential
       shell: bash
