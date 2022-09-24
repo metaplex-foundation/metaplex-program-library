@@ -18,7 +18,7 @@ use mpl_token_metadata::{
 };
 use solana_program::{
     account_info::next_account_info, account_info::AccountInfo, entrypoint::ProgramResult, msg,
-    program::invoke_signed, pubkey::Pubkey,
+    program::invoke_signed, program_memory::sol_memcpy, pubkey::Pubkey,
 };
 
 pub fn process_instruction(
@@ -163,6 +163,7 @@ fn create_trifle_account(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progr
     let trifle_authority_info = next_account_info(account_info_iter)?;
     let escrow_constraint_model_info = next_account_info(account_info_iter)?;
     let payer_info = next_account_info(account_info_iter)?;
+    let _tm_program_info = next_account_info(account_info_iter)?;
     let system_program_info = next_account_info(account_info_iter)?;
 
     let trifle_pda_bump = assert_derivation(
@@ -178,11 +179,16 @@ fn create_trifle_account(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progr
 
     assert_signer(payer_info)?;
     assert_signer(trifle_authority_info)?;
-    assert_owned_by(escrow_info, &token_metadata_program_id())?;
+    // msg!("Checking escrow_info.");
+    // assert_owned_by(escrow_info, &token_metadata_program_id())?;
+    msg!("Checking escrow_constraint_model_info.");
     assert_owned_by(escrow_constraint_model_info, program_id)?;
+    msg!("Checking metadata_info.");
     assert_owned_by(metadata_info, &token_metadata_program_id())?;
+    msg!("Checking mint_info.");
     assert_owned_by(mint_info, &spl_token::id())?;
-    assert_owned_by(token_account_info, &spl_token::id())?;
+    // msg!("Checking token_account_info.");
+    // assert_owned_by(token_account_info, &spl_token::id())?;
 
     let escrow_constraint_model_key =
         Key::try_from_slice(&escrow_constraint_model_info.data.borrow()[0..1])?;
@@ -206,16 +212,22 @@ fn create_trifle_account(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progr
         tokens: HashMap::new(),
     };
 
+    let serialized_data = trifle.try_to_vec().unwrap();
     create_or_allocate_account_raw(
         *program_id,
         trifle_info,
         system_program_info,
         payer_info,
-        trifle.try_len()?,
+        serialized_data.len(),
         trifle_signer_seeds,
     )?;
 
-    trifle.serialize(&mut *trifle_info.try_borrow_mut_data()?)?;
+    //trifle.serialize(&mut *trifle_info.try_borrow_mut_data()?)?;
+    sol_memcpy(
+        &mut **trifle_info.try_borrow_mut_data().unwrap(),
+        &serialized_data,
+        serialized_data.len(),
+    );
 
     let create_escrow_account_ix = mpl_token_metadata::escrow::create_escrow_account(
         token_metadata_program_id(),

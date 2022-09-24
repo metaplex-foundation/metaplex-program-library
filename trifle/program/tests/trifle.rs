@@ -109,7 +109,7 @@ mod trifle {
             &escrow_addr,
             &metadata.pubkey,
             &metadata.mint.pubkey(),
-            &token_account_addr,
+            &metadata.token.pubkey(),
             &master_edition.pubkey,
             &trifle_addr,
             &context.payer.pubkey(),

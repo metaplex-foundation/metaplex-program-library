@@ -47,7 +47,8 @@ pub enum TrifleInstruction {
     #[account(6, name = "trifle_authority", desc = "Trifle Authority - the account that can sign transactions for the trifle account")]
     #[account(7, name = "escrow_constraint_model", desc = "Escrow constraint model")]
     #[account(8, writable, signer, name = "payer", desc = "Wallet paying for the transaction")]
-    #[account(9, name = "system_program", desc = "System program")]
+    #[account(9, name = "token_metadata_program", desc = "Token Metadata program")]
+    #[account(10, name = "system_program", desc = "System program")]
     CreateTrifleAccount,
 
     TransferIn,
@@ -127,6 +128,7 @@ pub fn create_trifle_account(
         AccountMeta::new_readonly(*trifle_authority, false),
         AccountMeta::new_readonly(*escrow_constraint_model, false),
         AccountMeta::new(*payer, true),
+        AccountMeta::new_readonly(mpl_token_metadata::id(), false),
         AccountMeta::new_readonly(solana_program::system_program::id(), false),
     ];
 
