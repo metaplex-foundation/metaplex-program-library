@@ -11,7 +11,7 @@ runs:
 
     - name: apt-get install clang 
       run: |
-        sudo apt-get install build-essentials
+        sudo apt-get install build-essential
       shell: bash
     - name: apt-get install ssl libs
       run: |
