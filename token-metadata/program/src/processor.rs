@@ -1723,8 +1723,10 @@ pub fn process_burn_nft(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progra
         let edition_account_data = edition_info.try_borrow_data()?;
 
         // First byte is the object key.
-        let key = edition_account_data[0];
-        if key != Key::MasterEditionV1 as u8 && key != Key::MasterEditionV2 as u8 {
+        let key = edition_account_data
+            .first()
+            .ok_or(MetadataError::InvalidMasterEdition)?;
+        if *key != Key::MasterEditionV1 as u8 && *key != Key::MasterEditionV2 as u8 {
             return Err(MetadataError::NotAMasterEdition.into());
         }
 
