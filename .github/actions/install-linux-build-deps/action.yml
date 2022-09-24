@@ -11,8 +11,8 @@ runs:
 
     - name: apt-get install clang 
       run: |
-        sudo apt-get install -y clang --allow-unauthenticated
-        clang --version
+        sudo apt-get install -y clang-10 --allow-unauthenticated
+        clang-10 --version
       shell: bash
       
     - name: apt-get install ssl libs
