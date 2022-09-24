@@ -2,10 +2,6 @@ name: Install Linux Build Deps
 runs:
   using: "composite"
   steps:
-    - name: apt-get install build-essential
-      run: sudo apt-get install build-essential
-      shell: bash
-    
     - name: apt-get add llvm-snapshot key and update
       run: |
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
