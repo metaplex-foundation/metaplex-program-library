@@ -60,8 +60,7 @@ pub fn handle_update_candy_machine(
         return err!(CandyError::CannotSwitchToHiddenSettings);
     }
 
-    if candy_machine.data.items_available > 0
-        && candy_machine.data.hidden_settings.is_some()
+    if  candy_machine.data.hidden_settings.is_some()
         && data.hidden_settings.is_none()
     {
         return err!(CandyError::CannotSwitchFromHiddenSettings);
