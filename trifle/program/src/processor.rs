@@ -265,6 +265,24 @@ fn transfer_in(
     accounts: &[AccountInfo],
     args: TransferInArgs,
 ) -> ProgramResult {
+    let account_info_iter = &mut accounts.iter();
+
+    let trifle_account = next_account_info(account_info_iter)?;
+    let constraint_model = next_account_info(account_info_iter)?;
+    let escrow_account = next_account_info(account_info_iter)?;
+    let payer = next_account_info(account_info_iter)?;
+    let trifle_authority = next_account_info(account_info_iter)?;
+    let attribute_mint = next_account_info(account_info_iter)?;
+    let attribute_src_token_account = next_account_info(account_info_iter)?;
+    let attribute_dst_token_account = next_account_info(account_info_iter)?;
+    let attribute_metadata = next_account_info(account_info_iter)?;
+    let escrow_mint = next_account_info(account_info_iter)?;
+    let escrow_token_account = next_account_info(account_info_iter)?;
+    let system_program = next_account_info(account_info_iter)?;
+    let ata_program = next_account_info(account_info_iter)?;
+    let spl_token_program = next_account_info(account_info_iter)?;
+    let rent_info = next_account_info(account_info_iter)?;
+
     Ok(())
 }
 
@@ -273,6 +291,24 @@ fn transfer_out(
     accounts: &[AccountInfo],
     args: TransferOutArgs,
 ) -> ProgramResult {
+    let account_info_iter = &mut accounts.iter();
+
+    let trifle_account = next_account_info(account_info_iter)?;
+    let constraint_model = next_account_info(account_info_iter)?;
+    let escrow_account = next_account_info(account_info_iter)?;
+    let payer = next_account_info(account_info_iter)?;
+    let trifle_authority = next_account_info(account_info_iter)?;
+    let attribute_mint = next_account_info(account_info_iter)?;
+    let attribute_src_token_account = next_account_info(account_info_iter)?;
+    let attribute_dst_token_account = next_account_info(account_info_iter)?;
+    let attribute_metadata = next_account_info(account_info_iter)?;
+    let escrow_mint = next_account_info(account_info_iter)?;
+    let escrow_token_account = next_account_info(account_info_iter)?;
+    let system_program = next_account_info(account_info_iter)?;
+    let ata_program = next_account_info(account_info_iter)?;
+    let spl_token_program = next_account_info(account_info_iter)?;
+    let rent_info = next_account_info(account_info_iter)?;
+
     Ok(())
 }
 // proxy transfer_in
