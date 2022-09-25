@@ -347,3 +347,20 @@ impl<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExe
         self.tree.leaf_changed(self.inner.args)
     }
 }
+
+pub type DecompressV1Builder<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> = TxBuilder<
+    'a,
+    mpl_bubblegum::accounts::DecompressV1,
+    mpl_bubblegum::instruction::DecompressV1,
+    (),
+    MAX_DEPTH,
+    MAX_BUFFER_SIZE,
+>;
+
+impl<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExec
+    for DecompressV1Builder<'a, MAX_DEPTH, MAX_BUFFER_SIZE>
+{
+    fn on_successful_execute(&mut self) -> Result<()> {
+        Ok(())
+    }
+}

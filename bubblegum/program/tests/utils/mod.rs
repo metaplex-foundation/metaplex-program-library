@@ -33,6 +33,7 @@ pub fn program_test() -> ProgramTest {
         spl_account_compression::id(),
         None,
     );
+    test.add_program("mpl_token_metadata", mpl_token_metadata::id(), None);
     test.set_compute_max_units(u64::MAX);
     test
 }

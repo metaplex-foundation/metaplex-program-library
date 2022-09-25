@@ -114,3 +114,14 @@ async fn test_reedem_and_cancel_redeem_passes() {
     tree.redeem(leaf).await.unwrap();
     tree.cancel_redeem(leaf).await.unwrap();
 }
+
+#[tokio::test]
+async fn test_decompress_passes() {
+    let (_, tree, leaves) = context_tree_and_leaves().await.unwrap();
+    let leaf = leaves.last().unwrap();
+
+    tree.redeem(leaf).await.unwrap();
+    let voucher = tree.read_voucher(leaf.nonce).await.unwrap();
+
+    tree.decompress_v1(&voucher, leaf).await.unwrap();
+}
