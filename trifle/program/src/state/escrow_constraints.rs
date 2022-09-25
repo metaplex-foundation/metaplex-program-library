@@ -1,4 +1,4 @@
-use std::{collections::HashMap, mem};
+use std::{collections::HashSet, mem};
 
 use borsh::{BorshDeserialize, BorshSerialize};
 use shank::ShankAccount;
@@ -81,7 +81,7 @@ impl EscrowConstraint {
 pub enum EscrowConstraintType {
     None,
     Collection(Pubkey),
-    Tokens(HashMap<Pubkey, ()>),
+    Tokens(HashSet<Pubkey>),
 }
 
 impl EscrowConstraintType {
@@ -103,9 +103,9 @@ impl EscrowConstraintType {
     }
 
     pub fn tokens_from_slice(tokens: &[Pubkey]) -> EscrowConstraintType {
-        let mut hm = HashMap::new();
+        let mut hm = HashSet::new();
         for token in tokens {
-            hm.insert(*token, ());
+            hm.insert(*token);
         }
         EscrowConstraintType::Tokens(hm)
     }
@@ -121,7 +121,7 @@ impl EscrowConstraintType {
                 }
             }
             EscrowConstraintType::Tokens(tokens) => {
-                if tokens.contains_key(mint) {
+                if tokens.contains(mint) {
                     Ok(())
                 } else {
                     Err(TrifleError::EscrowConstraintViolation.into())

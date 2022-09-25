@@ -35,6 +35,10 @@ pub enum TrifleError {
     /// 6 - Failed to create pubkey
     #[error("Failed to create pubkey")]
     FailedToCreatePubkey,
+
+    /// 7 - Data type mismatch
+    #[error("Data type mismatch")]
+    DataTypeMismatch,
 }
 
 impl From<TrifleError> for ProgramError {

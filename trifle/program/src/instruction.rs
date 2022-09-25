@@ -23,6 +23,7 @@ pub struct AddConstraintToEscrowConstraintModelArgs {
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct TransferInArgs {
+    pub slot: String,
     pub amount: u64,
 }
 
@@ -30,6 +31,7 @@ pub struct TransferInArgs {
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct TransferOutArgs {
+    pub slot: String,
     pub amount: u64,
 }
 
@@ -199,6 +201,7 @@ pub fn transfer_in(
     attribute_metadata: Pubkey,
     escrow_mint: Pubkey,
     escrow_token_account: Pubkey,
+    slot: String,
     amount: u64,
 ) -> Instruction {
     let mut accounts = vec![
@@ -219,7 +222,7 @@ pub fn transfer_in(
         AccountMeta::new_readonly(solana_program::sysvar::rent::id(), false),
     ];
 
-    let data = TrifleInstruction::TransferIn(TransferInArgs { amount })
+    let data = TrifleInstruction::TransferIn(TransferInArgs { slot, amount })
         .try_to_vec()
         .unwrap();
 
@@ -243,6 +246,7 @@ pub fn transfer_out(
     attribute_metadata: Pubkey,
     escrow_mint: Pubkey,
     escrow_token_account: Pubkey,
+    slot: String,
     amount: u64,
 ) -> Instruction {
     let mut accounts = vec![
@@ -263,7 +267,7 @@ pub fn transfer_out(
         AccountMeta::new_readonly(solana_program::sysvar::rent::id(), false),
     ];
 
-    let data = TrifleInstruction::TransferOut(TransferOutArgs { amount })
+    let data = TrifleInstruction::TransferOut(TransferOutArgs { slot, amount })
         .try_to_vec()
         .unwrap();
 
