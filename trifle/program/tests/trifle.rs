@@ -92,17 +92,10 @@ mod trifle {
 
         println!("before------------------------------------------------------------------");
         let (escrow_addr, _) = mpl_token_metadata::escrow::pda::find_escrow_account(
-            &context.payer.pubkey(),
+            &metadata.mint.pubkey(),
             &EscrowAuthority::Creator(trifle_addr.to_owned()),
         );
         println!("after------------------------------------------------------------------");
-
-        let token_account_addr =
-            spl_associated_token_account::get_associated_token_address_with_program_id(
-                &escrow_addr,
-                &metadata.mint.pubkey(),
-                &spl_token::id(),
-            );
 
         let create_trifle_account_ix = create_trifle_account(
             &mpl_trifle::id(),

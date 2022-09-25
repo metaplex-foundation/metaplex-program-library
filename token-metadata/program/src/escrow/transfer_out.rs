@@ -88,7 +88,7 @@ pub fn process_transfer_out_of_escrow(
     let token_program_info = next_account_info(account_info_iter)?;
     let rent_info = next_account_info(account_info_iter)?;
 
-    let is_using_authority = account_info_iter.len() == 13;
+    let is_using_authority = account_info_iter.len() == 1;
 
     let maybe_authority_info: Option<&AccountInfo> = if is_using_authority {
         Some(next_account_info(account_info_iter)?)

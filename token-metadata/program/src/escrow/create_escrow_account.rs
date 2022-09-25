@@ -68,7 +68,7 @@ pub fn process_create_escrow_account(
     let payer_account_info = next_account_info(account_info_iter)?;
     let system_account_info = next_account_info(account_info_iter)?;
 
-    let is_using_authority = account_info_iter.len() == 8;
+    let is_using_authority = account_info_iter.len() == 1;
 
     let maybe_authority_info: Option<&AccountInfo> = if is_using_authority {
         Some(next_account_info(account_info_iter)?)
