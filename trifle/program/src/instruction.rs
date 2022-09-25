@@ -14,7 +14,7 @@ pub struct CreateEscrowConstraintModelAccountArgs {
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct AddConstraintToEscrowConstraintModelArgs {
     pub constraint: EscrowConstraint,
 }
@@ -204,12 +204,12 @@ pub fn transfer_in(
     slot: String,
     amount: u64,
 ) -> Instruction {
-    let mut accounts = vec![
+    let accounts = vec![
         AccountMeta::new(trifle_account, false),
         AccountMeta::new_readonly(constraint_model, false),
         AccountMeta::new_readonly(escrow_account, false),
         AccountMeta::new(payer, true),
-        AccountMeta::new_readonly(trifle_authority, true),
+        AccountMeta::new_readonly(trifle_authority, false),
         AccountMeta::new_readonly(attribute_mint, false),
         AccountMeta::new(attribute_src_token_account, false),
         AccountMeta::new(attribute_dst_token_account, false),
@@ -249,12 +249,12 @@ pub fn transfer_out(
     slot: String,
     amount: u64,
 ) -> Instruction {
-    let mut accounts = vec![
+    let accounts = vec![
         AccountMeta::new(trifle_account, false),
         AccountMeta::new_readonly(constraint_model, false),
         AccountMeta::new_readonly(escrow_account, false),
         AccountMeta::new(payer, true),
-        AccountMeta::new_readonly(trifle_authority, true),
+        AccountMeta::new_readonly(trifle_authority, false),
         AccountMeta::new_readonly(attribute_mint, false),
         AccountMeta::new(attribute_src_token_account, false),
         AccountMeta::new(attribute_dst_token_account, false),

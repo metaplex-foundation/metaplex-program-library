@@ -2,13 +2,11 @@
 
 pub mod utils;
 
-use solana_program::borsh::try_from_slice_unchecked;
 use solana_program_test::*;
 use solana_sdk::{signer::Signer, transaction::Transaction};
 use utils::*;
 
 mod trifle {
-    use borsh::{BorshDeserialize, BorshSerialize};
     use mpl_token_metadata::state::EscrowAuthority;
     use mpl_trifle::{
         instruction::{

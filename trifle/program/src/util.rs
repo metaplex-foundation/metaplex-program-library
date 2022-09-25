@@ -1,6 +1,6 @@
 use solana_program::{
-    account_info::AccountInfo, entrypoint::ProgramResult, program::invoke, pubkey::Pubkey,
-    rent::Rent, system_instruction, sysvar::Sysvar,
+    account_info::AccountInfo, entrypoint::ProgramResult, program::invoke, rent::Rent,
+    system_instruction, sysvar::Sysvar,
 };
 
 /// Resize an account using realloc, lifted from Solana Cookbook

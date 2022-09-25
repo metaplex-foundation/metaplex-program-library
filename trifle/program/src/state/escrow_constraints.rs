@@ -7,7 +7,7 @@ use solana_program::{program_error::ProgramError, pubkey::Pubkey};
 use crate::{error::TrifleError, state::Key};
 
 #[repr(C)]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone, ShankAccount)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, ShankAccount)]
 pub struct EscrowConstraintModel {
     pub key: Key,
     pub name: String,
@@ -24,7 +24,7 @@ impl EscrowConstraintModel {
             .iter()
             .try_fold(0usize, |acc, ec| {
                 acc.checked_add(ec.try_len()?)
-                    .ok_or(TrifleError::NumericalOverflow.into())
+                    .ok_or_else(|| TrifleError::NumericalOverflow.into())
             })
             .map(|ecs_len| {
                 ecs_len
@@ -41,7 +41,7 @@ impl EscrowConstraintModel {
         if let Some(constraint) = self.constraints.get(index) {
             constraint.constraint_type.validate(mint)
         } else {
-            return Err(TrifleError::InvalidEscrowConstraintIndex.into());
+            Err(TrifleError::InvalidEscrowConstraintIndex.into())
         }
     }
 }
@@ -60,7 +60,7 @@ impl Default for EscrowConstraintModel {
 }
 
 #[repr(C)]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone, Default)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, Default)]
 pub struct EscrowConstraint {
     pub name: String,
     pub token_limit: u64,
@@ -77,7 +77,7 @@ impl EscrowConstraint {
 }
 
 #[repr(C)]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub enum EscrowConstraintType {
     None,
     Collection(Pubkey),
