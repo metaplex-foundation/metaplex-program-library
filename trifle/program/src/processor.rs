@@ -4,7 +4,7 @@ use crate::{
     error::TrifleError,
     instruction::{
         AddConstraintToEscrowConstraintModelArgs, CreateEscrowConstraintModelAccountArgs,
-        TrifleInstruction,
+        TransferInArgs, TransferOutArgs, TrifleInstruction,
     },
     state::{
         escrow_constraints::EscrowConstraintModel, trifle::Trifle, Key, ESCROW_SEED, TRIFLE_SEED,
@@ -41,13 +41,13 @@ pub fn process_instruction(
             msg!("Instruction: Create Trifle Account");
             create_trifle_account(program_id, accounts)
         }
-        TrifleInstruction::TransferIn => {
+        TrifleInstruction::TransferIn(args) => {
             msg!("Instruction: Transfer In");
-            transfer_in(program_id, accounts)
+            transfer_in(program_id, accounts, args)
         }
-        TrifleInstruction::TransferOut => {
+        TrifleInstruction::TransferOut(args) => {
             msg!("Instruction: Transfer Out");
-            transfer_out(program_id, accounts)
+            transfer_out(program_id, accounts, args)
         }
     }
 }
@@ -260,11 +260,19 @@ fn create_trifle_account(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progr
     Ok(())
 }
 
-fn transfer_in(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
+fn transfer_in(
+    program_id: &Pubkey,
+    accounts: &[AccountInfo],
+    args: TransferInArgs,
+) -> ProgramResult {
     Ok(())
 }
 
-fn transfer_out(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
+fn transfer_out(
+    program_id: &Pubkey,
+    accounts: &[AccountInfo],
+    args: TransferOutArgs,
+) -> ProgramResult {
     Ok(())
 }
 // proxy transfer_in

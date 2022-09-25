@@ -19,6 +19,20 @@ pub struct AddConstraintToEscrowConstraintModelArgs {
     pub constraint: EscrowConstraint,
 }
 
+#[repr(C)]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+pub struct TransferInArgs {
+    pub amount: u64,
+}
+
+#[repr(C)]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+pub struct TransferOutArgs {
+    pub amount: u64,
+}
+
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(ShankInstruction, Debug, BorshSerialize, Clone, BorshDeserialize)]
 #[rustfmt::skip]
@@ -51,8 +65,37 @@ pub enum TrifleInstruction {
     #[account(10, name = "system_program", desc = "System program")]
     CreateTrifleAccount,
 
-    TransferIn,
-    TransferOut,
+    /// Transfer tokens into the Trifle escrow account.
+    #[account(0, writable, name="escrow", desc="Escrow account")]
+    #[account(1, writable, signer, name="payer", desc="Wallet paying for the transaction and new account")]
+    #[account(2, name="attribute_mint", desc="Mint account for the new attribute")]
+    #[account(3, writable, name="attribute_src", desc="Token account source for the new attribute")]
+    #[account(4, writable, name="attribute_dst", desc="Token account, owned by TM, destination for the new attribute")]
+    #[account(5, name="attribute_metadata", desc="Metadata account of the new attribute")]
+    #[account(6, name="escrow_mint", desc="Mint account that the escrow is attached")]
+    #[account(7, name="escrow_account", desc="Token account that holds the token the escrow is attached to")]
+    #[account(8, name="system_program", desc="System program")]
+    #[account(9, name="ata_program", desc="Associated Token program")]
+    #[account(10, name="token_program", desc="Token program")]
+    #[account(11, name="rent", desc="Rent info")]
+    #[account(12, optional, name="constraint_model", desc="The constraint model to check against")]
+    TransferIn(TransferInArgs),
+
+    /// Transfer tokens out of the Trifle escrow account.
+    #[account(0, writable, name="escrow", desc="Escrow account")]
+    #[account(1, writable, signer, name="payer", desc="Wallet paying for the transaction and new account")]
+    #[account(2, name="attribute_mint", desc="Mint account for the new attribute")]
+    #[account(3, writable, name="attribute_src", desc="Token account source for the new attribute")]
+    #[account(4, writable, name="attribute_dst", desc="Token account, owned by TM, destination for the new attribute")]
+    #[account(5, name="attribute_metadata", desc="Metadata account of the new attribute")]
+    #[account(6, name="escrow_mint", desc="Mint account that the escrow is attached")]
+    #[account(7, name="escrow_account", desc="Token account that holds the token the escrow is attached to")]
+    #[account(8, name="system_program", desc="System program")]
+    #[account(9, name="ata_program", desc="Associated Token program")]
+    #[account(10, name="token_program", desc="Token program")]
+    #[account(11, name="rent", desc="Rent info")]
+    #[account(12, optional, name="constraint_model", desc="The constraint model to check against")]
+    TransferOut(TransferOutArgs),
 }
 
 pub fn create_escrow_constraint_model_account(
@@ -136,5 +179,91 @@ pub fn create_trifle_account(
         program_id: *program_id,
         accounts,
         data: TrifleInstruction::CreateTrifleAccount.try_to_vec().unwrap(),
+    }
+}
+
+pub fn transfer_in(
+    program_id: Pubkey,
+    escrow: Pubkey,
+    payer: Pubkey,
+    attribute_mint: Pubkey,
+    attribute_src: Pubkey,
+    attribute_dst: Pubkey,
+    attribute_metadata: Pubkey,
+    escrow_mint: Pubkey,
+    escrow_account: Pubkey,
+    constraint_model: Option<Pubkey>,
+    amount: u64,
+) -> Instruction {
+    let mut accounts = vec![
+        AccountMeta::new(escrow, false),
+        AccountMeta::new(payer, true),
+        AccountMeta::new_readonly(attribute_mint, false),
+        AccountMeta::new(attribute_src, false),
+        AccountMeta::new(attribute_dst, false),
+        AccountMeta::new_readonly(attribute_metadata, false),
+        AccountMeta::new_readonly(escrow_mint, false),
+        AccountMeta::new_readonly(escrow_account, false),
+        AccountMeta::new_readonly(solana_program::system_program::id(), false),
+        AccountMeta::new_readonly(spl_associated_token_account::id(), false),
+        AccountMeta::new_readonly(spl_token::id(), false),
+        AccountMeta::new_readonly(solana_program::sysvar::rent::id(), false),
+    ];
+
+    if let Some(constraint_model) = constraint_model {
+        accounts.push(AccountMeta::new_readonly(constraint_model, false));
+    }
+
+    let data = TrifleInstruction::TransferIn(TransferInArgs { amount })
+        .try_to_vec()
+        .unwrap();
+
+    Instruction {
+        program_id,
+        accounts,
+        data,
+    }
+}
+
+pub fn transfer_out(
+    program_id: Pubkey,
+    escrow: Pubkey,
+    payer: Pubkey,
+    attribute_mint: Pubkey,
+    attribute_src: Pubkey,
+    attribute_dst: Pubkey,
+    attribute_metadata: Pubkey,
+    escrow_mint: Pubkey,
+    escrow_account: Pubkey,
+    constraint_model: Option<Pubkey>,
+    amount: u64,
+) -> Instruction {
+    let mut accounts = vec![
+        AccountMeta::new(escrow, false),
+        AccountMeta::new(payer, true),
+        AccountMeta::new_readonly(attribute_mint, false),
+        AccountMeta::new(attribute_src, false),
+        AccountMeta::new(attribute_dst, false),
+        AccountMeta::new_readonly(attribute_metadata, false),
+        AccountMeta::new_readonly(escrow_mint, false),
+        AccountMeta::new_readonly(escrow_account, false),
+        AccountMeta::new_readonly(solana_program::system_program::id(), false),
+        AccountMeta::new_readonly(spl_associated_token_account::id(), false),
+        AccountMeta::new_readonly(spl_token::id(), false),
+        AccountMeta::new_readonly(solana_program::sysvar::rent::id(), false),
+    ];
+
+    if let Some(constraint_model) = constraint_model {
+        accounts.push(AccountMeta::new_readonly(constraint_model, false));
+    }
+
+    let data = TrifleInstruction::TransferOut(TransferOutArgs { amount })
+        .try_to_vec()
+        .unwrap();
+
+    Instruction {
+        program_id,
+        accounts,
+        data,
     }
 }
