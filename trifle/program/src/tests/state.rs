@@ -1,5 +1,7 @@
 #[cfg(test)]
 mod escrow {
+    use std::collections::HashMap;
+
     use crate::state::{
         escrow_constraints::{EscrowConstraint, EscrowConstraintModel, EscrowConstraintType},
         Key,
@@ -45,19 +47,16 @@ mod escrow {
         );
 
         let escrow_constraint_none = EscrowConstraint {
-            name: "test".to_string(),
             constraint_type: ect_none,
             token_limit: 1,
         };
 
         let escrow_constraint_collection = EscrowConstraint {
-            name: "test".to_string(),
             constraint_type: ect_collection,
             token_limit: 1,
         };
 
         let escrow_constraint_tokens = EscrowConstraint {
-            name: "test".to_string(),
             constraint_type: ect_tokens,
             token_limit: 1,
         };
@@ -96,17 +95,18 @@ mod escrow {
             "EscrowConstraint::tokens length is not equal to serialized length"
         );
 
+        let mut constraints = HashMap::new();
+        constraints.insert("test1".to_string(), escrow_constraint_none);
+        constraints.insert("test2".to_string(), escrow_constraint_collection);
+        constraints.insert("test3".to_string(), escrow_constraint_tokens);
+
         let escrow_constraints_model = EscrowConstraintModel {
             key: Key::EscrowConstraintModel,
             name: "test".to_string(),
             count: 0,
             update_authority: Keypair::new().pubkey(),
             creator: Keypair::new().pubkey(),
-            constraints: vec![
-                escrow_constraint_none,
-                escrow_constraint_collection,
-                escrow_constraint_tokens,
-            ],
+            constraints,
         };
 
         let mut buf_escrow_constraints_model = Vec::new();
@@ -129,19 +129,16 @@ mod escrow {
         let keypair_3 = Keypair::new();
 
         let ec_none = EscrowConstraint {
-            name: "test".to_string(),
             constraint_type: EscrowConstraintType::None,
             token_limit: 1,
         };
 
         let ec_collection = EscrowConstraint {
-            name: "test".to_string(),
             constraint_type: EscrowConstraintType::Collection(keypair_1.pubkey()),
             token_limit: 1,
         };
 
         let ec_tokens = EscrowConstraint {
-            name: "test".to_string(),
             constraint_type: EscrowConstraintType::tokens_from_slice(&[
                 keypair_2.pubkey(),
                 keypair_3.pubkey(),
@@ -149,33 +146,39 @@ mod escrow {
 
             token_limit: 1,
         };
+
+        let mut constraints = HashMap::new();
+        constraints.insert("test1".to_string(), ec_none);
+        constraints.insert("test2".to_string(), ec_collection);
+        constraints.insert("test3".to_string(), ec_tokens);
+
         let escrow_constraints_model = EscrowConstraintModel {
             key: Key::EscrowConstraintModel,
             name: "test".to_string(),
             count: 0,
             update_authority: Keypair::new().pubkey(),
             creator: Keypair::new().pubkey(),
-            constraints: vec![ec_none, ec_collection, ec_tokens],
+            constraints,
         };
 
         escrow_constraints_model
-            .validate_at(&keypair_1.pubkey(), 0)
+            .validate_at(&keypair_1.pubkey(), "test1".to_string())
             .expect("None constraint failed");
 
         escrow_constraints_model
-            .validate_at(&keypair_1.pubkey(), 1)
+            .validate_at(&keypair_1.pubkey(), "test2".to_string())
             .expect("Collection constraint failed");
 
         escrow_constraints_model
-            .validate_at(&keypair_2.pubkey(), 1)
+            .validate_at(&keypair_2.pubkey(), "test2".to_string())
             .expect_err("Collection constraint failed");
 
         escrow_constraints_model
-            .validate_at(&keypair_2.pubkey(), 2)
+            .validate_at(&keypair_2.pubkey(), "test3".to_string())
             .expect("Tokens constraint failed");
 
         escrow_constraints_model
-            .validate_at(&keypair_1.pubkey(), 2)
+            .validate_at(&keypair_1.pubkey(), "test3".to_string())
             .expect_err("Tokens constraint failed");
     }
 }

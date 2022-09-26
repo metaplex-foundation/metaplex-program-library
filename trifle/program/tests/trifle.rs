@@ -7,7 +7,7 @@ use solana_sdk::{signer::Signer, transaction::Transaction};
 use utils::*;
 
 mod trifle {
-    use mpl_token_metadata::state::EscrowAuthority;
+    use mpl_token_metadata::state::{Creator, EscrowAuthority};
     use mpl_trifle::{
         instruction::{
             add_constraint_to_escrow_constraint_model, create_escrow_constraint_model_account,
@@ -25,13 +25,18 @@ mod trifle {
 
         let metadata = Metadata::new();
         let master_edition = MasterEditionV2::new(&metadata);
+        let payer_pubkey = context.payer.pubkey();
         metadata
             .create_v2(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
                 "uri".to_string(),
-                None,
+                Some(vec![Creator {
+                    address: payer_pubkey,
+                    verified: true,
+                    share: 100,
+                }]),
                 10,
                 true,
                 None,
@@ -58,7 +63,6 @@ mod trifle {
         );
 
         let constraint = EscrowConstraint {
-            name: "test".to_string(),
             token_limit: 1,
             constraint_type: EscrowConstraintType::None,
         };
@@ -68,6 +72,7 @@ mod trifle {
             &escrow_constraint_model_addr,
             &context.payer.pubkey(),
             &context.payer.pubkey(),
+            "test".to_string(),
             constraint,
         );
 
@@ -80,20 +85,16 @@ mod trifle {
 
         context.banks_client.process_transaction(tx).await.unwrap();
 
-        println!("before------------------------------------------------------------------");
         let (trifle_addr, _) = find_trifle_address(
             &metadata.mint.pubkey(),
             &context.payer.pubkey(),
             &escrow_constraint_model_addr,
         );
-        println!("after------------------------------------------------------------------");
 
-        println!("before------------------------------------------------------------------");
         let (escrow_addr, _) = mpl_token_metadata::escrow::pda::find_escrow_account(
             &metadata.mint.pubkey(),
             &EscrowAuthority::Creator(trifle_addr.to_owned()),
         );
-        println!("after------------------------------------------------------------------");
 
         let create_trifle_account_ix = create_trifle_account(
             &mpl_trifle::id(),
@@ -117,4 +118,8 @@ mod trifle {
 
         context.banks_client.process_transaction(tx).await.unwrap();
     }
+
+    // #[tokio::test]
+    // async fn test_transfer_in() {
+    // }
 }

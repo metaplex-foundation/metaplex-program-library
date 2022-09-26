@@ -14,6 +14,7 @@ use crate::{
 };
 use borsh::{BorshDeserialize, BorshSerialize};
 use mpl_token_metadata::{
+    error::MetadataError,
     id as token_metadata_program_id,
     state::{Metadata, TokenMetadataAccount, ESCROW_PREFIX, PREFIX},
     utils::{assert_derivation, assert_owned_by, assert_signer, create_or_allocate_account_raw},
@@ -77,8 +78,7 @@ fn create_escrow_constraints_model_account(
         name: args.name.to_owned(),
         creator: payer_info.key.to_owned(),
         update_authority: update_authority_info.key.to_owned(),
-        constraints: vec![],
-        count: 0,
+        ..Default::default()
     };
 
     let bump = assert_derivation(
@@ -145,7 +145,16 @@ fn add_constraint_to_escrow_constraint_model(
         ],
     )?;
 
-    escrow_constraint_model.constraints.push(args.constraint);
+    if escrow_constraint_model
+        .constraints
+        .contains_key(&args.constraint_name)
+    {
+        return Err(TrifleError::ConstraintAlreadyExists.into());
+    }
+
+    escrow_constraint_model
+        .constraints
+        .insert(args.constraint_name, args.constraint);
 
     resize_or_reallocate_account_raw(
         escrow_constraint_model_info,
@@ -185,18 +194,27 @@ fn create_trifle_account(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progr
         ],
     )?;
 
+    msg!("Checking singers.");
     assert_signer(payer_info)?;
     assert_signer(trifle_authority_info)?;
-    // msg!("Checking escrow_info.");
-    // assert_owned_by(escrow_info, &token_metadata_program_id())?;
+
+    msg!("Checking escrow account.");
+    assert_owned_by(escrow_info, system_program_info.key)?;
+    if !escrow_info.data_is_empty() {
+        return Err(MetadataError::AlreadyInitialized.into());
+    }
+
     msg!("Checking escrow_constraint_model_info.");
     assert_owned_by(escrow_constraint_model_info, program_id)?;
+
     msg!("Checking metadata_info.");
     assert_owned_by(metadata_info, &token_metadata_program_id())?;
+
     msg!("Checking mint_info.");
     assert_owned_by(mint_info, &spl_token::id())?;
-    // msg!("Checking token_account_info.");
-    // assert_owned_by(token_account_info, &spl_token::id())?;
+
+    msg!("Checking token_account_info.");
+    assert_owned_by(token_account_info, &spl_token::id())?;
 
     let escrow_constraint_model_key =
         Key::try_from_slice(&escrow_constraint_model_info.data.borrow()[0..1])?;
@@ -259,6 +277,7 @@ fn create_trifle_account(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progr
         trifle_info.clone(),
     ];
 
+    msg!("Creating token escrow.");
     invoke_signed(
         &create_escrow_account_ix,
         &account_infos,

@@ -1,4 +1,7 @@
-use std::{collections::HashSet, mem};
+use std::{
+    collections::{HashMap, HashSet},
+    mem,
+};
 
 use borsh::{BorshDeserialize, BorshSerialize};
 use shank::ShankAccount;
@@ -11,7 +14,7 @@ use crate::{error::TrifleError, state::Key};
 pub struct EscrowConstraintModel {
     pub key: Key,
     pub name: String,
-    pub constraints: Vec<EscrowConstraint>,
+    pub constraints: HashMap<String, EscrowConstraint>,
     pub creator: Pubkey,
     pub update_authority: Pubkey,
     pub count: u64,
@@ -19,26 +22,31 @@ pub struct EscrowConstraintModel {
 
 impl EscrowConstraintModel {
     pub fn try_len(&self) -> Result<usize, ProgramError> {
-        let unknown_overhead = 8; // TODO: find out where this is coming from
+        let map_overhead = 4;
+        let string_overhead = 4;
+        // let unknown_overhead = 8; // TODO: find out where this is coming from
         self.constraints
             .iter()
-            .try_fold(0usize, |acc, ec| {
-                acc.checked_add(ec.try_len()?)
-                    .ok_or_else(|| TrifleError::NumericalOverflow.into())
+            .try_fold(0usize, |acc, (constraint_name, escrow_constraint)| {
+                acc.checked_add(
+                    escrow_constraint.try_len()? + constraint_name.len() + string_overhead,
+                )
+                .ok_or_else(|| TrifleError::NumericalOverflow.into())
             })
             .map(|ecs_len| {
                 ecs_len
                     + 1 // key
                     + self.name.len()
+                    + string_overhead // for name
+                    + map_overhead // for constraints
                     + mem::size_of::<Pubkey>()
                     + mem::size_of::<Pubkey>()
                     + mem::size_of::<u64>()
-                    + unknown_overhead
             })
     }
 
-    pub fn validate_at(&self, mint: &Pubkey, index: usize) -> Result<(), ProgramError> {
-        if let Some(constraint) = self.constraints.get(index) {
+    pub fn validate_at(&self, mint: &Pubkey, constraint_key: String) -> Result<(), ProgramError> {
+        if let Some(constraint) = self.constraints.get(&constraint_key) {
             constraint.constraint_type.validate(mint)
         } else {
             Err(TrifleError::InvalidEscrowConstraintIndex.into())
@@ -51,7 +59,7 @@ impl Default for EscrowConstraintModel {
         Self {
             key: Key::EscrowConstraintModel,
             name: String::new(),
-            constraints: vec![],
+            constraints: HashMap::new(),
             creator: Pubkey::default(),
             update_authority: Pubkey::default(),
             count: 0,
@@ -62,17 +70,15 @@ impl Default for EscrowConstraintModel {
 #[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, Default)]
 pub struct EscrowConstraint {
-    pub name: String,
     pub token_limit: u64,
     pub constraint_type: EscrowConstraintType,
 }
 
 impl EscrowConstraint {
     pub fn try_len(&self) -> Result<usize, ProgramError> {
-        let unknown_overhead = 4; // TODO: find out where this is coming from
         self.constraint_type
             .try_len()
-            .map(|ct_len| Ok(ct_len + self.name.len() + mem::size_of::<u64>() + unknown_overhead))?
+            .map(|ct_len| Ok(ct_len + mem::size_of::<u64>()))?
     }
 }
 

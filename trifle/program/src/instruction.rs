@@ -16,6 +16,7 @@ pub struct CreateEscrowConstraintModelAccountArgs {
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct AddConstraintToEscrowConstraintModelArgs {
+    pub constraint_name: String,
     pub constraint: EscrowConstraint,
 }
 
@@ -135,6 +136,7 @@ pub fn add_constraint_to_escrow_constraint_model(
     escrow_constraint_model: &Pubkey,
     payer: &Pubkey,
     update_authority: &Pubkey,
+    constraint_name: String,
     constraint: EscrowConstraint,
 ) -> Instruction {
     let accounts = vec![
@@ -148,7 +150,10 @@ pub fn add_constraint_to_escrow_constraint_model(
         program_id: *program_id,
         accounts,
         data: TrifleInstruction::AddConstraintToEscrowConstraintModel(
-            AddConstraintToEscrowConstraintModelArgs { constraint },
+            AddConstraintToEscrowConstraintModelArgs {
+                constraint_name,
+                constraint,
+            },
         )
         .try_to_vec()
         .unwrap(),
