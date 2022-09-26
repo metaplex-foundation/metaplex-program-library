@@ -9,20 +9,9 @@ runs:
         sudo apt-get update
       shell: bash
 
-    - name: apt-get install build-essential 
-      run: |
-        sudo apt-get install build-essential
-      shell: bash
     - name: apt-get install ssl libs
       run: |
         sudo apt-get install -y openssl --allow-unauthenticated
         sudo apt-get install -y libssl-dev --allow-unauthenticated
         sudo apt-get install -y libssl1.1 --allow-unauthenticated
-      shell: bash
-
-    - name: apt-get install dev tools 
-      run: |
-        sudo apt-get install -y libudev-dev
-        sudo apt-get install -y binutils-dev
-        sudo apt-get install -y libunwind-dev
       shell: bash
