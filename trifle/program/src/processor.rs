@@ -295,7 +295,7 @@ fn transfer_in(
     let account_info_iter = &mut accounts.iter();
 
     let trifle_account = next_account_info(account_info_iter)?;
-    let _constraint_model = next_account_info(account_info_iter)?;
+    let constraint_model_info = next_account_info(account_info_iter)?;
     let escrow_account = next_account_info(account_info_iter)?;
     let payer = next_account_info(account_info_iter)?;
     let _trifle_authority = next_account_info(account_info_iter)?;
@@ -327,6 +327,12 @@ fn transfer_in(
 
     assert_signer(payer)?;
     //assert_signer(trifle_authority)?;
+
+    let constraint_model =
+        EscrowConstraintModel::try_from_slice(&constraint_model_info.data.borrow())
+            .map_err(|_| TrifleError::InvalidEscrowConstraintModel)?;
+
+    constraint_model.validate(attribute_mint.key, args.slot.to_owned())?;
 
     // Allocate the escrow accounts new ATA.
     let create_escrow_ata_ix =
@@ -418,7 +424,7 @@ fn transfer_out(
     let account_info_iter = &mut accounts.iter();
 
     let trifle_account = next_account_info(account_info_iter)?;
-    let constraint_model = next_account_info(account_info_iter)?;
+    let constraint_model_info = next_account_info(account_info_iter)?;
     let escrow_account = next_account_info(account_info_iter)?;
     let payer = next_account_info(account_info_iter)?;
     let trifle_authority = next_account_info(account_info_iter)?;
@@ -453,7 +459,7 @@ fn transfer_out(
         TRIFLE_SEED.as_bytes(),
         escrow_mint.key.as_ref(),
         trifle_authority.key.as_ref(),
-        constraint_model.key.as_ref(),
+        constraint_model_info.key.as_ref(),
         &[bump_seed],
     ];
 
@@ -549,5 +555,3 @@ fn transfer_out(
 
     Ok(())
 }
-// proxy transfer_in
-// proxy transfer_out

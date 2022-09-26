@@ -162,23 +162,23 @@ mod escrow {
         };
 
         escrow_constraints_model
-            .validate_at(&keypair_1.pubkey(), "test1".to_string())
+            .validate(&keypair_1.pubkey(), "test1".to_string())
             .expect("None constraint failed");
 
         escrow_constraints_model
-            .validate_at(&keypair_1.pubkey(), "test2".to_string())
+            .validate(&keypair_1.pubkey(), "test2".to_string())
             .expect("Collection constraint failed");
 
         escrow_constraints_model
-            .validate_at(&keypair_2.pubkey(), "test2".to_string())
+            .validate(&keypair_2.pubkey(), "test2".to_string())
             .expect_err("Collection constraint failed");
 
         escrow_constraints_model
-            .validate_at(&keypair_2.pubkey(), "test3".to_string())
+            .validate(&keypair_2.pubkey(), "test3".to_string())
             .expect("Tokens constraint failed");
 
         escrow_constraints_model
-            .validate_at(&keypair_1.pubkey(), "test3".to_string())
+            .validate(&keypair_1.pubkey(), "test3".to_string())
             .expect_err("Tokens constraint failed");
     }
 }

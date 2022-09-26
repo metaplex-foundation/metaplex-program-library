@@ -45,7 +45,7 @@ impl EscrowConstraintModel {
             })
     }
 
-    pub fn validate_at(&self, mint: &Pubkey, constraint_key: String) -> Result<(), ProgramError> {
+    pub fn validate(&self, mint: &Pubkey, constraint_key: String) -> Result<(), ProgramError> {
         if let Some(constraint) = self.constraints.get(&constraint_key) {
             constraint.constraint_type.validate(mint)
         } else {
