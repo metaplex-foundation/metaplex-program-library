@@ -11,11 +11,16 @@ mod trifle {
     use mpl_trifle::{
         instruction::{
             add_constraint_to_escrow_constraint_model, create_escrow_constraint_model_account,
-            create_trifle_account,
+            create_trifle_account, transfer_in,
         },
         pda::{find_escrow_constraint_model_address, find_trifle_address},
-        state::escrow_constraints::{EscrowConstraint, EscrowConstraintType},
+        state::{
+            escrow_constraints::{EscrowConstraint, EscrowConstraintModel, EscrowConstraintType},
+            trifle::Trifle,
+            SolanaAccount,
+        },
     };
+    use solana_program::borsh::try_from_slice_unchecked;
 
     use super::*;
 
@@ -117,6 +122,104 @@ mod trifle {
         );
 
         context.banks_client.process_transaction(tx).await.unwrap();
+
+        let trifle_account = context
+            .banks_client
+            .get_account(trifle_addr)
+            .await
+            .unwrap()
+            .unwrap();
+
+        let trifle_account_data: Trifle = try_from_slice_unchecked(&trifle_account.data).unwrap();
+        println!("trifle_account: {:#?}", trifle_account_data);
+        let constraint_account = context
+            .banks_client
+            .get_account(escrow_constraint_model_addr)
+            .await
+            .unwrap()
+            .unwrap();
+        let constraint_account_data: EscrowConstraintModel =
+            try_from_slice_unchecked(&constraint_account.data).unwrap();
+        println!("constraint_account: {:#?}", constraint_account_data);
+
+        // Build the attribute
+        let attribute_metadata = Metadata::new();
+        let attribute_master_edition = MasterEditionV2::new(&attribute_metadata);
+        attribute_metadata
+            .create_v2(
+                &mut context,
+                "Test".to_string(),
+                "TST".to_string(),
+                "uri".to_string(),
+                None,
+                10,
+                true,
+                None,
+                None,
+                None,
+            )
+            .await
+            .unwrap();
+
+        attribute_master_edition
+            .create_v3(&mut context, Some(0))
+            .await
+            .unwrap();
+
+        let trifle_attribute_token_account =
+            spl_associated_token_account::get_associated_token_address(
+                &escrow_addr,
+                &attribute_metadata.mint.pubkey(),
+            );
+
+        let transfer_in_ix = transfer_in(
+            mpl_trifle::id(),
+            trifle_addr,
+            escrow_constraint_model_addr,
+            escrow_addr,
+            context.payer.pubkey(),
+            context.payer.pubkey(),
+            attribute_metadata.mint.pubkey(),
+            attribute_metadata.token.pubkey(),
+            trifle_attribute_token_account,
+            attribute_metadata.pubkey,
+            metadata.mint.pubkey(),
+            metadata.token.pubkey(),
+            "test".to_string(),
+            1,
+        );
+
+        let transfer_in_tx = Transaction::new_signed_with_payer(
+            &[transfer_in_ix],
+            Some(&context.payer.pubkey()),
+            &[&context.payer],
+            context.last_blockhash,
+        );
+
+        context
+            .banks_client
+            .process_transaction(transfer_in_tx)
+            .await
+            .unwrap();
+
+        let trifle_account = context
+            .banks_client
+            .get_account(trifle_addr)
+            .await
+            .unwrap()
+            .unwrap();
+
+        let trifle_account_data: Trifle = try_from_slice_unchecked(&trifle_account.data).unwrap();
+        println!("trifle_account: {:#?}", trifle_account_data);
+        let constraint_account = context
+            .banks_client
+            .get_account(escrow_constraint_model_addr)
+            .await
+            .unwrap()
+            .unwrap();
+        let constraint_account_data: EscrowConstraintModel =
+            try_from_slice_unchecked(&constraint_account.data).unwrap();
+        println!("constraint_account: {:#?}", constraint_account_data);
     }
 
     // #[tokio::test]
