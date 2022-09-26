@@ -17,7 +17,7 @@ use mpl_testing_utils::{
     solana::{airdrop, create_associated_token_account, transfer},
     utils::Metadata,
 };
-use solana_sdk::signer::Signer;
+use solana_sdk::{commitment_config::CommitmentLevel, signer::Signer};
 
 use std::assert_eq;
 
@@ -471,19 +471,19 @@ async fn execute_sale_success() {
     )
     .unwrap();
 
-    let seller_ts_after = context
+    let _seller_ts_after = context
         .banks_client
         .get_account(sell_acc.seller_trade_state)
         .await
         .unwrap()
         .is_none();
-    let buyer_ts_after = context
+    let _buyer_ts_after = context
         .banks_client
         .get_account(bid_acc.buyer_trade_state)
         .await
         .unwrap()
         .is_none();
-    let free_ts_after = context
+    let _free_ts_after = context
         .banks_client
         .get_account(sell_acc.free_seller_trade_state)
         .await

@@ -148,7 +148,14 @@ async fn setup() -> (
         context.last_blockhash,
     );
 
-    context.banks_client.process_transaction(tx).await.unwrap();
+    context
+        .banks_client
+        .process_transaction_with_commitment(
+            tx,
+            solana_sdk::commitment_config::CommitmentLevel::Confirmed,
+        )
+        .await
+        .unwrap();
 
     voucher_edition
         .create(

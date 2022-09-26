@@ -61,7 +61,13 @@ jobs:
 
       # Build deps
       - uses: ./.github/actions/build-token-metadata
-      # Run test
+
+      # Get Metaplex program
+      - name: Get Metaplex program
+        run: |
+          solana program dump p1exdMJcjVao65QdewkaZRUnU6VPSXhus9n2GzWfh98 ../../test-programs/mpl_metaplex.so
+
+      # Run tests
       - name: test-nft-packs-program
         id: run_test
         working-directory: ./nft-packs/program
