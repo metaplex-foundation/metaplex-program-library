@@ -16,6 +16,8 @@ pub enum Error {
     Anchor(anchor_lang::error::Error),
     BanksClient(BanksClientError),
     BytemuckPod(PodCastError),
+    // The on-chain (via banks) and locally computed roots for a tree do not match.
+    RootMismatch,
     Signer(SignerError),
 }
 

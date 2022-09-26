@@ -1240,6 +1240,11 @@ pub mod bubblegum {
     }
 
     pub fn decompress_v1(ctx: Context<DecompressV1>, metadata: MetadataArgs) -> Result<()> {
+        msg!(
+            "*********** ma {:?} {}",
+            ctx.accounts.mint_authority,
+            ctx.accounts.mint_authority.key()
+        );
         // Allocate and create mint
         let incoming_data_hash = hash_metadata(&metadata)?;
         match ctx.accounts.voucher.leaf_schema {

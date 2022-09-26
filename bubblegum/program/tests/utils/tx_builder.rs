@@ -94,7 +94,9 @@ where
             .await
             .map_err(Error::BanksClient)?;
 
-        self.on_successful_execute()
+        self.on_successful_execute()?;
+        // Check the expected tree root matches on-chain state post tx.
+        self.tree.check_expected_root().await
     }
 
     // Returning `&mut Self` to allow method chaining.

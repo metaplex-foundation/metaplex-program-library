@@ -13,7 +13,7 @@ pub const ASSET_PREFIX: &str = "asset";
 pub const COLLECTION_CPI_PREFIX: &str = "collection_cpi";
 
 #[account]
-#[derive(Copy, Debug)]
+#[derive(Copy, Debug, PartialEq, Eq)]
 pub struct TreeConfig {
     pub tree_creator: Pubkey,
     pub tree_delegate: Pubkey,
@@ -33,7 +33,7 @@ impl TreeConfig {
 }
 
 #[account]
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq)]
 pub struct Voucher {
     pub leaf_schema: LeafSchema,
     pub index: u32,
