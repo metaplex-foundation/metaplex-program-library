@@ -27,12 +27,10 @@ pub trait SolanaAccount: BorshDeserialize {
 
     fn size() -> usize;
 
-    fn is_correct_account_type(data: &[u8], data_type: Key, data_size: usize) -> bool {
+    fn is_correct_account_type(data: &[u8], data_type: Key) -> bool {
         let key: Option<Key> = Key::from_u8(data[0]);
         match key {
-            Some(key) => {
-                (key == data_type || key == Key::Uninitialized) && (data.len() == data_size)
-            }
+            Some(key) => key == data_type || key == Key::Uninitialized,
             None => false,
         }
     }
@@ -46,7 +44,7 @@ pub trait SolanaAccount: BorshDeserialize {
     }
 
     fn safe_deserialize(mut data: &[u8]) -> Result<Self, BorshError> {
-        if !Self::is_correct_account_type(data, Self::key(), Self::size()) {
+        if !Self::is_correct_account_type(data, Self::key()) {
             return Err(BorshError::new(ErrorKind::Other, "DataTypeMismatch"));
         }
 

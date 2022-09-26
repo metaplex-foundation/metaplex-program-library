@@ -15,7 +15,7 @@ use crate::{
 use borsh::{BorshDeserialize, BorshSerialize};
 use mpl_token_metadata::{
     id as token_metadata_program_id,
-    state::{Metadata, TokenMetadataAccount, ESCROW_PREFIX, PREFIX},
+    state::{EscrowAuthority, Metadata, TokenMetadataAccount, ESCROW_PREFIX, PREFIX},
     utils::{assert_derivation, assert_owned_by, assert_signer, create_or_allocate_account_raw},
 };
 use solana_program::{
@@ -294,16 +294,17 @@ fn transfer_in(
     assert_owned_by(attribute_metadata, &mpl_token_metadata::id())?;
     let _attribute_metadata: Metadata = Metadata::from_account_info(attribute_metadata)?;
 
-    let _bump_seed = assert_derivation(
-        program_id,
-        escrow_account,
-        &[
-            PREFIX.as_bytes(),
-            program_id.as_ref(),
-            escrow_mint.key.as_ref(),
-            ESCROW_PREFIX.as_bytes(),
-        ],
-    )?;
+    let tm_pid = mpl_token_metadata::id();
+    let mut escrow_seeds = vec![PREFIX.as_bytes(), tm_pid.as_ref(), escrow_mint.key.as_ref()];
+
+    let escrow_auth = EscrowAuthority::Creator(*trifle_account.key);
+    for seed in escrow_auth.to_seeds() {
+        escrow_seeds.push(seed);
+    }
+
+    escrow_seeds.push(ESCROW_PREFIX.as_bytes());
+
+    let bump_seed = assert_derivation(&tm_pid, escrow_account, &escrow_seeds)?;
 
     assert_signer(payer)?;
     //assert_signer(trifle_authority)?;
@@ -367,11 +368,15 @@ fn transfer_in(
 
     // Update the Trifle account
     let mut trifle = Trifle::from_account_info(trifle_account)?;
-    trifle
-        .tokens
-        .get_mut(&args.slot)
-        .unwrap()
-        .push(*attribute_mint.key);
+    let token_list = trifle.tokens.get_mut(&args.slot);
+    match token_list {
+        Some(tokens) => {
+            tokens.push(*attribute_mint.key);
+        }
+        None => {
+            trifle.tokens.insert(args.slot, vec![*attribute_mint.key]);
+        }
+    }
 
     let serialized_data = trifle.try_to_vec().unwrap();
 
@@ -412,16 +417,17 @@ fn transfer_out(
     assert_owned_by(attribute_metadata, &mpl_token_metadata::id())?;
     let _attribute_metadata: Metadata = Metadata::from_account_info(attribute_metadata)?;
 
-    let bump_seed = assert_derivation(
-        program_id,
-        escrow_account,
-        &[
-            PREFIX.as_bytes(),
-            program_id.as_ref(),
-            escrow_mint.key.as_ref(),
-            ESCROW_PREFIX.as_bytes(),
-        ],
-    )?;
+    let tm_pid = mpl_token_metadata::id();
+    let mut escrow_seeds = vec![PREFIX.as_bytes(), tm_pid.as_ref(), escrow_mint.key.as_ref()];
+
+    let escrow_auth = EscrowAuthority::Creator(*trifle_account.key);
+    for seed in escrow_auth.to_seeds() {
+        escrow_seeds.push(seed);
+    }
+
+    escrow_seeds.push(ESCROW_PREFIX.as_bytes());
+
+    let bump_seed = assert_derivation(program_id, escrow_account, &escrow_seeds)?;
 
     // Derive the seeds for PDA signing.
     let trifle_authority_seeds = &[
