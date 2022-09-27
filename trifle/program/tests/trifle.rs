@@ -17,7 +17,6 @@ mod trifle {
         state::{
             escrow_constraints::{EscrowConstraint, EscrowConstraintModel, EscrowConstraintType},
             trifle::Trifle,
-            SolanaAccount,
         },
     };
     use solana_program::borsh::try_from_slice_unchecked;
@@ -276,8 +275,4 @@ mod trifle {
             try_from_slice_unchecked(&constraint_account.data).unwrap();
         println!("constraint_account: {:#?}", constraint_account_data);
     }
-
-    // #[tokio::test]
-    // async fn test_transfer_in() {
-    // }
 }

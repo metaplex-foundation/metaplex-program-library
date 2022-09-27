@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use crate::{
     error::TrifleError,
     instruction::{
@@ -232,10 +230,9 @@ fn create_trifle_account(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progr
     ];
 
     let trifle = Trifle {
-        key: Key::Trifle,
         token_escrow: escrow_info.key.to_owned(),
         escrow_constraint_model: escrow_constraint_model_info.key.to_owned(),
-        tokens: HashMap::new(),
+        ..Default::default()
     };
 
     let serialized_data = trifle.try_to_vec().unwrap();
@@ -295,10 +292,10 @@ fn transfer_in(
     let account_info_iter = &mut accounts.iter();
 
     let trifle_account = next_account_info(account_info_iter)?;
-    let _constraint_model = next_account_info(account_info_iter)?;
+    let constraint_model_info = next_account_info(account_info_iter)?;
     let escrow_account = next_account_info(account_info_iter)?;
     let payer = next_account_info(account_info_iter)?;
-    let _trifle_authority = next_account_info(account_info_iter)?;
+    let trifle_authority = next_account_info(account_info_iter)?;
     let attribute_mint = next_account_info(account_info_iter)?;
     let attribute_src_token_account = next_account_info(account_info_iter)?;
     let attribute_dst_token_account = next_account_info(account_info_iter)?;
@@ -310,6 +307,8 @@ fn transfer_in(
     let spl_token_program = next_account_info(account_info_iter)?;
     let rent_info = next_account_info(account_info_iter)?;
 
+    assert_signer(payer)?;
+    assert_signer(trifle_authority)?;
     assert_owned_by(attribute_metadata, &mpl_token_metadata::id())?;
     let _attribute_metadata: Metadata = Metadata::from_account_info(attribute_metadata)?;
 
@@ -323,10 +322,7 @@ fn transfer_in(
 
     escrow_seeds.push(ESCROW_PREFIX.as_bytes());
 
-    let bump_seed = assert_derivation(&tm_pid, escrow_account, &escrow_seeds)?;
-
-    assert_signer(payer)?;
-    //assert_signer(trifle_authority)?;
+    assert_derivation(&tm_pid, escrow_account, &escrow_seeds)?;
 
     // Allocate the escrow accounts new ATA.
     let create_escrow_ata_ix =
@@ -385,17 +381,19 @@ fn transfer_in(
         ],
     )?;
 
-    // Update the Trifle account
+    let constraint_model =
+        EscrowConstraintModel::try_from_slice(&constraint_model_info.data.borrow())
+            .map_err(|_| TrifleError::InvalidEscrowConstraintModel)?;
+
+    // conditionally update the trifle account
     let mut trifle = Trifle::from_account_info(trifle_account)?;
-    let token_list = trifle.tokens.get_mut(&args.slot);
-    match token_list {
-        Some(tokens) => {
-            tokens.push(*attribute_mint.key);
-        }
-        None => {
-            trifle.tokens.insert(args.slot, vec![*attribute_mint.key]);
-        }
-    }
+
+    trifle.try_add(
+        &constraint_model,
+        args.slot,
+        *attribute_mint.key,
+        args.amount,
+    )?;
 
     let serialized_data = trifle.try_to_vec().unwrap();
 
@@ -418,7 +416,7 @@ fn transfer_out(
     let account_info_iter = &mut accounts.iter();
 
     let trifle_account = next_account_info(account_info_iter)?;
-    let constraint_model = next_account_info(account_info_iter)?;
+    let constraint_model_info = next_account_info(account_info_iter)?;
     let escrow_account = next_account_info(account_info_iter)?;
     let payer = next_account_info(account_info_iter)?;
     let trifle_authority = next_account_info(account_info_iter)?;
@@ -467,7 +465,7 @@ fn transfer_out(
         TRIFLE_SEED.as_bytes(),
         escrow_mint.key.as_ref(),
         trifle_authority.key.as_ref(),
-        constraint_model.key.as_ref(),
+        constraint_model_info.key.as_ref(),
         &[trifle_bump_seed],
     ];
 
@@ -524,8 +522,9 @@ fn transfer_out(
         .get(&args.slot)
         .unwrap()
         .iter()
-        .position(|&x| x == *attribute_mint.key)
+        .position(|t| t.mint == *attribute_mint.key)
         .unwrap();
+
     trifle
         .tokens
         .get_mut(&args.slot)
@@ -544,5 +543,3 @@ fn transfer_out(
 
     Ok(())
 }
-// proxy transfer_in
-// proxy transfer_out

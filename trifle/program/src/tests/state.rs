@@ -2,9 +2,13 @@
 mod escrow {
     use std::collections::HashMap;
 
-    use crate::state::{
-        escrow_constraints::{EscrowConstraint, EscrowConstraintModel, EscrowConstraintType},
-        Key,
+    use crate::{
+        error::TrifleError,
+        state::{
+            escrow_constraints::{EscrowConstraint, EscrowConstraintModel, EscrowConstraintType},
+            trifle::Trifle,
+            Key,
+        },
     };
     use borsh::BorshSerialize;
     use solana_sdk::{signature::Keypair, signer::Signer};
@@ -133,6 +137,11 @@ mod escrow {
             token_limit: 1,
         };
 
+        let ec_none_unlimited = EscrowConstraint {
+            constraint_type: EscrowConstraintType::None,
+            token_limit: 0,
+        };
+
         let ec_collection = EscrowConstraint {
             constraint_type: EscrowConstraintType::Collection(keypair_1.pubkey()),
             token_limit: 1,
@@ -143,14 +152,14 @@ mod escrow {
                 keypair_2.pubkey(),
                 keypair_3.pubkey(),
             ]),
-
-            token_limit: 1,
+            token_limit: 10,
         };
 
         let mut constraints = HashMap::new();
-        constraints.insert("test1".to_string(), ec_none);
-        constraints.insert("test2".to_string(), ec_collection);
-        constraints.insert("test3".to_string(), ec_tokens);
+        constraints.insert("none".to_string(), ec_none);
+        constraints.insert("none_unlimited".to_string(), ec_none_unlimited);
+        constraints.insert("collection".to_string(), ec_collection);
+        constraints.insert("tokens".to_string(), ec_tokens.clone());
 
         let escrow_constraints_model = EscrowConstraintModel {
             key: Key::EscrowConstraintModel,
@@ -162,23 +171,110 @@ mod escrow {
         };
 
         escrow_constraints_model
-            .validate_at(&keypair_1.pubkey(), "test1".to_string())
+            .validate(&keypair_1.pubkey(), &"none".to_string())
             .expect("None constraint failed");
 
         escrow_constraints_model
-            .validate_at(&keypair_1.pubkey(), "test2".to_string())
+            .validate(&keypair_1.pubkey(), &"none_unlimited".to_string())
+            .expect("None constraint failed");
+
+        escrow_constraints_model
+            .validate(&keypair_1.pubkey(), &"collection".to_string())
             .expect("Collection constraint failed");
 
         escrow_constraints_model
-            .validate_at(&keypair_2.pubkey(), "test2".to_string())
+            .validate(&keypair_2.pubkey(), &"collection".to_string())
             .expect_err("Collection constraint failed");
 
         escrow_constraints_model
-            .validate_at(&keypair_2.pubkey(), "test3".to_string())
+            .validate(&keypair_2.pubkey(), &"tokens".to_string())
             .expect("Tokens constraint failed");
 
         escrow_constraints_model
-            .validate_at(&keypair_1.pubkey(), "test3".to_string())
+            .validate(&keypair_1.pubkey(), &"tokens".to_string())
             .expect_err("Tokens constraint failed");
+
+        let mut trifle = Trifle {
+            ..Default::default()
+        };
+
+        // EC::None limit 1
+        assert_eq!(
+            trifle.try_add(
+                &escrow_constraints_model,
+                "none".to_string(),
+                keypair_1.pubkey(),
+                1
+            ),
+            Ok(())
+        );
+        assert_eq!(
+            trifle.try_add(
+                &escrow_constraints_model,
+                "none".to_string(),
+                keypair_1.pubkey(),
+                1
+            ),
+            Err(TrifleError::TokenLimitExceeded)
+        );
+
+        // EC::None unlimited
+        assert_eq!(
+            trifle.try_add(
+                &escrow_constraints_model,
+                "none_unlimited".to_string(),
+                keypair_1.pubkey(),
+                1
+            ),
+            Ok(())
+        );
+        assert_eq!(
+            trifle.try_add(
+                &escrow_constraints_model,
+                "none_unlimited".to_string(),
+                keypair_1.pubkey(),
+                1
+            ),
+            Ok(())
+        );
+
+        assert_eq!(
+            trifle.try_add(
+                &escrow_constraints_model,
+                "tokens".to_string(),
+                keypair_1.pubkey(),
+                5
+            ),
+            Err(TrifleError::EscrowConstraintViolation)
+        );
+
+        // limit is 10
+        assert_eq!(
+            trifle.try_add(
+                &escrow_constraints_model,
+                "tokens".to_string(),
+                keypair_2.pubkey(),
+                5
+            ),
+            Ok(())
+        );
+        assert_eq!(
+            trifle.try_add(
+                &escrow_constraints_model,
+                "tokens".to_string(),
+                keypair_3.pubkey(),
+                5
+            ),
+            Ok(())
+        );
+        assert_eq!(
+            trifle.try_add(
+                &escrow_constraints_model,
+                "tokens".to_string(),
+                keypair_3.pubkey(),
+                5
+            ),
+            Err(TrifleError::TokenLimitExceeded)
+        );
     }
 }
