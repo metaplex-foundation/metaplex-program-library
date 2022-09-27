@@ -270,6 +270,7 @@ pub fn transfer_out(
         AccountMeta::new_readonly(spl_associated_token_account::id(), false),
         AccountMeta::new_readonly(spl_token::id(), false),
         AccountMeta::new_readonly(solana_program::sysvar::rent::id(), false),
+        AccountMeta::new_readonly(mpl_token_metadata::id(), false),
     ];
 
     let data = TrifleInstruction::TransferOut(TransferOutArgs { slot, amount })
