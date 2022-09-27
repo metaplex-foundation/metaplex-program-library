@@ -11,7 +11,7 @@ mod trifle {
     use mpl_trifle::{
         instruction::{
             add_constraint_to_escrow_constraint_model, create_escrow_constraint_model_account,
-            create_trifle_account, transfer_in,
+            create_trifle_account, transfer_in, transfer_out,
         },
         pda::{find_escrow_constraint_model_address, find_trifle_address},
         state::{
@@ -198,6 +198,61 @@ mod trifle {
         context
             .banks_client
             .process_transaction(transfer_in_tx)
+            .await
+            .unwrap();
+
+        let trifle_account = context
+            .banks_client
+            .get_account(trifle_addr)
+            .await
+            .unwrap()
+            .unwrap();
+
+        let trifle_account_data: Trifle = try_from_slice_unchecked(&trifle_account.data).unwrap();
+        println!("trifle_account: {:#?}", trifle_account_data);
+        let constraint_account = context
+            .banks_client
+            .get_account(escrow_constraint_model_addr)
+            .await
+            .unwrap()
+            .unwrap();
+        let constraint_account_data: EscrowConstraintModel =
+            try_from_slice_unchecked(&constraint_account.data).unwrap();
+        println!("constraint_account: {:#?}", constraint_account_data);
+
+        let metadata_attribute_token_account =
+            spl_associated_token_account::get_associated_token_address(
+                &context.payer.pubkey(),
+                &attribute_metadata.mint.pubkey(),
+            );
+
+        let transfer_out_ix = transfer_out(
+            mpl_trifle::id(),
+            trifle_addr,
+            escrow_constraint_model_addr,
+            escrow_addr,
+            context.payer.pubkey(),
+            context.payer.pubkey(),
+            attribute_metadata.mint.pubkey(),
+            trifle_attribute_token_account,
+            metadata_attribute_token_account,
+            attribute_metadata.pubkey,
+            metadata.mint.pubkey(),
+            metadata.token.pubkey(),
+            "test".to_string(),
+            1,
+        );
+
+        let transfer_out_tx = Transaction::new_signed_with_payer(
+            &[transfer_out_ix],
+            Some(&context.payer.pubkey()),
+            &[&context.payer],
+            context.last_blockhash,
+        );
+
+        context
+            .banks_client
+            .process_transaction(transfer_out_tx)
             .await
             .unwrap();
 

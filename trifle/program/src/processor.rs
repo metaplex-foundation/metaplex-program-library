@@ -430,12 +430,16 @@ fn transfer_out(
     let _ata_program = next_account_info(account_info_iter)?;
     let spl_token_program = next_account_info(account_info_iter)?;
     let rent_info = next_account_info(account_info_iter)?;
+    let token_metadata_program = next_account_info(account_info_iter)?;
 
     assert_owned_by(attribute_metadata, &mpl_token_metadata::id())?;
     let _attribute_metadata: Metadata = Metadata::from_account_info(attribute_metadata)?;
 
-    let tm_pid = mpl_token_metadata::id();
-    let mut escrow_seeds = vec![PREFIX.as_bytes(), tm_pid.as_ref(), escrow_mint.key.as_ref()];
+    let mut escrow_seeds = vec![
+        PREFIX.as_bytes(),
+        token_metadata_program.key.as_ref(),
+        escrow_mint.key.as_ref(),
+    ];
 
     let escrow_auth = EscrowAuthority::Creator(*trifle_account.key);
     for seed in escrow_auth.to_seeds() {
@@ -444,7 +448,17 @@ fn transfer_out(
 
     escrow_seeds.push(ESCROW_PREFIX.as_bytes());
 
-    let bump_seed = assert_derivation(program_id, escrow_account, &escrow_seeds)?;
+    let escrow_bump_seed =
+        assert_derivation(token_metadata_program.key, escrow_account, &escrow_seeds)?;
+
+    let trifle_seeds = &[
+        TRIFLE_SEED.as_bytes(),
+        escrow_mint.key.as_ref(),
+        trifle_authority.key.as_ref(),
+        constraint_model_info.key.as_ref(),
+    ];
+
+    let trifle_bump_seed = assert_derivation(program_id, trifle_account, trifle_seeds)?;
 
     // Derive the seeds for PDA signing.
     let trifle_authority_seeds = &[
@@ -452,33 +466,11 @@ fn transfer_out(
         escrow_mint.key.as_ref(),
         trifle_authority.key.as_ref(),
         constraint_model_info.key.as_ref(),
-        &[bump_seed],
+        &[trifle_bump_seed],
     ];
 
     assert_signer(payer)?;
     //assert_signer(trifle_authority)?;
-
-    // Allocate the escrow accounts new ATA.
-    let create_escrow_ata_ix =
-        spl_associated_token_account::instruction::create_associated_token_account(
-            payer.key,
-            escrow_account.key,
-            attribute_mint.key,
-            spl_token_program.key,
-        );
-
-    invoke(
-        &create_escrow_ata_ix,
-        &[
-            payer.clone(),
-            attribute_dst_token_account.clone(),
-            escrow_account.clone(),
-            attribute_mint.clone(),
-            system_program.clone(),
-            spl_token_program.clone(),
-            rent_info.clone(),
-        ],
-    )?;
 
     // Deserialize the token accounts and perform checks.
 
@@ -491,7 +483,7 @@ fn transfer_out(
 
     // Transfer the token out of the escrow
     let transfer_ix = mpl_token_metadata::escrow::transfer_out_of_escrow(
-        mpl_token_metadata::id(),
+        *token_metadata_program.key,
         *escrow_account.key,
         *payer.key,
         *attribute_mint.key,
@@ -500,10 +492,11 @@ fn transfer_out(
         *attribute_metadata.key,
         *escrow_mint.key,
         *escrow_token_account.key,
-        Some(*trifle_authority.key),
+        Some(*trifle_account.key),
         args.amount,
     );
 
+    msg!("Transferring the token out of the escrow");
     invoke_signed(
         &transfer_ix,
         &[
@@ -515,10 +508,12 @@ fn transfer_out(
             attribute_metadata.clone(),
             escrow_mint.clone(),
             escrow_token_account.clone(),
-            trifle_authority.clone(),
+            trifle_account.clone(),
+            rent_info.clone(),
         ],
         &[trifle_authority_seeds],
     )?;
+    msg!("Transferred the token out of the escrow");
 
     // Update the Trifle account
     let mut trifle = Trifle::from_account_info(trifle_account)?;

@@ -6,6 +6,7 @@ use crate::{
     utils::{assert_derivation, assert_owned_by, assert_signer},
 };
 use borsh::{BorshDeserialize, BorshSerialize};
+use mpl_token_vault::solana_program::msg;
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
@@ -39,7 +40,7 @@ pub fn transfer_out_of_escrow(
     amount: u64,
 ) -> Instruction {
     let mut accounts = vec![
-        AccountMeta::new(escrow, false),
+        AccountMeta::new_readonly(escrow, false),
         AccountMeta::new(payer, true),
         AccountMeta::new_readonly(attribute_mint, false),
         AccountMeta::new(attribute_src, false),
@@ -103,29 +104,24 @@ pub fn process_transfer_out_of_escrow(
     // Owned by token-metadata program.
     assert_owned_by(attribute_metadata_info, program_id)?;
     let _attribute_metadata: Metadata = Metadata::from_account_info(attribute_metadata_info)?;
-    let authority_primitive: Vec<u8> = toe.authority.try_to_vec().unwrap();
 
-    let bump_seed = assert_derivation(
-        program_id,
-        escrow_info,
-        &[
-            PREFIX.as_bytes(),
-            program_id.as_ref(),
-            escrow_mint_info.key.as_ref(),
-            authority_primitive.as_ref(),
-            ESCROW_PREFIX.as_bytes(),
-        ],
-    )?;
+    let tm_pid = crate::id();
+    let mut escrow_seeds = vec![
+        PREFIX.as_bytes(),
+        tm_pid.as_ref(),
+        escrow_mint_info.key.as_ref(),
+    ];
+
+    for seed in toe.authority.to_seeds() {
+        escrow_seeds.push(seed);
+    }
+
+    escrow_seeds.push(ESCROW_PREFIX.as_bytes());
+
+    let bump_seed = &[assert_derivation(&crate::id(), escrow_info, &escrow_seeds)?];
 
     // Derive the seeds for PDA signing.
-    let escrow_authority_seeds = &[
-        PREFIX.as_bytes(),
-        program_id.as_ref(),
-        escrow_mint_info.key.as_ref(),
-        authority_primitive.as_ref(),
-        ESCROW_PREFIX.as_bytes(),
-        &[bump_seed],
-    ];
+    let escrow_authority_seeds = [escrow_seeds, vec![bump_seed]].concat();
 
     assert_signer(payer_info)?;
 
@@ -137,6 +133,7 @@ pub fn process_transfer_out_of_escrow(
         attribute_mint_info.key,
     );
 
+    msg!("Creating ATA");
     invoke(
         &create_escrow_ata_ix,
         &[
@@ -149,6 +146,7 @@ pub fn process_transfer_out_of_escrow(
             rent_info.clone(),
         ],
     )?;
+    msg!("Created ATA");
 
     // Deserialize the token accounts and perform checks.
     let attribute_src = spl_token::state::Account::unpack(&attribute_src_info.data.borrow())?;
@@ -163,6 +161,8 @@ pub fn process_transfer_out_of_escrow(
             assert!(escrow_account.owner == *authority.key);
         }
         EscrowAuthority::Creator(creator) => {
+            msg!("Creator: {:#?}", creator);
+            msg!("Authority: {:#?}", authority.key);
             assert!(creator == *authority.key);
         }
     }
@@ -182,6 +182,7 @@ pub fn process_transfer_out_of_escrow(
     )
     .unwrap();
 
+    msg!("Transferring tokens");
     invoke_signed(
         &transfer_ix,
         &[
@@ -190,8 +191,9 @@ pub fn process_transfer_out_of_escrow(
             escrow_info.clone(),
             token_program_info.clone(),
         ],
-        &[escrow_authority_seeds],
+        &[&escrow_authority_seeds],
     )?;
+    msg!("Transferred tokens");
 
     Ok(())
 }
