@@ -91,8 +91,6 @@ impl Trifle {
             }
         }
 
-        tokens.push(TokenAmount::new(token, amount));
-
         Ok(())
     }
 }
