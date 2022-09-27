@@ -2076,7 +2076,7 @@
         },
         {
           "name": "masterEditionMint",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false,
           "desc": "Mint of the original/master NFT"
         },
