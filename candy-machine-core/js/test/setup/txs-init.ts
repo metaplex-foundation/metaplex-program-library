@@ -16,11 +16,10 @@ import {
   TransactionInstruction,
 } from '@solana/web3.js';
 import {
-  createAssociatedTokenAccountInstruction,
-  createInitializeMintInstruction,
-  createMintToInstruction,
+  ASSOCIATED_TOKEN_PROGRAM_ID,
   MintLayout,
   TOKEN_PROGRAM_ID,
+  Token,
 } from '@solana/spl-token';
 import { Test } from 'tape';
 import * as program from '../../src/generated';
@@ -180,7 +179,7 @@ export class InitTransactions {
       authority: payer.publicKey,
     };
 
-    const txs = [];
+    const txs: Transaction[] = [];
     let start = 0;
 
     while (start < lines.length) {
@@ -279,16 +278,35 @@ export class InitTransactions {
         programId: TOKEN_PROGRAM_ID,
       }),
     );
-    ixs.push(createInitializeMintInstruction(nftMint, 0, payer.publicKey, payer.publicKey));
     ixs.push(
-      createAssociatedTokenAccountInstruction(
+      Token.createInitMintInstruction(
+        TOKEN_PROGRAM_ID,
+        nftMint,
+        0,
+        payer.publicKey,
+        payer.publicKey,
+      ),
+    );
+    ixs.push(
+      Token.createAssociatedTokenAccountInstruction(
+        ASSOCIATED_TOKEN_PROGRAM_ID,
+        TOKEN_PROGRAM_ID,
         payer.publicKey,
         nftTokenAccount,
         payer.publicKey,
         nftMint,
       ),
     );
-    ixs.push(createMintToInstruction(nftMint, nftTokenAccount, payer.publicKey, 1, []));
+    ixs.push(
+      Token.createMintToInstruction(
+        TOKEN_PROGRAM_ID,
+        nftMint,
+        nftTokenAccount,
+        payer.publicKey,
+        [],
+        1,
+      ),
+    );
     // candy machine mint instruction
     ixs.push(program.createMintInstruction(accounts));
     const tx = new Transaction().add(...ixs);

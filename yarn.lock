@@ -1659,6 +1659,7 @@ __metadata:
     "@metaplex-foundation/cusper": ^0.0.2
     "@metaplex-foundation/js": ^0.15.0
     "@metaplex-foundation/solita": ^0.12.0
+    "@solana/spl-token": 0.3.5
     "@solana/web3.js": ^1.56.2
     "@types/bn.js": ^5.1.0
     bn.js: ^5.2.0
@@ -2553,6 +2554,19 @@ __metadata:
     buffer-layout: ^1.2.0
     dotenv: 10.0.0
   checksum: be4971c4af9c56fd30353356d8ca404b4460eb37806499ab1257e7d77afa56f89149cfe03c41a0f8908f50e9c421c5b805502857455281e8d3088a2eae1c3297
+  languageName: node
+  linkType: hard
+
+"@solana/spl-token@npm:0.3.5":
+  version: 0.3.5
+  resolution: "@solana/spl-token@npm:0.3.5"
+  dependencies:
+    "@solana/buffer-layout": ^4.0.0
+    "@solana/buffer-layout-utils": ^0.2.0
+    buffer: ^6.0.3
+  peerDependencies:
+    "@solana/web3.js": ^1.47.4
+  checksum: 230c153b886c7dedb09fdd65c4fd71259d37f3c951ab6ea9c099aff875cc595fc9d44c74b4d7ffef59475f7edd7a8a00931bfec8ab2bd3141512ca3f6f828139
   languageName: node
   linkType: hard
 
