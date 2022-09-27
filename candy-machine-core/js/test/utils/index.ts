@@ -3,6 +3,7 @@ export * from './constants';
 export * from './errors';
 
 import { Keypair, PublicKey } from '@solana/web3.js';
+import { BN } from 'bn.js';
 import { CandyMachineData } from '../../src/generated';
 import { HIDDEN_SECTION } from './constants';
 
@@ -19,7 +20,7 @@ export function getCandyMachineSpace(data: CandyMachineData): number {
   if (data.configLineSettings == null) {
     return HIDDEN_SECTION;
   } else {
-    const items = parseInt(data.itemsAvailable.toString());
+    const items = new BN(data.itemsAvailable).toNumber();
     return (
       HIDDEN_SECTION +
       4 +
