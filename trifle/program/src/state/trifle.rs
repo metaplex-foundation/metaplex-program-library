@@ -79,6 +79,18 @@ impl Trifle {
             }
         }
 
+        match tokens.iter_mut().find(|t| t.mint == token) {
+            Some(t) => {
+                t.amount = t
+                    .amount
+                    .checked_add(amount)
+                    .ok_or(TrifleError::NumericalOverflow)?;
+            }
+            None => {
+                tokens.push(TokenAmount::new(token, amount));
+            }
+        }
+
         tokens.push(TokenAmount::new(token, amount));
 
         Ok(())
