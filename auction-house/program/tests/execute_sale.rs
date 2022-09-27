@@ -470,6 +470,26 @@ async fn execute_sale_success() {
             .as_slice(),
     )
     .unwrap();
+
+    let seller_ts_after = context
+        .banks_client
+        .get_account(sell_acc.seller_trade_state)
+        .await
+        .unwrap()
+        .is_none();
+    let buyer_ts_after = context
+        .banks_client
+        .get_account(bid_acc.buyer_trade_state)
+        .await
+        .unwrap()
+        .is_none();
+    let free_ts_after = context
+        .banks_client
+        .get_account(sell_acc.free_seller_trade_state)
+        .await
+        .unwrap()
+        .is_none();
+
     let fee_minus: u64 = 100_000_000 - ((ah.seller_fee_basis_points as u64 * 100_000_000) / 10000);
     assert_eq!(seller_before.lamports + fee_minus, seller_after.lamports);
     assert!(seller_before.lamports < seller_after.lamports);

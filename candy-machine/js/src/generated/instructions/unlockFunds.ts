@@ -23,6 +23,7 @@ export const unlockFundsStruct = new beet.BeetArgsStruct<{
  * Accounts required by the _unlockFunds_ instruction
  *
  * @property [_writable_] candyMachine
+ * @property [_writable_] wallet
  * @property [_writable_, **signer**] authority
  * @property [_writable_] freezePda
  * @category Instructions
@@ -31,6 +32,7 @@ export const unlockFundsStruct = new beet.BeetArgsStruct<{
  */
 export type UnlockFundsInstructionAccounts = {
   candyMachine: web3.PublicKey;
+  wallet: web3.PublicKey;
   authority: web3.PublicKey;
   freezePda: web3.PublicKey;
   systemProgram?: web3.PublicKey;
@@ -56,6 +58,11 @@ export function createUnlockFundsInstruction(
   const keys: web3.AccountMeta[] = [
     {
       pubkey: accounts.candyMachine,
+      isWritable: true,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.wallet,
       isWritable: true,
       isSigner: false,
     },
