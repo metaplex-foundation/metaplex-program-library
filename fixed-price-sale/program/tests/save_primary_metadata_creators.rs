@@ -17,7 +17,9 @@ mod save_primary_metadata_creators {
     };
     use solana_program::instruction::Instruction;
     use solana_program_test::*;
-    use solana_sdk::{transaction::Transaction, transport::TransportError};
+    use solana_sdk::{
+        commitment_config::CommitmentLevel, transaction::Transaction, transport::TransportError,
+    };
 
     #[tokio::test]
     async fn success() {
@@ -110,7 +112,11 @@ mod save_primary_metadata_creators {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await.unwrap();
+        context
+            .banks_client
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+            .await
+            .unwrap();
 
         let primary_metadata_creators_acc = context
             .banks_client
@@ -246,7 +252,7 @@ mod save_primary_metadata_creators {
 
         let tx_error = context
             .banks_client
-            .process_transaction(tx)
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
             .await
             .unwrap_err();
         match tx_error {
@@ -345,7 +351,7 @@ mod save_primary_metadata_creators {
 
         let tx_error = context
             .banks_client
-            .process_transaction(tx)
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
             .await
             .unwrap_err();
         match tx_error {
@@ -448,7 +454,7 @@ mod save_primary_metadata_creators {
 
         let tx_error = context
             .banks_client
-            .process_transaction(tx)
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
             .await
             .unwrap_err();
         match tx_error {

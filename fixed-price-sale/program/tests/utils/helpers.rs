@@ -9,7 +9,9 @@ use mpl_token_metadata::state::Collection;
 use solana_program::instruction::InstructionError;
 use solana_program::{clock::Clock, system_instruction};
 use solana_program_test::*;
-use solana_sdk::{program_pack::Pack, transaction::Transaction};
+use solana_sdk::{
+    commitment_config::CommitmentLevel, program_pack::Pack, transaction::Transaction,
+};
 use solana_sdk::{transaction::TransactionError, transport::TransportError};
 use std::convert::TryFrom;
 use std::env;
@@ -36,7 +38,14 @@ pub async fn mint_to(
         context.last_blockhash,
     );
 
-    context.banks_client.process_transaction(tx).await.unwrap();
+    context
+        .banks_client
+        .process_transaction_with_commitment(
+            tx,
+            solana_sdk::commitment_config::CommitmentLevel::Confirmed,
+        )
+        .await
+        .unwrap();
 }
 
 pub async fn create_token_account(
@@ -69,7 +78,14 @@ pub async fn create_token_account(
         context.last_blockhash,
     );
 
-    context.banks_client.process_transaction(tx).await.unwrap();
+    context
+        .banks_client
+        .process_transaction_with_commitment(
+            tx,
+            solana_sdk::commitment_config::CommitmentLevel::Confirmed,
+        )
+        .await
+        .unwrap();
 }
 
 pub async fn create_mint(
@@ -103,7 +119,14 @@ pub async fn create_mint(
         context.last_blockhash,
     );
 
-    context.banks_client.process_transaction(tx).await.unwrap();
+    context
+        .banks_client
+        .process_transaction_with_commitment(
+            tx,
+            solana_sdk::commitment_config::CommitmentLevel::Confirmed,
+        )
+        .await
+        .unwrap();
 }
 
 pub async fn create_master_edition(
@@ -140,7 +163,14 @@ pub async fn create_master_edition(
         context.last_blockhash,
     );
 
-    context.banks_client.process_transaction(tx).await.unwrap();
+    context
+        .banks_client
+        .process_transaction_with_commitment(
+            tx,
+            solana_sdk::commitment_config::CommitmentLevel::Confirmed,
+        )
+        .await
+        .unwrap();
 
     (edition, edition_bump)
 }
@@ -193,7 +223,11 @@ pub async fn create_token_metadata(
         context.last_blockhash,
     );
 
-    context.banks_client.process_transaction(tx).await.unwrap();
+    context
+        .banks_client
+        .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+        .await
+        .unwrap();
 
     metadata
 }
@@ -239,7 +273,11 @@ pub async fn verify_collection(
         context.last_blockhash,
     );
 
-    context.banks_client.process_transaction(tx).await.unwrap();
+    context
+        .banks_client
+        .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+        .await
+        .unwrap();
 }
 
 pub async fn airdrop(context: &mut ProgramTestContext, receiver: &Pubkey, amount: u64) {
@@ -254,7 +292,11 @@ pub async fn airdrop(context: &mut ProgramTestContext, receiver: &Pubkey, amount
         context.last_blockhash,
     );
 
-    context.banks_client.process_transaction(tx).await.unwrap();
+    context
+        .banks_client
+        .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+        .await
+        .unwrap();
 }
 
 pub async fn create_collection(
