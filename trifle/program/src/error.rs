@@ -6,7 +6,7 @@ use solana_program::{
 };
 use thiserror::Error;
 
-#[derive(Error, Debug, FromPrimitive)]
+#[derive(Error, Debug, FromPrimitive, Copy, Clone, Eq, PartialEq)]
 pub enum TrifleError {
     /// 0 - Numerical Overflow
     #[error("Numerical Overflow")]
@@ -20,9 +20,9 @@ pub enum TrifleError {
     #[error("Invalid Escrow Constraint Model")]
     InvalidEscrowConstraintModel,
 
-    /// Invalid Escrow Constraint Index
-    #[error("Invalid Escrow Constraint Index")]
-    InvalidEscrowConstraintIndex,
+    /// Invalid Escrow Constraint
+    #[error("Invalid Escrow Constraint")]
+    InvalidEscrowConstraint,
 
     /// Escrow Constraint Violation
     #[error("Escrow Constraint Violation")]
@@ -43,6 +43,13 @@ pub enum TrifleError {
     /// Constraint already exists
     #[error("Constraint already exists")]
     ConstraintAlreadyExists,
+
+    /// Token limit exceeded
+    #[error("Token Limit Exceeded")]
+    TokenLimitExceeded,
+
+    #[error("Failed to find Token Amount")]
+    FailedToFindTokenAmount,
 }
 
 impl From<TrifleError> for ProgramError {

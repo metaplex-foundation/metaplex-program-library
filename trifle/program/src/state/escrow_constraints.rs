@@ -45,11 +45,11 @@ impl EscrowConstraintModel {
             })
     }
 
-    pub fn validate(&self, mint: &Pubkey, constraint_key: String) -> Result<(), ProgramError> {
-        if let Some(constraint) = self.constraints.get(&constraint_key) {
+    pub fn validate(&self, mint: &Pubkey, constraint_key: &String) -> Result<(), TrifleError> {
+        if let Some(constraint) = self.constraints.get(constraint_key) {
             constraint.constraint_type.validate(mint)
         } else {
-            Err(TrifleError::InvalidEscrowConstraintIndex.into())
+            Err(TrifleError::InvalidEscrowConstraint)
         }
     }
 }
@@ -109,28 +109,28 @@ impl EscrowConstraintType {
     }
 
     pub fn tokens_from_slice(tokens: &[Pubkey]) -> EscrowConstraintType {
-        let mut hm = HashSet::new();
+        let mut h = HashSet::new();
         for token in tokens {
-            hm.insert(*token);
+            h.insert(*token);
         }
-        EscrowConstraintType::Tokens(hm)
+        EscrowConstraintType::Tokens(h)
     }
 
-    pub fn validate(&self, mint: &Pubkey) -> Result<(), ProgramError> {
+    pub fn validate(&self, mint: &Pubkey) -> Result<(), TrifleError> {
         match self {
             EscrowConstraintType::None => Ok(()),
             EscrowConstraintType::Collection(collection) => {
                 if collection == mint {
                     Ok(())
                 } else {
-                    Err(TrifleError::EscrowConstraintViolation.into())
+                    Err(TrifleError::EscrowConstraintViolation)
                 }
             }
             EscrowConstraintType::Tokens(tokens) => {
                 if tokens.contains(mint) {
                     Ok(())
                 } else {
-                    Err(TrifleError::EscrowConstraintViolation.into())
+                    Err(TrifleError::EscrowConstraintViolation)
                 }
             }
         }
