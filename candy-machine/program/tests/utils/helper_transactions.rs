@@ -415,6 +415,7 @@ pub async fn unlock_funds(
     context: &mut ProgramTestContext,
     candy_machine: &Pubkey,
     authority: &Keypair,
+    treasury: &Pubkey,
     freeze_info: &FreezeInfo,
     token_info: &TokenInfo,
 ) -> transport::Result<()> {
@@ -422,6 +423,7 @@ pub async fn unlock_funds(
         freeze_pda: freeze_info.pda,
         candy_machine: *candy_machine,
         authority: authority.pubkey(),
+        wallet: *treasury,
         system_program: system_program::id(),
     }
     .to_account_metas(None);

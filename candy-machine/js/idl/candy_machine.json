@@ -1,5 +1,5 @@
 {
-  "version": "4.3.2",
+  "version": "4.4.0",
   "name": "candy_machine",
   "instructions": [
     {
@@ -513,6 +513,11 @@
       "accounts": [
         {
           "name": "candyMachine",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "wallet",
           "isMut": true,
           "isSigner": false
         },
