@@ -1,4 +1,3 @@
-use crate::state::escrow_constraints::EscrowConstraint;
 use borsh::{BorshDeserialize, BorshSerialize};
 use shank::ShankInstruction;
 use solana_program::{
@@ -15,9 +14,26 @@ pub struct CreateEscrowConstraintModelAccountArgs {
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
-pub struct AddConstraintToEscrowConstraintModelArgs {
+pub struct AddNoneConstraintToEscrowConstraintModelArgs {
     pub constraint_name: String,
-    pub constraint: EscrowConstraint,
+    pub token_limit: u64,
+}
+
+#[repr(C)]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+pub struct AddCollectionConstraintToEscrowConstraintModelArgs {
+    pub constraint_name: String,
+    pub token_limit: u64,
+}
+
+#[repr(C)]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+pub struct AddTokensConstraintToEscrowConstraintModelArgs {
+    pub constraint_name: String,
+    pub tokens: Vec<Pubkey>,
+    pub token_limit: u64,
 }
 
 #[repr(C)]
@@ -47,12 +63,6 @@ pub enum TrifleInstruction {
     #[account(3, name = "system_program", desc = "System program")]
     CreateEscrowConstraintModelAccount(CreateEscrowConstraintModelAccountArgs),
 
-    /// Add a constraint to an escrow constraint model.
-    #[account(0, writable, name = "escrow_constraint_model", desc = "Constraint model account")]
-    #[account(1, writable, signer, name = "payer", desc = "Wallet paying for the transaction and new account, will be set as the creator of the constraint model")]
-    #[account(2, signer, name = "update_authority", desc = "Update authority of the constraint model")]
-    #[account(3, name = "system_program", desc = "System program")]
-    AddConstraintToEscrowConstraintModel(AddConstraintToEscrowConstraintModelArgs),
 
     /// Creates a Trifle Account -- used to model token inventory in a Token Escrow account.
     #[account(0, writable, name = "escrow", desc = "Escrow account")]
@@ -103,6 +113,27 @@ pub enum TrifleInstruction {
     #[account(13, name="spl_token", desc="The spl token program")]
     #[account(14, name="rent", desc="The rent sysvar")]
     TransferOut(TransferOutArgs),
+
+    #[account(0, writable, name = "escrow_constraint_model", desc = "Constraint model account")]
+    #[account(1, writable, signer, name = "payer", desc = "Wallet paying for the transaction and new account, will be set as the creator of the constraint model")]
+    #[account(2, signer, name = "update_authority", desc = "Update authority of the constraint model")]
+    #[account(3, name = "system_program", desc = "System program")]
+    AddNoneConstraintToEscrowConstraintModel(AddNoneConstraintToEscrowConstraintModelArgs),
+
+    #[account(0, writable, name = "escrow_constraint_model", desc = "Constraint model account")]
+    #[account(1, writable, signer, name = "payer", desc = "Wallet paying for the transaction and new account, will be set as the creator of the constraint model")]
+    #[account(2, signer, name = "update_authority", desc = "Update authority of the constraint model")]
+    #[account(3, name = "collection_mint", desc = "Collection mint account")]
+    #[account(4, name = "collection_mint_metadata", desc = "Collection mint metadata account")]
+    #[account(5, name = "system_program", desc = "System program")]
+    AddCollectionConstraintToEscrowConstraintModel(AddCollectionConstraintToEscrowConstraintModelArgs),
+
+    #[account(0, writable, name = "escrow_constraint_model", desc = "Constraint model account")]
+    #[account(1, writable, signer, name = "payer", desc = "Wallet paying for the transaction and new account, will be set as the creator of the constraint model")]
+    #[account(2, signer, name = "update_authority", desc = "Update authority of the constraint model")]
+    #[account(3, name = "system_program", desc = "System program")]
+    AddTokensConstraintToEscrowConstraintModel(AddTokensConstraintToEscrowConstraintModelArgs),
+
 }
 
 pub fn create_escrow_constraint_model_account(
@@ -130,14 +161,13 @@ pub fn create_escrow_constraint_model_account(
     }
 }
 
-// TODO: make the args more approachable for clients.
-pub fn add_constraint_to_escrow_constraint_model(
+pub fn add_none_constraint_to_escrow_constraint_model(
     program_id: &Pubkey,
     escrow_constraint_model: &Pubkey,
     payer: &Pubkey,
     update_authority: &Pubkey,
     constraint_name: String,
-    constraint: EscrowConstraint,
+    token_limit: u64,
 ) -> Instruction {
     let accounts = vec![
         AccountMeta::new(*escrow_constraint_model, false),
@@ -149,10 +179,74 @@ pub fn add_constraint_to_escrow_constraint_model(
     Instruction {
         program_id: *program_id,
         accounts,
-        data: TrifleInstruction::AddConstraintToEscrowConstraintModel(
-            AddConstraintToEscrowConstraintModelArgs {
+        data: TrifleInstruction::AddNoneConstraintToEscrowConstraintModel(
+            AddNoneConstraintToEscrowConstraintModelArgs {
                 constraint_name,
-                constraint,
+                token_limit,
+            },
+        )
+        .try_to_vec()
+        .unwrap(),
+    }
+}
+
+pub fn add_collection_constraint_to_escrow_constraint_model(
+    program_id: &Pubkey,
+    escrow_constraint_model: &Pubkey,
+    payer: &Pubkey,
+    update_authority: &Pubkey,
+    collection_mint: &Pubkey,
+    collection_mint_metadata: &Pubkey,
+    constraint_name: String,
+    token_limit: u64,
+) -> Instruction {
+    let accounts = vec![
+        AccountMeta::new(*escrow_constraint_model, false),
+        AccountMeta::new(*payer, true),
+        AccountMeta::new_readonly(*update_authority, false),
+        AccountMeta::new_readonly(*collection_mint, false),
+        AccountMeta::new_readonly(*collection_mint_metadata, false),
+        AccountMeta::new_readonly(solana_program::system_program::id(), false),
+    ];
+
+    Instruction {
+        program_id: *program_id,
+        accounts,
+        data: TrifleInstruction::AddCollectionConstraintToEscrowConstraintModel(
+            AddCollectionConstraintToEscrowConstraintModelArgs {
+                constraint_name,
+                token_limit,
+            },
+        )
+        .try_to_vec()
+        .unwrap(),
+    }
+}
+
+pub fn add_tokens_constraint_to_escrow_constraint_model(
+    program_id: &Pubkey,
+    escrow_constraint_model: &Pubkey,
+    payer: &Pubkey,
+    update_authority: &Pubkey,
+    constraint_name: String,
+    token_limit: u64,
+    tokens: Vec<Pubkey>,
+) -> Instruction {
+    let accounts = vec![
+        AccountMeta::new(*escrow_constraint_model, false),
+        AccountMeta::new(*payer, true),
+        AccountMeta::new_readonly(*update_authority, false),
+        AccountMeta::new_readonly(solana_program::system_program::id(), false),
+    ];
+
+    Instruction {
+        program_id: *program_id,
+        accounts,
+        data: TrifleInstruction::AddTokensConstraintToEscrowConstraintModel(
+            AddTokensConstraintToEscrowConstraintModelArgs {
+                constraint_name,
+                tokens,
+                token_limit,
             },
         )
         .try_to_vec()

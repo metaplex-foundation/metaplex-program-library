@@ -7,17 +7,17 @@ use solana_sdk::{signer::Signer, transaction::Transaction};
 use utils::*;
 
 mod trifle {
-    use mpl_token_metadata::state::{Creator, EscrowAuthority};
+    use mpl_token_metadata::state::{CollectionDetails, Creator, EscrowAuthority};
     use mpl_trifle::{
         instruction::{
-            add_constraint_to_escrow_constraint_model, create_escrow_constraint_model_account,
-            create_trifle_account, transfer_in, transfer_out,
+            add_collection_constraint_to_escrow_constraint_model,
+            add_none_constraint_to_escrow_constraint_model,
+            add_tokens_constraint_to_escrow_constraint_model,
+            create_escrow_constraint_model_account, create_trifle_account, transfer_in,
+            transfer_out,
         },
         pda::{find_escrow_constraint_model_address, find_trifle_address},
-        state::{
-            escrow_constraints::{EscrowConstraint, EscrowConstraintModel, EscrowConstraintType},
-            trifle::Trifle,
-        },
+        state::{escrow_constraints::EscrowConstraintModel, trifle::Trifle},
     };
     use solana_program::borsh::try_from_slice_unchecked;
 
@@ -55,6 +55,24 @@ mod trifle {
             .await
             .unwrap();
 
+        let test_collection = Metadata::new();
+        test_collection
+            .create_v3(
+                &mut context,
+                "Test".to_string(),
+                "TST".to_string(),
+                "".to_string(),
+                None,
+                0,
+                false,
+                None,
+                None,
+                None,
+                Some(CollectionDetails::V1 { size: 1 }),
+            )
+            .await
+            .unwrap();
+
         let (escrow_constraint_model_addr, _) =
             find_escrow_constraint_model_address(&context.payer.pubkey(), "Test");
 
@@ -66,22 +84,43 @@ mod trifle {
             "Test".to_string(),
         );
 
-        let constraint = EscrowConstraint {
-            token_limit: 1,
-            constraint_type: EscrowConstraintType::None,
-        };
-
-        let add_constraint_ix = add_constraint_to_escrow_constraint_model(
+        let add_none_constraint_ix = add_none_constraint_to_escrow_constraint_model(
             &mpl_trifle::id(),
             &escrow_constraint_model_addr,
             &context.payer.pubkey(),
             &context.payer.pubkey(),
             "test".to_string(),
-            constraint,
+            0,
+        );
+
+        let add_collection_constraint_ix = add_collection_constraint_to_escrow_constraint_model(
+            &mpl_trifle::id(),
+            &escrow_constraint_model_addr,
+            &context.payer.pubkey(),
+            &context.payer.pubkey(),
+            &test_collection.mint.pubkey(),
+            &test_collection.pubkey,
+            "collection".to_string(),
+            0,
+        );
+
+        let add_tokens_constraint_ix = add_tokens_constraint_to_escrow_constraint_model(
+            &mpl_trifle::id(),
+            &escrow_constraint_model_addr,
+            &context.payer.pubkey(),
+            &context.payer.pubkey(),
+            "tokens".to_string(),
+            0,
+            vec![metadata.mint.pubkey()],
         );
 
         let tx = Transaction::new_signed_with_payer(
-            &[create_constraint_model_ix, add_constraint_ix],
+            &[
+                create_constraint_model_ix,
+                add_none_constraint_ix,
+                add_tokens_constraint_ix,
+                add_collection_constraint_ix,
+            ],
             Some(&context.payer.pubkey()),
             &[&context.payer],
             context.last_blockhash,
