@@ -455,7 +455,7 @@ fn transfer_out(
         TRIFLE_SEED.as_bytes(),
         escrow_mint.key.as_ref(),
         trifle_authority.key.as_ref(),
-        constraint_model.key.as_ref(),
+        constraint_model_info.key.as_ref(),
     ];
 
     let trifle_bump_seed = assert_derivation(program_id, trifle_account, trifle_seeds)?;
