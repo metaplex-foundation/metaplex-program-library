@@ -70,7 +70,11 @@ impl Trifle {
                     .ok_or(TrifleError::NumericalOverflow)
             })?;
 
-            if current_amount + amount > constraint.token_limit {
+            if current_amount
+                .checked_add(amount)
+                .ok_or(TrifleError::NumericalOverflow)?
+                > constraint.token_limit
+            {
                 return Err(TrifleError::TokenLimitExceeded);
             }
         }
