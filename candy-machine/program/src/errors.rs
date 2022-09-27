@@ -108,6 +108,6 @@ pub enum CandyError {
     NoUnlockWithNFTsStillFrozen,
     #[msg("Setting a sized collection requires the collection metadata to be mutable.")]
     SizedCollectionMetadataMustBeMutable,
-    #[msg("Cannot Switch back from Hidden Settings after items available is greater than 0")]
+    #[msg("Cannot remove Hidden Settings.")]
     CannotSwitchFromHiddenSettings,
 }
