@@ -8,6 +8,7 @@
 import * as beet from '@metaplex-foundation/beet';
 import { EscrowConstraint, escrowConstraintBeet } from './EscrowConstraint';
 export type AddConstraintToEscrowConstraintModelArgs = {
+  constraintName: string;
   constraint: EscrowConstraint;
 };
 
@@ -17,6 +18,9 @@ export type AddConstraintToEscrowConstraintModelArgs = {
  */
 export const addConstraintToEscrowConstraintModelArgsBeet =
   new beet.FixableBeetArgsStruct<AddConstraintToEscrowConstraintModelArgs>(
-    [['constraint', escrowConstraintBeet]],
+    [
+      ['constraintName', beet.utf8String],
+      ['constraint', escrowConstraintBeet],
+    ],
     'AddConstraintToEscrowConstraintModelArgs',
   );

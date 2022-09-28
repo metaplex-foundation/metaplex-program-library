@@ -394,9 +394,12 @@
           {
             "name": "constraints",
             "type": {
-              "vec": {
-                "defined": "EscrowConstraint"
-              }
+              "hashMap": [
+                "string",
+                {
+                  "defined": "EscrowConstraint"
+                }
+              ]
             }
           },
           {
@@ -435,7 +438,9 @@
               "hashMap": [
                 "string",
                 {
-                  "vec": "publicKey"
+                  "vec": {
+                    "defined": "TokenAmount"
+                  }
                 }
               ]
             }
@@ -454,10 +459,6 @@
       "type": {
         "kind": "struct",
         "fields": [
-          {
-            "name": "name",
-            "type": "string"
-          },
           {
             "name": "tokenLimit",
             "type": "u64"
@@ -488,6 +489,10 @@
       "type": {
         "kind": "struct",
         "fields": [
+          {
+            "name": "constraintName",
+            "type": "string"
+          },
           {
             "name": "constraint",
             "type": {
@@ -521,6 +526,22 @@
           {
             "name": "slot",
             "type": "string"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TokenAmount",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "type": "publicKey"
           },
           {
             "name": "amount",
@@ -590,8 +611,8 @@
     },
     {
       "code": 3,
-      "name": "InvalidEscrowConstraintIndex",
-      "msg": "Invalid Escrow Constraint Index"
+      "name": "InvalidEscrowConstraint",
+      "msg": "Invalid Escrow Constraint"
     },
     {
       "code": 4,
@@ -612,6 +633,21 @@
       "code": 7,
       "name": "DataTypeMismatch",
       "msg": "Data type mismatch"
+    },
+    {
+      "code": 8,
+      "name": "ConstraintAlreadyExists",
+      "msg": "Constraint already exists"
+    },
+    {
+      "code": 9,
+      "name": "TokenLimitExceeded",
+      "msg": "Token Limit Exceeded"
+    },
+    {
+      "code": 10,
+      "name": "FailedToFindTokenAmount",
+      "msg": "Failed to find Token Amount"
     }
   ],
   "metadata": {

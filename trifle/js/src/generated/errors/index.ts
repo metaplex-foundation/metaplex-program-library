@@ -75,27 +75,24 @@ createErrorFromNameLookup.set(
 );
 
 /**
- * InvalidEscrowConstraintIndex: 'Invalid Escrow Constraint Index'
+ * InvalidEscrowConstraint: 'Invalid Escrow Constraint'
  *
  * @category Errors
  * @category generated
  */
-export class InvalidEscrowConstraintIndexError extends Error {
+export class InvalidEscrowConstraintError extends Error {
   readonly code: number = 0x3;
-  readonly name: string = 'InvalidEscrowConstraintIndex';
+  readonly name: string = 'InvalidEscrowConstraint';
   constructor() {
-    super('Invalid Escrow Constraint Index');
+    super('Invalid Escrow Constraint');
     if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, InvalidEscrowConstraintIndexError);
+      Error.captureStackTrace(this, InvalidEscrowConstraintError);
     }
   }
 }
 
-createErrorFromCodeLookup.set(0x3, () => new InvalidEscrowConstraintIndexError());
-createErrorFromNameLookup.set(
-  'InvalidEscrowConstraintIndex',
-  () => new InvalidEscrowConstraintIndexError(),
-);
+createErrorFromCodeLookup.set(0x3, () => new InvalidEscrowConstraintError());
+createErrorFromNameLookup.set('InvalidEscrowConstraint', () => new InvalidEscrowConstraintError());
 
 /**
  * EscrowConstraintViolation: 'Escrow Constraint Violation'
@@ -179,6 +176,66 @@ export class DataTypeMismatchError extends Error {
 
 createErrorFromCodeLookup.set(0x7, () => new DataTypeMismatchError());
 createErrorFromNameLookup.set('DataTypeMismatch', () => new DataTypeMismatchError());
+
+/**
+ * ConstraintAlreadyExists: 'Constraint already exists'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class ConstraintAlreadyExistsError extends Error {
+  readonly code: number = 0x8;
+  readonly name: string = 'ConstraintAlreadyExists';
+  constructor() {
+    super('Constraint already exists');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, ConstraintAlreadyExistsError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x8, () => new ConstraintAlreadyExistsError());
+createErrorFromNameLookup.set('ConstraintAlreadyExists', () => new ConstraintAlreadyExistsError());
+
+/**
+ * TokenLimitExceeded: 'Token Limit Exceeded'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class TokenLimitExceededError extends Error {
+  readonly code: number = 0x9;
+  readonly name: string = 'TokenLimitExceeded';
+  constructor() {
+    super('Token Limit Exceeded');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, TokenLimitExceededError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x9, () => new TokenLimitExceededError());
+createErrorFromNameLookup.set('TokenLimitExceeded', () => new TokenLimitExceededError());
+
+/**
+ * FailedToFindTokenAmount: 'Failed to find Token Amount'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class FailedToFindTokenAmountError extends Error {
+  readonly code: number = 0xa;
+  readonly name: string = 'FailedToFindTokenAmount';
+  constructor() {
+    super('Failed to find Token Amount');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, FailedToFindTokenAmountError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xa, () => new FailedToFindTokenAmountError());
+createErrorFromNameLookup.set('FailedToFindTokenAmount', () => new FailedToFindTokenAmountError());
 
 /**
  * Attempts to resolve a custom program error from the provided error code.
