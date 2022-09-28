@@ -1938,6 +1938,7 @@ dependencies = [
  "spl-account-compression",
  "spl-associated-token-account",
  "spl-concurrent-merkle-tree",
+ "spl-merkle-tree-reference",
  "spl-noop",
  "spl-token",
 ]
@@ -4041,6 +4042,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bd0dc6f70db6bacea7ff25870b016a65ba1d1b6013536f08e4fd79a8f9005325"
 dependencies = [
  "solana-program",
+]
+
+[[package]]
+name = "spl-merkle-tree-reference"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "28437c617c7f0db6b7229a489239f3ea6160499542d9367fbca2fc5ec7744abb"
+dependencies = [
+ "solana-program",
+ "thiserror",
 ]
 
 [[package]]

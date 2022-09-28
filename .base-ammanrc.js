@@ -3,7 +3,7 @@
 const path = require('path');
 
 const localDeployDir = path.join(__dirname, 'target', 'deploy');
-const {LOCALHOST, tmpLedgerDir} = require('@metaplex-foundation/amman');
+const { LOCALHOST, tmpLedgerDir } = require('@metaplex-foundation/amman');
 
 function localDeployPath(programName) {
     return path.join(localDeployDir, `${programName}.so`);
@@ -24,12 +24,17 @@ const programs = {
         label: "Candy Machine",
         programId: 'cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ',
         deployPath: localDeployPath('mpl_candy_machine'),
-  },
-     hydra: {
-    label: 'Hydra',
-    programId: 'hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg',
-    deployPath: localDeployPath('mpl_hydra'),
-  },
+    },
+    hydra: {
+        label: 'Hydra',
+        programId: 'hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg',
+        deployPath: localDeployPath('mpl_hydra'),
+    },
+    trifle: {
+        label: 'Trifle',
+        programId: '6PLSD84fn6MVb3XdPYAiX33X8jgfCPXeqYUmfnYndU3X',
+        deployPath: localDeployPath('mpl_trifle'),
+    },
 };
 
 const validator = {

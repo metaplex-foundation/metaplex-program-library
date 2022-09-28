@@ -21,7 +21,7 @@ use {
     serde_with::{As, DisplayFromStr},
 };
 
-/// prefix used for PDAs to avoid certain collision attacks (https://en.wikipedia.org/wiki/Collision_attack#Chosen-prefix_collision_attack)
+/// prefix used for PDAs to avoid certain collision attacks (<https://en.wikipedia.org/wiki/Collision_attack#Chosen-prefix_collision_attack>)
 pub const PREFIX: &str = "metadata";
 
 /// Used in seeds to make Edition model pda address
@@ -97,7 +97,7 @@ pub trait TokenMetadataAccount: BorshDeserialize {
     fn size() -> usize;
 
     fn is_correct_account_type(data: &[u8], data_type: Key, data_size: usize) -> bool {
-        if data.len() == 0 {
+        if data.is_empty() {
             return false;
         }
 
