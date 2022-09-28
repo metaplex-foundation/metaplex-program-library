@@ -45,7 +45,7 @@ impl RewardCenter {
         1 // bump
     }
 
-    pub fn calculate_total_token_payout(
+    fn calculate_total_token_payout(
         &self,
         listing_price: u64,
         payout_operation: &PayoutOperation,
