@@ -9,6 +9,7 @@ import * as web3 from '@solana/web3.js';
 import * as beetSolana from '@metaplex-foundation/beet-solana';
 import * as beet from '@metaplex-foundation/beet';
 import { Key, keyBeet } from '../types/Key';
+import { TokenAmount, tokenAmountBeet } from '../types/TokenAmount';
 
 /**
  * Arguments used to create {@link Trifle}
@@ -18,7 +19,7 @@ import { Key, keyBeet } from '../types/Key';
 export type TrifleArgs = {
   key: Key;
   tokenEscrow: web3.PublicKey;
-  tokens: Map<string, web3.PublicKey[]>;
+  tokens: Map<string, TokenAmount[]>;
   escrowConstraintModel: web3.PublicKey;
 };
 /**
@@ -32,7 +33,7 @@ export class Trifle implements TrifleArgs {
   private constructor(
     readonly key: Key,
     readonly tokenEscrow: web3.PublicKey,
-    readonly tokens: Map<string, web3.PublicKey[]>,
+    readonly tokens: Map<string, TokenAmount[]>,
     readonly escrowConstraintModel: web3.PublicKey,
   ) {}
 
@@ -60,8 +61,9 @@ export class Trifle implements TrifleArgs {
   static async fromAccountAddress(
     connection: web3.Connection,
     address: web3.PublicKey,
+    commitmentOrConfig?: web3.Commitment | web3.GetAccountInfoConfig,
   ): Promise<Trifle> {
-    const accountInfo = await connection.getAccountInfo(address);
+    const accountInfo = await connection.getAccountInfo(address, commitmentOrConfig);
     if (accountInfo == null) {
       throw new Error(`Unable to find Trifle account at ${address}`);
     }
@@ -146,7 +148,7 @@ export const trifleBeet = new beet.FixableBeetStruct<Trifle, TrifleArgs>(
   [
     ['key', keyBeet],
     ['tokenEscrow', beetSolana.publicKey],
-    ['tokens', beet.map(beet.utf8String, beet.array(beetSolana.publicKey))],
+    ['tokens', beet.map(beet.utf8String, beet.array(tokenAmountBeet))],
     ['escrowConstraintModel', beetSolana.publicKey],
   ],
   Trifle.fromArgs,

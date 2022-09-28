@@ -44,47 +44,6 @@
       }
     },
     {
-      "name": "AddConstraintToEscrowConstraintModel",
-      "accounts": [
-        {
-          "name": "escrowConstraintModel",
-          "isMut": true,
-          "isSigner": false,
-          "desc": "Constraint model account"
-        },
-        {
-          "name": "payer",
-          "isMut": true,
-          "isSigner": true,
-          "desc": "Wallet paying for the transaction and new account, will be set as the creator of the constraint model"
-        },
-        {
-          "name": "updateAuthority",
-          "isMut": false,
-          "isSigner": true,
-          "desc": "Update authority of the constraint model"
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "System program"
-        }
-      ],
-      "args": [
-        {
-          "name": "addConstraintToEscrowConstraintModelArgs",
-          "type": {
-            "defined": "AddConstraintToEscrowConstraintModelArgs"
-          }
-        }
-      ],
-      "discriminant": {
-        "type": "u8",
-        "value": 1
-      }
-    },
-    {
       "name": "CreateTrifleAccount",
       "accounts": [
         {
@@ -157,7 +116,7 @@
       "args": [],
       "discriminant": {
         "type": "u8",
-        "value": 2
+        "value": 1
       }
     },
     {
@@ -264,7 +223,7 @@
       ],
       "discriminant": {
         "type": "u8",
-        "value": 3
+        "value": 2
       }
     },
     {
@@ -371,7 +330,142 @@
       ],
       "discriminant": {
         "type": "u8",
+        "value": 3
+      }
+    },
+    {
+      "name": "AddNoneConstraintToEscrowConstraintModel",
+      "accounts": [
+        {
+          "name": "escrowConstraintModel",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Constraint model account"
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "desc": "Wallet paying for the transaction and new account, will be set as the creator of the constraint model"
+        },
+        {
+          "name": "updateAuthority",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "Update authority of the constraint model"
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "System program"
+        }
+      ],
+      "args": [
+        {
+          "name": "addNoneConstraintToEscrowConstraintModelArgs",
+          "type": {
+            "defined": "AddNoneConstraintToEscrowConstraintModelArgs"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
         "value": 4
+      }
+    },
+    {
+      "name": "AddCollectionConstraintToEscrowConstraintModel",
+      "accounts": [
+        {
+          "name": "escrowConstraintModel",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Constraint model account"
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "desc": "Wallet paying for the transaction and new account, will be set as the creator of the constraint model"
+        },
+        {
+          "name": "updateAuthority",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "Update authority of the constraint model"
+        },
+        {
+          "name": "collectionMint",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Collection mint account"
+        },
+        {
+          "name": "collectionMintMetadata",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Collection mint metadata account"
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "System program"
+        }
+      ],
+      "args": [
+        {
+          "name": "addCollectionConstraintToEscrowConstraintModelArgs",
+          "type": {
+            "defined": "AddCollectionConstraintToEscrowConstraintModelArgs"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 5
+      }
+    },
+    {
+      "name": "AddTokensConstraintToEscrowConstraintModel",
+      "accounts": [
+        {
+          "name": "escrowConstraintModel",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Constraint model account"
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "desc": "Wallet paying for the transaction and new account, will be set as the creator of the constraint model"
+        },
+        {
+          "name": "updateAuthority",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "Update authority of the constraint model"
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "System program"
+        }
+      ],
+      "args": [
+        {
+          "name": "addTokensConstraintToEscrowConstraintModelArgs",
+          "type": {
+            "defined": "AddTokensConstraintToEscrowConstraintModelArgs"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 6
       }
     }
   ],
@@ -394,9 +488,12 @@
           {
             "name": "constraints",
             "type": {
-              "vec": {
-                "defined": "EscrowConstraint"
-              }
+              "hashMap": [
+                "string",
+                {
+                  "defined": "EscrowConstraint"
+                }
+              ]
             }
           },
           {
@@ -435,7 +532,9 @@
               "hashMap": [
                 "string",
                 {
-                  "vec": "publicKey"
+                  "vec": {
+                    "defined": "TokenAmount"
+                  }
                 }
               ]
             }
@@ -454,10 +553,6 @@
       "type": {
         "kind": "struct",
         "fields": [
-          {
-            "name": "name",
-            "type": "string"
-          },
           {
             "name": "tokenLimit",
             "type": "u64"
@@ -484,15 +579,55 @@
       }
     },
     {
-      "name": "AddConstraintToEscrowConstraintModelArgs",
+      "name": "AddNoneConstraintToEscrowConstraintModelArgs",
       "type": {
         "kind": "struct",
         "fields": [
           {
-            "name": "constraint",
+            "name": "constraintName",
+            "type": "string"
+          },
+          {
+            "name": "tokenLimit",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "AddCollectionConstraintToEscrowConstraintModelArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "constraintName",
+            "type": "string"
+          },
+          {
+            "name": "tokenLimit",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "AddTokensConstraintToEscrowConstraintModelArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "constraintName",
+            "type": "string"
+          },
+          {
+            "name": "tokens",
             "type": {
-              "defined": "EscrowConstraint"
+              "vec": "publicKey"
             }
+          },
+          {
+            "name": "tokenLimit",
+            "type": "u64"
           }
         ]
       }
@@ -521,6 +656,22 @@
           {
             "name": "slot",
             "type": "string"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TokenAmount",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "type": "publicKey"
           },
           {
             "name": "amount",
@@ -590,8 +741,8 @@
     },
     {
       "code": 3,
-      "name": "InvalidEscrowConstraintIndex",
-      "msg": "Invalid Escrow Constraint Index"
+      "name": "InvalidEscrowConstraint",
+      "msg": "Invalid Escrow Constraint"
     },
     {
       "code": 4,
@@ -612,6 +763,26 @@
       "code": 7,
       "name": "DataTypeMismatch",
       "msg": "Data type mismatch"
+    },
+    {
+      "code": 8,
+      "name": "ConstraintAlreadyExists",
+      "msg": "Constraint already exists"
+    },
+    {
+      "code": 9,
+      "name": "TokenLimitExceeded",
+      "msg": "Token Limit Exceeded"
+    },
+    {
+      "code": 10,
+      "name": "FailedToFindTokenAmount",
+      "msg": "Failed to find Token Amount"
+    },
+    {
+      "code": 11,
+      "name": "NotACollection",
+      "msg": "Provided Metadata Account does not have Collection Details"
     }
   ],
   "metadata": {

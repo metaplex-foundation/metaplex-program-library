@@ -8,70 +8,73 @@
 import * as beet from '@metaplex-foundation/beet';
 import * as web3 from '@solana/web3.js';
 import {
-  AddConstraintToEscrowConstraintModelArgs,
-  addConstraintToEscrowConstraintModelArgsBeet,
-} from '../types/AddConstraintToEscrowConstraintModelArgs';
+  AddNoneConstraintToEscrowConstraintModelArgs,
+  addNoneConstraintToEscrowConstraintModelArgsBeet,
+} from '../types/AddNoneConstraintToEscrowConstraintModelArgs';
 
 /**
  * @category Instructions
- * @category AddConstraintToEscrowConstraintModel
+ * @category AddNoneConstraintToEscrowConstraintModel
  * @category generated
  */
-export type AddConstraintToEscrowConstraintModelInstructionArgs = {
-  addConstraintToEscrowConstraintModelArgs: AddConstraintToEscrowConstraintModelArgs;
+export type AddNoneConstraintToEscrowConstraintModelInstructionArgs = {
+  addNoneConstraintToEscrowConstraintModelArgs: AddNoneConstraintToEscrowConstraintModelArgs;
 };
 /**
  * @category Instructions
- * @category AddConstraintToEscrowConstraintModel
+ * @category AddNoneConstraintToEscrowConstraintModel
  * @category generated
  */
-export const AddConstraintToEscrowConstraintModelStruct = new beet.FixableBeetArgsStruct<
-  AddConstraintToEscrowConstraintModelInstructionArgs & {
+export const AddNoneConstraintToEscrowConstraintModelStruct = new beet.FixableBeetArgsStruct<
+  AddNoneConstraintToEscrowConstraintModelInstructionArgs & {
     instructionDiscriminator: number;
   }
 >(
   [
     ['instructionDiscriminator', beet.u8],
-    ['addConstraintToEscrowConstraintModelArgs', addConstraintToEscrowConstraintModelArgsBeet],
+    [
+      'addNoneConstraintToEscrowConstraintModelArgs',
+      addNoneConstraintToEscrowConstraintModelArgsBeet,
+    ],
   ],
-  'AddConstraintToEscrowConstraintModelInstructionArgs',
+  'AddNoneConstraintToEscrowConstraintModelInstructionArgs',
 );
 /**
- * Accounts required by the _AddConstraintToEscrowConstraintModel_ instruction
+ * Accounts required by the _AddNoneConstraintToEscrowConstraintModel_ instruction
  *
  * @property [_writable_] escrowConstraintModel Constraint model account
  * @property [_writable_, **signer**] payer Wallet paying for the transaction and new account, will be set as the creator of the constraint model
  * @property [**signer**] updateAuthority Update authority of the constraint model
  * @category Instructions
- * @category AddConstraintToEscrowConstraintModel
+ * @category AddNoneConstraintToEscrowConstraintModel
  * @category generated
  */
-export type AddConstraintToEscrowConstraintModelInstructionAccounts = {
+export type AddNoneConstraintToEscrowConstraintModelInstructionAccounts = {
   escrowConstraintModel: web3.PublicKey;
   payer: web3.PublicKey;
   updateAuthority: web3.PublicKey;
   systemProgram?: web3.PublicKey;
 };
 
-export const addConstraintToEscrowConstraintModelInstructionDiscriminator = 1;
+export const addNoneConstraintToEscrowConstraintModelInstructionDiscriminator = 4;
 
 /**
- * Creates a _AddConstraintToEscrowConstraintModel_ instruction.
+ * Creates a _AddNoneConstraintToEscrowConstraintModel_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
  * @param args to provide as instruction data to the program
  *
  * @category Instructions
- * @category AddConstraintToEscrowConstraintModel
+ * @category AddNoneConstraintToEscrowConstraintModel
  * @category generated
  */
-export function createAddConstraintToEscrowConstraintModelInstruction(
-  accounts: AddConstraintToEscrowConstraintModelInstructionAccounts,
-  args: AddConstraintToEscrowConstraintModelInstructionArgs,
+export function createAddNoneConstraintToEscrowConstraintModelInstruction(
+  accounts: AddNoneConstraintToEscrowConstraintModelInstructionAccounts,
+  args: AddNoneConstraintToEscrowConstraintModelInstructionArgs,
   programId = new web3.PublicKey('6PLSD84fn6MVb3XdPYAiX33X8jgfCPXeqYUmfnYndU3X'),
 ) {
-  const [data] = AddConstraintToEscrowConstraintModelStruct.serialize({
-    instructionDiscriminator: addConstraintToEscrowConstraintModelInstructionDiscriminator,
+  const [data] = AddNoneConstraintToEscrowConstraintModelStruct.serialize({
+    instructionDiscriminator: addNoneConstraintToEscrowConstraintModelInstructionDiscriminator,
     ...args,
   });
   const keys: web3.AccountMeta[] = [

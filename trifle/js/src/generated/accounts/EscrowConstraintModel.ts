@@ -19,7 +19,7 @@ import { EscrowConstraint, escrowConstraintBeet } from '../types/EscrowConstrain
 export type EscrowConstraintModelArgs = {
   key: Key;
   name: string;
-  constraints: EscrowConstraint[];
+  constraints: Map<string, EscrowConstraint>;
   creator: web3.PublicKey;
   updateAuthority: web3.PublicKey;
   count: beet.bignum;
@@ -35,7 +35,7 @@ export class EscrowConstraintModel implements EscrowConstraintModelArgs {
   private constructor(
     readonly key: Key,
     readonly name: string,
-    readonly constraints: EscrowConstraint[],
+    readonly constraints: Map<string, EscrowConstraint>,
     readonly creator: web3.PublicKey,
     readonly updateAuthority: web3.PublicKey,
     readonly count: beet.bignum,
@@ -75,8 +75,9 @@ export class EscrowConstraintModel implements EscrowConstraintModelArgs {
   static async fromAccountAddress(
     connection: web3.Connection,
     address: web3.PublicKey,
+    commitmentOrConfig?: web3.Commitment | web3.GetAccountInfoConfig,
   ): Promise<EscrowConstraintModel> {
-    const accountInfo = await connection.getAccountInfo(address);
+    const accountInfo = await connection.getAccountInfo(address, commitmentOrConfig);
     if (accountInfo == null) {
       throw new Error(`Unable to find EscrowConstraintModel account at ${address}`);
     }
@@ -179,7 +180,7 @@ export const escrowConstraintModelBeet = new beet.FixableBeetStruct<
   [
     ['key', keyBeet],
     ['name', beet.utf8String],
-    ['constraints', beet.array(escrowConstraintBeet)],
+    ['constraints', beet.map(beet.utf8String, escrowConstraintBeet)],
     ['creator', beetSolana.publicKey],
     ['updateAuthority', beetSolana.publicKey],
     ['count', beet.u64],
