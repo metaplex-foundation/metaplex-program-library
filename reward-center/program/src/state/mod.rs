@@ -5,11 +5,21 @@ use anchor_lang::prelude::*;
 use crate::errors::ListingRewardsError;
 
 #[derive(AnchorDeserialize, AnchorSerialize, Clone, Debug)]
+pub enum PayoutOperation {
+    Multiple,
+    Divide,
+}
+
+#[derive(AnchorDeserialize, AnchorSerialize, Clone, Debug)]
 pub struct RewardRules {
     // Basis Points to determine reward ratio for seller
     pub seller_reward_payout_basis_points: u16,
-    // Payout Divider for determining reward distribution to seller/buyer
-    pub payout_divider: u16,
+
+    // Payout operation to consider when taking payout_numeral into account
+    pub mathematical_operand: PayoutOperation,
+
+    // Payout numeral for determining reward distribution to seller/buyer
+    pub payout_numeral: u16,
 }
 
 #[account]
@@ -35,19 +45,40 @@ impl RewardCenter {
         1 // bump
     }
 
+    fn calculate_total_token_payout(
+        &self,
+        listing_price: u64,
+        payout_operation: &PayoutOperation,
+    ) -> u64 {
+        match payout_operation {
+            PayoutOperation::Multiple => {
+                msg!("Payout operation mode: Multiple");
+                return listing_price
+                    .checked_mul(self.reward_rules.payout_numeral.into())
+                    .ok_or(ListingRewardsError::NumericalOverflowError)
+                    .unwrap();
+            }
+
+            PayoutOperation::Divide => {
+                msg!("Payout operation mode: Divide");
+                return listing_price
+                    .checked_div(self.reward_rules.payout_numeral.into())
+                    .ok_or(ListingRewardsError::NumericalOverflowError)
+                    .unwrap();
+            }
+        }
+    }
+
     // TODO: review the effects of decimals on the payouts. The math is clean when the currency token is the same as the reward token.
     pub fn payouts(&self, listing_price: u64) -> Result<(u64, u64)> {
-        let total_token_payout = listing_price
-            .checked_div(self.reward_rules.payout_divider.into())
-            .ok_or(ListingRewardsError::NumericalOverflowError)?
-            as u64;
+        let total_token_payout = self
+            .calculate_total_token_payout(listing_price, &self.reward_rules.mathematical_operand);
 
         let seller_share = self.reward_rules.seller_reward_payout_basis_points;
 
         let seller_payout = (seller_share as u128)
             .checked_mul(total_token_payout as u128)
-            .ok_or(ListingRewardsError::NumericalOverflowError)?
-            .checked_div(10000)
+            .and_then(|product| product.checked_div(10000))
             .ok_or(ListingRewardsError::NumericalOverflowError)? as u64;
 
         let buyer_payout = total_token_payout

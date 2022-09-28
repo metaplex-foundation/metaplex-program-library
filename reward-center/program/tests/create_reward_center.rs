@@ -1,11 +1,9 @@
 #![cfg(feature = "test-bpf")]
 
 pub mod reward_center_test;
-
-use crate::state::base::*;
 use anchor_client::solana_sdk::{signature::Signer, transaction::Transaction};
 use mpl_auction_house::pda::find_auction_house_address;
-use mpl_reward_center::{mut_reward_center, pda::find_reward_center_address, state};
+use mpl_reward_center::{pda::find_reward_center_address, reward_centers, state::*};
 
 use mpl_testing_utils::solana::airdrop;
 use solana_program_test::*;
@@ -80,10 +78,11 @@ async fn create_reward_center_success() {
     )
     .unwrap();
 
-    let reward_center_params = mut_reward_center::create::CreateRewardCenterParams {
+    let reward_center_params = reward_centers::create::CreateRewardCenterParams {
         reward_rules: RewardRules {
+            mathematical_operand: PayoutOperation::Divide,
             seller_reward_payout_basis_points: 1000,
-            payout_divider: 5,
+            payout_numeral: 5,
         },
     };
 
