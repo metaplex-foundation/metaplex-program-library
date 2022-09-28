@@ -1,5 +1,5 @@
 {
-  "version": "1.4.0",
+  "version": "1.4.1",
   "name": "mpl_token_metadata",
   "instructions": [
     {
@@ -2076,7 +2076,7 @@
         },
         {
           "name": "masterEditionMint",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false,
           "desc": "Mint of the original/master NFT"
         },
@@ -3531,8 +3531,6 @@
   ],
   "metadata": {
     "origin": "shank",
-    "address": "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s",
-    "binaryVersion": "0.0.8",
-    "libVersion": "~0.0.4"
+    "address": "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
   }
 }
