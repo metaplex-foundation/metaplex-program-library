@@ -16,12 +16,12 @@ use mpl_reward_center::{
     listings::{
         cancel::CancelListingParams, create::CreateListingParams, update::UpdateListingParams,
     },
-    mut_reward_center::{create::CreateRewardCenterParams, edit::EditRewardCenterParams},
-    offers::{close::CancelOfferParams, create::CreateOfferParams, update::UpdateOfferParams},
+    offers::{cancel::CancelOfferParams, create::CreateOfferParams, update::UpdateOfferParams},
     pda::{
         self, find_listing_address, find_offer_address, find_purchase_ticket_address,
         find_reward_center_address,
     },
+    reward_centers::{create::CreateRewardCenterParams, edit::EditRewardCenterParams},
 };
 use spl_associated_token_account::get_associated_token_address;
 
@@ -435,7 +435,7 @@ pub fn cancel_offer(
     .to_account_metas(None);
 
     let data = instruction::CancelOffer {
-        close_offer_params: CancelOfferParams {
+        cancel_offer_params: CancelOfferParams {
             buyer_price,
             escrow_payment_bump,
             token_size,

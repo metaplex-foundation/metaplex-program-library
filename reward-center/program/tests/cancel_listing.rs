@@ -2,7 +2,6 @@
 
 pub mod reward_center_test;
 
-use crate::state::base::*;
 use anchor_client::solana_sdk::{pubkey::Pubkey, signature::Signer, transaction::Transaction};
 use mpl_auction_house::{
     pda::{
@@ -11,9 +10,9 @@ use mpl_auction_house::{
     AuthorityScope,
 };
 use mpl_reward_center::{
-    mut_reward_center,
     pda::{find_listing_address, find_reward_center_address},
-    state,
+    reward_centers,
+    state::*,
 };
 use reward_center_test::fixtures::metadata;
 
@@ -127,10 +126,11 @@ async fn cancel_listing_success() {
     )
     .unwrap();
 
-    let reward_center_params = mut_reward_center::create::CreateRewardCenterParams {
+    let reward_center_params = reward_centers::create::CreateRewardCenterParams {
         reward_rules: RewardRules {
+            mathematical_operand: PayoutOperation::Divide,
             seller_reward_payout_basis_points: 1000,
-            payout_divider: 5,
+            payout_numeral: 5,
         },
     };
 
