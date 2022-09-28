@@ -111,6 +111,7 @@ mod escrow {
             update_authority: Keypair::new().pubkey(),
             creator: Keypair::new().pubkey(),
             constraints,
+            schema_uri: None,
         };
 
         let mut buf_escrow_constraints_model = Vec::new();
@@ -168,6 +169,7 @@ mod escrow {
             update_authority: Keypair::new().pubkey(),
             creator: Keypair::new().pubkey(),
             constraints,
+            schema_uri: Some("test".to_string()),
         };
 
         escrow_constraints_model

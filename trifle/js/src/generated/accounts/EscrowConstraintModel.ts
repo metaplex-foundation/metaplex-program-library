@@ -23,6 +23,7 @@ export type EscrowConstraintModelArgs = {
   creator: web3.PublicKey;
   updateAuthority: web3.PublicKey;
   count: beet.bignum;
+  schemaUri: beet.COption<string>;
 };
 /**
  * Holds the data for the {@link EscrowConstraintModel} Account and provides de/serialization
@@ -39,6 +40,7 @@ export class EscrowConstraintModel implements EscrowConstraintModelArgs {
     readonly creator: web3.PublicKey,
     readonly updateAuthority: web3.PublicKey,
     readonly count: beet.bignum,
+    readonly schemaUri: beet.COption<string>,
   ) {}
 
   /**
@@ -52,6 +54,7 @@ export class EscrowConstraintModel implements EscrowConstraintModelArgs {
       args.creator,
       args.updateAuthority,
       args.count,
+      args.schemaUri,
     );
   }
 
@@ -75,9 +78,8 @@ export class EscrowConstraintModel implements EscrowConstraintModelArgs {
   static async fromAccountAddress(
     connection: web3.Connection,
     address: web3.PublicKey,
-    commitmentOrConfig?: web3.Commitment | web3.GetAccountInfoConfig,
   ): Promise<EscrowConstraintModel> {
-    const accountInfo = await connection.getAccountInfo(address, commitmentOrConfig);
+    const accountInfo = await connection.getAccountInfo(address);
     if (accountInfo == null) {
       throw new Error(`Unable to find EscrowConstraintModel account at ${address}`);
     }
@@ -165,6 +167,7 @@ export class EscrowConstraintModel implements EscrowConstraintModelArgs {
         }
         return x;
       })(),
+      schemaUri: this.schemaUri,
     };
   }
 }
@@ -184,6 +187,7 @@ export const escrowConstraintModelBeet = new beet.FixableBeetStruct<
     ['creator', beetSolana.publicKey],
     ['updateAuthority', beetSolana.publicKey],
     ['count', beet.u64],
+    ['schemaUri', beet.coption(beet.utf8String)],
   ],
   EscrowConstraintModel.fromArgs,
   'EscrowConstraintModel',

@@ -9,6 +9,7 @@ use solana_program::{
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct CreateEscrowConstraintModelAccountArgs {
     pub name: String,
+    pub schema_uri: Option<String>,
 }
 
 #[repr(C)]
@@ -142,6 +143,7 @@ pub fn create_escrow_constraint_model_account(
     payer: &Pubkey,
     update_authority: &Pubkey,
     name: String,
+    schema_uri: Option<String>,
 ) -> Instruction {
     let accounts = vec![
         AccountMeta::new(*escrow_constraint_model, false),
@@ -154,7 +156,7 @@ pub fn create_escrow_constraint_model_account(
         program_id: *program_id,
         accounts,
         data: TrifleInstruction::CreateEscrowConstraintModelAccount(
-            CreateEscrowConstraintModelAccountArgs { name },
+            CreateEscrowConstraintModelAccountArgs { name, schema_uri },
         )
         .try_to_vec()
         .unwrap(),

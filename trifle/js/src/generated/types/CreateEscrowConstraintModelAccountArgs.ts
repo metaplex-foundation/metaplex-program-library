@@ -8,6 +8,7 @@
 import * as beet from '@metaplex-foundation/beet';
 export type CreateEscrowConstraintModelAccountArgs = {
   name: string;
+  schemaUri: beet.COption<string>;
 };
 
 /**
@@ -16,6 +17,9 @@ export type CreateEscrowConstraintModelAccountArgs = {
  */
 export const createEscrowConstraintModelAccountArgsBeet =
   new beet.FixableBeetArgsStruct<CreateEscrowConstraintModelAccountArgs>(
-    [['name', beet.utf8String]],
+    [
+      ['name', beet.utf8String],
+      ['schemaUri', beet.coption(beet.utf8String)],
+    ],
     'CreateEscrowConstraintModelAccountArgs',
   );

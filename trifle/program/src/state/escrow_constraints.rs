@@ -18,12 +18,20 @@ pub struct EscrowConstraintModel {
     pub creator: Pubkey,
     pub update_authority: Pubkey,
     pub count: u64,
+    pub schema_uri: Option<String>,
 }
 
 impl EscrowConstraintModel {
     pub fn try_len(&self) -> Result<usize, ProgramError> {
         let map_overhead = 4;
         let string_overhead = 4;
+        let option_overhead = 1;
+
+        let schema_size = match &self.schema_uri {
+            Some(schema) => schema.len() + string_overhead,
+            None => 0,
+        };
+
         // let unknown_overhead = 8; // TODO: find out where this is coming from
         self.constraints
             .iter()
@@ -42,6 +50,8 @@ impl EscrowConstraintModel {
                     + mem::size_of::<Pubkey>()
                     + mem::size_of::<Pubkey>()
                     + mem::size_of::<u64>()
+                    + option_overhead // for schema_uri
+                    + schema_size // the schema itself
             })
     }
 
@@ -63,6 +73,7 @@ impl Default for EscrowConstraintModel {
             creator: Pubkey::default(),
             update_authority: Pubkey::default(),
             count: 0,
+            schema_uri: None,
         }
     }
 }

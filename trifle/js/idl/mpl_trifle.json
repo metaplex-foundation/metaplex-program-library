@@ -507,6 +507,12 @@
           {
             "name": "count",
             "type": "u64"
+          },
+          {
+            "name": "schemaUri",
+            "type": {
+              "option": "string"
+            }
           }
         ]
       }
@@ -574,6 +580,12 @@
           {
             "name": "name",
             "type": "string"
+          },
+          {
+            "name": "schemaUri",
+            "type": {
+              "option": "string"
+            }
           }
         ]
       }

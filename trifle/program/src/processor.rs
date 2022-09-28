@@ -87,6 +87,7 @@ fn create_escrow_constraints_model_account(
         name: args.name.to_owned(),
         creator: payer_info.key.to_owned(),
         update_authority: update_authority_info.key.to_owned(),
+        schema_uri: args.schema_uri.to_owned(),
         ..Default::default()
     };
 
