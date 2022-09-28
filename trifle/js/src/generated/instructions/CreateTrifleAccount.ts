@@ -47,7 +47,7 @@ export type CreateTrifleAccountInstructionAccounts = {
   systemProgram?: web3.PublicKey;
 };
 
-export const createTrifleAccountInstructionDiscriminator = 2;
+export const createTrifleAccountInstructionDiscriminator = 1;
 
 /**
  * Creates a _CreateTrifleAccount_ instruction.

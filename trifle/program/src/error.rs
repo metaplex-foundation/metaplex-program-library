@@ -50,6 +50,9 @@ pub enum TrifleError {
 
     #[error("Failed to find Token Amount")]
     FailedToFindTokenAmount,
+
+    #[error("Provided Metadata Account does not have Collection Details")]
+    NotACollection,
 }
 
 impl From<TrifleError> for ProgramError {

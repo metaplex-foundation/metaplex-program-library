@@ -238,6 +238,26 @@ createErrorFromCodeLookup.set(0xa, () => new FailedToFindTokenAmountError());
 createErrorFromNameLookup.set('FailedToFindTokenAmount', () => new FailedToFindTokenAmountError());
 
 /**
+ * NotACollection: 'Provided Metadata Account does not have Collection Details'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class NotACollectionError extends Error {
+  readonly code: number = 0xb;
+  readonly name: string = 'NotACollection';
+  constructor() {
+    super('Provided Metadata Account does not have Collection Details');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, NotACollectionError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xb, () => new NotACollectionError());
+createErrorFromNameLookup.set('NotACollection', () => new NotACollectionError());
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

@@ -71,7 +71,7 @@ export type TransferInInstructionAccounts = {
   rent?: web3.PublicKey;
 };
 
-export const transferInInstructionDiscriminator = 3;
+export const transferInInstructionDiscriminator = 2;
 
 /**
  * Creates a _TransferIn_ instruction.
