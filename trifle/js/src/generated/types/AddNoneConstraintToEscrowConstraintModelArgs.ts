@@ -6,21 +6,20 @@
  */
 
 import * as beet from '@metaplex-foundation/beet';
-import { EscrowConstraint, escrowConstraintBeet } from './EscrowConstraint';
-export type AddConstraintToEscrowConstraintModelArgs = {
+export type AddNoneConstraintToEscrowConstraintModelArgs = {
   constraintName: string;
-  constraint: EscrowConstraint;
+  tokenLimit: beet.bignum;
 };
 
 /**
  * @category userTypes
  * @category generated
  */
-export const addConstraintToEscrowConstraintModelArgsBeet =
-  new beet.FixableBeetArgsStruct<AddConstraintToEscrowConstraintModelArgs>(
+export const addNoneConstraintToEscrowConstraintModelArgsBeet =
+  new beet.FixableBeetArgsStruct<AddNoneConstraintToEscrowConstraintModelArgs>(
     [
       ['constraintName', beet.utf8String],
-      ['constraint', escrowConstraintBeet],
+      ['tokenLimit', beet.u64],
     ],
-    'AddConstraintToEscrowConstraintModelArgs',
+    'AddNoneConstraintToEscrowConstraintModelArgs',
   );

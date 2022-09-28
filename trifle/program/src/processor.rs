@@ -1,12 +1,15 @@
 use crate::{
     error::TrifleError,
     instruction::{
-        AddConstraintToEscrowConstraintModelArgs, CreateEscrowConstraintModelAccountArgs,
+        AddCollectionConstraintToEscrowConstraintModelArgs,
+        AddNoneConstraintToEscrowConstraintModelArgs,
+        AddTokensConstraintToEscrowConstraintModelArgs, CreateEscrowConstraintModelAccountArgs,
         TransferInArgs, TransferOutArgs, TrifleInstruction,
     },
     state::{
-        escrow_constraints::EscrowConstraintModel, trifle::Trifle, Key, SolanaAccount, ESCROW_SEED,
-        TRIFLE_SEED,
+        escrow_constraints::{EscrowConstraint, EscrowConstraintModel, EscrowConstraintType},
+        trifle::Trifle,
+        Key, SolanaAccount, ESCROW_SEED, TRIFLE_SEED,
     },
     util::resize_or_reallocate_account_raw,
 };
@@ -40,10 +43,6 @@ pub fn process_instruction(
             msg!("Instruction: Create Escrow Constraint Model Account");
             create_escrow_constraints_model_account(program_id, accounts, args)
         }
-        TrifleInstruction::AddConstraintToEscrowConstraintModel(args) => {
-            msg!("Instruction: Add Constraint To Escrow Constraint Model");
-            add_constraint_to_escrow_constraint_model(program_id, accounts, args)
-        }
         TrifleInstruction::CreateTrifleAccount => {
             msg!("Instruction: Create Trifle Account");
             create_trifle_account(program_id, accounts)
@@ -55,6 +54,18 @@ pub fn process_instruction(
         TrifleInstruction::TransferOut(args) => {
             msg!("Instruction: Transfer Out");
             transfer_out(program_id, accounts, args)
+        }
+        TrifleInstruction::AddNoneConstraintToEscrowConstraintModel(args) => {
+            msg!("Instruction: Add None Constraint To Escrow Constraint Model");
+            add_none_constraint_to_escrow_constraint_model(program_id, accounts, args)
+        }
+        TrifleInstruction::AddCollectionConstraintToEscrowConstraintModel(args) => {
+            msg!("Instruction: Add Collection Constraint To Escrow Constraint Model");
+            add_collection_constraint_to_escrow_constraint_model(program_id, accounts, args)
+        }
+        TrifleInstruction::AddTokensConstraintToEscrowConstraintModel(args) => {
+            msg!("Instruction: Add Tokens Constraint To Escrow Constraint Model");
+            add_tokens_constraint_to_escrow_constraint_model(program_id, accounts, args)
         }
     }
 }
@@ -103,62 +114,6 @@ fn create_escrow_constraints_model_account(
         payer_info,
         escrow_constraint_model.try_len()?,
         escrow_constraint_model_seeds,
-    )?;
-
-    escrow_constraint_model.serialize(&mut *escrow_constraint_model_info.try_borrow_mut_data()?)?;
-
-    Ok(())
-}
-
-fn add_constraint_to_escrow_constraint_model(
-    program_id: &Pubkey,
-    accounts: &[AccountInfo],
-    args: AddConstraintToEscrowConstraintModelArgs,
-) -> ProgramResult {
-    let account_info_iter = &mut accounts.iter();
-
-    let escrow_constraint_model_info = next_account_info(account_info_iter)?;
-    let payer_info = next_account_info(account_info_iter)?;
-    let update_authority_info = next_account_info(account_info_iter)?;
-    let system_program_info = next_account_info(account_info_iter)?;
-
-    assert_owned_by(escrow_constraint_model_info, program_id)?;
-    assert_signer(payer_info)?;
-    assert_signer(update_authority_info)?;
-
-    let mut escrow_constraint_model: EscrowConstraintModel =
-        EscrowConstraintModel::try_from_slice(&escrow_constraint_model_info.data.borrow())?;
-
-    if escrow_constraint_model.update_authority != *update_authority_info.key {
-        return Err(TrifleError::InvalidUpdateAuthority.into());
-    }
-
-    assert_derivation(
-        program_id,
-        escrow_constraint_model_info,
-        &[
-            ESCROW_SEED.as_bytes(),
-            payer_info.key.as_ref(),
-            escrow_constraint_model.name.as_bytes(),
-        ],
-    )?;
-
-    if escrow_constraint_model
-        .constraints
-        .contains_key(&args.constraint_name)
-    {
-        return Err(TrifleError::ConstraintAlreadyExists.into());
-    }
-
-    escrow_constraint_model
-        .constraints
-        .insert(args.constraint_name, args.constraint);
-
-    resize_or_reallocate_account_raw(
-        escrow_constraint_model_info,
-        payer_info,
-        system_program_info,
-        escrow_constraint_model.try_len()?,
     )?;
 
     escrow_constraint_model.serialize(&mut *escrow_constraint_model_info.try_borrow_mut_data()?)?;
@@ -285,7 +240,7 @@ fn create_trifle_account(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progr
 }
 
 fn transfer_in(
-    program_id: &Pubkey,
+    _program_id: &Pubkey,
     accounts: &[AccountInfo],
     args: TransferInArgs,
 ) -> ProgramResult {
@@ -428,7 +383,7 @@ fn transfer_out(
     let escrow_token_account = next_account_info(account_info_iter)?;
     let system_program = next_account_info(account_info_iter)?;
     let _ata_program = next_account_info(account_info_iter)?;
-    let spl_token_program = next_account_info(account_info_iter)?;
+    let _spl_token_program = next_account_info(account_info_iter)?;
     let rent_info = next_account_info(account_info_iter)?;
     let token_metadata_program = next_account_info(account_info_iter)?;
 
@@ -448,8 +403,7 @@ fn transfer_out(
 
     escrow_seeds.push(ESCROW_PREFIX.as_bytes());
 
-    let escrow_bump_seed =
-        assert_derivation(token_metadata_program.key, escrow_account, &escrow_seeds)?;
+    assert_derivation(token_metadata_program.key, escrow_account, &escrow_seeds)?;
 
     let trifle_seeds = &[
         TRIFLE_SEED.as_bytes(),
@@ -542,4 +496,133 @@ fn transfer_out(
     );
 
     Ok(())
+}
+
+fn add_constraint_to_escrow_constraint_model(
+    program_id: &Pubkey,
+    accounts: &[AccountInfo],
+    constraint_name: String,
+    escrow_constraint: EscrowConstraint,
+) -> ProgramResult {
+    let account_info_iter = &mut accounts.iter();
+
+    let escrow_constraint_model_info = next_account_info(account_info_iter)?;
+    let payer_info = next_account_info(account_info_iter)?;
+    let update_authority_info = next_account_info(account_info_iter)?;
+    let system_program_info = next_account_info(account_info_iter)?;
+
+    assert_owned_by(escrow_constraint_model_info, program_id)?;
+    assert_signer(payer_info)?;
+    assert_signer(update_authority_info)?;
+
+    let mut escrow_constraint_model: EscrowConstraintModel =
+        EscrowConstraintModel::try_from_slice(&escrow_constraint_model_info.data.borrow())?;
+
+    if escrow_constraint_model.update_authority != *update_authority_info.key {
+        return Err(TrifleError::InvalidUpdateAuthority.into());
+    }
+
+    assert_derivation(
+        program_id,
+        escrow_constraint_model_info,
+        &[
+            ESCROW_SEED.as_bytes(),
+            payer_info.key.as_ref(),
+            escrow_constraint_model.name.as_bytes(),
+        ],
+    )?;
+
+    if escrow_constraint_model
+        .constraints
+        .contains_key(&constraint_name)
+    {
+        return Err(TrifleError::ConstraintAlreadyExists.into());
+    }
+
+    escrow_constraint_model
+        .constraints
+        .insert(constraint_name, escrow_constraint);
+
+    resize_or_reallocate_account_raw(
+        escrow_constraint_model_info,
+        payer_info,
+        system_program_info,
+        escrow_constraint_model.try_len()?,
+    )?;
+
+    escrow_constraint_model.serialize(&mut *escrow_constraint_model_info.try_borrow_mut_data()?)?;
+
+    Ok(())
+}
+
+fn add_none_constraint_to_escrow_constraint_model(
+    program_id: &Pubkey,
+    accounts: &[AccountInfo],
+    args: AddNoneConstraintToEscrowConstraintModelArgs,
+) -> ProgramResult {
+    let constraint = EscrowConstraint {
+        constraint_type: EscrowConstraintType::None,
+        token_limit: args.token_limit,
+    };
+
+    add_constraint_to_escrow_constraint_model(
+        program_id,
+        accounts,
+        args.constraint_name,
+        constraint,
+    )
+}
+
+fn add_collection_constraint_to_escrow_constraint_model(
+    program_id: &Pubkey,
+    accounts: &[AccountInfo],
+    args: AddCollectionConstraintToEscrowConstraintModelArgs,
+) -> ProgramResult {
+    let accounts_iter = &mut accounts.iter();
+
+    accounts_iter.next(); // skip the escrow constraint model
+    accounts_iter.next(); // skip the payer
+    accounts_iter.next(); // skip the update authority
+
+    let collection_mint_info = next_account_info(accounts_iter)?;
+    let collection_metadata_info = next_account_info(accounts_iter)?;
+
+    assert_owned_by(collection_mint_info, &spl_token::id())?;
+    assert_owned_by(collection_metadata_info, &mpl_token_metadata::id())?;
+
+    let metadata = Metadata::from_account_info(collection_metadata_info)?;
+
+    if metadata.collection_details.is_none() {
+        return Err(TrifleError::NotACollection.into());
+    }
+
+    let constraint = EscrowConstraint {
+        constraint_type: EscrowConstraintType::Collection(*collection_mint_info.key),
+        token_limit: args.token_limit,
+    };
+
+    add_constraint_to_escrow_constraint_model(
+        program_id,
+        accounts,
+        args.constraint_name,
+        constraint,
+    )
+}
+
+fn add_tokens_constraint_to_escrow_constraint_model(
+    program_id: &Pubkey,
+    accounts: &[AccountInfo],
+    args: AddTokensConstraintToEscrowConstraintModelArgs,
+) -> ProgramResult {
+    let constraint = EscrowConstraint {
+        constraint_type: EscrowConstraintType::tokens_from_slice(&args.tokens),
+        token_limit: args.token_limit,
+    };
+
+    add_constraint_to_escrow_constraint_model(
+        program_id,
+        accounts,
+        args.constraint_name,
+        constraint,
+    )
 }
