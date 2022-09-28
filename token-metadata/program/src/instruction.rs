@@ -532,7 +532,7 @@ pub enum MetadataInstruction {
     #[account(0, writable, name="metadata", desc="Metadata (pda of ['metadata', program id, mint id])")]
     #[account(1, signer, writable, name="owner", desc="NFT owner")]
     #[account(2, writable, name="print_edition_mint", desc="Mint of the print edition NFT")]
-    #[account(3, writable, name="master_edition_mint", desc="Mint of the original/master NFT")]
+    #[account(3, name="master_edition_mint", desc="Mint of the original/master NFT")]
     #[account(4, writable, name="print_edition_token_account", desc="Token account the print edition NFT is in")]
     #[account(5, name="master_edition_token_account", desc="Token account the Master Edition NFT is in")]
     #[account(6, writable, name="master_edition_account", desc="MasterEdition2 of the original NFT")]
@@ -1438,16 +1438,22 @@ pub fn burn_nft(
     }
 }
 
-/// #[account(0, writable, name="metadata", desc="Metadata (pda of ['metadata', program id, mint id])")]
-/// #[account(1, signer, writable, name="owner", desc="NFT owner")]
-/// #[account(2, writable, name="print_edition_mint", desc="Mint of the print edition NFT")]
-/// #[account(3, writable, name="master_edition_mint", desc="Mint of the original/master NFT")]
-/// #[account(4, writable, name="print_edition_token_account", desc="Token account the print edition NFT is in")]
-/// #[account(5, name="master_edition_token_account", desc="Token account the Master Edition NFT is in")]
-/// #[account(6, writable, name="master_edition_account", desc="MasterEdition2 of the original NFT")]
-/// #[account(7, writable, name="print_edition_account", desc="Print Edition account of the NFT")]
-/// #[account(8, writable, name="edition_marker_account", desc="Edition Marker PDA of the NFT")]
-/// #[account(9, name="spl token program", desc="SPL Token Program")]
+///# Burn Edition NFT
+///
+/// Burn an Edition NFT, closing its token, metadata and edition accounts, and reducing the Master Edition supply.
+///
+/// <ol start="0">
+/// <li><code>[writable]</code> Print NFT Metadata Account</li>
+/// <li><code>[writable, signer]</code> Owner of Print NFT</li>
+/// <li><code>[writable]</code> Mint of Print Edition NFT</li>
+/// <li><code>[writable]</code> Mint of Master Edition NFT</li>
+/// <li><code>[writable]</code> Print Edition Token Account</li>
+/// <li><code>[writable]</code> Master Edition Token Account</li>
+/// <li><code>[writable]</code> Master Edition PDA Account</li>
+/// <li><code>[writable]</code> Print Edition PDA Account</li>
+/// <li><code>[writable]</code> Edition Marker PDA Account</li>
+/// <li><code>[]</code> SPL Token program.</li>
+/// </ol>
 pub fn burn_edition_nft(
     program_id: Pubkey,
     metadata: Pubkey,
@@ -1465,9 +1471,9 @@ pub fn burn_edition_nft(
         AccountMeta::new(metadata, false),
         AccountMeta::new(owner, true),
         AccountMeta::new(print_edition_mint, false),
-        AccountMeta::new(master_edition_mint, false),
+        AccountMeta::new_readonly(master_edition_mint, false),
         AccountMeta::new(print_edition_token, false),
-        AccountMeta::new(master_edition_token, false),
+        AccountMeta::new_readonly(master_edition_token, false),
         AccountMeta::new(master_edition, false),
         AccountMeta::new(print_edition, false),
         AccountMeta::new(edition_marker, false),

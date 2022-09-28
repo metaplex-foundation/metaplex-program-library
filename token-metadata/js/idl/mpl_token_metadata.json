@@ -1,5 +1,5 @@
 {
-  "version": "1.4.0",
+  "version": "1.4.1",
   "name": "mpl_token_metadata",
   "instructions": [
     {
@@ -2076,7 +2076,7 @@
         },
         {
           "name": "masterEditionMint",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false,
           "desc": "Mint of the original/master NFT"
         },
