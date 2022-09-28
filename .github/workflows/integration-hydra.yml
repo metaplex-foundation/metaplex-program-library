@@ -78,9 +78,7 @@ jobs:
       # Run integration test
       - name: start-local-test-validator
         working-directory: ./hydra/js
-        run:
-          yarn run api:gen && yarn run build && DEBUG=amman* yarn amman:start && DEBUG=mpl* yarn
-          test && yarn run amman:stop
+        run: yarn run api:gen && yarn run build && DEBUG=amman* yarn amman:start && DEBUG=mpl* yarn test && yarn run amman:stop
 
       # - name: integration-test-hydra-program
       #   id: run_integration_test

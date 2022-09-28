@@ -119,4 +119,4 @@ jobs:
         working-directory: ./bubblegum/program
         run: |
           cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --version
-          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --bpf-out-dir ../../test-programs/ --test ${{ env.TEST }} -- --nocapture
+          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --bpf-out-dir ../../test-programs/ --test ${{ env.TEST }} -- --nocapture --test-threads 1

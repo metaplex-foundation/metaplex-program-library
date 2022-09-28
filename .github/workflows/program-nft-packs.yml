@@ -75,4 +75,4 @@ jobs:
         working-directory: ./nft-packs/program
         run: |
           cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --version
-          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --bpf-out-dir ../../test-programs -- --nocapture
+          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --bpf-out-dir ../../test-programs -- --nocapture --test-threads 1
