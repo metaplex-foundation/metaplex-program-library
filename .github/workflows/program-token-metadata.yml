@@ -71,7 +71,7 @@ jobs:
   build-and-test-token-metadata:
     needs: [changes, setup-versions, setup-tests]
     if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' }}
-    runs-on: ubuntu-latest
+    runs-on: buildjet-4vcpu-ubuntu-2204
     strategy:
       fail-fast: false
       matrix:
