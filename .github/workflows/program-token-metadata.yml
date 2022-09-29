@@ -28,7 +28,7 @@ jobs:
           echo $VERSION_JSON && \
           echo "::set-output name=value::$VERSION_JSON"
         shell: bash
-  
+
   setup-tests:
     runs-on: ubuntu-latest
     outputs:
