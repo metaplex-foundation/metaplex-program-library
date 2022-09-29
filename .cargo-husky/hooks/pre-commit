@@ -7,7 +7,7 @@ set -eu
 if ! cargo +nightly fmt -- --check
 then
     echo "There are some code style issues."
-    echo "Run `cargo +nightly fmt` first."
+    echo "Run 'cargo +nightly fmt' first."
     exit 1
 fi
 
