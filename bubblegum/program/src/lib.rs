@@ -396,7 +396,6 @@ pub fn hash_metadata(metadata: &MetadataArgs) -> Result<[u8; 32]> {
     .to_bytes())
 }
 
-#[derive(Eq, PartialEq)]
 pub enum InstructionName {
     Unknown,
     MintV1,

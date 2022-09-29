@@ -2,14 +2,14 @@ use anchor_lang::{prelude::*, solana_program::keccak};
 use spl_account_compression::Node;
 
 #[event]
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct LeafSchemaEvent {
     pub version: Version,
     pub schema: LeafSchema,
     pub leaf_hash: [u8; 32],
 }
 
-#[derive(AnchorDeserialize, AnchorSerialize, Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(AnchorDeserialize, AnchorSerialize, Clone, Copy, Debug)]
+
 pub enum Version {
     V1,
 }
@@ -28,7 +28,7 @@ impl Version {
     }
 }
 
-#[derive(AnchorDeserialize, AnchorSerialize, Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(AnchorDeserialize, AnchorSerialize, Clone, Copy, Debug)]
 pub enum LeafSchema {
     V1 {
         id: Pubkey,
