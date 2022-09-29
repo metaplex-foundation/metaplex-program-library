@@ -56,7 +56,6 @@ export type MintInstructionAccounts = {
   tokenMetadataProgram: web3.PublicKey;
   tokenProgram?: web3.PublicKey;
   systemProgram?: web3.PublicKey;
-  rent?: web3.PublicKey;
   recentSlothashes: web3.PublicKey;
 };
 
@@ -155,11 +154,6 @@ export function createMintInstruction(
     },
     {
       pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.rent ?? web3.SYSVAR_RENT_PUBKEY,
       isWritable: false,
       isSigner: false,
     },

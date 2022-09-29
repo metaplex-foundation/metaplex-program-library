@@ -62,7 +62,6 @@ export type InitializeInstructionAccounts = {
   collectionAuthorityRecord: web3.PublicKey;
   tokenMetadataProgram: web3.PublicKey;
   systemProgram?: web3.PublicKey;
-  rent?: web3.PublicKey;
 };
 
 export const initializeInstructionDiscriminator = [175, 175, 109, 31, 13, 152, 155, 237];
@@ -139,11 +138,6 @@ export function createInitializeInstruction(
     },
     {
       pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.rent ?? web3.SYSVAR_RENT_PUBKEY,
       isWritable: false,
       isSigner: false,
     },

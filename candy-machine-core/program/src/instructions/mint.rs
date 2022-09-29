@@ -99,7 +99,6 @@ pub fn mint<'info>(ctx: Context<'_, '_, '_, 'info, Mint<'info>>) -> Result<()> {
         ctx.accounts.token_metadata_program.to_account_info(),
         ctx.accounts.token_program.to_account_info(),
         ctx.accounts.system_program.to_account_info(),
-        ctx.accounts.rent.to_account_info(),
         ctx.accounts.authority_pda.to_account_info(),
     ];
 
@@ -112,7 +111,6 @@ pub fn mint<'info>(ctx: Context<'_, '_, '_, 'info, Mint<'info>>) -> Result<()> {
         ctx.accounts.token_metadata_program.to_account_info(),
         ctx.accounts.token_program.to_account_info(),
         ctx.accounts.system_program.to_account_info(),
-        ctx.accounts.rent.to_account_info(),
         ctx.accounts.authority_pda.to_account_info(),
     ];
 
@@ -375,7 +373,6 @@ pub struct Mint<'info> {
     token_metadata_program: UncheckedAccount<'info>,
     token_program: Program<'info, Token>,
     system_program: Program<'info, System>,
-    rent: Sysvar<'info, Rent>,
     /// CHECK: account constraints checked in account trait
     #[account(address = sysvar::slot_hashes::id())]
     recent_slothashes: UncheckedAccount<'info>,

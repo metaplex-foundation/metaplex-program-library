@@ -54,7 +54,6 @@ export type SetCollectionInstructionAccounts = {
   newCollectionAuthorityRecord: web3.PublicKey;
   tokenMetadataProgram: web3.PublicKey;
   systemProgram?: web3.PublicKey;
-  rent?: web3.PublicKey;
 };
 
 export const setCollectionInstructionDiscriminator = [192, 254, 206, 76, 168, 182, 59, 223];
@@ -142,11 +141,6 @@ export function createSetCollectionInstruction(
     },
     {
       pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.rent ?? web3.SYSVAR_RENT_PUBKEY,
       isWritable: false,
       isSigner: false,
     },

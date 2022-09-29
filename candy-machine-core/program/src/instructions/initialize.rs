@@ -45,7 +45,6 @@ pub fn initialize(ctx: Context<Initialize>, data: CandyMachineData) -> Result<()
         collection_authority_record: ctx.accounts.collection_authority_record.to_account_info(),
         token_metadata_program: ctx.accounts.token_metadata_program.to_account_info(),
         system_program: ctx.accounts.system_program.to_account_info(),
-        rent: ctx.accounts.rent.to_account_info(),
         collection_update_authority: ctx.accounts.collection_update_authority.to_account_info(),
     };
 
@@ -91,5 +90,4 @@ pub struct Initialize<'info> {
     #[account(address = mpl_token_metadata::id())]
     token_metadata_program: UncheckedAccount<'info>,
     system_program: Program<'info, System>,
-    rent: Sysvar<'info, Rent>,
 }
