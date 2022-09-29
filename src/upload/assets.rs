@@ -41,7 +41,7 @@ impl AssetPair {
             metadata_link: String::new(),
             on_chain: false,
             animation_hash: self.animation_hash,
-            animation_link: self.animation,
+            animation_link: None,
         }
     }
 }
