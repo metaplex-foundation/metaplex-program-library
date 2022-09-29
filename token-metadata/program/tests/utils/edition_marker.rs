@@ -14,6 +14,9 @@ use solana_program_test::BanksClientError;
 use solana_sdk::{
     pubkey::Pubkey, signature::Signer, signer::keypair::Keypair, transaction::Transaction,
 };
+use spl_associated_token_account::{
+    get_associated_token_address, instruction::create_associated_token_account,
+};
 
 #[derive(Debug)]
 pub struct EditionMarker {
@@ -80,72 +83,6 @@ impl EditionMarker {
     ) -> mpl_token_metadata::state::EditionMarker {
         let account = get_account(context, &self.pubkey).await;
         try_from_slice_unchecked(&account.data).unwrap()
-    }
-
-    pub async fn create_via_vault(
-        &self,
-        context: &mut ProgramTestContext,
-        vault: &Vault,
-        safety_deposit_box: &Pubkey,
-        store: &Pubkey,
-    ) -> Result<(), BanksClientError> {
-        let metaplex_token_vault_id = mpl_token_vault::id();
-        let vault_pubkey = vault.keypair.pubkey();
-
-        let vault_mint_seeds = &[
-            PREFIX.as_bytes(),
-            metaplex_token_vault_id.as_ref(),
-            vault_pubkey.as_ref(),
-        ];
-        let (_authority, _) =
-            Pubkey::find_program_address(vault_mint_seeds, &metaplex_token_vault_id);
-
-        create_mint(context, &self.mint, &context.payer.pubkey(), None, 0).await?;
-        create_token_account(
-            context,
-            &self.token,
-            &self.mint.pubkey(),
-            &context.payer.pubkey(),
-        )
-        .await?;
-        mint_tokens(
-            context,
-            &self.mint.pubkey(),
-            &self.token.pubkey(),
-            1,
-            &context.payer.pubkey(),
-            None,
-        )
-        .await?;
-
-        let tx = Transaction::new_signed_with_payer(
-            &[
-                instruction::mint_edition_from_master_edition_via_vault_proxy(
-                    id(),
-                    self.new_metadata_pubkey,
-                    self.new_edition_pubkey,
-                    self.master_edition_pubkey,
-                    self.mint.pubkey(),
-                    self.pubkey,
-                    context.payer.pubkey(),
-                    context.payer.pubkey(),
-                    context.payer.pubkey(),
-                    *store,
-                    *safety_deposit_box,
-                    vault.keypair.pubkey(),
-                    context.payer.pubkey(),
-                    self.metadata_pubkey,
-                    spl_token::id(),
-                    mpl_token_vault::id(),
-                    self.edition,
-                ),
-            ],
-            Some(&context.payer.pubkey()),
-            &[&context.payer, &context.payer],
-            context.last_blockhash,
-        );
-
-        context.banks_client.process_transaction(tx).await
     }
 
     pub async fn create(&self, context: &mut ProgramTestContext) -> Result<(), BanksClientError> {
@@ -248,5 +185,58 @@ impl EditionMarker {
         );
 
         context.banks_client.process_transaction(tx).await
+    }
+
+    pub async fn transfer(
+        &mut self,
+        context: &mut ProgramTestContext,
+        new_owner: &Pubkey,
+    ) -> Result<(), BanksClientError> {
+        let new_owner_token_account = get_associated_token_address(new_owner, &self.mint.pubkey());
+        let create_token_account_ix = create_associated_token_account(
+            &context.payer.pubkey(),
+            new_owner,
+            &self.mint.pubkey(),
+        );
+
+        let transfer_ix = spl_token::instruction::transfer(
+            &spl_token::id(),
+            &self.token.pubkey(),
+            &new_owner_token_account,
+            &context.payer.pubkey(),
+            &[],
+            1,
+        )
+        .unwrap();
+
+        let transfer_tx = Transaction::new_signed_with_payer(
+            &[create_token_account_ix, transfer_ix],
+            Some(&context.payer.pubkey()),
+            &[&context.payer],
+            context.last_blockhash,
+        );
+
+        context.banks_client.process_transaction(transfer_tx).await
+    }
+
+    pub async fn exists_on_chain(&self, context: &mut ProgramTestContext) -> bool {
+        // Metadata, Print Edition and token account exist.
+        let md_account = context
+            .banks_client
+            .get_account(self.new_metadata_pubkey)
+            .await
+            .unwrap();
+        let token_account = context
+            .banks_client
+            .get_account(self.token.pubkey())
+            .await
+            .unwrap();
+        let print_edition_account = context
+            .banks_client
+            .get_account(self.new_edition_pubkey)
+            .await
+            .unwrap();
+
+        md_account.is_some() && token_account.is_some() && print_edition_account.is_some()
     }
 }

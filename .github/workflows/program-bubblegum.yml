@@ -1,4 +1,4 @@
-name: Program Auction House
+name: Program Bubblegum
 
 on:
   workflow_dispatch:
@@ -41,7 +41,7 @@ jobs:
         run: |
           sudo apt-get install -y jq
           FILES=()
-          for FILE in $(ls ./auction-house/program/tests/ | grep rs)
+          for FILE in $(ls ./bubblegum/program/tests/ | grep rs)
           do
             echo $FILE
             FILES+=(\"$(basename $FILE .rs)\")
@@ -68,9 +68,9 @@ jobs:
             core:
               - 'core/rust/**'
             package:
-              - 'auction-house/program/**'
+              - 'bubblegum/program/**'
 
-  build-and-test-auction-house:
+  build-and-test-bubblegum:
     needs: [changes, setup-versions, setup-tests]
     if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' }}
     runs-on: ubuntu-latest
@@ -80,7 +80,7 @@ jobs:
         TEST: ${{fromJson(needs.setup-tests.outputs.tests)}}
         SOLANA_VERSION: ${{fromJson(needs.setup-versions.outputs.versions)}}
     env:
-      cache_id: program-auction-house
+      cache_id: program-bubblegum
       TEST: ${{ matrix.TEST }}
       SOLANA_VERSION: ${{ matrix.SOLANA_VERSION }}
 
@@ -111,16 +111,12 @@ jobs:
       # Run lint checks
       - uses: ./.github/actions/verify-rust
         with:
-          working-directory: ./auction-house/program
-
-      # Build deps
-      - uses: ./.github/actions/build-token-metadata
+          working-directory: ./bubblegum/program
 
       # Run test
-      - name: test-auction-house-program
-        id: run_auction_house_test
-        working-directory: ./auction-house/program
-        run: |
-          cargo +${{ env.RUST_TOOLCHAIN }} test -- --nocapture --test-threads 1
+      - name: test-bubblegum-program
+        id: run_bubblegum_test
+        working-directory: ./bubblegum/program
+        run: |          
           cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --version
           cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --bpf-out-dir ../../target/deploy/ --test ${{ env.TEST }} -- --nocapture --test-threads 1

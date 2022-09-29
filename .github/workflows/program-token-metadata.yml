@@ -9,7 +9,7 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  RUST_TOOLCHAIN: stable
+  RUST_TOOLCHAIN: 1.63.0
 
 jobs:
   setup-versions:
@@ -28,7 +28,7 @@ jobs:
           echo $VERSION_JSON && \
           echo "::set-output name=value::$VERSION_JSON"
         shell: bash
-  
+
   setup-tests:
     runs-on: ubuntu-latest
     outputs:
