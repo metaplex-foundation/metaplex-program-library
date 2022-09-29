@@ -552,12 +552,16 @@ pub fn calculate_supply_change<'a>(
     // This allows users to mint out missing edition numbers that are less than the supply, but
     // tracks the supply correctly once all missing editions are minted.
     let new_supply = if let Some(max_supply) = max_supply {
+        if edition > max_supply {
+            return Err(MetadataError::EditionNumberGreaterThanMaxSupply.into());
+        }
+
         if current_supply < max_supply {
             current_supply
                 .checked_add(1)
                 .ok_or(MetadataError::NumericalOverflowError)?
         } else {
-            current_supply
+            return Err(MetadataError::MaxEditionsMintedAlready.into());
         }
     } else {
         current_supply
@@ -625,7 +629,6 @@ pub fn mint_limited_edition<'a>(
     if reservation_list_info.is_some() && edition_override.is_some() {
         return Err(MetadataError::InvalidOperation.into());
     }
-
     calculate_supply_change(
         master_edition_account_info,
         reservation_list_info,
