@@ -10,7 +10,7 @@ use mpl_token_metadata::{
 use solana_program::{program::invoke_signed, sysvar};
 
 use crate::{
-    constants::{AUTHORITY_SEED, EMPTY_STR, HIDDEN_SECTION},
+    constants::{AUTHORITY_SEED, EMPTY_STR, HIDDEN_SECTION, NULL_STRING},
     utils::*,
     CandyError, CandyMachine, ConfigLine,
 };
@@ -60,8 +60,8 @@ pub fn mint<'info>(ctx: Context<'_, '_, '_, 'info, Mint<'info>>) -> Result<()> {
     let most_recent = array_ref![data, 12, 8];
 
     let clock = Clock::get()?;
-    // seed for the random number is a combination of the slot_hash + timestamp
-    let seed = u64::from_le_bytes(*most_recent).saturating_add(clock.unix_timestamp as u64);
+    // seed for the random number is a combination of the slot_hash - timestamp
+    let seed = u64::from_le_bytes(*most_recent).saturating_sub(clock.unix_timestamp as u64);
 
     let remainder: usize = seed
         .checked_rem(candy_machine.data.items_available - candy_machine.items_redeemed)
@@ -123,6 +123,9 @@ pub fn mint<'info>(ctx: Context<'_, '_, '_, 'info, Mint<'info>>) -> Result<()> {
         &[*ctx.bumps.get("authority_pda").unwrap()],
     ];
 
+    // removes the padding from the end of the symbol value
+    let symbol = candy_machine.data.symbol.trim_end_matches(NULL_STRING);
+
     invoke_signed(
         &create_metadata_accounts_v2(
             ctx.accounts.token_metadata_program.key(),
@@ -132,7 +135,7 @@ pub fn mint<'info>(ctx: Context<'_, '_, '_, 'info, Mint<'info>>) -> Result<()> {
             ctx.accounts.payer.key(),
             ctx.accounts.authority_pda.key(),
             config_line.name,
-            candy_machine.data.symbol.clone(),
+            symbol.to_string(),
             config_line.uri,
             Some(creators),
             candy_machine.data.seller_fee_basis_points,
@@ -292,8 +295,9 @@ pub fn get_config_line(
 
     let name = if name_length > 0 {
         let name_slice: &mut [u8] = &mut account_data[position..position + name_length];
-        String::from_utf8(name_slice.to_vec())
-            .map_err(|_| CandyError::CouldNotRetrieveConfigLineData)?
+        let name = String::from_utf8(name_slice.to_vec())
+            .map_err(|_| CandyError::CouldNotRetrieveConfigLineData)?;
+        name.trim_end_matches(NULL_STRING).to_string()
     } else {
         EMPTY_STR.to_string()
     };
@@ -301,8 +305,9 @@ pub fn get_config_line(
     position += name_length;
     let uri = if uri_length > 0 {
         let uri_slice: &mut [u8] = &mut account_data[position..position + uri_length];
-        String::from_utf8(uri_slice.to_vec())
-            .map_err(|_| CandyError::CouldNotRetrieveConfigLineData)?
+        let uri = String::from_utf8(uri_slice.to_vec())
+            .map_err(|_| CandyError::CouldNotRetrieveConfigLineData)?;
+        uri.trim_end_matches(NULL_STRING).to_string()
     } else {
         EMPTY_STR.to_string()
     };
