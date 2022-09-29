@@ -6,8 +6,6 @@ import { BN } from 'bn.js';
 import { keypairIdentity, Metaplex } from '@metaplex-foundation/js';
 import { InitTransactions } from '../setup';
 
-const API = new InitTransactions();
-
 export async function drain(
   t: Test,
   candyMachine: PublicKey,
@@ -15,6 +13,7 @@ export async function drain(
   handler: PayerTransactionHandler,
   connection: Connection,
 ): Promise<number[]> {
+  const API = new InitTransactions();
   const candyMachineObject = await CandyMachine.fromAccountAddress(connection, candyMachine);
   const available =
     new BN(candyMachineObject.data.itemsAvailable).toNumber() -
