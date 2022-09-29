@@ -1,6 +1,7 @@
 export * from './asserts';
 export * from './constants';
 export * from './errors';
+export * from './minter';
 
 import { Keypair, PublicKey } from '@solana/web3.js';
 import { BN } from 'bn.js';
