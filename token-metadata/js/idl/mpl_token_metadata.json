@@ -3527,10 +3527,17 @@
       "code": 121,
       "name": "PrintEditionDoesNotMatchMasterEdition",
       "msg": "Print Edition does not match Master Edition"
+    },
+    {
+      "code": 122,
+      "name": "EditionNumberGreaterThanMaxSupply",
+      "msg": "Edition Number greater than max supply"
     }
   ],
   "metadata": {
     "origin": "shank",
-    "address": "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
+    "address": "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s",
+    "binaryVersion": "0.0.8",
+    "libVersion": "~0.0.4"
   }
 }
