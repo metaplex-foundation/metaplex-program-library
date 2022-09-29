@@ -1,10 +1,10 @@
 import { Connection, Keypair, PublicKey } from '@solana/web3.js';
 import { Test } from 'tape';
 import { PayerTransactionHandler } from '@metaplex-foundation/amman-client';
-import { InitTransactions } from 'test/setup';
 import { CandyMachine } from 'src';
 import { BN } from 'bn.js';
 import { keypairIdentity, Metaplex } from '@metaplex-foundation/js';
+import { InitTransactions } from '../setup';
 
 const API = new InitTransactions();
 
