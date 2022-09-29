@@ -1,19 +1,17 @@
 import test from 'tape';
 import spok from 'spok';
-import { InitTransactions, killStuckProcess } from './setup/';
-import { CandyMachine } from '../src/generated';
-import * as program from '../src/generated';
+import { InitTransactions, killStuckProcess } from './setup';
+import { CandyMachine, CandyMachineData } from '../src/generated';
 import { spokSameBignum, spokSamePubkey } from './utils';
-
-const init = new InitTransactions();
 
 killStuckProcess();
 
 test('initialize: new candy machine', async (t) => {
-  const { fstTxHandler, payerPair, connection } = await init.payer();
+  const API = new InitTransactions();
+  const { fstTxHandler, payerPair, connection } = await API.payer();
   const items = 10;
 
-  const data: program.CandyMachineData = {
+  const data: CandyMachineData = {
     itemsAvailable: items,
     symbol: 'CORE',
     sellerFeeBasisPoints: 500,
@@ -36,7 +34,7 @@ test('initialize: new candy machine', async (t) => {
     hiddenSettings: null,
   };
 
-  const { tx: transaction, candyMachine: address } = await init.initialize(
+  const { tx: transaction, candyMachine: address } = await API.initialize(
     t,
     payerPair,
     data,
@@ -65,10 +63,11 @@ test('initialize: new candy machine', async (t) => {
 });
 
 test('initialize: new candy machine (hidden settings)', async (t) => {
-  const { fstTxHandler, payerPair, connection } = await init.payer();
+  const API = new InitTransactions();
+  const { fstTxHandler, payerPair, connection } = await API.payer();
   const items = 100;
 
-  const data: program.CandyMachineData = {
+  const data: CandyMachineData = {
     itemsAvailable: items,
     symbol: 'CORE',
     sellerFeeBasisPoints: 500,
@@ -89,7 +88,7 @@ test('initialize: new candy machine (hidden settings)', async (t) => {
     },
   };
 
-  const { tx: transaction, candyMachine: address } = await init.initialize(
+  const { tx: transaction, candyMachine: address } = await API.initialize(
     t,
     payerPair,
     data,

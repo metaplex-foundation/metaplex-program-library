@@ -1,16 +1,15 @@
 import test from 'tape';
 import { InitTransactions, killStuckProcess } from './setup';
-import * as program from '../src/generated';
-
-const init = new InitTransactions();
+import { CandyMachineData } from '../src/generated';
 
 killStuckProcess();
 
 test('withdraw', async (t) => {
-  const { fstTxHandler, payerPair, connection } = await init.payer();
+  const API = new InitTransactions();
+  const { fstTxHandler, payerPair, connection } = await API.payer();
   const items = 100;
 
-  const data: program.CandyMachineData = {
+  const data: CandyMachineData = {
     itemsAvailable: items,
     symbol: 'CORE',
     sellerFeeBasisPoints: 500,
@@ -33,7 +32,7 @@ test('withdraw', async (t) => {
     hiddenSettings: null,
   };
 
-  const { tx: transaction, candyMachine: address } = await init.initialize(
+  const { tx: transaction, candyMachine: address } = await API.initialize(
     t,
     payerPair,
     data,
@@ -46,7 +45,7 @@ test('withdraw', async (t) => {
   let accountInfo = await connection.getAccountInfo(payerPair.publicKey);
   const balance = accountInfo.lamports;
 
-  const { tx: withdrawTransaction } = await init.withdraw(t, address, payerPair, fstTxHandler);
+  const { tx: withdrawTransaction } = await API.withdraw(t, address, payerPair, fstTxHandler);
   await withdrawTransaction.assertSuccess(t);
 
   accountInfo = await connection.getAccountInfo(payerPair.publicKey);

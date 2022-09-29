@@ -1,16 +1,15 @@
+import { CandyMachineData, ConfigLine } from '../src/generated';
 import test from 'tape';
-import { InitTransactions, killStuckProcess } from './setup/';
-import * as program from '../src/generated';
-
-const init = new InitTransactions();
+import { InitTransactions, killStuckProcess } from './setup';
 
 killStuckProcess();
 
 test('add_config_lines', async (t) => {
-  const { fstTxHandler, payerPair, connection } = await init.payer();
+  const API = new InitTransactions();
+  const { fstTxHandler, payerPair, connection } = await API.payer();
   const items = 100;
 
-  const data: program.CandyMachineData = {
+  const data: CandyMachineData = {
     itemsAvailable: items,
     symbol: 'CORE',
     sellerFeeBasisPoints: 500,
@@ -33,7 +32,7 @@ test('add_config_lines', async (t) => {
     hiddenSettings: null,
   };
 
-  const { tx: transaction, candyMachine: address } = await init.initialize(
+  const { tx: transaction, candyMachine: address } = await API.initialize(
     t,
     payerPair,
     data,
@@ -43,7 +42,7 @@ test('add_config_lines', async (t) => {
   // executes the transaction
   await transaction.assertSuccess(t);
 
-  const lines: program.ConfigLine[] = [];
+  const lines: ConfigLine[] = [];
 
   for (let i = 0; i < items; i++) {
     lines[i] = {
@@ -51,7 +50,7 @@ test('add_config_lines', async (t) => {
       uri: 'uJSdJIsz_tYTcjUEWdeVSj0aR90K-hjDauATWZSi-tQ',
     };
   }
-  const { txs } = await init.addConfigLines(t, address, payerPair, lines);
+  const { txs } = await API.addConfigLines(t, address, payerPair, lines);
   // confirms that all lines have been written
   for (const tx of txs) {
     await fstTxHandler
@@ -61,10 +60,11 @@ test('add_config_lines', async (t) => {
 });
 
 test('add_config_lines (hidden settings)', async (t) => {
-  const { fstTxHandler, payerPair, connection } = await init.payer();
+  const API = new InitTransactions();
+  const { fstTxHandler, payerPair, connection } = await API.payer();
   const items = 10;
 
-  const data: program.CandyMachineData = {
+  const data: CandyMachineData = {
     itemsAvailable: items,
     symbol: 'CORE',
     sellerFeeBasisPoints: 500,
@@ -85,7 +85,7 @@ test('add_config_lines (hidden settings)', async (t) => {
     },
   };
 
-  const { tx: transaction, candyMachine: address } = await init.initialize(
+  const { tx: transaction, candyMachine: address } = await API.initialize(
     t,
     payerPair,
     data,
@@ -95,7 +95,7 @@ test('add_config_lines (hidden settings)', async (t) => {
   // executes the transaction
   await transaction.assertSuccess(t);
 
-  const lines: program.ConfigLine[] = [];
+  const lines: ConfigLine[] = [];
 
   for (let i = 0; i < items; i++) {
     lines[i] = {
@@ -103,7 +103,7 @@ test('add_config_lines (hidden settings)', async (t) => {
       uri: 'uJSdJIsz_tYTcjUEWdeVSj0aR90K-hjDauATWZSi-tQ',
     };
   }
-  const { txs } = await init.addConfigLines(t, address, payerPair, lines);
+  const { txs } = await API.addConfigLines(t, address, payerPair, lines);
   // this should fail since hiddenSettings do not have config lines
   for (const tx of txs) {
     await fstTxHandler
@@ -113,10 +113,11 @@ test('add_config_lines (hidden settings)', async (t) => {
 });
 
 test('add_config_lines (incomplete)', async (t) => {
-  const { fstTxHandler, payerPair, connection } = await init.payer();
+  const API = new InitTransactions();
+  const { fstTxHandler, payerPair, connection } = await API.payer();
   const items = 10;
 
-  const data: program.CandyMachineData = {
+  const data: CandyMachineData = {
     itemsAvailable: items,
     symbol: 'CORE',
     sellerFeeBasisPoints: 500,
@@ -139,7 +140,7 @@ test('add_config_lines (incomplete)', async (t) => {
     hiddenSettings: null,
   };
 
-  const { tx: transaction, candyMachine: address } = await init.initialize(
+  const { tx: transaction, candyMachine: address } = await API.initialize(
     t,
     payerPair,
     data,
@@ -149,7 +150,7 @@ test('add_config_lines (incomplete)', async (t) => {
   // executes the transaction
   await transaction.assertSuccess(t);
 
-  const lines: program.ConfigLine[] = [];
+  const lines: ConfigLine[] = [];
 
   for (let i = 0; i < items - 5; i++) {
     lines[i] = {
@@ -157,7 +158,7 @@ test('add_config_lines (incomplete)', async (t) => {
       uri: 'uJSdJIsz_tYTcjUEWdeVSj0aR90K-hjDauATWZSi-tQ',
     };
   }
-  const { txs } = await init.addConfigLines(t, address, payerPair, lines);
+  const { txs } = await API.addConfigLines(t, address, payerPair, lines);
   // confirms that all lines have been written
   for (const tx of txs) {
     await fstTxHandler
@@ -165,6 +166,6 @@ test('add_config_lines (incomplete)', async (t) => {
       .assertSuccess(t, [/New config line added/i]);
   }
 
-  const { tx: mintTransaction } = await init.mint(t, address, payerPair, fstTxHandler, connection);
+  const { tx: mintTransaction } = await API.mint(t, address, payerPair, fstTxHandler, connection);
   await mintTransaction.assertError(t, /Not all config lines were added/i);
 });

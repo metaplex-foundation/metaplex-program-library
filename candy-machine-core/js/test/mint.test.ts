@@ -1,18 +1,17 @@
 import test from 'tape';
-import { InitTransactions, killStuckProcess } from './setup/';
-import * as program from '../src/generated';
+import { InitTransactions, killStuckProcess } from './setup';
 import { drain } from './utils/minter';
 import spok from 'spok';
-
-const API = new InitTransactions();
+import { CandyMachineData, ConfigLine } from '../src/generated';
 
 killStuckProcess();
 
 test('mint (authority)', async (t) => {
+  const API = new InitTransactions();
   const { fstTxHandler, payerPair, connection } = await API.payer();
   const items = 10;
 
-  const data: program.CandyMachineData = {
+  const data: CandyMachineData = {
     itemsAvailable: items,
     symbol: 'CORE',
     sellerFeeBasisPoints: 500,
@@ -45,7 +44,7 @@ test('mint (authority)', async (t) => {
   // executes the transaction
   await transaction.assertSuccess(t);
 
-  const lines: program.ConfigLine[] = [];
+  const lines: ConfigLine[] = [];
 
   for (let i = 0; i < items; i++) {
     lines[i] = {
@@ -66,10 +65,11 @@ test('mint (authority)', async (t) => {
 });
 
 test('mint (sequential)', async (t) => {
+  const API = new InitTransactions();
   const { fstTxHandler, payerPair, connection } = await API.payer();
   const items = 10;
 
-  const data: program.CandyMachineData = {
+  const data: CandyMachineData = {
     itemsAvailable: items,
     symbol: 'CORE',
     sellerFeeBasisPoints: 500,
@@ -102,7 +102,7 @@ test('mint (sequential)', async (t) => {
   // executes the transaction
   await transaction.assertSuccess(t);
 
-  const lines: program.ConfigLine[] = [];
+  const lines: ConfigLine[] = [];
 
   for (let i = 0; i < items; i++) {
     lines[i] = {
@@ -129,10 +129,11 @@ test('mint (sequential)', async (t) => {
 });
 
 test('mint (random)', async (t) => {
+  const API = new InitTransactions();
   const { fstTxHandler, payerPair, connection } = await API.payer();
   const items = 10;
 
-  const data: program.CandyMachineData = {
+  const data: CandyMachineData = {
     itemsAvailable: items,
     symbol: 'CORE',
     sellerFeeBasisPoints: 500,
@@ -165,7 +166,7 @@ test('mint (random)', async (t) => {
   // executes the transaction
   await transaction.assertSuccess(t);
 
-  const lines: program.ConfigLine[] = [];
+  const lines: ConfigLine[] = [];
 
   for (let i = 0; i < items; i++) {
     lines[i] = {
@@ -197,10 +198,11 @@ test('mint (random)', async (t) => {
 });
 
 test('mint (hidden settings)', async (t) => {
+  const API = new InitTransactions();
   const { fstTxHandler, payerPair, connection } = await API.payer();
   const items = 10;
 
-  const data: program.CandyMachineData = {
+  const data: CandyMachineData = {
     itemsAvailable: items,
     symbol: 'CORE',
     sellerFeeBasisPoints: 500,

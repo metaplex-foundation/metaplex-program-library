@@ -1,19 +1,18 @@
 import test from 'tape';
 import spok from 'spok';
 import { CandyMachine } from '../src/generated';
-import { InitTransactions, killStuckProcess } from './setup/';
+import { InitTransactions, killStuckProcess } from './setup';
 import { spokSameBignum } from './utils';
-import * as program from '../src/generated';
-
-const init = new InitTransactions();
+import { CandyMachineData } from '../src/generated';
 
 killStuckProcess();
 
 test('update', async (t) => {
-  const { fstTxHandler, payerPair, connection } = await init.payer();
+  const API = new InitTransactions();
+  const { fstTxHandler, payerPair, connection } = await API.payer();
   const items = 10;
 
-  const data: program.CandyMachineData = {
+  const data: CandyMachineData = {
     itemsAvailable: items,
     symbol: 'CORE',
     sellerFeeBasisPoints: 500,
@@ -36,7 +35,7 @@ test('update', async (t) => {
     hiddenSettings: null,
   };
 
-  const { tx: transaction, candyMachine: address } = await init.initialize(
+  const { tx: transaction, candyMachine: address } = await API.initialize(
     t,
     payerPair,
     data,
@@ -67,7 +66,7 @@ test('update', async (t) => {
     data.configLineSettings.uriLength = 25;
   }
 
-  const { tx: updateTransaction1 } = await init.updateCandyMachine(
+  const { tx: updateTransaction1 } = await API.updateCandyMachine(
     t,
     address,
     payerPair,
@@ -88,7 +87,7 @@ test('update', async (t) => {
     data.configLineSettings.uriLength = 100;
   }
   // should fail since length is greater than the original allocated value
-  const { tx: updateTransaction2 } = await init.updateCandyMachine(
+  const { tx: updateTransaction2 } = await API.updateCandyMachine(
     t,
     address,
     payerPair,
@@ -104,7 +103,7 @@ test('update', async (t) => {
   }
   // should fail since it is not possible to change the itemsAvailable when
   // config lines are used
-  const { tx: updateTransaction3 } = await init.updateCandyMachine(
+  const { tx: updateTransaction3 } = await API.updateCandyMachine(
     t,
     address,
     payerPair,
@@ -115,10 +114,11 @@ test('update', async (t) => {
 });
 
 test('update (hidden settings)', async (t) => {
-  const { fstTxHandler, payerPair, connection } = await init.payer();
+  const API = new InitTransactions();
+  const { fstTxHandler, payerPair, connection } = await API.payer();
   const items = 10;
 
-  const data: program.CandyMachineData = {
+  const data: CandyMachineData = {
     itemsAvailable: items,
     symbol: 'CORE',
     sellerFeeBasisPoints: 500,
@@ -139,7 +139,7 @@ test('update (hidden settings)', async (t) => {
     },
   };
 
-  const { tx: transaction, candyMachine: address } = await init.initialize(
+  const { tx: transaction, candyMachine: address } = await API.initialize(
     t,
     payerPair,
     data,
@@ -159,7 +159,7 @@ test('update (hidden settings)', async (t) => {
 
   data.itemsAvailable = 1000;
 
-  const { tx: updateTransaction1 } = await init.updateCandyMachine(
+  const { tx: updateTransaction1 } = await API.updateCandyMachine(
     t,
     address,
     payerPair,
@@ -173,7 +173,7 @@ test('update (hidden settings)', async (t) => {
     itemsAvailable: spokSameBignum(1000),
   });
 
-  const updatedData: program.CandyMachineData = {
+  const updatedData: CandyMachineData = {
     itemsAvailable: items,
     symbol: 'CORE',
     sellerFeeBasisPoints: 500,
@@ -196,7 +196,7 @@ test('update (hidden settings)', async (t) => {
     hiddenSettings: null,
   };
   // should fail since length is greater than the original allocated value
-  const { tx: updateTransaction2 } = await init.updateCandyMachine(
+  const { tx: updateTransaction2 } = await API.updateCandyMachine(
     t,
     address,
     payerPair,
