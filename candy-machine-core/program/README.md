@@ -303,6 +303,9 @@ When a storage with deterministic URI generation is used, the **reveal** is not 
 
 The difference between using config lines with patterns and hidden settings with patterns is that in the former, the index generation for the mint is **random** while in the later the index generation is **sequential**.
 
+> **Note**
+> While the use of deterministic URIs saves you work in terms of not requiring to run an update the metadata on each NFT, it would be possible to determine the URI of an NFT before it is minted. In order to avoid the files to be publicly accessible ahead of time, a placeholder image with the same name can be used instead. Therefore, the trade-off is between running an update metadata on each NFT or updating the images.
+
 ### Random Index Generation
 
 Currently the random index generation uses a sequential procedure to find the next available mint index. While this procedure works for most cases, it is not efficient (in terms of compute units) and it can reach the limit of compute units on large Candy Machine deploys.
