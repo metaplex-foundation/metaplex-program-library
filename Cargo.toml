@@ -1,6 +1,8 @@
 [workspace]
 members=[
-  "candy-machine-core/program"
+  "token-entangler/program",
+  "nft-packs/program",
+  "fixed-price-sale/program"
 ]
 exclude = [
   "fixed-price-sale/cli",
@@ -10,7 +12,5 @@ exclude = [
   "candy-machine/program",
   "bubblegum/program",
   "candy-wrapper/program",
-  "token-entangler/program",
-  "nft-packs/program",
-  "fixed-price-sale/program"
+  "candy-machine-core/program",
 ]
