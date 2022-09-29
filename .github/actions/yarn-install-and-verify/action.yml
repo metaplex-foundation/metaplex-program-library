@@ -24,7 +24,7 @@ inputs:
     description: If true it will build the auction_house package before running checks
     required: false
     default: false
-build_candy_machine:
+  build_candy_machine:
     description: If true it will build the candy_machine package before running checks
     required: false
     default: false
