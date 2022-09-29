@@ -69,7 +69,9 @@ jobs:
         with: 
           cache_id: sdk-candy-machine-core
           working_dir: ./candy-machine-core/js
-          build_token_metadata: false
+          build_token_metadata: true
+          build_auction_house: true
+          build_candy_machine: true
 
       # Run integration test
       - name: start-local-test-validator
