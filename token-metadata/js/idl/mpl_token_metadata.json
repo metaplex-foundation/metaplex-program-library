@@ -1,5 +1,5 @@
 {
-  "version": "1.4.1",
+  "version": "1.4.2",
   "name": "mpl_token_metadata",
   "instructions": [
     {
@@ -3536,8 +3536,6 @@
   ],
   "metadata": {
     "origin": "shank",
-    "address": "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s",
-    "binaryVersion": "0.0.9",
-    "libVersion": "~0.0.4"
+    "address": "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
   }
 }
