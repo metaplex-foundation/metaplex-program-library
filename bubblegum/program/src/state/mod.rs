@@ -33,7 +33,7 @@ impl TreeConfig {
 }
 
 #[account]
-#[derive(Copy)]
+#[derive(Copy, Eq, PartialEq)]
 pub struct Voucher {
     pub leaf_schema: LeafSchema,
     pub index: u32,

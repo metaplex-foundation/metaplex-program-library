@@ -23,7 +23,7 @@ export const BurnEditionNftStruct = new beet.BeetArgsStruct<{ instructionDiscrim
  * @property [_writable_] metadata Metadata (pda of ['metadata', program id, mint id])
  * @property [_writable_, **signer**] owner NFT owner
  * @property [_writable_] printEditionMint Mint of the print edition NFT
- * @property [_writable_] masterEditionMint Mint of the original/master NFT
+ * @property [] masterEditionMint Mint of the original/master NFT
  * @property [_writable_] printEditionTokenAccount Token account the print edition NFT is in
  * @property [] masterEditionTokenAccount Token account the Master Edition NFT is in
  * @property [_writable_] masterEditionAccount MasterEdition2 of the original NFT
@@ -82,7 +82,7 @@ export function createBurnEditionNftInstruction(
     },
     {
       pubkey: accounts.masterEditionMint,
-      isWritable: true,
+      isWritable: false,
       isSigner: false,
     },
     {

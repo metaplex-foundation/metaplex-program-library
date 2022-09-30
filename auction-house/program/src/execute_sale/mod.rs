@@ -1340,22 +1340,24 @@ fn auctioneer_execute_sale_logic<'c, 'info>(
         ],
         &[&program_as_signer_seeds],
     )?;
-
+    let token_account_data = SplAccount::unpack(&token_account.data.borrow())?;
     if token_account_data.amount == 0 {
-        invoke(
-            &revoke(
-                &token_program.key(),
-                &token_account.key(),
-                &seller.key(),
-                &[],
-            )
-            .unwrap(),
-            &[
-                token_program.to_account_info(),
-                token_account.to_account_info(),
-                seller.to_account_info(),
-            ],
-        )?;
+        if seller.to_account_info().is_signer {
+            invoke(
+                &revoke(
+                    &token_program.key(),
+                    &token_account.key(),
+                    &seller.key(),
+                    &[],
+                )
+                    .unwrap(),
+                &[
+                    token_program.to_account_info(),
+                    token_account.to_account_info(),
+                    seller.to_account_info(),
+                ],
+            )?;
+        }
 
         let curr_seller_lamp = seller_trade_state.lamports();
         **seller_trade_state.lamports.borrow_mut() = 0;
@@ -1745,22 +1747,24 @@ fn execute_sale_logic<'c, 'info>(
         &[&program_as_signer_seeds],
     )?;
 
+    let token_account_data = SplAccount::unpack(&token_account.data.borrow())?;
     if token_account_data.amount == 0 {
-        invoke(
-            &revoke(
-                &token_program.key(),
-                &token_account.key(),
-                &seller.key(),
-                &[],
-            )
-            .unwrap(),
-            &[
-                token_program.to_account_info(),
-                token_account.to_account_info(),
-                seller.to_account_info(),
-            ],
-        )?;
-
+        if seller.to_account_info().is_signer {
+            invoke(
+                &revoke(
+                    &token_program.key(),
+                    &token_account.key(),
+                    &seller.key(),
+                    &[],
+                )
+                    .unwrap(),
+                &[
+                    token_program.to_account_info(),
+                    token_account.to_account_info(),
+                    seller.to_account_info(),
+                ],
+            )?;
+        }
         let curr_seller_lamp = seller_trade_state.lamports();
         **seller_trade_state.lamports.borrow_mut() = 0;
         sol_memset(&mut *seller_ts_data, 0, TRADE_STATE_SIZE);

@@ -116,7 +116,7 @@ jobs:
       - uses: ./.github/actions/build-token-metadata
       - uses: ./.github/actions/build-auction-house
 
-       # Run test
+      # Run test
       - name: test-auctioneer-program
         id: run_test
         working-directory: ./auctioneer/program

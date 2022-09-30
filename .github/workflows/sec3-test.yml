@@ -1,24 +1,24 @@
-name: Sec3
-on:
-  push:
-    branches: main
-  pull_request:
-    branches: "*"
-jobs:
-  audit:
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - name: Check-out the repository
-        uses: actions/checkout@v2
-      - name: Sec3 Pro Audit
-        continue-on-error: true    # set to true if you don't want to fail jobs
-        uses: sec3dev/pro-action@v1
-        with:
-          sec3-token: ${{ secrets.SEC3_TOKEN }}
-          path: hydra/program
-          hide-report-link: true
-      - name: Upload Sarif Report
-        uses: github/codeql-action/upload-sarif@v1
-        with:
-          sarif_file: sec3-report.sarif
+# name: Sec3
+# on:
+#   push:
+#     branches: main
+#   pull_request:
+#     branches: "*"
+# jobs:
+#   audit:
+#     runs-on: ubuntu-latest
+#     timeout-minutes: 15
+#     steps:
+#       - name: Check-out the repository
+#         uses: actions/checkout@v2
+#       - name: Sec3 Pro Audit
+#         continue-on-error: true    # set to true if you don't want to fail jobs
+#         uses: sec3dev/pro-action@v1
+#         with:
+#           sec3-token: ${{ secrets.SEC3_TOKEN }}
+#           path: hydra/program
+#           hide-report-link: true
+#       - name: Upload Sarif Report
+#         uses: github/codeql-action/upload-sarif@v1
+#         with:
+#           sarif_file: sec3-report.sarif
