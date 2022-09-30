@@ -60,7 +60,7 @@ impl AWSMethod {
             .get(profile)
             .ok_or_else(|| anyhow!("Profile not found in AWS credentials file!"))?
             .get("region")
-            .unwrap()
+            .ok_or_else(|| anyhow!("Region not found in AWS credentials file!"))?
             .as_ref()
             .ok_or_else(|| anyhow!("Region not found in AWS credentials file!"))?
             .to_string();
