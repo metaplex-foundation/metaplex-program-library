@@ -12,7 +12,7 @@ env:
   RUST_TOOLCHAIN: stable
 jobs:
   changes:
-    runs-on: ubuntu-latest
+    runs-on: buildjet-4vcpu-ubuntu-2204
     # Set job outputs to values from filter step
     outputs:
       core: ${{ steps.filter.outputs.core }}
@@ -34,7 +34,7 @@ jobs:
   build-and-test-fixed-price-sale:
     needs: changes
     if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' || needs.changes.outputs.workflow == 'true' }}
-    runs-on: ubuntu-latest
+    runs-on: buildjet-4vcpu-ubuntu-2204
     env:
       cache_id: program-fixed-price-sale
 
@@ -43,10 +43,10 @@ jobs:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/install-linux-build-deps
       - uses: ./.github/actions/install-solana
-        with: 
+        with:
           solana_version: ${{ env.SOLANA_VERSION }}
       - uses: ./.github/actions/install-rust
-        with: 
+        with:
           toolchain: ${{ env.RUST_TOOLCHAIN }}
 
       # Restore Cache from previous build/test
