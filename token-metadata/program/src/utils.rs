@@ -550,26 +550,35 @@ pub fn calculate_supply_change<'a>(
     // instead of properly tracking the supply.
     // Now, we increment this by one if the edition number is less than the max supply.
     // This allows users to mint out missing edition numbers that are less than the supply, but
-    // tracks the supply correctly once all missing editions are minted.
+    // tracks the supply correctly for new Master Editions.
     let new_supply = if let Some(max_supply) = max_supply {
+        // We should never be able to mint an edition number that is greater than the max supply.
+        if edition > max_supply {
+            return Err(MetadataError::EditionNumberGreaterThanMaxSupply.into());
+        }
+
+        // If the current supply is less than the max supply, then we can mint another addition so we increment the supply.
         if current_supply < max_supply {
             current_supply
                 .checked_add(1)
                 .ok_or(MetadataError::NumericalOverflowError)?
-        } else {
+        }
+        // If it's the same as max supply, we don't increment, but we return the supply
+        // so we can mint out missing edition numbers in old editions that use the previous
+        // edition override logic.
+        //
+        // The EditionMarker bitmask ensures we don't remint the same number twice.
+        else {
             current_supply
         }
-    } else {
+    }
+    // With no max supply we can increment each time.
+    else {
         current_supply
             .checked_add(1)
             .ok_or(MetadataError::NumericalOverflowError)?
     };
 
-    if let Some(max) = get_max_supply_off_master_edition(master_edition_account_info)? {
-        if new_supply > max {
-            return Err(MetadataError::MaxEditionsMintedAlready.into());
-        }
-    }
     // Doing old school serialization to protect CPU credits.
     let edition_data = &mut master_edition_account_info.data.borrow_mut();
     let output = array_mut_ref![edition_data, 0, MAX_MASTER_EDITION_LEN];
@@ -625,7 +634,6 @@ pub fn mint_limited_edition<'a>(
     if reservation_list_info.is_some() && edition_override.is_some() {
         return Err(MetadataError::InvalidOperation.into());
     }
-
     calculate_supply_change(
         master_edition_account_info,
         reservation_list_info,
