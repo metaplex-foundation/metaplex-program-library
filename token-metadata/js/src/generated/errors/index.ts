@@ -2629,6 +2629,29 @@ createErrorFromNameLookup.set(
 );
 
 /**
+ * EditionNumberGreaterThanMaxSupply: 'Edition Number greater than max supply'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class EditionNumberGreaterThanMaxSupplyError extends Error {
+  readonly code: number = 0x7a;
+  readonly name: string = 'EditionNumberGreaterThanMaxSupply';
+  constructor() {
+    super('Edition Number greater than max supply');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, EditionNumberGreaterThanMaxSupplyError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x7a, () => new EditionNumberGreaterThanMaxSupplyError());
+createErrorFromNameLookup.set(
+  'EditionNumberGreaterThanMaxSupply',
+  () => new EditionNumberGreaterThanMaxSupplyError(),
+);
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated
