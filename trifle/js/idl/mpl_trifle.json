@@ -482,6 +482,10 @@
             }
           },
           {
+            "name": "creator",
+            "type": "publicKey"
+          },
+          {
             "name": "name",
             "type": "string"
           },
@@ -495,10 +499,6 @@
                 }
               ]
             }
-          },
-          {
-            "name": "creator",
-            "type": "publicKey"
           },
           {
             "name": "updateAuthority",

@@ -13,9 +13,9 @@ use crate::{error::TrifleError, state::Key};
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, ShankAccount)]
 pub struct EscrowConstraintModel {
     pub key: Key,
+    pub creator: Pubkey,
     pub name: String,
     pub constraints: HashMap<String, EscrowConstraint>,
-    pub creator: Pubkey,
     pub update_authority: Pubkey,
     pub count: u64,
     pub schema_uri: Option<String>,

@@ -18,9 +18,9 @@ import { EscrowConstraint, escrowConstraintBeet } from '../types/EscrowConstrain
  */
 export type EscrowConstraintModelArgs = {
   key: Key;
+  creator: web3.PublicKey;
   name: string;
   constraints: Map<string, EscrowConstraint>;
-  creator: web3.PublicKey;
   updateAuthority: web3.PublicKey;
   count: beet.bignum;
   schemaUri: beet.COption<string>;
@@ -35,9 +35,9 @@ export type EscrowConstraintModelArgs = {
 export class EscrowConstraintModel implements EscrowConstraintModelArgs {
   private constructor(
     readonly key: Key,
+    readonly creator: web3.PublicKey,
     readonly name: string,
     readonly constraints: Map<string, EscrowConstraint>,
-    readonly creator: web3.PublicKey,
     readonly updateAuthority: web3.PublicKey,
     readonly count: beet.bignum,
     readonly schemaUri: beet.COption<string>,
@@ -49,9 +49,9 @@ export class EscrowConstraintModel implements EscrowConstraintModelArgs {
   static fromArgs(args: EscrowConstraintModelArgs) {
     return new EscrowConstraintModel(
       args.key,
+      args.creator,
       args.name,
       args.constraints,
-      args.creator,
       args.updateAuthority,
       args.count,
       args.schemaUri,
@@ -78,8 +78,9 @@ export class EscrowConstraintModel implements EscrowConstraintModelArgs {
   static async fromAccountAddress(
     connection: web3.Connection,
     address: web3.PublicKey,
+    commitmentOrConfig?: web3.Commitment | web3.GetAccountInfoConfig,
   ): Promise<EscrowConstraintModel> {
-    const accountInfo = await connection.getAccountInfo(address);
+    const accountInfo = await connection.getAccountInfo(address, commitmentOrConfig);
     if (accountInfo == null) {
       throw new Error(`Unable to find EscrowConstraintModel account at ${address}`);
     }
@@ -152,9 +153,9 @@ export class EscrowConstraintModel implements EscrowConstraintModelArgs {
   pretty() {
     return {
       key: 'Key.' + Key[this.key],
+      creator: this.creator.toBase58(),
       name: this.name,
       constraints: this.constraints,
-      creator: this.creator.toBase58(),
       updateAuthority: this.updateAuthority.toBase58(),
       count: (() => {
         const x = <{ toNumber: () => number }>this.count;
@@ -182,9 +183,9 @@ export const escrowConstraintModelBeet = new beet.FixableBeetStruct<
 >(
   [
     ['key', keyBeet],
+    ['creator', beetSolana.publicKey],
     ['name', beet.utf8String],
     ['constraints', beet.map(beet.utf8String, escrowConstraintBeet)],
-    ['creator', beetSolana.publicKey],
     ['updateAuthority', beetSolana.publicKey],
     ['count', beet.u64],
     ['schemaUri', beet.coption(beet.utf8String)],
