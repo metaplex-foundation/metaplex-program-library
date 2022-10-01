@@ -563,7 +563,7 @@ pub enum MetadataInstruction {
     #[account(6, optional, signer, name="authority", desc="Authority/creator of the escrow account")]
     CloseEscrowAccount,
 
-    /// Create an escrow account to hold tokens.
+    /// Transfer the token out of Escrow.
     #[account(0, name="escrow", desc="Escrow account")]
     #[account(1, writable, signer, name="payer", desc="Wallet paying for the transaction and new account")]
     #[account(2, name="attribute_mint", desc="Mint account for the new attribute")]
