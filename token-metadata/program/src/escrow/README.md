@@ -2,7 +2,7 @@
 ## Overview
 This extension of the Token Metadata contract was created as a new feature primitive that could optionally be added to all NFTs. At its core it is simply an escrow account attached to an NFT, enabling NFTs to become owners of other tokens.
 
-Aside from the requisite security and ownership checks necessary, the functionality this feature affords has been left generic enough to allow users to implement whatever they desire on top of the composability of the token and its escrow account. To give a better idea of what things can be accomplished, the [Using Bundt Cake](#using-bundt-cake) section provides several examples of implementations.
+Aside from the requisite security and ownership checks necessary, the functionality this feature affords has been left generic enough to allow users to implement whatever they desire on top of the composability of the token and its escrow account.
 ## Accounts
 ### Escrow
 The main account for this feature is the escrow account attached to the NFT. This can be considered the "wallet" that the NFT owns and uses to hold its tokens. This wallet has ownership over the various ATAs that are created to hold tokens transferred into it.
