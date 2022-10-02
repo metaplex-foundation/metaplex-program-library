@@ -42,6 +42,21 @@ pub enum ValidateParserError {
     #[error("Missing seller fee basis points field")]
     MissingSellerFeeBasisPoints,
 
+    #[error("Unexpected files found in assets directory")]
+    UnexpectedFilesFound,
+
+    #[error("No assets found in assets directory")]
+    NoAssetsFound,
+
+    #[error("Redundant file {0}.json")]
+    RedundantFile(usize),
+
+    #[error("File {0}.json is out of expected range")]
+    FileOutOfRange(usize),
+
+    #[error("Assets list isn't continuous please check files")]
+    NonContinuousSeries,
+
     #[error("Invalid category '{0}': must be one of: {1}")]
     InvalidCategory(String, String),
 }
