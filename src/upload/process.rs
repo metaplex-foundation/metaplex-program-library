@@ -320,10 +320,31 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
         println!("\n....no files need uploading, skipping remaining steps.");
     }
 
-    // sanity check
+    // move all non-numeric keys to the beginning and sort as strings
+    // sort numeric keys as integers
+    cache
+        .items
+        .sort_by(|key_a, _, key_b, _| -> std::cmp::Ordering {
+            let a = key_a.parse::<i32>();
+            let b = key_b.parse::<i32>();
 
-    cache.items.sort_keys();
+            if a.is_err() && b.is_err() {
+                // string, string
+                key_a.cmp(key_b)
+            } else if a.is_ok() && b.is_err() {
+                // number, string
+                std::cmp::Ordering::Greater
+            } else if a.is_err() && b.is_ok() {
+                // string, number
+                std::cmp::Ordering::Less
+            } else {
+                // number, number
+                a.unwrap().cmp(&b.unwrap())
+            }
+        });
     cache.sync_file()?;
+
+    // sanity check
 
     let mut count = 0;
 
