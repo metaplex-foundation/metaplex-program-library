@@ -1466,3 +1466,127 @@ async fn fail_verify_collection_negative_cases() {
         .unwrap_err();
     assert_custom_error!(err, MetadataError::IncorrectOwner);
 }
+
+#[tokio::test]
+async fn fail_already_verified() {
+    // set_and_verify
+    // Must unverify an already verified collection item so we don't mess up sized collections.
+    let mut context = program_test().start_with_context().await;
+
+    let collection_nft = Metadata::new();
+    collection_nft
+        .create_v2(
+            &mut context,
+            "Test".to_string(),
+            "TST".to_string(),
+            "uri".to_string(),
+            None,
+            10,
+            false,
+            None,
+            None,
+            None,
+        )
+        .await
+        .unwrap();
+
+    let collection_master_edition_account = MasterEditionV2::new(&collection_nft);
+    collection_master_edition_account
+        .create_v3(&mut context, Some(0))
+        .await
+        .unwrap();
+
+    let new_collection_nft = Metadata::new();
+    new_collection_nft
+        .create_v2(
+            &mut context,
+            "Test".to_string(),
+            "TST".to_string(),
+            "uri".to_string(),
+            None,
+            10,
+            false,
+            None,
+            None,
+            None,
+        )
+        .await
+        .unwrap();
+
+    let new_collection_master_edition_account = MasterEditionV2::new(&new_collection_nft);
+    new_collection_master_edition_account
+        .create_v3(&mut context, Some(0))
+        .await
+        .unwrap();
+
+    let name = "Test".to_string();
+    let symbol = "TST".to_string();
+    let uri = "uri".to_string();
+    let item_nft = Metadata::new();
+
+    item_nft
+        .create_v2(
+            &mut context,
+            name,
+            symbol,
+            uri,
+            None,
+            10,
+            false,
+            None,
+            Some(Collection {
+                key: collection_nft.mint.pubkey(),
+                verified: false,
+            }),
+            None,
+        )
+        .await
+        .unwrap();
+
+    let kpbytes = &context.payer;
+    let kp = Keypair::from_bytes(&kpbytes.to_bytes()).unwrap();
+
+    // Verify it as part of the first collection.
+    item_nft
+        .verify_collection(
+            &mut context,
+            collection_nft.pubkey,
+            &kp,
+            collection_master_edition_account.mint_pubkey,
+            collection_master_edition_account.pubkey,
+            None,
+        )
+        .await
+        .unwrap();
+
+    // Try to migrate it without unverifying it.
+    let err = item_nft
+        .set_and_verify_collection(
+            &mut context,
+            new_collection_nft.pubkey,
+            &kp,
+            kp.pubkey(),
+            new_collection_master_edition_account.mint_pubkey,
+            new_collection_master_edition_account.pubkey,
+            None,
+        )
+        .await
+        .unwrap_err();
+
+    assert_custom_error!(err, MetadataError::AlreadyVerified);
+
+    // If they run the command on the same collection, not migrating it,
+    // allow it to succeed even though it won't change anything.
+    item_nft
+        .set_and_verify_collection(
+            &mut context,
+            collection_nft.pubkey,
+            &kp,
+            kp.pubkey(),
+            collection_master_edition_account.mint_pubkey,
+            collection_master_edition_account.pubkey,
+            None,
+        )
+        .await
+        .unwrap();
+}
