@@ -108,19 +108,65 @@ pub async fn process_deploy(args: DeployArgs) -> Result<()> {
     let total_steps = 2 + (collection_in_cache as u8) + (config_data.freeze_time.is_some() as u8)
         - (hidden as u8);
 
-    let candy_pubkey = if candy_machine_address.is_empty() {
+    let mut candy_pubkey = Pubkey::default();
+    if candy_machine_address.is_empty() {
         println!(
             "{} {}Creating candy machine",
             style(format!("[1/{}]", total_steps)).bold().dim(),
             CANDY_EMOJI
         );
-        info!("Candy machine address is empty, creating new candy machine...");
+    } else {
+        println!(
+            "{} {}Loading candy machine",
+            style(format!("[1/{}]", total_steps)).bold().dim(),
+            CANDY_EMOJI
+        );
 
+        candy_pubkey = match Pubkey::from_str(candy_machine_address) {
+            Ok(pubkey) => pubkey,
+            Err(_err) => {
+                error!(
+                    "Invalid candy machine address in cache file: {}!",
+                    candy_machine_address
+                );
+                return Err(CacheError::InvalidCandyMachineAddress(
+                    candy_machine_address.to_string(),
+                )
+                .into());
+            }
+        };
+
+        match get_candy_machine_state(&Arc::clone(&sugar_config), &candy_pubkey) {
+            Ok(candy_state) => {
+                if candy_state.items_redeemed > 0 {
+                    item_redeemed = true;
+                }
+                if is_feature_active(&candy_state.data.uuid, FREEZE_FEATURE_INDEX) {
+                    freeze_deployed = true;
+                }
+            }
+            Err(_) => {
+                println!(
+                    "{} Candy machine {} not found on-chain",
+                    WARNING_EMOJI, candy_machine_address
+                );
+                println!(
+                    "{} This can happen if the deploy transaction fails or times out",
+                    WARNING_EMOJI
+                );
+                println!("{} Creating candy machine", CANDY_EMOJI);
+
+                candy_pubkey = Pubkey::default();
+            }
+        }
+    }
+
+    if candy_pubkey == Pubkey::default() {
         let spinner = spinner_with_style();
         spinner.set_message("Creating candy machine...");
 
         let candy_keypair = Keypair::new();
-        let candy_pubkey = candy_keypair.pubkey();
+        candy_pubkey = candy_keypair.pubkey();
 
         let uuid = DEFAULT_UUID.to_string();
         let candy_data = create_candy_machine_data(&client, &config_data, uuid)?;
@@ -149,6 +195,12 @@ pub async fn process_deploy(args: DeployArgs) -> Result<()> {
             },
         };
 
+        // save the candy machine pubkey to the cache _before_ attempting to deploy
+        // in case the transaction doesn't confirm in time the next run should pickup the pubkey
+        // and check if the deploy succeeded
+        cache.program = CacheProgram::new_from_cm(&candy_pubkey);
+        cache.sync_file()?;
+
         // all good, let's create the candy machine
 
         let sig = initialize_candy_machine(
@@ -164,49 +216,8 @@ pub async fn process_deploy(args: DeployArgs) -> Result<()> {
             &candy_pubkey.to_string()
         );
 
-        cache.program = CacheProgram::new_from_cm(&candy_pubkey);
-        cache.sync_file()?;
-
         spinner.finish_and_clear();
-
-        candy_pubkey
-    } else {
-        println!(
-            "{} {}Loading candy machine",
-            style(format!("[1/{}]", total_steps)).bold().dim(),
-            CANDY_EMOJI
-        );
-
-        let candy_pubkey = match Pubkey::from_str(candy_machine_address) {
-            Ok(pubkey) => pubkey,
-            Err(_err) => {
-                error!(
-                    "Invalid candy machine address in cache file: {}!",
-                    candy_machine_address
-                );
-                return Err(CacheError::InvalidCandyMachineAddress(
-                    candy_machine_address.to_string(),
-                )
-                .into());
-            }
-        };
-
-        match get_candy_machine_state(&Arc::clone(&sugar_config), &candy_pubkey) {
-            Ok(candy_state) => {
-                if candy_state.items_redeemed > 0 {
-                    item_redeemed = true;
-                }
-                if is_feature_active(&candy_state.data.uuid, FREEZE_FEATURE_INDEX) {
-                    freeze_deployed = true;
-                }
-            }
-            Err(_) => {
-                return Err(anyhow!("Candy machine from cache does't exist on chain!"));
-            }
-        }
-
-        candy_pubkey
-    };
+    }
 
     println!("{} {}", style("Candy machine ID:").bold(), candy_pubkey);
 
