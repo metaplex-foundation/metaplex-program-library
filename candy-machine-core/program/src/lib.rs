@@ -8,7 +8,7 @@ pub use utils::*;
 pub mod constants;
 pub mod errors;
 mod instructions;
-mod state;
+pub mod state;
 mod utils;
 
 declare_id!("CndyV3LdqHUfDLmE5naZjVN8rBZz4tqhdefbAnjHG3JR");
