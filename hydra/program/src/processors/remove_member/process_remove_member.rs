@@ -34,7 +34,6 @@ pub struct RemoveMember<'info> {
 pub fn remove_member(ctx: Context<RemoveMember>) -> Result<()> {
     let member_voucher = &ctx.accounts.membership_account;
     let fanout = &mut ctx.accounts.fanout;
-    assert_membership_model(fanout, MembershipModel::Wallet)?;
     assert_owned_by(&fanout.to_account_info(), &crate::ID)?;
     assert_owned_by(&member_voucher.to_account_info(), &crate::ID)?;
     update_fanout_for_remove(fanout)?;
