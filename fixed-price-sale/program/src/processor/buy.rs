@@ -1,3 +1,5 @@
+use std::cmp::Ordering;
+
 use crate::{
     error::ErrorCode,
     state::{GatingConfig, MarketState, SellingResourceState},
@@ -169,11 +171,13 @@ impl<'info> Buy<'info> {
 
         // Check, that `SellingResource::max_supply` is not overflowed by `supply`
         if let Some(max_supply) = selling_resource.max_supply {
-            if selling_resource.supply > max_supply {
-                return Err(ErrorCode::SupplyIsGtThanMaxSupply.into());
-            } else if selling_resource.supply == max_supply {
-                selling_resource.state = SellingResourceState::Exhausted;
-                market.state = MarketState::Ended;
+            match selling_resource.supply.cmp(&max_supply) {
+                Ordering::Greater => return Err(ErrorCode::SupplyIsGtThanMaxSupply.into()),
+                Ordering::Equal => {
+                    selling_resource.state = SellingResourceState::Exhausted;
+                    market.state = MarketState::Ended;
+                }
+                Ordering::Less => (),
             }
         }
 

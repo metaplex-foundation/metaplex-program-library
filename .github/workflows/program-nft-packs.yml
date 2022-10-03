@@ -19,16 +19,16 @@ jobs:
       core: ${{ steps.filter.outputs.core }}
       package: ${{ steps.filter.outputs.package }}
     steps:
-    - uses: actions/checkout@v2
-    # For pull requests it's not necessary to checkout the code
-    - uses: dorny/paths-filter@v2
-      id: filter
-      with:
-        filters: |
-          core:
-            - 'core/rust/**'
-          package:
-            - 'nft-packs/program/**'
+      - uses: actions/checkout@v2
+      # For pull requests it's not necessary to checkout the code
+      - uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            core:
+              - 'core/rust/**'
+            package:
+              - 'nft-packs/program/**'
 
   build-and-test-nft-packs:
     needs: changes
@@ -57,14 +57,22 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             ./rust/target
-          key: ${{ env.cache_id }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{ env.RUSTC_HASH }}
+          key:
+            ${{ env.cache_id }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{
+            env.RUSTC_HASH }}
 
       # Build deps
       - uses: ./.github/actions/build-token-metadata
-      # Run test
+
+      # Get Metaplex program
+      - name: Get Metaplex program
+        run: |
+          solana program dump p1exdMJcjVao65QdewkaZRUnU6VPSXhus9n2GzWfh98 test-programs/mpl_metaplex.so
+
+      # Run tests
       - name: test-nft-packs-program
         id: run_test
         working-directory: ./nft-packs/program
         run: |
           cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --version
-          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf -- --nocapture --test-threads 1
+          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --bpf-out-dir ../../test-programs -- --nocapture --test-threads 1

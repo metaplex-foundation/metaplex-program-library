@@ -1349,8 +1349,7 @@ fn auctioneer_execute_sale_logic<'c, 'info>(
                     &token_account.key(),
                     &seller.key(),
                     &[],
-                )
-                    .unwrap(),
+                )?,
                 &[
                     token_program.to_account_info(),
                     token_account.to_account_info(),
@@ -1757,7 +1756,7 @@ fn execute_sale_logic<'c, 'info>(
                     &seller.key(),
                     &[],
                 )
-                    .unwrap(),
+                .unwrap(),
                 &[
                     token_program.to_account_info(),
                     token_account.to_account_info(),

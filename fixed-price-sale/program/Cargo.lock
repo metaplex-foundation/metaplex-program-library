@@ -1698,37 +1698,54 @@ dependencies = [
 ]
 
 [[package]]
-name = "mpl-auction-house"
-version = "1.2.4"
+name = "mpl-auction"
+version = "0.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d8d763de66c9f224482208e621ef0e8e28056e0aeed2eb0ba796dead291a4985"
 dependencies = [
- "anchor-lang",
- "anchor-spl",
  "arrayref",
- "mpl-token-metadata",
+ "borsh",
+ "num-derive",
+ "num-traits",
  "solana-program",
- "spl-associated-token-account",
  "spl-token",
  "thiserror",
 ]
 
 [[package]]
-name = "mpl-auctioneer"
-version = "0.2.0"
+name = "mpl-fixed-price-sale"
+version = "0.2.3"
 dependencies = [
  "anchor-client",
  "anchor-lang",
  "anchor-spl",
- "env_logger",
- "mpl-auction-house",
+ "mpl-metaplex",
  "mpl-testing-utils",
  "mpl-token-metadata",
- "serde_json",
- "shellexpand",
  "solana-program",
  "solana-program-test",
  "solana-sdk",
  "spl-associated-token-account",
  "spl-token",
+]
+
+[[package]]
+name = "mpl-metaplex"
+version = "0.0.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "426eee9c8c553b340db442bb3b3299ef97203c7a370a9cf819dbe1d3c7356a29"
+dependencies = [
+ "arrayref",
+ "borsh",
+ "mpl-auction",
+ "mpl-token-metadata",
+ "mpl-token-vault",
+ "num-derive",
+ "num-traits",
+ "solana-program",
+ "spl-associated-token-account",
+ "spl-token",
+ "thiserror",
 ]
 
 [[package]]

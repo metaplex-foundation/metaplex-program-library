@@ -17,6 +17,19 @@ Metaplex smart contracts and SDK.
 
 ## Development
 
+### Setting up Rust Tests
+
+Run the `build.sh` script with the name of the program to build the shared object and put it in a directory called `test-programs` in the root of the project.
+
+E.g.:
+
+```bash
+./build.sh auction-house
+```
+
+Running with `all` builds all programs.
+
+
 ### Versioning and Publishing Packages
 
 Smart contract SDK packages are versioned independently since a contract isn't necessarily coupled

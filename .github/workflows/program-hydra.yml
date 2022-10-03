@@ -74,6 +74,6 @@ jobs:
       #   id: run_test
       #   working-directory: ./hydra/program
       #   run: |
-      #     cargo +${{ env.RUST_TOOLCHAIN }} test -- --nocapture --test-threads 1
+      #     cargo +${{ env.RUST_TOOLCHAIN }} test -- --nocapture
       #     cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --version
       #     cargo +${{ env.RUST_TOOLCHAIN }} test-bpf -- --nocapture --test-threads 1

@@ -139,7 +139,13 @@ impl TestEditionMarker {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await
+        context
+            .banks_client
+            .process_transaction_with_commitment(
+                tx,
+                solana_sdk::commitment_config::CommitmentLevel::Confirmed,
+            )
+            .await
     }
 
     pub async fn create(
@@ -188,7 +194,13 @@ impl TestEditionMarker {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await
+        context
+            .banks_client
+            .process_transaction_with_commitment(
+                tx,
+                solana_sdk::commitment_config::CommitmentLevel::Confirmed,
+            )
+            .await
     }
 
     pub async fn create_with_invalid_token_program(
@@ -247,6 +259,12 @@ impl TestEditionMarker {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await
+        context
+            .banks_client
+            .process_transaction_with_commitment(
+                tx,
+                solana_sdk::commitment_config::CommitmentLevel::Confirmed,
+            )
+            .await
     }
 }

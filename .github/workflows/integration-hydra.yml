@@ -20,24 +20,26 @@ jobs:
       package: ${{ steps.filter.outputs.package }}
       workflow: ${{ steps.filter.outputs.workflow }}
     steps:
-    - uses: actions/checkout@v2
-    # For pull requests it's not necessary to checkout the code
-    - uses: dorny/paths-filter@v2
-      id: filter
-      with:
-        filters: |
-          core:
-            - 'core/**'
-          package:
-            - 'hydra/**'
-          workflow:
-            - '.github/workflows/integration-hydra.yml'
+      - uses: actions/checkout@v2
+      # For pull requests it's not necessary to checkout the code
+      - uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            core:
+              - 'core/**'
+            package:
+              - 'hydra/**'
+            workflow:
+              - '.github/workflows/integration-hydra.yml'
   build-and-integration-test-hydra:
     runs-on: buildjet-4vcpu-ubuntu-2004
     env:
       cache_id: program-hydra
     needs: changes
-    if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' || needs.changes.outputs.workflow == 'true' }}
+    if:
+      ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' ||
+      needs.changes.outputs.workflow == 'true' }}
     steps:
       # Setup Deps
       - uses: actions/checkout@v2
@@ -58,7 +60,9 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             ./rust/target
-          key: ${{ env.cache_id }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{ env.RUSTC_HASH }}
+          key:
+            ${{ env.cache_id }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{
+            env.RUSTC_HASH }}
 
       # Build Rust Program
       - uses: ./.github/actions/build-hydra
@@ -80,7 +84,7 @@ jobs:
       #   id: run_integration_test
       #   working-directory: ./hydra/js
       #   run: DEBUG=mpl* yarn test
-      
+
       # - name: stop-local-test-validator
       #   working-directory: ./hydra/js
       #   run: yarn amman:stop

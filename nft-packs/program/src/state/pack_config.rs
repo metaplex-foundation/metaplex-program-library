@@ -13,7 +13,7 @@ use solana_program::{
 
 /// Pack config. PDA (["config", pack_key], program_id)
 #[repr(C)]
-#[derive(Debug, Clone, PartialEq, BorshSerialize, BorshDeserialize, ShankAccount)]
+#[derive(Debug, Clone, PartialEq, Eq, BorshSerialize, BorshDeserialize, ShankAccount)]
 pub struct PackConfig {
     /// account type - PackConfig
     pub account_type: AccountType,
@@ -25,7 +25,7 @@ pub struct PackConfig {
 
 /// Action CleanUp instruction has to do
 #[repr(C)]
-#[derive(Debug, Clone, PartialEq, BorshSerialize, BorshDeserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, BorshSerialize, BorshDeserialize)]
 pub enum CleanUpActions {
     // change value or if new_value == 0 delete it
     /// index and new_value
