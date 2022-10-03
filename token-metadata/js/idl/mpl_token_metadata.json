@@ -1,5 +1,5 @@
 {
-  "version": "1.4.1",
+  "version": "1.4.2",
   "name": "mpl_token_metadata",
   "instructions": [
     {
@@ -3527,6 +3527,11 @@
       "code": 121,
       "name": "PrintEditionDoesNotMatchMasterEdition",
       "msg": "Print Edition does not match Master Edition"
+    },
+    {
+      "code": 122,
+      "name": "EditionNumberGreaterThanMaxSupply",
+      "msg": "Edition Number greater than max supply"
     }
   ],
   "metadata": {

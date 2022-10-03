@@ -480,6 +480,10 @@ pub enum MetadataError {
     /// 121 - Print Edition doesn't match Master Edition
     #[error("Print Edition does not match Master Edition")]
     PrintEditionDoesNotMatchMasterEdition,
+
+    /// 122 - Edition Number greater than max supply
+    #[error("Edition Number greater than max supply")]
+    EditionNumberGreaterThanMaxSupply,
 }
 
 impl PrintProgramError for MetadataError {
