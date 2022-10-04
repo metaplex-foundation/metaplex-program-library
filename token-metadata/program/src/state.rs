@@ -206,7 +206,7 @@ impl DataV2 {
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, FromPrimitive)]
 pub enum UseMethod {
     Burn,
     Multiple,
@@ -232,7 +232,7 @@ pub struct Uses {
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, FromPrimitive)]
 pub enum TokenStandard {
     NonFungible,        // This is a master edition
     FungibleAsset,      // A token with metadata that can also have attrributes
