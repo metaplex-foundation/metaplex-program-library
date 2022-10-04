@@ -21,9 +21,9 @@ jobs:
       with:
         filters: |
           core:
-            - 'core/**'
+            - 'core/js/**'
           package:
-            - 'token-entangler/**'
+            - 'token-entangler/js/**'
 
   build-lint-and-test-token-entangler:
     needs: changes
@@ -31,7 +31,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v3
       - uses: ./.github/actions/yarn-install-and-verify
         with: 
           cache_id: sdk-token-entangler

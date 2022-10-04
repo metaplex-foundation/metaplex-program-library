@@ -2,6 +2,7 @@ use std::{fmt::Debug, str::FromStr};
 
 use anchor_lang::AccountDeserialize;
 use mpl_token_metadata::pda::find_collection_authority_account;
+use mpl_token_metadata::state::Metadata;
 use solana_gateway::state::{get_expire_address_with_seed, get_gateway_token_address_with_seed};
 use solana_program::clock::Clock;
 use solana_program::program_option::COption;
@@ -23,7 +24,9 @@ use mpl_candy_machine::{
 
 use crate::core::helpers::create_associated_token_account;
 use crate::utils::helpers::CandyTestLogger;
-use crate::utils::{remove_freeze, set_freeze, thaw_nft, unlock_funds};
+use crate::utils::{
+    remove_freeze, set_freeze, thaw_nft, unlock_funds, update_authority, withdraw_funds,
+};
 use crate::{
     core::{
         helpers::{
@@ -78,6 +81,7 @@ pub struct CollectionInfo {
     pub master_edition: Pubkey,
     pub token_account: Pubkey,
     pub authority_record: Pubkey,
+    pub sized: bool,
 }
 
 impl Clone for CollectionInfo {
@@ -90,6 +94,7 @@ impl Clone for CollectionInfo {
             master_edition: self.master_edition,
             token_account: self.token_account,
             authority_record: self.authority_record,
+            sized: self.sized,
         }
     }
 }
@@ -104,6 +109,7 @@ impl CollectionInfo {
         master_edition: Pubkey,
         token_account: Pubkey,
         authority_record: Pubkey,
+        sized: bool,
     ) -> Self {
         CollectionInfo {
             set,
@@ -113,6 +119,7 @@ impl CollectionInfo {
             master_edition,
             token_account,
             authority_record,
+            sized,
         }
     }
 
@@ -121,11 +128,12 @@ impl CollectionInfo {
         set: bool,
         candy_machine: &Pubkey,
         authority: Keypair,
+        sized: bool,
     ) -> Self {
         println!("Init Collection Info");
         let metadata_info = MetadataManager::new(&authority);
         metadata_info
-            .create_v2(
+            .create_v3(
                 context,
                 "Collection Name".to_string(),
                 "COLLECTION".to_string(),
@@ -136,6 +144,7 @@ impl CollectionInfo {
                 None,
                 None,
                 None,
+                sized,
             )
             .await
             .unwrap();
@@ -157,7 +166,12 @@ impl CollectionInfo {
             master_edition: master_edition_info.edition_pubkey,
             token_account: metadata_info.get_ata(),
             authority_record: collection_authority_record,
+            sized,
         }
+    }
+
+    pub async fn get_metadata(&self, context: &mut ProgramTestContext) -> Metadata {
+        MetadataManager::get_data_from_account(context, &self.metadata).await
     }
 }
 
@@ -503,7 +517,7 @@ impl CandyManager {
 
     pub async fn init(
         context: &mut ProgramTestContext,
-        collection: bool,
+        collection: Option<bool>,
         token: bool,
         freeze: Option<FreezeConfig>,
         whitelist: Option<WhitelistConfig>,
@@ -518,11 +532,18 @@ impl CandyManager {
             .await
             .unwrap();
 
+        let sized = if let Some(sized) = &collection {
+            *sized
+        } else {
+            false
+        };
+
         let collection_info = CollectionInfo::init(
             context,
-            collection,
+            collection.is_some(),
             &candy_machine.pubkey(),
             clone_keypair(&authority),
+            sized,
         )
         .await;
 
@@ -804,6 +825,24 @@ impl CandyManager {
         Ok(())
     }
 
+    pub async fn update_authority(
+        &mut self,
+        context: &mut ProgramTestContext,
+        new_authority: Pubkey,
+    ) -> transport::Result<()> {
+        let logger = CandyTestLogger::new_start("Update Candy Machine Authority");
+        update_authority(
+            context,
+            &self.candy_machine.pubkey(),
+            &self.authority,
+            &self.wallet,
+            &new_authority,
+        )
+        .await?;
+        logger.end();
+        Ok(())
+    }
+
     pub async fn set_freeze(&mut self, context: &mut ProgramTestContext) -> transport::Result<()> {
         let logger = CandyTestLogger::new_start("Set freeze");
         set_freeze(
@@ -864,6 +903,7 @@ impl CandyManager {
             context,
             &self.candy_machine.pubkey(),
             &self.authority,
+            &self.wallet,
             &self.freeze_info,
             &self.token_info,
         )
@@ -894,6 +934,23 @@ impl CandyManager {
             self.collection_info.clone(),
             self.gateway_info.clone(),
             self.freeze_info.clone(),
+        )
+        .await?;
+        logger.end();
+        Ok(nft_info)
+    }
+
+    pub async fn withdraw(
+        &mut self,
+        context: &mut ProgramTestContext,
+    ) -> transport::Result<MasterEditionManager> {
+        let logger = CandyTestLogger::new_start("Mint NFT");
+        let nft_info = prepare_nft(context, &self.minter).await;
+        withdraw_funds(
+            context,
+            &self.candy_machine.pubkey(),
+            &self.authority,
+            &self.collection_info,
         )
         .await?;
         logger.end();

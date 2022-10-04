@@ -222,13 +222,61 @@ createErrorFromNameLookup.set(
 )
 
 /**
+ * CreatorHashMismatch: 'User-provided creator Vec must result in same user-provided creator hash'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class CreatorHashMismatchError extends Error {
+  readonly code: number = 0x1779
+  readonly name: string = 'CreatorHashMismatch'
+  constructor() {
+    super(
+      'User-provided creator Vec must result in same user-provided creator hash'
+    )
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, CreatorHashMismatchError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1779, () => new CreatorHashMismatchError())
+createErrorFromNameLookup.set(
+  'CreatorHashMismatch',
+  () => new CreatorHashMismatchError()
+)
+
+/**
+ * DataHashMismatch: 'User-provided metadata must result in same user-provided data hash'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class DataHashMismatchError extends Error {
+  readonly code: number = 0x177a
+  readonly name: string = 'DataHashMismatch'
+  constructor() {
+    super('User-provided metadata must result in same user-provided data hash')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, DataHashMismatchError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x177a, () => new DataHashMismatchError())
+createErrorFromNameLookup.set(
+  'DataHashMismatch',
+  () => new DataHashMismatchError()
+)
+
+/**
  * CreatorsTooLong: 'Creators list too long'
  *
  * @category Errors
  * @category generated
  */
 export class CreatorsTooLongError extends Error {
-  readonly code: number = 0x1779
+  readonly code: number = 0x177b
   readonly name: string = 'CreatorsTooLong'
   constructor() {
     super('Creators list too long')
@@ -238,7 +286,7 @@ export class CreatorsTooLongError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x1779, () => new CreatorsTooLongError())
+createErrorFromCodeLookup.set(0x177b, () => new CreatorsTooLongError())
 createErrorFromNameLookup.set(
   'CreatorsTooLong',
   () => new CreatorsTooLongError()
@@ -251,7 +299,7 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class MetadataNameTooLongError extends Error {
-  readonly code: number = 0x177a
+  readonly code: number = 0x177c
   readonly name: string = 'MetadataNameTooLong'
   constructor() {
     super('Name in metadata is too long')
@@ -261,7 +309,7 @@ export class MetadataNameTooLongError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x177a, () => new MetadataNameTooLongError())
+createErrorFromCodeLookup.set(0x177c, () => new MetadataNameTooLongError())
 createErrorFromNameLookup.set(
   'MetadataNameTooLong',
   () => new MetadataNameTooLongError()
@@ -274,7 +322,7 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class MetadataSymbolTooLongError extends Error {
-  readonly code: number = 0x177b
+  readonly code: number = 0x177d
   readonly name: string = 'MetadataSymbolTooLong'
   constructor() {
     super('Symbol in metadata is too long')
@@ -284,7 +332,7 @@ export class MetadataSymbolTooLongError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x177b, () => new MetadataSymbolTooLongError())
+createErrorFromCodeLookup.set(0x177d, () => new MetadataSymbolTooLongError())
 createErrorFromNameLookup.set(
   'MetadataSymbolTooLong',
   () => new MetadataSymbolTooLongError()
@@ -297,7 +345,7 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class MetadataUriTooLongError extends Error {
-  readonly code: number = 0x177c
+  readonly code: number = 0x177e
   readonly name: string = 'MetadataUriTooLong'
   constructor() {
     super('Uri in metadata is too long')
@@ -307,7 +355,7 @@ export class MetadataUriTooLongError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x177c, () => new MetadataUriTooLongError())
+createErrorFromCodeLookup.set(0x177e, () => new MetadataUriTooLongError())
 createErrorFromNameLookup.set(
   'MetadataUriTooLong',
   () => new MetadataUriTooLongError()
@@ -320,7 +368,7 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class MetadataBasisPointsTooHighError extends Error {
-  readonly code: number = 0x177d
+  readonly code: number = 0x177f
   readonly name: string = 'MetadataBasisPointsTooHigh'
   constructor() {
     super('Basis points in metadata cannot exceed 10000')
@@ -331,12 +379,35 @@ export class MetadataBasisPointsTooHighError extends Error {
 }
 
 createErrorFromCodeLookup.set(
-  0x177d,
+  0x177f,
   () => new MetadataBasisPointsTooHighError()
 )
 createErrorFromNameLookup.set(
   'MetadataBasisPointsTooHigh',
   () => new MetadataBasisPointsTooHighError()
+)
+
+/**
+ * TreeAuthorityIncorrect: 'Tree creator or tree delegate must sign.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class TreeAuthorityIncorrectError extends Error {
+  readonly code: number = 0x1780
+  readonly name: string = 'TreeAuthorityIncorrect'
+  constructor() {
+    super('Tree creator or tree delegate must sign.')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, TreeAuthorityIncorrectError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1780, () => new TreeAuthorityIncorrectError())
+createErrorFromNameLookup.set(
+  'TreeAuthorityIncorrect',
+  () => new TreeAuthorityIncorrectError()
 )
 
 /**
@@ -346,7 +417,7 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class InsufficientMintCapacityError extends Error {
-  readonly code: number = 0x177e
+  readonly code: number = 0x1781
   readonly name: string = 'InsufficientMintCapacity'
   constructor() {
     super('Not enough unapproved mints left')
@@ -356,105 +427,199 @@ export class InsufficientMintCapacityError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x177e, () => new InsufficientMintCapacityError())
+createErrorFromCodeLookup.set(0x1781, () => new InsufficientMintCapacityError())
 createErrorFromNameLookup.set(
   'InsufficientMintCapacity',
   () => new InsufficientMintCapacityError()
 )
 
 /**
- * MintRequestNotApproved: 'Mint request not approved'
+ * NumericalOverflowError: 'NumericalOverflowError'
  *
  * @category Errors
  * @category generated
  */
-export class MintRequestNotApprovedError extends Error {
-  readonly code: number = 0x177f
-  readonly name: string = 'MintRequestNotApproved'
+export class NumericalOverflowErrorError extends Error {
+  readonly code: number = 0x1782
+  readonly name: string = 'NumericalOverflowError'
   constructor() {
-    super('Mint request not approved')
+    super('NumericalOverflowError')
     if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, MintRequestNotApprovedError)
+      Error.captureStackTrace(this, NumericalOverflowErrorError)
     }
   }
 }
 
-createErrorFromCodeLookup.set(0x177f, () => new MintRequestNotApprovedError())
+createErrorFromCodeLookup.set(0x1782, () => new NumericalOverflowErrorError())
 createErrorFromNameLookup.set(
-  'MintRequestNotApproved',
-  () => new MintRequestNotApprovedError()
+  'NumericalOverflowError',
+  () => new NumericalOverflowErrorError()
 )
 
 /**
- * MintRequestKeyMismatch: 'Mint authority key does not match request'
+ * IncorrectOwner: 'Incorrect account owner'
  *
  * @category Errors
  * @category generated
  */
-export class MintRequestKeyMismatchError extends Error {
-  readonly code: number = 0x1780
-  readonly name: string = 'MintRequestKeyMismatch'
+export class IncorrectOwnerError extends Error {
+  readonly code: number = 0x1783
+  readonly name: string = 'IncorrectOwner'
   constructor() {
-    super('Mint authority key does not match request')
+    super('Incorrect account owner')
     if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, MintRequestKeyMismatchError)
+      Error.captureStackTrace(this, IncorrectOwnerError)
     }
   }
 }
 
-createErrorFromCodeLookup.set(0x1780, () => new MintRequestKeyMismatchError())
-createErrorFromNameLookup.set(
-  'MintRequestKeyMismatch',
-  () => new MintRequestKeyMismatchError()
-)
+createErrorFromCodeLookup.set(0x1783, () => new IncorrectOwnerError())
+createErrorFromNameLookup.set('IncorrectOwner', () => new IncorrectOwnerError())
 
 /**
- * MintRequestDiscriminatorMismatch: 'Mint request data has incorrect disciminator'
+ * CollectionCannotBeVerifiedInThisInstruction: 'Cannot Verify Collection in this Instruction'
  *
  * @category Errors
  * @category generated
  */
-export class MintRequestDiscriminatorMismatchError extends Error {
-  readonly code: number = 0x1781
-  readonly name: string = 'MintRequestDiscriminatorMismatch'
+export class CollectionCannotBeVerifiedInThisInstructionError extends Error {
+  readonly code: number = 0x1784
+  readonly name: string = 'CollectionCannotBeVerifiedInThisInstruction'
   constructor() {
-    super('Mint request data has incorrect disciminator')
+    super('Cannot Verify Collection in this Instruction')
     if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, MintRequestDiscriminatorMismatchError)
+      Error.captureStackTrace(
+        this,
+        CollectionCannotBeVerifiedInThisInstructionError
+      )
     }
   }
 }
 
 createErrorFromCodeLookup.set(
-  0x1781,
-  () => new MintRequestDiscriminatorMismatchError()
+  0x1784,
+  () => new CollectionCannotBeVerifiedInThisInstructionError()
 )
 createErrorFromNameLookup.set(
-  'MintRequestDiscriminatorMismatch',
-  () => new MintRequestDiscriminatorMismatchError()
+  'CollectionCannotBeVerifiedInThisInstruction',
+  () => new CollectionCannotBeVerifiedInThisInstructionError()
 )
 
 /**
- * CloseMintRequestError: 'Something went wrong closing mint request'
+ * CollectionNotFound: 'Collection Not Found on Metadata'
  *
  * @category Errors
  * @category generated
  */
-export class CloseMintRequestErrorError extends Error {
-  readonly code: number = 0x1782
-  readonly name: string = 'CloseMintRequestError'
+export class CollectionNotFoundError extends Error {
+  readonly code: number = 0x1785
+  readonly name: string = 'CollectionNotFound'
   constructor() {
-    super('Something went wrong closing mint request')
+    super('Collection Not Found on Metadata')
     if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, CloseMintRequestErrorError)
+      Error.captureStackTrace(this, CollectionNotFoundError)
     }
   }
 }
 
-createErrorFromCodeLookup.set(0x1782, () => new CloseMintRequestErrorError())
+createErrorFromCodeLookup.set(0x1785, () => new CollectionNotFoundError())
 createErrorFromNameLookup.set(
-  'CloseMintRequestError',
-  () => new CloseMintRequestErrorError()
+  'CollectionNotFound',
+  () => new CollectionNotFoundError()
+)
+
+/**
+ * AlreadyVerified: 'Collection item is already verified.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class AlreadyVerifiedError extends Error {
+  readonly code: number = 0x1786
+  readonly name: string = 'AlreadyVerified'
+  constructor() {
+    super('Collection item is already verified.')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, AlreadyVerifiedError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1786, () => new AlreadyVerifiedError())
+createErrorFromNameLookup.set(
+  'AlreadyVerified',
+  () => new AlreadyVerifiedError()
+)
+
+/**
+ * AlreadyUnverified: 'Collection item is already unverified.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class AlreadyUnverifiedError extends Error {
+  readonly code: number = 0x1787
+  readonly name: string = 'AlreadyUnverified'
+  constructor() {
+    super('Collection item is already unverified.')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, AlreadyUnverifiedError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1787, () => new AlreadyUnverifiedError())
+createErrorFromNameLookup.set(
+  'AlreadyUnverified',
+  () => new AlreadyUnverifiedError()
+)
+
+/**
+ * UpdateAuthorityIncorrect: 'Incorrect leaf metadata update authority.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class UpdateAuthorityIncorrectError extends Error {
+  readonly code: number = 0x1788
+  readonly name: string = 'UpdateAuthorityIncorrect'
+  constructor() {
+    super('Incorrect leaf metadata update authority.')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, UpdateAuthorityIncorrectError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1788, () => new UpdateAuthorityIncorrectError())
+createErrorFromNameLookup.set(
+  'UpdateAuthorityIncorrect',
+  () => new UpdateAuthorityIncorrectError()
+)
+
+/**
+ * LeafAuthorityMustSign: 'This transaction must be signed by either the leaf owner or leaf delegate'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class LeafAuthorityMustSignError extends Error {
+  readonly code: number = 0x1789
+  readonly name: string = 'LeafAuthorityMustSign'
+  constructor() {
+    super(
+      'This transaction must be signed by either the leaf owner or leaf delegate'
+    )
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, LeafAuthorityMustSignError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1789, () => new LeafAuthorityMustSignError())
+createErrorFromNameLookup.set(
+  'LeafAuthorityMustSign',
+  () => new LeafAuthorityMustSignError()
 )
 
 /**

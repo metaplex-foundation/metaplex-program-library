@@ -272,7 +272,7 @@ pub enum MetadataInstruction {
     #[account(10, name="metadata", desc="Master record metadata account")]
     #[account(11, name="token_program", desc="Token program")]
     #[account(12, name="system_program", desc="System program")]
-    #[account(13, name="rent", desc="Rent info")]
+    #[account(13, optional, name="rent", desc="Rent info")]
     MintNewEditionFromMasterEditionViaToken(MintNewEditionFromMasterEditionViaTokenArgs),
 
     /// Converts the Master Edition V1 to a Master Edition V2, draining lamports from the two printing mints
@@ -300,7 +300,7 @@ pub enum MetadataInstruction {
     #[account(13, name="token_program", desc="Token program")]
     #[account(14, name="token_vault_program", desc="Token vault program")]
     #[account(15, name="system_program", desc="System program")]
-    #[account(16, name="rent", desc="Rent info")]
+    #[account(16, optional, name="rent", desc="Rent info")]
     MintNewEditionFromMasterEditionViaVaultProxy(MintNewEditionFromMasterEditionViaTokenArgs),
 
     /// Puff a Metadata - make all of it's variable length fields (name/uri/symbol) a fixed length using a null character
@@ -320,7 +320,7 @@ pub enum MetadataInstruction {
     #[account(3, signer, writable, name="payer", desc="payer")]
     #[account(4, name="update_authority", desc="update authority info")]
     #[account(5, name="system_program", desc="System program")]
-    #[account(6, name="rent", desc="Rent info")]
+    #[account(6, optional, name="rent", desc="Rent info")]
     CreateMetadataAccountV2(CreateMetadataAccountArgsV2),
 
     /// Register a Metadata as a Master Edition V2, which means Edition V2s can be minted.
@@ -334,7 +334,7 @@ pub enum MetadataInstruction {
     #[account(5, writable, name="metadata", desc="Metadata account")]
     #[account(6, name="token_program", desc="Token program")]
     #[account(7, name="system_program", desc="System program")]
-    #[account(8, name="rent", desc="Rent info")]
+    #[account(8, optional, name="rent", desc="Rent info")]
     CreateMasterEditionV3(CreateMasterEditionArgs),
 
     /// If a MetadataAccount Has a Collection allow the UpdateAuthority of the Collection to Verify the NFT Belongs in the Collection.
@@ -356,6 +356,8 @@ pub enum MetadataInstruction {
     #[account(5, name="token_program", desc="Token program")]
     #[account(6, name="ata_program", desc="Associated Token program")]
     #[account(7, name="system_program", desc="System program")]
+    // Rent is technically not needed but there isn't a way to "ignore" an account without 
+    // preventing latter accounts from being passed in.
     #[account(8, name="rent", desc="Rent info")]
     #[account(9, optional, writable, name="use_authority_record", desc="Use Authority Record PDA If present the program Assumes a delegated use authority")]
     #[account(10, optional, name="burner", desc="Program As Signer (Burner)")]
@@ -372,7 +374,7 @@ pub enum MetadataInstruction {
     #[account(7, name="burner", desc="Program As Signer (Burner)")]
     #[account(8, name="token_program", desc="Token program")]
     #[account(9, name="system_program", desc="System program")]
-    #[account(10, name="rent", desc="Rent info")]
+    #[account(10, optional, name="rent", desc="Rent info")]
     ApproveUseAuthority(ApproveUseAuthorityArgs),
 
     /// Revoke account to call [utilize] on this NFT.
@@ -384,7 +386,7 @@ pub enum MetadataInstruction {
     #[account(5, name="metadata", desc="Metadata account")]
     #[account(6, name="token_program", desc="Token program")]
     #[account(7, name="system_program", desc="System program")]
-    #[account(8, name="rent", desc="Rent info")]
+    #[account(8, optional, name="rent", desc="Rent info")]
     RevokeUseAuthority,
 
     /// If a MetadataAccount Has a Collection allow an Authority of the Collection to unverify an NFT in a Collection.
@@ -404,7 +406,7 @@ pub enum MetadataInstruction {
     #[account(4, name="metadata", desc="Collection Metadata account")]
     #[account(5, name="mint", desc="Mint of Collection Metadata")]
     #[account(6, name="system_program", desc="System program")]
-    #[account(7, name="rent", desc="Rent info")]
+    #[account(7, optional, name="rent", desc="Rent info")]
     ApproveCollectionAuthority,
 
     /// Revoke account to call [verify_collection] on this NFT.
@@ -500,7 +502,7 @@ pub enum MetadataInstruction {
     #[account(3, signer, writable, name="payer", desc="payer")]
     #[account(4, name="update_authority", desc="update authority info")]
     #[account(5, name="system_program", desc="System program")]
-    #[account(6, name="rent", desc="Rent info")]
+    #[account(6, optional, name="rent", desc="Rent info")]
     CreateMetadataAccountV3(CreateMetadataAccountArgsV3),
 
     /// Set size of an existing collection.
@@ -516,6 +518,28 @@ pub enum MetadataInstruction {
     #[account(2, name="mint", desc="Mint account")]
     #[account(3, optional, name="edition", desc="Edition account")]
     SetTokenStandard,
+
+    /// Set size of an existing collection using CPI from the Bubblegum program.  This is how
+    /// collection size is incremented and decremented for compressed NFTs.
+    #[account(0, writable, name="collection_metadata", desc="Collection Metadata account")]
+    #[account(1, signer, writable, name="collection_authority", desc="Collection Update authority")]
+    #[account(2, name="collection_mint", desc="Mint of the Collection")]
+    #[account(3, signer, name="bubblegum_signer", desc="Signing PDA of Bubblegum program")]
+    #[account(4, optional, name="collection_authority_record", desc="Collection Authority Record PDA")]
+    BubblegumSetCollectionSize(SetCollectionSizeArgs),
+
+    /// Completely burn a print edition NFT.
+    #[account(0, writable, name="metadata", desc="Metadata (pda of ['metadata', program id, mint id])")]
+    #[account(1, signer, writable, name="owner", desc="NFT owner")]
+    #[account(2, writable, name="print_edition_mint", desc="Mint of the print edition NFT")]
+    #[account(3, name="master_edition_mint", desc="Mint of the original/master NFT")]
+    #[account(4, writable, name="print_edition_token_account", desc="Token account the print edition NFT is in")]
+    #[account(5, name="master_edition_token_account", desc="Token account the Master Edition NFT is in")]
+    #[account(6, writable, name="master_edition_account", desc="MasterEdition2 of the original NFT")]
+    #[account(7, writable, name="print_edition_account", desc="Print Edition account of the NFT")]
+    #[account(8, writable, name="edition_marker_account", desc="Edition Marker PDA of the NFT")]
+    #[account(9, name="spl token program", desc="SPL Token Program")]
+    BurnEditionNft,
 }
 
 /// Creates an CreateMetadataAccounts instruction
@@ -591,7 +615,6 @@ pub fn create_metadata_accounts_v2(
             AccountMeta::new(payer, true),
             AccountMeta::new_readonly(update_authority, update_authority_is_signer),
             AccountMeta::new_readonly(solana_program::system_program::id(), false),
-            AccountMeta::new_readonly(sysvar::rent::id(), false),
         ],
         data: MetadataInstruction::CreateMetadataAccountV2(CreateMetadataAccountArgsV2 {
             data: DataV2 {
@@ -748,7 +771,6 @@ pub fn create_master_edition_v3(
         AccountMeta::new(metadata, false),
         AccountMeta::new_readonly(spl_token::id(), false),
         AccountMeta::new_readonly(solana_program::system_program::id(), false),
-        AccountMeta::new_readonly(sysvar::rent::id(), false),
     ];
 
     Instruction {
@@ -804,7 +826,6 @@ pub fn mint_new_edition_from_master_edition_via_token(
         AccountMeta::new_readonly(metadata, false),
         AccountMeta::new_readonly(spl_token::id(), false),
         AccountMeta::new_readonly(solana_program::system_program::id(), false),
-        AccountMeta::new_readonly(sysvar::rent::id(), false),
     ];
 
     Instruction {
@@ -872,6 +893,7 @@ pub fn convert_master_edition_v1_to_v2(
 }
 
 /// creates a mint_edition_proxy instruction
+#[deprecated(since = "1.4.0")]
 #[allow(clippy::too_many_arguments)]
 pub fn mint_edition_from_master_edition_via_vault_proxy(
     program_id: Pubkey,
@@ -909,7 +931,6 @@ pub fn mint_edition_from_master_edition_via_vault_proxy(
         AccountMeta::new_readonly(token_program, false),
         AccountMeta::new_readonly(token_vault_program_info, false),
         AccountMeta::new_readonly(solana_program::system_program::id(), false),
-        AccountMeta::new_readonly(sysvar::rent::id(), false),
     ];
 
     Instruction {
@@ -1037,7 +1058,7 @@ pub fn unverify_collection(
 ///   5. `[]` Token program
 ///   6. `[]` Associated Token program
 ///   7. `[]` System program
-///   8. `[]` Rent info
+///   8. Optional `[]` Rent info
 ///   9. Optional `[writable]` Use Authority Record PDA If present the program Assumes a delegated use authority
 #[allow(clippy::too_many_arguments)]
 pub fn utilize(
@@ -1060,7 +1081,6 @@ pub fn utilize(
         AccountMeta::new_readonly(spl_token::id(), false),
         AccountMeta::new_readonly(spl_associated_token_account::id(), false),
         AccountMeta::new_readonly(solana_program::system_program::id(), false),
-        AccountMeta::new_readonly(sysvar::rent::id(), false),
     ];
     match use_authority_record_pda {
         Some(use_authority_record_pda) => {
@@ -1105,7 +1125,7 @@ pub fn utilize(
 ///   7. `[]` Program As Signer (Burner)
 ///   8. `[]` Token program
 ///   9. `[]` System program
-///   10. `[]` Rent info
+///   10. Optional `[]` Rent info
 #[allow(clippy::too_many_arguments)]
 pub fn approve_use_authority(
     program_id: Pubkey,
@@ -1132,7 +1152,6 @@ pub fn approve_use_authority(
             AccountMeta::new_readonly(burner, false),
             AccountMeta::new_readonly(spl_token::id(), false),
             AccountMeta::new_readonly(solana_program::system_program::id(), false),
-            AccountMeta::new_readonly(sysvar::rent::id(), false),
         ],
         data: MetadataInstruction::ApproveUseAuthority(ApproveUseAuthorityArgs { number_of_uses })
             .try_to_vec()
@@ -1155,7 +1174,7 @@ pub fn approve_use_authority(
 ///   6. `[]` Mint of Metadata
 ///   7. `[]` Token program
 ///   8. `[]` System program
-///   9. `[]` Rent info
+///   9. Optional `[]` Rent info
 #[allow(clippy::too_many_arguments)]
 pub fn revoke_use_authority(
     program_id: Pubkey,
@@ -1177,7 +1196,6 @@ pub fn revoke_use_authority(
             AccountMeta::new_readonly(metadata, false),
             AccountMeta::new_readonly(spl_token::id(), false),
             AccountMeta::new_readonly(solana_program::system_program::id(), false),
-            AccountMeta::new_readonly(sysvar::rent::id(), false),
         ],
         data: MetadataInstruction::RevokeUseAuthority
             .try_to_vec()
@@ -1198,7 +1216,7 @@ pub fn revoke_use_authority(
 ///   5. `[]` Mint of Collection Metadata
 ///   6. `[]` Token program
 ///   7. `[]` System program
-///   8. `[]` Rent info
+///   8. Optional `[]` Rent info
 #[allow(clippy::too_many_arguments)]
 pub fn approve_collection_authority(
     program_id: Pubkey,
@@ -1219,7 +1237,6 @@ pub fn approve_collection_authority(
             AccountMeta::new_readonly(metadata, false),
             AccountMeta::new_readonly(mint, false),
             AccountMeta::new_readonly(solana_program::system_program::id(), false),
-            AccountMeta::new_readonly(sysvar::rent::id(), false),
         ],
         data: MetadataInstruction::ApproveCollectionAuthority
             .try_to_vec()
@@ -1421,6 +1438,55 @@ pub fn burn_nft(
     }
 }
 
+///# Burn Edition NFT
+///
+/// Burn an Edition NFT, closing its token, metadata and edition accounts, and reducing the Master Edition supply.
+///
+/// <ol start="0">
+/// <li><code>[writable]</code> Print NFT Metadata Account</li>
+/// <li><code>[writable, signer]</code> Owner of Print NFT</li>
+/// <li><code>[writable]</code> Mint of Print Edition NFT</li>
+/// <li><code>[writable]</code> Mint of Master Edition NFT</li>
+/// <li><code>[writable]</code> Print Edition Token Account</li>
+/// <li><code>[writable]</code> Master Edition Token Account</li>
+/// <li><code>[writable]</code> Master Edition PDA Account</li>
+/// <li><code>[writable]</code> Print Edition PDA Account</li>
+/// <li><code>[writable]</code> Edition Marker PDA Account</li>
+/// <li><code>[]</code> SPL Token program.</li>
+/// </ol>
+pub fn burn_edition_nft(
+    program_id: Pubkey,
+    metadata: Pubkey,
+    owner: Pubkey,
+    print_edition_mint: Pubkey,
+    master_edition_mint: Pubkey,
+    print_edition_token: Pubkey,
+    master_edition_token: Pubkey,
+    master_edition: Pubkey,
+    print_edition: Pubkey,
+    edition_marker: Pubkey,
+    spl_token: Pubkey,
+) -> Instruction {
+    let accounts = vec![
+        AccountMeta::new(metadata, false),
+        AccountMeta::new(owner, true),
+        AccountMeta::new(print_edition_mint, false),
+        AccountMeta::new_readonly(master_edition_mint, false),
+        AccountMeta::new(print_edition_token, false),
+        AccountMeta::new_readonly(master_edition_token, false),
+        AccountMeta::new(master_edition, false),
+        AccountMeta::new(print_edition, false),
+        AccountMeta::new(edition_marker, false),
+        AccountMeta::new_readonly(spl_token, false),
+    ];
+
+    Instruction {
+        program_id,
+        accounts,
+        data: MetadataInstruction::BurnEditionNft.try_to_vec().unwrap(),
+    }
+}
+
 /// # Verify Collection V2 -- Supports v1.3 Collection Details
 ///
 /// If a MetadataAccount Has a Collection allow the UpdateAuthority of the Collection to Verify the NFT Belongs in the Collection
@@ -1583,7 +1649,7 @@ pub fn set_and_verify_sized_collection_item(
 ///   3. `[signer]` payer
 ///   4. `[signer]` Update authority
 ///   5. `[]` System program
-///   6. `[]` Rent sysvar
+///   6. Optional `[]` Rent sysvar
 ///
 /// Creates an CreateMetadataAccounts instruction
 #[allow(clippy::too_many_arguments)]
@@ -1614,7 +1680,6 @@ pub fn create_metadata_accounts_v3(
             AccountMeta::new(payer, true),
             AccountMeta::new_readonly(update_authority, update_authority_is_signer),
             AccountMeta::new_readonly(solana_program::system_program::id(), false),
-            AccountMeta::new_readonly(sysvar::rent::id(), false),
         ],
         data: MetadataInstruction::CreateMetadataAccountV3(CreateMetadataAccountArgsV3 {
             data: DataV2 {
@@ -1656,6 +1721,35 @@ pub fn set_collection_size(
         program_id,
         accounts,
         data: MetadataInstruction::SetCollectionSize(SetCollectionSizeArgs { size })
+            .try_to_vec()
+            .unwrap(),
+    }
+}
+
+pub fn bubblegum_set_collection_size(
+    program_id: Pubkey,
+    metadata_account: Pubkey,
+    update_authority: Pubkey,
+    mint: Pubkey,
+    bubblegum_signer: Pubkey,
+    collection_authority_record: Option<Pubkey>,
+    size: u64,
+) -> Instruction {
+    let mut accounts = vec![
+        AccountMeta::new(metadata_account, false),
+        AccountMeta::new_readonly(update_authority, true),
+        AccountMeta::new_readonly(mint, false),
+        AccountMeta::new_readonly(bubblegum_signer, true),
+    ];
+
+    if let Some(record) = collection_authority_record {
+        accounts.push(AccountMeta::new_readonly(record, false));
+    }
+
+    Instruction {
+        program_id,
+        accounts,
+        data: MetadataInstruction::BubblegumSetCollectionSize(SetCollectionSizeArgs { size })
             .try_to_vec()
             .unwrap(),
     }

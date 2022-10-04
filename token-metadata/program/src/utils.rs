@@ -12,7 +12,7 @@ use crate::{
     },
 };
 use arrayref::{array_mut_ref, array_ref, array_refs, mut_array_refs};
-use borsh::{BorshDeserialize, BorshSerialize};
+use borsh::BorshSerialize;
 use solana_program::{
     account_info::AccountInfo,
     borsh::try_from_slice_unchecked,
@@ -171,13 +171,12 @@ pub fn assert_initialized<T: Pack + IsInitialized>(
 pub fn create_or_allocate_account_raw<'a>(
     program_id: Pubkey,
     new_account_info: &AccountInfo<'a>,
-    rent_sysvar_info: &AccountInfo<'a>,
     system_program_info: &AccountInfo<'a>,
     payer_info: &AccountInfo<'a>,
     size: usize,
     signer_seeds: &[&[u8]],
 ) -> ProgramResult {
-    let rent = &Rent::from_account_info(rent_sysvar_info)?;
+    let rent = &Rent::get()?;
     let required_lamports = rent
         .minimum_balance(size)
         .max(1)
@@ -271,7 +270,14 @@ pub fn get_mint_freeze_authority(
 pub fn get_mint_supply(account_info: &AccountInfo) -> Result<u64, ProgramError> {
     // In token program, 36, 8, 1, 1 is the layout, where the first 8 is supply u64.
     // so we start at 36.
-    let data = account_info.try_borrow_data().unwrap();
+    let data = account_info.try_borrow_data()?;
+
+    // If we don't check this and an empty account is passed in, we get a panic when
+    // the array_ref! macro tries to index into the data.
+    if data.is_empty() {
+        return Err(ProgramError::InvalidAccountData);
+    }
+
     let bytes = array_ref![data, 36, 8];
 
     Ok(u64::from_le_bytes(*bytes))
@@ -281,7 +287,14 @@ pub fn get_mint_supply(account_info: &AccountInfo) -> Result<u64, ProgramError> 
 pub fn get_mint_decimals(account_info: &AccountInfo) -> Result<u8, ProgramError> {
     // In token program, 36, 8, 1, 1, is the layout, where the first 1 is decimals u8.
     // so we start at 36.
-    let data = account_info.try_borrow_data().unwrap();
+    let data = account_info.try_borrow_data()?;
+
+    // If we don't check this and an empty account is passed in, we get a panic when
+    // we try to index into the data.
+    if data.is_empty() {
+        return Err(ProgramError::InvalidAccountData);
+    }
+
     Ok(data[44])
 }
 
@@ -513,38 +526,65 @@ pub fn calculate_supply_change<'a>(
     master_edition_account_info: &AccountInfo<'a>,
     reservation_list_info: Option<&AccountInfo<'a>>,
     edition_override: Option<u64>,
-    me_supply: u64,
+    current_supply: u64,
 ) -> ProgramResult {
-    if reservation_list_info.is_none() {
-        let new_supply: u64;
-        if let Some(edition) = edition_override {
-            if edition == 0 {
-                return Err(MetadataError::EditionOverrideCannotBeZero.into());
-            }
-
-            if edition > me_supply {
-                new_supply = edition;
-            } else {
-                new_supply = me_supply;
-            }
-        } else {
-            new_supply = me_supply
-                .checked_add(1)
-                .ok_or(MetadataError::NumericalOverflowError)?;
-        }
-
-        if let Some(max) = get_max_supply_off_master_edition(master_edition_account_info)? {
-            if new_supply > max {
-                return Err(MetadataError::MaxEditionsMintedAlready.into());
-            }
-        }
-        // Doing old school serialization to protect CPU credits.
-        let edition_data = &mut master_edition_account_info.data.borrow_mut();
-        let output = array_mut_ref![edition_data, 0, MAX_MASTER_EDITION_LEN];
-
-        let (_key, supply, _the_rest) = mut_array_refs![output, 1, 8, 273];
-        *supply = new_supply.to_le_bytes();
+    // Reservation lists are deprecated.
+    if reservation_list_info.is_some() {
+        return Err(MetadataError::ReservationListDeprecated.into());
     }
+
+    // This function requires passing in the edition number.
+    if edition_override.is_none() {
+        return Err(MetadataError::EditionOverrideCannotBeZero.into());
+    }
+
+    let edition = edition_override.unwrap();
+
+    if edition == 0 {
+        return Err(MetadataError::EditionOverrideCannotBeZero.into());
+    }
+
+    let max_supply = get_max_supply_off_master_edition(master_edition_account_info)?;
+
+    // Previously, the code used edition override to set the supply to the highest edition number minted,
+    // instead of properly tracking the supply.
+    // Now, we increment this by one if the edition number is less than the max supply.
+    // This allows users to mint out missing edition numbers that are less than the supply, but
+    // tracks the supply correctly for new Master Editions.
+    let new_supply = if let Some(max_supply) = max_supply {
+        // We should never be able to mint an edition number that is greater than the max supply.
+        if edition > max_supply {
+            return Err(MetadataError::EditionNumberGreaterThanMaxSupply.into());
+        }
+
+        // If the current supply is less than the max supply, then we can mint another addition so we increment the supply.
+        if current_supply < max_supply {
+            current_supply
+                .checked_add(1)
+                .ok_or(MetadataError::NumericalOverflowError)?
+        }
+        // If it's the same as max supply, we don't increment, but we return the supply
+        // so we can mint out missing edition numbers in old editions that use the previous
+        // edition override logic.
+        //
+        // The EditionMarker bitmask ensures we don't remint the same number twice.
+        else {
+            current_supply
+        }
+    }
+    // With no max supply we can increment each time.
+    else {
+        current_supply
+            .checked_add(1)
+            .ok_or(MetadataError::NumericalOverflowError)?
+    };
+
+    // Doing old school serialization to protect CPU credits.
+    let edition_data = &mut master_edition_account_info.data.borrow_mut();
+    let output = array_mut_ref![edition_data, 0, MAX_MASTER_EDITION_LEN];
+
+    let (_key, supply, _the_rest) = mut_array_refs![output, 1, 8, 273];
+    *supply = new_supply.to_le_bytes();
 
     Ok(())
 }
@@ -562,7 +602,6 @@ pub fn mint_limited_edition<'a>(
     update_authority_info: &'a AccountInfo<'a>,
     token_program_account_info: &'a AccountInfo<'a>,
     system_account_info: &'a AccountInfo<'a>,
-    rent_info: &'a AccountInfo<'a>,
     // Only present with MasterEditionV1 calls, if present, use edition based off address in res list,
     // otherwise, pull off the top
     reservation_list_info: Option<&'a AccountInfo<'a>>,
@@ -595,7 +634,6 @@ pub fn mint_limited_edition<'a>(
     if reservation_list_info.is_some() && edition_override.is_some() {
         return Err(MetadataError::InvalidOperation.into());
     }
-
     calculate_supply_change(
         master_edition_account_info,
         reservation_list_info,
@@ -633,7 +671,6 @@ pub fn mint_limited_edition<'a>(
             payer_account_info,
             update_authority_info,
             system_account_info,
-            rent_info,
         },
         data_v2,
         true,
@@ -653,7 +690,6 @@ pub fn mint_limited_edition<'a>(
     create_or_allocate_account_raw(
         *program_id,
         new_edition_account_info,
-        rent_info,
         system_account_info,
         payer_account_info,
         MAX_EDITION_LEN,
@@ -853,16 +889,12 @@ pub fn assert_token_program_matches_package(token_program_info: &AccountInfo) ->
     Ok(())
 }
 
-pub fn is_correct_account_type(data: &[u8], data_type: Key, data_size: usize) -> bool {
-    (data[0] == data_type as u8 || data[0] == Key::Uninitialized as u8) && (data.len() == data_size)
-}
-
-pub fn try_from_slice_checked<T: BorshDeserialize>(
+pub fn try_from_slice_checked<T: TokenMetadataAccount>(
     data: &[u8],
     data_type: Key,
     data_size: usize,
 ) -> Result<T, ProgramError> {
-    if !is_correct_account_type(data, data_type, data_size) {
+    if !T::is_correct_account_type(data, data_type, data_size) {
         return Err(MetadataError::DataTypeMismatch.into());
     }
 
@@ -878,7 +910,6 @@ pub struct CreateMetadataAccountsLogicArgs<'a> {
     pub payer_account_info: &'a AccountInfo<'a>,
     pub update_authority_info: &'a AccountInfo<'a>,
     pub system_account_info: &'a AccountInfo<'a>,
-    pub rent_info: &'a AccountInfo<'a>,
 }
 
 // This equals the program address of the metadata program:
@@ -900,6 +931,8 @@ pub const BUBBLEGUM_PROGRAM_ADDRESS: Pubkey = Pubkey::new_from_array([
     0x98, 0x8b, 0x80, 0xeb, 0x79, 0x35, 0x28, 0x69, 0xb2, 0x24, 0x74, 0x5f, 0x59, 0xdd, 0xbf, 0x8a,
     0x26, 0x58, 0xca, 0x13, 0xdc, 0x68, 0x81, 0x21, 0x26, 0x35, 0x1c, 0xae, 0x07, 0xc1, 0xa5, 0xa5,
 ]);
+// This flag activates certain program authority features of the Bubblegum program.
+pub const BUBBLEGUM_ACTIVATED: bool = false;
 
 /// Create a new account instruction
 pub fn process_create_metadata_accounts_logic(
@@ -919,7 +952,6 @@ pub fn process_create_metadata_accounts_logic(
         payer_account_info,
         update_authority_info,
         system_account_info,
-        rent_info,
     } = accounts;
 
     let mut update_authority_key = *update_authority_info.key;
@@ -964,19 +996,17 @@ pub fn process_create_metadata_accounts_logic(
     create_or_allocate_account_raw(
         *program_id,
         metadata_account_info,
-        rent_info,
         system_account_info,
         payer_account_info,
         MAX_METADATA_LEN,
         metadata_authority_signer_seeds,
     )?;
 
-    let mut metadata: Metadata = Metadata::from_account_info(metadata_account_info)?;
+    let mut metadata = Metadata::from_account_info(metadata_account_info)?;
     let compatible_data = data.to_v1();
 
     // This allows the Bubblegum program to create metadata with verified creators since they were
     // verified already by the Bubblegum program.
-    const BUBBLEGUM_ACTIVATED: bool = false;
     let allow_direct_creator_writes = if BUBBLEGUM_ACTIVATED
         && mint_authority_info.owner == &BUBBLEGUM_PROGRAM_ADDRESS
         && mint_authority_info.is_signer
@@ -1092,7 +1122,6 @@ pub struct MintNewEditionFromMasterEditionViaTokenLogicArgs<'a> {
     pub master_metadata_account_info: &'a AccountInfo<'a>,
     pub token_program_account_info: &'a AccountInfo<'a>,
     pub system_account_info: &'a AccountInfo<'a>,
-    pub rent_info: &'a AccountInfo<'a>,
 }
 
 pub fn process_mint_new_edition_from_master_edition_via_token_logic<'a>(
@@ -1115,7 +1144,6 @@ pub fn process_mint_new_edition_from_master_edition_via_token_logic<'a>(
         master_metadata_account_info,
         token_program_account_info,
         system_account_info,
-        rent_info,
     } = accounts;
 
     assert_token_program_matches_package(token_program_account_info)?;
@@ -1124,7 +1152,7 @@ pub fn process_mint_new_edition_from_master_edition_via_token_logic<'a>(
     assert_owned_by(master_edition_account_info, program_id)?;
     assert_owned_by(master_metadata_account_info, program_id)?;
 
-    let master_metadata: Metadata = Metadata::from_account_info(master_metadata_account_info)?;
+    let master_metadata = Metadata::from_account_info(master_metadata_account_info)?;
     let token_account: Account = assert_initialized(token_account_info)?;
 
     if !ignore_owner_signer {
@@ -1179,7 +1207,6 @@ pub fn process_mint_new_edition_from_master_edition_via_token_logic<'a>(
         create_or_allocate_account_raw(
             *program_id,
             edition_marker_info,
-            rent_info,
             system_account_info,
             payer_account_info,
             MAX_EDITION_MARKER_SIZE,
@@ -1187,8 +1214,7 @@ pub fn process_mint_new_edition_from_master_edition_via_token_logic<'a>(
         )?;
     }
 
-    let mut edition_marker =
-        EditionMarker::from_account_info::<EditionMarker>(edition_marker_info)?;
+    let mut edition_marker = EditionMarker::from_account_info(edition_marker_info)?;
     edition_marker.key = Key::EditionMarker;
     if edition_marker.edition_taken(edition)? {
         return Err(MetadataError::AlreadyInitialized.into());
@@ -1209,7 +1235,6 @@ pub fn process_mint_new_edition_from_master_edition_via_token_logic<'a>(
         update_authority_info,
         token_program_account_info,
         system_account_info,
-        rent_info,
         None,
         Some(edition),
     )?;
@@ -1389,8 +1414,7 @@ pub fn is_master_edition(
     mint_decimals: u8,
     mint_supply: u64,
 ) -> bool {
-    let is_correct_type =
-        MasterEditionV2::from_account_info::<MasterEditionV2>(edition_account_info).is_ok();
+    let is_correct_type = MasterEditionV2::from_account_info(edition_account_info).is_ok();
 
     is_correct_type && mint_decimals == 0 && mint_supply == 1
 }
@@ -1400,7 +1424,7 @@ pub fn is_print_edition(
     mint_decimals: u8,
     mint_supply: u64,
 ) -> bool {
-    let is_correct_type = Edition::from_account_info::<Edition>(edition_account_info).is_ok();
+    let is_correct_type = Edition::from_account_info(edition_account_info).is_ok();
 
     is_correct_type && mint_decimals == 0 && mint_supply == 1
 }

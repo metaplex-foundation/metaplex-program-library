@@ -20,6 +20,10 @@ pub enum BubblegumError {
     CreatorNotFound,
     #[msg("No creators in creator Vec")]
     NoCreatorsPresent,
+    #[msg("User-provided creator Vec must result in same user-provided creator hash")]
+    CreatorHashMismatch,
+    #[msg("User-provided metadata must result in same user-provided data hash")]
+    DataHashMismatch,
     #[msg("Creators list too long")]
     CreatorsTooLong,
     #[msg("Name in metadata is too long")]
@@ -30,14 +34,24 @@ pub enum BubblegumError {
     MetadataUriTooLong,
     #[msg("Basis points in metadata cannot exceed 10000")]
     MetadataBasisPointsTooHigh,
+    #[msg("Tree creator or tree delegate must sign.")]
+    TreeAuthorityIncorrect,
     #[msg("Not enough unapproved mints left")]
     InsufficientMintCapacity,
-    #[msg("Mint request not approved")]
-    MintRequestNotApproved,
-    #[msg("Mint authority key does not match request")]
-    MintRequestKeyMismatch,
-    #[msg("Mint request data has incorrect disciminator")]
-    MintRequestDiscriminatorMismatch,
-    #[msg("Something went wrong closing mint request")]
-    CloseMintRequestError,
+    #[msg("NumericalOverflowError")]
+    NumericalOverflowError,
+    #[msg("Incorrect account owner")]
+    IncorrectOwner,
+    #[msg("Cannot Verify Collection in this Instruction")]
+    CollectionCannotBeVerifiedInThisInstruction,
+    #[msg("Collection Not Found on Metadata")]
+    CollectionNotFound,
+    #[msg("Collection item is already verified.")]
+    AlreadyVerified,
+    #[msg("Collection item is already unverified.")]
+    AlreadyUnverified,
+    #[msg("Incorrect leaf metadata update authority.")]
+    UpdateAuthorityIncorrect,
+    #[msg("This transaction must be signed by either the leaf owner or leaf delegate")]
+    LeafAuthorityMustSign,
 }

@@ -27,6 +27,8 @@ use mpl_candy_machine::{
 };
 use utils::{custom_config, GatekeeperInfo};
 
+use crate::core::helpers::{assert_account_empty, get_balance};
+use crate::utils::helpers::test_start;
 use crate::{
     core::helpers::airdrop,
     utils::{
@@ -42,12 +44,13 @@ mod utils;
 
 #[tokio::test]
 async fn init_default_success() {
+    test_start("Init Default Success");
     let mut context = candy_machine_program_test().start_with_context().await;
     let context = &mut context;
 
     let mut candy_manager = CandyManager::init(
         context,
-        true,
+        Some(true),
         true,
         None,
         Some(WhitelistConfig::new(BurnEveryTime, false, Some(1))),
@@ -83,10 +86,17 @@ async fn init_default_success() {
         .mint_and_assert_successful(context, Some(1), true)
         .await
         .unwrap();
+    let pre_balance = get_balance(context, &candy_manager.authority.pubkey()).await;
+    candy_manager.withdraw(context).await.unwrap();
+    let post_balance = get_balance(context, &candy_manager.authority.pubkey()).await;
+    assert_account_empty(context, &candy_manager.candy_machine.pubkey()).await;
+    assert_account_empty(context, &candy_manager.collection_info.pda).await;
+    assert!(post_balance > pre_balance);
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn bot_tax_on_gatekeeper_expire_token() {
+    test_start("Bot Tax On Gatekeeper Expire Token");
     let mut context = candy_machine_program_test().start_with_context().await;
     let context = &mut context;
 
@@ -108,7 +118,7 @@ async fn bot_tax_on_gatekeeper_expire_token() {
 
     let mut candy_manager = CandyManager::init(
         context,
-        false,
+        None,
         false,
         None,
         None,
@@ -224,6 +234,7 @@ async fn bot_tax_on_gatekeeper_expire_token() {
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn bot_tax_on_gatekeeper() {
+    test_start("Bot Tax On Gatekeeper");
     let mut context = candy_machine_program_test().start_with_context().await;
     let context = &mut context;
 
@@ -245,7 +256,7 @@ async fn bot_tax_on_gatekeeper() {
 
     let mut candy_manager = CandyManager::init(
         context,
-        false,
+        None,
         false,
         None,
         None,

@@ -14,6 +14,7 @@ mod create_store {
     };
     use solana_program::instruction::Instruction;
     use solana_program_test::*;
+    use solana_sdk::commitment_config::CommitmentLevel;
     use solana_sdk::{transaction::Transaction, transport::TransportError};
 
     #[tokio::test]
@@ -54,7 +55,11 @@ mod create_store {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await.unwrap();
+        context
+            .banks_client
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+            .await
+            .unwrap();
 
         let store_acc = context
             .banks_client
@@ -112,7 +117,10 @@ mod create_store {
             context.last_blockhash,
         );
 
-        let tx_result = context.banks_client.process_transaction(tx).await;
+        let tx_result = context
+            .banks_client
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+            .await;
 
         match tx_result.unwrap_err() {
             TransportError::Custom(_) => assert!(true),
@@ -161,7 +169,10 @@ mod create_store {
             context.last_blockhash,
         );
 
-        let tx_result = context.banks_client.process_transaction(tx).await;
+        let tx_result = context
+            .banks_client
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+            .await;
 
         match tx_result.unwrap_err() {
             TransportError::Custom(_) => assert!(true),
@@ -210,6 +221,10 @@ mod create_store {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await.unwrap();
+        context
+            .banks_client
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+            .await
+            .unwrap();
     }
 }

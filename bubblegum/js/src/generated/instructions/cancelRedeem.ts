@@ -35,23 +35,23 @@ export const cancelRedeemStruct = new beet.BeetArgsStruct<
 /**
  * Accounts required by the _cancelRedeem_ instruction
  *
- * @property [] authority
- * @property [] candyWrapper
- * @property [] gummyrollProgram
- * @property [_writable_] merkleSlab
+ * @property [] treeAuthority
+ * @property [_writable_, **signer**] leafOwner
+ * @property [_writable_] merkleTree
  * @property [_writable_] voucher
- * @property [_writable_, **signer**] owner
+ * @property [] logWrapper
+ * @property [] compressionProgram
  * @category Instructions
  * @category CancelRedeem
  * @category generated
  */
 export type CancelRedeemInstructionAccounts = {
-  authority: web3.PublicKey
-  candyWrapper: web3.PublicKey
-  gummyrollProgram: web3.PublicKey
-  merkleSlab: web3.PublicKey
+  treeAuthority: web3.PublicKey
+  leafOwner: web3.PublicKey
+  merkleTree: web3.PublicKey
   voucher: web3.PublicKey
-  owner: web3.PublicKey
+  logWrapper: web3.PublicKey
+  compressionProgram: web3.PublicKey
 }
 
 export const cancelRedeemInstructionDiscriminator = [
@@ -79,22 +79,17 @@ export function createCancelRedeemInstruction(
   })
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: accounts.authority,
+      pubkey: accounts.treeAuthority,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: accounts.candyWrapper,
-      isWritable: false,
-      isSigner: false,
+      pubkey: accounts.leafOwner,
+      isWritable: true,
+      isSigner: true,
     },
     {
-      pubkey: accounts.gummyrollProgram,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.merkleSlab,
+      pubkey: accounts.merkleTree,
       isWritable: true,
       isSigner: false,
     },
@@ -104,9 +99,14 @@ export function createCancelRedeemInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.owner,
-      isWritable: true,
-      isSigner: true,
+      pubkey: accounts.logWrapper,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.compressionProgram,
+      isWritable: false,
+      isSigner: false,
     },
   ]
 

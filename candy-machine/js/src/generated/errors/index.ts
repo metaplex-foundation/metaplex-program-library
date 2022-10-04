@@ -801,26 +801,26 @@ createErrorFromNameLookup.set(
 );
 
 /**
- * NoChangingAuthorityWithFreeze: 'Can't change authority while freeze is enabled. Disable freeze first.'
+ * NoChangingAuthorityWithCollection: 'Can't change authority while collection is enabled. Disable collection first.'
  *
  * @category Errors
  * @category generated
  */
-export class NoChangingAuthorityWithFreezeError extends Error {
+export class NoChangingAuthorityWithCollectionError extends Error {
   readonly code: number = 0x1795;
-  readonly name: string = 'NoChangingAuthorityWithFreeze';
+  readonly name: string = 'NoChangingAuthorityWithCollection';
   constructor() {
-    super("Can't change authority while freeze is enabled. Disable freeze first.");
+    super("Can't change authority while collection is enabled. Disable collection first.");
     if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, NoChangingAuthorityWithFreezeError);
+      Error.captureStackTrace(this, NoChangingAuthorityWithCollectionError);
     }
   }
 }
 
-createErrorFromCodeLookup.set(0x1795, () => new NoChangingAuthorityWithFreezeError());
+createErrorFromCodeLookup.set(0x1795, () => new NoChangingAuthorityWithCollectionError());
 createErrorFromNameLookup.set(
-  'NoChangingAuthorityWithFreeze',
-  () => new NoChangingAuthorityWithFreezeError(),
+  'NoChangingAuthorityWithCollection',
+  () => new NoChangingAuthorityWithCollectionError(),
 );
 
 /**
@@ -1084,6 +1084,52 @@ createErrorFromCodeLookup.set(0x17a1, () => new NoUnlockWithNFTsStillFrozenError
 createErrorFromNameLookup.set(
   'NoUnlockWithNFTsStillFrozen',
   () => new NoUnlockWithNFTsStillFrozenError(),
+);
+
+/**
+ * SizedCollectionMetadataMustBeMutable: 'Setting a sized collection requires the collection metadata to be mutable.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class SizedCollectionMetadataMustBeMutableError extends Error {
+  readonly code: number = 0x17a2;
+  readonly name: string = 'SizedCollectionMetadataMustBeMutable';
+  constructor() {
+    super('Setting a sized collection requires the collection metadata to be mutable.');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, SizedCollectionMetadataMustBeMutableError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x17a2, () => new SizedCollectionMetadataMustBeMutableError());
+createErrorFromNameLookup.set(
+  'SizedCollectionMetadataMustBeMutable',
+  () => new SizedCollectionMetadataMustBeMutableError(),
+);
+
+/**
+ * CannotSwitchFromHiddenSettings: 'Cannot remove Hidden Settings.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class CannotSwitchFromHiddenSettingsError extends Error {
+  readonly code: number = 0x17a3;
+  readonly name: string = 'CannotSwitchFromHiddenSettings';
+  constructor() {
+    super('Cannot remove Hidden Settings.');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, CannotSwitchFromHiddenSettingsError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x17a3, () => new CannotSwitchFromHiddenSettingsError());
+createErrorFromNameLookup.set(
+  'CannotSwitchFromHiddenSettings',
+  () => new CannotSwitchFromHiddenSettingsError(),
 );
 
 /**

@@ -2,18 +2,23 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{close_account, CloseAccount, Token};
 
 use crate::{
-    assert_is_ata, constants::FREEZE_FEATURE_INDEX, remove_feature_flag, spl_token_transfer,
-    CandyError, CandyMachine, FreezePDA, TokenTransferParams,
+    assert_is_ata,
+    constants::{FREEZE_FEATURE_INDEX, FREEZE_LOCK_FEATURE_INDEX},
+    remove_feature_flag, spl_token_transfer, CandyError, CandyMachine, FreezePDA,
+    TokenTransferParams,
 };
 
 /// Unlocks the funds from mint stuck in the FreezePDA
 #[derive(Accounts)]
 pub struct UnlockFunds<'info> {
-    #[account(mut, has_one = authority)]
+    #[account(mut, has_one = authority, has_one = wallet)]
     candy_machine: Account<'info, CandyMachine>,
+    /// CHECK: wallet is the treasure account of the candy_machine
+    #[account(mut)]
+    wallet: UncheckedAccount<'info>,
     #[account(mut)]
     authority: Signer<'info>,
-    #[account(mut, close = authority, seeds = [FreezePDA::PREFIX.as_bytes(), candy_machine.to_account_info().key.as_ref()], bump)]
+    #[account(mut, close = wallet, seeds = [FreezePDA::PREFIX.as_bytes(), candy_machine.to_account_info().key.as_ref()], bump)]
     freeze_pda: Account<'info, FreezePDA>,
     system_program: Program<'info, System>,
     // > Only needed if candy machine has a mint set
@@ -81,6 +86,6 @@ pub fn handle_unlock_funds<'info>(
     }
 
     remove_feature_flag(&mut candy_machine.data.uuid, FREEZE_FEATURE_INDEX);
-    remove_feature_flag(&mut candy_machine.data.uuid, FREEZE_FEATURE_INDEX);
+    remove_feature_flag(&mut candy_machine.data.uuid, FREEZE_LOCK_FEATURE_INDEX);
     Ok(())
 }

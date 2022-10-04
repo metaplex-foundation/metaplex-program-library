@@ -2,62 +2,52 @@
 'use strict';
 const path = require('path');
 
-const localDeployDir = path.join(__dirname, 'target', 'deploy');
-const {LOCALHOST, tmpLedgerDir} = require('@metaplex-foundation/amman');
+const localDeployDir = path.join(__dirname, 'test-programs');
+const { LOCALHOST, tmpLedgerDir } = require('@metaplex-foundation/amman');
 
 function localDeployPath(programName) {
-    return path.join(localDeployDir, `${programName}.so`);
+  return path.join(localDeployDir, `${programName}.so`);
 }
 
 const programs = {
-    metadata: {
-        label: "Metadata",
-        programId: 'metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s',
-        deployPath: localDeployPath('mpl_token_metadata')
-    },
-    vault: {
-        label: "Vault",
-        programId: 'vau1zxA2LbssAUEF7Gpw91zMM1LvXrvpzJtmZ58rPsn',
-        deployPath: localDeployPath('mpl_token_vault')
-    },
-    auction: {
-        label: "Auction",
-        programId: 'auctxRXPeJoc4817jDhf4HbjnhEcr1cCXenosMhK5R8',
-        deployPath: localDeployPath('mpl_auction')
-    },
-    metaplex: {
-        label: "Metaplex",
-        programId: 'p1exdMJcjVao65QdewkaZRUnU6VPSXhus9n2GzWfh98',
-        deployPath: localDeployPath('mpl_metaplex')
-    },
-    token_sale: {
-        label: "Fixed Price Token Sale",
-        programId: 'SaLeTjyUa5wXHnGuewUSyJ5JWZaHwz3TxqUntCE9czo',
-        deployPath: localDeployPath('mpl_fixed_price_sale'),
-    },
-    candy_machine: {
-        label: "Candy Machine",
-        programId: 'cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ',
-        deployPath: localDeployPath('mpl_candy_machine'),
-    },
+  metadata: {
+    label: 'Metadata',
+    programId: 'metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s',
+    deployPath: localDeployPath('mpl_token_metadata'),
+  },
+  token_sale: {
+    label: 'Fixed Price Token Sale',
+    programId: 'SaLeTjyUa5wXHnGuewUSyJ5JWZaHwz3TxqUntCE9czo',
+    deployPath: localDeployPath('mpl_fixed_price_sale'),
+  },
+  candy_machine: {
+    label: 'Candy Machine',
+    programId: 'cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ',
+    deployPath: localDeployPath('mpl_candy_machine'),
+  },
+  hydra: {
+    label: 'Hydra',
+    programId: 'hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg',
+    deployPath: localDeployPath('mpl_hydra'),
+  },
 };
 
 const validator = {
-    killRunningValidators: true,
-    programs,
-    commitment: 'singleGossip',
-    resetLedger: true,
-    verifyFees: false,
-    jsonRpcUrl: LOCALHOST,
-    websocketUrl: '',
-    ledgerDir: tmpLedgerDir(),
+  killRunningValidators: true,
+  programs,
+  commitment: 'singleGossip',
+  resetLedger: true,
+  verifyFees: false,
+  jsonRpcUrl: LOCALHOST,
+  websocketUrl: '',
+  ledgerDir: tmpLedgerDir(),
 };
 
 module.exports = {
-    programs,
-    validator,
-    relay: {
-        enabled: true,
-        killRunningRelay: true,
-    },
+  programs,
+  validator,
+  relay: {
+    enabled: true,
+    killRunningRelay: true,
+  },
 };

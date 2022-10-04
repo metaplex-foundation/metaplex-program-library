@@ -46,25 +46,27 @@ export const verifyCreatorStruct = new beet.FixableBeetArgsStruct<
 /**
  * Accounts required by the _verifyCreator_ instruction
  *
- * @property [] authority
- * @property [] owner
- * @property [] delegate
+ * @property [] treeAuthority
+ * @property [] leafOwner
+ * @property [] leafDelegate
+ * @property [_writable_] merkleTree
+ * @property [**signer**] payer
  * @property [**signer**] creator
- * @property [] candyWrapper
- * @property [] gummyrollProgram
- * @property [_writable_] merkleSlab
+ * @property [] logWrapper
+ * @property [] compressionProgram
  * @category Instructions
  * @category VerifyCreator
  * @category generated
  */
 export type VerifyCreatorInstructionAccounts = {
-  authority: web3.PublicKey
-  owner: web3.PublicKey
-  delegate: web3.PublicKey
+  treeAuthority: web3.PublicKey
+  leafOwner: web3.PublicKey
+  leafDelegate: web3.PublicKey
+  merkleTree: web3.PublicKey
+  payer: web3.PublicKey
   creator: web3.PublicKey
-  candyWrapper: web3.PublicKey
-  gummyrollProgram: web3.PublicKey
-  merkleSlab: web3.PublicKey
+  logWrapper: web3.PublicKey
+  compressionProgram: web3.PublicKey
 }
 
 export const verifyCreatorInstructionDiscriminator = [
@@ -92,19 +94,29 @@ export function createVerifyCreatorInstruction(
   })
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: accounts.authority,
+      pubkey: accounts.treeAuthority,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: accounts.owner,
+      pubkey: accounts.leafOwner,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: accounts.delegate,
+      pubkey: accounts.leafDelegate,
       isWritable: false,
       isSigner: false,
+    },
+    {
+      pubkey: accounts.merkleTree,
+      isWritable: true,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.payer,
+      isWritable: false,
+      isSigner: true,
     },
     {
       pubkey: accounts.creator,
@@ -112,18 +124,13 @@ export function createVerifyCreatorInstruction(
       isSigner: true,
     },
     {
-      pubkey: accounts.candyWrapper,
+      pubkey: accounts.logWrapper,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: accounts.gummyrollProgram,
+      pubkey: accounts.compressionProgram,
       isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.merkleSlab,
-      isWritable: true,
       isSigner: false,
     },
   ]

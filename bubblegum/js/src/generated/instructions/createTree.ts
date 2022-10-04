@@ -37,24 +37,24 @@ export const createTreeStruct = new beet.BeetArgsStruct<
 /**
  * Accounts required by the _createTree_ instruction
  *
- * @property [_writable_] authority
+ * @property [_writable_] treeAuthority
+ * @property [_writable_] merkleTree
  * @property [_writable_, **signer**] payer
  * @property [**signer**] treeCreator
- * @property [] candyWrapper
- * @property [] gummyrollProgram
- * @property [_writable_] merkleSlab
+ * @property [] logWrapper
+ * @property [] compressionProgram
  * @category Instructions
  * @category CreateTree
  * @category generated
  */
 export type CreateTreeInstructionAccounts = {
-  authority: web3.PublicKey
+  treeAuthority: web3.PublicKey
+  merkleTree: web3.PublicKey
   payer: web3.PublicKey
   treeCreator: web3.PublicKey
-  candyWrapper: web3.PublicKey
+  logWrapper: web3.PublicKey
+  compressionProgram: web3.PublicKey
   systemProgram?: web3.PublicKey
-  gummyrollProgram: web3.PublicKey
-  merkleSlab: web3.PublicKey
 }
 
 export const createTreeInstructionDiscriminator = [
@@ -82,7 +82,12 @@ export function createCreateTreeInstruction(
   })
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: accounts.authority,
+      pubkey: accounts.treeAuthority,
+      isWritable: true,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.merkleTree,
       isWritable: true,
       isSigner: false,
     },
@@ -97,23 +102,18 @@ export function createCreateTreeInstruction(
       isSigner: true,
     },
     {
-      pubkey: accounts.candyWrapper,
+      pubkey: accounts.logWrapper,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.compressionProgram,
       isWritable: false,
       isSigner: false,
     },
     {
       pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
       isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.gummyrollProgram,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.merkleSlab,
-      isWritable: true,
       isSigner: false,
     },
   ]

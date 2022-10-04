@@ -13,7 +13,7 @@ use solana_program::{
 
 /// Pack config. PDA (["config", pack_key], program_id)
 #[repr(C)]
-#[derive(Debug, Clone, PartialEq, BorshSerialize, BorshDeserialize, ShankAccount)]
+#[derive(Debug, Clone, PartialEq, Eq, BorshSerialize, BorshDeserialize, ShankAccount)]
 pub struct PackConfig {
     /// account type - PackConfig
     pub account_type: AccountType,
@@ -25,7 +25,7 @@ pub struct PackConfig {
 
 /// Action CleanUp instruction has to do
 #[repr(C)]
-#[derive(Debug, Clone, PartialEq, BorshSerialize, BorshDeserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, BorshSerialize, BorshDeserialize)]
 pub enum CleanUpActions {
     // change value or if new_value == 0 delete it
     /// index and new_value
@@ -123,15 +123,12 @@ impl PackConfig {
             (rndp * weight_sum as f64).round().to_u32().unwrap()
         };
         for i in self.weights.iter() {
-            bound = match bound.error_sub(i.1) {
-                Ok(num) => num,
-                Err(_) => 0,
-            };
-            if bound <= 0 {
-                return Ok(i.clone());
+            bound = bound.error_sub(i.1).unwrap_or(0);
+            if bound == 0 {
+                return Ok(*i);
             }
         }
-        return Ok(selected.clone());
+        Ok(*selected)
     }
 }
 

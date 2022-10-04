@@ -22,7 +22,7 @@ export type CreateStoreInstructionArgs = {
  * @category CreateStore
  * @category generated
  */
-const createStoreStruct = new beet.FixableBeetArgsStruct<
+export const createStoreStruct = new beet.FixableBeetArgsStruct<
   CreateStoreInstructionArgs & {
     instructionDiscriminator: number[] /* size: 8 */;
   }
@@ -36,6 +36,9 @@ const createStoreStruct = new beet.FixableBeetArgsStruct<
 );
 /**
  * Accounts required by the _createStore_ instruction
+ *
+ * @property [_writable_, **signer**] admin
+ * @property [_writable_, **signer**] store
  * @category Instructions
  * @category CreateStore
  * @category generated
@@ -43,9 +46,11 @@ const createStoreStruct = new beet.FixableBeetArgsStruct<
 export type CreateStoreInstructionAccounts = {
   admin: web3.PublicKey;
   store: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
 };
 
-const createStoreInstructionDiscriminator = [132, 152, 9, 27, 112, 19, 95, 83];
+export const createStoreInstructionDiscriminator = [132, 152, 9, 27, 112, 19, 95, 83];
 
 /**
  * Creates a _CreateStore_ instruction.
@@ -60,33 +65,38 @@ const createStoreInstructionDiscriminator = [132, 152, 9, 27, 112, 19, 95, 83];
 export function createCreateStoreInstruction(
   accounts: CreateStoreInstructionAccounts,
   args: CreateStoreInstructionArgs,
+  programId = new web3.PublicKey('SaLeTjyUa5wXHnGuewUSyJ5JWZaHwz3TxqUntCE9czo'),
 ) {
-  const { admin, store } = accounts;
-
   const [data] = createStoreStruct.serialize({
     instructionDiscriminator: createStoreInstructionDiscriminator,
     ...args,
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: admin,
+      pubkey: accounts.admin,
       isWritable: true,
       isSigner: true,
     },
     {
-      pubkey: store,
+      pubkey: accounts.store,
       isWritable: true,
       isSigner: true,
     },
     {
-      pubkey: web3.SystemProgram.programId,
+      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
       isWritable: false,
       isSigner: false,
     },
   ];
 
+  if (accounts.anchorRemainingAccounts != null) {
+    for (const acc of accounts.anchorRemainingAccounts) {
+      keys.push(acc);
+    }
+  }
+
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey('SaLeTjyUa5wXHnGuewUSyJ5JWZaHwz3TxqUntCE9czo'),
+    programId,
     keys,
     data,
   });

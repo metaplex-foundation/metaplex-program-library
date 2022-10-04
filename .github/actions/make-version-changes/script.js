@@ -8,10 +8,6 @@ const MPL_PROGRAM_CONFIG = {
     has_idl: true,
     uses_anchor: true,
   },
-  auction: {
-    has_idl: false,
-    uses_anchor: false,
-  },
   auctioneer: {
     has_idl: true,
     uses_anchor: true,
@@ -32,10 +28,6 @@ const MPL_PROGRAM_CONFIG = {
     has_idl: true,
     uses_anchor: true,
   },
-  metaplex: {
-    has_idl: false,
-    uses_anchor: false,
-  },
   'nft-packs': {
     has_idl: false,
     uses_anchor: false,
@@ -49,10 +41,9 @@ const MPL_PROGRAM_CONFIG = {
     has_idl: true,
     uses_anchor: false,
   },
-  // uses shank
-  'token-vault': {
+  'hydra': {
     has_idl: true,
-    uses_anchor: false,
+    uses_anchor: true,
   },
 };
 

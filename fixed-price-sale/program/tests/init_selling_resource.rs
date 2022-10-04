@@ -20,7 +20,9 @@ mod init_selling_resource {
     };
     use solana_program::{instruction::Instruction, sysvar};
     use solana_program_test::*;
-    use solana_sdk::{transaction::Transaction, transport::TransportError};
+    use solana_sdk::{
+        commitment_config::CommitmentLevel, transaction::Transaction, transport::TransportError,
+    };
 
     #[tokio::test]
     async fn success() {
@@ -109,8 +111,8 @@ mod init_selling_resource {
         .to_account_metas(None);
 
         let data = mpl_fixed_price_sale_instruction::InitSellingResource {
-            master_edition_bump: master_edition_bump,
-            vault_owner_bump: vault_owner_bump,
+            master_edition_bump,
+            vault_owner_bump,
             max_supply: Some(1),
         }
         .data();
@@ -128,7 +130,11 @@ mod init_selling_resource {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await.unwrap();
+        context
+            .banks_client
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+            .await
+            .unwrap();
 
         let selling_resource_acc = context
             .banks_client
@@ -243,8 +249,8 @@ mod init_selling_resource {
         .to_account_metas(None);
 
         let data = mpl_fixed_price_sale_instruction::InitSellingResource {
-            master_edition_bump: master_edition_bump,
-            vault_owner_bump: vault_owner_bump,
+            master_edition_bump,
+            vault_owner_bump,
             max_supply: Some(1337),
         }
         .data();
@@ -264,7 +270,7 @@ mod init_selling_resource {
 
         let err = context
             .banks_client
-            .process_transaction(tx)
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
             .await
             .unwrap_err();
         match err {
@@ -367,8 +373,8 @@ mod init_selling_resource {
         .to_account_metas(None);
 
         let data = mpl_fixed_price_sale_instruction::InitSellingResource {
-            master_edition_bump: master_edition_bump,
-            vault_owner_bump: vault_owner_bump,
+            master_edition_bump,
+            vault_owner_bump,
             max_supply: None,
         }
         .data();
@@ -388,7 +394,7 @@ mod init_selling_resource {
 
         let err = context
             .banks_client
-            .process_transaction(tx)
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
             .await
             .unwrap_err();
         match err {
