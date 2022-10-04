@@ -2652,6 +2652,26 @@ createErrorFromNameLookup.set(
 );
 
 /**
+ * MustUnverify: 'Must unverify before migrating collections.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MustUnverifyError extends Error {
+  readonly code: number = 0x7b;
+  readonly name: string = 'MustUnverify';
+  constructor() {
+    super('Must unverify before migrating collections.');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MustUnverifyError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x7b, () => new MustUnverifyError());
+createErrorFromNameLookup.set('MustUnverify', () => new MustUnverifyError());
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

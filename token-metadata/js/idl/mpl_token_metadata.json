@@ -1,5 +1,5 @@
 {
-  "version": "1.4.2",
+  "version": "1.4.3",
   "name": "mpl_token_metadata",
   "instructions": [
     {
@@ -3532,6 +3532,11 @@
       "code": 122,
       "name": "EditionNumberGreaterThanMaxSupply",
       "msg": "Edition Number greater than max supply"
+    },
+    {
+      "code": 123,
+      "name": "MustUnverify",
+      "msg": "Must unverify before migrating collections."
     }
   ],
   "metadata": {
