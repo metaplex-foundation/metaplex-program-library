@@ -94,7 +94,6 @@ pub fn handle_set_collection(ctx: Context<SetCollection>) -> Result<()> {
         create_or_allocate_account_raw(
             crate::id(),
             &ctx.accounts.collection_pda.to_account_info(),
-            &ctx.accounts.rent.to_account_info(),
             &ctx.accounts.system_program.to_account_info(),
             &ctx.accounts.authority.to_account_info(),
             COLLECTION_PDA_SIZE,
