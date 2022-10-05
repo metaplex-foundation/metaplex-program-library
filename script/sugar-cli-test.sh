@@ -51,6 +51,9 @@ function default_settings() {
     STORAGE="bundlr"
     ARWEAVE_JWK="null"
     AWS_BUCKET="null"
+    AWS_PROFILE="null"
+    AWS_DIRECTORY="null"
+    AWS_DOMAIN="null"
     NFT_STORAGE_TOKEN="null"
     SHDW_STORAGE_ACCOUNT="null"
     PINATA_JWT="null"
@@ -73,6 +76,9 @@ function max_settings() {
     STORAGE="bundlr"
     ARWEAVE_JWK="null"
     AWS_BUCKET="null"
+    AWS_PROFILE="null"
+    AWS_DIRECTORY="null"
+    AWS_DOMAIN="null"
     NFT_STORAGE_TOKEN="null"
     SHDW_STORAGE_ACCOUNT="null"
     PINATA_JWT="null"
@@ -251,7 +257,19 @@ if [ -z ${AWS_DIRECTORY+x} ]; then
     fi
 fi
 
-# nft.storage
+if [ -z ${AWS_DOMAIN+x} ]; then
+    AWS_DOMAIN="https://$AWS_BUCKET.s3.amazonaws.com"
+
+    if [ "$STORAGE" = "aws" ]; then
+        echo -n "$(CYN "AWS custom domain") (default $AWS_DOMAIN): "
+        read Domain
+
+        if [ ! -z "$Domain" ]; then
+             AWS_DOMAIN=$Domain
+        fi
+    fi
+fi
+
 if [ -z ${NFT_STORAGE_TOKEN+x} ]; then
     NFT_STORAGE_TOKEN="null"
 
@@ -647,7 +665,8 @@ cat >$CONFIG_FILE <<-EOM
     "awsConfig": {
         "bucket": "${AWS_BUCKET}",
         "profile": "${AWS_PROFILE}",
-        "directory": "${AWS_DIRECTORY}"
+        "directory": "${AWS_DIRECTORY}",
+        "domain": "${AWS_DOMAIN}"
     },
     "nftStorageAuthToken": "${NFT_STORAGE_TOKEN}",
     "shdwStorageAccount": $SHDW,
@@ -688,6 +707,7 @@ ARWEAVE_JWK="$ARWEAVE_JWK"
 AWS_BUCKET="$AWS_BUCKET"
 AWS_PROFILE="$AWS_PROFILE"
 AWS_DIRECTORY="$AWS_DIRECTORY"
+AWS_DOMAIN="$AWS_DOMAIN"
 NFT_STORAGE_TOKEN="$NFT_STORAGE_TOKEN"
 SHDW_STORAGE_ACCOUNT="$SHDW_STORAGE_ACCOUNT"
 PINATA_JWT="$PINATA_JWT"

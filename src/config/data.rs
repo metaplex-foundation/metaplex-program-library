@@ -405,14 +405,21 @@ pub struct AwsConfig {
     pub bucket: String,
     pub profile: String,
     pub directory: String,
+    pub domain: Option<String>,
 }
 
 impl AwsConfig {
-    pub fn new(bucket: String, profile: String, directory: String) -> AwsConfig {
+    pub fn new(
+        bucket: String,
+        profile: String,
+        directory: String,
+        domain: Option<String>,
+    ) -> AwsConfig {
         AwsConfig {
             bucket,
             profile,
             directory,
+            domain,
         }
     }
 }

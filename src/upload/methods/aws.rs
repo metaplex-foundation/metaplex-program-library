@@ -20,6 +20,7 @@ const MAX_RETRY: u8 = 3;
 pub struct AWSMethod {
     pub bucket: Arc<Bucket>,
     pub directory: String,
+    pub domain: String,
 }
 
 impl AWSMethod {
@@ -34,9 +35,21 @@ impl AWSMethod {
         let region = AWSMethod::load_region(config_data)?;
 
         if let Some(config) = &config_data.aws_config {
+            let domain = if let Some(domain) = &config.domain {
+                match url::Url::parse(&domain.to_string()) {
+                    Ok(url) => url.to_string(),
+                    Err(error) => {
+                        return Err(anyhow!("Malformed domain URL ({})", error.to_string()))
+                    }
+                }
+            } else {
+                format!("https://{}.s3.amazonaws.com", &config.bucket)
+            };
+
             Ok(Self {
                 bucket: Arc::new(Bucket::new(&config.bucket, region, credentials)?),
                 directory: config.directory.clone(),
+                domain,
             })
         } else {
             Err(anyhow!("Missing AwsConfig 'bucket' value in config file."))
@@ -71,6 +84,7 @@ impl AWSMethod {
     async fn send(
         bucket: Arc<Bucket>,
         directory: String,
+        domain: String,
         asset_info: AssetInfo,
     ) -> Result<(String, String)> {
         let data = match asset_info.data_type {
@@ -115,9 +129,9 @@ impl AWSMethod {
             }
         }
 
-        let link = format!("https://{}.s3.amazonaws.com/{}", bucket.name(), path_str);
+        let link = url::Url::parse(&domain)?.join(path_str)?;
 
-        Ok((asset_info.asset_id, link))
+        Ok((asset_info.asset_id, link.to_string()))
     }
 }
 
@@ -139,7 +153,8 @@ impl ParallelUploader for AWSMethod {
     fn upload_asset(&self, asset_info: AssetInfo) -> JoinHandle<Result<(String, String)>> {
         let bucket = self.bucket.clone();
         let directory = self.directory.clone();
+        let domain = self.domain.clone();
 
-        tokio::spawn(async move { AWSMethod::send(bucket, directory, asset_info).await })
+        tokio::spawn(async move { AWSMethod::send(bucket, directory, domain, asset_info).await })
     }
 }

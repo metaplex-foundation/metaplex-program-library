@@ -632,11 +632,26 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
 
         let directory = Input::with_theme(&theme)
             .with_prompt("What is the directory to upload to? Leave blank to store files at the bucket root dir.")
-            .default(String::from(""))
+            .allow_empty(true)
             .interact()
             .unwrap();
 
-        config_data.aws_config = Some(AwsConfig::new(bucket, profile, directory));
+        let domain: String = Input::with_theme(&theme)
+            .with_prompt("Do you have a custom domain? Leave blank to use AWS default domain.")
+            .allow_empty(true)
+            .interact()
+            .unwrap();
+
+        config_data.aws_config = Some(AwsConfig::new(
+            bucket,
+            profile,
+            directory,
+            if domain.is_empty() {
+                None
+            } else {
+                Some(domain)
+            },
+        ));
     }
 
     if config_data.upload_method == UploadMethod::NftStorage {
