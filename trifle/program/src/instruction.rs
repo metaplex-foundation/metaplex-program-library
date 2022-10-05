@@ -88,10 +88,10 @@ pub enum TrifleInstruction {
     #[account(2, name="escrow_account", desc="The escrow account attached to the NFT")]
     #[account(3, writable, signer, name="payer", desc="The payer for the transaction")]
     #[account(4, writable, signer, name="trifle_authority", desc="The authority of the trifle account")]
-    #[account(5, name="attribute_mint", desc="The mint of the attribute")]
+    #[account(5, writable, name="attribute_mint", desc="The mint of the attribute")]
     #[account(6, writable, name="attribute_src_token_account", desc="The token account the attribute is being transferred from")]
     #[account(7, writable, name="attribute_dst_token_account", desc="The token account the attribute is being transferred to")]
-    #[account(8, name="attribute_metadata", desc="The metadata of the attribute")]
+    #[account(8, writable, name="attribute_metadata", desc="The metadata of the attribute")]
     #[account(9, name="escrow_mint", desc="The mint the escrow is attached to")]
     #[account(10, name="escrow_token_account", desc="The token account holding the NFT the escrow is attached to")]
     #[account(11, name="system_program", desc="The system program")]
@@ -99,8 +99,8 @@ pub enum TrifleInstruction {
     #[account(13, name="spl_token", desc="The spl token program")]
     #[account(14, name="rent", desc="The rent sysvar")]
     #[account(15, optional, name="token_metadata_program")]
-    #[account(16, optional, name="attribute_edition", desc="The edition PDA of the attribute NFT")]
-    #[account(17, optional, name="attribute_collection_metadata", desc="The Metadata PDA of the attribute NFT's collection")]
+    #[account(16, optional, writable, name="attribute_edition", desc="The edition PDA of the attribute NFT")]
+    #[account(17, optional, writable, name="attribute_collection_metadata", desc="The Metadata PDA of the attribute NFT's collection")]
     TransferIn(TransferInArgs),
 
     /// Transfer tokens out of the Trifle escrow account.
@@ -324,10 +324,10 @@ pub fn transfer_in(
         AccountMeta::new_readonly(escrow_account, false),
         AccountMeta::new(payer, true),
         AccountMeta::new_readonly(trifle_authority, false),
-        AccountMeta::new_readonly(attribute_mint, false),
+        AccountMeta::new(attribute_mint, false),
         AccountMeta::new(attribute_src_token_account, false),
         AccountMeta::new(attribute_dst_token_account, false),
-        AccountMeta::new_readonly(attribute_metadata, false),
+        AccountMeta::new(attribute_metadata, false),
         AccountMeta::new_readonly(escrow_mint, false),
         AccountMeta::new_readonly(escrow_token_account, false),
         AccountMeta::new_readonly(solana_program::system_program::id(), false),
@@ -338,7 +338,7 @@ pub fn transfer_in(
     ];
 
     if let Some(attribute_edition) = attribute_edition {
-        accounts.push(AccountMeta::new_readonly(attribute_edition, false));
+        accounts.push(AccountMeta::new(attribute_edition, false));
     }
     if let Some(attribute_collection_metadata) = attribute_collection_metadata {
         accounts.push(AccountMeta::new(attribute_collection_metadata, false));

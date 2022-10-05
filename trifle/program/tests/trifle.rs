@@ -85,7 +85,7 @@ mod trifle {
             &context.payer.pubkey(),
             "Test".to_string(),
             None,
-            FuseOptions::default(),
+            FuseOptions::new().with_burn(true).with_track(true),
         );
 
         let add_none_constraint_ix = add_none_constraint_to_escrow_constraint_model(

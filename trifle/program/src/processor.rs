@@ -315,21 +315,13 @@ fn transfer_in(
         return Err(TrifleError::FuseOptionConflict.into());
     }
 
-    // if constraint_model.fuse_options.track() {
-    //     todo!("track");
-    // }
+    if constraint_model.fuse_options.freeze() {
+        todo!("handle freeze");
+    }
 
-    // if constraint_model.fuse_options.burn() {
-    //     todo!("handle burn");
-    // }
-
-    // if constraint_model.fuse_options.freeze() {
-    //     todo!("handle freeze");
-    // }
-
-    // if constraint_model.fuse_options.freeze_parent() {
-    //     todo!("handle freeze_parent");
-    // }
+    if constraint_model.fuse_options.freeze_parent() {
+        todo!("handle freeze_parent");
+    }
 
     // If burn is not set, create an ATA for the incoming token and perform the transfer.
     if !constraint_model.fuse_options.burn() {
