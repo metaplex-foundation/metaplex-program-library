@@ -1,6 +1,5 @@
 {
   "name": "@metaplex-foundation/metaplex-program-library",
-  "packageManager": "yarn@3.2.0-rc.12",
   "version": "0.1.0",
   "description": "Web interface to Smart Contracts by the Metaplex team.",
   "repository": "git@github.com:metaplex-foundation/metaplex-program-library.git",
@@ -11,11 +10,7 @@
     "@project-serum/anchor": "^0.19.0",
     "@typescript-eslint/eslint-plugin": "^5.4.0",
     "@typescript-eslint/parser": "^5.4.0",
-    "esbuild-runner": "^2.2.1",
-    "eslint": "^8.3.0",
     "eslint-config-prettier": "^8.3.0",
-    "eslint-plugin-prettier": "^4.0.0",
-    "lerna": "^4.0.0",
-    "prettier": "^2.4.1"
+    "eslint-plugin-prettier": "^4.0.0"
   }
 }
