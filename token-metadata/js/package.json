@@ -58,6 +58,8 @@
     "spok": "^1.4.3",
     "supports-color": "^9.2.1",
     "tape": "^5.5.3",
-    "typescript": "^4.6.2"
+    "typescript": "^4.6.2",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^4.0.0"
   }
 }
