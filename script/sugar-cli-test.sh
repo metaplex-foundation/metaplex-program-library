@@ -2,31 +2,7 @@
 #
 # Sugar CLI - Candy Machine automated test
 #
-# To suppress prompts, you will need to set/export the following variables:
-#
-# ENV_URL="mainnet-beta"
-# RPC="https://ssc-dao.genesysgo.net"
-# STORAGE="bundlr"
-#
-# ENV_URL="devnet"
-# RPC="https://devnet.genesysgo.net"
-# STORAGE="bundlr"
-#
-# ITEMS=10
-# MULTIPLE=0
-#
-# RESET="Y"
-# EXT="png"
-# CLOSE="Y"
-# CHANGE="Y"
-# TEST_IMAGE="Y"
-#
-# ARWEAVE_JWK="null"
-# INFURA_ID="null"
-# INFURA_SECRET="null"
-# AWS_BUCKET="null"
-#
-# The custom RPC server option can be specified either by the flag -r <url>
+# Custom RPC server option can be specified either by the flag -r <url>
 
 CURRENT_DIR=$(pwd)
 SCRIPT_DIR=$(cd -- $(dirname -- "${BASH_SOURCE[0]}") &>/dev/null && pwd)
@@ -74,11 +50,13 @@ function default_settings() {
 
     STORAGE="bundlr"
     ARWEAVE_JWK="null"
-    INFURA_ID="null"
-    INFURA_SECRET="null"
     AWS_BUCKET="null"
     NFT_STORAGE_TOKEN="null"
     SHDW_STORAGE_ACCOUNT="null"
+    PINATA_JWT="null"
+    PINATA_API_GATEWAY="null"
+    PINATA_CONTENT_GATEWAY="null"
+    PINATA_PARALLEL=1
 }
 
 function max_settings() {
@@ -94,11 +72,13 @@ function max_settings() {
 
     STORAGE="bundlr"
     ARWEAVE_JWK="null"
-    INFURA_ID="null"
-    INFURA_SECRET="null"
     AWS_BUCKET="null"
     NFT_STORAGE_TOKEN="null"
     SHDW_STORAGE_ACCOUNT="null"
+    PINATA_JWT="null"
+    PINATA_API_GATEWAY="null"
+    PINATA_CONTENT_GATEWAY="null"
+    PINATA_PARALLEL=1
 }
 
 function mainnet_env() {
@@ -221,16 +201,19 @@ if [ -z ${STORAGE+x} ]; then
     echo "2. aws"
     echo "3. nft_storage"
     echo "4. shdw"
-    echo  -n "$(CYN "Select the storage type [1-4]") (default 1): "
+    echo "5. pinata"
+    echo  -n "$(CYN "Select the storage type [1-5]") (default 1): "
     read Input
     case "$Input" in
         1) STORAGE="bundlr" ;;
         2) STORAGE="aws" ;;
         3) STORAGE="nft_storage" ;;
         4) STORAGE="shdw" ;;
+        5) STORAGE="pinata" ;;
     esac
 fi
 
+# arweave
 if [ -z ${ARWEAVE_JWK+x} ]; then
     ARWEAVE_JWK="null"
 
@@ -240,18 +223,7 @@ if [ -z ${ARWEAVE_JWK+x} ]; then
     fi
 fi
 
-if [ -z ${INFURA_ID+x} ]; then
-    INFURA_ID="null"
-    INFURA_SECRET="null"
-
-    if [ "$STORAGE" = "ipfs" ]; then
-        echo -n $(CYN "Infura Project ID: ")
-        read INFURA_ID
-        echo -n $(CYN "Infura Secret: ")
-        read INFURA_SECRET
-    fi
-fi
-
+# AWS
 if [ -z ${AWS_BUCKET+x} ]; then
     AWS_BUCKET="null"
 
@@ -279,6 +251,7 @@ if [ -z ${AWS_DIRECTORY+x} ]; then
     fi
 fi
 
+# nft.storage
 if [ -z ${NFT_STORAGE_TOKEN+x} ]; then
     NFT_STORAGE_TOKEN="null"
 
@@ -288,12 +261,59 @@ if [ -z ${NFT_STORAGE_TOKEN+x} ]; then
     fi
 fi
 
+# shadow drive
 if [ -z ${SHDW_STORAGE_ACCOUNT+x} ]; then
     SHDW_STORAGE_ACCOUNT="null"
 
     if [ "$STORAGE" = "shdw" ]; then
         echo -n $(CYN "SHDW storage account: ")
         read SHDW_STORAGE_ACCOUNT
+    fi
+fi
+
+# pinata ipfs
+if [ -z ${PINATA_JWT+x} ]; then
+    PINATA_JWT="null"
+
+    if [ "$STORAGE" = "pinata" ]; then
+        echo -n $(CYN "Pinata JWT token: ")
+        read PINATA_JWT
+    fi
+fi
+
+if [ -z ${PINATA_API_GATEWAY+x} ]; then
+    PINATA_API_GATEWAY="https://api.pinata.cloud"
+
+    if [ "$STORAGE" = "pinata" ]; then
+        echo -n $(CYN "Pinata gateway [$PINATA_API_GATEWAY]: ")
+        read Gateway
+        if [ ! -z "$Gateway" ]; then
+            PINATA_API_GATEWAY=$Gateway
+        fi
+    fi
+fi
+
+if [ -z ${PINATA_CONTENT_GATEWAY+x} ]; then
+    PINATA_CONTENT_GATEWAY="https://gateway.pinata.cloud"
+
+    if [ "$STORAGE" = "pinata" ]; then
+        echo -n $(CYN "Pinata content gateway [$PINATA_CONTENT_GATEWAY]: ")
+        read Content
+        if [ ! -z "$Content" ]; then
+            PINATA_CONTENT_GATEWAY=$Content
+        fi
+    fi
+fi
+
+if [ -z ${PINATA_PARALLEL+x} ]; then
+    PINATA_PARALLEL=1
+
+    if [ "$STORAGE" = "pinata" ]; then
+        echo -n $(CYN "Pinata parallel limit [1]: ")
+        read Parallel
+        if [ ! -z "$Parallel" ]; then
+            PINATA_PARALLEL=$(($Parallel + 0))
+        fi
     fi
 fi
 
@@ -624,8 +644,6 @@ cat >$CONFIG_FILE <<-EOM
     "whitelistMintSettings": null,
     "hiddenSettings": $HIDDEN_SETTINGS,
     "uploadMethod": "${STORAGE}",
-    "ipfsInfuraProjectId": "${INFURA_ID}",
-    "ipfsInfuraSecret": "${INFURA_SECRET}",
     "awsConfig": {
         "bucket": "${AWS_BUCKET}",
         "profile": "${AWS_PROFILE}",
@@ -636,11 +654,17 @@ cat >$CONFIG_FILE <<-EOM
     "retainAuthority": true,
     "isMutable": true,
     "creators": [
-    {
-      "address": "$(solana address)",
-      "share": 100
+        {
+            "address": "$(solana address)",
+            "share": 100
+        }
+    ],
+    "pinataConfig": {
+        "jwt": "${PINATA_JWT}",
+        "apiGateway": "${PINATA_API_GATEWAY}",
+        "contentGateway": "${PINATA_CONTENT_GATEWAY}",
+        "parallelLimit": ${PINATA_PARALLEL}
     }
-  ]
 }
 EOM
 
@@ -661,13 +685,15 @@ TEST_IMAGE="$TEST_IMAGE"
 HIDDEN="$HIDDEN"
 
 ARWEAVE_JWK="$ARWEAVE_JWK"
-INFURA_ID="$INFURA_ID"
-INFURA_SECRET="$INFURA_SECRET"
 AWS_BUCKET="$AWS_BUCKET"
 AWS_PROFILE="$AWS_PROFILE"
 AWS_DIRECTORY="$AWS_DIRECTORY"
 NFT_STORAGE_TOKEN="$NFT_STORAGE_TOKEN"
 SHDW_STORAGE_ACCOUNT="$SHDW_STORAGE_ACCOUNT"
+PINATA_JWT="$PINATA_JWT"
+PINATA_API_GATEWAY="$PINATA_API_GATEWAY"
+PINATA_CONTENT_GATEWAY="$PINATA_CONTENT_GATEWAY"
+PINATA_PARALLEL=$PINATA_PARALLEL
 
 ENV_URL="$ENV_URL"
 RPC="$RPC"

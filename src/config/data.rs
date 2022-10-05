@@ -78,6 +78,8 @@ pub struct ConfigData {
 
     #[serde(serialize_with = "to_option_string")]
     pub shdw_storage_account: Option<String>,
+
+    pub pinata_config: Option<PinataConfig>,
 }
 
 pub fn to_string<T, S>(value: &T, serializer: S) -> Result<S::Ok, S::Error>
@@ -330,6 +332,7 @@ pub enum UploadMethod {
     NftStorage,
     #[serde(rename = "shdw")]
     SHDW,
+    Pinata,
 }
 
 impl Display for UploadMethod {
@@ -410,6 +413,26 @@ impl AwsConfig {
             bucket,
             profile,
             directory,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PinataConfig {
+    pub jwt: String,
+    pub api_gateway: String,
+    pub content_gateway: String,
+    pub parallel_limit: Option<u16>,
+}
+
+impl PinataConfig {
+    pub fn new(jwt: String, api_gateway: String, content_gateway: String) -> PinataConfig {
+        PinataConfig {
+            jwt,
+            api_gateway,
+            content_gateway,
+            parallel_limit: None,
         }
     }
 }

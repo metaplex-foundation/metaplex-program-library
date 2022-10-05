@@ -17,7 +17,8 @@ use crate::{
     candy_machine::CANDY_MACHINE_ID,
     config::{
         parse_string_as_date, AwsConfig, ConfigData, Creator, EndSettingType, EndSettings,
-        GatekeeperConfig, HiddenSettings, UploadMethod, WhitelistMintMode, WhitelistMintSettings,
+        GatekeeperConfig, HiddenSettings, PinataConfig, UploadMethod, WhitelistMintMode,
+        WhitelistMintSettings,
     },
     constants::*,
     setup::{setup_client, sugar_setup},
@@ -601,7 +602,7 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
     };
 
     // upload method
-    let upload_options = vec!["Bundlr", "AWS", "NFT Storage", "SHDW"];
+    let upload_options = vec!["Bundlr", "AWS", "NFT Storage", "SHDW", "Pinata"];
     config_data.upload_method = match Select::with_theme(&theme)
         .with_prompt("What upload method do you want to use?")
         .items(&upload_options)
@@ -613,6 +614,7 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
         1 => UploadMethod::AWS,
         2 => UploadMethod::NftStorage,
         3 => UploadMethod::SHDW,
+        4 => UploadMethod::Pinata,
         _ => UploadMethod::Bundlr,
     };
 
@@ -654,6 +656,40 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
                 .interact()
                 .unwrap(),
         );
+    }
+
+    if config_data.upload_method == UploadMethod::Pinata {
+        let jwt: String = Input::with_theme(&theme)
+            .with_prompt("What is your Pinata JWT authentication?")
+            .interact()
+            .unwrap();
+
+        let api_gateway = Input::with_theme(&theme)
+            .with_prompt("What is the Pinata API gateway for upload?")
+            .default(String::from("https://api.pinata.cloud"))
+            .interact()
+            .unwrap();
+
+        let content_gateway = Input::with_theme(&theme)
+            .with_prompt("What is the Pinata gateway for content retrieval?")
+            .default(String::from("https://gateway.pinata.cloud"))
+            .interact()
+            .unwrap();
+
+        let parallel_limit = Input::with_theme(&theme)
+            .with_prompt("How many concurrent uploads are allowed?")
+            .validate_with(number_validator)
+            .interact()
+            .unwrap()
+            .parse::<u16>()
+            .expect("Failed to parse number into u64 that should have already been validated.");
+
+        config_data.pinata_config = Some(PinataConfig {
+            jwt,
+            api_gateway,
+            content_gateway,
+            parallel_limit: Some(parallel_limit),
+        });
     }
 
     // retain authority

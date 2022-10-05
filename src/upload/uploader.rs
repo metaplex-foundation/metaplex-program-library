@@ -36,7 +36,6 @@ pub const MOCK_URI_SIZE: usize = 100;
 /// For example, for image files, the `content` contains the path of the file on the
 /// file system. In the case of json metadata files, the `content` contains the string
 /// representation of the json metadata.
-///
 pub struct AssetInfo {
     /// Id of the asset in the cache.
     pub asset_id: String,
@@ -71,7 +70,6 @@ pub trait Prepare {
     /// The `asset_pairs` contain the complete information of the assets, but only the assets specified in the
     /// `asset_indices` will be uploaded. E.g., if index `1` is only present in the `DataType::Image` indices' array,
     /// only the image of asset `1` will the uploaded.
-    ///
     async fn prepare(
         &self,
         sugar_config: &SugarConfig,
@@ -85,7 +83,6 @@ pub trait Prepare {
 /// This trait should be implemented directly by upload methods that require full control on how the upload
 /// is performed. For methods that support parallel uploads (threading), consider implementing
 /// [`ParallelUploader`](ParallelUploader) instead.
-///
 #[async_trait]
 pub trait Uploader: Prepare {
     /// Returns a vector [`UploadError`](super::errors::UploadError) with the errors (if any) after uploading all
@@ -143,7 +140,6 @@ pub trait Uploader: Prepare {
     /// // after several uploads
     /// cache.sync_file()?;
     /// ```
-    ///
     async fn upload(
         &self,
         sugar_config: &SugarConfig,
@@ -178,16 +174,20 @@ pub trait ParallelUploader: Uploader + Send + Sync {
     /// ```
     ///
     fn upload_asset(&self, asset: AssetInfo) -> JoinHandle<Result<(String, String)>>;
+
+    /// Return the number of concurrent uploads allowed. The default implementation returns
+    /// the value [PARALLEL_LIMIT].
+    fn parallel_limit(&self) -> usize {
+        PARALLEL_LIMIT
+    }
 }
 
 /// Default implementation of the trait ['Uploader'](Uploader) for all ['ParallelUploader'](ParallelUploader).
-///
 #[async_trait]
 impl<T: ParallelUploader> Uploader for T {
-    /// Uploads assets in parallel. It creates `PARALLEL_LIMIT`[PARALLEL_LIMIT] tasks at a time to avoid
-    /// reaching the limit of concurrent files open and it syncs the cache file at every `PARALLEL_LIMIT / 2`
+    /// Uploads assets in parallel. It creates [`self::parallel_limit()`] tasks at a time to avoid
+    /// reaching the limit of concurrent files open and it syncs the cache file at every `self.parallel_limit() / 2`
     /// step.
-    ///
     async fn upload(
         &self,
         _sugar_config: &SugarConfig,
@@ -197,9 +197,10 @@ impl<T: ParallelUploader> Uploader for T {
         progress: &ProgressBar,
         interrupted: Arc<AtomicBool>,
     ) -> Result<Vec<UploadError>> {
+        let limit = self.parallel_limit();
         let mut handles = Vec::new();
 
-        for task in assets.drain(0..cmp::min(assets.len(), PARALLEL_LIMIT)) {
+        for task in assets.drain(0..cmp::min(assets.len(), limit)) {
             handles.push(self.upload_asset(task));
         }
 
@@ -242,10 +243,14 @@ impl<T: ParallelUploader> Uploader for T {
             }
             if !assets.is_empty() {
                 // if we are half way through, let spawn more transactions
-                if (PARALLEL_LIMIT - handles.len()) > (PARALLEL_LIMIT / 2) {
+                if (limit - handles.len()) > (limit / 2) {
                     // syncs cache (checkpoint)
                     cache.sync_file()?;
-                    for task in assets.drain(0..cmp::min(assets.len(), PARALLEL_LIMIT / 2)) {
+                    // determine the number of task to release
+                    let task_count =
+                        cmp::min(assets.len(), if limit < 2 { limit } else { limit / 2 });
+
+                    for task in assets.drain(0..task_count) {
                         handles.push(self.upload_asset(task));
                     }
                 }
@@ -266,7 +271,6 @@ impl<T: ParallelUploader> Uploader for T {
 /// Returns a new uploader trait object based on the configuration `uploadMethod`.
 ///
 /// This function acts as a *factory* function for uploader objects.
-///
 pub async fn initialize(
     sugar_config: &SugarConfig,
     config_data: &ConfigData,
@@ -281,6 +285,9 @@ pub async fn initialize(
         }
         UploadMethod::SHDW => {
             Box::new(SHDWMethod::new(sugar_config, config_data).await?) as Box<dyn Uploader>
+        }
+        UploadMethod::Pinata => {
+            Box::new(PinataMethod::new(config_data).await?) as Box<dyn Uploader>
         }
     })
 }
