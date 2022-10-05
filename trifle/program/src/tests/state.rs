@@ -6,6 +6,7 @@ mod escrow {
         error::TrifleError,
         state::{
             escrow_constraints::{EscrowConstraint, EscrowConstraintModel, EscrowConstraintType},
+            fuse_options::FuseOptions,
             trifle::Trifle,
             Key,
         },
@@ -112,6 +113,7 @@ mod escrow {
             creator: Keypair::new().pubkey(),
             constraints,
             schema_uri: None,
+            fuse_options: FuseOptions::default(),
         };
 
         let mut buf_escrow_constraints_model = Vec::new();
@@ -157,8 +159,8 @@ mod escrow {
         };
 
         let mut constraints = HashMap::new();
-        constraints.insert("none".to_string(), ec_none);
-        constraints.insert("none_unlimited".to_string(), ec_none_unlimited);
+        constraints.insert("none".to_string(), ec_none.clone());
+        constraints.insert("none_unlimited".to_string(), ec_none_unlimited.clone());
         constraints.insert("collection".to_string(), ec_collection);
         constraints.insert("tokens".to_string(), ec_tokens.clone());
 
@@ -170,6 +172,7 @@ mod escrow {
             creator: Keypair::new().pubkey(),
             constraints,
             schema_uri: Some("test".to_string()),
+            fuse_options: FuseOptions::default(),
         };
 
         escrow_constraints_model
@@ -202,28 +205,18 @@ mod escrow {
 
         // EC::None limit 1
         assert_eq!(
-            trifle.try_add(
-                &escrow_constraints_model,
-                "none".to_string(),
-                keypair_1.pubkey(),
-                1
-            ),
+            trifle.try_add(&ec_none, "none".to_string(), keypair_1.pubkey(), 1),
             Ok(())
         );
         assert_eq!(
-            trifle.try_add(
-                &escrow_constraints_model,
-                "none".to_string(),
-                keypair_1.pubkey(),
-                1
-            ),
+            trifle.try_add(&ec_none, "none".to_string(), keypair_1.pubkey(), 1),
             Err(TrifleError::TokenLimitExceeded)
         );
 
         // EC::None unlimited
         assert_eq!(
             trifle.try_add(
-                &escrow_constraints_model,
+                &ec_none_unlimited,
                 "none_unlimited".to_string(),
                 keypair_1.pubkey(),
                 1
@@ -232,7 +225,7 @@ mod escrow {
         );
         assert_eq!(
             trifle.try_add(
-                &escrow_constraints_model,
+                &ec_none_unlimited,
                 "none_unlimited".to_string(),
                 keypair_1.pubkey(),
                 1
@@ -240,42 +233,22 @@ mod escrow {
             Ok(())
         );
 
-        assert_eq!(
-            trifle.try_add(
-                &escrow_constraints_model,
-                "tokens".to_string(),
-                keypair_1.pubkey(),
-                5
-            ),
-            Err(TrifleError::EscrowConstraintViolation)
-        );
+        // assert_eq!(
+        //     trifle.try_add(&ec_tokens, "tokens".to_string(), keypair_1.pubkey(), 5),
+        //     Err(TrifleError::EscrowConstraintViolation)
+        // );
 
         // limit is 10
         assert_eq!(
-            trifle.try_add(
-                &escrow_constraints_model,
-                "tokens".to_string(),
-                keypair_2.pubkey(),
-                5
-            ),
+            trifle.try_add(&ec_tokens, "tokens".to_string(), keypair_2.pubkey(), 5),
             Ok(())
         );
         assert_eq!(
-            trifle.try_add(
-                &escrow_constraints_model,
-                "tokens".to_string(),
-                keypair_3.pubkey(),
-                5
-            ),
+            trifle.try_add(&ec_tokens, "tokens".to_string(), keypair_3.pubkey(), 5),
             Ok(())
         );
         assert_eq!(
-            trifle.try_add(
-                &escrow_constraints_model,
-                "tokens".to_string(),
-                keypair_3.pubkey(),
-                5
-            ),
+            trifle.try_add(&ec_tokens, "tokens".to_string(), keypair_3.pubkey(), 5),
             Err(TrifleError::TokenLimitExceeded)
         );
     }

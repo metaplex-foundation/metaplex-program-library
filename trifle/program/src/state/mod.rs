@@ -1,4 +1,5 @@
 pub mod escrow_constraints;
+pub mod fuse_options;
 pub mod trifle;
 
 use std::io::ErrorKind;

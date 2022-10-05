@@ -53,6 +53,9 @@ pub enum TrifleError {
 
     #[error("Provided Metadata Account does not have Collection Details")]
     NotACollection,
+
+    #[error("Provided Fuse Options are in conflict")]
+    FuseOptionConflict,
 }
 
 impl From<TrifleError> for ProgramError {

@@ -17,7 +17,9 @@ mod trifle {
             transfer_out,
         },
         pda::{find_escrow_constraint_model_address, find_trifle_address},
-        state::{escrow_constraints::EscrowConstraintModel, trifle::Trifle},
+        state::{
+            escrow_constraints::EscrowConstraintModel, fuse_options::FuseOptions, trifle::Trifle,
+        },
     };
     use solana_program::borsh::try_from_slice_unchecked;
 
@@ -83,6 +85,7 @@ mod trifle {
             &context.payer.pubkey(),
             "Test".to_string(),
             None,
+            FuseOptions::default(),
         );
 
         let add_none_constraint_ix = add_none_constraint_to_escrow_constraint_model(
@@ -224,6 +227,8 @@ mod trifle {
             attribute_metadata.pubkey,
             metadata.mint.pubkey(),
             metadata.token.pubkey(),
+            Some(attribute_master_edition.pubkey),
+            None,
             "test".to_string(),
             1,
         );

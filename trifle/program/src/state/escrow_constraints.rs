@@ -7,7 +7,10 @@ use borsh::{BorshDeserialize, BorshSerialize};
 use shank::ShankAccount;
 use solana_program::{program_error::ProgramError, pubkey::Pubkey};
 
-use crate::{error::TrifleError, state::Key};
+use crate::{
+    error::TrifleError,
+    state::{fuse_options::FuseOptions, Key},
+};
 
 #[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, ShankAccount)]
@@ -19,6 +22,7 @@ pub struct EscrowConstraintModel {
     pub update_authority: Pubkey,
     pub count: u64,
     pub schema_uri: Option<String>,
+    pub fuse_options: FuseOptions,
 }
 
 impl EscrowConstraintModel {
@@ -52,6 +56,7 @@ impl EscrowConstraintModel {
                     + mem::size_of::<u64>()
                     + option_overhead // for schema_uri
                     + schema_size // the schema itself
+                    + mem::size_of::<FuseOptions>() // for fuse_options
             })
     }
 
@@ -74,6 +79,7 @@ impl Default for EscrowConstraintModel {
             update_authority: Pubkey::default(),
             count: 0,
             schema_uri: None,
+            fuse_options: FuseOptions::default(),
         }
     }
 }

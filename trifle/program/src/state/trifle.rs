@@ -7,7 +7,7 @@ use shank::ShankAccount;
 use solana_program::pubkey::Pubkey;
 use std::collections::HashMap;
 
-use super::SolanaAccount;
+use super::{escrow_constraints::EscrowConstraint, SolanaAccount};
 
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, ShankAccount)]
 pub struct Trifle {
@@ -49,18 +49,11 @@ impl Default for Trifle {
 impl Trifle {
     pub fn try_add(
         &mut self,
-        constraint_model: &EscrowConstraintModel,
+        constraint: &EscrowConstraint,
         constraint_key: String,
         token: Pubkey,
         amount: u64,
     ) -> Result<(), TrifleError> {
-        constraint_model.validate(&token, &constraint_key)?;
-
-        let constraint = constraint_model
-            .constraints
-            .get(&constraint_key)
-            .ok_or(TrifleError::InvalidEscrowConstraint)?;
-
         let tokens = self.tokens.entry(constraint_key).or_insert(vec![]);
 
         // 0 means there is no limit to how many tokens may be added

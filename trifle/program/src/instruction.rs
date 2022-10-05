@@ -5,11 +5,14 @@ use solana_program::{
     pubkey::Pubkey,
 };
 
+use crate::state::fuse_options::FuseOptions;
+
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct CreateEscrowConstraintModelAccountArgs {
     pub name: String,
     pub schema_uri: Option<String>,
+    pub fuse_options: FuseOptions,
 }
 
 #[repr(C)]
@@ -95,6 +98,9 @@ pub enum TrifleInstruction {
     #[account(12, name="spl_associated_token_account", desc="The associated token account program")]
     #[account(13, name="spl_token", desc="The spl token program")]
     #[account(14, name="rent", desc="The rent sysvar")]
+    #[account(15, optional, name="token_metadata_program")]
+    #[account(16, optional, name="attribute_edition", desc="The edition PDA of the attribute NFT")]
+    #[account(17, optional, name="attribute_collection_metadata", desc="The Metadata PDA of the attribute NFT's collection")]
     TransferIn(TransferInArgs),
 
     /// Transfer tokens out of the Trifle escrow account.
@@ -144,6 +150,7 @@ pub fn create_escrow_constraint_model_account(
     update_authority: &Pubkey,
     name: String,
     schema_uri: Option<String>,
+    fuse_options: FuseOptions,
 ) -> Instruction {
     let accounts = vec![
         AccountMeta::new(*escrow_constraint_model, false),
@@ -156,7 +163,11 @@ pub fn create_escrow_constraint_model_account(
         program_id: *program_id,
         accounts,
         data: TrifleInstruction::CreateEscrowConstraintModelAccount(
-            CreateEscrowConstraintModelAccountArgs { name, schema_uri },
+            CreateEscrowConstraintModelAccountArgs {
+                name,
+                schema_uri,
+                fuse_options,
+            },
         )
         .try_to_vec()
         .unwrap(),
@@ -302,10 +313,12 @@ pub fn transfer_in(
     attribute_metadata: Pubkey,
     escrow_mint: Pubkey,
     escrow_token_account: Pubkey,
+    attribute_edition: Option<Pubkey>,
+    attribute_collection_metadata: Option<Pubkey>,
     slot: String,
     amount: u64,
 ) -> Instruction {
-    let accounts = vec![
+    let mut accounts = vec![
         AccountMeta::new(trifle_account, false),
         AccountMeta::new_readonly(constraint_model, false),
         AccountMeta::new_readonly(escrow_account, false),
@@ -321,7 +334,15 @@ pub fn transfer_in(
         AccountMeta::new_readonly(spl_associated_token_account::id(), false),
         AccountMeta::new_readonly(spl_token::id(), false),
         AccountMeta::new_readonly(solana_program::sysvar::rent::id(), false),
+        AccountMeta::new_readonly(mpl_token_metadata::id(), false),
     ];
+
+    if let Some(attribute_edition) = attribute_edition {
+        accounts.push(AccountMeta::new_readonly(attribute_edition, false));
+    }
+    if let Some(attribute_collection_metadata) = attribute_collection_metadata {
+        accounts.push(AccountMeta::new(attribute_collection_metadata, false));
+    }
 
     let data = TrifleInstruction::TransferIn(TransferInArgs { slot, amount })
         .try_to_vec()
