@@ -56,6 +56,9 @@ pub enum TrifleError {
 
     #[error("Provided Fuse Options are in conflict")]
     FuseOptionConflict,
+
+    #[error("Freeze Authority Not Set")]
+    FreezeAuthorityNotSet,
 }
 
 impl From<TrifleError> for ProgramError {

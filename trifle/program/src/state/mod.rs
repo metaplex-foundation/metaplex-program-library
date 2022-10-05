@@ -14,6 +14,7 @@ use crate::error::TrifleError;
 
 pub const TRIFLE_SEED: &str = "trifle";
 pub const ESCROW_SEED: &str = "escrow";
+pub const FREEZE_AUTHORITY: &str = "freeze_authority";
 
 #[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, Copy, FromPrimitive)]
