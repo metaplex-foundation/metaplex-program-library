@@ -45,11 +45,13 @@
   },
   "devDependencies": {
     "@metaplex-foundation/solita": "^0.13.0",
+    "@typescript-eslint/eslint-plugin": "^5.39.0",
+    "@typescript-eslint/parser": "^5.39.0",
     "eslint": "^8.3.0",
-    "rimraf": "^3.0.2",
-    "typescript": "^4.6.2",
     "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin": "^1.0.1",
     "eslint-plugin-prettier": "^4.0.0",
-    "eslint-plugin": "^1.0.1"
+    "rimraf": "^3.0.2",
+    "typescript": "^4.6.2"
   }
 }
