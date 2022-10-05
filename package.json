@@ -23,7 +23,8 @@
     "hydra/js",
     "bubblegum/js",
     "nft-packs/js",
-    "trifle/js"
+    "trifle/js",
+    "trifle/cli"
   ],
   "repository": "git@github.com:metaplex-foundation/metaplex-program-library.git",
   "author": "Metaplex Maintainers <contact@metaplex.com>",
