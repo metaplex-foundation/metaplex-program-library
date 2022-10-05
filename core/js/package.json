@@ -41,6 +41,7 @@
     "bs58": "^4.0.1"
   },
   "devDependencies": {
+    "@types/bn.js": "^5.1.1",
     "@types/bs58": "^4.0.1",
     "eslint": "^8.3.0",
     "rimraf": "^3.0.2",
