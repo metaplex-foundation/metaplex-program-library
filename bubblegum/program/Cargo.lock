@@ -3998,9 +3998,9 @@ dependencies = [
 
 [[package]]
 name = "spl-account-compression"
-version = "0.1.0"
+version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a9fe548ab94493a49ecd68496439998a74784a9c4ec43fe9ec7364e2e53c9001"
+checksum = "893a9fb88714d977a261073fdd86c54cf3289fc15c977b4192116e5805788117"
 dependencies = [
  "anchor-lang",
  "bytemuck",
@@ -4026,9 +4026,9 @@ dependencies = [
 
 [[package]]
 name = "spl-concurrent-merkle-tree"
-version = "0.1.0"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "df4d5f6daaf91a5e2618a2ecc3ea74b2c6cab92cf4595c77d444802874df153a"
+checksum = "97fa18c14da1f02b360f936468ea60af94834fbcbc495cc316fb84734cd3cd6d"
 dependencies = [
  "bytemuck",
  "solana-program",
@@ -4056,9 +4056,9 @@ dependencies = [
 
 [[package]]
 name = "spl-noop"
-version = "0.1.0"
+version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fc0a0e73ff74f170d538773dd4ddccbac224ca1db478488abaa70f30da20bd7b"
+checksum = "76d9424a96e1cab78bf65bac7b6c8d97662af07d3bc263b065d527de9c85f296"
 dependencies = [
  "solana-program",
 ]
