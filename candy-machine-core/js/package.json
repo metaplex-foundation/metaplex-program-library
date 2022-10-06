@@ -13,11 +13,9 @@
     "postpublish": "git push origin && git push origin --tags",
     "build:docs": "typedoc",
     "build": "rimraf dist && tsc -p tsconfig.json",
-    "pretest": "yarn build && yarn amman:start",
-    "test": "tape dist/test/*.js",
-    "posttest": "yarn build && yarn amman:stop",
+    "test": "tape dist/test/*.test.js",
     "api:gen": "DEBUG='(solita|rustbin):(info|error)' solita",
-    "amman:start": "DEBUG='amman:(info|error)' amman start",
+    "amman:start": "amman start",
     "amman:stop": "amman stop",
     "lint": "eslint \"{src,test}/**/*.ts\" --format stylish",
     "fix:lint": "yarn lint --fix",
@@ -26,7 +24,7 @@
     "fix": "yarn fix:lint && yarn fix:prettier"
   },
   "files": [
-    "/dist"
+    "./dist/src/**/*"
   ],
   "publishConfig": {
     "access": "public",
