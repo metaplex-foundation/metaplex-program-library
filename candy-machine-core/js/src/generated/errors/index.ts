@@ -444,6 +444,26 @@ createErrorFromNameLookup.set(
 );
 
 /**
+ * NotFullyLoaded: 'Not all config lines were added to the candy machine'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class NotFullyLoadedError extends Error {
+  readonly code: number = 0x1784;
+  readonly name: string = 'NotFullyLoaded';
+  constructor() {
+    super('Not all config lines were added to the candy machine');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, NotFullyLoadedError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1784, () => new NotFullyLoadedError());
+createErrorFromNameLookup.set('NotFullyLoaded', () => new NotFullyLoadedError());
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

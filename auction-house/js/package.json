@@ -48,6 +48,7 @@
   },
   "devDependencies": {
     "@metaplex-foundation/solita": "^0.15.2",
+    "@solana/spl-token": "0.3.5",
     "@types/tape": "^4.13.2",
     "eslint": "^8.3.0",
     "prettier": "^2.5.1",

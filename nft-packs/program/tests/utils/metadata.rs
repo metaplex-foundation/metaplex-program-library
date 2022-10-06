@@ -88,7 +88,13 @@ impl TestMetadata {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await
+        context
+            .banks_client
+            .process_transaction_with_commitment(
+                tx,
+                solana_sdk::commitment_config::CommitmentLevel::Confirmed,
+            )
+            .await
     }
 
     pub async fn update_primary_sale_happened_via_token(
@@ -107,7 +113,13 @@ impl TestMetadata {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await
+        context
+            .banks_client
+            .process_transaction_with_commitment(
+                tx,
+                solana_sdk::commitment_config::CommitmentLevel::Confirmed,
+            )
+            .await
     }
 
     pub async fn update(
@@ -139,6 +151,12 @@ impl TestMetadata {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await
+        context
+            .banks_client
+            .process_transaction_with_commitment(
+                tx,
+                solana_sdk::commitment_config::CommitmentLevel::Confirmed,
+            )
+            .await
     }
 }

@@ -1,12 +1,10 @@
 import { Connection, Keypair, PublicKey } from '@solana/web3.js';
 import { Test } from 'tape';
 import { PayerTransactionHandler } from '@metaplex-foundation/amman-client';
-import { InitTransactions } from 'test/setup';
-import { CandyMachine } from 'src';
+import { CandyMachine } from '../../src';
 import { BN } from 'bn.js';
 import { keypairIdentity, Metaplex } from '@metaplex-foundation/js';
-
-const API = new InitTransactions();
+import { InitTransactions } from '../setup';
 
 export async function drain(
   t: Test,
@@ -15,6 +13,7 @@ export async function drain(
   handler: PayerTransactionHandler,
   connection: Connection,
 ): Promise<number[]> {
+  const API = new InitTransactions();
   const candyMachineObject = await CandyMachine.fromAccountAddress(connection, candyMachine);
   const available =
     new BN(candyMachineObject.data.itemsAvailable).toNumber() -

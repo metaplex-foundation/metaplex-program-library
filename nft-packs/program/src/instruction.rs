@@ -15,7 +15,7 @@ use solana_program::{
 };
 
 #[repr(C)]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct AddCardToPackArgs {
     /// How many editions of this card will exists in pack
     pub max_supply: u32,
@@ -27,7 +27,7 @@ pub struct AddCardToPackArgs {
 
 /// Initialize a PackSet arguments
 #[repr(C)]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct InitPackSetArgs {
     /// Name
     pub name: [u8; 32],
@@ -49,7 +49,7 @@ pub struct InitPackSetArgs {
 
 /// Edit a PackSet arguments
 #[repr(C)]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct EditPackSetArgs {
     /// Name
     pub name: Option<[u8; 32]>,
@@ -63,7 +63,7 @@ pub struct EditPackSetArgs {
 
 /// Claim card from pack
 #[repr(C)]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct ClaimPackArgs {
     /// Card index
     pub index: u32,
@@ -71,7 +71,7 @@ pub struct ClaimPackArgs {
 
 /// Request card to redeem arguments
 #[repr(C)]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct RequestCardToRedeemArgs {
     /// Voucher index
     pub index: u32,
@@ -88,7 +88,7 @@ pub enum NFTPacksInstruction {
     /// - name [u8; 32]
     /// - description String
     /// - URI String
-    /// - mutable	bool
+    /// - mutable    bool
     /// - distribution_type    DistributionType
     /// - allowed_amount_to_redeem    u32
     /// - redeem_start_date    Option<u64>
@@ -107,9 +107,9 @@ pub enum NFTPacksInstruction {
     /// Also admin points how many items of this specific MasterEdition will be in the pack. Check MasterEdition for V2.
     ///
     /// Parameters:
-    /// - max_supply	Option<u32>
-    /// - probability_type	enum[fixed number, probability based]
-    /// - probability	u64
+    /// - max_supply    Option<u32>
+    /// - probability_type   enum[fixed number, probability based]
+    /// - probability    u64
 
     #[account(0, writable, name = "pack_set")]
     #[account(1, writable, name = "pack_config", desc = "PDA, ['config', pack]")]
@@ -273,7 +273,7 @@ pub enum NFTPacksInstruction {
     /// - name Option<[u8; 32]>
     /// - description Option<String>
     /// - URI Option<String>
-    /// - mutable	Option<bool> (only can be changed from true to false)
+    /// - mutable Option<bool> (only can be changed from true to false)
     #[account(0, writable, name = "pack_set")]
     #[account(1, signer, name = "authority")]
     EditPack(EditPackSetArgs),

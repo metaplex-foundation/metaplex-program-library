@@ -13,40 +13,42 @@ env:
 
 jobs:
   changes:
-    runs-on: ubuntu-latest
+    runs-on: buildjet-4vcpu-ubuntu-2004
     # Set job outputs to values from filter step
     outputs:
       core: ${{ steps.filter.outputs.core }}
       package: ${{ steps.filter.outputs.package }}
       workflow: ${{ steps.filter.outputs.workflow }}
     steps:
-    - uses: actions/checkout@v2
-    # For pull requests it's not necessary to checkout the code
-    - uses: dorny/paths-filter@v2
-      id: filter
-      with:
-        filters: |
-          core:
-            - 'core/**'
-          package:
-            - 'hydra/**'
-          workflow:
-            - '.github/workflows/integration-hydra.yml'
+      - uses: actions/checkout@v2
+      # For pull requests it's not necessary to checkout the code
+      - uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            core:
+              - 'core/**'
+            package:
+              - 'hydra/**'
+            workflow:
+              - '.github/workflows/integration-hydra.yml'
   build-and-integration-test-hydra:
-    runs-on: ubuntu-latest
+    runs-on: buildjet-4vcpu-ubuntu-2004
     env:
-      cache_id: program-hydra 
+      cache_id: program-hydra
     needs: changes
-    if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' || needs.changes.outputs.workflow == 'true' }}
+    if:
+      ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' ||
+      needs.changes.outputs.workflow == 'true' }}
     steps:
       # Setup Deps
       - uses: actions/checkout@v2
       - uses: ./.github/actions/install-linux-build-deps
       - uses: ./.github/actions/install-solana
-        with: 
+        with:
           solana_version: ${{ env.SOLANA_VERSION }}
       - uses: ./.github/actions/install-rust
-        with: 
+        with:
           toolchain: ${{ env.RUST_TOOLCHAIN }}
 
       # Restore Cache from previous build/test
@@ -58,7 +60,9 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             ./rust/target
-          key: ${{ env.cache_id }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{ env.RUSTC_HASH }}
+          key:
+            ${{ env.cache_id }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{
+            env.RUSTC_HASH }}
 
       # Build Rust Program
       - uses: ./.github/actions/build-hydra
@@ -66,7 +70,7 @@ jobs:
 
       # Install JS SDK deps
       - uses: ./.github/actions/yarn-install-and-build
-        with: 
+        with:
           cache_id: sdk-hydra
           working_dir: ./hydra/js
           build_token_metadata: true
@@ -80,7 +84,7 @@ jobs:
       #   id: run_integration_test
       #   working-directory: ./hydra/js
       #   run: DEBUG=mpl* yarn test
-      
+
       # - name: stop-local-test-validator
       #   working-directory: ./hydra/js
       #   run: yarn amman:stop

@@ -42,4 +42,6 @@ pub enum CandyError {
     CollectionKeyMismatch,
     #[msg("Could not retrive config line data")]
     CouldNotRetrieveConfigLineData,
+    #[msg("Not all config lines were added to the candy machine")]
+    NotFullyLoaded,
 }

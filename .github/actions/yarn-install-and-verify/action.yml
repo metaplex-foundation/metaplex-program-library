@@ -20,6 +20,15 @@ inputs:
     description: If true it will build the token_metadata package before running checks
     required: false
     default: false
+  build_auction_house:
+    description: If true it will build the auction_house package before running checks
+    required: false
+    default: false
+  build_candy_machine:
+    description: If true it will build the candy_machine package before running checks
+    required: false
+    default: false
+
 
 runs:
   using: composite
@@ -55,6 +64,26 @@ runs:
         echo 'Install and Build token-metadata: yarn build'
         yarn build
       working-directory: ./token-metadata/js 
+      shell: bash
+
+    - name: Install and Build auction-house
+      if: inputs.build_auction_house == 'true'
+      run: |
+        echo 'Install and Build auction-house: yarn install'
+        yarn install
+        echo 'Install and Build auction-house: yarn build'
+        yarn build
+      working-directory: ./auction-house/js 
+      shell: bash
+
+    - name: Install and Build candy-machine
+      if: inputs.build_candy_machine == 'true'
+      run: |
+        echo 'Install and Build candy-machine: yarn install'
+        yarn install
+        echo 'Install and Build candy-machine: yarn build'
+        yarn build
+      working-directory: ./candy-machine/js 
       shell: bash
 
     ##############

@@ -57,7 +57,6 @@ pub fn set_collection(ctx: Context<SetCollection>) -> Result<()> {
         collection_authority_record: accounts.new_collection_authority_record.to_account_info(),
         token_metadata_program: accounts.token_metadata_program.to_account_info(),
         system_program: accounts.system_program.to_account_info(),
-        rent: accounts.rent.to_account_info(),
     };
 
     approve_collection_authority_helper(approve_collection_authority_helper_accounts)?;
@@ -78,7 +77,6 @@ pub fn approve_collection_authority_helper(
         collection_authority_record,
         token_metadata_program,
         system_program,
-        rent,
     } = accounts;
 
     let collection_data: Metadata = Metadata::from_account_info(&collection_metadata)?;
@@ -115,7 +113,6 @@ pub fn approve_collection_authority_helper(
             collection_metadata,
             collection_mint,
             system_program,
-            rent,
         ];
 
         invoke(
@@ -146,8 +143,6 @@ pub struct ApproveCollectionAuthorityHelperAccounts<'info> {
     pub token_metadata_program: AccountInfo<'info>,
     /// CHECK:
     pub system_program: AccountInfo<'info>,
-    /// CHECK:
-    pub rent: AccountInfo<'info>,
 }
 
 /// Set the collection PDA for the candy machine
@@ -188,5 +183,4 @@ pub struct SetCollection<'info> {
     #[account(address = mpl_token_metadata::id())]
     token_metadata_program: UncheckedAccount<'info>,
     system_program: Program<'info, System>,
-    rent: Sysvar<'info, Rent>,
 }

@@ -1,5 +1,5 @@
 {
-  "version": "0.0.2",
+  "version": "0.0.3",
   "name": "candy_machine_core",
   "instructions": [
     {
@@ -92,11 +92,6 @@
         },
         {
           "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "rent",
           "isMut": false,
           "isSigner": false
         }
@@ -193,11 +188,6 @@
         },
         {
           "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "rent",
           "isMut": false,
           "isSigner": false
         },
@@ -306,11 +296,6 @@
         },
         {
           "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "rent",
           "isMut": false,
           "isSigner": false
         }
@@ -759,6 +744,11 @@
       "code": 6019,
       "name": "CouldNotRetrieveConfigLineData",
       "msg": "Could not retrive config line data"
+    },
+    {
+      "code": 6020,
+      "name": "NotFullyLoaded",
+      "msg": "Not all config lines were added to the candy machine"
     }
   ],
   "metadata": {

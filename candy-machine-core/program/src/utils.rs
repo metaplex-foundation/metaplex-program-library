@@ -1,4 +1,5 @@
 use anchor_lang::prelude::*;
+use arrayref::array_ref;
 use solana_program::{
     account_info::AccountInfo,
     program::invoke,
@@ -9,7 +10,7 @@ use solana_program::{
 };
 
 use crate::{
-    constants::{NULL_STRING, REPLACEMENT_INDEX, REPLACEMENT_INDEX_INCREMENT},
+    constants::{NULL_STRING, REPLACEMENT_INDEX, REPLACEMENT_INDEX_INCREMENT, HIDDEN_SECTION},
     CandyError,
 };
 
@@ -20,6 +21,11 @@ pub fn assert_initialized<T: Pack + IsInitialized>(account_info: &AccountInfo) -
     } else {
         Ok(account)
     }
+}
+
+/// Return the current number of lines written to the account.
+pub fn get_config_count(data: &[u8]) -> Result<usize> {
+    Ok(u32::from_le_bytes(*array_ref![data, HIDDEN_SECTION, 4]) as usize)
 }
 
 pub fn cmp_pubkeys(a: &Pubkey, b: &Pubkey) -> bool {

@@ -17,6 +17,7 @@ mod suspend_market {
     };
     use solana_program_test::*;
     use solana_sdk::{
+        commitment_config::CommitmentLevel,
         instruction::Instruction,
         signature::Keypair,
         signer::Signer,
@@ -124,7 +125,11 @@ mod suspend_market {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await.unwrap();
+        context
+            .banks_client
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+            .await
+            .unwrap();
 
         let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
         context.warp_to_slot(clock.slot + 1500).unwrap();
@@ -152,7 +157,11 @@ mod suspend_market {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await.unwrap();
+        context
+            .banks_client
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+            .await
+            .unwrap();
 
         let market_acc = context
             .banks_client
@@ -263,7 +272,11 @@ mod suspend_market {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await.unwrap();
+        context
+            .banks_client
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+            .await
+            .unwrap();
 
         let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
         context.warp_to_slot(clock.slot + 1500).unwrap();
@@ -293,7 +306,7 @@ mod suspend_market {
 
         let tx_error = context
             .banks_client
-            .process_transaction(tx)
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
             .await
             .unwrap_err();
 
@@ -402,7 +415,11 @@ mod suspend_market {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await.unwrap();
+        context
+            .banks_client
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+            .await
+            .unwrap();
 
         let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
         context.warp_to_slot(clock.slot + 1500).unwrap();
@@ -430,7 +447,11 @@ mod suspend_market {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await.unwrap();
+        context
+            .banks_client
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+            .await
+            .unwrap();
 
         let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
         context.warp_to_slot(clock.slot + 3).unwrap();
@@ -460,7 +481,7 @@ mod suspend_market {
 
         let tx_error = context
             .banks_client
-            .process_transaction(tx)
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
             .await
             .unwrap_err();
 
@@ -569,7 +590,11 @@ mod suspend_market {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await.unwrap();
+        context
+            .banks_client
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+            .await
+            .unwrap();
 
         let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
         context.warp_to_slot(clock.slot + 1500).unwrap();
@@ -597,7 +622,11 @@ mod suspend_market {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await.unwrap();
+        context
+            .banks_client
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+            .await
+            .unwrap();
 
         // SuspendMarket
         let accounts = mpl_fixed_price_sale_accounts::SuspendMarket {
@@ -624,7 +653,7 @@ mod suspend_market {
 
         let tx_error = context
             .banks_client
-            .process_transaction(tx)
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
             .await
             .unwrap_err();
 
@@ -735,7 +764,11 @@ mod suspend_market {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await.unwrap();
+        context
+            .banks_client
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+            .await
+            .unwrap();
 
         let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
         context.warp_to_slot(clock.slot + 3000).unwrap();
@@ -765,7 +798,7 @@ mod suspend_market {
 
         let tx_error = context
             .banks_client
-            .process_transaction(tx)
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
             .await
             .unwrap_err();
 

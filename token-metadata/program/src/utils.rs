@@ -270,7 +270,14 @@ pub fn get_mint_freeze_authority(
 pub fn get_mint_supply(account_info: &AccountInfo) -> Result<u64, ProgramError> {
     // In token program, 36, 8, 1, 1 is the layout, where the first 8 is supply u64.
     // so we start at 36.
-    let data = account_info.try_borrow_data().unwrap();
+    let data = account_info.try_borrow_data()?;
+
+    // If we don't check this and an empty account is passed in, we get a panic when
+    // the array_ref! macro tries to index into the data.
+    if data.is_empty() {
+        return Err(ProgramError::InvalidAccountData);
+    }
+
     let bytes = array_ref![data, 36, 8];
 
     Ok(u64::from_le_bytes(*bytes))
@@ -280,7 +287,14 @@ pub fn get_mint_supply(account_info: &AccountInfo) -> Result<u64, ProgramError> 
 pub fn get_mint_decimals(account_info: &AccountInfo) -> Result<u8, ProgramError> {
     // In token program, 36, 8, 1, 1, is the layout, where the first 1 is decimals u8.
     // so we start at 36.
-    let data = account_info.try_borrow_data().unwrap();
+    let data = account_info.try_borrow_data()?;
+
+    // If we don't check this and an empty account is passed in, we get a panic when
+    // we try to index into the data.
+    if data.is_empty() {
+        return Err(ProgramError::InvalidAccountData);
+    }
+
     Ok(data[44])
 }
 
@@ -512,38 +526,65 @@ pub fn calculate_supply_change<'a>(
     master_edition_account_info: &AccountInfo<'a>,
     reservation_list_info: Option<&AccountInfo<'a>>,
     edition_override: Option<u64>,
-    me_supply: u64,
+    current_supply: u64,
 ) -> ProgramResult {
-    if reservation_list_info.is_none() {
-        let new_supply: u64;
-        if let Some(edition) = edition_override {
-            if edition == 0 {
-                return Err(MetadataError::EditionOverrideCannotBeZero.into());
-            }
-
-            if edition > me_supply {
-                new_supply = edition;
-            } else {
-                new_supply = me_supply;
-            }
-        } else {
-            new_supply = me_supply
-                .checked_add(1)
-                .ok_or(MetadataError::NumericalOverflowError)?;
-        }
-
-        if let Some(max) = get_max_supply_off_master_edition(master_edition_account_info)? {
-            if new_supply > max {
-                return Err(MetadataError::MaxEditionsMintedAlready.into());
-            }
-        }
-        // Doing old school serialization to protect CPU credits.
-        let edition_data = &mut master_edition_account_info.data.borrow_mut();
-        let output = array_mut_ref![edition_data, 0, MAX_MASTER_EDITION_LEN];
-
-        let (_key, supply, _the_rest) = mut_array_refs![output, 1, 8, 273];
-        *supply = new_supply.to_le_bytes();
+    // Reservation lists are deprecated.
+    if reservation_list_info.is_some() {
+        return Err(MetadataError::ReservationListDeprecated.into());
     }
+
+    // This function requires passing in the edition number.
+    if edition_override.is_none() {
+        return Err(MetadataError::EditionOverrideCannotBeZero.into());
+    }
+
+    let edition = edition_override.unwrap();
+
+    if edition == 0 {
+        return Err(MetadataError::EditionOverrideCannotBeZero.into());
+    }
+
+    let max_supply = get_max_supply_off_master_edition(master_edition_account_info)?;
+
+    // Previously, the code used edition override to set the supply to the highest edition number minted,
+    // instead of properly tracking the supply.
+    // Now, we increment this by one if the edition number is less than the max supply.
+    // This allows users to mint out missing edition numbers that are less than the supply, but
+    // tracks the supply correctly for new Master Editions.
+    let new_supply = if let Some(max_supply) = max_supply {
+        // We should never be able to mint an edition number that is greater than the max supply.
+        if edition > max_supply {
+            return Err(MetadataError::EditionNumberGreaterThanMaxSupply.into());
+        }
+
+        // If the current supply is less than the max supply, then we can mint another addition so we increment the supply.
+        if current_supply < max_supply {
+            current_supply
+                .checked_add(1)
+                .ok_or(MetadataError::NumericalOverflowError)?
+        }
+        // If it's the same as max supply, we don't increment, but we return the supply
+        // so we can mint out missing edition numbers in old editions that use the previous
+        // edition override logic.
+        //
+        // The EditionMarker bitmask ensures we don't remint the same number twice.
+        else {
+            current_supply
+        }
+    }
+    // With no max supply we can increment each time.
+    else {
+        current_supply
+            .checked_add(1)
+            .ok_or(MetadataError::NumericalOverflowError)?
+    };
+
+    // Doing old school serialization to protect CPU credits.
+    let edition_data = &mut master_edition_account_info.data.borrow_mut();
+    let output = array_mut_ref![edition_data, 0, MAX_MASTER_EDITION_LEN];
+
+    let (_key, supply, _the_rest) = mut_array_refs![output, 1, 8, 273];
+    *supply = new_supply.to_le_bytes();
 
     Ok(())
 }
@@ -593,7 +634,6 @@ pub fn mint_limited_edition<'a>(
     if reservation_list_info.is_some() && edition_override.is_some() {
         return Err(MetadataError::InvalidOperation.into());
     }
-
     calculate_supply_change(
         master_edition_account_info,
         reservation_list_info,

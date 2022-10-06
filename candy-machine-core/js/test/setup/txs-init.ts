@@ -10,7 +10,6 @@ import {
   Keypair,
   PublicKey,
   SystemProgram,
-  SYSVAR_RENT_PUBKEY,
   SYSVAR_SLOT_HASHES_PUBKEY,
   Transaction,
   TransactionInstruction,
@@ -142,7 +141,6 @@ export class InitTransactions {
       collectionAuthorityRecord,
       tokenMetadataProgram: METAPLEX_PROGRAM_ID,
       systemProgram: SystemProgram.programId,
-      rent: SYSVAR_RENT_PUBKEY,
     };
 
     const args: program.InitializeInstructionArgs = {
@@ -180,7 +178,7 @@ export class InitTransactions {
       authority: payer.publicKey,
     };
 
-    const txs = [];
+    const txs: Transaction[] = [];
     let start = 0;
 
     while (start < lines.length) {

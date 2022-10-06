@@ -11,6 +11,7 @@ runs:
     - name: build-token-metadata-program
       working-directory: ./token-metadata/program
       run: |
+        mkdir -p ../../test-programs
         cargo +${{ env.RUST_STABLE }} build-bpf --version
-        cargo +${{ env.RUST_STABLE }} build-bpf --bpf-out-dir ../../target/deploy/
+        cargo +${{ env.RUST_STABLE }} build-bpf --bpf-out-dir ../../test-programs/
       shell: bash

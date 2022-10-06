@@ -1,6 +1,7 @@
 export * from './ApproveCollectionAuthority';
 export * from './ApproveUseAuthority';
 export * from './BubblegumSetCollectionSize';
+export * from './BurnEditionNft';
 export * from './BurnNft';
 export * from './ConvertMasterEditionV1ToV2';
 export * from './CreateMasterEdition';

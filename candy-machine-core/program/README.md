@@ -6,7 +6,7 @@
 
 The Metaplex Protocol's `Candy Machine` is the leading minting and distribution program for fair NFT collection launches on Solana. It allows creators to bring their asset metadata on-chain and provides a mechanism to create (mint) NFTs from the on-chain configuration &mdash; in both deterministic and non-deterministic (random) way, like a traditional candy machine.
 
-The latest iteration of the `Candy Machine` program retains the core functionality of minting an NFT only, while any access control configuration is now done by the new [`Candy Guard`](https://github.com/metaplex-foundation/candy-guard) program.
+The latest iteration of the `Candy Machine` program retains the core functionality of minting an NFT only, while any access control configuration is now done by the new [`Candy Guard`](https://github.com/metaplex-foundation/mpl-candy-guard) program.
 
 The `Candy Machine` program is responsible for:
 - config line (asset) management: configuration of how many assets are available and their metadata information;
@@ -23,7 +23,7 @@ Creating a clear separation provides a modular and flexible architechture to add
 
 Each `Candy Machine` account has two authorities associated: an `authority` and `mint_authority`. The `authority` has permission to manage the configuration of the candy machine. This include adding config lines (assets), updating its settings, changing authority/mint authorities and closing/withdrawing the account.
 
-The `mint_authority` is the only address that is able to mint from a candy machine &mdash; the only requirement being that there are NFTs to be minted from it. The `authority` of the candy machine can delegate the `mint_authority` to another address, either a wallet or PDA. This separation allows maximum flexibility and enables composability, since other programs can be set as `mint_authority` and provide additional features on top of the candy machine. An example of this is the [`Candy Guard`](https://github.com/metaplex-foundation/candy-guard) program, which provides access control guards for the candy machine.
+The `mint_authority` is the only address that is able to mint from a candy machine &mdash; the only requirement being that there are NFTs to be minted from it. The `authority` of the candy machine can delegate the `mint_authority` to another address, either a wallet or PDA. This separation allows maximum flexibility and enables composability, since other programs can be set as `mint_authority` and provide additional features on top of the candy machine. An example of this is the [`Candy Guard`](https://github.com/metaplex-foundation/mpl-candy-guard) program, which provides access control guards for the candy machine.
 
 ## Account
 
@@ -302,6 +302,9 @@ Hidden settings are the most space efficient way to create a `Candy Machine` sin
 When a storage with deterministic URI generation is used, the **reveal** is not required as one can use the same `$ID$`or `$ID+1$` replacement patterns in the **name** and **uri** fields of hidden settings.
 
 The difference between using config lines with patterns and hidden settings with patterns is that in the former, the index generation for the mint is **random** while in the later the index generation is **sequential**.
+
+> **Note**
+> While the use of deterministic URIs saves you work in terms of not requiring to run an update the metadata on each NFT, it would be possible to determine the URI of an NFT before it is minted. In order to avoid the files to be publicly accessible ahead of time, a placeholder image with the same name can be used instead. Therefore, the trade-off is between running an update metadata on each NFT or updating the images.
 
 ### Random Index Generation
 

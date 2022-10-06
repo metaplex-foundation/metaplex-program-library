@@ -13,7 +13,7 @@ env:
 
 jobs:
   changes:
-    runs-on: ubuntu-latest
+    runs-on: buildjet-4vcpu-ubuntu-2004
     # Set job outputs to values from filter step
     outputs:
       core: ${{ steps.filter.outputs.core }}
@@ -33,7 +33,7 @@ jobs:
   build-and-test-token-entangler:
     needs: changes
     if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' }}
-    runs-on: ubuntu-latest
+    runs-on: buildjet-4vcpu-ubuntu-2004
     env:
       cache_id: program-token-entangler
 
@@ -71,4 +71,4 @@ jobs:
         run: |
           cargo +${{ env.RUST_TOOLCHAIN }} test -- --nocapture --test-threads 1
           cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --version
-          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf -- --nocapture --test-threads 1
+          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --bpf-out-dir ../../test-programs -- --nocapture --test-threads 1

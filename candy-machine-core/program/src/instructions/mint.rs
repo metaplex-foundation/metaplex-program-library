@@ -10,7 +10,7 @@ use mpl_token_metadata::{
 use solana_program::{program::invoke_signed, sysvar};
 
 use crate::{
-    constants::{AUTHORITY_SEED, EMPTY_STR, HIDDEN_SECTION},
+    constants::{AUTHORITY_SEED, EMPTY_STR, HIDDEN_SECTION, NULL_STRING},
     utils::*,
     CandyError, CandyMachine, ConfigLine,
 };
@@ -59,8 +59,11 @@ pub fn mint<'info>(ctx: Context<'_, '_, '_, 'info, Mint<'info>>) -> Result<()> {
     let data = recent_slothashes.data.borrow();
     let most_recent = array_ref![data, 12, 8];
 
-    let numerator = u64::from_le_bytes(*most_recent);
-    let remainder: usize = numerator
+    let clock = Clock::get()?;
+    // seed for the random number is a combination of the slot_hash - timestamp
+    let seed = u64::from_le_bytes(*most_recent).saturating_sub(clock.unix_timestamp as u64);
+
+    let remainder: usize = seed
         .checked_rem(candy_machine.data.items_available - candy_machine.items_redeemed)
         .ok_or(CandyError::NumericalOverflowError)? as usize;
 
@@ -96,7 +99,6 @@ pub fn mint<'info>(ctx: Context<'_, '_, '_, 'info, Mint<'info>>) -> Result<()> {
         ctx.accounts.token_metadata_program.to_account_info(),
         ctx.accounts.token_program.to_account_info(),
         ctx.accounts.system_program.to_account_info(),
-        ctx.accounts.rent.to_account_info(),
         ctx.accounts.authority_pda.to_account_info(),
     ];
 
@@ -109,7 +111,6 @@ pub fn mint<'info>(ctx: Context<'_, '_, '_, 'info, Mint<'info>>) -> Result<()> {
         ctx.accounts.token_metadata_program.to_account_info(),
         ctx.accounts.token_program.to_account_info(),
         ctx.accounts.system_program.to_account_info(),
-        ctx.accounts.rent.to_account_info(),
         ctx.accounts.authority_pda.to_account_info(),
     ];
 
@@ -120,6 +121,9 @@ pub fn mint<'info>(ctx: Context<'_, '_, '_, 'info, Mint<'info>>) -> Result<()> {
         &[*ctx.bumps.get("authority_pda").unwrap()],
     ];
 
+    // removes the padding from the end of the symbol value
+    let symbol = candy_machine.data.symbol.trim_end_matches(NULL_STRING);
+
     invoke_signed(
         &create_metadata_accounts_v2(
             ctx.accounts.token_metadata_program.key(),
@@ -129,7 +133,7 @@ pub fn mint<'info>(ctx: Context<'_, '_, '_, 'info, Mint<'info>>) -> Result<()> {
             ctx.accounts.payer.key(),
             ctx.accounts.authority_pda.key(),
             config_line.name,
-            candy_machine.data.symbol.clone(),
+            symbol.to_string(),
             config_line.uri,
             Some(creators),
             candy_machine.data.seller_fee_basis_points,
@@ -248,6 +252,12 @@ pub fn get_config_line(
     let account_info = candy_machine.to_account_info();
     let mut account_data = account_info.data.borrow_mut();
 
+    // validates that all config lines were added to the candy machine
+    let config_count = get_config_count(&account_data)? as u64;
+    if config_count != candy_machine.data.items_available {
+        return err!(CandyError::NotFullyLoaded);
+    }
+
     // (1) determine the mint index (index is a random index on the available indices array)
 
     let value_to_use = if settings.is_sequential {
@@ -283,8 +293,9 @@ pub fn get_config_line(
 
     let name = if name_length > 0 {
         let name_slice: &mut [u8] = &mut account_data[position..position + name_length];
-        String::from_utf8(name_slice.to_vec())
-            .map_err(|_| CandyError::CouldNotRetrieveConfigLineData)?
+        let name = String::from_utf8(name_slice.to_vec())
+            .map_err(|_| CandyError::CouldNotRetrieveConfigLineData)?;
+        name.trim_end_matches(NULL_STRING).to_string()
     } else {
         EMPTY_STR.to_string()
     };
@@ -292,8 +303,9 @@ pub fn get_config_line(
     position += name_length;
     let uri = if uri_length > 0 {
         let uri_slice: &mut [u8] = &mut account_data[position..position + uri_length];
-        String::from_utf8(uri_slice.to_vec())
-            .map_err(|_| CandyError::CouldNotRetrieveConfigLineData)?
+        let uri = String::from_utf8(uri_slice.to_vec())
+            .map_err(|_| CandyError::CouldNotRetrieveConfigLineData)?;
+        uri.trim_end_matches(NULL_STRING).to_string()
     } else {
         EMPTY_STR.to_string()
     };
@@ -361,7 +373,6 @@ pub struct Mint<'info> {
     token_metadata_program: UncheckedAccount<'info>,
     token_program: Program<'info, Token>,
     system_program: Program<'info, System>,
-    rent: Sysvar<'info, Rent>,
     /// CHECK: account constraints checked in account trait
     #[account(address = sysvar::slot_hashes::id())]
     recent_slothashes: UncheckedAccount<'info>,
