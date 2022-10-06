@@ -29,9 +29,7 @@ use mpl_token_metadata::{
     state::CollectionDetails,
 };
 use spl_account_compression::{
-    data_wrapper::{wrap_event, Wrapper},
-    program::SplAccountCompression,
-    Node,
+    program::SplAccountCompression, wrap_application_data_v1, Node, Wrapper,
 };
 use spl_token::state::Mint as SplMint;
 use std::collections::HashSet;
@@ -508,7 +506,7 @@ fn process_mint_v1<'info>(
     };
 
     emit!(new_nft);
-    wrap_event(new_nft.try_to_vec()?, wrapper)?;
+    wrap_application_data_v1(new_nft.try_to_vec()?, wrapper)?;
 
     emit!(leaf.to_event());
 
@@ -1100,7 +1098,7 @@ pub mod bubblegum {
             data_hash,
             creator_hash,
         );
-        wrap_event(new_leaf.try_to_vec()?, &ctx.accounts.log_wrapper)?;
+        wrap_application_data_v1(new_leaf.try_to_vec()?, &ctx.accounts.log_wrapper)?;
         emit!(new_leaf.to_event());
         replace_leaf(
             &merkle_tree.key(),
@@ -1146,7 +1144,7 @@ pub mod bubblegum {
         );
         emit!(previous_leaf.to_event());
         let new_leaf = Node::default();
-        wrap_event(new_leaf.try_to_vec()?, &ctx.accounts.log_wrapper)?;
+        wrap_application_data_v1(new_leaf.try_to_vec()?, &ctx.accounts.log_wrapper)?;
         replace_leaf(
             &merkle_tree.key(),
             *ctx.bumps.get("tree_authority").unwrap(),
@@ -1178,7 +1176,7 @@ pub mod bubblegum {
             LeafSchema::new_v0(asset_id, owner, delegate, nonce, data_hash, creator_hash);
         emit!(previous_leaf.to_event());
         let new_leaf = Node::default();
-        wrap_event(new_leaf.try_to_vec()?, &ctx.accounts.log_wrapper)?;
+        wrap_application_data_v1(new_leaf.try_to_vec()?, &ctx.accounts.log_wrapper)?;
         replace_leaf(
             &merkle_tree.key(),
             *ctx.bumps.get("tree_authority").unwrap(),
@@ -1213,7 +1211,7 @@ pub mod bubblegum {
         }?;
         let merkle_tree = ctx.accounts.merkle_tree.to_account_info();
         emit!(voucher.leaf_schema.to_event());
-        wrap_event(voucher.leaf_schema.try_to_vec()?, &ctx.accounts.log_wrapper)?;
+        wrap_application_data_v1(voucher.leaf_schema.try_to_vec()?, &ctx.accounts.log_wrapper)?;
 
         replace_leaf(
             &merkle_tree.key(),
