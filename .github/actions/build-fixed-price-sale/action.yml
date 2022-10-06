@@ -12,5 +12,5 @@ runs:
       working-directory: ./fixed-price-sale/program
       run: |
         cargo +${{ env.RUST_STABLE }} build-bpf --version
-        cargo +${{ env.RUST_STABLE }} build-bpf
+        cargo +${{ env.RUST_STABLE }} build-bpf --bpf-out-dir ../../test-programs
       shell: bash

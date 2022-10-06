@@ -1472,6 +1472,14 @@ pub fn set_and_verify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) 
         return Err(MetadataError::UpdateAuthorityIncorrect.into());
     }
 
+    // If it's a verified item and the user is trying to move it to a new collection,
+    // they must unverify first, in case it belongs to a sized collection.
+    if let Some(collection) = metadata.collection {
+        if collection.key != *collection_mint.key && collection.verified {
+            return Err(MetadataError::MustUnverify.into());
+        }
+    }
+
     if using_delegated_collection_authority {
         let collection_authority_record = next_account_info(account_info_iter)?;
         assert_has_collection_authority(
@@ -1536,7 +1544,7 @@ pub fn set_and_verify_sized_collection_item(
     // Don't verify already verified items, otherwise we end up with invalid size data.
     if let Some(collection) = metadata.collection {
         if collection.verified {
-            return Err(MetadataError::AlreadyVerified.into());
+            return Err(MetadataError::MustUnverify.into());
         }
     }
 

@@ -957,10 +957,7 @@ async fn success_claim_two_indexes() {
     let card_master_edition = card_master_edition.get_data(&mut context).await;
     let card_master_edition1 = card_master_edition1.get_data(&mut context).await;
 
-    assert_eq!(
-        card_master_edition.supply == 1 || card_master_edition1.supply == 1,
-        true
-    );
+    assert!(card_master_edition.supply == 1 || card_master_edition1.supply == 1);
 }
 
 #[tokio::test]
@@ -1092,7 +1089,7 @@ async fn success_claim_after_redeem_end_date() {
         .await
         .unwrap()
         .unix_timestamp as u64;
-    assert_eq!(last_timestamp > redeem_end_date.unwrap(), true);
+    assert!(last_timestamp > redeem_end_date.unwrap());
 
     test_pack_set
         .claim_pack(

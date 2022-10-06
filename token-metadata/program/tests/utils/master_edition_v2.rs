@@ -3,7 +3,7 @@ use borsh::ser::BorshSerialize;
 use mpl_token_metadata::{
     id,
     instruction::{self, CreateMasterEditionArgs, MetadataInstruction},
-    state::{EDITION, PREFIX},
+    state::{MasterEditionV2 as ProgramMasterEdition, TokenMetadataAccount, EDITION, PREFIX},
 };
 use solana_program::{
     borsh::try_from_slice_unchecked,
@@ -49,7 +49,7 @@ impl MasterEditionV2 {
         context: &mut ProgramTestContext,
     ) -> mpl_token_metadata::state::MasterEditionV2 {
         let account = get_account(context, &self.pubkey).await;
-        try_from_slice_unchecked(&account.data).unwrap()
+        ProgramMasterEdition::safe_deserialize(&account.data).unwrap()
     }
 
     pub async fn get_data_from_account(
@@ -158,5 +158,10 @@ impl MasterEditionV2 {
         }
 
         Ok(editions)
+    }
+
+    pub async fn get_supplies(&self, context: &mut ProgramTestContext) -> (u64, u64) {
+        let master_edition = self.get_data(context).await;
+        (master_edition.supply, master_edition.max_supply.unwrap())
     }
 }

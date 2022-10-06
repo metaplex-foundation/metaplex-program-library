@@ -1654,7 +1654,7 @@ async fn fail_set_and_verify_already_verified() {
         .await
         .unwrap_err();
 
-    assert_custom_error!(error, MetadataError::AlreadyVerified);
+    assert_custom_error!(error, MetadataError::MustUnverify);
 
     let collection_md = test_collection.get_data(&mut context).await;
     let size = if let Some(details) = collection_md.collection_details {

@@ -213,18 +213,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "anchor-spl"
-version = "0.24.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0188c33b4a3c124c4e593f2b440415aaea70a7650fac6ba0772395385d71c003"
-dependencies = [
- "anchor-lang",
- "solana-program",
- "spl-associated-token-account",
- "spl-token",
-]
-
-[[package]]
 name = "anchor-syn"
 version = "0.24.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1695,40 +1683,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b9f1c5b025cda876f66ef43a113f91ebc9f4ccef34843000e0adf6ebbab84e21"
 dependencies = [
  "winapi",
-]
-
-[[package]]
-name = "mpl-auction-house"
-version = "1.2.4"
-dependencies = [
- "anchor-lang",
- "anchor-spl",
- "arrayref",
- "mpl-token-metadata",
- "solana-program",
- "spl-associated-token-account",
- "spl-token",
- "thiserror",
-]
-
-[[package]]
-name = "mpl-auctioneer"
-version = "0.2.0"
-dependencies = [
- "anchor-client",
- "anchor-lang",
- "anchor-spl",
- "env_logger",
- "mpl-auction-house",
- "mpl-testing-utils",
- "mpl-token-metadata",
- "serde_json",
- "shellexpand",
- "solana-program",
- "solana-program-test",
- "solana-sdk",
- "spl-associated-token-account",
- "spl-token",
 ]
 
 [[package]]

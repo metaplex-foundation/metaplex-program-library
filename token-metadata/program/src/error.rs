@@ -480,6 +480,14 @@ pub enum MetadataError {
     /// 121 - Print Edition doesn't match Master Edition
     #[error("Print Edition does not match Master Edition")]
     PrintEditionDoesNotMatchMasterEdition,
+
+    /// 122 - Edition Number greater than max supply
+    #[error("Edition Number greater than max supply")]
+    EditionNumberGreaterThanMaxSupply,
+
+    /// 123 - Must unverify before migrating collections.
+    #[error("Must unverify before migrating collections.")]
+    MustUnverify,
 }
 
 impl PrintProgramError for MetadataError {

@@ -1,5 +1,5 @@
 {
-  "version": "4.4.0",
+  "version": "4.4.1",
   "name": "candy_machine",
   "instructions": [
     {
@@ -1118,6 +1118,11 @@
       "code": 6050,
       "name": "SizedCollectionMetadataMustBeMutable",
       "msg": "Setting a sized collection requires the collection metadata to be mutable."
+    },
+    {
+      "code": 6051,
+      "name": "CannotSwitchFromHiddenSettings",
+      "msg": "Cannot remove Hidden Settings."
     }
   ],
   "metadata": {
