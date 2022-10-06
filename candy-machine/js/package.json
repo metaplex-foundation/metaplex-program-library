@@ -47,6 +47,7 @@
   },
   "devDependencies": {
     "@metaplex-foundation/solita": "^0.14.0",
+    "@solana/spl-token": "0.3.5",
     "eslint": "^8.3.0",
     "prettier": "^2.5.1",
     "rimraf": "^3.0.2",
