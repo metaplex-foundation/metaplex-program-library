@@ -32,7 +32,7 @@ solana-program-test = "1.10.38"
 solana-sdk = "1.10.38"
 spl-concurrent-merkle-tree = "0.1.1"
 spl-merkle-tree-reference = "0.1.0"
-spl-noop = { version = "0.1.1", features = ["no-entrypoint"] }
+spl-noop = { version = "0.1.2", features = ["no-entrypoint"] }
 
 [profile.release]
 overflow-checks = true
