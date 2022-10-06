@@ -176,7 +176,7 @@ impl<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExe
         self.inner.index = u32::try_from(self.tree.num_minted()).unwrap();
         self.inner.nonce = self.tree.num_minted();
         self.tree.inc_num_minted();
-        self.tree.leaf_changed(self.inner)
+        self.tree.update_leaf(self.inner)
     }
 }
 
@@ -193,7 +193,7 @@ impl<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExe
     for BurnBuilder<'a, MAX_DEPTH, MAX_BUFFER_SIZE>
 {
     fn on_successful_execute(&mut self) -> Result<()> {
-        self.tree.leaf_zeroed(self.inner.index)
+        self.tree.zero_leaf(self.inner.index)
     }
 }
 
@@ -218,7 +218,7 @@ impl<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExe
         // After transfer, the new owner is also the new delegate IIUC.
         self.inner.args.owner = clone_keypair(&self.inner.new_owner);
         self.inner.args.delegate = clone_keypair(&self.inner.new_owner);
-        self.tree.leaf_changed(self.inner.args)
+        self.tree.update_leaf(self.inner.args)
     }
 }
 
@@ -241,7 +241,7 @@ impl<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExe
 {
     fn on_successful_execute(&mut self) -> Result<()> {
         self.inner.args.delegate = clone_keypair(&self.inner.new_delegate);
-        self.tree.leaf_changed(self.inner.args)
+        self.tree.update_leaf(self.inner.args)
     }
 }
 
@@ -258,7 +258,7 @@ impl<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExe
     for RedeemBuilder<'a, MAX_DEPTH, MAX_BUFFER_SIZE>
 {
     fn on_successful_execute(&mut self) -> Result<()> {
-        self.tree.leaf_zeroed(self.inner.index)
+        self.tree.zero_leaf(self.inner.index)
     }
 }
 
@@ -275,7 +275,7 @@ impl<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExe
     for CancelRedeemBuilder<'a, MAX_DEPTH, MAX_BUFFER_SIZE>
 {
     fn on_successful_execute(&mut self) -> Result<()> {
-        self.tree.leaf_changed(self.inner)
+        self.tree.update_leaf(self.inner)
     }
 }
 
@@ -322,7 +322,7 @@ impl<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExe
                 break;
             }
         }
-        self.tree.leaf_changed(self.inner.args)
+        self.tree.update_leaf(self.inner.args)
     }
 }
 
@@ -346,7 +346,7 @@ impl<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExe
                 break;
             }
         }
-        self.tree.leaf_changed(self.inner.args)
+        self.tree.update_leaf(self.inner.args)
     }
 }
 

@@ -8,6 +8,5 @@
 set -e
 
 cd ../../token-metadata
-cargo build-bpf
 mkdir -p ../target/deploy
-mv ./target/deploy/mpl_token_metadata.so ../target/deploy
+cargo build-bpf --bpf-out-dir ../target/deploy

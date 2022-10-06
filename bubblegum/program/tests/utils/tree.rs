@@ -753,7 +753,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
     }
 
     // Updates the inner `MerkleTree` when the given leaf has changed.
-    pub fn leaf_changed(&self, args: &LeafArgs) -> Result<()> {
+    pub fn update_leaf(&self, args: &LeafArgs) -> Result<()> {
         let node = self.leaf_node(args)?;
         self.proof_tree
             .borrow_mut()
@@ -764,7 +764,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
 
     // Updates the inner `MerkleTree` with the fact that we zeroed the leaf present
     // at the given index.
-    pub fn leaf_zeroed(&self, index: u32) -> Result<()> {
+    pub fn zero_leaf(&self, index: u32) -> Result<()> {
         let node = [0u8; 32];
         // The conversion below should never fail.
         self.proof_tree

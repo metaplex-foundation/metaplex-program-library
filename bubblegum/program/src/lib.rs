@@ -1240,11 +1240,6 @@ pub mod bubblegum {
     }
 
     pub fn decompress_v1(ctx: Context<DecompressV1>, metadata: MetadataArgs) -> Result<()> {
-        msg!(
-            "*********** ma {:?} {}",
-            ctx.accounts.mint_authority,
-            ctx.accounts.mint_authority.key()
-        );
         // Allocate and create mint
         let incoming_data_hash = hash_metadata(&metadata)?;
         match ctx.accounts.voucher.leaf_schema {
@@ -1376,18 +1371,7 @@ pub mod bubblegum {
                 metadata.symbol.clone(),
                 metadata.uri.clone(),
                 if !metadata.creators.is_empty() {
-                    let mut amended_metadata_creators = metadata.creators;
-                    amended_metadata_creators.push(Creator {
-                        address: ctx.accounts.mint_authority.key(),
-                        verified: true,
-                        share: 0,
-                    });
-                    Some(
-                        amended_metadata_creators
-                            .iter()
-                            .map(|c| c.adapt())
-                            .collect(),
-                    )
+                    Some(metadata.creators.iter().map(|c| c.adapt()).collect())
                 } else {
                     None
                 },
