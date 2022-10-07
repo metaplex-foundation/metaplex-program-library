@@ -48,6 +48,8 @@
     "bn.js": "^5.2.0"
   },
   "devDependencies": {
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^4.0.0",
     "@metaplex-foundation/amman": "^0.11.0",
     "@metaplex-foundation/js": "^0.15.0",
     "@metaplex-foundation/solita": "^0.12.0",
