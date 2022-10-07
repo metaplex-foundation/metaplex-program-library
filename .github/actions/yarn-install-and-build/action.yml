@@ -84,6 +84,13 @@ runs:
     ##############
     # Build Contract 
     ##############
+    - name: Install Root Modules
+      run: |
+        echo 'Install Root Modules: yarn install'
+        yarn install
+      working-directory: ./
+      shell: bash
+
     - name: Install modules
       run: yarn install
       working-directory: ${{ inputs.working_dir }}
