@@ -55,6 +55,8 @@
     "debug": "^4.3.3"
   },
   "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^5.4.0",
+    "@typescript-eslint/parser": "^5.4.0",
     "@metaplex-foundation/amman": "^0.10.0",
     "@metaplex-foundation/solita": "^0.8.1",
     "@types/bn.js": "^5.1.0",
