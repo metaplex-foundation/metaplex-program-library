@@ -36,6 +36,8 @@ jobs:
       packages: ${{ steps.filter-out-excluded-pkgs.outputs.result }}
     steps:
       - uses: actions/checkout@v3
+        ref: ${{ github.event.pull_request.head.ref }}
+        repository: ${{ github.event.pull_request.head.repo.full_name }}
       - name: List changed files
         uses: ./.github/actions/list-changed-files
         id: list-changed-files
