@@ -2205,7 +2205,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@metaplex-foundation/beet@npm:>=0.1.0":
+"@metaplex-foundation/beet@npm:>=0.1.0, @metaplex-foundation/beet@npm:^0.7.1":
   version: 0.7.1
   resolution: "@metaplex-foundation/beet@npm:0.7.1"
   dependencies:
@@ -2300,6 +2300,7 @@ __metadata:
   resolution: "@metaplex-foundation/metaplex-program-library@workspace:."
   dependencies:
     "@project-serum/anchor": ^0.19.0
+    "@solana/spl-account-compression": ^0.1.0
     "@typescript-eslint/eslint-plugin": ^5.4.0
     "@typescript-eslint/parser": ^5.4.0
     esbuild-runner: ^2.2.1
@@ -2354,10 +2355,12 @@ __metadata:
   resolution: "@metaplex-foundation/mpl-bubblegum@workspace:bubblegum/js"
   dependencies:
     "@metaplex-foundation/amman": 0.10.0
+    "@metaplex-foundation/beet": ^0.7.1
     "@metaplex-foundation/mpl-token-metadata": ^2.2.0
     "@metaplex-foundation/rustbin": ^0.3.1
     "@metaplex-foundation/solita": ^0.12.2
     "@project-serum/anchor": 0.24.2
+    "@solana/spl-account-compression": ^0.1.0
     "@solana/spl-token": ^0.1.8
     "@solana/web3.js": ^1.50.1
     "@sorend-solana/gummyroll": ^0.0.6
@@ -2369,6 +2372,7 @@ __metadata:
     chai: ^4.3.4
     eslint: ^8.3.0
     jest: ^29.1.2
+    js-sha3: ^0.8.0
     mocha: ^9.0.3
     prettier: ^2.5.1
     rimraf: ^3.0.2
@@ -3289,6 +3293,21 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@solana/spl-account-compression@npm:^0.1.0":
+  version: 0.1.0
+  resolution: "@solana/spl-account-compression@npm:0.1.0"
+  dependencies:
+    "@types/bn.js": ^5.1.1
+    bn.js: ^5.2.1
+    borsh: ^0.7.0
+  peerDependencies:
+    "@metaplex-foundation/beet": ^0.6.1
+    "@metaplex-foundation/beet-solana": ^0.6.1
+    "@solana/web3.js": ^1.50.1
+  checksum: 92f9c90318add02eec410bfb61aa0916b22d209e3e54d4f4321df517e14be0a713f92b5bd3cdc8d9e1a6e959b85b28c0736b0c2d9f21d080c2a30b455c606cf4
+  languageName: node
+  linkType: hard
+
 "@solana/spl-token-registry@npm:^0.2.2405":
   version: 0.2.4574
   resolution: "@solana/spl-token-registry@npm:0.2.4574"
@@ -3505,7 +3524,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/bn.js@npm:^5.1.0":
+"@types/bn.js@npm:^5.1.0, @types/bn.js@npm:^5.1.1":
   version: 5.1.1
   resolution: "@types/bn.js@npm:5.1.1"
   dependencies:
