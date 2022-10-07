@@ -23,16 +23,16 @@ anchor-lang = { version = "0.25.0", features = ["init-if-needed"] }
 bytemuck = "1.8.0"
 mpl-token-metadata = { version = "=1.4.1", features = ["no-entrypoint"] }
 solana-program = "1.10.29"
-spl-account-compression = { version="0.1.0", features = ["cpi"] }
+spl-account-compression = { version="0.1.2", features = ["cpi"] }
 spl-associated-token-account = { version = "1.1.1", features = ["no-entrypoint"] }
 spl-token = { version = "3.5.0", features = ["no-entrypoint"] }
 
 [dev-dependencies]
 solana-program-test = "1.10.38"
 solana-sdk = "1.10.38"
-spl-concurrent-merkle-tree = "0.1.0"
+spl-concurrent-merkle-tree = "0.1.1"
 spl-merkle-tree-reference = "0.1.0"
-spl-noop = { version = "0.1.0", features = ["no-entrypoint"] }
+spl-noop = { version = "0.1.2", features = ["no-entrypoint"] }
 
 [profile.release]
 overflow-checks = true
