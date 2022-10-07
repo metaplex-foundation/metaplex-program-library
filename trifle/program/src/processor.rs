@@ -254,14 +254,14 @@ fn transfer_in(
     let escrow_account_info = next_account_info(account_info_iter)?;
     let escrow_mint_info = next_account_info(account_info_iter)?;
     let escrow_token_account_info = next_account_info(account_info_iter)?;
-    let escrow_mint_authority_info = next_account_info(account_info_iter)?;
+    let escrow_mint_freeze_authority_info = next_account_info(account_info_iter)?;
     let attribute_mint_info = next_account_info(account_info_iter)?;
     let attribute_src_token_account_info = next_account_info(account_info_iter)?;
     let attribute_dst_token_account_info = next_account_info(account_info_iter)?;
     let attribute_metadata_info = next_account_info(account_info_iter)?;
     let attribute_edition_info = next_account_info(account_info_iter)?;
     let attribute_collection_metadata_info = next_account_info(account_info_iter)?;
-    let attribute_mint_authority_info = next_account_info(account_info_iter)?;
+    let attribute_mint_freeze_authority_info = next_account_info(account_info_iter)?;
     let system_program_info = next_account_info(account_info_iter)?;
     let token_program_info = next_account_info(account_info_iter)?;
     let associated_token_account_program_info = next_account_info(account_info_iter)?;
@@ -410,35 +410,24 @@ fn transfer_in(
         )?;
     }
 
-    if constraint_model.fuse_options.freeze() {
-        // a PDA needs to be the freeze authority for the attribute mint.
-        // let freeze_authority = Pubkey::create_program_address(
-        //     &[
-        //         PREFIX.as_bytes(),
-        //         tm_pid.as_ref(),
-        //         attribute_mint.key.as_ref(),
-        //         &[constraint_model.fuse_options.freeze_authority_seed()],
-        //     ],
-        //     &spl_token::id(),
-        // )
-        let attribute_mint = spl_token::state::Mint::unpack(&attribute_mint_info.data.borrow())?;
-        if attribute_mint.freeze_authority.is_none() {
-            msg!("Freeze authority is not set on the mint");
-            return Err(TrifleError::FreezeAuthorityNotSet.into());
-        }
+    if constraint_model.fuse_options.freeze_parent() {
+        msg!("freezing base nft");
+        let freeze_ix = spl_token::instruction::freeze_account(
+            &spl_token::id(),
+            escrow_token_account_info.key,
+            escrow_mint_info.key,
+            escrow_mint_freeze_authority_info.key,
+            &[],
+        )?;
 
-        // make sure the mint authority is correct
-        let freeze_authority_seeds = &[
-            ESCROW_PREFIX.as_bytes(),
-            constraint_model_info.key.as_ref(),
-            FREEZE_AUTHORITY.as_bytes(),
-        ];
-
-        // assert_derivation(
-        //     program_id,
-        //     attribute_mint_freeze_authority_info,
-        //     freeze_authority_seeds,
-        // )?;
+        invoke(
+            &freeze_ix,
+            &[
+                escrow_token_account_info.clone(),
+                escrow_mint_info.clone(),
+                escrow_mint_freeze_authority_info.clone(),
+            ],
+        )?;
     }
 
     if constraint_model.fuse_options.track() {

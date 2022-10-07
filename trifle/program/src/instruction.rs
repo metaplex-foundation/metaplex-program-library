@@ -91,14 +91,14 @@ pub enum TrifleInstruction {
     #[account(4, name = "escrow", desc = "The escrow account of the Trifle account")]
     #[account(5, optional, name = "escrow_mint", desc = "The escrow account's base token mint")]
     #[account(6, optional, name = "escrow_token_account", desc = "The token account of the escrow account's base token")]
-    #[account(7, optional, name = "escrow_mint_authority", desc = "The mint authority of the escrow account's base token mint")]
+    #[account(7, optional, name = "escrow_mint_freeze_authority", desc = "The freeze authority of the escrow account's base token mint")]
     #[account(8, optional, writable, name = "attribute_mint", desc = "The mint of the attribute token")]
     #[account(9, writable, name = "attribute_src_token_account", desc = "The token account that the attribute token is being transferred from")]
     #[account(10, optional, writable, name = "attribute_src_token_account", desc = "The token account that the attribute token is being transferred to (pda of the escrow account)")]
     #[account(11, optional, writable, name = "attribute_metadata", desc = "The metadata account of the attribute token")]
     #[account(12, optional, writable, name = "attribute_edition", desc = "The edition account of the attribute token")]
     #[account(13, optional, writable, name = "attribute_collection_metadata", desc = "The collection metadata account of the attribute token")]
-    #[account(14, optional, name = "attribute_mint_authority", desc = "The mint authority of the attribute token mint")]
+    #[account(14, optional, name = "attribute_mint_freeze_authority", desc = "The mint authority of the attribute token mint")]
     TransferIn(TransferInArgs),
 
     /// Transfer tokens out of the Trifle escrow account.
@@ -307,14 +307,14 @@ pub fn transfer_in(
     escrow_account: Pubkey,
     escrow_mint: Option<Pubkey>,
     escrow_token_account: Option<Pubkey>,
-    escrow_mint_authority: Option<Pubkey>,
+    escrow_mint_freeze_authority: Option<Pubkey>,
     attribute_mint: Pubkey,
     attribute_src_token_account: Pubkey,
     attribute_dst_token_account: Option<Pubkey>,
     attribute_metadata: Option<Pubkey>,
     attribute_edition: Option<Pubkey>,
     attribute_collection_metadata: Option<Pubkey>,
-    attribute_mint_authority: Option<Pubkey>,
+    attribute_mint_freeze_authority: Option<Pubkey>,
     slot: String,
     amount: u64,
 ) -> Instruction {
@@ -326,7 +326,7 @@ pub fn transfer_in(
         AccountMeta::new_readonly(escrow_account, false),
         AccountMeta::new_readonly(escrow_mint.unwrap_or(program_id), false),
         AccountMeta::new_readonly(escrow_token_account.unwrap_or(program_id), false),
-        AccountMeta::new_readonly(escrow_mint_authority.unwrap_or(program_id), false),
+        AccountMeta::new_readonly(escrow_mint_freeze_authority.unwrap_or(program_id), false),
         AccountMeta::new(attribute_mint, false),
         AccountMeta::new(attribute_src_token_account, false),
         AccountMeta::new(attribute_dst_token_account.unwrap_or(program_id), false),
@@ -334,7 +334,7 @@ pub fn transfer_in(
         AccountMeta::new(attribute_metadata.unwrap_or(program_id), false),
         AccountMeta::new(attribute_edition.unwrap_or(program_id), false),
         AccountMeta::new(attribute_collection_metadata.unwrap_or(program_id), false),
-        AccountMeta::new_readonly(attribute_mint_authority.unwrap_or(program_id), false),
+        AccountMeta::new_readonly(attribute_mint_freeze_authority.unwrap_or(program_id), false),
         AccountMeta::new_readonly(system_program::id(), false),
         AccountMeta::new_readonly(spl_token::id(), false),
         AccountMeta::new_readonly(spl_associated_token_account::id(), false),
