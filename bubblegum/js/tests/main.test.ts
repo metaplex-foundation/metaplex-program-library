@@ -45,7 +45,6 @@ describe("Bubblegum tests", () => {
         const maxDepth = 14;
         const maxBufferSize = 64;
 
-        // Hard code space until @solana/spl-account-compression released
         const space = getConcurrentMerkleTreeAccountSize(maxDepth, maxBufferSize);
         const allocTreeIx = SystemProgram.createAccount({
             fromPubkey: payer,
