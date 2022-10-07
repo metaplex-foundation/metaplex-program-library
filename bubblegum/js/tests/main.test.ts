@@ -9,6 +9,12 @@ import {
 } from '@solana/web3.js';
 
 import {
+    getConcurrentMerkleTreeAccountSize,
+    SPL_ACCOUNT_COMPRESSION_PROGRAM_ID,
+    SPL_NOOP_PROGRAM_ID
+} from '@solana/spl-account-compression'
+
+import {
     createCreateTreeInstruction,
     createMintV1Instruction,
     PROGRAM_ID as BUBBLEGUM_PROGRAM_ID,
@@ -21,8 +27,8 @@ function keypairFromSeed(seed: string) {
     return Keypair.fromSeed(expandedSeed.slice(0, 32));
 }
 
-const LOG_WRAPPER_ID = new PublicKey("noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV");
-const COMPRESSION_PROGRAM_ID = new PublicKey("cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK");
+// const LOG_WRAPPER_ID = new PublicKey("noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV");
+// const COMPRESSION_PROGRAM_ID = new PublicKey("cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK");
 
 describe("Bubblegum tests", () => {
     const connection = new Connection("http://localhost:8899");
@@ -36,14 +42,17 @@ describe("Bubblegum tests", () => {
         const merkleTreeKeypair = Keypair.generate();
         const merkleTree = merkleTreeKeypair.publicKey;
 
+        const maxDepth = 14;
+        const maxBufferSize = 64;
+
         // Hard code space until @solana/spl-account-compression released
-        const space = 31800;
+        const space = getConcurrentMerkleTreeAccountSize(maxDepth, maxBufferSize);
         const allocTreeIx = SystemProgram.createAccount({
             fromPubkey: payer,
             newAccountPubkey: merkleTree,
             lamports: await connection.getMinimumBalanceForRentExemption(space),
             space: space,
-            programId: COMPRESSION_PROGRAM_ID,
+            programId: SPL_ACCOUNT_COMPRESSION_PROGRAM_ID,
         })
         const [treeAuthority, _bump] = await PublicKey.findProgramAddress([merkleTree.toBuffer()], BUBBLEGUM_PROGRAM_ID);
         const createTreeIx = createCreateTreeInstruction(
@@ -52,12 +61,12 @@ describe("Bubblegum tests", () => {
                 treeAuthority,
                 treeCreator: payer,
                 payer,
-                logWrapper: LOG_WRAPPER_ID,
-                compressionProgram: COMPRESSION_PROGRAM_ID,
+                logWrapper: SPL_NOOP_PROGRAM_ID,
+                compressionProgram: SPL_ACCOUNT_COMPRESSION_PROGRAM_ID,
             },
             {
-                maxBufferSize: 64,
-                maxDepth: 14
+                maxBufferSize,
+                maxDepth,
             },
             BUBBLEGUM_PROGRAM_ID,
         );
@@ -70,8 +79,8 @@ describe("Bubblegum tests", () => {
                 payer,
                 leafDelegate: payer,
                 leafOwner: payer,
-                compressionProgram: COMPRESSION_PROGRAM_ID,
-                logWrapper: LOG_WRAPPER_ID,
+                compressionProgram: SPL_ACCOUNT_COMPRESSION_PROGRAM_ID,
+                logWrapper: SPL_NOOP_PROGRAM_ID,
             },
             {
                 message: {
