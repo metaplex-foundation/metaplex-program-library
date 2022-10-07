@@ -31,7 +31,7 @@ const programs = {
     deployPath: localDeployPath('mpl_hydra'),
   },
   candy_machine_core: {
-    label: "Candy Machine Core",
+    label: 'Candy Machine Core',
     programId: 'CndyV3LdqHUfDLmE5naZjVN8rBZz4tqhdefbAnjHG3JR',
     deployPath: localDeployPath('mpl_candy_machine_core'),
   },
