@@ -29,7 +29,7 @@ use crate::{
     freeze::enable_freeze,
     hash::hash_and_update,
     setup::{setup_client, sugar_setup},
-    update::{process_update, UpdateArgs},
+    update::{check_config_to_prevent_bots, process_update, UpdateArgs},
     utils::*,
     validate::parser::{check_name, check_seller_fee_basis_points, check_symbol, check_url},
 };
@@ -80,6 +80,10 @@ pub async fn process_deploy(args: DeployArgs) -> Result<()> {
     let client = setup_client(&sugar_config)?;
     let program = client.program(CANDY_MACHINE_ID);
     let mut config_data = get_config_data(&args.config)?;
+    if let Err(e) = check_config_to_prevent_bots(&config_data) {
+        println!("{}", e);
+        return Ok(());
+    };
 
     let candy_machine_address = &cache.program.candy_machine;
 

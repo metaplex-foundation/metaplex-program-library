@@ -3,7 +3,9 @@ use std::str::FromStr;
 use anchor_client::solana_sdk::pubkey::Pubkey;
 use anchor_lang::prelude::AccountMeta;
 use anyhow::Result;
-use console::style;
+use chrono::Utc;
+use console::{style, Style};
+use dialoguer::{theme::ColorfulTheme, Confirm};
 use mpl_candy_machine::{
     accounts as nft_accounts, instruction as nft_instruction, CandyMachineData,
 };
@@ -18,8 +20,8 @@ use crate::{
         parser::get_config_data,
     },
     utils::{
-        assert_correct_authority, check_spl_token, check_spl_token_account, get_mint_decimals,
-        spinner_with_style,
+        assert_correct_authority, check_spl_token, check_spl_token_account, get_dialoguer_theme,
+        get_mint_decimals, spinner_with_style,
     },
 };
 
@@ -36,6 +38,11 @@ pub fn process_update(args: UpdateArgs) -> Result<()> {
     let sugar_config = sugar_setup(args.keypair, args.rpc_url)?;
     let client = setup_client(&sugar_config)?;
     let config_data = get_config_data(&args.config)?;
+
+    if let Err(e) = check_config_to_prevent_bots(&config_data) {
+        println!("{} {}", WARNING_EMOJI, e);
+        return Ok(());
+    };
 
     // the candy machine id specified takes precedence over the one from the cache
     let candy_machine_id = match args.candy_machine {
@@ -236,4 +243,83 @@ fn create_candy_machine_data(
         gatekeeper,
     };
     Ok(data)
+}
+
+// warn user and prompt for confirmation if
+//   - price is 0
+//   - no gatekeeper is set
+//   - no whitelist token is set
+// if go live date is absent or less than 1 week from now prompt, else warn only
+pub fn check_config_to_prevent_bots(config_data: &ConfigData) -> Result<(), String> {
+    let now = Utc::now().timestamp();
+    let time_to_go_live =
+        match go_live_date_as_timestamp(&config_data.go_live_date).map_err(|e| e.to_string())? {
+            Some(time) => time - now,
+            None => 0,
+        };
+
+    const ONE_MINUTE: i64 = 60;
+    const ONE_HOUR: i64 = ONE_MINUTE * 60;
+    const ONE_DAY: i64 = ONE_HOUR * 24;
+    const ONE_WEEK: i64 = ONE_DAY * 7;
+
+    let time_left = if time_to_go_live < 0 {
+        "CURRENTLY LIVE".to_string()
+    } else {
+        let days = time_to_go_live / ONE_DAY;
+        let hours = (time_to_go_live % ONE_DAY) / ONE_HOUR;
+        let minutes = (time_to_go_live % ONE_HOUR) / ONE_MINUTE;
+        let seconds = time_to_go_live % ONE_MINUTE;
+        format!("in {}d {}h {}m {}s", days, hours, minutes, seconds)
+    };
+
+    // invert conditions to allow returning early
+    if config_data.price > 0f64
+        || config_data.gatekeeper.is_some()
+        || config_data.whitelist_mint_settings.is_some()
+    {
+        Ok(())
+    } else {
+        println!("{} warning: the candy machine will be created with 0 price and no gatekeeper or whitelist token", WARNING_EMOJI);
+        println!(
+            "{} bots will be able to mint from it as soon as it goes live on {} ({})",
+            WARNING_EMOJI,
+            config_data
+                .go_live_date
+                .as_ref()
+                .unwrap_or(&"-".to_string()),
+            time_left
+        );
+        println!();
+
+        if time_to_go_live > ONE_WEEK {
+            return Ok(());
+        } else {
+            println!(
+                "{} candy machine has less than one week left before going live",
+                WARNING_EMOJI
+            );
+        }
+
+        println!();
+        println!(
+            "{} it is highly recommended you quit and fix the config before proceeding",
+            WARNING_EMOJI
+        );
+
+        let theme = ColorfulTheme {
+            success_prefix: style("✔".to_string()).yellow().force_styling(true),
+            values_style: Style::new().yellow(),
+            ..get_dialoguer_theme()
+        };
+        if !Confirm::with_theme(&theme)
+            .with_prompt("are you sure you want to continue?")
+            .interact()
+            .map_err(|e| e.to_string())?
+        {
+            Err("action aborted".to_string())
+        } else {
+            Ok(())
+        }
+    }
 }
