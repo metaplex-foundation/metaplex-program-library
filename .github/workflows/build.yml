@@ -33,22 +33,21 @@ jobs:
         id: build
         shell: bash
         run: |
+          binary_extension=""
           if [[ "${RUNNER_OS}" == "Linux" ]]; then
             echo "Installing libudev-dev"
             sudo apt-get update
             sudo apt-get install libudev-dev
+            binary_path="sugar-ubuntu-latest"
           fi
-          cargo build --all --release --locked
-          binary_extension=""
           if [[ "${RUNNER_OS}" == "Windows" ]]; then
             binary_extension=".exe"
-          fi
-
-          if [[ "${RUNNER_OS}" == "macOS" ]]; then
-            binary_path="sugar-macos-intel-latest${binary_extension}"
-          else
             binary_path="sugar-${{ matrix.os }}${binary_extension}"
           fi
+          if [[ "${RUNNER_OS}" == "macOS" ]]; then
+            binary_path="sugar-macos-intel-latest"
+          fi
+          cargo build --all --release --locked
           mv "target/release/sugar${binary_extension}" "${binary_path}"
           echo "::set-output name=binary_path::${binary_path}"
           strip "${binary_path}"
