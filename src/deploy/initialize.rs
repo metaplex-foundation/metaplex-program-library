@@ -1,63 +1,38 @@
 use anchor_client::solana_sdk::{
     pubkey::Pubkey,
     signature::{Keypair, Signature, Signer},
-    system_instruction, system_program, sysvar,
+    system_instruction, system_program,
 };
-use anchor_lang::prelude::AccountMeta;
 use anyhow::Result;
-use mpl_candy_machine::{
-    accounts as nft_accounts, instruction as nft_instruction, CandyMachineData,
+use mpl_candy_machine_core::{
+    accounts as nft_accounts, instruction as nft_instruction, CandyMachineData, ConfigLineSettings,
     Creator as CandyCreator,
 };
+use mpl_token_metadata::pda::find_collection_authority_account;
 pub use mpl_token_metadata::state::{
     MAX_CREATOR_LIMIT, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH,
 };
 use solana_program::native_token::LAMPORTS_PER_SOL;
 
 use crate::{
-    candy_machine::{parse_config_price, CANDY_MACHINE_ID},
     common::*,
     config::data::*,
     deploy::errors::*,
-    utils::get_mint_decimals,
+    pdas::{find_candy_machine_creator_pda, find_master_edition_pda, find_metadata_pda},
 };
 
 /// Create the candy machine data struct.
 pub fn create_candy_machine_data(
-    client: &Client,
+    _client: &Client,
     config: &ConfigData,
-    uuid: String,
+    cache: &Cache,
 ) -> Result<CandyMachineData> {
-    let program = client.program(CANDY_MACHINE_ID);
-    let go_live_date: Option<i64> = go_live_date_as_timestamp(&config.go_live_date)?;
-
-    let end_settings = if let Some(end_settings) = &config.end_settings {
-        Some(end_settings.to_candy_format()?)
-    } else {
-        None
-    };
-
-    // If SPL token is used, get the decimals from the token mint account, otherwise use 9 for SOL.
-    let decimals = get_mint_decimals(&program, config)?;
-
-    let whitelist_mint_settings = config
-        .whitelist_mint_settings
-        .as_ref()
-        .map(|s| s.to_candy_format(decimals));
-
-    let hidden_settings = config.hidden_settings.as_ref().map(|s| s.to_candy_format());
-
-    let gatekeeper = config
-        .gatekeeper
-        .as_ref()
-        .map(|gatekeeper| gatekeeper.to_candy_format());
-
     let mut creators: Vec<CandyCreator> = Vec::new();
     let mut share = 0u32;
 
     for creator in &config.creators {
         let c = creator.to_candy_format()?;
-        share += c.share as u32;
+        share += c.percentage_share as u32;
 
         creators.push(c);
     }
@@ -75,24 +50,66 @@ pub fn create_candy_machine_data(
             share,
         ));
     }
+    // (shortest, largest) name
+    let mut name_pair = [String::new(), String::new(), String::new()];
+    // (shortest, largest) uri
+    let mut uri_pair = [String::new(), String::new(), String::new()];
+    // compares a value against a pair of (shorter, larger)
+    let compare_pair = |value: &String, pair: &mut [String; 3]| {
+        // lexicographic smaller
+        if pair[0].is_empty() || value < &pair[0] {
+            pair[0] = value.to_string();
+        }
+        // lexicographic larger
+        if value > &pair[1] {
+            pair[1] = value.to_string();
+        }
+        // lengthwise larger
+        if value.len() > pair[2].len() {
+            pair[2] = value.to_string();
+        }
+    };
+    let common_prefix = |value1: &str, value2: &str| {
+        let bytes1 = value1.as_bytes();
+        let bytes2 = value2.as_bytes();
+        let mut index = 0;
 
-    let price = parse_config_price(client, config)?;
+        while (index < bytes1.len() && index < bytes2.len()) && bytes1[index] == bytes2[index] {
+            index += 1;
+        }
+
+        value1[..index].to_string()
+    };
+
+    for (index, item) in cache.items.iter() {
+        if i64::from_str(index)? > -1 {
+            compare_pair(&item.name, &mut name_pair);
+            compare_pair(&item.metadata_link, &mut uri_pair);
+        }
+    }
+
+    let name_prefix = common_prefix(&name_pair[0], &name_pair[1]);
+    let uri_prefix = common_prefix(&uri_pair[0], &uri_pair[1]);
+
+    let config_line_settings = ConfigLineSettings {
+        name_length: (name_pair[2].len() - name_prefix.len()) as u32,
+        prefix_name: name_prefix,
+        uri_length: (uri_pair[2].len() - uri_prefix.len()) as u32,
+        prefix_uri: uri_prefix,
+        is_sequential: false,
+    };
+
+    let hidden_settings = config.hidden_settings.as_ref().map(|s| s.to_candy_format());
 
     let data = CandyMachineData {
-        uuid,
-        price,
+        items_available: config.size,
         symbol: config.symbol.clone(),
-        seller_fee_basis_points: config.seller_fee_basis_points,
+        seller_fee_basis_points: config.royalties,
         max_supply: 0,
         is_mutable: config.is_mutable,
-        retain_authority: config.retain_authority,
-        go_live_date,
-        end_settings,
         creators,
-        whitelist_mint_settings,
+        config_line_settings: Some(config_line_settings),
         hidden_settings,
-        items_available: config.number,
-        gatekeeper,
     };
 
     Ok(data)
@@ -100,24 +117,16 @@ pub fn create_candy_machine_data(
 
 /// Send the `initialize_candy_machine` instruction to the candy machine program.
 pub fn initialize_candy_machine(
-    config_data: &ConfigData,
+    _config_data: &ConfigData,
+
     candy_account: &Keypair,
     candy_machine_data: CandyMachineData,
-    treasury_wallet: Pubkey,
+    collection_mint: Pubkey,
+    collection_update_authority: Pubkey,
     program: Program,
 ) -> Result<Signature> {
     let payer = program.payer();
-    let items_available = candy_machine_data.items_available;
-
-    let candy_account_size = if candy_machine_data.hidden_settings.is_some() {
-        CONFIG_ARRAY_START
-    } else {
-        CONFIG_ARRAY_START
-            + 4
-            + items_available as usize * CONFIG_LINE_SIZE
-            + 8
-            + 2 * (items_available as usize / 8 + 1)
-    };
+    let candy_account_size = candy_machine_data.get_space_for_candy()?;
 
     info!(
         "Initializing candy machine with account size of: {} and address of: {}",
@@ -139,7 +148,15 @@ pub fn initialize_candy_machine(
         .into());
     }
 
-    let mut tx = program
+    // required PDAs
+
+    let (authority_pda, _) = find_candy_machine_creator_pda(&candy_account.pubkey());
+    let collection_authority_record =
+        find_collection_authority_account(&collection_mint, &authority_pda).0;
+    let collection_metadata = find_metadata_pda(&collection_mint);
+    let collection_master_edition = find_master_edition_pda(&collection_mint);
+
+    let tx = program
         .request()
         .instruction(system_instruction::create_account(
             &payer,
@@ -149,25 +166,22 @@ pub fn initialize_candy_machine(
             &program.id(),
         ))
         .signer(candy_account)
-        .accounts(nft_accounts::InitializeCandyMachine {
+        .accounts(nft_accounts::Initialize {
             candy_machine: candy_account.pubkey(),
-            wallet: treasury_wallet,
             authority: payer,
+            authority_pda,
             payer,
+            collection_metadata,
+            collection_mint,
+            collection_master_edition,
+            collection_authority_record,
+            collection_update_authority,
+            token_metadata_program: mpl_token_metadata::ID,
             system_program: system_program::id(),
-            rent: sysvar::rent::ID,
         })
-        .args(nft_instruction::InitializeCandyMachine {
+        .args(nft_instruction::Initialize {
             data: candy_machine_data,
         });
-
-    if let Some(token) = config_data.spl_token {
-        tx = tx.accounts(AccountMeta {
-            pubkey: token,
-            is_signer: false,
-            is_writable: false,
-        });
-    }
 
     let sig = tx.send()?;
 

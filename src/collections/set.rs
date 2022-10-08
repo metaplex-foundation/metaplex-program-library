@@ -1,9 +1,9 @@
 use std::str::FromStr;
 
-use anchor_client::solana_sdk::{pubkey::Pubkey, system_program, sysvar};
+use anchor_client::solana_sdk::{pubkey::Pubkey, system_program};
 use anyhow::Result;
 use console::style;
-use mpl_candy_machine::{accounts as nft_accounts, instruction as nft_instruction, CandyError};
+use mpl_candy_machine_core::{accounts as nft_accounts, instruction as nft_instruction};
 use mpl_token_metadata::{
     error::MetadataError,
     pda::find_collection_authority_account,
@@ -156,31 +156,28 @@ pub fn set_collection(
     program: &Program,
     candy_pubkey: &Pubkey,
     candy_machine_state: &CandyMachine,
-    collection_mint_pubkey: &Pubkey,
-    collection_metadata_info: &PdaInfo<Metadata>,
-    collection_edition_info: &PdaInfo<MasterEditionV2>,
+    new_collection_mint_pubkey: &Pubkey,
+    new_collection_metadata_info: &PdaInfo<Metadata>,
+    new_collection_edition_info: &PdaInfo<MasterEditionV2>,
 ) -> Result<Signature> {
     let payer = program.payer();
 
-    let collection_pda_pubkey = find_collection_pda(candy_pubkey).0;
-    let (collection_metadata_pubkey, collection_metadata) = collection_metadata_info;
-    let (collection_edition_pubkey, collection_edition) = collection_edition_info;
+    let (authority_pda, _) = find_candy_machine_creator_pda(candy_pubkey);
 
-    let collection_authority_record =
-        find_collection_authority_account(collection_mint_pubkey, &collection_pda_pubkey).0;
+    let (new_collection_metadata_pubkey, new_collection_metadata) = new_collection_metadata_info;
+    let (new_collection_edition_pubkey, new_collection_edition) = new_collection_edition_info;
 
-    if !candy_machine_state.data.retain_authority {
-        return Err(anyhow!(CandyError::CandyCollectionRequiresRetainAuthority));
-    }
+    let new_collection_authority_record =
+        find_collection_authority_account(new_collection_mint_pubkey, &authority_pda).0;
 
-    if collection_metadata.update_authority != payer {
+    if new_collection_metadata.update_authority != payer {
         return Err(anyhow!(CustomCandyError::AuthorityMismatch(
-            collection_metadata.update_authority.to_string(),
+            new_collection_metadata.update_authority.to_string(),
             payer.to_string()
         )));
     }
 
-    if collection_edition.max_supply != Some(0) {
+    if new_collection_edition.max_supply != Some(0) {
         return Err(anyhow!(MetadataError::CollectionMustBeAUniqueMasterEdition));
     }
 
@@ -190,20 +187,31 @@ pub fn set_collection(
         ));
     }
 
+    let collection_mint = candy_machine_state.collection_mint;
+
+    let (authority_pda, _) = find_candy_machine_creator_pda(candy_pubkey);
+    let collection_authority_record =
+        find_collection_authority_account(&collection_mint, &authority_pda).0;
+
+    let collection_metadata = find_metadata_pda(&collection_mint);
+
     let builder = program
         .request()
         .accounts(nft_accounts::SetCollection {
             candy_machine: *candy_pubkey,
             authority: payer,
-            collection_pda: collection_pda_pubkey,
+            authority_pda,
             payer,
-            system_program: system_program::id(),
-            rent: sysvar::rent::ID,
-            metadata: *collection_metadata_pubkey,
-            mint: *collection_mint_pubkey,
-            edition: *collection_edition_pubkey,
+            collection_mint,
+            collection_metadata,
             collection_authority_record,
+            new_collection_metadata: *new_collection_metadata_pubkey,
+            new_collection_mint: *new_collection_mint_pubkey,
+            new_collection_master_edition: *new_collection_edition_pubkey,
+            new_collection_authority_record,
+            new_collection_update_authority: new_collection_metadata.update_authority,
             token_metadata_program: mpl_token_metadata::ID,
+            system_program: system_program::id(),
         })
         .args(nft_instruction::SetCollection);
 

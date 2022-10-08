@@ -23,10 +23,7 @@ use solana_client::{
 };
 use spl_token::state::{Account as SplAccount, Mint};
 
-use crate::{
-    common::*,
-    config::{data::Cluster, ConfigData},
-};
+use crate::{common::*, config::data::Cluster};
 
 /// Hash for devnet cluster
 pub const DEVNET_HASH: &str = "EtWTRABZaYq6iMfeYKouRu166VU2xqa1wcaWoxPkrZBG";
@@ -194,6 +191,7 @@ fn get_cm_creator_accounts(
         std::process::exit(1);
     }
 
+    // TODO: fix account offset
     let config = RpcProgramAccountsConfig {
         filters: Some(vec![RpcFilterType::Memcmp(Memcmp {
             offset: 1 + // key
@@ -223,6 +221,7 @@ fn get_cm_creator_accounts(
             commitment: Some(CommitmentConfig {
                 commitment: CommitmentLevel::Confirmed,
             }),
+            min_context_slot: None,
         },
         with_context: None,
     };
@@ -230,15 +229,4 @@ fn get_cm_creator_accounts(
     let results = client.get_program_accounts_with_config(&TOKEN_METADATA_PROGRAM_ID, config)?;
 
     Ok(results)
-}
-
-pub fn get_mint_decimals(program: &Program, config: &ConfigData) -> Result<u8> {
-    // If SPL token is used, get the decimals from the token account, otherwise use 9 for SOL.
-    if let Some(mint_pubkey) = config.spl_token {
-        let mint_account = program.rpc().get_account(&mint_pubkey)?;
-        let mint = spl_token::state::Mint::unpack(&mint_account.data)?;
-        Ok(mint.decimals)
-    } else {
-        Ok(9)
-    }
 }

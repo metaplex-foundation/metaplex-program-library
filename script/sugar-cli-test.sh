@@ -649,41 +649,35 @@ fi
 
 cat >$CONFIG_FILE <<-EOM
 {
-    "price": 0.1,
-    "number": $ITEMS,
+    "size": $ITEMS,
     "symbol": "TEST",
-    "sellerFeeBasisPoints": 500,
-    "gatekeeper": null,
-    "solTreasuryAccount": "$(solana address)",
-    "splTokenAccount": null,
-    "splToken": null,
-    "goLiveDate": "$(date "+%Y-%m-%dT%T%z" | sed "s@^.\{22\}@&:@")",
-    "endSettings": null,
-    "whitelistMintSettings": null,
-    "hiddenSettings": $HIDDEN_SETTINGS,
-    "uploadMethod": "${STORAGE}",
-    "awsConfig": {
-        "bucket": "${AWS_BUCKET}",
-        "profile": "${AWS_PROFILE}",
-        "directory": "${AWS_DIRECTORY}",
-        "domain": "${AWS_DOMAIN}"
-    },
-    "nftStorageAuthToken": "${NFT_STORAGE_TOKEN}",
-    "shdwStorageAccount": $SHDW,
-    "retainAuthority": true,
+    "royalties": 500,
     "isMutable": true,
+    "isSequential": false,
     "creators": [
         {
             "address": "$(solana address)",
             "share": 100
         }
     ],
-    "pinataConfig": {
-        "jwt": "${PINATA_JWT}",
-        "apiGateway": "${PINATA_API_GATEWAY}",
-        "contentGateway": "${PINATA_CONTENT_GATEWAY}",
-        "parallelLimit": ${PINATA_PARALLEL}
-    }
+    "uploadConfig": {
+        "method": "${STORAGE}",
+        "awsConfig": {
+            "bucket": "${AWS_BUCKET}",
+            "profile": "${AWS_PROFILE}",
+            "directory": "${AWS_DIRECTORY}",
+            "domain": "${AWS_DOMAIN}"
+        },
+        "nftStorageAuthToken": "${NFT_STORAGE_TOKEN}",
+        "shdwStorageAccount": $SHDW,
+        "pinataConfig": {
+            "jwt": "${PINATA_JWT}",
+            "apiGateway": "${PINATA_API_GATEWAY}",
+            "contentGateway": "${PINATA_CONTENT_GATEWAY}",
+            "parallelLimit": ${PINATA_PARALLEL}
+        }
+    },
+    "hiddenSettings": $HIDDEN_SETTINGS
 }
 EOM
 
@@ -866,32 +860,6 @@ if [ ! "$MANUAL_CACHE" == "Y" ]; then
     fi
 
     echo "Collection mint:$(GRN "$COLLECTION_PDA")"
-    echo ""
-
-    MAG "Removing collection >>>"
-    $SUGAR_BIN collection remove --keypair $WALLET_KEY --cache $CACHE_FILE -r $RPC
-    MAG "<<<"
-
-    # checking that the collection PDA was removed
-    NONE=$(collection_mint)
-
-    if [ ! "$NONE" == " none" ]; then
-        RED "[$(date "+%T")] Aborting: collection mint still present"
-        exit 1
-    fi
-
-    echo ""
-    MAG "Setting collection >>>"
-    $SUGAR_BIN collection set --keypair $WALLET_KEY --cache $CACHE_FILE -r $RPC $COLLECTION_PDA
-    MAG "<<<"
-
-    # checking that the collection PDA was set
-    COLLECTION_PDA=$(collection_mint)
-
-    if [ -z ${COLLECTION_PDA} ]; then
-        RED "[$(date "+%T")] Aborting: collection mint not found"
-        exit 1
-    fi
 else
     CYN "5. Verifying collection mint (Skipped)"
 fi

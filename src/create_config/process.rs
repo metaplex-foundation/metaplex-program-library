@@ -3,27 +3,19 @@ use std::{
     fs::{File, OpenOptions},
     path::{Path, PathBuf},
     str::FromStr,
-    sync::Arc,
 };
 
 use anchor_lang::prelude::Pubkey;
 use anyhow::{anyhow, Result};
-use chrono::prelude::*;
 use console::style;
 use dialoguer::{Confirm, Input, MultiSelect, Select};
 use url::Url;
 
 use crate::{
-    candy_machine::CANDY_MACHINE_ID,
-    config::{
-        parse_string_as_date, AwsConfig, ConfigData, Creator, EndSettingType, EndSettings,
-        GatekeeperConfig, HiddenSettings, PinataConfig, UploadMethod, WhitelistMintMode,
-        WhitelistMintSettings,
-    },
+    config::{AwsConfig, ConfigData, Creator, HiddenSettings, PinataConfig, UploadMethod},
     constants::*,
-    setup::{setup_client, sugar_setup},
     upload::list_files,
-    utils::{check_spl_token, check_spl_token_account, get_dialoguer_theme},
+    utils::get_dialoguer_theme,
     validate::Metadata,
 };
 
@@ -55,31 +47,9 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
         }
     };
 
-    let float_validator = |input: &String| -> Result<(), String> {
-        if !input.is_empty() && input.parse::<f64>().is_err() {
-            Err(format!(
-                "Couldn't parse price input of '{}' to a float.",
-                input
-            ))
-        } else {
-            Ok(())
-        }
-    };
-
     let number_validator = |input: &String| -> Result<(), String> {
         if input.parse::<u64>().is_err() {
             Err(format!("Couldn't parse input of '{}' to a number.", input))
-        } else {
-            Ok(())
-        }
-    };
-
-    let date_validator = |input: &String| -> Result<(), String> {
-        if parse_string_as_date(input).is_err() {
-            Err(format!(
-                "Couldn't parse input of '{}' to a valid date.",
-                input
-            ))
         } else {
             Ok(())
         }
@@ -112,20 +82,6 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
         if value > 10_000 {
             Err(String::from(
                 "Seller fee basis points must be 10,000 or less.",
-            ))
-        } else {
-            Ok(())
-        }
-    };
-
-    let freeze_time_validator = |input: &String| -> Result<(), String> {
-        let value = match input.parse::<u8>() {
-            Ok(value) => value,
-            Err(_) => return Err(format!("Couldn't parse input of '{}' to a number.", input)),
-        };
-        if value > MAX_FREEZE_DAYS {
-            Err(String::from(
-                "Freeze time cannot be greater than {MAX_FREEZE_DAYS} days.",
             ))
         } else {
             Ok(())
@@ -184,19 +140,9 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
             .underlined()
     );
 
-    // price
+    // size
 
-    config_data.price = Input::with_theme(&theme)
-        .with_prompt("What is the price of each NFT?")
-        .validate_with(float_validator)
-        .interact()
-        .unwrap()
-        .parse::<f64>()
-        .expect("Failed to parse string into u64 that should have already been validated.");
-
-    // number
-
-    config_data.number = if num_files > 0 && (num_files % 2) == 0 && Confirm::with_theme(&theme)
+    config_data.size = if num_files > 0 && (num_files % 2) == 0 && Confirm::with_theme(&theme)
         .with_prompt(
             format!(
                 "Found {} file pairs in \"{}\". Is this how many NFTs you will have in your candy machine?", num_files / 2, args.assets_dir,
@@ -239,7 +185,7 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
 
     // seller_fee_basis_points
 
-    config_data.seller_fee_basis_points = if num_files > 0 && seller_fee != INVALID_SELLER_FEE && Confirm::with_theme(&theme)
+    config_data.royalties = if num_files > 0 && seller_fee != INVALID_SELLER_FEE && Confirm::with_theme(&theme)
         .with_prompt(
             format!(
                 "Found value {} for seller fee basis points in your metadata file. Is this value correct?", seller_fee,
@@ -257,35 +203,6 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
             .unwrap()
             .parse::<u16>()
             .expect("Failed to parse number into u16 that should have already been validated.")
-    };
-
-    // date
-
-    let null_or_none = |input: &str| -> bool { input == "none" || input == "null" };
-    let date= Input::with_theme(&theme)
-    .with_prompt("What is your go live date? Many common formats are supported. If unsure, try YYYY-MM-DD HH:MM:SS [+/-]UTC-OFFSET or type 'now' for \
-     current time. For example 2022-05-02 18:00:00 +0000 for May 2, 2022 18:00:00 UTC.")
-     .validate_with(|input: &String| {
-        let trimmed = input.trim().to_lowercase();
-        if trimmed == "now" || null_or_none(&trimmed) || parse_string_as_date(input).is_ok() {
-            Ok(())
-        } else {
-            Err("Invalid date format. Format must be YYYY-MM-DD HH:MM:SS [+/-]UTC-OFFSET or 'now'.")
-        }
-    })
-    .interact()
-    .unwrap();
-
-    let trimmed = date.trim().to_lowercase();
-
-    config_data.go_live_date = if trimmed == "now" {
-        let current_time = chrono::Utc::now();
-        Some(current_time.to_rfc3339())
-    } else if null_or_none(&trimmed) {
-        None
-    } else {
-        let date = dateparser::parse_with(&date, &Local, NaiveTime::from_hms(0, 0, 0))?;
-        Some(date.to_rfc3339())
     };
 
     // creators
@@ -343,216 +260,14 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
         config_data.creators.push(creator);
     });
 
-    const SPL_INDEX: usize = 0;
-    const GATEKEEPER_INDEX: usize = 1;
-    const WL_INDEX: usize = 2;
-    const END_SETTINGS_INDEX: usize = 3;
-    const HIDDEN_SETTINGS_INDEX: usize = 4;
-    const FREEZE_SETTINGS_INDEX: usize = 5;
+    const HIDDEN_SETTINGS_INDEX: usize = 0;
 
-    let extra_functions_options = vec![
-        "SPL Token Mint",
-        "Gatekeeper",
-        "Whitelist Mint",
-        "End Settings",
-        "Hidden Settings",
-        "Freeze Settings",
-    ];
+    let extra_functions_options = vec!["Hidden Settings"];
 
     let choices = MultiSelect::with_theme(&theme)
         .with_prompt("Which extra features do you want to use? (use [SPACEBAR] to select options you want and hit [ENTER] when done)")
         .items(&extra_functions_options)
         .interact()?;
-
-    // SPL token mint
-
-    let sugar_config = sugar_setup(args.keypair, args.rpc_url)?;
-    let client = Arc::new(setup_client(&sugar_config)?);
-    let program = client.program(CANDY_MACHINE_ID);
-
-    if choices.contains(&SPL_INDEX) {
-        config_data.sol_treasury_account = None;
-        config_data.spl_token = Some(
-            Pubkey::from_str(
-                &Input::with_theme(&theme)
-                    .with_prompt("What is your SPL token mint address?")
-                    .validate_with(pubkey_validator)
-                    .validate_with(|input: &String| -> Result<()> {
-                        check_spl_token(&program, input)?;
-                        Ok(())
-                    })
-                    .interact()
-                    .unwrap(),
-            )
-            .expect("Failed to parse string into pubkey that should have already been validated."),
-        );
-        config_data.spl_token_account = Some(
-                Pubkey::from_str(
-                    &Input::with_theme(&theme)
-                        .with_prompt("What is your SPL token account address (the account that will hold the SPL token mints)?")
-                        .validate_with(pubkey_validator)
-                        .validate_with(|input: &String| -> Result<()> {
-                            check_spl_token_account(&program, input)
-                        })
-                        .interact()
-                        .unwrap(),
-                )
-                    .expect("Failed to parse string into pubkey that should have already been validated."),
-            )
-    } else {
-        config_data.spl_token = None;
-        config_data.spl_token_account = None;
-        config_data.sol_treasury_account = Some(
-            Pubkey::from_str(
-                &Input::with_theme(&theme)
-                    .with_prompt("What is your SOL treasury address?")
-                    .validate_with(pubkey_validator)
-                    .interact()
-                    .unwrap(),
-            )
-            .expect("Failed to parse string into pubkey that should have already been validated."),
-        );
-    };
-
-    // gatekeeper
-
-    config_data.gatekeeper = if choices.contains(&GATEKEEPER_INDEX) {
-        let gatekeeper_options = vec!["Civic Pass", "Verify by Encore"];
-        let civic_network = Pubkey::from_str(CIVIC_NETWORK).unwrap();
-        let encore_network = Pubkey::from_str(ENCORE_NETWORK).unwrap();
-        let selection = Select::with_theme(&theme)
-            .with_prompt("Which gatekeeper network do you want to use? Check https://docs.metaplex.com/guides/archived/candy-machine-v2/configuration#provider-networks for more info.")
-            .items(&gatekeeper_options)
-            .default(0)
-            .interact()?;
-        let gatekeeper_network = match selection {
-            0 => civic_network,
-            1 => encore_network,
-            _ => civic_network,
-        };
-
-        let expire_on_use = Confirm::with_theme(&theme)
-            .with_prompt("To help prevent bots even more, do you want to expire the gatekeeper token on each mint?").interact()?;
-        Some(GatekeeperConfig::new(gatekeeper_network, expire_on_use))
-    } else {
-        None
-    };
-
-    // whitelist mint settings
-
-    config_data.whitelist_mint_settings = if choices.contains(&WL_INDEX) {
-        let mint = Pubkey::from_str(
-            &Input::with_theme(&theme)
-                .with_prompt("What is your WL token mint address?")
-                .validate_with(pubkey_validator)
-                .interact()
-                .unwrap(),
-        )
-        .expect("Failed to parse string into pubkey that should have already been validated.");
-
-        let whitelist_mint_mode: WhitelistMintMode = if Confirm::with_theme(&theme)
-            .with_prompt("Do you want the whitelist token to be burned on each mint?")
-            .interact()?
-        {
-            WhitelistMintMode::BurnEveryTime
-        } else {
-            WhitelistMintMode::NeverBurn
-        };
-
-        let presale = Confirm::with_theme(&theme)
-            .with_prompt("Do you want to enable presale mint with your whitelist token?")
-            .interact()?;
-        let discount_price: Option<f64> = if presale {
-            let price = Input::with_theme(&theme)
-                    .with_prompt(
-                        "What is the discount price for the presale? Hit [ENTER] to not set a discount price.",
-                    )
-                    .allow_empty(true)
-                    .validate_with(float_validator)
-                    .interact()
-                    .unwrap();
-            if price.is_empty() {
-                // the discount price can be set to null
-                None
-            } else {
-                Some(price.parse::<f64>().expect(
-                    "Failed to parse string into f64 that should have already been validated.",
-                ))
-            }
-        } else {
-            None
-        };
-        Some(WhitelistMintSettings::new(
-            whitelist_mint_mode,
-            mint,
-            presale,
-            discount_price,
-        ))
-    } else {
-        None
-    };
-
-    // end settings
-
-    config_data.end_settings = if choices.contains(&END_SETTINGS_INDEX) {
-        let end_settings_options = vec!["Amount", "Date"];
-        let end_setting_type = match Select::with_theme(&theme)
-            .with_prompt("What end settings type do you want to use?")
-            .items(&end_settings_options)
-            .default(0)
-            .interact()
-            .unwrap()
-        {
-            0 => EndSettingType::Amount,
-            1 => EndSettingType::Date,
-            _ => panic!("Invalid end setting type"),
-        };
-
-        match end_setting_type {
-            EndSettingType::Amount => {
-                let number = Input::with_theme(&theme)
-                .with_prompt("What is the amount to stop the mint?")
-                .validate_with(number_validator)
-                .validate_with(|num: &String| {
-                    if num.parse::<u64>().unwrap() < config_data.number {
-                        Ok(())
-                    } else {
-                        Err("Your end settings amount cannot be more than the number of items in your candy machine.")
-                    }
-                })
-                .interact()
-                .unwrap()
-                .parse::<u64>()
-                .expect("Failed to parse number into u64 that should have already been validated.");
-
-                Some(EndSettings::new(end_setting_type, Some(number), None))
-            }
-            EndSettingType::Date => {
-                println!("Date setting detected");
-                let date = Input::with_theme(&theme)
-                    .with_prompt("What is the date to stop the mint? Many common formats are supported. If unsure, try YYYY-MM-DD HH:MM:SS [+/-]UTC-OFFSET. \
-                    For example 2022-05-02 18:00:00 +0000 for May 2, 2022 18:00:00 UTC.")
-                    .validate_with(date_validator)
-                    .interact()
-                    .unwrap();
-
-                println!("date:{}:date", date);
-
-                // Convert to ISO 8601 for consistency, before storing in config.
-                let formatted_date = parse_string_as_date(&date)?;
-
-                println!("formatted_date: {}", formatted_date);
-
-                Some(EndSettings::new(
-                    end_setting_type,
-                    None,
-                    Some(formatted_date),
-                ))
-            }
-        }
-    } else {
-        None
-    };
 
     // hidden settings
 
@@ -585,25 +300,9 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
         None
     };
 
-    // Freeze Settings
-    config_data.freeze_time = if choices.contains(&FREEZE_SETTINGS_INDEX) {
-        let days = Input::with_theme(&theme)
-                 .with_prompt("How many days do you want to freeze the treasury funds and minted NFTs for? (Max: 31)")
-                 .validate_with(freeze_time_validator)
-                 .default(MAX_FREEZE_DAYS.to_string())
-                 .interact()
-                 .unwrap()
-                 .parse::<u8>().expect("Failed to parse number into u64 that should have already been validated.");
-
-        // convert to i64 of seconds, for storing in config and to match candy machine value
-        Some(days as i64 * 86400)
-    } else {
-        None
-    };
-
     // upload method
     let upload_options = vec!["Bundlr", "AWS", "NFT Storage", "SHDW", "Pinata"];
-    config_data.upload_method = match Select::with_theme(&theme)
+    config_data.upload_config.method = match Select::with_theme(&theme)
         .with_prompt("What upload method do you want to use?")
         .items(&upload_options)
         .default(0)
@@ -618,7 +317,7 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
         _ => UploadMethod::Bundlr,
     };
 
-    if config_data.upload_method == UploadMethod::AWS {
+    if config_data.upload_config.method == UploadMethod::AWS {
         let bucket: String = Input::with_theme(&theme)
             .with_prompt("What is the AWS S3 bucket name?")
             .interact()
@@ -642,7 +341,7 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
             .interact()
             .unwrap();
 
-        config_data.aws_config = Some(AwsConfig::new(
+        config_data.upload_config.aws_config = Some(AwsConfig::new(
             bucket,
             profile,
             directory,
@@ -654,8 +353,8 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
         ));
     }
 
-    if config_data.upload_method == UploadMethod::NftStorage {
-        config_data.nft_storage_auth_token = Some(
+    if config_data.upload_config.method == UploadMethod::NftStorage {
+        config_data.upload_config.nft_storage_auth_token = Some(
             Input::with_theme(&theme)
                 .with_prompt("What is the NFT Storage authentication token?")
                 .interact()
@@ -663,8 +362,8 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
         );
     }
 
-    if config_data.upload_method == UploadMethod::SHDW {
-        config_data.shdw_storage_account = Some(
+    if config_data.upload_config.method == UploadMethod::SHDW {
+        config_data.upload_config.shdw_storage_account = Some(
             Input::with_theme(&theme)
                 .with_prompt("What is the SHDW storage address?")
                 .validate_with(pubkey_validator)
@@ -673,7 +372,7 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
         );
     }
 
-    if config_data.upload_method == UploadMethod::Pinata {
+    if config_data.upload_config.method == UploadMethod::Pinata {
         let jwt: String = Input::with_theme(&theme)
             .with_prompt("What is your Pinata JWT authentication?")
             .interact()
@@ -699,7 +398,7 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
             .parse::<u16>()
             .expect("Failed to parse number into u64 that should have already been validated.");
 
-        config_data.pinata_config = Some(PinataConfig {
+        config_data.upload_config.pinata_config = Some(PinataConfig {
             jwt,
             api_gateway,
             content_gateway,
@@ -707,12 +406,8 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
         });
     }
 
-    // retain authority
-    config_data.retain_authority = Confirm::with_theme(&theme)
-        .with_prompt("Do you want to retain update authority on your NFTs? We HIGHLY recommend you choose yes.")
-        .interact()?;
-
     // is mutable
+
     config_data.is_mutable = Confirm::with_theme(&theme)
         .with_prompt("Do you want your NFTs to remain mutable? We HIGHLY recommend you choose yes.")
         .interact()?;

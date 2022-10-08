@@ -1,18 +1,11 @@
 use std::str::FromStr;
 
-use anchor_client::solana_sdk::{native_token::LAMPORTS_PER_SOL, pubkey::Pubkey};
+use anchor_client::solana_sdk::pubkey::Pubkey;
 use anyhow::Result;
-use chrono::NaiveDateTime;
 use console::style;
-use mpl_candy_machine::{utils::is_feature_active, EndSettingType, WhitelistMintMode};
+use mpl_candy_machine_core::constants::NULL_STRING;
 
-use crate::{
-    cache::load_cache,
-    candy_machine::*,
-    common::*,
-    pdas::{find_freeze_pda, get_collection_pda},
-    utils::*,
-};
+use crate::{cache::load_cache, candy_machine::*, common::*, utils::*};
 
 pub struct ShowArgs {
     pub keypair: Option<String>,
@@ -22,9 +15,6 @@ pub struct ShowArgs {
     pub unminted: bool,
 }
 
-// TODO: change the value '1' for the corresponding constant once the
-// new version of the mpl_candy_machine crate is published
-const SWAP_REMOVE_FEATURE_INDEX: usize = 255;
 // number of indices per line
 const PER_LINE: usize = 11;
 
@@ -64,16 +54,8 @@ pub fn process_show(args: ShowArgs) -> Result<()> {
         }
     };
 
-    let collection_mint =
-        if let Ok((_, collection_pda)) = get_collection_pda(&candy_machine_id, &program) {
-            Some(collection_pda.mint)
-        } else {
-            None
-        };
-
     let cndy_state = get_candy_machine_state(&sugar_config, &candy_machine_id)?;
     let cndy_data = cndy_state.data;
-    let freeze_pda = get_freeze_pda_account(&sugar_config, &candy_machine_id).ok();
 
     pb.finish_and_clear();
 
@@ -88,35 +70,24 @@ pub fn process_show(args: ShowArgs) -> Result<()> {
 
     println!(" {}", style(":").dim());
     print_with_style("", "authority", cndy_state.authority.to_string());
-    print_with_style("", "wallet", cndy_state.wallet.to_string());
-    match collection_mint {
-        Some(collection_mint) => {
-            print_with_style("", "collection mint", collection_mint.to_string())
-        }
-        None => print_with_style("", "collection mint", "none".to_string()),
-    };
-
-    if let Some(token_mint) = cndy_state.token_mint {
-        print_with_style("", "spl token", token_mint.to_string());
-    } else {
-        print_with_style("", "spl token", "none".to_string());
-    }
+    print_with_style("", "mint authority", cndy_state.mint_authority.to_string());
+    print_with_style(
+        "",
+        "collection mint",
+        cndy_state.collection_mint.to_string(),
+    );
 
     print_with_style("", "max supply", cndy_data.max_supply.to_string());
     print_with_style("", "items redeemed", cndy_state.items_redeemed.to_string());
     print_with_style("", "items available", cndy_data.items_available.to_string());
 
-    print_with_style("", "uuid", cndy_data.uuid.to_string());
-    print_with_style(
-        "",
-        "price",
-        format!(
-            "◎ {} ({})",
-            cndy_data.price as f64 / LAMPORTS_PER_SOL as f64,
-            cndy_data.price
-        ),
-    );
-    print_with_style("", "symbol", cndy_data.symbol.to_string());
+    if cndy_state.features.count_ones() > 0 {
+        print_with_style("", "features", cndy_state.features);
+    } else {
+        print_with_style("", "features", "none");
+    }
+
+    print_with_style("", "symbol", cndy_data.symbol.trim_end_matches(NULL_STRING));
     print_with_style(
         "",
         "seller fee basis points",
@@ -127,60 +98,26 @@ pub fn process_show(args: ShowArgs) -> Result<()> {
         ),
     );
     print_with_style("", "is mutable", cndy_data.is_mutable.to_string());
-    print_with_style(
-        "",
-        "retain authority",
-        cndy_data.retain_authority.to_string(),
-    );
-    if let Some(date) = cndy_data.go_live_date {
-        let date = NaiveDateTime::from_timestamp(date, 0);
-        print_with_style(
-            "",
-            "go live date",
-            date.format("%a %B %e %Y %H:%M:%S UTC").to_string(),
-        );
-    } else {
-        print_with_style("", "go live date", "none".to_string());
-    }
     print_with_style("", "creators", "".to_string());
 
-    for (index, creator) in cndy_data.creators.into_iter().enumerate() {
+    let creators = &cndy_data.creators;
+
+    for (index, creator) in creators.iter().enumerate() {
         let info = format!(
             "{} ({}%{})",
             creator.address,
-            creator.share,
+            creator.percentage_share,
             if creator.verified { ", verified" } else { "" },
         );
         print_with_style(":   ", &(index + 1).to_string(), info);
     }
 
-    // end settings
-    if let Some(end_settings) = cndy_data.end_settings {
-        print_with_style("", "end settings", "".to_string());
-        match end_settings.end_setting_type {
-            EndSettingType::Date => {
-                print_with_style(":   ", "end setting type", "date".to_string());
-                let date = NaiveDateTime::from_timestamp(end_settings.number as i64, 0);
-                print_with_style(
-                    ":   ",
-                    "number",
-                    date.format("%a %B %e %Y %H:%M:%S UTC").to_string(),
-                );
-            }
-            EndSettingType::Amount => {
-                print_with_style(":   ", "end setting type", "amount".to_string());
-                print_with_style(":   ", "number", end_settings.number.to_string());
-            }
-        }
-    } else {
-        print_with_style("", "end settings", "none".to_string());
-    }
-
     // hidden settings
-    if let Some(hidden_settings) = cndy_data.hidden_settings {
+
+    if let Some(hidden_settings) = &cndy_data.hidden_settings {
         print_with_style("", "hidden settings", "".to_string());
-        print_with_style(":   ", "name", hidden_settings.name);
-        print_with_style(":   ", "uri", hidden_settings.uri);
+        print_with_style(":   ", "name", &hidden_settings.name);
+        print_with_style(":   ", "uri", &hidden_settings.uri);
         print_with_style(
             ":   ",
             "hash",
@@ -190,66 +127,45 @@ pub fn process_show(args: ShowArgs) -> Result<()> {
         print_with_style("", "hidden settings", "none".to_string());
     }
 
-    // whitelist mint settings
-    if let Some(whitelist_settings) = cndy_data.whitelist_mint_settings {
-        print_with_style("", "whitelist mint settings", "".to_string());
+    // config line settings
+
+    if let Some(config_line_settings) = &cndy_data.config_line_settings {
+        print_with_style("", "config line settings", "");
+
+        let prefix_name = if config_line_settings.prefix_name.is_empty() {
+            style("<empty>").dim()
+        } else {
+            style(config_line_settings.prefix_name.as_str())
+        };
+        print_with_style("    ", "prefix_name", &prefix_name.to_string());
         print_with_style(
-            ":   ",
-            "mode",
-            if whitelist_settings.mode == WhitelistMintMode::BurnEveryTime {
-                "burn every time".to_string()
+            "    ",
+            "name_length",
+            &config_line_settings.name_length.to_string(),
+        );
+
+        let prefix_uri = if config_line_settings.prefix_uri.is_empty() {
+            style("<empty>").dim()
+        } else {
+            style(config_line_settings.prefix_uri.as_str())
+        };
+        print_with_style("    ", "prefix_uri", &prefix_uri.to_string());
+        print_with_style(
+            "    ",
+            "uri_length",
+            &config_line_settings.uri_length.to_string(),
+        );
+        print_with_style(
+            "    ",
+            "is_sequential",
+            if config_line_settings.is_sequential {
+                "true"
             } else {
-                "never burn".to_string()
+                "false"
             },
         );
-        print_with_style(":   ", "mint", whitelist_settings.mint.to_string());
-        print_with_style(":   ", "presale", whitelist_settings.presale.to_string());
-        print_with_style(
-            ":   ",
-            "discount price",
-            if let Some(value) = whitelist_settings.discount_price {
-                format!("◎ {} ({})", value as f64 / LAMPORTS_PER_SOL as f64, value)
-            } else {
-                "none".to_string()
-            },
-        );
     } else {
-        print_with_style("", "whitelist mint settings", "none".to_string());
-    }
-
-    // gatekeeper settings
-    if let Some(gatekeeper) = cndy_data.gatekeeper {
-        print_with_style("", "gatekeeper", "".to_string());
-        print_with_style(
-            "    ",
-            "gatekeeper network",
-            gatekeeper.gatekeeper_network.to_string(),
-        );
-        print_with_style(
-            "    ",
-            "expire on use",
-            gatekeeper.expire_on_use.to_string(),
-        );
-    } else {
-        print_with_style("", "gatekeeper", "none".to_string());
-    }
-
-    // freeze pda
-    if let Some(freeze_pda) = freeze_pda {
-        let (pda, _) = find_freeze_pda(&candy_machine_id);
-        print_with_style("", "freeze pda", pda.to_string());
-        print_with_style(
-            "    ",
-            "candy_machine",
-            freeze_pda.candy_machine.to_string(),
-        );
-        print_with_style("    ", "allow_thaw", freeze_pda.allow_thaw.to_string());
-        print_with_style("    ", "frozen_count", freeze_pda.frozen_count.to_string());
-        print_with_style("    ", "mint_start", freeze_pda.mint_start);
-        print_with_style("    ", "freeze_time", freeze_pda.freeze_time.to_string());
-        print_with_style("    ", "freeze_fee", freeze_pda.freeze_fee.to_string());
-    } else {
-        print_with_style("", "freeze pda", "none".to_string());
+        print_with_style("", "config line settings", "none");
     }
 
     // unminted indices
@@ -261,15 +177,14 @@ pub fn process_show(args: ShowArgs) -> Result<()> {
             LOOKING_GLASS_EMOJI
         );
 
-        let mut start = CONFIG_ARRAY_START
+        let start = CONFIG_ARRAY_START
             + STRING_LEN_SIZE
-            + CONFIG_LINE_SIZE * cndy_data.items_available as usize
-            + STRING_LEN_SIZE
+            + (cndy_data.items_available as usize * cndy_data.get_config_line_size())
             + cndy_data
                 .items_available
                 .checked_div(8)
                 .expect("Numerical overflow error") as usize
-            + STRING_LEN_SIZE;
+            + 1;
 
         let pb = spinner_with_style();
         pb.set_message("Connecting...");
@@ -277,34 +192,14 @@ pub fn process_show(args: ShowArgs) -> Result<()> {
         let data = program.rpc().get_account_data(&candy_machine_id)?;
 
         pb.finish_and_clear();
-        let mut index = 0;
         let mut indices = vec![];
 
-        if is_feature_active(&cndy_data.uuid, SWAP_REMOVE_FEATURE_INDEX) {
-            start += 1; // needed to get around rounding precision
-            let remaining = cndy_data.items_available - cndy_state.items_redeemed;
-            for i in 0..remaining {
-                let slice = start + (i * 4) as usize;
-                indices.push(u32::from_le_bytes(
-                    data[slice..slice + 4].try_into().unwrap(),
-                ));
-            }
-        } else {
-            while start < data.len() {
-                let mask = 1u8 << 7;
-
-                for i in 0..8 {
-                    if index < cndy_data.items_available {
-                        // unused mint indices have the 'flag' set to 0
-                        if (data[start] & (mask >> i)) == 0 {
-                            indices.push(index as u32);
-                        }
-                        index += 1;
-                    }
-                }
-
-                start += 1;
-            }
+        let remaining = cndy_data.items_available - cndy_state.items_redeemed;
+        for i in 0..remaining {
+            let slice = start + (i * 4) as usize;
+            indices.push(u32::from_le_bytes(
+                data[slice..slice + 4].try_into().unwrap(),
+            ));
         }
 
         if indices.is_empty() {
@@ -354,10 +249,10 @@ pub fn process_show(args: ShowArgs) -> Result<()> {
 
 fn print_with_style<S>(indent: &str, key: &str, value: S)
 where
-    S: core::fmt::Debug,
+    S: core::fmt::Display,
 {
     println!(
-        " {} {:?}",
+        " {} {}",
         style(format!("{}:.. {}:", indent, key)).dim(),
         value
     );

@@ -5,7 +5,7 @@ use std::{
 
 use anchor_client::solana_sdk::pubkey::Pubkey;
 use anyhow::Result;
-use mpl_candy_machine::ConfigLine;
+use mpl_candy_machine_core::ConfigLine;
 use serde::{Deserialize, Serialize};
 
 use crate::{common::*, pdas::find_candy_machine_creator_pda};

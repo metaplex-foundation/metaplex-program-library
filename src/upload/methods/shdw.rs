@@ -58,7 +58,7 @@ impl Deref for SHDWMethod {
 
 impl SHDWMethod {
     pub async fn new(sugar_config: &SugarConfig, config_data: &ConfigData) -> Result<Self> {
-        if let Some(pubkey) = &config_data.shdw_storage_account {
+        if let Some(pubkey) = &config_data.upload_config.shdw_storage_account {
             let client = setup_client(sugar_config)?;
             let program = client.program(SHADOW_DRIVE_PROGRAM_ID);
             let solana_cluster: Cluster = get_cluster(program.rpc())?;

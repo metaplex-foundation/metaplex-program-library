@@ -1,8 +1,10 @@
 use std::{thread, time::Duration};
 
 use anchor_lang::AccountDeserialize;
+use borsh::BorshDeserialize;
 use console::style;
-use mpl_candy_machine::CandyMachine;
+use mpl_candy_machine_core::{constants::HIDDEN_SECTION, CandyMachine};
+use mpl_token_metadata::state::Metadata;
 
 use crate::{
     cache::*,
@@ -10,7 +12,7 @@ use crate::{
     common::*,
     config::Cluster,
     constants::{CANDY_EMOJI, PAPER_EMOJI},
-    pdas::get_collection_pda,
+    pdas::find_metadata_pda,
     utils::*,
     verify::VerifyError,
 };
@@ -76,7 +78,6 @@ pub fn process_verify(args: VerifyArgs) -> Result<()> {
         }
     };
     let candy_machine: CandyMachine = CandyMachine::try_deserialize(&mut data.as_slice())?;
-    let collection_info = get_collection_pda(&candy_machine_pubkey, &program).ok();
 
     pb.finish_with_message("Completed");
 
@@ -86,7 +87,11 @@ pub fn process_verify(args: VerifyArgs) -> Result<()> {
         PAPER_EMOJI
     );
 
-    if candy_machine.data.hidden_settings.is_none() {
+    if candy_machine.data.hidden_settings.is_some() {
+        // nothing else to do, there are no config lines in a candy machine
+        // with hidden settings
+        println!("\nHidden settings enabled. No config items to verify.");
+    } else if let Some(config_line_settings) = &candy_machine.data.config_line_settings {
         let num_items = candy_machine.data.items_available;
         let cache_items = &mut cache.items;
         let mut errors = Vec::new();
@@ -100,18 +105,16 @@ pub fn process_verify(args: VerifyArgs) -> Result<()> {
             0
         };
 
-        for i in 0..num_items {
-            let name_start = CONFIG_ARRAY_START
-                + STRING_LEN_SIZE
-                + CONFIG_LINE_SIZE * (i as usize)
-                + CONFIG_NAME_OFFSET;
-            let name_end = name_start + MAX_NAME_LENGTH;
+        let line_size = candy_machine.data.get_config_line_size();
+        let name_length = config_line_settings.name_length as usize;
+        let uri_length = config_line_settings.uri_length as usize;
 
-            let uri_start = CONFIG_ARRAY_START
-                + STRING_LEN_SIZE
-                + CONFIG_LINE_SIZE * (i as usize)
-                + CONFIG_URI_OFFSET;
-            let uri_end = uri_start + MAX_URI_LENGTH;
+        for i in 0..num_items {
+            let name_start = HIDDEN_SECTION + STRING_LEN_SIZE + line_size * (i as usize);
+            let name_end = name_start + name_length;
+
+            let uri_start = name_end;
+            let uri_end = uri_start + uri_length;
 
             let name_error = format!("Failed to decode name for item {}", i);
             let name = String::from_utf8(data[name_start..name_end].to_vec())
@@ -125,7 +128,10 @@ pub fn process_verify(args: VerifyArgs) -> Result<()> {
                 .trim_matches(char::from(0))
                 .to_string();
 
-            let on_chain_item = OnChainItem { name, uri };
+            let on_chain_item = OnChainItem {
+                name: config_line_settings.prefix_name.to_string() + &name,
+                uri: config_line_settings.prefix_uri.to_string() + &uri,
+            };
             let cache_item = cache_items
                 .get_mut(&i.to_string())
                 .expect("Failed to get item from config.");
@@ -158,10 +164,11 @@ pub fn process_verify(args: VerifyArgs) -> Result<()> {
             ));
         }
     } else {
-        // nothing else to do, there are no config lines in a candy machine
-        // with hidden settings
-        println!("\nHidden settings enabled. No config items to verify.");
+        return Err(anyhow!(
+            "Could not determine candy machine config line settings"
+        ));
     }
+
     if candy_machine.items_redeemed > 0 {
         println!(
             "\nAn item has already been minted. Skipping candy machine collection verification..."
@@ -175,46 +182,33 @@ pub fn process_verify(args: VerifyArgs) -> Result<()> {
         };
         let collection_item = cache.items.get_mut("-1");
 
-        if let Some((_, collection_pda_account)) = collection_info {
-            if collection_pda_account.mint.to_string() != collection_mint_cache {
-                println!("\nInvalid collection state found");
-                cache.program.collection_mint = collection_pda_account.mint.to_string();
-                if let Some(collection_item) = collection_item {
-                    collection_item.on_chain = false;
-                }
-                cache.sync_file()?;
-                println!("Cache updated - re-run `deploy`.");
-                return Err(anyhow!(
-                    "Collection mint in cache {} doesn't match on chain collection mint {}!",
-                    collection_mint_cache,
-                    collection_pda_account.mint.to_string()
-                ));
-            } else if collection_needs_deploy {
-                println!("\nInvalid collection state found - re-run `deploy`.");
-                return Err(CacheError::InvalidState.into());
-            }
-        } else {
-            let mut error_found = false;
-            if collection_mint_cache != String::new() {
-                error_found = true;
-                cache.program.collection_mint = String::new();
-            }
+        let collection_metadata = find_metadata_pda(&candy_machine.collection_mint);
+        let data = program.rpc().get_account_data(&collection_metadata)?;
+        let metadata: Metadata = BorshDeserialize::deserialize(&mut data.as_slice())?;
+
+        if metadata.mint.to_string() != collection_mint_cache {
+            println!("\nInvalid collection state found");
+            cache.program.collection_mint = metadata.mint.to_string();
             if let Some(collection_item) = collection_item {
-                error_found = true;
                 collection_item.on_chain = false;
             }
-            if error_found {
-                cache.sync_file()?;
-                println!("\nInvalid collection state found - re-run `deploy`.");
-                return Err(CacheError::InvalidState.into());
-            }
+            cache.sync_file()?;
+            println!("Cache updated - re-run `deploy`.");
+            return Err(anyhow!(
+                "Collection mint in cache {} doesn't match on chain collection mint {}!",
+                collection_mint_cache,
+                metadata.mint.to_string()
+            ));
+        } else if collection_needs_deploy {
+            println!("\nInvalid collection state found - re-run `deploy`.");
+            return Err(CacheError::InvalidState.into());
         }
     }
 
     let cluster = match get_cluster(program.rpc())? {
         Cluster::Devnet => "devnet",
         Cluster::Mainnet => "mainnet",
-        Cluster::Localnet => "",
+        Cluster::Localnet => "localnet",
         Cluster::Unknown => "",
     };
 

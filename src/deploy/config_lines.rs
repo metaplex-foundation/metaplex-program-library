@@ -10,7 +10,9 @@ use anchor_client::solana_sdk::{pubkey::Pubkey, signature::Keypair};
 use anyhow::Result;
 use console::style;
 use futures::future::select_all;
-use mpl_candy_machine::{accounts as nft_accounts, instruction as nft_instruction, ConfigLine};
+use mpl_candy_machine_core::{
+    accounts as nft_accounts, instruction as nft_instruction, CandyMachineData, ConfigLine,
+};
 pub use mpl_token_metadata::state::{
     MAX_CREATOR_LIMIT, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH,
 };
@@ -36,10 +38,20 @@ pub struct TxInfo {
 pub fn generate_config_lines(
     num_items: u64,
     cache_items: &CacheItems,
+    data: &CandyMachineData,
 ) -> Result<Vec<Vec<(u32, ConfigLine)>>> {
     let mut config_lines: Vec<Vec<(u32, ConfigLine)>> = Vec::new();
     let mut current: Vec<(u32, ConfigLine)> = Vec::new();
     let mut tx_size = 0;
+
+    let config_line_settings = if let Some(config_line_settings) = &data.config_line_settings {
+        config_line_settings
+    } else {
+        return Err(anyhow!("Missing config line settings"));
+    };
+
+    let name_offset = config_line_settings.prefix_name.len();
+    let uri_offset = config_line_settings.prefix_uri.len();
 
     for i in 0..num_items {
         let item = match cache_items.get(&i.to_string()) {
@@ -61,11 +73,12 @@ pub fn generate_config_lines(
                 tx_size = 0;
             }
         } else {
-            let config_line = item
-                .to_config_line()
-                .expect("Could not convert item to config line");
+            let config_line = ConfigLine {
+                name: item.name[name_offset..].to_string(),
+                uri: item.metadata_link[uri_offset..].to_string(),
+            };
 
-            let size = (2 * STRING_LEN_SIZE) + config_line.name.len() + config_line.uri.len();
+            let size = (2 * STRING_LEN_SIZE) + data.get_config_line_size();
 
             if (tx_size + size) > MAX_TRANSACTION_BYTES || current.len() == MAX_TRANSACTION_LINES {
                 // we need a separate tx to not break the size limit

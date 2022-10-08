@@ -13,7 +13,7 @@ pub use anchor_client::{
 };
 use console::{style, Style};
 use dialoguer::{theme::ColorfulTheme, Confirm};
-use mpl_candy_machine::{accounts as nft_accounts, instruction as nft_instruction};
+use mpl_candy_machine_core::{accounts as nft_accounts, instruction as nft_instruction};
 use solana_account_decoder::UiAccountEncoding;
 use solana_client::{
     rpc_config::{RpcAccountInfoConfig, RpcProgramAccountsConfig},
@@ -94,6 +94,7 @@ pub fn process_withdraw(args: WithdrawArgs) -> Result<()> {
                     commitment: Some(CommitmentConfig {
                         commitment: CommitmentLevel::Confirmed,
                     }),
+                    min_context_slot: None,
                 },
                 with_context: None,
             };
@@ -216,11 +217,11 @@ fn setup_withdraw(keypair: Option<String>, rpc_url: Option<String>) -> Result<(P
 fn do_withdraw(program: Rc<Program>, candy_machine: Pubkey, payer: Pubkey) -> Result<()> {
     program
         .request()
-        .accounts(nft_accounts::WithdrawFunds {
+        .accounts(nft_accounts::Withdraw {
             candy_machine,
             authority: payer,
         })
-        .args(nft_instruction::WithdrawFunds {})
+        .args(nft_instruction::Withdraw {})
         .send()?;
 
     Ok(())

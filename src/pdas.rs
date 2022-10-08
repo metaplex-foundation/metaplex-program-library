@@ -1,6 +1,5 @@
-use anchor_client::{solana_sdk::pubkey::Pubkey, ClientError, Program};
+use anchor_client::{solana_sdk::pubkey::Pubkey, Program};
 use anyhow::{anyhow, Result};
-use mpl_candy_machine::CollectionPDA;
 use mpl_token_metadata::{
     pda::{find_master_edition_account, find_metadata_account},
     state::{Key, MasterEditionV2, Metadata, TokenMetadataAccount, MAX_MASTER_EDITION_LEN},
@@ -10,6 +9,11 @@ use mpl_token_metadata::{
 use crate::candy_machine::CANDY_MACHINE_ID;
 
 pub type PdaInfo<T> = (Pubkey, T);
+
+pub struct CollectionPDA {
+    pub mint: Pubkey,
+    pub candy_machine: Pubkey,
+}
 
 pub fn find_metadata_pda(mint: &Pubkey) -> Pubkey {
     let (pda, _bump) = find_metadata_account(mint);
@@ -82,28 +86,4 @@ pub fn find_collection_pda(candy_machine_id: &Pubkey) -> (Pubkey, u8) {
     let collection_seeds = &["collection".as_bytes(), candy_machine_id.as_ref()];
 
     Pubkey::find_program_address(collection_seeds, &CANDY_MACHINE_ID)
-}
-
-pub fn find_freeze_pda(candy_machine_id: &Pubkey) -> (Pubkey, u8) {
-    // Derive freeze PDA address
-    let freeze_seeds = &["freeze".as_bytes(), candy_machine_id.as_ref()];
-
-    Pubkey::find_program_address(freeze_seeds, &CANDY_MACHINE_ID)
-}
-
-pub fn get_collection_pda(
-    candy_machine: &Pubkey,
-    program: &Program,
-) -> Result<PdaInfo<CollectionPDA>> {
-    let collection_pda_pubkey = find_collection_pda(candy_machine).0;
-    program
-        .account(collection_pda_pubkey)
-        .map(|c| (collection_pda_pubkey, c))
-        .map_err(|e| match e {
-            ClientError::AccountNotFound => anyhow!("Candy Machine collection is not set!"),
-            _ => anyhow!(
-                "Failed to deserialize collection PDA account: {}",
-                &collection_pda_pubkey.to_string()
-            ),
-        })
 }
