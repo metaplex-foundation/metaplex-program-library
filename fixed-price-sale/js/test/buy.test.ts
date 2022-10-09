@@ -1,3 +1,5 @@
+// stick this in this dir: https://github.com/metaplex-foundation/metaplex-program-library/blob/master/fixed-price-sale/js/test/buy.test.ts
+
 import BN from 'bn.js';
 import test from 'tape';
 import {
