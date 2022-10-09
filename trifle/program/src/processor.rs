@@ -318,10 +318,6 @@ fn transfer_in(
         return Err(TrifleError::FuseOptionConflict.into());
     }
 
-    if constraint_model.fuse_options.freeze_parent() {
-        todo!("handle freeze_parent");
-    }
-
     // If burn is not set, create an ATA for the incoming token and perform the transfer.
     if !constraint_model.fuse_options.burn() {
         msg!("in transfer clause");
@@ -369,13 +365,12 @@ fn transfer_in(
         )?;
     } else {
         msg!("in burn clause");
-        // Optional accounts -- only required if FuseOptions::burn is set.
 
         // TODO: Find out if the attribute token has a collection.
         // if it does, then we need to pass the collection metadata.
         if let Some(collection) = attribute_metadata.collection {
-            // let collection_metadata =
-            //     Metadata::from_account_info(attribute_collection_metadata_info)?;
+            let collection_metadata =
+                Metadata::from_account_info(attribute_collection_metadata_info)?;
             msg!("collection {:?}", collection);
             // msg!("collection_metadata: {:?}", collection_metadata);
         }
@@ -412,22 +407,25 @@ fn transfer_in(
 
     if constraint_model.fuse_options.freeze_parent() {
         msg!("freezing base nft");
-        let freeze_ix = spl_token::instruction::freeze_account(
-            &spl_token::id(),
-            escrow_token_account_info.key,
-            escrow_mint_info.key,
-            escrow_mint_freeze_authority_info.key,
-            &[],
-        )?;
+        // make sure the freeze authority is set
+        let escrow_mint = spl_token::state::Mint::unpack(&escrow_mint_info.data.borrow())?;
 
-        invoke(
-            &freeze_ix,
-            &[
-                escrow_token_account_info.clone(),
-                escrow_mint_info.clone(),
-                escrow_mint_freeze_authority_info.clone(),
-            ],
-        )?;
+        if escrow_mint.freeze_authority.is_none() {
+            msg!("Freeze authority is not set");
+            return Err(TrifleError::FreezeAuthorityNotSet.into());
+        }
+
+        let escrow_mint_freeze_authority = escrow_mint.freeze_authority.unwrap();
+
+        todo!("use mpl_token_metadata freeze ix!");
+
+        // let freeze_ix = mpl_token_metadata::instruction::freeze_delegated_account(
+        //     mpl_token_metadata::id(),
+        //     *trifle_account_info.key,
+        //     *escrow_token_account_info.key,
+        //     *escrow_edition_info.key,
+        //     *escrow_mint_info.key,
+        // );
     }
 
     if constraint_model.fuse_options.track() {
@@ -688,9 +686,12 @@ fn add_collection_constraint_to_escrow_constraint_model(
 
     let metadata = Metadata::from_account_info(collection_metadata_info)?;
 
-    if metadata.collection_details.is_none() {
-        return Err(TrifleError::NotACollection.into());
-    }
+    // TODO: This will fail if the collection is not sized,
+    // bring this back when we can identify an unsized collection.
+
+    // if metadata.collection_details.is_none() {
+    //     return Err(TrifleError::NotACollection.into());
+    // }
 
     let constraint = EscrowConstraint {
         constraint_type: EscrowConstraintType::Collection(*collection_mint_info.key),

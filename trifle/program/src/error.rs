@@ -59,6 +59,9 @@ pub enum TrifleError {
 
     #[error("Freeze Authority Not Set")]
     FreezeAuthorityNotSet,
+
+    #[error("Incorrect Freeze Authority")]
+    IncorrectFreezeAuthority,
 }
 
 impl From<TrifleError> for ProgramError {
