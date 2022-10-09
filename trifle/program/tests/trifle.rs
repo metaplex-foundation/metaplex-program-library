@@ -327,7 +327,7 @@ mod trifle {
             escrow,
             Some(metadata.mint.pubkey()),
             Some(metadata.token.pubkey()),
-            Some(context.payer.pubkey()),
+            Some(master_edition.pubkey),
             attribute_metadata.mint.pubkey(),
             attribute_metadata.token.pubkey(),
             Some(trifle_attribute_token_account),

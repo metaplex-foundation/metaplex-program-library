@@ -247,17 +247,17 @@ fn transfer_in(
 ) -> ProgramResult {
     let account_info_iter = &mut accounts.iter();
 
-    let trifle_account_info = next_account_info(account_info_iter)?;
+    let trifle_info = next_account_info(account_info_iter)?;
     let trifle_authority_info = next_account_info(account_info_iter)?;
     let payer_info = next_account_info(account_info_iter)?;
     let constraint_model_info = next_account_info(account_info_iter)?;
-    let escrow_account_info = next_account_info(account_info_iter)?;
+    let escrow_info = next_account_info(account_info_iter)?;
     let escrow_mint_info = next_account_info(account_info_iter)?;
-    let escrow_token_account_info = next_account_info(account_info_iter)?;
-    let escrow_mint_freeze_authority_info = next_account_info(account_info_iter)?;
+    let escrow_token_info = next_account_info(account_info_iter)?;
+    let escrow_edition_info = next_account_info(account_info_iter)?;
     let attribute_mint_info = next_account_info(account_info_iter)?;
-    let attribute_src_token_account_info = next_account_info(account_info_iter)?;
-    let attribute_dst_token_account_info = next_account_info(account_info_iter)?;
+    let attribute_src_token_info = next_account_info(account_info_iter)?;
+    let attribute_dst_token_info = next_account_info(account_info_iter)?;
     let attribute_metadata_info = next_account_info(account_info_iter)?;
     let attribute_edition_info = next_account_info(account_info_iter)?;
     let attribute_collection_metadata_info = next_account_info(account_info_iter)?;
@@ -280,18 +280,17 @@ fn transfer_in(
         escrow_mint_info.key.as_ref(),
     ];
 
-    let escrow_auth = EscrowAuthority::Creator(*trifle_account_info.key);
+    let escrow_auth = EscrowAuthority::Creator(*trifle_info.key);
     for seed in escrow_auth.to_seeds() {
         escrow_seeds.push(seed);
     }
 
     escrow_seeds.push(ESCROW_PREFIX.as_bytes());
 
-    assert_derivation(&tm_pid, escrow_account_info, &escrow_seeds)?;
+    assert_derivation(&tm_pid, escrow_info, &escrow_seeds)?;
 
     // Deserialize the token accounts and perform checks.
-    let attribute_src =
-        spl_token::state::Account::unpack(&attribute_src_token_account_info.data.borrow())?;
+    let attribute_src = spl_token::state::Account::unpack(&attribute_src_token_info.data.borrow())?;
     assert!(attribute_src.mint == *attribute_mint_info.key);
     assert!(attribute_src.delegate.is_none());
     assert!(attribute_src.amount >= args.amount);
@@ -325,7 +324,7 @@ fn transfer_in(
         let create_escrow_ata_ix =
             spl_associated_token_account::instruction::create_associated_token_account(
                 payer_info.key,
-                escrow_account_info.key,
+                escrow_info.key,
                 attribute_mint_info.key,
                 token_program_info.key,
             );
@@ -334,8 +333,8 @@ fn transfer_in(
             &create_escrow_ata_ix,
             &[
                 payer_info.clone(),
-                attribute_dst_token_account_info.clone(),
-                escrow_account_info.clone(),
+                attribute_dst_token_info.clone(),
+                escrow_info.clone(),
                 attribute_mint_info.clone(),
                 system_program_info.clone(),
                 token_program_info.clone(),
@@ -346,8 +345,8 @@ fn transfer_in(
         // Transfer the token from the current owner into the escrow.
         let transfer_ix = spl_token::instruction::transfer(
             &spl_token::id(),
-            attribute_src_token_account_info.key,
-            attribute_dst_token_account_info.key,
+            attribute_src_token_info.key,
+            attribute_dst_token_info.key,
             payer_info.key,
             &[payer_info.key],
             args.amount,
@@ -357,8 +356,8 @@ fn transfer_in(
         invoke(
             &transfer_ix,
             &[
-                attribute_src_token_account_info.clone(),
-                attribute_dst_token_account_info.clone(),
+                attribute_src_token_info.clone(),
+                attribute_dst_token_info.clone(),
                 payer_info.clone(),
                 token_program_info.clone(),
             ],
@@ -383,7 +382,7 @@ fn transfer_in(
             *attribute_metadata_info.key,
             *trifle_authority_info.key, // TODO: should be the owner of the token
             *attribute_mint_info.key,
-            *attribute_src_token_account_info.key,
+            *attribute_src_token_info.key,
             *attribute_edition_info.key,
             *token_program_info.key,
             maybe_collection_metadata,
@@ -395,7 +394,7 @@ fn transfer_in(
                 attribute_metadata_info.clone(),
                 trifle_authority_info.clone(),
                 attribute_mint_info.clone(),
-                attribute_src_token_account_info.clone(),
+                attribute_src_token_info.clone(),
                 attribute_edition_info.clone(),
                 token_program_info.clone(),
                 // if let Some(collection_metadata) = maybe_collection_metadata {
@@ -415,21 +414,42 @@ fn transfer_in(
             return Err(TrifleError::FreezeAuthorityNotSet.into());
         }
 
-        let escrow_mint_freeze_authority = escrow_mint.freeze_authority.unwrap();
+        let freeze_ix = mpl_token_metadata::instruction::freeze_delegated_account(
+            mpl_token_metadata::id(),
+            *trifle_info.key,
+            *escrow_token_info.key,
+            *escrow_edition_info.key,
+            *escrow_mint_info.key,
+        );
 
-        todo!("use mpl_token_metadata freeze ix!");
+        let accounts = &[
+            trifle_info.clone(),
+            escrow_token_info.clone(),
+            escrow_edition_info.clone(),
+            escrow_mint_info.clone(),
+            token_program_info.clone(),
+        ];
+        let trifle_seeds = &[
+            TRIFLE_SEED.as_bytes(),
+            escrow_mint_info.key.as_ref(),
+            trifle_authority_info.key.as_ref(),
+            constraint_model_info.key.as_ref(),
+        ];
 
-        // let freeze_ix = mpl_token_metadata::instruction::freeze_delegated_account(
-        //     mpl_token_metadata::id(),
-        //     *trifle_account_info.key,
-        //     *escrow_token_account_info.key,
-        //     *escrow_edition_info.key,
-        //     *escrow_mint_info.key,
-        // );
+        let trifle_bump_seed = assert_derivation(program_id, trifle_info, trifle_seeds)?;
+        let trifle_signer_seeds = &[
+            TRIFLE_SEED.as_bytes(),
+            escrow_mint_info.key.as_ref(),
+            trifle_authority_info.key.as_ref(),
+            constraint_model_info.key.as_ref(),
+            &[trifle_bump_seed],
+        ];
+
+        invoke_signed(&freeze_ix, accounts, &[trifle_signer_seeds])?;
     }
 
     if constraint_model.fuse_options.track() {
-        let mut trifle = Trifle::from_account_info(trifle_account_info)?;
+        let mut trifle = Trifle::from_account_info(trifle_info)?;
 
         let constraint = constraint_model
             .constraints
@@ -441,14 +461,14 @@ fn transfer_in(
         let serialized_data = trifle.try_to_vec().unwrap();
 
         resize_or_reallocate_account_raw(
-            trifle_account_info,
+            trifle_info,
             payer_info,
             system_program_info,
             serialized_data.len(),
         )?;
 
         sol_memcpy(
-            &mut **trifle_account_info.try_borrow_mut_data().unwrap(),
+            &mut **trifle_info.try_borrow_mut_data().unwrap(),
             &serialized_data,
             serialized_data.len(),
         );
