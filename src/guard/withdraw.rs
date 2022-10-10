@@ -16,7 +16,7 @@ pub struct GuardWithdrawArgs {
 }
 
 pub fn process_guard_withdraw(args: GuardWithdrawArgs) -> Result<()> {
-    println!("[1/1] {}Retrieving funds", WITHDRAW_EMOJI);
+    println!("[1/2] {}Loading candy guard", LOOKING_GLASS_EMOJI);
 
     // the candy guard id specified takes precedence over the one from the cache
 
@@ -40,8 +40,6 @@ pub fn process_guard_withdraw(args: GuardWithdrawArgs) -> Result<()> {
         }
     };
 
-    // remove the candy guard as mint authority
-
     let sugar_config = sugar_setup(args.keypair, args.rpc_url)?;
     let client = setup_client(&sugar_config)?;
     let program = client.program(mpl_candy_guard::ID);
@@ -51,6 +49,13 @@ pub fn process_guard_withdraw(args: GuardWithdrawArgs) -> Result<()> {
     pb.set_message("Connecting...");
 
     let account = program.rpc().get_account(&candy_guard_id)?;
+
+    pb.finish_with_message("Done");
+
+    println!("\n[2/2] {}Retrieving funds", WITHDRAW_EMOJI);
+
+    let pb = spinner_with_style();
+    pb.set_message("Connecting...");
 
     let tx = program
         .request()
@@ -66,7 +71,7 @@ pub fn process_guard_withdraw(args: GuardWithdrawArgs) -> Result<()> {
     println!("{} {}", style("Signature:").bold(), sig);
 
     println!(
-        "\nReceived ◎ {}",
+        "\nReceived ◎ {} from rent fee.",
         (account.lamports as f64) / (LAMPORTS_PER_SOL as f64)
     );
 
