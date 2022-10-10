@@ -1,15 +1,16 @@
+use crate::state::AccountType;
 use anchor_lang::{prelude::*, solana_program::keccak};
 use spl_account_compression::Node;
 
-#[event]
+#[derive(AnchorSerialize, AnchorDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct LeafSchemaEvent {
+    pub account_type: AccountType,
     pub version: Version,
     pub schema: LeafSchema,
     pub leaf_hash: [u8; 32],
 }
 
-#[derive(AnchorDeserialize, AnchorSerialize, Clone, Copy, Debug)]
-
+#[derive(AnchorSerialize, AnchorDeserialize, PartialEq, Eq, Debug, Clone)]
 pub enum Version {
     V1,
 }
@@ -28,7 +29,7 @@ impl Version {
     }
 }
 
-#[derive(AnchorDeserialize, AnchorSerialize, Clone, Copy, Debug)]
+#[derive(AnchorSerialize, AnchorDeserialize, PartialEq, Eq, Debug, Clone)]
 pub enum LeafSchema {
     V1 {
         id: Pubkey,
@@ -98,8 +99,9 @@ impl LeafSchema {
 
     pub fn to_event(&self) -> LeafSchemaEvent {
         LeafSchemaEvent {
+            account_type: AccountType::LeafSchemaEvent,
             version: self.version(),
-            schema: *self,
+            schema: self.clone(),
             leaf_hash: self.to_node(),
         }
     }

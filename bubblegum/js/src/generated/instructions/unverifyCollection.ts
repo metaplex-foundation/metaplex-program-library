@@ -53,6 +53,7 @@ export const unverifyCollectionStruct = new beet.FixableBeetArgsStruct<
  * @property [**signer**] payer
  * @property [] treeDelegate
  * @property [**signer**] collectionAuthority
+ * @property [] collectionAuthorityRecordPda
  * @property [] collectionMint
  * @property [] collectionMetadata
  * @property [] editionAccount
@@ -72,6 +73,7 @@ export type UnverifyCollectionInstructionAccounts = {
   payer: web3.PublicKey
   treeDelegate: web3.PublicKey
   collectionAuthority: web3.PublicKey
+  collectionAuthorityRecordPda: web3.PublicKey
   collectionMint: web3.PublicKey
   collectionMetadata: web3.PublicKey
   editionAccount: web3.PublicKey
@@ -139,6 +141,11 @@ export function createUnverifyCollectionInstruction(
       pubkey: accounts.collectionAuthority,
       isWritable: false,
       isSigner: true,
+    },
+    {
+      pubkey: accounts.collectionAuthorityRecordPda,
+      isWritable: false,
+      isSigner: false,
     },
     {
       pubkey: accounts.collectionMint,
