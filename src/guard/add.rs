@@ -7,6 +7,7 @@ use mpl_candy_guard::{
     accounts::{Initialize as InitializeAccount, Wrap as WrapAccount},
     instruction::{Initialize, Wrap},
 };
+use mpl_candy_machine_core::constants::EMPTY_STR;
 
 use crate::{cache::load_cache, candy_machine::*, common::*, config::get_config_data, utils::*};
 
@@ -34,6 +35,10 @@ pub fn process_guard_add(args: GuardAddArgs) -> Result<()> {
         (cache.program.candy_machine.clone(), Some(cache))
     };
 
+    if candy_machine_id.is_empty() {
+        return Err(anyhow!("Missing candy machine id."));
+    }
+
     let candy_machine_id = match Pubkey::from_str(&candy_machine_id) {
         Ok(candy_machine_id) => candy_machine_id,
         Err(_) => {
@@ -51,47 +56,76 @@ pub fn process_guard_add(args: GuardAddArgs) -> Result<()> {
         candy_machine_id
     );
 
-    // deploys a candy guard "wrapping" the candy machine
+    // decide whether to create a new candy guard or use an existing one
 
-    println!("\n[2/3] {}Initializing a candy guard", GUARD_EMOJI);
-
-    let pb = spinner_with_style();
-    pb.set_message("Initializing...");
+    let candy_guard_id = if let Some(candy_guard) = args.candy_guard {
+        candy_guard
+    } else if let Some(ref cache) = cache {
+        cache.program.candy_guard.clone()
+    } else {
+        EMPTY_STR.to_string()
+    };
 
     let sugar_config = sugar_setup(args.keypair, args.rpc_url)?;
     let config_data = get_config_data(&args.config)?;
     let client = setup_client(&sugar_config)?;
+    let payer = sugar_config.keypair;
     let program = client.program(mpl_candy_guard::ID);
 
-    let data = if let Some(guards) = &config_data.guards {
-        guards.to_guard_format()?
+    let candy_guard = if candy_guard_id.is_empty() {
+        println!("\n[2/3] {}Initializing a candy guard", GUARD_EMOJI);
+        let pb = spinner_with_style();
+        pb.set_message("Initializing...");
+
+        let data = if let Some(guards) = &config_data.guards {
+            guards.to_guard_format()?
+        } else {
+            return Err(anyhow!("Missing guards configuration."));
+        };
+
+        let base = Keypair::new();
+        let (candy_guard, _) = Pubkey::find_program_address(
+            &[b"candy_guard", base.pubkey().as_ref()],
+            &mpl_candy_guard::ID,
+        );
+
+        let tx = program
+            .request()
+            .accounts(InitializeAccount {
+                candy_guard,
+                base: base.pubkey(),
+                authority: payer.pubkey(),
+                payer: payer.pubkey(),
+                system_program: system_program::id(),
+            })
+            .args(Initialize { data })
+            .signer(&base);
+
+        let sig = tx.send()?;
+
+        pb.finish_and_clear();
+        println!("{} {}", style("Signature:").bold(), sig);
+
+        candy_guard
     } else {
-        return Err(anyhow!("Missing guards configuration."));
+        println!("\n[2/3] {}Loading candy guard", COMPUTER_EMOJI);
+
+        let candy_guard_id = match Pubkey::from_str(&candy_guard_id) {
+            Ok(candy_guard_id) => candy_guard_id,
+            Err(_) => {
+                let error = anyhow!("Failed to parse candy guard id: {}", candy_guard_id);
+                error!("{:?}", error);
+                return Err(error);
+            }
+        };
+        // validates that the account exists
+        let _candy_guard = program.rpc().get_account(&candy_guard_id)?;
+
+        // TODO: update the configuration to make sure it is up to date
+        // with the config file
+
+        candy_guard_id
     };
-
-    let base = Keypair::new();
-    let (candy_guard, _) = Pubkey::find_program_address(
-        &[b"candy_guard", base.pubkey().as_ref()],
-        &mpl_candy_guard::ID,
-    );
-    let payer = sugar_config.keypair;
-
-    let tx = program
-        .request()
-        .accounts(InitializeAccount {
-            candy_guard,
-            base: base.pubkey(),
-            authority: payer.pubkey(),
-            payer: payer.pubkey(),
-            system_program: system_program::id(),
-        })
-        .args(Initialize { data })
-        .signer(&base);
-
-    let sig = tx.send()?;
-
-    pb.finish_and_clear();
-    println!("{} {}", style("Signature:").bold(), sig);
 
     println!("\n{} {}", style("Candy guard ID:").bold(), candy_guard);
 
