@@ -50,9 +50,14 @@ pub fn create_candy_machine_data(
             share,
         ));
     }
-    // (shortest, largest) name
+
+    // CMv3 allows the specification of a common prefix for both name and uri
+    // therefore we need to determine the largest common prefix and the len of
+    // the remaining parts of the name and uri
+
+    // (shortest, largest, len largest) name
     let mut name_pair = [String::new(), String::new(), String::new()];
-    // (shortest, largest) uri
+    // (shortest, largest, len largest) uri
     let mut uri_pair = [String::new(), String::new(), String::new()];
     // compares a value against a pair of (shorter, larger)
     let compare_pair = |value: &String, pair: &mut [String; 3]| {
@@ -96,7 +101,7 @@ pub fn create_candy_machine_data(
         prefix_name: name_prefix,
         uri_length: (uri_pair[2].len() - uri_prefix.len()) as u32,
         prefix_uri: uri_prefix,
-        is_sequential: false,
+        is_sequential: config.is_sequential,
     };
 
     let hidden_settings = config.hidden_settings.as_ref().map(|s| s.to_candy_format());
