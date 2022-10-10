@@ -17,7 +17,9 @@ use borsh::{BorshDeserialize, BorshSerialize};
 use mpl_token_metadata::{
     error::MetadataError,
     id as token_metadata_program_id,
-    state::{EscrowAuthority, Metadata, TokenMetadataAccount, ESCROW_PREFIX, PREFIX},
+    state::{
+        EscrowAuthority, Key as MetadataKey, Metadata, TokenMetadataAccount, ESCROW_PREFIX, PREFIX,
+    },
     utils::{assert_derivation, assert_owned_by, assert_signer, create_or_allocate_account_raw},
 };
 use solana_program::{
@@ -379,6 +381,17 @@ fn transfer_in(
             ],
         )?;
     } else {
+        let attribute_edition_data = attribute_edition_info.try_borrow_data()?;
+
+        // First byte is the object key.
+        let key = attribute_edition_data
+            .first()
+            .ok_or(MetadataError::InvalidMasterEdition)?;
+        if *key != MetadataKey::MasterEditionV1 as u8 && *key != MetadataKey::MasterEditionV2 as u8
+        {
+            return Err(MetadataError::NotAMasterEdition.into());
+        }
+
         let maybe_collection_metadata_pubkey = if attribute_metadata.collection.is_some() {
             Metadata::from_account_info(attribute_collection_metadata_info)
                 .map_err(|_| TrifleError::InvalidCollectionMetadata)?;
@@ -701,14 +714,8 @@ fn add_collection_constraint_to_escrow_constraint_model(
     assert_owned_by(collection_mint_info, &spl_token::id())?;
     assert_owned_by(collection_metadata_info, &mpl_token_metadata::id())?;
 
-    let metadata = Metadata::from_account_info(collection_metadata_info)?;
-
-    // TODO: This will fail if the collection is not sized,
-    // bring this back when we can identify an unsized collection.
-
-    // if metadata.collection_details.is_none() {
-    //     return Err(TrifleError::NotACollection.into());
-    // }
+    Metadata::from_account_info(collection_metadata_info)
+        .map_err(|_| TrifleError::InvalidCollectionMetadata)?;
 
     let constraint = EscrowConstraint {
         constraint_type: EscrowConstraintType::Collection(*collection_mint_info.key),
