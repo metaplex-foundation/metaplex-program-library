@@ -120,4 +120,10 @@ pub const RIGHT_ARROW_EMOJI: Emoji<'_, '_> = Emoji("➡️ ", "");
 
 pub const MONEY_BAG_EMOJI: Emoji<'_, '_> = Emoji("💰 ", "");
 
+pub const GUARD_EMOJI: Emoji<'_, '_> = Emoji("🛡  ", "");
+
+pub const WRAP_EMOJI: Emoji<'_, '_> = Emoji("📦 ", "");
+
+pub const UNWRAP_EMOJI: Emoji<'_, '_> = Emoji("🔩 ", "");
+
 pub const MAX_FREEZE_DAYS: u8 = 31;

@@ -13,11 +13,15 @@ use clap::Parser;
 use console::style;
 use sugar_cli::{
     bundlr::{process_bundlr, BundlrArgs},
-    cli::{Cli, CollectionSubcommands, Commands},
+    cli::{Cli, CollectionSubcommands, Commands, GuardCommand},
     collections::{process_set_collection, SetCollectionArgs},
     constants::{COMPLETE_EMOJI, ERROR_EMOJI},
     create_config::{process_create_config, CreateConfigArgs},
     deploy::{process_deploy, DeployArgs},
+    guard::{
+        process_guard_add, process_guard_remove, process_guard_update, process_guard_withdraw,
+        GuardAddArgs, GuardRemoveArgs, GuardUpdateArgs, GuardWithdrawArgs,
+    },
     hash::{process_hash, HashArgs},
     launch::{process_launch, LaunchArgs},
     mint::{process_mint, MintArgs},
@@ -187,6 +191,60 @@ async fn run() -> Result<()> {
             })
             .await?
         }
+        Commands::Guard { command } => match command {
+            GuardCommand::Add {
+                keypair,
+                rpc_url,
+                cache,
+                config,
+                candy_machine,
+                candy_guard,
+            } => process_guard_add(GuardAddArgs {
+                keypair,
+                rpc_url,
+                cache,
+                config,
+                candy_machine,
+                candy_guard,
+            })?,
+            GuardCommand::Remove {
+                keypair,
+                rpc_url,
+                cache,
+                candy_machine,
+                candy_guard,
+            } => process_guard_remove(GuardRemoveArgs {
+                keypair,
+                rpc_url,
+                cache,
+                candy_machine,
+                candy_guard,
+            })?,
+            GuardCommand::Update {
+                keypair,
+                rpc_url,
+                cache,
+                config,
+                candy_guard,
+            } => process_guard_update(GuardUpdateArgs {
+                keypair,
+                rpc_url,
+                cache,
+                config,
+                candy_guard,
+            })?,
+            GuardCommand::Withdraw {
+                keypair,
+                rpc_url,
+                cache,
+                candy_guard,
+            } => process_guard_withdraw(GuardWithdrawArgs {
+                keypair,
+                rpc_url,
+                cache,
+                candy_guard,
+            })?,
+        },
         Commands::Hash {
             config,
             cache,

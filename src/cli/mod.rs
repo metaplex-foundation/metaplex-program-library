@@ -73,6 +73,12 @@ pub enum Commands {
         cache: String,
     },
 
+    /// Manage guards on the candy machine
+    Guard {
+        #[clap(subcommand)]
+        command: GuardCommand,
+    },
+
     /// Generate hash of cache file for hidden settings.
     Hash {
         /// Path to the config file, defaults to "config.json"
@@ -290,7 +296,7 @@ pub enum Commands {
         cache: String,
     },
 
-    /// Withdraw funds from candy machine account closing it
+    /// Withdraw funds a from candy machine account closing it
     Withdraw {
         /// Address of candy machine to withdraw funds from.
         #[clap(long)]
@@ -344,5 +350,97 @@ pub enum CollectionSubcommands {
 
         /// Address of collection mint to set the candy machine to.
         collection_mint: String,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum GuardCommand {
+    /// Add a candy guard on a candy machine
+    Add {
+        /// Path to the keypair file, uses Sol config or defaults to "~/.config/solana/id.json"
+        #[clap(short, long)]
+        keypair: Option<String>,
+
+        /// RPC Url
+        #[clap(short, long)]
+        rpc_url: Option<String>,
+
+        /// Path to the cache file, defaults to "cache.json"
+        #[clap(long, default_value = DEFAULT_CACHE)]
+        cache: String,
+
+        /// Path to the config file
+        #[clap(short, long, default_value = DEFAULT_CONFIG)]
+        config: String,
+
+        /// Address of the candy machine.
+        #[clap(long)]
+        candy_machine: Option<String>,
+
+        /// Address of the candy guard.
+        #[clap(long)]
+        candy_guard: Option<String>,
+    },
+    /// Remove a candy guard from a candy machine
+    Remove {
+        /// Path to the keypair file, uses Sol config or defaults to "~/.config/solana/id.json"
+        #[clap(short, long)]
+        keypair: Option<String>,
+
+        /// RPC Url
+        #[clap(short, long)]
+        rpc_url: Option<String>,
+
+        /// Path to the cache file, defaults to "cache.json"
+        #[clap(long, default_value = DEFAULT_CACHE)]
+        cache: String,
+
+        /// Address of the candy machine.
+        #[clap(long)]
+        candy_machine: Option<String>,
+
+        /// Address of the candy guard.
+        #[clap(long)]
+        candy_guard: Option<String>,
+    },
+    /// Update the configuration of a candy guard
+    Update {
+        /// Path to the keypair file, uses Sol config or defaults to "~/.config/solana/id.json"
+        #[clap(short, long)]
+        keypair: Option<String>,
+
+        /// RPC Url
+        #[clap(short, long)]
+        rpc_url: Option<String>,
+
+        /// Path to the cache file, defaults to "cache.json"
+        #[clap(long, default_value = DEFAULT_CACHE)]
+        cache: String,
+
+        /// Path to the config file
+        #[clap(short, long, default_value = DEFAULT_CONFIG)]
+        config: String,
+
+        /// Address of the candy guard.
+        #[clap(long)]
+        candy_guard: Option<String>,
+    },
+    /// Withdraw funds from a candy guard account closing it
+    Withdraw {
+        /// Path to the keypair file, uses Sol config or defaults to "~/.config/solana/id.json"
+        #[clap(short, long)]
+        keypair: Option<String>,
+
+        /// RPC Url
+        #[clap(short, long)]
+        rpc_url: Option<String>,
+
+        /// Path to the cache file, defaults to "cache.json"
+        #[clap(long, default_value = DEFAULT_CACHE)]
+        cache: String,
+
+        /// Address of the candy guard.
+        #[clap(long)]
+        candy_guard: Option<String>,
     },
 }

@@ -50,6 +50,8 @@ impl Default for Cache {
 pub struct CacheProgram {
     #[serde(rename = "candyMachine")]
     pub candy_machine: String,
+    #[serde(rename = "candyGuard")]
+    pub candy_guard: String,
     #[serde(rename = "candyMachineCreator")]
     pub candy_machine_creator: String,
     #[serde(rename = "collectionMint")]
@@ -60,6 +62,7 @@ impl CacheProgram {
     pub fn new() -> Self {
         CacheProgram {
             candy_machine: String::new(),
+            candy_guard: String::new(),
             candy_machine_creator: String::new(),
             collection_mint: String::new(),
         }
@@ -70,6 +73,7 @@ impl CacheProgram {
             find_candy_machine_creator_pda(candy_machine);
         CacheProgram {
             candy_machine: candy_machine.to_string(),
+            candy_guard: String::new(),
             candy_machine_creator: candy_machine_creator_pda.to_string(),
             collection_mint: String::new(),
         }

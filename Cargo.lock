@@ -2352,7 +2352,7 @@ dependencies = [
 [[package]]
 name = "mpl-candy-guard"
 version = "0.0.1"
-source = "git+https://github.com/metaplex-foundation/mpl-candy-guard?branch=main#44d51e10811ed19bd56b3c79e2a48157604dcd8c"
+source = "git+https://github.com/metaplex-foundation/mpl-candy-guard?branch=main#d17e0126df01d592df03d69d90cd0805bd99dd83"
 dependencies = [
  "anchor-lang",
  "arrayref",
@@ -2368,7 +2368,7 @@ dependencies = [
 [[package]]
 name = "mpl-candy-guard-derive"
 version = "0.0.1"
-source = "git+https://github.com/metaplex-foundation/mpl-candy-guard?branch=main#44d51e10811ed19bd56b3c79e2a48157604dcd8c"
+source = "git+https://github.com/metaplex-foundation/mpl-candy-guard?branch=main#d17e0126df01d592df03d69d90cd0805bd99dd83"
 dependencies = [
  "quote 1.0.21",
  "syn 1.0.99",
@@ -2390,7 +2390,7 @@ dependencies = [
 [[package]]
 name = "mpl-candy-machine-core"
 version = "0.0.3"
-source = "git+https://github.com/metaplex-foundation/metaplex-program-library#03ad5bd083f930f4828276317c8085515efc2d14"
+source = "git+https://github.com/metaplex-foundation/metaplex-program-library#d32d28cd499174c3e13aecd6489e5fa6d81d2877"
 dependencies = [
  "anchor-lang",
  "arrayref",

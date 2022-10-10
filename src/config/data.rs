@@ -10,6 +10,7 @@ pub use anyhow::{anyhow, Result};
 use chrono::prelude::*;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
+use super::CandyGuardData;
 use crate::config::errors::*;
 
 pub struct SugarConfig {
@@ -50,6 +51,9 @@ pub struct ConfigData {
 
     /// Upload method configuration
     pub upload_config: UploadConfig,
+
+    /// Guards configuration
+    pub guards: Option<CandyGuardData>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
