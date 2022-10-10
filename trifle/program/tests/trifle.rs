@@ -31,7 +31,7 @@ mod trifle {
 
     use super::*;
 
-    // #[tokio::test]
+    #[tokio::test]
     async fn test_create_trifle_account() {
         let mut context = program_test().start_with_context().await;
 
@@ -99,7 +99,6 @@ mod trifle {
             Some(trifle_attribute_token_account),
             Some(attribute_metadata.pubkey),
             Some(attribute_master_edition.pubkey),
-            None,
             None,
             "test".to_string(),
             1,
@@ -195,7 +194,7 @@ mod trifle {
         println!("constraint_account: {:#?}", constraint_account_data);
     }
 
-    // #[tokio::test]
+    #[tokio::test]
     async fn test_transfer_in_with_track_and_burn() {
         let mut context = program_test().start_with_context().await;
 
@@ -243,7 +242,6 @@ mod trifle {
             Some(trifle_attribute_token_account),
             Some(attribute_metadata.pubkey),
             Some(attribute_master_edition.pubkey),
-            None,
             None,
             "test".to_string(),
             1,
@@ -333,7 +331,6 @@ mod trifle {
             Some(trifle_attribute_token_account),
             Some(attribute_metadata.pubkey),
             Some(attribute_master_edition.pubkey),
-            None,
             None,
             "test".to_string(),
             1,

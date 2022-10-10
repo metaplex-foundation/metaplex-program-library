@@ -9,7 +9,7 @@ use crate::{
     state::{
         escrow_constraints::{EscrowConstraint, EscrowConstraintModel, EscrowConstraintType},
         trifle::Trifle,
-        Key, SolanaAccount, ESCROW_SEED, FREEZE_AUTHORITY, TRIFLE_SEED,
+        Key, SolanaAccount, ESCROW_SEED, TRIFLE_SEED,
     },
     util::resize_or_reallocate_account_raw,
 };
@@ -17,10 +17,11 @@ use borsh::{BorshDeserialize, BorshSerialize};
 use mpl_token_metadata::{
     error::MetadataError,
     id as token_metadata_program_id,
-    state::{
-        EscrowAuthority, Key as MetadataKey, Metadata, TokenMetadataAccount, ESCROW_PREFIX, PREFIX,
+    state::{EscrowAuthority, Metadata, TokenMetadataAccount, ESCROW_PREFIX, PREFIX},
+    utils::{
+        assert_derivation, assert_owned_by, assert_signer, create_or_allocate_account_raw,
+        is_print_edition,
     },
-    utils::{assert_derivation, assert_owned_by, assert_signer, create_or_allocate_account_raw},
 };
 use solana_program::{
     account_info::next_account_info,
@@ -32,6 +33,7 @@ use solana_program::{
     program_pack::Pack,
     pubkey::Pubkey,
 };
+use spl_token::state::{Account, Mint};
 
 pub fn process_instruction(
     program_id: &Pubkey,
@@ -263,7 +265,6 @@ fn transfer_in(
     let attribute_metadata_info = next_account_info(account_info_iter)?;
     let attribute_edition_info = next_account_info(account_info_iter)?;
     let attribute_collection_metadata_info = next_account_info(account_info_iter)?;
-    let attribute_mint_freeze_authority_info = next_account_info(account_info_iter)?;
     let system_program_info = next_account_info(account_info_iter)?;
     let token_program_info = next_account_info(account_info_iter)?;
     let associated_token_account_program_info = next_account_info(account_info_iter)?;
@@ -292,7 +293,7 @@ fn transfer_in(
     assert_derivation(&tm_pid, escrow_info, &escrow_seeds)?;
 
     // Deserialize the token accounts and perform checks.
-    let attribute_src = spl_token::state::Account::unpack(&attribute_src_token_info.data.borrow())?;
+    let attribute_src = Account::unpack(&attribute_src_token_info.data.borrow())?;
     assert!(attribute_src.mint == *attribute_mint_info.key);
     assert!(attribute_src.delegate.is_none());
     assert!(attribute_src.amount >= args.amount);
@@ -381,15 +382,13 @@ fn transfer_in(
             ],
         )?;
     } else {
-        let attribute_edition_data = attribute_edition_info.try_borrow_data()?;
-
-        // First byte is the object key.
-        let key = attribute_edition_data
-            .first()
-            .ok_or(MetadataError::InvalidMasterEdition)?;
-        if *key != MetadataKey::MasterEditionV1 as u8 && *key != MetadataKey::MasterEditionV2 as u8
-        {
-            return Err(MetadataError::NotAMasterEdition.into());
+        let attribute_mint = Mint::unpack(&attribute_mint_info.data.borrow())?;
+        if is_print_edition(
+            attribute_edition_info,
+            attribute_mint.decimals,
+            attribute_mint.supply,
+        ) {
+            return Err(TrifleError::CannotBurnPrintEdition.into());
         }
 
         let maybe_collection_metadata_pubkey = if attribute_metadata.collection.is_some() {
@@ -432,7 +431,7 @@ fn transfer_in(
     if constraint_model.fuse_options.freeze_parent() {
         msg!("freezing base nft");
         // make sure the freeze authority is set
-        let escrow_mint = spl_token::state::Mint::unpack(&escrow_mint_info.data.borrow())?;
+        let escrow_mint = Mint::unpack(&escrow_mint_info.data.borrow())?;
 
         if escrow_mint.freeze_authority.is_none() {
             msg!("Freeze authority is not set");
@@ -552,8 +551,7 @@ fn transfer_out(
 
     // Deserialize the token accounts and perform checks.
 
-    let escrow_token_account_data =
-        spl_token::state::Account::unpack(&escrow_token_account.data.borrow())?;
+    let escrow_token_account_data = Account::unpack(&escrow_token_account.data.borrow())?;
     // Only the parent NFT holder can transfer out
     assert!(escrow_token_account_data.owner == *payer.key);
 

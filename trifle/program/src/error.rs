@@ -59,6 +59,9 @@ pub enum TrifleError {
 
     #[error("Freeze Authority Not Set")]
     FreezeAuthorityNotSet,
+
+    #[error("Cannot burn Print Edition")]
+    CannotBurnPrintEdition,
 }
 
 impl From<TrifleError> for ProgramError {

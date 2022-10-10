@@ -98,7 +98,6 @@ pub enum TrifleInstruction {
     #[account(11, optional, writable, name = "attribute_metadata", desc = "The metadata account of the attribute token")]
     #[account(12, optional, writable, name = "attribute_edition", desc = "The edition account of the attribute token")]
     #[account(13, optional, writable, name = "attribute_collection_metadata", desc = "The collection metadata account of the attribute token")]
-    #[account(14, optional, name = "attribute_mint_freeze_authority", desc = "The mint authority of the attribute token mint")]
     TransferIn(TransferInArgs),
 
     /// Transfer tokens out of the Trifle escrow account.
@@ -314,7 +313,6 @@ pub fn transfer_in(
     attribute_metadata: Option<Pubkey>,
     attribute_edition: Option<Pubkey>,
     attribute_collection_metadata: Option<Pubkey>,
-    attribute_mint_freeze_authority: Option<Pubkey>,
     slot: String,
     amount: u64,
 ) -> Instruction {
@@ -334,7 +332,6 @@ pub fn transfer_in(
         AccountMeta::new(attribute_metadata.unwrap_or(program_id), false),
         AccountMeta::new(attribute_edition.unwrap_or(program_id), false),
         AccountMeta::new(attribute_collection_metadata.unwrap_or(program_id), false),
-        AccountMeta::new_readonly(attribute_mint_freeze_authority.unwrap_or(program_id), false),
         AccountMeta::new_readonly(system_program::id(), false),
         AccountMeta::new_readonly(spl_token::id(), false),
         AccountMeta::new_readonly(spl_associated_token_account::id(), false),
