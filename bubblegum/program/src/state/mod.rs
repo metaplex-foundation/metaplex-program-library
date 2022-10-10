@@ -33,7 +33,6 @@ impl TreeConfig {
 }
 
 #[account]
-#[derive(Copy)]
 pub struct Voucher {
     pub leaf_schema: LeafSchema,
     pub index: u32,
@@ -50,17 +49,41 @@ impl Voucher {
     }
 }
 
-#[event]
+#[derive(AnchorSerialize, AnchorDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct NewNFTEvent {
+    pub account_type: AccountType,
     pub version: Version,
     pub metadata: MetadataArgs,
     pub nonce: u64,
 }
 
-#[event]
+#[derive(AnchorSerialize, AnchorDeserialize, PartialEq, Eq, Debug, Clone)]
+pub struct NodeEvent {
+    pub account_type: AccountType,
+    pub version: Version,
+    // TODO: Figure out why we cannot generate JS API if this is `spl_account_compression::Node`.
+    pub node: [u8; 32],
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct NFTDecompressionEvent {
+    pub account_type: AccountType,
     pub version: Version,
     pub id: Pubkey,
     pub tree_id: Pubkey,
     pub nonce: u64,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, PartialEq, Eq, Debug, Clone)]
+pub enum AccountType {
+    /// Marker for 0 data.
+    Uninitialized,
+    // New NFT event.
+    NewNFTEvent,
+    /// Leaf schema event.
+    LeafSchemaEvent,
+    /// Node event.
+    NodeEvent,
+    /// NFT decompression event.
+    NFTDecompressionEvent,
 }

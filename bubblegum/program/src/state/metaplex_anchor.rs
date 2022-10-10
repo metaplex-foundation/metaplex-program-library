@@ -16,7 +16,7 @@ impl anchor_lang::AccountDeserialize for MasterEdition {
             mpl_token_metadata::state::Key::MasterEditionV2,
             MAX_MASTER_EDITION_LEN,
         )
-        .map(|e| MasterEdition(e))
+        .map(MasterEdition)
         .map_err(Into::into)
     }
 }
@@ -47,7 +47,7 @@ impl anchor_lang::AccountDeserialize for TokenMetadata {
             mpl_token_metadata::state::Key::MetadataV1,
             MAX_METADATA_LEN,
         )
-        .map(|e| TokenMetadata(e))
+        .map(TokenMetadata)
         .map_err(Into::into)
     }
 }

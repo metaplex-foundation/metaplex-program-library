@@ -350,6 +350,15 @@
           "isSigner": true
         },
         {
+          "name": "collectionAuthorityRecordPda",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "If there is no collecton authority record PDA then",
+            "this must be the Bubblegum program address."
+          ]
+        },
+        {
           "name": "collectionMint",
           "isMut": false,
           "isSigner": false
@@ -472,6 +481,15 @@
           "isSigner": true
         },
         {
+          "name": "collectionAuthorityRecordPda",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "If there is no collecton authority record PDA then",
+            "this must be the Bubblegum program address."
+          ]
+        },
+        {
           "name": "collectionMint",
           "isMut": false,
           "isSigner": false
@@ -592,6 +610,15 @@
           "name": "collectionAuthority",
           "isMut": false,
           "isSigner": true
+        },
+        {
+          "name": "collectionAuthorityRecordPda",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "If there is no collecton authority record PDA then",
+            "this must be the Bubblegum program address."
+          ]
         },
         {
           "name": "collectionMint",
@@ -1098,6 +1125,11 @@
           "name": "associatedTokenProgram",
           "isMut": false,
           "isSigner": false
+        },
+        {
+          "name": "logWrapper",
+          "isMut": false,
+          "isSigner": false
         }
       ],
       "args": [
@@ -1235,6 +1267,41 @@
     }
   ],
   "types": [
+    {
+      "name": "LeafSchemaEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "accountType",
+            "type": {
+              "defined": "AccountType"
+            }
+          },
+          {
+            "name": "version",
+            "type": {
+              "defined": "Version"
+            }
+          },
+          {
+            "name": "schema",
+            "type": {
+              "defined": "LeafSchema"
+            }
+          },
+          {
+            "name": "leafHash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        ]
+      }
+    },
     {
       "name": "Creator",
       "type": {
@@ -1394,6 +1461,97 @@
       }
     },
     {
+      "name": "NewNFTEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "accountType",
+            "type": {
+              "defined": "AccountType"
+            }
+          },
+          {
+            "name": "version",
+            "type": {
+              "defined": "Version"
+            }
+          },
+          {
+            "name": "metadata",
+            "type": {
+              "defined": "MetadataArgs"
+            }
+          },
+          {
+            "name": "nonce",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "NodeEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "accountType",
+            "type": {
+              "defined": "AccountType"
+            }
+          },
+          {
+            "name": "version",
+            "type": {
+              "defined": "Version"
+            }
+          },
+          {
+            "name": "node",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "NFTDecompressionEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "accountType",
+            "type": {
+              "defined": "AccountType"
+            }
+          },
+          {
+            "name": "version",
+            "type": {
+              "defined": "Version"
+            }
+          },
+          {
+            "name": "id",
+            "type": "publicKey"
+          },
+          {
+            "name": "treeId",
+            "type": "publicKey"
+          },
+          {
+            "name": "nonce",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
       "name": "Version",
       "type": {
         "kind": "enum",
@@ -1503,6 +1661,29 @@
       }
     },
     {
+      "name": "AccountType",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Uninitialized"
+          },
+          {
+            "name": "NewNFTEvent"
+          },
+          {
+            "name": "LeafSchemaEvent"
+          },
+          {
+            "name": "NodeEvent"
+          },
+          {
+            "name": "NFTDecompressionEvent"
+          }
+        ]
+      }
+    },
+    {
       "name": "InstructionName",
       "type": {
         "kind": "enum",
@@ -1554,88 +1735,6 @@
           }
         ]
       }
-    }
-  ],
-  "events": [
-    {
-      "name": "LeafSchemaEvent",
-      "fields": [
-        {
-          "name": "version",
-          "type": {
-            "defined": "Version"
-          },
-          "index": false
-        },
-        {
-          "name": "schema",
-          "type": {
-            "defined": "LeafSchema"
-          },
-          "index": false
-        },
-        {
-          "name": "leafHash",
-          "type": {
-            "array": [
-              "u8",
-              32
-            ]
-          },
-          "index": false
-        }
-      ]
-    },
-    {
-      "name": "NewNFTEvent",
-      "fields": [
-        {
-          "name": "version",
-          "type": {
-            "defined": "Version"
-          },
-          "index": false
-        },
-        {
-          "name": "metadata",
-          "type": {
-            "defined": "MetadataArgs"
-          },
-          "index": false
-        },
-        {
-          "name": "nonce",
-          "type": "u64",
-          "index": false
-        }
-      ]
-    },
-    {
-      "name": "NFTDecompressionEvent",
-      "fields": [
-        {
-          "name": "version",
-          "type": {
-            "defined": "Version"
-          },
-          "index": false
-        },
-        {
-          "name": "id",
-          "type": "publicKey",
-          "index": false
-        },
-        {
-          "name": "treeId",
-          "type": "publicKey",
-          "index": false
-        },
-        {
-          "name": "nonce",
-          "type": "u64",
-          "index": false
-        }
-      ]
     }
   ],
   "errors": [
