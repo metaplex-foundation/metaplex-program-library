@@ -1,6 +1,6 @@
 # Metaplex Program Library
 
-Metaplex smart contracts and SDK.
+Metaplex smart contracts and SDK
 
 ## Metaplex Contracts
 
