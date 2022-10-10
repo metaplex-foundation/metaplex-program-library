@@ -8,9 +8,9 @@ use std::{path::Path, process::Command};
 fn main() {
     // The build script's working folder is always that of the containing package.
     let spl_compression_so_path =
-        Path::new("../../target/deploy/GRoLLzvxpxxu2PGNJMMeZPyMxjAUH9pKqxGXV9DGiceU.so");
+        Path::new("../../target/deploy/cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK.so");
     let spl_wrapper_so_path =
-        Path::new("../../target/deploy/WRAPYChf58WFCnyjXKJHtrPgzKXgHp6MD9aVDqJBbGh.so");
+        Path::new("../../target/deploy/noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV.so");
 
     if !spl_compression_so_path.exists() || !spl_wrapper_so_path.exists() {
         Command::new("./download-compression-programs.sh")

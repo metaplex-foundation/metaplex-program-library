@@ -24,12 +24,12 @@ pub type Result<T> = result::Result<T, Error>;
 pub fn program_test() -> ProgramTest {
     let mut test = ProgramTest::new("mpl_bubblegum", mpl_bubblegum::id(), None);
     test.add_program(
-        "WRAPYChf58WFCnyjXKJHtrPgzKXgHp6MD9aVDqJBbGh",
+        "noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV",
         spl_noop::id(),
         None,
     );
     test.add_program(
-        "GRoLLzvxpxxu2PGNJMMeZPyMxjAUH9pKqxGXV9DGiceU",
+        "cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK",
         spl_account_compression::id(),
         None,
     );
