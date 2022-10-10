@@ -6,12 +6,14 @@ use anchor_client::solana_sdk::{
     system_instruction, system_program, sysvar,
 };
 use anyhow::Result;
-use borsh::BorshDeserialize;
 use console::style;
 use mpl_candy_machine_core::{
     accounts as nft_accounts, instruction as nft_instruction, CandyMachine,
 };
-use mpl_token_metadata::{pda::find_collection_authority_account, state::Metadata};
+use mpl_token_metadata::{
+    pda::find_collection_authority_account,
+    state::{Metadata, TokenMetadataAccount},
+};
 use solana_client::rpc_response::Response;
 use spl_associated_token_account::{
     get_associated_token_address, instruction::create_associated_token_account,
@@ -244,7 +246,7 @@ pub async fn mint(
     let collection_metadata = find_metadata_pda(&collection_mint);
 
     let data = program.rpc().get_account_data(&collection_metadata)?;
-    let metadata: Metadata = BorshDeserialize::deserialize(&mut data.as_slice())?;
+    let metadata = Metadata::safe_deserialize(data.as_slice())?;
 
     let metadata_pda = find_metadata_pda(&nft_mint.pubkey());
     let master_edition_pda = find_master_edition_pda(&nft_mint.pubkey());

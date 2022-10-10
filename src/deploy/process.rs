@@ -13,9 +13,8 @@ use anchor_client::solana_sdk::{
     signature::{Keypair, Signer},
 };
 use anyhow::Result;
-use borsh::BorshDeserialize;
 use console::style;
-use mpl_token_metadata::state::Metadata;
+use mpl_token_metadata::state::{Metadata, TokenMetadataAccount};
 
 use crate::{
     cache::*,
@@ -162,7 +161,7 @@ pub async fn process_deploy(args: DeployArgs) -> Result<()> {
 
         let collection_metadata = find_metadata_pda(&collection_mint);
         let data = program.rpc().get_account_data(&collection_metadata)?;
-        let metadata: Metadata = BorshDeserialize::deserialize(&mut data.as_slice())?;
+        let metadata = Metadata::safe_deserialize(data.as_slice())?;
 
         let sig = initialize_candy_machine(
             &config_data,

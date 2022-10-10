@@ -2351,13 +2351,14 @@ dependencies = [
 
 [[package]]
 name = "mpl-candy-guard"
-version = "0.0.1"
-source = "git+https://github.com/metaplex-foundation/mpl-candy-guard?branch=main#d17e0126df01d592df03d69d90cd0805bd99dd83"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "31312ae965ea862ab4e5f427070f9a6b049aa2b57f1b728f073e1421cf331067"
 dependencies = [
  "anchor-lang",
  "arrayref",
  "mpl-candy-guard-derive",
- "mpl-candy-machine-core 0.0.3 (git+https://github.com/metaplex-foundation/metaplex-program-library)",
+ "mpl-candy-machine-core",
  "mpl-token-metadata",
  "solana-gateway",
  "solana-program",
@@ -2367,8 +2368,9 @@ dependencies = [
 
 [[package]]
 name = "mpl-candy-guard-derive"
-version = "0.0.1"
-source = "git+https://github.com/metaplex-foundation/mpl-candy-guard?branch=main#d17e0126df01d592df03d69d90cd0805bd99dd83"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e2ca93b6548fdbcdab8d19bf083ffed29109e9120e16aa951837c45519a32d80"
 dependencies = [
  "quote 1.0.21",
  "syn 1.0.99",
@@ -2376,21 +2378,9 @@ dependencies = [
 
 [[package]]
 name = "mpl-candy-machine-core"
-version = "0.0.3"
-source = "git+https://github.com/metaplex-foundation/metaplex-program-library?branch=master#03ad5bd083f930f4828276317c8085515efc2d14"
-dependencies = [
- "anchor-lang",
- "arrayref",
- "mpl-token-metadata",
- "solana-program",
- "spl-associated-token-account",
- "spl-token",
-]
-
-[[package]]
-name = "mpl-candy-machine-core"
-version = "0.0.3"
-source = "git+https://github.com/metaplex-foundation/metaplex-program-library#d32d28cd499174c3e13aecd6489e5fa6d81d2877"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "82b936b56e7f99ecc01abd34a2535c56bbc11b07f38b687726e5c42a260ef355"
 dependencies = [
  "anchor-lang",
  "arrayref",
@@ -4772,7 +4762,7 @@ dependencies = [
  "ini",
  "lazy_static",
  "mpl-candy-guard",
- "mpl-candy-machine-core 0.0.3 (git+https://github.com/metaplex-foundation/metaplex-program-library?branch=master)",
+ "mpl-candy-machine-core",
  "mpl-token-metadata",
  "num_cpus",
  "phf",
