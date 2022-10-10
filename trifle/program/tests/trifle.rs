@@ -355,6 +355,16 @@ mod trifle {
         // we will try to send the frozen base NFT to this address,
         // which should fail
         let test_receiver_account = Pubkey::new_unique();
+
+        let _transfer_ix = spl_token::instruction::transfer(
+            &spl_token::id(),
+            &metadata.token.pubkey(),
+            &test_receiver_account,
+            &context.payer.pubkey(),
+            &[&context.payer.pubkey()],
+            1,
+        )
+        .expect("should create transfer instruction");
     }
 }
 

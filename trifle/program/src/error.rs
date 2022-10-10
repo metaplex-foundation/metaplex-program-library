@@ -51,17 +51,14 @@ pub enum TrifleError {
     #[error("Failed to find Token Amount")]
     FailedToFindTokenAmount,
 
-    #[error("Provided Metadata Account does not have Collection Details")]
-    NotACollection,
+    #[error("Invalid Collection Metadata")]
+    InvalidCollectionMetadata,
 
     #[error("Provided Fuse Options are in conflict")]
     FuseOptionConflict,
 
     #[error("Freeze Authority Not Set")]
     FreezeAuthorityNotSet,
-
-    #[error("Incorrect Freeze Authority")]
-    IncorrectFreezeAuthority,
 }
 
 impl From<TrifleError> for ProgramError {

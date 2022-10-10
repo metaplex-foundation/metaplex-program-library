@@ -303,6 +303,22 @@ fn transfer_in(
     // assert!(attribute_dst.delegate.is_none());
     // msg!("past explicit assertions.");
 
+    let trifle_seeds = &[
+        TRIFLE_SEED.as_bytes(),
+        escrow_mint_info.key.as_ref(),
+        trifle_authority_info.key.as_ref(),
+        constraint_model_info.key.as_ref(),
+    ];
+
+    let trifle_bump_seed = assert_derivation(program_id, trifle_info, trifle_seeds)?;
+    let trifle_signer_seeds = &[
+        TRIFLE_SEED.as_bytes(),
+        escrow_mint_info.key.as_ref(),
+        trifle_authority_info.key.as_ref(),
+        constraint_model_info.key.as_ref(),
+        &[trifle_bump_seed],
+    ];
+
     // check constraints
     let constraint_model =
         EscrowConstraintModel::try_from_slice(&constraint_model_info.data.borrow())
@@ -363,45 +379,41 @@ fn transfer_in(
             ],
         )?;
     } else {
-        msg!("in burn clause");
+        let maybe_collection_metadata_pubkey = if attribute_metadata.collection.is_some() {
+            Metadata::from_account_info(attribute_collection_metadata_info)
+                .map_err(|_| TrifleError::InvalidCollectionMetadata)?;
 
-        // TODO: Find out if the attribute token has a collection.
-        // if it does, then we need to pass the collection metadata.
-        if let Some(collection) = attribute_metadata.collection {
-            let collection_metadata =
-                Metadata::from_account_info(attribute_collection_metadata_info)?;
-            msg!("collection {:?}", collection);
-            // msg!("collection_metadata: {:?}", collection_metadata);
-        }
-        // let maybe_collection_metadata = Some(attribute_collection_metadata_info.key.to_owned());
-        let maybe_collection_metadata = None;
+            Some(*attribute_collection_metadata_info.key)
+        } else {
+            None
+        };
 
         // Burn the token from the current owner.
         let burn_ix = mpl_token_metadata::instruction::burn_nft(
             mpl_token_metadata::id(),
             *attribute_metadata_info.key,
-            *trifle_authority_info.key, // TODO: should be the owner of the token
+            *trifle_authority_info.key,
             *attribute_mint_info.key,
             *attribute_src_token_info.key,
             *attribute_edition_info.key,
             *token_program_info.key,
-            maybe_collection_metadata,
+            maybe_collection_metadata_pubkey,
         );
 
-        invoke(
-            &burn_ix,
-            &[
-                attribute_metadata_info.clone(),
-                trifle_authority_info.clone(),
-                attribute_mint_info.clone(),
-                attribute_src_token_info.clone(),
-                attribute_edition_info.clone(),
-                token_program_info.clone(),
-                // if let Some(collection_metadata) = maybe_collection_metadata {
-                //     attribute_collection_metadata_info.clone()
-                // },
-            ],
-        )?;
+        let mut accounts = vec![
+            attribute_metadata_info.clone(),
+            trifle_authority_info.clone(),
+            attribute_mint_info.clone(),
+            attribute_src_token_info.clone(),
+            attribute_edition_info.clone(),
+            token_program_info.clone(),
+        ];
+
+        if maybe_collection_metadata_pubkey.is_some() {
+            accounts.push(attribute_collection_metadata_info.clone());
+        }
+
+        invoke_signed(&burn_ix, &accounts, &[trifle_signer_seeds])?;
     }
 
     if constraint_model.fuse_options.freeze_parent() {
@@ -428,21 +440,6 @@ fn transfer_in(
             escrow_edition_info.clone(),
             escrow_mint_info.clone(),
             token_program_info.clone(),
-        ];
-        let trifle_seeds = &[
-            TRIFLE_SEED.as_bytes(),
-            escrow_mint_info.key.as_ref(),
-            trifle_authority_info.key.as_ref(),
-            constraint_model_info.key.as_ref(),
-        ];
-
-        let trifle_bump_seed = assert_derivation(program_id, trifle_info, trifle_seeds)?;
-        let trifle_signer_seeds = &[
-            TRIFLE_SEED.as_bytes(),
-            escrow_mint_info.key.as_ref(),
-            trifle_authority_info.key.as_ref(),
-            constraint_model_info.key.as_ref(),
-            &[trifle_bump_seed],
         ];
 
         invoke_signed(&freeze_ix, accounts, &[trifle_signer_seeds])?;
