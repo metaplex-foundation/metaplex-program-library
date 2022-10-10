@@ -247,7 +247,7 @@ pub fn process_show(args: ShowArgs) -> Result<()> {
     Ok(())
 }
 
-fn print_with_style<S>(indent: &str, key: &str, value: S)
+pub fn print_with_style<S>(indent: &str, key: &str, value: S)
 where
     S: core::fmt::Display,
 {

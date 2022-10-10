@@ -403,6 +403,24 @@ pub enum GuardCommand {
         #[clap(long)]
         candy_guard: Option<String>,
     },
+    /// Show the on-chain config of an existing candy guard
+    Show {
+        /// Path to the keypair file, uses Sol config or defaults to "~/.config/solana/id.json"
+        #[clap(short, long)]
+        keypair: Option<String>,
+
+        /// RPC Url
+        #[clap(short, long)]
+        rpc_url: Option<String>,
+
+        /// Path to the cache file, defaults to "cache.json"
+        #[clap(long, default_value = DEFAULT_CACHE)]
+        cache: String,
+
+        /// Address of the candy guard.
+        #[clap(long)]
+        candy_guard: Option<String>,
+    },
     /// Update the configuration of a candy guard
     Update {
         /// Path to the keypair file, uses Sol config or defaults to "~/.config/solana/id.json"

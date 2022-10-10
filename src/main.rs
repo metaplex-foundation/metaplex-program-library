@@ -19,8 +19,9 @@ use sugar_cli::{
     create_config::{process_create_config, CreateConfigArgs},
     deploy::{process_deploy, DeployArgs},
     guard::{
-        process_guard_add, process_guard_remove, process_guard_update, process_guard_withdraw,
-        GuardAddArgs, GuardRemoveArgs, GuardUpdateArgs, GuardWithdrawArgs,
+        process_guard_add, process_guard_remove, process_guard_show, process_guard_update,
+        process_guard_withdraw, GuardAddArgs, GuardRemoveArgs, GuardShowArgs, GuardUpdateArgs,
+        GuardWithdrawArgs,
     },
     hash::{process_hash, HashArgs},
     launch::{process_launch, LaunchArgs},
@@ -218,6 +219,17 @@ async fn run() -> Result<()> {
                 rpc_url,
                 cache,
                 candy_machine,
+                candy_guard,
+            })?,
+            GuardCommand::Show {
+                keypair,
+                rpc_url,
+                cache,
+                candy_guard,
+            } => process_guard_show(GuardShowArgs {
+                keypair,
+                rpc_url,
+                cache,
                 candy_guard,
             })?,
             GuardCommand::Update {
