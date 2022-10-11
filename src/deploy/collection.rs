@@ -49,7 +49,6 @@ pub fn create_collection(
         MINT_LAYOUT,
         &TOKEN_PROGRAM_ID,
     );
-    //println!("   + created mint account instruction");
 
     // Initialize mint ix
     let init_mint_ix = initialize_mint(
@@ -59,14 +58,12 @@ pub fn create_collection(
         Some(&payer),
         0,
     )?;
-    //println!("   + created initialize mint instruction");
 
     let ata_pubkey = get_associated_token_address(&payer, &collection_mint.pubkey());
 
     // Create associated account instruction
     let create_assoc_account_ix =
         create_associated_token_account(&payer, &payer, &collection_mint.pubkey());
-    //println!("   + created associated account instruction");
 
     // Mint to instruction
     let mint_to_ix = mint_to(
@@ -77,7 +74,6 @@ pub fn create_collection(
         &[],
         1,
     )?;
-    //println!("   + created mint instruction");
 
     let creator = Creator {
         address: payer,
@@ -104,7 +100,6 @@ pub fn create_collection(
         None,
         Some(CollectionDetails::V1 { size: 0 }),
     );
-    //println!("   + created metadata account instruction");
 
     let collection_edition_pubkey = find_master_edition_pda(&collection_mint.pubkey());
 
@@ -118,7 +113,6 @@ pub fn create_collection(
         payer,
         Some(0),
     );
-    //println!("   + created master edition instruction");
 
     let builder = program
         .request()
@@ -130,9 +124,8 @@ pub fn create_collection(
         .instruction(create_metadata_account_ix)
         .instruction(create_master_edition_ix);
 
-    //println!("Sending transaction...");
     let sig = builder.send()?;
-    //println!("Transaction completed: {}", &sig);
+
     collection_item.on_chain = true;
     cache.program.collection_mint = collection_mint.pubkey().to_string();
     cache.sync_file()?;
