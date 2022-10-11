@@ -651,11 +651,11 @@ fn process_collection_verification<'info>(
     let bubblegum_signer = ctx.accounts.bubblegum_signer.to_account_info();
     let token_metadata_program = ctx.accounts.token_metadata_program.to_account_info();
 
-    // Look for collection authority record PDA as a remaining account.
+    // See if a collection authority record PDA was provided.
     let collection_authority_record = if collection_authority_record_pda.key() == crate::id() {
-        Some(&collection_authority_record_pda)
-    } else {
         None
+    } else {
+        Some(&collection_authority_record_pda)
     };
 
     // Verify correct account ownerships.
