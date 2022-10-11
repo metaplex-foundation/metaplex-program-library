@@ -1,6 +1,6 @@
 # mpl-candy-machine-core
 
-This package contains the Candy Machine Core contract SDK code.
+This package contains the Metaplex Candy Machine Core contract SDK code.
 
 ## API Docs
 
