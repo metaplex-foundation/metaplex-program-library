@@ -17,9 +17,7 @@ use solana_sdk::{
     signer::signers::Signers,
     transaction::Transaction,
 };
-use spl_account_compression::state::{
-    ConcurrentMerkleTreeHeader, CONCURRENT_MERKLE_TREE_HEADER_SIZE_V1,
-};
+use spl_account_compression::state::CONCURRENT_MERKLE_TREE_HEADER_SIZE_V1;
 use spl_concurrent_merkle_tree::concurrent_merkle_tree::ConcurrentMerkleTree;
 use spl_merkle_tree_reference::{MerkleTree, Node};
 use std::{
@@ -153,7 +151,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
         let account_size = self.merkle_tree_account_size();
 
         // u64 -> usize conversion should never fail on the platforms we're running on.
-        let lamports = rent.minimum_balance(usize::try_from(account_size).unwrap());
+        let lamports = rent.minimum_balance(account_size);
 
         let ix = system_instruction::create_account(
             &payer.pubkey(),
