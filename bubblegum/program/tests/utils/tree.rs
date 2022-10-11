@@ -17,7 +17,9 @@ use solana_sdk::{
     signer::signers::Signers,
     transaction::Transaction,
 };
-use spl_account_compression::state::ConcurrentMerkleTreeHeader;
+use spl_account_compression::state::{
+    ConcurrentMerkleTreeHeader, CONCURRENT_MERKLE_TREE_HEADER_SIZE_V1,
+};
 use spl_concurrent_merkle_tree::concurrent_merkle_tree::ConcurrentMerkleTree;
 use spl_merkle_tree_reference::{MerkleTree, Node};
 use std::{
@@ -108,7 +110,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
     }
 
     pub fn merkle_tree_account_size(&self) -> usize {
-        size_of::<ConcurrentMerkleTreeHeader>()
+        CONCURRENT_MERKLE_TREE_HEADER_SIZE_V1
             + size_of::<ConcurrentMerkleTree<MAX_DEPTH, MAX_BUFFER_SIZE>>()
     }
 
@@ -267,7 +269,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
 
         let merkle_tree_bytes = tree_account.data.as_mut_slice();
         let (_header_bytes, rest) =
-            merkle_tree_bytes.split_at_mut(size_of::<ConcurrentMerkleTreeHeader>());
+            merkle_tree_bytes.split_at_mut(CONCURRENT_MERKLE_TREE_HEADER_SIZE_V1);
 
         let merkle_tree_size = size_of::<ConcurrentMerkleTree<MAX_DEPTH, MAX_BUFFER_SIZE>>();
         let tree_bytes = &mut rest[..merkle_tree_size];
