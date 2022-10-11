@@ -7,7 +7,6 @@ use solana_program::borsh::try_from_slice_unchecked;
 use solana_program_test::*;
 use solana_sdk::{
     pubkey::Pubkey, signature::Signer, signer::keypair::Keypair, transaction::Transaction,
-    transport,
 };
 
 #[derive(Debug)]
@@ -57,7 +56,7 @@ impl Metadata {
         seller_fee_basis_points: u16,
         is_mutable: bool,
         amount: u64,
-    ) -> transport::Result<()> {
+    ) -> Result<(), BanksClientError> {
         create_mint(context, &self.mint, &context.payer.pubkey(), None).await?;
 
         let token = create_associated_token_account(context, &self.token, &self.mint.pubkey())
@@ -108,7 +107,7 @@ impl Metadata {
         is_mutable: bool,
         collection: Option<Collection>,
         uses: Option<Uses>,
-    ) -> transport::Result<()> {
+    ) -> Result<(), BanksClientError> {
         create_mint(context, &self.mint, &context.payer.pubkey(), None).await?;
         create_token_account(
             context,
@@ -156,7 +155,7 @@ impl Metadata {
     pub async fn update_primary_sale_happened_via_token(
         &self,
         context: &mut ProgramTestContext,
-    ) -> transport::Result<()> {
+    ) -> Result<(), BanksClientError> {
         let tx = Transaction::new_signed_with_payer(
             &[instruction::update_primary_sale_happened_via_token(
                 id(),
@@ -180,7 +179,7 @@ impl Metadata {
         uri: String,
         creators: Option<Vec<Creator>>,
         seller_fee_basis_points: u16,
-    ) -> transport::Result<()> {
+    ) -> Result<(), BanksClientError> {
         let tx = Transaction::new_signed_with_payer(
             &[instruction::update_metadata_accounts(
                 id(),
@@ -215,7 +214,7 @@ impl Metadata {
         is_mutable: bool,
         collection: Option<Collection>,
         uses: Option<Uses>,
-    ) -> transport::Result<()> {
+    ) -> Result<(), BanksClientError> {
         let tx = Transaction::new_signed_with_payer(
             &[instruction::update_metadata_accounts_v2(
                 id(),
@@ -250,7 +249,7 @@ impl Metadata {
         collection_mint: Pubkey,
         collection_master_edition_account: Pubkey,
         collection_authority_record: Option<Pubkey>,
-    ) -> transport::Result<()> {
+    ) -> Result<(), BanksClientError> {
         let tx = Transaction::new_signed_with_payer(
             &[instruction::verify_collection(
                 id(),
@@ -278,7 +277,7 @@ impl Metadata {
         collection_mint: Pubkey,
         collection_master_edition_account: Pubkey,
         collection_authority_record: Option<Pubkey>,
-    ) -> transport::Result<()> {
+    ) -> Result<(), BanksClientError> {
         let tx = Transaction::new_signed_with_payer(
             &[instruction::unverify_collection(
                 id(),

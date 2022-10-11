@@ -13,7 +13,6 @@ use solana_program::{
 use solana_program_test::*;
 use solana_sdk::{
     pubkey::Pubkey, signature::Signer, signer::keypair::Keypair, transaction::Transaction,
-    transport,
 };
 
 #[derive(Debug)]
@@ -89,7 +88,7 @@ impl EditionMarker {
         vault: &Vault,
         safety_deposit_box: &Pubkey,
         store: &Pubkey,
-    ) -> transport::Result<()> {
+    ) -> Result<(), BanksClientError> {
         let metaplex_token_vault_id = mpl_token_vault::id();
         let vault_pubkey = vault.keypair.pubkey();
 
@@ -119,6 +118,7 @@ impl EditionMarker {
         )
         .await?;
 
+        #[allow(deprecated)]
         let tx = Transaction::new_signed_with_payer(
             &[
                 instruction::mint_edition_from_master_edition_via_vault_proxy(
@@ -149,7 +149,7 @@ impl EditionMarker {
         context.banks_client.process_transaction(tx).await
     }
 
-    pub async fn create(&self, context: &mut ProgramTestContext) -> transport::Result<()> {
+    pub async fn create(&self, context: &mut ProgramTestContext) -> Result<(), BanksClientError> {
         create_mint(context, &self.mint, &context.payer.pubkey(), None).await?;
         create_token_account(
             context,
@@ -195,7 +195,7 @@ impl EditionMarker {
     pub async fn create_with_invalid_token_program(
         &self,
         context: &mut ProgramTestContext,
-    ) -> transport::Result<()> {
+    ) -> Result<(), BanksClientError> {
         let fake_token_program = Keypair::new();
         let program_id = mpl_token_metadata::id();
 
