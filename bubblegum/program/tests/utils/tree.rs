@@ -617,6 +617,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             token_metadata_program: mpl_token_metadata::id(),
             token_program: spl_token::id(),
             associated_token_program: spl_associated_token_account::id(),
+            log_wrapper: spl_noop::id(),
         };
 
         let data = mpl_bubblegum::instruction::DecompressV1 {

@@ -25,13 +25,9 @@ pub type Result<T> = result::Result<T, Error>;
 
 pub fn program_test() -> ProgramTest {
     let mut test = ProgramTest::new("mpl_bubblegum", mpl_bubblegum::id(), None);
+    test.add_program("spl_noop", spl_noop::id(), None);
     test.add_program(
-        "noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV",
-        spl_noop::id(),
-        None,
-    );
-    test.add_program(
-        "cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK",
+        "spl_account_compression",
         spl_account_compression::id(),
         None,
     );

@@ -7,11 +7,9 @@ use std::{path::Path, process::Command};
 // action for tests alone.
 fn main() {
     // The build script's working folder is always that of the containing package.
-    let spl_compression_so_path =
-        Path::new("../../target/deploy/cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK.so");
-    let spl_wrapper_so_path =
-        Path::new("../../target/deploy/noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV.so");
-    let mpl_tm_so_path = Path::new("../../target/deploy/mpl_token_metadata.so");
+    let spl_compression_so_path = Path::new("../../test-programs/spl_account_compression.so");
+    let spl_wrapper_so_path = Path::new("../../test-programs/spl_noop.so");
+    let mpl_tm_so_path = Path::new("../../test-programs/mpl_token_metadata.so");
 
     if !spl_compression_so_path.exists() || !spl_wrapper_so_path.exists() {
         Command::new("./download-compression-programs.sh")
