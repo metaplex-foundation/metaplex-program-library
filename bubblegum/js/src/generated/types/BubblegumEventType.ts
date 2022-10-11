@@ -10,18 +10,15 @@ import * as beet from '@metaplex-foundation/beet'
  * @category enums
  * @category generated
  */
-export enum AccountType {
+export enum BubblegumEventType {
   Uninitialized,
-  NewNFTEvent,
   LeafSchemaEvent,
-  NodeEvent,
-  NFTDecompressionEvent,
 }
 
 /**
  * @category userTypes
  * @category generated
  */
-export const accountTypeBeet = beet.fixedScalarEnum(
-  AccountType
-) as beet.FixedSizeBeet<AccountType, AccountType>
+export const bubblegumEventTypeBeet = beet.fixedScalarEnum(
+  BubblegumEventType
+) as beet.FixedSizeBeet<BubblegumEventType, BubblegumEventType>

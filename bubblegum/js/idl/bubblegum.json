@@ -1268,41 +1268,6 @@
   ],
   "types": [
     {
-      "name": "LeafSchemaEvent",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "accountType",
-            "type": {
-              "defined": "AccountType"
-            }
-          },
-          {
-            "name": "version",
-            "type": {
-              "defined": "Version"
-            }
-          },
-          {
-            "name": "schema",
-            "type": {
-              "defined": "LeafSchema"
-            }
-          },
-          {
-            "name": "leafHash",
-            "type": {
-              "array": [
-                "u8",
-                32
-              ]
-            }
-          }
-        ]
-      }
-    },
-    {
       "name": "Creator",
       "type": {
         "kind": "struct",
@@ -1461,97 +1426,6 @@
       }
     },
     {
-      "name": "NewNFTEvent",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "accountType",
-            "type": {
-              "defined": "AccountType"
-            }
-          },
-          {
-            "name": "version",
-            "type": {
-              "defined": "Version"
-            }
-          },
-          {
-            "name": "metadata",
-            "type": {
-              "defined": "MetadataArgs"
-            }
-          },
-          {
-            "name": "nonce",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "NodeEvent",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "accountType",
-            "type": {
-              "defined": "AccountType"
-            }
-          },
-          {
-            "name": "version",
-            "type": {
-              "defined": "Version"
-            }
-          },
-          {
-            "name": "node",
-            "type": {
-              "array": [
-                "u8",
-                32
-              ]
-            }
-          }
-        ]
-      }
-    },
-    {
-      "name": "NFTDecompressionEvent",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "accountType",
-            "type": {
-              "defined": "AccountType"
-            }
-          },
-          {
-            "name": "version",
-            "type": {
-              "defined": "Version"
-            }
-          },
-          {
-            "name": "id",
-            "type": "publicKey"
-          },
-          {
-            "name": "treeId",
-            "type": "publicKey"
-          },
-          {
-            "name": "nonce",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
       "name": "Version",
       "type": {
         "kind": "enum",
@@ -1661,7 +1535,7 @@
       }
     },
     {
-      "name": "AccountType",
+      "name": "BubblegumEventType",
       "type": {
         "kind": "enum",
         "variants": [
@@ -1669,16 +1543,7 @@
             "name": "Uninitialized"
           },
           {
-            "name": "NewNFTEvent"
-          },
-          {
             "name": "LeafSchemaEvent"
-          },
-          {
-            "name": "NodeEvent"
-          },
-          {
-            "name": "NFTDecompressionEvent"
           }
         ]
       }
