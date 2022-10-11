@@ -1,8 +1,9 @@
 use crate::state::BubblegumEventType;
 use anchor_lang::{prelude::*, solana_program::keccak};
+use borsh::{BorshDeserialize, BorshSerialize};
 use spl_account_compression::Node;
 
-#[derive(AnchorSerialize, AnchorDeserialize, PartialEq, Eq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct LeafSchemaEvent {
     pub event_type: BubblegumEventType,
     pub version: Version,
@@ -21,7 +22,7 @@ impl LeafSchemaEvent {
     }
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, PartialEq, Eq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub enum Version {
     V1,
 }
