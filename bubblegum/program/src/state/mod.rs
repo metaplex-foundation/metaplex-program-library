@@ -3,6 +3,7 @@ pub mod metaplex_adapter;
 pub mod metaplex_anchor;
 
 use anchor_lang::prelude::*;
+use borsh::{BorshDeserialize, BorshSerialize};
 use leaf_schema::{LeafSchema, Version};
 use metaplex_adapter::MetadataArgs;
 
@@ -74,7 +75,8 @@ pub struct NFTDecompressionEvent {
     pub nonce: u64,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, PartialEq, Eq, Debug, Clone)]
+#[derive(BorshDeserialize, BorshSerialize, PartialEq, Eq, Debug, Clone)]
+#[repr(u8)]
 pub enum AccountType {
     /// Marker for 0 data.
     Uninitialized,
