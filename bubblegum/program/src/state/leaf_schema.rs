@@ -1,13 +1,24 @@
-use crate::state::AccountType;
+use crate::state::BubblegumEventType;
 use anchor_lang::{prelude::*, solana_program::keccak};
 use spl_account_compression::Node;
 
 #[derive(AnchorSerialize, AnchorDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct LeafSchemaEvent {
-    pub account_type: AccountType,
+    pub event_type: BubblegumEventType,
     pub version: Version,
     pub schema: LeafSchema,
     pub leaf_hash: [u8; 32],
+}
+
+impl LeafSchemaEvent {
+    pub fn new(version: Version, schema: LeafSchema, leaf_hash: [u8; 32]) -> Self {
+        Self {
+            event_type: BubblegumEventType::LeafSchemaEvent,
+            version,
+            schema,
+            leaf_hash,
+        }
+    }
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, PartialEq, Eq, Debug, Clone)]
@@ -98,12 +109,7 @@ impl LeafSchema {
     }
 
     pub fn to_event(&self) -> LeafSchemaEvent {
-        LeafSchemaEvent {
-            account_type: AccountType::LeafSchemaEvent,
-            version: self.version(),
-            schema: self.clone(),
-            leaf_hash: self.to_node(),
-        }
+        LeafSchemaEvent::new(self.version(), self.clone(), self.to_node())
     }
 
     pub fn to_node(&self) -> Node {

@@ -4,8 +4,7 @@ pub mod metaplex_anchor;
 
 use anchor_lang::prelude::*;
 use borsh::{BorshDeserialize, BorshSerialize};
-use leaf_schema::{LeafSchema, Version};
-use metaplex_adapter::MetadataArgs;
+use leaf_schema::LeafSchema;
 
 pub const TREE_AUTHORITY_SIZE: usize = 88 + 8;
 pub const VOUCHER_SIZE: usize = 8 + 1 + 32 + 32 + 32 + 8 + 32 + 32 + 4 + 32;
@@ -50,42 +49,11 @@ impl Voucher {
     }
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, PartialEq, Eq, Debug, Clone)]
-pub struct NewNFTEvent {
-    pub account_type: AccountType,
-    pub version: Version,
-    pub metadata: MetadataArgs,
-    pub nonce: u64,
-}
-
-#[derive(AnchorSerialize, AnchorDeserialize, PartialEq, Eq, Debug, Clone)]
-pub struct NodeEvent {
-    pub account_type: AccountType,
-    pub version: Version,
-    // TODO: Figure out why we cannot generate JS API if this is `spl_account_compression::Node`.
-    pub node: [u8; 32],
-}
-
-#[derive(AnchorSerialize, AnchorDeserialize, PartialEq, Eq, Debug, Clone)]
-pub struct NFTDecompressionEvent {
-    pub account_type: AccountType,
-    pub version: Version,
-    pub id: Pubkey,
-    pub tree_id: Pubkey,
-    pub nonce: u64,
-}
-
 #[derive(BorshDeserialize, BorshSerialize, PartialEq, Eq, Debug, Clone)]
 #[repr(u8)]
-pub enum AccountType {
+pub enum BubblegumEventType {
     /// Marker for 0 data.
     Uninitialized,
-    // New NFT event.
-    NewNFTEvent,
     /// Leaf schema event.
     LeafSchemaEvent,
-    /// Node event.
-    NodeEvent,
-    /// NFT decompression event.
-    NFTDecompressionEvent,
 }
