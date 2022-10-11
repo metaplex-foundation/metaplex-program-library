@@ -6,6 +6,7 @@ use chrono::NaiveDateTime;
 use console::style;
 use mpl_candy_guard::state::{CandyGuard, CandyGuardData, GuardSet, DATA_OFFSET};
 use mpl_candy_machine_core::constants::EMPTY_STR;
+use solana_program::native_token::LAMPORTS_PER_SOL;
 
 use crate::{cache::load_cache, common::*, show::print_with_style, utils::*};
 
@@ -76,9 +77,14 @@ pub fn process_guard_show(args: GuardShowArgs) -> Result<()> {
 
     // groups
     if let Some(groups) = candy_guard_data.groups {
+        println!("     {}", style(":").dim());
         print_with_style("    ", "groups", EMPTY_STR.to_string());
 
         for (index, group) in groups.iter().enumerate() {
+            if index > 0 {
+                // padding between groups
+                println!("          {}", style(":").dim());
+            }
             print_with_style("         ", "label", &group.label);
             print_guard_set(
                 &group.guards,
@@ -103,7 +109,11 @@ fn print_guard_set(guard_set: &GuardSet, padding: String) -> Result<()> {
         print_with_style(
             &format!("{}:   ", padding),
             "lamports",
-            bot_tax.lamports.to_string(),
+            format!(
+                "{} (◎ {})",
+                bot_tax.lamports,
+                bot_tax.lamports as f64 / LAMPORTS_PER_SOL as f64
+            ),
         );
         print_with_style(
             &format!("{}:   ", padding),
@@ -120,7 +130,11 @@ fn print_guard_set(guard_set: &GuardSet, padding: String) -> Result<()> {
         print_with_style(
             &format!("{}:   ", padding),
             "lamports",
-            sol_payment.lamports.to_string(),
+            format!(
+                "{} (◎ {})",
+                sol_payment.lamports,
+                sol_payment.lamports as f64 / LAMPORTS_PER_SOL as f64
+            ),
         );
         print_with_style(
             &format!("{}:   ", padding),
@@ -217,7 +231,7 @@ fn print_guard_set(guard_set: &GuardSet, padding: String) -> Result<()> {
             date.format("%a %B %e %Y %H:%M:%S UTC").to_string(),
         );
     } else {
-        print_with_style(&format!("{}:   ", padding), "end date", "none".to_string());
+        print_with_style(&padding, "end date", "none".to_string());
     }
 
     // allow list
@@ -307,7 +321,7 @@ fn print_guard_set(guard_set: &GuardSet, padding: String) -> Result<()> {
             nft_burn.required_collection.to_string(),
         );
     } else {
-        print_with_style(&format!("{}:   ", padding), "nft burn", "none".to_string());
+        print_with_style(&padding, "nft burn", "none".to_string());
     }
 
     // token burn
