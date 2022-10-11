@@ -62,6 +62,9 @@ pub enum TrifleError {
 
     #[error("Cannot burn Print Edition")]
     CannotBurnPrintEdition,
+
+    #[error("Constraint Key Not Found")]
+    ConstraintKeyNotFound,
 }
 
 impl From<TrifleError> for ProgramError {

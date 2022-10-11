@@ -493,82 +493,84 @@ fn transfer_out(
 ) -> ProgramResult {
     let account_info_iter = &mut accounts.iter();
 
-    let trifle_account = next_account_info(account_info_iter)?;
+    let trifle_info = next_account_info(account_info_iter)?;
     let constraint_model_info = next_account_info(account_info_iter)?;
-    let escrow_account = next_account_info(account_info_iter)?;
-    let payer = next_account_info(account_info_iter)?;
-    let trifle_authority = next_account_info(account_info_iter)?;
-    let attribute_mint = next_account_info(account_info_iter)?;
-    let attribute_src_token_account = next_account_info(account_info_iter)?;
-    let attribute_dst_token_account = next_account_info(account_info_iter)?;
-    let attribute_metadata = next_account_info(account_info_iter)?;
-    let escrow_mint = next_account_info(account_info_iter)?;
-    let escrow_token_account = next_account_info(account_info_iter)?;
-    let system_program = next_account_info(account_info_iter)?;
-    let _ata_program = next_account_info(account_info_iter)?;
-    let _spl_token_program = next_account_info(account_info_iter)?;
+    let escrow_info = next_account_info(account_info_iter)?;
+    let escrow_token_info = next_account_info(account_info_iter)?;
+    let escrow_mint_info = next_account_info(account_info_iter)?;
+    let escrow_edition_info = next_account_info(account_info_iter)?;
+    let payer_info = next_account_info(account_info_iter)?;
+    let trifle_authority_info = next_account_info(account_info_iter)?;
+    let attribute_mint_info = next_account_info(account_info_iter)?;
+    let attribute_src_token_info = next_account_info(account_info_iter)?;
+    let attribute_dst_token_info = next_account_info(account_info_iter)?;
+    let attribute_metadata_info = next_account_info(account_info_iter)?;
+    let system_program_info = next_account_info(account_info_iter)?;
+    let _ata_program_info = next_account_info(account_info_iter)?;
+    let _spl_token_program_info = next_account_info(account_info_iter)?;
     let rent_info = next_account_info(account_info_iter)?;
-    let token_metadata_program = next_account_info(account_info_iter)?;
+    let token_metadata_program_info = next_account_info(account_info_iter)?;
 
-    assert_owned_by(attribute_metadata, &mpl_token_metadata::id())?;
-    let _attribute_metadata: Metadata = Metadata::from_account_info(attribute_metadata)?;
+    assert_owned_by(attribute_metadata_info, &mpl_token_metadata::id())?;
+    let _attribute_metadata: Metadata = Metadata::from_account_info(attribute_metadata_info)?;
 
     let mut escrow_seeds = vec![
         PREFIX.as_bytes(),
-        token_metadata_program.key.as_ref(),
-        escrow_mint.key.as_ref(),
+        token_metadata_program_info.key.as_ref(),
+        escrow_mint_info.key.as_ref(),
     ];
 
-    let escrow_auth = EscrowAuthority::Creator(*trifle_account.key);
+    let escrow_auth = EscrowAuthority::Creator(*trifle_info.key);
     for seed in escrow_auth.to_seeds() {
         escrow_seeds.push(seed);
     }
 
     escrow_seeds.push(ESCROW_PREFIX.as_bytes());
 
-    assert_derivation(token_metadata_program.key, escrow_account, &escrow_seeds)?;
+    msg!("asserting escrow info derivation");
+    assert_derivation(token_metadata_program_info.key, escrow_info, &escrow_seeds)?;
 
     let trifle_seeds = &[
         TRIFLE_SEED.as_bytes(),
-        escrow_mint.key.as_ref(),
-        trifle_authority.key.as_ref(),
+        escrow_mint_info.key.as_ref(),
+        trifle_authority_info.key.as_ref(),
         constraint_model_info.key.as_ref(),
     ];
 
-    let trifle_bump_seed = assert_derivation(program_id, trifle_account, trifle_seeds)?;
+    msg!("asserting trifle info derivation");
+    let trifle_bump_seed = assert_derivation(program_id, trifle_info, trifle_seeds)?;
 
     // Derive the seeds for PDA signing.
-    let trifle_authority_seeds = &[
+    let trifle_signer_seeds = &[
         TRIFLE_SEED.as_bytes(),
-        escrow_mint.key.as_ref(),
-        trifle_authority.key.as_ref(),
+        escrow_mint_info.key.as_ref(),
+        trifle_authority_info.key.as_ref(),
         constraint_model_info.key.as_ref(),
         &[trifle_bump_seed],
     ];
 
-    assert_signer(payer)?;
-    //assert_signer(trifle_authority)?;
+    assert_signer(payer_info)?;
+    // assert_signer(trifle_authority_info)?;
 
-    // Deserialize the token accounts and perform checks.
-
-    let escrow_token_account_data = Account::unpack(&escrow_token_account.data.borrow())?;
+    let escrow_token_account_data = Account::unpack(&escrow_token_info.data.borrow())?;
     // Only the parent NFT holder can transfer out
-    assert!(escrow_token_account_data.owner == *payer.key);
+    assert!(escrow_token_account_data.owner == *payer_info.key);
 
     // TODO: Check the constraints
 
+    msg!("preparing to transfer.");
     // Transfer the token out of the escrow
     let transfer_ix = mpl_token_metadata::escrow::transfer_out_of_escrow(
-        *token_metadata_program.key,
-        *escrow_account.key,
-        *payer.key,
-        *attribute_mint.key,
-        *attribute_src_token_account.key,
-        *attribute_dst_token_account.key,
-        *attribute_metadata.key,
-        *escrow_mint.key,
-        *escrow_token_account.key,
-        Some(*trifle_account.key),
+        *token_metadata_program_info.key,
+        *escrow_info.key,
+        *payer_info.key,
+        *attribute_mint_info.key,
+        *attribute_src_token_info.key,
+        *attribute_dst_token_info.key,
+        *attribute_metadata_info.key,
+        *escrow_mint_info.key,
+        *escrow_token_info.key,
+        Some(*trifle_info.key),
         args.amount,
     );
 
@@ -576,46 +578,74 @@ fn transfer_out(
     invoke_signed(
         &transfer_ix,
         &[
-            escrow_account.clone(),
-            payer.clone(),
-            attribute_mint.clone(),
-            attribute_src_token_account.clone(),
-            attribute_dst_token_account.clone(),
-            attribute_metadata.clone(),
-            escrow_mint.clone(),
-            escrow_token_account.clone(),
-            trifle_account.clone(),
+            escrow_info.clone(),
+            payer_info.clone(),
+            attribute_mint_info.clone(),
+            attribute_src_token_info.clone(),
+            attribute_dst_token_info.clone(),
+            attribute_metadata_info.clone(),
+            escrow_mint_info.clone(),
+            escrow_token_info.clone(),
+            trifle_info.clone(),
             rent_info.clone(),
         ],
-        &[trifle_authority_seeds],
+        &[trifle_signer_seeds],
     )?;
     msg!("Transferred the token out of the escrow");
 
     // Update the Trifle account
-    let mut trifle = Trifle::from_account_info(trifle_account)?;
-    let index = trifle
-        .tokens
-        .get(&args.slot)
-        .unwrap()
-        .iter()
-        .position(|t| t.mint == *attribute_mint.key)
-        .unwrap();
-
-    trifle
-        .tokens
-        .get_mut(&args.slot)
-        .unwrap()
-        .swap_remove(index);
+    let mut trifle = Trifle::from_account_info(trifle_info)?;
+    trifle.try_remove(args.slot, *attribute_mint_info.key, args.amount)?;
 
     let serialized_data = trifle.try_to_vec().unwrap();
 
-    resize_or_reallocate_account_raw(trifle_account, payer, system_program, serialized_data.len())?;
+    resize_or_reallocate_account_raw(
+        trifle_info,
+        payer_info,
+        system_program_info,
+        serialized_data.len(),
+    )?;
 
     sol_memcpy(
-        &mut **trifle_account.try_borrow_mut_data().unwrap(),
+        &mut trifle_info.try_borrow_mut_data().unwrap(),
         &serialized_data,
         serialized_data.len(),
     );
+
+    if trifle.tokens.is_empty() {
+        msg!("trifle tokens empty");
+        let constraint_model =
+            EscrowConstraintModel::try_from_slice(&constraint_model_info.data.borrow())
+                .map_err(|_| TrifleError::InvalidEscrowConstraintModel)?;
+
+        if constraint_model.fuse_options.freeze_parent() {
+            msg!("freeze parent is set, preparing to thaw");
+            let escrow_token = Account::unpack(&escrow_token_info.data.borrow())?;
+            if escrow_token.is_frozen() {
+                msg!("Last token transferred out of escrow. Unfreezing the escrow token account.");
+
+                let thaw_ix = mpl_token_metadata::instruction::thaw_delegated_account(
+                    mpl_token_metadata::id(),
+                    *trifle_info.key,
+                    *escrow_token_info.key,
+                    *escrow_edition_info.key,
+                    *escrow_mint_info.key,
+                );
+
+                invoke_signed(
+                    &thaw_ix,
+                    &[
+                        trifle_info.to_owned(),
+                        escrow_token_info.to_owned(),
+                        escrow_edition_info.to_owned(),
+                        escrow_mint_info.to_owned(),
+                        _spl_token_program_info.to_owned(),
+                    ],
+                    &[trifle_signer_seeds],
+                )?;
+            }
+        }
+    }
 
     Ok(())
 }

@@ -137,7 +137,7 @@ mod trifle {
             try_from_slice_unchecked(&constraint_account.data).expect("should deserialize");
         println!("constraint_account: {:#?}", constraint_account_data);
 
-        let metadata_attribute_token_account =
+        let payer_attribute_token_account =
             spl_associated_token_account::get_associated_token_address(
                 &context.payer.pubkey(),
                 &attribute_metadata.mint.pubkey(),
@@ -148,14 +148,15 @@ mod trifle {
             trifle_addr,
             escrow_constraint_model_addr,
             escrow_addr,
+            metadata.token.pubkey(),
+            metadata.mint.pubkey(),
+            None,
             context.payer.pubkey(),
             context.payer.pubkey(),
             attribute_metadata.mint.pubkey(),
             trifle_attribute_token_account,
-            metadata_attribute_token_account,
+            payer_attribute_token_account,
             attribute_metadata.pubkey,
-            metadata.mint.pubkey(),
-            metadata.token.pubkey(),
             "test".to_string(),
             1,
         );
@@ -270,7 +271,7 @@ mod trifle {
         let collection = collection.expect("should have a collection");
         let escrow_constraint_model_addr = create_escrow_constraint_model(
             &mut context,
-            FuseOptions::new().with_freeze_parent(true),
+            FuseOptions::new().with_track(true).with_freeze_parent(true),
             collection,
             vec![metadata.mint.pubkey()],
         )
@@ -349,19 +350,65 @@ mod trifle {
             .await
             .expect("transfer in should succeed");
 
-        // we will try to send the frozen base NFT to this address,
-        // which should fail
-        let test_receiver_account = Pubkey::new_unique();
+        let escrow_token_info = context
+            .banks_client
+            .get_account(metadata.token.pubkey())
+            .await
+            .expect("query should succeed")
+            .expect("account should be present");
 
-        let _transfer_ix = spl_token::instruction::transfer(
-            &spl_token::id(),
-            &metadata.token.pubkey(),
-            &test_receiver_account,
-            &context.payer.pubkey(),
-            &[&context.payer.pubkey()],
+        let escrow_token = spl_token::state::Account::unpack(&escrow_token_info.data).unwrap();
+        assert!(escrow_token.is_frozen(), "escrow token should be frozen");
+
+        let payer_attribute_token_account =
+            spl_associated_token_account::get_associated_token_address(
+                &context.payer.pubkey(),
+                &attribute_metadata.mint.pubkey(),
+            );
+
+        let transfer_out_ix = transfer_out(
+            mpl_trifle::id(),
+            trifle,
+            escrow_constraint_model_addr,
+            escrow,
+            metadata.token.pubkey(),
+            metadata.mint.pubkey(),
+            Some(master_edition.pubkey),
+            context.payer.pubkey(),
+            context.payer.pubkey(),
+            attribute_metadata.mint.pubkey(),
+            trifle_attribute_token_account,
+            payer_attribute_token_account,
+            attribute_metadata.pubkey,
+            "test".to_string(),
             1,
-        )
-        .expect("should create transfer instruction");
+        );
+
+        let transfer_out_tx = Transaction::new_signed_with_payer(
+            &[transfer_out_ix],
+            Some(&context.payer.pubkey()),
+            &[&context.payer],
+            context.last_blockhash,
+        );
+
+        context
+            .banks_client
+            .process_transaction(transfer_out_tx)
+            .await
+            .expect("transfer out should succeed");
+
+        let escrow_token_info = context
+            .banks_client
+            .get_account(metadata.token.pubkey())
+            .await
+            .expect("query should succeed")
+            .expect("account should be present");
+
+        let escrow_token = spl_token::state::Account::unpack(&escrow_token_info.data).unwrap();
+        assert!(
+            !escrow_token.is_frozen(),
+            "escrow token should not be frozen"
+        );
     }
 }
 

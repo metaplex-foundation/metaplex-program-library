@@ -86,6 +86,41 @@ impl Trifle {
 
         Ok(())
     }
+
+    pub fn try_remove(
+        &mut self,
+        constraint_key: String,
+        mint: Pubkey,
+        amount: u64,
+    ) -> Result<(), TrifleError> {
+        // find the constraint key, error if it doesn't exist
+        let mut token_amounts = self
+            .tokens
+            .remove(&constraint_key)
+            .ok_or(TrifleError::ConstraintKeyNotFound)?;
+
+        let index = token_amounts
+            .iter()
+            .position(|t| t.mint == mint)
+            .ok_or(TrifleError::FailedToFindTokenAmount)?;
+
+        let mut token_amount = token_amounts.swap_remove(index);
+
+        // subtract the amount from the token amount
+        token_amount.amount = token_amount
+            .amount
+            .checked_sub(amount)
+            .ok_or(TrifleError::NumericalOverflow)?;
+
+        if token_amount.amount > 0 {
+            token_amounts.push(token_amount);
+        }
+        if !token_amounts.is_empty() {
+            self.tokens.insert(constraint_key, token_amounts);
+        }
+
+        Ok(())
+    }
 }
 
 impl SolanaAccount for Trifle {
