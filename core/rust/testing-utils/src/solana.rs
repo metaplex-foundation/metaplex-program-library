@@ -1,10 +1,9 @@
-use solana_program_test::ProgramTestContext;
+use solana_program_test::{BanksClientError, ProgramTestContext};
 use solana_sdk::pubkey::Pubkey;
 use solana_sdk::signature::Keypair;
 use solana_sdk::signer::Signer;
 use solana_sdk::system_instruction;
 use solana_sdk::transaction::Transaction;
-use solana_sdk::transport::TransportError;
 use solana_sdk::{account::Account, program_pack::Pack};
 use spl_token::state::Mint;
 /// Perform native lamports transfer.
@@ -13,7 +12,7 @@ pub async fn transfer_lamports(
     wallet: &Keypair,
     to: &Pubkey,
     amount: u64,
-) -> Result<(), TransportError> {
+) -> Result<(), BanksClientError> {
     let tx = Transaction::new_signed_with_payer(
         &[system_instruction::transfer(&wallet.pubkey(), to, amount)],
         Some(&wallet.pubkey()),
@@ -29,7 +28,7 @@ pub async fn transfer_lamports(
 pub async fn get_token_account(
     client: &mut ProgramTestContext,
     token_account: &Pubkey,
-) -> Result<spl_token::state::Account, TransportError> {
+) -> Result<spl_token::state::Account, BanksClientError> {
     let account = client.banks_client.get_account(*token_account).await?;
     Ok(spl_token::state::Account::unpack(&account.unwrap().data).unwrap())
 }
@@ -38,7 +37,7 @@ pub async fn airdrop(
     context: &mut ProgramTestContext,
     receiver: &Pubkey,
     amount: u64,
-) -> Result<(), TransportError> {
+) -> Result<(), BanksClientError> {
     let tx = Transaction::new_signed_with_payer(
         &[system_instruction::transfer(
             &context.payer.pubkey(),
@@ -58,15 +57,16 @@ pub async fn create_associated_token_account(
     context: &mut ProgramTestContext,
     wallet: &Keypair,
     token_mint: &Pubkey,
-) -> Result<Pubkey, TransportError> {
+) -> Result<Pubkey, BanksClientError> {
     let recent_blockhash = context.last_blockhash;
 
     let tx = Transaction::new_signed_with_payer(
         &[
-            spl_associated_token_account::create_associated_token_account(
+            spl_associated_token_account::instruction::create_associated_token_account(
                 &context.payer.pubkey(),
                 &wallet.pubkey(),
                 token_mint,
+                &spl_token::id(),
             ),
         ],
         Some(&context.payer.pubkey()),
@@ -108,7 +108,7 @@ pub async fn mint_tokens(
     amount: u64,
     owner: &Pubkey,
     additional_signer: Option<&Keypair>,
-) -> Result<(), TransportError> {
+) -> Result<(), BanksClientError> {
     let mut signing_keypairs = vec![&context.payer];
     if let Some(signer) = additional_signer {
         signing_keypairs.push(signer);
@@ -132,7 +132,7 @@ pub async fn create_token_account(
     account: &Keypair,
     mint: &Pubkey,
     manager: &Pubkey,
-) -> Result<(), TransportError> {
+) -> Result<(), BanksClientError> {
     let rent = context.banks_client.get_rent().await.unwrap();
 
     let tx = Transaction::new_signed_with_payer(
@@ -165,7 +165,7 @@ pub async fn create_mint(
     mint: &Keypair,
     manager: &Pubkey,
     freeze_authority: Option<&Pubkey>,
-) -> Result<(), TransportError> {
+) -> Result<(), BanksClientError> {
     let rent = context.banks_client.get_rent().await.unwrap();
 
     let tx = Transaction::new_signed_with_payer(
@@ -199,7 +199,7 @@ pub async fn transfer(
     mint: &Pubkey,
     from: &Keypair,
     to: &Keypair,
-) -> Result<(), TransportError> {
+) -> Result<(), BanksClientError> {
     let to_token_account = create_associated_token_account(context, to, mint).await?;
 
     let from_token_account =
