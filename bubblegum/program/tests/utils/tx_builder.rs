@@ -109,7 +109,7 @@ where
     }
 
     pub fn set_additional_account_metas(&mut self, metas: &[AccountMeta]) -> &mut Self {
-        self.additional_accounts = metas.iter().cloned().collect();
+        self.additional_accounts = metas.to_vec();
         self
     }
 
