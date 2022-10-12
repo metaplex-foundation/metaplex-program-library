@@ -191,7 +191,6 @@ fn get_cm_creator_accounts(
         std::process::exit(1);
     }
 
-    // TODO: fix account offset
     let config = RpcProgramAccountsConfig {
         filters: Some(vec![RpcFilterType::Memcmp(Memcmp {
             offset: 1 + // key
