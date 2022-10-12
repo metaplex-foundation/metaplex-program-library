@@ -1963,7 +1963,7 @@ dependencies = [
 
 [[package]]
 name = "mpl-candy-machine"
-version = "4.4.1"
+version = "4.5.0"
 dependencies = [
  "anchor-client",
  "anchor-lang",
