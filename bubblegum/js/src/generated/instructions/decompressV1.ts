@@ -47,6 +47,7 @@ export const decompressV1Struct = new beet.FixableBeetArgsStruct<
  * @property [] sysvarRent
  * @property [] tokenMetadataProgram
  * @property [] associatedTokenProgram
+ * @property [] logWrapper
  * @category Instructions
  * @category DecompressV1
  * @category generated
@@ -64,6 +65,7 @@ export type DecompressV1InstructionAccounts = {
   tokenMetadataProgram: web3.PublicKey
   tokenProgram?: web3.PublicKey
   associatedTokenProgram: web3.PublicKey
+  logWrapper: web3.PublicKey
 }
 
 export const decompressV1InstructionDiscriminator = [
@@ -147,6 +149,11 @@ export function createDecompressV1Instruction(
     },
     {
       pubkey: accounts.associatedTokenProgram,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.logWrapper,
       isWritable: false,
       isSigner: false,
     },

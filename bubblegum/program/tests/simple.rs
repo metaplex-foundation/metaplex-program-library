@@ -95,7 +95,7 @@ async fn test_burn_passes() {
     let (_, tree, leaves) = context_tree_and_leaves().await.unwrap();
     let leaf = leaves.last().unwrap();
 
-    tree.burn(&leaf).await.unwrap();
+    tree.burn(leaf).await.unwrap();
 }
 
 #[tokio::test]

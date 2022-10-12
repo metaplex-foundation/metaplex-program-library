@@ -1,5 +1,5 @@
 {
-  "version": "0.1.2",
+  "version": "0.1.3",
   "name": "bubblegum",
   "instructions": [
     {
@@ -350,6 +350,15 @@
           "isSigner": true
         },
         {
+          "name": "collectionAuthorityRecordPda",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "If there is no collecton authority record PDA then",
+            "this must be the Bubblegum program address."
+          ]
+        },
+        {
           "name": "collectionMint",
           "isMut": false,
           "isSigner": false
@@ -472,6 +481,15 @@
           "isSigner": true
         },
         {
+          "name": "collectionAuthorityRecordPda",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "If there is no collecton authority record PDA then",
+            "this must be the Bubblegum program address."
+          ]
+        },
+        {
           "name": "collectionMint",
           "isMut": false,
           "isSigner": false
@@ -592,6 +610,15 @@
           "name": "collectionAuthority",
           "isMut": false,
           "isSigner": true
+        },
+        {
+          "name": "collectionAuthorityRecordPda",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "If there is no collecton authority record PDA then",
+            "this must be the Bubblegum program address."
+          ]
         },
         {
           "name": "collectionMint",
@@ -1098,6 +1125,11 @@
           "name": "associatedTokenProgram",
           "isMut": false,
           "isSigner": false
+        },
+        {
+          "name": "logWrapper",
+          "isMut": false,
+          "isSigner": false
         }
       ],
       "args": [
@@ -1503,6 +1535,20 @@
       }
     },
     {
+      "name": "BubblegumEventType",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Uninitialized"
+          },
+          {
+            "name": "LeafSchemaEvent"
+          }
+        ]
+      }
+    },
+    {
       "name": "InstructionName",
       "type": {
         "kind": "enum",
@@ -1554,88 +1600,6 @@
           }
         ]
       }
-    }
-  ],
-  "events": [
-    {
-      "name": "LeafSchemaEvent",
-      "fields": [
-        {
-          "name": "version",
-          "type": {
-            "defined": "Version"
-          },
-          "index": false
-        },
-        {
-          "name": "schema",
-          "type": {
-            "defined": "LeafSchema"
-          },
-          "index": false
-        },
-        {
-          "name": "leafHash",
-          "type": {
-            "array": [
-              "u8",
-              32
-            ]
-          },
-          "index": false
-        }
-      ]
-    },
-    {
-      "name": "NewNFTEvent",
-      "fields": [
-        {
-          "name": "version",
-          "type": {
-            "defined": "Version"
-          },
-          "index": false
-        },
-        {
-          "name": "metadata",
-          "type": {
-            "defined": "MetadataArgs"
-          },
-          "index": false
-        },
-        {
-          "name": "nonce",
-          "type": "u64",
-          "index": false
-        }
-      ]
-    },
-    {
-      "name": "NFTDecompressionEvent",
-      "fields": [
-        {
-          "name": "version",
-          "type": {
-            "defined": "Version"
-          },
-          "index": false
-        },
-        {
-          "name": "id",
-          "type": "publicKey",
-          "index": false
-        },
-        {
-          "name": "treeId",
-          "type": "publicKey",
-          "index": false
-        },
-        {
-          "name": "nonce",
-          "type": "u64",
-          "index": false
-        }
-      ]
     }
   ],
   "errors": [

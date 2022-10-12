@@ -3,8 +3,8 @@ pub mod metaplex_adapter;
 pub mod metaplex_anchor;
 
 use anchor_lang::prelude::*;
-use leaf_schema::{LeafSchema, Version};
-use metaplex_adapter::MetadataArgs;
+use borsh::{BorshDeserialize, BorshSerialize};
+use leaf_schema::LeafSchema;
 
 pub const TREE_AUTHORITY_SIZE: usize = 88 + 8;
 pub const VOUCHER_SIZE: usize = 8 + 1 + 32 + 32 + 32 + 8 + 32 + 32 + 4 + 32;
@@ -33,7 +33,6 @@ impl TreeConfig {
 }
 
 #[account]
-#[derive(Copy)]
 pub struct Voucher {
     pub leaf_schema: LeafSchema,
     pub index: u32,
@@ -50,17 +49,11 @@ impl Voucher {
     }
 }
 
-#[event]
-pub struct NewNFTEvent {
-    pub version: Version,
-    pub metadata: MetadataArgs,
-    pub nonce: u64,
-}
-
-#[event]
-pub struct NFTDecompressionEvent {
-    pub version: Version,
-    pub id: Pubkey,
-    pub tree_id: Pubkey,
-    pub nonce: u64,
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+#[repr(u8)]
+pub enum BubblegumEventType {
+    /// Marker for 0 data.
+    Uninitialized,
+    /// Leaf schema event.
+    LeafSchemaEvent,
 }
