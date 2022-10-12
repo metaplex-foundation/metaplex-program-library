@@ -16,7 +16,11 @@ pub struct GuardUpdateArgs {
 }
 
 pub fn process_guard_update(args: GuardUpdateArgs) -> Result<()> {
-    println!("[1/2] {}Loading candy guard", LOOKING_GLASS_EMOJI);
+    println!(
+        "{} {}Loading candy guard",
+        style("[1/2]").bold().dim(),
+        LOOKING_GLASS_EMOJI
+    );
 
     // the candy guard id specified takes precedence over the one from the cache
 
@@ -40,8 +44,6 @@ pub fn process_guard_update(args: GuardUpdateArgs) -> Result<()> {
         }
     };
 
-    println!("{} {}", style("Candy guard ID:").bold(), candy_guard_id);
-
     let sugar_config = sugar_setup(args.keypair, args.rpc_url)?;
     let client = setup_client(&sugar_config)?;
     let program = client.program(mpl_candy_guard::ID);
@@ -52,6 +54,8 @@ pub fn process_guard_update(args: GuardUpdateArgs) -> Result<()> {
     // make sure the account exists on-chain
     let _account = program.rpc().get_account(&candy_guard_id)?;
     pb.finish_with_message("Done");
+
+    println!("{} {}", style("Candy guard ID:").bold(), candy_guard_id);
 
     println!(
         "\n{} {}Updating configuration",
@@ -65,6 +69,9 @@ pub fn process_guard_update(args: GuardUpdateArgs) -> Result<()> {
     } else {
         return Err(anyhow!("Missing guards configuration."));
     };
+
+    let pb = spinner_with_style();
+    pb.set_message("Connecting...");
 
     let tx = program
         .request()
