@@ -4,8 +4,8 @@ use anchor_client::solana_sdk::pubkey::Pubkey;
 use anyhow::Result;
 use console::style;
 use mpl_candy_guard::{
-    accounts::{Initialize as InitializeAccount, Wrap as WrapAccount},
-    instruction::{Initialize, Wrap},
+    accounts::{Initialize as InitializeAccount, Update as UpdateAccount, Wrap as WrapAccount},
+    instruction::{Initialize, Update, Wrap},
 };
 use mpl_candy_machine_core::constants::EMPTY_STR;
 
@@ -118,11 +118,33 @@ pub fn process_guard_add(args: GuardAddArgs) -> Result<()> {
                 return Err(error);
             }
         };
+
+        let pb = spinner_with_style();
+        pb.set_message("Connecting...");
+
         // validates that the account exists
         let _candy_guard = program.rpc().get_account(&candy_guard_id)?;
 
-        // TODO: update the configuration to make sure it is up to date
-        // with the config file
+        let data = if let Some(guards) = &config_data.guards {
+            guards.to_guard_format()?
+        } else {
+            return Err(anyhow!("Missing guards configuration."));
+        };
+
+        // synchronizes the guards config with the on-chain account
+        let tx = program
+            .request()
+            .accounts(UpdateAccount {
+                candy_guard: candy_guard_id,
+                authority: payer.pubkey(),
+                payer: payer.pubkey(),
+                system_program: system_program::ID,
+            })
+            .args(Update { data });
+
+        tx.send()?;
+
+        pb.finish_with_message("Done");
 
         candy_guard_id
     };
