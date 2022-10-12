@@ -11,7 +11,7 @@ use mpl_testing_utils::{
 use solana_program_test::*;
 use solana_sdk::{
     instruction::InstructionError, signature::Keypair, signer::Signer,
-    transaction::TransactionError, transport::TransportError,
+    transaction::TransactionError,
 };
 
 use common::*;
@@ -179,7 +179,7 @@ async fn init_native_success_reinitialize_fail() {
     .await
     .unwrap_err();
     match hacked_auction_house {
-        TransportError::TransactionError(TransactionError::InstructionError(
+        BanksClientError::TransactionError(TransactionError::InstructionError(
             0,
             InstructionError::Custom(0),
         )) => (),
