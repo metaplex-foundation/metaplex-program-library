@@ -21,7 +21,7 @@ solana-program-test = "1.10"
 solana-program = "1.10"
 solana-sdk = "1.10" 
 spl-token = { version = "3.3",  features = ["no-entrypoint"] }
-spl-associated-token-account = { version = "1.0.5",  features = ["no-entrypoint"] }
+spl-associated-token-account = { version = "~1.0.5",  features = ["no-entrypoint"] }
 mpl-token-metadata = { version="1.4", features = [ "no-entrypoint" ] }
 mpl-token-vault = { version = "0.2", features = [ "no-entrypoint" ] }
 rand = "0.8.5"
