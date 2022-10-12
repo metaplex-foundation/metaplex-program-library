@@ -29,13 +29,13 @@ pub struct SolanaConfig {
 #[serde(rename_all = "camelCase")]
 pub struct ConfigData {
     /// Number of assets available
-    pub size: u64,
+    pub number: u64,
 
     /// Symbol for the asset
     pub symbol: String,
 
     /// Secondary sales royalty basis points (0-10000)
-    pub royalties: u16,
+    pub seller_fee_basis_points: u16,
 
     /// Indicates if the asset is mutable or not (default yes)
     pub is_mutable: bool,
@@ -46,21 +46,8 @@ pub struct ConfigData {
     /// List of creators
     pub creators: Vec<Creator>,
 
-    /// Hidden setttings
-    pub hidden_settings: Option<HiddenSettings>,
-
-    /// Upload method configuration
-    pub upload_config: UploadConfig,
-
-    /// Guards configuration
-    pub guards: Option<CandyGuardData>,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone, Default)]
-#[serde(rename_all = "camelCase")]
-pub struct UploadConfig {
     /// Upload method to use
-    pub method: UploadMethod,
+    pub upload_method: UploadMethod,
 
     // AWS specific configuration
     pub aws_config: Option<AwsConfig>,
@@ -75,6 +62,12 @@ pub struct UploadConfig {
 
     // Pinata specific configuration
     pub pinata_config: Option<PinataConfig>,
+
+    /// Hidden setttings
+    pub hidden_settings: Option<HiddenSettings>,
+
+    /// Guards configuration
+    pub guards: Option<CandyGuardData>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

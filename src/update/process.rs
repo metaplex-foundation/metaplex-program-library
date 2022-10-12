@@ -136,13 +136,13 @@ fn create_candy_machine_data(
 
     let data = CandyMachineData {
         symbol: config.symbol.clone(),
-        seller_fee_basis_points: config.royalties,
+        seller_fee_basis_points: config.seller_fee_basis_points,
         max_supply: 0,
         is_mutable: config.is_mutable,
         creators,
         hidden_settings,
         config_line_settings: candy_machine.config_line_settings.clone(),
-        items_available: config.size,
+        items_available: config.number,
     };
     Ok(data)
 }

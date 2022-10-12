@@ -83,7 +83,7 @@ pub async fn process_deploy(args: DeployArgs) -> Result<()> {
 
     // checks the candy machine data
 
-    let num_items = config_data.size;
+    let num_items = config_data.number;
     let hidden = config_data.hidden_settings.is_some();
     let collection_in_cache = cache.items.get("-1").is_some();
     let mut _item_redeemed = false;
@@ -99,7 +99,7 @@ pub async fn process_deploy(args: DeployArgs) -> Result<()> {
         ));
     } else {
         check_symbol(&config_data.symbol)?;
-        check_seller_fee_basis_points(config_data.royalties)?;
+        check_seller_fee_basis_points(config_data.seller_fee_basis_points)?;
     }
 
     let total_steps = 2 + if candy_machine_address.is_empty() {

@@ -73,7 +73,7 @@ pub struct NftStorageMethod {
 impl NftStorageMethod {
     /// Initialize a new NftStorageHandler.
     pub async fn new(config_data: &ConfigData) -> Result<Self> {
-        if let Some(auth_token) = &config_data.upload_config.nft_storage_auth_token {
+        if let Some(auth_token) = &config_data.nft_storage_auth_token {
             let client_builder = Client::builder();
 
             let mut headers = header::HeaderMap::new();

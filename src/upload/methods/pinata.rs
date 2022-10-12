@@ -44,7 +44,7 @@ impl Deref for PinataMethod {
 impl PinataMethod {
     /// Initialize a new PinataMethod.
     pub async fn new(config_data: &ConfigData) -> Result<Self> {
-        if let Some(pinata_config) = &config_data.upload_config.pinata_config {
+        if let Some(pinata_config) = &config_data.pinata_config {
             let client_builder = Client::builder();
 
             let mut headers = header::HeaderMap::new();

@@ -142,7 +142,7 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
 
     // size
 
-    config_data.size = if num_files > 0 && (num_files % 2) == 0 && Confirm::with_theme(&theme)
+    config_data.number = if num_files > 0 && (num_files % 2) == 0 && Confirm::with_theme(&theme)
         .with_prompt(
             format!(
                 "Found {} file pairs in \"{}\". Is this how many NFTs you will have in your candy machine?", num_files / 2, args.assets_dir,
@@ -185,7 +185,7 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
 
     // seller_fee_basis_points
 
-    config_data.royalties = if num_files > 0 && seller_fee != INVALID_SELLER_FEE && Confirm::with_theme(&theme)
+    config_data.seller_fee_basis_points = if num_files > 0 && seller_fee != INVALID_SELLER_FEE && Confirm::with_theme(&theme)
         .with_prompt(
             format!(
                 "Found value {} for seller fee basis points in your metadata file. Is this value correct?", seller_fee,
@@ -302,7 +302,7 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
 
     // upload method
     let upload_options = vec!["Bundlr", "AWS", "NFT Storage", "SHDW", "Pinata"];
-    config_data.upload_config.method = match Select::with_theme(&theme)
+    config_data.upload_method = match Select::with_theme(&theme)
         .with_prompt("What upload method do you want to use?")
         .items(&upload_options)
         .default(0)
@@ -317,7 +317,7 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
         _ => UploadMethod::Bundlr,
     };
 
-    if config_data.upload_config.method == UploadMethod::AWS {
+    if config_data.upload_method == UploadMethod::AWS {
         let bucket: String = Input::with_theme(&theme)
             .with_prompt("What is the AWS S3 bucket name?")
             .interact()
@@ -341,7 +341,7 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
             .interact()
             .unwrap();
 
-        config_data.upload_config.aws_config = Some(AwsConfig::new(
+        config_data.aws_config = Some(AwsConfig::new(
             bucket,
             profile,
             directory,
@@ -353,8 +353,8 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
         ));
     }
 
-    if config_data.upload_config.method == UploadMethod::NftStorage {
-        config_data.upload_config.nft_storage_auth_token = Some(
+    if config_data.upload_method == UploadMethod::NftStorage {
+        config_data.nft_storage_auth_token = Some(
             Input::with_theme(&theme)
                 .with_prompt("What is the NFT Storage authentication token?")
                 .interact()
@@ -362,8 +362,8 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
         );
     }
 
-    if config_data.upload_config.method == UploadMethod::SHDW {
-        config_data.upload_config.shdw_storage_account = Some(
+    if config_data.upload_method == UploadMethod::SHDW {
+        config_data.shdw_storage_account = Some(
             Input::with_theme(&theme)
                 .with_prompt("What is the SHDW storage address?")
                 .validate_with(pubkey_validator)
@@ -372,7 +372,7 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
         );
     }
 
-    if config_data.upload_config.method == UploadMethod::Pinata {
+    if config_data.upload_method == UploadMethod::Pinata {
         let jwt: String = Input::with_theme(&theme)
             .with_prompt("What is your Pinata JWT authentication?")
             .interact()
@@ -398,7 +398,7 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
             .parse::<u16>()
             .expect("Failed to parse number into u64 that should have already been validated.");
 
-        config_data.upload_config.pinata_config = Some(PinataConfig {
+        config_data.pinata_config = Some(PinataConfig {
             jwt,
             api_gateway,
             content_gateway,

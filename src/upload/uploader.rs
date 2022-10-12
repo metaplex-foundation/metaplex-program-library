@@ -275,7 +275,7 @@ pub async fn initialize(
     sugar_config: &SugarConfig,
     config_data: &ConfigData,
 ) -> Result<Box<dyn Uploader>> {
-    Ok(match config_data.upload_config.method {
+    Ok(match config_data.upload_method {
         UploadMethod::AWS => Box::new(AWSMethod::new(config_data).await?) as Box<dyn Uploader>,
         UploadMethod::Bundlr => {
             Box::new(BundlrMethod::new(sugar_config, config_data).await?) as Box<dyn Uploader>

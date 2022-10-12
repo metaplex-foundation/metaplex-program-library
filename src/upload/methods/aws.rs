@@ -26,7 +26,6 @@ pub struct AWSMethod {
 impl AWSMethod {
     pub async fn new(config_data: &ConfigData) -> Result<Self> {
         let profile = &config_data
-            .upload_config
             .aws_config
             .as_ref()
             .ok_or_else(|| anyhow!("AWS values not specified in config file!"))?
@@ -35,7 +34,7 @@ impl AWSMethod {
         let credentials = Credentials::from_profile(Some(profile))?;
         let region = AWSMethod::load_region(config_data)?;
 
-        if let Some(config) = &config_data.upload_config.aws_config {
+        if let Some(config) = &config_data.aws_config {
             let domain = if let Some(domain) = &config.domain {
                 match url::Url::parse(&domain.to_string()) {
                     Ok(url) => url.to_string(),
@@ -65,7 +64,6 @@ impl AWSMethod {
             .ok_or_else(|| anyhow!("Failed to load AWS credentials"))?);
 
         let profile = &config_data
-            .upload_config
             .aws_config
             .as_ref()
             .ok_or_else(|| anyhow!("AWS values not specified in config file!"))?

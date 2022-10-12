@@ -107,9 +107,9 @@ pub fn create_candy_machine_data(
     let hidden_settings = config.hidden_settings.as_ref().map(|s| s.to_candy_format());
 
     let data = CandyMachineData {
-        items_available: config.size,
+        items_available: config.number,
         symbol: config.symbol.clone(),
-        seller_fee_basis_points: config.royalties,
+        seller_fee_basis_points: config.seller_fee_basis_points,
         max_supply: 0,
         is_mutable: config.is_mutable,
         creators,
