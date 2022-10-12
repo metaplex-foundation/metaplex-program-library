@@ -24,7 +24,6 @@ mod resume_market {
         system_program,
         sysvar::{self, clock::Clock},
         transaction::Transaction,
-        transport::TransportError,
     };
 
     #[tokio::test]
@@ -368,8 +367,9 @@ mod resume_market {
             .await
             .unwrap_err();
         match tx_error {
-            TransportError::Custom(_) => assert!(true),
-            TransportError::TransactionError(_) => assert!(true),
+            BanksClientError::ClientError(_) => assert!(true),
+            BanksClientError::RpcError(_) => assert!(true),
+            BanksClientError::TransactionError(_) => assert!(true),
             _ => assert!(false),
         }
     }
@@ -545,8 +545,9 @@ mod resume_market {
             .unwrap_err();
 
         match tx_error {
-            TransportError::Custom(_) => assert!(true),
-            TransportError::TransactionError(_) => assert!(true),
+            BanksClientError::ClientError(_) => assert!(true),
+            BanksClientError::RpcError(_) => assert!(true),
+            BanksClientError::TransactionError(_) => assert!(true),
             _ => assert!(false),
         }
     }
@@ -687,8 +688,9 @@ mod resume_market {
             .await
             .unwrap_err();
         match tx_error {
-            TransportError::Custom(_) => assert!(true),
-            TransportError::TransactionError(_) => assert!(true),
+            BanksClientError::ClientError(_) => assert!(true),
+            BanksClientError::RpcError(_) => assert!(true),
+            BanksClientError::TransactionError(_) => assert!(true),
             _ => assert!(false),
         }
     }

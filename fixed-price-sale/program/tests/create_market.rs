@@ -18,7 +18,6 @@ mod create_market {
     use solana_sdk::{
         commitment_config::CommitmentLevel, instruction::Instruction, signature::Keypair,
         signer::Signer, system_program, sysvar::clock::Clock, transaction::Transaction,
-        transport::TransportError,
     };
 
     use crate::setup_context;
@@ -305,8 +304,9 @@ mod create_market {
             .await;
 
         match tx_result.unwrap_err() {
-            TransportError::Custom(_) => assert!(true),
-            TransportError::TransactionError(_) => assert!(true),
+            BanksClientError::ClientError(_) => assert!(true),
+            BanksClientError::RpcError(_) => assert!(true),
+            BanksClientError::TransactionError(_) => assert!(true),
             _ => assert!(false),
         }
     }
@@ -417,8 +417,9 @@ mod create_market {
             .await;
 
         match tx_result.unwrap_err() {
-            TransportError::Custom(_) => assert!(true),
-            TransportError::TransactionError(_) => assert!(true),
+            BanksClientError::ClientError(_) => assert!(true),
+            BanksClientError::RpcError(_) => assert!(true),
+            BanksClientError::TransactionError(_) => assert!(true),
             _ => assert!(false),
         }
     }
@@ -629,8 +630,9 @@ mod create_market {
             .await;
 
         match tx_result.unwrap_err() {
-            TransportError::Custom(_) => assert!(true),
-            TransportError::TransactionError(_) => assert!(true),
+            BanksClientError::ClientError(_) => assert!(true),
+            BanksClientError::RpcError(_) => assert!(true),
+            BanksClientError::TransactionError(_) => assert!(true),
             _ => assert!(false),
         }
     }
@@ -831,8 +833,9 @@ mod create_market {
             .await;
 
         match tx_result.unwrap_err() {
-            TransportError::Custom(_) => assert!(true),
-            TransportError::TransactionError(_) => assert!(true),
+            BanksClientError::ClientError(_) => assert!(true),
+            BanksClientError::RpcError(_) => assert!(true),
+            BanksClientError::TransactionError(_) => assert!(true),
             _ => assert!(false),
         }
     }
@@ -944,8 +947,9 @@ mod create_market {
             .await;
 
         match tx_result.unwrap_err() {
-            TransportError::Custom(_) => assert!(true),
-            TransportError::TransactionError(_) => assert!(true),
+            BanksClientError::ClientError(_) => assert!(true),
+            BanksClientError::RpcError(_) => assert!(true),
+            BanksClientError::TransactionError(_) => assert!(true),
             _ => assert!(false),
         }
     }
