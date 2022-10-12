@@ -82,7 +82,7 @@ impl Vault {
         &self,
         context: &mut ProgramTestContext,
         number_of_shares: u64,
-    ) -> transport::Result<()> {
+    ) -> Result<(), BanksClientError> {
         let metaplex_token_vault_id = mpl_token_vault::id();
         let vault_pubkey = self.keypair.pubkey();
 
@@ -115,7 +115,7 @@ impl Vault {
         &self,
         context: &mut ProgramTestContext,
         external_price: &ExternalPrice,
-    ) -> transport::Result<()> {
+    ) -> Result<(), BanksClientError> {
         let outstanding_token_account = Keypair::new();
         let paying_token_account = Keypair::new();
 
@@ -171,7 +171,7 @@ impl Vault {
         &self,
         context: &mut ProgramTestContext,
         external_price: &ExternalPrice,
-    ) -> transport::Result<()> {
+    ) -> Result<(), BanksClientError> {
         let metaplex_token_vault_id = mpl_token_vault::id();
         let vault_pubkey = self.keypair.pubkey();
 
