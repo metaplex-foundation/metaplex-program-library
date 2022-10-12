@@ -205,6 +205,14 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
             .expect("Failed to parse number into u16 that should have already been validated.")
     };
 
+    // is sequential
+
+    config_data.is_sequential = Confirm::with_theme(&theme)
+        .with_prompt(
+            "Do you want to use a sequential mint index generation? We recommend you choose no.",
+        )
+        .interact()?;
+
     // creators
 
     let num_creators = Input::with_theme(&theme)
