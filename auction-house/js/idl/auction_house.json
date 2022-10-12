@@ -1,5 +1,5 @@
 {
-  "version": "1.2.4",
+  "version": "1.3.0",
   "name": "auction_house",
   "instructions": [
     {
@@ -2688,11 +2688,5 @@
       "name": "InsufficientFunds",
       "msg": "Insufficient funds in escrow account to purchase."
     }
-  ],
-  "metadata": {
-    "address": "hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk",
-    "origin": "anchor",
-    "binaryVersion": "0.24.2",
-    "libVersion": "~0.24.2"
-  }
+  ]
 }
