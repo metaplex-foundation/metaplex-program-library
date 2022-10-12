@@ -3,7 +3,7 @@ use anyhow::Result;
 use dateparser::DateTimeUtc;
 use serde::{Deserialize, Serialize};
 
-use super::{to_pubkey, to_string};
+use super::{data::price_as_lamports, to_pubkey, to_string};
 
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
 pub struct CandyGuardData {
@@ -243,7 +243,7 @@ impl AllowList {
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct BotTax {
-    pub lamports: u64,
+    pub value: f64,
 
     pub last_instruction: bool,
 }
@@ -251,7 +251,7 @@ pub struct BotTax {
 impl BotTax {
     pub fn to_guard_format(&self) -> Result<mpl_candy_guard::guards::BotTax> {
         Ok(mpl_candy_guard::guards::BotTax {
-            lamports: self.lamports,
+            lamports: price_as_lamports(self.value),
             last_instruction: self.last_instruction,
         })
     }
@@ -389,7 +389,7 @@ impl RedeemedAmount {
 
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
 pub struct SolPayment {
-    pub lamports: u64,
+    pub value: f64,
 
     #[serde(deserialize_with = "to_pubkey")]
     #[serde(serialize_with = "to_string")]
@@ -399,7 +399,7 @@ pub struct SolPayment {
 impl SolPayment {
     pub fn to_guard_format(&self) -> Result<mpl_candy_guard::guards::SolPayment> {
         Ok(mpl_candy_guard::guards::SolPayment {
-            lamports: self.lamports,
+            lamports: price_as_lamports(self.value),
             destination: self.destination,
         })
     }
@@ -484,7 +484,7 @@ pub struct TokenPayment {
 
     #[serde(deserialize_with = "to_pubkey")]
     #[serde(serialize_with = "to_string")]
-    pub token_mint: Pubkey,
+    pub mint: Pubkey,
 
     #[serde(deserialize_with = "to_pubkey")]
     #[serde(serialize_with = "to_string")]
@@ -495,7 +495,7 @@ impl TokenPayment {
     pub fn to_guard_format(&self) -> Result<mpl_candy_guard::guards::TokenPayment> {
         Ok(mpl_candy_guard::guards::TokenPayment {
             amount: self.amount,
-            token_mint: self.token_mint,
+            token_mint: self.mint,
             destination_ata: self.destination_ata,
         })
     }
