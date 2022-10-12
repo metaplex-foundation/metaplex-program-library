@@ -4,26 +4,41 @@
   "instructions": [
     {
       "name": "withdrawFromFee",
+      "docs": [
+        "Withdraw `amount` from the Auction House Fee Account to a provided destination account."
+      ],
       "accounts": [
         {
           "name": "authority",
           "isMut": false,
-          "isSigner": true
+          "isSigner": true,
+          "docs": [
+            "Authority key for the Auction House."
+          ]
         },
         {
           "name": "feeWithdrawalDestination",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Account that pays for fees if the marketplace executes sales."
+          ]
         },
         {
           "name": "auctionHouseFeeAccount",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Auction House instance fee account."
+          ]
         },
         {
           "name": "auctionHouse",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Auction House instance PDA account."
+          ]
         },
         {
           "name": "systemProgram",
@@ -40,31 +55,49 @@
     },
     {
       "name": "withdrawFromTreasury",
+      "docs": [
+        "Withdraw `amount` from the Auction House Treasury Account to a provided destination account."
+      ],
       "accounts": [
         {
           "name": "treasuryMint",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Treasury mint account, either native SOL mint or a SPL token mint."
+          ]
         },
         {
           "name": "authority",
           "isMut": false,
-          "isSigner": true
+          "isSigner": true,
+          "docs": [
+            "Authority key for the Auction House."
+          ]
         },
         {
           "name": "treasuryWithdrawalDestination",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "SOL or SPL token account to receive Auction House fees. If treasury mint is native this will be the same as the `treasury_withdrawl_destination_owner`."
+          ]
         },
         {
           "name": "auctionHouseTreasury",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Auction House treasury PDA account."
+          ]
         },
         {
           "name": "auctionHouse",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Auction House instance PDA account."
+          ]
         },
         {
           "name": "tokenProgram",
@@ -86,46 +119,73 @@
     },
     {
       "name": "updateAuctionHouse",
+      "docs": [
+        "Update Auction House values such as seller fee basis points, update authority, treasury account, etc."
+      ],
       "accounts": [
         {
           "name": "treasuryMint",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Treasury mint account, either native SOL mint or a SPL token mint."
+          ]
         },
         {
           "name": "payer",
           "isMut": false,
-          "isSigner": true
+          "isSigner": true,
+          "docs": [
+            "Key paying SOL fees for setting up the Auction House."
+          ]
         },
         {
           "name": "authority",
           "isMut": false,
-          "isSigner": true
+          "isSigner": true,
+          "docs": [
+            "Authority key for the Auction House."
+          ]
         },
         {
           "name": "newAuthority",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "New authority key for the Auction House."
+          ]
         },
         {
           "name": "feeWithdrawalDestination",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Account that pays for fees if the marketplace executes sales."
+          ]
         },
         {
           "name": "treasuryWithdrawalDestination",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "SOL or SPL token account to receive Auction House fees. If treasury mint is native this will be the same as the `treasury_withdrawl_destination_owner`."
+          ]
         },
         {
           "name": "treasuryWithdrawalDestinationOwner",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Owner of the `treasury_withdrawal_destination` account or the same address if the `treasury_mint` is native."
+          ]
         },
         {
           "name": "auctionHouse",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Auction House instance PDA account."
+          ]
         },
         {
           "name": "tokenProgram",
@@ -171,16 +231,25 @@
     },
     {
       "name": "createAuctionHouse",
+      "docs": [
+        "Create a new Auction House instance."
+      ],
       "accounts": [
         {
           "name": "treasuryMint",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Treasury mint account, either native SOL mint or a SPL token mint."
+          ]
         },
         {
           "name": "payer",
           "isMut": true,
-          "isSigner": true
+          "isSigner": true,
+          "docs": [
+            "Key paying SOL fees for setting up the Auction House."
+          ]
         },
         {
           "name": "authority",
@@ -190,32 +259,50 @@
         {
           "name": "feeWithdrawalDestination",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Account that pays for fees if the marketplace executes sales."
+          ]
         },
         {
           "name": "treasuryWithdrawalDestination",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "SOL or SPL token account to receive Auction House fees. If treasury mint is native this will be the same as the `treasury_withdrawl_destination_owner`."
+          ]
         },
         {
           "name": "treasuryWithdrawalDestinationOwner",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Owner of the `treasury_withdrawal_destination` account or the same address if the `treasury_mint` is native."
+          ]
         },
         {
           "name": "auctionHouse",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Auction House instance PDA account."
+          ]
         },
         {
           "name": "auctionHouseFeeAccount",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Auction House instance fee account."
+          ]
         },
         {
           "name": "auctionHouseTreasury",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Auction House instance treasury PDA account."
+          ]
         },
         {
           "name": "tokenProgram",
@@ -267,61 +354,97 @@
     },
     {
       "name": "buy",
+      "docs": [
+        "Create a private buy bid by creating a `buyer_trade_state` account and an `escrow_payment` account and funding the escrow with the necessary SOL or SPL token amount."
+      ],
       "accounts": [
         {
           "name": "wallet",
           "isMut": false,
-          "isSigner": true
+          "isSigner": true,
+          "docs": [
+            "User wallet account."
+          ]
         },
         {
           "name": "paymentAccount",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "User SOL or SPL account to transfer funds from."
+          ]
         },
         {
           "name": "transferAuthority",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "SPL token account transfer authority."
+          ]
         },
         {
           "name": "treasuryMint",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Auction House instance treasury mint account."
+          ]
         },
         {
           "name": "tokenAccount",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "SPL token account."
+          ]
         },
         {
           "name": "metadata",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "SPL token account metadata."
+          ]
         },
         {
           "name": "escrowPaymentAccount",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Buyer escrow payment account PDA."
+          ]
         },
         {
           "name": "authority",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Auction House instance authority account."
+          ]
         },
         {
           "name": "auctionHouse",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Auction House instance PDA account."
+          ]
         },
         {
           "name": "auctionHouseFeeAccount",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Auction House instance fee account."
+          ]
         },
         {
           "name": "buyerTradeState",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Buyer trade state PDA."
+          ]
         },
         {
           "name": "tokenProgram",
@@ -364,37 +487,58 @@
         {
           "name": "wallet",
           "isMut": false,
-          "isSigner": true
+          "isSigner": true,
+          "docs": [
+            "User wallet account."
+          ]
         },
         {
           "name": "paymentAccount",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "User SOL or SPL account to transfer funds from."
+          ]
         },
         {
           "name": "transferAuthority",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "SPL token account transfer authority."
+          ]
         },
         {
           "name": "treasuryMint",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Auction House instance treasury mint account."
+          ]
         },
         {
           "name": "tokenAccount",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "SPL token account."
+          ]
         },
         {
           "name": "metadata",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "SPL token account metadata."
+          ]
         },
         {
           "name": "escrowPaymentAccount",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Buyer escrow payment account PDA."
+          ]
         },
         {
           "name": "authority",
@@ -404,22 +548,34 @@
         {
           "name": "auctioneerAuthority",
           "isMut": false,
-          "isSigner": true
+          "isSigner": true,
+          "docs": [
+            "The auctioneer authority - typically a PDA of the Auctioneer program running this action."
+          ]
         },
         {
           "name": "auctionHouse",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Auction House instance PDA account."
+          ]
         },
         {
           "name": "auctionHouseFeeAccount",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Auction House instance fee account."
+          ]
         },
         {
           "name": "buyerTradeState",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Buyer trade state PDA."
+          ]
         },
         {
           "name": "ahAuctioneerPda",
@@ -463,6 +619,9 @@
     },
     {
       "name": "publicBuy",
+      "docs": [
+        "Create a public buy bid by creating a `public_buyer_trade_state` account and an `escrow_payment` account and funding the escrow with the necessary SOL or SPL token amount."
+      ],
       "accounts": [
         {
           "name": "wallet",
@@ -556,6 +715,9 @@
     },
     {
       "name": "auctioneerPublicBuy",
+      "docs": [
+        "Create a public buy bid by creating a `public_buyer_trade_state` account and an `escrow_payment` account and funding the escrow with the necessary SOL or SPL token amount."
+      ],
       "accounts": [
         {
           "name": "wallet",
@@ -600,7 +762,10 @@
         {
           "name": "auctioneerAuthority",
           "isMut": false,
-          "isSigner": true
+          "isSigner": true,
+          "docs": [
+            "The auctioneer authority - typically a PDA of the Auctioneer program running this action."
+          ]
         },
         {
           "name": "auctionHouse",
@@ -620,7 +785,10 @@
         {
           "name": "ahAuctioneerPda",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "The auctioneer PDA owned by Auction House storing scopes."
+          ]
         },
         {
           "name": "tokenProgram",
@@ -659,41 +827,65 @@
     },
     {
       "name": "cancel",
+      "docs": [
+        "Cancel a bid or ask by revoking the token delegate, transferring all lamports from the trade state account to the fee payer, and setting the trade state account data to zero so it can be garbage collected."
+      ],
       "accounts": [
         {
           "name": "wallet",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "User wallet account."
+          ]
         },
         {
           "name": "tokenAccount",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "SPL token account containing the token of the sale to be canceled."
+          ]
         },
         {
           "name": "tokenMint",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Token mint account of SPL token."
+          ]
         },
         {
           "name": "authority",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Auction House instance authority account."
+          ]
         },
         {
           "name": "auctionHouse",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Auction House instance PDA account."
+          ]
         },
         {
           "name": "auctionHouseFeeAccount",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Auction House instance fee account."
+          ]
         },
         {
           "name": "tradeState",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Trade state PDA account representing the bid or ask to be canceled."
+          ]
         },
         {
           "name": "tokenProgram",
@@ -714,51 +906,81 @@
     },
     {
       "name": "auctioneerCancel",
+      "docs": [
+        "Cancel, but with an auctioneer"
+      ],
       "accounts": [
         {
           "name": "wallet",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "User wallet account."
+          ]
         },
         {
           "name": "tokenAccount",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "SPL token account containing the token of the sale to be canceled."
+          ]
         },
         {
           "name": "tokenMint",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Token mint account of SPL token."
+          ]
         },
         {
           "name": "authority",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Auction House instance authority account."
+          ]
         },
         {
           "name": "auctioneerAuthority",
           "isMut": false,
-          "isSigner": true
+          "isSigner": true,
+          "docs": [
+            "The auctioneer authority - typically a PDA of the Auctioneer program running this action."
+          ]
         },
         {
           "name": "auctionHouse",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Auction House instance PDA account."
+          ]
         },
         {
           "name": "auctionHouseFeeAccount",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Auction House instance fee account."
+          ]
         },
         {
           "name": "tradeState",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Trade state PDA account representing the bid or ask to be canceled."
+          ]
         },
         {
           "name": "ahAuctioneerPda",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "The auctioneer PDA owned by Auction House storing scopes."
+          ]
         },
         {
           "name": "tokenProgram",
@@ -779,46 +1001,73 @@
     },
     {
       "name": "deposit",
+      "docs": [
+        "Deposit `amount` into the escrow payment account for your specific wallet."
+      ],
       "accounts": [
         {
           "name": "wallet",
           "isMut": false,
-          "isSigner": true
+          "isSigner": true,
+          "docs": [
+            "User wallet account."
+          ]
         },
         {
           "name": "paymentAccount",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "User SOL or SPL account to transfer funds from."
+          ]
         },
         {
           "name": "transferAuthority",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "SPL token account transfer authority."
+          ]
         },
         {
           "name": "escrowPaymentAccount",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Buyer escrow payment account PDA."
+          ]
         },
         {
           "name": "treasuryMint",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Auction House instance treasury mint account."
+          ]
         },
         {
           "name": "authority",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Auction House instance authority account."
+          ]
         },
         {
           "name": "auctionHouse",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Auction House instance PDA account."
+          ]
         },
         {
           "name": "auctionHouseFeeAccount",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Auction House instance fee account."
+          ]
         },
         {
           "name": "tokenProgram",
@@ -849,56 +1098,89 @@
     },
     {
       "name": "auctioneerDeposit",
+      "docs": [
+        "Deposit `amount` into the escrow payment account for your specific wallet."
+      ],
       "accounts": [
         {
           "name": "wallet",
           "isMut": false,
-          "isSigner": true
+          "isSigner": true,
+          "docs": [
+            "User wallet account."
+          ]
         },
         {
           "name": "paymentAccount",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "User SOL or SPL account to transfer funds from."
+          ]
         },
         {
           "name": "transferAuthority",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "SPL token account transfer authority."
+          ]
         },
         {
           "name": "escrowPaymentAccount",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Buyer escrow payment account PDA."
+          ]
         },
         {
           "name": "treasuryMint",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Auction House instance treasury mint account."
+          ]
         },
         {
           "name": "authority",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Auction House instance authority account."
+          ]
         },
         {
           "name": "auctioneerAuthority",
           "isMut": false,
-          "isSigner": true
+          "isSigner": true,
+          "docs": [
+            "The auctioneer authority - typically a PDA of the Auctioneer program running this action."
+          ]
         },
         {
           "name": "auctionHouse",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Auction House instance PDA account."
+          ]
         },
         {
           "name": "auctionHouseFeeAccount",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Auction House instance fee account."
+          ]
         },
         {
           "name": "ahAuctioneerPda",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "The auctioneer PDA owned by Auction House storing scopes."
+          ]
         },
         {
           "name": "tokenProgram",
@@ -933,82 +1215,130 @@
         {
           "name": "buyer",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Buyer user wallet account."
+          ]
         },
         {
           "name": "seller",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Seller user wallet account."
+          ]
         },
         {
           "name": "tokenAccount",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Token account where the SPL token is stored."
+          ]
         },
         {
           "name": "tokenMint",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Token mint account for the SPL token."
+          ]
         },
         {
           "name": "metadata",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Metaplex metadata account decorating SPL mint account."
+          ]
         },
         {
           "name": "treasuryMint",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Auction House treasury mint account."
+          ]
         },
         {
           "name": "escrowPaymentAccount",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Buyer escrow payment account."
+          ]
         },
         {
           "name": "sellerPaymentReceiptAccount",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Seller SOL or SPL account to receive payment at."
+          ]
         },
         {
           "name": "buyerReceiptTokenAccount",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Buyer SPL token account to receive purchased item at."
+          ]
         },
         {
           "name": "authority",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Auction House instance authority."
+          ]
         },
         {
           "name": "auctionHouse",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Auction House instance PDA account."
+          ]
         },
         {
           "name": "auctionHouseFeeAccount",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Auction House instance fee account."
+          ]
         },
         {
           "name": "auctionHouseTreasury",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Auction House instance treasury account."
+          ]
         },
         {
           "name": "buyerTradeState",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Buyer trade state PDA account encoding the buy order."
+          ]
         },
         {
           "name": "sellerTradeState",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Seller trade state PDA account encoding the sell order."
+          ]
         },
         {
           "name": "freeTradeState",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Free seller trade state PDA account encoding a free sell order."
+          ]
         },
         {
           "name": "tokenProgram",
@@ -1065,82 +1395,130 @@
         {
           "name": "buyer",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Buyer user wallet account."
+          ]
         },
         {
           "name": "seller",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Seller user wallet account."
+          ]
         },
         {
           "name": "tokenAccount",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Token account where the SPL token is stored."
+          ]
         },
         {
           "name": "tokenMint",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Token mint account for the SPL token."
+          ]
         },
         {
           "name": "metadata",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Metaplex metadata account decorating SPL mint account."
+          ]
         },
         {
           "name": "treasuryMint",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Auction House treasury mint account."
+          ]
         },
         {
           "name": "escrowPaymentAccount",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Buyer escrow payment account."
+          ]
         },
         {
           "name": "sellerPaymentReceiptAccount",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Seller SOL or SPL account to receive payment at."
+          ]
         },
         {
           "name": "buyerReceiptTokenAccount",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Buyer SPL token account to receive purchased item at."
+          ]
         },
         {
           "name": "authority",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Auction House instance authority."
+          ]
         },
         {
           "name": "auctionHouse",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Auction House instance PDA account."
+          ]
         },
         {
           "name": "auctionHouseFeeAccount",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Auction House instance fee account."
+          ]
         },
         {
           "name": "auctionHouseTreasury",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Auction House instance treasury account."
+          ]
         },
         {
           "name": "buyerTradeState",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Buyer trade state PDA account encoding the buy order."
+          ]
         },
         {
           "name": "sellerTradeState",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Seller trade state PDA account encoding the sell order."
+          ]
         },
         {
           "name": "freeTradeState",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Free seller trade state PDA account encoding a free sell order."
+          ]
         },
         {
           "name": "tokenProgram",
@@ -1209,92 +1587,146 @@
         {
           "name": "buyer",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Buyer user wallet account."
+          ]
         },
         {
           "name": "seller",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Seller user wallet account."
+          ]
         },
         {
           "name": "tokenAccount",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Token account where the SPL token is stored."
+          ]
         },
         {
           "name": "tokenMint",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Token mint account for the SPL token."
+          ]
         },
         {
           "name": "metadata",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Metaplex metadata account decorating SPL mint account."
+          ]
         },
         {
           "name": "treasuryMint",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Auction House treasury mint account."
+          ]
         },
         {
           "name": "escrowPaymentAccount",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Buyer escrow payment account."
+          ]
         },
         {
           "name": "sellerPaymentReceiptAccount",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Seller SOL or SPL account to receive payment at."
+          ]
         },
         {
           "name": "buyerReceiptTokenAccount",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Buyer SPL token account to receive purchased item at."
+          ]
         },
         {
           "name": "authority",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Auction House instance authority."
+          ]
         },
         {
           "name": "auctioneerAuthority",
           "isMut": false,
-          "isSigner": true
+          "isSigner": true,
+          "docs": [
+            "The auctioneer authority - typically a PDA of the Auctioneer program running this action."
+          ]
         },
         {
           "name": "auctionHouse",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Auction House instance PDA account."
+          ]
         },
         {
           "name": "auctionHouseFeeAccount",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Auction House instance fee account."
+          ]
         },
         {
           "name": "auctionHouseTreasury",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Auction House instance treasury account."
+          ]
         },
         {
           "name": "buyerTradeState",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Buyer trade state PDA account encoding the buy order."
+          ]
         },
         {
           "name": "sellerTradeState",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Seller trade state PDA account encoding the sell order."
+          ]
         },
         {
           "name": "freeTradeState",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Free seller trade state PDA account encoding a free sell order."
+          ]
         },
         {
           "name": "ahAuctioneerPda",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "The auctioneer PDA owned by Auction House storing scopes."
+          ]
         },
         {
           "name": "tokenProgram",
@@ -1351,92 +1783,146 @@
         {
           "name": "buyer",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Buyer user wallet account."
+          ]
         },
         {
           "name": "seller",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Seller user wallet account."
+          ]
         },
         {
           "name": "tokenAccount",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Token account where the SPL token is stored."
+          ]
         },
         {
           "name": "tokenMint",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Token mint account for the SPL token."
+          ]
         },
         {
           "name": "metadata",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Metaplex metadata account decorating SPL mint account."
+          ]
         },
         {
           "name": "treasuryMint",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Auction House treasury mint account."
+          ]
         },
         {
           "name": "escrowPaymentAccount",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Buyer escrow payment account."
+          ]
         },
         {
           "name": "sellerPaymentReceiptAccount",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Seller SOL or SPL account to receive payment at."
+          ]
         },
         {
           "name": "buyerReceiptTokenAccount",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Buyer SPL token account to receive purchased item at."
+          ]
         },
         {
           "name": "authority",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Auction House instance authority."
+          ]
         },
         {
           "name": "auctioneerAuthority",
           "isMut": false,
-          "isSigner": true
+          "isSigner": true,
+          "docs": [
+            "The auctioneer authority - typically a PDA of the Auctioneer program running this action."
+          ]
         },
         {
           "name": "auctionHouse",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Auction House instance PDA account."
+          ]
         },
         {
           "name": "auctionHouseFeeAccount",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Auction House instance fee account."
+          ]
         },
         {
           "name": "auctionHouseTreasury",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Auction House instance treasury account."
+          ]
         },
         {
           "name": "buyerTradeState",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Buyer trade state PDA account encoding the buy order."
+          ]
         },
         {
           "name": "sellerTradeState",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Seller trade state PDA account encoding the sell order."
+          ]
         },
         {
           "name": "freeTradeState",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Free seller trade state PDA account encoding a free sell order."
+          ]
         },
         {
           "name": "ahAuctioneerPda",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "The auctioneer PDA owned by Auction House storing scopes."
+          ]
         },
         {
           "name": "tokenProgram",
@@ -1505,42 +1991,66 @@
         {
           "name": "wallet",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "User wallet account."
+          ]
         },
         {
           "name": "tokenAccount",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "SPL token account containing token for sale."
+          ]
         },
         {
           "name": "metadata",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Metaplex metadata account decorating SPL mint account."
+          ]
         },
         {
           "name": "authority",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Auction House authority account."
+          ]
         },
         {
           "name": "auctionHouse",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Auction House instance PDA account."
+          ]
         },
         {
           "name": "auctionHouseFeeAccount",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Auction House instance fee account."
+          ]
         },
         {
           "name": "sellerTradeState",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Seller trade state PDA account encoding the sell order."
+          ]
         },
         {
           "name": "freeSellerTradeState",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Free seller trade state PDA account encoding a free sell order."
+          ]
         },
         {
           "name": "tokenProgram",
@@ -1592,52 +2102,82 @@
         {
           "name": "wallet",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "User wallet account."
+          ]
         },
         {
           "name": "tokenAccount",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "SPL token account containing token for sale."
+          ]
         },
         {
           "name": "metadata",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Metaplex metadata account decorating SPL mint account."
+          ]
         },
         {
           "name": "authority",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Auction House authority account."
+          ]
         },
         {
           "name": "auctioneerAuthority",
           "isMut": false,
-          "isSigner": true
+          "isSigner": true,
+          "docs": [
+            "The auctioneer authority - typically a PDA of the Auctioneer program running this action."
+          ]
         },
         {
           "name": "auctionHouse",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Auction House instance PDA account."
+          ]
         },
         {
           "name": "auctionHouseFeeAccount",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Auction House instance fee account."
+          ]
         },
         {
           "name": "sellerTradeState",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Seller trade state PDA account encoding the sell order."
+          ]
         },
         {
           "name": "freeSellerTradeState",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Free seller trade state PDA account encoding a free sell order."
+          ]
         },
         {
           "name": "ahAuctioneerPda",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "The auctioneer PDA owned by Auction House storing scopes."
+          ]
         },
         {
           "name": "programAsSigner",
@@ -1681,41 +2221,65 @@
     },
     {
       "name": "withdraw",
+      "docs": [
+        "Withdraw `amount` from the escrow payment account for your specific wallet."
+      ],
       "accounts": [
         {
           "name": "wallet",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "User wallet account."
+          ]
         },
         {
           "name": "receiptAccount",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "SPL token account or native SOL account to transfer funds to. If the account is a native SOL account, this is the same as the wallet address."
+          ]
         },
         {
           "name": "escrowPaymentAccount",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Buyer escrow payment account PDA."
+          ]
         },
         {
           "name": "treasuryMint",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Auction House instance treasury mint account."
+          ]
         },
         {
           "name": "authority",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Auction House instance authority account."
+          ]
         },
         {
           "name": "auctionHouse",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Auction House instance PDA account."
+          ]
         },
         {
           "name": "auctionHouseFeeAccount",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Auction House instance fee account."
+          ]
         },
         {
           "name": "tokenProgram",
@@ -1751,51 +2315,81 @@
     },
     {
       "name": "auctioneerWithdraw",
+      "docs": [
+        "Withdraw `amount` from the escrow payment account for your specific wallet."
+      ],
       "accounts": [
         {
           "name": "wallet",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "User wallet account."
+          ]
         },
         {
           "name": "receiptAccount",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "SPL token account or native SOL account to transfer funds to. If the account is a native SOL account, this is the same as the wallet address."
+          ]
         },
         {
           "name": "escrowPaymentAccount",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Buyer escrow payment account PDA."
+          ]
         },
         {
           "name": "treasuryMint",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Auction House instance treasury mint account."
+          ]
         },
         {
           "name": "authority",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Auction House instance authority account."
+          ]
         },
         {
           "name": "auctioneerAuthority",
           "isMut": false,
-          "isSigner": true
+          "isSigner": true,
+          "docs": [
+            "The auctioneer authority - typically a PDA of the Auctioneer program running this action."
+          ]
         },
         {
           "name": "auctionHouse",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Auction House instance PDA account."
+          ]
         },
         {
           "name": "auctionHouseFeeAccount",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Auction House instance fee account."
+          ]
         },
         {
           "name": "ahAuctioneerPda",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "The auctioneer PDA owned by Auction House storing scopes."
+          ]
         },
         {
           "name": "tokenProgram",
@@ -1831,21 +2425,33 @@
     },
     {
       "name": "closeEscrowAccount",
+      "docs": [
+        "Close the escrow account of the user."
+      ],
       "accounts": [
         {
           "name": "wallet",
           "isMut": false,
-          "isSigner": true
+          "isSigner": true,
+          "docs": [
+            "User wallet account."
+          ]
         },
         {
           "name": "escrowPaymentAccount",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Buyer escrow payment account PDA."
+          ]
         },
         {
           "name": "auctionHouse",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Auction House instance PDA account."
+          ]
         },
         {
           "name": "systemProgram",
@@ -1876,12 +2482,18 @@
         {
           "name": "auctioneerAuthority",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "The auctioneer authority - the program PDA running this auction."
+          ]
         },
         {
           "name": "ahAuctioneerPda",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "The auctioneer PDA owned by Auction House storing scopes."
+          ]
         },
         {
           "name": "systemProgram",
@@ -1916,12 +2528,18 @@
         {
           "name": "auctioneerAuthority",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "The auctioneer authority - typically a PDA of the Auctioneer program running this action."
+          ]
         },
         {
           "name": "ahAuctioneerPda",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "The auctioneer PDA owned by Auction House storing scopes."
+          ]
         },
         {
           "name": "systemProgram",
@@ -1942,6 +2560,9 @@
     },
     {
       "name": "printListingReceipt",
+      "docs": [
+        "Create a listing receipt by creating a `listing_receipt` account."
+      ],
       "accounts": [
         {
           "name": "receipt",
@@ -1978,6 +2599,9 @@
     },
     {
       "name": "cancelListingReceipt",
+      "docs": [
+        "Cancel an active listing receipt by setting the `canceled_at` field to the current time."
+      ],
       "accounts": [
         {
           "name": "receipt",
@@ -1999,6 +2623,9 @@
     },
     {
       "name": "printBidReceipt",
+      "docs": [
+        "Create a bid receipt by creating a `bid_receipt` account."
+      ],
       "accounts": [
         {
           "name": "receipt",
@@ -2035,6 +2662,9 @@
     },
     {
       "name": "cancelBidReceipt",
+      "docs": [
+        "Cancel an active bid receipt by setting the `canceled_at` field to the current time."
+      ],
       "accounts": [
         {
           "name": "receipt",
@@ -2056,6 +2686,9 @@
     },
     {
       "name": "printPurchaseReceipt",
+      "docs": [
+        "Create a purchase receipt by creating a `purchase_receipt` account."
+      ],
       "accounts": [
         {
           "name": "purchaseReceipt",
@@ -2104,6 +2737,9 @@
   "accounts": [
     {
       "name": "BidReceipt",
+      "docs": [
+        "Receipt for a bid transaction."
+      ],
       "type": {
         "kind": "struct",
         "fields": [
@@ -2170,6 +2806,9 @@
     },
     {
       "name": "ListingReceipt",
+      "docs": [
+        "Receipt for a listing transaction."
+      ],
       "type": {
         "kind": "struct",
         "fields": [
@@ -2230,6 +2869,9 @@
     },
     {
       "name": "PurchaseReceipt",
+      "docs": [
+        "Receipt for a purchase transaction."
+      ],
       "type": {
         "kind": "struct",
         "fields": [
@@ -2692,7 +3334,7 @@
   "metadata": {
     "address": "hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk",
     "origin": "anchor",
-    "binaryVersion": "0.24.2",
-    "libVersion": "~0.24.2"
+    "binaryVersion": "0.25.0",
+    "libVersion": "0.25.0"
   }
 }
