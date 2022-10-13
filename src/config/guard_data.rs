@@ -495,7 +495,7 @@ impl TokenPayment {
     pub fn to_guard_format(&self) -> Result<mpl_candy_guard::guards::TokenPayment> {
         Ok(mpl_candy_guard::guards::TokenPayment {
             amount: self.amount,
-            token_mint: self.mint,
+            mint: self.mint,
             destination_ata: self.destination_ata,
         })
     }

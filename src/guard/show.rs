@@ -156,7 +156,7 @@ fn print_guard_set(guard_set: &GuardSet, padding: String) -> Result<()> {
         print_with_style(
             &format!("{}:   ", padding),
             "token mint",
-            token_payment.token_mint.to_string(),
+            token_payment.mint.to_string(),
         );
     } else {
         print_with_style(&padding, "token payment", "none".to_string());
