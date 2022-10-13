@@ -32,7 +32,6 @@ mod withdraw {
         signer::Signer,
         system_program, sysvar,
         transaction::Transaction,
-        transport::TransportError,
     };
 
     #[tokio::test]
@@ -1226,8 +1225,9 @@ mod withdraw {
             .await
             .unwrap_err();
         match tx_err {
-            TransportError::Custom(_) => assert!(true),
-            TransportError::TransactionError(_) => assert!(true),
+            BanksClientError::ClientError(_) => assert!(true),
+            BanksClientError::RpcError(_) => assert!(true),
+            BanksClientError::TransactionError(_) => assert!(true),
             _ => assert!(false),
         }
     }
@@ -1596,8 +1596,9 @@ mod withdraw {
             .await
             .unwrap_err();
         match tx_err {
-            TransportError::Custom(_) => assert!(true),
-            TransportError::TransactionError(_) => assert!(true),
+            BanksClientError::ClientError(_) => assert!(true),
+            BanksClientError::RpcError(_) => assert!(true),
+            BanksClientError::TransactionError(_) => assert!(true),
             _ => assert!(false),
         }
     }
@@ -2063,8 +2064,9 @@ mod withdraw {
             .await
             .unwrap_err();
         match tx_err {
-            TransportError::Custom(_) => assert!(true),
-            TransportError::TransactionError(_) => assert!(true),
+            BanksClientError::ClientError(_) => assert!(true),
+            BanksClientError::RpcError(_) => assert!(true),
+            BanksClientError::TransactionError(_) => assert!(true),
             _ => assert!(false),
         }
     }

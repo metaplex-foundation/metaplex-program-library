@@ -6,7 +6,7 @@ use solana_program::{
     system_instruction,
 };
 use solana_program_test::*;
-use solana_sdk::{signature::Keypair, transaction::Transaction, transport};
+use solana_sdk::{signature::Keypair, transaction::Transaction};
 
 use mpl_candy_machine::{
     constants::{CONFIG_ARRAY_START, CONFIG_LINE_SIZE},
@@ -22,6 +22,7 @@ use crate::{
         FreezeInfo,
     },
 };
+use std::result::Result;
 
 pub fn candy_machine_program_test() -> ProgramTest {
     let mut program = ProgramTest::new("mpl_candy_machine", mpl_candy_machine::id(), None);
@@ -36,7 +37,7 @@ pub async fn initialize_candy_machine(
     wallet: &Pubkey,
     candy_data: CandyMachineData,
     token_info: TokenInfo,
-) -> transport::Result<()> {
+) -> Result<(), BanksClientError> {
     let items_available = candy_data.items_available;
     let candy_account_size = if candy_data.hidden_settings.is_some() {
         CONFIG_ARRAY_START
@@ -98,7 +99,7 @@ pub async fn update_candy_machine(
     data: CandyMachineData,
     wallet: &Pubkey,
     token_mint: Option<Pubkey>,
-) -> transport::Result<()> {
+) -> Result<(), BanksClientError> {
     let mut accounts = mpl_candy_machine::accounts::UpdateCandyMachine {
         candy_machine: *candy_machine,
         authority: authority.pubkey(),
@@ -133,7 +134,7 @@ pub async fn update_authority(
     authority: &Keypair,
     wallet: &Pubkey,
     new_authority: &Pubkey,
-) -> transport::Result<()> {
+) -> Result<(), BanksClientError> {
     let accounts = mpl_candy_machine::accounts::UpdateCandyMachine {
         candy_machine: *candy_machine,
         authority: authority.pubkey(),
@@ -167,7 +168,7 @@ pub async fn add_config_lines(
     authority: &Keypair,
     index: u32,
     config_lines: Vec<ConfigLine>,
-) -> transport::Result<()> {
+) -> Result<(), BanksClientError> {
     let accounts = mpl_candy_machine::accounts::AddConfigLines {
         candy_machine: *candy_machine,
         authority: authority.pubkey(),
@@ -202,7 +203,7 @@ pub async fn add_all_config_lines(
     context: &mut ProgramTestContext,
     candy_machine: &Pubkey,
     authority: &Keypair,
-) -> transport::Result<()> {
+) -> Result<(), BanksClientError> {
     let candy_machine_account = context
         .banks_client
         .get_account(*candy_machine)
@@ -233,7 +234,7 @@ pub async fn set_collection(
     candy_machine: &Pubkey,
     authority: &Keypair,
     collection_info: &CollectionInfo,
-) -> transport::Result<()> {
+) -> Result<(), BanksClientError> {
     let accounts = mpl_candy_machine::accounts::SetCollection {
         candy_machine: *candy_machine,
         authority: authority.pubkey(),
@@ -273,7 +274,7 @@ pub async fn remove_collection(
     candy_machine: &Pubkey,
     authority: &Keypair,
     collection_info: &CollectionInfo,
-) -> transport::Result<()> {
+) -> Result<(), BanksClientError> {
     let accounts = mpl_candy_machine::accounts::RemoveCollection {
         candy_machine: *candy_machine,
         authority: authority.pubkey(),
@@ -309,7 +310,7 @@ pub async fn set_freeze(
     authority: &Keypair,
     freeze_info: &FreezeInfo,
     token_info: &TokenInfo,
-) -> transport::Result<()> {
+) -> Result<(), BanksClientError> {
     let mut accounts = mpl_candy_machine::accounts::SetFreeze {
         candy_machine: *candy_machine,
         freeze_pda: freeze_info.pda,
@@ -348,7 +349,7 @@ pub async fn remove_freeze(
     candy_machine: &Pubkey,
     authority: &Keypair,
     freeze_info: &FreezeInfo,
-) -> transport::Result<()> {
+) -> Result<(), BanksClientError> {
     let accounts = mpl_candy_machine::accounts::RemoveFreeze {
         candy_machine: *candy_machine,
         authority: authority.pubkey(),
@@ -379,7 +380,7 @@ pub async fn thaw_nft(
     signer: &Keypair,
     freeze_info: &FreezeInfo,
     nft_info: &MasterEditionManager,
-) -> transport::Result<()> {
+) -> Result<(), BanksClientError> {
     let accounts = mpl_candy_machine::accounts::ThawNFT {
         freeze_pda: freeze_info.pda,
         candy_machine: *candy_machine,
@@ -418,7 +419,7 @@ pub async fn unlock_funds(
     treasury: &Pubkey,
     freeze_info: &FreezeInfo,
     token_info: &TokenInfo,
-) -> transport::Result<()> {
+) -> Result<(), BanksClientError> {
     let mut accounts = mpl_candy_machine::accounts::UnlockFunds {
         freeze_pda: freeze_info.pda,
         candy_machine: *candy_machine,
@@ -458,7 +459,7 @@ pub async fn withdraw_funds(
     candy_machine: &Pubkey,
     authority: &Keypair,
     collection_info: &CollectionInfo,
-) -> transport::Result<()> {
+) -> Result<(), BanksClientError> {
     let mut accounts = mpl_candy_machine::accounts::WithdrawFunds {
         candy_machine: *candy_machine,
         authority: authority.pubkey(),
@@ -618,7 +619,7 @@ pub async fn mint_nft(
     collection_info: CollectionInfo,
     gateway_info: GatekeeperInfo,
     freeze_info: FreezeInfo,
-) -> transport::Result<()> {
+) -> Result<(), BanksClientError> {
     let ins = mint_nft_ix(
         candy_machine,
         candy_creator_pda,

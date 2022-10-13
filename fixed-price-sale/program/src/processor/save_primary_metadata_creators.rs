@@ -1,5 +1,6 @@
 use crate::{error::ErrorCode, state::Creator, utils::*, SavePrimaryMetadataCreators};
 use anchor_lang::prelude::*;
+use mpl_token_metadata::state::TokenMetadataAccount;
 
 impl<'info> SavePrimaryMetadataCreators<'info> {
     pub fn process(

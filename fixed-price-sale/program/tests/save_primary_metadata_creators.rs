@@ -17,9 +17,7 @@ mod save_primary_metadata_creators {
     };
     use solana_program::instruction::Instruction;
     use solana_program_test::*;
-    use solana_sdk::{
-        commitment_config::CommitmentLevel, transaction::Transaction, transport::TransportError,
-    };
+    use solana_sdk::{commitment_config::CommitmentLevel, transaction::Transaction};
 
     #[tokio::test]
     async fn success() {
@@ -256,8 +254,9 @@ mod save_primary_metadata_creators {
             .await
             .unwrap_err();
         match tx_error {
-            TransportError::Custom(_) => assert!(true),
-            TransportError::TransactionError(_) => assert!(true),
+            BanksClientError::ClientError(_) => assert!(true),
+            BanksClientError::RpcError(_) => assert!(true),
+            BanksClientError::TransactionError(_) => assert!(true),
             _ => assert!(false),
         }
     }
@@ -355,8 +354,9 @@ mod save_primary_metadata_creators {
             .await
             .unwrap_err();
         match tx_error {
-            TransportError::Custom(_) => assert!(true),
-            TransportError::TransactionError(_) => assert!(true),
+            BanksClientError::ClientError(_) => assert!(true),
+            BanksClientError::RpcError(_) => assert!(true),
+            BanksClientError::TransactionError(_) => assert!(true),
             _ => assert!(false),
         }
     }
@@ -458,8 +458,9 @@ mod save_primary_metadata_creators {
             .await
             .unwrap_err();
         match tx_error {
-            TransportError::Custom(_) => assert!(true),
-            TransportError::TransactionError(_) => assert!(true),
+            BanksClientError::ClientError(_) => assert!(true),
+            BanksClientError::RpcError(_) => assert!(true),
+            BanksClientError::TransactionError(_) => assert!(true),
             _ => assert!(false),
         }
     }
