@@ -8,6 +8,7 @@ use crate::{
     },
     state::{
         escrow_constraints::{EscrowConstraint, EscrowConstraintModel, EscrowConstraintType},
+        transfer_effects::TransferEffects,
         trifle::Trifle,
         Key, SolanaAccount, ESCROW_SEED, TRIFLE_SEED,
     },
@@ -92,7 +93,6 @@ fn create_escrow_constraints_model_account(
         creator: payer_info.key.to_owned(),
         update_authority: update_authority_info.key.to_owned(),
         schema_uri: args.schema_uri.to_owned(),
-        fuse_options: args.fuse_options,
         ..Default::default()
     };
 
@@ -329,15 +329,22 @@ fn transfer_in(
 
     constraint_model.validate(attribute_mint_info.key, &args.slot)?;
 
+    let constraint = constraint_model
+        .constraints
+        .get(&args.slot)
+        .ok_or(TrifleError::InvalidEscrowConstraint)?;
+
+    let transfer_effects = TransferEffects::from(constraint.transfer_effects);
+
     msg!("past constraint model validation");
     // check fuse options
-    if constraint_model.fuse_options.burn() && constraint_model.fuse_options.freeze() {
+    if transfer_effects.burn() && transfer_effects.freeze() {
         msg!("Fuse options cannot be both burn and freeze");
         return Err(TrifleError::FuseOptionConflict.into());
     }
 
     // If burn is not set, create an ATA for the incoming token and perform the transfer.
-    if !constraint_model.fuse_options.burn() {
+    if !transfer_effects.burn() {
         msg!("in transfer clause");
         // Allocate the escrow accounts new ATA.
         let create_escrow_ata_ix =
@@ -428,7 +435,7 @@ fn transfer_in(
         invoke_signed(&burn_ix, &accounts, &[trifle_signer_seeds])?;
     }
 
-    if constraint_model.fuse_options.freeze_parent() {
+    if transfer_effects.freeze_parent() {
         msg!("freezing base nft");
         // make sure the freeze authority is set
         let escrow_mint = Mint::unpack(&escrow_mint_info.data.borrow())?;
@@ -457,13 +464,8 @@ fn transfer_in(
         invoke_signed(&freeze_ix, accounts, &[trifle_signer_seeds])?;
     }
 
-    if constraint_model.fuse_options.track() {
+    if transfer_effects.track() {
         let mut trifle = Trifle::from_account_info(trifle_info)?;
-
-        let constraint = constraint_model
-            .constraints
-            .get(&args.slot)
-            .ok_or(TrifleError::InvalidEscrowConstraint)?;
 
         trifle.try_add(constraint, args.slot, *attribute_mint_info.key, args.amount)?;
 
@@ -498,7 +500,6 @@ fn transfer_out(
     let escrow_info = next_account_info(account_info_iter)?;
     let escrow_token_info = next_account_info(account_info_iter)?;
     let escrow_mint_info = next_account_info(account_info_iter)?;
-    let escrow_edition_info = next_account_info(account_info_iter)?;
     let payer_info = next_account_info(account_info_iter)?;
     let trifle_authority_info = next_account_info(account_info_iter)?;
     let attribute_mint_info = next_account_info(account_info_iter)?;
@@ -510,6 +511,7 @@ fn transfer_out(
     let _spl_token_program_info = next_account_info(account_info_iter)?;
     let rent_info = next_account_info(account_info_iter)?;
     let token_metadata_program_info = next_account_info(account_info_iter)?;
+    let escrow_edition_info = next_account_info(account_info_iter)?;
 
     assert_owned_by(attribute_metadata_info, &mpl_token_metadata::id())?;
     let _attribute_metadata: Metadata = Metadata::from_account_info(attribute_metadata_info)?;
@@ -595,7 +597,7 @@ fn transfer_out(
 
     // Update the Trifle account
     let mut trifle = Trifle::from_account_info(trifle_info)?;
-    trifle.try_remove(args.slot, *attribute_mint_info.key, args.amount)?;
+    trifle.try_remove(args.slot.clone(), *attribute_mint_info.key, args.amount)?;
 
     let serialized_data = trifle.try_to_vec().unwrap();
 
@@ -612,13 +614,20 @@ fn transfer_out(
         serialized_data.len(),
     );
 
-    if trifle.tokens.is_empty() {
+    if trifle.is_empty() {
         msg!("trifle tokens empty");
         let constraint_model =
             EscrowConstraintModel::try_from_slice(&constraint_model_info.data.borrow())
                 .map_err(|_| TrifleError::InvalidEscrowConstraintModel)?;
 
-        if constraint_model.fuse_options.freeze_parent() {
+        let constraint = constraint_model
+            .constraints
+            .get(&args.slot)
+            .ok_or(TrifleError::InvalidEscrowConstraint)?;
+
+        let transfer_effects = TransferEffects::from(constraint.transfer_effects);
+
+        if transfer_effects.freeze_parent() {
             msg!("freeze parent is set, preparing to thaw");
             let escrow_token = Account::unpack(&escrow_token_info.data.borrow())?;
             if escrow_token.is_frozen() {
@@ -715,6 +724,7 @@ fn add_none_constraint_to_escrow_constraint_model(
     let constraint = EscrowConstraint {
         constraint_type: EscrowConstraintType::None,
         token_limit: args.token_limit,
+        transfer_effects: args.transfer_effects,
     };
 
     add_constraint_to_escrow_constraint_model(
@@ -748,6 +758,7 @@ fn add_collection_constraint_to_escrow_constraint_model(
     let constraint = EscrowConstraint {
         constraint_type: EscrowConstraintType::Collection(*collection_mint_info.key),
         token_limit: args.token_limit,
+        transfer_effects: args.transfer_effects,
     };
 
     add_constraint_to_escrow_constraint_model(
@@ -766,6 +777,7 @@ fn add_tokens_constraint_to_escrow_constraint_model(
     let constraint = EscrowConstraint {
         constraint_type: EscrowConstraintType::tokens_from_slice(&args.tokens),
         token_limit: args.token_limit,
+        transfer_effects: args.transfer_effects,
     };
 
     add_constraint_to_escrow_constraint_model(

@@ -1,7 +1,4 @@
-use crate::{
-    error::TrifleError,
-    state::{escrow_constraints::EscrowConstraintModel, Key},
-};
+use crate::{error::TrifleError, state::Key};
 use borsh::{BorshDeserialize, BorshSerialize};
 use shank::ShankAccount;
 use solana_program::pubkey::Pubkey;
@@ -120,6 +117,13 @@ impl Trifle {
         }
 
         Ok(())
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.tokens.is_empty()
+            || self.tokens.iter().all(|(_, token_amounts)| {
+                token_amounts.is_empty() || token_amounts.iter().all(|t| t.amount == 0)
+            })
     }
 }
 

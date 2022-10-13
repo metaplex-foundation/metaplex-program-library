@@ -6,7 +6,7 @@ mod escrow {
         error::TrifleError,
         state::{
             escrow_constraints::{EscrowConstraint, EscrowConstraintModel, EscrowConstraintType},
-            fuse_options::FuseOptions,
+            transfer_effects::TransferEffects,
             trifle::Trifle,
             Key,
         },
@@ -54,16 +54,19 @@ mod escrow {
         let escrow_constraint_none = EscrowConstraint {
             constraint_type: ect_none,
             token_limit: 1,
+            transfer_effects: TransferEffects::default().into(),
         };
 
         let escrow_constraint_collection = EscrowConstraint {
             constraint_type: ect_collection,
             token_limit: 1,
+            transfer_effects: TransferEffects::default().into(),
         };
 
         let escrow_constraint_tokens = EscrowConstraint {
             constraint_type: ect_tokens,
             token_limit: 1,
+            transfer_effects: TransferEffects::default().into(),
         };
 
         let mut buf_escrow_constraint_none = Vec::new();
@@ -113,7 +116,6 @@ mod escrow {
             creator: Keypair::new().pubkey(),
             constraints,
             schema_uri: None,
-            fuse_options: FuseOptions::default(),
         };
 
         let mut buf_escrow_constraints_model = Vec::new();
@@ -138,16 +140,19 @@ mod escrow {
         let ec_none = EscrowConstraint {
             constraint_type: EscrowConstraintType::None,
             token_limit: 1,
+            transfer_effects: TransferEffects::default().into(),
         };
 
         let ec_none_unlimited = EscrowConstraint {
             constraint_type: EscrowConstraintType::None,
             token_limit: 0,
+            transfer_effects: TransferEffects::default().into(),
         };
 
         let ec_collection = EscrowConstraint {
             constraint_type: EscrowConstraintType::Collection(keypair_1.pubkey()),
             token_limit: 1,
+            transfer_effects: TransferEffects::default().into(),
         };
 
         let ec_tokens = EscrowConstraint {
@@ -156,6 +161,7 @@ mod escrow {
                 keypair_3.pubkey(),
             ]),
             token_limit: 10,
+            transfer_effects: TransferEffects::default().into(),
         };
 
         let mut constraints = HashMap::new();
@@ -172,7 +178,6 @@ mod escrow {
             creator: Keypair::new().pubkey(),
             constraints,
             schema_uri: Some("test".to_string()),
-            fuse_options: FuseOptions::default(),
         };
 
         escrow_constraints_model

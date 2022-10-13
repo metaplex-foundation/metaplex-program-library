@@ -9,7 +9,7 @@ use solana_program::{program_error::ProgramError, pubkey::Pubkey};
 
 use crate::{
     error::TrifleError,
-    state::{fuse_options::FuseOptions, Key},
+    state::{transfer_effects::TransferEffects, Key},
 };
 
 #[repr(C)]
@@ -22,7 +22,6 @@ pub struct EscrowConstraintModel {
     pub update_authority: Pubkey,
     pub count: u64,
     pub schema_uri: Option<String>,
-    pub fuse_options: FuseOptions,
 }
 
 impl EscrowConstraintModel {
@@ -56,7 +55,6 @@ impl EscrowConstraintModel {
                     + mem::size_of::<u64>()
                     + option_overhead // for schema_uri
                     + schema_size // the schema itself
-                    + mem::size_of::<FuseOptions>() // for fuse_options
             })
     }
 
@@ -79,7 +77,6 @@ impl Default for EscrowConstraintModel {
             update_authority: Pubkey::default(),
             count: 0,
             schema_uri: None,
-            fuse_options: FuseOptions::default(),
         }
     }
 }
@@ -89,13 +86,14 @@ impl Default for EscrowConstraintModel {
 pub struct EscrowConstraint {
     pub token_limit: u64,
     pub constraint_type: EscrowConstraintType,
+    pub transfer_effects: u16,
 }
 
 impl EscrowConstraint {
     pub fn try_len(&self) -> Result<usize, ProgramError> {
         self.constraint_type
             .try_len()
-            .map(|ct_len| Ok(ct_len + mem::size_of::<u64>()))?
+            .map(|ct_len| Ok(ct_len + mem::size_of::<u64>() + mem::size_of::<u16>()))?
     }
 }
 

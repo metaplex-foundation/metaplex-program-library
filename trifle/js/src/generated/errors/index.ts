@@ -238,24 +238,107 @@ createErrorFromCodeLookup.set(0xa, () => new FailedToFindTokenAmountError());
 createErrorFromNameLookup.set('FailedToFindTokenAmount', () => new FailedToFindTokenAmountError());
 
 /**
- * NotACollection: 'Provided Metadata Account does not have Collection Details'
+ * InvalidCollectionMetadata: 'Invalid Collection Metadata'
  *
  * @category Errors
  * @category generated
  */
-export class NotACollectionError extends Error {
+export class InvalidCollectionMetadataError extends Error {
   readonly code: number = 0xb;
-  readonly name: string = 'NotACollection';
+  readonly name: string = 'InvalidCollectionMetadata';
   constructor() {
-    super('Provided Metadata Account does not have Collection Details');
+    super('Invalid Collection Metadata');
     if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, NotACollectionError);
+      Error.captureStackTrace(this, InvalidCollectionMetadataError);
     }
   }
 }
 
-createErrorFromCodeLookup.set(0xb, () => new NotACollectionError());
-createErrorFromNameLookup.set('NotACollection', () => new NotACollectionError());
+createErrorFromCodeLookup.set(0xb, () => new InvalidCollectionMetadataError());
+createErrorFromNameLookup.set(
+  'InvalidCollectionMetadata',
+  () => new InvalidCollectionMetadataError(),
+);
+
+/**
+ * FuseOptionConflict: 'Provided Fuse Options are in conflict'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class FuseOptionConflictError extends Error {
+  readonly code: number = 0xc;
+  readonly name: string = 'FuseOptionConflict';
+  constructor() {
+    super('Provided Fuse Options are in conflict');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, FuseOptionConflictError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xc, () => new FuseOptionConflictError());
+createErrorFromNameLookup.set('FuseOptionConflict', () => new FuseOptionConflictError());
+
+/**
+ * FreezeAuthorityNotSet: 'Freeze Authority Not Set'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class FreezeAuthorityNotSetError extends Error {
+  readonly code: number = 0xd;
+  readonly name: string = 'FreezeAuthorityNotSet';
+  constructor() {
+    super('Freeze Authority Not Set');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, FreezeAuthorityNotSetError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xd, () => new FreezeAuthorityNotSetError());
+createErrorFromNameLookup.set('FreezeAuthorityNotSet', () => new FreezeAuthorityNotSetError());
+
+/**
+ * CannotBurnPrintEdition: 'Cannot burn Print Edition'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class CannotBurnPrintEditionError extends Error {
+  readonly code: number = 0xe;
+  readonly name: string = 'CannotBurnPrintEdition';
+  constructor() {
+    super('Cannot burn Print Edition');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, CannotBurnPrintEditionError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xe, () => new CannotBurnPrintEditionError());
+createErrorFromNameLookup.set('CannotBurnPrintEdition', () => new CannotBurnPrintEditionError());
+
+/**
+ * ConstraintKeyNotFound: 'Constraint Key Not Found'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class ConstraintKeyNotFoundError extends Error {
+  readonly code: number = 0xf;
+  readonly name: string = 'ConstraintKeyNotFound';
+  constructor() {
+    super('Constraint Key Not Found');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, ConstraintKeyNotFoundError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xf, () => new ConstraintKeyNotFoundError());
+createErrorFromNameLookup.set('ConstraintKeyNotFound', () => new ConstraintKeyNotFoundError());
 
 /**
  * Attempts to resolve a custom program error from the provided error code.

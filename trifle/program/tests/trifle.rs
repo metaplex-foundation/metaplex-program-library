@@ -11,7 +11,7 @@ use mpl_trifle::{
         create_trifle_account,
     },
     pda::{find_escrow_constraint_model_address, find_trifle_address},
-    state::fuse_options::FuseOptions,
+    state::transfer_effects::TransferEffects,
 };
 use solana_program::pubkey::Pubkey;
 use solana_program_test::*;
@@ -24,7 +24,8 @@ mod trifle {
         instruction::{create_trifle_account, transfer_in, transfer_out},
         pda::find_trifle_address,
         state::{
-            escrow_constraints::EscrowConstraintModel, fuse_options::FuseOptions, trifle::Trifle,
+            escrow_constraints::EscrowConstraintModel, transfer_effects::TransferEffects,
+            trifle::Trifle,
         },
     };
     use solana_program::{borsh::try_from_slice_unchecked, program_pack::Pack};
@@ -40,7 +41,7 @@ mod trifle {
         let test_collection = test_collection.expect("test collection should exist");
         let escrow_constraint_model_addr = create_escrow_constraint_model(
             &mut context,
-            FuseOptions::new().with_track(true),
+            TransferEffects::new().with_track(true),
             test_collection,
             vec![metadata.mint.pubkey()],
         )
@@ -150,7 +151,6 @@ mod trifle {
             escrow_addr,
             metadata.token.pubkey(),
             metadata.mint.pubkey(),
-            None,
             context.payer.pubkey(),
             context.payer.pubkey(),
             attribute_metadata.mint.pubkey(),
@@ -159,6 +159,7 @@ mod trifle {
             attribute_metadata.pubkey,
             "test".to_string(),
             1,
+            None,
         );
 
         let transfer_out_tx = Transaction::new_signed_with_payer(
@@ -204,7 +205,7 @@ mod trifle {
         let test_collection = test_collection.expect("should have a collection");
         let escrow_constraint_model_addr = create_escrow_constraint_model(
             &mut context,
-            FuseOptions::new().with_track(true).with_burn(true),
+            TransferEffects::new().with_track(true).with_burn(true),
             test_collection,
             vec![metadata.mint.pubkey()],
         )
@@ -271,7 +272,9 @@ mod trifle {
         let collection = collection.expect("should have a collection");
         let escrow_constraint_model_addr = create_escrow_constraint_model(
             &mut context,
-            FuseOptions::new().with_track(true).with_freeze_parent(true),
+            TransferEffects::new()
+                .with_track(true)
+                .with_freeze_parent(true),
             collection,
             vec![metadata.mint.pubkey()],
         )
@@ -373,7 +376,6 @@ mod trifle {
             escrow,
             metadata.token.pubkey(),
             metadata.mint.pubkey(),
-            Some(master_edition.pubkey),
             context.payer.pubkey(),
             context.payer.pubkey(),
             attribute_metadata.mint.pubkey(),
@@ -382,6 +384,7 @@ mod trifle {
             attribute_metadata.pubkey,
             "test".to_string(),
             1,
+            Some(master_edition.pubkey),
         );
 
         let transfer_out_tx = Transaction::new_signed_with_payer(
@@ -517,7 +520,7 @@ async fn create_nft(
 /// tokens will be added as tokens constraint
 async fn create_escrow_constraint_model(
     context: &mut ProgramTestContext,
-    fuse_options: FuseOptions,
+    transfer_effects: TransferEffects,
     collection: Metadata,
     tokens: Vec<Pubkey>,
 ) -> Pubkey {
@@ -531,7 +534,6 @@ async fn create_escrow_constraint_model(
         &context.payer.pubkey(),
         "Test".to_string(),
         None,
-        fuse_options,
     );
 
     let add_none_constraint_ix = add_none_constraint_to_escrow_constraint_model(
@@ -541,6 +543,7 @@ async fn create_escrow_constraint_model(
         &context.payer.pubkey(),
         "test".to_string(),
         0,
+        transfer_effects.clone().into(),
     );
 
     let add_collection_constraint_ix = add_collection_constraint_to_escrow_constraint_model(
@@ -552,6 +555,7 @@ async fn create_escrow_constraint_model(
         &collection.pubkey,
         "collection".to_string(),
         0,
+        transfer_effects.clone().into(),
     );
 
     let add_tokens_constraint_ix = add_tokens_constraint_to_escrow_constraint_model(
@@ -562,6 +566,7 @@ async fn create_escrow_constraint_model(
         "tokens".to_string(),
         0,
         tokens,
+        transfer_effects.into(),
     );
 
     let tx = Transaction::new_signed_with_payer(
