@@ -1,6 +1,7 @@
 use crate::{error::ErrorCode, state::SellingResourceState, utils::*, InitSellingResource};
 use anchor_lang::prelude::*;
 use anchor_spl::token;
+use mpl_token_metadata::state::TokenMetadataAccount;
 
 impl<'info> InitSellingResource<'info> {
     pub fn process(

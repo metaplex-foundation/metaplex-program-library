@@ -178,7 +178,7 @@ async fn incorrect_auctioneer_pda_fails() {
 
     assert_transport_error!(
         err,
-        TransportError::TransactionError(TransactionError::InstructionError(0, _))
+        BanksClientError::TransactionError(TransactionError::InstructionError(0, _))
     );
 }
 

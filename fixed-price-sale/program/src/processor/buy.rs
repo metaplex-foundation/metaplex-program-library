@@ -12,7 +12,10 @@ use anchor_lang::{
     system_program::System,
 };
 use anchor_spl::token;
-use mpl_token_metadata::{state::Metadata, utils::get_supply_off_master_edition};
+use mpl_token_metadata::{
+    state::{Metadata, TokenMetadataAccount},
+    utils::get_supply_off_master_edition,
+};
 
 impl<'info> Buy<'info> {
     pub fn process(

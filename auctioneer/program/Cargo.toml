@@ -21,20 +21,20 @@ cpi = ["no-entrypoint"]
 default = []
 
 [dependencies]
-solana-program = "~1.9.15"
-anchor-lang = "~0.24.2"
-anchor-spl = "~0.24.2"
+solana-program = "1.10"
+anchor-lang = "0.25.0"
+anchor-spl = "0.25.0"
 mpl-auction-house = { path = "../../auction-house/program", version = "1.2.4", features = ["cpi", "no-entrypoint"]}
 
 [dev-dependencies]
-anchor-client = "~0.24.2"
-shellexpand = "~2.1.0"
-serde_json = "~1.0"
-solana-program = "~1.9.15"
-mpl-testing-utils= {path="../../core/rust/testing-utils", version="0.0.2"}
-solana-program-test = "~1.9.15"
-solana-sdk = "~1.9.15"
-env_logger="~0.9.0"
-spl-associated-token-account = {version = "~1.0.3", features = ["no-entrypoint"]}
-mpl-token-metadata = { version="~1.2.7", features = [ "no-entrypoint" ] }
-spl-token = { version = "~3.2",  features = ["no-entrypoint"] }
+anchor-client = "0.25.0"
+shellexpand = "2.1.0"
+serde_json = "1.0"
+solana-program = "1.10"
+mpl-testing-utils= {path="../../core/rust/testing-utils", version="0.1"}
+solana-program-test = "1.10"
+solana-sdk = "1.10"
+env_logger="0.9.0"
+spl-associated-token-account = {version = "1.0.5", features = ["no-entrypoint"]}
+mpl-token-metadata = { version="1.4", features = [ "no-entrypoint" ] }
+spl-token = { version = "3.2",  features = ["no-entrypoint"] }

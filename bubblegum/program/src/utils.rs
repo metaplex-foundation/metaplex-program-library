@@ -29,7 +29,7 @@ pub fn assert_metadata_is_mpl_compatible(metadata: &MetadataArgs) -> Result<()> 
 
         let mut total: u8 = 0;
         for i in 0..metadata.creators.len() {
-            let creator = metadata.creators[i];
+            let creator = &metadata.creators[i];
             for iter in metadata.creators.iter().skip(i + 1) {
                 if iter.address == creator.address {
                     return Err(BubblegumError::DuplicateCreatorAddress.into());

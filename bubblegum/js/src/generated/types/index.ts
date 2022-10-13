@@ -1,3 +1,4 @@
+export * from './BubblegumEventType'
 export * from './Collection'
 export * from './Creator'
 export * from './InstructionName'

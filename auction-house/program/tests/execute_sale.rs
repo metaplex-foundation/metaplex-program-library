@@ -34,7 +34,6 @@ use solana_program::program_pack::Pack;
 use solana_sdk::{
     signature::Keypair,
     transaction::{Transaction, TransactionError},
-    transport::TransportError,
 };
 use spl_associated_token_account::get_associated_token_address;
 use spl_token::state::Account;
@@ -321,7 +320,7 @@ async fn execute_sale_wrong_token_account_owner_success() {
     println!("{:?}", err);
 
     match err {
-        TransportError::TransactionError(TransactionError::InstructionError(
+        BanksClientError::TransactionError(TransactionError::InstructionError(
             0,
             InstructionError::Custom(6000),
         )) => (),
@@ -3101,7 +3100,7 @@ async fn execute_sale_partial_order_fail_price_mismatch() {
         context.last_blockhash,
     );
 
-    let error: TransportError = context
+    let error: BanksClientError = context
         .banks_client
         .process_transaction(tx)
         .await
