@@ -36,7 +36,7 @@ impl AWSMethod {
 
         if let Some(config) = &config_data.aws_config {
             let domain = if let Some(domain) = &config.domain {
-                match url::Url::parse(&domain.to_string()) {
+                match url::Url::parse(domain) {
                     Ok(url) => url.to_string(),
                     Err(error) => {
                         return Err(anyhow!("Malformed domain URL ({})", error.to_string()))

@@ -63,7 +63,7 @@ jobs:
             binary_path="sugar-windows-latest${binary_extension}"
           elif [[ "${RUNNER_OS}" == "macOS" ]]; then
             binary_path="sugar-macos-intel-latest"
-          elif [[ "${RUNNER_OS}" == "Ubuntu" ]]; then
+          elif [[ "${RUNNER_OS}" == "Linux" ]]; then
             binary_path="sugar-ubuntu-latest"
           else
             echo "error: unknown OS: ${RUNNER_OS}"
