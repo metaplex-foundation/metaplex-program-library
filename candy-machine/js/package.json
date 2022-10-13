@@ -43,11 +43,15 @@
     "@metaplex-foundation/beet-solana": "^0.3.0",
     "@metaplex-foundation/cusper": "^0.0.2",
     "@metaplex-foundation/mpl-core": "^0.6.1",
+    "@solana/spl-token": "^0.3.5",
     "@solana/web3.js": "^1.35.1"
   },
   "devDependencies": {
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^4.0.0",
     "@metaplex-foundation/solita": "^0.14.0",
-    "@solana/spl-token": "0.3.5",
+    "@typescript-eslint/eslint-plugin": "^5.4.0",
+    "@typescript-eslint/parser": "^5.4.0",
     "eslint": "^8.3.0",
     "prettier": "^2.5.1",
     "rimraf": "^3.0.2",

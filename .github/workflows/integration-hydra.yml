@@ -8,7 +8,7 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  SOLANA_VERSION: 1.10.35
+  SOLANA_VERSION: 1.10.25
   RUST_TOOLCHAIN: stable
 
 jobs:
@@ -73,18 +73,13 @@ jobs:
         with:
           cache_id: sdk-hydra
           working_dir: ./hydra/js
-          build_token_metadata: true
 
       # Run integration test
       - name: start-local-test-validator
         working-directory: ./hydra/js
-        run: yarn run api:gen && yarn run build && DEBUG=amman* yarn amman:start && DEBUG=mpl* yarn test && yarn run amman:stop
+        run: DEBUG=amman* yarn amman:start
 
-      # - name: integration-test-hydra-program
-      #   id: run_integration_test
-      #   working-directory: ./hydra/js
-      #   run: DEBUG=mpl* yarn test
-
-      # - name: stop-local-test-validator
-      #   working-directory: ./hydra/js
-      #   run: yarn amman:stop
+      - name: integration-test-hydra-program
+        id: run_integration_test
+        working-directory: ./hydra/js
+        run: DEBUG=mpl* yarn test
