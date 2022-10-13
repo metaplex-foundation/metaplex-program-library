@@ -4,7 +4,7 @@ use mpl_token_metadata::{
     state::{MasterEditionV2, EDITION, PREFIX},
 };
 use solana_program::borsh::try_from_slice_unchecked;
-use solana_sdk::{pubkey::Pubkey, signature::Signer, transaction::Transaction, transport};
+use solana_sdk::{pubkey::Pubkey, signature::Signer, transaction::Transaction};
 use spl_associated_token_account::get_associated_token_address;
 
 use crate::{
@@ -89,7 +89,7 @@ impl MasterEditionManager {
         &self,
         context: &mut ProgramTestContext,
         max_supply: Option<u64>,
-    ) -> transport::Result<()> {
+    ) -> Result<(), BanksClientError> {
         update_blockhash(context).await?;
         let tx = Transaction::new_signed_with_payer(
             &[instruction::create_master_edition_v3(
