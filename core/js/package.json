@@ -41,8 +41,14 @@
     "bs58": "^4.0.1"
   },
   "devDependencies": {
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "@typescript-eslint/eslint-plugin": "^5.4.0",
+    "@typescript-eslint/parser": "^5.4.0",
+    "@types/bn.js": "^5.1.1",
     "@types/bs58": "^4.0.1",
     "eslint": "^8.3.0",
+    "prettier": "^2.5.1",
     "rimraf": "^3.0.2",
     "typescript": "^4.6.2"
   }

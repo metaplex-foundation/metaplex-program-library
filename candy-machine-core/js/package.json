@@ -48,7 +48,11 @@
     "bn.js": "^5.2.0"
   },
   "devDependencies": {
-    "@metaplex-foundation/amman": "^0.11.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "@typescript-eslint/eslint-plugin": "^5.4.0",
+    "@typescript-eslint/parser": "^5.4.0",
+    "@metaplex-foundation/amman": "^0.12.0",
     "@metaplex-foundation/js": "^0.15.0",
     "@metaplex-foundation/solita": "^0.12.0",
     "@solana/spl-token": "0.3.5",
