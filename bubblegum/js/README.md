@@ -1,14 +1,27 @@
-# Bubblegum
+# mpl-candy-machine-core
 
-This SDK uses MPL's `Solita` to generate typescript SDK for `anchor` smart-contract.
+This package contains the Metaplex Candy Machine Core contract SDK code.
 
-Solita is particularly helpful:
-- Enums: (i.e. TokenProgramVersion)
-- Complex types: (ie MetadataArgs support)
-- Using typed system to identify issues with smart contract args
+## API Docs
 
-### Install
+Find the [candy-machine-core API docs published here](https://metaplex-foundation.github.io/metaplex-program-library/docs/candy-machine-core/index.html).
 
-1. `yarn`
-2. `node solita.js`
-3. `import { ... } from '../sdk/bubblegum'` 
+## Installation
+
+```shell
+npm install @metaplex-foundation/mpl-candy-machine-core --save
+```
+
+## Developing
+
+In order to update the generated SDK when the rust contract was updated please run:
+
+```
+yarn api:gen
+```
+
+and then update the wrapper code and tests.
+
+## LICENSE
+
+Apache v2.0
