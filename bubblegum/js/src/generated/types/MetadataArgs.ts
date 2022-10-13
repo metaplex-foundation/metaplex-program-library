@@ -5,29 +5,26 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet'
-import { TokenStandard, tokenStandardBeet } from './TokenStandard'
-import { Collection, collectionBeet } from './Collection'
-import { Uses, usesBeet } from './Uses'
-import {
-  TokenProgramVersion,
-  tokenProgramVersionBeet,
-} from './TokenProgramVersion'
-import { Creator, creatorBeet } from './Creator'
+import * as beet from '@metaplex-foundation/beet';
+import { TokenStandard, tokenStandardBeet } from './TokenStandard';
+import { Collection, collectionBeet } from './Collection';
+import { Uses, usesBeet } from './Uses';
+import { TokenProgramVersion, tokenProgramVersionBeet } from './TokenProgramVersion';
+import { Creator, creatorBeet } from './Creator';
 export type MetadataArgs = {
-  name: string
-  symbol: string
-  uri: string
-  sellerFeeBasisPoints: number
-  primarySaleHappened: boolean
-  isMutable: boolean
-  editionNonce: beet.COption<number>
-  tokenStandard: beet.COption<TokenStandard>
-  collection: beet.COption<Collection>
-  uses: beet.COption<Uses>
-  tokenProgramVersion: TokenProgramVersion
-  creators: Creator[]
-}
+  name: string;
+  symbol: string;
+  uri: string;
+  sellerFeeBasisPoints: number;
+  primarySaleHappened: boolean;
+  isMutable: boolean;
+  editionNonce: beet.COption<number>;
+  tokenStandard: beet.COption<TokenStandard>;
+  collection: beet.COption<Collection>;
+  uses: beet.COption<Uses>;
+  tokenProgramVersion: TokenProgramVersion;
+  creators: Creator[];
+};
 
 /**
  * @category userTypes
@@ -48,5 +45,5 @@ export const metadataArgsBeet = new beet.FixableBeetArgsStruct<MetadataArgs>(
     ['tokenProgramVersion', tokenProgramVersionBeet],
     ['creators', beet.array(creatorBeet)],
   ],
-  'MetadataArgs'
-)
+  'MetadataArgs',
+);

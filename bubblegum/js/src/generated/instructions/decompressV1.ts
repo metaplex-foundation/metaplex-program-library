@@ -5,10 +5,10 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as splToken from '@solana/spl-token'
-import * as beet from '@metaplex-foundation/beet'
-import * as web3 from '@solana/web3.js'
-import { MetadataArgs, metadataArgsBeet } from '../types/MetadataArgs'
+import * as splToken from '@solana/spl-token';
+import * as beet from '@metaplex-foundation/beet';
+import * as web3 from '@solana/web3.js';
+import { MetadataArgs, metadataArgsBeet } from '../types/MetadataArgs';
 
 /**
  * @category Instructions
@@ -16,8 +16,8 @@ import { MetadataArgs, metadataArgsBeet } from '../types/MetadataArgs'
  * @category generated
  */
 export type DecompressV1InstructionArgs = {
-  metadata: MetadataArgs
-}
+  metadata: MetadataArgs;
+};
 /**
  * @category Instructions
  * @category DecompressV1
@@ -25,15 +25,15 @@ export type DecompressV1InstructionArgs = {
  */
 export const decompressV1Struct = new beet.FixableBeetArgsStruct<
   DecompressV1InstructionArgs & {
-    instructionDiscriminator: number[] /* size: 8 */
+    instructionDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
     ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
     ['metadata', metadataArgsBeet],
   ],
-  'DecompressV1InstructionArgs'
-)
+  'DecompressV1InstructionArgs',
+);
 /**
  * Accounts required by the _decompressV1_ instruction
  *
@@ -53,24 +53,22 @@ export const decompressV1Struct = new beet.FixableBeetArgsStruct<
  * @category generated
  */
 export type DecompressV1InstructionAccounts = {
-  voucher: web3.PublicKey
-  leafOwner: web3.PublicKey
-  tokenAccount: web3.PublicKey
-  mint: web3.PublicKey
-  mintAuthority: web3.PublicKey
-  metadata: web3.PublicKey
-  masterEdition: web3.PublicKey
-  systemProgram?: web3.PublicKey
-  sysvarRent: web3.PublicKey
-  tokenMetadataProgram: web3.PublicKey
-  tokenProgram?: web3.PublicKey
-  associatedTokenProgram: web3.PublicKey
-  logWrapper: web3.PublicKey
-}
+  voucher: web3.PublicKey;
+  leafOwner: web3.PublicKey;
+  tokenAccount: web3.PublicKey;
+  mint: web3.PublicKey;
+  mintAuthority: web3.PublicKey;
+  metadata: web3.PublicKey;
+  masterEdition: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
+  sysvarRent: web3.PublicKey;
+  tokenMetadataProgram: web3.PublicKey;
+  tokenProgram?: web3.PublicKey;
+  associatedTokenProgram: web3.PublicKey;
+  logWrapper: web3.PublicKey;
+};
 
-export const decompressV1InstructionDiscriminator = [
-  54, 85, 76, 70, 228, 250, 164, 81,
-]
+export const decompressV1InstructionDiscriminator = [54, 85, 76, 70, 228, 250, 164, 81];
 
 /**
  * Creates a _DecompressV1_ instruction.
@@ -85,12 +83,12 @@ export const decompressV1InstructionDiscriminator = [
 export function createDecompressV1Instruction(
   accounts: DecompressV1InstructionAccounts,
   args: DecompressV1InstructionArgs,
-  programId = new web3.PublicKey('BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY')
+  programId = new web3.PublicKey('BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY'),
 ) {
   const [data] = decompressV1Struct.serialize({
     instructionDiscriminator: decompressV1InstructionDiscriminator,
     ...args,
-  })
+  });
   const keys: web3.AccountMeta[] = [
     {
       pubkey: accounts.voucher,
@@ -157,12 +155,12 @@ export function createDecompressV1Instruction(
       isWritable: false,
       isSigner: false,
     },
-  ]
+  ];
 
   const ix = new web3.TransactionInstruction({
     programId,
     keys,
     data,
-  })
-  return ix
+  });
+  return ix;
 }

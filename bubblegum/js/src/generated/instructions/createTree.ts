@@ -5,8 +5,8 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet'
-import * as web3 from '@solana/web3.js'
+import * as beet from '@metaplex-foundation/beet';
+import * as web3 from '@solana/web3.js';
 
 /**
  * @category Instructions
@@ -14,9 +14,9 @@ import * as web3 from '@solana/web3.js'
  * @category generated
  */
 export type CreateTreeInstructionArgs = {
-  maxDepth: number
-  maxBufferSize: number
-}
+  maxDepth: number;
+  maxBufferSize: number;
+};
 /**
  * @category Instructions
  * @category CreateTree
@@ -24,7 +24,7 @@ export type CreateTreeInstructionArgs = {
  */
 export const createTreeStruct = new beet.BeetArgsStruct<
   CreateTreeInstructionArgs & {
-    instructionDiscriminator: number[] /* size: 8 */
+    instructionDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
@@ -32,8 +32,8 @@ export const createTreeStruct = new beet.BeetArgsStruct<
     ['maxDepth', beet.u32],
     ['maxBufferSize', beet.u32],
   ],
-  'CreateTreeInstructionArgs'
-)
+  'CreateTreeInstructionArgs',
+);
 /**
  * Accounts required by the _createTree_ instruction
  *
@@ -48,18 +48,16 @@ export const createTreeStruct = new beet.BeetArgsStruct<
  * @category generated
  */
 export type CreateTreeInstructionAccounts = {
-  treeAuthority: web3.PublicKey
-  merkleTree: web3.PublicKey
-  payer: web3.PublicKey
-  treeCreator: web3.PublicKey
-  logWrapper: web3.PublicKey
-  compressionProgram: web3.PublicKey
-  systemProgram?: web3.PublicKey
-}
+  treeAuthority: web3.PublicKey;
+  merkleTree: web3.PublicKey;
+  payer: web3.PublicKey;
+  treeCreator: web3.PublicKey;
+  logWrapper: web3.PublicKey;
+  compressionProgram: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
+};
 
-export const createTreeInstructionDiscriminator = [
-  165, 83, 136, 142, 89, 202, 47, 220,
-]
+export const createTreeInstructionDiscriminator = [165, 83, 136, 142, 89, 202, 47, 220];
 
 /**
  * Creates a _CreateTree_ instruction.
@@ -74,12 +72,12 @@ export const createTreeInstructionDiscriminator = [
 export function createCreateTreeInstruction(
   accounts: CreateTreeInstructionAccounts,
   args: CreateTreeInstructionArgs,
-  programId = new web3.PublicKey('BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY')
+  programId = new web3.PublicKey('BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY'),
 ) {
   const [data] = createTreeStruct.serialize({
     instructionDiscriminator: createTreeInstructionDiscriminator,
     ...args,
-  })
+  });
   const keys: web3.AccountMeta[] = [
     {
       pubkey: accounts.treeAuthority,
@@ -116,12 +114,12 @@ export function createCreateTreeInstruction(
       isWritable: false,
       isSigner: false,
     },
-  ]
+  ];
 
   const ix = new web3.TransactionInstruction({
     programId,
     keys,
     data,
-  })
-  return ix
+  });
+  return ix;
 }

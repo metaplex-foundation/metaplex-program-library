@@ -5,13 +5,13 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet'
-import { UseMethod, useMethodBeet } from './UseMethod'
+import * as beet from '@metaplex-foundation/beet';
+import { UseMethod, useMethodBeet } from './UseMethod';
 export type Uses = {
-  useMethod: UseMethod
-  remaining: beet.bignum
-  total: beet.bignum
-}
+  useMethod: UseMethod;
+  remaining: beet.bignum;
+  total: beet.bignum;
+};
 
 /**
  * @category userTypes
@@ -23,5 +23,5 @@ export const usesBeet = new beet.BeetArgsStruct<Uses>(
     ['remaining', beet.u64],
     ['total', beet.u64],
   ],
-  'Uses'
-)
+  'Uses',
+);

@@ -5,7 +5,7 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet'
+import * as beet from '@metaplex-foundation/beet';
 /**
  * @category enums
  * @category generated
@@ -21,6 +21,7 @@ export enum TokenStandard {
  * @category userTypes
  * @category generated
  */
-export const tokenStandardBeet = beet.fixedScalarEnum(
+export const tokenStandardBeet = beet.fixedScalarEnum(TokenStandard) as beet.FixedSizeBeet<
+  TokenStandard,
   TokenStandard
-) as beet.FixedSizeBeet<TokenStandard, TokenStandard>
+>;
