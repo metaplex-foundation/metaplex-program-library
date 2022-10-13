@@ -420,9 +420,9 @@ pub async fn create_master_nft(
 /// The below is a workaround to make it even less likely.
 /// Tests are still brittle, but fail much less often which is the best we can do for now aside
 /// from disabling the problematic tests in CI entirely.
-pub fn assert_error_ignoring_io_error_in_ci(error: &TransportError, error_code: u32) {
+pub fn assert_error_ignoring_io_error_in_ci(error: &BanksClientError, error_code: u32) {
     match error {
-        TransportError::IoError(err) if env::var("CI").is_ok() => {
+        BanksClientError::Io(err) if env::var("CI").is_ok() => {
             match err.kind() {
                 std::io::ErrorKind::Other
                     if &err.to_string() == "the request exceeded its deadline" =>
