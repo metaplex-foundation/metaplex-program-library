@@ -1,13 +1,16 @@
-import { PublicKey } from '@solana/web3.js';
+import { PublicKey } from "@solana/web3.js";
 import {
-  EscrowAuthority,
   PROGRAM_ADDRESS as TM_PROGRAM_ADDRESS,
-} from '../../../../token-metadata/js/src/generated';
-import { PROGRAM_ADDRESS as TRIFLE_PROGRAM_ADDRESS } from '../../../js/src/generated';
+} from "../../../../token-metadata/js/src/generated";
+import { PROGRAM_ADDRESS as TRIFLE_PROGRAM_ADDRESS } from "../../../js/src/generated";
+import { EscrowAuthority } from "./utils";
 
-export const findEscrowConstraintModelPda = async (creator: PublicKey, name: string) => {
+export const findEscrowConstraintModelPda = async (
+  creator: PublicKey,
+  name: string,
+) => {
   return await PublicKey.findProgramAddress(
-    [Buffer.from('escrow'), creator.toBuffer(), Buffer.from(name)],
+    [Buffer.from("escrow"), creator.toBuffer(), Buffer.from(name)],
     new PublicKey(TRIFLE_PROGRAM_ADDRESS),
   );
 };
@@ -19,7 +22,7 @@ export const findTriflePda = async (
 ) => {
   return await PublicKey.findProgramAddress(
     [
-      Buffer.from('trifle'),
+      Buffer.from("trifle"),
       mint.toBuffer(),
       authority.toBuffer(),
       escrow_constraint_model.toBuffer(),
@@ -34,7 +37,7 @@ export const findEscrowPda = async (
   creator?: PublicKey,
 ) => {
   const seeds = [
-    Buffer.from('metadata'),
+    Buffer.from("metadata"),
     new PublicKey(TM_PROGRAM_ADDRESS).toBuffer(),
     mint.toBuffer(),
     Uint8Array.from([authority]),
@@ -44,10 +47,13 @@ export const findEscrowPda = async (
     if (creator) {
       seeds.push(creator.toBuffer());
     } else {
-      throw new Error('Creator is required');
+      throw new Error("Creator is required");
     }
   }
 
-  seeds.push(Buffer.from('escrow'));
-  return await PublicKey.findProgramAddress(seeds, new PublicKey(TM_PROGRAM_ADDRESS));
+  seeds.push(Buffer.from("escrow"));
+  return await PublicKey.findProgramAddress(
+    seeds,
+    new PublicKey(TM_PROGRAM_ADDRESS),
+  );
 };

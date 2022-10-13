@@ -591,11 +591,7 @@ fn add_collection_constraint_to_escrow_constraint_model(
     assert_owned_by(collection_mint_info, &spl_token::id())?;
     assert_owned_by(collection_metadata_info, &mpl_token_metadata::id())?;
 
-    let metadata = Metadata::from_account_info(collection_metadata_info)?;
-
-    if metadata.collection_details.is_none() {
-        return Err(TrifleError::NotACollection.into());
-    }
+    Metadata::from_account_info(collection_metadata_info)?;
 
     let constraint = EscrowConstraint {
         constraint_type: EscrowConstraintType::Collection(*collection_mint_info.key),
