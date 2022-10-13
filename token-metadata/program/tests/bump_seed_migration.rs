@@ -3,7 +3,7 @@ pub mod utils;
 
 use mpl_token_metadata::state::{UseMethod, Uses};
 use mpl_token_metadata::{
-    state::{MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH},
+    constants::{MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH},
     utils::puffed_out_string,
 };
 

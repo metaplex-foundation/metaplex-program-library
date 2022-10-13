@@ -1,9 +1,10 @@
 use solana_program::{account_info::AccountInfo, program_error::ProgramError, pubkey::Pubkey};
 
 use crate::{
+    constants::{PREFIX, USER},
     error::MetadataError,
     pda,
-    state::{UseAuthorityRecord, UseMethod, Uses, PREFIX, USER},
+    state::{UseAuthorityRecord, UseMethod, Uses},
     utils::assert_derivation,
 };
 

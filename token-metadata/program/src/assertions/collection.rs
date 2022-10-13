@@ -1,11 +1,12 @@
 use solana_program::{account_info::AccountInfo, program_error::ProgramError, pubkey::Pubkey};
 
 use crate::{
+    constants::{EDITION, PREFIX},
     error::MetadataError,
     pda::find_collection_authority_account,
     state::{
         Collection, CollectionAuthorityRecord, MasterEditionV2, Metadata, TokenMetadataAccount,
-        TokenStandard, EDITION, PREFIX,
+        TokenStandard,
     },
     utils::assert_derivation,
 };

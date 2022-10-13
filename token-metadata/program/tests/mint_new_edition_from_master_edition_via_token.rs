@@ -3,9 +3,7 @@ pub mod utils;
 
 use borsh::BorshSerialize;
 use mpl_token_metadata::{
-    error::MetadataError,
-    id, instruction,
-    state::{Key, MAX_MASTER_EDITION_LEN},
+    constants::MAX_MASTER_EDITION_LEN, error::MetadataError, id, instruction, state::Key,
 };
 use num_traits::FromPrimitive;
 use solana_program_test::*;

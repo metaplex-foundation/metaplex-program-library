@@ -1,7 +1,8 @@
 use crate::*;
 use mpl_token_metadata::{
+    constants::PREFIX,
     id, instruction,
-    state::{Collection, CollectionDetails, Creator, Data, DataV2, Uses, PREFIX},
+    state::{Collection, CollectionDetails, Creator, Data, DataV2, Uses},
 };
 use solana_program::borsh::try_from_slice_unchecked;
 

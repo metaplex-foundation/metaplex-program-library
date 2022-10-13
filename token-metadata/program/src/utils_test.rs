@@ -68,8 +68,9 @@ mod puff_out_test {
 
 mod try_from_slice_checked {
     use crate::{
+        constants::MAX_METADATA_LEN,
         deser::tests::{expected_pesky_metadata, pesky_data},
-        state::{Key, Metadata, MAX_METADATA_LEN},
+        state::{Key, Metadata},
         utils::try_from_slice_checked,
     };
 

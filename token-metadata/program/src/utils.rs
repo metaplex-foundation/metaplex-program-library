@@ -1,14 +1,16 @@
 use crate::{
     assertions::{collection::assert_collection_update_is_valid, uses::assert_valid_use},
+    constants::{
+        EDITION, EDITION_MARKER_BIT_SIZE, MAX_CREATOR_LIMIT, MAX_EDITION_LEN,
+        MAX_EDITION_MARKER_SIZE, MAX_MASTER_EDITION_LEN, MAX_METADATA_LEN, MAX_NAME_LENGTH,
+        MAX_SYMBOL_LENGTH, MAX_URI_LENGTH, PREFIX,
+    },
     deser::clean_write_metadata,
     error::MetadataError,
     pda::find_master_edition_account,
     state::{
         get_reservation_list, CollectionDetails, Creator, Data, DataV2, Edition, EditionMarker,
         Key, MasterEditionV1, MasterEditionV2, Metadata, TokenMetadataAccount, TokenStandard, Uses,
-        EDITION, EDITION_MARKER_BIT_SIZE, MAX_CREATOR_LIMIT, MAX_EDITION_LEN,
-        MAX_EDITION_MARKER_SIZE, MAX_MASTER_EDITION_LEN, MAX_METADATA_LEN, MAX_NAME_LENGTH,
-        MAX_SYMBOL_LENGTH, MAX_URI_LENGTH, PREFIX,
     },
 };
 use arrayref::{array_mut_ref, array_ref, array_refs, mut_array_refs};

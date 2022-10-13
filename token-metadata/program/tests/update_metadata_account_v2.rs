@@ -2,12 +2,10 @@
 pub mod utils;
 
 use mpl_token_metadata::{
+    constants::{MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH},
     error::MetadataError,
     id, instruction,
-    state::{
-        Collection, Creator, DataV2, Key, UseMethod, Uses, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH,
-        MAX_URI_LENGTH,
-    },
+    state::{Collection, Creator, DataV2, Key, UseMethod, Uses},
     utils::puffed_out_string,
 };
 use num_traits::FromPrimitive;

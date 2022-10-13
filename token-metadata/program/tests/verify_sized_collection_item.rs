@@ -6,8 +6,9 @@ use mpl_token_metadata::pda::find_collection_authority_account;
 use mpl_token_metadata::state::{Collection, CollectionDetails};
 use mpl_token_metadata::state::{UseMethod, Uses};
 use mpl_token_metadata::{
+    constants::{MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH},
     error::MetadataError,
-    state::{Key, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH},
+    state::Key,
     utils::puffed_out_string,
     ID as PROGRAM_ID,
 };
@@ -22,7 +23,9 @@ use solana_sdk::{
 use utils::*;
 mod verify_sized_collection_item {
 
-    use mpl_token_metadata::state::{CollectionAuthorityRecord, COLLECTION_AUTHORITY_RECORD_SIZE};
+    use mpl_token_metadata::{
+        constants::COLLECTION_AUTHORITY_RECORD_SIZE, state::CollectionAuthorityRecord,
+    };
     use solana_program::borsh::try_from_slice_unchecked;
     use solana_sdk::transaction::Transaction;
 

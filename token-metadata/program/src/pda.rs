@@ -1,6 +1,6 @@
 use solana_program::pubkey::Pubkey;
 
-use crate::state::{BURN, COLLECTION_AUTHORITY, EDITION, PREFIX, USER};
+use crate::constants::{BURN, COLLECTION_AUTHORITY, EDITION, PREFIX, USER};
 
 pub fn find_edition_account(mint: &Pubkey, edition_number: String) -> (Pubkey, u8) {
     Pubkey::find_program_address(

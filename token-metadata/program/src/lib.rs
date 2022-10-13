@@ -1,6 +1,7 @@
 //! A Token Metadata program for the Solana blockchain.
 
 pub mod assertions;
+pub mod constants;
 pub mod deprecated_instruction;
 pub mod deprecated_processor;
 mod deser;

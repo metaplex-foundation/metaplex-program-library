@@ -1,9 +1,9 @@
 use crate::*;
 use borsh::BorshSerialize;
 use mpl_token_metadata::{
+    constants::{EDITION, EDITION_MARKER_BIT_SIZE, PREFIX},
     id,
     instruction::{self, MetadataInstruction, MintNewEditionFromMasterEditionViaTokenArgs},
-    state::{EDITION, EDITION_MARKER_BIT_SIZE, PREFIX},
 };
 use solana_program::{
     borsh::try_from_slice_unchecked,

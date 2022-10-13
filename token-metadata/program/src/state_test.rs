@@ -4,11 +4,12 @@ use solana_program::account_info::AccountInfo;
 use solana_sdk::{signature::Keypair, signer::Signer};
 
 use crate::{
+    constants::MAX_METADATA_LEN,
     deser::tests::{expected_pesky_metadata, pesky_data},
     error::MetadataError,
     state::{
         CollectionAuthorityRecord, Edition, EditionMarker, Key, MasterEditionV2, Metadata,
-        UseAuthorityRecord, MAX_METADATA_LEN,
+        UseAuthorityRecord,
     },
     ID,
 };

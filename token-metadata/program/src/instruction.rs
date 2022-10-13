@@ -1,9 +1,7 @@
 use crate::{
+    constants::{EDITION, EDITION_MARKER_BIT_SIZE, PREFIX},
     deprecated_instruction::{MintPrintingTokensViaTokenArgs, SetReservationListArgs},
-    state::{
-        Collection, CollectionDetails, Creator, Data, DataV2, Uses, EDITION,
-        EDITION_MARKER_BIT_SIZE, PREFIX,
-    },
+    state::{Collection, CollectionDetails, Creator, Data, DataV2, Uses},
 };
 use borsh::{BorshDeserialize, BorshSerialize};
 use shank::ShankInstruction;

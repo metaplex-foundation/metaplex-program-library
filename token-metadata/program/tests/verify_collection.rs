@@ -4,11 +4,7 @@ pub mod utils;
 use mpl_token_metadata::pda::find_collection_authority_account;
 use mpl_token_metadata::state::Collection;
 use mpl_token_metadata::state::{UseMethod, Uses};
-use mpl_token_metadata::{
-    error::MetadataError,
-    state::{Key, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH},
-    utils::puffed_out_string,
-};
+use mpl_token_metadata::{error::MetadataError, state::Key, utils::puffed_out_string};
 use num_traits::FromPrimitive;
 use solana_program_test::*;
 use solana_sdk::{
@@ -19,7 +15,7 @@ use solana_sdk::{
 use utils::*;
 mod verify_collection {
 
-    use mpl_token_metadata::state::{CollectionAuthorityRecord, COLLECTION_AUTHORITY_RECORD_SIZE};
+    use mpl_token_metadata::{constants::*, state::CollectionAuthorityRecord};
     use solana_program::borsh::try_from_slice_unchecked;
     use solana_sdk::transaction::Transaction;
 

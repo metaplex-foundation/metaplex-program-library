@@ -6,6 +6,11 @@ use crate::{
         },
         uses::{assert_valid_use, process_use_authority_validation},
     },
+    constants::{
+        BURN, COLLECTION_AUTHORITY, COLLECTION_AUTHORITY_RECORD_SIZE, EDITION,
+        EDITION_MARKER_BIT_SIZE, MAX_MASTER_EDITION_LEN, MAX_METADATA_LEN, PREFIX, USER,
+        USE_AUTHORITY_RECORD_SIZE,
+    },
     deprecated_processor::{
         process_deprecated_create_metadata_accounts, process_deprecated_update_metadata_accounts,
     },
@@ -16,9 +21,7 @@ use crate::{
     state::{
         Collection, CollectionAuthorityRecord, CollectionDetails, DataV2, Edition, EditionMarker,
         Key, MasterEditionV1, MasterEditionV2, Metadata, TokenMetadataAccount, TokenStandard,
-        UseAuthorityRecord, UseMethod, Uses, BURN, COLLECTION_AUTHORITY,
-        COLLECTION_AUTHORITY_RECORD_SIZE, EDITION, EDITION_MARKER_BIT_SIZE, MAX_MASTER_EDITION_LEN,
-        MAX_METADATA_LEN, PREFIX, USER, USE_AUTHORITY_RECORD_SIZE,
+        UseAuthorityRecord, UseMethod, Uses,
     },
     utils::{
         assert_currently_holding, assert_data_valid, assert_delegated_tokens, assert_derivation,
