@@ -26,7 +26,7 @@ Compressed NFTs are secured on-chain by the hashing of the state data when it is
 
 In the unlikely scenario that all RPC providers were to lose their data stores, the off-chain state of compressed NFTs could be recovered by replaying transactions (provided that the given tree was started from the beginning).
 
-Compressed NFTs can also be losslessly decompressed into uncompressed Metaplex NFTs.  Decompression will cost rent for the token-metadata Metadata and Master Edition accounts that need to be created.
+Compressed NFTs can also be losslessly decompressed into uncompressed Metaplex NFTs.  Decompression will cost rent for the Metadata and Master Edition `token-metadata` program accounts that need to be created.
 
 ## Basic operation
 
@@ -46,7 +46,7 @@ Beyond verifying creators at the time of mint, there are `verify_creator` and `u
 
 ### Collection verification
 
-Note that there is no such thing as compressed Verified Collections.  Collections are still NFTs created in the realm of token-metadata Metadata and Master Edition accounts.  Also note that a collection cannot be set to verified at the time of minting.  Instead, there are instructions to `verify_collection` and `unverify_collection`, as well as a `set_and_verify_collection` instruction for the case where the collection was set during the mint.  All of these require either the true Collection Authority to be a a signer, or a delegated Collection Authority to be a signer along with providing a Collection Authority Record PDA.  See the Metaplex documentation on [`Certified Collections`](https://docs.metaplex.com/programs/token-metadata/certified-collections) for more information on verifying collections.
+Note that there is no such thing as compressed Verified Collections.  Collections are still NFTs created in the realm of Metadata and Master Edition `token-metadata` accounts.  Also note that a collection cannot be set to verified at the time of minting.  Instead, there are instructions to `verify_collection` and `unverify_collection`, as well as a `set_and_verify_collection` instruction for the case where the collection was set during the mint.  All of these require either the true Collection Authority to be a a signer, or a delegated Collection Authority to be a signer along with providing a Collection Authority Record PDA.  See the Metaplex documentation on [`Certified Collections`](https://docs.metaplex.com/programs/token-metadata/certified-collections) for more information on verifying collections.
 
 ### Transfer ownership, delegate authority, and burn an NFT.
 
@@ -54,7 +54,7 @@ Compressed NFTs support transferring ownership, delegating authority, and burnin
 
 ### Redeem an NFT and decompress it into an uncompressed Metaplex NFT
 
-Redeeming an NFT removes the leaf from the Merkle tree and creates a voucher PDA account.  The voucher account can be sent to the `decompress_v1` instruction to decompress the NFT into an uncompressed Metaplex NFT.  As mentioned above this will cost rent for the token-metadata Metadata and Master Edition accounts that are created during the decompression process.  Note that after a compressed NFT is redeemed but before it is decompressed, the process can be reversed using `cancel_redeem`.  This puts the compressed NFT back into the Merkle tree.
+Redeeming an NFT removes the leaf from the Merkle tree and creates a voucher PDA account.  The voucher account can be sent to the `decompress_v1` instruction to decompress the NFT into an uncompressed Metaplex NFT.  As mentioned above this will cost rent for the Metadata and Master Edition `token-metadata` accounts that are created during the decompression process.  Note that after a compressed NFT is redeemed but before it is decompressed, the process can be reversed using `cancel_redeem`.  This puts the compressed NFT back into the Merkle tree.
 
 ## Accounts
 
