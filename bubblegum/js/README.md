@@ -4,7 +4,7 @@ This package contains the Metaplex Bubblegum program JS SDK code.
 
 ## API Docs
 
-Find the [mpl-bubblegum API docs published here](https://metaplex-foundation.github.io/metaplex-program-library/docs/mpl-bubblegum/index.html).
+Find the [bubblegum API docs published here](https://metaplex-foundation.github.io/metaplex-program-library/docs/bubblegum/index.html).
 
 ## Installation
 
