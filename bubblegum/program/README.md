@@ -30,38 +30,50 @@ Compressed NFTs can also be losslessly decompressed into uncompressed Metaplex N
 
 ### Creating and minting to a tree
 
-Anyone can create a tree using `create_tree` and then they are the tree owner.  They can also delegate authority to another wallet using `set_tree_delegate`.  The tree owner/delegate must sign the transaction to mint a Compressed NFT to the Merkle tree.
+Anyone can create a tree using `create_tree` and then they are the tree owner.  They can also delegate authority to another wallet.  After an NFT is minted, for any operations that modify the NFT, Merkle proofs must be sent to validate the Merkle tree changes.  Bubblegum is an Anchor program and makes use of the remaining accounts feature for Merkle proofs.  They are added as 32-byte Keccak256 hash values that represent the nodes from the Merkle tree that are required to calculate a new Merkle root.
 
 ### Creator verification
 
-Creators are specified in a creators array in the metadata passed into the `mint_v1` instruction.  All creators for which `verified` is set to true in the creators array at the time of mint must be a signer of the transaction or the mint will fail.  Beyond the signers specified in the `MintV1` Account validation structure, this Anchor program makes use of the remaining accounts feature to optionally look for additional signing creators.
+Creators are specified in a creators array in the metadata passed into the `mint_v1` instruction.  All creators for which `verified` is set to true in the creators array at the time of mint must be a signer of the transaction or the mint will fail.  Beyond the signers specified in the `MintV1` Account validation structure, the `mint_v1` instruction uses remaining accounts to optionally look for additional signing creators.  This does not conflict with the Merkle proofs requirement because proofs are not required for minting.
 
-Beyond verifying creators at the time of mint, there are `verify_creator` and `unverify_creator` instructions that can be used on existing Compressed NFTs.  Of course these transactions must be signed by the creator's wallet.
+Beyond verifying creators at the time of mint, there are `verify_creator` and `unverify_creator` instructions that can be used on existing Compressed NFTs.
 
 ### Collection verification
 
 Note that there are no such thing as Compressed Verified Collections.  Collections are still NFTs created in the realm of token-metadata Metadata and Master Edition accounts.  Also note that a collection cannot be set to verified at the time of minting.  Instead, there are instructions to `verify_collection` and `unverify_collection`, as well as a `set_and_verify_collection` for the case where the collection was set during time of mint.  All of these require either the true Collection Authority to be a a signer, or a delegated Collection Authority to be a signer along with providing a Collection Authority Record PDA.  See the Metaplex documentation on [`Certified Collections`](https://docs.metaplex.com/programs/token-metadata/certified-collections) for more information on verifying collections.
 
-### Transfer ownership of an NFT 
+### Transfer ownership, delegate authority, and burn an NFT.
 
-Transferring an NFT to a different owner is done using the `transfer` instruction.  Transfers must be signed by either the NFT owner or NFT delegate.  When NFTs are transferred there is no delegate authority.  
-
-### Delegate authority for an NFT
-
-Delegation is done using the `delegate` instruction and the transaction must be signed by the NFT owner.
-
-### Burn an NFT
-
-Compressed NFTs can be permanently destroyed using the `burn` instruction.  Burns must be signed by either the NFT owner or NFT delegate.
+Compressed NFTs support transferring ownership, delegating authority, and burning the NFT.  See the Instructions section below for details.
 
 ### Redeem an NFT and decompress it into an uncompressed Metaplex NFT
 
-Redeeming an NFT is done using the `redeem` instruction.  This instruction removes the leaf from the Merkle tree and creates a voucher PDA account.  The voucher account can be sent to the `decompress_v1` instruction to decompress the NFT into an uncompressed Metaplex NFT.  As mentioned above this will cost rent for the token-metadata Metadata and Master Edition accounts that are created during the decompression process.  Note that after a compressed NFT is redeemed but before it is decompressed, the process can be reversed using `cancel_redeem`.  This puts the compressed NFT back into the Merkle tree.  Redeeming, cancelling redeem, and decompressing all must be signed by the NFT owner.
+Redeeming an NFT removes the leaf from the Merkle tree and creates a voucher PDA account.  The voucher account can be sent to the `decompress_v1` instruction to decompress the NFT into an uncompressed Metaplex NFT.  As mentioned above this will cost rent for the token-metadata Metadata and Master Edition accounts that are created during the decompression process.  Note that after a compressed NFT is redeemed but before it is decompressed, the process can be reversed using `cancel_redeem`.  This puts the compressed NFT back into the Merkle tree.
 
+## Accounts
 
+### `tree_authority`
 
-TODO MERKLE PROOFS MUST BE SUPPLIED TO SOME FUNCTIONS.
+The `tree_authority` PDA account data stores information about a Merkle tree.  It is initialized by `create_tree` and is updated by all other Bubblegum instructions except for decompression.
+The account data is represented by the `TreeConfig`(https://github.com/metaplex-foundation/metaplex-program-library/blob/master/bubblegum/program/src/state/mod.rs#L17) struct.
 
+| Field                       | Offset | Size | Description
+| --------------------------- | ------ | ---- | --
+| &mdash;                     | 0      | 8    | Anchor account discriminator.
+| `tree_creator`              | 8      | 32   | `PubKey` of the creator/owner of the Merkle tree.
+| `tree_delegate`             | 32     | 32   | `PubKey` of the delegate authority of the tree.  Initially it is set to the `tree_creator`.
+| `num_minted`                | 64     | 8    | `u64` that keeps track of the number of NFTs minted into the tree.  This value is very important as it is used as a nonce ("number used once") value for leaf operations to ensure the Merkle tree leaves are unique.
+
+### `voucher`
+
+The `voucher` PDA account is used when a compressed NFT is redeemed and decompressed.  It is initialized by `redeem` and represented by the `Voucher`(https://github.com/metaplex-foundation/metaplex-program-library/blob/master/bubblegum/program/src/state/mod.rs#L36) struct, which includes a reference to the `LeafSchema`(https://github.com/metaplex-foundation/metaplex-program-library/blob/master/bubblegum/program/src/state/leaf_schema.rs#L45) struct.
+
+| Field                       | Offset | Size | Description
+| --------------------------- | ------ | ---- | --
+| &mdash;                     | 0      | 8    | Anchor account discriminator.
+| `leaf_schema`               | 8      | 32   | `PubKey` of the creator/owner of the Merkle tree.
+| `index`                     | 32     | 4    | `PubKey` of the delegate authority of the tree.  Initially it is set to the `tree_creator`.
+| `merkle_tree`               | 64     | 8    | `PubKey` of the Merkle tree to which the leaf belonged before it was redeemed.
 
 ## Instructions
 
@@ -224,7 +236,7 @@ Verify or unverify an NFT as a member of a Metaplex [`Certified Collection`](htt
 
 ### 📄 `transfer`
 
-Transfer an NFT to a different owner.
+Transfer an NFT to a different owner.  When NFTs are transferred there is no longer a delegate authority.
 
 <details>
   <summary>Accounts</summary>
