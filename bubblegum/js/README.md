@@ -1,4 +1,4 @@
-# mpl-candy-machine-core
+# mpl-bubblegum
 
 This package contains the Metaplex Bubblegum program JS SDK code.
 
