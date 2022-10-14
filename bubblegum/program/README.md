@@ -5,7 +5,9 @@
 
 ## Overview
 
-`Bubblegum` is the Metaplex Protocol program for creating and interacting with compressed Metaplex NFTs.  With Bubblegum you can:
+`Bubblegum` is the Metaplex Protocol program for creating and interacting with compressed Metaplex NFTs.  Compressed NFTs are secured on-chain using Merkle trees.
+
+With Bubblegum you can:
 * Create a tree
 * Delegate authority for a tree.
 * Mint a compressed NFT to a tree.
@@ -66,7 +68,7 @@ The account data is represented by the [`TreeConfig`](https://github.com/metaple
 | &mdash;                            | 0      | 8    | Anchor account discriminator.
 | `tree_creator`                     | 8      | 32   | `PubKey` of the creator/owner of the Merkle tree.
 | `tree_delegate`                    | 40     | 32   | `PubKey` of the delegate authority of the tree.  Initially it is set to the `tree_creator`.
-| `num_minted`                       | 72     | 8    | `u64` that keeps track of the number of NFTs minted into the tree.  This value is very important as it is used as a nonce ("number used once") value for leaf operations to ensure the Merkle tree leaves are unique.
+| `num_minted`                       | 72     | 8    | `u64` that keeps track of the number of NFTs minted into the tree.  This value is very important as it is used as a nonce ("number used once") value for leaf operations to ensure the Merkle tree leaves are unique.  The nonce is basically the tree-scoped unique ID of the asset.  In practice for each asset it is retrieved from off-chain data store.
 
 ### 📄 `voucher`
 
@@ -135,7 +137,7 @@ None.
 
 ### 📄 `mint_v1`
 
-This instruction mints a compressed NFT.
+This instruction mints a compressed NFT.  Note that Merkle proofs are *not* required for minting.
 
 <details>
   <summary>Accounts</summary>
@@ -192,7 +194,7 @@ Verify or unverify a creator that exists in the NFT's creators array.
 | `root`                            | 0      | 32   | The Merkle root for the tree.  Can be retrieved from off-chain data store.
 | `data_hash`                       | 32     | 32   | The Keccak256 hash of the NFTs existing metadata (**without** the `verified` flag for the creator changed).  The metadata is retrieved from off-chain data store.
 | `creator_hash`                    | 64     | 32   | The Keccak256 hash of the NFTs existing creators array (**without** the `verified` flag for the creator changed).  The creators array is retrieved from off-chain data store.
-| `nonce`                           | 96     | 8    | A nonce ("number used once") value used to make the Merkle tree leaves unique.  This is the value of `num_minted` for the tree and can be retrieved from the [`TreeConfig`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/bubblegum/program/src/state/mod.rs#L17) account previously initialized by `create_tree`.
+| `nonce`                           | 96     | 8    | A nonce ("number used once") value used to make the Merkle tree leaves unique.  This is the value of `num_minted` for the tree stored in the [`TreeConfig`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/bubblegum/program/src/state/mod.rs#L17) account at the time the NFT was minted.  The unique value for each asset can be retrieved from off-chain data store.
 | `index`                           | 104    | 4    | The index of the leaf node in the Merkle tree.  Can be retrieved from off-chain data store.
 | `data`                            | 108    | ~    | [`MetadataArgs`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/bubblegum/program/src/state/metaplex_adapter.rs#L81) object (**without** the `verified` flag for the creator changed).  Can be retrieved from off-chain data store.
 
@@ -234,7 +236,7 @@ Verify or unverify an NFT as a member of a Metaplex [`Certified Collection`](htt
 | `root`                            | 0      | 32   | The Merkle root for the tree.  Can be retrieved from off-chain data store.
 | `data_hash`                       | 32     | 32   | The Keccak256 hash of the NFTs existing metadata (**without** the `verified` flag for the creator changed).  The metadata is retrieved from off-chain data store.
 | `creator_hash`                    | 64     | 32   | The Keccak256 hash of the NFTs existing creators array (**without** the `verified` flag for the creator changed).  The creators array is retrieved from off-chain data store.
-| `nonce`                           | 96     | 8    | A nonce ("number used once") value used to make the Merkle tree leaves unique.  This is the value of `num_minted` for the tree and can be retrieved from the [`TreeConfig`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/bubblegum/program/src/state/mod.rs#L17) account previously initialized by `create_tree`.
+| `nonce`                           | 96     | 8    | A nonce ("number used once") value used to make the Merkle tree leaves unique.  This is the value of `num_minted` for the tree stored in the [`TreeConfig`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/bubblegum/program/src/state/mod.rs#L17) account at the time the NFT was minted.  The unique value for each asset can be retrieved from off-chain data store.
 | `index`                           | 104    | 4    | The index of the leaf node in the Merkle tree.  Can be retrieved from off-chain data store.
 | `data`                            | 108    | ~    | [`MetadataArgs`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/bubblegum/program/src/state/metaplex_adapter.rs#L81) object (**without** the `verified` flag for the collection changed).  Can be retrieved from off-chain data store.
 | `collection`                      | ~      | 32   | Mint address of a new Collection NFT.
@@ -269,7 +271,7 @@ Transfer an NFT to a different owner.  When NFTs are transferred there is no lon
 | `root`                            | 0      | 32   | The Merkle root for the tree.  Can be retrieved from off-chain data store.
 | `data_hash`                       | 32     | 32   | The Keccak256 hash of the NFTs existing metadata (**without** the `verified` flag for the creator changed).  The metadata is retrieved from off-chain data store.
 | `creator_hash`                    | 64     | 32   | The Keccak256 hash of the NFTs existing creators array (**without** the `verified` flag for the creator changed).  The creators array is retrieved from off-chain data store.
-| `nonce`                           | 96     | 8    | A nonce ("number used once") value used to make the Merkle tree leaves unique.  This is the value of `num_minted` for the tree and can be retrieved from the [`TreeConfig`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/bubblegum/program/src/state/mod.rs#L17) account previously initialized by `create_tree`.
+| `nonce`                           | 96     | 8    | A nonce ("number used once") value used to make the Merkle tree leaves unique.  This is the value of `num_minted` for the tree stored in the [`TreeConfig`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/bubblegum/program/src/state/mod.rs#L17) account at the time the NFT was minted.  The unique value for each asset can be retrieved from off-chain data store.
 | `index`                           | 104    | 4    | The index of the leaf node in the Merkle tree.  Can be retrieved from off-chain data store.
 
 </details>
@@ -302,7 +304,7 @@ Delegate authority of an NFT to a different wallet.
 | `root`                            | 0      | 32   | The Merkle root for the tree.  Can be retrieved from off-chain data store.
 | `data_hash`                       | 32     | 32   | The Keccak256 hash of the NFTs existing metadata (**without** the `verified` flag for the creator changed).  The metadata is retrieved from off-chain data store.
 | `creator_hash`                    | 64     | 32   | The Keccak256 hash of the NFTs existing creators array (**without** the `verified` flag for the creator changed).  The creators array is retrieved from off-chain data store.
-| `nonce`                           | 96     | 8    | A nonce ("number used once") value used to make the Merkle tree leaves unique.  This is the value of `num_minted` for the tree and can be retrieved from the [`TreeConfig`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/bubblegum/program/src/state/mod.rs#L17) account previously initialized by `create_tree`.
+| `nonce`                           | 96     | 8    | A nonce ("number used once") value used to make the Merkle tree leaves unique.  This is the value of `num_minted` for the tree stored in the [`TreeConfig`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/bubblegum/program/src/state/mod.rs#L17) account at the time the NFT was minted.  The unique value for each asset can be retrieved from off-chain data store.
 | `index`                           | 104    | 4    | The index of the leaf node in the Merkle tree.  Can be retrieved from off-chain data store.
 
 </details>
@@ -334,7 +336,7 @@ Burn an NFT.
 | `root`                            | 0      | 32   | The Merkle root for the tree.  Can be retrieved from off-chain data store.
 | `data_hash`                       | 32     | 32   | The Keccak256 hash of the NFTs existing metadata (**without** the `verified` flag for the creator changed).  The metadata is retrieved from off-chain data store.
 | `creator_hash`                    | 64     | 32   | The Keccak256 hash of the NFTs existing creators array (**without** the `verified` flag for the creator changed).  The creators array is retrieved from off-chain data store.
-| `nonce`                           | 96     | 8    | A nonce ("number used once") value used to make the Merkle tree leaves unique.  This is the value of `num_minted` for the tree and can be retrieved from the [`TreeConfig`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/bubblegum/program/src/state/mod.rs#L17) account previously initialized by `create_tree`.
+| `nonce`                           | 96     | 8    | A nonce ("number used once") value used to make the Merkle tree leaves unique.  This is the value of `num_minted` for the tree stored in the [`TreeConfig`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/bubblegum/program/src/state/mod.rs#L17) account at the time the NFT was minted.  The unique value for each asset can be retrieved from off-chain data store.
 | `index`                           | 104    | 4    | The index of the leaf node in the Merkle tree.  Can be retrieved from off-chain data store.
 
 </details>
@@ -368,7 +370,7 @@ Redeem an NFT (remove from tree and store in a voucher PDA).
 | `root`                            | 0      | 32   | The Merkle root for the tree.  Can be retrieved from off-chain data store.
 | `data_hash`                       | 32     | 32   | The Keccak256 hash of the NFTs existing metadata (**without** the `verified` flag for the creator changed).  The metadata is retrieved from off-chain data store.
 | `creator_hash`                    | 64     | 32   | The Keccak256 hash of the NFTs existing creators array (**without** the `verified` flag for the creator changed).  The creators array is retrieved from off-chain data store.
-| `nonce`                           | 96     | 8    | A nonce ("number used once") value used to make the Merkle tree leaves unique.  This is the value of `num_minted` for the tree and can be retrieved from the [`TreeConfig`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/bubblegum/program/src/state/mod.rs#L17) account previously initialized by `create_tree`.
+| `nonce`                           | 96     | 8    | A nonce ("number used once") value used to make the Merkle tree leaves unique.  This is the value of `num_minted` for the tree stored in the [`TreeConfig`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/bubblegum/program/src/state/mod.rs#L17) account at the time the NFT was minted.  The unique value for each asset can be retrieved from off-chain data store.
 | `index`                           | 104    | 4    | The index of the leaf node in the Merkle tree.  Can be retrieved from off-chain data store.
 
 </details>
@@ -403,7 +405,7 @@ Cancel the redemption of an NFT (Put the NFT back into the Merkle tree).
 
 ### 📄 `decompress_v1`
 
-Decompress an NFT into an uncompressed Metaplex NFT.  This will cost rent for the token-metadata Metadata and Master Edition accounts that are created.
+Decompress an NFT into an uncompressed Metaplex NFT.  This will cost rent for the token-metadata Metadata and Master Edition accounts that are created.  Note that Merkle proofs are *not* required for decompression because the leaf (NFT) was already removed from the tree.
 
 <details>
   <summary>Accounts</summary>
