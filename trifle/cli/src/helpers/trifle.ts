@@ -1,5 +1,5 @@
-import { NftWithToken, SftWithToken } from "@metaplex-foundation/js";
-import { Connection, Keypair, PublicKey, Transaction } from "@solana/web3.js";
+import { NftWithToken, SftWithToken } from '@metaplex-foundation/js';
+import { Connection, Keypair, PublicKey, Transaction } from '@solana/web3.js';
 import {
   createAddCollectionConstraintToEscrowConstraintModelInstruction,
   createAddNoneConstraintToEscrowConstraintModelInstruction,
@@ -9,22 +9,16 @@ import {
   createTransferInInstruction,
   EscrowConstraintModel,
   Trifle,
-} from "../../../js/src/generated";
-import {
-  findEscrowConstraintModelPda,
-  findEscrowPda,
-  findTriflePda,
-} from "./pdas";
+} from '../../../js/src/generated';
+import { findEscrowConstraintModelPda, findEscrowPda, findTriflePda } from './pdas';
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   getAssociatedTokenAddress,
   TOKEN_PROGRAM_ID,
-} from "@solana/spl-token";
-import { findMetadataPda } from "@metaplex-foundation/js";
-import {
-  PROGRAM_ADDRESS as TM_PROGRAM_ADDRESS,
-} from "@metaplex-foundation/mpl-token-metadata/src/generated";
-import { EscrowAuthority } from "./utils";
+} from '@solana/spl-token';
+import { findMetadataPda } from '@metaplex-foundation/js';
+import { PROGRAM_ADDRESS as TM_PROGRAM_ADDRESS } from '@metaplex-foundation/mpl-token-metadata/src/generated';
+import { EscrowAuthority, map_replacer } from './utils';
 
 export const createConstraintModel = async (
   connection: Connection,
@@ -32,10 +26,7 @@ export const createConstraintModel = async (
   name: string,
   schema: string,
 ) => {
-  const escrowConstraintModel = await findEscrowConstraintModelPda(
-    keypair.publicKey,
-    name,
-  );
+  const escrowConstraintModel = await findEscrowConstraintModelPda(keypair.publicKey, name);
 
   const createIX = createCreateEscrowConstraintModelAccountInstruction(
     {
@@ -56,8 +47,9 @@ export const createConstraintModel = async (
   const { blockhash } = await connection.getLatestBlockhash();
   tx.recentBlockhash = blockhash;
   tx.feePayer = keypair.publicKey;
-  await connection.sendTransaction(tx, [keypair], { skipPreflight: true });
+  const sig = await connection.sendTransaction(tx, [keypair]);
   // await connection.sendTransaction(tx, [keypair]);
+  await connection.confirmTransaction(sig, 'finalized');
 
   return escrowConstraintModel[0];
 };
@@ -88,7 +80,8 @@ export const addNoneConstraint = async (
   const { blockhash } = await connection.getLatestBlockhash();
   tx.recentBlockhash = blockhash;
   tx.feePayer = keypair.publicKey;
-  await connection.sendTransaction(tx, [keypair], { skipPreflight: true });
+  const sig = await connection.sendTransaction(tx, [keypair]);
+  await connection.confirmTransaction(sig, 'finalized');
 };
 
 export const addCollectionConstraint = async (
@@ -121,7 +114,8 @@ export const addCollectionConstraint = async (
   const { blockhash } = await connection.getLatestBlockhash();
   tx.recentBlockhash = blockhash;
   tx.feePayer = keypair.publicKey;
-  await connection.sendTransaction(tx, [keypair], { skipPreflight: true });
+  const sig = await connection.sendTransaction(tx, [keypair], { skipPreflight: true });
+  await connection.confirmTransaction(sig, 'finalized');
 };
 
 export const addTokensConstraint = async (
@@ -152,7 +146,8 @@ export const addTokensConstraint = async (
   const { blockhash } = await connection.getLatestBlockhash();
   tx.recentBlockhash = blockhash;
   tx.feePayer = keypair.publicKey;
-  await connection.sendTransaction(tx, [keypair], { skipPreflight: true });
+  const sig = await connection.sendTransaction(tx, [keypair]);
+  await connection.confirmTransaction(sig, 'finalized');
 };
 
 export const createTrifle = async (
@@ -161,10 +156,7 @@ export const createTrifle = async (
   keypair: Keypair,
   model_name: string,
 ) => {
-  const escrowConstraintModel = await findEscrowConstraintModelPda(
-    keypair.publicKey,
-    model_name,
-  );
+  const escrowConstraintModel = await findEscrowConstraintModelPda(keypair.publicKey, model_name);
   const trifleAddress = await findTriflePda(
     nft.mint.address,
     keypair.publicKey,
@@ -197,7 +189,7 @@ export const createTrifle = async (
   const sig = await connection.sendTransaction(tx, [keypair], {
     skipPreflight: false,
   });
-  await connection.confirmTransaction(sig, "finalized");
+  await connection.confirmTransaction(sig, 'finalized');
 
   return trifleAddress[0];
 };
@@ -210,10 +202,7 @@ export const transferIn = async (
   keypair: Keypair,
   slot: string,
 ) => {
-  const escrowConstraintModel = await findEscrowConstraintModelPda(
-    keypair.publicKey,
-    "test",
-  );
+  const escrowConstraintModel = await findEscrowConstraintModelPda(keypair.publicKey, 'test');
   const trifleAddress = await findTriflePda(
     escrowNft.mint.address,
     keypair.publicKey,
@@ -255,34 +244,27 @@ export const transferIn = async (
   const sig = await connection.sendTransaction(tx, [keypair], {
     skipPreflight: true,
   });
-  await connection.confirmTransaction(sig, "finalized");
+  await connection.confirmTransaction(sig, 'finalized');
 };
 
-export const showModel = async (
-  connection: Connection,
-  modelAddress: PublicKey,
-) => {
+export const showModel = async (connection: Connection, modelAddress: PublicKey) => {
   // console.log("Fetching " + modelAddress.toString());
   const accountInfo = await connection.getAccountInfo(modelAddress);
   if (accountInfo) {
-    const account: EscrowConstraintModel =
-      EscrowConstraintModel.fromAccountInfo(accountInfo)[0];
-    console.log(JSON.stringify(account.pretty()));
+    const account: EscrowConstraintModel = EscrowConstraintModel.fromAccountInfo(accountInfo)[0];
+    console.log(JSON.stringify(account, map_replacer));
   } else {
-    console.log("Unable to fetch account");
+    console.log('Unable to fetch account');
   }
 };
 
-export const showTrifle = async (
-  connection: Connection,
-  trifleAddress: PublicKey,
-) => {
+export const showTrifle = async (connection: Connection, trifleAddress: PublicKey) => {
   // console.log("Fetching " + trifleAddress.toString());
   const accountInfo = await connection.getAccountInfo(trifleAddress);
   if (accountInfo) {
     const account: Trifle = Trifle.fromAccountInfo(accountInfo)[0];
-    console.log(JSON.stringify(account.pretty()));
+    console.log(JSON.stringify(account, map_replacer));
   } else {
-    console.log("Unable to fetch account");
+    console.log('Unable to fetch account');
   }
 };
