@@ -3,8 +3,8 @@
   "version": "0.0.1",
   "programVersion": "0.1.3",
   "description": "SDK for MPL Bubblegum contract",
-  "main": "dist/src/mpl-bubblegum.js",
-  "types": "dist/src/mpl-bubblegum.d.ts",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "scripts": {
     "check:publish-ready": "yarn build && yarn test",
     "preversion": "yarn check:publish-ready",
@@ -24,7 +24,7 @@
     "fix": "yarn fix:lint && yarn fix:prettier"
   },
   "files": [
-    "/dist"
+    "/dist/src"
   ],
   "publishConfig": {
     "access": "public",
@@ -41,21 +41,20 @@
   "author": "Metaplex Maintainers <contact@metaplex.com>",
   "license": "Apache-2.0",
   "dependencies": {
-    "@metaplex-foundation/amman": "0.10.0",
     "@metaplex-foundation/beet": "^0.7.1",
+    "@metaplex-foundation/cusper": "^0.0.2",
+    "@project-serum/anchor": "0.24.2",
+    "@solana/spl-token": "^0.1.8",
+    "@solana/web3.js": "^1.50.1",
+    "js-sha3": "^0.8.0"
+  },
+  "devDependencies": {
+    "@metaplex-foundation/amman": "0.10.0",
     "@metaplex-foundation/mpl-token-metadata": "^2.2.0",
     "@metaplex-foundation/rustbin": "^0.3.1",
     "@metaplex-foundation/solita": "^0.12.2",
-    "@project-serum/anchor": "0.24.2",
     "@solana/spl-account-compression": "^0.1.0",
-    "@solana/spl-token": "^0.1.8",
-    "@solana/web3.js": "^1.50.1",
-    "@sorend-solana/gummyroll": "^0.0.6",
-    "@sorend-solana/utils": "^0.0.5",
-    "js-sha3": "^0.8.0",
-    "typescript-collections": "^1.3.3"
-  },
-  "devDependencies": {
+    "typescript-collections": "^1.3.3",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-prettier": "^4.0.0",
     "@typescript-eslint/eslint-plugin": "^5.4.0",
@@ -76,7 +75,6 @@
     "ts-jest": "^29.0.3",
     "ts-jest-resolver": "^2.0.0",
     "ts-mocha": "^10.0.0",
-    "ts-node": "^10.9.1",
     "typedoc": "^0.23.10",
     "typescript": "^4.3.5"
   }
