@@ -1371,18 +1371,7 @@ pub mod bubblegum {
                 metadata.symbol.clone(),
                 metadata.uri.clone(),
                 if !metadata.creators.is_empty() {
-                    let mut amended_metadata_creators = metadata.creators;
-                    amended_metadata_creators.push(Creator {
-                        address: ctx.accounts.mint_authority.key(),
-                        verified: true,
-                        share: 0,
-                    });
-                    Some(
-                        amended_metadata_creators
-                            .iter()
-                            .map(|c| c.adapt())
-                            .collect(),
-                    )
+                    Some(metadata.creators.iter().map(|c| c.adapt()).collect())
                 } else {
                     None
                 },

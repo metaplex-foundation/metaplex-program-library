@@ -1,14 +1,15 @@
+use crate::utils::tx_builder::DecompressV1Builder;
 use anchor_lang::{self, AccountDeserialize};
 use bytemuck::try_from_bytes;
 use mpl_bubblegum::{
-    state::{leaf_schema::LeafSchema, TreeConfig},
+    state::{leaf_schema::LeafSchema, TreeConfig, Voucher, VOUCHER_PREFIX},
     utils::get_asset_id,
 };
 use solana_program::{
     instruction::{AccountMeta, Instruction},
     pubkey::Pubkey,
     rent::Rent,
-    system_instruction, system_program,
+    system_instruction, system_program, sysvar,
 };
 use solana_program_test::BanksClient;
 use solana_sdk::{
@@ -18,6 +19,7 @@ use solana_sdk::{
     transaction::Transaction,
 };
 use spl_account_compression::state::CONCURRENT_MERKLE_TREE_HEADER_SIZE_V1;
+use spl_associated_token_account::get_associated_token_address;
 use spl_concurrent_merkle_tree::concurrent_merkle_tree::ConcurrentMerkleTree;
 use spl_merkle_tree_reference::{MerkleTree, Node};
 use std::{
@@ -30,12 +32,16 @@ use std::{
 use super::{
     clone_keypair, compute_metadata_hashes,
     tx_builder::{
-        BurnBuilder, CreateBuilder, CreatorVerificationInner, DelegateBuilder, DelegateInner,
-        MintV1Builder, SetTreeDelegateBuilder, TransferBuilder, TransferInner, TxBuilder,
-        UnverifyCreatorBuilder, VerifyCreatorBuilder,
+        BurnBuilder, CancelRedeemBuilder, CreateBuilder, CreatorVerificationInner, DelegateBuilder,
+        DelegateInner, MintV1Builder, RedeemBuilder, SetTreeDelegateBuilder, TransferBuilder,
+        TransferInner, TxBuilder, UnverifyCreatorBuilder, VerifyCreatorBuilder,
     },
     Error, LeafArgs, Result,
 };
+
+pub fn decompress_mint_auth_pda(mint_key: Pubkey) -> Pubkey {
+    Pubkey::find_program_address(&[mint_key.as_ref()], &mpl_bubblegum::id()).0
+}
 
 // A convenience object that records some of the parameters for compressed
 // trees and generates TX builders with the default configuration for each
@@ -105,6 +111,18 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
 
     pub fn authority(&self) -> Pubkey {
         Pubkey::find_program_address(&[self.tree_pubkey().as_ref()], &mpl_bubblegum::id()).0
+    }
+
+    pub fn voucher(&self, nonce: u64) -> Pubkey {
+        Pubkey::find_program_address(
+            &[
+                VOUCHER_PREFIX.as_ref(),
+                self.tree_pubkey().as_ref(),
+                &nonce.to_le_bytes(),
+            ],
+            &mpl_bubblegum::id(),
+        )
+        .0
     }
 
     pub fn merkle_tree_account_size(&self) -> usize {
@@ -504,6 +522,122 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
         self.delegate_tx(args, new_delegate).await?.execute().await
     }
 
+    pub async fn redeem_tx<'a>(
+        &'a self,
+        args: &'a LeafArgs,
+    ) -> Result<RedeemBuilder<MAX_DEPTH, MAX_BUFFER_SIZE>> {
+        let root = self.decode_root().await?;
+        let (data_hash, creator_hash) = compute_metadata_hashes(&args.metadata)?;
+
+        let accounts = mpl_bubblegum::accounts::Redeem {
+            tree_authority: self.authority(),
+            leaf_owner: args.owner.pubkey(),
+            leaf_delegate: args.delegate.pubkey(),
+            merkle_tree: self.tree_pubkey(),
+            voucher: self.voucher(args.nonce),
+            log_wrapper: spl_noop::id(),
+            compression_program: spl_account_compression::id(),
+            system_program: system_program::id(),
+        };
+
+        let data = mpl_bubblegum::instruction::Redeem {
+            root,
+            data_hash,
+            creator_hash,
+            nonce: args.nonce,
+            index: args.index,
+        };
+
+        Ok(self.tx_builder(
+            accounts,
+            data,
+            Some(args.index),
+            args,
+            args.owner.pubkey(),
+            &[&args.owner],
+        ))
+    }
+
+    pub async fn redeem(&self, args: &LeafArgs) -> Result<()> {
+        self.redeem_tx(args).await?.execute().await
+    }
+
+    pub async fn cancel_redeem_tx<'a>(
+        &'a self,
+        args: &'a LeafArgs,
+    ) -> Result<CancelRedeemBuilder<MAX_DEPTH, MAX_BUFFER_SIZE>> {
+        let root = self.decode_root().await?;
+
+        let accounts = mpl_bubblegum::accounts::CancelRedeem {
+            tree_authority: self.authority(),
+            leaf_owner: args.owner.pubkey(),
+            merkle_tree: self.tree_pubkey(),
+            voucher: self.voucher(args.nonce),
+            log_wrapper: spl_noop::id(),
+            compression_program: spl_account_compression::id(),
+        };
+
+        let data = mpl_bubblegum::instruction::CancelRedeem { root };
+
+        Ok(self.tx_builder(
+            accounts,
+            data,
+            Some(args.index),
+            args,
+            args.owner.pubkey(),
+            &[&args.owner],
+        ))
+    }
+
+    pub async fn cancel_redeem(&self, args: &LeafArgs) -> Result<()> {
+        self.cancel_redeem_tx(args).await?.execute().await
+    }
+
+    pub fn decompress_v1_tx(
+        &self,
+        voucher: &Voucher,
+        args: &LeafArgs,
+    ) -> DecompressV1Builder<MAX_DEPTH, MAX_BUFFER_SIZE> {
+        let mint = voucher.decompress_mint_pda();
+        let mint_authority = decompress_mint_auth_pda(mint);
+        let token_account = get_associated_token_address(&args.owner.pubkey(), &mint);
+        let metadata = mpl_token_metadata::pda::find_metadata_account(&mint).0;
+        let master_edition = mpl_token_metadata::pda::find_master_edition_account(&mint).0;
+
+        let accounts = mpl_bubblegum::accounts::DecompressV1 {
+            voucher: voucher.pda(),
+            leaf_owner: args.owner.pubkey(),
+            token_account,
+            mint,
+            mint_authority,
+            metadata,
+            master_edition,
+            system_program: system_program::id(),
+            sysvar_rent: sysvar::rent::id(),
+            token_metadata_program: mpl_token_metadata::id(),
+            token_program: spl_token::id(),
+            associated_token_program: spl_associated_token_account::id(),
+            log_wrapper: spl_noop::id(),
+        };
+
+        let data = mpl_bubblegum::instruction::DecompressV1 {
+            metadata: args.metadata.clone(),
+        };
+
+        self.tx_builder(
+            accounts,
+            data,
+            None,
+            (),
+            args.owner.pubkey(),
+            &[&args.owner],
+        )
+    }
+
+    pub async fn decompress_v1(&self, voucher: &Voucher, args: &LeafArgs) -> Result<()> {
+        self.decompress_v1_tx(voucher, args).execute().await
+    }
+
     pub fn set_tree_delegate_tx(
         &self,
         new_tree_delegate: &Keypair,
@@ -528,14 +662,11 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
     }
 
     pub async fn set_tree_delegate(&self, new_tree_delegate: &Keypair) -> Result<()> {
-        self.set_tree_delegate_tx(new_tree_delegate)
-            .execute()
-            .await?;
-        Ok(())
+        self.set_tree_delegate_tx(new_tree_delegate).execute().await
     }
 
     // The following methods provide convenience when reading data from accounts.
-    async fn read_account(&self, key: Pubkey) -> Result<Account> {
+    pub async fn read_account(&self, key: Pubkey) -> Result<Account> {
         self.client()
             .get_account(key)
             .await
@@ -556,6 +687,10 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
 
     pub async fn read_tree_config(&self) -> Result<TreeConfig> {
         self.read_account_data(self.authority()).await
+    }
+
+    pub async fn read_voucher(&self, nonce: u64) -> Result<Voucher> {
+        self.read_account_data(self.voucher(nonce)).await
     }
 
     pub fn leaf_node(&self, args: &LeafArgs) -> Result<Node> {
@@ -582,8 +717,44 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
         *self.num_minted.borrow_mut() += 1;
     }
 
+    // Return a `LeafSchema` object for the given arguments.
+    pub fn leaf_schema(&self, leaf: &LeafArgs) -> LeafSchema {
+        let id = get_asset_id(&self.tree_pubkey(), leaf.nonce);
+        let (data_hash, creator_hash) = compute_metadata_hashes(&leaf.metadata).unwrap();
+        LeafSchema::new_v0(
+            id,
+            leaf.owner.pubkey(),
+            leaf.delegate.pubkey(),
+            leaf.nonce,
+            data_hash,
+            creator_hash,
+        )
+    }
+
+    // Return a `Voucher` object with the field values we expect for the
+    // given leaf arguments.
+    pub fn expected_voucher(&self, leaf: &LeafArgs) -> Voucher {
+        Voucher::new(self.leaf_schema(leaf), leaf.index, self.tree_pubkey())
+    }
+
+    // Return the expected value of the on-chain merkle tree root, based on the locally
+    // computed proof generated by `self.proof_tree`.
+    pub fn expected_root(&self) -> [u8; 32] {
+        self.proof_tree.borrow().get_root()
+    }
+
+    pub async fn check_expected_root(&self) -> Result<()> {
+        let root = self.decode_root().await?;
+
+        if root != self.expected_root() {
+            return Err(Error::RootMismatch);
+        }
+
+        Ok(())
+    }
+
     // Updates the inner `MerkleTree` when the given leaf has changed.
-    pub fn leaf_changed(&self, args: &LeafArgs) -> Result<()> {
+    pub fn update_leaf(&self, args: &LeafArgs) -> Result<()> {
         let node = self.leaf_node(args)?;
         self.proof_tree
             .borrow_mut()
@@ -594,7 +765,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
 
     // Updates the inner `MerkleTree` with the fact that we zeroed the leaf present
     // at the given index.
-    pub fn leaf_zeroed(&self, index: u32) -> Result<()> {
+    pub fn zero_leaf(&self, index: u32) -> Result<()> {
         let node = [0u8; 32];
         // The conversion below should never fail.
         self.proof_tree

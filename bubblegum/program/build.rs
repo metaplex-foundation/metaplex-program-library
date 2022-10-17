@@ -7,24 +7,29 @@ use std::{path::Path, process::Command};
 // action for tests alone.
 fn main() {
     // The build script's working folder is always that of the containing package.
-    let spl_compression_so_path =
-        Path::new("../../target/deploy/cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK.so");
-    let spl_wrapper_so_path =
-        Path::new("../../target/deploy/noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV.so");
+    let spl_compression_so_path = Path::new("../../test-programs/spl_account_compression.so");
+    let spl_wrapper_so_path = Path::new("../../test-programs/spl_noop.so");
+    let mpl_tm_so_path = Path::new("../../test-programs/mpl_token_metadata.so");
 
     if !spl_compression_so_path.exists() || !spl_wrapper_so_path.exists() {
         Command::new("./download-compression-programs.sh")
             .output()
+            .expect("failed to execute build TM script");
+    }
+
+    if !mpl_tm_so_path.exists() {
+        Command::new("./build-token-metadata.sh")
+            .output()
             .expect("failed to execute download compression programs script");
     }
+
+    let paths = [spl_compression_so_path, spl_wrapper_so_path, mpl_tm_so_path];
 
     // The `build.rs` file be default is not re-run unless some files in the current crate
     // change, but the compression libraries reside outside, so we need to issue the prints
     // below (which have a special significance as part of the semantics around `buils.rs`
     // files) to effectively tell the script to run if any of them are missing (or changed).
-    println!(
-        "cargo:rerun-if-changed={}",
-        spl_compression_so_path.display()
-    );
-    println!("cargo:rerun-if-changed={}", spl_wrapper_so_path.display());
+    for path in paths {
+        println!("cargo:rerun-if-changed={}", path.display());
+    }
 }

@@ -13,7 +13,7 @@ pub const ASSET_PREFIX: &str = "asset";
 pub const COLLECTION_CPI_PREFIX: &str = "collection_cpi";
 
 #[account]
-#[derive(Copy, Debug)]
+#[derive(Copy, Debug, PartialEq, Eq)]
 pub struct TreeConfig {
     pub tree_creator: Pubkey,
     pub tree_delegate: Pubkey,
@@ -33,6 +33,7 @@ impl TreeConfig {
 }
 
 #[account]
+#[derive(Debug, Eq, PartialEq)]
 pub struct Voucher {
     pub leaf_schema: LeafSchema,
     pub index: u32,
@@ -46,6 +47,26 @@ impl Voucher {
             index,
             merkle_tree,
         }
+    }
+
+    fn pda_for_prefix(&self, prefix: &str) -> Pubkey {
+        Pubkey::find_program_address(
+            &[
+                prefix.as_ref(),
+                self.merkle_tree.as_ref(),
+                self.leaf_schema.nonce().to_le_bytes().as_ref(),
+            ],
+            &crate::id(),
+        )
+        .0
+    }
+
+    pub fn pda(&self) -> Pubkey {
+        self.pda_for_prefix(VOUCHER_PREFIX)
+    }
+
+    pub fn decompress_mint_pda(&self) -> Pubkey {
+        self.pda_for_prefix(ASSET_PREFIX)
     }
 }
 
