@@ -55,6 +55,11 @@ export function map_replacer(key, value) {
       dataType: 'Map',
       value: Array.from(value.entries()), // or with spread: value: [...value]
     };
+  } else if (value instanceof Set) {
+    return {
+      dataType: 'Set',
+      value: Array.from(value.values()),
+    };
   } else {
     return value;
   }

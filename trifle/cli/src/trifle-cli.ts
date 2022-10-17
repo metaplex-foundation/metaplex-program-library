@@ -18,7 +18,7 @@ import {
   Sft,
   SftWithToken,
 } from '@metaplex-foundation/js';
-import { use_metaplex } from './helpers/utils';
+import { EscrowAuthority, use_metaplex } from './helpers/utils';
 import {
   addCollectionConstraint,
   addNoneConstraint,
@@ -28,8 +28,9 @@ import {
   showModel,
   showTrifle,
   transferIn,
+  transferOut,
 } from './helpers/trifle';
-import { findEscrowConstraintModelPda, findTriflePda } from './helpers/pdas';
+import { findEscrowConstraintModelPda, findEscrowPda, findTriflePda } from './helpers/pdas';
 import { Key } from '@metaplex-foundation/mpl-token-metadata';
 import { PublicKeyMismatchError } from '@metaplex-foundation/mpl-auction-house';
 
@@ -110,7 +111,13 @@ create
         .run();
       nft = newNFT;
     } else {
-      nft = await metaplex.nfts().findByMint(mint).run();
+      nft = await metaplex
+        .nfts()
+        .findByMint({
+          mintAddress: new web3.PublicKey(mint),
+          tokenOwner: metaplex.identity().publicKey,
+        })
+        .run();
     }
 
     const trifleAddr = await createTrifle(
@@ -230,7 +237,7 @@ constraintCommand
   .option('-mn, --model-name <string>', 'The name of the constraint model.')
   .option('-cn --constraint-name <string>', 'The name of the constraint')
   .option(
-    '-l --token-limit <int>',
+    '-tl --token-limit <int>',
     'The max number of tokens that can be transferred into this constraint slot',
   )
   .option(
@@ -239,8 +246,7 @@ constraintCommand
   )
   .action(async (directory, cmd) => {
     // console.log(cmd.opts());
-    const { keypair, env, rpc, constraintName, collection, modelName, tokenLimit, tokenFilePath } =
-      cmd.opts();
+    const { keypair, env, rpc, constraintName, modelName, tokenLimit, tokenFilePath } = cmd.opts();
 
     // console.log(tokenFilePath);
     if (!tokenFilePath) {
@@ -301,11 +307,16 @@ transfer
   )
   .option('-am, --attribute-mint <string>', 'The mint of the attribute to transfer.')
   .option('-a, --amount <int>', 'The amount of the attribute to transfer.')
+  .option('-s, --slot <string>', 'The slot to transfer the attribute to.')
   .action(async (directory, cmd) => {
-    console.log(cmd.opts());
-    const { keypair, env, rpc, mint, modelName, attributeMint, amount } = cmd.opts();
+    // console.log(cmd.opts());
+    const { keypair, env, rpc, mint, modelName, attributeMint, amount, slot } = cmd.opts();
 
     const metaplex = await use_metaplex(keypair, env, rpc);
+    const adaptedKeypair = new Keypair({
+      publicKey: metaplex.identity().publicKey.toBuffer(),
+      secretKey: metaplex.identity().secretKey as Uint8Array,
+    });
 
     const modelAddr = await findEscrowConstraintModelPda(metaplex.identity().publicKey, modelName);
     const trifleAddr = await findTriflePda(
@@ -314,18 +325,46 @@ transfer
       modelAddr[0],
     );
 
-    const escrowNft = await metaplex.nfts().findByMint(mint).run();
-    console.log('Escrow NFT: ', escrowNft);
-    const attributeToken = await metaplex.nfts().findByMint(attributeMint).run();
-    console.log('Attribute Token: ', attributeToken);
-    // await transferIn(
-    //   metaplex.connection,
-    //   escrowNft as NftWithToken,
-    //   trifleAddr[0],
-    //   attributeToken,
-    //   metaplex.identity(),
-    //   'first',
-    // );
+    const escrowAddr = await findEscrowPda(
+      new web3.PublicKey(mint),
+      EscrowAuthority.Creator,
+      trifleAddr[0],
+    );
+
+    const escrowNft = await metaplex
+      .nfts()
+      .findByMint({
+        mintAddress: new web3.PublicKey(mint),
+        tokenOwner: metaplex.identity().publicKey,
+      })
+      .run();
+    // console.log('Escrow NFT: ', escrowNft);
+    const attributeToken = await metaplex
+      .nfts()
+      .findByMint({
+        mintAddress: new web3.PublicKey(attributeMint),
+        tokenOwner: metaplex.identity().publicKey,
+      })
+      .run();
+
+    let attribute: NftWithToken | SftWithToken;
+    if (attributeToken.model === 'nft') {
+      attribute = attributeToken as NftWithToken;
+    } else if (attributeToken.model === 'sft') {
+      attribute = attributeToken as SftWithToken;
+    } else {
+      console.error('Unknown attribute token type');
+      return;
+    }
+    // console.log('Attribute Token: ', attributeToken);
+    await transferIn(
+      metaplex.connection,
+      escrowNft as NftWithToken,
+      escrowAddr[0],
+      attribute,
+      adaptedKeypair,
+      slot,
+    );
 
     await showTrifle(metaplex.connection, trifleAddr[0]);
   });
@@ -345,11 +384,18 @@ transfer
     '-mn, --model-name <string>',
     'The name of the constraint model (Assumes keypair is the same as the Model Authority).',
   )
+  .option('-am, --attribute-mint <string>', 'The mint of the attribute to transfer.')
+  .option('-a, --amount <int>', 'The amount of the attribute to transfer.')
+  .option('-s, --slot <string>', 'The slot to transfer the attribute to.')
   .action(async (directory, cmd) => {
     // console.log(cmd.opts());
-    const { keypair, env, rpc, mint, modelName } = cmd.opts();
+    const { keypair, env, rpc, mint, modelName, attributeMint, amount, slot } = cmd.opts();
 
     const metaplex = await use_metaplex(keypair, env, rpc);
+    const adaptedKeypair = new Keypair({
+      publicKey: metaplex.identity().publicKey.toBuffer(),
+      secretKey: metaplex.identity().secretKey as Uint8Array,
+    });
 
     const modelAddr = await findEscrowConstraintModelPda(metaplex.identity().publicKey, modelName);
     const trifleAddr = await findTriflePda(
@@ -357,6 +403,48 @@ transfer
       metaplex.identity().publicKey,
       modelAddr[0],
     );
+
+    const escrowAddr = await findEscrowPda(
+      new web3.PublicKey(mint),
+      EscrowAuthority.Creator,
+      trifleAddr[0],
+    );
+
+    const escrowNft = await metaplex
+      .nfts()
+      .findByMint({
+        mintAddress: new web3.PublicKey(mint),
+        tokenOwner: metaplex.identity().publicKey,
+      })
+      .run();
+    // console.log('Escrow NFT: ', escrowNft);
+    const attributeToken = await metaplex
+      .nfts()
+      .findByMint({
+        mintAddress: new web3.PublicKey(attributeMint),
+        tokenOwner: escrowAddr[0],
+      })
+      .run();
+
+    let attribute: NftWithToken | SftWithToken;
+    if (attributeToken.model === 'nft') {
+      attribute = attributeToken as NftWithToken;
+    } else if (attributeToken.model === 'sft') {
+      attribute = attributeToken as SftWithToken;
+    } else {
+      console.error('Unknown attribute token type');
+      return;
+    }
+    // console.log('Attribute Token: ', attributeToken);
+    await transferOut(
+      metaplex.connection,
+      escrowNft as NftWithToken,
+      escrowAddr[0],
+      attribute,
+      adaptedKeypair,
+      slot,
+    );
+
     await showTrifle(metaplex.connection, trifleAddr[0]);
   });
 
