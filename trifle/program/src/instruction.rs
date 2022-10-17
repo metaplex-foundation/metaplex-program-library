@@ -113,6 +113,7 @@ pub enum TrifleInstruction {
     #[account(12, name="spl_associated_token_account", desc="The associated token account program")]
     #[account(13, name="spl_token", desc="The spl token program")]
     #[account(14, name="rent", desc="The rent sysvar")]
+    #[account(15, name="token_metadata_program", desc="The token metadata program")]
     TransferOut(TransferOutArgs),
 
     #[account(0, writable, name = "escrow_constraint_model", desc = "Constraint model account")]

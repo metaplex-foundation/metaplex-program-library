@@ -361,6 +361,25 @@ fn transfer_in(
         serialized_data.len(),
     );
 
+    // Close the ATA where the token came from.
+    let close_ix = spl_token::instruction::close_account(
+        &spl_token::id(),
+        attribute_src_token_account.key,
+        payer.key,
+        payer.key,
+        &[payer.key],
+    )
+    .unwrap();
+
+    invoke(
+        &close_ix,
+        &[
+            attribute_src_token_account.clone(),
+            payer.clone(),
+            spl_token_program.clone(),
+        ],
+    )?;
+
     Ok(())
 }
 
@@ -485,6 +504,10 @@ fn transfer_out(
         .get_mut(&args.slot)
         .unwrap()
         .swap_remove(index);
+
+    if trifle.tokens.get(&args.slot).unwrap().is_empty() {
+        trifle.tokens.remove(&args.slot);
+    }
 
     let serialized_data = trifle.try_to_vec().unwrap();
 
@@ -615,6 +638,8 @@ fn add_tokens_constraint_to_escrow_constraint_model(
         constraint_type: EscrowConstraintType::tokens_from_slice(&args.tokens),
         token_limit: args.token_limit,
     };
+
+    msg!("Tokens: {:#?}", args.tokens);
 
     add_constraint_to_escrow_constraint_model(
         program_id,

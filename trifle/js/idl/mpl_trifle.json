@@ -318,6 +318,12 @@
           "isMut": false,
           "isSigner": false,
           "desc": "The rent sysvar"
+        },
+        {
+          "name": "tokenMetadataProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "The token metadata program"
         }
       ],
       "args": [

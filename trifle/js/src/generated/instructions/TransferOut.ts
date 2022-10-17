@@ -49,6 +49,7 @@ export const TransferOutStruct = new beet.FixableBeetArgsStruct<
  * @property [] escrowTokenAccount The token account holding the NFT the escrow is attached to
  * @property [] splAssociatedTokenAccount The associated token account program
  * @property [] splToken The spl token program
+ * @property [] tokenMetadataProgram The token metadata program
  * @category Instructions
  * @category TransferOut
  * @category generated
@@ -69,6 +70,7 @@ export type TransferOutInstructionAccounts = {
   splAssociatedTokenAccount: web3.PublicKey;
   splToken: web3.PublicKey;
   rent?: web3.PublicKey;
+  tokenMetadataProgram: web3.PublicKey;
 };
 
 export const transferOutInstructionDiscriminator = 3;
@@ -165,6 +167,11 @@ export function createTransferOutInstruction(
     },
     {
       pubkey: accounts.rent ?? web3.SYSVAR_RENT_PUBKEY,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.tokenMetadataProgram,
       isWritable: false,
       isSigner: false,
     },
