@@ -2,6 +2,9 @@
 
 This package contains the Metaplex Bubblegum program JS SDK code.
 
+## HOW IT WORKS
+[Program Overview](../program/README.md)
+
 ## API Docs
 
 Find the [bubblegum API docs published here](https://metaplex-foundation.github.io/metaplex-program-library/docs/bubblegum/index.html).
@@ -19,6 +22,18 @@ In order to update the generated SDK when the Rust contract was updated please r
 yarn api:gen
 ```
 and then update the wrapper code and tests.
+
+## Running tests
+
+```shell
+## Build the latest bubblegum
+pushd ../program/
+cargo build-bpf
+popd
+yarn run start-validator
+
+yarn test
+```
 
 ## LICENSE
 
