@@ -5,9 +5,9 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as web3 from '@solana/web3.js'
-import * as beet from '@metaplex-foundation/beet'
-import * as beetSolana from '@metaplex-foundation/beet-solana'
+import * as web3 from '@solana/web3.js';
+import * as beet from '@metaplex-foundation/beet';
+import * as beetSolana from '@metaplex-foundation/beet-solana';
 /**
  * This type is used to derive the {@link LeafSchema} type as well as the de/serializer.
  * However don't refer to it in your code but use the {@link LeafSchema} type instead.
@@ -19,14 +19,14 @@ import * as beetSolana from '@metaplex-foundation/beet-solana'
  */
 export type LeafSchemaRecord = {
   V1: {
-    id: web3.PublicKey
-    owner: web3.PublicKey
-    delegate: web3.PublicKey
-    nonce: beet.bignum
-    dataHash: number[] /* size: 32 */
-    creatorHash: number[] /* size: 32 */
-  }
-}
+    id: web3.PublicKey;
+    owner: web3.PublicKey;
+    delegate: web3.PublicKey;
+    nonce: beet.bignum;
+    dataHash: number[] /* size: 32 */;
+    creatorHash: number[] /* size: 32 */;
+  };
+};
 
 /**
  * Union type respresenting the LeafSchema data enum defined in Rust.
@@ -39,11 +39,10 @@ export type LeafSchemaRecord = {
  * @category enums
  * @category generated
  */
-export type LeafSchema = beet.DataEnumKeyAsKind<LeafSchemaRecord>
+export type LeafSchema = beet.DataEnumKeyAsKind<LeafSchemaRecord>;
 
-export const isLeafSchemaV1 = (
-  x: LeafSchema
-): x is LeafSchema & { __kind: 'V1' } => x.__kind === 'V1'
+export const isLeafSchemaV1 = (x: LeafSchema): x is LeafSchema & { __kind: 'V1' } =>
+  x.__kind === 'V1';
 
 /**
  * @category userTypes
@@ -61,7 +60,7 @@ export const leafSchemaBeet = beet.dataEnum<LeafSchemaRecord>([
         ['dataHash', beet.uniformFixedSizeArray(beet.u8, 32)],
         ['creatorHash', beet.uniformFixedSizeArray(beet.u8, 32)],
       ],
-      'LeafSchemaRecord["V1"]'
+      'LeafSchemaRecord["V1"]',
     ),
   ],
-]) as beet.FixableBeet<LeafSchema>
+]) as beet.FixableBeet<LeafSchema>;

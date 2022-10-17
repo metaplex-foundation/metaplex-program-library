@@ -1,7 +1,7 @@
-export * from './TreeConfig'
-export * from './Voucher'
+export * from './TreeConfig';
+export * from './Voucher';
 
-import { TreeConfig } from './TreeConfig'
-import { Voucher } from './Voucher'
+import { TreeConfig } from './TreeConfig';
+import { Voucher } from './Voucher';
 
-export const accountProviders = { TreeConfig, Voucher }
+export const accountProviders = { TreeConfig, Voucher };

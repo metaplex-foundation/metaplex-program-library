@@ -5,9 +5,9 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet'
-import * as web3 from '@solana/web3.js'
-import { MetadataArgs, metadataArgsBeet } from '../types/MetadataArgs'
+import * as beet from '@metaplex-foundation/beet';
+import * as web3 from '@solana/web3.js';
+import { MetadataArgs, metadataArgsBeet } from '../types/MetadataArgs';
 
 /**
  * @category Instructions
@@ -15,14 +15,14 @@ import { MetadataArgs, metadataArgsBeet } from '../types/MetadataArgs'
  * @category generated
  */
 export type SetAndVerifyCollectionInstructionArgs = {
-  root: number[] /* size: 32 */
-  dataHash: number[] /* size: 32 */
-  creatorHash: number[] /* size: 32 */
-  nonce: beet.bignum
-  index: number
-  message: MetadataArgs
-  collection: number[] /* size: 32 */
-}
+  root: number[] /* size: 32 */;
+  dataHash: number[] /* size: 32 */;
+  creatorHash: number[] /* size: 32 */;
+  nonce: beet.bignum;
+  index: number;
+  message: MetadataArgs;
+  collection: number[] /* size: 32 */;
+};
 /**
  * @category Instructions
  * @category SetAndVerifyCollection
@@ -30,7 +30,7 @@ export type SetAndVerifyCollectionInstructionArgs = {
  */
 export const setAndVerifyCollectionStruct = new beet.FixableBeetArgsStruct<
   SetAndVerifyCollectionInstructionArgs & {
-    instructionDiscriminator: number[] /* size: 8 */
+    instructionDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
@@ -43,8 +43,8 @@ export const setAndVerifyCollectionStruct = new beet.FixableBeetArgsStruct<
     ['message', metadataArgsBeet],
     ['collection', beet.uniformFixedSizeArray(beet.u8, 32)],
   ],
-  'SetAndVerifyCollectionInstructionArgs'
-)
+  'SetAndVerifyCollectionInstructionArgs',
+);
 /**
  * Accounts required by the _setAndVerifyCollection_ instruction
  *
@@ -68,26 +68,26 @@ export const setAndVerifyCollectionStruct = new beet.FixableBeetArgsStruct<
  * @category generated
  */
 export type SetAndVerifyCollectionInstructionAccounts = {
-  treeAuthority: web3.PublicKey
-  leafOwner: web3.PublicKey
-  leafDelegate: web3.PublicKey
-  merkleTree: web3.PublicKey
-  payer: web3.PublicKey
-  treeDelegate: web3.PublicKey
-  collectionAuthority: web3.PublicKey
-  collectionAuthorityRecordPda: web3.PublicKey
-  collectionMint: web3.PublicKey
-  collectionMetadata: web3.PublicKey
-  editionAccount: web3.PublicKey
-  bubblegumSigner: web3.PublicKey
-  logWrapper: web3.PublicKey
-  compressionProgram: web3.PublicKey
-  tokenMetadataProgram: web3.PublicKey
-}
+  treeAuthority: web3.PublicKey;
+  leafOwner: web3.PublicKey;
+  leafDelegate: web3.PublicKey;
+  merkleTree: web3.PublicKey;
+  payer: web3.PublicKey;
+  treeDelegate: web3.PublicKey;
+  collectionAuthority: web3.PublicKey;
+  collectionAuthorityRecordPda: web3.PublicKey;
+  collectionMint: web3.PublicKey;
+  collectionMetadata: web3.PublicKey;
+  editionAccount: web3.PublicKey;
+  bubblegumSigner: web3.PublicKey;
+  logWrapper: web3.PublicKey;
+  compressionProgram: web3.PublicKey;
+  tokenMetadataProgram: web3.PublicKey;
+};
 
 export const setAndVerifyCollectionInstructionDiscriminator = [
   235, 242, 121, 216, 158, 234, 180, 234,
-]
+];
 
 /**
  * Creates a _SetAndVerifyCollection_ instruction.
@@ -102,12 +102,12 @@ export const setAndVerifyCollectionInstructionDiscriminator = [
 export function createSetAndVerifyCollectionInstruction(
   accounts: SetAndVerifyCollectionInstructionAccounts,
   args: SetAndVerifyCollectionInstructionArgs,
-  programId = new web3.PublicKey('BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY')
+  programId = new web3.PublicKey('BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY'),
 ) {
   const [data] = setAndVerifyCollectionStruct.serialize({
     instructionDiscriminator: setAndVerifyCollectionInstructionDiscriminator,
     ...args,
-  })
+  });
   const keys: web3.AccountMeta[] = [
     {
       pubkey: accounts.treeAuthority,
@@ -184,12 +184,12 @@ export function createSetAndVerifyCollectionInstruction(
       isWritable: false,
       isSigner: false,
     },
-  ]
+  ];
 
   const ix = new web3.TransactionInstruction({
     programId,
     keys,
     data,
-  })
-  return ix
+  });
+  return ix;
 }
