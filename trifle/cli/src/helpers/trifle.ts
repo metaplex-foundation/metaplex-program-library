@@ -64,7 +64,7 @@ export const addNoneConstraint = async (
 ) => {
   const addIX = createAddNoneConstraintToEscrowConstraintModelInstruction(
     {
-      escrowConstraintModel: model,
+      constraintModel: model,
       payer: keypair.publicKey,
       updateAuthority: keypair.publicKey,
     },
@@ -96,7 +96,7 @@ export const addCollectionConstraint = async (
   const collectionMintMetadata = await findMetadataPda(collection);
   const addIX = createAddCollectionConstraintToEscrowConstraintModelInstruction(
     {
-      escrowConstraintModel: model,
+      constraintModel: model,
       payer: keypair.publicKey,
       updateAuthority: keypair.publicKey,
       collectionMint: collection,
@@ -129,7 +129,7 @@ export const addTokensConstraint = async (
 ) => {
   const addIX = createAddTokensConstraintToEscrowConstraintModelInstruction(
     {
-      escrowConstraintModel: model,
+      constraintModel: model,
       payer: keypair.publicKey,
       updateAuthority: keypair.publicKey,
     },
@@ -177,7 +177,7 @@ export const createTrifle = async (
     edition: nft.edition.address,
     trifleAccount: trifleAddress[0],
     trifleAuthority: keypair.publicKey,
-    escrowConstraintModel: escrowConstraintModel[0],
+    constraintModel: escrowConstraintModel[0],
     payer: keypair.publicKey,
     tokenMetadataProgram: new PublicKey(TM_PROGRAM_ADDRESS),
   });

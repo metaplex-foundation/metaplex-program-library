@@ -73,7 +73,7 @@ pub enum TrifleInstruction {
     #[account(4, name = "edition", desc = "Edition account")]
     #[account(5, writable, name = "trifle_account", desc = "Trifle account")]
     #[account(6, name = "trifle_authority", desc = "Trifle Authority - the account that can sign transactions for the trifle account")]
-    #[account(7, name = "escrow_constraint_model", desc = "Escrow constraint model")]
+    #[account(7, writable, name = "constraint_model", desc = "Escrow constraint model")]
     #[account(8, writable, signer, name = "payer", desc = "Wallet paying for the transaction")]
     #[account(9, name = "token_metadata_program", desc = "Token Metadata program")]
     #[account(10, name = "system_program", desc = "System program")]
@@ -99,7 +99,7 @@ pub enum TrifleInstruction {
 
     /// Transfer tokens out of the Trifle escrow account.
     #[account(0, writable, name="trifle_account", desc="The trifle account to use")]
-    #[account(1, name="constraint_model", desc="The constraint model to check against")]
+    #[account(1, writable, name="constraint_model", desc="The constraint model to check against")]
     #[account(2, name="escrow_account", desc="The escrow account attached to the NFT")]
     #[account(3, writable, signer, name="payer", desc="The payer for the transaction")]
     #[account(4, writable, signer, name="trifle_authority", desc="The authority of the trifle account")]
@@ -116,13 +116,13 @@ pub enum TrifleInstruction {
     #[account(15, name="token_metadata_program", desc="The token metadata program")]
     TransferOut(TransferOutArgs),
 
-    #[account(0, writable, name = "escrow_constraint_model", desc = "Constraint model account")]
+    #[account(0, writable, name = "constraint_model", desc = "Constraint model account")]
     #[account(1, writable, signer, name = "payer", desc = "Wallet paying for the transaction and new account, will be set as the creator of the constraint model")]
     #[account(2, signer, name = "update_authority", desc = "Update authority of the constraint model")]
     #[account(3, name = "system_program", desc = "System program")]
     AddNoneConstraintToEscrowConstraintModel(AddNoneConstraintToEscrowConstraintModelArgs),
 
-    #[account(0, writable, name = "escrow_constraint_model", desc = "Constraint model account")]
+    #[account(0, writable, name = "constraint_model", desc = "Constraint model account")]
     #[account(1, writable, signer, name = "payer", desc = "Wallet paying for the transaction and new account, will be set as the creator of the constraint model")]
     #[account(2, signer, name = "update_authority", desc = "Update authority of the constraint model")]
     #[account(3, name = "collection_mint", desc = "Collection mint account")]
@@ -130,7 +130,7 @@ pub enum TrifleInstruction {
     #[account(5, name = "system_program", desc = "System program")]
     AddCollectionConstraintToEscrowConstraintModel(AddCollectionConstraintToEscrowConstraintModelArgs),
 
-    #[account(0, writable, name = "escrow_constraint_model", desc = "Constraint model account")]
+    #[account(0, writable, name = "constraint_model", desc = "Constraint model account")]
     #[account(1, writable, signer, name = "payer", desc = "Wallet paying for the transaction and new account, will be set as the creator of the constraint model")]
     #[account(2, signer, name = "update_authority", desc = "Update authority of the constraint model")]
     #[account(3, name = "system_program", desc = "System program")]

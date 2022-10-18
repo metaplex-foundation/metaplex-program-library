@@ -10,6 +10,7 @@ import * as beet from '@metaplex-foundation/beet';
 import * as beetSolana from '@metaplex-foundation/beet-solana';
 import { Key, keyBeet } from '../types/Key';
 import { EscrowConstraint, escrowConstraintBeet } from '../types/EscrowConstraint';
+import { RoyaltyModel, royaltyModelBeet } from '../types/RoyaltyModel';
 
 /**
  * Arguments used to create {@link EscrowConstraintModel}
@@ -24,6 +25,8 @@ export type EscrowConstraintModelArgs = {
   updateAuthority: web3.PublicKey;
   count: beet.bignum;
   schemaUri: beet.COption<string>;
+  royalties: RoyaltyModel;
+  royaltyBalance: beet.bignum;
 };
 /**
  * Holds the data for the {@link EscrowConstraintModel} Account and provides de/serialization
@@ -41,6 +44,8 @@ export class EscrowConstraintModel implements EscrowConstraintModelArgs {
     readonly updateAuthority: web3.PublicKey,
     readonly count: beet.bignum,
     readonly schemaUri: beet.COption<string>,
+    readonly royalties: RoyaltyModel,
+    readonly royaltyBalance: beet.bignum,
   ) {}
 
   /**
@@ -55,6 +60,8 @@ export class EscrowConstraintModel implements EscrowConstraintModelArgs {
       args.updateAuthority,
       args.count,
       args.schemaUri,
+      args.royalties,
+      args.royaltyBalance,
     );
   }
 
@@ -168,6 +175,18 @@ export class EscrowConstraintModel implements EscrowConstraintModelArgs {
         return x;
       })(),
       schemaUri: this.schemaUri,
+      royalties: this.royalties,
+      royaltyBalance: (() => {
+        const x = <{ toNumber: () => number }>this.royaltyBalance;
+        if (typeof x.toNumber === 'function') {
+          try {
+            return x.toNumber();
+          } catch (_) {
+            return x;
+          }
+        }
+        return x;
+      })(),
     };
   }
 }
@@ -188,6 +207,8 @@ export const escrowConstraintModelBeet = new beet.FixableBeetStruct<
     ['updateAuthority', beetSolana.publicKey],
     ['count', beet.u64],
     ['schemaUri', beet.coption(beet.utf8String)],
+    ['royalties', royaltyModelBeet],
+    ['royaltyBalance', beet.u64],
   ],
   EscrowConstraintModel.fromArgs,
   'EscrowConstraintModel',

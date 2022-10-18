@@ -37,7 +37,7 @@ export const TransferOutStruct = new beet.FixableBeetArgsStruct<
  * Accounts required by the _TransferOut_ instruction
  *
  * @property [_writable_] trifleAccount The trifle account to use
- * @property [] constraintModel The constraint model to check against
+ * @property [_writable_] constraintModel The constraint model to check against
  * @property [] escrowAccount The escrow account attached to the NFT
  * @property [_writable_, **signer**] payer The payer for the transaction
  * @property [_writable_, **signer**] trifleAuthority The authority of the trifle account
@@ -102,7 +102,7 @@ export function createTransferOutInstruction(
     },
     {
       pubkey: accounts.constraintModel,
-      isWritable: false,
+      isWritable: true,
       isSigner: false,
     },
     {

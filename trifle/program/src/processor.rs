@@ -7,7 +7,7 @@ use crate::{
         TransferInArgs, TransferOutArgs, TrifleInstruction,
     },
     state::{
-        escrow_constraints::{EscrowConstraint, EscrowConstraintModel, EscrowConstraintType},
+        escrow_constraints::{EscrowConstraint, EscrowConstraintModel, EscrowConstraintType, FEES},
         trifle::Trifle,
         Key, SolanaAccount, ESCROW_SEED, TRIFLE_SEED,
     },
@@ -82,7 +82,7 @@ fn create_escrow_constraints_model_account(
     let update_authority_info = next_account_info(account_info_iter)?;
     let system_program_info = next_account_info(account_info_iter)?;
 
-    let escrow_constraint_model = EscrowConstraintModel {
+    let mut escrow_constraint_model = EscrowConstraintModel {
         key: Key::EscrowConstraintModel,
         name: args.name.to_owned(),
         creator: payer_info.key.to_owned(),
@@ -108,16 +108,28 @@ fn create_escrow_constraints_model_account(
         &[bump],
     ];
 
+    solana_program::system_instruction::transfer(
+        payer_info.key,
+        escrow_constraint_model_info.key,
+        escrow_constraint_model.royalties.create_model + FEES.create_model,
+    );
+    escrow_constraint_model.royalty_balance += escrow_constraint_model.royalties.create_model;
+
+    let serialized_data = escrow_constraint_model.try_to_vec().unwrap();
     create_or_allocate_account_raw(
         *program_id,
         escrow_constraint_model_info,
         system_program_info,
         payer_info,
-        escrow_constraint_model.try_len()?,
+        serialized_data.len(),
         escrow_constraint_model_seeds,
     )?;
 
-    escrow_constraint_model.serialize(&mut *escrow_constraint_model_info.try_borrow_mut_data()?)?;
+    sol_memcpy(
+        &mut **escrow_constraint_model_info.try_borrow_mut_data().unwrap(),
+        &serialized_data,
+        serialized_data.len(),
+    );
 
     Ok(())
 }
@@ -190,6 +202,23 @@ fn create_trifle_account(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progr
         escrow_constraint_model: escrow_constraint_model_info.key.to_owned(),
         ..Default::default()
     };
+
+    let mut constraint_model =
+        EscrowConstraintModel::try_from_slice(&escrow_constraint_model_info.data.borrow())
+            .map_err(|_| TrifleError::InvalidEscrowConstraintModel)?;
+    solana_program::system_instruction::transfer(
+        payer_info.key,
+        escrow_constraint_model_info.key,
+        constraint_model.royalties.create_trifle + FEES.create_trifle,
+    );
+    constraint_model.royalty_balance += constraint_model.royalties.create_trifle;
+
+    let serialized_data = constraint_model.try_to_vec().unwrap();
+    sol_memcpy(
+        &mut **escrow_constraint_model_info.try_borrow_mut_data().unwrap(),
+        &serialized_data,
+        serialized_data.len(),
+    );
 
     let serialized_data = trifle.try_to_vec().unwrap();
     create_or_allocate_account_raw(
@@ -337,7 +366,7 @@ fn transfer_in(
         ],
     )?;
 
-    let constraint_model =
+    let mut constraint_model =
         EscrowConstraintModel::try_from_slice(&constraint_model_info.data.borrow())
             .map_err(|_| TrifleError::InvalidEscrowConstraintModel)?;
 
@@ -350,6 +379,20 @@ fn transfer_in(
         *attribute_mint.key,
         args.amount,
     )?;
+
+    solana_program::system_instruction::transfer(
+        payer.key,
+        constraint_model_info.key,
+        constraint_model.royalties.transfer_in + FEES.transfer_in,
+    );
+    constraint_model.royalty_balance += constraint_model.royalties.transfer_in;
+
+    let serialized_data = constraint_model.try_to_vec().unwrap();
+    sol_memcpy(
+        &mut **constraint_model_info.try_borrow_mut_data().unwrap(),
+        &serialized_data,
+        serialized_data.len(),
+    );
 
     let serialized_data = trifle.try_to_vec().unwrap();
 
@@ -509,6 +552,24 @@ fn transfer_out(
         trifle.tokens.remove(&args.slot);
     }
 
+    let mut constraint_model =
+        EscrowConstraintModel::try_from_slice(&constraint_model_info.data.borrow())
+            .map_err(|_| TrifleError::InvalidEscrowConstraintModel)?;
+
+    solana_program::system_instruction::transfer(
+        payer.key,
+        constraint_model_info.key,
+        constraint_model.royalties.transfer_out + FEES.transfer_out,
+    );
+    constraint_model.royalty_balance += constraint_model.royalties.transfer_out;
+
+    let serialized_data = constraint_model.try_to_vec().unwrap();
+    sol_memcpy(
+        &mut **constraint_model_info.try_borrow_mut_data().unwrap(),
+        &serialized_data,
+        serialized_data.len(),
+    );
+
     let serialized_data = trifle.try_to_vec().unwrap();
 
     resize_or_reallocate_account_raw(trifle_account, payer, system_program, serialized_data.len())?;
@@ -567,14 +628,26 @@ fn add_constraint_to_escrow_constraint_model(
         .constraints
         .insert(constraint_name, escrow_constraint);
 
+    solana_program::system_instruction::transfer(
+        payer_info.key,
+        escrow_constraint_model_info.key,
+        escrow_constraint_model.royalties.add_constraint + FEES.add_constraint,
+    );
+    escrow_constraint_model.royalty_balance += escrow_constraint_model.royalties.add_constraint;
+
+    let serialized_data = escrow_constraint_model.try_to_vec().unwrap();
     resize_or_reallocate_account_raw(
         escrow_constraint_model_info,
         payer_info,
         system_program_info,
-        escrow_constraint_model.try_len()?,
+        serialized_data.len(),
     )?;
 
-    escrow_constraint_model.serialize(&mut *escrow_constraint_model_info.try_borrow_mut_data()?)?;
+    sol_memcpy(
+        &mut **escrow_constraint_model_info.try_borrow_mut_data().unwrap(),
+        &serialized_data,
+        serialized_data.len(),
+    );
 
     Ok(())
 }

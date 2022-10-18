@@ -42,7 +42,7 @@ export const AddNoneConstraintToEscrowConstraintModelStruct = new beet.FixableBe
 /**
  * Accounts required by the _AddNoneConstraintToEscrowConstraintModel_ instruction
  *
- * @property [_writable_] escrowConstraintModel Constraint model account
+ * @property [_writable_] constraintModel Constraint model account
  * @property [_writable_, **signer**] payer Wallet paying for the transaction and new account, will be set as the creator of the constraint model
  * @property [**signer**] updateAuthority Update authority of the constraint model
  * @category Instructions
@@ -50,7 +50,7 @@ export const AddNoneConstraintToEscrowConstraintModelStruct = new beet.FixableBe
  * @category generated
  */
 export type AddNoneConstraintToEscrowConstraintModelInstructionAccounts = {
-  escrowConstraintModel: web3.PublicKey;
+  constraintModel: web3.PublicKey;
   payer: web3.PublicKey;
   updateAuthority: web3.PublicKey;
   systemProgram?: web3.PublicKey;
@@ -79,7 +79,7 @@ export function createAddNoneConstraintToEscrowConstraintModelInstruction(
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: accounts.escrowConstraintModel,
+      pubkey: accounts.constraintModel,
       isWritable: true,
       isSigner: false,
     },

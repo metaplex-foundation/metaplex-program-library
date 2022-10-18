@@ -11,6 +11,7 @@ echo "[\"$TOKEN\"]" > tokens.json
 
 # Create Constraint Model
 ts-node src/trifle-cli.ts create model -r http://localhost:8899 -k ~/.config/solana/id.json -n test -s none | jq
+
 ts-node src/trifle-cli.ts create constraint none -r http://localhost:8899 -k ~/.config/solana/id.json -mn test -cn first | jq
 ts-node src/trifle-cli.ts create constraint collection -r http://localhost:8899 -k ~/.config/solana/id.json -mn test -cn second -tl 1 -c $COLLECTION | jq
 ts-node src/trifle-cli.ts create constraint tokens -r http://localhost:8899 -k ~/.config/solana/id.json -mn test -cn third -tl 1 -p tokens.json | jq
@@ -21,5 +22,7 @@ ts-node src/trifle-cli.ts create trifle -r http://localhost:8899 -k ~/.config/so
 # Transfer In Tokens
 ts-node src/trifle-cli.ts transfer in -r http://localhost:8899 -k ~/.config/solana/id.json -m $BASE -mn test -am $NONE -a 1 -s first | jq
 ts-node src/trifle-cli.ts transfer in -r http://localhost:8899 -k ~/.config/solana/id.json -m $BASE -mn test -am $TOKEN -a 1 -s third | jq
+
+# Transfer Out Tokens
 ts-node src/trifle-cli.ts transfer out -r http://localhost:8899 -k ~/.config/solana/id.json -m $BASE -mn test -am $NONE -a 1 -s first | jq
 ts-node src/trifle-cli.ts transfer out -r http://localhost:8899 -k ~/.config/solana/id.json -m $BASE -mn test -am $TOKEN -a 1 -s third | jq
