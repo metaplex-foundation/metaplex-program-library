@@ -10,7 +10,7 @@ use solana_program::{
 };
 
 use crate::{
-    constants::{NULL_STRING, REPLACEMENT_INDEX, REPLACEMENT_INDEX_INCREMENT, HIDDEN_SECTION},
+    constants::{HIDDEN_SECTION, NULL_STRING, REPLACEMENT_INDEX, REPLACEMENT_INDEX_INCREMENT},
     CandyError,
 };
 

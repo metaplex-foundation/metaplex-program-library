@@ -99,7 +99,7 @@ impl CandyMachineData {
 
         if let Some(hidden) = &self.hidden_settings {
             // config line settings should not be enabled at the same time as hidden settings
-            if &self.config_line_settings.is_some() {
+            if self.config_line_settings.is_some() {
                 return err!(CandyError::HiddenSettingsDoNotHaveConfigLines);
             }
 
