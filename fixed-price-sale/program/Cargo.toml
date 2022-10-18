@@ -4,7 +4,7 @@ name = "mpl-fixed-price-sale"
 version = "0.3.0"
 description = "Created with Anchor"
 edition = "2018"
-license = "AGPL-3.0"
+license-file = "../../LICENSE"
 
 [lib]
 crate-type = ["cdylib", "lib"]
