@@ -51,57 +51,61 @@ pub fn create_candy_machine_data(
         ));
     }
 
-    // CMv3 allows the specification of a common prefix for both name and uri
-    // therefore we need to determine the largest common prefix and the len of
-    // the remaining parts of the name and uri
+    let config_line_settings = if config.hidden_settings.is_some() {
+        None
+    } else {
+        // CMv3 allows the specification of a common prefix for both name and uri
+        // therefore we need to determine the largest common prefix and the len of
+        // the remaining parts of the name and uri
 
-    // (shortest, largest, len largest) name
-    let mut name_pair = [String::new(), String::new(), String::new()];
-    // (shortest, largest, len largest) uri
-    let mut uri_pair = [String::new(), String::new(), String::new()];
-    // compares a value against a pair of (shorter, larger)
-    let compare_pair = |value: &String, pair: &mut [String; 3]| {
-        // lexicographic smaller
-        if pair[0].is_empty() || value < &pair[0] {
-            pair[0] = value.to_string();
+        // (shortest, largest, len largest) name
+        let mut name_pair = [String::new(), String::new(), String::new()];
+        // (shortest, largest, len largest) uri
+        let mut uri_pair = [String::new(), String::new(), String::new()];
+        // compares a value against a pair of (shorter, larger)
+        let compare_pair = |value: &String, pair: &mut [String; 3]| {
+            // lexicographic smaller
+            if pair[0].is_empty() || value < &pair[0] {
+                pair[0] = value.to_string();
+            }
+            // lexicographic larger
+            if value > &pair[1] {
+                pair[1] = value.to_string();
+            }
+            // lengthwise larger
+            if value.len() > pair[2].len() {
+                pair[2] = value.to_string();
+            }
+        };
+        let common_prefix = |value1: &str, value2: &str| {
+            let bytes1 = value1.as_bytes();
+            let bytes2 = value2.as_bytes();
+            let mut index = 0;
+
+            while (index < bytes1.len() && index < bytes2.len()) && bytes1[index] == bytes2[index] {
+                index += 1;
+            }
+
+            value1[..index].to_string()
+        };
+
+        for (index, item) in cache.items.iter() {
+            if i64::from_str(index)? > -1 {
+                compare_pair(&item.name, &mut name_pair);
+                compare_pair(&item.metadata_link, &mut uri_pair);
+            }
         }
-        // lexicographic larger
-        if value > &pair[1] {
-            pair[1] = value.to_string();
-        }
-        // lengthwise larger
-        if value.len() > pair[2].len() {
-            pair[2] = value.to_string();
-        }
-    };
-    let common_prefix = |value1: &str, value2: &str| {
-        let bytes1 = value1.as_bytes();
-        let bytes2 = value2.as_bytes();
-        let mut index = 0;
 
-        while (index < bytes1.len() && index < bytes2.len()) && bytes1[index] == bytes2[index] {
-            index += 1;
-        }
+        let name_prefix = common_prefix(&name_pair[0], &name_pair[1]);
+        let uri_prefix = common_prefix(&uri_pair[0], &uri_pair[1]);
 
-        value1[..index].to_string()
-    };
-
-    for (index, item) in cache.items.iter() {
-        if i64::from_str(index)? > -1 {
-            compare_pair(&item.name, &mut name_pair);
-            compare_pair(&item.metadata_link, &mut uri_pair);
-        }
-    }
-
-    let name_prefix = common_prefix(&name_pair[0], &name_pair[1]);
-    let uri_prefix = common_prefix(&uri_pair[0], &uri_pair[1]);
-
-    let config_line_settings = ConfigLineSettings {
-        name_length: (name_pair[2].len() - name_prefix.len()) as u32,
-        prefix_name: name_prefix,
-        uri_length: (uri_pair[2].len() - uri_prefix.len()) as u32,
-        prefix_uri: uri_prefix,
-        is_sequential: config.is_sequential,
+        Some(ConfigLineSettings {
+            name_length: (name_pair[2].len() - name_prefix.len()) as u32,
+            prefix_name: name_prefix,
+            uri_length: (uri_pair[2].len() - uri_prefix.len()) as u32,
+            prefix_uri: uri_prefix,
+            is_sequential: config.is_sequential,
+        })
     };
 
     let hidden_settings = config.hidden_settings.as_ref().map(|s| s.to_candy_format());
@@ -113,7 +117,7 @@ pub fn create_candy_machine_data(
         max_supply: 0,
         is_mutable: config.is_mutable,
         creators,
-        config_line_settings: Some(config_line_settings),
+        config_line_settings,
         hidden_settings,
     };
 
