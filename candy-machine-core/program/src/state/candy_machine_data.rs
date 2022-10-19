@@ -98,6 +98,11 @@ impl CandyMachineData {
         // replacement of the variables
 
         if let Some(hidden) = &self.hidden_settings {
+            // config line settings should not be enabled at the same time as hidden settings
+            if self.config_line_settings.is_some() {
+                return err!(CandyError::HiddenSettingsDoNotHaveConfigLines);
+            }
+
             let expected = replace_patterns(hidden.name.clone(), self.items_available as usize);
             if MAX_NAME_LENGTH < expected.len() {
                 return err!(CandyError::ExceededLengthError);
