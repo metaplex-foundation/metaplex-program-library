@@ -2,8 +2,6 @@
 
                             Version 1.0, Oct. 2022
 
-          https://github.com/metaplex-foundation/metaplex/licenses/
-
                                    PREAMBLE
 
 As the publisher of the non-fungible token (NFT) standard for the Solana
@@ -57,7 +55,8 @@ Copyright © [yyyy] [name of copyright owner]
 Licensed under the Metaplex(TM) NFT Open Source License, Version 1.0 (the 
 “License”). Use of this file is only permitted when in compliance with the 
 License. You may obtain a copy of the License at:
-https://github.com/metaplex-foundation/metaplex/licenses/
+https://github.com/metaplex-foundation/
+  metaplex-program-library/blob/master/LICENSE
 
 Unless required by applicable law or agreed to in writing, software 
 distributed under the License is distributed on an “AS IS” BASIS, WITHOUT 
