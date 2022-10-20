@@ -188,7 +188,7 @@
           "optional": true
         },
         {
-          "name": "attributeSrcToken",
+          "name": "attributeDstToken",
           "isMut": true,
           "isSigner": false,
           "desc": "The token account that the attribute token is being transferred to (pda of the escrow account)",

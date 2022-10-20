@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 
+import { TransferEffects } from "../../js/src/transfer-effects";
 import chalk from "chalk";
 import clear from "clear";
 import * as figlet from "figlet";
 import * as path from "path";
-import { program } from "commander";
+import { Command, program } from "commander";
 import log from "loglevel";
 import * as sdk from "@metaplex-foundation/mpl-token-metadata/src/generated";
 import * as web3 from "@solana/web3.js";
@@ -37,6 +38,45 @@ import { PublicKeyMismatchError } from "@metaplex-foundation/mpl-auction-house";
 // console.log(
 //   chalk.green(figlet.textSync("Trifle CLI", { horizontalLayout: "full" })),
 // );
+
+const addTransferEffectsOptions = (cmd: Command) => {
+  cmd.option(
+    "-T, --track",
+    "track the transfer of the token",
+    true,
+  );
+  cmd.option(
+    "-B, --burn",
+    "burn the token",
+    false,
+  );
+  cmd.option(
+    "-F, --freeze",
+    "freeze the token",
+    false,
+  );
+  cmd.option(
+    "-FP, --freeze-parent",
+    "freeze the parent token",
+    false,
+  );
+};
+
+interface TransferEffectsFlags {
+  track: boolean;
+  burn: boolean;
+  freeze: boolean;
+  freezeParent: boolean;
+}
+
+const useTransferEffects = (args: TransferEffectsFlags) => {
+  const transferEffects = new TransferEffects();
+  transferEffects.withTrack(args.track);
+  transferEffects.withBurn(args.burn);
+  transferEffects.withFreeze(args.freeze);
+  transferEffects.withFreezeParent(args.freezeParent);
+  return transferEffects;
+};
 
 const create = program.command("create");
 
@@ -138,7 +178,7 @@ create
 
 const constraintCommand = create.command("constraint");
 
-constraintCommand
+const addNoneConstraintCommand = constraintCommand
   .command("none")
   .option(
     "-e, --env <string>",
@@ -154,11 +194,10 @@ constraintCommand
   .option("-mn, --model-name <string>", "The name of the constraint model.")
   .option("-cn --constraint-name <string>", "The name of the constraint")
   .option(
-    "-l --token-limit <int>",
+    "-tl --token-limit <int>",
     "The max number of tokens that can be transferred into this constraint slot",
   )
   .action(async (directory, cmd) => {
-    // console.log(cmd.opts());
     const {
       keypair,
       env,
@@ -171,7 +210,7 @@ constraintCommand
     } = cmd.opts();
 
     const metaplex = await use_metaplex(keypair, env, rpc);
-    let [modelAddress] = await findEscrowConstraintModelPda(
+    const [modelAddress] = await findEscrowConstraintModelPda(
       metaplex.identity().publicKey,
       modelName,
     );
@@ -181,18 +220,21 @@ constraintCommand
       secretKey: metaplex.identity().secretKey as Uint8Array,
     });
 
+    const te = useTransferEffects(cmd.opts);
+
     await addNoneConstraint(
       metaplex.connection,
       adaptedKeypair,
       constraintName,
       tokenLimit,
+      te.toNumber(),
       modelAddress,
     );
 
     await showModel(metaplex.connection, modelAddress);
   });
 
-constraintCommand
+const addCollectionConstraintCommand = constraintCommand
   .command("collection")
   .option(
     "-e, --env <string>",
@@ -208,7 +250,7 @@ constraintCommand
   .option("-mn, --model-name <string>", "The name of the constraint model.")
   .option("-cn --constraint-name <string>", "The name of the constraint")
   .option(
-    "-l --token-limit <int>",
+    "-tl --token-limit <int>",
     "The max number of tokens that can be transferred into this constraint slot",
   )
   .option("-c --collection <string>", "The collection address")
@@ -225,7 +267,7 @@ constraintCommand
     } = cmd.opts();
 
     const metaplex = await use_metaplex(keypair, env, rpc);
-    let [modelAddress] = await findEscrowConstraintModelPda(
+    const [modelAddress] = await findEscrowConstraintModelPda(
       metaplex.identity().publicKey,
       modelName,
     );
@@ -235,7 +277,8 @@ constraintCommand
       secretKey: metaplex.identity().secretKey as Uint8Array,
     });
 
-    let collectionMint = new web3.PublicKey(collection);
+    const collectionMint = new web3.PublicKey(collection);
+    const te = useTransferEffects(cmd.opts);
 
     await addCollectionConstraint(
       metaplex.connection,
@@ -243,13 +286,14 @@ constraintCommand
       constraintName,
       tokenLimit,
       collectionMint,
+      te.toNumber(),
       modelAddress,
     );
 
     await showModel(metaplex.connection, modelAddress);
   });
 
-constraintCommand
+const addTokensConstraintCommand = constraintCommand
   .command("tokens")
   .option(
     "-e, --env <string>",
@@ -265,7 +309,7 @@ constraintCommand
   .option("-mn, --model-name <string>", "The name of the constraint model.")
   .option("-cn --constraint-name <string>", "The name of the constraint")
   .option(
-    "-l --token-limit <int>",
+    "-tl --token-limit <int>",
     "The max number of tokens that can be transferred into this constraint slot",
   )
   .option(
@@ -302,7 +346,7 @@ constraintCommand
     }
 
     const metaplex = await use_metaplex(keypair, env, rpc);
-    let [modelAddress] = await findEscrowConstraintModelPda(
+    const [modelAddress] = await findEscrowConstraintModelPda(
       metaplex.identity().publicKey,
       modelName,
     );
@@ -313,17 +357,24 @@ constraintCommand
     });
     // TODO: batch process this.
 
+    const te = useTransferEffects(cmd.opts);
+
     await addTokensConstraint(
       metaplex.connection,
       adaptedKeypair,
       constraintName,
       tokenLimit,
       tokens,
+      te.toNumber(),
       modelAddress,
     );
 
     await showModel(metaplex.connection, modelAddress);
   });
+
+addTransferEffectsOptions(addNoneConstraintCommand);
+addTransferEffectsOptions(addCollectionConstraintCommand);
+addTransferEffectsOptions(addTokensConstraintCommand);
 
 const show = program.command("show");
 
@@ -343,6 +394,7 @@ show
   .option("-n, --name <string>", "The name if creating a new NFT.")
   .action(async (directory, cmd) => {
     // console.log(cmd.opts());
+
     const { keypair, env, rpc, name } = cmd.opts();
 
     const metaplex = await use_metaplex(keypair, env, rpc);

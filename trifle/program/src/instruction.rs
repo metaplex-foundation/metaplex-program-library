@@ -96,7 +96,7 @@ pub enum TrifleInstruction {
     #[account(7, optional, writable, name = "escrow_edition", desc = "The freeze authority of the escrow account's base token mint")]
     #[account(8, optional, writable, name = "attribute_mint", desc = "The mint of the attribute token")]
     #[account(9, optional, writable, name = "attribute_src_token", desc = "The token account that the attribute token is being transferred from")]
-    #[account(10, optional, writable, name = "attribute_src_token", desc = "The token account that the attribute token is being transferred to (pda of the escrow account)")]
+    #[account(10, optional, writable, name = "attribute_dst_token", desc = "The token account that the attribute token is being transferred to (pda of the escrow account)")]
     #[account(11, optional, writable, name = "attribute_metadata", desc = "The metadata account of the attribute token")]
     #[account(12, optional, writable, name = "attribute_edition", desc = "The edition account of the attribute token")]
     #[account(13, optional, writable, name = "attribute_collection_metadata", desc = "The collection metadata account of the attribute token")]

@@ -46,7 +46,7 @@ export const TransferInStruct = new beet.FixableBeetArgsStruct<
  * @property [_writable_] escrowEdition (optional) The freeze authority of the escrow account's base token mint
  * @property [_writable_] attributeMint (optional) The mint of the attribute token
  * @property [_writable_] attributeSrcToken (optional) The token account that the attribute token is being transferred from
- * @property [_writable_] attributeSrcToken (optional) The token account that the attribute token is being transferred to (pda of the escrow account)
+ * @property [_writable_] attributeDstToken (optional) The token account that the attribute token is being transferred to (pda of the escrow account)
  * @property [_writable_] attributeMetadata (optional) The metadata account of the attribute token
  * @property [_writable_] attributeEdition (optional) The edition account of the attribute token
  * @property [_writable_] attributeCollectionMetadata (optional) The collection metadata account of the attribute token
@@ -65,7 +65,7 @@ export type TransferInInstructionAccounts = {
   escrowEdition?: web3.PublicKey;
   attributeMint?: web3.PublicKey;
   attributeSrcToken?: web3.PublicKey;
-  attributeSrcToken?: web3.PublicKey;
+  attributeDstToken?: web3.PublicKey;
   attributeMetadata?: web3.PublicKey;
   attributeEdition?: web3.PublicKey;
   attributeCollectionMetadata?: web3.PublicKey;
@@ -189,7 +189,7 @@ export function createTransferInInstruction(
     });
   }
 
-  if (accounts.attributeSrcToken != null) {
+  if (accounts.attributeDstToken != null) {
     if (
       accounts.escrowMint == null ||
       accounts.escrowToken == null ||
@@ -198,11 +198,11 @@ export function createTransferInInstruction(
       accounts.attributeSrcToken == null
     ) {
       throw new Error(
-        "When providing 'attributeSrcToken' then 'accounts.escrowMint', 'accounts.escrowToken', 'accounts.escrowEdition', 'accounts.attributeMint', 'accounts.attributeSrcToken' need(s) to be provided as well.",
+        "When providing 'attributeDstToken' then 'accounts.escrowMint', 'accounts.escrowToken', 'accounts.escrowEdition', 'accounts.attributeMint', 'accounts.attributeSrcToken' need(s) to be provided as well.",
       );
     }
     keys.push({
-      pubkey: accounts.attributeSrcToken,
+      pubkey: accounts.attributeDstToken,
       isWritable: true,
       isSigner: false,
     });
@@ -215,10 +215,10 @@ export function createTransferInInstruction(
       accounts.escrowEdition == null ||
       accounts.attributeMint == null ||
       accounts.attributeSrcToken == null ||
-      accounts.attributeSrcToken == null
+      accounts.attributeDstToken == null
     ) {
       throw new Error(
-        "When providing 'attributeMetadata' then 'accounts.escrowMint', 'accounts.escrowToken', 'accounts.escrowEdition', 'accounts.attributeMint', 'accounts.attributeSrcToken', 'accounts.attributeSrcToken' need(s) to be provided as well.",
+        "When providing 'attributeMetadata' then 'accounts.escrowMint', 'accounts.escrowToken', 'accounts.escrowEdition', 'accounts.attributeMint', 'accounts.attributeSrcToken', 'accounts.attributeDstToken' need(s) to be provided as well.",
       );
     }
     keys.push({
@@ -235,11 +235,11 @@ export function createTransferInInstruction(
       accounts.escrowEdition == null ||
       accounts.attributeMint == null ||
       accounts.attributeSrcToken == null ||
-      accounts.attributeSrcToken == null ||
+      accounts.attributeDstToken == null ||
       accounts.attributeMetadata == null
     ) {
       throw new Error(
-        "When providing 'attributeEdition' then 'accounts.escrowMint', 'accounts.escrowToken', 'accounts.escrowEdition', 'accounts.attributeMint', 'accounts.attributeSrcToken', 'accounts.attributeSrcToken', 'accounts.attributeMetadata' need(s) to be provided as well.",
+        "When providing 'attributeEdition' then 'accounts.escrowMint', 'accounts.escrowToken', 'accounts.escrowEdition', 'accounts.attributeMint', 'accounts.attributeSrcToken', 'accounts.attributeDstToken', 'accounts.attributeMetadata' need(s) to be provided as well.",
       );
     }
     keys.push({
@@ -256,12 +256,12 @@ export function createTransferInInstruction(
       accounts.escrowEdition == null ||
       accounts.attributeMint == null ||
       accounts.attributeSrcToken == null ||
-      accounts.attributeSrcToken == null ||
+      accounts.attributeDstToken == null ||
       accounts.attributeMetadata == null ||
       accounts.attributeEdition == null
     ) {
       throw new Error(
-        "When providing 'attributeCollectionMetadata' then 'accounts.escrowMint', 'accounts.escrowToken', 'accounts.escrowEdition', 'accounts.attributeMint', 'accounts.attributeSrcToken', 'accounts.attributeSrcToken', 'accounts.attributeMetadata', 'accounts.attributeEdition' need(s) to be provided as well.",
+        "When providing 'attributeCollectionMetadata' then 'accounts.escrowMint', 'accounts.escrowToken', 'accounts.escrowEdition', 'accounts.attributeMint', 'accounts.attributeSrcToken', 'accounts.attributeDstToken', 'accounts.attributeMetadata', 'accounts.attributeEdition' need(s) to be provided as well.",
       );
     }
     keys.push({

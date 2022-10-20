@@ -1,3 +1,4 @@
+import { inspect } from "util";
 import { NftWithToken, SftWithToken } from "@metaplex-foundation/js";
 import { Connection, Keypair, PublicKey, Transaction } from "@solana/web3.js";
 import {
@@ -67,6 +68,7 @@ export const addNoneConstraint = async (
   keypair: Keypair,
   name: string,
   tokenLimit: number,
+  transferEffects: number,
   model: PublicKey,
 ) => {
   const addIX = createAddNoneConstraintToEscrowConstraintModelInstruction(
@@ -79,6 +81,7 @@ export const addNoneConstraint = async (
       addNoneConstraintToEscrowConstraintModelArgs: {
         constraintName: name,
         tokenLimit: tokenLimit,
+        transferEffects,
       },
     },
   );
@@ -97,6 +100,7 @@ export const addCollectionConstraint = async (
   name: string,
   tokenLimit: number,
   collection: PublicKey,
+  transferEffects: number,
   model: PublicKey,
 ) => {
   const collectionMintMetadata = await findMetadataPda(collection);
@@ -112,6 +116,7 @@ export const addCollectionConstraint = async (
       addCollectionConstraintToEscrowConstraintModelArgs: {
         constraintName: name,
         tokenLimit: tokenLimit,
+        transferEffects,
       },
     },
   );
@@ -130,6 +135,7 @@ export const addTokensConstraint = async (
   name: string,
   tokenLimit: number,
   tokens: PublicKey[],
+  transferEffects: number,
   model: PublicKey,
 ) => {
   const addIX = createAddTokensConstraintToEscrowConstraintModelInstruction(
@@ -143,6 +149,7 @@ export const addTokensConstraint = async (
         constraintName: name,
         tokenLimit: tokenLimit,
         tokens,
+        transferEffects,
       },
     },
   );
@@ -225,21 +232,34 @@ export const transferIn = async (
     escrowAccountAddress,
     true,
   );
+
+  // trifle: web3.PublicKey;
+  // trifleAuthority: web3.PublicKey;
+  // payer: web3.PublicKey;
+  // constraintModel: web3.PublicKey;
+  // escrow: web3.PublicKey;
+  // escrowMint?: web3.PublicKey;
+  // escrowToken?: web3.PublicKey;
+  // escrowEdition?: web3.PublicKey;
+  // attributeMint?: web3.PublicKey;
+  // attributeSrcToken?: web3.PublicKey;
+  // attributeDstToken?: web3.PublicKey;
+  // attributeMetadata?: web3.PublicKey;
+  // attributeEdition?: web3.PublicKey;
+  // attributeCollectionMetadata?: web3.PublicKey;
   const transferIX = createTransferInInstruction(
     {
-      trifleAccount: trifleAddress[0],
+      trifle: trifleAddress[0],
       constraintModel: escrowConstraintModel[0],
-      escrowAccount: escrowAccountAddress,
+      escrow: escrowAccountAddress,
       payer: keypair.publicKey,
       trifleAuthority: keypair.publicKey,
       attributeMint: nft.mint.address,
-      attributeSrcTokenAccount: nft.token.address,
-      attributeDstTokenAccount: dst,
+      attributeSrcToken: nft.token.address,
+      attributeDstToken: dst,
       attributeMetadata: nft.metadataAddress,
       escrowMint: escrowNft.mint.address,
-      escrowTokenAccount: escrowNft.token.address,
-      splAssociatedTokenAccount: new PublicKey(ASSOCIATED_TOKEN_PROGRAM_ID),
-      splToken: new PublicKey(TOKEN_PROGRAM_ID),
+      escrowToken: escrowNft.token.address,
     },
     {
       transferInArgs: { amount: 1, slot },
@@ -267,7 +287,10 @@ export const showModel = async (
   if (accountInfo) {
     const account: EscrowConstraintModel =
       EscrowConstraintModel.fromAccountInfo(accountInfo)[0];
-    console.log(JSON.stringify(account.pretty()));
+    // console.log(JSON.stringify(account.pretty()));
+    console.log(JSON.stringify(account));
+    let inspected = inspect(account.constraints);
+    console.log(inspected);
   } else {
     console.log("Unable to fetch account");
   }

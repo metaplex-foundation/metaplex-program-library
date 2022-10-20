@@ -1876,10 +1876,11 @@ __metadata:
     "@metaplex-foundation/solita": ^0.16.0
     "@solana/spl-token": ^0.2.0
     "@solana/web3.js": ^1.35.1
-    "@types/bn.js": ^5.1.0
+    "@types/bn.js": ^5.1.1
     "@types/debug": ^4.1.7
     "@types/tape": ^4.13.2
-    bn.js: ^5.2.0
+    bitfield: ^4.1.0
+    bn.js: ^5.2.1
     cpr: ^3.0.1
     debug: ^4.3.3
     eslint: ^8.3.0
@@ -2725,7 +2726,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/bn.js@npm:^5.1.0":
+"@types/bn.js@npm:^5.1.0, @types/bn.js@npm:^5.1.1":
   version: 5.1.1
   resolution: "@types/bn.js@npm:5.1.1"
   dependencies:
@@ -3683,6 +3684,13 @@ __metadata:
     pbkdf2: ^3.0.9
     randombytes: ^2.0.1
   checksum: 71798582b4d1cc7f20d11372413c4514f124d302e6b38e7f9126d4759fca3e9fbccb431429a6ab16130dd67193de3d781122fcd4bca0a653be654d4aa13490c5
+  languageName: node
+  linkType: hard
+
+"bitfield@npm:^4.1.0":
+  version: 4.1.0
+  resolution: "bitfield@npm:4.1.0"
+  checksum: 91938f984a0fc3e13778da3ba9eb2721a6868f96d015fa38285a5ad1ee2b1137e6f50dcef08d920aa2b104bac645f3daddc50f08461511d7419da7d664e33d8e
   languageName: node
   linkType: hard
 
