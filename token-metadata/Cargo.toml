@@ -5,4 +5,4 @@ members=[
 ]
 
 [profile.release]
-overflow-checks = true
+overflow-checks = true     # Enable integer overflow checks.

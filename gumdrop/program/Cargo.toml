@@ -8,9 +8,6 @@ license-file = "../../LICENSE"
 edition = "2021"
 keywords = ["solana", "merkle", "distributor"]
 
-[profile.release]
-overflow-checks = true
-
 [lib]
 crate-type = ["cdylib", "lib"]
 name = "mpl_gumdrop"
@@ -28,3 +25,6 @@ solana-program = "1.9.18"
 spl-token = "3.2.0"
 spl-associated-token-account = { version = "=1.0.3", features = [ "no-entrypoint" ] }
 mpl-token-metadata = { version="=1.2.7", features = [ "no-entrypoint" ] }
+
+[profile.release]
+overflow-checks = true     # Enable integer overflow checks.

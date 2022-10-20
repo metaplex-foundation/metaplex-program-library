@@ -30,3 +30,5 @@ num-derive = "0.3"
 num-traits = "0.2"
 borsh = "0.9.1"
 
+[profile.release]
+overflow-checks = true     # Enable integer overflow checks.

@@ -30,3 +30,6 @@ rand = { version = "~0.8.4" }
 
 [lib]
 crate-type = ["cdylib", "lib"]
+
+[profile.release]
+overflow-checks = true     # Enable integer overflow checks.
