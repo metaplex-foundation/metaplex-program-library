@@ -1,6 +1,7 @@
 use crate::{error::ErrorCode, state::SellingResourceState, utils::*, InitSellingResource};
 use anchor_lang::prelude::*;
 use anchor_spl::token;
+use mpl_token_metadata::state::TokenMetadataAccount;
 
 impl<'info> InitSellingResource<'info> {
     pub fn process(
@@ -50,7 +51,7 @@ impl<'info> InitSellingResource<'info> {
         // Check, that at least one creator exists in primary sale
         if !metadata.primary_sale_happened {
             if let Some(creators) = metadata.data.creators {
-                if creators.len() == 0 {
+                if creators.is_empty() {
                     return Err(ErrorCode::MetadataCreatorsIsEmpty.into());
                 }
             } else {

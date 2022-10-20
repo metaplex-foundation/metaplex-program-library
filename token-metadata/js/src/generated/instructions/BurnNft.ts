@@ -51,63 +51,56 @@ export const burnNftInstructionDiscriminator = 29;
  * @category BurnNft
  * @category generated
  */
-export function createBurnNftInstruction(accounts: BurnNftInstructionAccounts) {
-  const {
-    metadata,
-    owner,
-    mint,
-    tokenAccount,
-    masterEditionAccount,
-    splTokenProgram,
-    collectionMetadata,
-  } = accounts;
-
+export function createBurnNftInstruction(
+  accounts: BurnNftInstructionAccounts,
+  programId = new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
+) {
   const [data] = BurnNftStruct.serialize({
     instructionDiscriminator: burnNftInstructionDiscriminator,
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: metadata,
+      pubkey: accounts.metadata,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: owner,
+      pubkey: accounts.owner,
       isWritable: true,
       isSigner: true,
     },
     {
-      pubkey: mint,
+      pubkey: accounts.mint,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: tokenAccount,
+      pubkey: accounts.tokenAccount,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: masterEditionAccount,
+      pubkey: accounts.masterEditionAccount,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: splTokenProgram,
+      pubkey: accounts.splTokenProgram,
       isWritable: false,
       isSigner: false,
     },
   ];
 
-  if (collectionMetadata != null) {
+  if (accounts.collectionMetadata != null) {
     keys.push({
-      pubkey: collectionMetadata,
+      pubkey: accounts.collectionMetadata,
       isWritable: true,
       isSigner: false,
     });
   }
 
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
+    programId,
     keys,
     data,
   });

@@ -1,3 +1,5 @@
+use std::cmp::Ordering;
+
 use crate::{
     error::ErrorCode,
     state::{GatingConfig, MarketState, SellingResourceState},
@@ -10,7 +12,10 @@ use anchor_lang::{
     system_program::System,
 };
 use anchor_spl::token;
-use mpl_token_metadata::{state::Metadata, utils::get_supply_off_master_edition};
+use mpl_token_metadata::{
+    state::{Metadata, TokenMetadataAccount},
+    utils::get_supply_off_master_edition,
+};
 
 impl<'info> Buy<'info> {
     pub fn process(
@@ -39,7 +44,7 @@ impl<'info> Buy<'info> {
         let token_program = &self.token_program;
         let system_program = &self.system_program;
 
-        let metadata_mint = selling_resource.resource.clone();
+        let metadata_mint = selling_resource.resource;
         // do supply +1 to increase master edition supply
         let edition = get_supply_off_master_edition(&master_edition.to_account_info())?
             .checked_add(1)
@@ -85,7 +90,7 @@ impl<'info> Buy<'info> {
 
         Self::verify_gating_token(
             &market.gatekeeper,
-            &user_wallet,
+            user_wallet,
             remaining_accounts,
             clock.unix_timestamp as u64,
         )?;
@@ -137,7 +142,7 @@ impl<'info> Buy<'info> {
             &master_edition_metadata.to_account_info(),
             &master_edition.to_account_info(),
             &metadata_mint,
-            &edition_marker_info,
+            edition_marker_info,
             &token_program.to_account_info(),
             &system_program.to_account_info(),
             &rent.to_account_info(),
@@ -169,11 +174,13 @@ impl<'info> Buy<'info> {
 
         // Check, that `SellingResource::max_supply` is not overflowed by `supply`
         if let Some(max_supply) = selling_resource.max_supply {
-            if selling_resource.supply > max_supply {
-                return Err(ErrorCode::SupplyIsGtThanMaxSupply.into());
-            } else if selling_resource.supply == max_supply {
-                selling_resource.state = SellingResourceState::Exhausted;
-                market.state = MarketState::Ended;
+            match selling_resource.supply.cmp(&max_supply) {
+                Ordering::Greater => return Err(ErrorCode::SupplyIsGtThanMaxSupply.into()),
+                Ordering::Equal => {
+                    selling_resource.state = SellingResourceState::Exhausted;
+                    market.state = MarketState::Ended;
+                }
+                Ordering::Less => (),
             }
         }
 

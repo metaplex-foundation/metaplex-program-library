@@ -45,40 +45,41 @@ export const setTokenStandardInstructionDiscriminator = 35;
  * @category SetTokenStandard
  * @category generated
  */
-export function createSetTokenStandardInstruction(accounts: SetTokenStandardInstructionAccounts) {
-  const { metadata, updateAuthority, mint, edition } = accounts;
-
+export function createSetTokenStandardInstruction(
+  accounts: SetTokenStandardInstructionAccounts,
+  programId = new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
+) {
   const [data] = SetTokenStandardStruct.serialize({
     instructionDiscriminator: setTokenStandardInstructionDiscriminator,
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: metadata,
+      pubkey: accounts.metadata,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: updateAuthority,
+      pubkey: accounts.updateAuthority,
       isWritable: true,
       isSigner: true,
     },
     {
-      pubkey: mint,
+      pubkey: accounts.mint,
       isWritable: false,
       isSigner: false,
     },
   ];
 
-  if (edition != null) {
+  if (accounts.edition != null) {
     keys.push({
-      pubkey: edition,
+      pubkey: accounts.edition,
       isWritable: false,
       isSigner: false,
     });
   }
 
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
+    programId,
     keys,
     data,
   });

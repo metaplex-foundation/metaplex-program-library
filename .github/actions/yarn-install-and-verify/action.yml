@@ -16,18 +16,19 @@ inputs:
     description: If not false it will build the core package before running checks
     required: false
     default: true
-  build_auction:
-    description: If true it will build the auction package before running checks
-    required: false
-    default: false
   build_token_metadata:
     description: If true it will build the token_metadata package before running checks
     required: false
     default: false
-  build_token_vault:
-    description: If true it will build the token_vault package before running checks
+  build_auction_house:
+    description: If true it will build the auction_house package before running checks
     required: false
     default: false
+  build_candy_machine:
+    description: If true it will build the candy_machine package before running checks
+    required: false
+    default: false
+
 
 runs:
   using: composite
@@ -41,11 +42,9 @@ runs:
     # Prepare Core and Dependencies
     ##############
     
-    # All contract SDKs depend on mpl-core so we need to build at least that
+    # Some contract SDKs depend on mpl-core so we need to build at least that by default.
     # We avoid running build in the project root to avoid a check for a contract failing due to
     # an issue in another contract which would cause a build failure.
-    # For the metaplex contract this is unfortunately not entirely possible as it depends on core, token-metadat,
-    # token-vault and auction
 
     - name: Install and Build core
       if: inputs.build_core == 'true'
@@ -55,16 +54,6 @@ runs:
         echo 'Install and Build core: yarn build'
         yarn build
       working-directory: ./core/js 
-      shell: bash
-
-    - name: Install and Build auction
-      if: inputs.build_auction == 'true'
-      run: |
-        echo 'Install and Build auction: yarn install'
-        yarn install
-        echo 'Install and Build auction: yarn build'
-        yarn build
-      working-directory: ./auction/js 
       shell: bash
 
     - name: Install and Build token-metadata
@@ -77,14 +66,24 @@ runs:
       working-directory: ./token-metadata/js 
       shell: bash
 
-    - name: Install and Build token-vault
-      if: inputs.build_token_vault == 'true'
+    - name: Install and Build auction-house
+      if: inputs.build_auction_house == 'true'
       run: |
-        echo 'Install and Build token-vault: yarn install'
+        echo 'Install and Build auction-house: yarn install'
         yarn install
-        echo 'Install and Build token-vault: yarn build'
+        echo 'Install and Build auction-house: yarn build'
         yarn build
-      working-directory: ./token-vault/js 
+      working-directory: ./auction-house/js 
+      shell: bash
+
+    - name: Install and Build candy-machine
+      if: inputs.build_candy_machine == 'true'
+      run: |
+        echo 'Install and Build candy-machine: yarn install'
+        yarn install
+        echo 'Install and Build candy-machine: yarn build'
+        yarn build
+      working-directory: ./candy-machine/js 
       shell: bash
 
     ##############

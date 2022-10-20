@@ -1,0 +1,6 @@
+{
+  "entryPoints": ["src/mpl-hydra.ts"],
+  "excludeInternal": true,
+  "excludePrivate": true,
+  "out": "./docs"
+}

@@ -42,27 +42,26 @@ export const removeCreatorVerificationInstructionDiscriminator = 28;
  */
 export function createRemoveCreatorVerificationInstruction(
   accounts: RemoveCreatorVerificationInstructionAccounts,
+  programId = new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
 ) {
-  const { metadata, creator } = accounts;
-
   const [data] = RemoveCreatorVerificationStruct.serialize({
     instructionDiscriminator: removeCreatorVerificationInstructionDiscriminator,
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: metadata,
+      pubkey: accounts.metadata,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: creator,
+      pubkey: accounts.creator,
       isWritable: false,
       isSigner: true,
     },
   ];
 
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
+    programId,
     keys,
     data,
   });

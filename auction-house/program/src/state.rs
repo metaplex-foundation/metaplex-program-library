@@ -19,17 +19,18 @@ pub struct AuctionHouse {
     pub can_change_sale_price: bool,
     pub escrow_payment_bump: u8,
     pub has_auctioneer: bool,
-    pub auctioneer_pda_bump: u8,
+    pub auctioneer_address: Pubkey,
+    pub scopes: [bool; MAX_NUM_SCOPES],
 }
 
 #[account]
 pub struct Auctioneer {
     pub auctioneer_authority: Pubkey,
     pub auction_house: Pubkey,
-    pub scopes: [bool; MAX_NUM_SCOPES],
+    pub bump: u8,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, PartialEq, Debug)]
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, PartialEq, Eq, Debug)]
 #[repr(u32)]
 pub enum AuthorityScope {
     Deposit = 0,

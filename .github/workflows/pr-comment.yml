@@ -8,11 +8,13 @@ permissions:
   id-token: write
   contents: write
   packages: write
+  issues: write # make comment
+  pull-requests: write # open PR
 
 env:
   NODE_VERSION: 17.0.1
   ANCHOR_VERSION: 0.22.0
-  SOLANA_VERSION_STABLE: 1.9.22
+  SOLANA_VERSION_STABLE: 1.10.34
   RUST_TOOLCHAIN: stable
 
 jobs:
@@ -26,9 +28,7 @@ jobs:
         run: echo "$GITHUB_CONTEXT"
 
   get-changes-scope:
-    if:
-      contains(fromJson('["OWNER", "MEMBER", "CONTRIBUTOR"]'), github.event.review.author_association) == true &&
-      contains(fromJson('["approved", "commented"]'), github.event.review.state) == true
+    if: contains(fromJson('["OWNER", "MEMBER", "CONTRIBUTOR"]'), github.event.review.author_association) == true && contains(fromJson('["approved", "commented"]'), github.event.review.state) == true
     runs-on: ubuntu-latest
     outputs:
       changed-packages: ${{ steps.get-changed-package-scope.outputs.result }}
@@ -61,20 +61,39 @@ jobs:
             return JSON.stringify(Array.from(Object.keys(uniqueFilesObj)).map((el) => `\"${el}\"`))
 
   get-version-scope:
-    if:
-      contains(fromJson('["OWNER", "MEMBER", "CONTRIBUTOR"]'), github.event.review.author_association) == true &&
-      contains(fromJson('["approved", "commented"]'), github.event.review.state) == true
+    if: contains(fromJson('["OWNER", "MEMBER", "CONTRIBUTOR"]'), github.event.review.author_association) == true && contains(fromJson('["approved", "commented"]'), github.event.review.state) == true
     runs-on: ubuntu-latest
     outputs:
       versioning: ${{ steps.parse-version-info.outputs.versioning }}
       has-versioning: ${{ steps.parse-version-info.outputs.has-versioning }}
     steps:
       - uses: actions/checkout@v3
+
+      # GH doesn't process or format body fields, so we do some light processing so that multiline comments will break inputs
+      - name: Process content body
+        id: process-content-body
+        env:
+          REVIEW_BODY: ${{ github.event.review.body }}
+        run: |
+          REVIEW_CONTENT=$(cat << EOF
+          $REVIEW_BODY
+          EOF
+          )
+          REVIEW_CONTENT="${REVIEW_CONTENT//\'/}"
+          REVIEW_CONTENT="${REVIEW_CONTENT//$'\n'/\\n}"
+          REVIEW_CONTENT="${REVIEW_CONTENT//$'\r'/\\r}"
+          echo "::set-output name=content::$REVIEW_CONTENT"
+        shell: bash
+
+      - name: Log processed content body
+        run: echo "${{ steps.process-content-body.outputs.content }}"
+        shell: bash
+
       - name: Parse version info from review
         uses: ./.github/actions/parse-version-command
         id: parse-version-info
         with:
-          body: ${{ github.event.review.body }}
+          body: ${{ steps.process-content-body.outputs.content }}
 
   update-pr-with-changes:
     needs: [get-changes-scope, get-version-scope]
@@ -97,4 +116,8 @@ jobs:
         with:
           changed-packages: ${{ needs.get-changes-scope.outputs.changed-packages }}
           versioning: ${{ needs.get-version-scope.outputs.versioning }}
-          branch: ${{ github.event.pull_request.head.ref }}
+          to-branch: ${{ github.event.pull_request.base.ref }}
+          to-repository: ${{ github.event.pull_request.base.repo.full_name }}
+          from-branch: ${{ github.event.pull_request.head.ref }}
+          from-repository: ${{ github.event.pull_request.head.repo.full_name }}
+          pull-number: ${{ github.event.pull_request.number }}

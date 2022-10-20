@@ -13,7 +13,7 @@ import * as web3 from '@solana/web3.js';
  * @category CancelListingReceipt
  * @category generated
  */
-const cancelListingReceiptStruct = new beet.BeetArgsStruct<{
+export const cancelListingReceiptStruct = new beet.BeetArgsStruct<{
   instructionDiscriminator: number[] /* size: 8 */;
 }>(
   [['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)]],
@@ -30,10 +30,12 @@ const cancelListingReceiptStruct = new beet.BeetArgsStruct<{
  */
 export type CancelListingReceiptInstructionAccounts = {
   receipt: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
   instruction: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
 };
 
-const cancelListingReceiptInstructionDiscriminator = [171, 59, 138, 126, 246, 189, 91, 11];
+export const cancelListingReceiptInstructionDiscriminator = [171, 59, 138, 126, 246, 189, 91, 11];
 
 /**
  * Creates a _CancelListingReceipt_ instruction.
@@ -45,32 +47,37 @@ const cancelListingReceiptInstructionDiscriminator = [171, 59, 138, 126, 246, 18
  */
 export function createCancelListingReceiptInstruction(
   accounts: CancelListingReceiptInstructionAccounts,
+  programId = new web3.PublicKey('hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk'),
 ) {
-  const { receipt, instruction } = accounts;
-
   const [data] = cancelListingReceiptStruct.serialize({
     instructionDiscriminator: cancelListingReceiptInstructionDiscriminator,
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: receipt,
+      pubkey: accounts.receipt,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: web3.SystemProgram.programId,
+      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: instruction,
+      pubkey: accounts.instruction,
       isWritable: false,
       isSigner: false,
     },
   ];
 
+  if (accounts.anchorRemainingAccounts != null) {
+    for (const acc of accounts.anchorRemainingAccounts) {
+      keys.push(acc);
+    }
+  }
+
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey('hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk'),
+    programId,
     keys,
     data,
   });

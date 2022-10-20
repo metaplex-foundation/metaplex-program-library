@@ -223,6 +223,64 @@ impl Metadata {
         context.banks_client.process_transaction(tx).await
     }
 
+    pub async fn create_default_nft(
+        context: &mut ProgramTestContext,
+    ) -> Result<(Metadata, MasterEditionV2), BanksClientError> {
+        let nft = Metadata::new();
+        nft.create_v3(
+            context,
+            "Test".to_string(),
+            "TST".to_string(),
+            "uri".to_string(),
+            None,
+            10,
+            false,
+            None,
+            None,
+            None,
+            None,
+        )
+        .await
+        .unwrap();
+
+        let master_edition = MasterEditionV2::new(&nft);
+        master_edition.create_v3(context, Some(0)).await.unwrap();
+
+        Ok((nft, master_edition))
+    }
+
+    pub async fn create_default_sized_parent(
+        context: &mut ProgramTestContext,
+    ) -> Result<(Metadata, MasterEditionV2), BanksClientError> {
+        let nft = Metadata::new();
+        nft.create_v3(
+            context,
+            "Test".to_string(),
+            "TST".to_string(),
+            "uri".to_string(),
+            None,
+            10,
+            false,
+            None,
+            None,
+            None,
+            Some(CollectionDetails::V1 { size: 0 }),
+        )
+        .await
+        .unwrap();
+
+        let master_edition = MasterEditionV2::new(&nft);
+        master_edition.create_v3(context, Some(0)).await.unwrap();
+
+        Ok((nft, master_edition))
+    }
+
+    pub async fn create_default_unsized_parent(
+        context: &mut ProgramTestContext,
+    ) -> Result<(Metadata, MasterEditionV2), BanksClientError> {
+        Self::create_default_nft(context).await
+    }
+
     pub async fn update_primary_sale_happened_via_token(
         &self,
         context: &mut ProgramTestContext,
@@ -513,4 +571,20 @@ impl Default for Metadata {
     fn default() -> Self {
         Self::new()
     }
+}
+
+pub async fn assert_collection_size(
+    context: &mut ProgramTestContext,
+    collection_metadata: &Metadata,
+    size: u64,
+) {
+    let collection_md = collection_metadata.get_data(context).await;
+    let retrieved_size = if let Some(details) = collection_md.collection_details {
+        match details {
+            CollectionDetails::V1 { size } => size,
+        }
+    } else {
+        panic!("Expected CollectionDetails::V1");
+    };
+    assert_eq!(retrieved_size, size);
 }

@@ -436,6 +436,58 @@ pub enum MetadataError {
     /// 110 - Master Edition has prints.
     #[error("This Master Edition has existing prints")]
     MasterEditionHasPrints,
+
+    /// 111 - Borsh Deserialization Error
+    #[error("Borsh Deserialization Error")]
+    BorshDeserializationError,
+
+    /// 112 - Cannot update a verified colleciton in this command
+    #[error("Cannot update a verified colleciton in this command")]
+    CannotUpdateVerifiedCollection,
+
+    /// 113 - Edition Account Doesnt Match Collection
+    #[error("Edition account doesnt match collection ")]
+    CollectionMasterEditionAccountInvalid,
+
+    /// 114 - Item is already verified.
+    #[error("Item is already verified.")]
+    AlreadyVerified,
+
+    /// 115 - Item is already unverified.
+    #[error("Item is already unverified.")]
+    AlreadyUnverified,
+
+    /// 116 - Not a Print Edition
+    #[error("This edition is not a Print Edition")]
+    NotAPrintEdition,
+
+    /// 117 - Invalid Edition Marker
+    #[error("Invalid Master Edition")]
+    InvalidMasterEdition,
+
+    /// 118 - Invalid Edition Marker
+    #[error("Invalid Print Edition")]
+    InvalidPrintEdition,
+
+    /// 119 - Invalid Edition Marker
+    #[error("Invalid Edition Marker")]
+    InvalidEditionMarker,
+
+    /// 120 - Reservation List is Deprecated
+    #[error("Reservation List is Deprecated")]
+    ReservationListDeprecated,
+
+    /// 121 - Print Edition doesn't match Master Edition
+    #[error("Print Edition does not match Master Edition")]
+    PrintEditionDoesNotMatchMasterEdition,
+
+    /// 122 - Edition Number greater than max supply
+    #[error("Edition Number greater than max supply")]
+    EditionNumberGreaterThanMaxSupply,
+
+    /// 123 - Must unverify before migrating collections.
+    #[error("Must unverify before migrating collections.")]
+    MustUnverify,
 }
 
 impl PrintProgramError for MetadataError {

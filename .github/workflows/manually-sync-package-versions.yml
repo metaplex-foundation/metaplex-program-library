@@ -31,4 +31,4 @@ jobs:
         with:
           changed-packages: ${{ inputs.packages }}
           cargo-token: ${{ secrets.CARGO_TOKEN }}
-          npm-token: ${{ secrets.NPM_PUBLISH_TOKEN }}
+          npm-token: ${{ secrets.NPM_TOKEN }}

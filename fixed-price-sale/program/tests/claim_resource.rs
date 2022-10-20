@@ -23,13 +23,13 @@ mod claim_resource {
     use solana_program::clock::Clock;
     use solana_program_test::*;
     use solana_sdk::{
+        commitment_config::CommitmentLevel,
         instruction::{AccountMeta, Instruction},
         pubkey::Pubkey,
         signature::Keypair,
         signer::Signer,
         system_program, sysvar,
         transaction::Transaction,
-        transport::TransportError,
     };
 
     #[tokio::test]
@@ -138,7 +138,11 @@ mod claim_resource {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await.unwrap();
+        context
+            .banks_client
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+            .await
+            .unwrap();
 
         let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
         context.warp_to_slot(clock.slot + 1500).unwrap();
@@ -265,7 +269,7 @@ mod claim_resource {
         let primary_royalties_holder = Keypair::new();
 
         let data = mpl_fixed_price_sale_instruction::SavePrimaryMetadataCreators {
-            primary_metadata_creators_bump: primary_metadata_creators_bump,
+            primary_metadata_creators_bump,
             creators: vec![mpl_fixed_price_sale::state::Creator {
                 address: primary_royalties_holder.pubkey(),
                 verified: false,
@@ -287,7 +291,11 @@ mod claim_resource {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await.unwrap();
+        context
+            .banks_client
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+            .await
+            .unwrap();
 
         // Buy
         let accounts = mpl_fixed_price_sale_accounts::Buy {
@@ -333,7 +341,11 @@ mod claim_resource {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await.unwrap();
+        context
+            .banks_client
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+            .await
+            .unwrap();
 
         let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
         context.warp_to_slot(clock.slot + 3).unwrap();
@@ -361,7 +373,11 @@ mod claim_resource {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await.unwrap();
+        context
+            .banks_client
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+            .await
+            .unwrap();
 
         // Withdraw
         let (payout_ticket, payout_ticket_bump) = find_payout_ticket_address(
@@ -422,7 +438,11 @@ mod claim_resource {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await.unwrap();
+        context
+            .banks_client
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+            .await
+            .unwrap();
 
         // ClaimResource
         let claim_token = Keypair::new();
@@ -465,7 +485,11 @@ mod claim_resource {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await.unwrap();
+        context
+            .banks_client
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+            .await
+            .unwrap();
     }
 
     #[tokio::test]
@@ -498,7 +522,7 @@ mod claim_resource {
         let (treasury_owner, treasyry_owner_bump) =
             find_treasury_owner_address(&treasury_mint, &selling_resource_keypair.pubkey());
 
-        let treasury_holder = treasury_owner.clone();
+        let treasury_holder = treasury_owner;
 
         let start_date = context
             .banks_client
@@ -557,7 +581,11 @@ mod claim_resource {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await.unwrap();
+        context
+            .banks_client
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+            .await
+            .unwrap();
 
         let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
         context.warp_to_slot(clock.slot + 1500).unwrap();
@@ -669,7 +697,7 @@ mod claim_resource {
         let primary_royalties_receiver = Keypair::new();
 
         let data = mpl_fixed_price_sale_instruction::SavePrimaryMetadataCreators {
-            primary_metadata_creators_bump: primary_metadata_creators_bump,
+            primary_metadata_creators_bump,
             creators: vec![mpl_fixed_price_sale::state::Creator {
                 address: primary_royalties_receiver.pubkey(),
                 verified: false,
@@ -691,7 +719,11 @@ mod claim_resource {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await.unwrap();
+        context
+            .banks_client
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+            .await
+            .unwrap();
 
         // Buy
         let accounts = mpl_fixed_price_sale_accounts::Buy {
@@ -737,7 +769,11 @@ mod claim_resource {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await.unwrap();
+        context
+            .banks_client
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+            .await
+            .unwrap();
 
         let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
         context.warp_to_slot(clock.slot + 3).unwrap();
@@ -765,7 +801,11 @@ mod claim_resource {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await.unwrap();
+        context
+            .banks_client
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+            .await
+            .unwrap();
 
         // Withdraw
         let (payout_ticket, payout_ticket_bump) = find_payout_ticket_address(
@@ -821,7 +861,11 @@ mod claim_resource {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await.unwrap();
+        context
+            .banks_client
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+            .await
+            .unwrap();
 
         // ClaimResource
         let claim_token = Keypair::new();
@@ -864,7 +908,11 @@ mod claim_resource {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await.unwrap();
+        context
+            .banks_client
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+            .await
+            .unwrap();
     }
 
     #[tokio::test]
@@ -973,7 +1021,11 @@ mod claim_resource {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await.unwrap();
+        context
+            .banks_client
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+            .await
+            .unwrap();
 
         let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
         context.warp_to_slot(clock.slot + 1500).unwrap();
@@ -1099,7 +1151,7 @@ mod claim_resource {
         .to_account_metas(None);
 
         let data = mpl_fixed_price_sale_instruction::SavePrimaryMetadataCreators {
-            primary_metadata_creators_bump: primary_metadata_creators_bump,
+            primary_metadata_creators_bump,
             creators: vec![mpl_fixed_price_sale::state::Creator {
                 address: context.payer.pubkey(),
                 verified: false,
@@ -1121,7 +1173,11 @@ mod claim_resource {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await.unwrap();
+        context
+            .banks_client
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+            .await
+            .unwrap();
 
         // Buy
         let accounts = mpl_fixed_price_sale_accounts::Buy {
@@ -1167,7 +1223,11 @@ mod claim_resource {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await.unwrap();
+        context
+            .banks_client
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+            .await
+            .unwrap();
 
         let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
         context.warp_to_slot(clock.slot + 3).unwrap();
@@ -1195,7 +1255,11 @@ mod claim_resource {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await.unwrap();
+        context
+            .banks_client
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+            .await
+            .unwrap();
 
         let (metadata, _) = Pubkey::find_program_address(
             &[
@@ -1249,12 +1313,13 @@ mod claim_resource {
 
         let tx_error = context
             .banks_client
-            .process_transaction(tx)
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
             .await
             .unwrap_err();
         match tx_error {
-            TransportError::Custom(_) => assert!(true),
-            TransportError::TransactionError(_) => assert!(true),
+            BanksClientError::ClientError(_) => assert!(true),
+            BanksClientError::RpcError(_) => assert!(true),
+            BanksClientError::TransactionError(_) => assert!(true),
             _ => assert!(false),
         }
     }

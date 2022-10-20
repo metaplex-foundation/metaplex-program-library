@@ -7,7 +7,6 @@ use solana_program::borsh::try_from_slice_unchecked;
 use solana_program_test::*;
 use solana_sdk::{
     pubkey::Pubkey, signature::Signer, signer::keypair::Keypair, transaction::Transaction,
-    transport,
 };
 
 #[derive(Debug)]
@@ -15,6 +14,12 @@ pub struct Metadata {
     pub mint: Keypair,
     pub pubkey: Pubkey,
     pub token: Keypair,
+}
+
+impl Default for Metadata {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl Metadata {
@@ -51,7 +56,7 @@ impl Metadata {
         seller_fee_basis_points: u16,
         is_mutable: bool,
         amount: u64,
-    ) -> transport::Result<()> {
+    ) -> Result<(), BanksClientError> {
         create_mint(context, &self.mint, &context.payer.pubkey(), None).await?;
 
         let token = create_associated_token_account(context, &self.token, &self.mint.pubkey())
@@ -70,11 +75,11 @@ impl Metadata {
         let tx = Transaction::new_signed_with_payer(
             &[instruction::create_metadata_accounts(
                 id(),
-                self.pubkey.clone(),
+                self.pubkey,
                 self.mint.pubkey(),
-                context.payer.pubkey().clone(),
-                context.payer.pubkey().clone(),
-                context.payer.pubkey().clone(),
+                context.payer.pubkey(),
+                context.payer.pubkey(),
+                context.payer.pubkey(),
                 name,
                 symbol,
                 uri,
@@ -88,7 +93,7 @@ impl Metadata {
             context.last_blockhash,
         );
 
-        Ok(context.banks_client.process_transaction(tx).await?)
+        context.banks_client.process_transaction(tx).await
     }
 
     pub async fn create_v2(
@@ -102,7 +107,7 @@ impl Metadata {
         is_mutable: bool,
         collection: Option<Collection>,
         uses: Option<Uses>,
-    ) -> transport::Result<()> {
+    ) -> Result<(), BanksClientError> {
         create_mint(context, &self.mint, &context.payer.pubkey(), None).await?;
         create_token_account(
             context,
@@ -124,11 +129,11 @@ impl Metadata {
         let tx = Transaction::new_signed_with_payer(
             &[instruction::create_metadata_accounts_v2(
                 id(),
-                self.pubkey.clone(),
+                self.pubkey,
                 self.mint.pubkey(),
-                context.payer.pubkey().clone(),
-                context.payer.pubkey().clone(),
-                context.payer.pubkey().clone(),
+                context.payer.pubkey(),
+                context.payer.pubkey(),
+                context.payer.pubkey(),
                 name,
                 symbol,
                 uri,
@@ -144,13 +149,13 @@ impl Metadata {
             context.last_blockhash,
         );
 
-        Ok(context.banks_client.process_transaction(tx).await?)
+        context.banks_client.process_transaction(tx).await
     }
 
     pub async fn update_primary_sale_happened_via_token(
         &self,
         context: &mut ProgramTestContext,
-    ) -> transport::Result<()> {
+    ) -> Result<(), BanksClientError> {
         let tx = Transaction::new_signed_with_payer(
             &[instruction::update_primary_sale_happened_via_token(
                 id(),
@@ -163,7 +168,7 @@ impl Metadata {
             context.last_blockhash,
         );
 
-        Ok(context.banks_client.process_transaction(tx).await?)
+        context.banks_client.process_transaction(tx).await
     }
 
     pub async fn update(
@@ -174,12 +179,12 @@ impl Metadata {
         uri: String,
         creators: Option<Vec<Creator>>,
         seller_fee_basis_points: u16,
-    ) -> transport::Result<()> {
+    ) -> Result<(), BanksClientError> {
         let tx = Transaction::new_signed_with_payer(
             &[instruction::update_metadata_accounts(
                 id(),
                 self.pubkey,
-                context.payer.pubkey().clone(),
+                context.payer.pubkey(),
                 None,
                 Some(Data {
                     name,
@@ -195,7 +200,7 @@ impl Metadata {
             context.last_blockhash,
         );
 
-        Ok(context.banks_client.process_transaction(tx).await?)
+        context.banks_client.process_transaction(tx).await
     }
 
     pub async fn update_v2(
@@ -209,12 +214,12 @@ impl Metadata {
         is_mutable: bool,
         collection: Option<Collection>,
         uses: Option<Uses>,
-    ) -> transport::Result<()> {
+    ) -> Result<(), BanksClientError> {
         let tx = Transaction::new_signed_with_payer(
             &[instruction::update_metadata_accounts_v2(
                 id(),
                 self.pubkey,
-                context.payer.pubkey().clone(),
+                context.payer.pubkey(),
                 None,
                 Some(DataV2 {
                     name,
@@ -222,8 +227,8 @@ impl Metadata {
                     uri,
                     creators,
                     seller_fee_basis_points,
-                    collection: collection,
-                    uses: uses,
+                    collection,
+                    uses,
                 }),
                 None,
                 Some(is_mutable),
@@ -233,7 +238,7 @@ impl Metadata {
             context.last_blockhash,
         );
 
-        Ok(context.banks_client.process_transaction(tx).await?)
+        context.banks_client.process_transaction(tx).await
     }
 
     pub async fn verify_collection(
@@ -244,13 +249,13 @@ impl Metadata {
         collection_mint: Pubkey,
         collection_master_edition_account: Pubkey,
         collection_authority_record: Option<Pubkey>,
-    ) -> transport::Result<()> {
+    ) -> Result<(), BanksClientError> {
         let tx = Transaction::new_signed_with_payer(
             &[instruction::verify_collection(
                 id(),
                 self.pubkey,
                 collection_authority.pubkey(),
-                context.payer.pubkey().clone(),
+                context.payer.pubkey(),
                 collection_mint,
                 collection,
                 collection_master_edition_account,
@@ -261,7 +266,7 @@ impl Metadata {
             context.last_blockhash,
         );
 
-        Ok(context.banks_client.process_transaction(tx).await?)
+        context.banks_client.process_transaction(tx).await
     }
 
     pub async fn unverify_collection(
@@ -272,7 +277,7 @@ impl Metadata {
         collection_mint: Pubkey,
         collection_master_edition_account: Pubkey,
         collection_authority_record: Option<Pubkey>,
-    ) -> transport::Result<()> {
+    ) -> Result<(), BanksClientError> {
         let tx = Transaction::new_signed_with_payer(
             &[instruction::unverify_collection(
                 id(),
@@ -288,6 +293,6 @@ impl Metadata {
             context.last_blockhash,
         );
 
-        Ok(context.banks_client.process_transaction(tx).await?)
+        context.banks_client.process_transaction(tx).await
     }
 }

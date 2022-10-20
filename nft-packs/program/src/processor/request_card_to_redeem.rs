@@ -76,7 +76,7 @@ pub fn request_card_for_redeem(
     let store = Store::from_account_info(store_account)?;
 
     assert_owned_by(edition_data_account, &store.token_metadata_program)?;
-    assert_signer(&user_wallet_account)?;
+    assert_signer(user_wallet_account)?;
 
     let pack_set = PackSet::unpack(&pack_set_account.data.borrow())?;
     assert_account_key(store_account, &pack_set.store)?;
@@ -254,7 +254,9 @@ pub fn get_proving_process_data<'a>(
 ) -> Result<ProvingProcess, ProgramError> {
     let unpack = ProvingProcess::unpack(&account_info.data.borrow_mut());
 
-    let proving_process = match unpack {
+    
+
+    match unpack {
         Ok(data) => Ok(data),
         Err(_) => {
             // Burn PackVoucher tokens
@@ -285,7 +287,5 @@ pub fn get_proving_process_data<'a>(
 
             Ok(data)
         }
-    };
-
-    proving_process
+    }
 }

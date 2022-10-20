@@ -58,8 +58,16 @@ pub struct AuctioneerWithdraw<'info> {
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// The auctioneer PDA owned by Auction House storing scopes.
-    #[account(seeds = [AUCTIONEER.as_bytes(), auction_house.key().as_ref(), auctioneer_authority.key().as_ref()], seeds::program=auction_house_program, bump = auction_house.auctioneer_pda_bump)]
-    pub ah_auctioneer_pda: UncheckedAccount<'info>,
+    #[account(
+        seeds = [
+            AUCTIONEER.as_bytes(),
+            auction_house.key().as_ref(),
+            auctioneer_authority.key().as_ref()
+            ],
+        seeds::program=auction_house_program,
+        bump = ah_auctioneer_pda.bump,
+    )]
+    pub ah_auctioneer_pda: Account<'info, mpl_auction_house::Auctioneer>,
 
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
