@@ -33,3 +33,6 @@ solana-program-test = "1.11.5"
 
 [lib]
 crate-type = ["cdylib", "lib"]
+
+[profile.release]
+overflow-checks = true     # Enable integer overflow checks.

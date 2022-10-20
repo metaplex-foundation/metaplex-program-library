@@ -35,4 +35,4 @@ spl-merkle-tree-reference = "0.1.0"
 spl-noop = { version = "0.1.2", features = ["no-entrypoint"] }
 
 [profile.release]
-overflow-checks = true
+overflow-checks = true     # Enable integer overflow checks.
