@@ -78,22 +78,26 @@ fn find_external_program_error(code: String) -> String {
         format!("Anchor Error: {e}")
     } else if let Some(e) = METADATA_ERROR.get(&parsed_code) {
         format!("Token Metadata Error: {e}")
-    } else if let Some(e) = CANDY_ERROR.get(&parsed_code) {
-        format!("Candy Machine Error: {e}")
     } else {
-        format!("Unknown error. Code: {code}")
-    }
-}
+        let mut errors = Vec::with_capacity(2);
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+        if let Some(e) = CANDY_MACHINE_ERROR.get(&parsed_code) {
+            errors.push(format!("Candy Machine: {e}"));
+        }
+        if let Some(e) = CANDY_GUARD_ERROR.get(&parsed_code) {
+            errors.push(format!("Candy Guard: {e}"));
+        }
 
-    #[test]
-    fn test_parse_sugar_errors() {
-        let expected_error = String::from("Candy Machine Error: NoWithdrawWithFrozenFunds");
-        let msg = String::from("Error: RPC response error -32002: Transaction simulation failed: Error processing Instruction 0: custom program error: 0x179e");
-        let parsed = parse_sugar_errors(&msg);
-        assert_eq!(parsed, expected_error);
+        if errors.is_empty() {
+            format!("Unknown error. Code: {code}")
+        } else {
+            let mut message = String::from("Command failed due to either:");
+
+            for error in errors {
+                message.push_str(&format!("\n  • {}", error).to_string());
+            }
+
+            message
+        }
     }
 }
