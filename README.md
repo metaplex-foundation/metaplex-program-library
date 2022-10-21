@@ -32,7 +32,6 @@ For macOS, Linux and Windows Subsystem Linux (WSL), run the following install sc
 bash <(curl -sSf https://sugar.metaplex.com/install.sh)
 ```
 
-
 For Windows:
 
 Download [this installer binary](https://github.com/metaplex-foundation/winstaller/releases/latest/download/winstaller.exe) and execute it. Since it is not a verified Windows binary you may have to choose "Run Anyway" from "More Info" on the pop-up Windows dialog. 

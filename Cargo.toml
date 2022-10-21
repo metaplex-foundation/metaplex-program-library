@@ -20,7 +20,7 @@ async-trait = "0.1.57"
 borsh = "0.9.3"
 bs58 = "0.4.0"
 bundlr-sdk = { version = "0.2.0", features = ["solana"] }
-chrono = "0.4.19"
+chrono = { version = "0.4.22", default-features = false, features = ["clock"] }
 clap = { version = "3.2.8", features = ["derive", "cargo"] }
 console = "0.15.0"
 ctrlc = "3.2.2"
