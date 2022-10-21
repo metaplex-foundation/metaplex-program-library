@@ -614,7 +614,6 @@ fn transfer_out(
         *attribute_mint_info.key,
         *attribute_src_token_info.key,
         *attribute_dst_token_info.key,
-        *attribute_metadata_info.key,
         *escrow_mint_info.key,
         *escrow_token_info.key,
         Some(*trifle_info.key),

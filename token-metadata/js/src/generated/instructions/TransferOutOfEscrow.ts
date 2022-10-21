@@ -45,7 +45,6 @@ export const TransferOutOfEscrowStruct = new beet.BeetArgsStruct<
  * @property [] attributeMint Mint account for the new attribute
  * @property [_writable_] attributeSrc Token account source for the new attribute
  * @property [_writable_] attributeDst Token account, owned by TM, destination for the new attribute
- * @property [] attributeMetadata Metadata account of the new attribute
  * @property [] escrowMint Mint account that the escrow is attached
  * @property [] escrowAccount Token account that holds the token the escrow is attached to
  * @property [**signer**] authority (optional) Authority/creator of the escrow account
@@ -59,7 +58,6 @@ export type TransferOutOfEscrowInstructionAccounts = {
   attributeMint: web3.PublicKey;
   attributeSrc: web3.PublicKey;
   attributeDst: web3.PublicKey;
-  attributeMetadata: web3.PublicKey;
   escrowMint: web3.PublicKey;
   escrowAccount: web3.PublicKey;
   systemProgram?: web3.PublicKey;
@@ -114,11 +112,6 @@ export function createTransferOutOfEscrowInstruction(
     {
       pubkey: accounts.attributeDst,
       isWritable: true,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.attributeMetadata,
-      isWritable: false,
       isSigner: false,
     },
     {
