@@ -15,6 +15,7 @@ use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
     instruction::{AccountMeta, Instruction},
+    msg,
     program_memory::sol_memcpy,
     pubkey::Pubkey,
 };
@@ -58,6 +59,7 @@ pub fn process_create_escrow_account(
     program_id: &Pubkey,
     accounts: &[AccountInfo],
 ) -> ProgramResult {
+    msg!("inside of create escrow");
     let account_info_iter = &mut accounts.iter();
 
     let escrow_account_info = next_account_info(account_info_iter)?;
@@ -67,15 +69,20 @@ pub fn process_create_escrow_account(
     let edition_account_info = next_account_info(account_info_iter)?;
     let payer_account_info = next_account_info(account_info_iter)?;
     let system_account_info = next_account_info(account_info_iter)?;
+    msg!("found accounts up to system program");
 
     let is_using_authority = account_info_iter.len() == 1;
 
+    msg!("trying authority");
     let maybe_authority_info: Option<&AccountInfo> = if is_using_authority {
+        msg!("creator authority");
         Some(next_account_info(account_info_iter)?)
     } else {
+        msg!("token authority");
         None
     };
 
+    msg!("asserting owners");
     // Owned by token-metadata program.
     assert_owned_by(metadata_account_info, program_id)?;
     assert_owned_by(mint_account_info, &spl_token::id())?;

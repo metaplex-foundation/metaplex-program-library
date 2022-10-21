@@ -10,6 +10,7 @@ import { EscrowConstraintType, escrowConstraintTypeBeet } from './EscrowConstrai
 export type EscrowConstraint = {
   tokenLimit: beet.bignum;
   constraintType: EscrowConstraintType;
+  transferEffects: number;
 };
 
 /**
@@ -20,6 +21,7 @@ export const escrowConstraintBeet = new beet.FixableBeetArgsStruct<EscrowConstra
   [
     ['tokenLimit', beet.u64],
     ['constraintType', escrowConstraintTypeBeet],
+    ['transferEffects', beet.u16],
   ],
   'EscrowConstraint',
 );

@@ -12,6 +12,7 @@ export type AddTokensConstraintToEscrowConstraintModelArgs = {
   constraintName: string;
   tokens: web3.PublicKey[];
   tokenLimit: beet.bignum;
+  transferEffects: number;
 };
 
 /**
@@ -24,6 +25,7 @@ export const addTokensConstraintToEscrowConstraintModelArgsBeet =
       ['constraintName', beet.utf8String],
       ['tokens', beet.array(beetSolana.publicKey)],
       ['tokenLimit', beet.u64],
+      ['transferEffects', beet.u16],
     ],
     'AddTokensConstraintToEscrowConstraintModelArgs',
   );

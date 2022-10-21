@@ -39,17 +39,18 @@ export const TransferOutStruct = new beet.FixableBeetArgsStruct<
  * @property [_writable_] trifleAccount The trifle account to use
  * @property [_writable_] constraintModel The constraint model to check against
  * @property [] escrowAccount The escrow account attached to the NFT
- * @property [_writable_, **signer**] payer The payer for the transaction
- * @property [_writable_, **signer**] trifleAuthority The authority of the trifle account
+ * @property [_writable_] escrowTokenAccount The token account holding the NFT the escrow is attached to
+ * @property [_writable_] escrowMint The mint of the NFT the escrow is attached to
+ * @property [_writable_, **signer**] payer Wallet paying for the transaction
+ * @property [] trifleAuthority Trifle Authority - the account that can sign transactions for the trifle account
  * @property [] attributeMint The mint of the attribute
  * @property [_writable_] attributeSrcTokenAccount The token account the attribute is being transferred from
  * @property [_writable_] attributeDstTokenAccount The token account the attribute is being transferred to
  * @property [] attributeMetadata The metadata of the attribute
- * @property [] escrowMint The mint the escrow is attached to
- * @property [] escrowTokenAccount The token account holding the NFT the escrow is attached to
  * @property [] splAssociatedTokenAccount The associated token account program
  * @property [] splToken The spl token program
  * @property [] tokenMetadataProgram The token metadata program
+ * @property [_writable_] escrowEdition (optional) The edition of the NFT the escrow is attached to
  * @category Instructions
  * @category TransferOut
  * @category generated
@@ -58,19 +59,20 @@ export type TransferOutInstructionAccounts = {
   trifleAccount: web3.PublicKey;
   constraintModel: web3.PublicKey;
   escrowAccount: web3.PublicKey;
+  escrowTokenAccount: web3.PublicKey;
+  escrowMint: web3.PublicKey;
   payer: web3.PublicKey;
   trifleAuthority: web3.PublicKey;
   attributeMint: web3.PublicKey;
   attributeSrcTokenAccount: web3.PublicKey;
   attributeDstTokenAccount: web3.PublicKey;
   attributeMetadata: web3.PublicKey;
-  escrowMint: web3.PublicKey;
-  escrowTokenAccount: web3.PublicKey;
   systemProgram?: web3.PublicKey;
   splAssociatedTokenAccount: web3.PublicKey;
   splToken: web3.PublicKey;
   rent?: web3.PublicKey;
   tokenMetadataProgram: web3.PublicKey;
+  escrowEdition?: web3.PublicKey;
 };
 
 export const transferOutInstructionDiscriminator = 3;
@@ -111,14 +113,24 @@ export function createTransferOutInstruction(
       isSigner: false,
     },
     {
+      pubkey: accounts.escrowTokenAccount,
+      isWritable: true,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.escrowMint,
+      isWritable: true,
+      isSigner: false,
+    },
+    {
       pubkey: accounts.payer,
       isWritable: true,
       isSigner: true,
     },
     {
       pubkey: accounts.trifleAuthority,
-      isWritable: true,
-      isSigner: true,
+      isWritable: false,
+      isSigner: false,
     },
     {
       pubkey: accounts.attributeMint,
@@ -137,16 +149,6 @@ export function createTransferOutInstruction(
     },
     {
       pubkey: accounts.attributeMetadata,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.escrowMint,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.escrowTokenAccount,
       isWritable: false,
       isSigner: false,
     },
@@ -176,6 +178,14 @@ export function createTransferOutInstruction(
       isSigner: false,
     },
   ];
+
+  if (accounts.escrowEdition != null) {
+    keys.push({
+      pubkey: accounts.escrowEdition,
+      isWritable: true,
+      isSigner: false,
+    });
+  }
 
   const ix = new web3.TransactionInstruction({
     programId,

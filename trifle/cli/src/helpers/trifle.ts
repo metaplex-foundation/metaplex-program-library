@@ -1,5 +1,9 @@
-import { NftWithToken, SftWithToken, TokenMetadataProgram } from '@metaplex-foundation/js';
-import { Connection, Keypair, PublicKey, Transaction } from '@solana/web3.js';
+import {
+  NftWithToken,
+  SftWithToken,
+  TokenMetadataProgram,
+} from "@metaplex-foundation/js";
+import { Connection, Keypair, PublicKey, Transaction } from "@solana/web3.js";
 import {
   createAddCollectionConstraintToEscrowConstraintModelInstruction,
   createAddNoneConstraintToEscrowConstraintModelInstruction,
@@ -10,16 +14,20 @@ import {
   createTransferOutInstruction,
   EscrowConstraintModel,
   Trifle,
-} from '../../../js/src/generated';
-import { findEscrowConstraintModelPda, findEscrowPda, findTriflePda } from './pdas';
+} from "../../../js/src/generated";
+import {
+  findEscrowConstraintModelPda,
+  findEscrowPda,
+  findTriflePda,
+} from "./pdas";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   getAssociatedTokenAddress,
   TOKEN_PROGRAM_ID,
-} from '@solana/spl-token';
-import { findMetadataPda } from '@metaplex-foundation/js';
-import { PROGRAM_ADDRESS as TM_PROGRAM_ADDRESS } from '@metaplex-foundation/mpl-token-metadata/src/generated';
-import { EscrowAuthority, map_replacer } from './utils';
+} from "@solana/spl-token";
+import { findMetadataPda } from "@metaplex-foundation/js";
+import { PROGRAM_ADDRESS as TM_PROGRAM_ADDRESS } from "@metaplex-foundation/mpl-token-metadata/src/generated";
+import { EscrowAuthority, map_replacer } from "./utils";
 
 export const createConstraintModel = async (
   connection: Connection,
@@ -27,7 +35,10 @@ export const createConstraintModel = async (
   name: string,
   schema: string,
 ) => {
-  const escrowConstraintModel = await findEscrowConstraintModelPda(keypair.publicKey, name);
+  const escrowConstraintModel = await findEscrowConstraintModelPda(
+    keypair.publicKey,
+    name,
+  );
 
   const createIX = createCreateEscrowConstraintModelAccountInstruction(
     {
@@ -50,7 +61,7 @@ export const createConstraintModel = async (
   tx.feePayer = keypair.publicKey;
   const sig = await connection.sendTransaction(tx, [keypair]);
   // await connection.sendTransaction(tx, [keypair]);
-  await connection.confirmTransaction(sig, 'finalized');
+  await connection.confirmTransaction(sig, "finalized");
 
   return escrowConstraintModel[0];
 };
@@ -60,6 +71,7 @@ export const addNoneConstraint = async (
   keypair: Keypair,
   name: string,
   tokenLimit: number,
+  transferEffects: number,
   model: PublicKey,
 ) => {
   const addIX = createAddNoneConstraintToEscrowConstraintModelInstruction(
@@ -72,6 +84,7 @@ export const addNoneConstraint = async (
       addNoneConstraintToEscrowConstraintModelArgs: {
         constraintName: name,
         tokenLimit: tokenLimit,
+        transferEffects,
       },
     },
   );
@@ -82,7 +95,7 @@ export const addNoneConstraint = async (
   tx.recentBlockhash = blockhash;
   tx.feePayer = keypair.publicKey;
   const sig = await connection.sendTransaction(tx, [keypair]);
-  await connection.confirmTransaction(sig, 'finalized');
+  await connection.confirmTransaction(sig, "finalized");
 };
 
 export const addCollectionConstraint = async (
@@ -91,6 +104,7 @@ export const addCollectionConstraint = async (
   name: string,
   tokenLimit: number,
   collection: PublicKey,
+  transferEffects: number,
   model: PublicKey,
 ) => {
   const collectionMintMetadata = await findMetadataPda(collection);
@@ -106,6 +120,7 @@ export const addCollectionConstraint = async (
       addCollectionConstraintToEscrowConstraintModelArgs: {
         constraintName: name,
         tokenLimit: tokenLimit,
+        transferEffects,
       },
     },
   );
@@ -115,8 +130,10 @@ export const addCollectionConstraint = async (
   const { blockhash } = await connection.getLatestBlockhash();
   tx.recentBlockhash = blockhash;
   tx.feePayer = keypair.publicKey;
-  const sig = await connection.sendTransaction(tx, [keypair], { skipPreflight: true });
-  await connection.confirmTransaction(sig, 'finalized');
+  const sig = await connection.sendTransaction(tx, [keypair], {
+    skipPreflight: true,
+  });
+  await connection.confirmTransaction(sig, "finalized");
 };
 
 export const addTokensConstraint = async (
@@ -125,6 +142,7 @@ export const addTokensConstraint = async (
   name: string,
   tokenLimit: number,
   tokens: PublicKey[],
+  transferEffects: number,
   model: PublicKey,
 ) => {
   const addIX = createAddTokensConstraintToEscrowConstraintModelInstruction(
@@ -138,6 +156,7 @@ export const addTokensConstraint = async (
         constraintName: name,
         tokenLimit: tokenLimit,
         tokens,
+        transferEffects,
       },
     },
   );
@@ -147,8 +166,10 @@ export const addTokensConstraint = async (
   const { blockhash } = await connection.getLatestBlockhash();
   tx.recentBlockhash = blockhash;
   tx.feePayer = keypair.publicKey;
-  const sig = await connection.sendTransaction(tx, [keypair], { skipPreflight: true });
-  await connection.confirmTransaction(sig, 'finalized');
+  const sig = await connection.sendTransaction(tx, [keypair], {
+    skipPreflight: true,
+  });
+  await connection.confirmTransaction(sig, "finalized");
 };
 
 export const createTrifle = async (
@@ -157,8 +178,14 @@ export const createTrifle = async (
   keypair: Keypair,
   model_name: string,
 ) => {
-  const escrowConstraintModel = await findEscrowConstraintModelPda(keypair.publicKey, model_name);
-  const trifleAddress = await findTriflePda(nft.mint.address, keypair.publicKey);
+  const escrowConstraintModel = await findEscrowConstraintModelPda(
+    keypair.publicKey,
+    model_name,
+  );
+  const trifleAddress = await findTriflePda(
+    nft.mint.address,
+    keypair.publicKey,
+  );
   const escrowAccountAddress = await findEscrowPda(
     nft.mint.address,
     EscrowAuthority.Creator,
@@ -186,7 +213,7 @@ export const createTrifle = async (
   const sig = await connection.sendTransaction(tx, [keypair], {
     skipPreflight: false,
   });
-  await connection.confirmTransaction(sig, 'finalized');
+  await connection.confirmTransaction(sig, "finalized");
 
   return trifleAddress[0];
 };
@@ -199,29 +226,48 @@ export const transferIn = async (
   keypair: Keypair,
   slot: string,
 ) => {
-  const escrowConstraintModel = await findEscrowConstraintModelPda(keypair.publicKey, 'test');
-  const trifleAddress = await findTriflePda(escrowNft.mint.address, keypair.publicKey);
+  const escrowConstraintModel = await findEscrowConstraintModelPda(
+    keypair.publicKey,
+    "test",
+  );
+  const trifleAddress = await findTriflePda(
+    escrowNft.mint.address,
+    keypair.publicKey,
+  );
 
   const dst: PublicKey = await getAssociatedTokenAddress(
     nft.mint.address,
     escrowAccountAddress,
     true,
   );
+
+  // trifle: web3.PublicKey;
+  // trifleAuthority: web3.PublicKey;
+  // payer: web3.PublicKey;
+  // constraintModel: web3.PublicKey;
+  // escrow: web3.PublicKey;
+  // escrowMint?: web3.PublicKey;
+  // escrowToken?: web3.PublicKey;
+  // escrowEdition?: web3.PublicKey;
+  // attributeMint?: web3.PublicKey;
+  // attributeSrcToken?: web3.PublicKey;
+  // attributeDstToken?: web3.PublicKey;
+  // attributeMetadata?: web3.PublicKey;
+  // attributeEdition?: web3.PublicKey;
+  // attributeCollectionMetadata?: web3.PublicKey;
   const transferIX = createTransferInInstruction(
     {
-      trifleAccount: trifleAddress[0],
+      trifle: trifleAddress[0],
       constraintModel: escrowConstraintModel[0],
-      escrowAccount: escrowAccountAddress,
+      escrow: escrowAccountAddress,
       payer: keypair.publicKey,
       trifleAuthority: keypair.publicKey,
       attributeMint: nft.mint.address,
-      attributeSrcTokenAccount: nft.token.address,
-      attributeDstTokenAccount: dst,
+      attributeSrcToken: nft.token.address,
+      attributeDstToken: dst,
       attributeMetadata: nft.metadataAddress,
       escrowMint: escrowNft.mint.address,
-      escrowTokenAccount: escrowNft.token.address,
-      splAssociatedTokenAccount: new PublicKey(ASSOCIATED_TOKEN_PROGRAM_ID),
-      splToken: new PublicKey(TOKEN_PROGRAM_ID),
+      escrowToken: escrowNft.token.address,
     },
     {
       transferInArgs: { amount: 1, slot },
@@ -237,7 +283,7 @@ export const transferIn = async (
   const sig = await connection.sendTransaction(tx, [keypair], {
     skipPreflight: true,
   });
-  await connection.confirmTransaction(sig, 'finalized');
+  await connection.confirmTransaction(sig, "finalized");
 };
 
 export const transferOut = async (
@@ -248,10 +294,20 @@ export const transferOut = async (
   keypair: Keypair,
   slot: string,
 ) => {
-  const escrowConstraintModel = await findEscrowConstraintModelPda(keypair.publicKey, 'test');
-  const trifleAddress = await findTriflePda(escrowNft.mint.address, keypair.publicKey);
+  const escrowConstraintModel = await findEscrowConstraintModelPda(
+    keypair.publicKey,
+    "test",
+  );
+  const trifleAddress = await findTriflePda(
+    escrowNft.mint.address,
+    keypair.publicKey,
+  );
 
-  const dst: PublicKey = await getAssociatedTokenAddress(nft.mint.address, keypair.publicKey, true);
+  const dst: PublicKey = await getAssociatedTokenAddress(
+    nft.mint.address,
+    keypair.publicKey,
+    true,
+  );
   const transferIX = createTransferOutInstruction(
     {
       trifleAccount: trifleAddress[0],
@@ -267,7 +323,9 @@ export const transferOut = async (
       escrowTokenAccount: escrowNft.token.address,
       splAssociatedTokenAccount: new PublicKey(ASSOCIATED_TOKEN_PROGRAM_ID),
       splToken: new PublicKey(TOKEN_PROGRAM_ID),
-      tokenMetadataProgram: new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
+      tokenMetadataProgram: new PublicKey(
+        "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s",
+      ),
     },
     {
       transferOutArgs: { amount: 1, slot },
@@ -283,27 +341,34 @@ export const transferOut = async (
   const sig = await connection.sendTransaction(tx, [keypair], {
     skipPreflight: true,
   });
-  await connection.confirmTransaction(sig, 'finalized');
+  await connection.confirmTransaction(sig, "finalized");
 };
 
-export const showModel = async (connection: Connection, modelAddress: PublicKey) => {
+export const showModel = async (
+  connection: Connection,
+  modelAddress: PublicKey,
+) => {
   // console.log("Fetching " + modelAddress.toString());
   const accountInfo = await connection.getAccountInfo(modelAddress);
   if (accountInfo) {
-    const account: EscrowConstraintModel = EscrowConstraintModel.fromAccountInfo(accountInfo)[0];
+    const account: EscrowConstraintModel =
+      EscrowConstraintModel.fromAccountInfo(accountInfo)[0];
     console.log(JSON.stringify(account.pretty(), map_replacer));
   } else {
-    console.log('Unable to fetch account');
+    console.log("Unable to fetch account");
   }
 };
 
-export const showTrifle = async (connection: Connection, trifleAddress: PublicKey) => {
+export const showTrifle = async (
+  connection: Connection,
+  trifleAddress: PublicKey,
+) => {
   // console.log("Fetching " + trifleAddress.toString());
   const accountInfo = await connection.getAccountInfo(trifleAddress);
   if (accountInfo) {
     const account: Trifle = Trifle.fromAccountInfo(accountInfo)[0];
     console.log(JSON.stringify(account.pretty(), map_replacer));
   } else {
-    console.log('Unable to fetch account');
+    console.log("Unable to fetch account");
   }
 };

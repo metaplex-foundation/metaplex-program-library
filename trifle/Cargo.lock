@@ -1808,6 +1808,7 @@ name = "mpl_trifle"
 version = "0.1.0"
 dependencies = [
  "borsh",
+ "modular-bitfield",
  "mpl-token-metadata",
  "num-derive",
  "num-traits",
