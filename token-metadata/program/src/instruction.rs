@@ -10,7 +10,7 @@ use shank::ShankInstruction;
 use solana_program::{
     instruction::{AccountMeta, Instruction},
     pubkey::Pubkey,
-    sysvar,
+    system_program, sysvar,
 };
 #[cfg(feature = "serde-feature")]
 use {
@@ -122,7 +122,6 @@ pub struct SetCollectionSizeArgs {
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, Clone, ShankInstruction)]
 #[rustfmt::skip]
-
 pub enum MetadataInstruction {
     /// Create Metadata object.
     #[account(0, writable, name="metadata", desc="Metadata key (pda of ['metadata', program id, mint id])")]
@@ -137,6 +136,8 @@ pub enum MetadataInstruction {
     /// Update a Metadata
     #[account(0, writable, name="metadata", desc="Metadata account")]
     #[account(1, signer, name="update_authority", desc="Update authority key")]
+    #[account(2, name="system_program", desc="System Program account")]
+    #[account(3, name="sysvar_instructions", desc="Instructions sysvar account")]
     UpdateMetadataAccount(UpdateMetadataAccountArgs),
 
     /// Register a Metadata as a Master Edition V1, which means Editions can be minted.
@@ -311,6 +312,8 @@ pub enum MetadataInstruction {
     /// Update a Metadata with is_mutable as a parameter
     #[account(0, writable, name="metadata", desc="Metadata account")]
     #[account(1, signer, name="update_authority", desc="Update authority key")]
+    #[account(2, name="system_program", desc="System Program account")]
+    #[account(3, name="sysvar_instructions", desc="Instructions sysvar account")]
     UpdateMetadataAccountV2(UpdateMetadataAccountArgsV2),
 
     /// Create Metadata object.
@@ -426,7 +429,9 @@ pub enum MetadataInstruction {
     #[account(4, name="collection_mint", desc="Mint of the Collection")]
     #[account(5, name="collection", desc="Metadata Account of the Collection")]
     #[account(6, name="collection_master_edition_account", desc="MasterEdition2 Account of the Collection Token")]
-    #[account(7, optional, name="collection_authority_record", desc="Collection Authority Record PDA")]
+    #[account(7, name="system_program", desc="System Program account")]
+    #[account(8, name="sysvar_instructions", desc="Instructions sysvar account")]
+    #[account(9, optional, name="collection_authority_record", desc="Collection Authority Record PDA")]
     SetAndVerifyCollection,
 
     /// Allow freezing of an NFT if this user is the delegate of the NFT.
@@ -435,6 +440,8 @@ pub enum MetadataInstruction {
     #[account(2, name="edition", desc="Edition")]
     #[account(3, name="mint", desc="Token mint")]
     #[account(4, name="token_program", desc="Token Program")]
+    #[account(5, name="system_program", desc="System Program account")]
+    #[account(6, name="sysvar_instructions", desc="Instructions sysvar account")]
     FreezeDelegatedAccount,
 
     /// Allow thawing of an NFT if this user is the delegate of the NFT.
@@ -443,6 +450,8 @@ pub enum MetadataInstruction {
     #[account(2, name="edition", desc="Edition")]
     #[account(3, name="mint", desc="Token mint")]
     #[account(4, name="token_program", desc="Token Program")]
+    #[account(5, name="system_program", desc="System Program account")]
+    #[account(6, name="sysvar_instructions", desc="Instructions sysvar account")]
     ThawDelegatedAccount,
 
     /// Remove Creator Verificaton.
@@ -456,8 +465,10 @@ pub enum MetadataInstruction {
     #[account(2, writable, name="mint", desc="Mint of the NFT")]
     #[account(3, writable, name="token_account", desc="Token account to close")]
     #[account(4, writable, name="master_edition_account", desc="MasterEdition2 of the NFT")]
-    #[account(5, name="spl token program", desc="SPL Token Program")]
-    #[account(6, optional, writable, name="collection_metadata", desc="Metadata of the Collection")]
+    #[account(5, name="spl_token_program", desc="SPL Token Program")]
+    #[account(6, name="system_program", desc="System Program account")]
+    #[account(7, name="sysvar_instructions", desc="Instructions sysvar account")]
+    #[account(8, optional, writable, name="collection_metadata", desc="Metadata of the Collection")]
     BurnNft,
 
     /// Verify Collection V2, new in v1.3--supports Collection Details.
@@ -492,7 +503,9 @@ pub enum MetadataInstruction {
     #[account(4, name="collection_mint", desc="Mint of the Collection")]
     #[account(5, writable, name="collection", desc="Metadata Account of the Collection")]
     #[account(6, writable, name="collection_master_edition_account", desc="MasterEdition2 Account of the Collection Token")]
-    #[account(7, optional, name="collection_authority_record", desc="Collection Authority Record PDA")]
+    #[account(7, name="system_program", desc="System Program account")]
+    #[account(8, name="sysvar_instructions", desc="Instructions sysvar account")]
+    #[account(9, optional, name="collection_authority_record", desc="Collection Authority Record PDA")]
     SetAndVerifySizedCollectionItem,
 
     /// Create Metadata object.
@@ -538,7 +551,9 @@ pub enum MetadataInstruction {
     #[account(6, writable, name="master_edition_account", desc="MasterEdition2 of the original NFT")]
     #[account(7, writable, name="print_edition_account", desc="Print Edition account of the NFT")]
     #[account(8, writable, name="edition_marker_account", desc="Edition Marker PDA of the NFT")]
-    #[account(9, name="spl token program", desc="SPL Token Program")]
+    #[account(9, name="spl_token_program", desc="SPL Token Program")]
+    #[account(10, name="system_program", desc="System Program account")]
+    #[account(11, name="sysvar_instructions", desc="Instructions sysvar account")]
     BurnEditionNft,
 }
 
@@ -648,6 +663,8 @@ pub fn update_metadata_accounts(
         accounts: vec![
             AccountMeta::new(metadata_account, false),
             AccountMeta::new_readonly(update_authority, true),
+            AccountMeta::new_readonly(system_program::id(), false),
+            AccountMeta::new_readonly(sysvar::instructions::id(), false),
         ],
         data: MetadataInstruction::UpdateMetadataAccount(UpdateMetadataAccountArgs {
             data,
@@ -674,6 +691,8 @@ pub fn update_metadata_accounts_v2(
         accounts: vec![
             AccountMeta::new(metadata_account, false),
             AccountMeta::new_readonly(update_authority, true),
+            AccountMeta::new_readonly(system_program::id(), false),
+            AccountMeta::new_readonly(sysvar::instructions::id(), false),
         ],
         data: MetadataInstruction::UpdateMetadataAccountV2(UpdateMetadataAccountArgsV2 {
             data,
@@ -976,14 +995,8 @@ pub fn verify_collection(
         AccountMeta::new_readonly(collection_master_edition_account, false),
     ];
 
-    match collection_authority_record {
-        Some(collection_authority_record) => {
-            accounts.push(AccountMeta::new_readonly(
-                collection_authority_record,
-                false,
-            ));
-        }
-        None => (),
+    if let Some(record) = collection_authority_record {
+        accounts.push(AccountMeta::new_readonly(record, false));
     }
 
     Instruction {
@@ -1023,14 +1036,8 @@ pub fn unverify_collection(
         AccountMeta::new_readonly(collection_master_edition_account, false),
     ];
 
-    match collection_authority_record {
-        Some(collection_authority_record) => {
-            accounts.push(AccountMeta::new_readonly(
-                collection_authority_record,
-                false,
-            ));
-        }
-        None => (),
+    if let Some(record) = collection_authority_record {
+        accounts.push(AccountMeta::new_readonly(record, false));
     }
 
     Instruction {
@@ -1082,18 +1089,12 @@ pub fn utilize(
         AccountMeta::new_readonly(spl_associated_token_account::id(), false),
         AccountMeta::new_readonly(solana_program::system_program::id(), false),
     ];
-    match use_authority_record_pda {
-        Some(use_authority_record_pda) => {
-            accounts.push(AccountMeta::new(use_authority_record_pda, false));
-        }
-        None => (),
+    if let Some(record) = use_authority_record_pda {
+        accounts.push(AccountMeta::new(record, false));
     }
 
-    match burner {
-        Some(burner) => {
-            accounts.push(AccountMeta::new_readonly(burner, false));
-        }
-        None => (),
+    if let Some(burner) = burner {
+        accounts.push(AccountMeta::new_readonly(burner, false));
     }
 
     Instruction {
@@ -1289,9 +1290,12 @@ pub fn revoke_collection_authority(
 ///   1. `[signer]` Collection Update authority
 ///   2. `[signer]` payer
 ///   3. `[] Update Authority of Collection NFT and NFT
-///   3. `[]` Mint of the Collection
-///   4. `[]` Metadata Account of the Collection
-///   5. `[]` MasterEdition2 Account of the Collection Token
+///   4. `[]` Mint of the Collection
+///   5. `[]` Metadata Account of the Collection
+///   6. `[]` MasterEdition2 Account of the Collection Token
+///   8.  Optional `[]` Collection authority record
+///   9.  Optional `[]` System Program account
+///   10. Optional `[]` Instruction sysvar
 #[allow(clippy::too_many_arguments)]
 pub fn set_and_verify_collection(
     program_id: Pubkey,
@@ -1314,14 +1318,11 @@ pub fn set_and_verify_collection(
         AccountMeta::new_readonly(collection_master_edition_account, false),
     ];
 
-    match collection_authority_record {
-        Some(collection_authority_record) => {
-            accounts.push(AccountMeta::new_readonly(
-                collection_authority_record,
-                false,
-            ));
-        }
-        None => (),
+    accounts.push(AccountMeta::new_readonly(system_program::id(), false));
+    accounts.push(AccountMeta::new_readonly(sysvar::instructions::id(), false));
+
+    if let Some(record) = collection_authority_record {
+        accounts.push(AccountMeta::new_readonly(record, false));
     }
 
     Instruction {
@@ -1333,15 +1334,20 @@ pub fn set_and_verify_collection(
     }
 }
 
-///# Freeze delegated account
+/// # Freeze delegated account
 ///
-///Allow freezing of an NFT if this user is the delegate of the NFT
+/// Allow freezing of an NFT if this user is the delegate of the NFT
 ///
-///### Accounts:
-///   0. `[signer]` Delegate
-///   1. `[writable]` Token account to freeze
-///   2. `[]` Edition
-///   3. `[]` Token mint
+/// ### Accounts:
+/// <ol start="0">
+/// <li><code>[signer]</code>Delegate</li>
+/// <li><code>[writable]</code>Token account to freeze</li>
+/// <li><code>[]</code>Edition</li>
+/// <li><code>[]</code>Token Mint</li>
+/// <li><code>[]</code>SPL Token program</li>
+/// <li><code>[]</code> System Program account.</li>
+/// <li><code>[]</code> Instruction sysvar account.</li>
+/// </ol>
 #[allow(clippy::too_many_arguments)]
 pub fn freeze_delegated_account(
     program_id: Pubkey,
@@ -1358,6 +1364,8 @@ pub fn freeze_delegated_account(
             AccountMeta::new_readonly(edition, false),
             AccountMeta::new_readonly(mint, false),
             AccountMeta::new_readonly(spl_token::id(), false),
+            AccountMeta::new_readonly(system_program::id(), false),
+            AccountMeta::new_readonly(sysvar::instructions::id(), false),
         ],
         data: MetadataInstruction::FreezeDelegatedAccount
             .try_to_vec()
@@ -1365,15 +1373,22 @@ pub fn freeze_delegated_account(
     }
 }
 
-///# Thaw delegated account
+/// # Thaw delegated account
 ///
-///Allow thawing of an NFT if this user is the delegate of the NFT
+/// Allow thawing of an NFT if this user is the delegate of the NFT
 ///
-///### Accounts:
-///   0. `[signer]` Delegate
-///   1. `[writable]` Token account to thaw
-///   2. `[]` Edition
-///   3. `[]` Token mint
+/// ### Accounts:
+/// <ol start="0">
+/// <li><code>[signer]</code>Delegate</li>
+/// <li><code>[writable]</code>Token account to thaw</li>
+/// <li><code>[]</code>Edition</li>
+/// <li><code>[]</code>Token Mint</li>
+/// <li><code>[]</code>SPL Token program</li>
+/// <li><code>[]</code> System Program account.</li>
+/// <li><code>[]</code> Instruction sysvar account.</li>
+/// </ol>
+///
+
 #[allow(clippy::too_many_arguments)]
 pub fn thaw_delegated_account(
     program_id: Pubkey,
@@ -1390,6 +1405,8 @@ pub fn thaw_delegated_account(
             AccountMeta::new_readonly(edition, false),
             AccountMeta::new_readonly(mint, false),
             AccountMeta::new_readonly(spl_token::id(), false),
+            AccountMeta::new_readonly(system_program::id(), false),
+            AccountMeta::new_readonly(sysvar::instructions::id(), false),
         ],
         data: MetadataInstruction::ThawDelegatedAccount
             .try_to_vec()
@@ -1407,7 +1424,9 @@ pub fn thaw_delegated_account(
 /// 3. `[writable]` NFT token account
 /// 4. `[writable]` NFT edition account
 /// 5. `[]` SPL Token program.
-/// 6. Optional `[writable]` Collection metadata account
+/// 6. `[]` Instruction sysvar account
+/// 7. `[]` System Program account
+/// 8. Optional `[writable]` Collection metadata account
 pub fn burn_nft(
     program_id: Pubkey,
     metadata: Pubkey,
@@ -1427,6 +1446,9 @@ pub fn burn_nft(
         AccountMeta::new_readonly(spl_token, false),
     ];
 
+    accounts.push(AccountMeta::new_readonly(system_program::id(), false));
+    accounts.push(AccountMeta::new_readonly(sysvar::instructions::id(), false));
+
     if let Some(collection_metadata) = collection_metadata {
         accounts.push(AccountMeta::new(collection_metadata, false));
     }
@@ -1442,17 +1464,20 @@ pub fn burn_nft(
 ///
 /// Burn an Edition NFT, closing its token, metadata and edition accounts, and reducing the Master Edition supply.
 ///
+/// ### Accounts:
 /// <ol start="0">
 /// <li><code>[writable]</code> Print NFT Metadata Account</li>
 /// <li><code>[writable, signer]</code> Owner of Print NFT</li>
 /// <li><code>[writable]</code> Mint of Print Edition NFT</li>
-/// <li><code>[writable]</code> Mint of Master Edition NFT</li>
+/// <li><code>[]</code> Mint of Master Edition NFT</li>
 /// <li><code>[writable]</code> Print Edition Token Account</li>
-/// <li><code>[writable]</code> Master Edition Token Account</li>
+/// <li><code>[]</code> Master Edition Token Account</li>
 /// <li><code>[writable]</code> Master Edition PDA Account</li>
 /// <li><code>[writable]</code> Print Edition PDA Account</li>
 /// <li><code>[writable]</code> Edition Marker PDA Account</li>
 /// <li><code>[]</code> SPL Token program.</li>
+/// <li><code>[]</code> System Program account.</li>
+/// <li><code>[]</code> Instruction sysvar account.</li>
 /// </ol>
 pub fn burn_edition_nft(
     program_id: Pubkey,
@@ -1478,6 +1503,8 @@ pub fn burn_edition_nft(
         AccountMeta::new(print_edition, false),
         AccountMeta::new(edition_marker, false),
         AccountMeta::new_readonly(spl_token, false),
+        AccountMeta::new_readonly(system_program::id(), false),
+        AccountMeta::new_readonly(sysvar::instructions::id(), false),
     ];
 
     Instruction {
@@ -1564,14 +1591,8 @@ pub fn unverify_sized_collection_item(
         AccountMeta::new_readonly(collection_master_edition_account, false),
     ];
 
-    match collection_authority_record {
-        Some(collection_authority_record) => {
-            accounts.push(AccountMeta::new_readonly(
-                collection_authority_record,
-                false,
-            ));
-        }
-        None => (),
+    if let Some(record) = collection_authority_record {
+        accounts.push(AccountMeta::new_readonly(record, false));
     }
 
     Instruction {
@@ -1588,14 +1609,19 @@ pub fn unverify_sized_collection_item(
 ///Allows the same Update Authority (Or Delegated Authority) on an NFT and Collection to perform [update_metadata_accounts_v2] with collection and [verify_collection] on the NFT/Collection in one instruction
 ///
 /// ### Accounts:
-///
-///   0. `[writable]` Metadata account
-///   1. `[signer]` Collection Update authority
-///   2. `[signer]` payer
-///   3. `[] Update Authority of Collection NFT and NFT
-///   3. `[]` Mint of the Collection
-///   4. `[writable]` Metadata Account of the Collection
-///   5. `[]` MasterEdition2 Account of the Collection Token
+/// <ol start="0">
+/// <li><code>[writable]</code>Metadata account</li>
+/// <li><code>[signer]</code>Collection update authority</li>
+/// <li><code>[signer]</code>Payer</li>
+/// <li><code>[]</code> Update authority of Collection NFT and NFT</li>
+/// <li><code>[]</code>Mint of the Collection</li>
+/// <li><code>[writable]</code> Metadata account of the collection toekn</li>
+/// <li><code>[]</code> MasterEdition2 account of the collection token</li>
+/// <li>Optional <code>[]</code> Collection authority record</li>
+/// <li>Optional <code>[]</code> System Program account.</li>
+/// <li>Optional <code>[]</code> Instruction sysvar account.</li>
+/// </ol>
+
 #[allow(clippy::too_many_arguments)]
 pub fn set_and_verify_sized_collection_item(
     program_id: Pubkey,
@@ -1618,14 +1644,11 @@ pub fn set_and_verify_sized_collection_item(
         AccountMeta::new_readonly(collection_master_edition_account, false),
     ];
 
-    match collection_authority_record {
-        Some(collection_authority_record) => {
-            accounts.push(AccountMeta::new_readonly(
-                collection_authority_record,
-                false,
-            ));
-        }
-        None => (),
+    accounts.push(AccountMeta::new_readonly(system_program::id(), false));
+    accounts.push(AccountMeta::new_readonly(sysvar::instructions::id(), false));
+
+    if let Some(record) = collection_authority_record {
+        accounts.push(AccountMeta::new_readonly(record, false));
     }
 
     Instruction {

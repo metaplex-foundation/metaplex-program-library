@@ -1455,7 +1455,9 @@ pub fn set_and_verify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) 
     let collection_mint = next_account_info(account_info_iter)?;
     let collection_info = next_account_info(account_info_iter)?;
     let edition_account_info = next_account_info(account_info_iter)?;
-    let using_delegated_collection_authority = accounts.len() == 8;
+
+    let using_delegated_collection_authority = accounts.len() == 8 || accounts.len() == 10;
+
     assert_signer(collection_authority_info)?;
     assert_signer(payer_info)?;
 
@@ -1481,7 +1483,19 @@ pub fn set_and_verify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) 
     }
 
     if using_delegated_collection_authority {
-        let collection_authority_record = next_account_info(account_info_iter)?;
+        let collection_authority_record = if accounts.len() == 8 {
+            next_account_info(account_info_iter)?
+        } else if accounts.len() == 10 {
+            // Skip system program account
+            next_account_info(account_info_iter)?;
+            // Skip instructions sysvar account
+            next_account_info(account_info_iter)?;
+            // collection metadata account
+            next_account_info(account_info_iter)?
+        } else {
+            panic!("Invalid number of accounts");
+        };
+
         assert_has_collection_authority(
             collection_authority_info,
             &collection_data,
@@ -1528,7 +1542,9 @@ pub fn set_and_verify_sized_collection_item(
     let collection_mint = next_account_info(account_info_iter)?;
     let collection_info = next_account_info(account_info_iter)?;
     let edition_account_info = next_account_info(account_info_iter)?;
-    let using_delegated_collection_authority = accounts.len() == 8;
+
+    // Eight accounts for <1.6 and eleven accounts if it's v1.6.
+    let using_delegated_collection_authority = accounts.len() == 8 || accounts.len() == 10;
 
     assert_signer(collection_authority_info)?;
     assert_signer(payer_info)?;
@@ -1555,7 +1571,19 @@ pub fn set_and_verify_sized_collection_item(
     }
 
     if using_delegated_collection_authority {
-        let collection_authority_record = next_account_info(account_info_iter)?;
+        let collection_authority_record = if accounts.len() == 8 {
+            next_account_info(account_info_iter)?
+        } else if accounts.len() == 10 {
+            // Skip system program account
+            next_account_info(account_info_iter)?;
+            // Skip instructions sysvar account
+            next_account_info(account_info_iter)?;
+            // collection metadata account
+            next_account_info(account_info_iter)?
+        } else {
+            panic!("Invalid number of accounts");
+        };
+
         assert_has_collection_authority(
             collection_authority_info,
             &collection_metadata,
@@ -1710,7 +1738,9 @@ pub fn process_burn_nft(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progra
     let edition_info = next_account_info(account_info_iter)?;
     let spl_token_program_info = next_account_info(account_info_iter)?;
 
-    let collection_nft_provided = accounts.len() == 7;
+    // 7 accounts means optional collection nft is provided on v1.5 or lower ix
+    // 9 accounts means optional collection nft is provided on >v1.6 ix
+    let collection_nft_provided = accounts.len() == 7 || accounts.len() == 9;
 
     let metadata = Metadata::from_account_info(metadata_info)?;
 
@@ -1827,7 +1857,18 @@ pub fn process_burn_nft(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progra
     sol_memset(edition_data, 0, edition_data_len);
 
     if collection_nft_provided {
-        let collection_metadata_info = next_account_info(account_info_iter)?;
+        let collection_metadata_info = if accounts.len() == 7 {
+            next_account_info(account_info_iter)?
+        } else if accounts.len() == 9 {
+            // Skip system program account
+            next_account_info(account_info_iter)?;
+            // Skip instructions sysvar account
+            next_account_info(account_info_iter)?;
+            // collection metadata account
+            next_account_info(account_info_iter)?
+        } else {
+            return Err(MetadataError::MissingCollectionMetadata.into());
+        };
 
         // Get our collections metadata into a Rust type so we can update the collection size after burning.
         let mut collection_metadata = Metadata::from_account_info(collection_metadata_info)?;
