@@ -91,7 +91,7 @@ fn find_external_program_error(code: String) -> String {
         if errors.is_empty() {
             format!("Unknown error. Code: {code}")
         } else {
-            let mut message = String::from("Command failed due to either:");
+            let mut message = String::from("Command failed due to the following reason(s):");
 
             for error in errors {
                 message.push_str(&format!("\n  • {}", error).to_string());
