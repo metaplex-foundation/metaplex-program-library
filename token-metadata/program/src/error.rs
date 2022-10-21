@@ -488,6 +488,10 @@ pub enum MetadataError {
     /// 123 - Must unverify before migrating collections.
     #[error("Must unverify before migrating collections.")]
     MustUnverify,
+
+    /// 124 - Cannot create NFT with no Freeze Authority.
+    #[error("Cannot create NFT with no Freeze Authority.")]
+    NoFreezeAuthoritySet,
 }
 
 impl PrintProgramError for MetadataError {
