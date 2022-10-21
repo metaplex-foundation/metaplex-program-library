@@ -89,8 +89,8 @@
           "desc": "Trifle Authority - the account that can sign transactions for the trifle account"
         },
         {
-          "name": "escrowConstraintModel",
-          "isMut": false,
+          "name": "constraintModel",
+          "isMut": true,
           "isSigner": false,
           "desc": "Escrow constraint model"
         },
@@ -240,7 +240,7 @@
         },
         {
           "name": "constraintModel",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false,
           "desc": "The constraint model to check against"
         },
@@ -323,6 +323,12 @@
           "desc": "The rent sysvar"
         },
         {
+          "name": "tokenMetadataProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "The token metadata program"
+        },
+        {
           "name": "escrowEdition",
           "isMut": true,
           "isSigner": false,
@@ -347,7 +353,7 @@
       "name": "AddNoneConstraintToEscrowConstraintModel",
       "accounts": [
         {
-          "name": "escrowConstraintModel",
+          "name": "constraintModel",
           "isMut": true,
           "isSigner": false,
           "desc": "Constraint model account"
@@ -388,7 +394,7 @@
       "name": "AddCollectionConstraintToEscrowConstraintModel",
       "accounts": [
         {
-          "name": "escrowConstraintModel",
+          "name": "constraintModel",
           "isMut": true,
           "isSigner": false,
           "desc": "Constraint model account"
@@ -441,7 +447,7 @@
       "name": "AddTokensConstraintToEscrowConstraintModel",
       "accounts": [
         {
-          "name": "escrowConstraintModel",
+          "name": "constraintModel",
           "isMut": true,
           "isSigner": false,
           "desc": "Constraint model account"
@@ -523,6 +529,16 @@
             "type": {
               "option": "string"
             }
+          },
+          {
+            "name": "royalties",
+            "type": {
+              "defined": "RoyaltyModel"
+            }
+          },
+          {
+            "name": "royaltyBalance",
+            "type": "u64"
           }
         ]
       }
@@ -582,6 +598,34 @@
           {
             "name": "transferEffects",
             "type": "u16"
+          }
+        ]
+      }
+    },
+    {
+      "name": "RoyaltyModel",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "createModel",
+            "type": "u64"
+          },
+          {
+            "name": "createTrifle",
+            "type": "u64"
+          },
+          {
+            "name": "transferIn",
+            "type": "u64"
+          },
+          {
+            "name": "transferOut",
+            "type": "u64"
+          },
+          {
+            "name": "addConstraint",
+            "type": "u64"
           }
         ]
       }

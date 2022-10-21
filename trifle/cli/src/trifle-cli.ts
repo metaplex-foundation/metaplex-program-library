@@ -19,7 +19,7 @@ import {
   Sft,
   SftWithToken,
 } from "@metaplex-foundation/js";
-import { use_metaplex } from "./helpers/utils";
+import { EscrowAuthority, use_metaplex } from "./helpers/utils";
 import {
   addCollectionConstraint,
   addNoneConstraint,
@@ -28,8 +28,14 @@ import {
   createTrifle,
   showModel,
   showTrifle,
+  transferIn,
+  transferOut,
 } from "./helpers/trifle";
-import { findEscrowConstraintModelPda, findTriflePda } from "./helpers/pdas";
+import {
+  findEscrowConstraintModelPda,
+  findEscrowPda,
+  findTriflePda,
+} from "./helpers/pdas";
 import { Key } from "@metaplex-foundation/mpl-token-metadata";
 import { PublicKeyMismatchError } from "@metaplex-foundation/mpl-auction-house";
 
@@ -88,15 +94,11 @@ create
     "devnet", //mainnet-beta, testnet, devnet
   )
   .option("-r, --rpc <string>", "The endpoint to connect to.")
-  .option(
-    "-k, --keypair <path>",
-    `Solana wallet location`,
-  )
+  .option("-k, --keypair <path>", `Solana wallet location`)
   .option("-l, --log-level <string>", "log level", setLogLevel)
   .option("-n, --name <string>", "The name of the constraint model.")
   .option("-s, --schema <string>", "The schema of the constraint model.")
   .action(async (directory, cmd) => {
-    // console.log(cmd.opts());
     const { keypair, env, rpc, name, schema } = cmd.opts();
 
     const metaplex = await use_metaplex(keypair, env, rpc);
@@ -123,10 +125,7 @@ create
     "devnet", //mainnet-beta, testnet, devnet
   )
   .option("-r, --rpc <string>", "The endpoint to connect to.")
-  .option(
-    "-k, --keypair <path>",
-    `Solana wallet location`,
-  )
+  .option("-k, --keypair <path>", `Solana wallet location`)
   .option("-l, --log-level <string>", "log level", setLogLevel)
   .option(
     "-m, --mint <string>",
@@ -140,7 +139,6 @@ create
     "The name of the constraint model (Assumes keypair is the same as the Model Authority).",
   )
   .action(async (directory, cmd) => {
-    // console.log(cmd.opts());
     const { keypair, env, rpc, mint, create, uri, name, modelName } = cmd
       .opts();
 
@@ -159,7 +157,13 @@ create
         .run();
       nft = newNFT;
     } else {
-      nft = await metaplex.nfts().findByMint(mint).run();
+      nft = await metaplex
+        .nfts()
+        .findByMint({
+          mintAddress: new web3.PublicKey(mint),
+          tokenOwner: metaplex.identity().publicKey,
+        })
+        .run();
     }
 
     const trifleAddr = await createTrifle(
@@ -187,9 +191,12 @@ const addNoneConstraintCommand = constraintCommand
   )
   .option("-r, --rpc <string>", "The endpoint to connect to.")
   .option(
-    "-k, --keypair <path>",
-    `Solana wallet location`,
+    "-e, --env <string>",
+    "Solana cluster env name",
+    "devnet", //mainnet-beta, testnet, devnet
   )
+  .option("-r, --rpc <string>", "The endpoint to connect to.")
+  .option("-k, --keypair <path>", `Solana wallet location`)
   .option("-l, --log-level <string>", "log level", setLogLevel)
   .option("-mn, --model-name <string>", "The name of the constraint model.")
   .option("-cn --constraint-name <string>", "The name of the constraint")
@@ -220,7 +227,7 @@ const addNoneConstraintCommand = constraintCommand
       secretKey: metaplex.identity().secretKey as Uint8Array,
     });
 
-    const te = useTransferEffects(cmd.opts);
+    const te = useTransferEffects(cmd.opts());
 
     await addNoneConstraint(
       metaplex.connection,
@@ -242,10 +249,7 @@ const addCollectionConstraintCommand = constraintCommand
     "devnet", //mainnet-beta, testnet, devnet
   )
   .option("-r, --rpc <string>", "The endpoint to connect to.")
-  .option(
-    "-k, --keypair <path>",
-    `Solana wallet location`,
-  )
+  .option("-k, --keypair <path>", `Solana wallet location`)
   .option("-l, --log-level <string>", "log level", setLogLevel)
   .option("-mn, --model-name <string>", "The name of the constraint model.")
   .option("-cn --constraint-name <string>", "The name of the constraint")
@@ -278,7 +282,7 @@ const addCollectionConstraintCommand = constraintCommand
     });
 
     const collectionMint = new web3.PublicKey(collection);
-    const te = useTransferEffects(cmd.opts);
+    const te = useTransferEffects(cmd.opts());
 
     await addCollectionConstraint(
       metaplex.connection,
@@ -302,9 +306,12 @@ const addTokensConstraintCommand = constraintCommand
   )
   .option("-r, --rpc <string>", "The endpoint to connect to.")
   .option(
-    "-k, --keypair <path>",
-    `Solana wallet location`,
+    "-e, --env <string>",
+    "Solana cluster env name",
+    "devnet", //mainnet-beta, testnet, devnet
   )
+  .option("-r, --rpc <string>", "The endpoint to connect to.")
+  .option("-k, --keypair <path>", `Solana wallet location`)
   .option("-l, --log-level <string>", "log level", setLogLevel)
   .option("-mn, --model-name <string>", "The name of the constraint model.")
   .option("-cn --constraint-name <string>", "The name of the constraint")
@@ -317,13 +324,11 @@ const addTokensConstraintCommand = constraintCommand
     "The path to the file containing the tokens. Should contain a top-level array of token mint addresses.",
   )
   .action(async (directory, cmd) => {
-    // console.log(cmd.opts());
     const {
       keypair,
       env,
       rpc,
       constraintName,
-      collection,
       modelName,
       tokenLimit,
       tokenFilePath,
@@ -357,7 +362,7 @@ const addTokensConstraintCommand = constraintCommand
     });
     // TODO: batch process this.
 
-    const te = useTransferEffects(cmd.opts);
+    const te = useTransferEffects(cmd.opts());
 
     await addTokensConstraint(
       metaplex.connection,
@@ -376,6 +381,182 @@ addTransferEffectsOptions(addNoneConstraintCommand);
 addTransferEffectsOptions(addCollectionConstraintCommand);
 addTransferEffectsOptions(addTokensConstraintCommand);
 
+const transfer = program.command("transfer");
+
+transfer
+  .command("in")
+  .option(
+    "-e, --env <string>",
+    "Solana cluster env name",
+    "devnet", //mainnet-beta, testnet, devnet
+  )
+  .option("-r, --rpc <string>", "The endpoint to connect to.")
+  .option("-k, --keypair <path>", `Solana wallet location`)
+  .option("-l, --log-level <string>", "log level", setLogLevel)
+  .option(
+    "-m, --mint <string>",
+    "The mint of the NFT the Trifle is attached to.",
+  )
+  .option(
+    "-mn, --model-name <string>",
+    "The name of the constraint model (Assumes keypair is the same as the Model Authority).",
+  )
+  .option(
+    "-am, --attribute-mint <string>",
+    "The mint of the attribute to transfer.",
+  )
+  .option("-a, --amount <int>", "The amount of the attribute to transfer.")
+  .option("-s, --slot <string>", "The slot to transfer the attribute to.")
+  .action(async (directory, cmd) => {
+    const { keypair, env, rpc, mint, modelName, attributeMint, amount, slot } =
+      cmd.opts();
+
+    const metaplex = await use_metaplex(keypair, env, rpc);
+    const adaptedKeypair = new Keypair({
+      publicKey: metaplex.identity().publicKey.toBuffer(),
+      secretKey: metaplex.identity().secretKey as Uint8Array,
+    });
+
+    const modelAddr = await findEscrowConstraintModelPda(
+      metaplex.identity().publicKey,
+      modelName,
+    );
+    const trifleAddr = await findTriflePda(
+      new web3.PublicKey(mint),
+      metaplex.identity().publicKey,
+    );
+
+    const escrowAddr = await findEscrowPda(
+      new web3.PublicKey(mint),
+      EscrowAuthority.Creator,
+      trifleAddr[0],
+    );
+
+    const escrowNft = await metaplex
+      .nfts()
+      .findByMint({
+        mintAddress: new web3.PublicKey(mint),
+        tokenOwner: metaplex.identity().publicKey,
+      })
+      .run();
+    // console.log('Escrow NFT: ', escrowNft);
+    const attributeToken = await metaplex
+      .nfts()
+      .findByMint({
+        mintAddress: new web3.PublicKey(attributeMint),
+        tokenOwner: metaplex.identity().publicKey,
+      })
+      .run();
+
+    let attribute: NftWithToken | SftWithToken;
+    if (attributeToken.model === "nft") {
+      attribute = attributeToken as NftWithToken;
+    } else if (attributeToken.model === "sft") {
+      attribute = attributeToken as SftWithToken;
+    } else {
+      console.error("Unknown attribute token type");
+      return;
+    }
+    // console.log('Attribute Token: ', attributeToken);
+    await transferIn(
+      metaplex.connection,
+      escrowNft as NftWithToken,
+      escrowAddr[0],
+      attribute,
+      adaptedKeypair,
+      slot,
+    );
+
+    await showTrifle(metaplex.connection, trifleAddr[0]);
+  });
+
+transfer
+  .command("out")
+  .option(
+    "-e, --env <string>",
+    "Solana cluster env name",
+    "devnet", //mainnet-beta, testnet, devnet
+  )
+  .option("-r, --rpc <string>", "The endpoint to connect to.")
+  .option("-k, --keypair <path>", `Solana wallet location`)
+  .option("-l, --log-level <string>", "log level", setLogLevel)
+  .option(
+    "-m, --mint <string>",
+    "The mint of the NFT the Trifle is attached to.",
+  )
+  .option(
+    "-mn, --model-name <string>",
+    "The name of the constraint model (Assumes keypair is the same as the Model Authority).",
+  )
+  .option(
+    "-am, --attribute-mint <string>",
+    "The mint of the attribute to transfer.",
+  )
+  .option("-a, --amount <int>", "The amount of the attribute to transfer.")
+  .option("-s, --slot <string>", "The slot to transfer the attribute to.")
+  .action(async (directory, cmd) => {
+    const { keypair, env, rpc, mint, modelName, attributeMint, amount, slot } =
+      cmd.opts();
+
+    const metaplex = await use_metaplex(keypair, env, rpc);
+    const adaptedKeypair = new Keypair({
+      publicKey: metaplex.identity().publicKey.toBuffer(),
+      secretKey: metaplex.identity().secretKey as Uint8Array,
+    });
+
+    const modelAddr = await findEscrowConstraintModelPda(
+      metaplex.identity().publicKey,
+      modelName,
+    );
+    const trifleAddr = await findTriflePda(
+      new web3.PublicKey(mint),
+      metaplex.identity().publicKey,
+    );
+
+    const escrowAddr = await findEscrowPda(
+      new web3.PublicKey(mint),
+      EscrowAuthority.Creator,
+      trifleAddr[0],
+    );
+
+    const escrowNft = await metaplex
+      .nfts()
+      .findByMint({
+        mintAddress: new web3.PublicKey(mint),
+        tokenOwner: metaplex.identity().publicKey,
+      })
+      .run();
+    // console.log('Escrow NFT: ', escrowNft);
+    const attributeToken = await metaplex
+      .nfts()
+      .findByMint({
+        mintAddress: new web3.PublicKey(attributeMint),
+        tokenOwner: escrowAddr[0],
+      })
+      .run();
+
+    let attribute: NftWithToken | SftWithToken;
+    if (attributeToken.model === "nft") {
+      attribute = attributeToken as NftWithToken;
+    } else if (attributeToken.model === "sft") {
+      attribute = attributeToken as SftWithToken;
+    } else {
+      console.error("Unknown attribute token type");
+      return;
+    }
+    // console.log('Attribute Token: ', attributeToken);
+    await transferOut(
+      metaplex.connection,
+      escrowNft as NftWithToken,
+      escrowAddr[0],
+      attribute,
+      adaptedKeypair,
+      slot,
+    );
+
+    await showTrifle(metaplex.connection, trifleAddr[0]);
+  });
+
 const show = program.command("show");
 
 show
@@ -386,15 +567,10 @@ show
     "devnet", //mainnet-beta, testnet, devnet
   )
   .option("-r, --rpc <string>", "The endpoint to connect to.")
-  .option(
-    "-k, --keypair <path>",
-    `Solana wallet location`,
-  )
+  .option("-k, --keypair <path>", `Solana wallet location`)
   .option("-l, --log-level <string>", "log level", setLogLevel)
   .option("-n, --name <string>", "The name if creating a new NFT.")
   .action(async (directory, cmd) => {
-    // console.log(cmd.opts());
-
     const { keypair, env, rpc, name } = cmd.opts();
 
     const metaplex = await use_metaplex(keypair, env, rpc);
@@ -414,22 +590,17 @@ show
     "devnet", //mainnet-beta, testnet, devnet
   )
   .option("-r, --rpc <string>", "The endpoint to connect to.")
-  .option(
-    "-k, --keypair <path>",
-    `Solana wallet location`,
-  )
+  .option("-k, --keypair <path>", `Solana wallet location`)
   .option("-l, --log-level <string>", "log level", setLogLevel)
   .option(
     "-m, --mint <string>",
     "The mint of the NFT you want to view the Trifle for.",
   )
-  .option("-mn, --model-name <string>", "The Model the Trifle uses.")
   .option(
     "-mn, --model-name <string>",
     "The name of the constraint model (Assumes keypair is the same as the Model Authority).",
   )
   .action(async (directory, cmd) => {
-    // console.log(cmd.opts());
     const { keypair, env, rpc, mint, modelName } = cmd.opts();
 
     const metaplex = await use_metaplex(keypair, env, rpc);
@@ -441,7 +612,6 @@ show
     const trifleAddr = await findTriflePda(
       new web3.PublicKey(mint),
       metaplex.identity().publicKey,
-      modelAddr[0],
     );
     await showTrifle(metaplex.connection, trifleAddr[0]);
   });

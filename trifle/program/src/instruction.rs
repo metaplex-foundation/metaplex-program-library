@@ -6,8 +6,6 @@ use solana_program::{
     system_program, sysvar,
 };
 
-use crate::state::transfer_effects::TransferEffects;
-
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct CreateEscrowConstraintModelAccountArgs {
@@ -79,7 +77,7 @@ pub enum TrifleInstruction {
     #[account(4, name = "edition", desc = "Edition account")]
     #[account(5, writable, name = "trifle_account", desc = "Trifle account")]
     #[account(6, name = "trifle_authority", desc = "Trifle Authority - the account that can sign transactions for the trifle account")]
-    #[account(7, name = "escrow_constraint_model", desc = "Escrow constraint model")]
+    #[account(7, writable, name = "constraint_model", desc = "Escrow constraint model")]
     #[account(8, writable, signer, name = "payer", desc = "Wallet paying for the transaction")]
     #[account(9, name = "token_metadata_program", desc = "Token Metadata program")]
     #[account(10, name = "system_program", desc = "System program")]
@@ -104,7 +102,7 @@ pub enum TrifleInstruction {
 
     /// Transfer tokens out of the Trifle escrow account.
     #[account(0, writable, name="trifle_account", desc="The trifle account to use")]
-    #[account(1, name="constraint_model", desc="The constraint model to check against")]
+    #[account(1, writable, name="constraint_model", desc="The constraint model to check against")]
     #[account(2, name="escrow_account", desc="The escrow account attached to the NFT")]
     #[account(3, writable, name="escrow_token_account", desc="The token account holding the NFT the escrow is attached to")]
     #[account(4, writable, name="escrow_mint", desc="The mint of the NFT the escrow is attached to")]
@@ -118,16 +116,17 @@ pub enum TrifleInstruction {
     #[account(12, name="spl_associated_token_account", desc="The associated token account program")]
     #[account(13, name="spl_token", desc="The spl token program")]
     #[account(14, name="rent", desc="The rent sysvar")]
-    #[account(15, optional, writable, name="escrow_edition", desc="The edition of the NFT the escrow is attached to")]
+    #[account(15, name="token_metadata_program", desc="The token metadata program")]
+    #[account(16, optional, writable, name="escrow_edition", desc="The edition of the NFT the escrow is attached to")]
     TransferOut(TransferOutArgs),
 
-    #[account(0, writable, name = "escrow_constraint_model", desc = "Constraint model account")]
+    #[account(0, writable, name = "constraint_model", desc = "Constraint model account")]
     #[account(1, writable, signer, name = "payer", desc = "Wallet paying for the transaction and new account, will be set as the creator of the constraint model")]
     #[account(2, signer, name = "update_authority", desc = "Update authority of the constraint model")]
     #[account(3, name = "system_program", desc = "System program")]
     AddNoneConstraintToEscrowConstraintModel(AddNoneConstraintToEscrowConstraintModelArgs),
 
-    #[account(0, writable, name = "escrow_constraint_model", desc = "Constraint model account")]
+    #[account(0, writable, name = "constraint_model", desc = "Constraint model account")]
     #[account(1, writable, signer, name = "payer", desc = "Wallet paying for the transaction and new account, will be set as the creator of the constraint model")]
     #[account(2, signer, name = "update_authority", desc = "Update authority of the constraint model")]
     #[account(3, name = "collection_mint", desc = "Collection mint account")]
@@ -135,7 +134,7 @@ pub enum TrifleInstruction {
     #[account(5, name = "system_program", desc = "System program")]
     AddCollectionConstraintToEscrowConstraintModel(AddCollectionConstraintToEscrowConstraintModelArgs),
 
-    #[account(0, writable, name = "escrow_constraint_model", desc = "Constraint model account")]
+    #[account(0, writable, name = "constraint_model", desc = "Constraint model account")]
     #[account(1, writable, signer, name = "payer", desc = "Wallet paying for the transaction and new account, will be set as the creator of the constraint model")]
     #[account(2, signer, name = "update_authority", desc = "Update authority of the constraint model")]
     #[account(3, name = "system_program", desc = "System program")]
@@ -372,23 +371,23 @@ pub fn transfer_out(
     escrow_edition: Option<Pubkey>,
 ) -> Instruction {
     let accounts = vec![
-        AccountMeta::new(trifle_account, false),              // 0
-        AccountMeta::new_readonly(constraint_model, false),   // 1
-        AccountMeta::new_readonly(escrow_account, false),     // 2
-        AccountMeta::new(escrow_token_account, false),        // 3
-        AccountMeta::new(escrow_mint, false),                 // 4
-        AccountMeta::new(payer, true),                        // 6
-        AccountMeta::new_readonly(trifle_authority, false),   // 7
-        AccountMeta::new_readonly(attribute_mint, false),     // 8
-        AccountMeta::new(attribute_src_token_account, false), // 9
-        AccountMeta::new(attribute_dst_token_account, false), // 10
-        AccountMeta::new_readonly(attribute_metadata, false), // 11
-        AccountMeta::new_readonly(solana_program::system_program::id(), false), // 12
+        AccountMeta::new(trifle_account, false),
+        AccountMeta::new_readonly(constraint_model, false),
+        AccountMeta::new_readonly(escrow_account, false),
+        AccountMeta::new(escrow_token_account, false),
+        AccountMeta::new(escrow_mint, false),
+        AccountMeta::new(payer, true),
+        AccountMeta::new_readonly(trifle_authority, false),
+        AccountMeta::new_readonly(attribute_mint, false),
+        AccountMeta::new(attribute_src_token_account, false),
+        AccountMeta::new(attribute_dst_token_account, false),
+        AccountMeta::new_readonly(attribute_metadata, false),
+        AccountMeta::new_readonly(solana_program::system_program::id(), false),
         AccountMeta::new_readonly(spl_associated_token_account::id(), false),
         AccountMeta::new_readonly(spl_token::id(), false),
         AccountMeta::new_readonly(solana_program::sysvar::rent::id(), false),
         AccountMeta::new_readonly(mpl_token_metadata::id(), false),
-        AccountMeta::new(escrow_edition.unwrap_or(program_id), false), // 5
+        AccountMeta::new(escrow_edition.unwrap_or(program_id), false),
     ];
 
     let data = TrifleInstruction::TransferOut(TransferOutArgs { slot, amount })

@@ -26,7 +26,7 @@ export const CreateTrifleAccountStruct = new beet.BeetArgsStruct<{
  * @property [] edition Edition account
  * @property [_writable_] trifleAccount Trifle account
  * @property [] trifleAuthority Trifle Authority - the account that can sign transactions for the trifle account
- * @property [] escrowConstraintModel Escrow constraint model
+ * @property [_writable_] constraintModel Escrow constraint model
  * @property [_writable_, **signer**] payer Wallet paying for the transaction
  * @property [] tokenMetadataProgram Token Metadata program
  * @category Instructions
@@ -41,7 +41,7 @@ export type CreateTrifleAccountInstructionAccounts = {
   edition: web3.PublicKey;
   trifleAccount: web3.PublicKey;
   trifleAuthority: web3.PublicKey;
-  escrowConstraintModel: web3.PublicKey;
+  constraintModel: web3.PublicKey;
   payer: web3.PublicKey;
   tokenMetadataProgram: web3.PublicKey;
   systemProgram?: web3.PublicKey;
@@ -101,8 +101,8 @@ export function createCreateTrifleAccountInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.escrowConstraintModel,
-      isWritable: false,
+      pubkey: accounts.constraintModel,
+      isWritable: true,
       isSigner: false,
     },
     {

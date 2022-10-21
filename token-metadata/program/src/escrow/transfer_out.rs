@@ -3,7 +3,7 @@ use crate::{
     state::{
         EscrowAuthority, Metadata, TokenMetadataAccount, TokenOwnedEscrow, ESCROW_PREFIX, PREFIX,
     },
-    utils::{assert_derivation, assert_owned_by, assert_signer},
+    utils::{assert_derivation, assert_owned_by, assert_signer, close_account_raw},
 };
 use borsh::{BorshDeserialize, BorshSerialize};
 use mpl_token_vault::solana_program::msg;
@@ -194,6 +194,33 @@ pub fn process_transfer_out_of_escrow(
         &[&escrow_authority_seeds],
     )?;
     msg!("Transferred tokens");
+
+    // msg!("{:#?}", attribute_src_info);
+    // msg!(
+    //     "{:#?}",
+    //     spl_token::state::Account::unpack(&attribute_src_info.data.borrow())
+    // );
+    // close_account_raw(payer_info, attribute_src_info)?;
+    let close_ix = spl_token::instruction::close_account(
+        &spl_token::id(),
+        attribute_src_info.key,
+        payer_info.key,
+        escrow_info.key,
+        &[escrow_info.key],
+    )
+    .unwrap();
+
+    msg!("Closing ATA");
+    invoke_signed(
+        &close_ix,
+        &[
+            attribute_src_info.clone(),
+            payer_info.clone(),
+            escrow_info.clone(),
+            token_program_info.clone(),
+        ],
+        &[&escrow_authority_seeds],
+    )?;
 
     Ok(())
 }

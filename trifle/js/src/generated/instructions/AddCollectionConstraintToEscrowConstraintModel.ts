@@ -42,7 +42,7 @@ export const AddCollectionConstraintToEscrowConstraintModelStruct = new beet.Fix
 /**
  * Accounts required by the _AddCollectionConstraintToEscrowConstraintModel_ instruction
  *
- * @property [_writable_] escrowConstraintModel Constraint model account
+ * @property [_writable_] constraintModel Constraint model account
  * @property [_writable_, **signer**] payer Wallet paying for the transaction and new account, will be set as the creator of the constraint model
  * @property [**signer**] updateAuthority Update authority of the constraint model
  * @property [] collectionMint Collection mint account
@@ -52,7 +52,7 @@ export const AddCollectionConstraintToEscrowConstraintModelStruct = new beet.Fix
  * @category generated
  */
 export type AddCollectionConstraintToEscrowConstraintModelInstructionAccounts = {
-  escrowConstraintModel: web3.PublicKey;
+  constraintModel: web3.PublicKey;
   payer: web3.PublicKey;
   updateAuthority: web3.PublicKey;
   collectionMint: web3.PublicKey;
@@ -84,7 +84,7 @@ export function createAddCollectionConstraintToEscrowConstraintModelInstruction(
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: accounts.escrowConstraintModel,
+      pubkey: accounts.constraintModel,
       isWritable: true,
       isSigner: false,
     },

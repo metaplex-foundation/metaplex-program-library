@@ -238,7 +238,7 @@ mod trifle {
             escrow_addr,
             Some(metadata.mint.pubkey()),
             Some(metadata.token.pubkey()),
-            Some(context.payer.pubkey()),
+            Some(master_edition.pubkey),
             attribute_metadata.mint.pubkey(),
             attribute_metadata.token.pubkey(),
             Some(trifle_attribute_token_account),
@@ -594,11 +594,7 @@ async fn create_trifle(
     master_edition: &MasterEditionV2,
     escrow_constraint_model_addr: Pubkey,
 ) -> (Pubkey, Pubkey) {
-    let (trifle_addr, _) = find_trifle_address(
-        &metadata.mint.pubkey(),
-        &context.payer.pubkey(),
-        &escrow_constraint_model_addr,
-    );
+    let (trifle_addr, _) = find_trifle_address(&metadata.mint.pubkey(), &context.payer.pubkey());
 
     let (escrow_addr, _) = mpl_token_metadata::escrow::pda::find_escrow_account(
         &metadata.mint.pubkey(),

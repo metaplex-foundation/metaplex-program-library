@@ -37,7 +37,7 @@ export const TransferOutStruct = new beet.FixableBeetArgsStruct<
  * Accounts required by the _TransferOut_ instruction
  *
  * @property [_writable_] trifleAccount The trifle account to use
- * @property [] constraintModel The constraint model to check against
+ * @property [_writable_] constraintModel The constraint model to check against
  * @property [] escrowAccount The escrow account attached to the NFT
  * @property [_writable_] escrowTokenAccount The token account holding the NFT the escrow is attached to
  * @property [_writable_] escrowMint The mint of the NFT the escrow is attached to
@@ -49,6 +49,7 @@ export const TransferOutStruct = new beet.FixableBeetArgsStruct<
  * @property [] attributeMetadata The metadata of the attribute
  * @property [] splAssociatedTokenAccount The associated token account program
  * @property [] splToken The spl token program
+ * @property [] tokenMetadataProgram The token metadata program
  * @property [_writable_] escrowEdition (optional) The edition of the NFT the escrow is attached to
  * @category Instructions
  * @category TransferOut
@@ -70,6 +71,7 @@ export type TransferOutInstructionAccounts = {
   splAssociatedTokenAccount: web3.PublicKey;
   splToken: web3.PublicKey;
   rent?: web3.PublicKey;
+  tokenMetadataProgram: web3.PublicKey;
   escrowEdition?: web3.PublicKey;
 };
 
@@ -102,7 +104,7 @@ export function createTransferOutInstruction(
     },
     {
       pubkey: accounts.constraintModel,
-      isWritable: false,
+      isWritable: true,
       isSigner: false,
     },
     {
@@ -167,6 +169,11 @@ export function createTransferOutInstruction(
     },
     {
       pubkey: accounts.rent ?? web3.SYSVAR_RENT_PUBKEY,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.tokenMetadataProgram,
       isWritable: false,
       isSigner: false,
     },

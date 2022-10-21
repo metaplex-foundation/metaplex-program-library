@@ -202,12 +202,12 @@ mod escrow {
             try_from_slice_unchecked(&escrow_account.data).unwrap();
 
         print!("\n{:#?}\n", escrow);
-        let attribute_src_account =
-            get_account(&mut context, &escrow_attribute_token_account).await;
-        let attribute_src =
-            spl_token::state::Account::unpack_from_slice(&attribute_src_account.data).unwrap();
+        // let attribute_src_account =
+        //     get_account(&mut context, &escrow_attribute_token_account).await;
+        // let attribute_src =
+        //     spl_token::state::Account::unpack_from_slice(&attribute_src_account.data).unwrap();
         println!("attribute_src:{:#?}", attribute_src);
-        assert!(attribute_src.amount == 0);
+        // assert!(attribute_src.amount == 0);
         let attribute_dst_account = get_account(&mut context, &payer_attribute_token_account).await;
         let attribute_dst =
             spl_token::state::Account::unpack_from_slice(&attribute_dst_account.data).unwrap();
