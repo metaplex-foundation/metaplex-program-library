@@ -5,17 +5,12 @@ use solana_program::pubkey::Pubkey;
 ///     mint.key.as_ref(),
 ///     trifle_authority_info.key.as_ref(),
 ///     escrow_constraint_model.key.as_ref(),
-pub fn find_trifle_address(
-    mint: &Pubkey,
-    trifle_authority: &Pubkey,
-    escrow_constraint_model: &Pubkey,
-) -> (Pubkey, u8) {
+pub fn find_trifle_address(mint: &Pubkey, trifle_authority: &Pubkey) -> (Pubkey, u8) {
     Pubkey::find_program_address(
         &[
             TRIFLE_SEED.as_bytes(),
             mint.as_ref(),
             trifle_authority.as_ref(),
-            escrow_constraint_model.as_ref(),
         ],
         &crate::id(),
     )

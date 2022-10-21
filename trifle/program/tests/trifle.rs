@@ -129,11 +129,8 @@ mod trifle {
 
         context.banks_client.process_transaction(tx).await.unwrap();
 
-        let (trifle_addr, _) = find_trifle_address(
-            &metadata.mint.pubkey(),
-            &context.payer.pubkey(),
-            &escrow_constraint_model_addr,
-        );
+        let (trifle_addr, _) =
+            find_trifle_address(&metadata.mint.pubkey(), &context.payer.pubkey());
 
         let (escrow_addr, _) = mpl_token_metadata::escrow::pda::find_escrow_account(
             &metadata.mint.pubkey(),

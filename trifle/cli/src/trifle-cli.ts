@@ -319,11 +319,7 @@ transfer
     });
 
     const modelAddr = await findEscrowConstraintModelPda(metaplex.identity().publicKey, modelName);
-    const trifleAddr = await findTriflePda(
-      new web3.PublicKey(mint),
-      metaplex.identity().publicKey,
-      modelAddr[0],
-    );
+    const trifleAddr = await findTriflePda(new web3.PublicKey(mint), metaplex.identity().publicKey);
 
     const escrowAddr = await findEscrowPda(
       new web3.PublicKey(mint),
@@ -398,11 +394,7 @@ transfer
     });
 
     const modelAddr = await findEscrowConstraintModelPda(metaplex.identity().publicKey, modelName);
-    const trifleAddr = await findTriflePda(
-      new web3.PublicKey(mint),
-      metaplex.identity().publicKey,
-      modelAddr[0],
-    );
+    const trifleAddr = await findTriflePda(new web3.PublicKey(mint), metaplex.identity().publicKey);
 
     const escrowAddr = await findEscrowPda(
       new web3.PublicKey(mint),
@@ -493,11 +485,7 @@ show
     const metaplex = await use_metaplex(keypair, env, rpc);
 
     const modelAddr = await findEscrowConstraintModelPda(metaplex.identity().publicKey, modelName);
-    const trifleAddr = await findTriflePda(
-      new web3.PublicKey(mint),
-      metaplex.identity().publicKey,
-      modelAddr[0],
-    );
+    const trifleAddr = await findTriflePda(new web3.PublicKey(mint), metaplex.identity().publicKey);
     await showTrifle(metaplex.connection, trifleAddr[0]);
   });
 

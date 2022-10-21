@@ -158,11 +158,7 @@ export const createTrifle = async (
   model_name: string,
 ) => {
   const escrowConstraintModel = await findEscrowConstraintModelPda(keypair.publicKey, model_name);
-  const trifleAddress = await findTriflePda(
-    nft.mint.address,
-    keypair.publicKey,
-    escrowConstraintModel[0],
-  );
+  const trifleAddress = await findTriflePda(nft.mint.address, keypair.publicKey);
   const escrowAccountAddress = await findEscrowPda(
     nft.mint.address,
     EscrowAuthority.Creator,
@@ -204,11 +200,7 @@ export const transferIn = async (
   slot: string,
 ) => {
   const escrowConstraintModel = await findEscrowConstraintModelPda(keypair.publicKey, 'test');
-  const trifleAddress = await findTriflePda(
-    escrowNft.mint.address,
-    keypair.publicKey,
-    escrowConstraintModel[0],
-  );
+  const trifleAddress = await findTriflePda(escrowNft.mint.address, keypair.publicKey);
 
   const dst: PublicKey = await getAssociatedTokenAddress(
     nft.mint.address,
@@ -257,11 +249,7 @@ export const transferOut = async (
   slot: string,
 ) => {
   const escrowConstraintModel = await findEscrowConstraintModelPda(keypair.publicKey, 'test');
-  const trifleAddress = await findTriflePda(
-    escrowNft.mint.address,
-    keypair.publicKey,
-    escrowConstraintModel[0],
-  );
+  const trifleAddress = await findTriflePda(escrowNft.mint.address, keypair.publicKey);
 
   const dst: PublicKey = await getAssociatedTokenAddress(nft.mint.address, keypair.publicKey, true);
   const transferIX = createTransferOutInstruction(

@@ -156,7 +156,6 @@ fn create_trifle_account(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progr
             TRIFLE_SEED.as_bytes(),
             mint_info.key.as_ref(),
             trifle_authority_info.key.as_ref(),
-            escrow_constraint_model_info.key.as_ref(),
         ],
     )?;
 
@@ -193,7 +192,6 @@ fn create_trifle_account(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progr
         TRIFLE_SEED.as_bytes(),
         mint_info.key.as_ref(),
         trifle_authority_info.key.as_ref(),
-        escrow_constraint_model_info.key.as_ref(),
         &[trifle_pda_bump],
     ];
 
@@ -472,7 +470,6 @@ fn transfer_out(
         TRIFLE_SEED.as_bytes(),
         escrow_mint.key.as_ref(),
         trifle_authority.key.as_ref(),
-        constraint_model_info.key.as_ref(),
     ];
 
     let trifle_bump_seed = assert_derivation(program_id, trifle_account, trifle_seeds)?;
@@ -482,7 +479,6 @@ fn transfer_out(
         TRIFLE_SEED.as_bytes(),
         escrow_mint.key.as_ref(),
         trifle_authority.key.as_ref(),
-        constraint_model_info.key.as_ref(),
         &[trifle_bump_seed],
     ];
 
