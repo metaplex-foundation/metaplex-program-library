@@ -3,9 +3,8 @@ pub mod metaplex_adapter;
 pub mod metaplex_anchor;
 
 use anchor_lang::prelude::*;
+use borsh::{BorshDeserialize, BorshSerialize};
 use leaf_schema::LeafSchema;
-use leaf_schema::Version;
-use metaplex_adapter::MetadataArgs;
 
 pub const TREE_AUTHORITY_SIZE: usize = 88 + 8;
 pub const VOUCHER_SIZE: usize = 8 + 1 + 32 + 32 + 32 + 8 + 32 + 32 + 4 + 32;
@@ -14,7 +13,7 @@ pub const ASSET_PREFIX: &str = "asset";
 pub const COLLECTION_CPI_PREFIX: &str = "collection_cpi";
 
 #[account]
-#[derive(Copy)]
+#[derive(Copy, Debug, PartialEq, Eq)]
 pub struct TreeConfig {
     pub tree_creator: Pubkey,
     pub tree_delegate: Pubkey,
@@ -34,7 +33,7 @@ impl TreeConfig {
 }
 
 #[account]
-#[derive(Copy)]
+#[derive(Debug, Eq, PartialEq)]
 pub struct Voucher {
     pub leaf_schema: LeafSchema,
     pub index: u32,
@@ -49,19 +48,33 @@ impl Voucher {
             merkle_tree,
         }
     }
+
+    fn pda_for_prefix(&self, prefix: &str) -> Pubkey {
+        Pubkey::find_program_address(
+            &[
+                prefix.as_ref(),
+                self.merkle_tree.as_ref(),
+                self.leaf_schema.nonce().to_le_bytes().as_ref(),
+            ],
+            &crate::id(),
+        )
+        .0
+    }
+
+    pub fn pda(&self) -> Pubkey {
+        self.pda_for_prefix(VOUCHER_PREFIX)
+    }
+
+    pub fn decompress_mint_pda(&self) -> Pubkey {
+        self.pda_for_prefix(ASSET_PREFIX)
+    }
 }
 
-#[event]
-pub struct NewNFTEvent {
-    pub version: Version,
-    pub metadata: MetadataArgs,
-    pub nonce: u64,
-}
-
-#[event]
-pub struct NFTDecompressionEvent {
-    pub version: Version,
-    pub id: Pubkey,
-    pub tree_id: Pubkey,
-    pub nonce: u64,
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+#[repr(u8)]
+pub enum BubblegumEventType {
+    /// Marker for 0 data.
+    Uninitialized,
+    /// Leaf schema event.
+    LeafSchemaEvent,
 }

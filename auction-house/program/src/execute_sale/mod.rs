@@ -1341,21 +1341,33 @@ fn auctioneer_execute_sale_logic<'c, 'info>(
         &[&program_as_signer_seeds],
     )?;
 
-    if token_account_data.amount == 0 {
-        invoke(
-            &revoke(
-                &token_program.key(),
-                &token_account.key(),
-                &seller.key(),
-                &[],
-            )
-            .unwrap(),
-            &[
-                token_program.to_account_info(),
-                token_account.to_account_info(),
-                seller.to_account_info(),
-            ],
-        )?;
+    // Close the buyer trade state account if the rest of execute sale was successful.
+    let curr_buyer_lamp = buyer_trade_state.lamports();
+    **buyer_trade_state.lamports.borrow_mut() = 0;
+    sol_memset(&mut *buyer_ts_data, 0, TRADE_STATE_SIZE);
+    **fee_payer.lamports.borrow_mut() = fee_payer
+        .lamports()
+        .checked_add(curr_buyer_lamp)
+        .ok_or(AuctionHouseError::NumericalOverflow)?;
+
+    let token_account_data = SplAccount::unpack(&token_account.data.borrow())?;
+    if token_account_data.delegated_amount == 0 {
+        if seller.to_account_info().is_signer {
+            invoke(
+                &revoke(
+                    &token_program.key(),
+                    &token_account.key(),
+                    &seller.key(),
+                    &[],
+                )
+                .unwrap(),
+                &[
+                    token_program.to_account_info(),
+                    token_account.to_account_info(),
+                    seller.to_account_info(),
+                ],
+            )?;
+        }
 
         let curr_seller_lamp = seller_trade_state.lamports();
         **seller_trade_state.lamports.borrow_mut() = 0;
@@ -1364,14 +1376,6 @@ fn auctioneer_execute_sale_logic<'c, 'info>(
         **fee_payer.lamports.borrow_mut() = fee_payer
             .lamports()
             .checked_add(curr_seller_lamp)
-            .ok_or(AuctionHouseError::NumericalOverflow)?;
-
-        let curr_buyer_lamp = buyer_trade_state.lamports();
-        **buyer_trade_state.lamports.borrow_mut() = 0;
-        sol_memset(&mut *buyer_ts_data, 0, TRADE_STATE_SIZE);
-        **fee_payer.lamports.borrow_mut() = fee_payer
-            .lamports()
-            .checked_add(curr_buyer_lamp)
             .ok_or(AuctionHouseError::NumericalOverflow)?;
 
         if free_trade_state.lamports() > 0 {
@@ -1745,22 +1749,33 @@ fn execute_sale_logic<'c, 'info>(
         &[&program_as_signer_seeds],
     )?;
 
-    if token_account_data.amount == 0 {
-        invoke(
-            &revoke(
-                &token_program.key(),
-                &token_account.key(),
-                &seller.key(),
-                &[],
-            )
-            .unwrap(),
-            &[
-                token_program.to_account_info(),
-                token_account.to_account_info(),
-                seller.to_account_info(),
-            ],
-        )?;
+    // Close the buyer trade state account if the rest of execute sale was successful.
+    let curr_buyer_lamp = buyer_trade_state.lamports();
+    **buyer_trade_state.lamports.borrow_mut() = 0;
+    sol_memset(&mut *buyer_ts_data, 0, TRADE_STATE_SIZE);
+    **fee_payer.lamports.borrow_mut() = fee_payer
+        .lamports()
+        .checked_add(curr_buyer_lamp)
+        .ok_or(AuctionHouseError::NumericalOverflow)?;
 
+    let token_account_data = SplAccount::unpack(&token_account.data.borrow())?;
+    if token_account_data.delegated_amount == 0 {
+        if seller.to_account_info().is_signer {
+            invoke(
+                &revoke(
+                    &token_program.key(),
+                    &token_account.key(),
+                    &seller.key(),
+                    &[],
+                )
+                .unwrap(),
+                &[
+                    token_program.to_account_info(),
+                    token_account.to_account_info(),
+                    seller.to_account_info(),
+                ],
+            )?;
+        }
         let curr_seller_lamp = seller_trade_state.lamports();
         **seller_trade_state.lamports.borrow_mut() = 0;
         sol_memset(&mut *seller_ts_data, 0, TRADE_STATE_SIZE);
@@ -1784,14 +1799,6 @@ fn execute_sale_logic<'c, 'info>(
                 TRADE_STATE_SIZE,
             );
         }
-
-        let curr_buyer_lamp = buyer_trade_state.lamports();
-        **buyer_trade_state.lamports.borrow_mut() = 0;
-        sol_memset(&mut *buyer_ts_data, 0, TRADE_STATE_SIZE);
-        **fee_payer.lamports.borrow_mut() = fee_payer
-            .lamports()
-            .checked_add(curr_buyer_lamp)
-            .ok_or(AuctionHouseError::NumericalOverflow)?;
     };
 
     Ok(())

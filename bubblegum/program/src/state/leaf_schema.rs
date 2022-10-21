@@ -1,15 +1,28 @@
+use crate::state::BubblegumEventType;
 use anchor_lang::{prelude::*, solana_program::keccak};
+use borsh::{BorshDeserialize, BorshSerialize};
 use spl_account_compression::Node;
 
-#[event]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct LeafSchemaEvent {
+    pub event_type: BubblegumEventType,
     pub version: Version,
     pub schema: LeafSchema,
     pub leaf_hash: [u8; 32],
 }
 
-#[derive(AnchorDeserialize, AnchorSerialize, Clone, Copy, Debug)]
+impl LeafSchemaEvent {
+    pub fn new(version: Version, schema: LeafSchema, leaf_hash: [u8; 32]) -> Self {
+        Self {
+            event_type: BubblegumEventType::LeafSchemaEvent,
+            version,
+            schema,
+            leaf_hash,
+        }
+    }
+}
 
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub enum Version {
     V1,
 }
@@ -28,7 +41,7 @@ impl Version {
     }
 }
 
-#[derive(AnchorDeserialize, AnchorSerialize, Clone, Copy, Debug)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub enum LeafSchema {
     V1 {
         id: Pubkey,
@@ -97,11 +110,7 @@ impl LeafSchema {
     }
 
     pub fn to_event(&self) -> LeafSchemaEvent {
-        LeafSchemaEvent {
-            version: self.version(),
-            schema: *self,
-            leaf_hash: self.to_node(),
-        }
+        LeafSchemaEvent::new(self.version(), self.clone(), self.to_node())
     }
 
     pub fn to_node(&self) -> Node {

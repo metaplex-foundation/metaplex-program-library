@@ -8,7 +8,6 @@ use solana_program::pubkey::Pubkey;
 use solana_program_test::*;
 use solana_sdk::account::{AccountSharedData, WritableAccount};
 use solana_sdk::transaction::TransactionError;
-use solana_sdk::transport::TransportError;
 use solana_sdk::{signature::Keypair, signer::Signer};
 
 use crate::core::helpers::{prepare_nft, update_blockhash};
@@ -73,7 +72,7 @@ async fn fail_metadata_not_blank() {
     .await
     .unwrap_err()
     {
-        TransportError::TransactionError(TransactionError::InstructionError(
+        BanksClientError::TransactionError(TransactionError::InstructionError(
             0,
             InstructionError::Custom(err_num),
         )) => err_num,
@@ -156,7 +155,7 @@ async fn metadata_check_before_bot_tax() {
         .await
         .unwrap_err()
     {
-        TransportError::TransactionError(TransactionError::InstructionError(
+        BanksClientError::TransactionError(TransactionError::InstructionError(
             0,
             InstructionError::Custom(err_num),
         )) => err_num,

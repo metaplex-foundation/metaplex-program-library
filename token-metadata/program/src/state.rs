@@ -21,7 +21,7 @@ use {
     serde_with::{As, DisplayFromStr},
 };
 
-/// prefix used for PDAs to avoid certain collision attacks (https://en.wikipedia.org/wiki/Collision_attack#Chosen-prefix_collision_attack)
+/// prefix used for PDAs to avoid certain collision attacks (<https://en.wikipedia.org/wiki/Collision_attack#Chosen-prefix_collision_attack>)
 pub const PREFIX: &str = "metadata";
 
 /// Used in seeds to make Edition model pda address
@@ -97,6 +97,10 @@ pub trait TokenMetadataAccount: BorshDeserialize {
     fn size() -> usize;
 
     fn is_correct_account_type(data: &[u8], data_type: Key, data_size: usize) -> bool {
+        if data.is_empty() {
+            return false;
+        }
+
         let key: Option<Key> = Key::from_u8(data[0]);
         match key {
             Some(key) => {
@@ -204,7 +208,7 @@ impl DataV2 {
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, FromPrimitive)]
 pub enum UseMethod {
     Burn,
     Multiple,
@@ -230,7 +234,7 @@ pub struct Uses {
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, FromPrimitive)]
 pub enum TokenStandard {
     NonFungible,        // This is a master edition
     FungibleAsset,      // A token with metadata that can also have attrributes
@@ -903,7 +907,7 @@ impl EditionMarker {
             .ok_or(MetadataError::NumericalOverflowError)? as u32)
     }
 
-    fn get_index_and_mask(edition: u64) -> Result<(usize, u8), ProgramError> {
+    pub fn get_index_and_mask(edition: u64) -> Result<(usize, u8), ProgramError> {
         // How many editions off we are from edition at 0th index
         let offset_from_start = EditionMarker::get_edition_offset_from_starting_index(edition)?;
 

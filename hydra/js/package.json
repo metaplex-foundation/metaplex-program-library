@@ -12,9 +12,7 @@
     "postpublish": "git push origin && git push origin --tags",
     "build:docs": "typedoc",
     "build": "rimraf dist && tsc -p tsconfig.json",
-    "pretest": "yarn build && yarn amman:start",
     "test": "ts-mocha -p ./tsconfig.json -t 100000000 \"test/*.ts\"",
-    "posttest": "yarn build && yarn amman:stop",
     "api:gen": "DEBUG='(solita|rustbin):(info|error)' solita",
     "amman:start": "DEBUG='amman:(info|error)' amman start",
     "amman:stop": "amman stop",
@@ -55,7 +53,11 @@
     "debug": "^4.3.3"
   },
   "devDependencies": {
-    "@metaplex-foundation/amman": "^0.10.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "@typescript-eslint/eslint-plugin": "^5.4.0",
+    "@typescript-eslint/parser": "^5.4.0",
+    "@metaplex-foundation/amman": "^0.12.0",
     "@metaplex-foundation/solita": "^0.8.1",
     "@types/bn.js": "^5.1.0",
     "@types/chai": "^4.2.21",

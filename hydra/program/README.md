@@ -47,7 +47,7 @@ To build the latest token metadata program you will need to do the following:
 
 ```shell
 cd metaplex-program-library/token-metadata/program
-cargo build-bpf --bpf-out-dir ../../target/deploy/
+cargo build-bpf --bpf-out-dir ../../test-programs/
 ```
 
 Now your top level MPL target folder will have the token metadata `so` file that `amman` can find

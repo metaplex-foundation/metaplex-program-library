@@ -65,7 +65,13 @@ impl TestPackSet {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await
+        context
+            .banks_client
+            .process_transaction_with_commitment(
+                tx,
+                solana_sdk::commitment_config::CommitmentLevel::Confirmed,
+            )
+            .await
     }
 
     pub async fn clean_up(&self, context: &mut ProgramTestContext) -> transport::Result<()> {
@@ -78,7 +84,13 @@ impl TestPackSet {
             &[&context.payer],
             context.last_blockhash,
         );
-        context.banks_client.process_transaction(tx).await
+        context
+            .banks_client
+            .process_transaction_with_commitment(
+                tx,
+                solana_sdk::commitment_config::CommitmentLevel::Confirmed,
+            )
+            .await
     }
 
     pub async fn add_card(
@@ -122,7 +134,13 @@ impl TestPackSet {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await
+        context
+            .banks_client
+            .process_transaction_with_commitment(
+                tx,
+                solana_sdk::commitment_config::CommitmentLevel::Confirmed,
+            )
+            .await
     }
 
     pub async fn activate(&self, context: &mut ProgramTestContext) -> transport::Result<()> {
@@ -137,7 +155,13 @@ impl TestPackSet {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await
+        context
+            .banks_client
+            .process_transaction_with_commitment(
+                tx,
+                solana_sdk::commitment_config::CommitmentLevel::Confirmed,
+            )
+            .await
     }
 
     pub async fn deactivate(&self, context: &mut ProgramTestContext) -> transport::Result<()> {
@@ -152,7 +176,13 @@ impl TestPackSet {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await
+        context
+            .banks_client
+            .process_transaction_with_commitment(
+                tx,
+                solana_sdk::commitment_config::CommitmentLevel::Confirmed,
+            )
+            .await
     }
 
     pub async fn close(&self, context: &mut ProgramTestContext) -> transport::Result<()> {
@@ -167,7 +197,13 @@ impl TestPackSet {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await
+        context
+            .banks_client
+            .process_transaction_with_commitment(
+                tx,
+                solana_sdk::commitment_config::CommitmentLevel::Confirmed,
+            )
+            .await
     }
 
     pub async fn transfer_pack_authority(
@@ -187,7 +223,13 @@ impl TestPackSet {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await
+        context
+            .banks_client
+            .process_transaction_with_commitment(
+                tx,
+                solana_sdk::commitment_config::CommitmentLevel::Confirmed,
+            )
+            .await
     }
 
     pub async fn edit(
@@ -215,7 +257,13 @@ impl TestPackSet {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await
+        context
+            .banks_client
+            .process_transaction_with_commitment(
+                tx,
+                solana_sdk::commitment_config::CommitmentLevel::Confirmed,
+            )
+            .await
     }
 
     pub async fn delete_card(
@@ -240,7 +288,13 @@ impl TestPackSet {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await
+        context
+            .banks_client
+            .process_transaction_with_commitment(
+                tx,
+                solana_sdk::commitment_config::CommitmentLevel::Confirmed,
+            )
+            .await
     }
 
     pub async fn delete(
@@ -260,7 +314,13 @@ impl TestPackSet {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await
+        context
+            .banks_client
+            .process_transaction_with_commitment(
+                tx,
+                solana_sdk::commitment_config::CommitmentLevel::Confirmed,
+            )
+            .await
     }
 
     pub async fn delete_voucher(
@@ -282,7 +342,13 @@ impl TestPackSet {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await
+        context
+            .banks_client
+            .process_transaction_with_commitment(
+                tx,
+                solana_sdk::commitment_config::CommitmentLevel::Confirmed,
+            )
+            .await
     }
 
     pub async fn add_voucher(
@@ -326,7 +392,13 @@ impl TestPackSet {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await
+        context
+            .banks_client
+            .process_transaction_with_commitment(
+                tx,
+                solana_sdk::commitment_config::CommitmentLevel::Confirmed,
+            )
+            .await
     }
 
     pub async fn request_card_for_redeem(
@@ -355,7 +427,13 @@ impl TestPackSet {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await
+        context
+            .banks_client
+            .process_transaction_with_commitment(
+                tx,
+                solana_sdk::commitment_config::CommitmentLevel::Confirmed,
+            )
+            .await
     }
 
     pub async fn request_card_for_redeem_fake_voucher(
@@ -389,7 +467,13 @@ impl TestPackSet {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await
+        context
+            .banks_client
+            .process_transaction_with_commitment(
+                tx,
+                solana_sdk::commitment_config::CommitmentLevel::Confirmed,
+            )
+            .await
     }
 
     pub async fn claim_pack(
@@ -469,6 +553,12 @@ impl TestPackSet {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await
+        context
+            .banks_client
+            .process_transaction_with_commitment(
+                tx,
+                solana_sdk::commitment_config::CommitmentLevel::Confirmed,
+            )
+            .await
     }
 }
