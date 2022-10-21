@@ -246,6 +246,67 @@ impl Metadata {
         context.banks_client.process_transaction(tx).await
     }
 
+    pub async fn create_v3_no_freeze_auth(
+        &self,
+        context: &mut ProgramTestContext,
+    ) -> Result<(), BanksClientError> {
+        let name = String::from("Test");
+        let symbol = String::from("TEST");
+        let uri = String::from("https://test.com");
+        let creators = vec![Creator {
+            address: context.payer.pubkey(),
+            verified: true,
+            share: 100,
+        }];
+        let sfbp = 100;
+        let is_mutable = true;
+
+        // Mint created with no freeze authority set.
+        create_mint(context, &self.mint, &context.payer.pubkey(), None, 0).await?;
+        create_token_account(
+            context,
+            &self.token,
+            &self.mint.pubkey(),
+            &context.payer.pubkey(),
+        )
+        .await?;
+        mint_tokens(
+            context,
+            &self.mint.pubkey(),
+            &self.token.pubkey(),
+            1,
+            &context.payer.pubkey(),
+            None,
+        )
+        .await?;
+
+        let tx = Transaction::new_signed_with_payer(
+            &[instruction::create_metadata_accounts_v3(
+                id(),
+                self.pubkey,
+                self.mint.pubkey(),
+                context.payer.pubkey(),
+                context.payer.pubkey(),
+                context.payer.pubkey(),
+                name,
+                symbol,
+                uri,
+                Some(creators),
+                sfbp,
+                false,
+                is_mutable,
+                None,
+                None,
+                None,
+            )],
+            Some(&context.payer.pubkey()),
+            &[&context.payer],
+            context.last_blockhash,
+        );
+
+        context.banks_client.process_transaction(tx).await
+    }
+
     pub async fn create_v3_default(
         &self,
         context: &mut ProgramTestContext,
