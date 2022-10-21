@@ -3,7 +3,7 @@ name: Build and Release
 on:
   workflow_dispatch:
   push:
-    branches: "*"
+    branches: "**"
     tags:
       - "v*.*.*"
 

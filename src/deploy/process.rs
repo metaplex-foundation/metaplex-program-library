@@ -119,6 +119,14 @@ pub async fn process_deploy(args: DeployArgs) -> Result<()> {
             style(format!("[1/{}]", total_steps)).bold().dim(),
             CANDY_EMOJI
         );
+
+        // Sanity check that all items in the cache are set to 'false', in case
+        // a user didn't clear them after a previous deploy.
+        cache
+            .items
+            .iter_mut()
+            .for_each(|(_, item)| item.on_chain = false);
+        cache.sync_file()?;
     } else {
         println!(
             "{} {}Loading candy machine",
@@ -159,6 +167,14 @@ pub async fn process_deploy(args: DeployArgs) -> Result<()> {
                     WARNING_EMOJI
                 );
                 println!("{} Creating candy machine", CANDY_EMOJI);
+
+                // We set cache items onChain values to false, in case they are set to true
+                // from a previous run. This ensures the config items are actually uploaded.
+                cache
+                    .items
+                    .iter_mut()
+                    .for_each(|(_, item)| item.on_chain = false);
+                cache.sync_file()?;
 
                 candy_pubkey = Pubkey::default();
             }
