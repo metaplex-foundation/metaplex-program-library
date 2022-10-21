@@ -2269,12 +2269,6 @@
           "desc": "Token account, owned by TM, destination for the new attribute"
         },
         {
-          "name": "attributeMetadata",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "Metadata account of the new attribute"
-        },
-        {
           "name": "escrowMint",
           "isMut": false,
           "isSigner": false,

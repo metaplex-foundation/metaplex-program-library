@@ -569,14 +569,13 @@ pub enum MetadataInstruction {
     #[account(2, name="attribute_mint", desc="Mint account for the new attribute")]
     #[account(3, writable, name="attribute_src", desc="Token account source for the new attribute")]
     #[account(4, writable, name="attribute_dst", desc="Token account, owned by TM, destination for the new attribute")]
-    #[account(5, name="attribute_metadata", desc="Metadata account of the new attribute")]
-    #[account(6, name="escrow_mint", desc="Mint account that the escrow is attached")]
-    #[account(7, name="escrow_account", desc="Token account that holds the token the escrow is attached to")]
-    #[account(8, name="system_program", desc="System program")]
-    #[account(9, name="ata_program", desc="Associated Token program")]
-    #[account(10, name="token_program", desc="Token program")]
-    #[account(11, name="rent", desc="Rent info")]
-    #[account(12, optional, signer, name="authority", desc="Authority/creator of the escrow account")]
+    #[account(5, name="escrow_mint", desc="Mint account that the escrow is attached")]
+    #[account(6, name="escrow_account", desc="Token account that holds the token the escrow is attached to")]
+    #[account(7, name="system_program", desc="System program")]
+    #[account(8, name="ata_program", desc="Associated Token program")]
+    #[account(9, name="token_program", desc="Token program")]
+    #[account(10, name="rent", desc="Rent info")]
+    #[account(11, optional, signer, name="authority", desc="Authority/creator of the escrow account")]
     TransferOutOfEscrow(TransferOutOfEscrowArgs),
 }
 

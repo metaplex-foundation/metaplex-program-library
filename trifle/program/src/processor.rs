@@ -502,7 +502,6 @@ fn transfer_out(
         *attribute_mint.key,
         *attribute_src_token_account.key,
         *attribute_dst_token_account.key,
-        *attribute_metadata.key,
         *escrow_mint.key,
         *escrow_token_account.key,
         Some(*trifle_account.key),
