@@ -457,27 +457,6 @@ pub enum MetadataError {
     #[error("Item is already unverified.")]
     AlreadyUnverified,
 
-<<<<<<< HEAD
-    /// 116 - Must be Update Authority to set the Constraint Model.
-    #[error("Must be Update Authority to set the Constraint Model.")]
-    MustBeUpdateAuthToSetModel,
-
-    /// 117 - Missing EscrowConstraintModel.
-    #[error("Missing EscrowConstraintModel.")]
-    MissingEscrowConstraintModel,
-
-    /// 118 - Invalid EscrowConstraintModel.
-    #[error("Invalid EscrowConstraintModel.")]
-    InvalidEscrowConstraintModel,
-
-    /// 119 - Escrow Constraint Violation
-    #[error("Escrow Constraint Violation")]
-    EscrowConstraintViolation,
-
-    /// 120 - Invalid Escrow Constraint Index
-    #[error("Invalid Escrow Constraint Index")]
-    InvalidEscrowConstraintIndex,
-=======
     /// 116 - Not a Print Edition
     #[error("This edition is not a Print Edition")]
     NotAPrintEdition,
@@ -509,7 +488,14 @@ pub enum MetadataError {
     /// 123 - Must unverify before migrating collections.
     #[error("Must unverify before migrating collections.")]
     MustUnverify,
->>>>>>> af9b3e17813d645b6ebb3839dec46ace5a31b81f
+    
+    /// 124 - Invalid Escrow Account Bump Seed
+    #[error("Invalid Escrow Account Bump Seed")]
+    InvalidEscrowBumpSeed,
+
+    /// 125 - Must be Update Authority on Escrow Account
+    #[error("Must be Update Authority on Escrow Account")]
+    MustBeEscrowUpdateAuthority,
 }
 
 impl PrintProgramError for MetadataError {

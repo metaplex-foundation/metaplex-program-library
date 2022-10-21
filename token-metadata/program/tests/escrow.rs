@@ -7,7 +7,7 @@ use solana_sdk::{signer::Signer, transaction::Transaction};
 use utils::*;
 
 mod escrow {
-    use mpl_token_metadata::escrow::find_escrow_account;
+    use mpl_token_metadata::{escrow::find_escrow_account, state::EscrowAuthority};
     use solana_program::program_pack::Pack;
 
     use super::*;
@@ -41,7 +41,10 @@ mod escrow {
             .await
             .unwrap();
 
-        let escrow_address = find_escrow_account(&parent_test_metadata.mint.pubkey());
+        let escrow_address = find_escrow_account(
+            &parent_test_metadata.mint.pubkey(),
+            &EscrowAuthority::TokenOwner,
+        );
         print!("\nEscrow Address: {:#?}\n", escrow_address);
 
         let ix0 = mpl_token_metadata::escrow::create_escrow_account(
@@ -49,8 +52,10 @@ mod escrow {
             escrow_address.0,
             parent_test_metadata.pubkey,
             parent_test_metadata.mint.pubkey(),
+            parent_test_metadata.token.pubkey(),
             parent_test_master_edition.pubkey,
             context.payer.pubkey(),
+            None,
         );
         println!("{:?} {:?}", &context.payer, &parent_test_metadata.token);
 
@@ -167,9 +172,9 @@ mod escrow {
             attribute_test_metadata.mint.pubkey(),
             escrow_attribute_token_account,
             payer_attribute_token_account,
-            attribute_test_metadata.pubkey,
             parent_test_metadata.mint.pubkey(),
             parent_test_metadata.token.pubkey(),
+            None,
             1,
         );
         println!("{:?} {:?}", &context.payer, &attribute_test_metadata.token);
@@ -196,12 +201,7 @@ mod escrow {
             try_from_slice_unchecked(&escrow_account.data).unwrap();
 
         print!("\n{:#?}\n", escrow);
-        let attribute_src_account =
-            get_account(&mut context, &escrow_attribute_token_account).await;
-        let attribute_src =
-            spl_token::state::Account::unpack_from_slice(&attribute_src_account.data).unwrap();
         println!("attribute_src:{:#?}", attribute_src);
-        assert!(attribute_src.amount == 0);
         let attribute_dst_account = get_account(&mut context, &payer_attribute_token_account).await;
         let attribute_dst =
             spl_token::state::Account::unpack_from_slice(&attribute_dst_account.data).unwrap();
