@@ -1,18 +1,20 @@
 use std::str::FromStr;
 
+use crate::{
+    cache::load_cache,
+    candy_machine::{get_candy_machine_state, CANDY_MACHINE_ID},
+    common::*,
+    config::{
+        data::{ConfigData, *},
+        parser::get_config_data,
+    },
+    utils::{assert_correct_authority, spinner_with_style},
+};
 use anchor_client::solana_sdk::pubkey::Pubkey;
 use anyhow::Result;
 use console::style;
 use mpl_candy_machine_core::{
     accounts as nft_accounts, instruction as nft_instruction, CandyMachineData,
-};
-
-use crate::{
-    cache::load_cache,
-    candy_machine::{get_candy_machine_state, CANDY_MACHINE_ID},
-    common::*,
-    config::{data::ConfigData, parser::get_config_data},
-    utils::{assert_correct_authority, spinner_with_style},
 };
 
 pub struct UpdateArgs {
