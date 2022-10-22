@@ -8,28 +8,14 @@
 import * as beet from '@metaplex-foundation/beet';
 export type HiddenSettings = {
   name: string;
-<<<<<<< HEAD:trifle/js/src/generated/types/CreateEscrowConstraintModelAccountArgs.ts
-  schemaUri: beet.COption<string>;
-=======
   uri: string;
   hash: number[] /* size: 32 */;
->>>>>>> tm_escrow:candy-machine-core/js/src/generated/types/HiddenSettings.ts
 };
 
 /**
  * @category userTypes
  * @category generated
  */
-<<<<<<< HEAD:trifle/js/src/generated/types/CreateEscrowConstraintModelAccountArgs.ts
-export const createEscrowConstraintModelAccountArgsBeet =
-  new beet.FixableBeetArgsStruct<CreateEscrowConstraintModelAccountArgs>(
-    [
-      ['name', beet.utf8String],
-      ['schemaUri', beet.coption(beet.utf8String)],
-    ],
-    'CreateEscrowConstraintModelAccountArgs',
-  );
-=======
 export const hiddenSettingsBeet = new beet.FixableBeetArgsStruct<HiddenSettings>(
   [
     ['name', beet.utf8String],
@@ -38,4 +24,3 @@ export const hiddenSettingsBeet = new beet.FixableBeetArgsStruct<HiddenSettings>
   ],
   'HiddenSettings',
 );
->>>>>>> tm_escrow:candy-machine-core/js/src/generated/types/HiddenSettings.ts
