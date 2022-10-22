@@ -50,7 +50,7 @@
     "debug": "^4.3.3"
   },
   "devDependencies": {
-    "@metaplex-foundation/solita": "^0.16.0",
+    "@metaplex-foundation/solita": "0.19.0",
     "@types/debug": "^4.1.7",
     "@types/tape": "^4.13.2",
     "cpr": "^3.0.1",

@@ -16,7 +16,7 @@ test-bpf = []
 
 [dependencies]
 borsh = "0.9.3"
-shank = "0.0.9"
+shank = "0.0.10"
 solana-program = "1.10.40"
 spl-token = { version = "3.5.0", features = ["no-entrypoint"] }
 spl-associated-token-account = { version = "1.0.3", features = [
