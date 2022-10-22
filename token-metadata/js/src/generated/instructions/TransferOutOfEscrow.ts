@@ -40,15 +40,14 @@ export const TransferOutOfEscrowStruct = new beet.BeetArgsStruct<
 /**
  * Accounts required by the _TransferOutOfEscrow_ instruction
  *
- * @property [_writable_] escrow Escrow account
+ * @property [] escrow Escrow account
  * @property [_writable_, **signer**] payer Wallet paying for the transaction and new account
  * @property [] attributeMint Mint account for the new attribute
  * @property [_writable_] attributeSrc Token account source for the new attribute
  * @property [_writable_] attributeDst Token account, owned by TM, destination for the new attribute
- * @property [] attributeMetadata Metadata account of the new attribute
  * @property [] escrowMint Mint account that the escrow is attached
  * @property [] escrowAccount Token account that holds the token the escrow is attached to
- * @property [] constraintModel (optional) The constraint model to check against
+ * @property [**signer**] authority (optional) Authority/creator of the escrow account
  * @category Instructions
  * @category TransferOutOfEscrow
  * @category generated
@@ -59,14 +58,13 @@ export type TransferOutOfEscrowInstructionAccounts = {
   attributeMint: web3.PublicKey;
   attributeSrc: web3.PublicKey;
   attributeDst: web3.PublicKey;
-  attributeMetadata: web3.PublicKey;
   escrowMint: web3.PublicKey;
   escrowAccount: web3.PublicKey;
   systemProgram?: web3.PublicKey;
   ataProgram?: web3.PublicKey;
   tokenProgram?: web3.PublicKey;
   rent?: web3.PublicKey;
-  constraintModel?: web3.PublicKey;
+  authority?: web3.PublicKey;
 };
 
 export const transferOutOfEscrowInstructionDiscriminator = 40;
@@ -93,7 +91,7 @@ export function createTransferOutOfEscrowInstruction(
   const keys: web3.AccountMeta[] = [
     {
       pubkey: accounts.escrow,
-      isWritable: true,
+      isWritable: false,
       isSigner: false,
     },
     {
@@ -114,11 +112,6 @@ export function createTransferOutOfEscrowInstruction(
     {
       pubkey: accounts.attributeDst,
       isWritable: true,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.attributeMetadata,
-      isWritable: false,
       isSigner: false,
     },
     {
@@ -153,11 +146,11 @@ export function createTransferOutOfEscrowInstruction(
     },
   ];
 
-  if (accounts.constraintModel != null) {
+  if (accounts.authority != null) {
     keys.push({
-      pubkey: accounts.constraintModel,
+      pubkey: accounts.authority,
       isWritable: false,
-      isSigner: false,
+      isSigner: true,
     });
   }
 

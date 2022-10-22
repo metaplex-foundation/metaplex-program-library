@@ -6,9 +6,10 @@
  */
 
 import * as web3 from '@solana/web3.js';
-import * as beet from '@metaplex-foundation/beet';
 import * as beetSolana from '@metaplex-foundation/beet-solana';
+import * as beet from '@metaplex-foundation/beet';
 import { Key, keyBeet } from '../types/Key';
+import { EscrowAuthority, escrowAuthorityBeet } from '../types/EscrowAuthority';
 
 /**
  * Arguments used to create {@link TokenOwnedEscrow}
@@ -18,9 +19,8 @@ import { Key, keyBeet } from '../types/Key';
 export type TokenOwnedEscrowArgs = {
   key: Key;
   baseToken: web3.PublicKey;
-  tokens: beet.COption<web3.PublicKey>[];
-  delegates: web3.PublicKey[];
-  model: beet.COption<web3.PublicKey>;
+  authority: EscrowAuthority;
+  bump: number;
 };
 /**
  * Holds the data for the {@link TokenOwnedEscrow} Account and provides de/serialization
@@ -33,16 +33,15 @@ export class TokenOwnedEscrow implements TokenOwnedEscrowArgs {
   private constructor(
     readonly key: Key,
     readonly baseToken: web3.PublicKey,
-    readonly tokens: beet.COption<web3.PublicKey>[],
-    readonly delegates: web3.PublicKey[],
-    readonly model: beet.COption<web3.PublicKey>,
+    readonly authority: EscrowAuthority,
+    readonly bump: number,
   ) {}
 
   /**
    * Creates a {@link TokenOwnedEscrow} instance from the provided args.
    */
   static fromArgs(args: TokenOwnedEscrowArgs) {
-    return new TokenOwnedEscrow(args.key, args.baseToken, args.tokens, args.delegates, args.model);
+    return new TokenOwnedEscrow(args.key, args.baseToken, args.authority, args.bump);
   }
 
   /**
@@ -140,9 +139,8 @@ export class TokenOwnedEscrow implements TokenOwnedEscrowArgs {
     return {
       key: 'Key.' + Key[this.key],
       baseToken: this.baseToken.toBase58(),
-      tokens: this.tokens,
-      delegates: this.delegates,
-      model: this.model,
+      authority: this.authority.__kind,
+      bump: this.bump,
     };
   }
 }
@@ -158,9 +156,8 @@ export const tokenOwnedEscrowBeet = new beet.FixableBeetStruct<
   [
     ['key', keyBeet],
     ['baseToken', beetSolana.publicKey],
-    ['tokens', beet.array(beet.coption(beetSolana.publicKey))],
-    ['delegates', beet.array(beetSolana.publicKey)],
-    ['model', beet.coption(beetSolana.publicKey)],
+    ['authority', escrowAuthorityBeet],
+    ['bump', beet.u8],
   ],
   TokenOwnedEscrow.fromArgs,
   'TokenOwnedEscrow',

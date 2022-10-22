@@ -2503,24 +2503,11 @@ createErrorFromCodeLookup.set(0x73, () => new AlreadyUnverifiedError());
 createErrorFromNameLookup.set('AlreadyUnverified', () => new AlreadyUnverifiedError());
 
 /**
-<<<<<<< HEAD
- * MustBeUpdateAuthToSetModel: 'Must be Update Authority to set the Constraint Model.'
-=======
  * NotAPrintEdition: 'This edition is not a Print Edition'
->>>>>>> af9b3e17813d645b6ebb3839dec46ace5a31b81f
  *
  * @category Errors
  * @category generated
  */
-<<<<<<< HEAD
-export class MustBeUpdateAuthToSetModelError extends Error {
-  readonly code: number = 0x74;
-  readonly name: string = 'MustBeUpdateAuthToSetModel';
-  constructor() {
-    super('Must be Update Authority to set the Constraint Model.');
-    if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, MustBeUpdateAuthToSetModelError);
-=======
 export class NotAPrintEditionError extends Error {
   readonly code: number = 0x74;
   readonly name: string = 'NotAPrintEdition';
@@ -2528,40 +2515,19 @@ export class NotAPrintEditionError extends Error {
     super('This edition is not a Print Edition');
     if (typeof Error.captureStackTrace === 'function') {
       Error.captureStackTrace(this, NotAPrintEditionError);
->>>>>>> af9b3e17813d645b6ebb3839dec46ace5a31b81f
     }
   }
 }
 
-<<<<<<< HEAD
-createErrorFromCodeLookup.set(0x74, () => new MustBeUpdateAuthToSetModelError());
-createErrorFromNameLookup.set(
-  'MustBeUpdateAuthToSetModel',
-  () => new MustBeUpdateAuthToSetModelError(),
-);
-
-/**
- * MissingEscrowConstraintModel: 'Missing EscrowConstraintModel.'
-=======
 createErrorFromCodeLookup.set(0x74, () => new NotAPrintEditionError());
 createErrorFromNameLookup.set('NotAPrintEdition', () => new NotAPrintEditionError());
 
 /**
  * InvalidMasterEdition: 'Invalid Master Edition'
->>>>>>> af9b3e17813d645b6ebb3839dec46ace5a31b81f
  *
  * @category Errors
  * @category generated
  */
-<<<<<<< HEAD
-export class MissingEscrowConstraintModelError extends Error {
-  readonly code: number = 0x75;
-  readonly name: string = 'MissingEscrowConstraintModel';
-  constructor() {
-    super('Missing EscrowConstraintModel.');
-    if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, MissingEscrowConstraintModelError);
-=======
 export class InvalidMasterEditionError extends Error {
   readonly code: number = 0x75;
   readonly name: string = 'InvalidMasterEdition';
@@ -2569,40 +2535,19 @@ export class InvalidMasterEditionError extends Error {
     super('Invalid Master Edition');
     if (typeof Error.captureStackTrace === 'function') {
       Error.captureStackTrace(this, InvalidMasterEditionError);
->>>>>>> af9b3e17813d645b6ebb3839dec46ace5a31b81f
     }
   }
 }
 
-<<<<<<< HEAD
-createErrorFromCodeLookup.set(0x75, () => new MissingEscrowConstraintModelError());
-createErrorFromNameLookup.set(
-  'MissingEscrowConstraintModel',
-  () => new MissingEscrowConstraintModelError(),
-);
-
-/**
- * InvalidEscrowConstraintModel: 'Invalid EscrowConstraintModel.'
-=======
 createErrorFromCodeLookup.set(0x75, () => new InvalidMasterEditionError());
 createErrorFromNameLookup.set('InvalidMasterEdition', () => new InvalidMasterEditionError());
 
 /**
  * InvalidPrintEdition: 'Invalid Print Edition'
->>>>>>> af9b3e17813d645b6ebb3839dec46ace5a31b81f
  *
  * @category Errors
  * @category generated
  */
-<<<<<<< HEAD
-export class InvalidEscrowConstraintModelError extends Error {
-  readonly code: number = 0x76;
-  readonly name: string = 'InvalidEscrowConstraintModel';
-  constructor() {
-    super('Invalid EscrowConstraintModel.');
-    if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, InvalidEscrowConstraintModelError);
-=======
 export class InvalidPrintEditionError extends Error {
   readonly code: number = 0x76;
   readonly name: string = 'InvalidPrintEdition';
@@ -2650,21 +2595,10 @@ export class ReservationListDeprecatedError extends Error {
     super('Reservation List is Deprecated');
     if (typeof Error.captureStackTrace === 'function') {
       Error.captureStackTrace(this, ReservationListDeprecatedError);
->>>>>>> af9b3e17813d645b6ebb3839dec46ace5a31b81f
     }
   }
 }
 
-<<<<<<< HEAD
-createErrorFromCodeLookup.set(0x76, () => new InvalidEscrowConstraintModelError());
-createErrorFromNameLookup.set(
-  'InvalidEscrowConstraintModel',
-  () => new InvalidEscrowConstraintModelError(),
-);
-
-/**
- * EscrowConstraintViolation: 'Escrow Constraint Violation'
-=======
 createErrorFromCodeLookup.set(0x78, () => new ReservationListDeprecatedError());
 createErrorFromNameLookup.set(
   'ReservationListDeprecated',
@@ -2673,20 +2607,10 @@ createErrorFromNameLookup.set(
 
 /**
  * PrintEditionDoesNotMatchMasterEdition: 'Print Edition does not match Master Edition'
->>>>>>> af9b3e17813d645b6ebb3839dec46ace5a31b81f
  *
  * @category Errors
  * @category generated
  */
-<<<<<<< HEAD
-export class EscrowConstraintViolationError extends Error {
-  readonly code: number = 0x77;
-  readonly name: string = 'EscrowConstraintViolation';
-  constructor() {
-    super('Escrow Constraint Violation');
-    if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, EscrowConstraintViolationError);
-=======
 export class PrintEditionDoesNotMatchMasterEditionError extends Error {
   readonly code: number = 0x79;
   readonly name: string = 'PrintEditionDoesNotMatchMasterEdition';
@@ -2694,21 +2618,10 @@ export class PrintEditionDoesNotMatchMasterEditionError extends Error {
     super('Print Edition does not match Master Edition');
     if (typeof Error.captureStackTrace === 'function') {
       Error.captureStackTrace(this, PrintEditionDoesNotMatchMasterEditionError);
->>>>>>> af9b3e17813d645b6ebb3839dec46ace5a31b81f
     }
   }
 }
 
-<<<<<<< HEAD
-createErrorFromCodeLookup.set(0x77, () => new EscrowConstraintViolationError());
-createErrorFromNameLookup.set(
-  'EscrowConstraintViolation',
-  () => new EscrowConstraintViolationError(),
-);
-
-/**
- * InvalidEscrowConstraintIndex: 'Invalid Escrow Constraint Index'
-=======
 createErrorFromCodeLookup.set(0x79, () => new PrintEditionDoesNotMatchMasterEditionError());
 createErrorFromNameLookup.set(
   'PrintEditionDoesNotMatchMasterEdition',
@@ -2717,20 +2630,10 @@ createErrorFromNameLookup.set(
 
 /**
  * EditionNumberGreaterThanMaxSupply: 'Edition Number greater than max supply'
->>>>>>> af9b3e17813d645b6ebb3839dec46ace5a31b81f
  *
  * @category Errors
  * @category generated
  */
-<<<<<<< HEAD
-export class InvalidEscrowConstraintIndexError extends Error {
-  readonly code: number = 0x78;
-  readonly name: string = 'InvalidEscrowConstraintIndex';
-  constructor() {
-    super('Invalid Escrow Constraint Index');
-    if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, InvalidEscrowConstraintIndexError);
-=======
 export class EditionNumberGreaterThanMaxSupplyError extends Error {
   readonly code: number = 0x7a;
   readonly name: string = 'EditionNumberGreaterThanMaxSupply';
@@ -2738,20 +2641,10 @@ export class EditionNumberGreaterThanMaxSupplyError extends Error {
     super('Edition Number greater than max supply');
     if (typeof Error.captureStackTrace === 'function') {
       Error.captureStackTrace(this, EditionNumberGreaterThanMaxSupplyError);
->>>>>>> af9b3e17813d645b6ebb3839dec46ace5a31b81f
     }
   }
 }
 
-<<<<<<< HEAD
-createErrorFromCodeLookup.set(0x78, () => new InvalidEscrowConstraintIndexError());
-createErrorFromNameLookup.set(
-  'InvalidEscrowConstraintIndex',
-  () => new InvalidEscrowConstraintIndexError(),
-);
-
-/**
-=======
 createErrorFromCodeLookup.set(0x7a, () => new EditionNumberGreaterThanMaxSupplyError());
 createErrorFromNameLookup.set(
   'EditionNumberGreaterThanMaxSupply',
@@ -2779,7 +2672,86 @@ createErrorFromCodeLookup.set(0x7b, () => new MustUnverifyError());
 createErrorFromNameLookup.set('MustUnverify', () => new MustUnverifyError());
 
 /**
->>>>>>> af9b3e17813d645b6ebb3839dec46ace5a31b81f
+ * InvalidEscrowBumpSeed: 'Invalid Escrow Account Bump Seed'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidEscrowBumpSeedError extends Error {
+  readonly code: number = 0x7c;
+  readonly name: string = 'InvalidEscrowBumpSeed';
+  constructor() {
+    super('Invalid Escrow Account Bump Seed');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidEscrowBumpSeedError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x7c, () => new InvalidEscrowBumpSeedError());
+createErrorFromNameLookup.set('InvalidEscrowBumpSeed', () => new InvalidEscrowBumpSeedError());
+
+/**
+ * MustBeEscrowAuthority: 'Must Escrow Authority'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MustBeEscrowAuthorityError extends Error {
+  readonly code: number = 0x7d;
+  readonly name: string = 'MustBeEscrowAuthority';
+  constructor() {
+    super('Must Escrow Authority');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MustBeEscrowAuthorityError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x7d, () => new MustBeEscrowAuthorityError());
+createErrorFromNameLookup.set('MustBeEscrowAuthority', () => new MustBeEscrowAuthorityError());
+
+/**
+ * InvalidSystemProgram: 'Invalid System Program'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidSystemProgramError extends Error {
+  readonly code: number = 0x7e;
+  readonly name: string = 'InvalidSystemProgram';
+  constructor() {
+    super('Invalid System Program');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidSystemProgramError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x7e, () => new InvalidSystemProgramError());
+createErrorFromNameLookup.set('InvalidSystemProgram', () => new InvalidSystemProgramError());
+
+/**
+ * MustBeNonFungible: 'Must be a Non Fungible Token'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MustBeNonFungibleError extends Error {
+  readonly code: number = 0x7f;
+  readonly name: string = 'MustBeNonFungible';
+  constructor() {
+    super('Must be a Non Fungible Token');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MustBeNonFungibleError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x7f, () => new MustBeNonFungibleError());
+createErrorFromNameLookup.set('MustBeNonFungible', () => new MustBeNonFungibleError());
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated
