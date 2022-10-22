@@ -50,6 +50,9 @@ export const TransferInStruct = new beet.FixableBeetArgsStruct<
  * @property [_writable_] attributeMetadata (optional) The metadata account of the attribute token
  * @property [_writable_] attributeEdition (optional) The edition account of the attribute token
  * @property [_writable_] attributeCollectionMetadata (optional) The collection metadata account of the attribute token
+ * @property [] splToken Token program
+ * @property [] splAssociatedTokenAccount Associated token account program
+ * @property [] tokenMetadataProgram Token Metadata program
  * @category Instructions
  * @category TransferIn
  * @category generated
@@ -69,12 +72,20 @@ export type TransferInInstructionAccounts = {
   attributeMetadata?: web3.PublicKey;
   attributeEdition?: web3.PublicKey;
   attributeCollectionMetadata?: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
+  splToken: web3.PublicKey;
+  splAssociatedTokenAccount: web3.PublicKey;
+  tokenMetadataProgram: web3.PublicKey;
+  rent?: web3.PublicKey;
 };
 
 export const transferInInstructionDiscriminator = 2;
 
 /**
  * Creates a _TransferIn_ instruction.
+ *
+ * Optional accounts that are not provided default to the program ID since
+ * this was indicated in the IDL from which this instruction was generated.
  *
  * @param accounts that will be accessed while the instruction is processed
  * @param args to provide as instruction data to the program
@@ -118,158 +129,77 @@ export function createTransferInInstruction(
       isWritable: false,
       isSigner: false,
     },
-  ];
-
-  if (accounts.escrowMint != null) {
-    keys.push({
-      pubkey: accounts.escrowMint,
+    {
+      pubkey: accounts.escrowMint ?? programId,
       isWritable: false,
       isSigner: false,
-    });
-  }
-
-  if (accounts.escrowToken != null) {
-    if (accounts.escrowMint == null) {
-      throw new Error(
-        "When providing 'escrowToken' then 'accounts.escrowMint' need(s) to be provided as well.",
-      );
-    }
-    keys.push({
-      pubkey: accounts.escrowToken,
-      isWritable: true,
+    },
+    {
+      pubkey: accounts.escrowToken ?? programId,
+      isWritable: accounts.escrowToken != null,
       isSigner: false,
-    });
-  }
-
-  if (accounts.escrowEdition != null) {
-    if (accounts.escrowMint == null || accounts.escrowToken == null) {
-      throw new Error(
-        "When providing 'escrowEdition' then 'accounts.escrowMint', 'accounts.escrowToken' need(s) to be provided as well.",
-      );
-    }
-    keys.push({
-      pubkey: accounts.escrowEdition,
-      isWritable: true,
+    },
+    {
+      pubkey: accounts.escrowEdition ?? programId,
+      isWritable: accounts.escrowEdition != null,
       isSigner: false,
-    });
-  }
-
-  if (accounts.attributeMint != null) {
-    if (
-      accounts.escrowMint == null ||
-      accounts.escrowToken == null ||
-      accounts.escrowEdition == null
-    ) {
-      throw new Error(
-        "When providing 'attributeMint' then 'accounts.escrowMint', 'accounts.escrowToken', 'accounts.escrowEdition' need(s) to be provided as well.",
-      );
-    }
-    keys.push({
-      pubkey: accounts.attributeMint,
-      isWritable: true,
+    },
+    {
+      pubkey: accounts.attributeMint ?? programId,
+      isWritable: accounts.attributeMint != null,
       isSigner: false,
-    });
-  }
-
-  if (accounts.attributeSrcToken != null) {
-    if (
-      accounts.escrowMint == null ||
-      accounts.escrowToken == null ||
-      accounts.escrowEdition == null ||
-      accounts.attributeMint == null
-    ) {
-      throw new Error(
-        "When providing 'attributeSrcToken' then 'accounts.escrowMint', 'accounts.escrowToken', 'accounts.escrowEdition', 'accounts.attributeMint' need(s) to be provided as well.",
-      );
-    }
-    keys.push({
-      pubkey: accounts.attributeSrcToken,
-      isWritable: true,
+    },
+    {
+      pubkey: accounts.attributeSrcToken ?? programId,
+      isWritable: accounts.attributeSrcToken != null,
       isSigner: false,
-    });
-  }
-
-  if (accounts.attributeDstToken != null) {
-    if (
-      accounts.escrowMint == null ||
-      accounts.escrowToken == null ||
-      accounts.escrowEdition == null ||
-      accounts.attributeMint == null ||
-      accounts.attributeSrcToken == null
-    ) {
-      throw new Error(
-        "When providing 'attributeDstToken' then 'accounts.escrowMint', 'accounts.escrowToken', 'accounts.escrowEdition', 'accounts.attributeMint', 'accounts.attributeSrcToken' need(s) to be provided as well.",
-      );
-    }
-    keys.push({
-      pubkey: accounts.attributeDstToken,
-      isWritable: true,
+    },
+    {
+      pubkey: accounts.attributeDstToken ?? programId,
+      isWritable: accounts.attributeDstToken != null,
       isSigner: false,
-    });
-  }
-
-  if (accounts.attributeMetadata != null) {
-    if (
-      accounts.escrowMint == null ||
-      accounts.escrowToken == null ||
-      accounts.escrowEdition == null ||
-      accounts.attributeMint == null ||
-      accounts.attributeSrcToken == null ||
-      accounts.attributeDstToken == null
-    ) {
-      throw new Error(
-        "When providing 'attributeMetadata' then 'accounts.escrowMint', 'accounts.escrowToken', 'accounts.escrowEdition', 'accounts.attributeMint', 'accounts.attributeSrcToken', 'accounts.attributeDstToken' need(s) to be provided as well.",
-      );
-    }
-    keys.push({
-      pubkey: accounts.attributeMetadata,
-      isWritable: true,
+    },
+    {
+      pubkey: accounts.attributeMetadata ?? programId,
+      isWritable: accounts.attributeMetadata != null,
       isSigner: false,
-    });
-  }
-
-  if (accounts.attributeEdition != null) {
-    if (
-      accounts.escrowMint == null ||
-      accounts.escrowToken == null ||
-      accounts.escrowEdition == null ||
-      accounts.attributeMint == null ||
-      accounts.attributeSrcToken == null ||
-      accounts.attributeDstToken == null ||
-      accounts.attributeMetadata == null
-    ) {
-      throw new Error(
-        "When providing 'attributeEdition' then 'accounts.escrowMint', 'accounts.escrowToken', 'accounts.escrowEdition', 'accounts.attributeMint', 'accounts.attributeSrcToken', 'accounts.attributeDstToken', 'accounts.attributeMetadata' need(s) to be provided as well.",
-      );
-    }
-    keys.push({
-      pubkey: accounts.attributeEdition,
-      isWritable: true,
+    },
+    {
+      pubkey: accounts.attributeEdition ?? programId,
+      isWritable: accounts.attributeEdition != null,
       isSigner: false,
-    });
-  }
-
-  if (accounts.attributeCollectionMetadata != null) {
-    if (
-      accounts.escrowMint == null ||
-      accounts.escrowToken == null ||
-      accounts.escrowEdition == null ||
-      accounts.attributeMint == null ||
-      accounts.attributeSrcToken == null ||
-      accounts.attributeDstToken == null ||
-      accounts.attributeMetadata == null ||
-      accounts.attributeEdition == null
-    ) {
-      throw new Error(
-        "When providing 'attributeCollectionMetadata' then 'accounts.escrowMint', 'accounts.escrowToken', 'accounts.escrowEdition', 'accounts.attributeMint', 'accounts.attributeSrcToken', 'accounts.attributeDstToken', 'accounts.attributeMetadata', 'accounts.attributeEdition' need(s) to be provided as well.",
-      );
-    }
-    keys.push({
-      pubkey: accounts.attributeCollectionMetadata,
-      isWritable: true,
+    },
+    {
+      pubkey: accounts.attributeCollectionMetadata ?? programId,
+      isWritable: accounts.attributeCollectionMetadata != null,
       isSigner: false,
-    });
-  }
+    },
+    {
+      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.splToken,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.splAssociatedTokenAccount,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.tokenMetadataProgram,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.rent ?? web3.SYSVAR_RENT_PUBKEY,
+      isWritable: false,
+      isSigner: false,
+    },
+  ];
 
   const ix = new web3.TransactionInstruction({
     programId,

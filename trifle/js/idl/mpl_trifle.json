@@ -214,6 +214,36 @@
           "isSigner": false,
           "desc": "The collection metadata account of the attribute token",
           "optional": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "System program"
+        },
+        {
+          "name": "splToken",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Token program"
+        },
+        {
+          "name": "splAssociatedTokenAccount",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Associated token account program"
+        },
+        {
+          "name": "tokenMetadataProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Token Metadata program"
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Rent sysvar"
         }
       ],
       "args": [
@@ -224,6 +254,7 @@
           }
         }
       ],
+      "defaultOptionalAccounts": true,
       "discriminant": {
         "type": "u8",
         "value": 2
@@ -261,6 +292,13 @@
           "isMut": true,
           "isSigner": false,
           "desc": "The mint of the NFT the escrow is attached to"
+        },
+        {
+          "name": "escrowEdition",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "The edition of the NFT the escrow is attached to",
+          "optional": true
         },
         {
           "name": "payer",
@@ -327,13 +365,6 @@
           "isMut": false,
           "isSigner": false,
           "desc": "The token metadata program"
-        },
-        {
-          "name": "escrowEdition",
-          "isMut": true,
-          "isSigner": false,
-          "desc": "The edition of the NFT the escrow is attached to",
-          "optional": true
         }
       ],
       "args": [
@@ -344,6 +375,7 @@
           }
         }
       ],
+      "defaultOptionalAccounts": true,
       "discriminant": {
         "type": "u8",
         "value": 3
@@ -890,7 +922,7 @@
   "metadata": {
     "origin": "shank",
     "address": "6PLSD84fn6MVb3XdPYAiX33X8jgfCPXeqYUmfnYndU3X",
-    "binaryVersion": "0.0.9",
-    "libVersion": "0.0.9"
+    "binaryVersion": "0.0.10",
+    "libVersion": "0.0.10"
   }
 }

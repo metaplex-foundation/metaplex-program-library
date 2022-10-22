@@ -151,6 +151,7 @@ mod trifle {
             escrow_addr,
             metadata.token.pubkey(),
             metadata.mint.pubkey(),
+            None,
             context.payer.pubkey(),
             context.payer.pubkey(),
             attribute_metadata.mint.pubkey(),
@@ -159,7 +160,6 @@ mod trifle {
             attribute_metadata.pubkey,
             "test".to_string(),
             1,
-            None,
         );
 
         let transfer_out_tx = Transaction::new_signed_with_payer(
@@ -376,6 +376,7 @@ mod trifle {
             escrow,
             metadata.token.pubkey(),
             metadata.mint.pubkey(),
+            Some(master_edition.pubkey),
             context.payer.pubkey(),
             context.payer.pubkey(),
             attribute_metadata.mint.pubkey(),
@@ -384,7 +385,6 @@ mod trifle {
             attribute_metadata.pubkey,
             "test".to_string(),
             1,
-            Some(master_edition.pubkey),
         );
 
         let transfer_out_tx = Transaction::new_signed_with_payer(

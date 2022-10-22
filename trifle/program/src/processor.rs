@@ -164,26 +164,15 @@ fn create_trifle_account(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progr
         ],
     )?;
 
-    msg!("Checking singers.");
     assert_signer(payer_info)?;
     assert_signer(trifle_authority_info)?;
-
-    msg!("Checking escrow account.");
     assert_owned_by(escrow_info, system_program_info.key)?;
     if !escrow_info.data_is_empty() {
         return Err(MetadataError::AlreadyInitialized.into());
     }
-
-    msg!("Checking escrow_constraint_model_info.");
     assert_owned_by(escrow_constraint_model_info, program_id)?;
-
-    msg!("Checking metadata_info.");
     assert_owned_by(metadata_info, &token_metadata_program_id())?;
-
-    msg!("Checking mint_info.");
     assert_owned_by(mint_info, &spl_token::id())?;
-
-    msg!("Checking token_account_info.");
     assert_owned_by(token_account_info, &spl_token::id())?;
 
     let escrow_constraint_model_key =
@@ -360,7 +349,6 @@ fn transfer_in(
 
     let transfer_effects = TransferEffects::from(constraint.transfer_effects);
 
-    msg!("past constraint model validation");
     // check fuse options
     if transfer_effects.burn() && transfer_effects.freeze() {
         msg!("Fuse options cannot be both burn and freeze");
@@ -385,7 +373,6 @@ fn transfer_in(
 
     // If burn is not set, create an ATA for the incoming token and perform the transfer.
     if !transfer_effects.burn() {
-        msg!("in transfer clause");
         // Allocate the escrow accounts new ATA.
         let create_escrow_ata_ix =
             spl_associated_token_account::instruction::create_associated_token_account(
@@ -429,7 +416,6 @@ fn transfer_in(
             ],
         )?;
     } else {
-        msg!("checking attribute edition info");
         let attribute_mint = Mint::unpack(&attribute_mint_info.data.borrow())?;
         if is_print_edition(
             attribute_edition_info,
@@ -439,7 +425,6 @@ fn transfer_in(
             return Err(TrifleError::CannotBurnPrintEdition.into());
         }
 
-        msg!("its not a print, continuing");
         let maybe_collection_metadata_pubkey = if attribute_metadata.collection.is_some() {
             Metadata::from_account_info(attribute_collection_metadata_info)
                 .map_err(|_| TrifleError::InvalidCollectionMetadata)?;
@@ -449,10 +434,6 @@ fn transfer_in(
             None
         };
 
-        msg!(
-            "maybe collection metadata pubkey: {:?}",
-            maybe_collection_metadata_pubkey
-        );
         // Burn the token from the current owner.
         let burn_ix = mpl_token_metadata::instruction::burn_nft(
             mpl_token_metadata::id(),
@@ -483,7 +464,6 @@ fn transfer_in(
     }
 
     if transfer_effects.freeze_parent() {
-        msg!("freezing base nft");
         // make sure the freeze authority is set
         let escrow_mint = Mint::unpack(&escrow_mint_info.data.borrow())?;
 
@@ -547,6 +527,7 @@ fn transfer_out(
     let escrow_info = next_account_info(account_info_iter)?;
     let escrow_token_info = next_account_info(account_info_iter)?;
     let escrow_mint_info = next_account_info(account_info_iter)?;
+    let escrow_edition_info = next_account_info(account_info_iter)?;
     let payer_info = next_account_info(account_info_iter)?;
     let trifle_authority_info = next_account_info(account_info_iter)?;
     let attribute_mint_info = next_account_info(account_info_iter)?;
@@ -558,7 +539,6 @@ fn transfer_out(
     let _spl_token_program_info = next_account_info(account_info_iter)?;
     let rent_info = next_account_info(account_info_iter)?;
     let token_metadata_program_info = next_account_info(account_info_iter)?;
-    let escrow_edition_info = next_account_info(account_info_iter)?;
 
     assert_owned_by(attribute_metadata_info, &mpl_token_metadata::id())?;
     let _attribute_metadata: Metadata = Metadata::from_account_info(attribute_metadata_info)?;
@@ -575,8 +555,6 @@ fn transfer_out(
     }
 
     escrow_seeds.push(ESCROW_PREFIX.as_bytes());
-
-    msg!("asserting escrow info derivation");
     assert_derivation(token_metadata_program_info.key, escrow_info, &escrow_seeds)?;
 
     let trifle_seeds = &[
@@ -585,7 +563,6 @@ fn transfer_out(
         trifle_authority_info.key.as_ref(),
     ];
 
-    msg!("asserting trifle info derivation");
     let trifle_bump_seed = assert_derivation(program_id, trifle_info, trifle_seeds)?;
 
     // Derive the seeds for PDA signing.
@@ -603,9 +580,6 @@ fn transfer_out(
     // Only the parent NFT holder can transfer out
     assert!(escrow_token_account_data.owner == *payer_info.key);
 
-    // TODO: Check the constraints
-
-    msg!("preparing to transfer.");
     // Transfer the token out of the escrow
     let transfer_ix = mpl_token_metadata::escrow::transfer_out_of_escrow(
         *token_metadata_program_info.key,
@@ -620,7 +594,6 @@ fn transfer_out(
         args.amount,
     );
 
-    msg!("Transferring the token out of the escrow");
     invoke_signed(
         &transfer_ix,
         &[
@@ -637,7 +610,6 @@ fn transfer_out(
         ],
         &[trifle_signer_seeds],
     )?;
-    msg!("Transferred the token out of the escrow");
 
     // Update the Trifle account
     let mut trifle = Trifle::from_account_info(trifle_info)?;
@@ -678,7 +650,6 @@ fn transfer_out(
     );
 
     if trifle.is_empty() {
-        msg!("trifle tokens empty");
         let constraint_model =
             EscrowConstraintModel::try_from_slice(&constraint_model_info.data.borrow())
                 .map_err(|_| TrifleError::InvalidEscrowConstraintModel)?;
@@ -691,7 +662,6 @@ fn transfer_out(
         let transfer_effects = TransferEffects::from(constraint.transfer_effects);
 
         if transfer_effects.freeze_parent() {
-            msg!("freeze parent is set, preparing to thaw");
             let escrow_token = Account::unpack(&escrow_token_info.data.borrow())?;
             if escrow_token.is_frozen() {
                 msg!("Last token transferred out of escrow. Unfreezing the escrow token account.");

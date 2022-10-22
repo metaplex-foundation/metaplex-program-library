@@ -41,6 +41,7 @@ export const TransferOutStruct = new beet.FixableBeetArgsStruct<
  * @property [] escrowAccount The escrow account attached to the NFT
  * @property [_writable_] escrowTokenAccount The token account holding the NFT the escrow is attached to
  * @property [_writable_] escrowMint The mint of the NFT the escrow is attached to
+ * @property [_writable_] escrowEdition (optional) The edition of the NFT the escrow is attached to
  * @property [_writable_, **signer**] payer Wallet paying for the transaction
  * @property [] trifleAuthority Trifle Authority - the account that can sign transactions for the trifle account
  * @property [] attributeMint The mint of the attribute
@@ -50,7 +51,6 @@ export const TransferOutStruct = new beet.FixableBeetArgsStruct<
  * @property [] splAssociatedTokenAccount The associated token account program
  * @property [] splToken The spl token program
  * @property [] tokenMetadataProgram The token metadata program
- * @property [_writable_] escrowEdition (optional) The edition of the NFT the escrow is attached to
  * @category Instructions
  * @category TransferOut
  * @category generated
@@ -61,6 +61,7 @@ export type TransferOutInstructionAccounts = {
   escrowAccount: web3.PublicKey;
   escrowTokenAccount: web3.PublicKey;
   escrowMint: web3.PublicKey;
+  escrowEdition?: web3.PublicKey;
   payer: web3.PublicKey;
   trifleAuthority: web3.PublicKey;
   attributeMint: web3.PublicKey;
@@ -72,13 +73,15 @@ export type TransferOutInstructionAccounts = {
   splToken: web3.PublicKey;
   rent?: web3.PublicKey;
   tokenMetadataProgram: web3.PublicKey;
-  escrowEdition?: web3.PublicKey;
 };
 
 export const transferOutInstructionDiscriminator = 3;
 
 /**
  * Creates a _TransferOut_ instruction.
+ *
+ * Optional accounts that are not provided default to the program ID since
+ * this was indicated in the IDL from which this instruction was generated.
  *
  * @param accounts that will be accessed while the instruction is processed
  * @param args to provide as instruction data to the program
@@ -120,6 +123,11 @@ export function createTransferOutInstruction(
     {
       pubkey: accounts.escrowMint,
       isWritable: true,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.escrowEdition ?? programId,
+      isWritable: accounts.escrowEdition != null,
       isSigner: false,
     },
     {
@@ -178,14 +186,6 @@ export function createTransferOutInstruction(
       isSigner: false,
     },
   ];
-
-  if (accounts.escrowEdition != null) {
-    keys.push({
-      pubkey: accounts.escrowEdition,
-      isWritable: true,
-      isSigner: false,
-    });
-  }
 
   const ix = new web3.TransactionInstruction({
     programId,

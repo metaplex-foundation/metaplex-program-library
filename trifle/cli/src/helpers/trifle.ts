@@ -268,6 +268,11 @@ export const transferIn = async (
       attributeMetadata: nft.metadataAddress,
       escrowMint: escrowNft.mint.address,
       escrowToken: escrowNft.token.address,
+      splToken: new PublicKey(TOKEN_PROGRAM_ID),
+      splAssociatedTokenAccount: new PublicKey(ASSOCIATED_TOKEN_PROGRAM_ID),
+      tokenMetadataProgram: new PublicKey(
+        "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s",
+      ),
     },
     {
       transferInArgs: { amount: 1, slot },
