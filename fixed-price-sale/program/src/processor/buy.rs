@@ -1,3 +1,5 @@
+use std::cmp::Ordering;
+
 use crate::{
     error::ErrorCode,
     state::{GatingConfig, MarketState, SellingResourceState},
@@ -10,7 +12,10 @@ use anchor_lang::{
     system_program::System,
 };
 use anchor_spl::token;
-use mpl_token_metadata::{state::Metadata, utils::get_supply_off_master_edition};
+use mpl_token_metadata::{
+    state::{Metadata, TokenMetadataAccount},
+    utils::get_supply_off_master_edition,
+};
 
 impl<'info> Buy<'info> {
     pub fn process(
@@ -169,11 +174,13 @@ impl<'info> Buy<'info> {
 
         // Check, that `SellingResource::max_supply` is not overflowed by `supply`
         if let Some(max_supply) = selling_resource.max_supply {
-            if selling_resource.supply > max_supply {
-                return Err(ErrorCode::SupplyIsGtThanMaxSupply.into());
-            } else if selling_resource.supply == max_supply {
-                selling_resource.state = SellingResourceState::Exhausted;
-                market.state = MarketState::Ended;
+            match selling_resource.supply.cmp(&max_supply) {
+                Ordering::Greater => return Err(ErrorCode::SupplyIsGtThanMaxSupply.into()),
+                Ordering::Equal => {
+                    selling_resource.state = SellingResourceState::Exhausted;
+                    market.state = MarketState::Ended;
+                }
+                Ordering::Less => (),
             }
         }
 

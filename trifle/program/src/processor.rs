@@ -313,7 +313,6 @@ fn transfer_in(
             payer.key,
             escrow_account.key,
             attribute_mint.key,
-            spl_token_program.key,
         );
 
     invoke(

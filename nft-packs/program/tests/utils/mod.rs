@@ -40,6 +40,7 @@ pub use vault::TestVault;
 pub fn nft_packs_program_test<'a>() -> ProgramTest {
     let mut program = ProgramTest::new("mpl_nft_packs", mpl_nft_packs::id(), None);
     program.add_program("mpl_token_metadata", mpl_token_metadata::id(), None);
+    program.add_program("mpl_metaplex", mpl_metaplex::id(), None);
     program.prefer_bpf(false);
     program
 }
@@ -114,7 +115,13 @@ pub async fn mint_tokens(
         context.last_blockhash,
     );
 
-    context.banks_client.process_transaction(tx).await
+    context
+        .banks_client
+        .process_transaction_with_commitment(
+            tx,
+            solana_sdk::commitment_config::CommitmentLevel::Confirmed,
+        )
+        .await
 }
 
 pub async fn create_token_account(
@@ -147,7 +154,13 @@ pub async fn create_token_account(
         context.last_blockhash,
     );
 
-    context.banks_client.process_transaction(tx).await
+    context
+        .banks_client
+        .process_transaction_with_commitment(
+            tx,
+            solana_sdk::commitment_config::CommitmentLevel::Confirmed,
+        )
+        .await
 }
 
 pub async fn transfer_token(
@@ -172,7 +185,13 @@ pub async fn transfer_token(
         context.last_blockhash,
     );
 
-    context.banks_client.process_transaction(tx).await
+    context
+        .banks_client
+        .process_transaction_with_commitment(
+            tx,
+            solana_sdk::commitment_config::CommitmentLevel::Confirmed,
+        )
+        .await
 }
 
 pub async fn create_account<S: Pack>(
@@ -195,7 +214,13 @@ pub async fn create_account<S: Pack>(
         context.last_blockhash,
     );
 
-    context.banks_client.process_transaction(tx).await
+    context
+        .banks_client
+        .process_transaction_with_commitment(
+            tx,
+            solana_sdk::commitment_config::CommitmentLevel::Confirmed,
+        )
+        .await
 }
 
 pub async fn create_mint(
@@ -229,7 +254,13 @@ pub async fn create_mint(
         context.last_blockhash,
     );
 
-    context.banks_client.process_transaction(tx).await
+    context
+        .banks_client
+        .process_transaction_with_commitment(
+            tx,
+            solana_sdk::commitment_config::CommitmentLevel::Confirmed,
+        )
+        .await
 }
 
 pub async fn create_store(
@@ -260,7 +291,15 @@ pub async fn create_store(
         context.last_blockhash,
     );
 
-    unwrap_ignoring_io_error_in_ci(context.banks_client.process_transaction(tx).await);
+    unwrap_ignoring_io_error_in_ci(
+        context
+            .banks_client
+            .process_transaction_with_commitment(
+                tx,
+                solana_sdk::commitment_config::CommitmentLevel::Confirmed,
+            )
+            .await,
+    );
 
     Ok(store_key)
 }

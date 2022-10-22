@@ -546,7 +546,7 @@ pub enum MetadataInstruction {
     #[account(0, writable, name="escrow", desc="Escrow account")]
     #[account(1, name="metadata", desc="Metadata account")]
     #[account(2, name="mint", desc="Mint account")]
-    #[account(3, writable, name="token_account", desc="Token account to close")]
+    #[account(3, name="token_account", desc="Token account of the token")]
     #[account(4, name="edition", desc="Edition account")]
     #[account(5, writable, signer, name="payer", desc="Wallet paying for the transaction and new account")]
     #[account(6, name="system_program", desc="System program")]
@@ -557,10 +557,10 @@ pub enum MetadataInstruction {
     #[account(0, writable, name="escrow", desc="Escrow account")]
     #[account(1, name="metadata", desc="Metadata account")]
     #[account(2, name="mint", desc="Mint account")]
-    #[account(3, name="edition", desc="Edition account")]
-    #[account(4, writable, signer, name="payer", desc="Wallet paying for the transaction and new account")]
-    #[account(5, name="system_program", desc="System program")]
-    #[account(6, optional, signer, name="authority", desc="Authority/creator of the escrow account")]
+    #[account(3, name="token_account", desc="Token account")]
+    #[account(4, name="edition", desc="Edition account")]
+    #[account(5, writable, signer, name="payer", desc="Wallet paying for the transaction and new account")]
+    #[account(6, name="system_program", desc="System program")]
     CloseEscrowAccount,
 
     /// Transfer the token out of Escrow.

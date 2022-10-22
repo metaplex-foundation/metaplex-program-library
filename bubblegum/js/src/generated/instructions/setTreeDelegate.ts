@@ -5,8 +5,8 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet'
-import * as web3 from '@solana/web3.js'
+import * as beet from '@metaplex-foundation/beet';
+import * as web3 from '@solana/web3.js';
 
 /**
  * @category Instructions
@@ -14,11 +14,11 @@ import * as web3 from '@solana/web3.js'
  * @category generated
  */
 export const setTreeDelegateStruct = new beet.BeetArgsStruct<{
-  instructionDiscriminator: number[] /* size: 8 */
+  instructionDiscriminator: number[] /* size: 8 */;
 }>(
   [['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)]],
-  'SetTreeDelegateInstructionArgs'
-)
+  'SetTreeDelegateInstructionArgs',
+);
 /**
  * Accounts required by the _setTreeDelegate_ instruction
  *
@@ -31,15 +31,13 @@ export const setTreeDelegateStruct = new beet.BeetArgsStruct<{
  * @category generated
  */
 export type SetTreeDelegateInstructionAccounts = {
-  treeAuthority: web3.PublicKey
-  treeCreator: web3.PublicKey
-  newTreeDelegate: web3.PublicKey
-  merkleTree: web3.PublicKey
-}
+  treeAuthority: web3.PublicKey;
+  treeCreator: web3.PublicKey;
+  newTreeDelegate: web3.PublicKey;
+  merkleTree: web3.PublicKey;
+};
 
-export const setTreeDelegateInstructionDiscriminator = [
-  253, 118, 66, 37, 190, 49, 154, 102,
-]
+export const setTreeDelegateInstructionDiscriminator = [253, 118, 66, 37, 190, 49, 154, 102];
 
 /**
  * Creates a _SetTreeDelegate_ instruction.
@@ -51,11 +49,11 @@ export const setTreeDelegateInstructionDiscriminator = [
  */
 export function createSetTreeDelegateInstruction(
   accounts: SetTreeDelegateInstructionAccounts,
-  programId = new web3.PublicKey('BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY')
+  programId = new web3.PublicKey('BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY'),
 ) {
   const [data] = setTreeDelegateStruct.serialize({
     instructionDiscriminator: setTreeDelegateInstructionDiscriminator,
-  })
+  });
   const keys: web3.AccountMeta[] = [
     {
       pubkey: accounts.treeAuthority,
@@ -77,12 +75,12 @@ export function createSetTreeDelegateInstruction(
       isWritable: false,
       isSigner: false,
     },
-  ]
+  ];
 
   const ix = new web3.TransactionInstruction({
     programId,
     keys,
     data,
-  })
-  return ix
+  });
+  return ix;
 }

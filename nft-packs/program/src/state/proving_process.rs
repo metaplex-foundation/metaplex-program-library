@@ -14,7 +14,7 @@ use std::collections::BTreeMap;
 
 /// Proving process
 #[repr(C)]
-#[derive(Debug, Clone, PartialEq, BorshSerialize, BorshDeserialize, Default, ShankAccount)]
+#[derive(Debug, Clone, PartialEq, Eq, BorshSerialize, BorshDeserialize, Default, ShankAccount)]
 pub struct ProvingProcess {
     /// Account type - ProvingProcess
     pub account_type: AccountType,

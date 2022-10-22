@@ -20,7 +20,7 @@ mod init_selling_resource {
     };
     use solana_program::{instruction::Instruction, sysvar};
     use solana_program_test::*;
-    use solana_sdk::{transaction::Transaction, transport::TransportError};
+    use solana_sdk::{commitment_config::CommitmentLevel, transaction::Transaction};
 
     #[tokio::test]
     async fn success() {
@@ -128,7 +128,11 @@ mod init_selling_resource {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await.unwrap();
+        context
+            .banks_client
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+            .await
+            .unwrap();
 
         let selling_resource_acc = context
             .banks_client
@@ -264,12 +268,13 @@ mod init_selling_resource {
 
         let err = context
             .banks_client
-            .process_transaction(tx)
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
             .await
             .unwrap_err();
         match err {
-            TransportError::Custom(_) => assert!(true),
-            TransportError::TransactionError(_) => assert!(true),
+            BanksClientError::ClientError(_) => assert!(true),
+            BanksClientError::RpcError(_) => assert!(true),
+            BanksClientError::TransactionError(_) => assert!(true),
             _ => assert!(false),
         }
     }
@@ -388,12 +393,13 @@ mod init_selling_resource {
 
         let err = context
             .banks_client
-            .process_transaction(tx)
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
             .await
             .unwrap_err();
         match err {
-            TransportError::Custom(_) => assert!(true),
-            TransportError::TransactionError(_) => assert!(true),
+            BanksClientError::ClientError(_) => assert!(true),
+            BanksClientError::RpcError(_) => assert!(true),
+            BanksClientError::TransactionError(_) => assert!(true),
             _ => assert!(false),
         }
     }

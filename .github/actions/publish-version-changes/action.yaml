@@ -34,5 +34,4 @@ runs:
       # remove dependencies from package.json and then reset yarn.lock
       run: |
         yarn remove @iarna/toml axios
-        git restore yarn.lock
       shell: bash

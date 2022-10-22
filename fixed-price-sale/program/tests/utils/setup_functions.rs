@@ -11,6 +11,7 @@ use mpl_fixed_price_sale::{
 };
 use solana_program_test::ProgramTestContext;
 use solana_sdk::{
+    commitment_config::CommitmentLevel,
     instruction::Instruction,
     signature::Keypair,
     signer::Signer,
@@ -68,7 +69,14 @@ pub async fn setup_store(context: &mut ProgramTestContext) -> (Keypair, Keypair)
         context.last_blockhash,
     );
 
-    context.banks_client.process_transaction(tx).await.unwrap();
+    context
+        .banks_client
+        .process_transaction_with_commitment(
+            tx,
+            solana_sdk::commitment_config::CommitmentLevel::Confirmed,
+        )
+        .await
+        .unwrap();
 
     (admin_wallet, store_keypair)
 }
@@ -209,7 +217,14 @@ pub async fn setup_selling_resource(
         context.last_blockhash,
     );
 
-    context.banks_client.process_transaction(tx).await.unwrap();
+    context
+        .banks_client
+        .process_transaction_with_commitment(
+            tx,
+            solana_sdk::commitment_config::CommitmentLevel::Confirmed,
+        )
+        .await
+        .unwrap();
 
     (
         selling_resource_keypair,
@@ -300,7 +315,11 @@ pub async fn setup_market(
         context.last_blockhash,
     );
 
-    context.banks_client.process_transaction(tx).await.unwrap();
+    context
+        .banks_client
+        .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+        .await
+        .unwrap();
 
     market_keypair
 }

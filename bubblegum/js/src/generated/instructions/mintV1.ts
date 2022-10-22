@@ -5,9 +5,9 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet'
-import * as web3 from '@solana/web3.js'
-import { MetadataArgs, metadataArgsBeet } from '../types/MetadataArgs'
+import * as beet from '@metaplex-foundation/beet';
+import * as web3 from '@solana/web3.js';
+import { MetadataArgs, metadataArgsBeet } from '../types/MetadataArgs';
 
 /**
  * @category Instructions
@@ -15,8 +15,8 @@ import { MetadataArgs, metadataArgsBeet } from '../types/MetadataArgs'
  * @category generated
  */
 export type MintV1InstructionArgs = {
-  message: MetadataArgs
-}
+  message: MetadataArgs;
+};
 /**
  * @category Instructions
  * @category MintV1
@@ -24,15 +24,15 @@ export type MintV1InstructionArgs = {
  */
 export const mintV1Struct = new beet.FixableBeetArgsStruct<
   MintV1InstructionArgs & {
-    instructionDiscriminator: number[] /* size: 8 */
+    instructionDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
     ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
     ['message', metadataArgsBeet],
   ],
-  'MintV1InstructionArgs'
-)
+  'MintV1InstructionArgs',
+);
 /**
  * Accounts required by the _mintV1_ instruction
  *
@@ -49,19 +49,17 @@ export const mintV1Struct = new beet.FixableBeetArgsStruct<
  * @category generated
  */
 export type MintV1InstructionAccounts = {
-  treeAuthority: web3.PublicKey
-  leafOwner: web3.PublicKey
-  leafDelegate: web3.PublicKey
-  merkleTree: web3.PublicKey
-  payer: web3.PublicKey
-  treeDelegate: web3.PublicKey
-  logWrapper: web3.PublicKey
-  compressionProgram: web3.PublicKey
-}
+  treeAuthority: web3.PublicKey;
+  leafOwner: web3.PublicKey;
+  leafDelegate: web3.PublicKey;
+  merkleTree: web3.PublicKey;
+  payer: web3.PublicKey;
+  treeDelegate: web3.PublicKey;
+  logWrapper: web3.PublicKey;
+  compressionProgram: web3.PublicKey;
+};
 
-export const mintV1InstructionDiscriminator = [
-  145, 98, 192, 118, 184, 147, 118, 104,
-]
+export const mintV1InstructionDiscriminator = [145, 98, 192, 118, 184, 147, 118, 104];
 
 /**
  * Creates a _MintV1_ instruction.
@@ -76,12 +74,12 @@ export const mintV1InstructionDiscriminator = [
 export function createMintV1Instruction(
   accounts: MintV1InstructionAccounts,
   args: MintV1InstructionArgs,
-  programId = new web3.PublicKey('BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY')
+  programId = new web3.PublicKey('BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY'),
 ) {
   const [data] = mintV1Struct.serialize({
     instructionDiscriminator: mintV1InstructionDiscriminator,
     ...args,
-  })
+  });
   const keys: web3.AccountMeta[] = [
     {
       pubkey: accounts.treeAuthority,
@@ -123,12 +121,12 @@ export function createMintV1Instruction(
       isWritable: false,
       isSigner: false,
     },
-  ]
+  ];
 
   const ix = new web3.TransactionInstruction({
     programId,
     keys,
     data,
-  })
-  return ix
+  });
+  return ix;
 }

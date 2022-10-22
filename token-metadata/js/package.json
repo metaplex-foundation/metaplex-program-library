@@ -1,7 +1,7 @@
 {
   "name": "@metaplex-foundation/mpl-token-metadata",
-  "version": "2.3.1",
-  "contractVersion": "1.4.0",
+  "version": "2.3.3",
+  "contractVersion": "1.5.0",
   "description": "MPL Token Metadata JavaScript API.",
   "main": "dist/src/mpl-token-metadata.js",
   "types": "dist/src/mpl-token-metadata.d.ts",
@@ -48,7 +48,11 @@
     "debug": "^4.3.3"
   },
   "devDependencies": {
-    "@metaplex-foundation/solita": "^0.16.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "@typescript-eslint/eslint-plugin": "^5.4.0",
+    "@typescript-eslint/parser": "^5.4.0",
+    "@metaplex-foundation/solita": "^0.12.1",
     "@types/bn.js": "^5.1.0",
     "@types/debug": "^4.1.7",
     "@types/tape": "^4.13.2",

@@ -2629,24 +2629,47 @@ createErrorFromNameLookup.set(
 );
 
 /**
- * MustBeDelegate: 'Must be delegate to transfer out of Token Owned Escrow'
+ * EditionNumberGreaterThanMaxSupply: 'Edition Number greater than max supply'
  *
  * @category Errors
  * @category generated
  */
-export class MustBeDelegateError extends Error {
+export class EditionNumberGreaterThanMaxSupplyError extends Error {
   readonly code: number = 0x7a;
-  readonly name: string = 'MustBeDelegate';
+  readonly name: string = 'EditionNumberGreaterThanMaxSupply';
   constructor() {
-    super('Must be delegate to transfer out of Token Owned Escrow');
+    super('Edition Number greater than max supply');
     if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, MustBeDelegateError);
+      Error.captureStackTrace(this, EditionNumberGreaterThanMaxSupplyError);
     }
   }
 }
 
-createErrorFromCodeLookup.set(0x7a, () => new MustBeDelegateError());
-createErrorFromNameLookup.set('MustBeDelegate', () => new MustBeDelegateError());
+createErrorFromCodeLookup.set(0x7a, () => new EditionNumberGreaterThanMaxSupplyError());
+createErrorFromNameLookup.set(
+  'EditionNumberGreaterThanMaxSupply',
+  () => new EditionNumberGreaterThanMaxSupplyError(),
+);
+
+/**
+ * MustUnverify: 'Must unverify before migrating collections.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MustUnverifyError extends Error {
+  readonly code: number = 0x7b;
+  readonly name: string = 'MustUnverify';
+  constructor() {
+    super('Must unverify before migrating collections.');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MustUnverifyError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x7b, () => new MustUnverifyError());
+createErrorFromNameLookup.set('MustUnverify', () => new MustUnverifyError());
 
 /**
  * InvalidEscrowBumpSeed: 'Invalid Escrow Account Bump Seed'
@@ -2655,7 +2678,7 @@ createErrorFromNameLookup.set('MustBeDelegate', () => new MustBeDelegateError())
  * @category generated
  */
 export class InvalidEscrowBumpSeedError extends Error {
-  readonly code: number = 0x7b;
+  readonly code: number = 0x7c;
   readonly name: string = 'InvalidEscrowBumpSeed';
   constructor() {
     super('Invalid Escrow Account Bump Seed');
@@ -2665,31 +2688,68 @@ export class InvalidEscrowBumpSeedError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x7b, () => new InvalidEscrowBumpSeedError());
+createErrorFromCodeLookup.set(0x7c, () => new InvalidEscrowBumpSeedError());
 createErrorFromNameLookup.set('InvalidEscrowBumpSeed', () => new InvalidEscrowBumpSeedError());
 
 /**
- * MustBeEscrowUpdateAuthority: 'Must be Update Authority on Escrow Account'
+ * MustBeEscrowAuthority: 'Must Escrow Authority'
  *
  * @category Errors
  * @category generated
  */
-export class MustBeEscrowUpdateAuthorityError extends Error {
-  readonly code: number = 0x7c;
-  readonly name: string = 'MustBeEscrowUpdateAuthority';
+export class MustBeEscrowAuthorityError extends Error {
+  readonly code: number = 0x7d;
+  readonly name: string = 'MustBeEscrowAuthority';
   constructor() {
-    super('Must be Update Authority on Escrow Account');
+    super('Must Escrow Authority');
     if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, MustBeEscrowUpdateAuthorityError);
+      Error.captureStackTrace(this, MustBeEscrowAuthorityError);
     }
   }
 }
 
-createErrorFromCodeLookup.set(0x7c, () => new MustBeEscrowUpdateAuthorityError());
-createErrorFromNameLookup.set(
-  'MustBeEscrowUpdateAuthority',
-  () => new MustBeEscrowUpdateAuthorityError(),
-);
+createErrorFromCodeLookup.set(0x7d, () => new MustBeEscrowAuthorityError());
+createErrorFromNameLookup.set('MustBeEscrowAuthority', () => new MustBeEscrowAuthorityError());
+
+/**
+ * InvalidSystemProgram: 'Invalid System Program'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidSystemProgramError extends Error {
+  readonly code: number = 0x7e;
+  readonly name: string = 'InvalidSystemProgram';
+  constructor() {
+    super('Invalid System Program');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidSystemProgramError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x7e, () => new InvalidSystemProgramError());
+createErrorFromNameLookup.set('InvalidSystemProgram', () => new InvalidSystemProgramError());
+
+/**
+ * MustBeNonFungible: 'Must be a Non Fungible Token'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MustBeNonFungibleError extends Error {
+  readonly code: number = 0x7f;
+  readonly name: string = 'MustBeNonFungible';
+  constructor() {
+    super('Must be a Non Fungible Token');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MustBeNonFungibleError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x7f, () => new MustBeNonFungibleError());
+createErrorFromNameLookup.set('MustBeNonFungible', () => new MustBeNonFungibleError());
 
 /**
  * Attempts to resolve a custom program error from the provided error code.

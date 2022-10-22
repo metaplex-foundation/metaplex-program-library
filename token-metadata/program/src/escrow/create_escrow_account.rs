@@ -6,8 +6,8 @@ use crate::{
         ESCROW_PREFIX, PREFIX,
     },
     utils::{
-        assert_derivation, assert_initialized, assert_owned_by, check_token_standard,
-        create_or_allocate_account_raw,
+        assert_derivation, assert_initialized, assert_owned_by, assert_signer,
+        check_token_standard, create_or_allocate_account_raw,
     },
 };
 use borsh::BorshSerialize;
@@ -76,10 +76,11 @@ pub fn process_create_escrow_account(
         None
     };
 
-    // Owned by token-metadata program.
     assert_owned_by(metadata_account_info, program_id)?;
     assert_owned_by(mint_account_info, &spl_token::id())?;
     assert_owned_by(token_account_info, &spl_token::id())?;
+    assert_signer(payer_account_info)?;
+
     let metadata: Metadata = Metadata::from_account_info(metadata_account_info)?;
 
     // Mint account passed in must be the mint of the metadata account passed in.
@@ -88,10 +89,11 @@ pub fn process_create_escrow_account(
     }
 
     // Only non-fungible tokens (i.e. unique) can have escrow accounts.
-    assert!(
-        check_token_standard(mint_account_info, Some(edition_account_info))?
-            == TokenStandard::NonFungible,
-    );
+    if check_token_standard(mint_account_info, Some(edition_account_info))?
+        != TokenStandard::NonFungible
+    {
+        return Err(MetadataError::MustBeNonFungible.into());
+    };
 
     let creator = maybe_authority_info.unwrap_or(payer_account_info);
 

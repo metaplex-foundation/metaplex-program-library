@@ -5,10 +5,10 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as web3 from '@solana/web3.js'
-import * as beet from '@metaplex-foundation/beet'
-import * as beetSolana from '@metaplex-foundation/beet-solana'
-import { LeafSchema, leafSchemaBeet } from '../types/LeafSchema'
+import * as web3 from '@solana/web3.js';
+import * as beet from '@metaplex-foundation/beet';
+import * as beetSolana from '@metaplex-foundation/beet-solana';
+import { LeafSchema, leafSchemaBeet } from '../types/LeafSchema';
 
 /**
  * Arguments used to create {@link Voucher}
@@ -16,12 +16,12 @@ import { LeafSchema, leafSchemaBeet } from '../types/LeafSchema'
  * @category generated
  */
 export type VoucherArgs = {
-  leafSchema: LeafSchema
-  index: number
-  merkleTree: web3.PublicKey
-}
+  leafSchema: LeafSchema;
+  index: number;
+  merkleTree: web3.PublicKey;
+};
 
-export const voucherDiscriminator = [191, 204, 149, 234, 213, 165, 13, 65]
+export const voucherDiscriminator = [191, 204, 149, 234, 213, 165, 13, 65];
 /**
  * Holds the data for the {@link Voucher} Account and provides de/serialization
  * functionality for that data
@@ -33,25 +33,22 @@ export class Voucher implements VoucherArgs {
   private constructor(
     readonly leafSchema: LeafSchema,
     readonly index: number,
-    readonly merkleTree: web3.PublicKey
+    readonly merkleTree: web3.PublicKey,
   ) {}
 
   /**
    * Creates a {@link Voucher} instance from the provided args.
    */
   static fromArgs(args: VoucherArgs) {
-    return new Voucher(args.leafSchema, args.index, args.merkleTree)
+    return new Voucher(args.leafSchema, args.index, args.merkleTree);
   }
 
   /**
    * Deserializes the {@link Voucher} from the data of the provided {@link web3.AccountInfo}.
    * @returns a tuple of the account data and the offset up to which the buffer was read to obtain it.
    */
-  static fromAccountInfo(
-    accountInfo: web3.AccountInfo<Buffer>,
-    offset = 0
-  ): [Voucher, number] {
-    return Voucher.deserialize(accountInfo.data, offset)
+  static fromAccountInfo(accountInfo: web3.AccountInfo<Buffer>, offset = 0): [Voucher, number] {
+    return Voucher.deserialize(accountInfo.data, offset);
   }
 
   /**
@@ -62,13 +59,13 @@ export class Voucher implements VoucherArgs {
    */
   static async fromAccountAddress(
     connection: web3.Connection,
-    address: web3.PublicKey
+    address: web3.PublicKey,
   ): Promise<Voucher> {
-    const accountInfo = await connection.getAccountInfo(address)
+    const accountInfo = await connection.getAccountInfo(address);
     if (accountInfo == null) {
-      throw new Error(`Unable to find Voucher account at ${address}`)
+      throw new Error(`Unable to find Voucher account at ${address}`);
     }
-    return Voucher.fromAccountInfo(accountInfo, 0)[0]
+    return Voucher.fromAccountInfo(accountInfo, 0)[0];
   }
 
   /**
@@ -78,11 +75,9 @@ export class Voucher implements VoucherArgs {
    * @param programId - the program that owns the accounts we are filtering
    */
   static gpaBuilder(
-    programId: web3.PublicKey = new web3.PublicKey(
-      'BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY'
-    )
+    programId: web3.PublicKey = new web3.PublicKey('BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY'),
   ) {
-    return beetSolana.GpaBuilder.fromStruct(programId, voucherBeet)
+    return beetSolana.GpaBuilder.fromStruct(programId, voucherBeet);
   }
 
   /**
@@ -90,7 +85,7 @@ export class Voucher implements VoucherArgs {
    * @returns a tuple of the account data and the offset up to which the buffer was read to obtain it.
    */
   static deserialize(buf: Buffer, offset = 0): [Voucher, number] {
-    return voucherBeet.deserialize(buf, offset)
+    return voucherBeet.deserialize(buf, offset);
   }
 
   /**
@@ -101,7 +96,7 @@ export class Voucher implements VoucherArgs {
     return voucherBeet.serialize({
       accountDiscriminator: voucherDiscriminator,
       ...this,
-    })
+    });
   }
 
   /**
@@ -112,11 +107,11 @@ export class Voucher implements VoucherArgs {
    * depends on them
    */
   static byteSize(args: VoucherArgs) {
-    const instance = Voucher.fromArgs(args)
+    const instance = Voucher.fromArgs(args);
     return voucherBeet.toFixedFromValue({
       accountDiscriminator: voucherDiscriminator,
       ...instance,
-    }).byteSize
+    }).byteSize;
   }
 
   /**
@@ -130,12 +125,9 @@ export class Voucher implements VoucherArgs {
   static async getMinimumBalanceForRentExemption(
     args: VoucherArgs,
     connection: web3.Connection,
-    commitment?: web3.Commitment
+    commitment?: web3.Commitment,
   ): Promise<number> {
-    return connection.getMinimumBalanceForRentExemption(
-      Voucher.byteSize(args),
-      commitment
-    )
+    return connection.getMinimumBalanceForRentExemption(Voucher.byteSize(args), commitment);
   }
 
   /**
@@ -147,7 +139,7 @@ export class Voucher implements VoucherArgs {
       leafSchema: this.leafSchema.__kind,
       index: this.index,
       merkleTree: this.merkleTree.toBase58(),
-    }
+    };
   }
 }
 
@@ -158,7 +150,7 @@ export class Voucher implements VoucherArgs {
 export const voucherBeet = new beet.FixableBeetStruct<
   Voucher,
   VoucherArgs & {
-    accountDiscriminator: number[] /* size: 8 */
+    accountDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
@@ -168,5 +160,5 @@ export const voucherBeet = new beet.FixableBeetStruct<
     ['merkleTree', beetSolana.publicKey],
   ],
   Voucher.fromArgs,
-  'Voucher'
-)
+  'Voucher',
+);

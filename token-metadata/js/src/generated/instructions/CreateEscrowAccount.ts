@@ -22,7 +22,7 @@ export const CreateEscrowAccountStruct = new beet.BeetArgsStruct<{
  * @property [_writable_] escrow Escrow account
  * @property [] metadata Metadata account
  * @property [] mint Mint account
- * @property [_writable_] tokenAccount Token account to close
+ * @property [] tokenAccount Token account of the token
  * @property [] edition Edition account
  * @property [_writable_, **signer**] payer Wallet paying for the transaction and new account
  * @property [**signer**] authority (optional) Authority/creator of the escrow account
@@ -76,7 +76,7 @@ export function createCreateEscrowAccountInstruction(
     },
     {
       pubkey: accounts.tokenAccount,
-      isWritable: true,
+      isWritable: false,
       isSigner: false,
     },
     {

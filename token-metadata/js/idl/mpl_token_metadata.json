@@ -1,5 +1,5 @@
 {
-  "version": "1.4.1",
+  "version": "1.5.0",
   "name": "mpl_token_metadata",
   "instructions": [
     {
@@ -2146,9 +2146,9 @@
         },
         {
           "name": "tokenAccount",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false,
-          "desc": "Token account to close"
+          "desc": "Token account of the token"
         },
         {
           "name": "edition",
@@ -2204,6 +2204,12 @@
           "desc": "Mint account"
         },
         {
+          "name": "tokenAccount",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Token account"
+        },
+        {
           "name": "edition",
           "isMut": false,
           "isSigner": false,
@@ -2220,13 +2226,6 @@
           "isMut": false,
           "isSigner": false,
           "desc": "System program"
-        },
-        {
-          "name": "authority",
-          "isMut": false,
-          "isSigner": true,
-          "desc": "Authority/creator of the escrow account",
-          "optional": true
         }
       ],
       "args": [],
@@ -3795,24 +3794,39 @@
     },
     {
       "code": 122,
-      "name": "MustBeDelegate",
-      "msg": "Must be delegate to transfer out of Token Owned Escrow"
+      "name": "EditionNumberGreaterThanMaxSupply",
+      "msg": "Edition Number greater than max supply"
     },
     {
       "code": 123,
+      "name": "MustUnverify",
+      "msg": "Must unverify before migrating collections."
+    },
+    {
+      "code": 124,
       "name": "InvalidEscrowBumpSeed",
       "msg": "Invalid Escrow Account Bump Seed"
     },
     {
-      "code": 124,
-      "name": "MustBeEscrowUpdateAuthority",
-      "msg": "Must be Update Authority on Escrow Account"
+      "code": 125,
+      "name": "MustBeEscrowAuthority",
+      "msg": "Must Escrow Authority"
+    },
+    {
+      "code": 126,
+      "name": "InvalidSystemProgram",
+      "msg": "Invalid System Program"
+    },
+    {
+      "code": 127,
+      "name": "MustBeNonFungible",
+      "msg": "Must be a Non Fungible Token"
     }
   ],
   "metadata": {
     "origin": "shank",
     "address": "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s",
     "binaryVersion": "0.0.9",
-    "libVersion": "~0.0.9"
+    "libVersion": "0.0.9"
   }
 }

@@ -16,8 +16,8 @@ mod create_market {
     };
     use solana_program_test::*;
     use solana_sdk::{
-        instruction::Instruction, signature::Keypair, signer::Signer, system_program,
-        sysvar::clock::Clock, transaction::Transaction, transport::TransportError,
+        commitment_config::CommitmentLevel, instruction::Instruction, signature::Keypair,
+        signer::Signer, system_program, sysvar::clock::Clock, transaction::Transaction,
     };
 
     use crate::setup_context;
@@ -119,7 +119,11 @@ mod create_market {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await.unwrap();
+        context
+            .banks_client
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+            .await
+            .unwrap();
 
         let market_acc = context
             .banks_client
@@ -294,11 +298,15 @@ mod create_market {
             context.last_blockhash,
         );
 
-        let tx_result = context.banks_client.process_transaction(tx).await;
+        let tx_result = context
+            .banks_client
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+            .await;
 
         match tx_result.unwrap_err() {
-            TransportError::Custom(_) => assert!(true),
-            TransportError::TransactionError(_) => assert!(true),
+            BanksClientError::ClientError(_) => assert!(true),
+            BanksClientError::RpcError(_) => assert!(true),
+            BanksClientError::TransactionError(_) => assert!(true),
             _ => assert!(false),
         }
     }
@@ -403,11 +411,15 @@ mod create_market {
             context.last_blockhash,
         );
 
-        let tx_result = context.banks_client.process_transaction(tx).await;
+        let tx_result = context
+            .banks_client
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+            .await;
 
         match tx_result.unwrap_err() {
-            TransportError::Custom(_) => assert!(true),
-            TransportError::TransactionError(_) => assert!(true),
+            BanksClientError::ClientError(_) => assert!(true),
+            BanksClientError::RpcError(_) => assert!(true),
+            BanksClientError::TransactionError(_) => assert!(true),
             _ => assert!(false),
         }
     }
@@ -507,7 +519,11 @@ mod create_market {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await.unwrap();
+        context
+            .banks_client
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+            .await
+            .unwrap();
     }
 
     #[tokio::test]
@@ -608,11 +624,15 @@ mod create_market {
             context.last_blockhash,
         );
 
-        let tx_result = context.banks_client.process_transaction(tx).await;
+        let tx_result = context
+            .banks_client
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+            .await;
 
         match tx_result.unwrap_err() {
-            TransportError::Custom(_) => assert!(true),
-            TransportError::TransactionError(_) => assert!(true),
+            BanksClientError::ClientError(_) => assert!(true),
+            BanksClientError::RpcError(_) => assert!(true),
+            BanksClientError::TransactionError(_) => assert!(true),
             _ => assert!(false),
         }
     }
@@ -709,7 +729,11 @@ mod create_market {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await.unwrap();
+        context
+            .banks_client
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+            .await
+            .unwrap();
     }
 
     #[tokio::test]
@@ -803,11 +827,15 @@ mod create_market {
             context.last_blockhash,
         );
 
-        let tx_result = context.banks_client.process_transaction(tx).await;
+        let tx_result = context
+            .banks_client
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+            .await;
 
         match tx_result.unwrap_err() {
-            TransportError::Custom(_) => assert!(true),
-            TransportError::TransactionError(_) => assert!(true),
+            BanksClientError::ClientError(_) => assert!(true),
+            BanksClientError::RpcError(_) => assert!(true),
+            BanksClientError::TransactionError(_) => assert!(true),
             _ => assert!(false),
         }
     }
@@ -913,11 +941,15 @@ mod create_market {
             context.last_blockhash,
         );
 
-        let tx_result = context.banks_client.process_transaction(tx).await;
+        let tx_result = context
+            .banks_client
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+            .await;
 
         match tx_result.unwrap_err() {
-            TransportError::Custom(_) => assert!(true),
-            TransportError::TransactionError(_) => assert!(true),
+            BanksClientError::ClientError(_) => assert!(true),
+            BanksClientError::RpcError(_) => assert!(true),
+            BanksClientError::TransactionError(_) => assert!(true),
             _ => assert!(false),
         }
     }

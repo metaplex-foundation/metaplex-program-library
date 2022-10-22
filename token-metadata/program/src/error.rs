@@ -481,17 +481,29 @@ pub enum MetadataError {
     #[error("Print Edition does not match Master Edition")]
     PrintEditionDoesNotMatchMasterEdition,
 
-    /// 122 - Must be delegate
-    #[error("Must be delegate to transfer out of Token Owned Escrow")]
-    MustBeDelegate,
+    /// 122 - Edition Number greater than max supply
+    #[error("Edition Number greater than max supply")]
+    EditionNumberGreaterThanMaxSupply,
 
-    /// 123 - Invalid Escrow Account Bump Seed
+    /// 123 - Must unverify before migrating collections.
+    #[error("Must unverify before migrating collections.")]
+    MustUnverify,
+
+    /// 124 - Invalid Escrow Account Bump Seed
     #[error("Invalid Escrow Account Bump Seed")]
     InvalidEscrowBumpSeed,
 
-    /// 124 - Must be Update Authority on Escrow Account
-    #[error("Must be Update Authority on Escrow Account")]
-    MustBeEscrowUpdateAuthority,
+    /// 125 - Must be Escrow Authority
+    #[error("Must Escrow Authority")]
+    MustBeEscrowAuthority,
+
+    /// 126 - Invalid System Program
+    #[error("Invalid System Program")]
+    InvalidSystemProgram,
+
+    /// 127 - Must be a Non Fungible Token
+    #[error("Must be a Non Fungible Token")]
+    MustBeNonFungible,
 }
 
 impl PrintProgramError for MetadataError {

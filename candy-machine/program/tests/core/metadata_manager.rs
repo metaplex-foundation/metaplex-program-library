@@ -4,10 +4,9 @@ use mpl_token_metadata::{
     state::{Collection, Creator, Metadata, Uses, PREFIX},
 };
 use solana_program::borsh::try_from_slice_unchecked;
-use solana_program_test::ProgramTestContext;
+use solana_program_test::{BanksClientError, ProgramTestContext};
 use solana_sdk::{
     pubkey::Pubkey, signature::Signer, signer::keypair::Keypair, transaction::Transaction,
-    transport,
 };
 
 use crate::core::helpers::{
@@ -88,7 +87,7 @@ impl MetadataManager {
         collection: Option<Collection>,
         uses: Option<Uses>,
         sized: bool,
-    ) -> transport::Result<()> {
+    ) -> Result<(), BanksClientError> {
         create_mint(
             context,
             &self.authority.pubkey(),
