@@ -6,34 +6,19 @@
  */
 
 import * as beet from '@metaplex-foundation/beet';
-<<<<<<< HEAD:trifle/js/src/generated/types/TransferInArgs.ts
 export type TransferInArgs = {
   slot: string;
   amount: beet.bignum;
-=======
-export type ConfigLine = {
-  name: string;
-  uri: string;
->>>>>>> tm_escrow:candy-machine-core/js/src/generated/types/ConfigLine.ts
 };
 
 /**
  * @category userTypes
  * @category generated
  */
-<<<<<<< HEAD:trifle/js/src/generated/types/TransferInArgs.ts
 export const transferInArgsBeet = new beet.FixableBeetArgsStruct<TransferInArgs>(
   [
     ['slot', beet.utf8String],
     ['amount', beet.u64],
   ],
   'TransferInArgs',
-=======
-export const configLineBeet = new beet.FixableBeetArgsStruct<ConfigLine>(
-  [
-    ['name', beet.utf8String],
-    ['uri', beet.utf8String],
-  ],
-  'ConfigLine',
->>>>>>> tm_escrow:candy-machine-core/js/src/generated/types/ConfigLine.ts
 );

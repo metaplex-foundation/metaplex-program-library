@@ -16,7 +16,7 @@ test-bpf = []
 
 [dependencies]
 borsh = "0.9.3"
-shank = "0.0.9"
+shank = "0.0.10"
 solana-program = "1.10.40"
 spl-token = { version = "3.2.0", features = ["no-entrypoint"] }
 spl-associated-token-account = { version = "~1.0.5", features = [
@@ -29,6 +29,7 @@ mpl-token-metadata = { path = "../../token-metadata/program", features = [
 ] }
 num-derive = "0.3.3"
 num-traits = "0.2.14"
+modular-bitfield = "0.11.2"
 
 [dev-dependencies]
 solana-sdk = "1.10.40"

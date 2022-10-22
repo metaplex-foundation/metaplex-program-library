@@ -36,38 +36,46 @@ export const TransferInStruct = new beet.FixableBeetArgsStruct<
 /**
  * Accounts required by the _TransferIn_ instruction
  *
- * @property [_writable_] trifleAccount The trifle account to use
- * @property [] constraintModel The constraint model to check against
- * @property [] escrowAccount The escrow account attached to the NFT
- * @property [_writable_, **signer**] payer The payer for the transaction
- * @property [_writable_, **signer**] trifleAuthority The authority of the trifle account
- * @property [] attributeMint The mint of the attribute
- * @property [_writable_] attributeSrcTokenAccount The token account the attribute is being transferred from
- * @property [_writable_] attributeDstTokenAccount The token account the attribute is being transferred to
- * @property [] attributeMetadata The metadata of the attribute
- * @property [] escrowMint The mint the escrow is attached to
- * @property [] escrowTokenAccount The token account holding the NFT the escrow is attached to
- * @property [] splAssociatedTokenAccount The associated token account program
- * @property [] splToken The spl token program
+ * @property [_writable_] trifle The trifle account to use
+ * @property [_writable_, **signer**] trifleAuthority Trifle Authority - the account that can sign transactions for the trifle account
+ * @property [_writable_, **signer**] payer Wallet paying for the transaction
+ * @property [] constraintModel The escrow constraint model of the Trifle account
+ * @property [] escrow The escrow account of the Trifle account
+ * @property [] escrowMint (optional) The escrow account's base token mint
+ * @property [_writable_] escrowToken (optional) The token account of the escrow account's base token
+ * @property [_writable_] escrowEdition (optional) The freeze authority of the escrow account's base token mint
+ * @property [_writable_] attributeMint (optional) The mint of the attribute token
+ * @property [_writable_] attributeSrcToken (optional) The token account that the attribute token is being transferred from
+ * @property [_writable_] attributeDstToken (optional) The token account that the attribute token is being transferred to (pda of the escrow account)
+ * @property [_writable_] attributeMetadata (optional) The metadata account of the attribute token
+ * @property [_writable_] attributeEdition (optional) The edition account of the attribute token
+ * @property [_writable_] attributeCollectionMetadata (optional) The collection metadata account of the attribute token
+ * @property [] splToken Token program
+ * @property [] splAssociatedTokenAccount Associated token account program
+ * @property [] tokenMetadataProgram Token Metadata program
  * @category Instructions
  * @category TransferIn
  * @category generated
  */
 export type TransferInInstructionAccounts = {
-  trifleAccount: web3.PublicKey;
-  constraintModel: web3.PublicKey;
-  escrowAccount: web3.PublicKey;
-  payer: web3.PublicKey;
+  trifle: web3.PublicKey;
   trifleAuthority: web3.PublicKey;
-  attributeMint: web3.PublicKey;
-  attributeSrcTokenAccount: web3.PublicKey;
-  attributeDstTokenAccount: web3.PublicKey;
-  attributeMetadata: web3.PublicKey;
-  escrowMint: web3.PublicKey;
-  escrowTokenAccount: web3.PublicKey;
+  payer: web3.PublicKey;
+  constraintModel: web3.PublicKey;
+  escrow: web3.PublicKey;
+  escrowMint?: web3.PublicKey;
+  escrowToken?: web3.PublicKey;
+  escrowEdition?: web3.PublicKey;
+  attributeMint?: web3.PublicKey;
+  attributeSrcToken?: web3.PublicKey;
+  attributeDstToken?: web3.PublicKey;
+  attributeMetadata?: web3.PublicKey;
+  attributeEdition?: web3.PublicKey;
+  attributeCollectionMetadata?: web3.PublicKey;
   systemProgram?: web3.PublicKey;
-  splAssociatedTokenAccount: web3.PublicKey;
   splToken: web3.PublicKey;
+  splAssociatedTokenAccount: web3.PublicKey;
+  tokenMetadataProgram: web3.PublicKey;
   rent?: web3.PublicKey;
 };
 
@@ -75,6 +83,9 @@ export const transferInInstructionDiscriminator = 2;
 
 /**
  * Creates a _TransferIn_ instruction.
+ *
+ * Optional accounts that are not provided default to the program ID since
+ * this was indicated in the IDL from which this instruction was generated.
  *
  * @param accounts that will be accessed while the instruction is processed
  * @param args to provide as instruction data to the program
@@ -94,24 +105,9 @@ export function createTransferInInstruction(
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: accounts.trifleAccount,
+      pubkey: accounts.trifle,
       isWritable: true,
       isSigner: false,
-    },
-    {
-      pubkey: accounts.constraintModel,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.escrowAccount,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.payer,
-      isWritable: true,
-      isSigner: true,
     },
     {
       pubkey: accounts.trifleAuthority,
@@ -119,37 +115,72 @@ export function createTransferInInstruction(
       isSigner: true,
     },
     {
-      pubkey: accounts.attributeMint,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.attributeSrcTokenAccount,
+      pubkey: accounts.payer,
       isWritable: true,
-      isSigner: false,
+      isSigner: true,
     },
     {
-      pubkey: accounts.attributeDstTokenAccount,
-      isWritable: true,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.attributeMetadata,
+      pubkey: accounts.constraintModel,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: accounts.escrowMint,
+      pubkey: accounts.escrow,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: accounts.escrowTokenAccount,
+      pubkey: accounts.escrowMint ?? programId,
       isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.escrowToken ?? programId,
+      isWritable: accounts.escrowToken != null,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.escrowEdition ?? programId,
+      isWritable: accounts.escrowEdition != null,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.attributeMint ?? programId,
+      isWritable: accounts.attributeMint != null,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.attributeSrcToken ?? programId,
+      isWritable: accounts.attributeSrcToken != null,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.attributeDstToken ?? programId,
+      isWritable: accounts.attributeDstToken != null,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.attributeMetadata ?? programId,
+      isWritable: accounts.attributeMetadata != null,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.attributeEdition ?? programId,
+      isWritable: accounts.attributeEdition != null,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.attributeCollectionMetadata ?? programId,
+      isWritable: accounts.attributeCollectionMetadata != null,
       isSigner: false,
     },
     {
       pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.splToken,
       isWritable: false,
       isSigner: false,
     },
@@ -159,7 +190,7 @@ export function createTransferInInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.splToken,
+      pubkey: accounts.tokenMetadataProgram,
       isWritable: false,
       isSigner: false,
     },

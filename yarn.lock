@@ -1873,13 +1873,14 @@ __metadata:
     "@metaplex-foundation/beet": ^0.7.1
     "@metaplex-foundation/beet-solana": ^0.4.0
     "@metaplex-foundation/cusper": ^0.0.2
-    "@metaplex-foundation/solita": ^0.16.0
+    "@metaplex-foundation/solita": 0.19.0
     "@solana/spl-token": ^0.2.0
     "@solana/web3.js": ^1.35.1
-    "@types/bn.js": ^5.1.0
+    "@types/bn.js": ^5.1.1
     "@types/debug": ^4.1.7
     "@types/tape": ^4.13.2
-    bn.js: ^5.2.0
+    bitfield: ^4.1.0
+    bn.js: ^5.2.1
     cpr: ^3.0.1
     debug: ^4.3.3
     eslint: ^8.3.0
@@ -1900,6 +1901,27 @@ __metadata:
     text-table: ^0.2.0
     toml: ^3.0.0
   checksum: 042eb8cb729e886477efa885693dadcf31722c071f8adc5a49509483d846d4d359999b9f2beff9406f4dc9fa0a0f0bdb37be4b0c68426864f9f9f60b456cc74b
+  languageName: node
+  linkType: hard
+
+"@metaplex-foundation/solita@npm:0.19.0":
+  version: 0.19.0
+  resolution: "@metaplex-foundation/solita@npm:0.19.0"
+  dependencies:
+    "@metaplex-foundation/beet": ^0.7.1
+    "@metaplex-foundation/beet-solana": ^0.3.1
+    "@metaplex-foundation/rustbin": ^0.3.0
+    "@solana/web3.js": ^1.56.2
+    ansi-colors: ^4.1.3
+    camelcase: ^6.2.1
+    debug: ^4.3.3
+    js-sha256: ^0.9.0
+    prettier: ^2.5.1
+    snake-case: ^3.0.4
+    spok: ^1.4.3
+  bin:
+    solita: dist/src/cli/solita.js
+  checksum: 198553c68193ac20006da870b11215828ba22d2263bdc7edc09d5583eac78a928b959acf22bbba23c04b46a41a2fb0598299c1db4a5a30f1275144adc4b72117
   languageName: node
   linkType: hard
 
@@ -2725,7 +2747,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/bn.js@npm:^5.1.0":
+"@types/bn.js@npm:^5.1.0, @types/bn.js@npm:^5.1.1":
   version: 5.1.1
   resolution: "@types/bn.js@npm:5.1.1"
   dependencies:
@@ -3195,7 +3217,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ansi-colors@npm:^4.1.1":
+"ansi-colors@npm:^4.1.1, ansi-colors@npm:^4.1.3":
   version: 4.1.3
   resolution: "ansi-colors@npm:4.1.3"
   checksum: a9c2ec842038a1fabc7db9ece7d3177e2fe1c5dc6f0c51ecfbf5f39911427b89c00b5dc6b8bd95f82a26e9b16aaae2e83d45f060e98070ce4d1333038edceb0e
@@ -3683,6 +3705,13 @@ __metadata:
     pbkdf2: ^3.0.9
     randombytes: ^2.0.1
   checksum: 71798582b4d1cc7f20d11372413c4514f124d302e6b38e7f9126d4759fca3e9fbccb431429a6ab16130dd67193de3d781122fcd4bca0a653be654d4aa13490c5
+  languageName: node
+  linkType: hard
+
+"bitfield@npm:^4.1.0":
+  version: 4.1.0
+  resolution: "bitfield@npm:4.1.0"
+  checksum: 91938f984a0fc3e13778da3ba9eb2721a6868f96d015fa38285a5ad1ee2b1137e6f50dcef08d920aa2b104bac645f3daddc50f08461511d7419da7d664e33d8e
   languageName: node
   linkType: hard
 

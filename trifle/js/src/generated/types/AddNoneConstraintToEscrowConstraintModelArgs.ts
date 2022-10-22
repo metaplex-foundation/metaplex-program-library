@@ -9,6 +9,7 @@ import * as beet from '@metaplex-foundation/beet';
 export type AddNoneConstraintToEscrowConstraintModelArgs = {
   constraintName: string;
   tokenLimit: beet.bignum;
+  transferEffects: number;
 };
 
 /**
@@ -20,6 +21,7 @@ export const addNoneConstraintToEscrowConstraintModelArgsBeet =
     [
       ['constraintName', beet.utf8String],
       ['tokenLimit', beet.u64],
+      ['transferEffects', beet.u16],
     ],
     'AddNoneConstraintToEscrowConstraintModelArgs',
   );

@@ -123,94 +123,127 @@
       "name": "TransferIn",
       "accounts": [
         {
-          "name": "trifleAccount",
+          "name": "trifle",
           "isMut": true,
           "isSigner": false,
           "desc": "The trifle account to use"
         },
         {
-          "name": "constraintModel",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "The constraint model to check against"
-        },
-        {
-          "name": "escrowAccount",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "The escrow account attached to the NFT"
+          "name": "trifleAuthority",
+          "isMut": true,
+          "isSigner": true,
+          "desc": "Trifle Authority - the account that can sign transactions for the trifle account"
         },
         {
           "name": "payer",
           "isMut": true,
           "isSigner": true,
-          "desc": "The payer for the transaction"
+          "desc": "Wallet paying for the transaction"
         },
         {
-          "name": "trifleAuthority",
-          "isMut": true,
-          "isSigner": true,
-          "desc": "The authority of the trifle account"
-        },
-        {
-          "name": "attributeMint",
+          "name": "constraintModel",
           "isMut": false,
           "isSigner": false,
-          "desc": "The mint of the attribute"
+          "desc": "The escrow constraint model of the Trifle account"
         },
         {
-          "name": "attributeSrcTokenAccount",
-          "isMut": true,
-          "isSigner": false,
-          "desc": "The token account the attribute is being transferred from"
-        },
-        {
-          "name": "attributeDstTokenAccount",
-          "isMut": true,
-          "isSigner": false,
-          "desc": "The token account the attribute is being transferred to"
-        },
-        {
-          "name": "attributeMetadata",
+          "name": "escrow",
           "isMut": false,
           "isSigner": false,
-          "desc": "The metadata of the attribute"
+          "desc": "The escrow account of the Trifle account"
         },
         {
           "name": "escrowMint",
           "isMut": false,
           "isSigner": false,
-          "desc": "The mint the escrow is attached to"
+          "desc": "The escrow account's base token mint",
+          "optional": true
         },
         {
-          "name": "escrowTokenAccount",
-          "isMut": false,
+          "name": "escrowToken",
+          "isMut": true,
           "isSigner": false,
-          "desc": "The token account holding the NFT the escrow is attached to"
+          "desc": "The token account of the escrow account's base token",
+          "optional": true
+        },
+        {
+          "name": "escrowEdition",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "The freeze authority of the escrow account's base token mint",
+          "optional": true
+        },
+        {
+          "name": "attributeMint",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "The mint of the attribute token",
+          "optional": true
+        },
+        {
+          "name": "attributeSrcToken",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "The token account that the attribute token is being transferred from",
+          "optional": true
+        },
+        {
+          "name": "attributeDstToken",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "The token account that the attribute token is being transferred to (pda of the escrow account)",
+          "optional": true
+        },
+        {
+          "name": "attributeMetadata",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "The metadata account of the attribute token",
+          "optional": true
+        },
+        {
+          "name": "attributeEdition",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "The edition account of the attribute token",
+          "optional": true
+        },
+        {
+          "name": "attributeCollectionMetadata",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "The collection metadata account of the attribute token",
+          "optional": true
         },
         {
           "name": "systemProgram",
           "isMut": false,
           "isSigner": false,
-          "desc": "The system program"
-        },
-        {
-          "name": "splAssociatedTokenAccount",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "The associated token account program"
+          "desc": "System program"
         },
         {
           "name": "splToken",
           "isMut": false,
           "isSigner": false,
-          "desc": "The spl token program"
+          "desc": "Token program"
+        },
+        {
+          "name": "splAssociatedTokenAccount",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Associated token account program"
+        },
+        {
+          "name": "tokenMetadataProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Token Metadata program"
         },
         {
           "name": "rent",
           "isMut": false,
           "isSigner": false,
-          "desc": "The rent sysvar"
+          "desc": "Rent sysvar"
         }
       ],
       "args": [
@@ -221,6 +254,7 @@
           }
         }
       ],
+      "defaultOptionalAccounts": true,
       "discriminant": {
         "type": "u8",
         "value": 2
@@ -248,16 +282,35 @@
           "desc": "The escrow account attached to the NFT"
         },
         {
+          "name": "escrowTokenAccount",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "The token account holding the NFT the escrow is attached to"
+        },
+        {
+          "name": "escrowMint",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "The mint of the NFT the escrow is attached to"
+        },
+        {
+          "name": "escrowEdition",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "The edition of the NFT the escrow is attached to",
+          "optional": true
+        },
+        {
           "name": "payer",
           "isMut": true,
           "isSigner": true,
-          "desc": "The payer for the transaction"
+          "desc": "Wallet paying for the transaction"
         },
         {
           "name": "trifleAuthority",
-          "isMut": true,
-          "isSigner": true,
-          "desc": "The authority of the trifle account"
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Trifle Authority - the account that can sign transactions for the trifle account"
         },
         {
           "name": "attributeMint",
@@ -282,18 +335,6 @@
           "isMut": false,
           "isSigner": false,
           "desc": "The metadata of the attribute"
-        },
-        {
-          "name": "escrowMint",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "The mint the escrow is attached to"
-        },
-        {
-          "name": "escrowTokenAccount",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "The token account holding the NFT the escrow is attached to"
         },
         {
           "name": "systemProgram",
@@ -334,6 +375,7 @@
           }
         }
       ],
+      "defaultOptionalAccounts": true,
       "discriminant": {
         "type": "u8",
         "value": 3
@@ -584,6 +626,10 @@
             "type": {
               "defined": "EscrowConstraintType"
             }
+          },
+          {
+            "name": "transferEffects",
+            "type": "u16"
           }
         ]
       }
@@ -646,6 +692,10 @@
           {
             "name": "tokenLimit",
             "type": "u64"
+          },
+          {
+            "name": "transferEffects",
+            "type": "u16"
           }
         ]
       }
@@ -662,6 +712,10 @@
           {
             "name": "tokenLimit",
             "type": "u64"
+          },
+          {
+            "name": "transferEffects",
+            "type": "u16"
           }
         ]
       }
@@ -684,6 +738,10 @@
           {
             "name": "tokenLimit",
             "type": "u64"
+          },
+          {
+            "name": "transferEffects",
+            "type": "u16"
           }
         ]
       }
@@ -837,14 +895,34 @@
     },
     {
       "code": 11,
-      "name": "NotACollection",
-      "msg": "Provided Metadata Account does not have Collection Details"
+      "name": "InvalidCollectionMetadata",
+      "msg": "Invalid Collection Metadata"
+    },
+    {
+      "code": 12,
+      "name": "FuseOptionConflict",
+      "msg": "Provided Fuse Options are in conflict"
+    },
+    {
+      "code": 13,
+      "name": "FreezeAuthorityNotSet",
+      "msg": "Freeze Authority Not Set"
+    },
+    {
+      "code": 14,
+      "name": "CannotBurnPrintEdition",
+      "msg": "Cannot burn Print Edition"
+    },
+    {
+      "code": 15,
+      "name": "ConstraintKeyNotFound",
+      "msg": "Constraint Key Not Found"
     }
   ],
   "metadata": {
     "origin": "shank",
     "address": "6PLSD84fn6MVb3XdPYAiX33X8jgfCPXeqYUmfnYndU3X",
-    "binaryVersion": "0.0.9",
-    "libVersion": "0.0.9"
+    "binaryVersion": "0.0.10",
+    "libVersion": "0.0.10"
   }
 }

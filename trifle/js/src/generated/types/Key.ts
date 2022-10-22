@@ -10,26 +10,14 @@ import * as beet from '@metaplex-foundation/beet';
  * @category enums
  * @category generated
  */
-<<<<<<< HEAD:trifle/js/src/generated/types/Key.ts
 export enum Key {
   Uninitialized,
   EscrowConstraintModel,
   Trifle,
-=======
-export enum BubblegumEventType {
-  Uninitialized,
-  LeafSchemaEvent,
->>>>>>> tm_escrow:bubblegum/js/src/generated/types/BubblegumEventType.ts
 }
 
 /**
  * @category userTypes
  * @category generated
  */
-<<<<<<< HEAD:trifle/js/src/generated/types/Key.ts
 export const keyBeet = beet.fixedScalarEnum(Key) as beet.FixedSizeBeet<Key, Key>;
-=======
-export const bubblegumEventTypeBeet = beet.fixedScalarEnum(
-  BubblegumEventType,
-) as beet.FixedSizeBeet<BubblegumEventType, BubblegumEventType>;
->>>>>>> tm_escrow:bubblegum/js/src/generated/types/BubblegumEventType.ts
