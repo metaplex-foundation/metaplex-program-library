@@ -216,7 +216,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
     // different signer, payer, accounts, data, etc.) before execution.
     // Moreover executions don't consume the builder, which can be modified
     // some more and executed again etc.
-    pub fn create_tree_tx(&self, payer: &Keypair) -> CreateBuilder<MAX_DEPTH, MAX_BUFFER_SIZE> {
+    pub fn create_tree_tx(&self, payer: &Keypair, public: bool) -> CreateBuilder<MAX_DEPTH, MAX_BUFFER_SIZE> {
         let accounts = mpl_bubblegum::accounts::CreateTree {
             tree_authority: self.authority(),
             payer: payer.pubkey(),
@@ -231,7 +231,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
         let data = mpl_bubblegum::instruction::CreateTree {
             max_depth: u32::try_from(MAX_DEPTH).unwrap(),
             max_buffer_size: u32::try_from(MAX_BUFFER_SIZE).unwrap(),
-            public: None,
+            public: Some(public),
         };
 
         self.tx_builder(accounts, data, None, (), payer.pubkey(), &[payer])
@@ -240,7 +240,11 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
     // Shorthand method for executing a create tree tx with the default config
     // defined in the `_tx` method.
     pub async fn create(&self, payer: &Keypair) -> Result<()> {
-        self.create_tree_tx(payer).execute().await
+        self.create_tree_tx(payer, false).execute().await
+    }
+
+    pub async fn create_public(&self, payer: &Keypair) -> Result<()> {
+        self.create_tree_tx(payer, true).execute().await
     }
 
     pub fn mint_v1_tx<'a>(

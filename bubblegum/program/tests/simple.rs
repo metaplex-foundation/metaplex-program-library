@@ -291,3 +291,39 @@ async fn test_decompress_passes() {
         assert_eq!(me, expected_me);
     }
 }
+
+#[tokio::test]
+async fn test_create_public_tree_and_mint_passes() {
+    // The mint operation implicitly called below also verifies that the on-chain tree
+    // root matches the expected value as leaves are added.
+    let mut context = BubblegumTestContext::new().await.unwrap();
+    let tree = context
+        .create_public_tree::<MAX_DEPTH, MAX_BUF_SIZE>()
+        .await.unwrap();
+    let tree_private = context
+        .create_public_tree::<MAX_DEPTH, MAX_BUF_SIZE>()
+        .await.unwrap();
+    let payer = context.payer();
+    let minter = Keypair::new(); // NON tree authority payer, nor delegate
+
+    context.fund_account(minter.pubkey(), 10000000000).await.unwrap();
+    let cfg = tree.read_tree_config().await.unwrap();
+
+    let name = format!("test{}", 0);
+    let symbol = format!("tst{}", 0);
+    let mut args = LeafArgs::new(&minter, context.default_metadata_args(name, symbol));
+
+    assert_eq!(cfg.tree_creator, payer.pubkey());
+    assert_eq!(cfg.tree_delegate, payer.pubkey());
+    assert_eq!(cfg.total_mint_capacity, 1 << MAX_DEPTH);
+    assert_eq!(cfg.public, true);
+
+    tree.mint_v1(&payer, &mut args).await.unwrap();
+    let cfg = tree.read_tree_config().await.unwrap();
+    assert_eq!(cfg.num_minted, 1);
+
+    tree_private.mint_v1(&payer, &mut args).await.map_err(|e| {
+        println!("Error: {:?}", e);
+        e
+    }).unwrap();
+}
