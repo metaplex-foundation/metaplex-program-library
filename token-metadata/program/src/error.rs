@@ -504,6 +504,14 @@ pub enum MetadataError {
     /// 127 - Must be a Non Fungible Token
     #[error("Must be a Non Fungible Token")]
     MustBeNonFungible,
+
+    /// 128 - Insufficient tokens for transfer
+    #[error("Insufficient tokens for transfer")]
+    InsufficientTokens,
+
+    /// 129 - Borsh Serialization Error
+    #[error("Borsh Serialization Error")]
+    BorshSerializationError,
 }
 
 impl PrintProgramError for MetadataError {

@@ -3,7 +3,7 @@ use crate::{
     instruction::MetadataInstruction,
     state::{
         EscrowAuthority, Metadata, TokenMetadataAccount, TokenOwnedEscrow, TokenStandard,
-        ESCROW_PREFIX, PREFIX,
+        ESCROW_POSTFIX, PREFIX,
     },
     utils::{
         assert_derivation, assert_initialized, assert_owned_by, assert_signer,
@@ -91,7 +91,7 @@ pub fn process_close_escrow_account(
             PREFIX.as_bytes(),
             program_id.as_ref(),
             mint_account_info.key.as_ref(),
-            ESCROW_PREFIX.as_bytes(),
+            ESCROW_POSTFIX.as_bytes(),
         ],
     )?;
 
