@@ -436,3 +436,9 @@ Decompress an NFT into an uncompressed Metaplex NFT.  This will cost rent for th
 | `data`                            | 0      | ~    | [`MetadataArgs`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/bubblegum/program/src/state/metaplex_adapter.rs#L81) object.
 
 </details>
+
+## Testing
+```bash
+cargo build
+cargo test-bpf --bpf-out-dir ../../test-programs
+```

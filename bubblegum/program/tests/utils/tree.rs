@@ -231,6 +231,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
         let data = mpl_bubblegum::instruction::CreateTree {
             max_depth: u32::try_from(MAX_DEPTH).unwrap(),
             max_buffer_size: u32::try_from(MAX_BUFFER_SIZE).unwrap(),
+            public: None,
         };
 
         self.tx_builder(accounts, data, None, (), payer.pubkey(), &[payer])
@@ -256,6 +257,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             leaf_owner: args.owner.pubkey(),
             leaf_delegate: args.delegate.pubkey(),
             merkle_tree: self.tree_pubkey(),
+            system_program: system_program::id(),
         };
 
         let data = mpl_bubblegum::instruction::MintV1 {
@@ -313,6 +315,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             leaf_owner: args.owner.pubkey(),
             leaf_delegate: args.delegate.pubkey(),
             merkle_tree: self.tree_pubkey(),
+            system_program: system_program::id(),
         };
 
         let data = mpl_bubblegum::instruction::Burn {
@@ -356,6 +359,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             log_wrapper: spl_noop::id(),
             compression_program: spl_account_compression::id(),
             merkle_tree: self.tree_pubkey(),
+            system_program: system_program::id(),
         };
 
         let data = mpl_bubblegum::instruction::VerifyCreator {
@@ -405,6 +409,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             log_wrapper: spl_noop::id(),
             compression_program: spl_account_compression::id(),
             merkle_tree: self.tree_pubkey(),
+            system_program: system_program::id(),
         };
 
         let data = mpl_bubblegum::instruction::UnverifyCreator {
@@ -456,6 +461,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             log_wrapper: spl_noop::id(),
             compression_program: spl_account_compression::id(),
             merkle_tree: self.tree_pubkey(),
+            system_program: system_program::id(),
         };
 
         let data = mpl_bubblegum::instruction::Transfer {
@@ -497,6 +503,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             log_wrapper: spl_noop::id(),
             compression_program: spl_account_compression::id(),
             merkle_tree: self.tree_pubkey(),
+            system_program: system_program::id(),
         };
 
         let data = mpl_bubblegum::instruction::Delegate {
@@ -575,6 +582,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             voucher: self.voucher(args.nonce),
             log_wrapper: spl_noop::id(),
             compression_program: spl_account_compression::id(),
+            system_program: system_program::id(),
         };
 
         let data = mpl_bubblegum::instruction::CancelRedeem { root };
@@ -647,6 +655,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             new_tree_delegate: new_tree_delegate.pubkey(),
             merkle_tree: self.tree_pubkey(),
             tree_authority: self.authority(),
+            system_program: system_program::id(),
         };
 
         let data = mpl_bubblegum::instruction::SetTreeDelegate;

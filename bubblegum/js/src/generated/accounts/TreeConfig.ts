@@ -5,9 +5,9 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as web3 from '@solana/web3.js';
-import * as beet from '@metaplex-foundation/beet';
-import * as beetSolana from '@metaplex-foundation/beet-solana';
+import * as web3 from '@solana/web3.js'
+import * as beet from '@metaplex-foundation/beet'
+import * as beetSolana from '@metaplex-foundation/beet-solana'
 
 /**
  * Arguments used to create {@link TreeConfig}
@@ -15,13 +15,14 @@ import * as beetSolana from '@metaplex-foundation/beet-solana';
  * @category generated
  */
 export type TreeConfigArgs = {
-  treeCreator: web3.PublicKey;
-  treeDelegate: web3.PublicKey;
-  totalMintCapacity: beet.bignum;
-  numMinted: beet.bignum;
-};
+  treeCreator: web3.PublicKey
+  treeDelegate: web3.PublicKey
+  totalMintCapacity: beet.bignum
+  numMinted: beet.bignum
+  public: boolean
+}
 
-export const treeConfigDiscriminator = [122, 245, 175, 248, 171, 34, 0, 207];
+export const treeConfigDiscriminator = [122, 245, 175, 248, 171, 34, 0, 207]
 /**
  * Holds the data for the {@link TreeConfig} Account and provides de/serialization
  * functionality for that data
@@ -35,6 +36,7 @@ export class TreeConfig implements TreeConfigArgs {
     readonly treeDelegate: web3.PublicKey,
     readonly totalMintCapacity: beet.bignum,
     readonly numMinted: beet.bignum,
+    readonly public: boolean
   ) {}
 
   /**
@@ -46,15 +48,19 @@ export class TreeConfig implements TreeConfigArgs {
       args.treeDelegate,
       args.totalMintCapacity,
       args.numMinted,
-    );
+      args.public
+    )
   }
 
   /**
    * Deserializes the {@link TreeConfig} from the data of the provided {@link web3.AccountInfo}.
    * @returns a tuple of the account data and the offset up to which the buffer was read to obtain it.
    */
-  static fromAccountInfo(accountInfo: web3.AccountInfo<Buffer>, offset = 0): [TreeConfig, number] {
-    return TreeConfig.deserialize(accountInfo.data, offset);
+  static fromAccountInfo(
+    accountInfo: web3.AccountInfo<Buffer>,
+    offset = 0
+  ): [TreeConfig, number] {
+    return TreeConfig.deserialize(accountInfo.data, offset)
   }
 
   /**
@@ -66,12 +72,16 @@ export class TreeConfig implements TreeConfigArgs {
   static async fromAccountAddress(
     connection: web3.Connection,
     address: web3.PublicKey,
+    commitmentOrConfig?: web3.Commitment | web3.GetAccountInfoConfig
   ): Promise<TreeConfig> {
-    const accountInfo = await connection.getAccountInfo(address);
+    const accountInfo = await connection.getAccountInfo(
+      address,
+      commitmentOrConfig
+    )
     if (accountInfo == null) {
-      throw new Error(`Unable to find TreeConfig account at ${address}`);
+      throw new Error(`Unable to find TreeConfig account at ${address}`)
     }
-    return TreeConfig.fromAccountInfo(accountInfo, 0)[0];
+    return TreeConfig.fromAccountInfo(accountInfo, 0)[0]
   }
 
   /**
@@ -81,9 +91,11 @@ export class TreeConfig implements TreeConfigArgs {
    * @param programId - the program that owns the accounts we are filtering
    */
   static gpaBuilder(
-    programId: web3.PublicKey = new web3.PublicKey('BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY'),
+    programId: web3.PublicKey = new web3.PublicKey(
+      'BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY'
+    )
   ) {
-    return beetSolana.GpaBuilder.fromStruct(programId, treeConfigBeet);
+    return beetSolana.GpaBuilder.fromStruct(programId, treeConfigBeet)
   }
 
   /**
@@ -91,7 +103,7 @@ export class TreeConfig implements TreeConfigArgs {
    * @returns a tuple of the account data and the offset up to which the buffer was read to obtain it.
    */
   static deserialize(buf: Buffer, offset = 0): [TreeConfig, number] {
-    return treeConfigBeet.deserialize(buf, offset);
+    return treeConfigBeet.deserialize(buf, offset)
   }
 
   /**
@@ -102,7 +114,7 @@ export class TreeConfig implements TreeConfigArgs {
     return treeConfigBeet.serialize({
       accountDiscriminator: treeConfigDiscriminator,
       ...this,
-    });
+    })
   }
 
   /**
@@ -110,7 +122,7 @@ export class TreeConfig implements TreeConfigArgs {
    * {@link TreeConfig}
    */
   static get byteSize() {
-    return treeConfigBeet.byteSize;
+    return treeConfigBeet.byteSize
   }
 
   /**
@@ -121,9 +133,12 @@ export class TreeConfig implements TreeConfigArgs {
    */
   static async getMinimumBalanceForRentExemption(
     connection: web3.Connection,
-    commitment?: web3.Commitment,
+    commitment?: web3.Commitment
   ): Promise<number> {
-    return connection.getMinimumBalanceForRentExemption(TreeConfig.byteSize, commitment);
+    return connection.getMinimumBalanceForRentExemption(
+      TreeConfig.byteSize,
+      commitment
+    )
   }
 
   /**
@@ -131,7 +146,7 @@ export class TreeConfig implements TreeConfigArgs {
    * hold {@link TreeConfig} data.
    */
   static hasCorrectByteSize(buf: Buffer, offset = 0) {
-    return buf.byteLength - offset === TreeConfig.byteSize;
+    return buf.byteLength - offset === TreeConfig.byteSize
   }
 
   /**
@@ -143,28 +158,29 @@ export class TreeConfig implements TreeConfigArgs {
       treeCreator: this.treeCreator.toBase58(),
       treeDelegate: this.treeDelegate.toBase58(),
       totalMintCapacity: (() => {
-        const x = <{ toNumber: () => number }>this.totalMintCapacity;
+        const x = <{ toNumber: () => number }>this.totalMintCapacity
         if (typeof x.toNumber === 'function') {
           try {
-            return x.toNumber();
+            return x.toNumber()
           } catch (_) {
-            return x;
+            return x
           }
         }
-        return x;
+        return x
       })(),
       numMinted: (() => {
-        const x = <{ toNumber: () => number }>this.numMinted;
+        const x = <{ toNumber: () => number }>this.numMinted
         if (typeof x.toNumber === 'function') {
           try {
-            return x.toNumber();
+            return x.toNumber()
           } catch (_) {
-            return x;
+            return x
           }
         }
-        return x;
+        return x
       })(),
-    };
+      public: this.public,
+    }
   }
 }
 
@@ -175,7 +191,7 @@ export class TreeConfig implements TreeConfigArgs {
 export const treeConfigBeet = new beet.BeetStruct<
   TreeConfig,
   TreeConfigArgs & {
-    accountDiscriminator: number[] /* size: 8 */;
+    accountDiscriminator: number[] /* size: 8 */
   }
 >(
   [
@@ -184,7 +200,8 @@ export const treeConfigBeet = new beet.BeetStruct<
     ['treeDelegate', beetSolana.publicKey],
     ['totalMintCapacity', beet.u64],
     ['numMinted', beet.u64],
+    ['public', beet.bool],
   ],
   TreeConfig.fromArgs,
-  'TreeConfig',
-);
+  'TreeConfig'
+)
