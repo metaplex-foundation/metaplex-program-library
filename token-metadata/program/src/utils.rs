@@ -932,7 +932,7 @@ pub const BUBBLEGUM_PROGRAM_ADDRESS: Pubkey = Pubkey::new_from_array([
     0x26, 0x58, 0xca, 0x13, 0xdc, 0x68, 0x81, 0x21, 0x26, 0x35, 0x1c, 0xae, 0x07, 0xc1, 0xa5, 0xa5,
 ]);
 // This flag activates certain program authority features of the Bubblegum program.
-pub const BUBBLEGUM_ACTIVATED: bool = false;
+pub const BUBBLEGUM_ACTIVATED: bool = true;
 
 /// Create a new account instruction
 pub fn process_create_metadata_accounts_logic(
