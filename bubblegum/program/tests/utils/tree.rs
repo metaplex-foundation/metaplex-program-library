@@ -247,6 +247,38 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
         self.create_tree_tx(payer, true).execute().await
     }
 
+    pub fn mint_v1_non_owner_tx<'a>(&'a self,
+                                 tree_delegate: &Keypair,
+                                 args: &'a mut LeafArgs,
+    ) -> MintV1Builder<MAX_DEPTH, MAX_BUFFER_SIZE> {
+        let accounts = mpl_bubblegum::accounts::MintV1 {
+            tree_authority: self.authority(),
+            tree_delegate: tree_delegate.pubkey(),
+            payer: args.owner.pubkey(),
+            log_wrapper: spl_noop::id(),
+            compression_program: spl_account_compression::id(),
+            leaf_owner: args.owner.pubkey(),
+            leaf_delegate: args.delegate.pubkey(),
+            merkle_tree: self.tree_pubkey(),
+            system_program: system_program::id(),
+        };
+
+        let data = mpl_bubblegum::instruction::MintV1 {
+            message: args.metadata.clone(),
+        };
+
+        let owner = clone_keypair(&args.owner);
+
+        self.tx_builder(
+            accounts,
+            data,
+            None,
+            args,
+            tree_delegate.pubkey(),
+            &[tree_delegate],
+        )
+    }
+
     pub fn mint_v1_tx<'a>(
         &'a self,
         tree_delegate: &Keypair,
@@ -284,6 +316,10 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
     // more configurable for any of the methods.
     pub async fn mint_v1(&self, tree_delegate: &Keypair, args: &mut LeafArgs) -> Result<()> {
         self.mint_v1_tx(tree_delegate, args).execute().await
+    }
+
+    pub async fn mint_v1_non_owner(&self, tree_delegate: &Keypair, args: &mut LeafArgs) -> Result<()> {
+        self.mint_v1_non_owner_tx(tree_delegate, args).execute().await
     }
 
     pub async fn decode_root(&self) -> Result<[u8; 32]> {
