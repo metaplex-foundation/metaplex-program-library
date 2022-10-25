@@ -136,10 +136,9 @@ pub fn process_create_escrow_account(
         bump: bump_seed[0],
     };
 
-    let serialized_data = match toe.try_to_vec() {
-        Ok(data) => data,
-        Err(_) => return Err(MetadataError::BorshSerializationError.into()),
-    };
+    let serialized_data = toe
+        .try_to_vec()
+        .map_err(|_| MetadataError::BorshSerializationError)?;
 
     // Create the account.
     create_or_allocate_account_raw(
