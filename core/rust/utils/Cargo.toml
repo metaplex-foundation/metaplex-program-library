@@ -18,12 +18,10 @@ solana-program = "1.10"
 borsh = "0.9.3"
 arrayref = "0.3.6"
 spl-token = { version = "3.2.0", features = ["no-entrypoint"], optional = true }
-mpl-token-metadata = { version = "1.5.0", features = ["no-entrypoint"], optional = true }
 
 [features]
 spl-token = ["dep:spl-token"]
-mpl-token-metadata = ["dep:mpl-token-metadata"]
-default = ["spl-token", "mpl-token-metadata"]
+default = ["spl-token"]
 
 [profile.release]
 overflow-checks = true     # Enable integer overflow checks.

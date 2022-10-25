@@ -1,11 +1,8 @@
-pub use misc::*;
 pub use assertions::*;
+pub use misc::*;
 
-mod misc;
 mod assertions;
+mod misc;
 
-#[cfg(feature = "mpl-token-metadata")]
-pub mod metadata;
 #[cfg(feature = "spl-token")]
 pub mod token;
-
