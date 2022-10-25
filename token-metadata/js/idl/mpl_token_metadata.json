@@ -3537,6 +3537,11 @@
       "code": 123,
       "name": "MustUnverify",
       "msg": "Must unverify before migrating collections."
+    },
+    {
+      "code": 124,
+      "name": "NoFreezeAuthoritySet",
+      "msg": "Cannot create NFT with no Freeze Authority."
     }
   ],
   "metadata": {

@@ -2672,6 +2672,26 @@ createErrorFromCodeLookup.set(0x7b, () => new MustUnverifyError());
 createErrorFromNameLookup.set('MustUnverify', () => new MustUnverifyError());
 
 /**
+ * NoFreezeAuthoritySet: 'Cannot create NFT with no Freeze Authority.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class NoFreezeAuthoritySetError extends Error {
+  readonly code: number = 0x7c;
+  readonly name: string = 'NoFreezeAuthoritySet';
+  constructor() {
+    super('Cannot create NFT with no Freeze Authority.');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, NoFreezeAuthoritySetError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x7c, () => new NoFreezeAuthoritySetError());
+createErrorFromNameLookup.set('NoFreezeAuthoritySet', () => new NoFreezeAuthoritySetError());
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated
