@@ -6,6 +6,7 @@ pub mod deprecated_processor;
 mod deser;
 pub mod entrypoint;
 pub mod error;
+pub mod escrow;
 pub mod instruction;
 pub mod pda;
 pub mod processor;

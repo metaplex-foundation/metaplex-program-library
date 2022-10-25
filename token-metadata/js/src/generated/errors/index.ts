@@ -2672,24 +2672,84 @@ createErrorFromCodeLookup.set(0x7b, () => new MustUnverifyError());
 createErrorFromNameLookup.set('MustUnverify', () => new MustUnverifyError());
 
 /**
- * NoFreezeAuthoritySet: 'Cannot create NFT with no Freeze Authority.'
+ * InvalidEscrowBumpSeed: 'Invalid Escrow Account Bump Seed'
  *
  * @category Errors
  * @category generated
  */
-export class NoFreezeAuthoritySetError extends Error {
+export class InvalidEscrowBumpSeedError extends Error {
   readonly code: number = 0x7c;
-  readonly name: string = 'NoFreezeAuthoritySet';
+  readonly name: string = 'InvalidEscrowBumpSeed';
   constructor() {
-    super('Cannot create NFT with no Freeze Authority.');
+    super('Invalid Escrow Account Bump Seed');
     if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, NoFreezeAuthoritySetError);
+      Error.captureStackTrace(this, InvalidEscrowBumpSeedError);
     }
   }
 }
 
-createErrorFromCodeLookup.set(0x7c, () => new NoFreezeAuthoritySetError());
-createErrorFromNameLookup.set('NoFreezeAuthoritySet', () => new NoFreezeAuthoritySetError());
+createErrorFromCodeLookup.set(0x7c, () => new InvalidEscrowBumpSeedError());
+createErrorFromNameLookup.set('InvalidEscrowBumpSeed', () => new InvalidEscrowBumpSeedError());
+
+/**
+ * MustBeEscrowAuthority: 'Must Escrow Authority'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MustBeEscrowAuthorityError extends Error {
+  readonly code: number = 0x7d;
+  readonly name: string = 'MustBeEscrowAuthority';
+  constructor() {
+    super('Must Escrow Authority');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MustBeEscrowAuthorityError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x7d, () => new MustBeEscrowAuthorityError());
+createErrorFromNameLookup.set('MustBeEscrowAuthority', () => new MustBeEscrowAuthorityError());
+
+/**
+ * InvalidSystemProgram: 'Invalid System Program'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidSystemProgramError extends Error {
+  readonly code: number = 0x7e;
+  readonly name: string = 'InvalidSystemProgram';
+  constructor() {
+    super('Invalid System Program');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidSystemProgramError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x7e, () => new InvalidSystemProgramError());
+createErrorFromNameLookup.set('InvalidSystemProgram', () => new InvalidSystemProgramError());
+
+/**
+ * MustBeNonFungible: 'Must be a Non Fungible Token'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MustBeNonFungibleError extends Error {
+  readonly code: number = 0x7f;
+  readonly name: string = 'MustBeNonFungible';
+  constructor() {
+    super('Must be a Non Fungible Token');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MustBeNonFungibleError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x7f, () => new MustBeNonFungibleError());
+createErrorFromNameLookup.set('MustBeNonFungible', () => new MustBeNonFungibleError());
 
 /**
  * Attempts to resolve a custom program error from the provided error code.

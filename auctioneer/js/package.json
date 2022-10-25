@@ -1,6 +1,6 @@
 {
   "name": "@metaplex-foundation/mpl-auctioneer",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "MPL Auctioneer JavaScript API.",
   "main": "dist/src/mpl-auctioneer.js",
   "types": "dist/src/mpl-auctioneer.d.ts",
@@ -49,8 +49,6 @@
   "devDependencies": {
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-prettier": "^4.0.0",
-    "@typescript-eslint/eslint-plugin": "^5.4.0",
-    "@typescript-eslint/parser": "^5.4.0",
     "@typescript-eslint/eslint-plugin": "^5.4.0",
     "@typescript-eslint/parser": "^5.4.0",
     "@metaplex-foundation/solita": "^0.7.0",
