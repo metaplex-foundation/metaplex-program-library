@@ -86,7 +86,14 @@ impl EditionMarker {
     }
 
     pub async fn create(&self, context: &mut ProgramTestContext) -> Result<(), BanksClientError> {
-        create_mint(context, &self.mint, &context.payer.pubkey(), None, 0).await?;
+        create_mint(
+            context,
+            &self.mint,
+            &context.payer.pubkey(),
+            Some(&context.payer.pubkey()),
+            0,
+        )
+        .await?;
         create_token_account(
             context,
             &self.token,

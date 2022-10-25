@@ -3821,6 +3821,11 @@
       "code": 127,
       "name": "MustBeNonFungible",
       "msg": "Must be a Non Fungible Token"
+    },
+    {
+      "code": 124,
+      "name": "NoFreezeAuthoritySet",
+      "msg": "Cannot create NFT with no Freeze Authority."
     }
   ],
   "metadata": {

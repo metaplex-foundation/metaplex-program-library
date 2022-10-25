@@ -512,6 +512,10 @@ pub enum MetadataError {
     /// 129 - Borsh Serialization Error
     #[error("Borsh Serialization Error")]
     BorshSerializationError,
+
+    /// 130 - Cannot create NFT with no Freeze Authority.
+    #[error("Cannot create NFT with no Freeze Authority.")]
+    NoFreezeAuthoritySet,
 }
 
 impl PrintProgramError for MetadataError {

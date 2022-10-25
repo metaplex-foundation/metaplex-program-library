@@ -51,7 +51,14 @@ impl Metadata {
         is_mutable: bool,
         decimals: u8,
     ) -> Result<(), BanksClientError> {
-        create_mint(context, &self.mint, &context.payer.pubkey(), None, decimals).await?;
+        create_mint(
+            context,
+            &self.mint,
+            &context.payer.pubkey(),
+            Some(&context.payer.pubkey()),
+            decimals,
+        )
+        .await?;
         create_token_account(
             context,
             &self.token,
@@ -102,7 +109,6 @@ impl Metadata {
         creators: Option<Vec<Creator>>,
         seller_fee_basis_points: u16,
         is_mutable: bool,
-        freeze_authority: Option<&Pubkey>,
         collection: Option<Collection>,
         uses: Option<Uses>,
     ) -> Result<(), BanksClientError> {
@@ -110,7 +116,7 @@ impl Metadata {
             context,
             &self.mint,
             &context.payer.pubkey(),
-            freeze_authority,
+            Some(&context.payer.pubkey()),
             0,
         )
         .await?;
@@ -157,6 +163,24 @@ impl Metadata {
         context.banks_client.process_transaction(tx).await
     }
 
+    pub async fn create_v2_default(
+        &self,
+        context: &mut ProgramTestContext,
+    ) -> Result<(), BanksClientError> {
+        self.create_v2(
+            context,
+            "name".to_string(),
+            "symbol".to_string(),
+            "uri".to_string(),
+            None,
+            0,
+            false,
+            None,
+            None,
+        )
+        .await
+    }
+
     pub async fn create_v3(
         &self,
         context: &mut ProgramTestContext,
@@ -166,7 +190,6 @@ impl Metadata {
         creators: Option<Vec<Creator>>,
         seller_fee_basis_points: u16,
         is_mutable: bool,
-        freeze_authority: Option<&Pubkey>,
         collection: Option<Collection>,
         uses: Option<Uses>,
         collection_details: Option<CollectionDetails>,
@@ -175,7 +198,7 @@ impl Metadata {
             context,
             &self.mint,
             &context.payer.pubkey(),
-            freeze_authority,
+            Some(&context.payer.pubkey()),
             0,
         )
         .await?;
@@ -223,6 +246,86 @@ impl Metadata {
         context.banks_client.process_transaction(tx).await
     }
 
+    pub async fn create_v3_no_freeze_auth(
+        &self,
+        context: &mut ProgramTestContext,
+    ) -> Result<(), BanksClientError> {
+        let name = String::from("Test");
+        let symbol = String::from("TEST");
+        let uri = String::from("https://test.com");
+        let creators = vec![Creator {
+            address: context.payer.pubkey(),
+            verified: true,
+            share: 100,
+        }];
+        let sfbp = 100;
+        let is_mutable = true;
+
+        // Mint created with no freeze authority set.
+        create_mint(context, &self.mint, &context.payer.pubkey(), None, 0).await?;
+        create_token_account(
+            context,
+            &self.token,
+            &self.mint.pubkey(),
+            &context.payer.pubkey(),
+        )
+        .await?;
+        mint_tokens(
+            context,
+            &self.mint.pubkey(),
+            &self.token.pubkey(),
+            1,
+            &context.payer.pubkey(),
+            None,
+        )
+        .await?;
+
+        let tx = Transaction::new_signed_with_payer(
+            &[instruction::create_metadata_accounts_v3(
+                id(),
+                self.pubkey,
+                self.mint.pubkey(),
+                context.payer.pubkey(),
+                context.payer.pubkey(),
+                context.payer.pubkey(),
+                name,
+                symbol,
+                uri,
+                Some(creators),
+                sfbp,
+                false,
+                is_mutable,
+                None,
+                None,
+                None,
+            )],
+            Some(&context.payer.pubkey()),
+            &[&context.payer],
+            context.last_blockhash,
+        );
+
+        context.banks_client.process_transaction(tx).await
+    }
+
+    pub async fn create_v3_default(
+        &self,
+        context: &mut ProgramTestContext,
+    ) -> Result<(), BanksClientError> {
+        self.create_v3(
+            context,
+            "name".to_string(),
+            "symbol".to_string(),
+            "uri".to_string(),
+            None,
+            0,
+            false,
+            None,
+            None,
+            None,
+        )
+        .await
+    }
+
     pub async fn create_default_nft(
         context: &mut ProgramTestContext,
     ) -> Result<(Metadata, MasterEditionV2), BanksClientError> {
@@ -235,7 +338,6 @@ impl Metadata {
             None,
             10,
             false,
-            None,
             None,
             None,
             None,
@@ -263,7 +365,6 @@ impl Metadata {
             false,
             None,
             None,
-            None,
             Some(CollectionDetails::V1 { size: 0 }),
         )
         .await
@@ -279,6 +380,35 @@ impl Metadata {
         context: &mut ProgramTestContext,
     ) -> Result<(Metadata, MasterEditionV2), BanksClientError> {
         Self::create_default_nft(context).await
+    }
+
+    pub async fn create_nft_with_max_supply(
+        context: &mut ProgramTestContext,
+        max_supply: u64,
+    ) -> Result<(Metadata, MasterEditionV2), BanksClientError> {
+        let nft = Metadata::new();
+        nft.create_v3(
+            context,
+            "Test".to_string(),
+            "TST".to_string(),
+            "uri".to_string(),
+            None,
+            10,
+            false,
+            None,
+            None,
+            Some(CollectionDetails::V1 { size: 0 }),
+        )
+        .await
+        .unwrap();
+
+        let master_edition = MasterEditionV2::new(&nft);
+        master_edition
+            .create_v3(context, Some(max_supply))
+            .await
+            .unwrap();
+
+        Ok((nft, master_edition))
     }
 
     pub async fn update_primary_sale_happened_via_token(

@@ -432,7 +432,7 @@ pub fn transfer_mint_authority<'a>(
         )?;
         msg!("Finished setting freeze authority");
     } else {
-        msg!("Skipping freeze authority because this mint has none")
+        return Err(MetadataError::NoFreezeAuthoritySet.into());
     }
 
     Ok(())

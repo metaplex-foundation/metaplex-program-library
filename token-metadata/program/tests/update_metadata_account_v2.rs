@@ -113,7 +113,6 @@ mod update_metadata_account_v2 {
                 true,
                 None,
                 None,
-                None,
             )
             .await
             .unwrap();
@@ -181,7 +180,6 @@ mod update_metadata_account_v2 {
                 true,
                 None,
                 None,
-                None,
             )
             .await
             .unwrap();
@@ -189,18 +187,7 @@ mod update_metadata_account_v2 {
         let new_collection_authority = Keypair::new();
         let test_collection = Metadata::new();
         test_collection
-            .create_v2(
-                &mut context,
-                "Test".to_string(),
-                "TST".to_string(),
-                "uri".to_string(),
-                None,
-                10,
-                false,
-                None,
-                None,
-                None,
-            )
+            .create_v2_default(&mut context)
             .await
             .unwrap();
         let collection_master_edition_account = MasterEditionV2::new(&test_collection);
@@ -463,7 +450,6 @@ mod update_metadata_account_v2 {
                 true,
                 None,
                 None,
-                None,
             )
             .await
             .unwrap();
@@ -477,7 +463,6 @@ mod update_metadata_account_v2 {
                 None,
                 10,
                 false,
-                None,
                 None,
                 None,
             )
@@ -542,7 +527,6 @@ mod update_metadata_account_v2 {
                 true,
                 None,
                 None,
-                None,
             )
             .await
             .unwrap();
@@ -550,18 +534,7 @@ mod update_metadata_account_v2 {
         let new_collection_authority = Keypair::new();
         let test_collection = Metadata::new();
         test_collection
-            .create_v2(
-                &mut context,
-                "Test".to_string(),
-                "TST".to_string(),
-                "uri".to_string(),
-                None,
-                10,
-                false,
-                None,
-                None,
-                None,
-            )
+            .create_v2_default(&mut context)
             .await
             .unwrap();
         let collection_master_edition_account = MasterEditionV2::new(&test_collection);
@@ -661,7 +634,6 @@ mod update_metadata_account_v2 {
                 false,
                 None,
                 None,
-                None,
             )
             .await
             .unwrap();
@@ -682,7 +654,6 @@ mod update_metadata_account_v2 {
                 None,
                 10,
                 true,
-                None,
                 Some(Collection {
                     key: test_collection.pubkey,
                     verified: false,
@@ -804,7 +775,6 @@ mod update_metadata_account_v2 {
                 true,
                 None,
                 None,
-                None,
             )
             .await
             .unwrap();
@@ -850,7 +820,6 @@ mod update_metadata_account_v2 {
                 None,
                 10,
                 true,
-                None,
                 None,
                 Some(Uses {
                     use_method: UseMethod::Single,
@@ -917,7 +886,6 @@ mod update_metadata_account_v2 {
                 Some(creators),
                 10,
                 true,
-                None,
                 None,
                 None,
             )
@@ -1009,7 +977,6 @@ async fn fail_cannot_unverify_another_creator_by_removing_from_array() {
             Some(creators),
             10,
             true,
-            None,
             None,
             None,
         )
