@@ -488,6 +488,30 @@ pub enum MetadataError {
     /// 123 - Must unverify before migrating collections.
     #[error("Must unverify before migrating collections.")]
     MustUnverify,
+
+    /// 124 - Invalid Escrow Account Bump Seed
+    #[error("Invalid Escrow Account Bump Seed")]
+    InvalidEscrowBumpSeed,
+
+    /// 125 - Must be Escrow Authority
+    #[error("Must Escrow Authority")]
+    MustBeEscrowAuthority,
+
+    /// 126 - Invalid System Program
+    #[error("Invalid System Program")]
+    InvalidSystemProgram,
+
+    /// 127 - Must be a Non Fungible Token
+    #[error("Must be a Non Fungible Token")]
+    MustBeNonFungible,
+
+    /// 128 - Insufficient tokens for transfer
+    #[error("Insufficient tokens for transfer")]
+    InsufficientTokens,
+
+    /// 129 - Borsh Serialization Error
+    #[error("Borsh Serialization Error")]
+    BorshSerializationError,
 }
 
 impl PrintProgramError for MetadataError {
