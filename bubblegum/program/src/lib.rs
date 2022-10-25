@@ -628,7 +628,7 @@ fn process_collection_verification<'info>(
     index: u32,
     mut message: MetadataArgs,
     verify: bool,
-    new_collection: Option<[u8; 32]>,
+    new_collection: Option<Pubkey>,
 ) -> Result<()> {
     let owner = ctx.accounts.leaf_owner.to_account_info();
     let delegate = ctx.accounts.leaf_delegate.to_account_info();
@@ -673,9 +673,9 @@ fn process_collection_verification<'info>(
 
     // If new collection was provided, set it in the NFT metadata.
     if new_collection.is_some() {
-        message.collection = new_collection.map(|c| metaplex_adapter::Collection {
+        message.collection = new_collection.map(|key| metaplex_adapter::Collection {
             verified: false, // Set to true below.
-            key: Pubkey::new(&c),
+            key,
         });
     }
 
@@ -980,7 +980,7 @@ pub mod bubblegum {
         nonce: u64,
         index: u32,
         message: MetadataArgs,
-        collection: [u8; 32],
+        collection: Pubkey,
     ) -> Result<()> {
         let incoming_tree_delegate = &ctx.accounts.tree_delegate;
         let tree_creator = ctx.accounts.tree_authority.tree_creator;

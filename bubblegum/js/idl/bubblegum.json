@@ -700,12 +700,7 @@
         },
         {
           "name": "collection",
-          "type": {
-            "array": [
-              "u8",
-              32
-            ]
-          }
+          "type": "publicKey"
         }
       ]
     },
