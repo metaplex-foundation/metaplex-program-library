@@ -2204,6 +2204,19 @@ pub fn bubblegum_set_collection_size(
         delegated_collection_auth_opt,
     )?;
 
+    // Ensure new size is + or - 1 of the current size.
+    let current_size = if let Some(details) = metadata.collection_details {
+        match details {
+            CollectionDetails::V1 { size } => size,
+        }
+    } else {
+        return Err(MetadataError::NotACollectionParent.into());
+    };
+
+    if current_size.abs_diff(size) != 1 {
+        return Err(MetadataError::InvalidCollectionSizeChange.into());
+    }
+
     // The Bubblegum program has authority to manage the collection details.
     metadata.collection_details = Some(CollectionDetails::V1 { size });
 
