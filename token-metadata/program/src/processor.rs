@@ -11,6 +11,9 @@ use crate::{
     },
     deser::clean_write_metadata,
     error::MetadataError,
+    escrow::{
+        process_close_escrow_account, process_create_escrow_account, process_transfer_out_of_escrow,
+    },
     instruction::{MetadataInstruction, SetCollectionSizeArgs},
     solana_program::program_memory::sol_memset,
     state::{
@@ -246,6 +249,18 @@ pub fn process_instruction<'a>(
         MetadataInstruction::BubblegumSetCollectionSize(args) => {
             msg!("Instruction: Bubblegum Program Set Collection Size");
             bubblegum_set_collection_size(program_id, accounts, args)
+        }
+        MetadataInstruction::CreateEscrowAccount => {
+            msg!("Instruction: Create Escrow Account");
+            process_create_escrow_account(program_id, accounts)
+        }
+        MetadataInstruction::CloseEscrowAccount => {
+            msg!("Instruction: Close Escrow Account");
+            process_close_escrow_account(program_id, accounts)
+        }
+        MetadataInstruction::TransferOutOfEscrow(args) => {
+            msg!("Instruction: Transfer Out Of Escrow");
+            process_transfer_out_of_escrow(program_id, accounts, args)
         }
     }
 }

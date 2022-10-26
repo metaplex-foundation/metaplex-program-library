@@ -81,6 +81,8 @@ export type UnverifyCollectionInstructionAccounts = {
   logWrapper: web3.PublicKey;
   compressionProgram: web3.PublicKey;
   tokenMetadataProgram: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
 };
 
 export const unverifyCollectionInstructionDiscriminator = [250, 251, 42, 106, 41, 137, 186, 168];
@@ -180,7 +182,18 @@ export function createUnverifyCollectionInstruction(
       isWritable: false,
       isSigner: false,
     },
+    {
+      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
+      isWritable: false,
+      isSigner: false,
+    },
   ];
+
+  if (accounts.anchorRemainingAccounts != null) {
+    for (const acc of accounts.anchorRemainingAccounts) {
+      keys.push(acc);
+    }
+  }
 
   const ix = new web3.TransactionInstruction({
     programId,

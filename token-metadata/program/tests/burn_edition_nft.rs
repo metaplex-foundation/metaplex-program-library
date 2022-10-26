@@ -22,21 +22,7 @@ mod burn_edition_nft {
         let mut context = program_test().start_with_context().await;
 
         let original_nft = Metadata::new();
-        original_nft
-            .create_v2(
-                &mut context,
-                "Test".to_string(),
-                "TST".to_string(),
-                "uri".to_string(),
-                None,
-                10,
-                false,
-                None,
-                None,
-                None,
-            )
-            .await
-            .unwrap();
+        original_nft.create_v2_default(&mut context).await.unwrap();
 
         let master_edition = MasterEditionV2::new(&original_nft);
         master_edition
@@ -69,8 +55,26 @@ mod burn_edition_nft {
         .await
         .unwrap();
 
-        // Metadata, Edition and token account are burned.
-        assert!(!print_edition.exists_on_chain(&mut context).await);
+        // Metadata, and token account are burned.
+        let print_md = context
+            .banks_client
+            .get_account(print_edition.new_metadata_pubkey)
+            .await
+            .unwrap();
+        let token_account = context
+            .banks_client
+            .get_account(print_edition.token.pubkey())
+            .await
+            .unwrap();
+        let print_edition_account = context
+            .banks_client
+            .get_account(print_edition.new_edition_pubkey)
+            .await
+            .unwrap();
+
+        assert!(print_md.is_none());
+        assert!(token_account.is_none());
+        assert!(print_edition_account.is_none());
 
         // Edition marker account should also be burned, because that was the only print edition on it.
         let edition_marker_account = context
@@ -96,21 +100,7 @@ mod burn_edition_nft {
         let mut context = program_test().start_with_context().await;
 
         let original_nft = Metadata::new();
-        original_nft
-            .create_v2(
-                &mut context,
-                "Test".to_string(),
-                "TST".to_string(),
-                "uri".to_string(),
-                None,
-                10,
-                false,
-                None,
-                None,
-                None,
-            )
-            .await
-            .unwrap();
+        original_nft.create_v2_default(&mut context).await.unwrap();
 
         let master_edition = MasterEditionV2::new(&original_nft);
         master_edition
@@ -207,21 +197,7 @@ mod burn_edition_nft {
         let mut context = program_test().start_with_context().await;
 
         let original_nft = Metadata::new();
-        original_nft
-            .create_v2(
-                &mut context,
-                "Test".to_string(),
-                "TST".to_string(),
-                "uri".to_string(),
-                None,
-                10,
-                false,
-                None,
-                None,
-                None,
-            )
-            .await
-            .unwrap();
+        original_nft.create_v2_default(&mut context).await.unwrap();
 
         let master_edition = MasterEditionV2::new(&original_nft);
         master_edition
@@ -262,21 +238,7 @@ mod burn_edition_nft {
         let mut context = program_test().start_with_context().await;
 
         let original_nft = Metadata::new();
-        original_nft
-            .create_v2(
-                &mut context,
-                "Test".to_string(),
-                "TST".to_string(),
-                "uri".to_string(),
-                None,
-                10,
-                false,
-                None,
-                None,
-                None,
-            )
-            .await
-            .unwrap();
+        original_nft.create_v2_default(&mut context).await.unwrap();
 
         let master_edition = MasterEditionV2::new(&original_nft);
         master_edition
@@ -322,38 +284,10 @@ mod burn_edition_nft {
         let mut context = program_test().start_with_context().await;
 
         let original_nft = Metadata::new();
-        original_nft
-            .create_v2(
-                &mut context,
-                "Test".to_string(),
-                "TST".to_string(),
-                "uri".to_string(),
-                None,
-                10,
-                false,
-                None,
-                None,
-                None,
-            )
-            .await
-            .unwrap();
+        original_nft.create_v2_default(&mut context).await.unwrap();
 
         let second_nft = Metadata::new();
-        second_nft
-            .create_v2(
-                &mut context,
-                "Test".to_string(),
-                "TST".to_string(),
-                "uri".to_string(),
-                None,
-                10,
-                false,
-                None,
-                None,
-                None,
-            )
-            .await
-            .unwrap();
+        second_nft.create_v2_default(&mut context).await.unwrap();
 
         let master_edition = MasterEditionV2::new(&original_nft);
         master_edition
@@ -393,21 +327,7 @@ mod burn_edition_nft {
         let mut context = program_test().start_with_context().await;
 
         let original_nft = Metadata::new();
-        original_nft
-            .create_v2(
-                &mut context,
-                "Test".to_string(),
-                "TST".to_string(),
-                "uri".to_string(),
-                None,
-                10,
-                false,
-                None,
-                None,
-                None,
-            )
-            .await
-            .unwrap();
+        original_nft.create_v2_default(&mut context).await.unwrap();
 
         let master_edition = MasterEditionV2::new(&original_nft);
         master_edition
@@ -447,21 +367,7 @@ mod burn_edition_nft {
         let mut context = program_test().start_with_context().await;
 
         let original_nft = Metadata::new();
-        original_nft
-            .create_v2(
-                &mut context,
-                "Test".to_string(),
-                "TST".to_string(),
-                "uri".to_string(),
-                None,
-                10,
-                false,
-                None,
-                None,
-                None,
-            )
-            .await
-            .unwrap();
+        original_nft.create_v2_default(&mut context).await.unwrap();
 
         let master_edition = MasterEditionV2::new(&original_nft);
         master_edition
@@ -498,21 +404,7 @@ mod burn_edition_nft {
         // it's derivation is incorrect.
 
         let new_nft = Metadata::new();
-        new_nft
-            .create_v2(
-                &mut context,
-                "Test".to_string(),
-                "TST".to_string(),
-                "uri".to_string(),
-                None,
-                10,
-                false,
-                None,
-                None,
-                None,
-            )
-            .await
-            .unwrap();
+        new_nft.create_v2_default(&mut context).await.unwrap();
 
         let incorrect_master_edition = MasterEditionV2::new(&new_nft);
         incorrect_master_edition
@@ -543,21 +435,7 @@ mod burn_edition_nft {
         let mut context = program_test().start_with_context().await;
 
         let original_nft = Metadata::new();
-        original_nft
-            .create_v2(
-                &mut context,
-                "Test".to_string(),
-                "TST".to_string(),
-                "uri".to_string(),
-                None,
-                10,
-                false,
-                None,
-                None,
-                None,
-            )
-            .await
-            .unwrap();
+        original_nft.create_v2_default(&mut context).await.unwrap();
 
         let master_edition = MasterEditionV2::new(&original_nft);
         master_edition
@@ -619,21 +497,7 @@ mod burn_edition_nft {
         let mut context = program_test().start_with_context().await;
 
         let original_nft = Metadata::new();
-        original_nft
-            .create_v2(
-                &mut context,
-                "Test".to_string(),
-                "TST".to_string(),
-                "uri".to_string(),
-                None,
-                10,
-                false,
-                None,
-                None,
-                None,
-            )
-            .await
-            .unwrap();
+        original_nft.create_v2_default(&mut context).await.unwrap();
 
         let master_edition = MasterEditionV2::new(&original_nft);
         master_edition
@@ -695,21 +559,7 @@ mod burn_edition_nft {
         let mut context = program_test().start_with_context().await;
 
         let original_nft = Metadata::new();
-        original_nft
-            .create_v2(
-                &mut context,
-                "Test".to_string(),
-                "TST".to_string(),
-                "uri".to_string(),
-                None,
-                10,
-                false,
-                None,
-                None,
-                None,
-            )
-            .await
-            .unwrap();
+        original_nft.create_v2_default(&mut context).await.unwrap();
 
         let master_edition = MasterEditionV2::new(&original_nft);
         master_edition
@@ -832,21 +682,7 @@ mod burn_edition_nft {
         let mut context = program_test().start_with_context().await;
 
         let original_nft = Metadata::new();
-        original_nft
-            .create_v2(
-                &mut context,
-                "Test".to_string(),
-                "TST".to_string(),
-                "uri".to_string(),
-                None,
-                10,
-                false,
-                None,
-                None,
-                None,
-            )
-            .await
-            .unwrap();
+        original_nft.create_v2_default(&mut context).await.unwrap();
 
         let master_edition = MasterEditionV2::new(&original_nft);
         master_edition
@@ -945,21 +781,7 @@ mod burn_edition_nft {
         let mut context = program_test().start_with_context().await;
 
         let original_nft = Metadata::new();
-        original_nft
-            .create_v2(
-                &mut context,
-                "Test".to_string(),
-                "TST".to_string(),
-                "uri".to_string(),
-                None,
-                10,
-                false,
-                None,
-                None,
-                None,
-            )
-            .await
-            .unwrap();
+        original_nft.create_v2_default(&mut context).await.unwrap();
 
         let master_edition = MasterEditionV2::new(&original_nft);
         master_edition
@@ -1051,21 +873,7 @@ mod burn_edition_nft {
 
         // Someone else's NFT
         let other_nft = Metadata::new();
-        other_nft
-            .create_v2(
-                &mut context,
-                "Test".to_string(),
-                "TST".to_string(),
-                "uri".to_string(),
-                None,
-                10,
-                false,
-                None,
-                None,
-                None,
-            )
-            .await
-            .unwrap();
+        other_nft.create_v2_default(&mut context).await.unwrap();
 
         let other_master_edition = MasterEditionV2::new(&other_nft);
         other_master_edition
@@ -1083,21 +891,7 @@ mod burn_edition_nft {
         other_print_edition.create(&mut context).await.unwrap();
 
         let our_nft = Metadata::new();
-        our_nft
-            .create_v2(
-                &mut context,
-                "Test".to_string(),
-                "TST".to_string(),
-                "uri".to_string(),
-                None,
-                10,
-                false,
-                None,
-                None,
-                None,
-            )
-            .await
-            .unwrap();
+        our_nft.create_v2_default(&mut context).await.unwrap();
 
         let master_edition = MasterEditionV2::new(&our_nft);
         master_edition
@@ -1135,20 +929,7 @@ mod burn_edition_nft {
         let mut context = program_test().start_with_context().await;
 
         let nft = Metadata::new();
-        nft.create_v2(
-            &mut context,
-            "Test".to_string(),
-            "TST".to_string(),
-            "uri".to_string(),
-            None,
-            10,
-            false,
-            None,
-            None,
-            None,
-        )
-        .await
-        .unwrap();
+        nft.create_v2_default(&mut context).await.unwrap();
 
         let master_edition = MasterEditionV2::new(&nft);
         master_edition
@@ -1185,21 +966,7 @@ mod burn_edition_nft {
         // Wrong master edition mint account.
 
         let other_nft = Metadata::new();
-        other_nft
-            .create_v2(
-                &mut context,
-                "Test".to_string(),
-                "TST".to_string(),
-                "uri".to_string(),
-                None,
-                10,
-                false,
-                None,
-                None,
-                None,
-            )
-            .await
-            .unwrap();
+        other_nft.create_v2_default(&mut context).await.unwrap();
 
         let other_master_edition = MasterEditionV2::new(&other_nft);
         other_master_edition

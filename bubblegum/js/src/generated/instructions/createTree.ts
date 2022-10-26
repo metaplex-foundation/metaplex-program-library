@@ -16,13 +16,14 @@ import * as web3 from '@solana/web3.js';
 export type CreateTreeInstructionArgs = {
   maxDepth: number;
   maxBufferSize: number;
+  public: beet.COption<boolean>;
 };
 /**
  * @category Instructions
  * @category CreateTree
  * @category generated
  */
-export const createTreeStruct = new beet.BeetArgsStruct<
+export const createTreeStruct = new beet.FixableBeetArgsStruct<
   CreateTreeInstructionArgs & {
     instructionDiscriminator: number[] /* size: 8 */;
   }
@@ -31,6 +32,7 @@ export const createTreeStruct = new beet.BeetArgsStruct<
     ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
     ['maxDepth', beet.u32],
     ['maxBufferSize', beet.u32],
+    ['public', beet.coption(beet.bool)],
   ],
   'CreateTreeInstructionArgs',
 );
@@ -55,6 +57,7 @@ export type CreateTreeInstructionAccounts = {
   logWrapper: web3.PublicKey;
   compressionProgram: web3.PublicKey;
   systemProgram?: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
 };
 
 export const createTreeInstructionDiscriminator = [165, 83, 136, 142, 89, 202, 47, 220];
@@ -115,6 +118,12 @@ export function createCreateTreeInstruction(
       isSigner: false,
     },
   ];
+
+  if (accounts.anchorRemainingAccounts != null) {
+    for (const acc of accounts.anchorRemainingAccounts) {
+      keys.push(acc);
+    }
+  }
 
   const ix = new web3.TransactionInstruction({
     programId,

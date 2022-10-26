@@ -79,7 +79,8 @@ To report a security issue, please follow the guidance on the [SECURITY](.github
 
 ## License
 
-The Rust/Cargo programs are licensed under the [AGPLv3](https://www.gnu.org/licenses/agpl-3.0.txt) license and the JS/TS client libraries are licensed under either the [MIT](https://www.mit.edu/~amini/LICENSE.md) or the [Apache](https://www.apache.org/licenses/LICENSE-2.0.txt) licenses.
+The Rust/Cargo programs are licensed under the “Apache-style” [Metaplex(TM) NFT Open Source License](metaplex-nft-license) and the JS/TS client libraries are licensed under either the [MIT](mit-license) or the [Apache](apache-license) licenses.
+
 
 <!-- ===================================== -->
 <!-- Links for badges and such shown above -->
@@ -143,3 +144,7 @@ The Rust/Cargo programs are licensed under the [AGPLv3](https://www.gnu.org/lice
 [mpl-core-nimg]:https://img.shields.io/npm/v/@metaplex-foundation/mpl-core
 [mpl-auction-house-nimg]:https://img.shields.io/npm/v/@metaplex-foundation/mpl-auction-house
 
+<!-- Licenses -->
+[metaplex-nft-license]:  https://github.com/metaplex-foundation/metaplex-program-library/blob/master/LICENSE
+[apache-license]: https://www.apache.org/licenses/LICENSE-2.0.txt
+[mit-license]: https://www.mit.edu/~amini/LICENSE.md

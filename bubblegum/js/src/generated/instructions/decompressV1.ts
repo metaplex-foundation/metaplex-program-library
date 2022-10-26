@@ -66,6 +66,7 @@ export type DecompressV1InstructionAccounts = {
   tokenProgram?: web3.PublicKey;
   associatedTokenProgram: web3.PublicKey;
   logWrapper: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
 };
 
 export const decompressV1InstructionDiscriminator = [54, 85, 76, 70, 228, 250, 164, 81];
@@ -156,6 +157,12 @@ export function createDecompressV1Instruction(
       isSigner: false,
     },
   ];
+
+  if (accounts.anchorRemainingAccounts != null) {
+    for (const acc of accounts.anchorRemainingAccounts) {
+      keys.push(acc);
+    }
+  }
 
   const ix = new web3.TransactionInstruction({
     programId,
