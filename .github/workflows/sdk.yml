@@ -1,4 +1,4 @@
-name: Integration Tests
+name: SDK Tests
 
 on:
   push:
@@ -40,8 +40,8 @@ jobs:
     uses: ./.github/workflows/integration-reusable.yml
     with:
       name: ${{ matrix.node.name }}
-      skip_test: ${{ matrix.node.skip_test }}
-      build_core: ${{ matrix.node.build_core }}
-      build_token_metadata: ${{ matrix.node.build_token_metadata }}
-      build_auction_house: ${{ matrix.node.build_auction_house }}
-      build_candy_machine: ${{ matrix.node.build_candy_machine }}
+      skip_test: ${{ matrix.node.skip_test:#{false} }}
+      build_core: ${{ matrix.node.build_core:#{true} }}
+      build_token_metadata: ${{ matrix.node.build_token_metadata:#{false} }}
+      build_auction_house: ${{ matrix.node.build_auction_house:#{false} }}
+      build_candy_machine: ${{ matrix.node.build_candy_machine:#{false} }}
