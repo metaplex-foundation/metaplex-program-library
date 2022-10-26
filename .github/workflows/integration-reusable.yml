@@ -1,24 +1,28 @@
-name: Integration Fixed Price Sale
+name: Integration Test
 
 on:
-  push:
-    branches: [master]
-  pull_request:
-    branches: [master]
+  workflow_call:
+    inputs:
+      name:
+        required: true
+        type: string
 
 env:
   CARGO_TERM_COLOR: always
-  SOLANA_VERSION: 1.10.25
+  SOLANA_VERSION: 1.10.40
   RUST_TOOLCHAIN: stable
 
 jobs:
   changes:
-    runs-on: buildjet-4vcpu-ubuntu-2004
+    name: Changes ${{ inputs.name }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
     # Set job outputs to values from filter step
     outputs:
       core: ${{ steps.filter.outputs.core }}
       package: ${{ steps.filter.outputs.package }}
       workflow: ${{ steps.filter.outputs.workflow }}
+      action: ${{ steps.filter.outputs.action }}
     steps:
       - uses: actions/checkout@v2
       # For pull requests it's not necessary to checkout the code
@@ -29,17 +33,22 @@ jobs:
             core:
               - 'core/**'
             package:
-              - 'fixed-price-sale/**'
+              - '${{ inputs.name }}/**'
             workflow:
-              - '.github/workflows/integration-fixed-price-sale.yml '
-  build-and-integration-test-fixed-price-sale:
+              - '.github/workflows/integration-reusable.yml'
+            action:
+              - '.github/actions/integration/${{ inputs.name }}/action.yml'
+  build-and-integration-test:
+    name: Build and Integration Test ${{ inputs.name }}
     runs-on: buildjet-4vcpu-ubuntu-2004
     env:
-      cache_id: program-fixed-price-sale
+      cache_id: program-${{ inputs.name }}
     needs: changes
-    if:
-      ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' ||
-      needs.changes.outputs.workflow == 'true' }}
+    if: ${{ needs.changes.outputs.core == 'true' ||
+      needs.changes.outputs.package == 'true' ||
+      needs.changes.outputs.workflow == 'true' ||
+      needs.changes.outputs.actions == 'true'
+      }}
     steps:
       # Setup Deps
       - uses: actions/checkout@v2
@@ -60,26 +69,23 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             ./rust/target
-          key:
-            ${{ env.cache_id }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{
-            env.RUSTC_HASH }}
+          key: ${{ env.cache_id }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{ env.RUSTC_HASH }}
 
-      # Build Rust Programs
-      - uses: ./.github/actions/build-fixed-price-sale
-      - uses: ./.github/actions/build-token-metadata
+      # Build and install deps
+      - uses: ./.github/actions/integration/${{ inputs.name }}
 
-      # Install JS SDK deps
-      - uses: ./.github/actions/yarn-install-and-build
-        with:
-          cache_id: sdk-fixed-price-sale
-          working_dir: ./fixed-price-sale/js
-
-      # Run integration test
+      # Start local validator
       - name: start-local-test-validator
-        working-directory: ./fixed-price-sale/js
+        working-directory: ./${{ inputs.name }}/js
         run: DEBUG=amman* yarn amman:start
-
-      - name: integration-test-fixed-price-sale-program
+      
+      # Run integration test
+      - name: run-integration-test
         id: run_integration_test
-        working-directory: ./fixed-price-sale/js
+        working-directory: ./${{ inputs.name }}/js
         run: DEBUG=mpl* yarn test
+
+      # Stop local validator
+      - name: stop-local-test-validator
+        working-directory: ./${{ inputs.name }}/js
+        run: yarn amman:stop

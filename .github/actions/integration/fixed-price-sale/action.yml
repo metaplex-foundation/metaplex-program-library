@@ -1,0 +1,20 @@
+# Implicit dependencies
+# - actions/checkout@v2
+# - ./.github/actions/install-linux-build-deps
+# - ./.github/actions/install-solana
+# - ./.github/actions/install-rust
+
+name: Fixed Price Sale Integration Dependencies
+description: Builds the dependencies for the Fixed Price Sale integration test
+runs:
+  using: 'composite'
+  steps:
+    # Build Rust Programs
+    - uses: ./.github/actions/build-fixed-price-sale
+    - uses: ./.github/actions/build-token-metadata
+
+    # Install JS SDK deps
+    - uses: ./.github/actions/yarn-install-and-build
+      with:
+        cache_id: sdk-fixed-price-sale
+        working_dir: ./fixed-price-sale/js

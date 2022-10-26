@@ -1,0 +1,20 @@
+name: Integration Tests
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+
+jobs:
+  integration-tests:
+    strategy:
+      matrix:
+        node:
+          - name: "fixed-price-sale"
+          - name: "hydra"
+          - name: "token-metadata"
+    uses: ./.github/workflows/reusable-integration.yml
+    with:
+      name: ${{ matrix.node.name }}
