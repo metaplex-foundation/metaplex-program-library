@@ -23,13 +23,14 @@ runs:
         sh -c "$(curl -sSfL https://release.solana.com/v${{ inputs.solana_version }}/install)"
       shell: bash
 
-    - name: Set Active Solana Version
-      run: solana-install init ${{ inputs.solana_version }}
-      shell: bash
+#    - name: Set Active Solana Version
+#      run: |
+#        rm -f "$HOME/.local/share/solana/install/active_release"
+#        ln -s "$HOME/.local/share/solana/install/releases/${{ inputs.solana_version }}/solana-release" "$HOME/.local/share/solana/install/active_release"
 
     - name: Add Solana bin to Path
       run: |
-        echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+        echo "$HOME/.local/share/solana/install/releases/${{ inputs.solana_version }}/solana-release" >> $GITHUB_PATH
       shell: bash
 
     - name: Verify Solana install
