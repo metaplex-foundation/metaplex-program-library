@@ -9,6 +9,7 @@ on:
 
 jobs:
   integration-tests:
+    name: "Integration Test: ${{ matrix.node.name }}"
     strategy:
       fail-fast: false
       matrix:
