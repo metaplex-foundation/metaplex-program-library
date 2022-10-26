@@ -10,8 +10,12 @@ runs:
   using: 'composite'
   steps:
     # Build Rust Program
-    - uses: ./.github/actions/build-candy-machine-core
-    - uses: ./.github/actions/build-token-metadata
+    - uses: ./.github/actions/build-program
+      with:
+        name: candy-machine-core
+    - uses: ./.github/actions/build-program
+      with:
+        name: token-metadata
 
     # Install JS SDK deps
     - uses: ./.github/actions/yarn-install-and-build

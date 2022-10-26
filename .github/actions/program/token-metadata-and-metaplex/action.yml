@@ -10,7 +10,9 @@ runs:
   using: 'composite'
   steps:
     # Build deps
-    - uses: ./.github/actions/build-token-metadata
+    - uses: ./.github/actions/build-program
+      with:
+        name: token-metadata
 
     # Get Metaplex program
     - name: Get Metaplex program

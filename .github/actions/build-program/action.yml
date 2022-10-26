@@ -1,0 +1,30 @@
+# Implicit dependencies
+# - actions/checkout@v2
+# - ./.github/actions/install-linux-build-deps
+# - ./.github/actions/install-solana
+# - ./.github/actions/install-rust
+
+name: Build Token Metadata
+inputs:
+  name:
+    description: The name of the program to build
+    required: true
+runs:
+  using: 'composite'
+  steps:
+    - uses: actions/cache@v3
+      id: cache-program
+      working-directory: ./${{ inputs.name }}/program
+      with:
+        path: |
+          ../../test-programs
+        key:
+          program-${{ inputs.name }}-${{ runner.os }}-cargo-${{ hashFiles('./**/Cargo.lock') }}
+    - name: build-program
+      if: steps.cache-program.outputs.cache-hit != 'true'
+      working-directory: ./${{ inputs.name }}/program
+      run: |
+        mkdir -p ../../test-programs
+        cargo +${{ env.RUST_STABLE }} build-bpf --version
+        cargo +${{ env.RUST_STABLE }} build-bpf --bpf-out-dir ../../test-programs/
+      shell: bash
