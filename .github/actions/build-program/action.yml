@@ -18,7 +18,7 @@ runs:
         path: |
           ./test-programs
         key:
-          program-${{ inputs.name }}-${{ runner.os }}-cargo-${{ hashFiles('./${{ inputs.name }}/**/Cargo.lock') }}
+          program-${{ inputs.name }}-${{ runner.os }}-cargo-${{ hashFiles('${{ inputs.name }}/**/Cargo.lock') }}
     - name: build-program
       if: steps.cache-program.outputs.cache-hit != 'true'
       working-directory: ./${{ inputs.name }}/program
