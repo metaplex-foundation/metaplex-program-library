@@ -83,7 +83,6 @@ impl MetadataManager {
         creators: Option<Vec<Creator>>,
         seller_fee_basis_points: u16,
         is_mutable: bool,
-        freeze_authority: Option<&Pubkey>,
         collection: Option<Collection>,
         uses: Option<Uses>,
         sized: bool,
@@ -91,7 +90,7 @@ impl MetadataManager {
         create_mint(
             context,
             &self.authority.pubkey(),
-            freeze_authority,
+            Some(&self.authority.pubkey()),
             0,
             Some(clone_keypair(&self.mint)),
         )
