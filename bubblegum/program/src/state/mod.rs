@@ -19,7 +19,7 @@ pub struct TreeConfig {
     pub tree_delegate: Pubkey,
     pub total_mint_capacity: u64,
     pub num_minted: u64,
-    pub public: bool,
+    pub is_public: bool,
 }
 
 impl TreeConfig {
