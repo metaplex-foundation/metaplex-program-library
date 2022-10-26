@@ -44,11 +44,12 @@ jobs:
     env:
       cache_id: program-${{ inputs.name }}
     needs: changes
-    if: ${{ needs.changes.outputs.core == 'true' ||
-      needs.changes.outputs.package == 'true' ||
-      needs.changes.outputs.workflow == 'true' ||
-      needs.changes.outputs.actions == 'true'
-      }}
+#    if: ${{ needs.changes.outputs.core == 'true' ||
+#      needs.changes.outputs.package == 'true' ||
+#      needs.changes.outputs.workflow == 'true' ||
+#      needs.changes.outputs.actions == 'true'
+#      }}
+    if: ${{ needs.changes.outputs.core == '123' }}
     steps:
       # Setup Deps
       - uses: actions/checkout@v2
@@ -94,3 +95,5 @@ jobs:
       - name: stop-local-test-validator
         working-directory: ./${{ inputs.name }}/js
         run: yarn amman:stop
+        continue-on-error: true
+
