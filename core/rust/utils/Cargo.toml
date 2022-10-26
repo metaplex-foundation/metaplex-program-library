@@ -1,6 +1,6 @@
 [package]
 name = "mpl-utils"
-version = "0.0.1"
+version = "0.0.2"
 edition = "2021"
 description = "Metaplex core utils library"
 authors = ["Metaplex Developers <dev@metaplex.com>"]
