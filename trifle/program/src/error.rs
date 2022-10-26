@@ -54,8 +54,8 @@ pub enum TrifleError {
     #[error("Invalid Collection Metadata")]
     InvalidCollectionMetadata,
 
-    #[error("Provided Fuse Options are in conflict")]
-    FuseOptionConflict,
+    #[error("Provided Transfer Effects are not compatible")]
+    TransferEffectConflict,
 
     #[error("Freeze Authority Not Set")]
     FreezeAuthorityNotSet,

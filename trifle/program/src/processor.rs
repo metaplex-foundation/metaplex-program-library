@@ -4,7 +4,8 @@ use crate::{
         AddCollectionConstraintToEscrowConstraintModelArgs,
         AddNoneConstraintToEscrowConstraintModelArgs,
         AddTokensConstraintToEscrowConstraintModelArgs, CreateEscrowConstraintModelAccountArgs,
-        TransferInArgs, TransferOutArgs, TrifleInstruction,
+        RemoveConstraintFromEscrowConstraintModelArgs, TransferInArgs, TransferOutArgs,
+        TrifleInstruction,
     },
     state::{
         escrow_constraints::{EscrowConstraint, EscrowConstraintModel, EscrowConstraintType, FEES},
@@ -71,6 +72,10 @@ pub fn process_instruction(
         TrifleInstruction::AddTokensConstraintToEscrowConstraintModel(args) => {
             msg!("Instruction: Add Tokens Constraint To Escrow Constraint Model");
             add_tokens_constraint_to_escrow_constraint_model(program_id, accounts, args)
+        }
+        TrifleInstruction::RemoveConstraintFromEscrowConstraintModel(args) => {
+            msg!("Instruction: Remove Constraint From Escrow Constraint Model");
+            remove_constraint_from_escrow_constraint_model(program_id, accounts, args)
         }
     }
 }
@@ -350,8 +355,8 @@ fn transfer_in(
 
     // check fuse options
     if transfer_effects.burn() && transfer_effects.freeze() {
-        msg!("Fuse options cannot be both burn and freeze");
-        return Err(TrifleError::FuseOptionConflict.into());
+        msg!("Transfer effects cannot be both burn and freeze");
+        return Err(TrifleError::TransferEffectConflict.into());
     }
 
     // collect and track royalties
@@ -831,4 +836,50 @@ fn add_tokens_constraint_to_escrow_constraint_model(
         args.constraint_name,
         constraint,
     )
+}
+
+fn remove_constraint_from_escrow_constraint_model(
+    program_id: &Pubkey,
+    accounts: &[AccountInfo],
+    args: RemoveConstraintFromEscrowConstraintModelArgs,
+) -> ProgramResult {
+    let mut accounts_iter = accounts.iter();
+    let escrow_constraint_model_info = next_account_info(&mut accounts_iter)?;
+    let payer_info = next_account_info(&mut accounts_iter)?;
+    let update_authority_info = next_account_info(&mut accounts_iter)?;
+    let system_program_info = next_account_info(&mut accounts_iter)?;
+
+    assert_signer(payer_info)?;
+    assert_signer(update_authority_info)?;
+    assert_owned_by(escrow_constraint_model_info, program_id)?;
+    // assert update authority matches ecm update authority;
+    let mut escrow_constraint_model =
+        EscrowConstraintModel::try_from_slice(&escrow_constraint_model_info.data.borrow())?;
+
+    if escrow_constraint_model.update_authority != *update_authority_info.key {
+        return Err(TrifleError::InvalidUpdateAuthority.into());
+    }
+
+    // remove the constraint by key.
+    escrow_constraint_model
+        .constraints
+        .remove(&args.constraint_name);
+
+    let serialized_data = escrow_constraint_model.try_to_vec().unwrap();
+
+    // resize the account to the new size.
+    resize_or_reallocate_account_raw(
+        escrow_constraint_model_info,
+        payer_info,
+        system_program_info,
+        serialized_data.len(),
+    )?;
+
+    sol_memcpy(
+        &mut **escrow_constraint_model_info.try_borrow_mut_data().unwrap(),
+        &serialized_data,
+        serialized_data.len(),
+    );
+
+    Ok(())
 }

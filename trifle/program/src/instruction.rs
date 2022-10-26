@@ -57,6 +57,13 @@ pub struct TransferOutArgs {
     pub amount: u64,
 }
 
+#[repr(C)]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+pub struct RemoveConstraintFromEscrowConstraintModelArgs {
+    pub constraint_name: String,
+}
+
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(ShankInstruction, Debug, BorshSerialize, Clone, BorshDeserialize)]
 #[rustfmt::skip]
@@ -146,6 +153,12 @@ pub enum TrifleInstruction {
     #[account(2, signer, name = "update_authority", desc = "Update authority of the constraint model")]
     #[account(3, name = "system_program", desc = "System program")]
     AddTokensConstraintToEscrowConstraintModel(AddTokensConstraintToEscrowConstraintModelArgs),
+
+    #[account(0, writable, name = "constraint_model", desc = "Constraint model account")]
+    #[account(1, writable, signer, name = "payer", desc = "Wallet paying for the transaction")]
+    #[account(2, signer, name = "update_authority", desc = "Update authority of the constraint model")]
+    #[account(3, name = "system_program", desc = "System program")]
+    RemoveConstraintFromEscrowConstraintModel(RemoveConstraintFromEscrowConstraintModelArgs),
 
 }
 
@@ -405,5 +418,30 @@ pub fn transfer_out(
         program_id,
         accounts,
         data,
+    }
+}
+
+pub fn remove_constraint_from_escrow_constraint_model(
+    program_id: Pubkey,
+    escrow_constraint_model: Pubkey,
+    payer: Pubkey,
+    update_authority: Pubkey,
+    constraint_name: String,
+) -> Instruction {
+    let accounts = vec![
+        AccountMeta::new(escrow_constraint_model, false),
+        AccountMeta::new(payer, true),
+        AccountMeta::new(update_authority, true),
+        AccountMeta::new_readonly(solana_program::system_program::id(), false),
+    ];
+
+    Instruction {
+        program_id,
+        accounts,
+        data: TrifleInstruction::RemoveConstraintFromEscrowConstraintModel(
+            RemoveConstraintFromEscrowConstraintModelArgs { constraint_name },
+        )
+        .try_to_vec()
+        .unwrap(),
     }
 }

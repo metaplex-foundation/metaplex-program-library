@@ -1,4 +1,3 @@
-use borsh::{BorshDeserialize, BorshSerialize};
 use modular_bitfield::{bitfield, specifiers::B12};
 
 #[bitfield(bits = 16)]
@@ -23,6 +22,7 @@ impl From<u16> for TransferEffects {
     }
 }
 
+#[allow(clippy::from_over_into)]
 impl Into<u16> for TransferEffects {
     fn into(self) -> u16 {
         u16::from_le_bytes(self.into_bytes())
