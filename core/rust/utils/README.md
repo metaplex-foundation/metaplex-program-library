@@ -1,4 +1,3 @@
----
-title: Metaplex tools
----
-Core utils crate for commonly used functions
+# MPL Utils
+
+Core Metaplex Program Library utilities crate for commonly used functions
