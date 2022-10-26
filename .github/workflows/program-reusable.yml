@@ -63,6 +63,7 @@ jobs:
 
   build-lint-and-test:
     name: Build Lint and Test
+    runs-on: buildjet-4vcpu-ubuntu-2004
     needs: changes
     if: |
       needs.changes.outputs.core == 'true' ||
@@ -70,7 +71,6 @@ jobs:
       needs.changes.outputs.workflow == 'true' ||
       needs.changes.outputs.action == 'true' ||
       needs.changes.outputs.custom == 'true'
-    runs-on: buildjet-4vcpu-ubuntu-2004
     env:
       cache_id: program-${{ inputs.name }}
     steps:
