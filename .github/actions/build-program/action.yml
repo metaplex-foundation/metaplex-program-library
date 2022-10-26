@@ -21,10 +21,11 @@ runs:
         key:
           program-${{ inputs.name }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{
           env.RUSTC_HASH }}
-    - run: |
+    - name: build-program
+      working-directory: ./token-metadata/program
+      run: |
         mkdir -p ../../test-programs
         cargo +${{ env.RUST_STABLE }} build-bpf --version
         cargo +${{ env.RUST_STABLE }} build-bpf --bpf-out-dir ../../test-programs/
       shell: bash
-      working-directory: ./${{ inputs.name }}/program
 
