@@ -14,7 +14,7 @@ env:
 
 jobs:
   changes:
-    name: Changes ${{ inputs.name }}
+    name: Changes
     runs-on: ubuntu-latest
     timeout-minutes: 10
     # Set job outputs to values from filter step
@@ -39,17 +39,16 @@ jobs:
             action:
               - '.github/actions/integration/${{ inputs.name }}/action.yml'
   build-and-integration-test:
-    name: Build and Integration Test ${{ inputs.name }}
+    name: Build and Integration Test
     runs-on: buildjet-4vcpu-ubuntu-2004
     env:
       cache_id: program-${{ inputs.name }}
     needs: changes
-#    if: ${{ needs.changes.outputs.core == 'true' ||
-#      needs.changes.outputs.package == 'true' ||
-#      needs.changes.outputs.workflow == 'true' ||
-#      needs.changes.outputs.actions == 'true'
-#      }}
-    if: ${{ needs.changes.outputs.core == '123' }}
+    if: ${{ needs.changes.outputs.core == 'true' ||
+      needs.changes.outputs.package == 'true' ||
+      needs.changes.outputs.workflow == 'true' ||
+      needs.changes.outputs.actions == 'true'
+      }}
     steps:
       # Setup Deps
       - uses: actions/checkout@v2
