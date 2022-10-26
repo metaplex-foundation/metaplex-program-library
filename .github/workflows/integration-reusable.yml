@@ -72,7 +72,7 @@ jobs:
           key: ${{ env.cache_id }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{ env.RUSTC_HASH }}
 
       # Build and install deps
-      - uses: ./.github/actions/integration/${{ inputs.name }}
+      - uses: ./.github/actions/integration/${{ env.cache_id }}
 
       # Start local validator
       - name: start-local-test-validator
