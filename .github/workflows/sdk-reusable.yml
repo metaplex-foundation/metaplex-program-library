@@ -30,6 +30,8 @@ jobs:
     outputs:
       core: ${{ steps.filter.outputs.core }}
       package: ${{ steps.filter.outputs.package }}
+      workflow: ${{ steps.filter.outputs.workflow }}
+      action: ${{ steps.filter.outputs.action }}
     steps:
       - uses: actions/checkout@v2
       # For pull requests it's not necessary to checkout the code
