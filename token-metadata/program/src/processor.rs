@@ -1,10 +1,46 @@
+use arrayref::array_ref;
+use borsh::{BorshDeserialize, BorshSerialize};
+use mpl_token_vault::{error::VaultError, state::VaultState};
+use mpl_utils::{
+    assert_signer, create_or_allocate_account_raw,
+    token::{
+        get_mint_decimals, get_mint_supply, get_owner_from_token_account, spl_token_burn,
+        spl_token_close, TokenBurnParams, TokenCloseParams,
+    },
+};
+use solana_program::{
+    account_info::{next_account_info, AccountInfo},
+    entrypoint::ProgramResult,
+    msg,
+    program::{invoke, invoke_signed},
+    program_error::ProgramError,
+    program_memory::sol_memset,
+    pubkey::Pubkey,
+    rent::Rent,
+    sysvar::SysvarId,
+};
+use spl_token::{
+    instruction::{approve, freeze_account, revoke, thaw_account},
+    state::{Account, Mint},
+};
+
 use crate::{
     assertions::{
+        assert_delegated_tokens, assert_derivation, assert_freeze_authority_matches_mint,
+        assert_initialized, assert_mint_authority_matches_mint, assert_owned_by,
+        assert_token_program_matches_package,
         collection::{
             assert_collection_update_is_valid, assert_collection_verify_is_valid,
             assert_has_collection_authority,
         },
-        uses::{assert_valid_use, process_use_authority_validation},
+        metadata::{
+            assert_currently_holding, assert_data_valid, assert_update_authority_is_correct,
+            assert_verified_member_of_collection,
+        },
+        uses::{
+            assert_burner, assert_use_authority_derivation, assert_valid_bump, assert_valid_use,
+            process_use_authority_validation,
+        },
     },
     deprecated_processor::{
         process_deprecated_create_metadata_accounts, process_deprecated_update_metadata_accounts,
@@ -15,7 +51,6 @@ use crate::{
         process_close_escrow_account, process_create_escrow_account, process_transfer_out_of_escrow,
     },
     instruction::{MetadataInstruction, SetCollectionSizeArgs},
-    solana_program::program_memory::sol_memset,
     state::{
         Collection, CollectionAuthorityRecord, CollectionDetails, DataV2, Edition, EditionMarker,
         Key, MasterEditionV1, MasterEditionV2, Metadata, TokenMetadataAccount, TokenStandard,
@@ -24,39 +59,14 @@ use crate::{
         MAX_METADATA_LEN, PREFIX, USER, USE_AUTHORITY_RECORD_SIZE,
     },
     utils::{
-        assert_currently_holding, assert_data_valid, assert_delegated_tokens, assert_derivation,
-        assert_freeze_authority_matches_mint, assert_initialized,
-        assert_mint_authority_matches_mint, assert_owned_by, assert_signer,
-        assert_token_program_matches_package, assert_update_authority_is_correct,
-        assert_verified_member_of_collection, check_token_standard, create_or_allocate_account_raw,
-        decrement_collection_size, get_mint_decimals, get_mint_supply,
-        get_owner_from_token_account, increment_collection_size, is_master_edition,
-        is_print_edition, process_create_metadata_accounts_logic,
+        check_token_standard, decrement_collection_size, increment_collection_size,
+        is_master_edition, is_print_edition, process_create_metadata_accounts_logic,
         process_mint_new_edition_from_master_edition_via_token_logic, puff_out_data_fields,
-        spl_token_burn, spl_token_close, transfer_mint_authority, CreateMetadataAccountsLogicArgs,
-        MintNewEditionFromMasterEditionViaTokenLogicArgs, TokenBurnParams, TokenCloseParams,
-        BUBBLEGUM_ACTIVATED, BUBBLEGUM_PROGRAM_ADDRESS,
+        transfer_mint_authority, CreateMetadataAccountsLogicArgs,
+        MintNewEditionFromMasterEditionViaTokenLogicArgs, BUBBLEGUM_ACTIVATED,
+        BUBBLEGUM_PROGRAM_ADDRESS,
     },
 };
-use arrayref::array_ref;
-use borsh::{BorshDeserialize, BorshSerialize};
-use mpl_token_vault::{error::VaultError, state::VaultState};
-use solana_program::rent::Rent;
-use solana_program::sysvar::SysvarId;
-use solana_program::{
-    account_info::{next_account_info, AccountInfo},
-    entrypoint::ProgramResult,
-    msg,
-    program::{invoke, invoke_signed},
-    program_error::ProgramError,
-    pubkey::Pubkey,
-};
-use spl_token::{
-    instruction::{approve, freeze_account, revoke, thaw_account},
-    state::{Account, Mint},
-};
-
-use crate::assertions::uses::{assert_burner, assert_use_authority_derivation, assert_valid_bump};
 
 pub fn process_instruction<'a>(
     program_id: &'a Pubkey,

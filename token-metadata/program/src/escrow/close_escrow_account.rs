@@ -1,22 +1,22 @@
-use crate::{
-    error::MetadataError,
-    instruction::MetadataInstruction,
-    state::{
-        EscrowAuthority, Metadata, TokenMetadataAccount, TokenOwnedEscrow, TokenStandard,
-        ESCROW_POSTFIX, PREFIX,
-    },
-    utils::{
-        assert_derivation, assert_initialized, assert_owned_by, assert_signer,
-        check_token_standard, close_account_raw,
-    },
-};
 use borsh::BorshSerialize;
+use mpl_utils::{assert_signer, close_account_raw};
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
     instruction::{AccountMeta, Instruction},
     pubkey::Pubkey,
     system_program,
+};
+
+use crate::{
+    assertions::{assert_derivation, assert_initialized, assert_owned_by},
+    error::MetadataError,
+    instruction::MetadataInstruction,
+    state::{
+        EscrowAuthority, Metadata, TokenMetadataAccount, TokenOwnedEscrow, TokenStandard,
+        ESCROW_POSTFIX, PREFIX,
+    },
+    utils::check_token_standard,
 };
 
 pub fn close_escrow_account(

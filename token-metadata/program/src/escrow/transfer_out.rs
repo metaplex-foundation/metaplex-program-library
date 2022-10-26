@@ -1,11 +1,7 @@
-use crate::{
-    error::MetadataError,
-    escrow::pda::find_escrow_seeds,
-    instruction::MetadataInstruction,
-    state::{EscrowAuthority, TokenMetadataAccount, TokenOwnedEscrow},
-    utils::{assert_derivation, assert_owned_by, assert_signer},
-};
 use borsh::{BorshDeserialize, BorshSerialize};
+use mpl_utils::assert_signer;
+#[cfg(feature = "serde-feature")]
+use serde::{Deserialize, Serialize};
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
@@ -14,10 +10,15 @@ use solana_program::{
     program_pack::Pack,
     pubkey::Pubkey,
 };
-
-#[cfg(feature = "serde-feature")]
-use serde::{Deserialize, Serialize};
 use spl_token::state::is_initialized_account;
+
+use crate::{
+    assertions::{assert_derivation, assert_owned_by},
+    error::MetadataError,
+    escrow::pda::find_escrow_seeds,
+    instruction::MetadataInstruction,
+    state::{EscrowAuthority, TokenMetadataAccount, TokenOwnedEscrow},
+};
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]

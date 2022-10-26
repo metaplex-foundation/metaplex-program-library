@@ -1,11 +1,6 @@
 use std::io::ErrorKind;
 
-use crate::{
-    deser::meta_deser_unchecked,
-    error::MetadataError,
-    utils::{assert_owned_by, try_from_slice_checked},
-    ID,
-};
+use crate::{deser::meta_deser_unchecked, error::MetadataError, utils::try_from_slice_checked, ID};
 use borsh::{maybestd::io::Error as BorshError, BorshDeserialize, BorshSerialize};
 use num_derive::FromPrimitive;
 use num_traits::FromPrimitive;
@@ -15,6 +10,7 @@ use solana_program::{
     pubkey::Pubkey,
 };
 
+use crate::assertions::assert_owned_by;
 #[cfg(feature = "serde-feature")]
 use {
     serde::{Deserialize, Serialize},

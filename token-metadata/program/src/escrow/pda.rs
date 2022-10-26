@@ -1,5 +1,6 @@
-use crate::state::{EscrowAuthority, ESCROW_POSTFIX, PREFIX};
 use solana_program::pubkey::Pubkey;
+
+use crate::state::{EscrowAuthority, ESCROW_POSTFIX, PREFIX};
 
 pub fn find_escrow_seeds<'a>(mint: &'a Pubkey, authority: &'a EscrowAuthority) -> Vec<&'a [u8]> {
     let mut seeds = vec![PREFIX.as_bytes(), crate::ID.as_ref(), mint.as_ref()];

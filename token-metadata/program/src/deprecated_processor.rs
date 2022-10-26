@@ -1,17 +1,21 @@
-use crate::{
-    error::MetadataError,
-    state::{Data, DataV2, Metadata, TokenMetadataAccount},
-    utils::{
-        assert_data_valid, assert_owned_by, assert_update_authority_is_correct,
-        process_create_metadata_accounts_logic, puff_out_data_fields,
-        CreateMetadataAccountsLogicArgs,
-    },
-};
 use borsh::BorshSerialize;
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
     pubkey::Pubkey,
+};
+
+use crate::{
+    assertions::{
+        assert_owned_by,
+        metadata::{assert_data_valid, assert_update_authority_is_correct},
+    },
+    error::MetadataError,
+    state::{Data, DataV2, Metadata, TokenMetadataAccount},
+    utils::{
+        process_create_metadata_accounts_logic, puff_out_data_fields,
+        CreateMetadataAccountsLogicArgs,
+    },
 };
 
 pub fn process_deprecated_create_metadata_accounts<'a>(
