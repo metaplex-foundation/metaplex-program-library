@@ -12,6 +12,7 @@ inputs:
 runs:
   using: 'composite'
   steps:
+    - run: echo $GITHUB_WORKSPACE
     - uses: actions/cache@v3
       id: cache-program
       with:
@@ -20,7 +21,6 @@ runs:
         key:
           program-${{ inputs.name }}-${{ runner.os }}-cargo-${{ hashFiles('${{ inputs.name }}/**') }}
     - name: build-program
-      if: steps.cache-program.outputs.cache-hit != 'true'
       working-directory: ./${{ inputs.name }}/program
       run: |
         mkdir -p ../../test-programs
