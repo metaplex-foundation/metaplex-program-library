@@ -1,3 +1,5 @@
+use std::cmp;
+
 use crate::{
     assertions::{
         collection::{
@@ -2213,7 +2215,11 @@ pub fn bubblegum_set_collection_size(
         return Err(MetadataError::NotACollectionParent.into());
     };
 
-    if current_size.abs_diff(size) != 1 {
+    let diff = cmp::max(current_size, size)
+        .checked_sub(cmp::min(current_size, size))
+        .ok_or(MetadataError::InvalidCollectionSizeChange)?;
+
+    if diff != 1 {
         return Err(MetadataError::InvalidCollectionSizeChange.into());
     }
 
