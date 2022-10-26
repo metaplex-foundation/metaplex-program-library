@@ -2177,7 +2177,6 @@ pub fn bubblegum_set_collection_size(
         None
     };
 
-    // Bubblegum program not currently activated.
     if !BUBBLEGUM_ACTIVATED {
         return Err(MetadataError::InvalidOperation.into());
     }
