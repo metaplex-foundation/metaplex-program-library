@@ -13,13 +13,13 @@ runs:
     - uses: ./.github/actions/build-token-metadata
       if: ${{ inputs.name == 'auction-house' }}
 
-    - uses: ./.github/actions/program/build-deps/auctioneer
+    - uses: ./.github/actions/program/auctioneer
       if: ${{ inputs.name == 'auctioneer' }}
 
     - uses: ./.github/actions/build-token-metadata
       if: ${{ inputs.name == 'candy-machine' }}
 
-    - uses: ./.github/actions/program/build-deps/token-metadata-and-metaplex
+    - uses: ./.github/actions/program/token-metadata-and-metaplex
       if: ${{ inputs.name == 'fixed-price-sale' }}
 
     - uses: ./.github/actions/build-token-metadata
@@ -28,7 +28,7 @@ runs:
     - uses: ./.github/actions/build-token-metadata
       if: ${{ inputs.name == 'hydra' }}
 
-    - uses: ./.github/actions/program/build-deps/token-metadata-and-metaplex
+    - uses: ./.github/actions/program/token-metadata-and-metaplex
       if: ${{ inputs.name == 'nft-packs' }}
 
     - uses: ./.github/actions/build-token-metadata

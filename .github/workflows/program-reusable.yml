@@ -39,7 +39,6 @@ jobs:
       package: ${{ steps.filter.outputs.package }}
       workflow: ${{ steps.filter.outputs.workflow }}
       action: ${{ steps.filter.outputs.action }}
-    #      custom: ${{ steps.custom.outputs.custom }}
     steps:
       - uses: actions/checkout@v2
       # For pull requests it's not necessary to checkout the code
@@ -55,10 +54,22 @@ jobs:
               - '.github/workflows/program-reusable.yml'
             action:
               - '.github/actions/program/${{ inputs.name }}/action.yml'
-  #      - uses: ./.github/actions/program/change
-  #        id: custom
-  #        with:
-  #          name: ${{ inputs.name }}
+        if: ${{ inputs.name != auctioneer }}
+
+      - uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            core:
+              - 'core/rust/**'
+            package:
+              - '${{ inputs.name }}/program/**'
+              - 'auction-house/program/**'
+            workflow:
+              - '.github/workflows/program-reusable.yml'
+            action:
+              - '.github/actions/program/${{ inputs.name }}/action.yml'
+        if: ${{ inputs.name == 'auctioneer' }}
 
   build-lint-and-test:
     name: Build Lint and Test
@@ -101,7 +112,7 @@ jobs:
           working-directory: ./${{ inputs.name }}/program
 
       # Build deps
-      - uses: ./.github/actions/program/build-deps
+      - uses: ./.github/actions/program
         with:
           name: ${{ inputs.name }}
 
