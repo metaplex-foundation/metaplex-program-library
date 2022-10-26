@@ -65,7 +65,7 @@ jobs:
 
   build-lint-and-test:
     name: Build Lint and Test
-    runs-on: buildjet-32vcpu-ubuntu-2204
+    runs-on: buildjet-16vcpu-ubuntu-2204
     needs: changes
     if: |
       needs.changes.outputs.core == 'true' ||
