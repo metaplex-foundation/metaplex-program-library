@@ -19,11 +19,11 @@ jobs:
           - name: "bubblegum"
           - name: "candy-machine"
           - name: "fixed-price-sale"
-          - name: "gumdrop"
-          - name: "hydra"
-          - name: "nft-packs"
-          - name: "token-entangler"
-          - name: "token-metadata"
+#          - name: "gumdrop"
+#          - name: "hydra"
+#          - name: "nft-packs"
+#          - name: "token-entangler"
+#          - name: "token-metadata"
 
     uses: ./.github/workflows/program-reusable.yml
     with:
