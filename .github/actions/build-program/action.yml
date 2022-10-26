@@ -11,8 +11,6 @@ inputs:
     required: true
 runs:
   using: 'composite'
-  env:
-    cache_id: program-${{ inputs.name }}
   steps:
     - uses: actions/cache@v3
       id: cache-program
@@ -21,9 +19,10 @@ runs:
           ./${{ inputs.name }}/target/
           ./${{ inputs.name }}/program/target/
         key:
-          ${{ env.cache_id }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{
+          program-${{ inputs.name }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{
           env.RUSTC_HASH }}
       working-directory: ./${{ inputs.name }}/program
+
     - run: |
         mkdir -p ../../test-programs
         cargo +${{ env.RUST_STABLE }} build-bpf --version
