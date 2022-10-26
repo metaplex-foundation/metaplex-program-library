@@ -10,7 +10,6 @@ runs:
   using: "composite"
   steps:
     - name: Cache Solana Install
-      if: ${{ !env.ACT }}
       id: cache-solana-install
       uses: actions/cache@v3
       with:
@@ -20,7 +19,7 @@ runs:
         key: ${{ runner.os }}-Solana-v${{ inputs.solana_version  }}
 
     - run: sh -c "$(curl -sSfL https://release.solana.com/v${{ inputs.solana_version }}/install)"
-      if: ${{ !env.ACT }} && steps.cache-solana-install.outputs.cache-hit != 'true'
+      if: steps.cache-solana-install.outputs.cache-hit != 'true'
       shell: bash
 
     - name: Add Solana bin to Path
