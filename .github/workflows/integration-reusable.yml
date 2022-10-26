@@ -72,12 +72,9 @@ jobs:
           key: ${{ env.cache_id }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{ env.RUSTC_HASH }}
 
       # Build and install deps
-      - uses: ./.github/actions/integration/fixed-price-sale
-        if: ${{ inputs.name == 'fixed-price-sale' }}
-      - uses: ./.github/actions/integration/hydra
-        if: ${{ inputs.name == 'hydra' }}
-      - uses: ./.github/actions/integration/candy-machine-core
-        if: ${{ inputs.name == 'candy-machine-core' }}
+      - uses: ./.github/actions/integration
+        with:
+          name: ${{ inputs.name }}
 
       # Start local validator
       - name: start-local-test-validator
