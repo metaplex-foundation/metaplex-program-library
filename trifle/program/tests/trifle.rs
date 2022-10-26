@@ -36,8 +36,9 @@ mod trifle {
     async fn test_create_trifle_account() {
         let mut context = program_test().start_with_context().await;
 
+        let payer_pubkey = context.payer.pubkey().to_owned();
         let (metadata, master_edition, test_collection) =
-            create_nft(&mut context, true, None).await;
+            create_nft(&mut context, true, Some(payer_pubkey)).await;
         let test_collection = test_collection.expect("test collection should exist");
         let escrow_constraint_model_addr = create_escrow_constraint_model(
             &mut context,
@@ -200,8 +201,9 @@ mod trifle {
     async fn test_transfer_in_with_track_and_burn() {
         let mut context = program_test().start_with_context().await;
 
+        let payer_pubkey = context.payer.pubkey().to_owned();
         let (metadata, master_edition, test_collection) =
-            create_nft(&mut context, true, None).await;
+            create_nft(&mut context, true, Some(payer_pubkey)).await;
         let test_collection = test_collection.expect("should have a collection");
         let escrow_constraint_model_addr = create_escrow_constraint_model(
             &mut context,
@@ -421,6 +423,7 @@ async fn create_nft(
     freeze_authority: Option<Pubkey>,
 ) -> (Metadata, MasterEditionV2, Option<Metadata>) {
     if create_collection {
+        let payer_pubkey = context.payer.pubkey().to_owned();
         let collection = Metadata::new();
         let collection_master_edition = MasterEditionV2::new(&collection);
         collection
@@ -432,7 +435,6 @@ async fn create_nft(
                 None,
                 0,
                 true,
-                None,
                 None,
                 None,
             )
@@ -456,7 +458,6 @@ async fn create_nft(
                 None,
                 10,
                 true,
-                freeze_authority.as_ref(),
                 Some(Collection {
                     key: collection.mint.pubkey(),
                     verified: false,
@@ -503,7 +504,6 @@ async fn create_nft(
                 None,
                 10,
                 true,
-                freeze_authority.as_ref(),
                 None,
                 None,
             )

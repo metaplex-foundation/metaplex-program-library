@@ -1,8 +1,10 @@
 mod assert;
+mod edition_marker;
 mod master_edition_v2;
 mod metadata;
 
 pub use assert::*;
+pub use edition_marker::EditionMarker;
 pub use master_edition_v2::MasterEditionV2;
 pub use metadata::{assert_collection_size, Metadata};
 pub use mpl_token_metadata::instruction;

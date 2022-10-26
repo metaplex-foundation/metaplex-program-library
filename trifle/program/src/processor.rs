@@ -18,7 +18,7 @@ use borsh::{BorshDeserialize, BorshSerialize};
 use mpl_token_metadata::{
     error::MetadataError,
     id as token_metadata_program_id,
-    state::{EscrowAuthority, Metadata, TokenMetadataAccount, ESCROW_PREFIX, PREFIX},
+    state::{EscrowAuthority, Metadata, TokenMetadataAccount, ESCROW_POSTFIX, PREFIX},
     utils::{
         assert_derivation, assert_owned_by, assert_signer, create_or_allocate_account_raw,
         is_print_edition,
@@ -303,7 +303,7 @@ fn transfer_in(
         escrow_seeds.push(seed);
     }
 
-    escrow_seeds.push(ESCROW_PREFIX.as_bytes());
+    escrow_seeds.push(ESCROW_POSTFIX.as_bytes());
 
     assert_derivation(token_metadata_program_info.key, escrow_info, &escrow_seeds)?;
 
@@ -552,7 +552,7 @@ fn transfer_out(
         escrow_seeds.push(seed);
     }
 
-    escrow_seeds.push(ESCROW_PREFIX.as_bytes());
+    escrow_seeds.push(ESCROW_POSTFIX.as_bytes());
     assert_derivation(token_metadata_program_info.key, escrow_info, &escrow_seeds)?;
 
     let trifle_seeds = &[
