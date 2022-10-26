@@ -12,7 +12,7 @@ runs:
     - name: Cache Solana Install
       if: ${{ !env.ACT }}
       id: cache-solana-install
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: "$HOME/.local/share/solana/install/releases/${{ inputs.solana_version }}"
         key: ${{ runner.os }}-Solana-v${{ inputs.solana_version  }}
@@ -24,9 +24,7 @@ runs:
       shell: bash
 
     - name: Set Active Solana Version
-      run: |
-        rm -f "$HOME/.local/share/solana/install/active_release"
-        ln -s "$HOME/.local/share/solana/install/releases/${{ inputs.solana_version }}/solana-release" "$HOME/.local/share/solana/install/active_release"
+      run: solana-install init ${{ inputs.solana_version }}
       shell: bash
 
     - name: Add Solana bin to Path
