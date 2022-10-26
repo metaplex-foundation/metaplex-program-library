@@ -4,24 +4,25 @@
 # - ./.github/actions/install-solana
 # - ./.github/actions/install-rust
 
-name: Build Token Metadata
+name: "Build: ${{ inputs.name }}"
 inputs:
   name:
     description: The name of the program to build
     required: true
 runs:
   using: 'composite'
+  env:
+    cache_id: program-${{ inputs.name }}
   steps:
-    - run: echo $GITHUB_WORKSPACE
-      shell: bash
     - uses: actions/cache@v3
       id: cache-program
       with:
         path: |
-          ./test-programs
+          ./${{ inputs.name }}/target/
+          ./${{ inputs.name }}/program/target/
         key:
-          program-${{ inputs.name }}-${{ runner.os }}-cargo-${{ hashFiles('${{ inputs.name }}/**') }}
-    - name: build-program
+          ${{ env.cache_id }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{
+          env.RUSTC_HASH }}
       working-directory: ./${{ inputs.name }}/program
       run: |
         mkdir -p ../../test-programs
