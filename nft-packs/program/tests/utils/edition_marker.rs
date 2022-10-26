@@ -155,7 +155,13 @@ impl TestEditionMarker {
         token_authority: &Keypair,
         master_token_acc: &Pubkey,
     ) -> transport::Result<()> {
-        create_mint(context, &self.mint, &authority.pubkey(), None).await?;
+        create_mint(
+            context,
+            &self.mint,
+            &authority.pubkey(),
+            Some(&authority.pubkey()),
+        )
+        .await?;
         create_token_account(
             context,
             &self.token,
