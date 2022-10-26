@@ -19,7 +19,7 @@ runs:
           ~/.local/share/solana/
         key: ${{ runner.os }}-Solana-v${{ inputs.solana_version  }}
 
-    - run: sh -c "$(curl -sSfL https://release.solana.com/v${{ env.SOLANA_CLI_VERSION }}/install)"
+    - run: sh -c "$(curl -sSfL https://release.solana.com/v${{ inputs.solana_version }}/install)"
       if: ${{ !env.ACT }} && steps.cache-solana-install.outputs.cache-hit != 'true'
       shell: bash
 
