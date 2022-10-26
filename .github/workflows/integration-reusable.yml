@@ -41,8 +41,6 @@ jobs:
   build-and-test:
     name: Build and Test
     runs-on: buildjet-4vcpu-ubuntu-2004
-    env:
-      cache_id: program-${{ inputs.name }}
     needs: changes
     if: |
       needs.changes.outputs.core == 'true' ||
@@ -68,9 +66,11 @@ jobs:
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
-            ./${{ inputs.name }}/target/
-            ./${{ inputs.name }}/program/target/
-          key: ${{ env.cache_id }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{ env.RUSTC_HASH }}
+          key: cargo-${{ inputs.name }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+      - uses: actions/cache@v3
+        with:
+          path: ./${{ inputs.name }}/program/target/
+          key: program-${{ inputs.name }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
       # Build and install deps
       - uses: ./.github/actions/integration
