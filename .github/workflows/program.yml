@@ -19,7 +19,7 @@ jobs:
           - name: "auctioneer"
             verify_rust: true
           - name: "bubblegum"
-            verify_rust: true
+            verify_rust: false
           - name: "candy-machine"
             verify_rust: true
           - name: "fixed-price-sale"
