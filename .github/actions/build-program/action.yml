@@ -13,6 +13,7 @@ runs:
   using: 'composite'
   steps:
     - run: echo $GITHUB_WORKSPACE
+      shell: bash
     - uses: actions/cache@v3
       id: cache-program
       with:
