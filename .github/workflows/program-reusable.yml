@@ -76,8 +76,6 @@ jobs:
       needs.changes.outputs.workflow == 'true' ||
       needs.changes.outputs.action == 'true' ||
       needs.changes.outputs.custom == 'true'
-    env:
-      cache_id: program-${{ inputs.name }}
     steps:
       # Setup Deps
       - uses: actions/checkout@v2
@@ -97,11 +95,9 @@ jobs:
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
-            ./${{ inputs.name }}/target/
             ./${{ inputs.name }}/program/target/
           key:
-            ${{ env.cache_id }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{
-            env.RUSTC_HASH }}
+            program-${{ inputs.name }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
       # Run lint checks
       - uses: ./.github/actions/verify-rust

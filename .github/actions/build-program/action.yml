@@ -5,6 +5,7 @@
 # - ./.github/actions/install-rust
 
 name: Build Program
+description: Builds the specified Rust program based on the `name` input
 inputs:
   name:
     description: The name of the program to build
@@ -16,11 +17,13 @@ runs:
       uses: actions/cache@v3
       with:
         path: |
-          ./${{ inputs.name }}/target/
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
           ./${{ inputs.name }}/program/target/
         key:
-          program-${{ inputs.name }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{
-          env.RUSTC_HASH }}
+          program-${{ inputs.name }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
       id: cache-program
     - name: "Build: ${{ inputs.name }}"
       working-directory: ./token-metadata/program
