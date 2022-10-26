@@ -4,7 +4,7 @@
 # - ./.github/actions/install-solana
 # - ./.github/actions/install-rust
 
-name: "Build: ${{ inputs.name }}"
+name: Build Program
 inputs:
   name:
     description: The name of the program to build
@@ -12,8 +12,8 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - uses: actions/cache@v3
-      id: cache-program
+    - name: "Cache: ${{ inputs.name }}"
+      uses: actions/cache@v3
       with:
         path: |
           ./${{ inputs.name }}/target/
@@ -21,7 +21,8 @@ runs:
         key:
           program-${{ inputs.name }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{
           env.RUSTC_HASH }}
-    - name: build-program
+      id: cache-program
+    - name: "Build: ${{ inputs.name }}"
       working-directory: ./token-metadata/program
       run: |
         mkdir -p ../../test-programs
