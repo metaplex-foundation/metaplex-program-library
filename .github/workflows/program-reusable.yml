@@ -54,7 +54,7 @@ jobs:
               - '.github/workflows/program-reusable.yml'
             action:
               - '.github/actions/program/${{ inputs.name }}/action.yml'
-        if: ${{ inputs.name != auctioneer }}
+        if: ${{ inputs.name != 'auctioneer' }}
 
       - uses: dorny/paths-filter@v2
         id: filter
