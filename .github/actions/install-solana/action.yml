@@ -19,7 +19,6 @@ runs:
         key: ${{ runner.os }}-Solana-v${{ inputs.solana_version  }}
 
     - run: sh -c "$(curl -sSfL https://release.solana.com/v${{ inputs.solana_version }}/install)"
-      if: steps.cache-solana-install.outputs.cache-hit != 'true'
       shell: bash
 
     - name: Add Solana bin to Path
