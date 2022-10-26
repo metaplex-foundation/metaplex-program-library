@@ -1,0 +1,23 @@
+# Implicit dependencies
+# - actions/checkout@v2
+# - ./.github/actions/install-linux-build-deps
+# - ./.github/actions/install-solana
+# - ./.github/actions/install-rust
+
+name: Hydra SDK Dependencies
+description: Builds the dependencies for the Hydra sdk test
+
+env:
+  SOLANA_VERSION: 1.10.40
+  RUST_TOOLCHAIN: stable
+
+runs:
+  using: 'composite'
+  steps:
+    - uses: ./.github/actions/install-linux-build-deps
+    - uses: ./.github/actions/install-solana
+      with:
+        solana_version: ${{ env.SOLANA_VERSION }}
+    - uses: ./.github/actions/install-rust
+      with:
+        toolchain: ${{ env.RUST_TOOLCHAIN }}

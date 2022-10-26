@@ -1,0 +1,67 @@
+name: SDK Test
+
+on:
+  workflow_call:
+    inputs:
+      name:
+        required: true
+        type: string
+      skip_test:
+        required: false
+        default: false
+      build_core:
+        required: false
+        default: true
+      build_token_metadata:
+        required: false
+        default: false
+      build_auction_house:
+        required: false
+        default: false
+      build_candy_machine:
+        required: false
+        default: false
+
+jobs:
+  changes:
+    name: Changes
+    runs-on: ubuntu-latest
+    # Set job outputs to values from filter step
+    outputs:
+      core: ${{ steps.filter.outputs.core }}
+      package: ${{ steps.filter.outputs.package }}
+    steps:
+      - uses: actions/checkout@v2
+      # For pull requests it's not necessary to checkout the code
+      - uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            core:
+              - 'core/js/**'
+            package:
+              - '${{ inputs.name }}/js/**'
+
+  build-lint-and-test:
+    name: Build Lint and Test
+    needs: changes
+    if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      # Build and install deps if needed
+      - uses: ./.github/actions/sdk
+        with:
+          name: ${{ inputs.name }}
+
+      - uses: ./.github/actions/yarn-install-and-verify
+        with:
+          cache_id: sdk-${{ inputs.name }}
+          working_dir: ./${{ inputs.name }}/js
+          skip_test: ${{ inputs.skip_test }}
+          build_core: ${{ inputs.build_core }}
+          build_token_metadata: ${{ inputs.build_token_metadata }}
+          build_auction_house: ${{ inputs.build_auction_house }}
+          build_candy_machine: ${{ inputs.build_candy_machine }}

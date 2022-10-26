@@ -1,0 +1,47 @@
+name: Integration Tests
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  sdk-tests:
+    name: "SDK: ${{ matrix.node.name }}"
+    strategy:
+      fail-fast: false
+      matrix:
+        node:
+          - name: "auction-house"
+            skip_test: false
+          - name: "candy-machine"
+          - name: "candy-machine-core"
+            skip_test: true
+            build_token_metadata: true
+            build_auction_house: true
+            build_candy_machine: true
+          - name: "core"
+            build_core: false
+          - name: "fixed-price-sale"
+            build_token_metadata: true
+            skip_test: true
+          - name: "gumdrop"
+            build_token_metadata: true
+          - name: "hydra"
+            build_token_metadata: true
+            skip_test: true
+          - name: "nft-packs"
+            skip_test: true
+            build_core: false
+          - name: "token-entangler"
+            build_token_metadata: true
+          - name: "token-metadata"
+    uses: ./.github/workflows/integration-reusable.yml
+    with:
+      name: ${{ matrix.node.name }}
+      skip_test: ${{ matrix.node.skip_test }}
+      build_core: ${{ matrix.node.build_core }}
+      build_token_metadata: ${{ matrix.node.build_token_metadata }}
+      build_auction_house: ${{ matrix.node.build_auction_house }}
+      build_candy_machine: ${{ matrix.node.build_candy_machine }}
