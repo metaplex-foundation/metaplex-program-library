@@ -38,8 +38,8 @@ jobs:
               - '.github/workflows/integration-reusable.yml'
             action:
               - '.github/actions/integration/${{ inputs.name }}/action.yml'
-  build-and-integration-test:
-    name: Build and Integration Test
+  build-and-test:
+    name: Build and Test
     runs-on: buildjet-4vcpu-ubuntu-2004
     env:
       cache_id: program-${{ inputs.name }}
