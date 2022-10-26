@@ -8,7 +8,7 @@ inputs:
 outputs:
   custom:
     description: Whether or not the custom change check passes
-    value: ${{ steps.${{ inputs.name }}.outputs.core }}
+    value: ${{ steps["${{ inputs.name }}"].outputs.core }}
 
 
 runs:
