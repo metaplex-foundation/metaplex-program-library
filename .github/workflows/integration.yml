@@ -10,11 +10,12 @@ on:
 jobs:
   integration-tests:
     strategy:
+      fail-fast: false
       matrix:
         node:
           - name: "fixed-price-sale"
           - name: "hydra"
-          - name: "token-metadata"
+          - name: "candy-machine-core"
     uses: ./.github/workflows/integration-reusable.yml
     with:
       name: ${{ matrix.node.name }}
