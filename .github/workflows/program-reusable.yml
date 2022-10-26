@@ -17,7 +17,7 @@ env:
 
 jobs:
   #  setup-versions:
-  #    runs-on: buildjet-4vcpu-ubuntu-2004
+  #    runs-on: ubuntu-latest
   #    outputs:
   #      versions: ${{ steps.matrix.outputs.value }}
   #    steps:
