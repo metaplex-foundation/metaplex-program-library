@@ -58,25 +58,20 @@ jobs:
       - uses: dorny/paths-filter@v2
         id: auctioneer-filter
         with:
-#          filters: |
-#            changed:
-#              - 'auction-house/program/**'
           filters: |
             changed:
-              - '.github/workflows/program-reusable.yml'
+              - 'auction-house/program/**'
         if: ${{ inputs.name == 'auctioneer' }}
 
   build-lint-and-test:
     name: Build Lint and Test
     runs-on: buildjet-4vcpu-ubuntu-2004
     needs: changes
-#    if: |
-#      needs.changes.outputs.core == 'true' ||
-#      needs.changes.outputs.package == 'true' ||
-#      needs.changes.outputs.workflow == 'true' ||
-#      needs.changes.outputs.action == 'true' ||
-#      needs.changes.outputs.custom == 'true'
     if: |
+      needs.changes.outputs.core == 'true' ||
+      needs.changes.outputs.package == 'true' ||
+      needs.changes.outputs.workflow == 'true' ||
+      needs.changes.outputs.action == 'true' ||
       needs.changes.outputs.custom == 'true'
     env:
       cache_id: program-${{ inputs.name }}
