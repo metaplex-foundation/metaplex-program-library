@@ -71,7 +71,7 @@ export const addTokensConstraintToEscrowConstraintModelInstructionDiscriminator 
 export function createAddTokensConstraintToEscrowConstraintModelInstruction(
   accounts: AddTokensConstraintToEscrowConstraintModelInstructionAccounts,
   args: AddTokensConstraintToEscrowConstraintModelInstructionArgs,
-  programId = new web3.PublicKey('6PLSD84fn6MVb3XdPYAiX33X8jgfCPXeqYUmfnYndU3X'),
+  programId = new web3.PublicKey('trifMWutwBxkSuatmpPVnEe7NoE3BJKgjVi8sSyoXWX'),
 ) {
   const [data] = AddTokensConstraintToEscrowConstraintModelStruct.serialize({
     instructionDiscriminator: addTokensConstraintToEscrowConstraintModelInstructionDiscriminator,

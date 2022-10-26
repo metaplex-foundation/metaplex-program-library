@@ -23,10 +23,7 @@ spl-associated-token-account = { version = "~1.0.5", features = [
     "no-entrypoint",
 ] }
 thiserror = "1.0.35"
-# mpl-token-metadata = { version = "1.5.0", features = ["no-entrypoint"] }
-mpl-token-metadata = { path = "../../token-metadata/program", features = [
-    "no-entrypoint",
-] }
+mpl-token-metadata = { version = "1.6.0", features = ["no-entrypoint"] }
 num-derive = "0.3.3"
 num-traits = "0.2.14"
 modular-bitfield = "0.11.2"

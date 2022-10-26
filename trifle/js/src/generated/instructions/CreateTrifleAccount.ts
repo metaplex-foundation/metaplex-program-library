@@ -59,7 +59,7 @@ export const createTrifleAccountInstructionDiscriminator = 1;
  */
 export function createCreateTrifleAccountInstruction(
   accounts: CreateTrifleAccountInstructionAccounts,
-  programId = new web3.PublicKey('6PLSD84fn6MVb3XdPYAiX33X8jgfCPXeqYUmfnYndU3X'),
+  programId = new web3.PublicKey('trifMWutwBxkSuatmpPVnEe7NoE3BJKgjVi8sSyoXWX'),
 ) {
   const [data] = CreateTrifleAccountStruct.serialize({
     instructionDiscriminator: createTrifleAccountInstructionDiscriminator,

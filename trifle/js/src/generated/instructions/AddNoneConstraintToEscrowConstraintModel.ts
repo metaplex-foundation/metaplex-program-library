@@ -71,7 +71,7 @@ export const addNoneConstraintToEscrowConstraintModelInstructionDiscriminator = 
 export function createAddNoneConstraintToEscrowConstraintModelInstruction(
   accounts: AddNoneConstraintToEscrowConstraintModelInstructionAccounts,
   args: AddNoneConstraintToEscrowConstraintModelInstructionArgs,
-  programId = new web3.PublicKey('6PLSD84fn6MVb3XdPYAiX33X8jgfCPXeqYUmfnYndU3X'),
+  programId = new web3.PublicKey('trifMWutwBxkSuatmpPVnEe7NoE3BJKgjVi8sSyoXWX'),
 ) {
   const [data] = AddNoneConstraintToEscrowConstraintModelStruct.serialize({
     instructionDiscriminator: addNoneConstraintToEscrowConstraintModelInstructionDiscriminator,

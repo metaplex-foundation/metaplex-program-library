@@ -1,4 +1,3 @@
-use borsh::{BorshDeserialize, BorshSerialize};
 use modular_bitfield::{bitfield, specifiers::B12};
 
 #[bitfield(bits = 16)]

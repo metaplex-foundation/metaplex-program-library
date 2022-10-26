@@ -68,7 +68,7 @@ export const createEscrowConstraintModelAccountInstructionDiscriminator = 0;
 export function createCreateEscrowConstraintModelAccountInstruction(
   accounts: CreateEscrowConstraintModelAccountInstructionAccounts,
   args: CreateEscrowConstraintModelAccountInstructionArgs,
-  programId = new web3.PublicKey('6PLSD84fn6MVb3XdPYAiX33X8jgfCPXeqYUmfnYndU3X'),
+  programId = new web3.PublicKey('trifMWutwBxkSuatmpPVnEe7NoE3BJKgjVi8sSyoXWX'),
 ) {
   const [data] = CreateEscrowConstraintModelAccountStruct.serialize({
     instructionDiscriminator: createEscrowConstraintModelAccountInstructionDiscriminator,

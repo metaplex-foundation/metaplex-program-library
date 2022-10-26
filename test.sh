@@ -16,7 +16,7 @@ mkdir -p test-programs
 if exists_in_list "$programs" " " $input; then
     echo "building $input"
     cd $input/program
-    cargo build-bpf --bpf-out-dir ../../test-programs/
+    cargo test-bpf --bpf-out-dir ../../test-programs/
     cd ../../
 
 elif [[ $input = "all" ]]
@@ -25,13 +25,9 @@ then
     for program in ${programs}; do
         echo "building $program"
         cd $program/program
-        cargo build-bpf --bpf-out-dir ../../test-programs/
+        cargo test-bpf --bpf-out-dir ../../test-programs/
         cd ../../
     done
-        echo "building testing-utils"
-        cd core/rust/testing-utils
-        cargo build-bpf --bpf-out-dir ../../../test-programs/
-        cd ../../../
 else
     echo "Invalid program name: $input"
     exit 1
