@@ -39,7 +39,7 @@ jobs:
       package: ${{ steps.filter.outputs.package }}
       workflow: ${{ steps.filter.outputs.workflow }}
       action: ${{ steps.filter.outputs.action }}
-      custom: ${{ steps.auctioneer-filter.changed }}
+      custom: ${{ steps.auctioneer-filter.outputs.changed }}
     steps:
       - uses: actions/checkout@v2
       # For pull requests it's not necessary to checkout the code
