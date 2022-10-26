@@ -10,7 +10,7 @@ use mpl_token_metadata::{
     utils::puffed_out_string,
 };
 use solana_program::{account_info::AccountInfo, program_option::COption, program_pack::Pack};
-use solana_program_test::{BanksClientError, tokio};
+use solana_program_test::{tokio, BanksClientError};
 use solana_sdk::signature::{Keypair, Signer};
 use solana_sdk::transaction::TransactionError;
 
@@ -18,12 +18,12 @@ use spl_associated_token_account::get_associated_token_address;
 use spl_token::{self, state::Mint};
 
 use crate::utils::tree::decompress_mint_auth_pda;
+use crate::utils::Error::BanksClient;
 use utils::{
     context::{BubblegumTestContext, DEFAULT_LAMPORTS_FUND_AMOUNT},
     tree::Tree,
     LeafArgs, Result,
 };
-use crate::utils::Error::BanksClient;
 
 // Test for multiple combinations?
 const MAX_DEPTH: usize = 14;
@@ -213,7 +213,7 @@ async fn test_decompress_passes() {
             supply: 1,
             decimals: 0,
             is_initialized: true,
-            freeze_authority: COption::None,
+            freeze_authority: COption::Some(find_master_edition_account(&mint_key).0),
         };
 
         assert_eq!(mint, expected_mint);
@@ -243,7 +243,7 @@ async fn test_decompress_passes() {
                 &metadata_key,
                 &mut meta_account,
             )))
-                .unwrap();
+            .unwrap();
 
         let mut expected_creators = Vec::new();
 
@@ -303,14 +303,19 @@ async fn test_create_public_tree_and_mint_passes() {
     let mut context = BubblegumTestContext::new().await.unwrap();
     let tree = context
         .create_public_tree::<MAX_DEPTH, MAX_BUF_SIZE>()
-        .await.unwrap();
+        .await
+        .unwrap();
     let tree_private = context
         .default_create_tree::<MAX_DEPTH, MAX_BUF_SIZE>()
-        .await.unwrap();
+        .await
+        .unwrap();
     let payer = context.payer();
     let minter = Keypair::new(); // NON tree authority payer, nor delegate
 
-    context.fund_account(minter.pubkey(), 10000000000).await.unwrap();
+    context
+        .fund_account(minter.pubkey(), 10000000000)
+        .await
+        .unwrap();
     let cfg = tree.read_tree_config().await.unwrap();
 
     let name = format!("test{}", 0);
@@ -326,11 +331,13 @@ async fn test_create_public_tree_and_mint_passes() {
     let cfg = tree.read_tree_config().await.unwrap();
     assert_eq!(cfg.num_minted, 1);
 
-    if let Err(BanksClient(BanksClientError::TransactionError(e))) = tree_private.mint_v1_non_owner(&minter, &mut args).await {
-        assert_eq!(e, TransactionError::InstructionError(
-        0,
-        InstructionError::Custom(6016),
-    ));
+    if let Err(BanksClient(BanksClientError::TransactionError(e))) =
+        tree_private.mint_v1_non_owner(&minter, &mut args).await
+    {
+        assert_eq!(
+            e,
+            TransactionError::InstructionError(0, InstructionError::Custom(6016),)
+        );
     } else {
         panic!("Should have failed");
     }
