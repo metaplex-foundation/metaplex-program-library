@@ -15,16 +15,27 @@ jobs:
       matrix:
         node:
           - name: "auction-house"
+            verify_rust: true
           - name: "auctioneer"
+            verify_rust: true
           - name: "bubblegum"
+            verify_rust: true
           - name: "candy-machine"
+            verify_rust: true
           - name: "fixed-price-sale"
+            verify_rust: false
           - name: "gumdrop"
+            verify_rust: false
           - name: "hydra"
+            verify_rust: true
           - name: "nft-packs"
+            verify_rust: false
           - name: "token-entangler"
+            verify_rust: true
           - name: "token-metadata"
+            verify_rust: true
 
     uses: ./.github/workflows/program-reusable.yml
     with:
       name: ${{ matrix.node.name }}
+      verify_rust: ${{ matrix.node.verify_rust }}

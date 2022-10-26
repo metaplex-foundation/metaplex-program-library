@@ -6,6 +6,9 @@ on:
       name:
         required: true
         type: string
+      verify_rust:
+        required: true
+        type: boolean
 
 env:
   CARGO_TERM_COLOR: always
@@ -102,6 +105,7 @@ jobs:
 
       # Run lint checks
       - uses: ./.github/actions/verify-rust
+        if: ${{ inputs.verify_rust == 'true' }}
         with:
           working-directory: ./${{ inputs.name }}/program
 
