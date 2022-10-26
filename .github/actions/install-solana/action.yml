@@ -4,7 +4,7 @@ inputs:
   solana_version:
     description: Version of Solana to install
     required: true
-    default: 1.10.34
+    default: 1.10.40
 
 runs:
   using: "composite"
@@ -14,19 +14,14 @@ runs:
       id: cache-solana-install
       uses: actions/cache@v3
       with:
-        path: "$HOME/.local/share/solana/install/releases/${{ inputs.solana_version }}"
+        path: |
+          ~/.cache/solana/
+          ~/.local/share/solana/
         key: ${{ runner.os }}-Solana-v${{ inputs.solana_version  }}
 
-    - name: Install Solana
+    - run: sh -c "$(curl -sSfL https://release.solana.com/v${{ env.SOLANA_CLI_VERSION }}/install)"
       if: ${{ !env.ACT }} && steps.cache-solana-install.outputs.cache-hit != 'true'
-      run: |
-        sh -c "$(curl -sSfL https://release.solana.com/v${{ inputs.solana_version }}/install)"
       shell: bash
-
-#    - name: Set Active Solana Version
-#      run: |
-#        rm -f "$HOME/.local/share/solana/install/active_release"
-#        ln -s "$HOME/.local/share/solana/install/releases/${{ inputs.solana_version }}/solana-release" "$HOME/.local/share/solana/install/active_release"
 
     - name: Add Solana bin to Path
       run: |
