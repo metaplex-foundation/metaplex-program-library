@@ -81,6 +81,7 @@ export type VerifyCollectionInstructionAccounts = {
   logWrapper: web3.PublicKey;
   compressionProgram: web3.PublicKey;
   tokenMetadataProgram: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
 };
 
 export const verifyCollectionInstructionDiscriminator = [56, 113, 101, 253, 79, 55, 122, 169];
@@ -181,6 +182,12 @@ export function createVerifyCollectionInstruction(
       isSigner: false,
     },
   ];
+
+  if (accounts.anchorRemainingAccounts != null) {
+    for (const acc of accounts.anchorRemainingAccounts) {
+      keys.push(acc);
+    }
+  }
 
   const ix = new web3.TransactionInstruction({
     programId,

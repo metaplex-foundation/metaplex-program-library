@@ -54,6 +54,7 @@ export type CompressInstructionAccounts = {
   tokenProgram?: web3.PublicKey;
   tokenMetadataProgram: web3.PublicKey;
   systemProgram?: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
 };
 
 export const compressInstructionDiscriminator = [82, 193, 176, 117, 176, 21, 115, 253];
@@ -145,6 +146,12 @@ export function createCompressInstruction(
       isSigner: false,
     },
   ];
+
+  if (accounts.anchorRemainingAccounts != null) {
+    for (const acc of accounts.anchorRemainingAccounts) {
+      keys.push(acc);
+    }
+  }
 
   const ix = new web3.TransactionInstruction({
     programId,

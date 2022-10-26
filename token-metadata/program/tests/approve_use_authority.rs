@@ -36,7 +36,6 @@ mod approve_use_authority {
                 10,
                 false,
                 None,
-                None,
                 Some(Uses {
                     use_method: UseMethod::Single,
                     total: 1,
@@ -95,7 +94,6 @@ mod approve_use_authority {
                 10,
                 false,
                 None,
-                None,
                 Some(Uses {
                     use_method: UseMethod::Burn,
                     total: 1,
@@ -152,7 +150,6 @@ mod approve_use_authority {
                 None,
                 10,
                 false,
-                None,
                 None,
                 None,
             )
@@ -216,7 +213,6 @@ mod approve_use_authority {
                 None,
                 10,
                 false,
-                None,
                 None,
                 Some(Uses {
                     use_method: UseMethod::Single,
@@ -307,7 +303,6 @@ mod approve_use_authority {
                 10,
                 false,
                 None,
-                None,
                 Some(Uses {
                     use_method: UseMethod::Single,
                     total: 1,
@@ -375,7 +370,6 @@ mod approve_use_authority {
                 None,
                 10,
                 false,
-                None,
                 None,
                 Some(Uses {
                     use_method: UseMethod::Single,

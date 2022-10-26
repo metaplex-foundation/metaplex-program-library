@@ -50,7 +50,6 @@ mod set_collection_size {
                 None,
                 None,
                 None,
-                None,
             )
             .await
             .unwrap();
@@ -113,7 +112,6 @@ mod set_collection_size {
                 None,
                 10,
                 false,
-                None,
                 None,
                 None,
                 None,
@@ -221,7 +219,6 @@ mod set_collection_size {
                 None,
                 None,
                 None,
-                None,
             )
             .await
             .unwrap();
@@ -274,7 +271,6 @@ mod set_collection_size {
                 None,
                 10,
                 false,
-                None,
                 None,
                 None,
                 None,
@@ -340,7 +336,6 @@ mod set_collection_size {
                 None,
                 10,
                 false,
-                None,
                 None,
                 None,
                 DEFAULT_COLLECTION_DETAILS,
@@ -414,7 +409,6 @@ mod set_collection_size {
                 None,
                 10,
                 false,
-                None,
                 None,
                 None,
                 None,
@@ -512,7 +506,6 @@ async fn invalid_update_authority_fails_with_delegated_collection_authority() {
             None,
             None,
             None,
-            None,
         )
         .await
         .unwrap();
@@ -599,7 +592,6 @@ async fn update_authority_not_a_signer_fails_with_delegated_collection_authority
             None,
             10,
             false,
-            None,
             None,
             None,
             None,
@@ -695,7 +687,6 @@ async fn other_collection_delegate_cant_set_size() {
             None,
             None,
             None,
-            None,
         )
         .await
         .unwrap();
@@ -716,7 +707,6 @@ async fn other_collection_delegate_cant_set_size() {
             None,
             10,
             false,
-            None,
             None,
             None,
             None,

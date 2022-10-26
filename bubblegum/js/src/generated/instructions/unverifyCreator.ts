@@ -67,6 +67,7 @@ export type UnverifyCreatorInstructionAccounts = {
   creator: web3.PublicKey;
   logWrapper: web3.PublicKey;
   compressionProgram: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
 };
 
 export const unverifyCreatorInstructionDiscriminator = [107, 178, 57, 39, 105, 115, 112, 152];
@@ -132,6 +133,12 @@ export function createUnverifyCreatorInstruction(
       isSigner: false,
     },
   ];
+
+  if (accounts.anchorRemainingAccounts != null) {
+    for (const acc of accounts.anchorRemainingAccounts) {
+      keys.push(acc);
+    }
+  }
 
   const ix = new web3.TransactionInstruction({
     programId,

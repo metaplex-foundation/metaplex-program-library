@@ -1,6 +1,8 @@
 use crate::{
+    error::MetadataError,
+    escrow::pda::find_escrow_seeds,
     instruction::MetadataInstruction,
-    state::{EscrowAuthority, TokenMetadataAccount, TokenOwnedEscrow, ESCROW_PREFIX, PREFIX},
+    state::{EscrowAuthority, TokenMetadataAccount, TokenOwnedEscrow},
     utils::{assert_derivation, assert_owned_by, assert_signer},
 };
 use borsh::{BorshDeserialize, BorshSerialize};
@@ -87,7 +89,9 @@ pub fn process_transfer_out_of_escrow(
     // Allow the option to set a different authority than the payer.
     let is_using_authority = account_info_iter.len() == 1;
     let maybe_authority_info: Option<&AccountInfo> = if is_using_authority {
-        Some(next_account_info(account_info_iter)?)
+        let auth = next_account_info(account_info_iter)?;
+        assert_signer(auth)?;
+        Some(auth)
     } else {
         None
     };
@@ -96,21 +100,10 @@ pub fn process_transfer_out_of_escrow(
     assert_owned_by(escrow_info, program_id)?;
     let toe = TokenOwnedEscrow::from_account_info(escrow_info)?;
 
-    let mut escrow_seeds = vec![
-        PREFIX.as_bytes(),
-        program_id.as_ref(),
-        escrow_mint_info.key.as_ref(),
-    ];
-
-    for seed in toe.authority.to_seeds() {
-        escrow_seeds.push(seed);
-    }
-
-    escrow_seeds.push(ESCROW_PREFIX.as_bytes());
+    // Derive the seeds for PDA signing.
+    let escrow_seeds = find_escrow_seeds(escrow_mint_info.key, &toe.authority);
 
     let bump_seed = &[assert_derivation(&crate::id(), escrow_info, &escrow_seeds)?];
-
-    // Derive the seeds for PDA signing.
     let escrow_authority_seeds = [escrow_seeds, vec![bump_seed]].concat();
 
     assert_signer(payer_info)?;
@@ -140,24 +133,32 @@ pub fn process_transfer_out_of_escrow(
 
     // Deserialize the token accounts and perform checks.
     let attribute_src = spl_token::state::Account::unpack(&attribute_src_info.data.borrow())?;
-    assert!(attribute_src.mint == *attribute_mint_info.key);
-    assert!(attribute_src.delegate.is_none());
-    assert!(attribute_src.amount >= args.amount);
+    if attribute_src.mint != *attribute_mint_info.key {
+        return Err(MetadataError::MintMismatch.into());
+    }
+    if attribute_src.amount < args.amount {
+        return Err(MetadataError::InsufficientTokens.into());
+    }
 
     // Check that the authority matches based on the authority type.
     let escrow_account = spl_token::state::Account::unpack(&escrow_account_info.data.borrow())?;
     match toe.authority {
         EscrowAuthority::TokenOwner => {
-            assert!(escrow_account.owner == *authority.key);
+            if escrow_account.owner != *authority.key {
+                return Err(MetadataError::MustBeEscrowAuthority.into());
+            }
         }
         EscrowAuthority::Creator(creator) => {
-            assert!(creator == *authority.key);
+            if creator != *authority.key {
+                return Err(MetadataError::MustBeEscrowAuthority.into());
+            }
         }
     }
 
     let attribute_dst = spl_token::state::Account::unpack(&attribute_dst_info.data.borrow())?;
-    assert!(attribute_dst.mint == *attribute_mint_info.key);
-    assert!(attribute_dst.delegate.is_none());
+    if attribute_dst.mint != *attribute_mint_info.key {
+        return Err(MetadataError::MintMismatch.into());
+    }
 
     // Transfer the token out of the escrow to the destination ATA.
     let transfer_ix = spl_token::instruction::transfer(

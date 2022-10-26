@@ -55,6 +55,7 @@ export type CreateTreeInstructionAccounts = {
   logWrapper: web3.PublicKey;
   compressionProgram: web3.PublicKey;
   systemProgram?: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
 };
 
 export const createTreeInstructionDiscriminator = [165, 83, 136, 142, 89, 202, 47, 220];
@@ -115,6 +116,12 @@ export function createCreateTreeInstruction(
       isSigner: false,
     },
   ];
+
+  if (accounts.anchorRemainingAccounts != null) {
+    for (const acc of accounts.anchorRemainingAccounts) {
+      keys.push(acc);
+    }
+  }
 
   const ix = new web3.TransactionInstruction({
     programId,
