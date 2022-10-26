@@ -105,7 +105,7 @@ jobs:
 
       # Run lint checks
       - uses: ./.github/actions/verify-rust
-        if: ${{ inputs.verify_rust == 'true' }}
+        if: ${{ inputs.verify_rust }}
         with:
           working-directory: ./${{ inputs.name }}/program
 
