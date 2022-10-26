@@ -1,5 +1,5 @@
 {
-  "version": "0.1.3",
+  "version": "0.2.0",
   "name": "bubblegum",
   "instructions": [
     {
@@ -49,6 +49,12 @@
         {
           "name": "maxBufferSize",
           "type": "u32"
+        },
+        {
+          "name": "public",
+          "type": {
+            "option": "bool"
+          }
         }
       ]
     },
@@ -72,6 +78,11 @@
         },
         {
           "name": "merkleTree",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
           "isMut": false,
           "isSigner": false
         }
@@ -118,6 +129,11 @@
         },
         {
           "name": "compressionProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
           "isMut": false,
           "isSigner": false
         }
@@ -171,6 +187,11 @@
         },
         {
           "name": "compressionProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
           "isMut": false,
           "isSigner": false
         }
@@ -259,6 +280,11 @@
         },
         {
           "name": "compressionProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
           "isMut": false,
           "isSigner": false
         }
@@ -392,6 +418,11 @@
           "name": "tokenMetadataProgram",
           "isMut": false,
           "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
         }
       ],
       "args": [
@@ -521,6 +552,11 @@
         },
         {
           "name": "tokenMetadataProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
           "isMut": false,
           "isSigner": false
         }
@@ -654,6 +690,11 @@
           "name": "tokenMetadataProgram",
           "isMut": false,
           "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
         }
       ],
       "args": [
@@ -741,6 +782,11 @@
           "name": "compressionProgram",
           "isMut": false,
           "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
         }
       ],
       "args": [
@@ -818,6 +864,11 @@
           "name": "compressionProgram",
           "isMut": false,
           "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
         }
       ],
       "args": [
@@ -888,6 +939,11 @@
         },
         {
           "name": "compressionProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
           "isMut": false,
           "isSigner": false
         }
@@ -1042,6 +1098,11 @@
         },
         {
           "name": "compressionProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
           "isMut": false,
           "isSigner": false
         }
@@ -1234,6 +1295,10 @@
           {
             "name": "numMinted",
             "type": "u64"
+          },
+          {
+            "name": "public",
+            "type": "bool"
           }
         ]
       }

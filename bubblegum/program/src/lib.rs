@@ -80,6 +80,7 @@ pub struct MintV1<'info> {
     pub tree_delegate: Signer<'info>,
     pub log_wrapper: Program<'info, Wrapper>,
     pub compression_program: Program<'info, SplAccountCompression>,
+    pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]
@@ -98,6 +99,7 @@ pub struct Burn<'info> {
     pub merkle_tree: UncheckedAccount<'info>,
     pub log_wrapper: Program<'info, Wrapper>,
     pub compression_program: Program<'info, SplAccountCompression>,
+    pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]
@@ -118,6 +120,7 @@ pub struct CreatorVerification<'info> {
     pub creator: Signer<'info>,
     pub log_wrapper: Program<'info, Wrapper>,
     pub compression_program: Program<'info, SplAccountCompression>,
+    pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]
@@ -158,6 +161,7 @@ pub struct CollectionVerification<'info> {
     pub log_wrapper: Program<'info, Wrapper>,
     pub compression_program: Program<'info, SplAccountCompression>,
     pub token_metadata_program: Program<'info, MplTokenMetadata>,
+    pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]
@@ -179,6 +183,7 @@ pub struct Transfer<'info> {
     pub merkle_tree: UncheckedAccount<'info>,
     pub log_wrapper: Program<'info, Wrapper>,
     pub compression_program: Program<'info, SplAccountCompression>,
+    pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]
@@ -199,6 +204,7 @@ pub struct Delegate<'info> {
     pub merkle_tree: UncheckedAccount<'info>,
     pub log_wrapper: Program<'info, Wrapper>,
     pub compression_program: Program<'info, SplAccountCompression>,
+    pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]
@@ -266,6 +272,7 @@ pub struct CancelRedeem<'info> {
     pub voucher: Account<'info, Voucher>,
     pub log_wrapper: Program<'info, Wrapper>,
     pub compression_program: Program<'info, SplAccountCompression>,
+    pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]
@@ -370,6 +377,7 @@ pub struct SetTreeDelegate<'info> {
     pub new_tree_delegate: UncheckedAccount<'info>,
     /// CHECK: this account is neither read from or written to
     pub merkle_tree: UncheckedAccount<'info>,
+    pub system_program: Program<'info, System>,
 }
 
 pub fn hash_creators(creators: &[Creator]) -> Result<[u8; 32]> {
@@ -804,6 +812,7 @@ pub mod bubblegum {
         ctx: Context<CreateTree>,
         max_depth: u32,
         max_buffer_size: u32,
+        public: Option<bool>
     ) -> Result<()> {
         let merkle_tree = ctx.accounts.merkle_tree.to_account_info();
         let seed = merkle_tree.key();
@@ -814,6 +823,7 @@ pub mod bubblegum {
             tree_delegate: ctx.accounts.tree_creator.key(),
             total_mint_capacity: 1 << max_depth,
             num_minted: 0,
+            public: public.unwrap_or(false),
         });
         let authority_pda_signer = &[&seeds[..]];
         let cpi_ctx = CpiContext::new_with_signer(
@@ -837,18 +847,18 @@ pub mod bubblegum {
         // TODO -> Separate V1 / V1 into seperate instructions
         let payer = ctx.accounts.payer.key();
         let incoming_tree_delegate = ctx.accounts.tree_delegate.key();
-
         let owner = ctx.accounts.leaf_owner.key();
         let delegate = ctx.accounts.leaf_delegate.key();
         let authority = &mut ctx.accounts.tree_authority;
         let tree_creator = authority.tree_creator;
         let tree_delegate = authority.tree_delegate;
         let merkle_tree = &ctx.accounts.merkle_tree;
-
-        require!(
-            incoming_tree_delegate == tree_creator || incoming_tree_delegate == tree_delegate,
-            BubblegumError::TreeAuthorityIncorrect,
-        );
+        if !authority.public {
+            require!(
+                incoming_tree_delegate == tree_creator || incoming_tree_delegate == tree_delegate,
+                BubblegumError::TreeAuthorityIncorrect,
+            );
+        }
 
         if !authority.contains_mint_capacity(1) {
             return Err(BubblegumError::InsufficientMintCapacity.into());

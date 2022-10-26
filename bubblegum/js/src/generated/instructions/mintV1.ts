@@ -57,6 +57,7 @@ export type MintV1InstructionAccounts = {
   treeDelegate: web3.PublicKey;
   logWrapper: web3.PublicKey;
   compressionProgram: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
   anchorRemainingAccounts?: web3.AccountMeta[];
 };
 
@@ -119,6 +120,11 @@ export function createMintV1Instruction(
     },
     {
       pubkey: accounts.compressionProgram,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
       isWritable: false,
       isSigner: false,
     },

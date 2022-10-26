@@ -16,13 +16,14 @@ import * as web3 from '@solana/web3.js';
 export type CreateTreeInstructionArgs = {
   maxDepth: number;
   maxBufferSize: number;
+  public: beet.COption<boolean>;
 };
 /**
  * @category Instructions
  * @category CreateTree
  * @category generated
  */
-export const createTreeStruct = new beet.BeetArgsStruct<
+export const createTreeStruct = new beet.FixableBeetArgsStruct<
   CreateTreeInstructionArgs & {
     instructionDiscriminator: number[] /* size: 8 */;
   }
@@ -31,6 +32,7 @@ export const createTreeStruct = new beet.BeetArgsStruct<
     ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
     ['maxDepth', beet.u32],
     ['maxBufferSize', beet.u32],
+    ['public', beet.coption(beet.bool)],
   ],
   'CreateTreeInstructionArgs',
 );

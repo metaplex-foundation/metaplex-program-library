@@ -60,6 +60,7 @@ export type BurnInstructionAccounts = {
   merkleTree: web3.PublicKey;
   logWrapper: web3.PublicKey;
   compressionProgram: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
   anchorRemainingAccounts?: web3.AccountMeta[];
 };
 
@@ -112,6 +113,11 @@ export function createBurnInstruction(
     },
     {
       pubkey: accounts.compressionProgram,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
       isWritable: false,
       isSigner: false,
     },
