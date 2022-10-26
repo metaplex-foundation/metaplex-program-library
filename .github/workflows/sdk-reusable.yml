@@ -41,13 +41,20 @@ jobs:
               - 'core/js/**'
             package:
               - '${{ inputs.name }}/js/**'
+            workflow:
+              - '.github/workflows/sdk-reusable.yml'
+            action:
+              - '.github/actions/sdk/${{ inputs.name }}/action.yml'
 
   build-lint-and-test:
     name: Build Lint and Test
     needs: changes
-    if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' }}
+    if: |
+      needs.changes.outputs.core == 'true' || 
+      needs.changes.outputs.package == 'true' || 
+      needs.changes.outputs.workflow == 'true' || 
+      needs.changes.outputs.action == 'true'
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v2
 

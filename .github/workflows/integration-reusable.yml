@@ -44,11 +44,11 @@ jobs:
     env:
       cache_id: program-${{ inputs.name }}
     needs: changes
-    if: ${{ needs.changes.outputs.core == 'true' ||
+    if: |
+      needs.changes.outputs.core == 'true' ||
       needs.changes.outputs.package == 'true' ||
       needs.changes.outputs.workflow == 'true' ||
       needs.changes.outputs.actions == 'true'
-      }}
     steps:
       # Setup Deps
       - uses: actions/checkout@v2
