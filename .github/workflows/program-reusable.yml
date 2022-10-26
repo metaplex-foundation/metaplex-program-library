@@ -40,7 +40,7 @@ jobs:
       package: ${{ steps.filter.outputs.package }}
       workflow: ${{ steps.filter.outputs.workflow }}
       action: ${{ steps.filter.outputs.action }}
-#      custom: ${{ steps.custom.outputs.custom }}
+    #      custom: ${{ steps.custom.outputs.custom }}
     steps:
       - uses: actions/checkout@v2
       # For pull requests it's not necessary to checkout the code
@@ -56,10 +56,10 @@ jobs:
               - '.github/workflows/program-reusable.yml'
             action:
               - '.github/actions/program/${{ inputs.name }}/action.yml'
-#      - uses: ./.github/actions/program/change
-#        id: custom
-#        with:
-#          name: ${{ inputs.name }}
+  #      - uses: ./.github/actions/program/change
+  #        id: custom
+  #        with:
+  #          name: ${{ inputs.name }}
 
   build-lint-and-test:
     name: Build Lint and Test
@@ -69,7 +69,6 @@ jobs:
       needs.changes.outputs.core == 'true' ||
       needs.changes.outputs.package == 'true' ||
       needs.changes.outputs.workflow == 'true' ||
-#      needs.changes.outputs.custom == 'true' ||
       needs.changes.outputs.action == 'true'
     env:
       cache_id: program-${{ inputs.name }}
