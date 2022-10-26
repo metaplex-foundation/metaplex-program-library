@@ -83,7 +83,7 @@ jobs:
             build_auction_house: false
             build_candy_machine: false
 
-    uses: ./.github/workflows/integration-reusable.yml
+    uses: ./.github/workflows/sdk-reusable.yml
     with:
       name: ${{ matrix.node.name }}
       skip_test: ${{ matrix.node.skip_test }}
