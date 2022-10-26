@@ -1,0 +1,117 @@
+name: Program Test
+
+on:
+  workflow_call:
+    inputs:
+      name:
+        required: true
+        type: string
+
+env:
+  CARGO_TERM_COLOR: always
+  SOLANA_VERSION: 1.10.40
+  RUST_TOOLCHAIN: stable
+
+concurrency: lock
+jobs:
+  #  setup-versions:
+  #    runs-on: buildjet-4vcpu-ubuntu-2004
+  #    outputs:
+  #      versions: ${{ steps.matrix.outputs.value }}
+  #    steps:
+  #      - id: matrix
+  #        run: |
+  #          sudo apt-get install -y jq && \
+  #          MAINNET=$(curl https://api.mainnet-beta.solana.com -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","id":1, "method":"getVersion"}' | jq '.result["solana-core"]') && \
+  #          DEVNET=$(curl https://api.devnet.solana.com -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","id":1, "method":"getVersion"}' | jq '.result["solana-core"]') && \
+  #          VERSIONS=($MAINNET $DEVNET) && \
+  #          echo "${VERSIONS[@]}" && \
+  #          VERSION_JSON=$(echo "${VERSIONS[@]}" | jq -s -c) && \
+  #          echo $VERSION_JSON && \
+  #          echo "::set-output name=value::$VERSION_JSON"
+  #        shell: bash
+
+  changes:
+    name: Changes
+    runs-on: ubuntu-latest
+    # Set job outputs to values from filter step
+    outputs:
+      core: ${{ steps.filter.outputs.core }}
+      package: ${{ steps.filter.outputs.package }}
+      workflow: ${{ steps.filter.outputs.workflow }}
+      action: ${{ steps.filter.outputs.action }}
+      custom: ${{ steps.custom.outputs.custom }}
+    steps:
+      - uses: actions/checkout@v2
+      # For pull requests it's not necessary to checkout the code
+      - uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            core:
+              - 'core/rust/**'
+            package:
+              - '${{ inputs.name }}/program/**'
+            workflow:
+              - '.github/workflows/program-reusable.yml'
+            action:
+              - '.github/actions/program/${{ inputs.name }}/action.yml'
+      - uses: ./.github/actions/program/change
+        id: custom
+        with:
+          name: ${{ inputs.name }}
+
+  build-lint-and-test:
+    name: Build Lint and Test
+    needs: changes
+    if: |
+      needs.changes.outputs.core == 'true' ||
+      needs.changes.outputs.package == 'true' ||
+      needs.changes.outputs.workflow == 'true' ||
+      needs.changes.outputs.action == 'true' ||
+      needs.changes.outputs.custom == 'true'
+    runs-on: buildjet-4vcpu-ubuntu-2004
+    env:
+      cache_id: program-${{ inputs.name }}
+    steps:
+      # Setup Deps
+      - uses: actions/checkout@v2
+      - uses: ./.github/actions/install-linux-build-deps
+      - uses: ./.github/actions/install-solana
+        with:
+          solana_version: ${{ env.SOLANA_VERSION }}
+      - uses: ./.github/actions/install-rust
+        with:
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
+
+      # Restore Cache from previous build/test
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            ./rust/target
+          key:
+            ${{ env.cache_id }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{
+            env.RUSTC_HASH }}
+
+      # Run lint checks
+      - uses: ./.github/actions/verify-rust
+        with:
+          working-directory: ./${{ inputs.name }}/program
+
+      # Build deps
+      - uses: ./.github/actions/program/build-deps
+        with:
+          name: ${{ inputs.name }}
+
+      # Run test
+      - name: "Test: ${{ inputs.name }}"
+        working-directory: ./${{ inputs.name }}/program
+        run: |
+          cargo +${{ env.RUST_TOOLCHAIN }} test -- --nocapture --test-threads 1
+          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --version
+          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --bpf-out-dir ../../test-programs/ -- --nocapture --test-threads 1
+

@@ -1,0 +1,23 @@
+name: Program Change Dependencies
+description: Checks if the custom changes changed
+
+inputs:
+  name:
+    description: The name of the program test
+    required: true
+outputs:
+  custom:
+    description: Whether or not the custom change check passes
+    value: ${{ steps.${{ inputs.name }}.outputs.core }}
+
+
+runs:
+  using: 'composite'
+  steps:
+    - uses: dorny/paths-filter@v2
+      id: auctioneer
+      with:
+        filters: |
+          custom:
+            - 'auctioneer/program/**'
+      if: ${{ inputs.name == 'auctioneer' }}
