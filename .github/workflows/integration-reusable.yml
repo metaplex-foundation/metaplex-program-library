@@ -77,7 +77,7 @@ jobs:
       - uses: ./.github/actions/integration/hydra
         if: ${{ inputs.name == 'hydra' }}
       - uses: ./.github/actions/integration/candy-machine-core
-        if: ${{ inputs.name == 'candy-machine-core }}
+        if: ${{ inputs.name == 'candy-machine-core' }}
 
       # Start local validator
       - name: start-local-test-validator
