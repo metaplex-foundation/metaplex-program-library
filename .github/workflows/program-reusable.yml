@@ -95,12 +95,8 @@ jobs:
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
-          key: cargo-${{ inputs.name }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-      - uses: actions/cache@v3
-        with:
-          path: ./${{ inputs.name }}/program/target/
-          key:
-            program-${{ inputs.name }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+            ./${{ inputs.name }}/program/target/
+          key: program-${{ inputs.name }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
       # Run lint checks
       - uses: ./.github/actions/verify-rust

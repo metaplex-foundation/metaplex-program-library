@@ -66,10 +66,7 @@ jobs:
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
-          key: cargo-${{ inputs.name }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-      - uses: actions/cache@v3
-        with:
-          path: ./${{ inputs.name }}/program/target/
+            ./${{ inputs.name }}/program/target/
           key: program-${{ inputs.name }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
       # Build and install deps
