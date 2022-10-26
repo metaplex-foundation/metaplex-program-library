@@ -1235,9 +1235,14 @@ async fn fail_wrong_user_wallet() {
 
     let malicious_user = Keypair::new();
 
-    create_mint(&mut context, &new_mint, &malicious_user.pubkey(), None)
-        .await
-        .unwrap();
+    create_mint(
+        &mut context,
+        &new_mint,
+        &malicious_user.pubkey(),
+        Some(&malicious_user.pubkey()),
+    )
+    .await
+    .unwrap();
     create_token_account(
         &mut context,
         &new_mint_token_acc,
