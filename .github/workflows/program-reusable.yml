@@ -12,7 +12,6 @@ env:
   SOLANA_VERSION: 1.10.40
   RUST_TOOLCHAIN: stable
 
-concurrency: lock
 jobs:
   #  setup-versions:
   #    runs-on: buildjet-4vcpu-ubuntu-2004
