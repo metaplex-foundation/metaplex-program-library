@@ -823,7 +823,7 @@ pub mod bubblegum {
             tree_delegate: ctx.accounts.tree_creator.key(),
             total_mint_capacity: 1 << max_depth,
             num_minted: 0,
-            public: public.unwrap_or(false),
+            is_public: public.unwrap_or(false),
         });
         let authority_pda_signer = &[&seeds[..]];
         let cpi_ctx = CpiContext::new_with_signer(
@@ -853,7 +853,7 @@ pub mod bubblegum {
         let tree_creator = authority.tree_creator;
         let tree_delegate = authority.tree_delegate;
         let merkle_tree = &ctx.accounts.merkle_tree;
-        if !authority.public {
+        if !authority.is_public {
             require!(
                 incoming_tree_delegate == tree_creator || incoming_tree_delegate == tree_delegate,
                 BubblegumError::TreeAuthorityIncorrect,

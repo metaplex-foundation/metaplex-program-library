@@ -19,7 +19,7 @@ export type TreeConfigArgs = {
   treeDelegate: web3.PublicKey;
   totalMintCapacity: beet.bignum;
   numMinted: beet.bignum;
-  public: boolean;
+  isPublic: boolean;
 };
 
 export const treeConfigDiscriminator = [122, 245, 175, 248, 171, 34, 0, 207];
@@ -36,7 +36,7 @@ export class TreeConfig implements TreeConfigArgs {
     readonly treeDelegate: web3.PublicKey,
     readonly totalMintCapacity: beet.bignum,
     readonly numMinted: beet.bignum,
-    readonly public: boolean,
+    readonly isPublic: boolean,
   ) {}
 
   /**
@@ -48,7 +48,7 @@ export class TreeConfig implements TreeConfigArgs {
       args.treeDelegate,
       args.totalMintCapacity,
       args.numMinted,
-      args.public,
+      args.isPublic,
     );
   }
 
@@ -168,7 +168,7 @@ export class TreeConfig implements TreeConfigArgs {
         }
         return x;
       })(),
-      public: this.public,
+      isPublic: this.isPublic,
     };
   }
 }
@@ -189,7 +189,7 @@ export const treeConfigBeet = new beet.BeetStruct<
     ['treeDelegate', beetSolana.publicKey],
     ['totalMintCapacity', beet.u64],
     ['numMinted', beet.u64],
-    ['public', beet.bool],
+    ['isPublic', beet.bool],
   ],
   TreeConfig.fromArgs,
   'TreeConfig',

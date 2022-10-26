@@ -320,7 +320,7 @@ async fn test_create_public_tree_and_mint_passes() {
     assert_eq!(cfg.tree_creator, payer.pubkey());
     assert_eq!(cfg.tree_delegate, payer.pubkey());
     assert_eq!(cfg.total_mint_capacity, 1 << MAX_DEPTH);
-    assert_eq!(cfg.public, true);
+    assert_eq!(cfg.is_public, true);
 
     tree.mint_v1_non_owner(&minter, &mut args).await.unwrap();
     let cfg = tree.read_tree_config().await.unwrap();

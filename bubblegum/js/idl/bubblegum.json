@@ -1297,7 +1297,7 @@
             "type": "u64"
           },
           {
-            "name": "public",
+            "name": "isPublic",
             "type": "bool"
           }
         ]

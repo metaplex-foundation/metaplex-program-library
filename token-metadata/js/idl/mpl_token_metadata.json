@@ -3823,9 +3823,24 @@
       "msg": "Must be a Non Fungible Token"
     },
     {
-      "code": 124,
+      "code": 128,
+      "name": "InsufficientTokens",
+      "msg": "Insufficient tokens for transfer"
+    },
+    {
+      "code": 129,
+      "name": "BorshSerializationError",
+      "msg": "Borsh Serialization Error"
+    },
+    {
+      "code": 130,
       "name": "NoFreezeAuthoritySet",
       "msg": "Cannot create NFT with no Freeze Authority."
+    },
+    {
+      "code": 131,
+      "name": "InvalidCollectionSizeChange",
+      "msg": "Invalid collection size change"
     }
   ],
   "metadata": {
