@@ -2,9 +2,9 @@ name: SDK Tests
 
 on:
   push:
-    branches: [master]
+    branches: [ master ]
   pull_request:
-    branches: [master]
+    branches: [ master ]
 
 jobs:
   sdk-tests:
@@ -40,8 +40,28 @@ jobs:
     uses: ./.github/workflows/integration-reusable.yml
     with:
       name: ${{ matrix.node.name }}
-      skip_test: ${{ matrix.node.skip_test:#{false} }}
-      build_core: ${{ matrix.node.build_core:#{true} }}
-      build_token_metadata: ${{ matrix.node.build_token_metadata:#{false} }}
-      build_auction_house: ${{ matrix.node.build_auction_house:#{false} }}
-      build_candy_machine: ${{ matrix.node.build_candy_machine:#{false} }}
+
+      ${{ if eq(matrix.node.skip_test, '') }}:
+      skip_test: false
+      ${{ if ne(matrix.node.skip_test, '') }}:
+      skip_test: ${{ matrix.node.skip_test }}
+
+      ${{ if eq(matrix.node.skip_test, '') }}:
+      build_core: true
+      ${{ if ne(matrix.node.skip_test, '') }}:
+      build_core: ${{ matrix.node.build_core }}
+
+      ${{ if eq(matrix.node.build_token_metadata, '') }}:
+      build_token_metadata: false
+      ${{ if ne(matrix.node.build_token_metadata, '') }}:
+      build_token_metadata: ${{ matrix.node.build_token_metadata }}
+
+      ${{ if eq(matrix.node.build_auction_house, '') }}:
+      build_auction_house: false
+      ${{ if ne(matrix.node.build_auction_house, '') }}:
+      build_auction_house: ${{ matrix.node.build_auction_house }}
+
+      ${{ if eq(matrix.node.build_candy_machine, '') }}:
+      build_candy_machine: false
+      ${{ if ne(matrix.node.build_candy_machine, '') }}:
+      build_candy_machine: ${{ matrix.node.build_candy_machine }}
