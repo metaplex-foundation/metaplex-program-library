@@ -9,14 +9,14 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Cache Solana Install
-      id: cache-solana-install
-      uses: actions/cache@v3
-      with:
-        path: |
-          ~/.cache/solana/
-          ~/.local/share/solana/
-        key: ${{ runner.os }}-Solana-v${{ inputs.solana_version  }}
+#    - name: Cache Solana Install
+#      id: cache-solana-install
+#      uses: actions/cache@v3
+#      with:
+#        path: |
+#          ~/.cache/solana/
+#          ~/.local/share/solana/
+#        key: ${{ runner.os }}-Solana-v${{ inputs.solana_version  }}
 
     - run: sh -c "$(curl -sSfL https://release.solana.com/v${{ inputs.solana_version }}/install)"
       shell: bash
