@@ -326,7 +326,7 @@ async fn test_create_public_tree_and_mint_passes() {
     let cfg = tree.read_tree_config().await.unwrap();
     assert_eq!(cfg.num_minted, 1);
 
-    if let BanksClient(BanksClientError::TransactionError(e)) = tree_private.mint_v1_non_owner(&minter, &mut args).await.unwrap_err() {
+    if let Err(BanksClient(BanksClientError::TransactionError(e))) = tree_private.mint_v1_non_owner(&minter, &mut args).await {
         assert_eq!(e, TransactionError::InstructionError(
         0,
         InstructionError::Custom(6016),
