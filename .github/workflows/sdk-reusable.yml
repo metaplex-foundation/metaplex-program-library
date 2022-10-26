@@ -7,20 +7,20 @@ on:
         required: true
         type: string
       skip_test:
-        required: false
-        default: false
+        required: true
+        type: boolean
       build_core:
-        required: false
-        default: true
+        required: true
+        type: boolean
       build_token_metadata:
-        required: false
-        default: false
+        required: true
+        type: boolean
       build_auction_house:
-        required: false
-        default: false
+        required: true
+        type: boolean
       build_candy_machine:
-        required: false
-        default: false
+        required: true
+        type: boolean
 
 jobs:
   changes:
