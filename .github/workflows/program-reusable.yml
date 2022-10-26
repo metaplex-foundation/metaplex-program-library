@@ -35,10 +35,11 @@ jobs:
     runs-on: ubuntu-latest
     # Set job outputs to values from filter step
     outputs:
-      core: ${{ steps.filter.outputs.core }}
+      core: ${{ steps.filter1.outputs.core }}
       package: ${{ steps.filter.outputs.package }}
       workflow: ${{ steps.filter.outputs.workflow }}
       action: ${{ steps.filter.outputs.action }}
+      custom: ${{ steps.auctioneer-filter.changed == 'true' }}
     steps:
       - uses: actions/checkout@v2
       # For pull requests it's not necessary to checkout the code
@@ -54,21 +55,12 @@ jobs:
               - '.github/workflows/program-reusable.yml'
             action:
               - '.github/actions/program/${{ inputs.name }}/action.yml'
-        if: ${{ inputs.name != 'auctioneer' }}
-
       - uses: dorny/paths-filter@v2
-        id: filter
+        id: auctioneer-filter
         with:
           filters: |
-            core:
-              - 'core/rust/**'
-            package:
-              - '${{ inputs.name }}/program/**'
+            changed:
               - 'auction-house/program/**'
-            workflow:
-              - '.github/workflows/program-reusable.yml'
-            action:
-              - '.github/actions/program/${{ inputs.name }}/action.yml'
         if: ${{ inputs.name == 'auctioneer' }}
 
   build-lint-and-test:
