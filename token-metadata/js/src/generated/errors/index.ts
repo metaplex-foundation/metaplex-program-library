@@ -2752,6 +2752,89 @@ createErrorFromCodeLookup.set(0x7f, () => new MustBeNonFungibleError());
 createErrorFromNameLookup.set('MustBeNonFungible', () => new MustBeNonFungibleError());
 
 /**
+ * InsufficientTokens: 'Insufficient tokens for transfer'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InsufficientTokensError extends Error {
+  readonly code: number = 0x80;
+  readonly name: string = 'InsufficientTokens';
+  constructor() {
+    super('Insufficient tokens for transfer');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InsufficientTokensError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x80, () => new InsufficientTokensError());
+createErrorFromNameLookup.set('InsufficientTokens', () => new InsufficientTokensError());
+
+/**
+ * BorshSerializationError: 'Borsh Serialization Error'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class BorshSerializationErrorError extends Error {
+  readonly code: number = 0x81;
+  readonly name: string = 'BorshSerializationError';
+  constructor() {
+    super('Borsh Serialization Error');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, BorshSerializationErrorError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x81, () => new BorshSerializationErrorError());
+createErrorFromNameLookup.set('BorshSerializationError', () => new BorshSerializationErrorError());
+
+/**
+ * NoFreezeAuthoritySet: 'Cannot create NFT with no Freeze Authority.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class NoFreezeAuthoritySetError extends Error {
+  readonly code: number = 0x82;
+  readonly name: string = 'NoFreezeAuthoritySet';
+  constructor() {
+    super('Cannot create NFT with no Freeze Authority.');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, NoFreezeAuthoritySetError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x82, () => new NoFreezeAuthoritySetError());
+createErrorFromNameLookup.set('NoFreezeAuthoritySet', () => new NoFreezeAuthoritySetError());
+
+/**
+ * InvalidCollectionSizeChange: 'Invalid collection size change'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidCollectionSizeChangeError extends Error {
+  readonly code: number = 0x83;
+  readonly name: string = 'InvalidCollectionSizeChange';
+  constructor() {
+    super('Invalid collection size change');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidCollectionSizeChangeError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x83, () => new InvalidCollectionSizeChangeError());
+createErrorFromNameLookup.set(
+  'InvalidCollectionSizeChange',
+  () => new InvalidCollectionSizeChangeError(),
+);
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated
