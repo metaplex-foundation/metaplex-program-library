@@ -30,18 +30,7 @@ mod verify_collection {
 
         let test_collection = Metadata::new();
         test_collection
-            .create_v2(
-                &mut context,
-                "Test".to_string(),
-                "TST".to_string(),
-                "uri".to_string(),
-                None,
-                10,
-                false,
-                None,
-                None,
-                None,
-            )
+            .create_v2_default(&mut context)
             .await
             .unwrap();
         let collection_master_edition_account = MasterEditionV2::new(&test_collection);
@@ -73,7 +62,6 @@ mod verify_collection {
                 None,
                 10,
                 false,
-                None,
                 Some(Collection {
                     key: test_collection.mint.pubkey(),
                     verified: false,
@@ -131,20 +119,10 @@ mod verify_collection {
 
         let test_collection = Metadata::new();
         test_collection
-            .create_v2(
-                &mut context,
-                "Test".to_string(),
-                "TST".to_string(),
-                "uri".to_string(),
-                None,
-                10,
-                false,
-                None,
-                None,
-                None,
-            )
+            .create_v2_default(&mut context)
             .await
             .unwrap();
+
         let collection_master_edition_account = MasterEditionV2::new(&test_collection);
         collection_master_edition_account
             .create_v3(&mut context, Some(0))
@@ -153,20 +131,10 @@ mod verify_collection {
 
         let test_collection2 = Metadata::new();
         test_collection2
-            .create_v2(
-                &mut context,
-                "Test".to_string(),
-                "TST".to_string(),
-                "uri".to_string(),
-                None,
-                10,
-                false,
-                None,
-                None,
-                None,
-            )
+            .create_v2_default(&mut context)
             .await
             .unwrap();
+
         let collection_master_edition_account2 = MasterEditionV2::new(&test_collection2);
         collection_master_edition_account2
             .create_v3(&mut context, Some(0))
@@ -196,7 +164,6 @@ mod verify_collection {
                 None,
                 10,
                 false,
-                None,
                 Some(Collection {
                     key: test_collection.mint.pubkey(),
                     verified: false,
@@ -248,20 +215,10 @@ mod verify_collection {
 
         let test_collection = Metadata::new();
         test_collection
-            .create_v2(
-                &mut context,
-                "Test".to_string(),
-                "TST".to_string(),
-                "uri".to_string(),
-                None,
-                10,
-                false,
-                None,
-                None,
-                None,
-            )
+            .create_v2_default(&mut context)
             .await
             .unwrap();
+
         let collection_master_edition_account = MasterEditionV2::new(&test_collection);
         collection_master_edition_account
             .create(&mut context, Some(0))
@@ -286,7 +243,6 @@ mod verify_collection {
                 None,
                 10,
                 false,
-                None,
                 Some(Collection {
                     key: test_collection.mint.pubkey(),
                     verified: false,
@@ -324,20 +280,10 @@ mod verify_collection {
 
         let test_collection = Metadata::new();
         test_collection
-            .create_v2(
-                &mut context,
-                "Test".to_string(),
-                "TST".to_string(),
-                "uri".to_string(),
-                None,
-                10,
-                false,
-                None,
-                None,
-                None,
-            )
+            .create_v2_default(&mut context)
             .await
             .unwrap();
+
         let collection_master_edition_account = MasterEditionV2::new(&test_collection);
         collection_master_edition_account
             .create(&mut context, Some(1))
@@ -362,7 +308,6 @@ mod verify_collection {
                 None,
                 10,
                 false,
-                None,
                 Some(Collection {
                     key: test_collection.mint.pubkey(),
                     verified: false,
@@ -400,18 +345,7 @@ mod verify_collection {
 
         let test_collection = Metadata::new();
         test_collection
-            .create_v2(
-                &mut context,
-                "Test".to_string(),
-                "TST".to_string(),
-                "uri".to_string(),
-                None,
-                10,
-                false,
-                None,
-                None,
-                None,
-            )
+            .create_v2_default(&mut context)
             .await
             .unwrap();
 
@@ -434,7 +368,6 @@ mod verify_collection {
                 None,
                 10,
                 false,
-                None,
                 Some(Collection {
                     key: test_collection.mint.pubkey(),
                     verified: false,
@@ -473,20 +406,10 @@ mod verify_collection {
 
         let test_collection = Metadata::new();
         test_collection
-            .create_v2(
-                &mut context,
-                "Test".to_string(),
-                "TST".to_string(),
-                "uri".to_string(),
-                None,
-                10,
-                false,
-                None,
-                None,
-                None,
-            )
+            .create_v2_default(&mut context)
             .await
             .unwrap();
+
         let collection_master_edition_account = MasterEditionV2::new(&test_collection);
         collection_master_edition_account
             .create_v3(&mut context, Some(0))
@@ -512,7 +435,6 @@ mod verify_collection {
                 None,
                 10,
                 false,
-                None,
                 Some(Collection {
                     key: test_collection.mint.pubkey(),
                     verified: false,
@@ -548,20 +470,10 @@ mod verify_collection {
 
         let test_collection = Metadata::new();
         test_collection
-            .create_v2(
-                &mut context,
-                "Test".to_string(),
-                "TST".to_string(),
-                "uri".to_string(),
-                None,
-                10,
-                false,
-                None,
-                None,
-                None,
-            )
+            .create_v2_default(&mut context)
             .await
             .unwrap();
+
         let collection_master_edition_account = MasterEditionV2::new(&test_collection);
         collection_master_edition_account
             .create_v3(&mut context, Some(0))
@@ -591,7 +503,6 @@ mod verify_collection {
                 None,
                 10,
                 false,
-                None,
                 Some(Collection {
                     key: test_collection.mint.pubkey(),
                     verified: false,
@@ -649,20 +560,10 @@ mod verify_collection {
         let new_collection_authority = Keypair::new();
         let test_collection = Metadata::new();
         test_collection
-            .create_v2(
-                &mut context,
-                "Test".to_string(),
-                "TST".to_string(),
-                "uri".to_string(),
-                None,
-                10,
-                false,
-                None,
-                None,
-                None,
-            )
+            .create_v2_default(&mut context)
             .await
             .unwrap();
+
         let collection_master_edition_account = MasterEditionV2::new(&test_collection);
         collection_master_edition_account
             .create_v3(&mut context, Some(0))
@@ -682,7 +583,6 @@ mod verify_collection {
                 None,
                 10,
                 false,
-                None,
                 Some(Collection {
                     key: test_collection.mint.pubkey(),
                     verified: false,
@@ -766,45 +666,18 @@ mod verify_collection {
         let new_collection_authority = Keypair::new();
         let test_collection = Metadata::new();
         test_collection
-            .create_v2(
-                &mut context,
-                "Test".to_string(),
-                "TST".to_string(),
-                "uri".to_string(),
-                None,
-                10,
-                false,
-                None,
-                None,
-                None,
-            )
+            .create_v2_default(&mut context)
             .await
             .unwrap();
+
         let collection_master_edition_account = MasterEditionV2::new(&test_collection);
         collection_master_edition_account
             .create_v3(&mut context, Some(0))
             .await
             .unwrap();
 
-        let name = "Test".to_string();
-        let symbol = "TST".to_string();
-        let uri = "uri".to_string();
         let test_metadata = Metadata::new();
-        test_metadata
-            .create_v2(
-                &mut context,
-                name,
-                symbol,
-                uri,
-                None,
-                10,
-                false,
-                None,
-                None,
-                None,
-            )
-            .await
-            .unwrap();
+        test_metadata.create_v2_default(&mut context).await.unwrap();
 
         let metadata = test_metadata.get_data(&mut context).await;
         assert!(metadata.collection.is_none());
@@ -882,45 +755,18 @@ mod verify_collection {
 
         let test_collection = Metadata::new();
         test_collection
-            .create_v2(
-                &mut context,
-                "Test".to_string(),
-                "TST".to_string(),
-                "uri".to_string(),
-                None,
-                10,
-                false,
-                None,
-                None,
-                None,
-            )
+            .create_v2_default(&mut context)
             .await
             .unwrap();
+
         let collection_master_edition_account = MasterEditionV2::new(&test_collection);
         collection_master_edition_account
             .create_v3(&mut context, Some(0))
             .await
             .unwrap();
 
-        let name = "Test".to_string();
-        let symbol = "TST".to_string();
-        let uri = "uri".to_string();
         let test_metadata = Metadata::new();
-        test_metadata
-            .create_v2(
-                &mut context,
-                name,
-                symbol,
-                uri,
-                None,
-                10,
-                false,
-                None,
-                None,
-                None,
-            )
-            .await
-            .unwrap();
+        test_metadata.create_v2_default(&mut context).await.unwrap();
 
         let metadata = test_metadata.get_data(&mut context).await;
         assert!(metadata.collection.is_none());
@@ -1002,20 +848,10 @@ mod verify_collection {
         let new_collection_authority = Keypair::new();
         let test_collection = Metadata::new();
         test_collection
-            .create_v2(
-                &mut context,
-                "Test".to_string(),
-                "TST".to_string(),
-                "uri".to_string(),
-                None,
-                10,
-                false,
-                None,
-                None,
-                None,
-            )
+            .create_v2_default(&mut context)
             .await
             .unwrap();
+
         let collection_master_edition_account = MasterEditionV2::new(&test_collection);
         collection_master_edition_account
             .create_v3(&mut context, Some(0))
@@ -1040,7 +876,6 @@ mod verify_collection {
                 None,
                 10,
                 false,
-                None,
                 Some(Collection {
                     key: test_collection.mint.pubkey(),
                     verified: false,
@@ -1145,46 +980,18 @@ mod verify_collection {
 
         let test_collection = Metadata::new();
         test_collection
-            .create_v2(
-                &mut context,
-                "Test".to_string(),
-                "TST".to_string(),
-                "uri".to_string(),
-                None,
-                10,
-                false,
-                None,
-                None,
-                None,
-            )
+            .create_v2_default(&mut context)
             .await
             .unwrap();
+
         let collection_master_edition_account = MasterEditionV2::new(&test_collection);
         collection_master_edition_account
             .create_v3(&mut context, Some(0))
             .await
             .unwrap();
 
-        let name = "Test".to_string();
-        let symbol = "TST".to_string();
-        let uri = "uri".to_string();
         let test_metadata = Metadata::new();
-        test_metadata
-            .create_v2(
-                &mut context,
-                name,
-                symbol,
-                uri,
-                None,
-                10,
-                false,
-                None,
-                None,
-                None,
-            )
-            .await
-            .unwrap();
-
+        test_metadata.create_v2_default(&mut context).await.unwrap();
         let metadata = test_metadata.get_data(&mut context).await;
         assert!(metadata.collection.is_none());
         let update_authority = context.payer.pubkey();
@@ -1282,20 +1089,10 @@ async fn fail_verify_collection_invalid_owner() {
 
     let test_collection = Metadata::new();
     test_collection
-        .create_v2(
-            &mut context,
-            "Test".to_string(),
-            "TST".to_string(),
-            "uri".to_string(),
-            None,
-            10,
-            false,
-            None,
-            None,
-            None,
-        )
+        .create_v2_default(&mut context)
         .await
         .unwrap();
+
     let collection_master_edition_account = MasterEditionV2::new(&test_collection);
     collection_master_edition_account
         .create_v3(&mut context, Some(0))
@@ -1322,7 +1119,6 @@ async fn fail_verify_collection_invalid_owner() {
             None,
             10,
             false,
-            None,
             Some(Collection {
                 key: test_collection.mint.pubkey(),
                 verified: false,
@@ -1356,37 +1152,16 @@ async fn fail_verify_collection_negative_cases() {
 
     let test_collection = Metadata::new();
     test_collection
-        .create_v2(
-            &mut context,
-            "Test".to_string(),
-            "TST".to_string(),
-            "uri".to_string(),
-            None,
-            10,
-            false,
-            None,
-            None,
-            None,
-        )
+        .create_v2_default(&mut context)
         .await
         .unwrap();
 
     let test_collection_fake = Metadata::new();
     test_collection_fake
-        .create_v2(
-            &mut context,
-            "Test".to_string(),
-            "TST".to_string(),
-            "uri".to_string(),
-            None,
-            10,
-            false,
-            None,
-            None,
-            None,
-        )
+        .create_v2_default(&mut context)
         .await
         .unwrap();
+
     let fake_collection_master_edition_account = MasterEditionV2::new(&test_collection_fake);
     fake_collection_master_edition_account
         .create_v3(&mut context, Some(0))
@@ -1413,7 +1188,6 @@ async fn fail_verify_collection_negative_cases() {
             None,
             10,
             false,
-            None,
             Some(Collection {
                 key: test_collection.mint.pubkey(),
                 verified: false,

@@ -5,8 +5,8 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet'
-import * as web3 from '@solana/web3.js'
+import * as beet from '@metaplex-foundation/beet';
+import * as web3 from '@solana/web3.js';
 
 /**
  * @category Instructions
@@ -14,12 +14,12 @@ import * as web3 from '@solana/web3.js'
  * @category generated
  */
 export type DelegateInstructionArgs = {
-  root: number[] /* size: 32 */
-  dataHash: number[] /* size: 32 */
-  creatorHash: number[] /* size: 32 */
-  nonce: beet.bignum
-  index: number
-}
+  root: number[] /* size: 32 */;
+  dataHash: number[] /* size: 32 */;
+  creatorHash: number[] /* size: 32 */;
+  nonce: beet.bignum;
+  index: number;
+};
 /**
  * @category Instructions
  * @category Delegate
@@ -27,7 +27,7 @@ export type DelegateInstructionArgs = {
  */
 export const delegateStruct = new beet.BeetArgsStruct<
   DelegateInstructionArgs & {
-    instructionDiscriminator: number[] /* size: 8 */
+    instructionDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
@@ -38,8 +38,8 @@ export const delegateStruct = new beet.BeetArgsStruct<
     ['nonce', beet.u64],
     ['index', beet.u32],
   ],
-  'DelegateInstructionArgs'
-)
+  'DelegateInstructionArgs',
+);
 /**
  * Accounts required by the _delegate_ instruction
  *
@@ -55,20 +55,18 @@ export const delegateStruct = new beet.BeetArgsStruct<
  * @category generated
  */
 export type DelegateInstructionAccounts = {
-  treeAuthority: web3.PublicKey
-  leafOwner: web3.PublicKey
-  previousLeafDelegate: web3.PublicKey
-  newLeafDelegate: web3.PublicKey
-  merkleTree: web3.PublicKey
-  logWrapper: web3.PublicKey
-  compressionProgram: web3.PublicKey
-  systemProgram?: web3.PublicKey
-  anchorRemainingAccounts?: web3.AccountMeta[]
-}
+  treeAuthority: web3.PublicKey;
+  leafOwner: web3.PublicKey;
+  previousLeafDelegate: web3.PublicKey;
+  newLeafDelegate: web3.PublicKey;
+  merkleTree: web3.PublicKey;
+  logWrapper: web3.PublicKey;
+  compressionProgram: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
+};
 
-export const delegateInstructionDiscriminator = [
-  90, 147, 75, 178, 85, 88, 4, 137,
-]
+export const delegateInstructionDiscriminator = [90, 147, 75, 178, 85, 88, 4, 137];
 
 /**
  * Creates a _Delegate_ instruction.
@@ -83,12 +81,12 @@ export const delegateInstructionDiscriminator = [
 export function createDelegateInstruction(
   accounts: DelegateInstructionAccounts,
   args: DelegateInstructionArgs,
-  programId = new web3.PublicKey('BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY')
+  programId = new web3.PublicKey('BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY'),
 ) {
   const [data] = delegateStruct.serialize({
     instructionDiscriminator: delegateInstructionDiscriminator,
     ...args,
-  })
+  });
   const keys: web3.AccountMeta[] = [
     {
       pubkey: accounts.treeAuthority,
@@ -130,11 +128,11 @@ export function createDelegateInstruction(
       isWritable: false,
       isSigner: false,
     },
-  ]
+  ];
 
   if (accounts.anchorRemainingAccounts != null) {
     for (const acc of accounts.anchorRemainingAccounts) {
-      keys.push(acc)
+      keys.push(acc);
     }
   }
 
@@ -142,6 +140,6 @@ export function createDelegateInstruction(
     programId,
     keys,
     data,
-  })
-  return ix
+  });
+  return ix;
 }

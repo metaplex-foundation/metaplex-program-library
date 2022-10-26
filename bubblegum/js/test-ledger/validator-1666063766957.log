@@ -1,0 +1,34 @@
+[0m[38;5;8m[[0m2022-10-18T03:29:26.957954911Z [0m[32mINFO [0m solana_test_validator[0m[38;5;8m][0m solana-validator 1.10.32 (src:9cdd84bb; feat:1871643445)
+[0m[38;5;8m[[0m2022-10-18T03:29:26.958247809Z [0m[32mINFO [0m solana_test_validator[0m[38;5;8m][0m Starting validator with: ArgsOs {
+        inner: [
+            "solana-test-validator",
+            "-ud",
+            "--quiet",
+            "--reset",
+            "-c",
+            "cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK",
+            "-c",
+            "4VTQredsAmr1yzRJugLV6Mt6eu6XMeCwdkZ73wwVMWHv",
+            "-c",
+            "noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV",
+            "-c",
+            "3RHkdjCwWyK2firrwFQGvXCxbUpBky1GTmb9EDK9hUnX",
+            "-c",
+            "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s",
+            "--bpf-program",
+            "BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY",
+            "../program/target/deploy/mpl_bubblegum.so",
+        ],
+    }
+[0m[38;5;8m[[0m2022-10-18T03:29:26.958277018Z [0m[33mWARN [0m solana_perf[0m[38;5;8m][0m CUDA is disabled
+[0m[38;5;8m[[0m2022-10-18T03:29:26.958279408Z [0m[32mINFO [0m solana_perf[0m[38;5;8m][0m AVX detected
+[0m[38;5;8m[[0m2022-10-18T03:29:26.958280968Z [0m[32mINFO [0m solana_perf[0m[38;5;8m][0m AVX2 detected
+[0m[38;5;8m[[0m2022-10-18T03:29:26.962645557Z [0m[32mINFO [0m solana_faucet::faucet[0m[38;5;8m][0m Faucet started. Listening on: 0.0.0.0:9900
+[0m[38;5;8m[[0m2022-10-18T03:29:26.962702645Z [0m[32mINFO [0m solana_faucet::faucet[0m[38;5;8m][0m Faucet account address: Gkp1ubJraF36YuTJh8qXQ5xcet5L3MwQ8jPiCVhYHTV6
+[0m[38;5;8m[[0m2022-10-18T03:29:26.962780132Z [0m[32mINFO [0m solana_test_validator[0m[38;5;8m][0m Fetching cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK over RPC...
+[0m[38;5;8m[[0m2022-10-18T03:29:27.588302840Z [0m[32mINFO [0m solana_test_validator[0m[38;5;8m][0m Fetching metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s over RPC...
+[0m[38;5;8m[[0m2022-10-18T03:29:27.707378522Z [0m[32mINFO [0m solana_test_validator[0m[38;5;8m][0m Fetching 4VTQredsAmr1yzRJugLV6Mt6eu6XMeCwdkZ73wwVMWHv over RPC...
+[0m[38;5;8m[[0m2022-10-18T03:29:28.190146516Z [0m[32mINFO [0m solana_test_validator[0m[38;5;8m][0m Fetching noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV over RPC...
+[0m[38;5;8m[[0m2022-10-18T03:29:28.313397725Z [0m[32mINFO [0m solana_test_validator[0m[38;5;8m][0m Fetching 3RHkdjCwWyK2firrwFQGvXCxbUpBky1GTmb9EDK9hUnX over RPC...
+[0m[38;5;8m[[0m2022-10-18T03:29:28.439194873Z [0m[32mINFO [0m solana_ledger::blockstore[0m[38;5;8m][0m Maximum open file descriptors: 1048576
+[0m[38;5;8m[[0m2022-10-18T03:29:28.439210902Z [0m[32mINFO [0m solana_ledger::blockstore[0m[38;5;8m][0m Opening database at "test-ledger/rocksdb"
