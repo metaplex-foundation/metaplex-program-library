@@ -5,7 +5,9 @@ use mpl_token_metadata::{
     pda::find_collection_authority_account,
     state::{CollectionDetails, Creator},
 };
-use spl_associated_token_account::{create_associated_token_account, get_associated_token_address};
+use spl_associated_token_account::{
+    get_associated_token_address, instruction::create_associated_token_account,
+};
 use spl_token::{
     instruction::{initialize_mint, mint_to},
     ID as TOKEN_PROGRAM_ID,
