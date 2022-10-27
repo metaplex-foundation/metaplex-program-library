@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
     inputs:
       cache:
-        description: 'Whether or not to use caching'
+        description: 'Use Cached Dependencies'
         required: false
         default: true
 
