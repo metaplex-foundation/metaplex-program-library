@@ -55,7 +55,7 @@ export const unverifyCollectionStruct = new beet.FixableBeetArgsStruct<
  * @property [**signer**] collectionAuthority
  * @property [] collectionAuthorityRecordPda
  * @property [] collectionMint
- * @property [] collectionMetadata
+ * @property [_writable_] collectionMetadata
  * @property [] editionAccount
  * @property [] bubblegumSigner
  * @property [] logWrapper
@@ -154,7 +154,7 @@ export function createUnverifyCollectionInstruction(
     },
     {
       pubkey: accounts.collectionMetadata,
-      isWritable: false,
+      isWritable: true,
       isSigner: false,
     },
     {

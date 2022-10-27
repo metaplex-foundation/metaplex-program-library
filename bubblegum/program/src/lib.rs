@@ -149,6 +149,7 @@ pub struct CollectionVerification<'info> {
     pub collection_authority_record_pda: UncheckedAccount<'info>,
     /// CHECK: This account is checked in the instruction
     pub collection_mint: UncheckedAccount<'info>,
+    #[account(mut)]
     pub collection_metadata: Box<Account<'info, TokenMetadata>>,
     /// CHECK: This account is checked in the instruction
     pub edition_account: UncheckedAccount<'info>,
