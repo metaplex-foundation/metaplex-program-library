@@ -28,7 +28,6 @@ jobs:
       core: ${{ steps.filter.outputs.core }}
       package: ${{ steps.filter.outputs.package }}
       workflow: ${{ steps.filter.outputs.workflow }}
-      action: ${{ steps.filter.outputs.action }}
     steps:
       - uses: actions/checkout@v2
       # For pull requests it's not necessary to checkout the code
@@ -42,8 +41,6 @@ jobs:
               - '${{ inputs.name }}/js/**'
             workflow:
               - '.github/workflows/sdk-reusable.yml'
-            action:
-              - '.github/actions/sdk/${{ inputs.name }}/action.yml'
 
   build-lint-and-test:
     name: Build Lint and Test
@@ -51,17 +48,10 @@ jobs:
     if: |
       needs.changes.outputs.core == 'true' || 
       needs.changes.outputs.package == 'true' || 
-      needs.changes.outputs.workflow == 'true' || 
-      needs.changes.outputs.action == 'true'
+      needs.changes.outputs.workflow == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-
-#      # Build and install deps if needed
-#      - uses: ./.github/actions/sdk
-#        with:
-#          name: ${{ inputs.name }}
-
       - uses: ./.github/actions/yarn-install-and-verify
         with:
           cache_id: sdk-${{ inputs.name }}
