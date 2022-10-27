@@ -9,6 +9,9 @@ on:
       verify_rust:
         required: true
         type: boolean
+      cargo_test:
+        required: true
+        type: boolean
 
 env:
   CARGO_TERM_COLOR: always
@@ -109,11 +112,16 @@ jobs:
         with:
           name: ${{ inputs.name }}
 
-      # Run test
+      # Run Cargo Test
+      - name: "Test: ${{ inputs.name }}"
+        working-directory: ./${{ inputs.name }}/program
+        run: cargo +${{ env.RUST_TOOLCHAIN }} test -- --nocapture --test-threads 1
+        if: ${{ inputs.cargo_test }}
+
+      # Run BPF Test
       - name: "Test: ${{ inputs.name }}"
         working-directory: ./${{ inputs.name }}/program
         run: |
-          cargo +${{ env.RUST_TOOLCHAIN }} test -- --nocapture --test-threads 1
           cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --version
           cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --bpf-out-dir ../../test-programs/ -- --nocapture --test-threads 1
 
