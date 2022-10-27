@@ -1,4 +1,4 @@
-name: Program Test
+name: Program Reusable Test
 
 on:
   workflow_call:

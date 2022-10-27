@@ -1,4 +1,4 @@
-name: SDK Test
+name: SDK Reusable Test
 
 on:
   workflow_call:
