@@ -66,7 +66,6 @@ export type TransferOutOfEscrowInstructionAccounts = {
   systemProgram?: web3.PublicKey;
   ataProgram?: web3.PublicKey;
   tokenProgram?: web3.PublicKey;
-  rent?: web3.PublicKey;
   sysvarInstructions: web3.PublicKey;
   authority?: web3.PublicKey;
 };
@@ -145,11 +144,6 @@ export function createTransferOutOfEscrowInstruction(
     },
     {
       pubkey: accounts.tokenProgram ?? splToken.TOKEN_PROGRAM_ID,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.rent ?? web3.SYSVAR_RENT_PUBKEY,
       isWritable: false,
       isSigner: false,
     },

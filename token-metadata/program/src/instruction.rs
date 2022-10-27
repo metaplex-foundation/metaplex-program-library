@@ -577,9 +577,8 @@ pub enum MetadataInstruction {
     #[account(8, name="system_program", desc="System program")]
     #[account(9, name="ata_program", desc="Associated Token program")]
     #[account(10, name="token_program", desc="Token program")]
-    #[account(11, name="rent", desc="Rent info")]
-    #[account(12, name="sysvar_instructions", desc="Instructions sysvar account")]
-    #[account(13, optional, signer, name="authority", desc="Authority/creator of the escrow account")]
+    #[account(11, name="sysvar_instructions", desc="Instructions sysvar account")]
+    #[account(12, optional, signer, name="authority", desc="Authority/creator of the escrow account")]
     TransferOutOfEscrow(TransferOutOfEscrowArgs),
 }
 
