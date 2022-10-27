@@ -30,7 +30,7 @@ jobs:
       package: ${{ steps.filter.outputs.package }}
       workflow: ${{ steps.filter.outputs.workflow }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       # For pull requests it's not necessary to checkout the code
       - uses: dorny/paths-filter@v2
         id: filter
@@ -52,7 +52,7 @@ jobs:
       needs.changes.outputs.workflow == 'true'
     steps:
       # Setup Deps
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: ./.github/actions/install-linux-build-deps
       - uses: ./.github/actions/install-solana
         with:
