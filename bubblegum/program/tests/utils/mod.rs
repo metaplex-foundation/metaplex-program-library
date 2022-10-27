@@ -16,6 +16,8 @@ pub enum Error {
     Anchor(anchor_lang::error::Error),
     BanksClient(BanksClientError),
     BytemuckPod(PodCastError),
+    // The on-chain (via banks) and locally computed roots for a tree do not match.
+    RootMismatch,
     Signer(SignerError),
 }
 
@@ -23,16 +25,13 @@ pub type Result<T> = result::Result<T, Error>;
 
 pub fn program_test() -> ProgramTest {
     let mut test = ProgramTest::new("mpl_bubblegum", mpl_bubblegum::id(), None);
+    test.add_program("spl_noop", spl_noop::id(), None);
     test.add_program(
-        "noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV",
-        spl_noop::id(),
-        None,
-    );
-    test.add_program(
-        "cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK",
+        "spl_account_compression",
         spl_account_compression::id(),
         None,
     );
+    test.add_program("mpl_token_metadata", mpl_token_metadata::id(), None);
     test.set_compute_max_units(u64::MAX);
     test
 }

@@ -22,6 +22,7 @@ use solana_program::{
     program_error::ProgramError,
     program_option::COption,
     program_pack::{IsInitialized, Pack},
+    pubkey,
     pubkey::Pubkey,
     system_instruction,
     sysvar::{rent::Rent, Sysvar},
@@ -213,6 +214,50 @@ pub fn create_or_allocate_account_raw<'a>(
     Ok(())
 }
 
+/// Resize an account using realloc, lifted from Solana Cookbook
+#[inline(always)]
+pub fn resize_or_reallocate_account_raw<'a>(
+    target_account: &AccountInfo<'a>,
+    funding_account: &AccountInfo<'a>,
+    system_program: &AccountInfo<'a>,
+    new_size: usize,
+) -> ProgramResult {
+    let rent = Rent::get()?;
+    let new_minimum_balance = rent.minimum_balance(new_size);
+
+    let lamports_diff = new_minimum_balance.saturating_sub(target_account.lamports());
+    invoke(
+        &system_instruction::transfer(funding_account.key, target_account.key, lamports_diff),
+        &[
+            funding_account.clone(),
+            target_account.clone(),
+            system_program.clone(),
+        ],
+    )?;
+
+    target_account.realloc(new_size, false)?;
+
+    Ok(())
+}
+
+/// Close src_account and transfer lamports to dst_account, lifted from Solana Cookbook
+#[inline(always)]
+pub fn close_account_raw<'a>(
+    dest_account_info: &AccountInfo<'a>,
+    src_account_info: &AccountInfo<'a>,
+) -> ProgramResult {
+    let dest_starting_lamports = dest_account_info.lamports();
+    **dest_account_info.lamports.borrow_mut() = dest_starting_lamports
+        .checked_add(src_account_info.lamports())
+        .unwrap();
+    **src_account_info.lamports.borrow_mut() = 0;
+
+    let mut src_data = src_account_info.data.borrow_mut();
+    src_data.fill(0);
+
+    Ok(())
+}
+
 pub fn assert_update_authority_is_correct(
     metadata: &Metadata,
     update_authority_info: &AccountInfo,
@@ -388,7 +433,7 @@ pub fn transfer_mint_authority<'a>(
         )?;
         msg!("Finished setting freeze authority");
     } else {
-        msg!("Skipping freeze authority because this mint has none")
+        return Err(MetadataError::NoFreezeAuthoritySet.into());
     }
 
     Ok(())
@@ -923,16 +968,12 @@ pub const SEED_AUTHORITY: Pubkey = Pubkey::new_from_array([
     0x00, 0x93, 0xa3, 0x0b, 0x02, 0x73, 0xdc, 0xfa, 0x74, 0x92, 0x17, 0xfc, 0x94, 0xa2, 0x40, 0x49,
 ]);
 
-// This equals the program address of the Bubblegum program:
-// "BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY"
 // This allows the Bubblegum program to add verified creators since they were verified as part of
 // the Bubblegum program.
-pub const BUBBLEGUM_PROGRAM_ADDRESS: Pubkey = Pubkey::new_from_array([
-    0x98, 0x8b, 0x80, 0xeb, 0x79, 0x35, 0x28, 0x69, 0xb2, 0x24, 0x74, 0x5f, 0x59, 0xdd, 0xbf, 0x8a,
-    0x26, 0x58, 0xca, 0x13, 0xdc, 0x68, 0x81, 0x21, 0x26, 0x35, 0x1c, 0xae, 0x07, 0xc1, 0xa5, 0xa5,
-]);
+pub const BUBBLEGUM_PROGRAM_ADDRESS: Pubkey =
+    pubkey!("BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY");
 // This flag activates certain program authority features of the Bubblegum program.
-pub const BUBBLEGUM_ACTIVATED: bool = false;
+pub const BUBBLEGUM_ACTIVATED: bool = true;
 
 /// Create a new account instruction
 pub fn process_create_metadata_accounts_logic(

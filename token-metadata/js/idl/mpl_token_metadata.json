@@ -2122,6 +2122,207 @@
         "type": "u8",
         "value": 37
       }
+    },
+    {
+      "name": "CreateEscrowAccount",
+      "accounts": [
+        {
+          "name": "escrow",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Escrow account"
+        },
+        {
+          "name": "metadata",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Metadata account"
+        },
+        {
+          "name": "mint",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Mint account"
+        },
+        {
+          "name": "tokenAccount",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Token account of the token"
+        },
+        {
+          "name": "edition",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Edition account"
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "desc": "Wallet paying for the transaction and new account"
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "System program"
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "Authority/creator of the escrow account",
+          "optional": true
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 38
+      }
+    },
+    {
+      "name": "CloseEscrowAccount",
+      "accounts": [
+        {
+          "name": "escrow",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Escrow account"
+        },
+        {
+          "name": "metadata",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Metadata account"
+        },
+        {
+          "name": "mint",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Mint account"
+        },
+        {
+          "name": "tokenAccount",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Token account"
+        },
+        {
+          "name": "edition",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Edition account"
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "desc": "Wallet paying for the transaction and new account"
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "System program"
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 39
+      }
+    },
+    {
+      "name": "TransferOutOfEscrow",
+      "accounts": [
+        {
+          "name": "escrow",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Escrow account"
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "desc": "Wallet paying for the transaction and new account"
+        },
+        {
+          "name": "attributeMint",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Mint account for the new attribute"
+        },
+        {
+          "name": "attributeSrc",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Token account source for the new attribute"
+        },
+        {
+          "name": "attributeDst",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Token account, owned by TM, destination for the new attribute"
+        },
+        {
+          "name": "escrowMint",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Mint account that the escrow is attached"
+        },
+        {
+          "name": "escrowAccount",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Token account that holds the token the escrow is attached to"
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "System program"
+        },
+        {
+          "name": "ataProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Associated Token program"
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Token program"
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Rent info"
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "Authority/creator of the escrow account",
+          "optional": true
+        }
+      ],
+      "args": [
+        {
+          "name": "transferOutOfEscrowArgs",
+          "type": {
+            "defined": "TransferOutOfEscrowArgs"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 40
+      }
     }
   ],
   "accounts": [
@@ -2408,6 +2609,34 @@
                 31
               ]
             }
+          }
+        ]
+      }
+    },
+    {
+      "name": "TokenOwnedEscrow",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "key",
+            "type": {
+              "defined": "Key"
+            }
+          },
+          {
+            "name": "baseToken",
+            "type": "publicKey"
+          },
+          {
+            "name": "authority",
+            "type": {
+              "defined": "EscrowAuthority"
+            }
+          },
+          {
+            "name": "bump",
+            "type": "u8"
           }
         ]
       }
@@ -2825,6 +3054,18 @@
       }
     },
     {
+      "name": "TransferOutOfEscrowArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "amount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
       "name": "Key",
       "type": {
         "kind": "enum",
@@ -2858,6 +3099,12 @@
           },
           {
             "name": "CollectionAuthorityRecord"
+          },
+          {
+            "name": "TokenOwnedEscrow"
+          },
+          {
+            "name": "EscrowConstraintModel"
           }
         ]
       }
@@ -2912,6 +3159,23 @@
           },
           {
             "name": "NonFungibleEdition"
+          }
+        ]
+      }
+    },
+    {
+      "name": "EscrowAuthority",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "TokenOwner"
+          },
+          {
+            "name": "Creator",
+            "fields": [
+              "publicKey"
+            ]
           }
         ]
       }
@@ -3537,6 +3801,46 @@
       "code": 123,
       "name": "MustUnverify",
       "msg": "Must unverify before migrating collections."
+    },
+    {
+      "code": 124,
+      "name": "InvalidEscrowBumpSeed",
+      "msg": "Invalid Escrow Account Bump Seed"
+    },
+    {
+      "code": 125,
+      "name": "MustBeEscrowAuthority",
+      "msg": "Must Escrow Authority"
+    },
+    {
+      "code": 126,
+      "name": "InvalidSystemProgram",
+      "msg": "Invalid System Program"
+    },
+    {
+      "code": 127,
+      "name": "MustBeNonFungible",
+      "msg": "Must be a Non Fungible Token"
+    },
+    {
+      "code": 128,
+      "name": "InsufficientTokens",
+      "msg": "Insufficient tokens for transfer"
+    },
+    {
+      "code": 129,
+      "name": "BorshSerializationError",
+      "msg": "Borsh Serialization Error"
+    },
+    {
+      "code": 130,
+      "name": "NoFreezeAuthoritySet",
+      "msg": "Cannot create NFT with no Freeze Authority."
+    },
+    {
+      "code": 131,
+      "name": "InvalidCollectionSizeChange",
+      "msg": "Invalid collection size change"
     }
   ],
   "metadata": {

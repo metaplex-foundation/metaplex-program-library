@@ -5,7 +5,7 @@ edition = "2018"
 description = "Metaplex Metadata"
 authors = ["Metaplex Developers <dev@metaplex.com>"]
 repository = "https://github.com/metaplex-foundation/metaplex-program-library"
-license = "AGPL-3.0"
+license-file = "../../../LICENSE"
 readme = "README.md"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -30,3 +30,5 @@ num-derive = "0.3"
 num-traits = "0.2"
 borsh = "0.9.1"
 
+[profile.release]
+overflow-checks = true     # Enable integer overflow checks.

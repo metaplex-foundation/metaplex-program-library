@@ -1,5 +1,6 @@
 use crate::{
     deprecated_instruction::{MintPrintingTokensViaTokenArgs, SetReservationListArgs},
+    escrow::TransferOutOfEscrowArgs,
     state::{
         Collection, CollectionDetails, Creator, Data, DataV2, Uses, EDITION,
         EDITION_MARKER_BIT_SIZE, PREFIX,
@@ -540,6 +541,42 @@ pub enum MetadataInstruction {
     #[account(8, writable, name="edition_marker_account", desc="Edition Marker PDA of the NFT")]
     #[account(9, name="spl token program", desc="SPL Token Program")]
     BurnEditionNft,
+
+    /// Create an escrow account to hold tokens.
+    #[account(0, writable, name="escrow", desc="Escrow account")]
+    #[account(1, name="metadata", desc="Metadata account")]
+    #[account(2, name="mint", desc="Mint account")]
+    #[account(3, name="token_account", desc="Token account of the token")]
+    #[account(4, name="edition", desc="Edition account")]
+    #[account(5, writable, signer, name="payer", desc="Wallet paying for the transaction and new account")]
+    #[account(6, name="system_program", desc="System program")]
+    #[account(7, optional, signer, name="authority", desc="Authority/creator of the escrow account")]
+    CreateEscrowAccount,
+
+    /// Close the escrow account.
+    #[account(0, writable, name="escrow", desc="Escrow account")]
+    #[account(1, name="metadata", desc="Metadata account")]
+    #[account(2, name="mint", desc="Mint account")]
+    #[account(3, name="token_account", desc="Token account")]
+    #[account(4, name="edition", desc="Edition account")]
+    #[account(5, writable, signer, name="payer", desc="Wallet paying for the transaction and new account")]
+    #[account(6, name="system_program", desc="System program")]
+    CloseEscrowAccount,
+
+    /// Transfer the token out of Escrow.
+    #[account(0, name="escrow", desc="Escrow account")]
+    #[account(1, writable, signer, name="payer", desc="Wallet paying for the transaction and new account")]
+    #[account(2, name="attribute_mint", desc="Mint account for the new attribute")]
+    #[account(3, writable, name="attribute_src", desc="Token account source for the new attribute")]
+    #[account(4, writable, name="attribute_dst", desc="Token account, owned by TM, destination for the new attribute")]
+    #[account(5, name="escrow_mint", desc="Mint account that the escrow is attached")]
+    #[account(6, name="escrow_account", desc="Token account that holds the token the escrow is attached to")]
+    #[account(7, name="system_program", desc="System program")]
+    #[account(8, name="ata_program", desc="Associated Token program")]
+    #[account(9, name="token_program", desc="Token program")]
+    #[account(10, name="rent", desc="Rent info")]
+    #[account(11, optional, signer, name="authority", desc="Authority/creator of the escrow account")]
+    TransferOutOfEscrow(TransferOutOfEscrowArgs),
 }
 
 /// Creates an CreateMetadataAccounts instruction

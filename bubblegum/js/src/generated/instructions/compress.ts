@@ -5,9 +5,9 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as splToken from '@solana/spl-token'
-import * as beet from '@metaplex-foundation/beet'
-import * as web3 from '@solana/web3.js'
+import * as splToken from '@solana/spl-token';
+import * as beet from '@metaplex-foundation/beet';
+import * as web3 from '@solana/web3.js';
 
 /**
  * @category Instructions
@@ -15,11 +15,11 @@ import * as web3 from '@solana/web3.js'
  * @category generated
  */
 export const compressStruct = new beet.BeetArgsStruct<{
-  instructionDiscriminator: number[] /* size: 8 */
+  instructionDiscriminator: number[] /* size: 8 */;
 }>(
   [['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)]],
-  'CompressInstructionArgs'
-)
+  'CompressInstructionArgs',
+);
 /**
  * Accounts required by the _compress_ instruction
  *
@@ -40,25 +40,24 @@ export const compressStruct = new beet.BeetArgsStruct<{
  * @category generated
  */
 export type CompressInstructionAccounts = {
-  treeAuthority: web3.PublicKey
-  leafOwner: web3.PublicKey
-  leafDelegate: web3.PublicKey
-  merkleTree: web3.PublicKey
-  tokenAccount: web3.PublicKey
-  mint: web3.PublicKey
-  metadata: web3.PublicKey
-  masterEdition: web3.PublicKey
-  payer: web3.PublicKey
-  logWrapper: web3.PublicKey
-  compressionProgram: web3.PublicKey
-  tokenProgram?: web3.PublicKey
-  tokenMetadataProgram: web3.PublicKey
-  systemProgram?: web3.PublicKey
-}
+  treeAuthority: web3.PublicKey;
+  leafOwner: web3.PublicKey;
+  leafDelegate: web3.PublicKey;
+  merkleTree: web3.PublicKey;
+  tokenAccount: web3.PublicKey;
+  mint: web3.PublicKey;
+  metadata: web3.PublicKey;
+  masterEdition: web3.PublicKey;
+  payer: web3.PublicKey;
+  logWrapper: web3.PublicKey;
+  compressionProgram: web3.PublicKey;
+  tokenProgram?: web3.PublicKey;
+  tokenMetadataProgram: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
+};
 
-export const compressInstructionDiscriminator = [
-  82, 193, 176, 117, 176, 21, 115, 253,
-]
+export const compressInstructionDiscriminator = [82, 193, 176, 117, 176, 21, 115, 253];
 
 /**
  * Creates a _Compress_ instruction.
@@ -70,11 +69,11 @@ export const compressInstructionDiscriminator = [
  */
 export function createCompressInstruction(
   accounts: CompressInstructionAccounts,
-  programId = new web3.PublicKey('BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY')
+  programId = new web3.PublicKey('BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY'),
 ) {
   const [data] = compressStruct.serialize({
     instructionDiscriminator: compressInstructionDiscriminator,
-  })
+  });
   const keys: web3.AccountMeta[] = [
     {
       pubkey: accounts.treeAuthority,
@@ -146,12 +145,18 @@ export function createCompressInstruction(
       isWritable: false,
       isSigner: false,
     },
-  ]
+  ];
+
+  if (accounts.anchorRemainingAccounts != null) {
+    for (const acc of accounts.anchorRemainingAccounts) {
+      keys.push(acc);
+    }
+  }
 
   const ix = new web3.TransactionInstruction({
     programId,
     keys,
     data,
-  })
-  return ix
+  });
+  return ix;
 }

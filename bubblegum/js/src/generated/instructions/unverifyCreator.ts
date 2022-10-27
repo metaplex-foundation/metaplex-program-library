@@ -5,9 +5,9 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet'
-import * as web3 from '@solana/web3.js'
-import { MetadataArgs, metadataArgsBeet } from '../types/MetadataArgs'
+import * as beet from '@metaplex-foundation/beet';
+import * as web3 from '@solana/web3.js';
+import { MetadataArgs, metadataArgsBeet } from '../types/MetadataArgs';
 
 /**
  * @category Instructions
@@ -15,13 +15,13 @@ import { MetadataArgs, metadataArgsBeet } from '../types/MetadataArgs'
  * @category generated
  */
 export type UnverifyCreatorInstructionArgs = {
-  root: number[] /* size: 32 */
-  dataHash: number[] /* size: 32 */
-  creatorHash: number[] /* size: 32 */
-  nonce: beet.bignum
-  index: number
-  message: MetadataArgs
-}
+  root: number[] /* size: 32 */;
+  dataHash: number[] /* size: 32 */;
+  creatorHash: number[] /* size: 32 */;
+  nonce: beet.bignum;
+  index: number;
+  message: MetadataArgs;
+};
 /**
  * @category Instructions
  * @category UnverifyCreator
@@ -29,7 +29,7 @@ export type UnverifyCreatorInstructionArgs = {
  */
 export const unverifyCreatorStruct = new beet.FixableBeetArgsStruct<
   UnverifyCreatorInstructionArgs & {
-    instructionDiscriminator: number[] /* size: 8 */
+    instructionDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
@@ -41,8 +41,8 @@ export const unverifyCreatorStruct = new beet.FixableBeetArgsStruct<
     ['index', beet.u32],
     ['message', metadataArgsBeet],
   ],
-  'UnverifyCreatorInstructionArgs'
-)
+  'UnverifyCreatorInstructionArgs',
+);
 /**
  * Accounts required by the _unverifyCreator_ instruction
  *
@@ -59,19 +59,19 @@ export const unverifyCreatorStruct = new beet.FixableBeetArgsStruct<
  * @category generated
  */
 export type UnverifyCreatorInstructionAccounts = {
-  treeAuthority: web3.PublicKey
-  leafOwner: web3.PublicKey
-  leafDelegate: web3.PublicKey
-  merkleTree: web3.PublicKey
-  payer: web3.PublicKey
-  creator: web3.PublicKey
-  logWrapper: web3.PublicKey
-  compressionProgram: web3.PublicKey
-}
+  treeAuthority: web3.PublicKey;
+  leafOwner: web3.PublicKey;
+  leafDelegate: web3.PublicKey;
+  merkleTree: web3.PublicKey;
+  payer: web3.PublicKey;
+  creator: web3.PublicKey;
+  logWrapper: web3.PublicKey;
+  compressionProgram: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
+};
 
-export const unverifyCreatorInstructionDiscriminator = [
-  107, 178, 57, 39, 105, 115, 112, 152,
-]
+export const unverifyCreatorInstructionDiscriminator = [107, 178, 57, 39, 105, 115, 112, 152];
 
 /**
  * Creates a _UnverifyCreator_ instruction.
@@ -86,12 +86,12 @@ export const unverifyCreatorInstructionDiscriminator = [
 export function createUnverifyCreatorInstruction(
   accounts: UnverifyCreatorInstructionAccounts,
   args: UnverifyCreatorInstructionArgs,
-  programId = new web3.PublicKey('BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY')
+  programId = new web3.PublicKey('BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY'),
 ) {
   const [data] = unverifyCreatorStruct.serialize({
     instructionDiscriminator: unverifyCreatorInstructionDiscriminator,
     ...args,
-  })
+  });
   const keys: web3.AccountMeta[] = [
     {
       pubkey: accounts.treeAuthority,
@@ -133,12 +133,23 @@ export function createUnverifyCreatorInstruction(
       isWritable: false,
       isSigner: false,
     },
-  ]
+    {
+      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
+      isWritable: false,
+      isSigner: false,
+    },
+  ];
+
+  if (accounts.anchorRemainingAccounts != null) {
+    for (const acc of accounts.anchorRemainingAccounts) {
+      keys.push(acc);
+    }
+  }
 
   const ix = new web3.TransactionInstruction({
     programId,
     keys,
     data,
-  })
-  return ix
+  });
+  return ix;
 }

@@ -2,9 +2,10 @@ use anchor_lang::prelude::*;
 
 use crate::{
     constants::HIDDEN_SECTION,
+    get_config_count,
     state::{CandyMachine, ConfigLine},
     utils::fixed_length_string,
-    CandyError, get_config_count,
+    CandyError,
 };
 
 pub fn add_config_lines(

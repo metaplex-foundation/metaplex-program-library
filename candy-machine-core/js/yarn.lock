@@ -451,10 +451,10 @@
     socket.io-client "^4.4.1"
     tweetnacl "^1.0.3"
 
-"@metaplex-foundation/amman@^0.11.0":
-  version "0.11.1"
-  resolved "https://registry.yarnpkg.com/@metaplex-foundation/amman/-/amman-0.11.1.tgz#2065d763dc7ca78b5ea0c4476c2cf491e9bfdf93"
-  integrity sha512-n1GfdjhRy1T3cDey9tCJ+ozKS3K2h9aFbVk/qzxbLN5rCK0N40N5aJWzVxjZSndnyPUE4wZMRvDt6HOHNgh9wA==
+"@metaplex-foundation/amman@^0.12.0":
+  version "0.12.0"
+  resolved "https://registry.yarnpkg.com/@metaplex-foundation/amman/-/amman-0.12.0.tgz#c7519d29c9c818d174d5f183dd9b99b736576311"
+  integrity sha512-T6fE5rglKVmnDrPvs6Vv8ijXUZyBqALICb/OA39n+UAhkYP80MafGmV+ViuhfxoWgtD2tSBCan8VDshcH7l3UA==
   dependencies:
     "@metaplex-foundation/amman-client" "^0.2.0"
     "@solana/spl-token" "^0.2.0"

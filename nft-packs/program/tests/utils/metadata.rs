@@ -55,7 +55,13 @@ impl TestMetadata {
         token_account: &Keypair,
         token_owner: &Pubkey,
     ) -> transport::Result<()> {
-        create_mint(context, &self.mint, &context.payer.pubkey(), None).await?;
+        create_mint(
+            context,
+            &self.mint,
+            &context.payer.pubkey(),
+            Some(&context.payer.pubkey()),
+        )
+        .await?;
         create_token_account(context, token_account, &self.mint.pubkey(), token_owner).await?;
         mint_tokens(
             context,

@@ -121,9 +121,6 @@ pub fn mint<'info>(ctx: Context<'_, '_, '_, 'info, Mint<'info>>) -> Result<()> {
         &[*ctx.bumps.get("authority_pda").unwrap()],
     ];
 
-    // removes the padding from the end of the symbol value
-    let symbol = candy_machine.data.symbol.trim_end_matches(NULL_STRING);
-
     invoke_signed(
         &create_metadata_accounts_v2(
             ctx.accounts.token_metadata_program.key(),
@@ -133,7 +130,7 @@ pub fn mint<'info>(ctx: Context<'_, '_, '_, 'info, Mint<'info>>) -> Result<()> {
             ctx.accounts.payer.key(),
             ctx.accounts.authority_pda.key(),
             config_line.name,
-            symbol.to_string(),
+            candy_machine.data.symbol.clone(),
             config_line.uri,
             Some(creators),
             candy_machine.data.seller_fee_basis_points,

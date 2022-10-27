@@ -5,8 +5,8 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet'
-import * as web3 from '@solana/web3.js'
+import * as beet from '@metaplex-foundation/beet';
+import * as web3 from '@solana/web3.js';
 
 /**
  * @category Instructions
@@ -14,12 +14,12 @@ import * as web3 from '@solana/web3.js'
  * @category generated
  */
 export type RedeemInstructionArgs = {
-  root: number[] /* size: 32 */
-  dataHash: number[] /* size: 32 */
-  creatorHash: number[] /* size: 32 */
-  nonce: beet.bignum
-  index: number
-}
+  root: number[] /* size: 32 */;
+  dataHash: number[] /* size: 32 */;
+  creatorHash: number[] /* size: 32 */;
+  nonce: beet.bignum;
+  index: number;
+};
 /**
  * @category Instructions
  * @category Redeem
@@ -27,7 +27,7 @@ export type RedeemInstructionArgs = {
  */
 export const redeemStruct = new beet.BeetArgsStruct<
   RedeemInstructionArgs & {
-    instructionDiscriminator: number[] /* size: 8 */
+    instructionDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
@@ -38,8 +38,8 @@ export const redeemStruct = new beet.BeetArgsStruct<
     ['nonce', beet.u64],
     ['index', beet.u32],
   ],
-  'RedeemInstructionArgs'
-)
+  'RedeemInstructionArgs',
+);
 /**
  * Accounts required by the _redeem_ instruction
  *
@@ -55,19 +55,18 @@ export const redeemStruct = new beet.BeetArgsStruct<
  * @category generated
  */
 export type RedeemInstructionAccounts = {
-  treeAuthority: web3.PublicKey
-  leafOwner: web3.PublicKey
-  leafDelegate: web3.PublicKey
-  merkleTree: web3.PublicKey
-  voucher: web3.PublicKey
-  logWrapper: web3.PublicKey
-  compressionProgram: web3.PublicKey
-  systemProgram?: web3.PublicKey
-}
+  treeAuthority: web3.PublicKey;
+  leafOwner: web3.PublicKey;
+  leafDelegate: web3.PublicKey;
+  merkleTree: web3.PublicKey;
+  voucher: web3.PublicKey;
+  logWrapper: web3.PublicKey;
+  compressionProgram: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
+};
 
-export const redeemInstructionDiscriminator = [
-  184, 12, 86, 149, 70, 196, 97, 225,
-]
+export const redeemInstructionDiscriminator = [184, 12, 86, 149, 70, 196, 97, 225];
 
 /**
  * Creates a _Redeem_ instruction.
@@ -82,12 +81,12 @@ export const redeemInstructionDiscriminator = [
 export function createRedeemInstruction(
   accounts: RedeemInstructionAccounts,
   args: RedeemInstructionArgs,
-  programId = new web3.PublicKey('BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY')
+  programId = new web3.PublicKey('BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY'),
 ) {
   const [data] = redeemStruct.serialize({
     instructionDiscriminator: redeemInstructionDiscriminator,
     ...args,
-  })
+  });
   const keys: web3.AccountMeta[] = [
     {
       pubkey: accounts.treeAuthority,
@@ -129,12 +128,18 @@ export function createRedeemInstruction(
       isWritable: false,
       isSigner: false,
     },
-  ]
+  ];
+
+  if (accounts.anchorRemainingAccounts != null) {
+    for (const acc of accounts.anchorRemainingAccounts) {
+      keys.push(acc);
+    }
+  }
 
   const ix = new web3.TransactionInstruction({
     programId,
     keys,
     data,
-  })
-  return ix
+  });
+  return ix;
 }

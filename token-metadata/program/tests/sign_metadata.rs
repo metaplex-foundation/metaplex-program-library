@@ -44,7 +44,6 @@ mod sign_metadata {
                 false,
                 None,
                 None,
-                None,
             )
             .await
             .unwrap();

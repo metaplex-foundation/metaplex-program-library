@@ -94,7 +94,9 @@ where
             .await
             .map_err(Error::BanksClient)?;
 
-        self.on_successful_execute()
+        self.on_successful_execute()?;
+        // Check the expected tree root matches on-chain state post tx.
+        self.tree.check_expected_root().await
     }
 
     // Returning `&mut Self` to allow method chaining.
@@ -174,7 +176,7 @@ impl<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExe
         self.inner.index = u32::try_from(self.tree.num_minted()).unwrap();
         self.inner.nonce = self.tree.num_minted();
         self.tree.inc_num_minted();
-        self.tree.leaf_changed(self.inner)
+        self.tree.update_leaf(self.inner)
     }
 }
 
@@ -191,7 +193,7 @@ impl<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExe
     for BurnBuilder<'a, MAX_DEPTH, MAX_BUFFER_SIZE>
 {
     fn on_successful_execute(&mut self) -> Result<()> {
-        self.tree.leaf_zeroed(self.inner.index)
+        self.tree.zero_leaf(self.inner.index)
     }
 }
 
@@ -216,7 +218,7 @@ impl<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExe
         // After transfer, the new owner is also the new delegate IIUC.
         self.inner.args.owner = clone_keypair(&self.inner.new_owner);
         self.inner.args.delegate = clone_keypair(&self.inner.new_owner);
-        self.tree.leaf_changed(self.inner.args)
+        self.tree.update_leaf(self.inner.args)
     }
 }
 
@@ -239,7 +241,41 @@ impl<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExe
 {
     fn on_successful_execute(&mut self) -> Result<()> {
         self.inner.args.delegate = clone_keypair(&self.inner.new_delegate);
-        self.tree.leaf_changed(self.inner.args)
+        self.tree.update_leaf(self.inner.args)
+    }
+}
+
+pub type RedeemBuilder<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> = TxBuilder<
+    'a,
+    mpl_bubblegum::accounts::Redeem,
+    mpl_bubblegum::instruction::Redeem,
+    &'a LeafArgs,
+    MAX_DEPTH,
+    MAX_BUFFER_SIZE,
+>;
+
+impl<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExec
+    for RedeemBuilder<'a, MAX_DEPTH, MAX_BUFFER_SIZE>
+{
+    fn on_successful_execute(&mut self) -> Result<()> {
+        self.tree.zero_leaf(self.inner.index)
+    }
+}
+
+pub type CancelRedeemBuilder<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> = TxBuilder<
+    'a,
+    mpl_bubblegum::accounts::CancelRedeem,
+    mpl_bubblegum::instruction::CancelRedeem,
+    &'a LeafArgs,
+    MAX_DEPTH,
+    MAX_BUFFER_SIZE,
+>;
+
+impl<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExec
+    for CancelRedeemBuilder<'a, MAX_DEPTH, MAX_BUFFER_SIZE>
+{
+    fn on_successful_execute(&mut self) -> Result<()> {
+        self.tree.update_leaf(self.inner)
     }
 }
 
@@ -286,7 +322,7 @@ impl<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExe
                 break;
             }
         }
-        self.tree.leaf_changed(self.inner.args)
+        self.tree.update_leaf(self.inner.args)
     }
 }
 
@@ -310,6 +346,23 @@ impl<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExe
                 break;
             }
         }
-        self.tree.leaf_changed(self.inner.args)
+        self.tree.update_leaf(self.inner.args)
+    }
+}
+
+pub type DecompressV1Builder<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> = TxBuilder<
+    'a,
+    mpl_bubblegum::accounts::DecompressV1,
+    mpl_bubblegum::instruction::DecompressV1,
+    (),
+    MAX_DEPTH,
+    MAX_BUFFER_SIZE,
+>;
+
+impl<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExec
+    for DecompressV1Builder<'a, MAX_DEPTH, MAX_BUFFER_SIZE>
+{
+    fn on_successful_execute(&mut self) -> Result<()> {
+        Ok(())
     }
 }

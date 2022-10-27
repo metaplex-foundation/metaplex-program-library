@@ -9,4 +9,4 @@ The following versions are currently being supported with security updates.
 
 ## Reporting Security Issues
 
-To report a security issue, please follow the guidance on our [security policy](https://docs.metaplex.com/security-policy) page.
+To report a security issue, please follow the guidance on our [bug bounty program](https://www.metaplex.com/bounty-program) page.

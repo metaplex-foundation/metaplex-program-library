@@ -1,3 +1,5 @@
+use std::cmp;
+
 use crate::{
     assertions::{
         collection::{
@@ -11,6 +13,9 @@ use crate::{
     },
     deser::clean_write_metadata,
     error::MetadataError,
+    escrow::{
+        process_close_escrow_account, process_create_escrow_account, process_transfer_out_of_escrow,
+    },
     instruction::{MetadataInstruction, SetCollectionSizeArgs},
     solana_program::program_memory::sol_memset,
     state::{
@@ -246,6 +251,18 @@ pub fn process_instruction<'a>(
         MetadataInstruction::BubblegumSetCollectionSize(args) => {
             msg!("Instruction: Bubblegum Program Set Collection Size");
             bubblegum_set_collection_size(program_id, accounts, args)
+        }
+        MetadataInstruction::CreateEscrowAccount => {
+            msg!("Instruction: Create Escrow Account");
+            process_create_escrow_account(program_id, accounts)
+        }
+        MetadataInstruction::CloseEscrowAccount => {
+            msg!("Instruction: Close Escrow Account");
+            process_close_escrow_account(program_id, accounts)
+        }
+        MetadataInstruction::TransferOutOfEscrow(args) => {
+            msg!("Instruction: Transfer Out Of Escrow");
+            process_transfer_out_of_escrow(program_id, accounts, args)
         }
     }
 }
@@ -2154,9 +2171,12 @@ pub fn bubblegum_set_collection_size(
     let collection_mint_account_info = next_account_info(account_info_iter)?;
     let bubblegum_signer_info = next_account_info(account_info_iter)?;
 
-    let using_delegated_collection_authority = accounts.len() == 5;
+    let delegated_collection_auth_opt = if accounts.len() == 5 {
+        Some(next_account_info(account_info_iter)?)
+    } else {
+        None
+    };
 
-    // Bubblegum program not currently activated.
     if !BUBBLEGUM_ACTIVATED {
         return Err(MetadataError::InvalidOperation.into());
     }
@@ -2178,21 +2198,28 @@ pub fn bubblegum_set_collection_size(
         return Err(MetadataError::UpdateAuthorityIsNotSigner.into());
     }
 
-    if using_delegated_collection_authority {
-        let collection_authority_record = next_account_info(account_info_iter)?;
-        assert_has_collection_authority(
-            collection_update_authority_account_info,
-            &metadata,
-            collection_mint_account_info.key,
-            Some(collection_authority_record),
-        )?;
+    assert_has_collection_authority(
+        collection_update_authority_account_info,
+        &metadata,
+        collection_mint_account_info.key,
+        delegated_collection_auth_opt,
+    )?;
+
+    // Ensure new size is + or - 1 of the current size.
+    let current_size = if let Some(details) = metadata.collection_details {
+        match details {
+            CollectionDetails::V1 { size } => size,
+        }
     } else {
-        assert_has_collection_authority(
-            collection_update_authority_account_info,
-            &metadata,
-            collection_mint_account_info.key,
-            None,
-        )?;
+        return Err(MetadataError::NotACollectionParent.into());
+    };
+
+    let diff = cmp::max(current_size, size)
+        .checked_sub(cmp::min(current_size, size))
+        .ok_or(MetadataError::InvalidCollectionSizeChange)?;
+
+    if diff != 1 {
+        return Err(MetadataError::InvalidCollectionSizeChange.into());
     }
 
     // The Bubblegum program has authority to manage the collection details.

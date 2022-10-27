@@ -1,19 +1,19 @@
 {
   "name": "@metaplex-foundation/mpl-bubblegum",
-  "version": "0.0.1",
-  "programVersion": "0.1.3",
+  "version": "0.3.0",
+  "programVersion": "0.3.0",
   "description": "SDK for MPL Bubblegum contract",
-  "main": "dist/src/mpl-bubblegum.js",
-  "types": "dist/src/mpl-bubblegum.d.ts",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "scripts": {
-    "check:publish-ready": "yarn build && yarn test",
+    "check:publish-ready": "yarn build",
     "preversion": "yarn check:publish-ready",
     "postversion": "git add package.json && git commit -m \"chore: update $npm_package_name to v$npm_package_version\" && git tag $npm_package_name@$npm_package_version",
     "prepublishOnly": "yarn check:publish-ready",
     "postpublish": "git push origin && git push origin --tags",
     "build:docs": "typedoc",
     "build": "rimraf dist && tsc -p tsconfig.json",
-    "start-validator": "solana-test-validator -um --quiet --reset -c cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK -c 4VTQredsAmr1yzRJugLV6Mt6eu6XMeCwdkZ73wwVMWHv -c noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV -c 3RHkdjCwWyK2firrwFQGvXCxbUpBky1GTmb9EDK9hUnX -c metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s --bpf-program BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY ../program/target/deploy/mpl_bubblegum.so",
+    "start-validator": "solana-test-validator -ud --quiet --reset -c cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK -c 4VTQredsAmr1yzRJugLV6Mt6eu6XMeCwdkZ73wwVMWHv -c noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV -c 3RHkdjCwWyK2firrwFQGvXCxbUpBky1GTmb9EDK9hUnX -c metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s --bpf-program BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY ../program/target/deploy/mpl_bubblegum.so",
     "run-tests": "jest tests --detectOpenHandles",
     "test": "start-server-and-test start-validator http://localhost:8899/health run-tests",
     "api:gen": "DEBUG='(solita|rustbin):(info|error)' solita",
@@ -24,7 +24,7 @@
     "fix": "yarn fix:lint && yarn fix:prettier"
   },
   "files": [
-    "/dist"
+    "/dist/src"
   ],
   "publishConfig": {
     "access": "public",
@@ -41,21 +41,26 @@
   "author": "Metaplex Maintainers <contact@metaplex.com>",
   "license": "Apache-2.0",
   "dependencies": {
+    "@metaplex-foundation/amman": "0.12.0",
+    "@metaplex-foundation/beet": "0.7.1",
+    "@metaplex-foundation/beet-solana": "0.4.0",
+    "@metaplex-foundation/mpl-token-metadata": "^2.3.3",
+    "@metaplex-foundation/rustbin": "^0.3.1",
+    "@metaplex-foundation/solita": "^0.18.0",
+    "@solana/spl-account-compression": "^0.1.1",
+    "@metaplex-foundation/cusper": "^0.0.2",
+    "@project-serum/anchor": "0.24.2",
+    "@solana/spl-token": "^0.1.8",
+    "@solana/web3.js": "^1.50.1",
+    "js-sha3": "^0.8.0"
+  },
+  "devDependencies": {
     "@metaplex-foundation/amman": "0.10.0",
-    "@metaplex-foundation/beet": "^0.7.1",
     "@metaplex-foundation/mpl-token-metadata": "^2.2.0",
     "@metaplex-foundation/rustbin": "^0.3.1",
     "@metaplex-foundation/solita": "^0.12.2",
-    "@project-serum/anchor": "0.24.2",
     "@solana/spl-account-compression": "^0.1.0",
-    "@solana/spl-token": "^0.1.8",
-    "@solana/web3.js": "^1.50.1",
-    "@sorend-solana/gummyroll": "^0.0.6",
-    "@sorend-solana/utils": "^0.0.5",
-    "js-sha3": "^0.8.0",
-    "typescript-collections": "^1.3.3"
-  },
-  "devDependencies": {
+    "typescript-collections": "^1.3.3",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-prettier": "^4.0.0",
     "@typescript-eslint/eslint-plugin": "^5.4.0",
@@ -76,7 +81,6 @@
     "ts-jest": "^29.0.3",
     "ts-jest-resolver": "^2.0.0",
     "ts-mocha": "^10.0.0",
-    "ts-node": "^10.9.1",
     "typedoc": "^0.23.10",
     "typescript": "^4.3.5"
   }

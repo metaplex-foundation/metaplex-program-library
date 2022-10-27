@@ -1,12 +1,12 @@
 [workspace]
 [package]
 name = "mpl-auctioneer"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2021"
 description = "Default Auctioneer implementation"
 authors = ["Metaplex Developers <dev@metaplex.com>"]
 repository = "https://github.com/metaplex-foundation/metaplex-program-library"
-license = "AGPL-3.0"
+license-file = "../../LICENSE"
 readme = "README.md"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -24,7 +24,7 @@ default = []
 solana-program = "1.10"
 anchor-lang = "0.25.0"
 anchor-spl = "0.25.0"
-mpl-auction-house = { path = "../../auction-house/program", version = "1.2.4", features = ["cpi", "no-entrypoint"]}
+mpl-auction-house = { path = "../../auction-house/program", version = "1.3.1", features = ["cpi", "no-entrypoint"]}
 
 [dev-dependencies]
 anchor-client = "0.25.0"
@@ -38,3 +38,6 @@ env_logger="0.9.0"
 spl-associated-token-account = {version = "1.0.5", features = ["no-entrypoint"]}
 mpl-token-metadata = { version="1.4", features = [ "no-entrypoint" ] }
 spl-token = { version = "3.2",  features = ["no-entrypoint"] }
+
+[profile.release]
+overflow-checks = true     # Enable integer overflow checks.

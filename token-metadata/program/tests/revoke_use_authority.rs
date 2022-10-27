@@ -31,7 +31,6 @@ mod revoke_use_authority {
                 10,
                 false,
                 None,
-                None,
                 Some(Uses {
                     use_method: UseMethod::Single,
                     total: 1,
