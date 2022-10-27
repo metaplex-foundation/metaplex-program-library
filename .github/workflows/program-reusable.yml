@@ -23,23 +23,6 @@ env:
   CACHE: ${{ inputs.cache }}
 
 jobs:
-  #  setup-versions:
-  #    runs-on: ubuntu-latest
-  #    outputs:
-  #      versions: ${{ steps.matrix.outputs.value }}
-  #    steps:
-  #      - id: matrix
-  #        run: |
-  #          sudo apt-get install -y jq && \
-  #          MAINNET=$(curl https://api.mainnet-beta.solana.com -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","id":1, "method":"getVersion"}' | jq '.result["solana-core"]') && \
-  #          DEVNET=$(curl https://api.devnet.solana.com -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","id":1, "method":"getVersion"}' | jq '.result["solana-core"]') && \
-  #          VERSIONS=($MAINNET $DEVNET) && \
-  #          echo "${VERSIONS[@]}" && \
-  #          VERSION_JSON=$(echo "${VERSIONS[@]}" | jq -s -c) && \
-  #          echo $VERSION_JSON && \
-  #          echo "::set-output name=value::$VERSION_JSON"
-  #        shell: bash
-
   changes:
     name: Changes
     runs-on: ubuntu-latest
@@ -117,13 +100,13 @@ jobs:
           name: ${{ inputs.name }}
 
       # Run Cargo Test
-      - name: "Test: ${{ inputs.name }}"
+      - name: "Cargo Test: ${{ inputs.name }}"
         working-directory: ./${{ inputs.name }}/program
         run: cargo +${{ env.RUST_TOOLCHAIN }} test -- --nocapture --test-threads 1
         if: ${{ inputs.cargo_test }}
 
       # Run BPF Test
-      - name: "Test: ${{ inputs.name }}"
+      - name: "BPF Test: ${{ inputs.name }}"
         working-directory: ./${{ inputs.name }}/program
         run: |
           cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --version

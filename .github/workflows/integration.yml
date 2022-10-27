@@ -2,9 +2,9 @@ name: Integration Tests
 
 on:
   push:
-    branches: [master]
+    branches: [ master ]
   pull_request:
-    branches: [master]
+    branches: [ master ]
 
   workflow_dispatch:
     inputs:
@@ -12,9 +12,6 @@ on:
         description: 'Use Cached Dependencies'
         required: false
         default: true
-
-env:
-  CACHE: 'false'
 
 jobs:
   integration-tests:
@@ -30,4 +27,5 @@ jobs:
     with:
       name: ${{ matrix.node.name }}
       cache: ${{ (github.event_name == 'workflow_dispatch' && github.event.workflow_dispatch.inputs.cache == 'true') ||
-        (github.event_name != 'workflow_dispatch' && env.CACHE == 'true') }}
+        (github.event_name != 'workflow_dispatch' && false) }}
+# CHANGE `&& false` to `&& true` to default the workflow to use caching.

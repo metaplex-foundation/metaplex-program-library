@@ -9,25 +9,19 @@ inputs:
     required: true
   skip_test:
     description: If true, testing is skipped. This should be used when the tests are end-to-end and thus need a locally running test-validator with deployed Rust programs.
-    required: false
-    default: 'false'
-
+    required: true
   build_core:
     description: If not false it will build the core package before running checks
-    required: false
-    default: 'true'
+    required: true
   build_token_metadata:
     description: If true it will build the token_metadata package before running checks
-    required: false
-    default: 'false'
+    required: true
   build_auction_house:
     description: If true it will build the auction_house package before running checks
-    required: false
-    default: 'false'
+    required: true
   build_candy_machine:
     description: If true it will build the candy_machine package before running checks
-    required: false
-    default: 'false'
+    required: true
 
 description: Installs JS deps and builds the JS package, ensuring the code is valid
 
@@ -38,7 +32,7 @@ runs:
       with:
         path: '**/node_modules'
         key: ${{ inputs.cache_id }}-${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
-      if: ${{ env.CACHE != 'false' }}
+      if: ${{ env.CACHE == 'true' }}
 
     ##############
     # Prepare Core and Dependencies
@@ -55,7 +49,7 @@ runs:
         yarn install
         echo 'Install and Build core: yarn build'
         yarn build
-      working-directory: ./core/js 
+      working-directory: ./core/js
       shell: bash
 
     - name: Install and Build token-metadata
@@ -65,7 +59,7 @@ runs:
         yarn install
         echo 'Install and Build token-metadata: yarn build'
         yarn build
-      working-directory: ./token-metadata/js 
+      working-directory: ./token-metadata/js
       shell: bash
 
     - name: Install and Build auction-house
@@ -75,7 +69,7 @@ runs:
         yarn install
         echo 'Install and Build auction-house: yarn build'
         yarn build
-      working-directory: ./auction-house/js 
+      working-directory: ./auction-house/js
       shell: bash
 
     - name: Install and Build candy-machine
@@ -85,7 +79,7 @@ runs:
         yarn install
         echo 'Install and Build candy-machine: yarn build'
         yarn build
-      working-directory: ./candy-machine/js 
+      working-directory: ./candy-machine/js
       shell: bash
 
     ##############
@@ -96,7 +90,7 @@ runs:
       working-directory: ${{ inputs.working_dir }}
       shell: bash
 
-    - name: Build TypeScript 
+    - name: Build TypeScript
       run: yarn build
       working-directory: ${{ inputs.working_dir }}
       shell: bash
@@ -107,7 +101,7 @@ runs:
       working-directory: ${{ inputs.working_dir }}
       shell: bash
 
-    - name: Lint TypeScript 
+    - name: Lint TypeScript
       run: yarn lint
       working-directory: ${{ inputs.working_dir }}
       shell: bash

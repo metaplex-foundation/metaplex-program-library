@@ -11,19 +11,21 @@ inputs:
   build_core:
     description: If not false it will build the core package
     required: false
-    default: true
+    default: 'true'
   build_token_metadata:
     description: If true it will build the token_metadata package
     required: false
-    default: false
+    default: 'false'
   build_auction_house:
     description: If true it will build the auction_house package before running checks
     required: false
-    default: false
+    default: 'false'
   build_candy_machine:
     description: If true it will build the candy_machine package before running checks
     required: false
-    default: false
+    default: 'false'
+
+description: Installs Yarn Packages and Builds
 
 runs:
   using: composite
@@ -32,7 +34,7 @@ runs:
       with:
         path: '**/node_modules'
         key: ${{ inputs.cache_id }}-${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
-      if: ${{ env.CACHE != 'false' }}
+      if: ${{ env.CACHE == 'true' }}
 
     ##############
     # Prepare Core and Dependencies
