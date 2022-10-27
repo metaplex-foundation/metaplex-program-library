@@ -32,7 +32,7 @@ runs:
       with:
         path: '**/node_modules'
         key: ${{ inputs.cache_id }}-${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
-      if: ${{ env.CACHE }}
+      if: ${{ env.CACHE != false }}
 
     ##############
     # Prepare Core and Dependencies

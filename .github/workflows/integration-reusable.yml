@@ -72,7 +72,7 @@ jobs:
             ~/.cargo/git/db/
             ./${{ inputs.name }}/program/target/
           key: program-${{ inputs.name }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-        if: ${{ env.CACHE }}
+        if: ${{ env.CACHE != false }}
 
       # Build and install deps
       - uses: ./.github/actions/integration
