@@ -13,6 +13,8 @@ on:
         required: false
         default: true
 
+env:
+  CACHE: 'false'
 
 jobs:
   integration-tests:
@@ -28,4 +30,4 @@ jobs:
     with:
       name: ${{ matrix.node.name }}
       cache: ${{ (github.event_name == 'workflow_dispatch' && github.event.workflow_dispatch.inputs.cache == 'true') ||
-        (github.event_name != 'workflow_dispatch' && false) }}
+        (github.event_name != 'workflow_dispatch' && env.CACHE == 'true') }}

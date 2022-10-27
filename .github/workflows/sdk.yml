@@ -12,6 +12,8 @@ on:
         description: 'Use Cached Dependencies'
         required: false
         default: true
+env:
+  CACHE: 'false'
 
 jobs:
   sdk-tests:
@@ -99,4 +101,4 @@ jobs:
       build_auction_house: ${{ matrix.node.build_auction_house }}
       build_candy_machine: ${{ matrix.node.build_candy_machine }}
       cache: ${{ (github.event_name == 'workflow_dispatch' && github.event.workflow_dispatch.inputs.cache == 'true') ||
-        (github.event_name != 'workflow_dispatch' && true) }}
+        (github.event_name != 'workflow_dispatch' && env.CACHE == 'true') }}
