@@ -1,0 +1,50 @@
+name: SDK Tests
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+  workflow_dispatch:
+    inputs:
+      cache:
+        description: 'Use Cached Dependencies'
+        required: false
+        default: true
+
+jobs:
+  sdk-tests:
+    name: "SDK: ${{ matrix.node.name }}"
+    strategy:
+      fail-fast: false
+      matrix:
+        node:
+          - name: "auction-house"
+            skip_test: false
+          - name: "candy-machine"
+            skip_test: false
+          - name: "candy-machine-core"
+            skip_test: true
+          - name: "core"
+            skip_test: false
+          - name: "fixed-price-sale"
+            skip_test: true
+          - name: "gumdrop"
+            skip_test: false
+          - name: "hydra"
+            skip_test: true
+          - name: "nft-packs"
+            skip_test: true
+          - name: "token-entangler"
+            skip_test: false
+          - name: "token-metadata"
+            skip_test: false
+
+    uses: ./.github/workflows/sdk-reusable.yml
+    with:
+      name: ${{ matrix.node.name }}
+      skip_test: ${{ matrix.node.skip_test }}
+      cache: ${{ (github.event_name == 'workflow_dispatch' && github.event.workflow_dispatch.inputs.cache == 'true') ||
+        (github.event_name != 'workflow_dispatch' && false) }}
+# CHANGE `&& false` to `&& true` to default the workflow to use caching.

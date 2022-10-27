@@ -1,0 +1,35 @@
+name: Integration Tests
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+  workflow_dispatch:
+    inputs:
+      cache:
+        description: 'Use Cached Dependencies'
+        required: false
+        default: true
+
+jobs:
+  integration-tests:
+    name: "Integration: ${{ matrix.node.name }}"
+    strategy:
+      fail-fast: false
+      matrix:
+        node:
+          - name: "fixed-price-sale"
+            build_token_metadata: true
+          - name: "hydra"
+            build_token_metadata: true
+          - name: "candy-machine-core"
+            build_token_metadata: true
+    uses: ./.github/workflows/integration-reusable.yml
+    with:
+      name: ${{ matrix.node.name }}
+      build_token_metadata: ${{ matrix.node.build_token_metadata }}
+      cache: ${{ (github.event_name == 'workflow_dispatch' && github.event.workflow_dispatch.inputs.cache == 'true') ||
+        (github.event_name != 'workflow_dispatch' && false) }}
+# CHANGE `&& false` to `&& true` to default the workflow to use caching.
