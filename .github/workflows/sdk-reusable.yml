@@ -9,18 +9,18 @@ on:
       skip_test:
         required: true
         type: boolean
-      build_core:
-        required: true
-        type: boolean
-      build_token_metadata:
-        required: true
-        type: boolean
-      build_auction_house:
-        required: true
-        type: boolean
-      build_candy_machine:
-        required: true
-        type: boolean
+#      build_core:
+#        required: true
+#        type: boolean
+#      build_token_metadata:
+#        required: true
+#        type: boolean
+#      build_auction_house:
+#        required: true
+#        type: boolean
+#      build_candy_machine:
+#        required: true
+#        type: boolean
       cache:
         required: true
         type: boolean
@@ -79,7 +79,7 @@ jobs:
           cache_id: sdk-${{ inputs.name }}
           working_dir: ./${{ inputs.name }}/js
           skip_test: ${{ inputs.skip_test }}
-          build_core: ${{ inputs.build_core }}
-          build_token_metadata: ${{ inputs.build_token_metadata }}
-          build_auction_house: ${{ inputs.build_auction_house }}
-          build_candy_machine: ${{ inputs.build_candy_machine }}
+#          build_core: ${{ inputs.build_core }}
+#          build_token_metadata: ${{ inputs.build_token_metadata }}
+#          build_auction_house: ${{ inputs.build_auction_house }}
+#          build_candy_machine: ${{ inputs.build_candy_machine }}
