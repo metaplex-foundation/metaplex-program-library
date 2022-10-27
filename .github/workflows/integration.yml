@@ -27,6 +27,5 @@ jobs:
     uses: ./.github/workflows/integration-reusable.yml
     with:
       name: ${{ matrix.node.name }}
-      cache: |
-        (github.event_name == 'workflow_dispatch' && github.event.workflow_dispatch.inputs.cache == 'true') ||
-        (github.event_name != 'workflow_dispatch' && false)
+      cache: ${{ (github.event_name == 'workflow_dispatch' && github.event.workflow_dispatch.inputs.cache == 'true') ||
+        (github.event_name != 'workflow_dispatch' && false) }}
