@@ -35,6 +35,7 @@ export type SetTreeDelegateInstructionAccounts = {
   treeCreator: web3.PublicKey;
   newTreeDelegate: web3.PublicKey;
   merkleTree: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
   anchorRemainingAccounts?: web3.AccountMeta[];
 };
 
@@ -73,6 +74,11 @@ export function createSetTreeDelegateInstruction(
     },
     {
       pubkey: accounts.merkleTree,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
       isWritable: false,
       isSigner: false,
     },

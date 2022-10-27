@@ -490,9 +490,14 @@ impl TestPackSet {
         master_mint: &Pubkey,
         index: u32,
     ) -> transport::Result<()> {
-        create_mint(context, new_mint, &new_mint_authority.pubkey(), None)
-            .await
-            .unwrap();
+        create_mint(
+            context,
+            new_mint,
+            &new_mint_authority.pubkey(),
+            Some(&new_mint_authority.pubkey()),
+        )
+        .await
+        .unwrap();
         create_token_account(
             context,
             new_mint_token_acc,
