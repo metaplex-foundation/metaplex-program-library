@@ -216,7 +216,11 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
     // different signer, payer, accounts, data, etc.) before execution.
     // Moreover executions don't consume the builder, which can be modified
     // some more and executed again etc.
-    pub fn create_tree_tx(&self, payer: &Keypair, public: bool) -> CreateBuilder<MAX_DEPTH, MAX_BUFFER_SIZE> {
+    pub fn create_tree_tx(
+        &self,
+        payer: &Keypair,
+        public: bool,
+    ) -> CreateBuilder<MAX_DEPTH, MAX_BUFFER_SIZE> {
         let accounts = mpl_bubblegum::accounts::CreateTree {
             tree_authority: self.authority(),
             payer: payer.pubkey(),
@@ -247,9 +251,10 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
         self.create_tree_tx(payer, true).execute().await
     }
 
-    pub fn mint_v1_non_owner_tx<'a>(&'a self,
-                                 tree_delegate: &Keypair,
-                                 args: &'a mut LeafArgs,
+    pub fn mint_v1_non_owner_tx<'a>(
+        &'a self,
+        tree_delegate: &Keypair,
+        args: &'a mut LeafArgs,
     ) -> MintV1Builder<MAX_DEPTH, MAX_BUFFER_SIZE> {
         let accounts = mpl_bubblegum::accounts::MintV1 {
             tree_authority: self.authority(),
@@ -318,8 +323,14 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
         self.mint_v1_tx(tree_delegate, args).execute().await
     }
 
-    pub async fn mint_v1_non_owner(&self, tree_delegate: &Keypair, args: &mut LeafArgs) -> Result<()> {
-        self.mint_v1_non_owner_tx(tree_delegate, args).execute().await
+    pub async fn mint_v1_non_owner(
+        &self,
+        tree_delegate: &Keypair,
+        args: &mut LeafArgs,
+    ) -> Result<()> {
+        self.mint_v1_non_owner_tx(tree_delegate, args)
+            .execute()
+            .await
     }
 
     pub async fn decode_root(&self) -> Result<[u8; 32]> {

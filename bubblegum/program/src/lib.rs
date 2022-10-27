@@ -812,7 +812,7 @@ pub mod bubblegum {
         ctx: Context<CreateTree>,
         max_depth: u32,
         max_buffer_size: u32,
-        public: Option<bool>
+        public: Option<bool>,
     ) -> Result<()> {
         let merkle_tree = ctx.accounts.merkle_tree.to_account_info();
         let seed = merkle_tree.key();
@@ -1294,7 +1294,7 @@ pub mod bubblegum {
                             &spl_token::id(),
                             &ctx.accounts.mint.key(),
                             &ctx.accounts.mint_authority.key(),
-                            None,
+                            Some(&ctx.accounts.mint_authority.key()),
                             0,
                         )?,
                         &[
