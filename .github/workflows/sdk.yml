@@ -98,5 +98,6 @@ jobs:
       build_token_metadata: ${{ matrix.node.build_token_metadata }}
       build_auction_house: ${{ matrix.node.build_auction_house }}
       build_candy_machine: ${{ matrix.node.build_candy_machine }}
-      cache: ${{ github.event.workflow_dispatch.inputs.cache != false }}
-
+      cache: |
+        (github.event_name == 'workflow_dispatch' && github.event.workflow_dispatch.inputs.cache == 'true') ||
+        (github.event_name != 'workflow_dispatch' && false)

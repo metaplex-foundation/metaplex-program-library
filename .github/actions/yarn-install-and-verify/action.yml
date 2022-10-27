@@ -10,25 +10,26 @@ inputs:
   skip_test:
     description: If true, testing is skipped. This should be used when the tests are end-to-end and thus need a locally running test-validator with deployed Rust programs.
     required: false
-    default: false
+    default: 'false'
 
   build_core:
     description: If not false it will build the core package before running checks
     required: false
-    default: true
+    default: 'true'
   build_token_metadata:
     description: If true it will build the token_metadata package before running checks
     required: false
-    default: false
+    default: 'false'
   build_auction_house:
     description: If true it will build the auction_house package before running checks
     required: false
-    default: false
+    default: 'false'
   build_candy_machine:
     description: If true it will build the candy_machine package before running checks
     required: false
-    default: false
+    default: 'false'
 
+description: Installs JS deps and builds the JS package, ensuring the code is valid
 
 runs:
   using: composite
