@@ -9,6 +9,9 @@ on:
       cache:
         required: true
         type: boolean
+      build_token_metadata:
+        required: true
+        type: boolean
 
 env:
   CARGO_TERM_COLOR: always
@@ -40,8 +43,8 @@ jobs:
               - '${{ inputs.name }}/**'
             workflow:
               - '.github/workflows/integration-reusable.yml'
-            action:
-              - '.github/actions/integration/${{ inputs.name }}/action.yml'
+#            action:
+#              - '.github/actions/integration/${{ inputs.name }}/action.yml'
   build-and-test:
     name: Build and Test
     runs-on: buildjet-8vcpu-ubuntu-2004
@@ -49,8 +52,8 @@ jobs:
     if: |
       needs.changes.outputs.core == 'true' ||
       needs.changes.outputs.package == 'true' ||
-      needs.changes.outputs.workflow == 'true' ||
-      needs.changes.outputs.actions == 'true'
+      needs.changes.outputs.workflow == 'true'
+#      needs.changes.outputs.actions == 'true'
     steps:
       # Setup Deps
       - uses: actions/checkout@v2
@@ -74,8 +77,19 @@ jobs:
           key: program-${{ inputs.name }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
         if: ${{ env.CACHE != 'false' }}
 
-      # Build and install deps
-      - uses: ./.github/actions/integration
+      # Install JS SDK deps
+      - uses: ./.github/actions/yarn-install-and-build
+        with:
+          cache_id: sdk-${{ inputs.name }}
+          working_dir: ./${{ inputs.name }}/js
+
+      # Build Rust Programs
+      - uses: ./.github/actions/build-program
+        with:
+          name: token-metadata
+        if: ${{ inputs.build_token_metadata }}
+
+      - uses: ./.github/actions/build-program
         with:
           name: ${{ inputs.name }}
 
