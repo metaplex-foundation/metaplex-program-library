@@ -40,7 +40,7 @@ jobs:
               - '.github/actions/integration/${{ inputs.name }}/action.yml'
   build-and-test:
     name: Build and Test
-    runs-on: buildjet-4vcpu-ubuntu-2004
+    runs-on: buildjet-8vcpu-ubuntu-2004
     needs: changes
     if: |
       needs.changes.outputs.core == 'true' ||
