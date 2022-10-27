@@ -6,6 +6,13 @@ on:
   pull_request:
     branches: [ master ]
 
+  workflow_dispatch:
+    inputs:
+      cache:
+        description: 'Whether or not to use caching'
+        required: false
+        default: true
+
 jobs:
   sdk-tests:
     name: "SDK: ${{ matrix.node.name }}"
@@ -91,3 +98,5 @@ jobs:
       build_token_metadata: ${{ matrix.node.build_token_metadata }}
       build_auction_house: ${{ matrix.node.build_auction_house }}
       build_candy_machine: ${{ matrix.node.build_candy_machine }}
+      cache: ${{ github.event.workflow_dispatch.inputs.cache != false }}
+
