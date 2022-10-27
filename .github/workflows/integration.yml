@@ -6,6 +6,13 @@ on:
   pull_request:
     branches: [master]
 
+  workflow_dispatch:
+    inputs:
+      cache:
+        description: 'Whether or not to use caching'
+        required: false
+        default: true
+
 
 jobs:
   integration-tests:
@@ -20,3 +27,4 @@ jobs:
     uses: ./.github/workflows/integration-reusable.yml
     with:
       name: ${{ matrix.node.name }}
+      cache: ${{ github.event.workflow_dispatch.inputs.cache != false }}

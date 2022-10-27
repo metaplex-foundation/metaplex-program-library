@@ -21,11 +21,15 @@ on:
       build_candy_machine:
         required: true
         type: boolean
+      cache:
+        required: true
+        type: boolean
 
 env:
   CARGO_TERM_COLOR: always
   SOLANA_VERSION: 1.10.40
   RUST_TOOLCHAIN: stable
+  CACHE: ${{ inputs.cache }}
 
 jobs:
   changes:
