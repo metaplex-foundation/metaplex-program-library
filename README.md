@@ -44,7 +44,6 @@ Download [this installer binary](https://github.com/metaplex-foundation/winstall
 > ```
 
 
-
 ### Developers
 
 Using Crates.io:
