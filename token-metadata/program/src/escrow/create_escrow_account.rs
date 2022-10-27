@@ -17,6 +17,7 @@ use solana_program::{
     instruction::{AccountMeta, Instruction},
     program_memory::sol_memcpy,
     pubkey::Pubkey,
+    sysvar,
 };
 
 pub fn create_escrow_account(
@@ -31,12 +32,13 @@ pub fn create_escrow_account(
 ) -> Instruction {
     let mut accounts = vec![
         AccountMeta::new(escrow_account, false),
-        AccountMeta::new_readonly(metadata_account, false),
+        AccountMeta::new(metadata_account, false),
         AccountMeta::new_readonly(mint_account, false),
         AccountMeta::new_readonly(token_account, false),
         AccountMeta::new_readonly(edition_account, false),
         AccountMeta::new(payer_account, true),
         AccountMeta::new_readonly(solana_program::system_program::id(), false),
+        AccountMeta::new_readonly(sysvar::instructions::id(), false),
     ];
 
     if let Some(authority) = authority {
@@ -67,6 +69,7 @@ pub fn process_create_escrow_account(
     let edition_account_info = next_account_info(account_info_iter)?;
     let payer_account_info = next_account_info(account_info_iter)?;
     let system_account_info = next_account_info(account_info_iter)?;
+    let _sysvar_ix_account_info = next_account_info(account_info_iter)?;
 
     let is_using_authority = account_info_iter.len() == 1;
 
