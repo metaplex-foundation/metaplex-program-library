@@ -1,5 +1,5 @@
 {
-  "version": "0.2.0",
+  "version": "0.2.1",
   "name": "bubblegum",
   "instructions": [
     {
@@ -391,7 +391,7 @@
         },
         {
           "name": "collectionMetadata",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -527,7 +527,7 @@
         },
         {
           "name": "collectionMetadata",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -663,7 +663,7 @@
         },
         {
           "name": "collectionMetadata",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
