@@ -56,4 +56,4 @@ jobs:
       name: ${{ matrix.node.name }}
       verify_rust: ${{ matrix.node.verify_rust }}
       cargo_test: ${{ matrix.node.cargo_test }}
-      cache: ${{ github.event.workflow_dispatch.inputs.cache != 'false' }}
+      cache: ${{ github.event.workflow_dispatch.inputs.cache != false }}
