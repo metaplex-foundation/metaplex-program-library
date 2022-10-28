@@ -7,6 +7,12 @@ This package contains the hydra contract SDK code.
 Find the
 [hydra API docs published here](https://metaplex-foundation.github.io/metaplex-program-library/docs/hydra/index.html).
 
+## Installation
+
+```shell
+npm install @metaplex-foundation/mpl-hydra --save
+```
+
 ## Developing
 
 In order to update the generated SDK when the rust contract was updated please run:
