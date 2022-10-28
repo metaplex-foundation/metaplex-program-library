@@ -229,7 +229,7 @@ under either the [MIT](mit-license) or the [Apache](apache-license) licenses.
 
 [mpl-token-entangler-nimg]:https://img.shields.io/npm/v/@metaplex-foundation/mpl-token-entangler?label=npm%20%7C%20%40metaplex-foundation%2Fmpl-token-entangler&logo=typescript
 
-[mpl-token-metadata-nimg]:https://img.shields.io/npm/v/@metaplex-foundation/mpl-token-metadata?label=npm%20%7C%20%40metaplex-foundation%2Fmpl-token-metadata&logo=typescript?label=npm%20%7C%20%40metaplex-foundation%2Fmpl-token-metadata&logo=typescript
+[mpl-token-metadata-nimg]:https://img.shields.io/npm/v/@metaplex-foundation/mpl-token-metadata?label=npm%20%7C%20%40metaplex-foundation%2Fmpl-token-metadata&logo=typescript
 
 <!-- Licenses -->
 
