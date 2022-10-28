@@ -18,7 +18,7 @@ Metaplex smart contracts and SDK.
 | [Fixed Price Sale](./fixed-price-sale)     | [![Crate][mpl-fixed-price-sale-img-long]][mpl-fixed-price-sale-crate]     | [![NPM][mpl-fixed-price-sale-nimg-long]][mpl-fixed-price-sale-npm]     |
 | [Gumdrop](./gumdrop)                       | [![Crate][mpl-gumdrop-img-long]][mpl-gumdrop-crate]                       | [![NPM][mpl-gumdrop-nimg-long]][mpl-gumdrop-npm]                       |
 | [Hydra](./hydra)                           | [![Crate][mpl-hydra-img-long]][mpl-hydra-crate]                           | [![NPM][mpl-hydra-nimg-long]][mpl-hydra-npm]                           |
-| [Fixed Price Sale](./fixed-price-sale)     | [![Crate][mpl-fixed-price-sale-img-long]][mpl-fixed-price-sale-crate]     | [![NPM][mpl-nft-packs-nimg-long]][mpl-nft-packs-npm]                   |
+| [NFT Packs](./nft-packs)                   | [![Crate][mpl-nft-packs-img-long]][mpl-nft-packs-crate]                   | [![NPM][mpl-nft-packs-nimg-long]][mpl-nft-packs-npm]                   |
 | [Token Entangler](./token-entangler)       | [![Crate][mpl-token-entangler-img-long]][mpl-token-entangler-crate]       | [![NPM][mpl-token-entangler-nimg-long]][mpl-token-entangler-npm]       |
 | [Token Metadata](./token-metadata)         | [![Crate][mpl-token-metadata-img-long]][mpl-token-metadata-crate]         | [![NPM][mpl-token-metadata-nimg-long]][mpl-token-metadata-npm]         |
 
