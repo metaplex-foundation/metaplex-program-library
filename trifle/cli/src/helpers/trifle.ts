@@ -3,7 +3,7 @@ import {
   SftWithToken,
   TokenMetadataProgram,
 } from "@metaplex-foundation/js";
-import { Connection, Keypair, PublicKey, Transaction } from "@solana/web3.js";
+import { Connection, Keypair, PublicKey, SYSVAR_INSTRUCTIONS_PUBKEY, Transaction } from "@solana/web3.js";
 import {
   createAddCollectionConstraintToEscrowConstraintModelInstruction,
   createAddNoneConstraintToEscrowConstraintModelInstruction,
@@ -203,6 +203,7 @@ export const createTrifle = async (
     constraintModel: escrowConstraintModel[0],
     payer: keypair.publicKey,
     tokenMetadataProgram: new PublicKey(TM_PROGRAM_ADDRESS),
+    sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
   });
 
   const tx = new Transaction().add(createIX);
@@ -271,7 +272,7 @@ export const transferIn = async (
       splToken: new PublicKey(TOKEN_PROGRAM_ID),
       splAssociatedTokenAccount: new PublicKey(ASSOCIATED_TOKEN_PROGRAM_ID),
       tokenMetadataProgram: new PublicKey(
-        "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s",
+        TM_PROGRAM_ADDRESS,
       ),
     },
     {
@@ -318,19 +319,21 @@ export const transferOut = async (
       trifleAccount: trifleAddress[0],
       constraintModel: escrowConstraintModel[0],
       escrowAccount: escrowAccountAddress,
+      escrowTokenAccount: escrowNft.token.address,
+      escrowMint: escrowNft.mint.address,
+      escrowMetadata: escrowNft.metadataAddress,
       payer: keypair.publicKey,
       trifleAuthority: keypair.publicKey,
       attributeMint: nft.mint.address,
       attributeSrcTokenAccount: nft.token.address,
       attributeDstTokenAccount: dst,
       attributeMetadata: nft.metadataAddress,
-      escrowMint: escrowNft.mint.address,
-      escrowTokenAccount: escrowNft.token.address,
       splAssociatedTokenAccount: new PublicKey(ASSOCIATED_TOKEN_PROGRAM_ID),
       splToken: new PublicKey(TOKEN_PROGRAM_ID),
       tokenMetadataProgram: new PublicKey(
-        "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s",
+        TM_PROGRAM_ADDRESS,
       ),
+      sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
     },
     {
       transferOutArgs: { amount: 1, slot },
