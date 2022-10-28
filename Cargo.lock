@@ -2351,9 +2351,9 @@ dependencies = [
 
 [[package]]
 name = "mpl-candy-guard"
-version = "0.1.1"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "79f08b4e0e8a488190aa621334eb9ba0903f5127ec68b78329b2775e9245dc2d"
+checksum = "cf911a47bf4731d49e5748ddcf9ebf669ac0d16034632e4ab47a6b82504175ce"
 dependencies = [
  "anchor-lang",
  "arrayref",
@@ -2368,9 +2368,9 @@ dependencies = [
 
 [[package]]
 name = "mpl-candy-guard-derive"
-version = "0.1.0"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e2ca93b6548fdbcdab8d19bf083ffed29109e9120e16aa951837c45519a32d80"
+checksum = "18e4d3002ea881e94a238798faf87a006a687297a24bd4b3f810fbb63611173d"
 dependencies = [
  "quote 1.0.21",
  "syn 1.0.99",
@@ -4737,7 +4737,7 @@ checksum = "6bdef32e8150c2a081110b42772ffe7d7c9032b606bc226c8260fd97e0976601"
 
 [[package]]
 name = "sugar-cli"
-version = "1.1.1-alpha+CMv3"
+version = "1.1.2-alpha+CMv3"
 dependencies = [
  "anchor-client",
  "anchor-lang",

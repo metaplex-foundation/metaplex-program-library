@@ -83,6 +83,10 @@ pub struct GuardSet {
     pub nft_burn: Option<NftBurn>,
     /// Token burn guard (burn a specified amount of spl-token)
     pub token_burn: Option<TokenBurn>,
+    /// Freeze sol payment guard (set the price for the mint in lamports with a freeze period).
+    pub freeze_sol_payment: Option<FreezeSolPayment>,
+    /// Freeze token payment guard (set the price for the mint in spl-token amount with a freeze period).
+    pub freeze_token_payment: Option<FreezeTokenPayment>,
 }
 
 impl GuardSet {
@@ -183,6 +187,18 @@ impl GuardSet {
         } else {
             None
         };
+        // freeze sol payment
+        let freeze_sol_payment = if let Some(freeze_sol_payment) = &self.freeze_sol_payment {
+            Some(freeze_sol_payment.to_guard_format()?)
+        } else {
+            None
+        };
+        // freeze token payment
+        let freeze_token_payment = if let Some(freeze_token_payment) = &self.freeze_token_payment {
+            Some(freeze_token_payment.to_guard_format()?)
+        } else {
+            None
+        };
 
         Ok(mpl_candy_guard::guards::GuardSet {
             bot_tax,
@@ -201,6 +217,9 @@ impl GuardSet {
             nft_gate,
             nft_burn,
             token_burn,
+            freeze_sol_payment,
+            freeze_token_payment,
+            program_gate: None,
         })
     }
 }
@@ -494,6 +513,53 @@ pub struct TokenPayment {
 impl TokenPayment {
     pub fn to_guard_format(&self) -> Result<mpl_candy_guard::guards::TokenPayment> {
         Ok(mpl_candy_guard::guards::TokenPayment {
+            amount: self.amount,
+            mint: self.mint,
+            destination_ata: self.destination_ata,
+        })
+    }
+}
+
+// Freeze Sol Payment guard
+
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct FreezeSolPayment {
+    pub value: f64,
+
+    #[serde(deserialize_with = "to_pubkey")]
+    #[serde(serialize_with = "to_string")]
+    pub destination: Pubkey,
+}
+
+impl FreezeSolPayment {
+    pub fn to_guard_format(&self) -> Result<mpl_candy_guard::guards::FreezeSolPayment> {
+        Ok(mpl_candy_guard::guards::FreezeSolPayment {
+            lamports: price_as_lamports(self.value),
+            destination: self.destination,
+        })
+    }
+}
+
+// Freeze Token Payment guard
+
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct FreezeTokenPayment {
+    pub amount: u64,
+
+    #[serde(deserialize_with = "to_pubkey")]
+    #[serde(serialize_with = "to_string")]
+    pub mint: Pubkey,
+
+    #[serde(deserialize_with = "to_pubkey")]
+    #[serde(serialize_with = "to_string")]
+    pub destination_ata: Pubkey,
+}
+
+impl FreezeTokenPayment {
+    pub fn to_guard_format(&self) -> Result<mpl_candy_guard::guards::FreezeTokenPayment> {
+        Ok(mpl_candy_guard::guards::FreezeTokenPayment {
             amount: self.amount,
             mint: self.mint,
             destination_ata: self.destination_ata,
