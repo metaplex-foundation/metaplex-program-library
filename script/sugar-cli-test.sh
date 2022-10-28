@@ -649,9 +649,9 @@ fi
 
 cat >$CONFIG_FILE <<-EOM
 {
-    "size": $ITEMS,
+    "number": $ITEMS,
     "symbol": "TEST",
-    "royalties": 500,
+    "sellerFeeBasisPoints": 500,
     "isMutable": true,
     "isSequential": false,
     "creators": [
@@ -660,22 +660,20 @@ cat >$CONFIG_FILE <<-EOM
             "share": 100
         }
     ],
-    "uploadConfig": {
-        "method": "${STORAGE}",
-        "awsConfig": {
-            "bucket": "${AWS_BUCKET}",
-            "profile": "${AWS_PROFILE}",
-            "directory": "${AWS_DIRECTORY}",
-            "domain": "${AWS_DOMAIN}"
-        },
-        "nftStorageAuthToken": "${NFT_STORAGE_TOKEN}",
-        "shdwStorageAccount": $SHDW,
-        "pinataConfig": {
-            "jwt": "${PINATA_JWT}",
-            "apiGateway": "${PINATA_API_GATEWAY}",
-            "contentGateway": "${PINATA_CONTENT_GATEWAY}",
-            "parallelLimit": ${PINATA_PARALLEL}
-        }
+    "uploadMethod": "${STORAGE}",
+    "awsConfig": {
+        "bucket": "${AWS_BUCKET}",
+        "profile": "${AWS_PROFILE}",
+        "directory": "${AWS_DIRECTORY}",
+        "domain": "${AWS_DOMAIN}"
+    },
+    "nftStorageAuthToken": "${NFT_STORAGE_TOKEN}",
+    "shdwStorageAccount": $SHDW,
+    "pinataConfig": {
+        "jwt": "${PINATA_JWT}",
+        "apiGateway": "${PINATA_API_GATEWAY}",
+        "contentGateway": "${PINATA_CONTENT_GATEWAY}",
+        "parallelLimit": ${PINATA_PARALLEL}
     },
     "hiddenSettings": $HIDDEN_SETTINGS
 }
