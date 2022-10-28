@@ -16,7 +16,7 @@ use solana_program::{
     entrypoint::ProgramResult,
     instruction::{AccountMeta, Instruction},
     pubkey::Pubkey,
-    system_program,
+    system_program, sysvar,
 };
 
 pub fn close_escrow_account(
@@ -30,12 +30,13 @@ pub fn close_escrow_account(
 ) -> Instruction {
     let accounts = vec![
         AccountMeta::new(escrow_account, false),
-        AccountMeta::new_readonly(metadata_account, false),
+        AccountMeta::new(metadata_account, false),
         AccountMeta::new_readonly(mint_account, false),
         AccountMeta::new_readonly(token_account, false),
         AccountMeta::new_readonly(edition_account, false),
         AccountMeta::new(payer_account, true),
         AccountMeta::new_readonly(system_program::id(), false),
+        AccountMeta::new_readonly(sysvar::instructions::id(), false),
     ];
     let data = MetadataInstruction::CloseEscrowAccount
         .try_to_vec()
