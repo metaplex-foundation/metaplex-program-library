@@ -1,4 +1,3 @@
-[workspace]
 [package]
 name = "mpl-auctioneer"
 version = "0.2.1"
