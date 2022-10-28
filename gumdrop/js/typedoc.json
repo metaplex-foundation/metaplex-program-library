@@ -1,6 +1,4 @@
 {
-  "entryPoints": ["src/mpl-gumdrop.ts"],
-  "excludeInternal": true,
-  "excludePrivate": true,
-  "out": "./docs"
+  "extends": "../../.base-typedoc.json",
+  "out": "../../docs/gumdrop"
 }
