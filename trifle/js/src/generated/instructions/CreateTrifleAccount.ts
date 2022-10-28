@@ -20,7 +20,7 @@ export const CreateTrifleAccountStruct = new beet.BeetArgsStruct<{
  * Accounts required by the _CreateTrifleAccount_ instruction
  *
  * @property [_writable_] escrow Escrow account
- * @property [] metadata Metadata account
+ * @property [_writable_] metadata Metadata account
  * @property [] mint Mint account
  * @property [_writable_] tokenAccount Token account (base token)
  * @property [] edition Edition account
@@ -29,6 +29,7 @@ export const CreateTrifleAccountStruct = new beet.BeetArgsStruct<{
  * @property [_writable_] constraintModel Escrow constraint model
  * @property [_writable_, **signer**] payer Wallet paying for the transaction
  * @property [] tokenMetadataProgram Token Metadata program
+ * @property [] sysvarInstructions Instructions sysvar account
  * @category Instructions
  * @category CreateTrifleAccount
  * @category generated
@@ -45,6 +46,7 @@ export type CreateTrifleAccountInstructionAccounts = {
   payer: web3.PublicKey;
   tokenMetadataProgram: web3.PublicKey;
   systemProgram?: web3.PublicKey;
+  sysvarInstructions: web3.PublicKey;
 };
 
 export const createTrifleAccountInstructionDiscriminator = 1;
@@ -72,7 +74,7 @@ export function createCreateTrifleAccountInstruction(
     },
     {
       pubkey: accounts.metadata,
-      isWritable: false,
+      isWritable: true,
       isSigner: false,
     },
     {
@@ -117,6 +119,11 @@ export function createCreateTrifleAccountInstruction(
     },
     {
       pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.sysvarInstructions,
       isWritable: false,
       isSigner: false,
     },

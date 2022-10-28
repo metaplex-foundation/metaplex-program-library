@@ -153,6 +153,7 @@ fn create_trifle_account(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progr
     let payer_info = next_account_info(account_info_iter)?;
     let _tm_program_info = next_account_info(account_info_iter)?;
     let system_program_info = next_account_info(account_info_iter)?;
+    let sysvar_ix_account_info = next_account_info(account_info_iter)?;
 
     let trifle_pda_bump = assert_derivation(
         program_id,
@@ -248,6 +249,7 @@ fn create_trifle_account(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progr
         payer_info.clone(),
         system_program_info.clone(),
         trifle_info.clone(),
+        sysvar_ix_account_info.clone(),
     ];
 
     msg!("Creating token escrow.");
@@ -525,6 +527,7 @@ fn transfer_out(
     let escrow_info = next_account_info(account_info_iter)?;
     let escrow_token_info = next_account_info(account_info_iter)?;
     let escrow_mint_info = next_account_info(account_info_iter)?;
+    let escrow_metadata_info = next_account_info(account_info_iter)?;
     let escrow_edition_info = next_account_info(account_info_iter)?;
     let payer_info = next_account_info(account_info_iter)?;
     let trifle_authority_info = next_account_info(account_info_iter)?;
@@ -537,6 +540,7 @@ fn transfer_out(
     let _spl_token_program_info = next_account_info(account_info_iter)?;
     let rent_info = next_account_info(account_info_iter)?;
     let token_metadata_program_info = next_account_info(account_info_iter)?;
+    let sysvar_ix_account_info = next_account_info(account_info_iter)?;
 
     assert_owned_by(attribute_metadata_info, &mpl_token_metadata::id())?;
     let _attribute_metadata: Metadata = Metadata::from_account_info(attribute_metadata_info)?;
@@ -582,6 +586,7 @@ fn transfer_out(
     let transfer_ix = mpl_token_metadata::escrow::transfer_out_of_escrow(
         *token_metadata_program_info.key,
         *escrow_info.key,
+        *escrow_metadata_info.key,
         *payer_info.key,
         *attribute_mint_info.key,
         *attribute_src_token_info.key,
@@ -605,6 +610,8 @@ fn transfer_out(
             escrow_token_info.clone(),
             trifle_info.clone(),
             rent_info.clone(),
+            escrow_metadata_info.clone(),
+            sysvar_ix_account_info.clone(),
         ],
         &[trifle_signer_seeds],
     )?;

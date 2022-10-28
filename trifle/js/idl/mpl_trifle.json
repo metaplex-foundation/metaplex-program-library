@@ -54,7 +54,7 @@
         },
         {
           "name": "metadata",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false,
           "desc": "Metadata account"
         },
@@ -111,6 +111,12 @@
           "isMut": false,
           "isSigner": false,
           "desc": "System program"
+        },
+        {
+          "name": "sysvarInstructions",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Instructions sysvar account"
         }
       ],
       "args": [],
@@ -294,6 +300,12 @@
           "desc": "The mint of the NFT the escrow is attached to"
         },
         {
+          "name": "escrowMetadata",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "The metadata account for the escrow mint"
+        },
+        {
           "name": "escrowEdition",
           "isMut": true,
           "isSigner": false,
@@ -365,6 +377,12 @@
           "isMut": false,
           "isSigner": false,
           "desc": "The token metadata program"
+        },
+        {
+          "name": "sysvarInstructions",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Instructions sysvar account"
         }
       ],
       "args": [

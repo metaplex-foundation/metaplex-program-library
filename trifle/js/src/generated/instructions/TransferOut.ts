@@ -41,6 +41,7 @@ export const TransferOutStruct = new beet.FixableBeetArgsStruct<
  * @property [] escrowAccount The escrow account attached to the NFT
  * @property [_writable_] escrowTokenAccount The token account holding the NFT the escrow is attached to
  * @property [_writable_] escrowMint The mint of the NFT the escrow is attached to
+ * @property [_writable_] escrowMetadata The metadata account for the escrow mint
  * @property [_writable_] escrowEdition (optional) The edition of the NFT the escrow is attached to
  * @property [_writable_, **signer**] payer Wallet paying for the transaction
  * @property [] trifleAuthority Trifle Authority - the account that can sign transactions for the trifle account
@@ -51,6 +52,7 @@ export const TransferOutStruct = new beet.FixableBeetArgsStruct<
  * @property [] splAssociatedTokenAccount The associated token account program
  * @property [] splToken The spl token program
  * @property [] tokenMetadataProgram The token metadata program
+ * @property [] sysvarInstructions Instructions sysvar account
  * @category Instructions
  * @category TransferOut
  * @category generated
@@ -61,6 +63,7 @@ export type TransferOutInstructionAccounts = {
   escrowAccount: web3.PublicKey;
   escrowTokenAccount: web3.PublicKey;
   escrowMint: web3.PublicKey;
+  escrowMetadata: web3.PublicKey;
   escrowEdition?: web3.PublicKey;
   payer: web3.PublicKey;
   trifleAuthority: web3.PublicKey;
@@ -73,6 +76,7 @@ export type TransferOutInstructionAccounts = {
   splToken: web3.PublicKey;
   rent?: web3.PublicKey;
   tokenMetadataProgram: web3.PublicKey;
+  sysvarInstructions: web3.PublicKey;
 };
 
 export const transferOutInstructionDiscriminator = 3;
@@ -122,6 +126,11 @@ export function createTransferOutInstruction(
     },
     {
       pubkey: accounts.escrowMint,
+      isWritable: true,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.escrowMetadata,
       isWritable: true,
       isSigner: false,
     },
@@ -182,6 +191,11 @@ export function createTransferOutInstruction(
     },
     {
       pubkey: accounts.tokenMetadataProgram,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.sysvarInstructions,
       isWritable: false,
       isSigner: false,
     },
