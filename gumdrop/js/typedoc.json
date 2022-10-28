@@ -1,4 +1,4 @@
 {
-  "extends": "../../.base-typedoc.json",
+  "extends": ["../../typedoc.json"],
   "out": "../../docs/gumdrop"
 }
