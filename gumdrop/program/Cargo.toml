@@ -1,7 +1,7 @@
-[workspace]
 [package]
-name = "mpl_gumdrop"
+name = "mpl-gumdrop"
 version = "0.1.1"
+description = "Gumdrop: cheap and easy token airdrops and print edition airdrops."
 authors = ["Metaplex Developers <dev@metaplex.com>"]
 repository = "https://github.com/metaplex-foundation/metaplex-program-library"
 license-file = "../../LICENSE"
@@ -10,7 +10,6 @@ keywords = ["solana", "merkle", "distributor"]
 
 [lib]
 crate-type = ["cdylib", "lib"]
-name = "mpl_gumdrop"
 
 [features]
 no-entrypoint = []
