@@ -28,7 +28,7 @@ export type ClaimCandyInstructionArgs = {
  * @category ClaimCandy
  * @category generated
  */
-const claimCandyStruct = new beet.FixableBeetArgsStruct<
+export const claimCandyStruct = new beet.FixableBeetArgsStruct<
   ClaimCandyInstructionArgs & {
     instructionDiscriminator: number[] /* size: 8 */;
   }
@@ -46,6 +46,21 @@ const claimCandyStruct = new beet.FixableBeetArgsStruct<
 );
 /**
  * Accounts required by the _claimCandy_ instruction
+ *
+ * @property [_writable_] distributor
+ * @property [_writable_] distributorWallet
+ * @property [_writable_] claimCount
+ * @property [**signer**] temporal
+ * @property [**signer**] payer
+ * @property [] candyMachineConfig
+ * @property [_writable_] candyMachine
+ * @property [_writable_] candyMachineWallet
+ * @property [_writable_] candyMachineMint
+ * @property [_writable_] candyMachineMetadata
+ * @property [_writable_] candyMachineMasterEdition
+ * @property [] tokenMetadataProgram
+ * @property [] candyMachineProgram
+ * @property [] clock
  * @category Instructions
  * @category ClaimCandy
  * @category generated
@@ -62,12 +77,15 @@ export type ClaimCandyInstructionAccounts = {
   candyMachineMint: web3.PublicKey;
   candyMachineMetadata: web3.PublicKey;
   candyMachineMasterEdition: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
+  tokenProgram?: web3.PublicKey;
   tokenMetadataProgram: web3.PublicKey;
   candyMachineProgram: web3.PublicKey;
+  rent?: web3.PublicKey;
   clock: web3.PublicKey;
 };
 
-const claimCandyInstructionDiscriminator = [87, 176, 177, 90, 136, 95, 83, 242];
+export const claimCandyInstructionDiscriminator = [87, 176, 177, 90, 136, 95, 83, 242];
 
 /**
  * Creates a _ClaimCandy_ instruction.
@@ -82,118 +100,102 @@ const claimCandyInstructionDiscriminator = [87, 176, 177, 90, 136, 95, 83, 242];
 export function createClaimCandyInstruction(
   accounts: ClaimCandyInstructionAccounts,
   args: ClaimCandyInstructionArgs,
+  programId = new web3.PublicKey('gdrpGjVffourzkdDRrQmySw4aTHr8a3xmQzzxSwFD1a'),
 ) {
-  const {
-    distributor,
-    distributorWallet,
-    claimCount,
-    temporal,
-    payer,
-    candyMachineConfig,
-    candyMachine,
-    candyMachineWallet,
-    candyMachineMint,
-    candyMachineMetadata,
-    candyMachineMasterEdition,
-    tokenMetadataProgram,
-    candyMachineProgram,
-    clock,
-  } = accounts;
-
   const [data] = claimCandyStruct.serialize({
     instructionDiscriminator: claimCandyInstructionDiscriminator,
     ...args,
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: distributor,
+      pubkey: accounts.distributor,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: distributorWallet,
+      pubkey: accounts.distributorWallet,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: claimCount,
+      pubkey: accounts.claimCount,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: temporal,
+      pubkey: accounts.temporal,
       isWritable: false,
       isSigner: true,
     },
     {
-      pubkey: payer,
+      pubkey: accounts.payer,
       isWritable: false,
       isSigner: true,
     },
     {
-      pubkey: candyMachineConfig,
+      pubkey: accounts.candyMachineConfig,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: candyMachine,
+      pubkey: accounts.candyMachine,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: candyMachineWallet,
+      pubkey: accounts.candyMachineWallet,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: candyMachineMint,
+      pubkey: accounts.candyMachineMint,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: candyMachineMetadata,
+      pubkey: accounts.candyMachineMetadata,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: candyMachineMasterEdition,
+      pubkey: accounts.candyMachineMasterEdition,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: web3.SystemProgram.programId,
+      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: splToken.TOKEN_PROGRAM_ID,
+      pubkey: accounts.tokenProgram ?? splToken.TOKEN_PROGRAM_ID,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: tokenMetadataProgram,
+      pubkey: accounts.tokenMetadataProgram,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: candyMachineProgram,
+      pubkey: accounts.candyMachineProgram,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: web3.SYSVAR_RENT_PUBKEY,
+      pubkey: accounts.rent ?? web3.SYSVAR_RENT_PUBKEY,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: clock,
+      pubkey: accounts.clock,
       isWritable: false,
       isSigner: false,
     },
   ];
 
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey('gdrpGjVffourzkdDRrQmySw4aTHr8a3xmQzzxSwFD1a'),
+    programId,
     keys,
     data,
   });

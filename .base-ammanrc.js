@@ -15,8 +15,8 @@ const programs = {
     programId: 'metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s',
     deployPath: localDeployPath('mpl_token_metadata'),
   },
-  token_sale: {
-    label: 'Fixed Price Token Sale',
+  fixed_price_sale: {
+    label: 'Fixed Price Sale',
     programId: 'SaLeTjyUa5wXHnGuewUSyJ5JWZaHwz3TxqUntCE9czo',
     deployPath: localDeployPath('mpl_fixed_price_sale'),
   },
@@ -25,15 +25,20 @@ const programs = {
     programId: 'cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ',
     deployPath: localDeployPath('mpl_candy_machine'),
   },
-  hydra: {
-    label: 'Hydra',
-    programId: 'hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg',
-    deployPath: localDeployPath('mpl_hydra'),
-  },
   candy_machine_core: {
     label: 'Candy Machine Core',
     programId: 'CndyV3LdqHUfDLmE5naZjVN8rBZz4tqhdefbAnjHG3JR',
     deployPath: localDeployPath('mpl_candy_machine_core'),
+  },
+  gumdrop: {
+    label: 'Gumdrop',
+    programId: 'gdrpGjVffourzkdDRrQmySw4aTHr8a3xmQzzxSwFD1a',
+    deployPath: localDeployPath('mpl_gumdrop'),
+  },
+  hydra: {
+    label: 'Hydra',
+    programId: 'hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg',
+    deployPath: localDeployPath('mpl_hydra'),
   },
 };
 

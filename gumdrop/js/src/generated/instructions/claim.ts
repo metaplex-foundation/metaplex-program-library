@@ -16,7 +16,7 @@ import * as beetSolana from '@metaplex-foundation/beet-solana';
  * @category generated
  */
 export type ClaimInstructionArgs = {
-  bump: number;
+  claimBump: number;
   index: beet.bignum;
   amount: beet.bignum;
   claimantSecret: web3.PublicKey;
@@ -27,14 +27,14 @@ export type ClaimInstructionArgs = {
  * @category Claim
  * @category generated
  */
-const claimStruct = new beet.FixableBeetArgsStruct<
+export const claimStruct = new beet.FixableBeetArgsStruct<
   ClaimInstructionArgs & {
     instructionDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
     ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
-    ['bump', beet.u8],
+    ['claimBump', beet.u8],
     ['index', beet.u64],
     ['amount', beet.u64],
     ['claimantSecret', beetSolana.publicKey],
@@ -44,6 +44,13 @@ const claimStruct = new beet.FixableBeetArgsStruct<
 );
 /**
  * Accounts required by the _claim_ instruction
+ *
+ * @property [_writable_] distributor
+ * @property [_writable_] claimStatus
+ * @property [_writable_] from
+ * @property [_writable_] to
+ * @property [**signer**] temporal
+ * @property [_writable_, **signer**] payer
  * @category Instructions
  * @category Claim
  * @category generated
@@ -55,9 +62,11 @@ export type ClaimInstructionAccounts = {
   to: web3.PublicKey;
   temporal: web3.PublicKey;
   payer: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
+  tokenProgram?: web3.PublicKey;
 };
 
-const claimInstructionDiscriminator = [62, 198, 214, 193, 213, 159, 108, 210];
+export const claimInstructionDiscriminator = [62, 198, 214, 193, 213, 159, 108, 210];
 
 /**
  * Creates a _Claim_ instruction.
@@ -72,58 +81,57 @@ const claimInstructionDiscriminator = [62, 198, 214, 193, 213, 159, 108, 210];
 export function createClaimInstruction(
   accounts: ClaimInstructionAccounts,
   args: ClaimInstructionArgs,
+  programId = new web3.PublicKey('gdrpGjVffourzkdDRrQmySw4aTHr8a3xmQzzxSwFD1a'),
 ) {
-  const { distributor, claimStatus, from, to, temporal, payer } = accounts;
-
   const [data] = claimStruct.serialize({
     instructionDiscriminator: claimInstructionDiscriminator,
     ...args,
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: distributor,
+      pubkey: accounts.distributor,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: claimStatus,
+      pubkey: accounts.claimStatus,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: from,
+      pubkey: accounts.from,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: to,
+      pubkey: accounts.to,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: temporal,
+      pubkey: accounts.temporal,
       isWritable: false,
       isSigner: true,
     },
     {
-      pubkey: payer,
-      isWritable: false,
+      pubkey: accounts.payer,
+      isWritable: true,
       isSigner: true,
     },
     {
-      pubkey: web3.SystemProgram.programId,
+      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: splToken.TOKEN_PROGRAM_ID,
+      pubkey: accounts.tokenProgram ?? splToken.TOKEN_PROGRAM_ID,
       isWritable: false,
       isSigner: false,
     },
   ];
 
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey('gdrpGjVffourzkdDRrQmySw4aTHr8a3xmQzzxSwFD1a'),
+    programId,
     keys,
     data,
   });
