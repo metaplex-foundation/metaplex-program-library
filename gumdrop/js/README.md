@@ -1,17 +1,26 @@
 # mpl-gumdrop
 
-This package contains the gumdrop contract SDK code.
+This package contains the Metaplex Gumdrop contract SDK code.
+
+## API Docs
+
+Find the [gumdrop API docs published here](https://metaplex-foundation.github.io/metaplex-program-library/docs/gumdrop/index.html).
+
+## Installation
+
+```shell
+npm install @metaplex-foundation/mpl-gumdrop --save
+```
 
 ## Developing
 
 In order to update the generated SDK when the rust contract was updated please run:
 
 ```
-yarn gen:api
+yarn api:gen
 ```
 
-NOTE: at this point this only generates the IDL json file but later will generate TypeScript
-definitions and SDK code as well, derived from that IDL.
+and then update the wrapper code and tests.
 
 ## LICENSE
 

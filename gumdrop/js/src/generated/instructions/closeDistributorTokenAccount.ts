@@ -22,7 +22,7 @@ export type CloseDistributorTokenAccountInstructionArgs = {
  * @category CloseDistributorTokenAccount
  * @category generated
  */
-const closeDistributorTokenAccountStruct = new beet.BeetArgsStruct<
+export const closeDistributorTokenAccountStruct = new beet.BeetArgsStruct<
   CloseDistributorTokenAccountInstructionArgs & {
     instructionDiscriminator: number[] /* size: 8 */;
   }
@@ -35,6 +35,12 @@ const closeDistributorTokenAccountStruct = new beet.BeetArgsStruct<
 );
 /**
  * Accounts required by the _closeDistributorTokenAccount_ instruction
+ *
+ * @property [**signer**] base
+ * @property [] distributor
+ * @property [_writable_] from
+ * @property [_writable_] to
+ * @property [_writable_] receiver
  * @category Instructions
  * @category CloseDistributorTokenAccount
  * @category generated
@@ -45,9 +51,11 @@ export type CloseDistributorTokenAccountInstructionAccounts = {
   from: web3.PublicKey;
   to: web3.PublicKey;
   receiver: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
+  tokenProgram?: web3.PublicKey;
 };
 
-const closeDistributorTokenAccountInstructionDiscriminator = [
+export const closeDistributorTokenAccountInstructionDiscriminator = [
   156, 174, 153, 120, 102, 150, 134, 142,
 ];
 
@@ -64,53 +72,52 @@ const closeDistributorTokenAccountInstructionDiscriminator = [
 export function createCloseDistributorTokenAccountInstruction(
   accounts: CloseDistributorTokenAccountInstructionAccounts,
   args: CloseDistributorTokenAccountInstructionArgs,
+  programId = new web3.PublicKey('gdrpGjVffourzkdDRrQmySw4aTHr8a3xmQzzxSwFD1a'),
 ) {
-  const { base, distributor, from, to, receiver } = accounts;
-
   const [data] = closeDistributorTokenAccountStruct.serialize({
     instructionDiscriminator: closeDistributorTokenAccountInstructionDiscriminator,
     ...args,
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: base,
+      pubkey: accounts.base,
       isWritable: false,
       isSigner: true,
     },
     {
-      pubkey: distributor,
+      pubkey: accounts.distributor,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: from,
+      pubkey: accounts.from,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: to,
+      pubkey: accounts.to,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: receiver,
+      pubkey: accounts.receiver,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: web3.SystemProgram.programId,
+      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: splToken.TOKEN_PROGRAM_ID,
+      pubkey: accounts.tokenProgram ?? splToken.TOKEN_PROGRAM_ID,
       isWritable: false,
       isSigner: false,
     },
   ];
 
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey('gdrpGjVffourzkdDRrQmySw4aTHr8a3xmQzzxSwFD1a'),
+    programId,
     keys,
     data,
   });

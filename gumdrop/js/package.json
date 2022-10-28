@@ -1,9 +1,10 @@
 {
   "name": "@metaplex-foundation/mpl-gumdrop",
-  "version": "0.0.0",
-  "description": "Metaplex Gumdrop SDK",
-  "main": "dist/src/mpl-gumdrop.js",
-  "types": "dist/src/mpl-gumdrop.d.ts",
+  "version": "0.1.0",
+  "programVersion": "0.1.1",
+  "description": "MPL Gumdrop JavaScript API.",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "scripts": {
     "check:publish-ready": "yarn build && yarn test",
     "preversion": "yarn check:publish-ready",
@@ -12,8 +13,10 @@
     "postpublish": "git push origin && git push origin --tags",
     "build:docs": "typedoc",
     "build": "rimraf dist && tsc -p tsconfig.json",
-    "test": "tape dist/test/*.js",
-    "api:gen": "node scripts/api-gen-ts.js && prettier --write ./src/**/*.ts",
+    "test": "tape dist/test/*.test.js",
+    "api:gen": "DEBUG='(solita|rustbin):(info|error)' solita",
+    "amman:start": "amman start",
+    "amman:stop": "amman stop",
     "lint": "eslint \"{src,test}/**/*.ts\" --format stylish",
     "fix:lint": "yarn lint --fix",
     "prettier": "prettier \"{src,test}/**/*.ts\" --check",
@@ -21,7 +24,7 @@
     "fix": "yarn fix:lint && yarn fix:prettier"
   },
   "files": [
-    "/dist"
+    "/dist/src"
   ],
   "publishConfig": {
     "access": "public",
@@ -38,23 +41,30 @@
   "author": "Metaplex Maintainers <contact@metaplex.com>",
   "license": "Apache-2.0",
   "dependencies": {
-    "@metaplex-foundation/beet": "^0.1.0",
-    "@metaplex-foundation/beet-solana": "^0.1.1",
+    "@metaplex-foundation/beet": "^0.4.0",
+    "@metaplex-foundation/beet-solana": "^0.3.0",
     "@metaplex-foundation/cusper": "^0.0.2",
-    "@solana/spl-token": "^0.3.5",
-    "@solana/web3.js": "^1.35.1"
+    "@solana/web3.js": "^1.56.2",
+    "bn.js": "^5.2.0"
   },
   "devDependencies": {
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-prettier": "^4.0.0",
-    "@metaplex-foundation/solita": "^0.2.0",
-    "@types/tape": "^4.13.2",
     "@typescript-eslint/eslint-plugin": "^5.4.0",
     "@typescript-eslint/parser": "^5.4.0",
+    "@metaplex-foundation/amman": "^0.12.0",
+    "@metaplex-foundation/js": "^0.15.0",
+    "@metaplex-foundation/solita": "^0.12.0",
+    "@solana/spl-token": "0.3.5",
+    "@types/bn.js": "^5.1.0",
+    "esbuild": "^0.15.7",
     "eslint": "^8.3.0",
+    "prettier": "^2.5.1",
     "rimraf": "^3.0.2",
     "spok": "^1.4.3",
-    "tape": "^5.5.2",
+    "tap-spec": "^5.0.0",
+    "tape": "^5.5.0",
+    "typedoc": "^0.23.16",
     "typescript": "^4.6.2"
   }
 }

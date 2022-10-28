@@ -112,6 +112,89 @@ createErrorFromCodeLookup.set(0x1774, () => new TemporalMismatchError());
 createErrorFromNameLookup.set('TemporalMismatch', () => new TemporalMismatchError());
 
 /**
+ * NumericalOverflow: 'Numerical Overflow'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class NumericalOverflowError extends Error {
+  readonly code: number = 0x1775;
+  readonly name: string = 'NumericalOverflow';
+  constructor() {
+    super('Numerical Overflow');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, NumericalOverflowError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1775, () => new NumericalOverflowError());
+createErrorFromNameLookup.set('NumericalOverflow', () => new NumericalOverflowError());
+
+/**
+ * InvalidClaimBump: 'Invalid Claim Bump'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidClaimBumpError extends Error {
+  readonly code: number = 0x1776;
+  readonly name: string = 'InvalidClaimBump';
+  constructor() {
+    super('Invalid Claim Bump');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidClaimBumpError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1776, () => new InvalidClaimBumpError());
+createErrorFromNameLookup.set('InvalidClaimBump', () => new InvalidClaimBumpError());
+
+/**
+ * MustUseOfficialCandyMachine: 'Gumdrop only supports the official Metaplex Candy machine contracts'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MustUseOfficialCandyMachineError extends Error {
+  readonly code: number = 0x1777;
+  readonly name: string = 'MustUseOfficialCandyMachine';
+  constructor() {
+    super('Gumdrop only supports the official Metaplex Candy machine contracts');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MustUseOfficialCandyMachineError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1777, () => new MustUseOfficialCandyMachineError());
+createErrorFromNameLookup.set(
+  'MustUseOfficialCandyMachine',
+  () => new MustUseOfficialCandyMachineError(),
+);
+
+/**
+ * BumpSeedNotInHashMap: 'Bump seed not in hash map'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class BumpSeedNotInHashMapError extends Error {
+  readonly code: number = 0x1778;
+  readonly name: string = 'BumpSeedNotInHashMap';
+  constructor() {
+    super('Bump seed not in hash map');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, BumpSeedNotInHashMapError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1778, () => new BumpSeedNotInHashMapError());
+createErrorFromNameLookup.set('BumpSeedNotInHashMap', () => new BumpSeedNotInHashMapError());
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated
