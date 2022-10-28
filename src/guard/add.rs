@@ -89,7 +89,7 @@ pub fn process_guard_add(args: GuardAddArgs) -> Result<()> {
             &mpl_candy_guard::ID,
         );
 
-        let mut serialized_data = Vec::with_capacity(data.size());
+        let mut serialized_data = vec![0; data.size()];
         data.save(&mut serialized_data)?;
 
         let tx = program
@@ -136,8 +136,9 @@ pub fn process_guard_add(args: GuardAddArgs) -> Result<()> {
             return Err(anyhow!("Missing guards configuration."));
         };
 
-        let mut serialized_data = Vec::with_capacity(data.size());
+        let mut serialized_data = vec![0; data.size()];
         data.save(&mut serialized_data)?;
+        println!("\n{}\n", serialized_data.len());
 
         // synchronizes the guards config with the on-chain account
         let tx = program

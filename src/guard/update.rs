@@ -70,7 +70,7 @@ pub fn process_guard_update(args: GuardUpdateArgs) -> Result<()> {
         return Err(anyhow!("Missing guards configuration."));
     };
 
-    let mut serialized_data = Vec::with_capacity(data.size());
+    let mut serialized_data = vec![0; data.size()];
     data.save(&mut serialized_data)?;
 
     let pb = spinner_with_style();
