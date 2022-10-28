@@ -2,22 +2,5 @@ name: Install Linux Build Deps
 runs:
   using: "composite"
   steps:
-    - name: apt-get add llvm-snapshot key and update
-      run: |
-        wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-        sudo apt-add-repository "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-10 main"
-        sudo apt-get update
-        sudo apt-get upgrade
-      shell: bash
-
-    - name: apt-get install ssl libs
-      run: |
-        sudo apt-get install -y openssl --allow-unauthenticated
-        sudo apt-get install -y libssl-dev --allow-unauthenticated
-        sudo apt-get install -y libssl1.1 --allow-unauthenticated
-      shell: bash
-
-    - name: apt-get install libudev
-      run: |
-        sudo apt-get install libudev-dev
-      shell: bash
+      - run: sudo apt-get update && sudo apt-get install -y pkg-config build-essential libudev-dev
+        shell: bash

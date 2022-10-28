@@ -33,7 +33,7 @@ runs:
         repository: ${{ inputs.from-repository }}
 
     # cache and install cargo release
-    - uses: actions/cache@v2
+    - uses: actions/cache@v3
       name: Cache Cargo Release
       id: cache-cargo-release
       with:
@@ -48,7 +48,7 @@ runs:
         cargo install cargo-release
 
     # cache and install shank cli
-    - uses: actions/cache@v2
+    - uses: actions/cache@v3
       name: Cache Shank CLI
       id: cache-shank-cli
       with:

@@ -143,7 +143,6 @@ impl CollectionInfo {
                 true,
                 None,
                 None,
-                None,
                 sized,
             )
             .await

@@ -8,78 +8,16 @@ inputs:
     description: Directory in which to perform the yarn tasks
     required: true
 
-  build_core:
-    description: If not false it will build the core package
-    required: false
-    default: true
-  build_token_metadata:
-    description: If true it will build the token_metadata package
-    required: false
-    default: false
-  build_auction_house:
-    description: If true it will build the auction_house package before running checks
-    required: false
-    default: false
-  build_candy_machine:
-    description: If true it will build the candy_machine package before running checks
-    required: false
-    default: false
+description: Installs Yarn Packages and Builds
 
 runs:
   using: composite
   steps:
-    - uses: actions/cache@v2
+    - uses: actions/cache@v3
       with:
         path: '**/node_modules'
         key: ${{ inputs.cache_id }}-${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
-
-    ##############
-    # Prepare Core and Dependencies
-    ##############
-    
-    # All contract SDKs depend on mpl-core so we need to build at least that
-    # We avoid running build in the project root to avoid a check for a contract failing due to
-    # an issue in another contract which would cause a build failure.
-   
-    - name: Install and Build core
-      if: inputs.build_core == 'true'
-      run: |
-        echo 'Install and Build core: yarn install'
-        yarn install
-        echo 'Install and Build core: yarn build'
-        yarn build
-      working-directory: ./core/js 
-      shell: bash
-
-    - name: Install and Build token-metadata
-      if: inputs.build_token_metadata == 'true'
-      run: |
-        echo 'Install and Build token-metadata: yarn install'
-        yarn install
-        echo 'Install and Build token-metadata: yarn build'
-        yarn build
-      working-directory: ./token-metadata/js 
-      shell: bash
-
-    - name: Install and Build auction-house
-      if: inputs.build_auction_house == 'true'
-      run: |
-        echo 'Install and Build auction-house: yarn install'
-        yarn install
-        echo 'Install and Build auction-house: yarn build'
-        yarn build
-      working-directory: ./auction-house/js 
-      shell: bash
-
-    - name: Install and Build candy-machine
-      if: inputs.build_candy_machine == 'true'
-      run: |
-        echo 'Install and Build candy-machine: yarn install'
-        yarn install
-        echo 'Install and Build candy-machine: yarn build'
-        yarn build
-      working-directory: ./candy-machine/js 
-      shell: bash
+      if: ${{ env.CACHE == 'true' }}
 
     ##############
     # Build Contract 
