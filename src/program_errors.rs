@@ -178,6 +178,17 @@ pub static CANDY_GUARD_ERROR: phf::Map<&'static str, &'static str> = phf_map! {
     "178F" => "Missing NFT on the account",
     "1790" => "Current redemeed items is at the set maximum amount",
     "1791" => "Address not authorized",
+    "1792" => "Missing freeze instruction data",
+    "1793" => "Freeze guard must be enabled",
+    "1794" => "Freeze must be initialized",
+    "1795" => "Missing freeze period",
+    "1796" => "The freeze escrow account already exists",
+    "1797" => "Maximum freeze period exceeded",
+    "1798" => "Thaw is not enabled",
+    "1799" => "Unlock is not enabled (not all NFTs are thawed)",
+    "179A" => "Duplicated group label",
+    "179B" => "Duplicated mint limit id",
+    "179C" => "An unauthorized program was found in the transaction",
 };
 
 pub static ANCHOR_ERROR: phf::Map<&'static str, &'static str> = phf_map! {
