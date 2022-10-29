@@ -240,7 +240,7 @@ fn print_guard_set(guard_set: &GuardSet, padding: String) -> Result<()> {
         print_with_style(
             &format!("{}:   ", padding),
             "merkle root",
-            String::from_utf8(allow_list.merkle_root.to_vec())?,
+            hex::encode(allow_list.merkle_root),
         );
     } else {
         print_with_style(&padding, "allow list", "none".to_string());
@@ -328,12 +328,12 @@ fn print_guard_set(guard_set: &GuardSet, padding: String) -> Result<()> {
     if let Some(token_burn) = &guard_set.token_burn {
         print_with_style(&padding, "token burn", EMPTY_STR.to_string());
         print_with_style(
-            &format!("{}:   ", padding),
+            &format!("{}    ", padding),
             "amount",
             token_burn.amount.to_string(),
         );
         print_with_style(
-            &format!("{}:   ", padding),
+            &format!("{}    ", padding),
             "mint",
             token_burn.mint.to_string(),
         );

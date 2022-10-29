@@ -1,5 +1,5 @@
 use anchor_lang::prelude::Pubkey;
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use dateparser::DateTimeUtc;
 use serde::{Deserialize, Serialize};
 
@@ -251,9 +251,10 @@ pub struct AllowList {
 
 impl AllowList {
     pub fn to_guard_format(&self) -> Result<mpl_candy_guard::guards::AllowList> {
-        Ok(mpl_candy_guard::guards::AllowList {
-            merkle_root: self.merkle_root.as_bytes().try_into().unwrap_or([0; 32]),
-        })
+        let root: [u8; 32] = hex::decode(&self.merkle_root)?
+            .try_into()
+            .map_err(|_| anyhow!("Invalid merkle root value: {}", self.merkle_root))?;
+        Ok(mpl_candy_guard::guards::AllowList { merkle_root: root })
     }
 }
 

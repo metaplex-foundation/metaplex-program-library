@@ -4757,6 +4757,7 @@ dependencies = [
  "dirs",
  "futures",
  "glob",
+ "hex",
  "indexmap",
  "indicatif",
  "ini",
