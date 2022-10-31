@@ -125,7 +125,10 @@ fn create_escrow_constraints_model_account(
     );
     escrow_constraint_model.royalty_balance += escrow_constraint_model.royalties.create_model;
 
-    let serialized_data = escrow_constraint_model.try_to_vec().unwrap();
+    let serialized_data = escrow_constraint_model
+        .try_to_vec()
+        .map_err(|_| TrifleError::FailedToSerialize)?;
+
     create_or_allocate_account_raw(
         *program_id,
         escrow_constraint_model_info,
@@ -136,7 +139,9 @@ fn create_escrow_constraints_model_account(
     )?;
 
     sol_memcpy(
-        &mut **escrow_constraint_model_info.try_borrow_mut_data().unwrap(),
+        &mut **escrow_constraint_model_info
+            .try_borrow_mut_data()
+            .map_err(|_| TrifleError::FailedToBorrowAccountData)?,
         &serialized_data,
         serialized_data.len(),
     );
@@ -211,14 +216,22 @@ fn create_trifle_account(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progr
     );
     constraint_model.royalty_balance += constraint_model.royalties.create_trifle;
 
-    let serialized_data = constraint_model.try_to_vec().unwrap();
+    let serialized_data = constraint_model
+        .try_to_vec()
+        .map_err(|_| TrifleError::FailedToSerialize)?;
+
     sol_memcpy(
-        &mut **escrow_constraint_model_info.try_borrow_mut_data().unwrap(),
+        &mut **escrow_constraint_model_info
+            .try_borrow_mut_data()
+            .map_err(|_| TrifleError::FailedToBorrowAccountData)?,
         &serialized_data,
         serialized_data.len(),
     );
 
-    let serialized_data = trifle.try_to_vec().unwrap();
+    let serialized_data = trifle
+        .try_to_vec()
+        .map_err(|_| TrifleError::FailedToSerialize)?;
+
     create_or_allocate_account_raw(
         *program_id,
         trifle_info,
@@ -229,7 +242,9 @@ fn create_trifle_account(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progr
     )?;
 
     sol_memcpy(
-        &mut **trifle_info.try_borrow_mut_data().unwrap(),
+        &mut **trifle_info
+            .try_borrow_mut_data()
+            .map_err(|_| TrifleError::FailedToBorrowAccountData)?,
         &serialized_data,
         serialized_data.len(),
     );
@@ -370,9 +385,14 @@ fn transfer_in(
     constraint_model.royalty_balance += constraint_model.royalties.transfer_in;
 
     // save constraint model
-    let serialized_data = constraint_model.try_to_vec().unwrap();
+    let serialized_data = constraint_model
+        .try_to_vec()
+        .map_err(|_| TrifleError::FailedToSerialize)?;
+
     sol_memcpy(
-        &mut **constraint_model_info.try_borrow_mut_data().unwrap(),
+        &mut **constraint_model_info
+            .try_borrow_mut_data()
+            .map_err(|_| TrifleError::FailedToBorrowAccountData)?,
         &serialized_data,
         serialized_data.len(),
     );
@@ -408,8 +428,7 @@ fn transfer_in(
             payer_info.key,
             &[payer_info.key],
             args.amount,
-        )
-        .unwrap();
+        )?;
 
         invoke(
             &transfer_ix,
@@ -501,7 +520,9 @@ fn transfer_in(
 
         trifle.try_add(constraint, args.slot, *attribute_mint_info.key, args.amount)?;
 
-        let serialized_data = trifle.try_to_vec().unwrap();
+        let serialized_data = trifle
+            .try_to_vec()
+            .map_err(|_| TrifleError::FailedToSerialize)?;
 
         resize_or_reallocate_account_raw(
             trifle_info,
@@ -511,7 +532,9 @@ fn transfer_in(
         )?;
 
         sol_memcpy(
-            &mut **trifle_info.try_borrow_mut_data().unwrap(),
+            &mut **trifle_info
+                .try_borrow_mut_data()
+                .map_err(|_| TrifleError::FailedToBorrowAccountData)?,
             &serialized_data,
             serialized_data.len(),
         );
@@ -637,14 +660,21 @@ fn transfer_out(
     );
     constraint_model.royalty_balance += constraint_model.royalties.transfer_out;
 
-    let serialized_data = constraint_model.try_to_vec().unwrap();
+    let serialized_data = constraint_model
+        .try_to_vec()
+        .map_err(|_| TrifleError::FailedToSerialize)?;
+
     sol_memcpy(
-        &mut **constraint_model_info.try_borrow_mut_data().unwrap(),
+        &mut **constraint_model_info
+            .try_borrow_mut_data()
+            .map_err(|_| TrifleError::FailedToBorrowAccountData)?,
         &serialized_data,
         serialized_data.len(),
     );
 
-    let serialized_data = trifle.try_to_vec().unwrap();
+    let serialized_data = trifle
+        .try_to_vec()
+        .map_err(|_| TrifleError::FailedToSerialize)?;
 
     resize_or_reallocate_account_raw(
         trifle_info,
@@ -654,7 +684,9 @@ fn transfer_out(
     )?;
 
     sol_memcpy(
-        &mut trifle_info.try_borrow_mut_data().unwrap(),
+        &mut trifle_info
+            .try_borrow_mut_data()
+            .map_err(|_| TrifleError::FailedToBorrowAccountData)?,
         &serialized_data,
         serialized_data.len(),
     );
@@ -754,7 +786,10 @@ fn add_constraint_to_escrow_constraint_model(
     );
     escrow_constraint_model.royalty_balance += escrow_constraint_model.royalties.add_constraint;
 
-    let serialized_data = escrow_constraint_model.try_to_vec().unwrap();
+    let serialized_data = escrow_constraint_model
+        .try_to_vec()
+        .map_err(|_| TrifleError::FailedToSerialize)?;
+
     resize_or_reallocate_account_raw(
         escrow_constraint_model_info,
         payer_info,
@@ -763,7 +798,9 @@ fn add_constraint_to_escrow_constraint_model(
     )?;
 
     sol_memcpy(
-        &mut **escrow_constraint_model_info.try_borrow_mut_data().unwrap(),
+        &mut **escrow_constraint_model_info
+            .try_borrow_mut_data()
+            .map_err(|_| TrifleError::FailedToBorrowAccountData)?,
         &serialized_data,
         serialized_data.len(),
     );
@@ -861,7 +898,7 @@ fn remove_constraint_from_escrow_constraint_model(
     assert_owned_by(escrow_constraint_model_info, program_id)?;
     // assert update authority matches ecm update authority;
     let mut escrow_constraint_model =
-        EscrowConstraintModel::try_from_slice(&escrow_constraint_model_info.data.borrow())?;
+        EscrowConstraintModel::from_account_info(escrow_constraint_model_info)?;
 
     if escrow_constraint_model.update_authority != *update_authority_info.key {
         return Err(TrifleError::InvalidUpdateAuthority.into());
@@ -872,7 +909,9 @@ fn remove_constraint_from_escrow_constraint_model(
         .constraints
         .remove(&args.constraint_name);
 
-    let serialized_data = escrow_constraint_model.try_to_vec().unwrap();
+    let serialized_data = escrow_constraint_model
+        .try_to_vec()
+        .map_err(|_| TrifleError::FailedToSerialize)?;
 
     // resize the account to the new size.
     resize_or_reallocate_account_raw(
@@ -883,7 +922,9 @@ fn remove_constraint_from_escrow_constraint_model(
     )?;
 
     sol_memcpy(
-        &mut **escrow_constraint_model_info.try_borrow_mut_data().unwrap(),
+        &mut **escrow_constraint_model_info
+            .try_borrow_mut_data()
+            .map_err(|_| TrifleError::FailedToBorrowAccountData)?,
         &serialized_data,
         serialized_data.len(),
     );

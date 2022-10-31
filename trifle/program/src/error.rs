@@ -65,6 +65,12 @@ pub enum TrifleError {
 
     #[error("Constraint Key Not Found")]
     ConstraintKeyNotFound,
+
+    #[error("Failed to serialize")]
+    FailedToSerialize,
+
+    #[error("Failed to borrow account data")]
+    FailedToBorrowAccountData,
 }
 
 impl From<TrifleError> for ProgramError {

@@ -194,7 +194,7 @@ mod trifle {
             mpl_trifle::id(),
             escrow_constraint_model_addr,
             context.payer.pubkey(),
-            context.payer.pubkey(),
+            Some(context.payer.pubkey()),
             "test".to_string(),
         );
 

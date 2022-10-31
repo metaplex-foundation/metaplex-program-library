@@ -6,6 +6,8 @@ use solana_program::pubkey::Pubkey;
 
 use crate::{error::TrifleError, state::Key};
 
+use super::SolanaAccount;
+
 #[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, ShankAccount)]
 pub struct EscrowConstraintModel {
@@ -113,4 +115,14 @@ pub struct RoyaltyModel {
     pub transfer_in: u64,
     pub transfer_out: u64,
     pub add_constraint: u64,
+}
+
+impl SolanaAccount for EscrowConstraintModel {
+    fn key() -> Key {
+        Key::EscrowConstraintModel
+    }
+
+    fn size() -> usize {
+        0
+    }
 }
