@@ -18,6 +18,7 @@ pub struct EscrowConstraintModel {
     pub schema_uri: Option<String>,
     pub royalties: RoyaltyModel,
     pub royalty_balance: u64,
+    pub bump: u8,
 }
 
 impl EscrowConstraintModel {
@@ -42,6 +43,7 @@ impl Default for EscrowConstraintModel {
             schema_uri: None,
             royalties: RoyaltyModel::default(),
             royalty_balance: 0,
+            bump: 0,
         }
     }
 }

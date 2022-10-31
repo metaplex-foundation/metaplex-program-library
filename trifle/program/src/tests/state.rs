@@ -84,6 +84,7 @@ mod escrow {
             schema_uri: None,
             royalties: RoyaltyModel::default(),
             royalty_balance: 0,
+            bump: 0,
         };
 
         let mut buf_escrow_constraints_model = Vec::new();
@@ -142,6 +143,7 @@ mod escrow {
             schema_uri: Some("test".to_string()),
             royalties: RoyaltyModel::default(),
             royalty_balance: 0,
+            bump: 0,
         };
 
         escrow_constraints_model
