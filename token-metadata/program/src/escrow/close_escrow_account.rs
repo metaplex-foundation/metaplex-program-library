@@ -3,7 +3,7 @@ use crate::{
     instruction::MetadataInstruction,
     state::{
         EscrowAuthority, Metadata, TokenMetadataAccount, TokenOwnedEscrow, TokenStandard,
-        ESCROW_PREFIX, PREFIX,
+        ESCROW_POSTFIX, PREFIX,
     },
     utils::{
         assert_derivation, assert_initialized, assert_owned_by, assert_signer,
@@ -16,7 +16,7 @@ use solana_program::{
     entrypoint::ProgramResult,
     instruction::{AccountMeta, Instruction},
     pubkey::Pubkey,
-    system_program,
+    system_program, sysvar,
 };
 
 pub fn close_escrow_account(
@@ -30,12 +30,13 @@ pub fn close_escrow_account(
 ) -> Instruction {
     let accounts = vec![
         AccountMeta::new(escrow_account, false),
-        AccountMeta::new_readonly(metadata_account, false),
+        AccountMeta::new(metadata_account, false),
         AccountMeta::new_readonly(mint_account, false),
         AccountMeta::new_readonly(token_account, false),
         AccountMeta::new_readonly(edition_account, false),
         AccountMeta::new(payer_account, true),
         AccountMeta::new_readonly(system_program::id(), false),
+        AccountMeta::new_readonly(sysvar::instructions::id(), false),
     ];
     let data = MetadataInstruction::CloseEscrowAccount
         .try_to_vec()
@@ -91,7 +92,7 @@ pub fn process_close_escrow_account(
             PREFIX.as_bytes(),
             program_id.as_ref(),
             mint_account_info.key.as_ref(),
-            ESCROW_PREFIX.as_bytes(),
+            ESCROW_POSTFIX.as_bytes(),
         ],
     )?;
 

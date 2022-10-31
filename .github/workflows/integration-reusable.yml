@@ -1,0 +1,108 @@
+name: Integration Reusable Test
+
+on:
+  workflow_call:
+    inputs:
+      name:
+        required: true
+        type: string
+      cache:
+        required: true
+        type: boolean
+      build_token_metadata:
+        required: true
+        type: boolean
+
+env:
+  CARGO_TERM_COLOR: always
+  SOLANA_VERSION: 1.10.40
+  RUST_TOOLCHAIN: stable
+  CACHE: ${{ inputs.cache }}
+
+jobs:
+  changes:
+    name: Changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # Set job outputs to values from filter step
+    outputs:
+      core: ${{ steps.filter.outputs.core }}
+      package: ${{ steps.filter.outputs.package }}
+      workflow: ${{ steps.filter.outputs.workflow }}
+    steps:
+      - uses: actions/checkout@v3
+      # For pull requests it's not necessary to checkout the code
+      - uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            core:
+              - 'core/**'
+            package:
+              - '${{ inputs.name }}/**'
+            workflow:
+              - '.github/workflows/integration-reusable.yml'
+  build-and-test:
+    name: Build and Test
+    runs-on: buildjet-8vcpu-ubuntu-2004
+    needs: changes
+    if: |
+      needs.changes.outputs.core == 'true' ||
+      needs.changes.outputs.package == 'true' ||
+      needs.changes.outputs.workflow == 'true'
+    steps:
+      # Setup Deps
+      - uses: actions/checkout@v3
+      - uses: ./.github/actions/install-linux-build-deps
+      - uses: ./.github/actions/install-solana
+        with:
+          solana_version: ${{ env.SOLANA_VERSION }}
+      - uses: ./.github/actions/install-rust
+        with:
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
+
+      # Restore Cache from previous build/test
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            ./${{ inputs.name }}/program/target/
+          key: program-${{ inputs.name }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+        if: ${{ env.CACHE != 'false' }}
+
+      # Install JS SDK deps
+      - uses: ./.github/actions/yarn-install-and-build
+        with:
+          cache_id: sdk-${{ inputs.name }}
+          working_dir: ./${{ inputs.name }}/js
+
+      # Build Rust Programs
+      - uses: ./.github/actions/build-program
+        with:
+          name: token-metadata
+        if: ${{ inputs.build_token_metadata }}
+
+      - uses: ./.github/actions/build-program
+        with:
+          name: ${{ inputs.name }}
+
+      # Start local validator
+      - name: start-local-test-validator
+        working-directory: ./${{ inputs.name }}/js
+        run: DEBUG=amman* yarn amman:start
+
+      # Run integration test
+      - name: run-integration-test
+        id: run_integration_test
+        working-directory: ./${{ inputs.name }}/js
+        run: DEBUG=mpl* yarn test
+
+      # Stop local validator
+      - name: stop-local-test-validator
+        working-directory: ./${{ inputs.name }}/js
+        run: yarn amman:stop
+        continue-on-error: true
+

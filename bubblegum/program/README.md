@@ -3,6 +3,13 @@
 > ⚠️ **Bubblegum is currently experimental and has not been formally audited. Use in production
 > at your own risk.**
 
+## Testing
+```bash
+cargo build
+cargo test-bpf --bpf-out-dir ../../test-programs
+```
+
+
 ## Overview
 
 `Bubblegum` is the Metaplex Protocol program for creating and interacting with compressed Metaplex NFTs.  Compressed NFTs are secured on-chain using Merkle trees.
@@ -436,3 +443,4 @@ Decompress an NFT into an uncompressed Metaplex NFT.  This will cost rent for th
 | `data`                            | 0      | ~    | [`MetadataArgs`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/bubblegum/program/src/state/metaplex_adapter.rs#L81) object.
 
 </details>
+

@@ -60,6 +60,8 @@ export type BurnInstructionAccounts = {
   merkleTree: web3.PublicKey;
   logWrapper: web3.PublicKey;
   compressionProgram: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
 };
 
 export const burnInstructionDiscriminator = [116, 110, 29, 56, 107, 219, 42, 93];
@@ -114,7 +116,18 @@ export function createBurnInstruction(
       isWritable: false,
       isSigner: false,
     },
+    {
+      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
+      isWritable: false,
+      isSigner: false,
+    },
   ];
+
+  if (accounts.anchorRemainingAccounts != null) {
+    for (const acc of accounts.anchorRemainingAccounts) {
+      keys.push(acc);
+    }
+  }
 
   const ix = new web3.TransactionInstruction({
     programId,

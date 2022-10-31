@@ -1,0 +1,35 @@
+# Implicit dependencies
+# - actions/checkout@v3
+# - ./.github/actions/install-linux-build-deps
+# - ./.github/actions/install-solana
+# - ./.github/actions/install-rust
+
+name: Build Program
+description: Builds the specified Rust program based on the `name` input
+inputs:
+  name:
+    description: The name of the program to build
+    required: true
+runs:
+  using: 'composite'
+  steps:
+#    - name: "Cache: ${{ inputs.name }}"
+#      uses: actions/cache@v3
+#      with:
+#        path: |
+#          ~/.cargo/bin/
+#          ~/.cargo/registry/index/
+#          ~/.cargo/registry/cache/
+#          ~/.cargo/git/db/
+#          ./${{ inputs.name }}/program/target/
+#        key:
+#          program-${{ inputs.name }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+#      id: cache-program
+    - name: "Build: ${{ inputs.name }}"
+      working-directory: ./${{ inputs.name }}/program
+      run: |
+        mkdir -p ../../test-programs
+        cargo +${{ env.RUST_STABLE }} build-bpf --version
+        cargo +${{ env.RUST_STABLE }} build-bpf --bpf-out-dir ../../test-programs/
+      shell: bash
+

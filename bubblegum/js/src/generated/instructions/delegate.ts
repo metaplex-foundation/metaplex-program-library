@@ -62,6 +62,8 @@ export type DelegateInstructionAccounts = {
   merkleTree: web3.PublicKey;
   logWrapper: web3.PublicKey;
   compressionProgram: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
 };
 
 export const delegateInstructionDiscriminator = [90, 147, 75, 178, 85, 88, 4, 137];
@@ -121,7 +123,18 @@ export function createDelegateInstruction(
       isWritable: false,
       isSigner: false,
     },
+    {
+      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
+      isWritable: false,
+      isSigner: false,
+    },
   ];
+
+  if (accounts.anchorRemainingAccounts != null) {
+    for (const acc of accounts.anchorRemainingAccounts) {
+      keys.push(acc);
+    }
+  }
 
   const ix = new web3.TransactionInstruction({
     programId,

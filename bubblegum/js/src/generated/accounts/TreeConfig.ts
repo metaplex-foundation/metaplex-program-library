@@ -19,6 +19,7 @@ export type TreeConfigArgs = {
   treeDelegate: web3.PublicKey;
   totalMintCapacity: beet.bignum;
   numMinted: beet.bignum;
+  isPublic: boolean;
 };
 
 export const treeConfigDiscriminator = [122, 245, 175, 248, 171, 34, 0, 207];
@@ -35,6 +36,7 @@ export class TreeConfig implements TreeConfigArgs {
     readonly treeDelegate: web3.PublicKey,
     readonly totalMintCapacity: beet.bignum,
     readonly numMinted: beet.bignum,
+    readonly isPublic: boolean,
   ) {}
 
   /**
@@ -46,6 +48,7 @@ export class TreeConfig implements TreeConfigArgs {
       args.treeDelegate,
       args.totalMintCapacity,
       args.numMinted,
+      args.isPublic,
     );
   }
 
@@ -66,8 +69,9 @@ export class TreeConfig implements TreeConfigArgs {
   static async fromAccountAddress(
     connection: web3.Connection,
     address: web3.PublicKey,
+    commitmentOrConfig?: web3.Commitment | web3.GetAccountInfoConfig,
   ): Promise<TreeConfig> {
-    const accountInfo = await connection.getAccountInfo(address);
+    const accountInfo = await connection.getAccountInfo(address, commitmentOrConfig);
     if (accountInfo == null) {
       throw new Error(`Unable to find TreeConfig account at ${address}`);
     }
@@ -164,6 +168,7 @@ export class TreeConfig implements TreeConfigArgs {
         }
         return x;
       })(),
+      isPublic: this.isPublic,
     };
   }
 }
@@ -184,6 +189,7 @@ export const treeConfigBeet = new beet.BeetStruct<
     ['treeDelegate', beetSolana.publicKey],
     ['totalMintCapacity', beet.u64],
     ['numMinted', beet.u64],
+    ['isPublic', beet.bool],
   ],
   TreeConfig.fromArgs,
   'TreeConfig',

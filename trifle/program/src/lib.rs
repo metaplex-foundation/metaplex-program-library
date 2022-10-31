@@ -7,4 +7,4 @@ pub mod state;
 mod tests;
 pub mod util;
 
-solana_program::declare_id!("6PLSD84fn6MVb3XdPYAiX33X8jgfCPXeqYUmfnYndU3X");
+solana_program::declare_id!("trifMWutwBxkSuatmpPVnEe7NoE3BJKgjVi8sSyoXWX");

@@ -7,6 +7,7 @@
 
 import * as beet from '@metaplex-foundation/beet';
 import * as web3 from '@solana/web3.js';
+import * as beetSolana from '@metaplex-foundation/beet-solana';
 import { MetadataArgs, metadataArgsBeet } from '../types/MetadataArgs';
 
 /**
@@ -21,7 +22,7 @@ export type SetAndVerifyCollectionInstructionArgs = {
   nonce: beet.bignum;
   index: number;
   message: MetadataArgs;
-  collection: number[] /* size: 32 */;
+  collection: web3.PublicKey;
 };
 /**
  * @category Instructions
@@ -41,7 +42,7 @@ export const setAndVerifyCollectionStruct = new beet.FixableBeetArgsStruct<
     ['nonce', beet.u64],
     ['index', beet.u32],
     ['message', metadataArgsBeet],
-    ['collection', beet.uniformFixedSizeArray(beet.u8, 32)],
+    ['collection', beetSolana.publicKey],
   ],
   'SetAndVerifyCollectionInstructionArgs',
 );
@@ -57,7 +58,7 @@ export const setAndVerifyCollectionStruct = new beet.FixableBeetArgsStruct<
  * @property [**signer**] collectionAuthority
  * @property [] collectionAuthorityRecordPda
  * @property [] collectionMint
- * @property [] collectionMetadata
+ * @property [_writable_] collectionMetadata
  * @property [] editionAccount
  * @property [] bubblegumSigner
  * @property [] logWrapper
@@ -83,6 +84,8 @@ export type SetAndVerifyCollectionInstructionAccounts = {
   logWrapper: web3.PublicKey;
   compressionProgram: web3.PublicKey;
   tokenMetadataProgram: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
 };
 
 export const setAndVerifyCollectionInstructionDiscriminator = [
@@ -156,7 +159,7 @@ export function createSetAndVerifyCollectionInstruction(
     },
     {
       pubkey: accounts.collectionMetadata,
-      isWritable: false,
+      isWritable: true,
       isSigner: false,
     },
     {
@@ -184,7 +187,18 @@ export function createSetAndVerifyCollectionInstruction(
       isWritable: false,
       isSigner: false,
     },
+    {
+      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
+      isWritable: false,
+      isSigner: false,
+    },
   ];
+
+  if (accounts.anchorRemainingAccounts != null) {
+    for (const acc of accounts.anchorRemainingAccounts) {
+      keys.push(acc);
+    }
+  }
 
   const ix = new web3.TransactionInstruction({
     programId,

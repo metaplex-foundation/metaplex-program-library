@@ -1,9 +1,9 @@
 use crate::{
     error::MetadataError,
+    escrow::pda::find_escrow_seeds,
     instruction::MetadataInstruction,
     state::{
         EscrowAuthority, Key, Metadata, TokenMetadataAccount, TokenOwnedEscrow, TokenStandard,
-        ESCROW_PREFIX, PREFIX,
     },
     utils::{
         assert_derivation, assert_initialized, assert_owned_by, assert_signer,
@@ -15,9 +15,9 @@ use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
     instruction::{AccountMeta, Instruction},
-    msg,
     program_memory::sol_memcpy,
     pubkey::Pubkey,
+    sysvar,
 };
 
 pub fn create_escrow_account(
@@ -32,12 +32,13 @@ pub fn create_escrow_account(
 ) -> Instruction {
     let mut accounts = vec![
         AccountMeta::new(escrow_account, false),
-        AccountMeta::new_readonly(metadata_account, false),
+        AccountMeta::new(metadata_account, false),
         AccountMeta::new_readonly(mint_account, false),
         AccountMeta::new_readonly(token_account, false),
         AccountMeta::new_readonly(edition_account, false),
         AccountMeta::new(payer_account, true),
         AccountMeta::new_readonly(solana_program::system_program::id(), false),
+        AccountMeta::new_readonly(sysvar::instructions::id(), false),
     ];
 
     if let Some(authority) = authority {
@@ -59,7 +60,6 @@ pub fn process_create_escrow_account(
     program_id: &Pubkey,
     accounts: &[AccountInfo],
 ) -> ProgramResult {
-    msg!("inside of create escrow");
     let account_info_iter = &mut accounts.iter();
 
     let escrow_account_info = next_account_info(account_info_iter)?;
@@ -69,16 +69,13 @@ pub fn process_create_escrow_account(
     let edition_account_info = next_account_info(account_info_iter)?;
     let payer_account_info = next_account_info(account_info_iter)?;
     let system_account_info = next_account_info(account_info_iter)?;
-    msg!("found accounts up to system program");
+    let _sysvar_ix_account_info = next_account_info(account_info_iter)?;
 
     let is_using_authority = account_info_iter.len() == 1;
 
-    msg!("trying authority");
     let maybe_authority_info: Option<&AccountInfo> = if is_using_authority {
-        msg!("creator authority");
         Some(next_account_info(account_info_iter)?)
     } else {
-        msg!("token authority");
         None
     };
 
@@ -105,52 +102,47 @@ pub fn process_create_escrow_account(
 
     let token_account: spl_token::state::Account = assert_initialized(token_account_info)?;
 
+    if token_account.mint != *mint_account_info.key {
+        return Err(MetadataError::MintMismatch.into());
+    }
+
+    if token_account.amount < 1 {
+        return Err(MetadataError::NotEnoughTokens.into());
+    }
+
+    if token_account.mint != metadata.mint {
+        return Err(MetadataError::MintMismatch.into());
+    }
+
     let creator_type = if token_account.owner == *creator.key {
-        if token_account.mint != *mint_account_info.key {
-            return Err(MetadataError::MintMismatch.into());
-        }
-
-        if token_account.amount < 1 {
-            return Err(MetadataError::NotEnoughTokens.into());
-        }
-
-        if token_account.mint != metadata.mint {
-            return Err(MetadataError::MintMismatch.into());
-        }
-
         EscrowAuthority::TokenOwner
     } else {
         EscrowAuthority::Creator(*creator.key)
     };
 
     // Derive the seeds for PDA signing.
-    let mut escrow_authority_seeds = vec![
-        PREFIX.as_bytes(),
-        program_id.as_ref(),
-        metadata.mint.as_ref(),
-    ];
+    let escrow_seeds = find_escrow_seeds(mint_account_info.key, &creator_type);
 
-    for seed in creator_type.to_seeds() {
-        escrow_authority_seeds.push(seed);
-    }
+    let bump_seed = &[assert_derivation(
+        &crate::id(),
+        escrow_account_info,
+        &escrow_seeds,
+    )?];
 
-    escrow_authority_seeds.push(ESCROW_PREFIX.as_bytes());
-
-    // Assert that this is the canonical PDA for this mint.
-    let bump_seed = assert_derivation(program_id, escrow_account_info, &escrow_authority_seeds)?;
-
-    let binding = [bump_seed];
-    escrow_authority_seeds.push(&binding);
+    let escrow_authority_seeds = [escrow_seeds, vec![bump_seed]].concat();
 
     // Initialize a default (empty) escrow structure.
     let toe = TokenOwnedEscrow {
         key: Key::TokenOwnedEscrow,
         base_token: *mint_account_info.key,
         authority: creator_type,
-        bump: bump_seed,
+        bump: bump_seed[0],
     };
 
-    let serialized_data = toe.try_to_vec().unwrap();
+    let serialized_data = toe
+        .try_to_vec()
+        .map_err(|_| MetadataError::BorshSerializationError)?;
+
     // Create the account.
     create_or_allocate_account_raw(
         *program_id,

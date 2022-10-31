@@ -155,7 +155,6 @@ pub enum Key {
     UseAuthorityRecord,
     CollectionAuthorityRecord,
     TokenOwnedEscrow,
-    EscrowConstraintModel,
 }
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
@@ -942,7 +941,7 @@ impl EditionMarker {
     }
 }
 
-pub const ESCROW_PREFIX: &str = "escrow";
+pub const ESCROW_POSTFIX: &str = "escrow";
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]

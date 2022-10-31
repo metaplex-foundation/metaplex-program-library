@@ -109,7 +109,7 @@ pub async fn create_mint(
                 &spl_token::id(),
                 &mint.pubkey(),
                 authority,
-                None,
+                Some(&authority),
                 decimals,
             )
             .unwrap(),

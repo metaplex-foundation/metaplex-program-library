@@ -19,6 +19,10 @@ pub struct BubblegumTestContext {
 pub const DEFAULT_LAMPORTS_FUND_AMOUNT: u64 = 1_000_000_000;
 
 impl BubblegumTestContext {
+    pub fn test_context(&self) -> &ProgramTestContext {
+        &self.program_context
+    }
+
     pub async fn new() -> Result<Self> {
         let program_context = program_test().start_with_context().await;
 
@@ -128,6 +132,16 @@ impl BubblegumTestContext {
         let tree = Tree::<MAX_DEPTH, MAX_BUFFER_SIZE>::with_creator(&payer, self.client());
         tree.alloc(&payer).await?;
         tree.create(&payer).await?;
+        Ok(tree)
+    }
+
+    pub async fn create_public_tree<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize>(
+        &self,
+    ) -> Result<Tree<MAX_DEPTH, MAX_BUFFER_SIZE>> {
+        let payer = self.payer();
+        let tree = Tree::<MAX_DEPTH, MAX_BUFFER_SIZE>::with_creator(&payer, self.client());
+        tree.alloc(&payer).await?;
+        tree.create_public(&payer).await?;
         Ok(tree)
     }
 

@@ -37,7 +37,7 @@ const programs = {
   },
   trifle: {
       label: 'Trifle',
-      programId: '6PLSD84fn6MVb3XdPYAiX33X8jgfCPXeqYUmfnYndU3X',
+      programId: 'trifMWutwBxkSuatmpPVnEe7NoE3BJKgjVi8sSyoXWX',
       deployPath: localDeployPath('mpl_trifle'),
   },
 };

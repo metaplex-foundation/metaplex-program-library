@@ -35,6 +35,8 @@ export type SetTreeDelegateInstructionAccounts = {
   treeCreator: web3.PublicKey;
   newTreeDelegate: web3.PublicKey;
   merkleTree: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
 };
 
 export const setTreeDelegateInstructionDiscriminator = [253, 118, 66, 37, 190, 49, 154, 102];
@@ -75,7 +77,18 @@ export function createSetTreeDelegateInstruction(
       isWritable: false,
       isSigner: false,
     },
+    {
+      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
+      isWritable: false,
+      isSigner: false,
+    },
   ];
+
+  if (accounts.anchorRemainingAccounts != null) {
+    for (const acc of accounts.anchorRemainingAccounts) {
+      keys.push(acc);
+    }
+  }
 
   const ix = new web3.TransactionInstruction({
     programId,
