@@ -32,7 +32,6 @@ jobs:
     if: inputs.changes == true
     # Set job outputs to values from filter step
     outputs:
-      changes: ${{ steps }}
       core: ${{ steps.filter1.outputs.core }}
       package: ${{ steps.filter.outputs.package }}
       workflow: ${{ steps.filter.outputs.workflow }}
