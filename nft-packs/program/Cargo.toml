@@ -1,6 +1,7 @@
 [package]
 name = "mpl-nft-packs"
 version = "0.1.0"
+description = "NFT Packs: mystery packs NFTs that are not revealed until after opening the pack."
 authors = ["Metaplex Developers <dev@metaplex.com>"]
 repository = "https://github.com/metaplex-foundation/metaplex-program-library"
 license-file = "../../LICENSE"
