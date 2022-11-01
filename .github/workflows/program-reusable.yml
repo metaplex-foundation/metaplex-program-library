@@ -24,13 +24,12 @@ env:
   SOLANA_VERSION: 1.10.40
   RUST_TOOLCHAIN: stable
   CACHE: ${{ inputs.cache }}
-  CHANGES: ${{ inputs.changes }}
 
 jobs:
   changes:
     name: Changes
     runs-on: ubuntu-latest
-    if: env.CHANGES == 'true'
+    if: inputs.changes == 'true'
     # Set job outputs to values from filter step
     outputs:
       changes: ${{ steps }}
@@ -66,7 +65,7 @@ jobs:
     runs-on: buildjet-8vcpu-ubuntu-2204
     needs: changes
     if: |
-      env.CHANGES == 'false' ||
+      inputs.changes == 'false' ||
       needs.changes.outputs.core == 'true' ||
       needs.changes.outputs.package == 'true' ||
       needs.changes.outputs.workflow == 'true' ||
