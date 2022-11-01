@@ -2,13 +2,13 @@
 
 pub mod utils;
 
-use mpl_token_metadata::state::{Collection, CollectionDetails, EscrowAuthority};
+use mpl_token_metadata::state::{Collection, EscrowAuthority};
 use mpl_trifle::{
     instruction::{
         add_collection_constraint_to_escrow_constraint_model,
         add_none_constraint_to_escrow_constraint_model,
         add_tokens_constraint_to_escrow_constraint_model, create_escrow_constraint_model_account,
-        create_trifle_account,
+        create_trifle_account, remove_constraint_from_escrow_constraint_model,
     },
     pda::{find_escrow_constraint_model_address, find_trifle_address},
     state::transfer_effects::TransferEffects,
@@ -19,10 +19,8 @@ use solana_sdk::{signer::Signer, transaction::Transaction};
 use utils::*;
 
 mod trifle {
-    use mpl_token_metadata::state::EscrowAuthority;
     use mpl_trifle::{
-        instruction::{create_trifle_account, transfer_in, transfer_out},
-        pda::find_trifle_address,
+        instruction::{transfer_in, transfer_out},
         state::{
             escrow_constraints::EscrowConstraintModel, transfer_effects::TransferEffects,
             trifle::Trifle,
@@ -33,7 +31,7 @@ mod trifle {
     use super::*;
 
     #[tokio::test]
-    async fn test_create_trifle_account() {
+    async fn test_happy_path() {
         let mut context = program_test().start_with_context().await;
 
         let payer_pubkey = context.payer.pubkey().to_owned();
@@ -187,6 +185,32 @@ mod trifle {
         let trifle_account_data: Trifle =
             try_from_slice_unchecked(&trifle_account.data).expect("should deserialize");
         println!("trifle_account: {:#?}", trifle_account_data);
+
+        // right now, the constraint model can be modified even if there are trifle accounts,
+        // that reference it, but in the future, we should make it so that the constraint model
+        // cannot be modified unless there are no trifles referecing it.
+
+        let remove_constraint_from_model_ix = remove_constraint_from_escrow_constraint_model(
+            mpl_trifle::id(),
+            escrow_constraint_model_addr,
+            context.payer.pubkey(),
+            context.payer.pubkey(),
+            "test".to_string(),
+        );
+
+        let remove_constraint_tx = Transaction::new_signed_with_payer(
+            &[remove_constraint_from_model_ix],
+            Some(&context.payer.pubkey()),
+            &[&context.payer],
+            context.last_blockhash,
+        );
+
+        context
+            .banks_client
+            .process_transaction(remove_constraint_tx)
+            .await
+            .expect("remove constraint from model should succeed");
+
         let constraint_account = context
             .banks_client
             .get_account(escrow_constraint_model_addr)

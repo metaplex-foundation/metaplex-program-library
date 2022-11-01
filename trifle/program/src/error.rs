@@ -54,8 +54,8 @@ pub enum TrifleError {
     #[error("Invalid Collection Metadata")]
     InvalidCollectionMetadata,
 
-    #[error("Provided Fuse Options are in conflict")]
-    FuseOptionConflict,
+    #[error("Provided Transfer Effects are not compatible")]
+    TransferEffectConflict,
 
     #[error("Freeze Authority Not Set")]
     FreezeAuthorityNotSet,
@@ -65,6 +65,12 @@ pub enum TrifleError {
 
     #[error("Constraint Key Not Found")]
     ConstraintKeyNotFound,
+
+    #[error("Failed to serialize")]
+    FailedToSerialize,
+
+    #[error("Failed to borrow account data")]
+    FailedToBorrowAccountData,
 }
 
 impl From<TrifleError> for ProgramError {
