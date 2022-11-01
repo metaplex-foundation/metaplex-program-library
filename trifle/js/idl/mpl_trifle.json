@@ -533,6 +533,48 @@
         "type": "u8",
         "value": 6
       }
+    },
+    {
+      "name": "RemoveConstraintFromEscrowConstraintModel",
+      "accounts": [
+        {
+          "name": "constraintModel",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Constraint model account"
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "desc": "Wallet paying for the transaction"
+        },
+        {
+          "name": "updateAuthority",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "Update authority of the constraint model"
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "System program"
+        }
+      ],
+      "args": [
+        {
+          "name": "removeConstraintFromEscrowConstraintModelArgs",
+          "type": {
+            "defined": "RemoveConstraintFromEscrowConstraintModelArgs"
+          }
+        }
+      ],
+      "defaultOptionalAccounts": true,
+      "discriminant": {
+        "type": "u8",
+        "value": 7
+      }
     }
   ],
   "accounts": [
@@ -797,6 +839,18 @@
       }
     },
     {
+      "name": "RemoveConstraintFromEscrowConstraintModelArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "constraintName",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
       "name": "TokenAmount",
       "type": {
         "kind": "struct",
@@ -918,8 +972,8 @@
     },
     {
       "code": 12,
-      "name": "FuseOptionConflict",
-      "msg": "Provided Fuse Options are in conflict"
+      "name": "TransferEffectConflict",
+      "msg": "Provided Transfer Effects are not compatible"
     },
     {
       "code": 13,
@@ -935,6 +989,16 @@
       "code": 15,
       "name": "ConstraintKeyNotFound",
       "msg": "Constraint Key Not Found"
+    },
+    {
+      "code": 16,
+      "name": "FailedToSerialize",
+      "msg": "Failed to serialize"
+    },
+    {
+      "code": 17,
+      "name": "FailedToBorrowAccountData",
+      "msg": "Failed to borrow account data"
     }
   ],
   "metadata": {

@@ -261,24 +261,24 @@ createErrorFromNameLookup.set(
 );
 
 /**
- * FuseOptionConflict: 'Provided Fuse Options are in conflict'
+ * TransferEffectConflict: 'Provided Transfer Effects are not compatible'
  *
  * @category Errors
  * @category generated
  */
-export class FuseOptionConflictError extends Error {
+export class TransferEffectConflictError extends Error {
   readonly code: number = 0xc;
-  readonly name: string = 'FuseOptionConflict';
+  readonly name: string = 'TransferEffectConflict';
   constructor() {
-    super('Provided Fuse Options are in conflict');
+    super('Provided Transfer Effects are not compatible');
     if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, FuseOptionConflictError);
+      Error.captureStackTrace(this, TransferEffectConflictError);
     }
   }
 }
 
-createErrorFromCodeLookup.set(0xc, () => new FuseOptionConflictError());
-createErrorFromNameLookup.set('FuseOptionConflict', () => new FuseOptionConflictError());
+createErrorFromCodeLookup.set(0xc, () => new TransferEffectConflictError());
+createErrorFromNameLookup.set('TransferEffectConflict', () => new TransferEffectConflictError());
 
 /**
  * FreezeAuthorityNotSet: 'Freeze Authority Not Set'
@@ -339,6 +339,49 @@ export class ConstraintKeyNotFoundError extends Error {
 
 createErrorFromCodeLookup.set(0xf, () => new ConstraintKeyNotFoundError());
 createErrorFromNameLookup.set('ConstraintKeyNotFound', () => new ConstraintKeyNotFoundError());
+
+/**
+ * FailedToSerialize: 'Failed to serialize'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class FailedToSerializeError extends Error {
+  readonly code: number = 0x10;
+  readonly name: string = 'FailedToSerialize';
+  constructor() {
+    super('Failed to serialize');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, FailedToSerializeError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x10, () => new FailedToSerializeError());
+createErrorFromNameLookup.set('FailedToSerialize', () => new FailedToSerializeError());
+
+/**
+ * FailedToBorrowAccountData: 'Failed to borrow account data'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class FailedToBorrowAccountDataError extends Error {
+  readonly code: number = 0x11;
+  readonly name: string = 'FailedToBorrowAccountData';
+  constructor() {
+    super('Failed to borrow account data');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, FailedToBorrowAccountDataError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x11, () => new FailedToBorrowAccountDataError());
+createErrorFromNameLookup.set(
+  'FailedToBorrowAccountData',
+  () => new FailedToBorrowAccountDataError(),
+);
 
 /**
  * Attempts to resolve a custom program error from the provided error code.
