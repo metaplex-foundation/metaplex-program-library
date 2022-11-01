@@ -27,6 +27,7 @@ jobs:
   changes:
     name: Changes
     runs-on: ubuntu-latest
+    if: env.CHANGES == 'true'
     # Set job outputs to values from filter step
     outputs:
       core: ${{ steps.filter.outputs.core }}
@@ -50,10 +51,10 @@ jobs:
     name: Build Lint and Test
     needs: changes
     if: |
+      env.CHANGES == 'false' ||
       needs.changes.outputs.core == 'true' || 
       needs.changes.outputs.package == 'true' || 
-      needs.changes.outputs.workflow == 'true' ||
-      input.changes == 'false'
+      needs.changes.outputs.workflow == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3

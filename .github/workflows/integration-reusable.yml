@@ -27,6 +27,7 @@ jobs:
   changes:
     name: Changes
     runs-on: ubuntu-latest
+    if: env.CHANGES == 'true'
     timeout-minutes: 10
     # Set job outputs to values from filter step
     outputs:
@@ -51,10 +52,10 @@ jobs:
     runs-on: buildjet-8vcpu-ubuntu-2004
     needs: changes
     if: |
+      env.CHANGES == 'false' ||
       needs.changes.outputs.core == 'true' ||
       needs.changes.outputs.package == 'true' ||
-      needs.changes.outputs.workflow == 'true' ||
-      input.changes == 'false'
+      needs.changes.outputs.workflow == 'true'
     steps:
       # Setup Deps
       - uses: actions/checkout@v3
