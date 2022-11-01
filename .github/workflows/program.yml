@@ -28,7 +28,7 @@ jobs:
             cargo_test: true
           - name: "bubblegum"
             verify_rust: false
-            cargo_test: false
+            cargo_test: true
           - name: "candy-machine"
             verify_rust: true
             cargo_test: true
