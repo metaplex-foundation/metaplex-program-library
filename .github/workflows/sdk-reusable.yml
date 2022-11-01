@@ -26,7 +26,7 @@ jobs:
   changes:
     name: Changes
     runs-on: ubuntu-latest
-    if: inputs.changes == 'true'
+    if: inputs.changes == true
     # Set job outputs to values from filter step
     outputs:
       core: ${{ steps.filter.outputs.core }}
@@ -50,7 +50,7 @@ jobs:
     name: Build Lint and Test
     needs: changes
     if: |
-      inputs.changes == 'false' ||
+      inputs.changes == false ||
       needs.changes.outputs.core == 'true' || 
       needs.changes.outputs.package == 'true' || 
       needs.changes.outputs.workflow == 'true'

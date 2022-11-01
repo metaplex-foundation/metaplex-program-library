@@ -29,7 +29,7 @@ jobs:
   changes:
     name: Changes
     runs-on: ubuntu-latest
-    if: inputs.changes == 'true'
+    if: inputs.changes == true
     # Set job outputs to values from filter step
     outputs:
       changes: ${{ steps }}
@@ -65,12 +65,12 @@ jobs:
     runs-on: buildjet-8vcpu-ubuntu-2204
     needs: changes
     if: |
-      inputs.changes == 'false' ||
+      inputs.changes == false ||
       needs.changes.outputs.core == 'true' ||
       needs.changes.outputs.package == 'true' ||
       needs.changes.outputs.workflow == 'true' ||
       needs.changes.outputs.action == 'true' ||
-      needs.changes.outputs.custom == 'true' ||
+      needs.changes.outputs.custom == 'true'
     steps:
       # Setup Deps
       - uses: actions/checkout@v3
