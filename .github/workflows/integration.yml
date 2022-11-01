@@ -12,6 +12,10 @@ on:
         description: 'Use Cached Dependencies'
         required: false
         default: true
+      changes:
+        description: 'Only run when files change'
+        required: false
+        default: false
 
 jobs:
   integration-tests:
@@ -33,3 +37,6 @@ jobs:
       cache: ${{ (github.event_name == 'workflow_dispatch' && github.event.workflow_dispatch.inputs.cache == 'true') ||
         (github.event_name != 'workflow_dispatch' && false) }}
 # CHANGE `&& false` to `&& true` to default the workflow to use caching.
+      changes: ${{ (github.event_name == 'workflow_dispatch' && github.event.workflow_dispatch.inputs.changes == 'true') ||
+        (github.event_name != 'workflow_dispatch' && true) }}
+# CHANGE `&& true` to `&& false` to default the workflow to run regardless of whether the files changed.

@@ -15,12 +15,16 @@ on:
       cache:
         required: true
         type: boolean
+      changes:
+        required: true
+        type: boolean
 
 env:
   CARGO_TERM_COLOR: always
   SOLANA_VERSION: 1.10.40
   RUST_TOOLCHAIN: stable
   CACHE: ${{ inputs.cache }}
+  CHANGES: ${{ inputs.changes }}
 
 jobs:
   changes:
@@ -65,7 +69,8 @@ jobs:
       needs.changes.outputs.package == 'true' ||
       needs.changes.outputs.workflow == 'true' ||
       needs.changes.outputs.action == 'true' ||
-      needs.changes.outputs.custom == 'true'
+      needs.changes.outputs.custom == 'true' ||
+      env.CHANGES == 'false'
     steps:
       # Setup Deps
       - uses: actions/checkout@v3
