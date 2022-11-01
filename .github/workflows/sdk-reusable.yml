@@ -53,7 +53,7 @@ jobs:
       needs.changes.outputs.core == 'true' || 
       needs.changes.outputs.package == 'true' || 
       needs.changes.outputs.workflow == 'true' ||
-      env.CHANGES == 'false'
+      input.changes == 'false'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3

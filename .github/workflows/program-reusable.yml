@@ -70,7 +70,7 @@ jobs:
       needs.changes.outputs.workflow == 'true' ||
       needs.changes.outputs.action == 'true' ||
       needs.changes.outputs.custom == 'true' ||
-      env.CHANGES == 'false'
+      input.changes == 'false'
     steps:
       # Setup Deps
       - uses: actions/checkout@v3
