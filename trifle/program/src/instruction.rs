@@ -11,6 +11,7 @@ use solana_program::{
 pub struct CreateEscrowConstraintModelAccountArgs {
     pub name: String,
     pub schema_uri: Option<String>,
+    pub bump: u8,
 }
 
 #[repr(C)]
@@ -57,6 +58,13 @@ pub struct TransferOutArgs {
     pub amount: u64,
 }
 
+#[repr(C)]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+pub struct CreateTrifleAccountArgs {
+    pub bump: u8,
+}
+
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(ShankInstruction, Debug, BorshSerialize, Clone, BorshDeserialize)]
 #[rustfmt::skip]
@@ -82,7 +90,7 @@ pub enum TrifleInstruction {
     #[account(9, name = "token_metadata_program", desc = "Token Metadata program")]
     #[account(10, name = "system_program", desc = "System program")]
     #[account(11, name="sysvar_instructions", desc="Instructions sysvar account")]
-    CreateTrifleAccount,
+    CreateTrifleAccount(CreateTrifleAccountArgs),
 
     /// Transfer tokens into the Trifle escrow account.
     #[default_optional_accounts]
@@ -159,6 +167,7 @@ pub fn create_escrow_constraint_model_account(
     update_authority: &Pubkey,
     name: String,
     schema_uri: Option<String>,
+    bump: u8,
 ) -> Instruction {
     let accounts = vec![
         AccountMeta::new(*escrow_constraint_model, false),
@@ -171,7 +180,11 @@ pub fn create_escrow_constraint_model_account(
         program_id: *program_id,
         accounts,
         data: TrifleInstruction::CreateEscrowConstraintModelAccount(
-            CreateEscrowConstraintModelAccountArgs { name, schema_uri },
+            CreateEscrowConstraintModelAccountArgs {
+                name,
+                schema_uri,
+                bump,
+            },
         )
         .try_to_vec()
         .unwrap(),
@@ -288,6 +301,7 @@ pub fn create_trifle_account(
     trifle_authority: &Pubkey,
     escrow_constraint_model: &Pubkey,
     payer: &Pubkey,
+    bump: u8,
 ) -> Instruction {
     let accounts = vec![
         AccountMeta::new(*escrow, false),
@@ -307,7 +321,9 @@ pub fn create_trifle_account(
     Instruction {
         program_id: *program_id,
         accounts,
-        data: TrifleInstruction::CreateTrifleAccount.try_to_vec().unwrap(),
+        data: TrifleInstruction::CreateTrifleAccount(CreateTrifleAccountArgs { bump })
+            .try_to_vec()
+            .unwrap(),
     }
 }
 
