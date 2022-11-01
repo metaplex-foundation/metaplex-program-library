@@ -160,7 +160,7 @@ pub enum TrifleInstruction {
     #[default_optional_accounts]
     #[account(0, writable, name = "constraint_model", desc = "Constraint model account")]
     #[account(1, writable, signer, name = "payer", desc = "Wallet paying for the transaction")]
-    #[account(2, optional, signer, name = "update_authority", desc = "Update authority of the constraint model")]
+    #[account(2, signer, name = "update_authority", desc = "Update authority of the constraint model")]
     #[account(3, name = "system_program", desc = "System program")]
     RemoveConstraintFromEscrowConstraintModel(RemoveConstraintFromEscrowConstraintModelArgs),
 
@@ -433,13 +433,13 @@ pub fn remove_constraint_from_escrow_constraint_model(
     program_id: Pubkey,
     escrow_constraint_model: Pubkey,
     payer: Pubkey,
-    update_authority: Option<Pubkey>,
+    update_authority: Pubkey,
     constraint_name: String,
 ) -> Instruction {
     let accounts = vec![
         AccountMeta::new(escrow_constraint_model, false),
         AccountMeta::new(payer, true),
-        AccountMeta::new(update_authority.unwrap_or(program_id), true),
+        AccountMeta::new(update_authority, true),
         AccountMeta::new_readonly(solana_program::system_program::id(), false),
     ];
 
