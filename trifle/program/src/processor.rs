@@ -4,7 +4,7 @@ use crate::{
         AddCollectionConstraintToEscrowConstraintModelArgs,
         AddNoneConstraintToEscrowConstraintModelArgs,
         AddTokensConstraintToEscrowConstraintModelArgs, CreateEscrowConstraintModelAccountArgs,
-        CreateTrifleAccountArgs, TransferInArgs, TransferOutArgs, TrifleInstruction,
+        TransferInArgs, TransferOutArgs, TrifleInstruction,
     },
     state::{
         escrow_constraints::{EscrowConstraint, EscrowConstraintModel, EscrowConstraintType, FEES},
@@ -48,9 +48,9 @@ pub fn process_instruction(
             msg!("Instruction: Create Escrow Constraint Model Account");
             create_escrow_constraints_model_account(program_id, accounts, args)
         }
-        TrifleInstruction::CreateTrifleAccount(args) => {
+        TrifleInstruction::CreateTrifleAccount => {
             msg!("Instruction: Create Trifle Account");
-            create_trifle_account(program_id, accounts, args)
+            create_trifle_account(program_id, accounts)
         }
         TrifleInstruction::TransferIn(args) => {
             msg!("Instruction: Transfer In");
@@ -93,7 +93,6 @@ fn create_escrow_constraints_model_account(
         creator: payer_info.key.to_owned(),
         update_authority: update_authority_info.key.to_owned(),
         schema_uri: args.schema_uri.to_owned(),
-        bump: args.bump,
         ..Default::default()
     };
 
@@ -140,11 +139,7 @@ fn create_escrow_constraints_model_account(
     Ok(())
 }
 
-fn create_trifle_account(
-    program_id: &Pubkey,
-    accounts: &[AccountInfo],
-    args: CreateTrifleAccountArgs,
-) -> ProgramResult {
+fn create_trifle_account(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
     let account_info_iter = &mut accounts.iter();
 
     let escrow_info = next_account_info(account_info_iter)?;
@@ -169,8 +164,6 @@ fn create_trifle_account(
             trifle_authority_info.key.as_ref(),
         ],
     )?;
-
-    assert_eq!(args.bump, trifle_pda_bump);
 
     assert_signer(payer_info)?;
     assert_signer(trifle_authority_info)?;
@@ -200,7 +193,6 @@ fn create_trifle_account(
     let trifle = Trifle {
         token_escrow: escrow_info.key.to_owned(),
         escrow_constraint_model: escrow_constraint_model_info.key.to_owned(),
-        bump: args.bump,
         ..Default::default()
     };
 

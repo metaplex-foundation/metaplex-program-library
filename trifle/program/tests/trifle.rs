@@ -526,7 +526,7 @@ async fn create_escrow_constraint_model(
     collection: Metadata,
     tokens: Vec<Pubkey>,
 ) -> Pubkey {
-    let (escrow_constraint_model_addr, escrow_constraint_model_bump) =
+    let (escrow_constraint_model_addr, _) =
         find_escrow_constraint_model_address(&context.payer.pubkey(), "Test");
 
     let create_constraint_model_ix = create_escrow_constraint_model_account(
@@ -536,7 +536,6 @@ async fn create_escrow_constraint_model(
         &context.payer.pubkey(),
         "Test".to_string(),
         None,
-        escrow_constraint_model_bump,
     );
 
     let add_none_constraint_ix = add_none_constraint_to_escrow_constraint_model(
@@ -597,8 +596,7 @@ async fn create_trifle(
     master_edition: &MasterEditionV2,
     escrow_constraint_model_addr: Pubkey,
 ) -> (Pubkey, Pubkey) {
-    let (trifle_addr, trifle_bump) =
-        find_trifle_address(&metadata.mint.pubkey(), &context.payer.pubkey());
+    let (trifle_addr, _) = find_trifle_address(&metadata.mint.pubkey(), &context.payer.pubkey());
 
     let (escrow_addr, _) = mpl_token_metadata::escrow::pda::find_escrow_account(
         &metadata.mint.pubkey(),
@@ -616,7 +614,6 @@ async fn create_trifle(
         &context.payer.pubkey(),
         &escrow_constraint_model_addr,
         &context.payer.pubkey(),
-        trifle_bump,
     );
 
     let tx = Transaction::new_signed_with_payer(

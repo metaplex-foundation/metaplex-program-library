@@ -12,7 +12,6 @@ pub struct Trifle {
     pub token_escrow: Pubkey,
     pub tokens: HashMap<String, Vec<TokenAmount>>,
     pub escrow_constraint_model: Pubkey,
-    pub bump: u8,
 }
 
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
@@ -40,7 +39,6 @@ impl Default for Trifle {
             token_escrow: Pubkey::default(),
             tokens: HashMap::new(),
             escrow_constraint_model: Pubkey::default(),
-            bump: 0,
         }
     }
 }
