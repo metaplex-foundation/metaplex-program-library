@@ -1,4 +1,4 @@
-#![cfg(feature = "test-bpf")]
+// #![cfg(feature = "test-bpf")]
 #![allow(dead_code)]
 
 use mpl_candy_machine::CandyError;
