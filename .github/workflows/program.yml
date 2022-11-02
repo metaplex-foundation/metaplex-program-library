@@ -53,7 +53,8 @@ jobs:
       cargo_test: ${{ !contains(matrix.node.cargo_test, 'false') }}
 #      cache: ${{ (github.event_name == 'workflow_dispatch' && github.event.workflow_dispatch.inputs.cache == 'true') ||
 #        (github.event_name != 'workflow_dispatch' && false) }}
-      cache: ${{ contains(github.event.workflow_dispatch.inputs.cache, 'true') }}
+#      cache: ${{ contains(github.event.workflow_dispatch.inputs.cache, 'true') }}
+      cache: ${{ false }}
 # CHANGE `&& false` to `&& true` to default the workflow to use caching.
       changes: ${{ (github.event_name == 'workflow_dispatch' && github.event.workflow_dispatch.inputs.changes == 'true') ||
         (github.event_name != 'workflow_dispatch' && true) }}
