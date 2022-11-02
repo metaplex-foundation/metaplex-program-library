@@ -31,23 +31,23 @@ jobs:
             verify_rust: true
             cargo_test: true
           - name: "bubblegum"
-            verify_rust: false
+            verify_rust: true
             cargo_test: true
           - name: "candy-machine"
             verify_rust: true
             cargo_test: true
           - name: "fixed-price-sale"
             verify_rust: false
-            cargo_test: false
+            cargo_test: true
           - name: "gumdrop"
-            verify_rust: false
+            verify_rust: true
             cargo_test: true
           - name: "hydra"
             verify_rust: true
             cargo_test: true
           - name: "nft-packs"
             verify_rust: false
-            cargo_test: false
+            cargo_test: true
           - name: "token-entangler"
             verify_rust: true
             cargo_test: true
