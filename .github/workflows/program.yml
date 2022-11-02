@@ -24,12 +24,12 @@ jobs:
       fail-fast: false
       matrix:
         node:
-#          - name: "auction-house"
           - name: "auctioneer"
           - name: "bubblegum"
             cargo_test: false
           - name: "candy-machine"
             cargo_test: true
+#          - name: "auction-house"
 #          - name: "fixed-price-sale"
 #          - name: "gumdrop"
 #          - name: "hydra"
@@ -40,7 +40,7 @@ jobs:
     uses: ./.github/workflows/program-reusable.yml
     with:
       name: ${{ matrix.node.name }}
-      cargo_test: ${{ fromJSON(matrix.node.cargo_test) == 123 }}
+      cargo_test: ${{ fromJSON(matrix.node.cargo_test) == '' }}
       cache: ${{ (github.event_name == 'workflow_dispatch' && github.event.workflow_dispatch.inputs.cache == 'true') ||
         (github.event_name != 'workflow_dispatch' && false) }}
 # CHANGE `&& false` to `&& true` to default the workflow to use caching.
