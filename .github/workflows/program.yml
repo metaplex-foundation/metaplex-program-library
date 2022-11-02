@@ -37,7 +37,7 @@ jobs:
             verify_rust: true
             cargo_test: true
           - name: "fixed-price-sale"
-            verify_rust: false
+            verify_rust: true
             cargo_test: true
           - name: "gumdrop"
             verify_rust: true
@@ -46,7 +46,7 @@ jobs:
             verify_rust: true
             cargo_test: true
           - name: "nft-packs"
-            verify_rust: false
+            verify_rust: true
             cargo_test: true
           - name: "token-entangler"
             verify_rust: true
