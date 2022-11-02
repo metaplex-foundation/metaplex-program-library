@@ -1391,7 +1391,6 @@ fn auctioneer_execute_sale_logic<'c, 'info>(
             .lamports()
             .checked_add(curr_buyer_lamp)
             .ok_or(AuctionHouseError::NumericalOverflow)?;
-
     }
     Ok(())
 }
