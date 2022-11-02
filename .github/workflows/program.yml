@@ -25,31 +25,21 @@ jobs:
       matrix:
         node:
           - name: "auction-house"
-            cargo_test: true
           - name: "auctioneer"
-            cargo_test: true
           - name: "bubblegum"
             cargo_test: false
           - name: "candy-machine"
-            cargo_test: true
           - name: "fixed-price-sale"
-            cargo_test: true
           - name: "gumdrop"
-            cargo_test: true
           - name: "hydra"
-            cargo_test: true
           - name: "nft-packs"
-            cargo_test: true
           - name: "token-entangler"
-            cargo_test: true
           - name: "token-metadata"
-            cargo_test: true
 
     uses: ./.github/workflows/program-reusable.yml
     with:
       name: ${{ matrix.node.name }}
-      verify_rust: ${{ matrix.node.verify_rust }}
-      cargo_test: ${{ matrix.node.cargo_test }}
+      cargo_test: ${{ matrix.node.cargo_test == '' || matrix.node.cargo_test != 'false' }}
       cache: ${{ (github.event_name == 'workflow_dispatch' && github.event.workflow_dispatch.inputs.cache == 'true') ||
         (github.event_name != 'workflow_dispatch' && false) }}
 # CHANGE `&& false` to `&& true` to default the workflow to use caching.

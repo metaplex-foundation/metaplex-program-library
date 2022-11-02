@@ -6,9 +6,6 @@ on:
       name:
         required: true
         type: string
-      verify_rust:
-        required: true
-        type: boolean
       cargo_test:
         required: true
         type: boolean
@@ -94,7 +91,6 @@ jobs:
         if: ${{ env.CACHE != 'false' }}
       # Run lint checks
       - uses: ./.github/actions/verify-rust
-        if: ${{ inputs.verify_rust }}
         with:
           working-directory: ./${{ inputs.name }}/program
 
