@@ -608,7 +608,7 @@ async fn fail_request_after_end_date() {
         .await
         .unwrap()
         .unix_timestamp as u64;
-    assert_eq!(last_timestamp > redeem_end_date.unwrap(), true);
+    assert!(last_timestamp > redeem_end_date.unwrap());
 
     let err = test_pack_set
         .request_card_for_redeem(
@@ -756,7 +756,7 @@ async fn fail_request_with_invalid_voucher() {
         .await
         .unwrap()
         .unix_timestamp as u64;
-    assert_eq!(last_timestamp > redeem_end_date.unwrap(), true);
+    assert!(last_timestamp > redeem_end_date.unwrap());
 
     let err = test_pack_set
         .request_card_for_redeem_fake_voucher(

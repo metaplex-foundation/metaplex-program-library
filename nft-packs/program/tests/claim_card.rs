@@ -950,8 +950,6 @@ async fn success_claim_two_indexes() {
             )
             .await
             .unwrap();
-
-        break;
     }
 
     let card_master_edition = card_master_edition.get_data(&mut context).await;
