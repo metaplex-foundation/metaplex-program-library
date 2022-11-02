@@ -24,18 +24,18 @@ jobs:
       fail-fast: false
       matrix:
         node:
-          - name: "auction-house"
+#          - name: "auction-house"
           - name: "auctioneer"
           - name: "bubblegum"
             cargo_test: false
           - name: "candy-machine"
             cargo_test: true
-          - name: "fixed-price-sale"
-          - name: "gumdrop"
-          - name: "hydra"
-          - name: "nft-packs"
-          - name: "token-entangler"
-          - name: "token-metadata"
+#          - name: "fixed-price-sale"
+#          - name: "gumdrop"
+#          - name: "hydra"
+#          - name: "nft-packs"
+#          - name: "token-entangler"
+#          - name: "token-metadata"
 
     uses: ./.github/workflows/program-reusable.yml
     with:
