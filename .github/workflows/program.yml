@@ -11,11 +11,11 @@ on:
       cache:
         description: 'Use Cached Dependencies'
         required: true
-        default: true
+        type: boolean
       changes:
         description: 'Only run when files change'
         required: true
-        default: true
+        type: boolean
 
 jobs:
   program-tests:
