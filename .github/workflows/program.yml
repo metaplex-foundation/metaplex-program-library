@@ -10,12 +10,12 @@ on:
     inputs:
       cache:
         description: 'Use Cached Dependencies'
-        required: false
+        required: true
         default: true
       changes:
         description: 'Only run when files change'
-        required: false
-        default: false
+        required: true
+        default: true
 
 jobs:
   program-tests:
