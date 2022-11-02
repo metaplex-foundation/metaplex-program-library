@@ -40,7 +40,8 @@ jobs:
     uses: ./.github/workflows/program-reusable.yml
     with:
       name: ${{ matrix.node.name }}
-      cargo_test: ${{ matrix.node.cargo_test == '' || matrix.node.cargo_test != 'false' }}
+      cargo_test: ${{ matrix.node.cargo_test == '' || 
+        (matrix.node.cargo_test != '' && matrix.node.cargo_test == true) }}
       cache: ${{ (github.event_name == 'workflow_dispatch' && github.event.workflow_dispatch.inputs.cache == 'true') ||
         (github.event_name != 'workflow_dispatch' && false) }}
 # CHANGE `&& false` to `&& true` to default the workflow to use caching.
