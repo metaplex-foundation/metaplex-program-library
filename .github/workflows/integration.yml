@@ -10,12 +10,12 @@ on:
     inputs:
       cache:
         description: 'Use Cached Dependencies'
-        required: false
-        default: true
+        required: true
+        type: boolean
       changes:
         description: 'Only run when files change'
-        required: false
-        default: false
+        required: true
+        type: boolean
 
 jobs:
   integration-tests:
@@ -31,5 +31,5 @@ jobs:
     with:
       name: ${{ matrix.node.name }}
       build_token_metadata: ${{ !contains(matrix.node.build_token_metadata, 'false') }}
-      cache: ${{ contains(github.event.workflow_dispatch.inputs.cache, 'true') }}
-      changes: ${{ !contains(github.event.workflow_dispatch.inputs.changes, 'false') }}
+      cache: ${{ contains(inputs.cache, 'true') }}
+      changes: ${{ !contains(inputs.changes, 'false') }}
