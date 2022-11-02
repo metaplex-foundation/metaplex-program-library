@@ -29,33 +29,17 @@ jobs:
             cargo_test: false
           - name: "candy-machine"
             cargo_test: true
-#          - name: "auction-house"
-#          - name: "fixed-price-sale"
-#          - name: "gumdrop"
-#          - name: "hydra"
-#          - name: "nft-packs"
-#          - name: "token-entangler"
-#          - name: "token-metadata"
-
-# true != ''
-# true != 'true'
-
-# false == ''
-# false != 'true'
-
-# nothing == ''
-# nothing != 'true'
-
+          - name: "auction-house"
+          - name: "fixed-price-sale"
+          - name: "gumdrop"
+          - name: "hydra"
+          - name: "nft-packs"
+          - name: "token-entangler"
+          - name: "token-metadata"
 
     uses: ./.github/workflows/program-reusable.yml
     with:
       name: ${{ matrix.node.name }}
       cargo_test: ${{ !contains(matrix.node.cargo_test, 'false') }}
-#      cache: ${{ (github.event_name == 'workflow_dispatch' && github.event.workflow_dispatch.inputs.cache == 'true') ||
-#        (github.event_name != 'workflow_dispatch' && false) }}
       cache: ${{ contains(github.event.workflow_dispatch.inputs.cache, 'true') }}
-# CHANGE `&& false` to `&& true` to default the workflow to use caching.
-#      changes: ${{ (github.event_name == 'workflow_dispatch' && github.event.workflow_dispatch.inputs.changes == 'true') ||
-#        (github.event_name != 'workflow_dispatch' && true) }}
-      changes: ${{ false }}
-# CHANGE `&& true` to `&& false` to default the workflow to run regardless of whether the files changed.
+      changes: ${{ !contains(github.event.workflow_dispatch.inputs.changes, 'false') }}

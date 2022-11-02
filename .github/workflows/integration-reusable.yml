@@ -26,7 +26,6 @@ jobs:
   changes:
     name: Changes
     runs-on: ubuntu-latest
-    if: inputs.changes == true
     timeout-minutes: 10
     # Set job outputs to values from filter step
     outputs:
