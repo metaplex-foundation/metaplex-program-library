@@ -29,6 +29,7 @@ jobs:
           - name: "bubblegum"
             cargo_test: false
           - name: "candy-machine"
+            cargo_test: true
           - name: "fixed-price-sale"
           - name: "gumdrop"
           - name: "hydra"
