@@ -217,8 +217,6 @@ pub fn get_pack_config_data<'a>(
 ) -> Result<PackConfig, ProgramError> {
     let unpack = PackConfig::unpack(&account_info.data.borrow_mut());
 
-    
-
     match unpack {
         Ok(data) => Ok(data),
         Err(_) => {

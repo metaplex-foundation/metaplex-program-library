@@ -1,3 +1,4 @@
+#![cfg(feature = "test-bpf")]
 mod utils;
 
 use mpl_nft_packs::{
@@ -222,7 +223,8 @@ async fn fail_invalid_state() {
 
     let result = test_pack_set
         .transfer_pack_authority(&mut context, &new_minting_authority.pubkey())
-        .await.unwrap_err();
+        .await
+        .unwrap_err();
 
     assert_custom_error!(result, NFTPacksError::WrongPackState, 0);
 }
