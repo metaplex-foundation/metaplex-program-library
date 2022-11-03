@@ -1,6 +1,16 @@
 # mpl-fixed-price-sale
 
-This package contains the fixed sale price contract SDK code.
+This package contains the Metaplex Fixed Price Sale contract SDK code.
+
+## API Docs
+
+Find the [gumdrop API docs published here](https://metaplex-foundation.github.io/metaplex-program-library/docs/gumdrop/index.html).
+
+## Installation
+
+```shell
+npm install @metaplex-foundation/mpl-fixed-price-sale --save
+```
 
 ## Developing
 

@@ -1,6 +1,6 @@
 {
   "name": "@metaplex-foundation/mpl-hydra",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "MPL Hydra JavaScript API.",
   "main": "dist/src/mpl-hydra.js",
   "types": "dist/src/mpl-hydra.d.ts",
@@ -44,7 +44,7 @@
     "@metaplex-foundation/beet-solana": "^0.1.1",
     "@metaplex-foundation/cusper": "^0.0.2",
     "@metaplex-foundation/mpl-token-metadata": "~2.0",
-    "@project-serum/anchor": "0.24.2",
+    "@project-serum/anchor": "0.25.0",
     "@project-serum/common": "0.0.1-beta.3",
     "@solana/spl-token": "^0.1.8",
     "@solana/web3.js": "^1.50.1",

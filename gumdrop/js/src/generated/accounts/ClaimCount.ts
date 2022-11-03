@@ -19,7 +19,7 @@ export type ClaimCountArgs = {
   claimant: web3.PublicKey;
 };
 
-const claimCountDiscriminator = [78, 134, 220, 213, 34, 152, 102, 167];
+export const claimCountDiscriminator = [78, 134, 220, 213, 34, 152, 102, 167];
 /**
  * Holds the data for the {@link ClaimCount} Account and provides de/serialization
  * functionality for that data
@@ -60,6 +60,18 @@ export class ClaimCount implements ClaimCountArgs {
       throw new Error(`Unable to find ClaimCount account at ${address}`);
     }
     return ClaimCount.fromAccountInfo(accountInfo, 0)[0];
+  }
+
+  /**
+   * Provides a {@link web3.Connection.getProgramAccounts} config builder,
+   * to fetch accounts matching filters that can be specified via that builder.
+   *
+   * @param programId - the program that owns the accounts we are filtering
+   */
+  static gpaBuilder(
+    programId: web3.PublicKey = new web3.PublicKey('gdrpGjVffourzkdDRrQmySw4aTHr8a3xmQzzxSwFD1a'),
+  ) {
+    return beetSolana.GpaBuilder.fromStruct(programId, claimCountBeet);
   }
 
   /**
@@ -116,7 +128,17 @@ export class ClaimCount implements ClaimCountArgs {
    */
   pretty() {
     return {
-      count: this.count,
+      count: (() => {
+        const x = <{ toNumber: () => number }>this.count;
+        if (typeof x.toNumber === 'function') {
+          try {
+            return x.toNumber();
+          } catch (_) {
+            return x;
+          }
+        }
+        return x;
+      })(),
       claimant: this.claimant.toBase58(),
     };
   }

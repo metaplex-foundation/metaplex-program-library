@@ -1,6 +1,6 @@
 [package]
 name = "mpl-hydra"
-version = "0.3.0"
+version = "0.4.0"
 edition = "2021"
 description = "Collective account pooling, fan out wallet, dao treasury, all of the things you need to FAN OUT"
 authors = ["Metaplex Developers <dev@metaplex.com>"]
@@ -19,10 +19,10 @@ cpi = ["no-entrypoint"]
 default = []
 
 [dependencies]
-anchor-lang = "0.24.2"
-anchor-spl = "0.24.2"
-spl-token = {version="3.2.0", features = [ "no-entrypoint" ]}
-mpl-token-metadata = {version="1.2.7", features = [ "no-entrypoint" ]}
+anchor-lang = "0.25.0"
+anchor-spl = "0.25.0"
+spl-token = { version = "3.2.0", features = ["no-entrypoint"] }
+mpl-token-metadata = { version = "1.6.1", features = ["no-entrypoint"] }
 
 [profile.release]
 overflow-checks = true     # Enable integer overflow checks.

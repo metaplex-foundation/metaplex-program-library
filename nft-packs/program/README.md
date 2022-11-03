@@ -59,23 +59,23 @@ Supports creation of "mystery" packages of NFTs that are not revealed until afte
 
 **PackSet**
 
-|Parameter|Type|Description|
-|--------|----------|--------------|
-|store|Pubkey|Store
-|name	|   [u8; 32]|	Pack's name|
-|description|String|Pack description|
-|img_link|	String(limited to 200)|	Link to Arweave cover image|
-|authority|	Pubkey|	Pack authority|
-|pack_cards|u32|	Card masters counter|
-|pack_vouchers|u32|	Pack voucher counter|
-|total_weight|u64|Total weight
-|total_editions|u64|Total amount of editions pack can mint|
-|mutable|	bool|	If true authority can make changes at deactivated phase|
-|pack_state|	enum|	[not activated, activated, deactivated, ended]|
-|distribution_type|	enum|	[max_supply, weighted, unlimited]|
-|allowed_amount_to_redeem|u32|	Count of cards user can try to redeem|
-|redeem_start_date|	u64|	Date when users can start to redeem cards|
-|redeem_end_date|	Option(u64)|	Date when pack set becomes inactive|
+| Parameter                | Type                    | Description                                              |
+|--------------------------|-------------------------|----------------------------------------------------------|
+| store                    | Pubkey                  | Store                                                    |
+| name	                    | [u8; 32]                | 	Pack's name                                             |
+| description              | String                  | Pack description                                         |
+| img_link                 | 	String(limited to 200) | 	Link to Arweave cover image                             |
+| authority                | 	Pubkey                 | 	Pack authority                                          |
+| pack_cards               | u32                     | 	Card masters counter                                    |
+| pack_vouchers            | u32                     | 	Pack voucher counter                                    |
+| total_weight             | u64                     | Total weight                                             |
+| total_editions           | u64                     | Total amount of editions pack can mint                   |
+| mutable                  | 	bool                   | 	If true authority can make changes at deactivated phase |
+| pack_state               | 	enum                   | 	[not activated, activated, deactivated, ended]          |
+| distribution_type        | 	enum                   | 	[max_supply, weighted, unlimited]                       |
+| allowed_amount_to_redeem | u32                     | 	Count of cards user can try to redeem                   |
+| redeem_start_date        | 	u64                    | 	Date when users can start to redeem cards               |
+| redeem_end_date          | 	Option(u64)            | 	Date when pack set becomes inactive                     |
     
 **PackCard**
 

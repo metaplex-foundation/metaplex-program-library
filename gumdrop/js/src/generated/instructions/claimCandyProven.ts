@@ -8,28 +8,24 @@
 import * as splToken from '@solana/spl-token';
 import * as beet from '@metaplex-foundation/beet';
 import * as web3 from '@solana/web3.js';
-import * as beetSolana from '@metaplex-foundation/beet-solana';
 
 /**
  * @category Instructions
- * @category ClaimCandy
+ * @category ClaimCandyProven
  * @category generated
  */
-export type ClaimCandyInstructionArgs = {
+export type ClaimCandyProvenInstructionArgs = {
   walletBump: number;
   claimBump: number;
   index: beet.bignum;
-  amount: beet.bignum;
-  claimantSecret: web3.PublicKey;
-  proof: number[] /* size: 32 */[];
 };
 /**
  * @category Instructions
- * @category ClaimCandy
+ * @category ClaimCandyProven
  * @category generated
  */
-export const claimCandyStruct = new beet.FixableBeetArgsStruct<
-  ClaimCandyInstructionArgs & {
+export const claimCandyProvenStruct = new beet.BeetArgsStruct<
+  ClaimCandyProvenInstructionArgs & {
     instructionDiscriminator: number[] /* size: 8 */;
   }
 >(
@@ -38,19 +34,15 @@ export const claimCandyStruct = new beet.FixableBeetArgsStruct<
     ['walletBump', beet.u8],
     ['claimBump', beet.u8],
     ['index', beet.u64],
-    ['amount', beet.u64],
-    ['claimantSecret', beetSolana.publicKey],
-    ['proof', beet.array(beet.uniformFixedSizeArray(beet.u8, 32))],
   ],
-  'ClaimCandyInstructionArgs',
+  'ClaimCandyProvenInstructionArgs',
 );
 /**
- * Accounts required by the _claimCandy_ instruction
+ * Accounts required by the _claimCandyProven_ instruction
  *
  * @property [_writable_] distributor
  * @property [_writable_] distributorWallet
- * @property [_writable_] claimCount
- * @property [**signer**] temporal
+ * @property [_writable_] claimProof
  * @property [**signer**] payer
  * @property [] candyMachineConfig
  * @property [_writable_] candyMachine
@@ -62,14 +54,13 @@ export const claimCandyStruct = new beet.FixableBeetArgsStruct<
  * @property [] candyMachineProgram
  * @property [] clock
  * @category Instructions
- * @category ClaimCandy
+ * @category ClaimCandyProven
  * @category generated
  */
-export type ClaimCandyInstructionAccounts = {
+export type ClaimCandyProvenInstructionAccounts = {
   distributor: web3.PublicKey;
   distributorWallet: web3.PublicKey;
-  claimCount: web3.PublicKey;
-  temporal: web3.PublicKey;
+  claimProof: web3.PublicKey;
   payer: web3.PublicKey;
   candyMachineConfig: web3.PublicKey;
   candyMachine: web3.PublicKey;
@@ -85,25 +76,25 @@ export type ClaimCandyInstructionAccounts = {
   clock: web3.PublicKey;
 };
 
-export const claimCandyInstructionDiscriminator = [87, 176, 177, 90, 136, 95, 83, 242];
+export const claimCandyProvenInstructionDiscriminator = [1, 2, 30, 252, 145, 228, 67, 145];
 
 /**
- * Creates a _ClaimCandy_ instruction.
+ * Creates a _ClaimCandyProven_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
  * @param args to provide as instruction data to the program
  *
  * @category Instructions
- * @category ClaimCandy
+ * @category ClaimCandyProven
  * @category generated
  */
-export function createClaimCandyInstruction(
-  accounts: ClaimCandyInstructionAccounts,
-  args: ClaimCandyInstructionArgs,
+export function createClaimCandyProvenInstruction(
+  accounts: ClaimCandyProvenInstructionAccounts,
+  args: ClaimCandyProvenInstructionArgs,
   programId = new web3.PublicKey('gdrpGjVffourzkdDRrQmySw4aTHr8a3xmQzzxSwFD1a'),
 ) {
-  const [data] = claimCandyStruct.serialize({
-    instructionDiscriminator: claimCandyInstructionDiscriminator,
+  const [data] = claimCandyProvenStruct.serialize({
+    instructionDiscriminator: claimCandyProvenInstructionDiscriminator,
     ...args,
   });
   const keys: web3.AccountMeta[] = [
@@ -118,14 +109,9 @@ export function createClaimCandyInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.claimCount,
+      pubkey: accounts.claimProof,
       isWritable: true,
       isSigner: false,
-    },
-    {
-      pubkey: accounts.temporal,
-      isWritable: false,
-      isSigner: true,
     },
     {
       pubkey: accounts.payer,

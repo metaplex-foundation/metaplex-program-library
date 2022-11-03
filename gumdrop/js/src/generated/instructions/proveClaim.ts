@@ -5,86 +5,86 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as splToken from '@solana/spl-token';
 import * as beet from '@metaplex-foundation/beet';
 import * as web3 from '@solana/web3.js';
 import * as beetSolana from '@metaplex-foundation/beet-solana';
 
 /**
  * @category Instructions
- * @category Claim
+ * @category ProveClaim
  * @category generated
  */
-export type ClaimInstructionArgs = {
+export type ProveClaimInstructionArgs = {
+  claimPrefix: Uint8Array;
   claimBump: number;
   index: beet.bignum;
   amount: beet.bignum;
   claimantSecret: web3.PublicKey;
+  resource: web3.PublicKey;
+  resourceNonce: Uint8Array;
   proof: number[] /* size: 32 */[];
 };
 /**
  * @category Instructions
- * @category Claim
+ * @category ProveClaim
  * @category generated
  */
-export const claimStruct = new beet.FixableBeetArgsStruct<
-  ClaimInstructionArgs & {
+export const proveClaimStruct = new beet.FixableBeetArgsStruct<
+  ProveClaimInstructionArgs & {
     instructionDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
     ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
+    ['claimPrefix', beet.bytes],
     ['claimBump', beet.u8],
     ['index', beet.u64],
     ['amount', beet.u64],
     ['claimantSecret', beetSolana.publicKey],
+    ['resource', beetSolana.publicKey],
+    ['resourceNonce', beet.bytes],
     ['proof', beet.array(beet.uniformFixedSizeArray(beet.u8, 32))],
   ],
-  'ClaimInstructionArgs',
+  'ProveClaimInstructionArgs',
 );
 /**
- * Accounts required by the _claim_ instruction
+ * Accounts required by the _proveClaim_ instruction
  *
  * @property [_writable_] distributor
- * @property [_writable_] claimStatus
- * @property [_writable_] from
- * @property [_writable_] to
+ * @property [_writable_] claimProof
  * @property [**signer**] temporal
  * @property [_writable_, **signer**] payer
  * @category Instructions
- * @category Claim
+ * @category ProveClaim
  * @category generated
  */
-export type ClaimInstructionAccounts = {
+export type ProveClaimInstructionAccounts = {
   distributor: web3.PublicKey;
-  claimStatus: web3.PublicKey;
-  from: web3.PublicKey;
-  to: web3.PublicKey;
+  claimProof: web3.PublicKey;
   temporal: web3.PublicKey;
   payer: web3.PublicKey;
   systemProgram?: web3.PublicKey;
-  tokenProgram?: web3.PublicKey;
 };
 
-export const claimInstructionDiscriminator = [62, 198, 214, 193, 213, 159, 108, 210];
+export const proveClaimInstructionDiscriminator = [52, 82, 123, 224, 40, 139, 230, 184];
 
 /**
- * Creates a _Claim_ instruction.
+ * Creates a _ProveClaim_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
  * @param args to provide as instruction data to the program
  *
  * @category Instructions
- * @category Claim
+ * @category ProveClaim
  * @category generated
  */
-export function createClaimInstruction(
-  accounts: ClaimInstructionAccounts,
-  args: ClaimInstructionArgs,
+export function createProveClaimInstruction(
+  accounts: ProveClaimInstructionAccounts,
+  args: ProveClaimInstructionArgs,
   programId = new web3.PublicKey('gdrpGjVffourzkdDRrQmySw4aTHr8a3xmQzzxSwFD1a'),
 ) {
-  const [data] = claimStruct.serialize({
-    instructionDiscriminator: claimInstructionDiscriminator,
+  const [data] = proveClaimStruct.serialize({
+    instructionDiscriminator: proveClaimInstructionDiscriminator,
     ...args,
   });
   const keys: web3.AccountMeta[] = [
@@ -94,17 +94,7 @@ export function createClaimInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.claimStatus,
-      isWritable: true,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.from,
-      isWritable: true,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.to,
+      pubkey: accounts.claimProof,
       isWritable: true,
       isSigner: false,
     },
@@ -120,11 +110,6 @@ export function createClaimInstruction(
     },
     {
       pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.tokenProgram ?? splToken.TOKEN_PROGRAM_ID,
       isWritable: false,
       isSigner: false,
     },

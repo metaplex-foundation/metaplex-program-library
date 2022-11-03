@@ -5,77 +5,79 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as splToken from '@solana/spl-token';
 import * as beet from '@metaplex-foundation/beet';
 import * as web3 from '@solana/web3.js';
 
 /**
  * @category Instructions
- * @category CloseDistributorTokenAccount
+ * @category RecoverUpdateAuthority
  * @category generated
  */
-export type CloseDistributorTokenAccountInstructionArgs = {
+export type RecoverUpdateAuthorityInstructionArgs = {
   bump: number;
+  walletBump: number;
 };
 /**
  * @category Instructions
- * @category CloseDistributorTokenAccount
+ * @category RecoverUpdateAuthority
  * @category generated
  */
-export const closeDistributorTokenAccountStruct = new beet.BeetArgsStruct<
-  CloseDistributorTokenAccountInstructionArgs & {
+export const recoverUpdateAuthorityStruct = new beet.BeetArgsStruct<
+  RecoverUpdateAuthorityInstructionArgs & {
     instructionDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
     ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
     ['bump', beet.u8],
+    ['walletBump', beet.u8],
   ],
-  'CloseDistributorTokenAccountInstructionArgs',
+  'RecoverUpdateAuthorityInstructionArgs',
 );
 /**
- * Accounts required by the _closeDistributorTokenAccount_ instruction
+ * Accounts required by the _recoverUpdateAuthority_ instruction
  *
  * @property [**signer**] base
  * @property [] distributor
- * @property [_writable_] from
- * @property [_writable_] to
- * @property [_writable_] receiver
+ * @property [] distributorWallet
+ * @property [] newUpdateAuthority
+ * @property [_writable_] metadata
+ * @property [] tokenMetadataProgram
  * @category Instructions
- * @category CloseDistributorTokenAccount
+ * @category RecoverUpdateAuthority
  * @category generated
  */
-export type CloseDistributorTokenAccountInstructionAccounts = {
+export type RecoverUpdateAuthorityInstructionAccounts = {
   base: web3.PublicKey;
   distributor: web3.PublicKey;
-  from: web3.PublicKey;
-  to: web3.PublicKey;
-  receiver: web3.PublicKey;
+  distributorWallet: web3.PublicKey;
+  newUpdateAuthority: web3.PublicKey;
+  metadata: web3.PublicKey;
   systemProgram?: web3.PublicKey;
-  tokenProgram?: web3.PublicKey;
+  tokenMetadataProgram: web3.PublicKey;
 };
 
-export const closeDistributorTokenAccountInstructionDiscriminator = [
-  156, 174, 153, 120, 102, 150, 134, 142,
+export const recoverUpdateAuthorityInstructionDiscriminator = [
+  142, 251, 209, 116, 87, 100, 36, 191,
 ];
 
 /**
- * Creates a _CloseDistributorTokenAccount_ instruction.
+ * Creates a _RecoverUpdateAuthority_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
  * @param args to provide as instruction data to the program
  *
  * @category Instructions
- * @category CloseDistributorTokenAccount
+ * @category RecoverUpdateAuthority
  * @category generated
  */
-export function createCloseDistributorTokenAccountInstruction(
-  accounts: CloseDistributorTokenAccountInstructionAccounts,
-  args: CloseDistributorTokenAccountInstructionArgs,
+export function createRecoverUpdateAuthorityInstruction(
+  accounts: RecoverUpdateAuthorityInstructionAccounts,
+  args: RecoverUpdateAuthorityInstructionArgs,
   programId = new web3.PublicKey('gdrpGjVffourzkdDRrQmySw4aTHr8a3xmQzzxSwFD1a'),
 ) {
-  const [data] = closeDistributorTokenAccountStruct.serialize({
-    instructionDiscriminator: closeDistributorTokenAccountInstructionDiscriminator,
+  const [data] = recoverUpdateAuthorityStruct.serialize({
+    instructionDiscriminator: recoverUpdateAuthorityInstructionDiscriminator,
     ...args,
   });
   const keys: web3.AccountMeta[] = [
@@ -90,17 +92,17 @@ export function createCloseDistributorTokenAccountInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.from,
-      isWritable: true,
+      pubkey: accounts.distributorWallet,
+      isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: accounts.to,
-      isWritable: true,
+      pubkey: accounts.newUpdateAuthority,
+      isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: accounts.receiver,
+      pubkey: accounts.metadata,
       isWritable: true,
       isSigner: false,
     },
@@ -110,7 +112,7 @@ export function createCloseDistributorTokenAccountInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.tokenProgram ?? splToken.TOKEN_PROGRAM_ID,
+      pubkey: accounts.tokenMetadataProgram,
       isWritable: false,
       isSigner: false,
     },

@@ -5,7 +5,7 @@ use anchor_lang::solana_program::instruction::Instruction;
 use anchor_lang::solana_program::program_memory::sol_memcmp;
 use anchor_lang::solana_program::pubkey::PUBKEY_BYTES;
 use anchor_spl::token::TokenAccount;
-use mpl_token_metadata::state::Metadata;
+use mpl_token_metadata::state::{Metadata, TokenMetadataAccount};
 
 pub fn cmp_pubkeys(a: &Pubkey, b: &Pubkey) -> bool {
     sol_memcmp(a.as_ref(), b.as_ref(), PUBKEY_BYTES) == 0
