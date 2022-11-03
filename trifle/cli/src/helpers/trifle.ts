@@ -3,7 +3,13 @@ import {
   SftWithToken,
   TokenMetadataProgram,
 } from "@metaplex-foundation/js";
-import { Connection, Keypair, PublicKey, SYSVAR_INSTRUCTIONS_PUBKEY, Transaction } from "@solana/web3.js";
+import {
+  Connection,
+  Keypair,
+  PublicKey,
+  SYSVAR_INSTRUCTIONS_PUBKEY,
+  Transaction,
+} from "@solana/web3.js";
 import {
   createAddCollectionConstraintToEscrowConstraintModelInstruction,
   createAddNoneConstraintToEscrowConstraintModelInstruction,
@@ -26,7 +32,7 @@ import {
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 import { findMetadataPda } from "@metaplex-foundation/js";
-import { PROGRAM_ADDRESS as TM_PROGRAM_ADDRESS } from "@metaplex-foundation/mpl-token-metadata/src/generated";
+import { PROGRAM_ADDRESS as TM_PROGRAM_ADDRESS } from "@metaplex-foundation/mpl-token-metadata";
 import { EscrowAuthority, map_replacer } from "./utils";
 
 export const createConstraintModel = async (

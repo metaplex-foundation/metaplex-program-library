@@ -7,7 +7,7 @@ import * as figlet from "figlet";
 import * as path from "path";
 import { Command, program } from "commander";
 import log from "loglevel";
-import * as sdk from "@metaplex-foundation/mpl-token-metadata/src/generated";
+import * as sdk from "@metaplex-foundation/mpl-token-metadata";
 import * as web3 from "@solana/web3.js";
 import * as fs from "fs";
 import { Keypair } from "@solana/web3.js";
