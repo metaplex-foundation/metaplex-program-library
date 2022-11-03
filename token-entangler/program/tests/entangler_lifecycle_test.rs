@@ -1,3 +1,4 @@
+#![cfg(feature = "test-bpf")]
 use anchor_lang::{
     prelude::{Pubkey, Rent},
     InstructionData, ToAccountMetas,
@@ -18,7 +19,6 @@ use test_utils::{
     instructions_to_mint_an_nft,
 };
 
-#[cfg(feature = "test-bpf")]
 #[tokio::test]
 async fn _lifecycle_test() {
     const TREASURY_MINT: &str = "So11111111111111111111111111111111111111112";
