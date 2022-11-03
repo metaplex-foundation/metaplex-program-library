@@ -1,4 +1,4 @@
-use crate::state::{Fanout, FanoutMembershipVoucher, HOLDING_ACCOUNT_SIZE};
+use crate::state::{Fanout, FanoutMembershipVoucher, FANOUT_ACCOUNT_SIZE, HOLDING_ACCOUNT_SIZE};
 use crate::utils::logic::calculation::*;
 use crate::utils::logic::transfer::{transfer_from_mint_holding, transfer_native};
 use crate::utils::parse_fanout_mint;
@@ -18,6 +18,19 @@ pub fn distribute_native<'info>(
     if holding_account.key() != fanout.account_key {
         return Err(HydraError::InvalidHoldingAccount.into());
     }
+
+    let fanout_snapshot = fanout.to_account_info().lamports();
+    let fanout_snapshot_less_min = current_lamports(&rent, FANOUT_ACCOUNT_SIZE, fanout_snapshot)?;
+    let fanout_transfer = transfer_native(
+        fanout.to_account_info(),
+        holding_account.to_account_info(),
+        fanout_snapshot,
+        fanout_snapshot_less_min,
+    );
+    if fanout_transfer.is_err() {
+        return Err(HydraError::BadArtithmetic.into());
+    }
+
     let current_snapshot = holding_account.lamports();
     let current_snapshot_less_min =
         current_lamports(&rent, HOLDING_ACCOUNT_SIZE, current_snapshot)?;
