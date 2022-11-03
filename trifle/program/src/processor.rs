@@ -370,7 +370,7 @@ fn transfer_in(
         let collection_key = attribute_metadata
             .collection
             .clone()
-            .ok_or(TrifleError::InvalidCollectionMetadata)?
+            .ok_or(TrifleError::InvalidCollection)?
             .key;
 
         constraint_model.validate(&collection_key, &args.slot)?;
