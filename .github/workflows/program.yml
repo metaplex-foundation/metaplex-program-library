@@ -26,9 +26,7 @@ jobs:
         node:
           - name: "auctioneer"
           - name: "bubblegum"
-            cargo_test: false
           - name: "candy-machine"
-            cargo_test: true
           - name: "auction-house"
           - name: "fixed-price-sale"
           - name: "gumdrop"
@@ -40,6 +38,5 @@ jobs:
     uses: ./.github/workflows/program-reusable.yml
     with:
       name: ${{ matrix.node.name }}
-      cargo_test: ${{ !contains(matrix.node.cargo_test, 'false') }}
       cache: ${{ contains(inputs.cache, 'true') }}
       changes: ${{ !contains(inputs.changes, 'false') }}
