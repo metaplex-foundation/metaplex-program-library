@@ -6,7 +6,10 @@ use mpl_token_metadata::{
 };
 use solana_program::program::{invoke, invoke_signed};
 
-use crate::{cmp_pubkeys, constants::AUTHORITY_SEED, CandyError, CandyMachine};
+use crate::{
+    cmp_pubkeys, constants::AUTHORITY_SEED, utils::assert_edition_from_mint, CandyError,
+    CandyMachine,
+};
 
 pub fn set_collection(ctx: Context<SetCollection>) -> Result<()> {
     let accounts = ctx.accounts;
@@ -93,6 +96,7 @@ pub fn approve_collection_authority_helper(
     }
 
     assert_master_edition(&collection_data, &collection_master_edition)?;
+    assert_edition_from_mint(&collection_master_edition, &collection_mint)?;
 
     let approve_collection_authority_ix = approve_collection_authority(
         token_metadata_program.key(),
