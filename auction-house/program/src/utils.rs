@@ -686,7 +686,10 @@ pub fn assert_scopes_eq(
     Ok(())
 }
 
-pub fn close_account(source_account: AccountInfo, receiver_account: AccountInfo) -> Result<()> {
+pub fn close_account<'a>(
+    source_account: &AccountInfo<'a>,
+    receiver_account: &AccountInfo<'a>,
+) -> Result<()> {
     let current_lamports = source_account.lamports();
     let account_data_size = source_account.data_len();
 
