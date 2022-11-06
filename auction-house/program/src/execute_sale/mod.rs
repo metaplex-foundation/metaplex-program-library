@@ -1750,14 +1750,23 @@ fn execute_sale_logic<'c, 'info>(
     )?;
 
     // Close the buyer trade state account if the rest of execute sale was successful.
-    close_account(buyer_trade_state.to_account_info(), &fee_payer)?;
+    close_account(
+        buyer_trade_state.to_account_info(),
+        fee_payer.to_account_info(),
+    )?;
 
     let token_account_data = SplAccount::unpack(&token_account.data.borrow())?;
     if token_account_data.delegated_amount == 0 {
-        close_account(seller_trade_state.to_account_info(), &fee_payer)?;
+        close_account(
+            seller_trade_state.to_account_info(),
+            fee_payer.to_account_info(),
+        )?;
 
         if free_trade_state.lamports() > 0 {
-            close_account(free_trade_state.to_account_info(), &fee_payer)?;
+            close_account(
+                free_trade_state.to_account_info(),
+                fee_payer.to_account_info(),
+            )?;
         }
     };
 
