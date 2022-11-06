@@ -3,10 +3,10 @@ use std::{cell::RefMut, ops::Deref};
 use anchor_lang::prelude::*;
 use anchor_spl::token::Token;
 use arrayref::array_ref;
-use mpl_token_metadata::instruction::freeze_delegated_account;
 use mpl_token_metadata::{
     instruction::{
-        create_master_edition_v3, create_metadata_accounts_v2, update_metadata_accounts_v2,
+        create_master_edition_v3, create_metadata_accounts_v2, freeze_delegated_account,
+        update_metadata_accounts_v2,
     },
     state::{MAX_NAME_LENGTH, MAX_URI_LENGTH},
 };
@@ -23,11 +23,11 @@ use solana_program::{
 };
 use spl_token::instruction::approve;
 
-use crate::constants::{COMPUTE_BUDGET, FREEZE_FEATURE_INDEX};
 use crate::{
     constants::{
-        A_TOKEN, BLOCK_HASHES, BOT_FEE, COLLECTIONS_FEATURE_INDEX, CONFIG_ARRAY_START,
-        CONFIG_LINE_SIZE, CUPCAKE_ID, EXPIRE_OFFSET, GUMDROP_ID, PREFIX,
+        A_TOKEN, BLOCK_HASHES, BOT_FEE, COLLECTIONS_FEATURE_INDEX, COMPUTE_BUDGET,
+        CONFIG_ARRAY_START, CONFIG_LINE_SIZE, CUPCAKE_ID, EXPIRE_OFFSET, FREEZE_FEATURE_INDEX,
+        GUMDROP_ID, PREFIX,
     },
     utils::*,
     CandyError, CandyMachine, CandyMachineData, ConfigLine, EndSettingType, FreezePDA,
