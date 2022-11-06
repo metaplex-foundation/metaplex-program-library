@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use super::*;
 
 pub struct ThawArgs {
@@ -177,7 +179,7 @@ pub async fn process_thaw(args: ThawArgs) -> Result<()> {
 
     let solana_cluster: Cluster = get_cluster(program.rpc())?;
     let rpc_url = get_rpc_url(args.rpc_url);
-    let client = RpcClient::new(&rpc_url);
+    let client = RpcClient::new_with_timeout(&rpc_url, Duration::from_secs(300));
 
     let solana_cluster = if rpc_url.ends_with("8899") {
         Cluster::Localnet
@@ -186,23 +188,10 @@ pub async fn process_thaw(args: ThawArgs) -> Result<()> {
     };
 
     let mint_pubkeys = match solana_cluster {
-        Cluster::Devnet | Cluster::Localnet => {
+        Cluster::Devnet | Cluster::Localnet | Cluster::Mainnet => {
             let (creator, _) = find_candy_machine_creator_pda(&candy_pubkey);
             let creator = bs58::encode(creator).into_string();
             get_cm_creator_mint_accounts(&client, &creator, 0)?
-        }
-        Cluster::Mainnet => {
-            // New client instance because we have to move it into the crawler.
-            let client = RpcClient::new(&rpc_url);
-
-            let crawled_accounts = Crawler::get_cmv2_mints(client, candy_pubkey).await?;
-            match crawled_accounts.get("mint") {
-                Some(accounts) => accounts
-                    .iter()
-                    .map(|account| Pubkey::from_str(account).unwrap())
-                    .collect::<Vec<Pubkey>>(),
-                None => Vec::new(),
-            }
         }
         _ => {
             return Err(anyhow!(
