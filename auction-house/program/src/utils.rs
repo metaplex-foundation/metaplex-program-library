@@ -688,6 +688,8 @@ pub fn assert_scopes_eq(
 
 pub fn close_account(source_account: AccountInfo, receiver_account: &AccountInfo) -> Result<()> {
     let current_lamports = source_account.lamports();
+    let account_data_size = source_account.data_len();
+
     **source_account.lamports.borrow_mut() = 0;
     **receiver_account.lamports.borrow_mut() = receiver_account
         .lamports()
@@ -697,7 +699,7 @@ pub fn close_account(source_account: AccountInfo, receiver_account: &AccountInfo
     sol_memset(
         &mut *source_account.try_borrow_mut_data()?,
         0,
-        source_account.data_len(),
+        account_data_size,
     );
 
     Ok(())
