@@ -22,9 +22,8 @@ impl From<u16> for TransferEffects {
     }
 }
 
-#[allow(clippy::from_over_into)]
-impl Into<u16> for TransferEffects {
-    fn into(self) -> u16 {
-        u16::from_le_bytes(self.into_bytes())
+impl From<TransferEffects> for u16 {
+    fn from(transfer_effects: TransferEffects) -> Self {
+        u16::from_le_bytes(transfer_effects.into_bytes())
     }
 }
