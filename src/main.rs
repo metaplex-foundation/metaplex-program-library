@@ -330,11 +330,13 @@ async fn run() -> Result<()> {
             keypair,
             rpc_url,
             cache,
+            config,
             candy_machine,
         } => process_unfreeze_funds(UnlockFundsArgs {
             keypair,
             rpc_url,
             cache,
+            config,
             candy_machine,
         })?,
         Commands::Update {

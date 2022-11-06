@@ -260,6 +260,10 @@ pub enum Commands {
         #[clap(long, default_value = DEFAULT_CACHE)]
         cache: String,
 
+        /// Path to the config file
+        #[clap(short, long, default_value = DEFAULT_CONFIG)]
+        config: String,
+
         /// Address of candy machine to update.
         candy_machine: Option<String>,
     },
