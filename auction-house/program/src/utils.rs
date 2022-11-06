@@ -6,7 +6,7 @@ use anchor_lang::{
     prelude::*,
     solana_program::{
         program::invoke_signed,
-        program_memory::sol_memcmp,
+        program_memory::{sol_memcmp, sol_memset},
         program_option::COption,
         program_pack::{IsInitialized, Pack},
         pubkey::PUBKEY_BYTES,
@@ -682,6 +682,23 @@ pub fn assert_scopes_eq(
             return Err(AuctionHouseError::MissingAuctioneerScope.into());
         }
     }
+
+    Ok(())
+}
+
+pub fn close_account(source_account: AccountInfo, receiver_account: &AccountInfo) -> Result<()> {
+    let current_lamports = source_account.lamports();
+    **source_account.lamports.borrow_mut() = 0;
+    **receiver_account.lamports.borrow_mut() = receiver_account
+        .lamports()
+        .checked_add(current_lamports)
+        .ok_or(AuctionHouseError::NumericalOverflow)?;
+
+    sol_memset(
+        &mut *source_account.try_borrow_mut_data()?,
+        0,
+        source_account.data_len(),
+    );
 
     Ok(())
 }
