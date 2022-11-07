@@ -7,7 +7,7 @@ use crate::{
     },
     utils::{
         assert_derivation, assert_initialized, assert_owned_by, assert_signer,
-        check_token_standard, create_or_allocate_account_raw,
+        create_or_allocate_account_raw, validate_token_standard,
     },
 };
 use borsh::BorshSerialize;
@@ -92,7 +92,7 @@ pub fn process_create_escrow_account(
     }
 
     // Only non-fungible tokens (i.e. unique) can have escrow accounts.
-    if check_token_standard(mint_account_info, Some(edition_account_info))?
+    if validate_token_standard(mint_account_info, edition_account_info)?
         != TokenStandard::NonFungible
     {
         return Err(MetadataError::MustBeNonFungible.into());

@@ -2,7 +2,7 @@ use crate::{
     deprecated_instruction::{MintPrintingTokensViaTokenArgs, SetReservationListArgs},
     escrow::TransferOutOfEscrowArgs,
     state::{
-        Collection, CollectionDetails, Creator, Data, DataV2, Uses, EDITION,
+        Collection, CollectionDetails, Creator, Data, DataV2, TokenStandard, Uses, EDITION,
         EDITION_MARKER_BIT_SIZE, PREFIX,
     },
 };
@@ -117,6 +117,13 @@ pub struct UtilizeArgs {
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct SetCollectionSizeArgs {
     pub size: u64,
+}
+
+#[repr(C)]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+pub struct SetTokenStandardArgs {
+    pub token_standard: Option<TokenStandard>,
 }
 
 /// Instructions supported by the Metadata program.
@@ -518,7 +525,7 @@ pub enum MetadataInstruction {
     #[account(1, signer, writable, name="update_authority", desc="Metadata update authority")]
     #[account(2, name="mint", desc="Mint account")]
     #[account(3, optional, name="edition", desc="Edition account")]
-    SetTokenStandard,
+    SetTokenStandard(SetTokenStandardArgs),
 
     /// Set size of an existing collection using CPI from the Bubblegum program.  This is how
     /// collection size is incremented and decremented for compressed NFTs.
@@ -1801,13 +1808,16 @@ pub fn set_token_standard(
     update_authority: Pubkey,
     mint_account: Pubkey,
     edition_account: Option<Pubkey>,
+    token_standard: Option<TokenStandard>,
 ) -> Instruction {
     let mut accounts = vec![
         AccountMeta::new(metadata_account, false),
         AccountMeta::new(update_authority, true),
         AccountMeta::new_readonly(mint_account, false),
     ];
-    let data = MetadataInstruction::SetTokenStandard.try_to_vec().unwrap();
+    let data = MetadataInstruction::SetTokenStandard(SetTokenStandardArgs { token_standard })
+        .try_to_vec()
+        .unwrap();
 
     if let Some(edition_account) = edition_account {
         accounts.push(AccountMeta::new_readonly(edition_account, false));

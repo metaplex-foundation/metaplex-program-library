@@ -1422,32 +1422,22 @@ pub fn assert_verified_member_of_collection(
     Ok(())
 }
 
-pub fn check_token_standard(
+pub fn validate_token_standard(
     mint_info: &AccountInfo,
-    edition_account_info: Option<&AccountInfo>,
+    edition_account_info: &AccountInfo,
 ) -> Result<TokenStandard, ProgramError> {
     let mint_decimals = get_mint_decimals(mint_info)?;
     let mint_supply = get_mint_supply(mint_info)?;
 
-    match edition_account_info {
-        Some(edition) => {
-            if is_master_edition(edition, mint_decimals, mint_supply) {
-                Ok(TokenStandard::NonFungible)
-            } else if is_print_edition(edition, mint_decimals, mint_supply) {
-                Ok(TokenStandard::NonFungibleEdition)
-            } else {
-                Err(MetadataError::CouldNotDetermineTokenStandard.into())
-            }
-        }
-        None => {
-            assert_edition_is_not_mint_authority(mint_info)?;
-            if mint_decimals == 0 {
-                Ok(TokenStandard::FungibleAsset)
-            } else {
-                Ok(TokenStandard::Fungible)
-            }
-        }
-    }
+    let standard = if is_master_edition(edition_account_info, mint_decimals, mint_supply) {
+        TokenStandard::NonFungible
+    } else if is_print_edition(edition_account_info, mint_decimals, mint_supply) {
+        TokenStandard::NonFungibleEdition
+    } else {
+        return Err(MetadataError::CouldNotDetermineTokenStandard.into());
+    };
+
+    Ok(standard)
 }
 
 pub fn is_master_edition(

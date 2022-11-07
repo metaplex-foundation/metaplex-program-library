@@ -16,7 +16,7 @@ use crate::{
     escrow::{
         process_close_escrow_account, process_create_escrow_account, process_transfer_out_of_escrow,
     },
-    instruction::{MetadataInstruction, SetCollectionSizeArgs},
+    instruction::{MetadataInstruction, SetCollectionSizeArgs, SetTokenStandardArgs},
     solana_program::program_memory::sol_memset,
     state::{
         Collection, CollectionAuthorityRecord, CollectionDetails, DataV2, Edition, EditionMarker,
@@ -27,17 +27,17 @@ use crate::{
     },
     utils::{
         assert_currently_holding, assert_data_valid, assert_delegated_tokens, assert_derivation,
-        assert_freeze_authority_matches_mint, assert_initialized,
-        assert_mint_authority_matches_mint, assert_owned_by, assert_signer,
+        assert_edition_is_not_mint_authority, assert_freeze_authority_matches_mint,
+        assert_initialized, assert_mint_authority_matches_mint, assert_owned_by, assert_signer,
         assert_token_program_matches_package, assert_update_authority_is_correct,
-        assert_verified_member_of_collection, check_token_standard, create_or_allocate_account_raw,
+        assert_verified_member_of_collection, create_or_allocate_account_raw,
         decrement_collection_size, get_mint_decimals, get_mint_supply,
         get_owner_from_token_account, increment_collection_size, is_master_edition,
         is_print_edition, process_create_metadata_accounts_logic,
         process_mint_new_edition_from_master_edition_via_token_logic, puff_out_data_fields,
-        spl_token_burn, spl_token_close, transfer_mint_authority, CreateMetadataAccountsLogicArgs,
-        MintNewEditionFromMasterEditionViaTokenLogicArgs, TokenBurnParams, TokenCloseParams,
-        BUBBLEGUM_ACTIVATED, BUBBLEGUM_PROGRAM_ADDRESS,
+        spl_token_burn, spl_token_close, transfer_mint_authority, validate_token_standard,
+        CreateMetadataAccountsLogicArgs, MintNewEditionFromMasterEditionViaTokenLogicArgs,
+        TokenBurnParams, TokenCloseParams, BUBBLEGUM_ACTIVATED, BUBBLEGUM_PROGRAM_ADDRESS,
     },
 };
 use arrayref::array_ref;
@@ -244,9 +244,9 @@ pub fn process_instruction<'a>(
             msg!("Instruction: Set Collection Size");
             set_collection_size(program_id, accounts, args)
         }
-        MetadataInstruction::SetTokenStandard => {
+        MetadataInstruction::SetTokenStandard(args) => {
             msg!("Instruction: Set Token Standard");
-            set_token_standard(program_id, accounts)
+            set_token_standard(program_id, accounts, args)
         }
         MetadataInstruction::BubblegumSetCollectionSize(args) => {
             msg!("Instruction: Bubblegum Program Set Collection Size");
@@ -2229,7 +2229,11 @@ pub fn bubblegum_set_collection_size(
     Ok(())
 }
 
-pub fn set_token_standard(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
+pub fn set_token_standard(
+    program_id: &Pubkey,
+    accounts: &[AccountInfo],
+    args: SetTokenStandardArgs,
+) -> ProgramResult {
     let account_info_iter = &mut accounts.iter();
 
     let metadata_account_info = next_account_info(account_info_iter)?;
@@ -2261,9 +2265,15 @@ pub fn set_token_standard(program_id: &Pubkey, accounts: &[AccountInfo]) -> Prog
         assert_owned_by(edition_account_info, program_id)?;
         assert_derivation(program_id, edition_account_info, &edition_path)?;
 
-        check_token_standard(mint_account_info, Some(edition_account_info))?
+        // validate Nonfungible or NonfungibleEdition
+        validate_token_standard(mint_account_info, edition_account_info)?
+    } else if let Some(token_standard) = args.token_standard {
+        // Ensure it's not supposed to be a Nonfungible variant.
+        assert_edition_is_not_mint_authority(mint_account_info)?;
+        // Use can choose between Fungible and FungibleAsset.
+        token_standard
     } else {
-        check_token_standard(mint_account_info, None)?
+        return Err(MetadataError::NoTokenStandardProvided.into());
     };
 
     metadata.token_standard = Some(token_standard);

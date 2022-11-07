@@ -520,6 +520,10 @@ pub enum MetadataError {
     /// 131
     #[error("Invalid collection size change")]
     InvalidCollectionSizeChange,
+
+    /// 132
+    #[error("No token standard provided")]
+    NoTokenStandardProvided,
 }
 
 impl PrintProgramError for MetadataError {

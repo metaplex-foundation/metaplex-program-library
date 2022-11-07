@@ -54,6 +54,7 @@ async fn successfully_update_nonfungible() {
         context.payer.pubkey(),
         test_nft.mint.pubkey(),
         Some(master_edition.pubkey),
+        None,
     );
     let tx = Transaction::new_signed_with_payer(
         &[ix],
@@ -127,6 +128,7 @@ async fn successfully_update_nonfungible_edition() {
         context.payer.pubkey(),
         edition.mint.pubkey(),
         Some(edition.new_edition_pubkey),
+        None,
     );
     let tx = Transaction::new_signed_with_payer(
         &[ix],
@@ -177,6 +179,7 @@ async fn successfully_update_fungible_asset() {
         context.payer.pubkey(),
         test_nft.mint.pubkey(),
         None,
+        Some(TokenStandard::FungibleAsset),
     );
     let tx = Transaction::new_signed_with_payer(
         &[ix],
@@ -224,6 +227,7 @@ async fn successfully_update_fungible() {
         context.payer.pubkey(),
         test_nft.mint.pubkey(),
         None,
+        Some(TokenStandard::Fungible),
     );
     let tx = Transaction::new_signed_with_payer(
         &[ix],
@@ -277,6 +281,7 @@ async fn updating_without_authority_fails() {
         fake_authority.pubkey(),
         test_nft.mint.pubkey(),
         Some(master_edition.pubkey),
+        None,
     );
     let tx = Transaction::new_signed_with_payer(
         &[ix],
@@ -341,6 +346,7 @@ async fn mint_matches_metadata() {
         context.payer.pubkey(),
         test_nft.mint.pubkey(),
         Some(master_edition.pubkey),
+        None,
     );
     let tx = Transaction::new_signed_with_payer(
         &[ix],
@@ -412,6 +418,7 @@ async fn incorrect_edition_fails() {
         context.payer.pubkey(),
         test_nft.mint.pubkey(),
         Some(wrong_master_edition.pubkey),
+        None,
     );
     let tx = Transaction::new_signed_with_payer(
         &[ix],
@@ -462,6 +469,7 @@ async fn invalid_edition_fails() {
         context.payer.pubkey(),
         test_nft.mint.pubkey(),
         Some(invalid_edition),
+        None,
     );
     let tx = Transaction::new_signed_with_payer(
         &[ix],
@@ -513,6 +521,7 @@ async fn updating_nonfungible_without_edition_fails() {
         context.payer.pubkey(),
         test_nft.mint.pubkey(),
         None,
+        Some(TokenStandard::Fungible),
     );
     let tx = Transaction::new_signed_with_payer(
         &[ix],

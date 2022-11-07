@@ -6,8 +6,8 @@ use crate::{
         ESCROW_POSTFIX, PREFIX,
     },
     utils::{
-        assert_derivation, assert_initialized, assert_owned_by, assert_signer,
-        check_token_standard, close_account_raw,
+        assert_derivation, assert_initialized, assert_owned_by, assert_signer, close_account_raw,
+        validate_token_standard,
     },
 };
 use borsh::BorshSerialize;
@@ -79,7 +79,7 @@ pub fn process_close_escrow_account(
         return Err(MetadataError::MintMismatch.into());
     }
 
-    if check_token_standard(mint_account_info, Some(edition_account_info))?
+    if validate_token_standard(mint_account_info, edition_account_info)?
         != TokenStandard::NonFungible
     {
         return Err(MetadataError::MustBeNonFungible.into());
