@@ -155,7 +155,6 @@ pub enum Key {
     UseAuthorityRecord,
     CollectionAuthorityRecord,
     TokenOwnedEscrow,
-    EscrowConstraintModel,
 }
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]

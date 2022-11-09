@@ -1,5 +1,5 @@
 {
-  "version": "1.5.0",
+  "version": "1.6.1",
   "name": "mpl_token_metadata",
   "instructions": [
     {
@@ -2134,7 +2134,7 @@
         },
         {
           "name": "metadata",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false,
           "desc": "Metadata account"
         },
@@ -2169,6 +2169,12 @@
           "desc": "System program"
         },
         {
+          "name": "sysvarInstructions",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Instructions sysvar account"
+        },
+        {
           "name": "authority",
           "isMut": false,
           "isSigner": true,
@@ -2193,7 +2199,7 @@
         },
         {
           "name": "metadata",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false,
           "desc": "Metadata account"
         },
@@ -2226,6 +2232,12 @@
           "isMut": false,
           "isSigner": false,
           "desc": "System program"
+        },
+        {
+          "name": "sysvarInstructions",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Instructions sysvar account"
         }
       ],
       "args": [],
@@ -2242,6 +2254,12 @@
           "isMut": false,
           "isSigner": false,
           "desc": "Escrow account"
+        },
+        {
+          "name": "metadata",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Metadata account"
         },
         {
           "name": "payer",
@@ -2298,10 +2316,10 @@
           "desc": "Token program"
         },
         {
-          "name": "rent",
+          "name": "sysvarInstructions",
           "isMut": false,
           "isSigner": false,
-          "desc": "Rent info"
+          "desc": "Instructions sysvar account"
         },
         {
           "name": "authority",
@@ -3102,9 +3120,6 @@
           },
           {
             "name": "TokenOwnedEscrow"
-          },
-          {
-            "name": "EscrowConstraintModel"
           }
         ]
       }

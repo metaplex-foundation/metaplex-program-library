@@ -1,3 +1,4 @@
+#![cfg(feature = "test-bpf")]
 pub mod utils;
 
 use anchor_lang::solana_program::instruction::InstructionError;

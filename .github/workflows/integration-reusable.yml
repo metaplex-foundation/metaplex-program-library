@@ -12,6 +12,9 @@ on:
       build_token_metadata:
         required: true
         type: boolean
+      changes:
+        required: true
+        type: boolean
 
 env:
   CARGO_TERM_COLOR: always
@@ -47,6 +50,7 @@ jobs:
     runs-on: buildjet-8vcpu-ubuntu-2004
     needs: changes
     if: |
+      inputs.changes == false ||
       needs.changes.outputs.core == 'true' ||
       needs.changes.outputs.package == 'true' ||
       needs.changes.outputs.workflow == 'true'

@@ -13,6 +13,7 @@ use solana_program::{
     program::{invoke, invoke_signed},
     program_pack::Pack,
     pubkey::Pubkey,
+    sysvar,
 };
 
 #[cfg(feature = "serde-feature")]
@@ -29,6 +30,7 @@ pub struct TransferOutOfEscrowArgs {
 pub fn transfer_out_of_escrow(
     program_id: Pubkey,
     escrow: Pubkey,
+    metadata: Pubkey,
     payer: Pubkey,
     attribute_mint: Pubkey,
     attribute_src: Pubkey,
@@ -40,6 +42,7 @@ pub fn transfer_out_of_escrow(
 ) -> Instruction {
     let mut accounts = vec![
         AccountMeta::new_readonly(escrow, false),
+        AccountMeta::new(metadata, false),
         AccountMeta::new(payer, true),
         AccountMeta::new_readonly(attribute_mint, false),
         AccountMeta::new(attribute_src, false),
@@ -49,7 +52,7 @@ pub fn transfer_out_of_escrow(
         AccountMeta::new_readonly(solana_program::system_program::id(), false),
         AccountMeta::new_readonly(spl_associated_token_account::id(), false),
         AccountMeta::new_readonly(spl_token::id(), false),
-        AccountMeta::new_readonly(solana_program::sysvar::rent::id(), false),
+        AccountMeta::new_readonly(sysvar::instructions::id(), false),
     ];
 
     if let Some(authority) = authority {
@@ -75,6 +78,7 @@ pub fn process_transfer_out_of_escrow(
     let account_info_iter = &mut accounts.iter();
 
     let escrow_info = next_account_info(account_info_iter)?;
+    let _metadata_info = next_account_info(account_info_iter)?;
     let payer_info = next_account_info(account_info_iter)?;
     let attribute_mint_info = next_account_info(account_info_iter)?;
     let attribute_src_info = next_account_info(account_info_iter)?;
@@ -84,7 +88,7 @@ pub fn process_transfer_out_of_escrow(
     let system_account_info = next_account_info(account_info_iter)?;
     let ata_program_info = next_account_info(account_info_iter)?;
     let token_program_info = next_account_info(account_info_iter)?;
-    let rent_info = next_account_info(account_info_iter)?;
+    let _sysvar_ix_account_info = next_account_info(account_info_iter)?;
 
     // Allow the option to set a different authority than the payer.
     let is_using_authority = account_info_iter.len() == 1;
@@ -111,11 +115,12 @@ pub fn process_transfer_out_of_escrow(
     // Allocate the target ATA if it doesn't exist.
     if !is_initialized_account(*attribute_dst_info.data.borrow()) {
         #[allow(deprecated)]
-        let create_escrow_ata_ix = spl_associated_token_account::create_associated_token_account(
-            payer_info.key,
-            payer_info.key,
-            attribute_mint_info.key,
-        );
+        let create_escrow_ata_ix =
+            spl_associated_token_account::instruction::create_associated_token_account(
+                payer_info.key,
+                payer_info.key,
+                attribute_mint_info.key,
+            );
 
         invoke(
             &create_escrow_ata_ix,
@@ -126,7 +131,6 @@ pub fn process_transfer_out_of_escrow(
                 system_account_info.clone(),
                 token_program_info.clone(),
                 ata_program_info.clone(),
-                rent_info.clone(),
             ],
         )?;
     }

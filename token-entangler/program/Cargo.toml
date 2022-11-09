@@ -13,6 +13,7 @@ name = "mpl_token_entangler"
 [features]
 no-entrypoint = []
 no-idl = []
+test-bpf = []
 cpi = ["no-entrypoint"]
 default = []
 

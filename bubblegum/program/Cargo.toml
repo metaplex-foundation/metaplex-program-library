@@ -16,6 +16,7 @@ no-entrypoint = []
 no-idl = []
 no-log-ix-name = []
 cpi = ["no-entrypoint"]
+test-bpf = []
 default = []
 
 [dependencies]
