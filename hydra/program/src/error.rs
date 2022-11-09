@@ -94,4 +94,10 @@ pub enum HydraError {
 
     #[msg("Sending Sol to a SPL token destination will render the sol unusable")]
     InvalidCloseAccountDestination,
+
+    #[msg("Saturation not supported on this membership model")]
+    SaturationNotSupported,
+
+    #[msg("Unable to distribute shares with member at saturation limit. Redistribute shares to proceed.")]
+    SaturatedMember,
 }

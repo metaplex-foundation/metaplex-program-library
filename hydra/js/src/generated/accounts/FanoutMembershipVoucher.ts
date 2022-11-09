@@ -21,6 +21,7 @@ export type FanoutMembershipVoucherArgs = {
   bumpSeed: number;
   membershipKey: web3.PublicKey;
   shares: beet.bignum;
+  saturationLimit: beet.bignum;
 };
 
 const fanoutMembershipVoucherDiscriminator = [185, 62, 74, 60, 105, 158, 178, 125];
@@ -39,6 +40,7 @@ export class FanoutMembershipVoucher implements FanoutMembershipVoucherArgs {
     readonly bumpSeed: number,
     readonly membershipKey: web3.PublicKey,
     readonly shares: beet.bignum,
+    readonly saturationLimit: beet.bignum,
   ) {}
 
   /**
@@ -52,6 +54,7 @@ export class FanoutMembershipVoucher implements FanoutMembershipVoucherArgs {
       args.bumpSeed,
       args.membershipKey,
       args.shares,
+      args.saturationLimit,
     );
   }
 
@@ -176,6 +179,17 @@ export class FanoutMembershipVoucher implements FanoutMembershipVoucherArgs {
         }
         return x;
       })(),
+      saturationLimit: (() => {
+        const x = <{ toNumber: () => number }>this.saturationLimit;
+        if (typeof x.toNumber === 'function') {
+          try {
+            return x.toNumber();
+          } catch (_) {
+            return x;
+          }
+        }
+        return x;
+      })(),
     };
   }
 }
@@ -198,6 +212,7 @@ export const fanoutMembershipVoucherBeet = new beet.BeetStruct<
     ['bumpSeed', beet.u8],
     ['membershipKey', beetSolana.publicKey],
     ['shares', beet.u64],
+    ['saturationLimit', beet.u64],
   ],
   FanoutMembershipVoucher.fromArgs,
   'FanoutMembershipVoucher',

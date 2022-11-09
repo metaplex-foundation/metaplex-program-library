@@ -7,6 +7,7 @@ export * from './processInit';
 export * from './processInitForMint';
 export * from './processRemoveMember';
 export * from './processSetForTokenMemberStake';
+export * from './processSetSaturation';
 export * from './processSetTokenMemberStake';
 export * from './processSignMetadata';
 export * from './processTransferShares';

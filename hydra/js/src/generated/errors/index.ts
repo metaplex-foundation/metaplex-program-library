@@ -529,6 +529,48 @@ createErrorFromNameLookup.set(
 );
 
 /**
+ * SaturationNotSupported: 'Saturation not supported on this membership model'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class SaturationNotSupportedError extends Error {
+  readonly code: number = 0x1789;
+  readonly name: string = 'SaturationNotSupported';
+  constructor() {
+    super('Saturation not supported on this membership model');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, SaturationNotSupportedError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1789, () => new SaturationNotSupportedError());
+createErrorFromNameLookup.set('SaturationNotSupported', () => new SaturationNotSupportedError());
+
+/**
+ * SaturatedMember: 'Unable to distribute shares with member at saturation limit. Redistribute shares to proceed.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class SaturatedMemberError extends Error {
+  readonly code: number = 0x178a;
+  readonly name: string = 'SaturatedMember';
+  constructor() {
+    super(
+      'Unable to distribute shares with member at saturation limit. Redistribute shares to proceed.',
+    );
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, SaturatedMemberError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x178a, () => new SaturatedMemberError());
+createErrorFromNameLookup.set('SaturatedMember', () => new SaturatedMemberError());
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

@@ -23,6 +23,28 @@ pub fn calculate_dist_amount(
     Ok(dist_amount as u64)
 }
 
+pub fn check_saturation(
+    total_inflow: u64,
+    saturation_limit: u64,
+    dist_amount: u64,
+) -> Result<(bool, u64)> {
+    if (saturation_limit != 0)
+        && (total_inflow
+            .checked_add(dist_amount)
+            .ok_or(HydraError::NumericalOverflow)?
+            > saturation_limit)
+    {
+        Ok((
+            true,
+            saturation_limit
+                .checked_sub(total_inflow)
+                .ok_or(HydraError::NumericalOverflow)?,
+        ))
+    } else {
+        Ok((false, dist_amount))
+    }
+}
+
 pub fn update_fanout_for_add(fanout: &mut Account<Fanout>, shares: u64) -> Result<()> {
     let less_shares = fanout
         .total_available_shares
