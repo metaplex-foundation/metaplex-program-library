@@ -1,8 +1,7 @@
 import { Fanout, FanoutClient, MembershipModel } from '../../src';
-import { createMasterEdition } from './metaplex';
-import { deprecated } from '@metaplex-foundation/mpl-token-metadata';
 import { Keypair, PublicKey, TransactionInstruction } from '@solana/web3.js';
-import { Token } from '@solana/spl-token';
+import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { Metaplex } from '@metaplex-foundation/js';
 type BuiltNftFanout = {
   fanout: PublicKey;
   name: string;
@@ -146,6 +145,7 @@ export async function builtNftFanout(
   shares: number,
   numberMembers: number,
 ): Promise<BuiltNftFanout> {
+  const metaplex = new Metaplex(fanoutSdk.connection);
   const name = `Test${Date.now()}`;
   const init = await fanoutSdk.initializeFanout({
     totalShares: shares,
@@ -157,26 +157,17 @@ export async function builtNftFanout(
   const members: NftFanoutMember[] = [];
   for (let i = 0; i < numberMembers; i++) {
     const memberWallet = new Keypair();
-    const initMetadataData = new deprecated.DataV2({
+    const { nft } = await metaplex.nfts().create({
       uri: 'URI' + i,
       name: 'NAME' + i,
       symbol: 'SYMBOL' + i,
       sellerFeeBasisPoints: 1000,
-      creators: null,
-      collection: null,
-      uses: null,
     });
-    const nft = await createMasterEdition(
-      fanoutSdk.connection,
-      //@ts-ignore
-      fanoutSdk.wallet.payer,
-      //@ts-ignore
-      initMetadataData,
-      0,
-    );
-    const tokenAccount = await nft.mint.getOrCreateAssociatedAccountInfo(memberWallet.publicKey);
-    const owner = await nft.mint.getOrCreateAssociatedAccountInfo(fanoutSdk.wallet.publicKey);
-    await nft.mint.transfer(
+
+    const token = new Token(fanoutSdk.connection, nft.mint.address, TOKEN_PROGRAM_ID, memberWallet);
+    const tokenAccount = await token.getOrCreateAssociatedAccountInfo(memberWallet.publicKey);
+    const owner = await token.getOrCreateAssociatedAccountInfo(fanoutSdk.wallet.publicKey);
+    await token.transfer(
       owner.address,
       tokenAccount.address,
       //@ts-ignore
@@ -187,12 +178,12 @@ export async function builtNftFanout(
     const ix = await fanoutSdk.addMemberNftInstructions({
       fanout: init.fanout,
       fanoutNativeAccount: init.nativeAccount,
-      membershipKey: nft.mint.publicKey,
+      membershipKey: nft.mint.address,
       shares: memberNumber,
     });
     members.push({
       voucher: ix.output.membershipAccount,
-      mint: nft.mint.publicKey,
+      mint: nft.mint.address,
       wallet: memberWallet,
     });
     ixs.push(...ix.instructions);
