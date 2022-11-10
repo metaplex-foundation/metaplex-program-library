@@ -1,10 +1,5 @@
 use crate::{constants::*, errors::*, utils::*, AuctionHouse, Auctioneer, AuthorityScope, *};
-use anchor_lang::{
-    prelude::*,
-    solana_program::{program::invoke, program_pack::Pack},
-    AnchorDeserialize,
-};
-use solana_program::program_memory::sol_memset;
+use anchor_lang::{prelude::*, solana_program::program_pack::Pack, AnchorDeserialize};
 use spl_token::state::Account as SplAccount;
 
 /// Accounts for the [`execute_sale` handler](auction_house/fn.execute_sale.html).
@@ -1047,16 +1042,17 @@ fn auctioneer_execute_sale_logic<'c, 'info>(
         msg!("No delegate detected on token account.");
         return Err(AuctionHouseError::BothPartiesNeedToAgreeToSale.into());
     }
-    let buyer_ts_data = &mut buyer_trade_state.try_borrow_mut_data()?;
-    let seller_ts_data = &mut seller_trade_state.try_borrow_mut_data()?;
 
-    let ts_bump = if buyer_ts_data.len() > 0 {
-        buyer_ts_data[0]
+    let ts_bump = if buyer_trade_state.data_len() > 0 {
+        buyer_trade_state.try_borrow_data()?[0]
     } else {
         return Err(AuctionHouseError::BuyerTradeStateNotValid.into());
     };
 
-    if ts_bump == 0 || seller_ts_data.len() == 0 || seller_ts_data[0] == 0 {
+    if ts_bump == 0
+        || seller_trade_state.data_len() == 0
+        || seller_trade_state.try_borrow_data()?[0] == 0
+    {
         return Err(AuctionHouseError::BothPartiesNeedToAgreeToSale.into());
     }
 
@@ -1342,55 +1338,23 @@ fn auctioneer_execute_sale_logic<'c, 'info>(
     )?;
 
     // Close the buyer trade state account if the rest of execute sale was successful.
-    let curr_buyer_lamp = buyer_trade_state.lamports();
-    **buyer_trade_state.lamports.borrow_mut() = 0;
-    sol_memset(&mut *buyer_ts_data, 0, TRADE_STATE_SIZE);
-    **fee_payer.lamports.borrow_mut() = fee_payer
-        .lamports()
-        .checked_add(curr_buyer_lamp)
-        .ok_or(AuctionHouseError::NumericalOverflow)?;
+    close_account(
+        &buyer_trade_state.to_account_info(),
+        &fee_payer.to_account_info(),
+    )?;
 
     let token_account_data = SplAccount::unpack(&token_account.data.borrow())?;
     if token_account_data.delegated_amount == 0 {
-        if seller.to_account_info().is_signer {
-            invoke(
-                &revoke(
-                    &token_program.key(),
-                    &token_account.key(),
-                    &seller.key(),
-                    &[],
-                )
-                .unwrap(),
-                &[
-                    token_program.to_account_info(),
-                    token_account.to_account_info(),
-                    seller.to_account_info(),
-                ],
-            )?;
-        }
-
-        let curr_seller_lamp = seller_trade_state.lamports();
-        **seller_trade_state.lamports.borrow_mut() = 0;
-        sol_memset(&mut *seller_ts_data, 0, TRADE_STATE_SIZE);
-
-        **fee_payer.lamports.borrow_mut() = fee_payer
-            .lamports()
-            .checked_add(curr_seller_lamp)
-            .ok_or(AuctionHouseError::NumericalOverflow)?;
+        close_account(
+            &seller_trade_state.to_account_info(),
+            &fee_payer.to_account_info(),
+        )?;
 
         if free_trade_state.lamports() > 0 {
-            let curr_buyer_lamp = free_trade_state.lamports();
-            **free_trade_state.lamports.borrow_mut() = 0;
-
-            **fee_payer.lamports.borrow_mut() = fee_payer
-                .lamports()
-                .checked_add(curr_buyer_lamp)
-                .ok_or(AuctionHouseError::NumericalOverflow)?;
-            sol_memset(
-                *free_trade_state.try_borrow_mut_data()?,
-                0,
-                TRADE_STATE_SIZE,
-            );
+            close_account(
+                &free_trade_state.to_account_info(),
+                &fee_payer.to_account_info(),
+            )?;
         }
     }
     Ok(())
@@ -1462,16 +1426,16 @@ fn execute_sale_logic<'c, 'info>(
         return Err(AuctionHouseError::BothPartiesNeedToAgreeToSale.into());
     };
 
-    let buyer_ts_data = &mut buyer_trade_state.try_borrow_mut_data()?;
-    let seller_ts_data = &mut seller_trade_state.try_borrow_mut_data()?;
-
-    let ts_bump = if buyer_ts_data.len() > 0 {
-        buyer_ts_data[0]
+    let ts_bump = if buyer_trade_state.data_len() > 0 {
+        buyer_trade_state.try_borrow_data()?[0]
     } else {
         return Err(AuctionHouseError::BuyerTradeStateNotValid.into());
     };
 
-    if ts_bump == 0 || seller_ts_data.len() == 0 || seller_ts_data[0] == 0 {
+    if ts_bump == 0
+        || seller_trade_state.data_len() == 0
+        || seller_trade_state.try_borrow_data()?[0] == 0
+    {
         return Err(AuctionHouseError::BothPartiesNeedToAgreeToSale.into());
     }
 
@@ -1750,56 +1714,25 @@ fn execute_sale_logic<'c, 'info>(
     )?;
 
     // Close the buyer trade state account if the rest of execute sale was successful.
-    let curr_buyer_lamp = buyer_trade_state.lamports();
-    **buyer_trade_state.lamports.borrow_mut() = 0;
-    sol_memset(&mut *buyer_ts_data, 0, TRADE_STATE_SIZE);
-    **fee_payer.lamports.borrow_mut() = fee_payer
-        .lamports()
-        .checked_add(curr_buyer_lamp)
-        .ok_or(AuctionHouseError::NumericalOverflow)?;
+    close_account(
+        &buyer_trade_state.to_account_info(),
+        &fee_payer.to_account_info(),
+    )?;
 
     let token_account_data = SplAccount::unpack(&token_account.data.borrow())?;
     if token_account_data.delegated_amount == 0 {
-        if seller.to_account_info().is_signer {
-            invoke(
-                &revoke(
-                    &token_program.key(),
-                    &token_account.key(),
-                    &seller.key(),
-                    &[],
-                )
-                .unwrap(),
-                &[
-                    token_program.to_account_info(),
-                    token_account.to_account_info(),
-                    seller.to_account_info(),
-                ],
-            )?;
-        }
-        let curr_seller_lamp = seller_trade_state.lamports();
-        **seller_trade_state.lamports.borrow_mut() = 0;
-        sol_memset(&mut *seller_ts_data, 0, TRADE_STATE_SIZE);
-
-        **fee_payer.lamports.borrow_mut() = fee_payer
-            .lamports()
-            .checked_add(curr_seller_lamp)
-            .ok_or(AuctionHouseError::NumericalOverflow)?;
+        close_account(
+            &seller_trade_state.to_account_info(),
+            &fee_payer.to_account_info(),
+        )?;
 
         if free_trade_state.lamports() > 0 {
-            let curr_buyer_lamp = free_trade_state.lamports();
-            **free_trade_state.lamports.borrow_mut() = 0;
-
-            **fee_payer.lamports.borrow_mut() = fee_payer
-                .lamports()
-                .checked_add(curr_buyer_lamp)
-                .ok_or(AuctionHouseError::NumericalOverflow)?;
-            sol_memset(
-                *free_trade_state.try_borrow_mut_data()?,
-                0,
-                TRADE_STATE_SIZE,
-            );
+            close_account(
+                &free_trade_state.to_account_info(),
+                &fee_payer.to_account_info(),
+            )?;
         }
-    };
+    }
 
     Ok(())
 }

@@ -1,5 +1,10 @@
 use anchor_lang::prelude::*;
 use arrayref::array_ref;
+use mpl_token_metadata::{
+    error::MetadataError,
+    state::{EDITION, PREFIX},
+    utils::assert_derivation,
+};
 use solana_program::{
     account_info::AccountInfo,
     program::invoke,
@@ -8,6 +13,7 @@ use solana_program::{
     pubkey::{Pubkey, PUBKEY_BYTES},
     system_instruction,
 };
+use std::result::Result as StdResult;
 
 use crate::{
     constants::{HIDDEN_SECTION, NULL_STRING, REPLACEMENT_INDEX, REPLACEMENT_INDEX_INCREMENT},
@@ -78,6 +84,24 @@ pub fn replace_patterns(value: String, index: usize) -> String {
     }
 
     mutable
+}
+
+pub fn assert_edition_from_mint(
+    edition_account: &AccountInfo,
+    mint_account: &AccountInfo,
+) -> StdResult<(), ProgramError> {
+    assert_derivation(
+        &mpl_token_metadata::id(),
+        edition_account,
+        &[
+            PREFIX.as_bytes(),
+            mpl_token_metadata::id().as_ref(),
+            mint_account.key().as_ref(),
+            EDITION.as_bytes(),
+        ],
+    )
+    .map_err(|_| MetadataError::CollectionMasterEditionAccountInvalid)?;
+    Ok(())
 }
 
 #[cfg(test)]
