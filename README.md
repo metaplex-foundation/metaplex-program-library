@@ -43,13 +43,13 @@ Smart contract SDK packages are versioned independently since a contract isn't n
 to other contracts.
 
 We use the following `(pre|post)(version|publish)` npm scripts to manage related checks, tagging,
-commiting and pushing the version bump.
+committing and pushing the version bump.
 
 - `preversion`: ensures that the package builds and its tests pass
 - `postversion`: adds and commits the version bump and adds a tag indicating package name and new
   version, i.e. `@metaplex-foundation/mp-core@v0.0.1`
 - `prepublishOnly`: ensures that the package builds and its tests pass again (just to be _really_ sure)
-- `postpublish`: pushes the committed change and new tag to github
+- `postpublish`: pushes the committed change and new tag to GitHub
 
 In order to version and then publish a package just run the following commands from the folder of
 the package you want to update:
@@ -58,7 +58,7 @@ the package you want to update:
 - `npm publish`
 
 As you note if version + publish succeeds the scripts end up pushing those updates to the master
-branch. Therefore please ensure to be on and up to date `master` branch before running them. Please
+branch. Therefore, please ensure to be on and up to date `master` branch before running them. Please
 **don't ever publish from another branch** but only from the main one with only PR approved changes
 merged.
 
@@ -103,8 +103,8 @@ To report a security issue, please follow the guidance on the [SECURITY](.github
 ## License
 
 The Rust/Cargo programs are licensed under the
-“Apache-style” [Metaplex(TM) NFT Open Source License](metaplex-nft-license) and the JS/TS client libraries are licensed
-under either the [MIT](mit-license) or the [Apache](apache-license) licenses.
+“Apache-style” [Metaplex(TM) NFT Open Source License][metaplex-nft-license] and the JS/TS client libraries are licensed
+under either the [MIT][mit-license] or the [Apache][apache-license] licenses.
 
 
 <!-- ===================================== -->
@@ -192,40 +192,40 @@ under either the [MIT](mit-license) or the [Apache](apache-license) licenses.
 [mpl-token-entangler-npm]:https://www.npmjs.com/package/@metaplex-foundation/mpl-token-entangler
 [mpl-token-metadata-npm]:https://www.npmjs.com/package/@metaplex-foundation/mpl-token-metadata
 
-[mpl-auction-house-nimg-long]:https://img.shields.io/npm/v/@metaplex-foundation/mpl-auction-house?label=npm%20%7C%20%40metaplex-foundation%2Fmpl-auction-house&logo=typescript
+[mpl-auction-house-nimg-long]:https://img.shields.io/npm/v/@metaplex-foundation/mpl-auction-house?label=npm%20%7C%20mpl-auction-house&logo=typescript
 [mpl-auction-house-nimg]:https://img.shields.io/npm/v/@metaplex-foundation/mpl-auction-house?logo=typescript
 
-[mpl-auctioneer-nimg-long]:https://img.shields.io/npm/v/@metaplex-foundation/mpl-auctioneer?label=npm%20%7C%20%40metaplex-foundation%2Fmpl-auctioneer&logo=typescript
+[mpl-auctioneer-nimg-long]:https://img.shields.io/npm/v/@metaplex-foundation/mpl-auctioneer?label=npm%20%7C%20mpl-auctioneer&logo=typescript
 [mpl-auctioneer-nimg]:https://img.shields.io/npm/v/@metaplex-foundation/mpl-auctioneer?logo=typescript
 
-[mpl-bubblegum-nimg-long]:https://img.shields.io/npm/v/@metaplex-foundation/mpl-bubblegum?label=npm%20%7C%20%40metaplex-foundation%2Fmpl-bubblegum&logo=typescript
+[mpl-bubblegum-nimg-long]:https://img.shields.io/npm/v/@metaplex-foundation/mpl-bubblegum?label=npm%20%7C%20mpl-bubblegum&logo=typescript
 [mpl-bubblegum-nimg]:https://img.shields.io/npm/v/@metaplex-foundation/mpl-bubblegum?logo=typescript
 
-[mpl-candy-machine-core-nimg-long]:https://img.shields.io/npm/v/@metaplex-foundation/mpl-candy-machine-core?label=npm%20%7C%20%40metaplex-foundation%2Fmpl-candy-machine-core&logo=typescript
+[mpl-candy-machine-core-nimg-long]:https://img.shields.io/npm/v/@metaplex-foundation/mpl-candy-machine-core?label=npm%20%7C%20mpl-candy-machine-core&logo=typescript
 [mpl-candy-machine-core-nimg]:https://img.shields.io/npm/v/@metaplex-foundation/mpl-candy-machine-core?logo=typescript
 
-[mpl-candy-machine-nimg-long]:https://img.shields.io/npm/v/@metaplex-foundation/mpl-candy-machine?label=npm%20%7C%20%40metaplex-foundation%2Fmpl-candy-machine&logo=typescript
+[mpl-candy-machine-nimg-long]:https://img.shields.io/npm/v/@metaplex-foundation/mpl-candy-machine?label=npm%20%7C%20mpl-candy-machine&logo=typescript
 [mpl-candy-machine-nimg]:https://img.shields.io/npm/v/@metaplex-foundation/mpl-candy-machine?logo=typescript
 
-[mpl-fixed-price-sale-nimg-long]:https://img.shields.io/npm/v/@metaplex-foundation/mpl-fixed-price-sale?label=npm%20%7C%20%40metaplex-foundation%2Fmpl-fixed-price-sale&logo=typescript
+[mpl-fixed-price-sale-nimg-long]:https://img.shields.io/npm/v/@metaplex-foundation/mpl-fixed-price-sale?label=npm%20%7C%20mpl-fixed-price-sale&logo=typescript
 [mpl-fixed-price-sale-nimg]:https://img.shields.io/npm/v/@metaplex-foundation/mpl-fixed-price-sale?logo=typescript
 
-[mpl-core-nimg-long]:https://img.shields.io/npm/v/@metaplex-foundation/mpl-core?label=npm%20%7C%20%40metaplex-foundation%2Fmpl-core&logo=typescript
+[mpl-core-nimg-long]:https://img.shields.io/npm/v/@metaplex-foundation/mpl-core?label=npm%20%7C%20mpl-core&logo=typescript
 [mpl-core-nimg]:https://img.shields.io/npm/v/@metaplex-foundation/mpl-core?logo=typescript
 
-[mpl-gumdrop-nimg-long]:https://img.shields.io/npm/v/@metaplex-foundation/mpl-gumdrop?label=npm%20%7C%20%40metaplex-foundation%2Fmpl-gumdrop&logo=typescript
+[mpl-gumdrop-nimg-long]:https://img.shields.io/npm/v/@metaplex-foundation/mpl-gumdrop?label=npm%20%7C%20mpl-gumdrop&logo=typescript
 [mpl-gumdrop-nimg]:https://img.shields.io/npm/v/@metaplex-foundation/mpl-gumdrop?logo=typescript
 
-[mpl-hydra-nimg-long]:https://img.shields.io/npm/v/@metaplex-foundation/mpl-hydra?label=npm%20%7C%20%40metaplex-foundation%2Fmpl-hydra&logo=typescript
+[mpl-hydra-nimg-long]:https://img.shields.io/npm/v/@metaplex-foundation/mpl-hydra?label=npm%20%7C%20mpl-hydra&logo=typescript
 [mpl-hydra-nimg]:https://img.shields.io/npm/v/@metaplex-foundation/mpl-hydra?logo=typescript
 
-[mpl-nft-packs-nimg-long]:https://img.shields.io/npm/v/@metaplex-foundation/mpl-nft-packs?label=npm%20%7C%20%40metaplex-foundation%2Fmpl-nft-packs&logo=typescript
+[mpl-nft-packs-nimg-long]:https://img.shields.io/npm/v/@metaplex-foundation/mpl-nft-packs?label=npm%20%7C%20mpl-nft-packs&logo=typescript
 [mpl-nft-packs-nimg]:https://img.shields.io/npm/v/@metaplex-foundation/mpl-nft-packs?logo=typescript
 
-[mpl-token-entangler-nimg-long]:https://img.shields.io/npm/v/@metaplex-foundation/mpl-token-entangler?label=npm%20%7C%20%40metaplex-foundation%2Fmpl-token-entangler&logo=typescript
+[mpl-token-entangler-nimg-long]:https://img.shields.io/npm/v/@metaplex-foundation/mpl-token-entangler?label=npm%20%7C%20mpl-token-entangler&logo=typescript
 [mpl-token-entangler-nimg]:https://img.shields.io/npm/v/@metaplex-foundation/mpl-token-entangler?logo=typescript
 
-[mpl-token-metadata-nimg-long]:https://img.shields.io/npm/v/@metaplex-foundation/mpl-token-metadata?label=npm%20%7C%20%40metaplex-foundation%2Fmpl-token-metadata&logo=typescript
+[mpl-token-metadata-nimg-long]:https://img.shields.io/npm/v/@metaplex-foundation/mpl-token-metadata?label=npm%20%7C%20mpl-token-metadata&logo=typescript
 [mpl-token-metadata-nimg]:https://img.shields.io/npm/v/@metaplex-foundation/mpl-token-metadata?logo=typescript
 
 <!-- Licenses -->
@@ -235,7 +235,3 @@ under either the [MIT](mit-license) or the [Apache](apache-license) licenses.
 [apache-license]: https://www.apache.org/licenses/LICENSE-2.0.txt
 
 [mit-license]: https://www.mit.edu/~amini/LICENSE.md
-
-[//]: # (https://img.shields.io/crates/v/mpl-token-metadata?label=crates.io%20%7C%20mpl-token-metadata&logo=rust)
-
-[//]: # (https://img.shields.io/npm/v/@metaplex-foundation/mpl-token-metadata?label=npm%20%7C%20%40metaplex-foundation%2Fmpl-token-metadata&logo=typescript)

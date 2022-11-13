@@ -1,6 +1,4 @@
 {
-  "entryPoints": ["src/mpl-candy-machine.ts"],
-  "excludeInternal": true,
-  "excludePrivate": true,
-  "out": "./docs"
+  "extends": ["../../typedoc.json"],
+  "out": "../../docs/candy-machine"
 }
