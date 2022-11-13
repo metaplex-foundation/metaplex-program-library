@@ -47,6 +47,14 @@
     "bn.js": "^5.2.0"
   },
   "devDependencies": {
-    "@metaplex-foundation/solita": "^0.7.0"
+    "@metaplex-foundation/solita": "^0.7.0",
+    "@typescript-eslint/parser": "^5.42.1",
+    "@typescript-eslint/eslint-plugin": "^5.42.1",
+    "eslint": "^8.27.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "prettier": "^2.7.1",
+    "typescript": "^4.8.4",
+    "rimraf": "^3.0.2"
   }
 }
