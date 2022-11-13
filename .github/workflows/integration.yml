@@ -24,9 +24,9 @@ jobs:
       fail-fast: false
       matrix:
         node:
-          - name: "fixed-price-sale"
-          - name: "hydra"
-          - name: "candy-machine-core"
+#          - name: "fixed-price-sale"
+#          - name: "hydra"
+#          - name: "candy-machine-core"
     uses: ./.github/workflows/integration-reusable.yml
     with:
       name: ${{ matrix.node.name }}

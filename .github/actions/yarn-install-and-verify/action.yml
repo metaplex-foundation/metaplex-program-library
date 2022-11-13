@@ -26,9 +26,11 @@ runs:
     # Verify Contract 
     ##############
     - name: Install Root Modules
-      run: |
-        echo 'Install Root Modules: yarn install'
-        yarn install
+      run: yarn install
+      working-directory: ./
+      shell: bash
+    - name: Test stuff
+      run: yarn hello
       working-directory: ./
       shell: bash
 
