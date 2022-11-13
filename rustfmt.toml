@@ -1,4 +1,4 @@
-edition = "2018"
+edition = "2021"
 max_width = 100 
 imports_indent = "Block"
 imports_granularity = "Crate"
