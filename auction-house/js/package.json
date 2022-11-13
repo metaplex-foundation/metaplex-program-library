@@ -49,6 +49,7 @@
   },
   "devDependencies": {
     "@metaplex-foundation/solita": "^0.15.2",
+    "@types/tape": "^4.13.2",
     "eslint": "^8.27.0",
     "prettier": "^2.7.1",
     "spok": "^1.4.3",
