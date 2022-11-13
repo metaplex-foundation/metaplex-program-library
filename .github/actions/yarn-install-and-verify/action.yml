@@ -29,10 +29,6 @@ runs:
       run: yarn install
       working-directory: ./
       shell: bash
-    - name: Test stuff
-      run: yarn hello
-      working-directory: ./
-      shell: bash
 
     - name: Install modules
       run: yarn install

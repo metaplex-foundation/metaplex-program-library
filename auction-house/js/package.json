@@ -48,6 +48,10 @@
     "bn.js": "^5.2.0"
   },
   "devDependencies": {
-    "@metaplex-foundation/solita": "^0.15.2"
+    "@metaplex-foundation/solita": "^0.15.2",
+    "rimraf": "^3.0.2",
+    "spok": "^1.4.3",
+    "tape": "^5.5.2",
+    "@types/tape": "^4.13.2"
   }
 }
