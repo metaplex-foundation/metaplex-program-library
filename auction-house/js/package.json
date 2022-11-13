@@ -48,17 +48,6 @@
     "bn.js": "^5.2.0"
   },
   "devDependencies": {
-    "eslint-config-prettier": "^8.3.0",
-    "eslint-plugin-prettier": "^4.0.0",
-    "@metaplex-foundation/solita": "^0.15.2",
-    "@types/tape": "^4.13.2",
-    "@typescript-eslint/eslint-plugin": "^5.4.0",
-    "@typescript-eslint/parser": "^5.4.0",
-    "eslint": "^8.3.0",
-    "prettier": "^2.5.1",
-    "rimraf": "^3.0.2",
-    "spok": "^1.4.3",
-    "tape": "^5.5.2",
-    "typescript": "^4.6.2"
+    "@metaplex-foundation/solita": "^0.15.2"
   }
 }

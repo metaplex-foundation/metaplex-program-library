@@ -1,4 +1,4 @@
 {
   "extends": ["../../typedoc.json"],
-  "out": "../../docs/auction-house"
+  "out": "../../docs/auctioneer"
 }

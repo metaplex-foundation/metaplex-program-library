@@ -1,0 +1,17 @@
+[registry]
+url = "https://anchor.projectserum.com"
+
+[provider]
+cluster = "localnet"
+wallet = "~/.config/solana/id.json"
+
+[workspace]
+members = [
+    "auction-house/program",
+    "auctioneer/program",
+    "bubblegum/program",
+    "candy-machine/program",
+    "candy-machine-core/program",
+    "gumdrop/program",
+    "hydra/program",
+]

@@ -1,7 +1,5 @@
 {
   "compilerOptions": {
-    "outDir": "./dist",
-    "baseUrl": ".",
     "target": "ES2018",
     "module": "commonjs",
     "sourceMap": true,
@@ -24,6 +22,10 @@
     "skipLibCheck": true,
     "useUnknownInCatchVariables": false
   },
-  "include": ["./src"],
-  "exclude": ["node_modules", "dist", "build", "lib"]
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build",
+    "lib"
+  ]
 }
