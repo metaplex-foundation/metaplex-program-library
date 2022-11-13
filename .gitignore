@@ -33,3 +33,5 @@ yarn-error.log*
 test-programs/*
 *-keypair.json
 
+**/test-ledger
+
