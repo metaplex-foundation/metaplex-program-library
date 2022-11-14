@@ -6,13 +6,10 @@ on:
       name:
         required: true
         type: string
-      verify_rust:
-        required: true
-        type: boolean
-      cargo_test:
-        required: true
-        type: boolean
       cache:
+        required: true
+        type: boolean
+      changes:
         required: true
         type: boolean
 
@@ -61,6 +58,7 @@ jobs:
     runs-on: buildjet-8vcpu-ubuntu-2204
     needs: changes
     if: |
+      inputs.changes == false ||
       needs.changes.outputs.core == 'true' ||
       needs.changes.outputs.package == 'true' ||
       needs.changes.outputs.workflow == 'true' ||
@@ -90,7 +88,6 @@ jobs:
         if: ${{ env.CACHE != 'false' }}
       # Run lint checks
       - uses: ./.github/actions/verify-rust
-        if: ${{ inputs.verify_rust }}
         with:
           working-directory: ./${{ inputs.name }}/program
 
@@ -103,7 +100,6 @@ jobs:
       - name: "Cargo Test: ${{ inputs.name }}"
         working-directory: ./${{ inputs.name }}/program
         run: cargo +${{ env.RUST_TOOLCHAIN }} test -- --nocapture --test-threads 1
-        if: ${{ inputs.cargo_test }}
 
       # Run BPF Test
       - name: "BPF Test: ${{ inputs.name }}"

@@ -1,9 +1,10 @@
+#![cfg(feature = "test-bpf")]
 use anchor_lang::{
     prelude::{Pubkey, Rent},
     InstructionData, ToAccountMetas,
 };
 use mpl_token_metadata::{instruction::create_metadata_accounts, pda::find_metadata_account};
-use solana_program_test::ProgramTest;
+use solana_program_test::{tokio, ProgramTest};
 use solana_sdk::{
     instruction::Instruction, program_pack::Pack, signature::Keypair, signer::Signer,
     system_instruction::create_account, transaction::Transaction,
@@ -18,7 +19,7 @@ use test_utils::{
     instructions_to_mint_an_nft,
 };
 
-// #[tokio::test]
+#[tokio::test]
 async fn _lifecycle_test() {
     const TREASURY_MINT: &str = "So11111111111111111111111111111111111111112";
     const RENT_SYSVAR_ADDRESS: &str = "SysvarRent111111111111111111111111111111111";
