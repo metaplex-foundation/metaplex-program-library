@@ -36,8 +36,9 @@ jobs:
       packages: ${{ steps.filter-out-excluded-pkgs.outputs.result }}
     steps:
       - uses: actions/checkout@v3
-        ref: ${{ github.event.pull_request.head.ref }}
-        repository: ${{ github.event.pull_request.head.repo.full_name }}
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
       - name: List changed files
         uses: ./.github/actions/list-changed-files
         id: list-changed-files
@@ -67,7 +68,7 @@ jobs:
         with:
           # exclude packages either do not have `js` dirs or do not have `api:gen` scripts in their local package.json
           script: |
-            const exclude = ['core', 'nft-packs', 'candy-wrapper']
+            const exclude = ['core']
             const files = ${{ steps.map-changed-files-to-pkg.outputs.result }}
             const result = files
               .filter(f => !exclude.includes(f))
@@ -82,7 +83,7 @@ jobs:
     needs: [get-changes-scope]
     # note: checking for empty string just doesn't work, so we explicitly return and check null in the case that there's nothing to verify
     if: ${{ needs.get-changes-scope.outputs.packages != 'null' }}
-    runs-on: ubuntu-latest
+    runs-on: buildjet-16vcpu-ubuntu-2204
     steps:
       # branch should be the branch from which the PR is opened
       - uses: actions/checkout@v3
