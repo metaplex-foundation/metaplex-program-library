@@ -47,7 +47,7 @@ jobs:
               - '.github/workflows/integration-reusable.yml'
   build-and-test:
     name: Build and Test
-    runs-on: buildjet-8vcpu-ubuntu-2004
+    runs-on: buildjet-8vcpu-ubuntu-2204
     needs: changes
     if: |
       inputs.changes == false ||
