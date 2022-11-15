@@ -1016,14 +1016,11 @@ pub fn verify_collection(
         AccountMeta::new_readonly(collection_master_edition_account, false),
     ];
 
-    match collection_authority_record {
-        Some(collection_authority_record) => {
-            accounts.push(AccountMeta::new_readonly(
-                collection_authority_record,
-                false,
-            ));
-        }
-        None => (),
+    if let Some(collection_authority_record) = collection_authority_record {
+        accounts.push(AccountMeta::new_readonly(
+            collection_authority_record,
+            false,
+        ));
     }
 
     Instruction {
@@ -1063,14 +1060,11 @@ pub fn unverify_collection(
         AccountMeta::new_readonly(collection_master_edition_account, false),
     ];
 
-    match collection_authority_record {
-        Some(collection_authority_record) => {
-            accounts.push(AccountMeta::new_readonly(
-                collection_authority_record,
-                false,
-            ));
-        }
-        None => (),
+    if let Some(collection_authority_record) = collection_authority_record {
+        accounts.push(AccountMeta::new_readonly(
+            collection_authority_record,
+            false,
+        ));
     }
 
     Instruction {
@@ -1122,18 +1116,12 @@ pub fn utilize(
         AccountMeta::new_readonly(spl_associated_token_account::id(), false),
         AccountMeta::new_readonly(solana_program::system_program::id(), false),
     ];
-    match use_authority_record_pda {
-        Some(use_authority_record_pda) => {
-            accounts.push(AccountMeta::new(use_authority_record_pda, false));
-        }
-        None => (),
+    if let Some(use_authority_record_pda) = use_authority_record_pda {
+        accounts.push(AccountMeta::new(use_authority_record_pda, false));
     }
 
-    match burner {
-        Some(burner) => {
-            accounts.push(AccountMeta::new_readonly(burner, false));
-        }
-        None => (),
+    if let Some(burner) = burner {
+        accounts.push(AccountMeta::new_readonly(burner, false));
     }
 
     Instruction {
@@ -1354,14 +1342,11 @@ pub fn set_and_verify_collection(
         AccountMeta::new_readonly(collection_master_edition_account, false),
     ];
 
-    match collection_authority_record {
-        Some(collection_authority_record) => {
-            accounts.push(AccountMeta::new_readonly(
-                collection_authority_record,
-                false,
-            ));
-        }
-        None => (),
+    if let Some(collection_authority_record) = collection_authority_record {
+        accounts.push(AccountMeta::new_readonly(
+            collection_authority_record,
+            false,
+        ));
     }
 
     Instruction {
@@ -1604,14 +1589,11 @@ pub fn unverify_sized_collection_item(
         AccountMeta::new_readonly(collection_master_edition_account, false),
     ];
 
-    match collection_authority_record {
-        Some(collection_authority_record) => {
-            accounts.push(AccountMeta::new_readonly(
-                collection_authority_record,
-                false,
-            ));
-        }
-        None => (),
+    if let Some(collection_authority_record) = collection_authority_record {
+        accounts.push(AccountMeta::new_readonly(
+            collection_authority_record,
+            false,
+        ));
     }
 
     Instruction {
@@ -1658,14 +1640,11 @@ pub fn set_and_verify_sized_collection_item(
         AccountMeta::new_readonly(collection_master_edition_account, false),
     ];
 
-    match collection_authority_record {
-        Some(collection_authority_record) => {
-            accounts.push(AccountMeta::new_readonly(
-                collection_authority_record,
-                false,
-            ));
-        }
-        None => (),
+    if let Some(collection_authority_record) = collection_authority_record {
+        accounts.push(AccountMeta::new_readonly(
+            collection_authority_record,
+            false,
+        ));
     }
 
     Instruction {

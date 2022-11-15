@@ -5,25 +5,9 @@ use mpl_utils::{
     token::{get_mint_authority, get_mint_decimals, get_mint_freeze_authority, get_mint_supply},
 };
 use solana_program::{
-    account_info::AccountInfo,
-    account_info::AccountInfo,
-    borsh::try_from_slice_unchecked,
-    borsh::try_from_slice_unchecked,
-    entrypoint::ProgramResult,
-    entrypoint::ProgramResult,
-    msg, msg,
-    program::invoke_signed,
-    program::{invoke, invoke_signed},
-    program_error::ProgramError,
-    program_error::ProgramError,
-    program_option::COption,
-    program_option::COption,
-    program_pack::{IsInitialized, Pack},
-    pubkey,
+    account_info::AccountInfo, borsh::try_from_slice_unchecked, entrypoint::ProgramResult, msg,
+    program::invoke_signed, program_error::ProgramError, program_option::COption, pubkey,
     pubkey::Pubkey,
-    pubkey::Pubkey,
-    system_instruction,
-    sysvar::{rent::Rent, Sysvar},
 };
 use spl_token::{
     instruction::{set_authority, AuthorityType},
