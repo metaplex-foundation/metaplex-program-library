@@ -121,7 +121,6 @@ jobs:
             yarn api:gen
             echo ">> git status"
             # ignore any possible yarn.lock changes
-            git restore ../../yarn.lock
             git status
             if [[ $(git diff --stat) != '' ]]; then
               echo ">> git diff"
