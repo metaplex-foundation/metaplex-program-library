@@ -6,7 +6,7 @@ use std::{path::Path, process::Command};
 // required for running the tests, but there's no way currently to have a `build.rs`
 // action for tests alone.
 fn main() {
-    let ci = env::var("CI");
+    let ci = env::var("CI_PUBLISH");
     if ci.unwrap_or("false".to_string()) == "false".to_string() {
         // The build script's working folder is always that of the containing package.
         let spl_compression_so_path = Path::new("../../test-programs/spl_account_compression.so");
