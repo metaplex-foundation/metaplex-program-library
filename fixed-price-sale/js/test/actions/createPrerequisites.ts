@@ -1,5 +1,5 @@
 import { Connection, Keypair } from '@solana/web3.js';
-import { airdrop, PayerTransactionHandler } from '@metaplex-foundation/amman';
+import { Amman, PayerTransactionHandler } from '@metaplex-foundation/amman-client';
 
 import { connectionURL } from '../utils';
 
@@ -9,7 +9,7 @@ export const createPrerequisites = async () => {
   const connection = new Connection(connectionURL, 'confirmed');
   const transactionHandler = new PayerTransactionHandler(connection, payer);
 
-  await airdrop(connection, payer.publicKey, 30);
+  await Amman.instance().airdrop(connection, payer.publicKey, 30);
 
   return { payer, connection, transactionHandler };
 };

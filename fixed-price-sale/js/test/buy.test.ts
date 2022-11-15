@@ -1,11 +1,4 @@
-import BN from 'bn.js';
 import test from 'tape';
-import {
-  assertConfirmedTransaction,
-  assertError,
-  defaultSendOptions,
-} from '@metaplex-foundation/amman';
-import { deprecated } from '@metaplex-foundation/mpl-token-metadata';
 
 import { findTradeHistoryAddress } from '../src/utils';
 import { createBuyTransaction } from './transactions';
@@ -18,8 +11,9 @@ import {
   createMarket,
   mintTokenToAccount,
 } from './actions';
-import { CreateMarketInstructionArgs } from '../src';
+import { CreateMarketInstructionArgs, GatingTokenMissingError } from '../src';
 import { verifyCollection } from './actions/verifyCollection';
+import { Metaplex, toBigNumber } from '@metaplex-foundation/js';
 
 killStuckProcess();
 
@@ -90,15 +84,17 @@ test('buy: successful purchase without gating', async (t) => {
 
   logDebug('new mint', newMint.publicKey.toBase58());
 
-  const newMintEdition = await deprecated.Edition.getPDA(newMint.publicKey);
-  const newMintMetadata = await deprecated.Metadata.getPDA(newMint.publicKey);
+  const metaplex = Metaplex.make(connection);
+  const pdas = metaplex.nfts().pdas();
+  const newMintEdition = pdas.edition({ mint: newMint.publicKey });
+  const newMintMetadata = pdas.metadata({ mint: newMint.publicKey });
 
-  const resourceMintMasterEdition = await deprecated.Edition.getPDA(resourceMint.publicKey);
-  const resourceMintMetadata = await deprecated.Metadata.getPDA(resourceMint.publicKey);
-  const resourceMintEditionMarker = await deprecated.EditionMarker.getPDA(
-    resourceMint.publicKey,
-    new BN(1),
-  );
+  const resourceMintMasterEdition = pdas.edition({ mint: resourceMint.publicKey });
+  const resourceMintMetadata = pdas.metadata({ mint: resourceMint.publicKey });
+  const resourceMintEditionMarker = pdas.editionMarker({
+    mint: resourceMint.publicKey,
+    edition: toBigNumber(1),
+  });
 
   await sleep(1000);
 
@@ -123,14 +119,8 @@ test('buy: successful purchase without gating', async (t) => {
     newTokenAccount: mintAta.publicKey,
   });
 
-  const buyRes = await transactionHandler.sendAndConfirmTransaction(
-    buyTx,
-    [payer],
-    defaultSendOptions,
-  );
-
+  await transactionHandler.sendAndConfirmTransaction(buyTx, [payer]).assertSuccess(t);
   logDebug('buy:: successful purchase');
-  assertConfirmedTransaction(t, buyRes.txConfirmed);
 });
 
 test('buy: successful purchase with gating', async (t) => {
@@ -217,15 +207,17 @@ test('buy: successful purchase with gating', async (t) => {
 
   logDebug('new mint', newMint.publicKey.toBase58());
 
-  const newMintEdition = await deprecated.Edition.getPDA(newMint.publicKey);
-  const newMintMetadata = await deprecated.Metadata.getPDA(newMint.publicKey);
+  const metaplex = Metaplex.make(connection);
+  const pdas = metaplex.nfts().pdas();
+  const newMintEdition = pdas.edition({ mint: newMint.publicKey });
+  const newMintMetadata = pdas.metadata({ mint: newMint.publicKey });
 
-  const resourceMintMasterEdition = await deprecated.Edition.getPDA(resourceMint.publicKey);
-  const resourceMintMetadata = await deprecated.Metadata.getPDA(resourceMint.publicKey);
-  const resourceMintEditionMarker = await deprecated.EditionMarker.getPDA(
-    resourceMint.publicKey,
-    new BN(1),
-  );
+  const resourceMintMasterEdition = pdas.edition({ mint: resourceMint.publicKey });
+  const resourceMintMetadata = pdas.metadata({ mint: resourceMint.publicKey });
+  const resourceMintEditionMarker = pdas.editionMarker({
+    mint: resourceMint.publicKey,
+    edition: toBigNumber(1),
+  });
 
   // Create NFT from collection
   const {
@@ -290,14 +282,8 @@ test('buy: successful purchase with gating', async (t) => {
     ],
   });
 
-  const buyRes = await transactionHandler.sendAndConfirmTransaction(
-    buyTx,
-    [payer],
-    defaultSendOptions,
-  );
-
+  await transactionHandler.sendAndConfirmTransaction(buyTx, [payer]).assertSuccess(t);
   logDebug('buy:: successful purchase');
-  assertConfirmedTransaction(t, buyRes.txConfirmed);
 });
 
 test('buy: unsuccessful purchase with gating', async (t) => {
@@ -380,15 +366,17 @@ test('buy: unsuccessful purchase with gating', async (t) => {
 
   logDebug('new mint', newMint.publicKey.toBase58());
 
-  const newMintEdition = await deprecated.Edition.getPDA(newMint.publicKey);
-  const newMintMetadata = await deprecated.Metadata.getPDA(newMint.publicKey);
+  const metaplex = Metaplex.make(connection);
+  const pdas = metaplex.nfts().pdas();
+  const newMintEdition = pdas.edition({ mint: newMint.publicKey });
+  const newMintMetadata = pdas.metadata({ mint: newMint.publicKey });
 
-  const resourceMintMasterEdition = await deprecated.Edition.getPDA(resourceMint.publicKey);
-  const resourceMintMetadata = await deprecated.Metadata.getPDA(resourceMint.publicKey);
-  const resourceMintEditionMarker = await deprecated.EditionMarker.getPDA(
-    resourceMint.publicKey,
-    new BN(1),
-  );
+  const resourceMintMasterEdition = pdas.edition({ mint: resourceMint.publicKey });
+  const resourceMintMetadata = pdas.metadata({ mint: resourceMint.publicKey });
+  const resourceMintEditionMarker = pdas.editionMarker({
+    mint: resourceMint.publicKey,
+    edition: toBigNumber(1),
+  });
 
   await sleep(1000);
 
@@ -414,9 +402,7 @@ test('buy: unsuccessful purchase with gating', async (t) => {
     // User doesn't have gating token
   });
 
-  try {
-    await transactionHandler.sendAndConfirmTransaction(buyTx, [payer], defaultSendOptions);
-  } catch (err) {
-    assertError(t, err, [/GatingTokenMissing/i, /Gating token is missing/i]);
-  }
+  await transactionHandler
+    .sendAndConfirmTransaction(buyTx, [payer])
+    .assertError(t, GatingTokenMissingError);
 });
