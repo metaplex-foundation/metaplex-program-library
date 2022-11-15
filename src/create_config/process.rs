@@ -178,7 +178,7 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
     println!("\nCheck out our Candy Machine config docs to learn about the options:");
     println!(
         "  -> {}\n",
-        style("https://docs.metaplex.com/tools/sugar/configuration")
+        style("https://docs.metaplex.com/developer-tools/sugar/guides/configuration")
             .bold()
             .magenta()
             .underlined()
