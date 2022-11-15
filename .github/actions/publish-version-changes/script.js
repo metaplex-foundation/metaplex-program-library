@@ -113,7 +113,7 @@ const tryPublishCratesPackage = async (cargoToken, cwdArgs) => {
 
   // only publish if local != remote crate version
   if (shouldPublishPackage(localCrateVersion, remoteCrateVersion)) {
-    wrappedExec(`cargo publish --token ${cargoToken} -p ${crateName} --no-verify`, currentDir);
+    wrappedExec(`cargo publish --token ${cargoToken} -p ${crateName}`, currentDir);
 
     addTag(formatCrateTag(crateName, localCrateVersion));
   } else {
