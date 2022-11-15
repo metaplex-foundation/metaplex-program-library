@@ -520,6 +520,10 @@ pub enum MetadataError {
     /// 131
     #[error("Invalid collection size change")]
     InvalidCollectionSizeChange,
+
+    /// 132
+    #[error("Invalid bubblegum signer")]
+    InvalidBubblegumSigner,
 }
 
 impl PrintProgramError for MetadataError {

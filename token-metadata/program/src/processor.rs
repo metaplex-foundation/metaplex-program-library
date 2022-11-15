@@ -37,7 +37,7 @@ use crate::{
         process_mint_new_edition_from_master_edition_via_token_logic, puff_out_data_fields,
         spl_token_burn, spl_token_close, transfer_mint_authority, CreateMetadataAccountsLogicArgs,
         MintNewEditionFromMasterEditionViaTokenLogicArgs, TokenBurnParams, TokenCloseParams,
-        BUBBLEGUM_ACTIVATED, BUBBLEGUM_PROGRAM_ADDRESS,
+        BUBBLEGUM_ACTIVATED, BUBBLEGUM_SIGNER,
     },
 };
 use arrayref::array_ref;
@@ -2182,7 +2182,9 @@ pub fn bubblegum_set_collection_size(
     }
 
     // This instruction can only be called by the Bubblegum program.
-    assert_owned_by(bubblegum_signer_info, &BUBBLEGUM_PROGRAM_ADDRESS)?;
+    if *bubblegum_signer_info.key != BUBBLEGUM_SIGNER {
+        return Err(MetadataError::InvalidBubblegumSigner.into());
+    }
     assert_signer(bubblegum_signer_info)?;
 
     // Owned by token-metadata program.
