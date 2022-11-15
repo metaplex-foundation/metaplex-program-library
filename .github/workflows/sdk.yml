@@ -28,7 +28,6 @@ jobs:
           - name: "candy-machine"
           - name: "candy-machine-core"
             skip_test: true
-          - name: "core"
           - name: "fixed-price-sale"
             skip_test: true
           - name: "gumdrop"
