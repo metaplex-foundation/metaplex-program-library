@@ -14,7 +14,15 @@ use solana_program::{
 /// Pack card
 #[repr(C)]
 #[derive(
-    Debug, Clone, PartialEq, Eq, BorshSerialize, BorshDeserialize, BorshSchema, Default, ShankAccount,
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    BorshSerialize,
+    BorshDeserialize,
+    BorshSchema,
+    Default,
+    ShankAccount,
 )]
 pub struct PackCard {
     /// Account type - PackCard

@@ -89,6 +89,7 @@ async function setupTreeWithCompressedNFT(
     {
       maxBufferSize,
       maxDepth,
+      public: false,
     },
     BUBBLEGUM_PROGRAM_ID,
   );

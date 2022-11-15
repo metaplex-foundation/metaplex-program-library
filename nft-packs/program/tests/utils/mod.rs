@@ -11,8 +11,6 @@ mod pack_voucher;
 mod user;
 mod vault;
 
-pub use assert::*;
-pub use edition::*;
 pub use edition_marker::TestEditionMarker;
 pub use external_price::TestExternalPrice;
 pub use master_edition_v2::TestMasterEditionV2;
@@ -37,7 +35,7 @@ use std::{env, time};
 pub use user::*;
 pub use vault::TestVault;
 
-pub fn nft_packs_program_test<'a>() -> ProgramTest {
+pub fn nft_packs_program_test() -> ProgramTest {
     let mut program = ProgramTest::new("mpl_nft_packs", mpl_nft_packs::id(), None);
     program.add_program("mpl_token_metadata", mpl_token_metadata::id(), None);
     program.add_program("mpl_metaplex", mpl_metaplex::id(), None);

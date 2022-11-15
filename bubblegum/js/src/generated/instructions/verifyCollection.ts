@@ -55,7 +55,7 @@ export const verifyCollectionStruct = new beet.FixableBeetArgsStruct<
  * @property [**signer**] collectionAuthority
  * @property [] collectionAuthorityRecordPda
  * @property [] collectionMint
- * @property [] collectionMetadata
+ * @property [_writable_] collectionMetadata
  * @property [] editionAccount
  * @property [] bubblegumSigner
  * @property [] logWrapper
@@ -81,6 +81,7 @@ export type VerifyCollectionInstructionAccounts = {
   logWrapper: web3.PublicKey;
   compressionProgram: web3.PublicKey;
   tokenMetadataProgram: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
   anchorRemainingAccounts?: web3.AccountMeta[];
 };
 
@@ -153,7 +154,7 @@ export function createVerifyCollectionInstruction(
     },
     {
       pubkey: accounts.collectionMetadata,
-      isWritable: false,
+      isWritable: true,
       isSigner: false,
     },
     {
@@ -178,6 +179,11 @@ export function createVerifyCollectionInstruction(
     },
     {
       pubkey: accounts.tokenMetadataProgram,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
       isWritable: false,
       isSigner: false,
     },

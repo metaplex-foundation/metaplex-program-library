@@ -166,6 +166,7 @@ mod escrow {
         let ix2 = mpl_token_metadata::escrow::transfer_out_of_escrow(
             mpl_token_metadata::id(),
             escrow_address.0,
+            parent_test_metadata.pubkey,
             context.payer.pubkey(),
             attribute_test_metadata.mint.pubkey(),
             escrow_attribute_token_account,

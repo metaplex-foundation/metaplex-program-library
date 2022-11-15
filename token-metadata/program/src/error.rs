@@ -516,6 +516,14 @@ pub enum MetadataError {
     /// 130 - Cannot create NFT with no Freeze Authority.
     #[error("Cannot create NFT with no Freeze Authority.")]
     NoFreezeAuthoritySet,
+
+    /// 131
+    #[error("Invalid collection size change")]
+    InvalidCollectionSizeChange,
+
+    /// 132
+    #[error("Invalid bubblegum signer")]
+    InvalidBubblegumSigner,
 }
 
 impl PrintProgramError for MetadataError {

@@ -1,0 +1,35 @@
+name: Integration Tests
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+  workflow_dispatch:
+    inputs:
+      cache:
+        description: 'Use Cached Dependencies'
+        required: true
+        type: boolean
+      changes:
+        description: 'Only run when files change'
+        required: true
+        type: boolean
+
+jobs:
+  integration-tests:
+    name: "Integration: ${{ matrix.node.name }}"
+    strategy:
+      fail-fast: false
+      matrix:
+        node:
+          - name: "fixed-price-sale"
+          - name: "hydra"
+          - name: "candy-machine-core"
+    uses: ./.github/workflows/integration-reusable.yml
+    with:
+      name: ${{ matrix.node.name }}
+      build_token_metadata: ${{ !contains(matrix.node.build_token_metadata, 'false') }}
+      cache: ${{ contains(inputs.cache, 'true') }}
+      changes: ${{ !contains(inputs.changes, 'false') }}

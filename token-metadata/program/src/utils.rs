@@ -5,8 +5,25 @@ use mpl_utils::{
     token::{get_mint_authority, get_mint_decimals, get_mint_freeze_authority, get_mint_supply},
 };
 use solana_program::{
-    account_info::AccountInfo, borsh::try_from_slice_unchecked, entrypoint::ProgramResult, msg,
-    program::invoke_signed, program_error::ProgramError, program_option::COption, pubkey::Pubkey,
+    account_info::AccountInfo,
+    account_info::AccountInfo,
+    borsh::try_from_slice_unchecked,
+    borsh::try_from_slice_unchecked,
+    entrypoint::ProgramResult,
+    entrypoint::ProgramResult,
+    msg, msg,
+    program::invoke_signed,
+    program::{invoke, invoke_signed},
+    program_error::ProgramError,
+    program_error::ProgramError,
+    program_option::COption,
+    program_option::COption,
+    program_pack::{IsInitialized, Pack},
+    pubkey,
+    pubkey::Pubkey,
+    pubkey::Pubkey,
+    system_instruction,
+    sysvar::{rent::Rent, Sysvar},
 };
 use spl_token::{
     instruction::{set_authority, AuthorityType},
@@ -420,16 +437,13 @@ pub const SEED_AUTHORITY: Pubkey = Pubkey::new_from_array([
     0x00, 0x93, 0xa3, 0x0b, 0x02, 0x73, 0xdc, 0xfa, 0x74, 0x92, 0x17, 0xfc, 0x94, 0xa2, 0x40, 0x49,
 ]);
 
-// This equals the program address of the Bubblegum program:
-// "BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY"
 // This allows the Bubblegum program to add verified creators since they were verified as part of
 // the Bubblegum program.
-pub const BUBBLEGUM_PROGRAM_ADDRESS: Pubkey = Pubkey::new_from_array([
-    0x98, 0x8b, 0x80, 0xeb, 0x79, 0x35, 0x28, 0x69, 0xb2, 0x24, 0x74, 0x5f, 0x59, 0xdd, 0xbf, 0x8a,
-    0x26, 0x58, 0xca, 0x13, 0xdc, 0x68, 0x81, 0x21, 0x26, 0x35, 0x1c, 0xae, 0x07, 0xc1, 0xa5, 0xa5,
-]);
+pub const BUBBLEGUM_PROGRAM_ADDRESS: Pubkey =
+    pubkey!("BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY");
+pub const BUBBLEGUM_SIGNER: Pubkey = pubkey!("4ewWZC5gT6TGpm5LZNDs9wVonfUT2q5PP5sc9kVbwMAK");
 // This flag activates certain program authority features of the Bubblegum program.
-pub const BUBBLEGUM_ACTIVATED: bool = false;
+pub const BUBBLEGUM_ACTIVATED: bool = true;
 
 /// Create a new account instruction
 pub fn process_create_metadata_accounts_logic(
