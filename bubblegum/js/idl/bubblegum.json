@@ -1,12 +1,26 @@
 {
-  "version": "0.1.0",
+  "version": "0.4.0",
   "name": "bubblegum",
   "instructions": [
     {
       "name": "createTree",
       "accounts": [
         {
-          "name": "authority",
+          "name": "treeAuthority",
+          "isMut": true,
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "path": "merkle_tree"
+              }
+            ]
+          }
+        },
+        {
+          "name": "merkleTree",
           "isMut": true,
           "isSigner": false
         },
@@ -21,12 +35,7 @@
           "isSigner": true
         },
         {
-          "name": "candyWrapper",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
+          "name": "logWrapper",
           "isMut": false,
           "isSigner": false
         },
@@ -36,8 +45,8 @@
           "isSigner": false
         },
         {
-          "name": "merkleTree",
-          "isMut": true,
+          "name": "systemProgram",
+          "isMut": false,
           "isSigner": false
         }
       ],
@@ -49,162 +58,39 @@
         {
           "name": "maxBufferSize",
           "type": "u32"
+        },
+        {
+          "name": "public",
+          "type": {
+            "option": "bool"
+          }
         }
       ]
-    },
-    {
-      "name": "createDefaultMintRequest",
-      "docs": [
-        "Creates a special mint request the tree_authority PDA. This allows permissionless minting without",
-        "requiring a higher level CPI"
-      ],
-      "accounts": [
-        {
-          "name": "mintAuthorityRequest",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "payer",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "creator",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "treeAuthority",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "merkleTree",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "mintCapacity",
-          "type": "u64"
-        }
-      ]
-    },
-    {
-      "name": "requestMintAuthority",
-      "accounts": [
-        {
-          "name": "mintAuthorityRequest",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "payer",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "mintAuthority",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "treeAuthority",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "merkleTree",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "mintCapacity",
-          "type": "u64"
-        }
-      ]
-    },
-    {
-      "name": "approveMintAuthorityRequest",
-      "accounts": [
-        {
-          "name": "mintAuthorityRequest",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "treeDelegate",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "treeAuthority",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "merkleTree",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "numMintsToApprove",
-          "type": "u64"
-        }
-      ]
-    },
-    {
-      "name": "closeMintRequest",
-      "accounts": [
-        {
-          "name": "mintAuthorityRequest",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "mintAuthority",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "treeAuthority",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "merkleTree",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": []
     },
     {
       "name": "setTreeDelegate",
       "accounts": [
         {
-          "name": "creator",
+          "name": "treeAuthority",
+          "isMut": true,
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "path": "merkle_tree"
+              }
+            ]
+          }
+        },
+        {
+          "name": "treeCreator",
           "isMut": false,
           "isSigner": true
         },
         {
-          "name": "newDelegate",
+          "name": "newTreeDelegate",
           "isMut": false,
           "isSigner": false
         },
@@ -214,8 +100,8 @@
           "isSigner": false
         },
         {
-          "name": "treeAuthority",
-          "isMut": true,
+          "name": "systemProgram",
+          "isMut": false,
           "isSigner": false
         }
       ],
@@ -225,17 +111,46 @@
       "name": "mintV1",
       "accounts": [
         {
-          "name": "mintAuthority",
+          "name": "treeAuthority",
+          "isMut": true,
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "path": "merkle_tree"
+              }
+            ]
+          }
+        },
+        {
+          "name": "leafOwner",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "authority",
+          "name": "leafDelegate",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "merkleTree",
           "isMut": true,
           "isSigner": false
         },
         {
-          "name": "candyWrapper",
+          "name": "payer",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "treeDelegate",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "logWrapper",
           "isMut": false,
           "isSigner": false
         },
@@ -245,23 +160,8 @@
           "isSigner": false
         },
         {
-          "name": "owner",
+          "name": "systemProgram",
           "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "delegate",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "mintAuthorityRequest",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "merkleTree",
-          "isMut": true,
           "isSigner": false
         }
       ],
@@ -275,21 +175,150 @@
       ]
     },
     {
+      "name": "mintToCollectionV1",
+      "accounts": [
+        {
+          "name": "treeAuthority",
+          "isMut": true,
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "path": "merkle_tree"
+              }
+            ]
+          }
+        },
+        {
+          "name": "leafOwner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "leafDelegate",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "merkleTree",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "payer",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "treeDelegate",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "collectionAuthority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "collectionAuthorityRecordPda",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "If there is no collecton authority record PDA then",
+            "this must be the Bubblegum program address."
+          ]
+        },
+        {
+          "name": "collectionMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "collectionMetadata",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "editionAccount",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "bubblegumSigner",
+          "isMut": false,
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "type": "string",
+                "value": "collection_cpi"
+              }
+            ]
+          }
+        },
+        {
+          "name": "logWrapper",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "compressionProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMetadataProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "metadataArgs",
+          "type": {
+            "defined": "MetadataArgs"
+          }
+        }
+      ]
+    },
+    {
       "name": "verifyCreator",
       "accounts": [
         {
-          "name": "authority",
+          "name": "treeAuthority",
+          "isMut": false,
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "path": "merkle_tree"
+              }
+            ]
+          }
+        },
+        {
+          "name": "leafOwner",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "owner",
+          "name": "leafDelegate",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "delegate",
-          "isMut": false,
+          "name": "merkleTree",
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -303,7 +332,7 @@
           "isSigner": true
         },
         {
-          "name": "candyWrapper",
+          "name": "logWrapper",
           "isMut": false,
           "isSigner": false
         },
@@ -313,8 +342,8 @@
           "isSigner": false
         },
         {
-          "name": "merkleTree",
-          "isMut": true,
+          "name": "systemProgram",
+          "isMut": false,
           "isSigner": false
         }
       ],
@@ -366,18 +395,32 @@
       "name": "unverifyCreator",
       "accounts": [
         {
-          "name": "authority",
+          "name": "treeAuthority",
+          "isMut": false,
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "path": "merkle_tree"
+              }
+            ]
+          }
+        },
+        {
+          "name": "leafOwner",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "owner",
+          "name": "leafDelegate",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "delegate",
-          "isMut": false,
+          "name": "merkleTree",
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -391,7 +434,7 @@
           "isSigner": true
         },
         {
-          "name": "candyWrapper",
+          "name": "logWrapper",
           "isMut": false,
           "isSigner": false
         },
@@ -401,8 +444,8 @@
           "isSigner": false
         },
         {
-          "name": "merkleTree",
-          "isMut": true,
+          "name": "systemProgram",
+          "isMut": false,
           "isSigner": false
         }
       ],
@@ -454,18 +497,32 @@
       "name": "verifyCollection",
       "accounts": [
         {
-          "name": "authority",
+          "name": "treeAuthority",
+          "isMut": false,
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "path": "merkle_tree"
+              }
+            ]
+          }
+        },
+        {
+          "name": "leafOwner",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "owner",
+          "name": "leafDelegate",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "delegate",
-          "isMut": false,
+          "name": "merkleTree",
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -488,13 +545,22 @@
           "isSigner": true
         },
         {
+          "name": "collectionAuthorityRecordPda",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "If there is no collecton authority record PDA then",
+            "this must be the Bubblegum program address."
+          ]
+        },
+        {
           "name": "collectionMint",
           "isMut": false,
           "isSigner": false
         },
         {
           "name": "collectionMetadata",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -505,10 +571,19 @@
         {
           "name": "bubblegumSigner",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "type": "string",
+                "value": "collection_cpi"
+              }
+            ]
+          }
         },
         {
-          "name": "candyWrapper",
+          "name": "logWrapper",
           "isMut": false,
           "isSigner": false
         },
@@ -518,12 +593,12 @@
           "isSigner": false
         },
         {
-          "name": "merkleTree",
-          "isMut": true,
+          "name": "tokenMetadataProgram",
+          "isMut": false,
           "isSigner": false
         },
         {
-          "name": "tokenMetadataProgram",
+          "name": "systemProgram",
           "isMut": false,
           "isSigner": false
         }
@@ -576,18 +651,32 @@
       "name": "unverifyCollection",
       "accounts": [
         {
-          "name": "authority",
+          "name": "treeAuthority",
+          "isMut": false,
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "path": "merkle_tree"
+              }
+            ]
+          }
+        },
+        {
+          "name": "leafOwner",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "owner",
+          "name": "leafDelegate",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "delegate",
-          "isMut": false,
+          "name": "merkleTree",
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -610,13 +699,22 @@
           "isSigner": true
         },
         {
+          "name": "collectionAuthorityRecordPda",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "If there is no collecton authority record PDA then",
+            "this must be the Bubblegum program address."
+          ]
+        },
+        {
           "name": "collectionMint",
           "isMut": false,
           "isSigner": false
         },
         {
           "name": "collectionMetadata",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -627,10 +725,19 @@
         {
           "name": "bubblegumSigner",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "type": "string",
+                "value": "collection_cpi"
+              }
+            ]
+          }
         },
         {
-          "name": "candyWrapper",
+          "name": "logWrapper",
           "isMut": false,
           "isSigner": false
         },
@@ -640,12 +747,12 @@
           "isSigner": false
         },
         {
-          "name": "merkleTree",
-          "isMut": true,
+          "name": "tokenMetadataProgram",
+          "isMut": false,
           "isSigner": false
         },
         {
-          "name": "tokenMetadataProgram",
+          "name": "systemProgram",
           "isMut": false,
           "isSigner": false
         }
@@ -698,18 +805,32 @@
       "name": "setAndVerifyCollection",
       "accounts": [
         {
-          "name": "authority",
+          "name": "treeAuthority",
+          "isMut": false,
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "path": "merkle_tree"
+              }
+            ]
+          }
+        },
+        {
+          "name": "leafOwner",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "owner",
+          "name": "leafDelegate",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "delegate",
-          "isMut": false,
+          "name": "merkleTree",
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -732,13 +853,22 @@
           "isSigner": true
         },
         {
+          "name": "collectionAuthorityRecordPda",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "If there is no collecton authority record PDA then",
+            "this must be the Bubblegum program address."
+          ]
+        },
+        {
           "name": "collectionMint",
           "isMut": false,
           "isSigner": false
         },
         {
           "name": "collectionMetadata",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -749,10 +879,19 @@
         {
           "name": "bubblegumSigner",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "type": "string",
+                "value": "collection_cpi"
+              }
+            ]
+          }
         },
         {
-          "name": "candyWrapper",
+          "name": "logWrapper",
           "isMut": false,
           "isSigner": false
         },
@@ -762,12 +901,12 @@
           "isSigner": false
         },
         {
-          "name": "merkleTree",
-          "isMut": true,
+          "name": "tokenMetadataProgram",
+          "isMut": false,
           "isSigner": false
         },
         {
-          "name": "tokenMetadataProgram",
+          "name": "systemProgram",
           "isMut": false,
           "isSigner": false
         }
@@ -816,12 +955,7 @@
         },
         {
           "name": "collection",
-          "type": {
-            "array": [
-              "u8",
-              32
-            ]
-          }
+          "type": "publicKey"
         }
       ]
     },
@@ -829,27 +963,41 @@
       "name": "transfer",
       "accounts": [
         {
-          "name": "authority",
+          "name": "treeAuthority",
+          "isMut": false,
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "path": "merkle_tree"
+              }
+            ]
+          }
+        },
+        {
+          "name": "leafOwner",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "owner",
+          "name": "leafDelegate",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "delegate",
+          "name": "newLeafOwner",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "newOwner",
-          "isMut": false,
+          "name": "merkleTree",
+          "isMut": true,
           "isSigner": false
         },
         {
-          "name": "candyWrapper",
+          "name": "logWrapper",
           "isMut": false,
           "isSigner": false
         },
@@ -859,8 +1007,8 @@
           "isSigner": false
         },
         {
-          "name": "merkleTree",
-          "isMut": true,
+          "name": "systemProgram",
+          "isMut": false,
           "isSigner": false
         }
       ],
@@ -906,27 +1054,41 @@
       "name": "delegate",
       "accounts": [
         {
-          "name": "authority",
+          "name": "treeAuthority",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "path": "merkle_tree"
+              }
+            ]
+          }
         },
         {
-          "name": "owner",
+          "name": "leafOwner",
           "isMut": false,
           "isSigner": true
         },
         {
-          "name": "previousDelegate",
+          "name": "previousLeafDelegate",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "newDelegate",
+          "name": "newLeafDelegate",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "candyWrapper",
+          "name": "merkleTree",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "logWrapper",
           "isMut": false,
           "isSigner": false
         },
@@ -936,8 +1098,8 @@
           "isSigner": false
         },
         {
-          "name": "merkleTree",
-          "isMut": true,
+          "name": "systemProgram",
+          "isMut": false,
           "isSigner": false
         }
       ],
@@ -983,12 +1145,36 @@
       "name": "burn",
       "accounts": [
         {
-          "name": "authority",
+          "name": "treeAuthority",
+          "isMut": false,
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "path": "merkle_tree"
+              }
+            ]
+          }
+        },
+        {
+          "name": "leafOwner",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "candyWrapper",
+          "name": "leafDelegate",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "merkleTree",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "logWrapper",
           "isMut": false,
           "isSigner": false
         },
@@ -998,18 +1184,8 @@
           "isSigner": false
         },
         {
-          "name": "owner",
+          "name": "systemProgram",
           "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "delegate",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "merkleTree",
-          "isMut": true,
           "isSigner": false
         }
       ],
@@ -1055,27 +1231,26 @@
       "name": "redeem",
       "accounts": [
         {
-          "name": "authority",
+          "name": "treeAuthority",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "path": "merkle_tree"
+              }
+            ]
+          }
         },
         {
-          "name": "candyWrapper",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "compressionProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "owner",
+          "name": "leafOwner",
           "isMut": true,
           "isSigner": true
         },
         {
-          "name": "delegate",
+          "name": "leafDelegate",
           "isMut": false,
           "isSigner": false
         },
@@ -1087,6 +1262,35 @@
         {
           "name": "voucher",
           "isMut": true,
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "type": "string",
+                "value": "voucher"
+              },
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "path": "merkle_tree"
+              },
+              {
+                "kind": "arg",
+                "type": "u64",
+                "path": "nonce"
+              }
+            ]
+          }
+        },
+        {
+          "name": "logWrapper",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "compressionProgram",
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -1137,19 +1341,23 @@
       "name": "cancelRedeem",
       "accounts": [
         {
-          "name": "authority",
+          "name": "treeAuthority",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "path": "merkle_tree"
+              }
+            ]
+          }
         },
         {
-          "name": "candyWrapper",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "compressionProgram",
-          "isMut": false,
-          "isSigner": false
+          "name": "leafOwner",
+          "isMut": true,
+          "isSigner": true
         },
         {
           "name": "merkleTree",
@@ -1159,12 +1367,44 @@
         {
           "name": "voucher",
           "isMut": true,
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "type": "string",
+                "value": "voucher"
+              },
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "path": "merkle_tree"
+              },
+              {
+                "kind": "account",
+                "type": {
+                  "defined": "LeafSchema"
+                },
+                "account": "Voucher",
+                "path": "voucher.leaf_schema"
+              }
+            ]
+          }
+        },
+        {
+          "name": "logWrapper",
+          "isMut": false,
           "isSigner": false
         },
         {
-          "name": "owner",
-          "isMut": true,
-          "isSigner": true
+          "name": "compressionProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
         }
       ],
       "args": [
@@ -1185,10 +1425,33 @@
         {
           "name": "voucher",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "type": "string",
+                "value": "voucher"
+              },
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "account": "Voucher",
+                "path": "voucher.merkle_tree"
+              },
+              {
+                "kind": "account",
+                "type": {
+                  "defined": "LeafSchema"
+                },
+                "account": "Voucher",
+                "path": "voucher.leaf_schema"
+              }
+            ]
+          }
         },
         {
-          "name": "owner",
+          "name": "leafOwner",
           "isMut": true,
           "isSigner": true
         },
@@ -1200,12 +1463,44 @@
         {
           "name": "mint",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "type": "string",
+                "value": "asset"
+              },
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "account": "Voucher",
+                "path": "voucher.merkle_tree"
+              },
+              {
+                "kind": "account",
+                "type": {
+                  "defined": "LeafSchema"
+                },
+                "account": "Voucher",
+                "path": "voucher.leaf_schema"
+              }
+            ]
+          }
         },
         {
           "name": "mintAuthority",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "path": "mint"
+              }
+            ]
+          }
         },
         {
           "name": "metadata",
@@ -1241,6 +1536,11 @@
           "name": "associatedTokenProgram",
           "isMut": false,
           "isSigner": false
+        },
+        {
+          "name": "logWrapper",
+          "isMut": false,
+          "isSigner": false
         }
       ],
       "args": [
@@ -1256,22 +1556,31 @@
       "name": "compress",
       "accounts": [
         {
-          "name": "authority",
+          "name": "treeAuthority",
+          "isMut": false,
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "path": "merkle_tree"
+              }
+            ]
+          }
+        },
+        {
+          "name": "leafOwner",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "leafDelegate",
           "isMut": false,
           "isSigner": false
         },
         {
           "name": "merkleTree",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "owner",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "delegate",
           "isMut": false,
           "isSigner": false
         },
@@ -1301,12 +1610,12 @@
           "isSigner": true
         },
         {
-          "name": "systemProgram",
+          "name": "logWrapper",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "tokenMetadataProgram",
+          "name": "compressionProgram",
           "isMut": false,
           "isSigner": false
         },
@@ -1316,12 +1625,12 @@
           "isSigner": false
         },
         {
-          "name": "candyWrapper",
+          "name": "tokenMetadataProgram",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "compressionProgram",
+          "name": "systemProgram",
           "isMut": false,
           "isSigner": false
         }
@@ -1331,36 +1640,16 @@
   ],
   "accounts": [
     {
-      "name": "MintRequest",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "mintAuthority",
-            "type": "publicKey"
-          },
-          {
-            "name": "numMintsRequested",
-            "type": "u64"
-          },
-          {
-            "name": "numMintsApproved",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
       "name": "TreeConfig",
       "type": {
         "kind": "struct",
         "fields": [
           {
-            "name": "creator",
+            "name": "treeCreator",
             "type": "publicKey"
           },
           {
-            "name": "delegate",
+            "name": "treeDelegate",
             "type": "publicKey"
           },
           {
@@ -1368,12 +1657,12 @@
             "type": "u64"
           },
           {
-            "name": "numMintsApproved",
+            "name": "numMinted",
             "type": "u64"
           },
           {
-            "name": "numMinted",
-            "type": "u64"
+            "name": "isPublic",
+            "type": "bool"
           }
         ]
       }
@@ -1670,6 +1959,20 @@
       }
     },
     {
+      "name": "BubblegumEventType",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Uninitialized"
+          },
+          {
+            "name": "LeafSchemaEvent"
+          }
+        ]
+      }
+    },
+    {
       "name": "InstructionName",
       "type": {
         "kind": "enum",
@@ -1721,88 +2024,6 @@
           }
         ]
       }
-    }
-  ],
-  "events": [
-    {
-      "name": "LeafSchemaEvent",
-      "fields": [
-        {
-          "name": "version",
-          "type": {
-            "defined": "Version"
-          },
-          "index": false
-        },
-        {
-          "name": "schema",
-          "type": {
-            "defined": "LeafSchema"
-          },
-          "index": false
-        },
-        {
-          "name": "leafHash",
-          "type": {
-            "array": [
-              "u8",
-              32
-            ]
-          },
-          "index": false
-        }
-      ]
-    },
-    {
-      "name": "NewNFTEvent",
-      "fields": [
-        {
-          "name": "version",
-          "type": {
-            "defined": "Version"
-          },
-          "index": false
-        },
-        {
-          "name": "metadata",
-          "type": {
-            "defined": "MetadataArgs"
-          },
-          "index": false
-        },
-        {
-          "name": "nonce",
-          "type": "u64",
-          "index": false
-        }
-      ]
-    },
-    {
-      "name": "NFTDecompressionEvent",
-      "fields": [
-        {
-          "name": "version",
-          "type": {
-            "defined": "Version"
-          },
-          "index": false
-        },
-        {
-          "name": "id",
-          "type": "publicKey",
-          "index": false
-        },
-        {
-          "name": "treeId",
-          "type": "publicKey",
-          "index": false
-        },
-        {
-          "name": "nonce",
-          "type": "u64",
-          "index": false
-        }
-      ]
     }
   ],
   "errors": [
@@ -1888,71 +2109,51 @@
     },
     {
       "code": 6016,
+      "name": "TreeAuthorityIncorrect",
+      "msg": "Tree creator or tree delegate must sign."
+    },
+    {
+      "code": 6017,
       "name": "InsufficientMintCapacity",
       "msg": "Not enough unapproved mints left"
     },
     {
-      "code": 6017,
-      "name": "MintRequestNotApproved",
-      "msg": "Mint request not approved"
-    },
-    {
       "code": 6018,
-      "name": "MintRequestKeyMismatch",
-      "msg": "Mint authority key does not match request"
-    },
-    {
-      "code": 6019,
-      "name": "MintRequestDiscriminatorMismatch",
-      "msg": "Mint request data has incorrect disciminator"
-    },
-    {
-      "code": 6020,
-      "name": "CloseMintRequestError",
-      "msg": "Something went wrong closing mint request"
-    },
-    {
-      "code": 6021,
-      "name": "MintAuthorityMustSign",
-      "msg": "The mint authority must sign if it is not equal to the tree authority"
-    },
-    {
-      "code": 6022,
       "name": "NumericalOverflowError",
       "msg": "NumericalOverflowError"
     },
     {
-      "code": 6023,
+      "code": 6019,
       "name": "IncorrectOwner",
       "msg": "Incorrect account owner"
     },
     {
-      "code": 6024,
+      "code": 6020,
       "name": "CollectionCannotBeVerifiedInThisInstruction",
       "msg": "Cannot Verify Collection in this Instruction"
     },
     {
-      "code": 6025,
+      "code": 6021,
       "name": "CollectionNotFound",
       "msg": "Collection Not Found on Metadata"
     },
     {
-      "code": 6026,
+      "code": 6022,
       "name": "AlreadyVerified",
       "msg": "Collection item is already verified."
     },
     {
-      "code": 6027,
+      "code": 6023,
       "name": "AlreadyUnverified",
       "msg": "Collection item is already unverified."
     },
     {
-      "code": 6028,
+      "code": 6024,
       "name": "UpdateAuthorityIncorrect",
       "msg": "Incorrect leaf metadata update authority."
     },
     {
-      "code": 6029,
+      "code": 6025,
       "name": "LeafAuthorityMustSign",
       "msg": "This transaction must be signed by either the leaf owner or leaf delegate"
     }

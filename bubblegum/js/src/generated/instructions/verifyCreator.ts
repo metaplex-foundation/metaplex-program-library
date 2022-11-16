@@ -5,9 +5,9 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet'
-import * as web3 from '@solana/web3.js'
-import { MetadataArgs, metadataArgsBeet } from '../types/MetadataArgs'
+import * as beet from '@metaplex-foundation/beet';
+import * as web3 from '@solana/web3.js';
+import { MetadataArgs, metadataArgsBeet } from '../types/MetadataArgs';
 
 /**
  * @category Instructions
@@ -15,13 +15,13 @@ import { MetadataArgs, metadataArgsBeet } from '../types/MetadataArgs'
  * @category generated
  */
 export type VerifyCreatorInstructionArgs = {
-  root: number[] /* size: 32 */
-  dataHash: number[] /* size: 32 */
-  creatorHash: number[] /* size: 32 */
-  nonce: beet.bignum
-  index: number
-  message: MetadataArgs
-}
+  root: number[] /* size: 32 */;
+  dataHash: number[] /* size: 32 */;
+  creatorHash: number[] /* size: 32 */;
+  nonce: beet.bignum;
+  index: number;
+  message: MetadataArgs;
+};
 /**
  * @category Instructions
  * @category VerifyCreator
@@ -29,7 +29,7 @@ export type VerifyCreatorInstructionArgs = {
  */
 export const verifyCreatorStruct = new beet.FixableBeetArgsStruct<
   VerifyCreatorInstructionArgs & {
-    instructionDiscriminator: number[] /* size: 8 */
+    instructionDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
@@ -41,37 +41,37 @@ export const verifyCreatorStruct = new beet.FixableBeetArgsStruct<
     ['index', beet.u32],
     ['message', metadataArgsBeet],
   ],
-  'VerifyCreatorInstructionArgs'
-)
+  'VerifyCreatorInstructionArgs',
+);
 /**
  * Accounts required by the _verifyCreator_ instruction
  *
- * @property [] authority
- * @property [] owner
- * @property [] delegate
+ * @property [] treeAuthority
+ * @property [] leafOwner
+ * @property [] leafDelegate
+ * @property [_writable_] merkleTree
  * @property [**signer**] payer
  * @property [**signer**] creator
- * @property [] candyWrapper
+ * @property [] logWrapper
  * @property [] compressionProgram
- * @property [_writable_] merkleTree
  * @category Instructions
  * @category VerifyCreator
  * @category generated
  */
 export type VerifyCreatorInstructionAccounts = {
-  authority: web3.PublicKey
-  owner: web3.PublicKey
-  delegate: web3.PublicKey
-  payer: web3.PublicKey
-  creator: web3.PublicKey
-  candyWrapper: web3.PublicKey
-  compressionProgram: web3.PublicKey
-  merkleTree: web3.PublicKey
-}
+  treeAuthority: web3.PublicKey;
+  leafOwner: web3.PublicKey;
+  leafDelegate: web3.PublicKey;
+  merkleTree: web3.PublicKey;
+  payer: web3.PublicKey;
+  creator: web3.PublicKey;
+  logWrapper: web3.PublicKey;
+  compressionProgram: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
+};
 
-export const verifyCreatorInstructionDiscriminator = [
-  52, 17, 96, 132, 71, 4, 85, 194,
-]
+export const verifyCreatorInstructionDiscriminator = [52, 17, 96, 132, 71, 4, 85, 194];
 
 /**
  * Creates a _VerifyCreator_ instruction.
@@ -86,26 +86,31 @@ export const verifyCreatorInstructionDiscriminator = [
 export function createVerifyCreatorInstruction(
   accounts: VerifyCreatorInstructionAccounts,
   args: VerifyCreatorInstructionArgs,
-  programId = new web3.PublicKey('BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY')
+  programId = new web3.PublicKey('BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY'),
 ) {
   const [data] = verifyCreatorStruct.serialize({
     instructionDiscriminator: verifyCreatorInstructionDiscriminator,
     ...args,
-  })
+  });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: accounts.authority,
+      pubkey: accounts.treeAuthority,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: accounts.owner,
+      pubkey: accounts.leafOwner,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: accounts.delegate,
+      pubkey: accounts.leafDelegate,
       isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.merkleTree,
+      isWritable: true,
       isSigner: false,
     },
     {
@@ -119,7 +124,7 @@ export function createVerifyCreatorInstruction(
       isSigner: true,
     },
     {
-      pubkey: accounts.candyWrapper,
+      pubkey: accounts.logWrapper,
       isWritable: false,
       isSigner: false,
     },
@@ -129,16 +134,22 @@ export function createVerifyCreatorInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.merkleTree,
-      isWritable: true,
+      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
+      isWritable: false,
       isSigner: false,
     },
-  ]
+  ];
+
+  if (accounts.anchorRemainingAccounts != null) {
+    for (const acc of accounts.anchorRemainingAccounts) {
+      keys.push(acc);
+    }
+  }
 
   const ix = new web3.TransactionInstruction({
     programId,
     keys,
     data,
-  })
-  return ix
+  });
+  return ix;
 }

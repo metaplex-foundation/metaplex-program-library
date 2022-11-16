@@ -143,7 +143,6 @@ impl CollectionInfo {
                 true,
                 None,
                 None,
-                None,
                 sized,
             )
             .await
@@ -903,6 +902,7 @@ impl CandyManager {
             context,
             &self.candy_machine.pubkey(),
             &self.authority,
+            &self.wallet,
             &self.freeze_info,
             &self.token_info,
         )

@@ -21,6 +21,7 @@ export enum Key {
   EditionMarker,
   UseAuthorityRecord,
   CollectionAuthorityRecord,
+  TokenOwnedEscrow,
 }
 
 /**

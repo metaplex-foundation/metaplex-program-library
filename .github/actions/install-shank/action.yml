@@ -1,0 +1,17 @@
+# if referencing from a workflow, SHANK_VERSION environment variable must be defined
+name: Setup Shank CLI
+description: 'Setup Shank CLI'
+
+runs:
+  using: 'composite'
+  steps:
+    - uses: actions/cache@v3
+      name: Cache Shank CLI
+      id: cache-shank-cli
+      with:
+        path: /home/runner/.cargo/bin/shank
+        key: shank-cli-${{ runner.os }}-v${{ env.SHANK_VERSION }}
+
+    - run: cargo install --git https://github.com/metaplex-foundation/shank --tag "shank-cli@v$SHANK_VERSION" shank-cli --locked
+      shell: bash
+      if: steps.cache-shank-cli.outputs.cache-hit != 'true'

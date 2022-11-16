@@ -42,10 +42,7 @@ pub fn meta_deser_unchecked(buf: &mut &[u8]) -> Result<Metadata, BorshError> {
     // Handle v1.3 separately
     let collection_details = match collection_details_res {
         Ok(details) => details,
-        Err(_) => {
-            println!("no collection details found");
-            None
-        }
+        Err(_) => None,
     };
 
     let metadata = Metadata {

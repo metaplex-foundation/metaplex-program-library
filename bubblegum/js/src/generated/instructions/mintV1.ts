@@ -5,9 +5,9 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet'
-import * as web3 from '@solana/web3.js'
-import { MetadataArgs, metadataArgsBeet } from '../types/MetadataArgs'
+import * as beet from '@metaplex-foundation/beet';
+import * as web3 from '@solana/web3.js';
+import { MetadataArgs, metadataArgsBeet } from '../types/MetadataArgs';
 
 /**
  * @category Instructions
@@ -15,8 +15,8 @@ import { MetadataArgs, metadataArgsBeet } from '../types/MetadataArgs'
  * @category generated
  */
 export type MintV1InstructionArgs = {
-  message: MetadataArgs
-}
+  message: MetadataArgs;
+};
 /**
  * @category Instructions
  * @category MintV1
@@ -24,44 +24,44 @@ export type MintV1InstructionArgs = {
  */
 export const mintV1Struct = new beet.FixableBeetArgsStruct<
   MintV1InstructionArgs & {
-    instructionDiscriminator: number[] /* size: 8 */
+    instructionDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
     ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
     ['message', metadataArgsBeet],
   ],
-  'MintV1InstructionArgs'
-)
+  'MintV1InstructionArgs',
+);
 /**
  * Accounts required by the _mintV1_ instruction
  *
- * @property [] mintAuthority
- * @property [_writable_] authority
- * @property [] candyWrapper
- * @property [] compressionProgram
- * @property [] owner
- * @property [] delegate
- * @property [_writable_] mintAuthorityRequest
+ * @property [_writable_] treeAuthority
+ * @property [] leafOwner
+ * @property [] leafDelegate
  * @property [_writable_] merkleTree
+ * @property [**signer**] payer
+ * @property [**signer**] treeDelegate
+ * @property [] logWrapper
+ * @property [] compressionProgram
  * @category Instructions
  * @category MintV1
  * @category generated
  */
 export type MintV1InstructionAccounts = {
-  mintAuthority: web3.PublicKey
-  authority: web3.PublicKey
-  candyWrapper: web3.PublicKey
-  compressionProgram: web3.PublicKey
-  owner: web3.PublicKey
-  delegate: web3.PublicKey
-  mintAuthorityRequest: web3.PublicKey
-  merkleTree: web3.PublicKey
-}
+  treeAuthority: web3.PublicKey;
+  leafOwner: web3.PublicKey;
+  leafDelegate: web3.PublicKey;
+  merkleTree: web3.PublicKey;
+  payer: web3.PublicKey;
+  treeDelegate: web3.PublicKey;
+  logWrapper: web3.PublicKey;
+  compressionProgram: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
+};
 
-export const mintV1InstructionDiscriminator = [
-  145, 98, 192, 118, 184, 147, 118, 104,
-]
+export const mintV1InstructionDiscriminator = [145, 98, 192, 118, 184, 147, 118, 104];
 
 /**
  * Creates a _MintV1_ instruction.
@@ -76,25 +76,45 @@ export const mintV1InstructionDiscriminator = [
 export function createMintV1Instruction(
   accounts: MintV1InstructionAccounts,
   args: MintV1InstructionArgs,
-  programId = new web3.PublicKey('BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY')
+  programId = new web3.PublicKey('BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY'),
 ) {
   const [data] = mintV1Struct.serialize({
     instructionDiscriminator: mintV1InstructionDiscriminator,
     ...args,
-  })
+  });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: accounts.mintAuthority,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.authority,
+      pubkey: accounts.treeAuthority,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: accounts.candyWrapper,
+      pubkey: accounts.leafOwner,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.leafDelegate,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.merkleTree,
+      isWritable: true,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.payer,
+      isWritable: false,
+      isSigner: true,
+    },
+    {
+      pubkey: accounts.treeDelegate,
+      isWritable: false,
+      isSigner: true,
+    },
+    {
+      pubkey: accounts.logWrapper,
       isWritable: false,
       isSigner: false,
     },
@@ -104,31 +124,22 @@ export function createMintV1Instruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.owner,
+      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
       isWritable: false,
       isSigner: false,
     },
-    {
-      pubkey: accounts.delegate,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.mintAuthorityRequest,
-      isWritable: true,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.merkleTree,
-      isWritable: true,
-      isSigner: false,
-    },
-  ]
+  ];
+
+  if (accounts.anchorRemainingAccounts != null) {
+    for (const acc of accounts.anchorRemainingAccounts) {
+      keys.push(acc);
+    }
+  }
 
   const ix = new web3.TransactionInstruction({
     programId,
     keys,
     data,
-  })
-  return ix
+  });
+  return ix;
 }

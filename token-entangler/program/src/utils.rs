@@ -46,9 +46,9 @@ pub fn make_ata<'a>(
 
     invoke_signed(
         &spl_associated_token_account::create_associated_token_account(
-            &fee_payer.key,
-            &wallet.key,
-            &mint.key,
+            fee_payer.key,
+            wallet.key,
+            mint.key,
         ),
         &[
             ata,
@@ -105,7 +105,7 @@ pub fn assert_metadata_valid(
 
 pub fn assert_keys_equal(key1: Pubkey, key2: Pubkey) -> Result<()> {
     if sol_memcmp(key1.as_ref(), key2.as_ref(), PUBKEY_BYTES) != 0 {
-        return err!(ErrorCode::PublicKeyMismatch);
+        err!(ErrorCode::PublicKeyMismatch)
     } else {
         Ok(())
     }

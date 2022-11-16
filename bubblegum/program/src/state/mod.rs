@@ -1,27 +1,25 @@
 pub mod leaf_schema;
 pub mod metaplex_adapter;
 pub mod metaplex_anchor;
-pub mod request;
 
 use anchor_lang::prelude::*;
+use borsh::{BorshDeserialize, BorshSerialize};
 use leaf_schema::LeafSchema;
-use leaf_schema::Version;
-use metaplex_adapter::MetadataArgs;
 
-pub const TREE_AUTHORITY_SIZE: usize = 88 + 8;
+pub const TREE_AUTHORITY_SIZE: usize = 32 + 32 + 8 + 8 + 1 + 15; // 15 bytes padding
 pub const VOUCHER_SIZE: usize = 8 + 1 + 32 + 32 + 32 + 8 + 32 + 32 + 4 + 32;
 pub const VOUCHER_PREFIX: &str = "voucher";
 pub const ASSET_PREFIX: &str = "asset";
 pub const COLLECTION_CPI_PREFIX: &str = "collection_cpi";
 
 #[account]
-#[derive(Copy)]
+#[derive(Copy, Debug, PartialEq, Eq)]
 pub struct TreeConfig {
-    pub creator: Pubkey,
-    pub delegate: Pubkey,
+    pub tree_creator: Pubkey,
+    pub tree_delegate: Pubkey,
     pub total_mint_capacity: u64,
-    pub num_mints_approved: u64,
     pub num_minted: u64,
+    pub is_public: bool,
 }
 
 impl TreeConfig {
@@ -29,23 +27,14 @@ impl TreeConfig {
         self.num_minted = self.num_minted.saturating_add(1);
     }
 
-    pub fn approve_mint_capacity(&mut self, capacity: u64) {
-        self.num_mints_approved = self.num_mints_approved.saturating_add(capacity);
-    }
-
     pub fn contains_mint_capacity(&self, requested_capacity: u64) -> bool {
         let remaining_mints = self.total_mint_capacity.saturating_sub(self.num_minted);
-        let remaining_mints_to_approve = remaining_mints.saturating_sub(self.num_mints_approved);
-        requested_capacity <= remaining_mints_to_approve
-    }
-
-    pub fn restore_mint_capacity(&mut self, capacity: u64) {
-        self.num_mints_approved = self.num_mints_approved.saturating_sub(capacity);
+        requested_capacity <= remaining_mints
     }
 }
 
 #[account]
-#[derive(Copy)]
+#[derive(Debug, Eq, PartialEq)]
 pub struct Voucher {
     pub leaf_schema: LeafSchema,
     pub index: u32,
@@ -60,19 +49,33 @@ impl Voucher {
             merkle_tree,
         }
     }
+
+    fn pda_for_prefix(&self, prefix: &str) -> Pubkey {
+        Pubkey::find_program_address(
+            &[
+                prefix.as_ref(),
+                self.merkle_tree.as_ref(),
+                self.leaf_schema.nonce().to_le_bytes().as_ref(),
+            ],
+            &crate::id(),
+        )
+        .0
+    }
+
+    pub fn pda(&self) -> Pubkey {
+        self.pda_for_prefix(VOUCHER_PREFIX)
+    }
+
+    pub fn decompress_mint_pda(&self) -> Pubkey {
+        self.pda_for_prefix(ASSET_PREFIX)
+    }
 }
 
-#[event]
-pub struct NewNFTEvent {
-    pub version: Version,
-    pub metadata: MetadataArgs,
-    pub nonce: u64,
-}
-
-#[event]
-pub struct NFTDecompressionEvent {
-    pub version: Version,
-    pub id: Pubkey,
-    pub tree_id: Pubkey,
-    pub nonce: u64,
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+#[repr(u8)]
+pub enum BubblegumEventType {
+    /// Marker for 0 data.
+    Uninitialized,
+    /// Leaf schema event.
+    LeafSchemaEvent,
 }

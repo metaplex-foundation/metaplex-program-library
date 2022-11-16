@@ -5,8 +5,8 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet'
-import * as web3 from '@solana/web3.js'
+import * as beet from '@metaplex-foundation/beet';
+import * as web3 from '@solana/web3.js';
 
 /**
  * @category Instructions
@@ -14,52 +14,53 @@ import * as web3 from '@solana/web3.js'
  * @category generated
  */
 export type CreateTreeInstructionArgs = {
-  maxDepth: number
-  maxBufferSize: number
-}
+  maxDepth: number;
+  maxBufferSize: number;
+  public: beet.COption<boolean>;
+};
 /**
  * @category Instructions
  * @category CreateTree
  * @category generated
  */
-export const createTreeStruct = new beet.BeetArgsStruct<
+export const createTreeStruct = new beet.FixableBeetArgsStruct<
   CreateTreeInstructionArgs & {
-    instructionDiscriminator: number[] /* size: 8 */
+    instructionDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
     ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
     ['maxDepth', beet.u32],
     ['maxBufferSize', beet.u32],
+    ['public', beet.coption(beet.bool)],
   ],
-  'CreateTreeInstructionArgs'
-)
+  'CreateTreeInstructionArgs',
+);
 /**
  * Accounts required by the _createTree_ instruction
  *
- * @property [_writable_] authority
+ * @property [_writable_] treeAuthority
+ * @property [_writable_] merkleTree
  * @property [_writable_, **signer**] payer
  * @property [**signer**] treeCreator
- * @property [] candyWrapper
+ * @property [] logWrapper
  * @property [] compressionProgram
- * @property [_writable_] merkleTree
  * @category Instructions
  * @category CreateTree
  * @category generated
  */
 export type CreateTreeInstructionAccounts = {
-  authority: web3.PublicKey
-  payer: web3.PublicKey
-  treeCreator: web3.PublicKey
-  candyWrapper: web3.PublicKey
-  systemProgram?: web3.PublicKey
-  compressionProgram: web3.PublicKey
-  merkleTree: web3.PublicKey
-}
+  treeAuthority: web3.PublicKey;
+  merkleTree: web3.PublicKey;
+  payer: web3.PublicKey;
+  treeCreator: web3.PublicKey;
+  logWrapper: web3.PublicKey;
+  compressionProgram: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
+};
 
-export const createTreeInstructionDiscriminator = [
-  165, 83, 136, 142, 89, 202, 47, 220,
-]
+export const createTreeInstructionDiscriminator = [165, 83, 136, 142, 89, 202, 47, 220];
 
 /**
  * Creates a _CreateTree_ instruction.
@@ -74,15 +75,20 @@ export const createTreeInstructionDiscriminator = [
 export function createCreateTreeInstruction(
   accounts: CreateTreeInstructionAccounts,
   args: CreateTreeInstructionArgs,
-  programId = new web3.PublicKey('BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY')
+  programId = new web3.PublicKey('BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY'),
 ) {
   const [data] = createTreeStruct.serialize({
     instructionDiscriminator: createTreeInstructionDiscriminator,
     ...args,
-  })
+  });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: accounts.authority,
+      pubkey: accounts.treeAuthority,
+      isWritable: true,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.merkleTree,
       isWritable: true,
       isSigner: false,
     },
@@ -97,12 +103,7 @@ export function createCreateTreeInstruction(
       isSigner: true,
     },
     {
-      pubkey: accounts.candyWrapper,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
+      pubkey: accounts.logWrapper,
       isWritable: false,
       isSigner: false,
     },
@@ -112,16 +113,22 @@ export function createCreateTreeInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.merkleTree,
-      isWritable: true,
+      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
+      isWritable: false,
       isSigner: false,
     },
-  ]
+  ];
+
+  if (accounts.anchorRemainingAccounts != null) {
+    for (const acc of accounts.anchorRemainingAccounts) {
+      keys.push(acc);
+    }
+  }
 
   const ix = new web3.TransactionInstruction({
     programId,
     keys,
     data,
-  })
-  return ix
+  });
+  return ix;
 }

@@ -1,10 +1,11 @@
+# if referencing from a workflow, ANCHOR_VERSION environment variable must be defined
 name: Setup Anchor CLI
 description: 'Setup Anchor CLI'
 
 runs:
   using: 'composite'
   steps:
-    - uses: actions/cache@v2
+    - uses: actions/cache@v3
       name: Cache Anchor CLI
       id: cache-anchor-cli
       with:

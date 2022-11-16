@@ -33,7 +33,7 @@ runs:
         repository: ${{ inputs.from-repository }}
 
     # cache and install cargo release
-    - uses: actions/cache@v2
+    - uses: actions/cache@v3
       name: Cache Cargo Release
       id: cache-cargo-release
       with:

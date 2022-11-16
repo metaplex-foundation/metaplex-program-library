@@ -1,4 +1,4 @@
-name: Apply version update
+name: Apply Version Update
 
 on:
   pull_request_review:
@@ -13,8 +13,8 @@ permissions:
 
 env:
   NODE_VERSION: 17.0.1
-  ANCHOR_VERSION: 0.22.0
-  SOLANA_VERSION_STABLE: 1.10.35
+  ANCHOR_VERSION: 0.25.0
+  SOLANA_VERSION_STABLE: 1.10.40
   RUST_TOOLCHAIN: stable
 
 jobs:
@@ -89,9 +89,11 @@ jobs:
       # GH doesn't process or format body fields, so we do some light processing so that multiline comments will break inputs
       - name: Process content body
         id: process-content-body
+        env:
+          REVIEW_BODY: ${{ github.event.review.body }}
         run: |
           REVIEW_CONTENT=$(cat << EOF
-          ${{ github.event.review.body }}
+          $REVIEW_BODY
           EOF
           )
           REVIEW_CONTENT="${REVIEW_CONTENT//\'/}"

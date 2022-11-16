@@ -1,3 +1,4 @@
+#![cfg(feature = "test-bpf")]
 mod utils;
 
 use mpl_nft_packs::{
@@ -932,35 +933,33 @@ async fn success_claim_two_indexes() {
 
     let proving_process_data = get_account(&mut context, &proving_process_key).await;
     let proving_process = ProvingProcess::unpack_from_slice(&proving_process_data.data).unwrap();
+    let (index, _value) = proving_process
+        .cards_to_redeem
+        .into_iter()
+        .next()
+        .expect("Cards to redeem shouldn't be empty!");
 
-    for (index, _value) in proving_process.cards_to_redeem {
-        test_pack_set
-            .claim_pack(
-                &mut context,
-                &edition_authority,
-                &voucher_edition.mint.pubkey(),
-                &test_pack_card.token_account.pubkey(),
-                &card_master_edition.pubkey,
-                &new_mint,
-                &new_mint_token_acc,
-                &edition_authority,
-                &card_metadata.pubkey,
-                &card_master_edition.mint_pubkey,
-                index,
-            )
-            .await
-            .unwrap();
-
-        break;
-    }
+    test_pack_set
+        .claim_pack(
+            &mut context,
+            &edition_authority,
+            &voucher_edition.mint.pubkey(),
+            &test_pack_card.token_account.pubkey(),
+            &card_master_edition.pubkey,
+            &new_mint,
+            &new_mint_token_acc,
+            &edition_authority,
+            &card_metadata.pubkey,
+            &card_master_edition.mint_pubkey,
+            index,
+        )
+        .await
+        .unwrap();
 
     let card_master_edition = card_master_edition.get_data(&mut context).await;
     let card_master_edition1 = card_master_edition1.get_data(&mut context).await;
 
-    assert_eq!(
-        card_master_edition.supply == 1 || card_master_edition1.supply == 1,
-        true
-    );
+    assert!(card_master_edition.supply == 1 || card_master_edition1.supply == 1);
 }
 
 #[tokio::test]
@@ -1092,7 +1091,7 @@ async fn success_claim_after_redeem_end_date() {
         .await
         .unwrap()
         .unix_timestamp as u64;
-    assert_eq!(last_timestamp > redeem_end_date.unwrap(), true);
+    assert!(last_timestamp > redeem_end_date.unwrap());
 
     test_pack_set
         .claim_pack(
@@ -1238,9 +1237,14 @@ async fn fail_wrong_user_wallet() {
 
     let malicious_user = Keypair::new();
 
-    create_mint(&mut context, &new_mint, &malicious_user.pubkey(), None)
-        .await
-        .unwrap();
+    create_mint(
+        &mut context,
+        &new_mint,
+        &malicious_user.pubkey(),
+        Some(&malicious_user.pubkey()),
+    )
+    .await
+    .unwrap();
     create_token_account(
         &mut context,
         &new_mint_token_acc,

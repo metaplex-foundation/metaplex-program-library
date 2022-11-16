@@ -5,8 +5,8 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet'
-import * as web3 from '@solana/web3.js'
+import * as beet from '@metaplex-foundation/beet';
+import * as web3 from '@solana/web3.js';
 
 /**
  * @category Instructions
@@ -14,8 +14,8 @@ import * as web3 from '@solana/web3.js'
  * @category generated
  */
 export type CancelRedeemInstructionArgs = {
-  root: number[] /* size: 32 */
-}
+  root: number[] /* size: 32 */;
+};
 /**
  * @category Instructions
  * @category CancelRedeem
@@ -23,40 +23,40 @@ export type CancelRedeemInstructionArgs = {
  */
 export const cancelRedeemStruct = new beet.BeetArgsStruct<
   CancelRedeemInstructionArgs & {
-    instructionDiscriminator: number[] /* size: 8 */
+    instructionDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
     ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
     ['root', beet.uniformFixedSizeArray(beet.u8, 32)],
   ],
-  'CancelRedeemInstructionArgs'
-)
+  'CancelRedeemInstructionArgs',
+);
 /**
  * Accounts required by the _cancelRedeem_ instruction
  *
- * @property [] authority
- * @property [] candyWrapper
- * @property [] compressionProgram
+ * @property [] treeAuthority
+ * @property [_writable_, **signer**] leafOwner
  * @property [_writable_] merkleTree
  * @property [_writable_] voucher
- * @property [_writable_, **signer**] owner
+ * @property [] logWrapper
+ * @property [] compressionProgram
  * @category Instructions
  * @category CancelRedeem
  * @category generated
  */
 export type CancelRedeemInstructionAccounts = {
-  authority: web3.PublicKey
-  candyWrapper: web3.PublicKey
-  compressionProgram: web3.PublicKey
-  merkleTree: web3.PublicKey
-  voucher: web3.PublicKey
-  owner: web3.PublicKey
-}
+  treeAuthority: web3.PublicKey;
+  leafOwner: web3.PublicKey;
+  merkleTree: web3.PublicKey;
+  voucher: web3.PublicKey;
+  logWrapper: web3.PublicKey;
+  compressionProgram: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
+};
 
-export const cancelRedeemInstructionDiscriminator = [
-  111, 76, 232, 50, 39, 175, 48, 242,
-]
+export const cancelRedeemInstructionDiscriminator = [111, 76, 232, 50, 39, 175, 48, 242];
 
 /**
  * Creates a _CancelRedeem_ instruction.
@@ -71,27 +71,22 @@ export const cancelRedeemInstructionDiscriminator = [
 export function createCancelRedeemInstruction(
   accounts: CancelRedeemInstructionAccounts,
   args: CancelRedeemInstructionArgs,
-  programId = new web3.PublicKey('BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY')
+  programId = new web3.PublicKey('BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY'),
 ) {
   const [data] = cancelRedeemStruct.serialize({
     instructionDiscriminator: cancelRedeemInstructionDiscriminator,
     ...args,
-  })
+  });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: accounts.authority,
+      pubkey: accounts.treeAuthority,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: accounts.candyWrapper,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.compressionProgram,
-      isWritable: false,
-      isSigner: false,
+      pubkey: accounts.leafOwner,
+      isWritable: true,
+      isSigner: true,
     },
     {
       pubkey: accounts.merkleTree,
@@ -104,16 +99,32 @@ export function createCancelRedeemInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.owner,
-      isWritable: true,
-      isSigner: true,
+      pubkey: accounts.logWrapper,
+      isWritable: false,
+      isSigner: false,
     },
-  ]
+    {
+      pubkey: accounts.compressionProgram,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
+      isWritable: false,
+      isSigner: false,
+    },
+  ];
+
+  if (accounts.anchorRemainingAccounts != null) {
+    for (const acc of accounts.anchorRemainingAccounts) {
+      keys.push(acc);
+    }
+  }
 
   const ix = new web3.TransactionInstruction({
     programId,
     keys,
     data,
-  })
-  return ix
+  });
+  return ix;
 }

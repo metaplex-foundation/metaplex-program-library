@@ -1,3 +1,4 @@
+#![cfg(feature = "test-bpf")]
 mod utils;
 
 use mpl_nft_packs::{
@@ -168,19 +169,16 @@ async fn success_clean_up_change() {
     let pack_config_account = get_account(&mut context, &pack_config_key).await;
     let pack_config = PackConfig::unpack_from_slice(&pack_config_account.data).unwrap();
 
-    assert_eq!(pack_config.weights[0] == (1, 100, 5), true);
-    assert_eq!(
-        pack_config.action_to_do == CleanUpActions::Change(1, 4),
-        true
-    );
+    assert_eq!(pack_config.weights[0], (1, 100, 5));
+    assert_eq!(pack_config.action_to_do, CleanUpActions::Change(1, 4));
 
     test_pack_set.clean_up(&mut context).await.unwrap();
 
     let pack_config_account = get_account(&mut context, &pack_config_key).await;
     let pack_config = PackConfig::unpack_from_slice(&pack_config_account.data).unwrap();
 
-    assert_eq!(pack_config.weights[0] == (1, 100, 4), true);
-    assert_eq!(pack_config.action_to_do == CleanUpActions::None, true);
+    assert_eq!(pack_config.weights[0], (1, 100, 4));
+    assert_eq!(pack_config.action_to_do, CleanUpActions::None);
 }
 
 #[tokio::test]
@@ -315,14 +313,14 @@ async fn success_clean_up_sort() {
     let pack_config_account = get_account(&mut context, &pack_config_key).await;
     let pack_config = PackConfig::unpack_from_slice(&pack_config_account.data).unwrap();
 
-    assert_eq!(pack_config.action_to_do == CleanUpActions::Sort, true);
-    assert_eq!(pack_config.weights[0] == (1, 40, 5), true);
+    assert_eq!(pack_config.action_to_do, CleanUpActions::Sort);
+    assert_eq!(pack_config.weights[0], (1, 40, 5));
 
     test_pack_set.clean_up(&mut context).await.unwrap();
 
     let pack_config_account = get_account(&mut context, &pack_config_key).await;
     let pack_config = PackConfig::unpack_from_slice(&pack_config_account.data).unwrap();
 
-    assert!(pack_config.action_to_do == CleanUpActions::None, "{}", true);
-    assert_eq!(pack_config.weights[0] == (2, 60, 5), true);
+    assert_eq!(pack_config.action_to_do, CleanUpActions::None, "{}", true);
+    assert_eq!(pack_config.weights[0], (2, 60, 5));
 }

@@ -5,8 +5,8 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet'
-import * as web3 from '@solana/web3.js'
+import * as beet from '@metaplex-foundation/beet';
+import * as web3 from '@solana/web3.js';
 
 /**
  * @category Instructions
@@ -14,12 +14,12 @@ import * as web3 from '@solana/web3.js'
  * @category generated
  */
 export type BurnInstructionArgs = {
-  root: number[] /* size: 32 */
-  dataHash: number[] /* size: 32 */
-  creatorHash: number[] /* size: 32 */
-  nonce: beet.bignum
-  index: number
-}
+  root: number[] /* size: 32 */;
+  dataHash: number[] /* size: 32 */;
+  creatorHash: number[] /* size: 32 */;
+  nonce: beet.bignum;
+  index: number;
+};
 /**
  * @category Instructions
  * @category Burn
@@ -27,7 +27,7 @@ export type BurnInstructionArgs = {
  */
 export const burnStruct = new beet.BeetArgsStruct<
   BurnInstructionArgs & {
-    instructionDiscriminator: number[] /* size: 8 */
+    instructionDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
@@ -38,31 +38,33 @@ export const burnStruct = new beet.BeetArgsStruct<
     ['nonce', beet.u64],
     ['index', beet.u32],
   ],
-  'BurnInstructionArgs'
-)
+  'BurnInstructionArgs',
+);
 /**
  * Accounts required by the _burn_ instruction
  *
- * @property [] authority
- * @property [] candyWrapper
- * @property [] compressionProgram
- * @property [] owner
- * @property [] delegate
+ * @property [] treeAuthority
+ * @property [] leafOwner
+ * @property [] leafDelegate
  * @property [_writable_] merkleTree
+ * @property [] logWrapper
+ * @property [] compressionProgram
  * @category Instructions
  * @category Burn
  * @category generated
  */
 export type BurnInstructionAccounts = {
-  authority: web3.PublicKey
-  candyWrapper: web3.PublicKey
-  compressionProgram: web3.PublicKey
-  owner: web3.PublicKey
-  delegate: web3.PublicKey
-  merkleTree: web3.PublicKey
-}
+  treeAuthority: web3.PublicKey;
+  leafOwner: web3.PublicKey;
+  leafDelegate: web3.PublicKey;
+  merkleTree: web3.PublicKey;
+  logWrapper: web3.PublicKey;
+  compressionProgram: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
+};
 
-export const burnInstructionDiscriminator = [116, 110, 29, 56, 107, 219, 42, 93]
+export const burnInstructionDiscriminator = [116, 110, 29, 56, 107, 219, 42, 93];
 
 /**
  * Creates a _Burn_ instruction.
@@ -77,20 +79,35 @@ export const burnInstructionDiscriminator = [116, 110, 29, 56, 107, 219, 42, 93]
 export function createBurnInstruction(
   accounts: BurnInstructionAccounts,
   args: BurnInstructionArgs,
-  programId = new web3.PublicKey('BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY')
+  programId = new web3.PublicKey('BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY'),
 ) {
   const [data] = burnStruct.serialize({
     instructionDiscriminator: burnInstructionDiscriminator,
     ...args,
-  })
+  });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: accounts.authority,
+      pubkey: accounts.treeAuthority,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: accounts.candyWrapper,
+      pubkey: accounts.leafOwner,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.leafDelegate,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.merkleTree,
+      isWritable: true,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.logWrapper,
       isWritable: false,
       isSigner: false,
     },
@@ -100,26 +117,22 @@ export function createBurnInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.owner,
+      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
       isWritable: false,
       isSigner: false,
     },
-    {
-      pubkey: accounts.delegate,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.merkleTree,
-      isWritable: true,
-      isSigner: false,
-    },
-  ]
+  ];
+
+  if (accounts.anchorRemainingAccounts != null) {
+    for (const acc of accounts.anchorRemainingAccounts) {
+      keys.push(acc);
+    }
+  }
 
   const ix = new web3.TransactionInstruction({
     programId,
     keys,
     data,
-  })
-  return ix
+  });
+  return ix;
 }

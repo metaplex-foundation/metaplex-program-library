@@ -1,3 +1,6 @@
+[features]
+seeds = true
+
 [registry]
 url = "https://anchor.projectserum.com"
 
@@ -41,5 +44,4 @@ members = [
   "fixed-price-sale/program",
   "hydra/program",
   "bubblegum/program",
-  "candy-wrapper/program"
 ]

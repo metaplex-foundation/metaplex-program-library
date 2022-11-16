@@ -1,0 +1,49 @@
+name: Install common build deps
+
+inputs:
+  linux:
+    description: Install or restore Linux dependencies from cache
+    required: false
+    default: true
+  rust:
+    description: Install or restore Rust from cache
+    required: false
+    default: true
+  rust-version:
+    description: Version for Rust, default to stable
+    required: false
+    default: 'stable'
+  solana:
+    description: Install or restore Solana from cache
+    required: false
+    default: true
+  anchor:
+    description: Install or restore Anchor CLI from cache
+    required: false
+    default: true
+  shank:
+    description: Install or restore Shank CLI from cache
+    required: false
+    default: true
+
+runs:
+  using: composite
+  steps:
+    - uses: ./.github/actions/install-linux-build-deps
+      if: inputs.linux == 'true'
+
+    - uses: ./.github/actions/install-rust
+      if: inputs.rust == 'true'
+      with:
+        toolchain: ${{ inputs.rust-version }}
+
+    - uses: ./.github/actions/install-solana
+      if: inputs.solana == 'true'
+      with:
+        solana_version: ${{ env.SOLANA_VERSION }}
+
+    - uses: ./.github/actions/install-anchor
+      if: inputs.anchor == 'true'
+
+    - uses: ./.github/actions/install-shank
+      if: inputs.shank == 'true'

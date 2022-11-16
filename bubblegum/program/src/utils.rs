@@ -1,13 +1,9 @@
-use {
-    crate::error::BubblegumError,
-    crate::state::metaplex_adapter::MetadataArgs,
-    crate::ASSET_PREFIX,
-    anchor_lang::{
-        prelude::*, solana_program::program_memory::sol_memcmp,
-        solana_program::pubkey::PUBKEY_BYTES,
-    },
-    spl_compression::Node,
+use crate::{error::BubblegumError, state::metaplex_adapter::MetadataArgs, ASSET_PREFIX};
+use anchor_lang::{
+    prelude::*,
+    solana_program::{program_memory::sol_memcmp, pubkey::PUBKEY_BYTES},
 };
+use spl_account_compression::Node;
 
 /// Assert that the provided MetadataArgs are compatible with MPL `Data`
 pub fn assert_metadata_is_mpl_compatible(metadata: &MetadataArgs) -> Result<()> {
@@ -33,7 +29,7 @@ pub fn assert_metadata_is_mpl_compatible(metadata: &MetadataArgs) -> Result<()> 
 
         let mut total: u8 = 0;
         for i in 0..metadata.creators.len() {
-            let creator = metadata.creators[i];
+            let creator = &metadata.creators[i];
             for iter in metadata.creators.iter().skip(i + 1) {
                 if iter.address == creator.address {
                     return Err(BubblegumError::DuplicateCreatorAddress.into());
@@ -53,10 +49,10 @@ pub fn assert_metadata_is_mpl_compatible(metadata: &MetadataArgs) -> Result<()> 
 pub fn replace_leaf<'info>(
     seed: &Pubkey,
     bump: u8,
-    gummyroll_program: &AccountInfo<'info>,
+    compression_program: &AccountInfo<'info>,
     authority: &AccountInfo<'info>,
-    merkle_roll: &AccountInfo<'info>,
-    candy_wrapper: &AccountInfo<'info>,
+    merkle_tree: &AccountInfo<'info>,
+    log_wrapper: &AccountInfo<'info>,
     remaining_accounts: &[AccountInfo<'info>],
     root_node: Node,
     previous_leaf: Node,
@@ -66,39 +62,39 @@ pub fn replace_leaf<'info>(
     let seeds = &[seed.as_ref(), &[bump]];
     let authority_pda_signer = &[&seeds[..]];
     let cpi_ctx = CpiContext::new_with_signer(
-        gummyroll_program.clone(),
-        spl_compression::cpi::accounts::Modify {
+        compression_program.clone(),
+        spl_account_compression::cpi::accounts::Modify {
             authority: authority.clone(),
-            merkle_tree: merkle_roll.clone(),
-            log_wrapper: candy_wrapper.clone(),
+            merkle_tree: merkle_tree.clone(),
+            log_wrapper: log_wrapper.clone(),
         },
         authority_pda_signer,
     )
     .with_remaining_accounts(remaining_accounts.to_vec());
-    spl_compression::cpi::replace_leaf(cpi_ctx, root_node, previous_leaf, new_leaf, index)
+    spl_account_compression::cpi::replace_leaf(cpi_ctx, root_node, previous_leaf, new_leaf, index)
 }
 
 pub fn append_leaf<'info>(
     seed: &Pubkey,
     bump: u8,
-    gummyroll_program: &AccountInfo<'info>,
+    compression_program: &AccountInfo<'info>,
     authority: &AccountInfo<'info>,
-    merkle_roll: &AccountInfo<'info>,
+    merkle_tree: &AccountInfo<'info>,
     log_wrapper: &AccountInfo<'info>,
     leaf_node: Node,
 ) -> Result<()> {
     let seeds = &[seed.as_ref(), &[bump]];
     let authority_pda_signer = &[&seeds[..]];
     let cpi_ctx = CpiContext::new_with_signer(
-        gummyroll_program.clone(),
-        spl_compression::cpi::accounts::Modify {
+        compression_program.clone(),
+        spl_account_compression::cpi::accounts::Modify {
             authority: authority.clone(),
-            merkle_tree: merkle_roll.clone(),
+            merkle_tree: merkle_tree.clone(),
             log_wrapper: log_wrapper.clone(),
         },
         authority_pda_signer,
     );
-    spl_compression::cpi::append(cpi_ctx, leaf_node)
+    spl_account_compression::cpi::append(cpi_ctx, leaf_node)
 }
 
 pub fn cmp_pubkeys(a: &Pubkey, b: &Pubkey) -> bool {

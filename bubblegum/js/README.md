@@ -1,14 +1,40 @@
-# Bubblegum
+# mpl-bubblegum
 
-This SDK uses MPL's `Solita` to generate typescript SDK for `anchor` smart-contract.
+This package contains the Metaplex Bubblegum program JS SDK code.
 
-Solita is particularly helpful:
-- Enums: (i.e. TokenProgramVersion)
-- Complex types: (ie MetadataArgs support)
-- Using typed system to identify issues with smart contract args
+## HOW IT WORKS
+[Program Overview](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/bubblegum/program/README.md)
 
-### Install
+## API Docs
 
-1. `yarn`
-2. `node solita.js`
-3. `import { ... } from '../sdk/bubblegum'` 
+Find the [bubblegum API docs published here](https://metaplex-foundation.github.io/metaplex-program-library/docs/bubblegum/index.html).
+
+## Installation
+
+```shell
+npm install @metaplex-foundation/mpl-bubblegum --save
+```
+
+## Developing
+
+In order to update the generated SDK when the Rust contract was updated please run:
+```
+yarn api:gen
+```
+and then update the wrapper code and tests.
+
+## Running tests
+
+```shell
+## Build the latest bubblegum
+pushd ../program/
+cargo build-bpf
+popd
+yarn run start-validator
+
+yarn test
+```
+
+## LICENSE
+
+Apache v2.0
