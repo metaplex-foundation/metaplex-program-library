@@ -47,6 +47,7 @@ export const addConfigLinesStruct = new beet.FixableBeetArgsStruct<
 export type AddConfigLinesInstructionAccounts = {
   candyMachine: web3.PublicKey;
   authority: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
 };
 
 export const addConfigLinesInstructionDiscriminator = [223, 50, 224, 227, 151, 8, 115, 106];
@@ -82,6 +83,12 @@ export function createAddConfigLinesInstruction(
       isSigner: true,
     },
   ];
+
+  if (accounts.anchorRemainingAccounts != null) {
+    for (const acc of accounts.anchorRemainingAccounts) {
+      keys.push(acc);
+    }
+  }
 
   const ix = new web3.TransactionInstruction({
     programId,

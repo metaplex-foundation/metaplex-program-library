@@ -36,6 +36,7 @@ export type UnlockFundsInstructionAccounts = {
   authority: web3.PublicKey;
   freezePda: web3.PublicKey;
   systemProgram?: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
 };
 
 export const unlockFundsInstructionDiscriminator = [175, 119, 16, 245, 141, 55, 255, 43];
@@ -82,6 +83,12 @@ export function createUnlockFundsInstruction(
       isSigner: false,
     },
   ];
+
+  if (accounts.anchorRemainingAccounts != null) {
+    for (const acc of accounts.anchorRemainingAccounts) {
+      keys.push(acc);
+    }
+  }
 
   const ix = new web3.TransactionInstruction({
     programId,
