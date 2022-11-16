@@ -1,6 +1,6 @@
 # Hydra
 
-Collective account pooling, fan out wallet, dao treasury, all of the things you need to FAN OUT
+Collective account pooling, fan out wallet, dao treasury, all the things you need to FAN OUT
 
 ## Setup && Development
 
