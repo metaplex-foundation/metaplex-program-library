@@ -6,14 +6,9 @@ import {
   initSellingResource,
   createMarket,
 } from './actions';
-import {
-  assertConfirmedTransaction,
-  assertError,
-  defaultSendOptions,
-} from '@metaplex-foundation/amman';
 import { killStuckProcess, logDebug, sleep } from './utils';
 import { closeMarket } from './transactions';
-import { CreateMarketInstructionArgs, Market } from '../src';
+import { CreateMarketInstructionArgs, Market, MarketDurationIsNotUnlimitedError } from '../src';
 
 killStuckProcess();
 
@@ -80,14 +75,8 @@ test.skip('close-market: success', async (t) => {
     market,
   });
 
-  const MarketRes = await transactionHandler.sendAndConfirmTransaction(
-    marketTx,
-    [payer],
-    defaultSendOptions,
-  );
-
+  await transactionHandler.sendAndConfirmTransaction(marketTx, [payer]).assertSuccess(t);
   logDebug(`market: ${market.publicKey}`);
-  assertConfirmedTransaction(t, MarketRes.txConfirmed);
 
   const marketAccount = await connection.getAccountInfo(market.publicKey);
   const [marketData] = Market.deserialize(marketAccount?.data as Buffer);
@@ -158,10 +147,8 @@ test('close-market: should fail when the market has the specific endDate', async
 
   logDebug(`market: ${market.publicKey}`);
 
-  try {
-    await transactionHandler.sendAndConfirmTransaction(marketTx, [payer], defaultSendOptions);
-  } catch (error) {
-    logDebug('expected transaction to fail due to limited market duration ');
-    assertError(t, error, [/0x1782/i]);
-  }
+  await transactionHandler
+    .sendAndConfirmTransaction(marketTx, [payer])
+    .assertError(t, MarketDurationIsNotUnlimitedError);
+  logDebug('expected transaction to fail due to limited market duration ');
 });

@@ -1,10 +1,6 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import test from 'tape';
-import {
-  assertConfirmedTransaction,
-  defaultSendOptions,
-  PayerTransactionHandler,
-} from '@metaplex-foundation/amman';
+import { PayerTransactionHandler } from '@metaplex-foundation/amman-client';
 import * as web3 from '@solana/web3.js';
 import { Connection, Keypair, PublicKey, Transaction } from '@solana/web3.js';
 
@@ -59,14 +55,10 @@ export const createMarket = async ({
     owner: treasuryOwner,
   });
 
-  const createVaultRes = await transactionHandler.sendAndConfirmTransaction(
-    createTokenTx,
-    [treasuryHolder],
-    defaultSendOptions,
-  );
-
+  await transactionHandler
+    .sendAndConfirmTransaction(createTokenTx, [treasuryHolder])
+    .assertSuccess(test);
   logDebug(`treasuryHolder: ${treasuryHolder.publicKey}`);
-  assertConfirmedTransaction(test, createVaultRes.txConfirmed);
 
   const market = Keypair.generate();
 
@@ -100,14 +92,8 @@ export const createMarket = async ({
     [market],
   );
 
-  const marketRes = await transactionHandler.sendAndConfirmTransaction(
-    marketTx,
-    [market],
-    defaultSendOptions,
-  );
-
+  await transactionHandler.sendAndConfirmTransaction(marketTx, [market]).assertSuccess(test);
   logDebug(`market: ${market.publicKey}`);
-  assertConfirmedTransaction(test, marketRes.txConfirmed);
 
   return { market, treasuryHolder, treasuryOwnerBump, treasuryOwner };
 };
