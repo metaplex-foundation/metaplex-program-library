@@ -17,9 +17,8 @@ pub use crate::{state::Creator, utils::puff_out_data_fields};
 #[cfg(test)]
 mod metadata {
 
-    use crate::state::TokenMetadataAccount;
-
     use super::*;
+    use crate::state::TokenMetadataAccount;
 
     fn pad_metadata_length(metadata: &mut Vec<u8>) {
         let padding_length = MAX_METADATA_LEN - metadata.len();
@@ -284,9 +283,8 @@ mod metadata {
 }
 
 mod master_edition {
-    use crate::state::TokenMetadataAccount;
-
     use super::*;
+    use crate::state::TokenMetadataAccount;
 
     #[test]
     fn successfully_deserialize() {
@@ -347,9 +345,8 @@ mod master_edition {
 }
 
 mod edition {
-    use crate::state::TokenMetadataAccount;
-
     use super::*;
+    use crate::state::TokenMetadataAccount;
 
     #[test]
     fn successfully_deserialize_edition() {
@@ -410,9 +407,8 @@ mod edition {
 }
 
 mod edition_marker {
-    use crate::state::TokenMetadataAccount;
-
     use super::*;
+    use crate::state::TokenMetadataAccount;
 
     #[test]
     fn successfully_deserialize() {
@@ -473,9 +469,8 @@ mod edition_marker {
 }
 
 mod use_authority_record {
-    use crate::state::TokenMetadataAccount;
-
     use super::*;
+    use crate::state::TokenMetadataAccount;
 
     #[test]
     fn successfully_deserialize() {
@@ -535,9 +530,8 @@ mod use_authority_record {
 }
 
 mod collection_authority_record {
-    use crate::state::TokenMetadataAccount;
-
     use super::*;
+    use crate::state::TokenMetadataAccount;
 
     #[test]
     fn successfully_deserialize() {

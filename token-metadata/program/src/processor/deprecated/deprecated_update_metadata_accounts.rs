@@ -1,7 +1,9 @@
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
+pub use instruction::*;
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
+    instruction::{AccountMeta, Instruction},
     pubkey::Pubkey,
 };
 
@@ -11,52 +13,59 @@ use crate::{
         metadata::{assert_data_valid, assert_update_authority_is_correct},
     },
     error::MetadataError,
-    state::{Data, DataV2, Metadata, TokenMetadataAccount},
-    utils::{
-        process_create_metadata_accounts_logic, puff_out_data_fields,
-        CreateMetadataAccountsLogicArgs,
-    },
+    instruction::MetadataInstruction,
+    state::{Data, Metadata, TokenMetadataAccount},
+    utils::puff_out_data_fields,
 };
 
-pub fn process_deprecated_create_metadata_accounts<'a>(
-    program_id: &'a Pubkey,
-    accounts: &'a [AccountInfo<'a>],
-    data: Data,
-    is_mutable: bool,
-) -> ProgramResult {
-    let account_info_iter = &mut accounts.iter();
-    let metadata_account_info = next_account_info(account_info_iter)?;
-    let mint_info = next_account_info(account_info_iter)?;
-    let mint_authority_info = next_account_info(account_info_iter)?;
-    let payer_account_info = next_account_info(account_info_iter)?;
-    let update_authority_info = next_account_info(account_info_iter)?;
-    let system_account_info = next_account_info(account_info_iter)?;
+mod instruction {
+    #[cfg(feature = "serde-feature")]
+    use {
+        serde::{Deserialize, Serialize},
+        serde_with::{As, DisplayFromStr},
+    };
 
-    process_create_metadata_accounts_logic(
-        program_id,
-        CreateMetadataAccountsLogicArgs {
-            metadata_account_info,
-            mint_info,
-            mint_authority_info,
-            payer_account_info,
-            update_authority_info,
-            system_account_info,
-        },
-        DataV2 {
-            name: data.name,
-            uri: data.uri,
-            symbol: data.symbol,
-            creators: data.creators,
-            seller_fee_basis_points: data.seller_fee_basis_points,
-            collection: None,
-            uses: None,
-        },
-        false,
-        is_mutable,
-        false,
-        false,
-        None, // Does not support collection parents.
-    )
+    use super::*;
+
+    #[repr(C)]
+    #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
+    #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+    /// Args for update call
+    pub struct UpdateMetadataAccountArgs {
+        pub data: Option<Data>,
+        #[cfg_attr(
+            feature = "serde-feature",
+            serde(with = "As::<Option<DisplayFromStr>>")
+        )]
+        pub update_authority: Option<Pubkey>,
+        pub primary_sale_happened: Option<bool>,
+    }
+
+    /// update metadata account instruction
+    /// #[deprecated(since="1.1.0", note="please use `update_metadata_accounts_v2` instead")]
+    pub fn update_metadata_accounts(
+        program_id: Pubkey,
+        metadata_account: Pubkey,
+        update_authority: Pubkey,
+        new_update_authority: Option<Pubkey>,
+        data: Option<Data>,
+        primary_sale_happened: Option<bool>,
+    ) -> Instruction {
+        Instruction {
+            program_id,
+            accounts: vec![
+                AccountMeta::new(metadata_account, false),
+                AccountMeta::new_readonly(update_authority, true),
+            ],
+            data: MetadataInstruction::UpdateMetadataAccount(UpdateMetadataAccountArgs {
+                data,
+                update_authority: new_update_authority,
+                primary_sale_happened,
+            })
+            .try_to_vec()
+            .unwrap(),
+        }
+    }
 }
 
 /// Update existing account instruction

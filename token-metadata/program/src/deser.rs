@@ -1,6 +1,7 @@
-use crate::state::{Collection, CollectionDetails, Data, Key, Metadata, TokenStandard, Uses};
 use borsh::{maybestd::io::Error as BorshError, BorshDeserialize, BorshSerialize};
 use solana_program::{account_info::AccountInfo, entrypoint::ProgramResult, pubkey::Pubkey};
+
+use crate::state::{Collection, CollectionDetails, Data, Key, Metadata, TokenStandard, Uses};
 
 // Custom deserialization function to handle NFTs with corrupted data.
 // This function is used in a custom deserialization implementation for the

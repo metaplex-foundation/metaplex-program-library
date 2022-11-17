@@ -1,6 +1,5 @@
 use std::io::ErrorKind;
 
-use crate::{deser::meta_deser_unchecked, error::MetadataError, utils::try_from_slice_checked, ID};
 use borsh::{maybestd::io::Error as BorshError, BorshDeserialize, BorshSerialize};
 use num_derive::FromPrimitive;
 use num_traits::FromPrimitive;
@@ -9,12 +8,15 @@ use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
     pubkey::Pubkey,
 };
-
-use crate::assertions::assert_owned_by;
 #[cfg(feature = "serde-feature")]
 use {
     serde::{Deserialize, Serialize},
     serde_with::{As, DisplayFromStr},
+};
+
+use crate::{
+    assertions::assert_owned_by, deser::meta_deser_unchecked, error::MetadataError,
+    utils::try_from_slice_checked, ID,
 };
 
 /// prefix used for PDAs to avoid certain collision attacks (<https://en.wikipedia.org/wiki/Collision_attack#Chosen-prefix_collision_attack>)

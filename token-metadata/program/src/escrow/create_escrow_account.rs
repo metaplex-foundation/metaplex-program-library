@@ -1,13 +1,3 @@
-use crate::assertions::{assert_derivation, assert_initialized, assert_owned_by};
-use crate::{
-    error::MetadataError,
-    escrow::pda::find_escrow_seeds,
-    instruction::MetadataInstruction,
-    state::{
-        EscrowAuthority, Key, Metadata, TokenMetadataAccount, TokenOwnedEscrow, TokenStandard,
-    },
-    utils::check_token_standard,
-};
 use borsh::BorshSerialize;
 use mpl_utils::{assert_signer, create_or_allocate_account_raw};
 use solana_program::{
@@ -17,6 +7,17 @@ use solana_program::{
     program_memory::sol_memcpy,
     pubkey::Pubkey,
     sysvar,
+};
+
+use crate::{
+    assertions::{assert_derivation, assert_initialized, assert_owned_by},
+    error::MetadataError,
+    escrow::pda::find_escrow_seeds,
+    instruction::MetadataInstruction,
+    state::{
+        EscrowAuthority, Key, Metadata, TokenMetadataAccount, TokenOwnedEscrow, TokenStandard,
+    },
+    utils::check_token_standard,
 };
 
 pub fn create_escrow_account(

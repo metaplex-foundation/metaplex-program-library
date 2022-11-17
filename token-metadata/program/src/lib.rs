@@ -1,8 +1,11 @@
 //! A Token Metadata program for the Solana blockchain.
 
 pub mod assertions;
-pub mod deprecated_instruction;
-pub mod deprecated_processor;
+
+pub mod deprecated_processor {
+    pub use crate::processor::deprecated::*;
+}
+
 mod deser;
 pub mod entrypoint;
 pub mod error;
