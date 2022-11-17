@@ -1,5 +1,4 @@
 use borsh::BorshSerialize;
-pub use instruction::*;
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
@@ -13,12 +12,12 @@ use crate::{
     },
     deser::clean_write_metadata,
     error::MetadataError,
-    instruction::MetadataInstruction,
+    instruction_old::MetadataInstruction,
     state::{Metadata, TokenMetadataAccount, EDITION, PREFIX},
     utils::check_token_standard,
 };
 
-mod instruction {
+pub(crate) mod instruction {
     use super::*;
 
     pub fn set_token_standard(

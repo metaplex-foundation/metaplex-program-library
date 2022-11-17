@@ -1,13 +1,13 @@
-use crate::*;
 use mpl_token_metadata::{
-    id, instruction,
+    deprecated_instruction, id, instruction,
     state::{Collection, CollectionDetails, Creator, Data, DataV2, Uses, PREFIX},
 };
 use solana_program::borsh::try_from_slice_unchecked;
-
 use solana_sdk::{
     pubkey::Pubkey, signature::Signer, signer::keypair::Keypair, transaction::Transaction,
 };
+
+use crate::*;
 
 #[derive(Debug)]
 pub struct Metadata {
@@ -77,7 +77,7 @@ impl Metadata {
         .await?;
 
         let tx = Transaction::new_signed_with_payer(
-            &[instruction::create_metadata_accounts(
+            &[deprecated_instruction::create_metadata_accounts(
                 id(),
                 self.pubkey,
                 self.mint.pubkey(),
@@ -440,7 +440,7 @@ impl Metadata {
         seller_fee_basis_points: u16,
     ) -> Result<(), BanksClientError> {
         let tx = Transaction::new_signed_with_payer(
-            &[instruction::update_metadata_accounts(
+            &[deprecated_instruction::update_metadata_accounts(
                 id(),
                 self.pubkey,
                 context.payer.pubkey(),

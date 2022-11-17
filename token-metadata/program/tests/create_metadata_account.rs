@@ -18,6 +18,7 @@ use solana_sdk::{
 use utils::*;
 
 mod create_meta_accounts {
+    use mpl_token_metadata::deprecated_instruction;
 
     use super::*;
     #[tokio::test]
@@ -133,7 +134,7 @@ mod create_meta_accounts {
         .await
         .unwrap();
 
-        let ix = instruction::create_metadata_accounts(
+        let ix = deprecated_instruction::create_metadata_accounts(
             id(),
             test_metadata.pubkey,
             test_metadata.mint.pubkey(),

@@ -11,7 +11,7 @@ use solana_program::{
 use crate::{
     assertions::{assert_derivation, assert_initialized, assert_owned_by},
     error::MetadataError,
-    instruction::MetadataInstruction,
+    instruction_old::MetadataInstruction,
     state::{
         EscrowAuthority, Metadata, TokenMetadataAccount, TokenOwnedEscrow, TokenStandard,
         ESCROW_POSTFIX, PREFIX,

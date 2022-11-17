@@ -1,6 +1,5 @@
 use arrayref::array_ref;
 use borsh::BorshSerialize;
-pub use instruction::*;
 use mpl_token_vault::{error::VaultError, state::VaultState};
 use mpl_utils::{assert_signer, token::get_owner_from_token_account};
 use solana_program::{
@@ -13,8 +12,8 @@ use solana_program::{
 use crate::{
     assertions::assert_owned_by,
     error::MetadataError,
-    instruction::MetadataInstruction,
-    processor::edition::MintNewEditionFromMasterEditionViaTokenArgs,
+    instruction::MintNewEditionFromMasterEditionViaTokenArgs,
+    instruction_old::MetadataInstruction,
     utils::{
         process_mint_new_edition_from_master_edition_via_token_logic,
         MintNewEditionFromMasterEditionViaTokenLogicArgs,

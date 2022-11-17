@@ -3,11 +3,19 @@ mod deprecated_create_metadata_accounts;
 mod deprecated_update_metadata_accounts;
 mod mint_new_edition_from_master_edition_via_vault_proxy;
 
-pub use args::*;
-pub use create_master_edition::*;
-pub use deprecated_create_metadata_accounts::*;
-pub use deprecated_update_metadata_accounts::*;
-pub use mint_new_edition_from_master_edition_via_vault_proxy::*;
+pub use deprecated_create_metadata_accounts::process_deprecated_create_metadata_accounts;
+pub use deprecated_update_metadata_accounts::process_deprecated_update_metadata_accounts;
+pub use mint_new_edition_from_master_edition_via_vault_proxy::process_deprecated_mint_new_edition_from_master_edition_via_vault_proxy;
+
+pub(crate) mod deprecated_instructions {
+    pub use args::*;
+    pub use create_master_edition::instruction::*;
+    pub use deprecated_create_metadata_accounts::instruction::*;
+    pub use deprecated_update_metadata_accounts::instruction::*;
+    pub use mint_new_edition_from_master_edition_via_vault_proxy::instruction::*;
+
+    use super::*;
+}
 
 mod args {
     use borsh::{BorshDeserialize, BorshSerialize};

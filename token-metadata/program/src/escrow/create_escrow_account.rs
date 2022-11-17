@@ -13,7 +13,7 @@ use crate::{
     assertions::{assert_derivation, assert_initialized, assert_owned_by},
     error::MetadataError,
     escrow::pda::find_escrow_seeds,
-    instruction::MetadataInstruction,
+    instruction_old::MetadataInstruction,
     state::{
         EscrowAuthority, Key, Metadata, TokenMetadataAccount, TokenOwnedEscrow, TokenStandard,
     },

@@ -1,5 +1,4 @@
 use borsh::BorshSerialize;
-pub use instruction::*;
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
@@ -12,11 +11,11 @@ use spl_token::state::Account;
 use crate::{
     assertions::{assert_initialized, assert_owned_by},
     error::MetadataError,
-    instruction::MetadataInstruction,
+    instruction_old::MetadataInstruction,
     state::{Metadata, TokenMetadataAccount},
 };
 
-mod instruction {
+pub(crate) mod instruction {
     use super::*;
 
     /// creates a update_primary_sale_happened_via_token instruction

@@ -1,7 +1,6 @@
-use crate::*;
 use borsh::ser::BorshSerialize;
 use mpl_token_metadata::{
-    id,
+    deprecated_instruction, id,
     instruction::{self, CreateMasterEditionArgs, MetadataInstruction},
     state::{MasterEditionV2 as ProgramMasterEdition, TokenMetadataAccount, EDITION, PREFIX},
 };
@@ -10,12 +9,13 @@ use solana_program::{
     instruction::{AccountMeta, Instruction},
     sysvar,
 };
-
 use solana_sdk::{
     pubkey::Pubkey,
     signature::{Keypair, Signer},
     transaction::Transaction,
 };
+
+use crate::*;
 
 #[derive(Debug)]
 pub struct MasterEditionV2 {
@@ -101,7 +101,7 @@ impl MasterEditionV2 {
         max_supply: Option<u64>,
     ) -> Result<(), BanksClientError> {
         let tx = Transaction::new_signed_with_payer(
-            &[instruction::create_master_edition(
+            &[deprecated_instruction::create_master_edition(
                 id(),
                 self.pubkey,
                 self.mint_pubkey,

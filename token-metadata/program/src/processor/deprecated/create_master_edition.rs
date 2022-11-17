@@ -1,14 +1,13 @@
 use borsh::BorshSerialize;
-pub use instruction::*;
 use solana_program::{
     instruction::{AccountMeta, Instruction},
     pubkey::Pubkey,
     sysvar,
 };
 
-use crate::{instruction::MetadataInstruction, processor::CreateMasterEditionArgs};
+use crate::{instruction::CreateMasterEditionArgs, instruction_old::MetadataInstruction};
 
-mod instruction {
+pub(crate) mod instruction {
     use super::*;
 
     /// creates a create_master_edition instruction

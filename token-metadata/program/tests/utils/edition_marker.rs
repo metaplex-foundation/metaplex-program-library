@@ -1,4 +1,3 @@
-use crate::*;
 use borsh::BorshSerialize;
 use mpl_token_metadata::{
     id,
@@ -17,6 +16,8 @@ use solana_sdk::{
 use spl_associated_token_account::{
     get_associated_token_address, instruction::create_associated_token_account,
 };
+
+use crate::*;
 
 #[derive(Debug)]
 pub struct EditionMarker {

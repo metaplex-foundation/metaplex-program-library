@@ -6,11 +6,26 @@ pub mod deprecated_processor {
     pub use crate::processor::deprecated::*;
 }
 
+pub mod instruction {
+    pub use crate::{
+        instruction_old::*,
+        processor::{edition_instructions::*, metadata_instructions::*},
+    };
+}
+
+pub mod deprecated_instruction {
+    pub use crate::processor::deprecated::deprecated_instructions::*;
+}
+
+// pub mod deprecated_instructions {
+//     // pub use crate::processor::
+// }
+
 mod deser;
 pub mod entrypoint;
 pub mod error;
 pub mod escrow;
-pub mod instruction;
+mod instruction_old;
 pub mod pda;
 pub mod processor;
 pub mod state;

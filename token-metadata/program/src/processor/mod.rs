@@ -50,7 +50,7 @@ use crate::{
     escrow::{
         process_close_escrow_account, process_create_escrow_account, process_transfer_out_of_escrow,
     },
-    instruction::{MetadataInstruction, SetCollectionSizeArgs},
+    instruction_old::{MetadataInstruction, SetCollectionSizeArgs},
     processor::edition::{
         process_convert_master_edition_v1_to_v2, process_create_master_edition,
         process_mint_new_edition_from_master_edition_via_token,

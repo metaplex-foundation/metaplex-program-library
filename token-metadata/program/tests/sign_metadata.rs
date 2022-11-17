@@ -2,17 +2,17 @@
 
 use solana_program_test::*;
 use solana_sdk::signature::{Keypair, Signer};
-
 use utils::*;
 
 pub mod utils;
 
 mod sign_metadata {
 
+    use mpl_token_metadata::{
+        instruction::{remove_creator_verification, sign_metadata},
+        state::Creator,
+    };
     use solana_sdk::transaction::Transaction;
-
-    use mpl_token_metadata::instruction::{remove_creator_verification, sign_metadata};
-    use mpl_token_metadata::state::Creator;
 
     use super::*;
 

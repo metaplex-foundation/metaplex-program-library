@@ -1,5 +1,4 @@
 use borsh::{BorshDeserialize, BorshSerialize};
-pub use instruction::*;
 use mpl_utils::create_or_allocate_account_raw;
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
@@ -15,7 +14,7 @@ use crate::{
         assert_token_program_matches_package, metadata::assert_update_authority_is_correct,
     },
     error::MetadataError,
-    instruction::MetadataInstruction,
+    instruction_old::MetadataInstruction,
     state::{
         Key, MasterEditionV2, Metadata, TokenMetadataAccount, TokenStandard, EDITION,
         MAX_MASTER_EDITION_LEN, PREFIX,
@@ -23,7 +22,7 @@ use crate::{
     utils::transfer_mint_authority,
 };
 
-mod instruction {
+pub(crate) mod instruction {
     #[cfg(feature = "serde-feature")]
     use {
         serde::{Deserialize, Serialize},

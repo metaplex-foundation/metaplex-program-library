@@ -1,5 +1,4 @@
 use borsh::{BorshDeserialize, BorshSerialize};
-pub use instruction::*;
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
@@ -9,11 +8,12 @@ use solana_program::{
 };
 
 use crate::{
-    instruction::MetadataInstruction,
+    instruction_old::MetadataInstruction,
     state::{Creator, Data, DataV2},
     utils::{process_create_metadata_accounts_logic, CreateMetadataAccountsLogicArgs},
 };
-mod instruction {
+
+pub(crate) mod instruction {
     #[cfg(feature = "serde-feature")]
     use {
         serde::{Deserialize, Serialize},

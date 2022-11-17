@@ -1,5 +1,4 @@
 use borsh::BorshSerialize;
-pub use instruction::*;
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
@@ -11,11 +10,11 @@ use spl_token::state::Mint;
 use crate::{
     assertions::{assert_initialized, assert_owned_by},
     error::MetadataError,
-    instruction::MetadataInstruction,
+    instruction_old::MetadataInstruction,
     state::{Key, MasterEditionV1, MasterEditionV2, TokenMetadataAccount},
 };
 
-mod instruction {
+pub(crate) mod instruction {
     use super::*;
 
     /// Converts a master edition v1 to v2
