@@ -227,6 +227,7 @@ mod metadata {
         let collection_record = CollectionAuthorityRecord {
             key: Key::CollectionAuthorityRecord,
             bump: 255,
+            update_authority: None,
         };
 
         let mut buf = Vec::new();

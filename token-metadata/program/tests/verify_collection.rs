@@ -2,7 +2,9 @@
 pub mod utils;
 
 use mpl_token_metadata::pda::find_collection_authority_account;
-use mpl_token_metadata::state::Collection;
+use mpl_token_metadata::state::{
+    Collection, CollectionAuthorityRecord, COLLECTION_AUTHORITY_RECORD_SIZE,
+};
 use mpl_token_metadata::state::{UseMethod, Uses};
 use mpl_token_metadata::{
     error::MetadataError,
@@ -10,7 +12,11 @@ use mpl_token_metadata::{
     utils::puffed_out_string,
 };
 use num_traits::FromPrimitive;
+use solana_program::borsh::try_from_slice_unchecked;
+use solana_program::native_token::LAMPORTS_PER_SOL;
 use solana_program_test::*;
+use solana_sdk::account::{Account, AccountSharedData};
+use solana_sdk::transaction::Transaction;
 use solana_sdk::{
     instruction::InstructionError,
     signature::{Keypair, Signer},
@@ -1239,4 +1245,183 @@ async fn fail_verify_collection_negative_cases() {
         .await
         .unwrap_err();
     assert_custom_error!(err, MetadataError::IncorrectOwner);
+}
+
+#[tokio::test]
+async fn fail_invalid_collection_update_authority() {
+    let mut context = program_test().start_with_context().await;
+
+    let user_keypair = Keypair::new();
+
+    let test_collection = Metadata::new();
+    test_collection
+        .create_v2_default(&mut context)
+        .await
+        .unwrap();
+
+    let collection_master_edition_account = MasterEditionV2::new(&test_collection);
+    collection_master_edition_account
+        .create_v3(&mut context, Some(0))
+        .await
+        .unwrap();
+
+    let user_nft = Metadata::new();
+    user_nft.create_v2_default(&mut context).await.unwrap();
+
+    let user_master_edition_account = MasterEditionV2::new(&user_nft);
+    user_master_edition_account
+        .create_v3(&mut context, Some(0))
+        .await
+        .unwrap();
+
+    user_nft
+        .change_update_authority(&mut context, user_keypair.pubkey())
+        .await
+        .unwrap();
+
+    // Setup delegate
+    let delegate_keypair = Keypair::new();
+
+    let update_authority = context.payer.pubkey();
+    let (record, _) = find_collection_authority_account(
+        &test_collection.mint.pubkey(),
+        &delegate_keypair.pubkey(),
+    );
+
+    let ix1 = mpl_token_metadata::instruction::approve_collection_authority(
+        mpl_token_metadata::id(),
+        record,
+        delegate_keypair.pubkey(),
+        update_authority,
+        context.payer.pubkey(),
+        test_collection.pubkey,
+        test_collection.mint.pubkey(),
+    );
+
+    let tx1 = Transaction::new_signed_with_payer(
+        &[ix1],
+        Some(&context.payer.pubkey()),
+        &[&context.payer],
+        context.last_blockhash,
+    );
+    context.banks_client.process_transaction(tx1).await.unwrap();
+
+    // Change update authority to match users keypair
+    test_collection
+        .change_update_authority(&mut context, user_keypair.pubkey())
+        .await
+        .unwrap();
+
+    let err = user_nft
+        .set_and_verify_collection(
+            &mut context,
+            test_collection.pubkey,
+            &delegate_keypair,
+            user_keypair.pubkey(),
+            test_collection.mint.pubkey(),
+            collection_master_edition_account.pubkey,
+            Some(record),
+        )
+        .await
+        .unwrap_err();
+
+    assert_custom_error!(err, MetadataError::InvalidCollectionUpdateAuthority);
+}
+
+#[tokio::test]
+async fn success_collection_authority_delegate_revoke() {
+    let mut context = program_test().start_with_context().await;
+
+    let test_collection = Metadata::new();
+    test_collection
+        .create_v2_default(&mut context)
+        .await
+        .unwrap();
+
+    let collection_master_edition_account = MasterEditionV2::new(&test_collection);
+    collection_master_edition_account
+        .create_v3(&mut context, Some(0))
+        .await
+        .unwrap();
+
+    let user_nft = Metadata::new();
+    user_nft.create_v2_default(&mut context).await.unwrap();
+
+    let user_master_edition_account = MasterEditionV2::new(&user_nft);
+    user_master_edition_account
+        .create_v3(&mut context, Some(0))
+        .await
+        .unwrap();
+
+    // Setup delegate
+    let delegate_keypair = Keypair::new();
+
+    let (record, bump) = find_collection_authority_account(
+        &test_collection.mint.pubkey(),
+        &delegate_keypair.pubkey(),
+    );
+
+    let mut data = vec![0u8; 11];
+    data[0] = 9; // key
+    data[1] = bump; // bump
+
+    let record_account = Account {
+        lamports: LAMPORTS_PER_SOL,
+        data,
+        owner: mpl_token_metadata::ID,
+        executable: false,
+        rent_epoch: 1,
+    };
+    let record_account_shared_data: AccountSharedData = record_account.into();
+    context.set_account(&record, &record_account_shared_data);
+
+    let payer = context.payer.pubkey();
+
+    let ix_revoke = mpl_token_metadata::instruction::revoke_collection_authority(
+        mpl_token_metadata::id(),
+        record,
+        delegate_keypair.pubkey(),
+        payer,
+        test_collection.pubkey,
+        test_collection.mint.pubkey(),
+    );
+
+    let tx_revoke = Transaction::new_signed_with_payer(
+        &[ix_revoke],
+        Some(&payer),
+        &[&context.payer],
+        context.last_blockhash,
+    );
+
+    context
+        .banks_client
+        .process_transaction(tx_revoke)
+        .await
+        .unwrap();
+
+    let ix = mpl_token_metadata::instruction::approve_collection_authority(
+        mpl_token_metadata::id(),
+        record,
+        delegate_keypair.pubkey(),
+        payer,
+        payer,
+        test_collection.pubkey,
+        test_collection.mint.pubkey(),
+    );
+
+    let tx = Transaction::new_signed_with_payer(
+        &[ix],
+        Some(&context.payer.pubkey()),
+        &[&context.payer],
+        context.last_blockhash,
+    );
+
+    context.banks_client.process_transaction(tx).await.unwrap();
+
+    let record_account = get_account(&mut context, &record).await;
+    let record_data: CollectionAuthorityRecord =
+        try_from_slice_unchecked(&record_account.data).unwrap();
+    assert_eq!(record_data.key, Key::CollectionAuthorityRecord);
+    assert_eq!(record_data.update_authority, Some(payer));
+    assert_eq!(record_account.data.len(), COLLECTION_AUTHORITY_RECORD_SIZE);
 }
