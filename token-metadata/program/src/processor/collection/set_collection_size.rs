@@ -6,6 +6,7 @@ use solana_program::{
     pubkey::Pubkey,
 };
 
+use self::instruction::SetCollectionSizeArgs;
 use crate::{
     assertions::{assert_owned_by, collection::assert_has_collection_authority},
     deser::clean_write_metadata,
@@ -13,8 +14,6 @@ use crate::{
     instruction::MetadataInstruction,
     state::{CollectionDetails, Metadata, TokenMetadataAccount},
 };
-
-use self::instruction::SetCollectionSizeArgs;
 
 pub(crate) mod instruction {
     #[cfg(feature = "serde-feature")]

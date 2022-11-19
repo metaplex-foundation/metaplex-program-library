@@ -9,8 +9,9 @@ pub use pda::*;
 pub use transfer_out::transfer_out_of_escrow;
 
 pub(crate) mod escrow_instructions {
-    use super::*;
     pub use close_escrow_account::instruction::*;
     pub use create_escrow_account::instruction::*;
     pub use transfer_out::instruction::*;
+
+    use super::*;
 }

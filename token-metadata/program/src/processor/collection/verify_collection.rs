@@ -1,9 +1,9 @@
 use borsh::BorshSerialize;
 use mpl_utils::assert_signer;
-use solana_program::instruction::{AccountMeta, Instruction};
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
+    instruction::{AccountMeta, Instruction},
     pubkey::Pubkey,
 };
 

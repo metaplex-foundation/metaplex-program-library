@@ -20,9 +20,8 @@ use crate::{
 pub(crate) mod instruction {
     use solana_program::instruction::{AccountMeta, Instruction};
 
-    use crate::instruction::MetadataInstruction;
-
     use super::*;
+    use crate::instruction::MetadataInstruction;
 
     //# Set And Verify Collection V2 -- Supports v1.3 Collection Details
     ///

@@ -9,6 +9,7 @@ use solana_program::{
     sysvar,
 };
 
+use super::find_escrow_seeds;
 use crate::{
     assertions::{assert_derivation, assert_initialized, assert_owned_by},
     error::MetadataError,
@@ -18,8 +19,6 @@ use crate::{
     },
     utils::check_token_standard,
 };
-
-use super::find_escrow_seeds;
 
 pub(crate) mod instruction {
     use super::*;

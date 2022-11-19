@@ -2,17 +2,17 @@ mod bubblegum;
 mod collection;
 pub(crate) mod deprecated;
 mod edition;
+mod escrow;
 mod metadata;
 mod operation;
-mod escrow;
 
 use borsh::BorshDeserialize;
 pub use bubblegum::*;
 pub use collection::*;
 pub use edition::*;
+pub use escrow::*;
 pub use metadata::*;
 pub use operation::*;
-pub use escrow::*;
 use solana_program::{account_info::AccountInfo, entrypoint::ProgramResult, msg, pubkey::Pubkey};
 
 use crate::{
@@ -23,11 +23,13 @@ use crate::{
     },
     error::MetadataError,
     instruction_old::MetadataInstruction,
-    processor::edition::{
-        process_convert_master_edition_v1_to_v2, process_create_master_edition,
-        process_mint_new_edition_from_master_edition_via_token,
+    processor::{
+        edition::{
+            process_convert_master_edition_v1_to_v2, process_create_master_edition,
+            process_mint_new_edition_from_master_edition_via_token,
+        },
+        escrow::{close_escrow_account, create_escrow_account, transfer_out_of_escrow},
     },
-    processor::escrow::{close_escrow_account, create_escrow_account, transfer_out_of_escrow},
 };
 
 pub fn process_instruction<'a>(

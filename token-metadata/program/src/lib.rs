@@ -11,7 +11,7 @@ pub mod instruction {
         instruction_old::*,
         processor::{
             collection_instructions::*, edition_instructions::*, metadata_instructions::*,
-            operation_instructions::*, 
+            operation_instructions::*,
         },
     };
 }

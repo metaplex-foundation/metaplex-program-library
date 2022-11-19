@@ -29,9 +29,8 @@ pub(crate) mod instruction {
     use serde::{Deserialize, Serialize};
     use solana_program::instruction::{AccountMeta, Instruction};
 
-    use crate::instruction::MetadataInstruction;
-
     use super::*;
+    use crate::instruction::MetadataInstruction;
 
     #[repr(C)]
     #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]

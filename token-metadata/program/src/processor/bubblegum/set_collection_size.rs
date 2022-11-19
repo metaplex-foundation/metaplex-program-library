@@ -1,3 +1,5 @@
+use std::cmp;
+
 use borsh::BorshSerialize;
 use mpl_utils::assert_signer;
 use solana_program::{
@@ -5,7 +7,6 @@ use solana_program::{
     entrypoint::ProgramResult,
     pubkey::Pubkey,
 };
-use std::cmp;
 
 use crate::{
     assertions::{assert_owned_by, collection::assert_has_collection_authority},
@@ -19,9 +20,8 @@ use crate::{
 pub(crate) mod instruction {
     use solana_program::instruction::{AccountMeta, Instruction};
 
-    use crate::instruction::MetadataInstruction;
-
     use super::*;
+    use crate::instruction::MetadataInstruction;
 
     pub fn set_collection_size(
         program_id: Pubkey,
