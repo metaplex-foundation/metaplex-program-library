@@ -1110,6 +1110,29 @@ createErrorFromNameLookup.set(
 );
 
 /**
+ * CannotSwitchFromHiddenSettings: 'Cannot remove Hidden Settings.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class CannotSwitchFromHiddenSettingsError extends Error {
+  readonly code: number = 0x17a3;
+  readonly name: string = 'CannotSwitchFromHiddenSettings';
+  constructor() {
+    super('Cannot remove Hidden Settings.');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, CannotSwitchFromHiddenSettingsError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x17a3, () => new CannotSwitchFromHiddenSettingsError());
+createErrorFromNameLookup.set(
+  'CannotSwitchFromHiddenSettings',
+  () => new CannotSwitchFromHiddenSettingsError(),
+);
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

@@ -1,12 +1,12 @@
 use anchor_lang::prelude::*;
 
-#[derive(AnchorSerialize, AnchorDeserialize, PartialEq, Eq, Copy, Clone)]
+#[derive(AnchorSerialize, AnchorDeserialize, PartialEq, Eq, Debug, Clone)]
 pub enum TokenProgramVersion {
     Original,
     Token2022,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, PartialEq, Eq, Copy, Clone)]
+#[derive(AnchorSerialize, AnchorDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct Creator {
     pub address: Pubkey,
     pub verified: bool,
@@ -77,7 +77,7 @@ impl Collection {
     }
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, PartialEq, Eq, Clone)]
+#[derive(AnchorSerialize, AnchorDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct MetadataArgs {
     /// The name of the asset
     pub name: String,

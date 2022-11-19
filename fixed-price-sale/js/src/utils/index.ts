@@ -1,8 +1,7 @@
-import { StringPublicKey, TokenAccount } from '@metaplex-foundation/mpl-core';
-import { deprecated } from '@metaplex-foundation/mpl-token-metadata';
 import { Connection, PublicKey } from '@solana/web3.js';
 import { PROGRAM_ID } from '../generated';
-import { strict as assert } from 'assert';
+import { Account as TokenAccount } from '@solana/spl-token';
+import { assertNft, assertNftPrintEdition, Metaplex } from '@metaplex-foundation/js';
 
 const VAULT_OWNER_PREFIX = 'mt_vault';
 const HISTORY_PREFIX = 'history';
@@ -57,13 +56,12 @@ export const findPrimaryMetadataCreatorsAddress = (
 
 export const validateMembershipToken = async (
   connection: Connection,
-  me: StringPublicKey,
+  me: PublicKey,
   ta: TokenAccount,
 ) => {
-  assert(ta.data != null, 'token account data cannot be null');
-  const edition = (await deprecated.Metadata.getEdition(
-    connection,
-    ta.data.mint,
-  )) as deprecated.Edition;
-  return edition?.data?.parent === me;
+  const metaplex = Metaplex.make(connection);
+  const nft = await metaplex.nfts().findByMint({ mintAddress: ta.mint });
+  assertNft(nft);
+  assertNftPrintEdition(nft.edition);
+  return nft.edition.parent.equals(me);
 };

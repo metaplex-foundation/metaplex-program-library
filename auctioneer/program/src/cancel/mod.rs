@@ -154,5 +154,23 @@ pub fn auctioneer_cancel<'info>(
 
     invoke_signed(&ix, &cpi_accounts.to_account_infos(), &[&auctioneer_seeds])?;
 
+    // Close the Listing Config account if the seller is canceling their listing.
+    if ctx.accounts.token_account.owner == ctx.accounts.wallet.key()
+        && ctx.accounts.wallet.is_signer
+    {
+        let listing_config = &ctx.accounts.listing_config.to_account_info();
+        let seller = &ctx.accounts.seller.to_account_info();
+
+        let listing_config_lamports = listing_config.lamports();
+        **seller.lamports.borrow_mut() = seller
+            .lamports()
+            .checked_add(listing_config_lamports)
+            .unwrap();
+        **listing_config.lamports.borrow_mut() = 0;
+
+        let mut source_data = listing_config.data.borrow_mut();
+        source_data.fill(0);
+    }
+
     Ok(())
 }

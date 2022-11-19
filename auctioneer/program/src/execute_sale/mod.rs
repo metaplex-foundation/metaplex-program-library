@@ -230,6 +230,7 @@ pub fn auctioneer_execute_sale<'info>(
 
     invoke_signed(&ix, &cpi_accounts.to_account_infos(), &[&auctioneer_seeds])?;
 
+    // Close the Listing Config account.
     let listing_config = &ctx.accounts.listing_config.to_account_info();
     let seller = &ctx.accounts.seller.to_account_info();
 

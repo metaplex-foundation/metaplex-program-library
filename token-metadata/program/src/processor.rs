@@ -1,8 +1,10 @@
+use std::cmp;
+
 use crate::{
     assertions::{
         collection::{
             assert_collection_update_is_valid, assert_collection_verify_is_valid,
-            assert_has_collection_authority,
+            assert_has_collection_authority, assert_is_collection_delegated_authority,
         },
         uses::{assert_valid_use, process_use_authority_validation},
     },
@@ -11,6 +13,9 @@ use crate::{
     },
     deser::clean_write_metadata,
     error::MetadataError,
+    escrow::{
+        process_close_escrow_account, process_create_escrow_account, process_transfer_out_of_escrow,
+    },
     instruction::{MetadataInstruction, SetCollectionSizeArgs},
     solana_program::program_memory::sol_memset,
     state::{
@@ -32,7 +37,7 @@ use crate::{
         process_mint_new_edition_from_master_edition_via_token_logic, puff_out_data_fields,
         spl_token_burn, spl_token_close, transfer_mint_authority, CreateMetadataAccountsLogicArgs,
         MintNewEditionFromMasterEditionViaTokenLogicArgs, TokenBurnParams, TokenCloseParams,
-        BUBBLEGUM_ACTIVATED, BUBBLEGUM_PROGRAM_ADDRESS,
+        BUBBLEGUM_ACTIVATED, BUBBLEGUM_SIGNER,
     },
 };
 use arrayref::array_ref;
@@ -246,6 +251,18 @@ pub fn process_instruction<'a>(
         MetadataInstruction::BubblegumSetCollectionSize(args) => {
             msg!("Instruction: Bubblegum Program Set Collection Size");
             bubblegum_set_collection_size(program_id, accounts, args)
+        }
+        MetadataInstruction::CreateEscrowAccount => {
+            msg!("Instruction: Create Escrow Account");
+            process_create_escrow_account(program_id, accounts)
+        }
+        MetadataInstruction::CloseEscrowAccount => {
+            msg!("Instruction: Close Escrow Account");
+            process_close_escrow_account(program_id, accounts)
+        }
+        MetadataInstruction::TransferOutOfEscrow(args) => {
+            msg!("Instruction: Transfer Out Of Escrow");
+            process_transfer_out_of_escrow(program_id, accounts, args)
         }
     }
 }
@@ -1395,6 +1412,7 @@ pub fn process_approve_collection_authority(
     let mut record = CollectionAuthorityRecord::from_account_info(collection_authority_record)?;
     record.key = Key::CollectionAuthorityRecord;
     record.bump = collection_authority_bump_seed[0];
+    record.update_authority = Some(*update_authority.key);
     record.serialize(&mut *collection_authority_record.try_borrow_mut_data()?)?;
     Ok(())
 }
@@ -1425,12 +1443,13 @@ pub fn process_revoke_collection_authority(
     if collection_authority_info_empty {
         return Err(MetadataError::CollectionAuthorityDoesNotExist.into());
     }
-    assert_has_collection_authority(
-        delegate_authority,
-        &metadata,
+
+    assert_is_collection_delegated_authority(
+        collection_authority_record,
+        delegate_authority.key,
         mint_info.key,
-        Some(collection_authority_record),
     )?;
+
     let lamports = collection_authority_record.lamports();
     **collection_authority_record.try_borrow_mut_lamports()? = 0;
     **revoke_authority.try_borrow_mut_lamports()? = revoke_authority
@@ -1470,6 +1489,14 @@ pub fn set_and_verify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) 
         || metadata.update_authority != collection_data.update_authority
     {
         return Err(MetadataError::UpdateAuthorityIncorrect.into());
+    }
+
+    // If it's a verified item and the user is trying to move it to a new collection,
+    // they must unverify first, in case it belongs to a sized collection.
+    if let Some(collection) = metadata.collection {
+        if collection.key != *collection_mint.key && collection.verified {
+            return Err(MetadataError::MustUnverify.into());
+        }
     }
 
     if using_delegated_collection_authority {
@@ -1536,7 +1563,7 @@ pub fn set_and_verify_sized_collection_item(
     // Don't verify already verified items, otherwise we end up with invalid size data.
     if let Some(collection) = metadata.collection {
         if collection.verified {
-            return Err(MetadataError::AlreadyVerified.into());
+            return Err(MetadataError::MustUnverify.into());
         }
     }
 
@@ -2146,15 +2173,20 @@ pub fn bubblegum_set_collection_size(
     let collection_mint_account_info = next_account_info(account_info_iter)?;
     let bubblegum_signer_info = next_account_info(account_info_iter)?;
 
-    let using_delegated_collection_authority = accounts.len() == 5;
+    let delegated_collection_auth_opt = if accounts.len() == 5 {
+        Some(next_account_info(account_info_iter)?)
+    } else {
+        None
+    };
 
-    // Bubblegum program not currently activated.
     if !BUBBLEGUM_ACTIVATED {
         return Err(MetadataError::InvalidOperation.into());
     }
 
     // This instruction can only be called by the Bubblegum program.
-    assert_owned_by(bubblegum_signer_info, &BUBBLEGUM_PROGRAM_ADDRESS)?;
+    if *bubblegum_signer_info.key != BUBBLEGUM_SIGNER {
+        return Err(MetadataError::InvalidBubblegumSigner.into());
+    }
     assert_signer(bubblegum_signer_info)?;
 
     // Owned by token-metadata program.
@@ -2170,21 +2202,28 @@ pub fn bubblegum_set_collection_size(
         return Err(MetadataError::UpdateAuthorityIsNotSigner.into());
     }
 
-    if using_delegated_collection_authority {
-        let collection_authority_record = next_account_info(account_info_iter)?;
-        assert_has_collection_authority(
-            collection_update_authority_account_info,
-            &metadata,
-            collection_mint_account_info.key,
-            Some(collection_authority_record),
-        )?;
+    assert_has_collection_authority(
+        collection_update_authority_account_info,
+        &metadata,
+        collection_mint_account_info.key,
+        delegated_collection_auth_opt,
+    )?;
+
+    // Ensure new size is + or - 1 of the current size.
+    let current_size = if let Some(details) = metadata.collection_details {
+        match details {
+            CollectionDetails::V1 { size } => size,
+        }
     } else {
-        assert_has_collection_authority(
-            collection_update_authority_account_info,
-            &metadata,
-            collection_mint_account_info.key,
-            None,
-        )?;
+        return Err(MetadataError::NotACollectionParent.into());
+    };
+
+    let diff = cmp::max(current_size, size)
+        .checked_sub(cmp::min(current_size, size))
+        .ok_or(MetadataError::InvalidCollectionSizeChange)?;
+
+    if diff != 1 {
+        return Err(MetadataError::InvalidCollectionSizeChange.into());
     }
 
     // The Bubblegum program has authority to manage the collection details.

@@ -1,9 +1,8 @@
 use anchor_lang::prelude::*;
 
-use crate::constants::FREEZE_FEATURE_INDEX;
 use crate::{
-    constants::COLLECTIONS_FEATURE_INDEX, is_feature_active, CandyError, CandyMachine,
-    CandyMachineData,
+    constants::{COLLECTIONS_FEATURE_INDEX, FREEZE_FEATURE_INDEX},
+    is_feature_active, CandyError, CandyMachine, CandyMachineData,
 };
 
 /// Update the candy machine state.
@@ -59,6 +58,10 @@ pub fn handle_update_candy_machine(
         && data.hidden_settings.is_some()
     {
         return err!(CandyError::CannotSwitchToHiddenSettings);
+    }
+
+    if candy_machine.data.hidden_settings.is_some() && data.hidden_settings.is_none() {
+        return err!(CandyError::CannotSwitchFromHiddenSettings);
     }
 
     let old_uuid = candy_machine.data.uuid.clone();

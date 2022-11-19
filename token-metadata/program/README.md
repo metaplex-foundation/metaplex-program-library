@@ -12,11 +12,11 @@ document are available at:
 
 ## Testing
 ```sh
-cargo test-bpf --bpf-out-dir ../../target/deploy/
+cargo test-bpf --bpf-out-dir ../../test-programs/
 ```
 ## Building
 ```sh
-cargo build-bpf --bpf-out-dir ../../target/deploy/
+cargo build-bpf --bpf-out-dir ../../test-programs/
 ```
 
 ## Source

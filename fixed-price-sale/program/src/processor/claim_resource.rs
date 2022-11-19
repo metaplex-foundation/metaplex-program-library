@@ -6,6 +6,7 @@ use crate::{
 };
 use anchor_lang::{prelude::*, solana_program::program_pack::Pack, system_program::System};
 use anchor_spl::token;
+use mpl_token_metadata::state::TokenMetadataAccount;
 
 impl<'info> ClaimResource<'info> {
     pub fn process(&mut self, vault_owner_bump: u8) -> Result<()> {

@@ -86,7 +86,14 @@ impl EditionMarker {
     }
 
     pub async fn create(&self, context: &mut ProgramTestContext) -> Result<(), BanksClientError> {
-        create_mint(context, &self.mint, &context.payer.pubkey(), None, 0).await?;
+        create_mint(
+            context,
+            &self.mint,
+            &context.payer.pubkey(),
+            Some(&context.payer.pubkey()),
+            0,
+        )
+        .await?;
         create_token_account(
             context,
             &self.token,
@@ -125,7 +132,13 @@ impl EditionMarker {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await
+        context
+            .banks_client
+            .process_transaction_with_commitment(
+                tx,
+                solana_sdk::commitment_config::CommitmentLevel::Confirmed,
+            )
+            .await
     }
 
     pub async fn create_with_invalid_token_program(

@@ -1,3 +1,4 @@
+#![cfg(feature = "test-bpf")]
 mod utils;
 
 use mpl_nft_packs::{
@@ -148,7 +149,14 @@ async fn setup() -> (
         context.last_blockhash,
     );
 
-    context.banks_client.process_transaction(tx).await.unwrap();
+    context
+        .banks_client
+        .process_transaction_with_commitment(
+            tx,
+            solana_sdk::commitment_config::CommitmentLevel::Confirmed,
+        )
+        .await
+        .unwrap();
 
     voucher_edition
         .create(

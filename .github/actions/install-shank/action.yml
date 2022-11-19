@@ -5,7 +5,7 @@ description: 'Setup Shank CLI'
 runs:
   using: 'composite'
   steps:
-    - uses: actions/cache@v2
+    - uses: actions/cache@v3
       name: Cache Shank CLI
       id: cache-shank-cli
       with:

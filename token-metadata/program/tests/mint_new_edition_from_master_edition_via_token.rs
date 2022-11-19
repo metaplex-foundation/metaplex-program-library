@@ -63,18 +63,7 @@ mod mint_new_edition_from_master_edition_via_token {
         let test_master_edition = MasterEditionV2::new(&test_metadata);
         let test_collection = Metadata::new();
         test_collection
-            .create_v2(
-                &mut context,
-                "Test".to_string(),
-                "TST".to_string(),
-                "uri".to_string(),
-                None,
-                10,
-                false,
-                None,
-                None,
-                None,
-            )
+            .create_v2_default(&mut context)
             .await
             .unwrap();
         let collection_master_edition_account = MasterEditionV2::new(&test_collection);
@@ -91,7 +80,6 @@ mod mint_new_edition_from_master_edition_via_token {
                 None,
                 10,
                 false,
-                None,
                 Some(Collection {
                     key: test_collection.mint.pubkey(),
                     verified: false,
@@ -341,21 +329,7 @@ mod mint_new_edition_from_master_edition_via_token {
         let mut context = program_test().start_with_context().await;
 
         let original_nft = Metadata::new();
-        original_nft
-            .create_v2(
-                &mut context,
-                "Test".to_string(),
-                "TST".to_string(),
-                "uri".to_string(),
-                None,
-                10,
-                false,
-                None,
-                None,
-                None,
-            )
-            .await
-            .unwrap();
+        original_nft.create_v2_default(&mut context).await.unwrap();
 
         let master_edition = MasterEditionV2::new(&original_nft);
         master_edition
@@ -442,21 +416,7 @@ mod mint_new_edition_from_master_edition_via_token {
         let mut context = program_test().start_with_context().await;
 
         let original_nft = Metadata::new();
-        original_nft
-            .create_v2(
-                &mut context,
-                "Test".to_string(),
-                "TST".to_string(),
-                "uri".to_string(),
-                None,
-                10,
-                false,
-                None,
-                None,
-                None,
-            )
-            .await
-            .unwrap();
+        original_nft.create_v2_default(&mut context).await.unwrap();
 
         let master_edition = MasterEditionV2::new(&original_nft);
         master_edition
@@ -490,21 +450,7 @@ mod mint_new_edition_from_master_edition_via_token {
         let mut context = program_test().start_with_context().await;
 
         let original_nft = Metadata::new();
-        original_nft
-            .create_v2(
-                &mut context,
-                "Test".to_string(),
-                "TST".to_string(),
-                "uri".to_string(),
-                None,
-                10,
-                false,
-                None,
-                None,
-                None,
-            )
-            .await
-            .unwrap();
+        original_nft.create_v2_default(&mut context).await.unwrap();
 
         let master_edition = MasterEditionV2::new(&original_nft);
         master_edition
@@ -541,21 +487,7 @@ mod mint_new_edition_from_master_edition_via_token {
         let mut context = program_test().start_with_context().await;
 
         let original_nft = Metadata::new();
-        original_nft
-            .create_v2(
-                &mut context,
-                "Test".to_string(),
-                "TST".to_string(),
-                "uri".to_string(),
-                None,
-                10,
-                false,
-                None,
-                None,
-                None,
-            )
-            .await
-            .unwrap();
+        original_nft.create_v2_default(&mut context).await.unwrap();
 
         let master_edition = MasterEditionV2::new(&original_nft);
         master_edition

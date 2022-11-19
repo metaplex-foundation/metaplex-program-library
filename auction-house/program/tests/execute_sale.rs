@@ -17,7 +17,7 @@ use mpl_testing_utils::{
     solana::{airdrop, create_associated_token_account, transfer},
     utils::Metadata,
 };
-use solana_sdk::signer::Signer;
+use solana_sdk::{commitment_config::CommitmentLevel, signer::Signer};
 
 use std::assert_eq;
 
@@ -34,7 +34,6 @@ use solana_program::program_pack::Pack;
 use solana_sdk::{
     signature::Keypair,
     transaction::{Transaction, TransactionError},
-    transport::TransportError,
 };
 use spl_associated_token_account::get_associated_token_address;
 use spl_token::state::Account;
@@ -321,7 +320,7 @@ async fn execute_sale_wrong_token_account_owner_success() {
     println!("{:?}", err);
 
     match err {
-        TransportError::TransactionError(TransactionError::InstructionError(
+        BanksClientError::TransactionError(TransactionError::InstructionError(
             0,
             InstructionError::Custom(6000),
         )) => (),
@@ -471,19 +470,19 @@ async fn execute_sale_success() {
     )
     .unwrap();
 
-    let seller_ts_after = context
+    let _seller_ts_after = context
         .banks_client
         .get_account(sell_acc.seller_trade_state)
         .await
         .unwrap()
         .is_none();
-    let buyer_ts_after = context
+    let _buyer_ts_after = context
         .banks_client
         .get_account(bid_acc.buyer_trade_state)
         .await
         .unwrap()
         .is_none();
-    let free_ts_after = context
+    let _free_ts_after = context
         .banks_client
         .get_account(sell_acc.free_seller_trade_state)
         .await
@@ -2019,7 +2018,7 @@ async fn execute_sale_partial_order_success() {
     let ((sell_acc, _), sell_tx) = sell(&mut context, &ahkey, &ah, &test_metadata, 600_000_000, 6);
     context
         .banks_client
-        .process_transaction(sell_tx)
+        .process_transaction_with_commitment(sell_tx, CommitmentLevel::Confirmed)
         .await
         .unwrap();
     let buyer = Keypair::new();
@@ -2039,7 +2038,7 @@ async fn execute_sale_partial_order_success() {
 
     context
         .banks_client
-        .process_transaction(buy_tx)
+        .process_transaction_with_commitment(buy_tx, CommitmentLevel::Confirmed)
         .await
         .unwrap();
     let buyer_token_account =
@@ -2120,7 +2119,11 @@ async fn execute_sale_partial_order_success() {
         .await
         .unwrap();
     assert!(!buyer_token_before.is_none());
-    context.banks_client.process_transaction(tx).await.unwrap();
+    context
+        .banks_client
+        .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+        .await
+        .unwrap();
 
     let seller_after = context
         .banks_client
@@ -2175,7 +2178,7 @@ async fn execute_sale_partial_order_success() {
     );
     context
         .banks_client
-        .process_transaction(buy_tx)
+        .process_transaction_with_commitment(buy_tx, CommitmentLevel::Confirmed)
         .await
         .unwrap();
     let buyer_token_account =
@@ -2248,7 +2251,12 @@ async fn execute_sale_partial_order_success() {
         .await
         .unwrap();
     assert!(!buyer_token_before.is_none());
-    unwrap_ignoring_io_error_in_ci(context.banks_client.process_transaction(tx).await);
+    unwrap_ignoring_io_error_in_ci(
+        context
+            .banks_client
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+            .await,
+    );
 
     let seller_after = context
         .banks_client
@@ -2315,7 +2323,7 @@ async fn execute_sale_partial_order_bad_trade_state_failure() {
     let ((sell_acc, _), sell_tx) = sell(&mut context, &ahkey, &ah, &test_metadata, 600_000_000, 6);
     context
         .banks_client
-        .process_transaction(sell_tx)
+        .process_transaction_with_commitment(sell_tx, CommitmentLevel::Confirmed)
         .await
         .unwrap();
     let buyer0 = Keypair::new();
@@ -2335,7 +2343,7 @@ async fn execute_sale_partial_order_bad_trade_state_failure() {
 
     context
         .banks_client
-        .process_transaction(buy_tx0)
+        .process_transaction_with_commitment(buy_tx0, CommitmentLevel::Confirmed)
         .await
         .unwrap();
     let buyer0_token_account =
@@ -2361,7 +2369,7 @@ async fn execute_sale_partial_order_bad_trade_state_failure() {
 
     context
         .banks_client
-        .process_transaction(buy_tx1)
+        .process_transaction_with_commitment(buy_tx1, CommitmentLevel::Confirmed)
         .await
         .unwrap();
 
@@ -2427,7 +2435,7 @@ async fn execute_sale_partial_order_bad_trade_state_failure() {
     );
     let result = context
         .banks_client
-        .process_transaction(tx)
+        .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
         .await
         .unwrap_err();
 
@@ -3092,7 +3100,7 @@ async fn execute_sale_partial_order_fail_price_mismatch() {
         context.last_blockhash,
     );
 
-    let error: TransportError = context
+    let error: BanksClientError = context
         .banks_client
         .process_transaction(tx)
         .await

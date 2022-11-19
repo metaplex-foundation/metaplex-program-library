@@ -102,6 +102,14 @@ async fn cancel_listing() {
     );
 
     context.banks_client.process_transaction(tx).await.unwrap();
+
+    let listing_config_closed = context
+        .banks_client
+        .get_account(listing_config_address)
+        .await
+        .unwrap();
+
+    assert!(listing_config_closed.is_none());
 }
 
 #[tokio::test]
@@ -217,6 +225,15 @@ async fn cancel_bid() {
         context.last_blockhash,
     );
     context.banks_client.process_transaction(tx).await.unwrap();
+
+    // Make sure the trade state wasn't erroneously closed.
+    let listing_config_closed = context
+        .banks_client
+        .get_account(listing_config_address)
+        .await
+        .unwrap();
+
+    assert!(listing_config_closed.is_some());
 }
 
 #[tokio::test]

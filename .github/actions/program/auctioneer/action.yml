@@ -1,0 +1,17 @@
+# Implicit dependencies
+# - actions/checkout@v3
+# - ./.github/actions/install-linux-build-deps
+# - ./.github/actions/install-solana
+# - ./.github/actions/install-rust
+
+name: Auctioneer Program Dependencies
+description: Builds the dependencies for the Auctioneer program test
+runs:
+  using: 'composite'
+  steps:
+    - uses: ./.github/actions/build-program
+      with:
+        name: token-metadata
+    - uses: ./.github/actions/build-program
+      with:
+        name: auction-house

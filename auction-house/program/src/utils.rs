@@ -6,7 +6,7 @@ use anchor_lang::{
     prelude::*,
     solana_program::{
         program::invoke_signed,
-        program_memory::sol_memcmp,
+        program_memory::{sol_memcmp, sol_memset},
         program_option::COption,
         program_pack::{IsInitialized, Pack},
         pubkey::PUBKEY_BYTES,
@@ -15,7 +15,7 @@ use anchor_lang::{
 };
 use anchor_spl::token::{Mint, Token, TokenAccount};
 use arrayref::array_ref;
-use mpl_token_metadata::state::Metadata;
+use mpl_token_metadata::state::{Metadata, TokenMetadataAccount};
 use spl_associated_token_account::get_associated_token_address;
 use spl_token::{instruction::initialize_account2, state::Account as SplAccount};
 use std::{convert::TryInto, slice::Iter};
@@ -49,7 +49,7 @@ pub fn make_ata<'a>(
     };
 
     invoke_signed(
-        &spl_associated_token_account::create_associated_token_account(
+        &spl_associated_token_account::instruction::create_associated_token_account(
             fee_payer.key,
             wallet.key,
             mint.key,
@@ -682,6 +682,28 @@ pub fn assert_scopes_eq(
             return Err(AuctionHouseError::MissingAuctioneerScope.into());
         }
     }
+
+    Ok(())
+}
+
+pub fn close_account<'a>(
+    source_account: &AccountInfo<'a>,
+    receiver_account: &AccountInfo<'a>,
+) -> Result<()> {
+    let current_lamports = source_account.lamports();
+    let account_data_size = source_account.data_len();
+
+    **source_account.lamports.borrow_mut() = 0;
+    **receiver_account.lamports.borrow_mut() = receiver_account
+        .lamports()
+        .checked_add(current_lamports)
+        .ok_or(AuctionHouseError::NumericalOverflow)?;
+
+    sol_memset(
+        &mut *source_account.try_borrow_mut_data()?,
+        0,
+        account_data_size,
+    );
 
     Ok(())
 }

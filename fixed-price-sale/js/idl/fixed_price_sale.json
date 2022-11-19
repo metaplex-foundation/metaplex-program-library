@@ -1,5 +1,5 @@
 {
-  "version": "0.2.3",
+  "version": "0.3.0",
   "name": "fixed_price_sale",
   "instructions": [
     {
@@ -848,6 +848,9 @@
           },
           {
             "name": "expireOnUse",
+            "docs": [
+              "whether program will burn token or just check availability"
+            ],
             "type": "bool"
           },
           {
@@ -1151,7 +1154,7 @@
   "metadata": {
     "address": "SaLeTjyUa5wXHnGuewUSyJ5JWZaHwz3TxqUntCE9czo",
     "origin": "anchor",
-    "binaryVersion": "0.24.2",
-    "libVersion": "~0.24.2"
+    "binaryVersion": "0.25.0",
+    "libVersion": "0.25.0"
   }
 }

@@ -21,10 +21,7 @@ use std::result::Result as StdResult;
 
 use mpl_token_metadata::pda::find_metadata_account;
 use solana_program_test::*;
-use solana_sdk::{
-    clock::UnixTimestamp, instruction::Instruction, transaction::Transaction,
-    transport::TransportError,
-};
+use solana_sdk::{clock::UnixTimestamp, instruction::Instruction, transaction::Transaction};
 use spl_associated_token_account::get_associated_token_address;
 
 use crate::utils::helpers::default_scopes;
@@ -52,7 +49,7 @@ pub async fn create_auction_house(
     seller_fee_basis_points: u16,
     requires_sign_off: bool,
     can_change_sale_price: bool,
-) -> StdResult<Pubkey, TransportError> {
+) -> StdResult<Pubkey, BanksClientError> {
     let create_accounts = mpl_auction_house::accounts::CreateAuctionHouse {
         treasury_mint: *t_mint_key,
         payer: payer_wallet.pubkey(),
@@ -639,7 +636,7 @@ pub fn withdraw(
 
 pub async fn existing_auction_house_test_context(
     context: &mut ProgramTestContext,
-) -> StdResult<(AuctionHouse, Pubkey, Keypair), TransportError> {
+) -> StdResult<(AuctionHouse, Pubkey, Keypair), BanksClientError> {
     let twd_key = context.payer.pubkey();
     let fwd_key = context.payer.pubkey();
     let t_mint_key = spl_token::native_mint::id();
@@ -682,6 +679,6 @@ pub async fn existing_auction_house_test_context(
         .expect("account empty");
 
     let auction_house_data = AuctionHouse::try_deserialize(&mut auction_house_acc.data.as_ref())
-        .map_err(|e| TransportError::IoError(io::Error::new(io::ErrorKind::InvalidData, e)))?;
+        .map_err(|e| BanksClientError::Io(io::Error::new(io::ErrorKind::InvalidData, e)))?;
     Ok((auction_house_data, auction_house_address, authority))
 }

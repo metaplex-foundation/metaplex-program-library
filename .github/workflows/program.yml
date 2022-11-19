@@ -1,0 +1,42 @@
+name: Program Tests
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+  workflow_dispatch:
+    inputs:
+      cache:
+        description: 'Use Cached Dependencies'
+        required: true
+        type: boolean
+      changes:
+        description: 'Only run when files change'
+        required: true
+        type: boolean
+
+jobs:
+  program-tests:
+    name: "Program: ${{ matrix.node.name }}"
+    strategy:
+      fail-fast: false
+      matrix:
+        node:
+          - name: "auctioneer"
+          - name: "bubblegum"
+          - name: "candy-machine"
+          - name: "auction-house"
+          - name: "fixed-price-sale"
+          - name: "gumdrop"
+          - name: "hydra"
+          - name: "nft-packs"
+          - name: "token-entangler"
+          - name: "token-metadata"
+
+    uses: ./.github/workflows/program-reusable.yml
+    with:
+      name: ${{ matrix.node.name }}
+      cache: ${{ contains(inputs.cache, 'true') }}
+      changes: ${{ !contains(inputs.changes, 'false') }}
