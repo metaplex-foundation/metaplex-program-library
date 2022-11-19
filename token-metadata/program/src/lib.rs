@@ -9,7 +9,10 @@ pub mod deprecated_processor {
 pub mod instruction {
     pub use crate::{
         instruction_old::*,
-        processor::{edition_instructions::*, metadata_instructions::*},
+        processor::{
+            collection_instructions::*, edition_instructions::*, metadata_instructions::*,
+            operation_instructions::*, 
+        },
     };
 }
 
@@ -24,7 +27,6 @@ pub mod deprecated_instruction {
 mod deser;
 pub mod entrypoint;
 pub mod error;
-pub mod escrow;
 mod instruction_old;
 pub mod pda;
 pub mod processor;

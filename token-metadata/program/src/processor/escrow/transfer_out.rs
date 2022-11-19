@@ -16,62 +16,69 @@ use spl_token::state::is_initialized_account;
 use crate::{
     assertions::{assert_derivation, assert_owned_by},
     error::MetadataError,
-    escrow::pda::find_escrow_seeds,
     instruction_old::MetadataInstruction,
     state::{EscrowAuthority, TokenMetadataAccount, TokenOwnedEscrow},
 };
 
-#[repr(C)]
-#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
-pub struct TransferOutOfEscrowArgs {
-    pub amount: u64,
+use self::instruction::TransferOutOfEscrowArgs;
+
+use super::find_escrow_seeds;
+
+pub(crate) mod instruction {
+    use super::*;
+
+    #[repr(C)]
+    #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
+    #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+    pub struct TransferOutOfEscrowArgs {
+        pub amount: u64,
+    }
+
+    pub fn transfer_out_of_escrow(
+        program_id: Pubkey,
+        escrow: Pubkey,
+        metadata: Pubkey,
+        payer: Pubkey,
+        attribute_mint: Pubkey,
+        attribute_src: Pubkey,
+        attribute_dst: Pubkey,
+        escrow_mint: Pubkey,
+        escrow_account: Pubkey,
+        authority: Option<Pubkey>,
+        amount: u64,
+    ) -> Instruction {
+        let mut accounts = vec![
+            AccountMeta::new_readonly(escrow, false),
+            AccountMeta::new(metadata, false),
+            AccountMeta::new(payer, true),
+            AccountMeta::new_readonly(attribute_mint, false),
+            AccountMeta::new(attribute_src, false),
+            AccountMeta::new(attribute_dst, false),
+            AccountMeta::new_readonly(escrow_mint, false),
+            AccountMeta::new_readonly(escrow_account, false),
+            AccountMeta::new_readonly(solana_program::system_program::id(), false),
+            AccountMeta::new_readonly(spl_associated_token_account::id(), false),
+            AccountMeta::new_readonly(spl_token::id(), false),
+            AccountMeta::new_readonly(sysvar::instructions::id(), false),
+        ];
+
+        if let Some(authority) = authority {
+            accounts.push(AccountMeta::new_readonly(authority, true));
+        }
+
+        let data = MetadataInstruction::TransferOutOfEscrow(TransferOutOfEscrowArgs { amount })
+            .try_to_vec()
+            .unwrap();
+
+        Instruction {
+            program_id,
+            accounts,
+            data,
+        }
+    }
 }
 
 pub fn transfer_out_of_escrow(
-    program_id: Pubkey,
-    escrow: Pubkey,
-    metadata: Pubkey,
-    payer: Pubkey,
-    attribute_mint: Pubkey,
-    attribute_src: Pubkey,
-    attribute_dst: Pubkey,
-    escrow_mint: Pubkey,
-    escrow_account: Pubkey,
-    authority: Option<Pubkey>,
-    amount: u64,
-) -> Instruction {
-    let mut accounts = vec![
-        AccountMeta::new_readonly(escrow, false),
-        AccountMeta::new(metadata, false),
-        AccountMeta::new(payer, true),
-        AccountMeta::new_readonly(attribute_mint, false),
-        AccountMeta::new(attribute_src, false),
-        AccountMeta::new(attribute_dst, false),
-        AccountMeta::new_readonly(escrow_mint, false),
-        AccountMeta::new_readonly(escrow_account, false),
-        AccountMeta::new_readonly(solana_program::system_program::id(), false),
-        AccountMeta::new_readonly(spl_associated_token_account::id(), false),
-        AccountMeta::new_readonly(spl_token::id(), false),
-        AccountMeta::new_readonly(sysvar::instructions::id(), false),
-    ];
-
-    if let Some(authority) = authority {
-        accounts.push(AccountMeta::new_readonly(authority, true));
-    }
-
-    let data = MetadataInstruction::TransferOutOfEscrow(TransferOutOfEscrowArgs { amount })
-        .try_to_vec()
-        .unwrap();
-
-    Instruction {
-        program_id,
-        accounts,
-        data,
-    }
-}
-
-pub fn process_transfer_out_of_escrow(
     program_id: &Pubkey,
     accounts: &[AccountInfo],
     args: TransferOutOfEscrowArgs,
