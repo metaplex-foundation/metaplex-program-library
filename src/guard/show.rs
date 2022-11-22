@@ -158,6 +158,11 @@ fn print_guard_set(guard_set: &GuardSet, padding: String) -> Result<()> {
             "token mint",
             token_payment.mint.to_string(),
         );
+        print_with_style(
+            &format!("{}:   ", padding),
+            "destination",
+            token_payment.destination_ata.to_string(),
+        );
     } else {
         print_with_style(&padding, "token payment", "none".to_string());
     }
@@ -339,6 +344,49 @@ fn print_guard_set(guard_set: &GuardSet, padding: String) -> Result<()> {
         );
     } else {
         print_with_style(&padding, "token burn", "none".to_string());
+    }
+
+    // freeze sol payment
+    if let Some(freeze_sol_payment) = &guard_set.freeze_sol_payment {
+        print_with_style(&padding, "freeze sol payment", EMPTY_STR.to_string());
+        print_with_style(
+            &format!("{}:   ", padding),
+            "lamports",
+            format!(
+                "{} (◎ {})",
+                freeze_sol_payment.lamports,
+                freeze_sol_payment.lamports as f64 / LAMPORTS_PER_SOL as f64
+            ),
+        );
+        print_with_style(
+            &format!("{}:   ", padding),
+            "destination",
+            freeze_sol_payment.destination.to_string(),
+        );
+    } else {
+        print_with_style(&padding, "freeze sol payment", "none".to_string());
+    }
+
+    // freeze token payment
+    if let Some(freeze_token_payment) = &guard_set.freeze_token_payment {
+        print_with_style(&padding, "freeze token payment", EMPTY_STR.to_string());
+        print_with_style(
+            &format!("{}:   ", padding),
+            "amount",
+            freeze_token_payment.amount.to_string(),
+        );
+        print_with_style(
+            &format!("{}:   ", padding),
+            "token mint",
+            freeze_token_payment.mint.to_string(),
+        );
+        print_with_style(
+            &format!("{}:   ", padding),
+            "destination",
+            freeze_token_payment.destination_ata.to_string(),
+        );
+    } else {
+        print_with_style(&padding, "freeze token payment", "none".to_string());
     }
 
     Ok(())
