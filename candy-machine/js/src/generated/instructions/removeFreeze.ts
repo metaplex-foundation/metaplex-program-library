@@ -33,6 +33,7 @@ export type RemoveFreezeInstructionAccounts = {
   candyMachine: web3.PublicKey;
   authority: web3.PublicKey;
   freezePda: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
 };
 
 export const removeFreezeInstructionDiscriminator = [1, 212, 80, 168, 129, 60, 46, 251];
@@ -69,6 +70,12 @@ export function createRemoveFreezeInstruction(
       isSigner: false,
     },
   ];
+
+  if (accounts.anchorRemainingAccounts != null) {
+    for (const acc of accounts.anchorRemainingAccounts) {
+      keys.push(acc);
+    }
+  }
 
   const ix = new web3.TransactionInstruction({
     programId,

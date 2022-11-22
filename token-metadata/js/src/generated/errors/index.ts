@@ -2835,6 +2835,26 @@ createErrorFromNameLookup.set(
 );
 
 /**
+ * InvalidBubblegumSigner: 'Invalid bubblegum signer'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidBubblegumSignerError extends Error {
+  readonly code: number = 0x84;
+  readonly name: string = 'InvalidBubblegumSigner';
+  constructor() {
+    super('Invalid bubblegum signer');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidBubblegumSignerError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x84, () => new InvalidBubblegumSignerError());
+createErrorFromNameLookup.set('InvalidBubblegumSigner', () => new InvalidBubblegumSignerError());
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

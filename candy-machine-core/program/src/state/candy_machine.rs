@@ -23,7 +23,7 @@ pub struct CandyMachine {
     // - (u32) how many actual lines of data there are currently (eventually
     //   equals items available)
     // - (ConfigLine * items_available) lines and lines of name + uri data
-    // - (ceil(item_available / 8) + 1) bit mask to keep track of which ConfigLines
+    // - (item_available / 8) + 1 bit mask to keep track of which ConfigLines
     //   have been added
     // - (u32 * items_available) mint indices
 }

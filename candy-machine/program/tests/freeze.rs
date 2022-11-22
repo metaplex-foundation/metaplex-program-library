@@ -5,19 +5,22 @@ use solana_program::clock::Clock;
 use solana_program_test::*;
 use solana_sdk::{signature::Keypair, signer::Signer};
 
-use mpl_candy_machine::constants::{
-    FREEZE_FEATURE_INDEX, FREEZE_FEE, FREEZE_LOCK_FEATURE_INDEX, MAX_FREEZE_TIME,
-};
 use mpl_candy_machine::{
-    is_feature_active, CandyMachineData, FreezePDA, WhitelistMintMode::BurnEveryTime,
+    constants::{FREEZE_FEATURE_INDEX, FREEZE_FEE, FREEZE_LOCK_FEATURE_INDEX, MAX_FREEZE_TIME},
+    is_feature_active, CandyMachineData, FreezePDA,
+    WhitelistMintMode::BurnEveryTime,
 };
 
-use crate::core::helpers::{get_balance, get_token_balance, new_funded_keypair};
-use crate::utils::helpers::test_start;
-use crate::utils::FreezeConfig;
 use crate::{
-    core::helpers::{airdrop, assert_account_empty, clone_keypair},
-    utils::{auto_config, candy_machine_program_test, helpers::sol, CandyManager, WhitelistConfig},
+    core::helpers::{
+        airdrop, assert_account_empty, clone_keypair, get_balance, get_token_balance,
+        new_funded_keypair,
+    },
+    utils::{
+        auto_config, candy_machine_program_test,
+        helpers::{sol, test_start},
+        CandyManager, FreezeConfig, WhitelistConfig,
+    },
 };
 
 pub mod core;

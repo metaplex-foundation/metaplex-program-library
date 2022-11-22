@@ -1,9 +1,5 @@
 import test from 'tape';
-import {
-  assertConfirmedTransaction,
-  defaultSendOptions,
-  PayerTransactionHandler,
-} from '@metaplex-foundation/amman';
+import { PayerTransactionHandler } from '@metaplex-foundation/amman-client';
 import { Connection, Keypair, PublicKey } from '@solana/web3.js';
 import { Creator } from '@metaplex-foundation/mpl-token-metadata';
 
@@ -66,12 +62,7 @@ export const initSellingResource = async ({
     connection,
     owner: vaultOwner,
   });
-  const createVaultRes = await transactionHandler.sendAndConfirmTransaction(
-    createTokenTx,
-    [vault],
-    defaultSendOptions,
-  );
-  assertConfirmedTransaction(test, createVaultRes.txConfirmed);
+  await transactionHandler.sendAndConfirmTransaction(createTokenTx, [vault]).assertSuccess(test);
 
   const sellingResource = Keypair.generate();
 
@@ -119,14 +110,10 @@ export const initSellingResource = async ({
     [sellingResource],
   );
 
-  const initSellingResourceRes = await transactionHandler.sendAndConfirmTransaction(
-    initSellingResourceTx,
-    [sellingResource],
-    defaultSendOptions,
-  );
-
+  await transactionHandler
+    .sendAndConfirmTransaction(initSellingResourceTx, [sellingResource])
+    .assertSuccess(test);
   logDebug(`selling-resource: ${sellingResource.publicKey}`);
-  assertConfirmedTransaction(test, initSellingResourceRes.txConfirmed);
 
   return {
     sellingResource,

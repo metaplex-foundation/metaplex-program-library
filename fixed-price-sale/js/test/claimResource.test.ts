@@ -1,14 +1,7 @@
-import BN from 'bn.js';
 import test from 'tape';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore these exports actually exist but aren't setup correctly
 import { getAccount, getAssociatedTokenAddress } from '@solana/spl-token';
-import {
-  assertConfirmedTransaction,
-  assertError,
-  defaultSendOptions,
-} from '@metaplex-foundation/amman';
-import { deprecated } from '@metaplex-foundation/mpl-token-metadata';
 import { findPayoutTicketAddress, findTradeHistoryAddress } from '../src/utils';
 import {
   createPrerequisites,
@@ -27,7 +20,8 @@ import {
   createWithdrawTransaction,
 } from './transactions';
 import { killStuckProcess, logDebug, sleep } from './utils';
-import { CreateMarketInstructionArgs } from '../src';
+import { CreateMarketInstructionArgs, TreasuryIsNotEmptyError } from '../src';
+import { Metaplex, toBigNumber } from '@metaplex-foundation/js';
 
 killStuckProcess();
 
@@ -105,15 +99,17 @@ test('claim resource: success', async (t) => {
 
   logDebug('new mint', newMint.publicKey.toBase58());
 
-  const newMintEdition = await deprecated.Edition.getPDA(newMint.publicKey);
-  const newMintMetadata = await deprecated.Metadata.getPDA(newMint.publicKey);
+  const metaplex = Metaplex.make(connection);
+  const pdas = metaplex.nfts().pdas();
+  const newMintEdition = pdas.edition({ mint: newMint.publicKey });
+  const newMintMetadata = pdas.metadata({ mint: newMint.publicKey });
 
-  const resourceMintMasterEdition = await deprecated.Edition.getPDA(resourceMint.publicKey);
-  const resourceMintMetadata = await deprecated.Metadata.getPDA(resourceMint.publicKey);
-  const resourceMintEditionMarker = await deprecated.EditionMarker.getPDA(
-    resourceMint.publicKey,
-    new BN(1),
-  );
+  const resourceMintMasterEdition = pdas.edition({ mint: resourceMint.publicKey });
+  const resourceMintMetadata = pdas.metadata({ mint: resourceMint.publicKey });
+  const resourceMintEditionMarker = pdas.editionMarker({
+    mint: resourceMint.publicKey,
+    edition: toBigNumber(1),
+  });
 
   await sleep(1000);
 
@@ -138,14 +134,9 @@ test('claim resource: success', async (t) => {
     newTokenAccount: mintAta.publicKey,
   });
 
-  const buyRes = await transactionHandler.sendAndConfirmTransaction(
-    buyTx,
-    [payer],
-    defaultSendOptions,
-  );
+  await transactionHandler.sendAndConfirmTransaction(buyTx, [payer]).assertSuccess(t);
 
   logDebug('buy:: successful purchase');
-  assertConfirmedTransaction(t, buyRes.txConfirmed);
 
   await sleep(3000);
 
@@ -156,14 +147,9 @@ test('claim resource: success', async (t) => {
     market,
   });
 
-  const marketRes = await transactionHandler.sendAndConfirmTransaction(
-    marketTx,
-    [payer],
-    defaultSendOptions,
-  );
+  await transactionHandler.sendAndConfirmTransaction(marketTx, [payer]).assertSuccess(t);
 
   logDebug(`market: ${market.publicKey}`);
-  assertConfirmedTransaction(t, marketRes.txConfirmed);
 
   const [payoutTicket, payoutTicketBump] = await findPayoutTicketAddress(
     market.publicKey,
@@ -172,7 +158,7 @@ test('claim resource: success', async (t) => {
 
   const destination = await getAssociatedTokenAddress(treasuryMint.publicKey, payer.publicKey);
 
-  const metadata = await deprecated.Metadata.getPDA(resourceMint.publicKey);
+  const metadata = await pdas.metadata({ mint: resourceMint.publicKey });
 
   const withdrawTx = await createWithdrawTransaction({
     connection,
@@ -190,13 +176,7 @@ test('claim resource: success', async (t) => {
     primaryMetadataCreators,
   });
 
-  const withdrawRes = await transactionHandler.sendAndConfirmTransaction(
-    withdrawTx,
-    [payer],
-    defaultSendOptions,
-  );
-
-  assertConfirmedTransaction(t, withdrawRes.txConfirmed);
+  await transactionHandler.sendAndConfirmTransaction(withdrawTx, [payer]).assertSuccess(t);
 
   const { tokenAccount: claimToken, createTokenTx } = await createTokenAccount({
     payer: payer.publicKey,
@@ -204,13 +184,7 @@ test('claim resource: success', async (t) => {
     connection,
   });
 
-  const claimTokenRes = await transactionHandler.sendAndConfirmTransaction(
-    createTokenTx,
-    [claimToken],
-    defaultSendOptions,
-  );
-
-  assertConfirmedTransaction(t, claimTokenRes.txConfirmed);
+  await transactionHandler.sendAndConfirmTransaction(createTokenTx, [claimToken]).assertSuccess(t);
 
   const claimResourceTx = await createClaimResourceTransaction({
     connection,
@@ -225,13 +199,7 @@ test('claim resource: success', async (t) => {
     owner: vaultOwner,
   });
 
-  const claimResourceRes = await transactionHandler.sendAndConfirmTransaction(
-    claimResourceTx,
-    [payer],
-    defaultSendOptions,
-  );
-
-  assertConfirmedTransaction(t, claimResourceRes.txConfirmed);
+  await transactionHandler.sendAndConfirmTransaction(claimResourceTx, [payer]).assertSuccess(t);
 
   const createdToken = await getAccount(connection, claimToken.publicKey);
 
@@ -306,15 +274,17 @@ test('claim resource:  should fail due to the treasury not empty', async (t) => 
 
   logDebug('new mint', newMint.publicKey.toBase58());
 
-  const newMintEdition = await deprecated.Edition.getPDA(newMint.publicKey);
-  const newMintMetadata = await deprecated.Metadata.getPDA(newMint.publicKey);
+  const metaplex = Metaplex.make(connection);
+  const pdas = metaplex.nfts().pdas();
+  const newMintEdition = pdas.edition({ mint: newMint.publicKey });
+  const newMintMetadata = pdas.metadata({ mint: newMint.publicKey });
 
-  const resourceMintMasterEdition = await deprecated.Edition.getPDA(resourceMint.publicKey);
-  const resourceMintMetadata = await deprecated.Metadata.getPDA(resourceMint.publicKey);
-  const resourceMintEditionMarker = await deprecated.EditionMarker.getPDA(
-    resourceMint.publicKey,
-    new BN(1),
-  );
+  const resourceMintMasterEdition = pdas.edition({ mint: resourceMint.publicKey });
+  const resourceMintMetadata = pdas.metadata({ mint: resourceMint.publicKey });
+  const resourceMintEditionMarker = pdas.editionMarker({
+    mint: resourceMint.publicKey,
+    edition: toBigNumber(1),
+  });
 
   await sleep(1000);
 
@@ -339,14 +309,9 @@ test('claim resource:  should fail due to the treasury not empty', async (t) => 
     newTokenAccount: mintAta.publicKey,
   });
 
-  const buyRes = await transactionHandler.sendAndConfirmTransaction(
-    buyTx,
-    [payer],
-    defaultSendOptions,
-  );
+  await transactionHandler.sendAndConfirmTransaction(buyTx, [payer]).assertSuccess(t);
 
   logDebug('buy:: successful purchase');
-  assertConfirmedTransaction(t, buyRes.txConfirmed);
 
   await sleep(3000);
 
@@ -357,16 +322,11 @@ test('claim resource:  should fail due to the treasury not empty', async (t) => 
     market,
   });
 
-  const marketRes = await transactionHandler.sendAndConfirmTransaction(
-    marketTx,
-    [payer],
-    defaultSendOptions,
-  );
+  await transactionHandler.sendAndConfirmTransaction(marketTx, [payer]).assertSuccess(t);
 
   logDebug(`market: ${market.publicKey}`);
-  assertConfirmedTransaction(t, marketRes.txConfirmed);
 
-  const metadata = await deprecated.Metadata.getPDA(resourceMint.publicKey);
+  const metadata = await pdas.metadata({ mint: resourceMint.publicKey });
 
   const { tokenAccount: claimToken, createTokenTx } = await createTokenAccount({
     payer: payer.publicKey,
@@ -374,13 +334,7 @@ test('claim resource:  should fail due to the treasury not empty', async (t) => 
     connection,
   });
 
-  const claimTokenRes = await transactionHandler.sendAndConfirmTransaction(
-    createTokenTx,
-    [claimToken],
-    defaultSendOptions,
-  );
-
-  assertConfirmedTransaction(t, claimTokenRes.txConfirmed);
+  await transactionHandler.sendAndConfirmTransaction(createTokenTx, [claimToken]).assertSuccess(t);
 
   const claimResourceTx = await createClaimResourceTransaction({
     connection,
@@ -394,16 +348,8 @@ test('claim resource:  should fail due to the treasury not empty', async (t) => 
     vaultOwnerBump,
     owner: vaultOwner,
   });
-
-  try {
-    await transactionHandler.sendAndConfirmTransaction(
-      claimResourceTx,
-      [payer],
-      defaultSendOptions,
-    );
-  } catch (error) {
-    logDebug(`expected transaction to fail due to 'treasury not empty'`);
-
-    assertError(t, error, [/0x178a/i]);
-  }
+  await transactionHandler
+    .sendAndConfirmTransaction(claimResourceTx, [payer])
+    .assertError(t, TreasuryIsNotEmptyError);
+  logDebug(`expected transaction to fail due to 'treasury not empty'`);
 });
