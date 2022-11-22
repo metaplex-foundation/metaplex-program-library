@@ -17,7 +17,7 @@ use solana_sdk::{
 use utils::*;
 
 mod update_metadata_account {
-    use mpl_token_metadata::{deprecated_instruction, state::Key};
+    use mpl_token_metadata::state::Key;
 
     use super::*;
     #[tokio::test]
@@ -88,7 +88,7 @@ mod update_metadata_account {
             .unwrap();
 
         let tx = Transaction::new_signed_with_payer(
-            &[deprecated_instruction::update_metadata_accounts(
+            &[instruction::update_metadata_accounts(
                 id(),
                 test_metadata.pubkey,
                 fake_update_authority.pubkey(),

@@ -12,8 +12,6 @@ use solana_sdk::{
 use utils::*;
 
 mod create_master_edition {
-    use mpl_token_metadata::deprecated_instruction;
-
     use super::*;
 
     #[tokio::test]
@@ -119,7 +117,7 @@ mod create_master_edition {
             .unwrap();
 
         let tx = Transaction::new_signed_with_payer(
-            &[deprecated_instruction::create_master_edition(
+            &[instruction::create_master_edition(
                 id(),
                 test_master_edition.pubkey,
                 test_master_edition.mint_pubkey,
@@ -251,7 +249,7 @@ mod create_master_edition {
             .unwrap();
 
         let tx = Transaction::new_signed_with_payer(
-            &[deprecated_instruction::create_master_edition(
+            &[instruction::create_master_edition(
                 id(),
                 test_master_edition.pubkey,
                 test_master_edition.mint_pubkey,
