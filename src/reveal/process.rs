@@ -1,4 +1,7 @@
-use std::sync::{Arc, Mutex};
+use std::{
+    sync::{Arc, Mutex},
+    time::Duration,
+};
 
 use anchor_client::solana_sdk::account::Account;
 use anchor_lang::AnchorDeserialize;
@@ -48,6 +51,9 @@ enum RevealResult {
     Success,
     Failure(String),
 }
+
+// Timeout for the GPA call (in seconds).
+const TIMEOUT: u64 = 300;
 
 pub async fn process_reveal(args: RevealArgs) -> Result<()> {
     println!(
@@ -107,7 +113,7 @@ pub async fn process_reveal(args: RevealArgs) -> Result<()> {
 
     let metadata_pubkeys = match solana_cluster {
         Cluster::Mainnet | Cluster::Devnet | Cluster::Localnet => {
-            let client = RpcClient::new(&rpc_url);
+            let client = RpcClient::new_with_timeout(&rpc_url, Duration::from_secs(TIMEOUT));
             let (creator, _) = find_candy_machine_creator_pda(&candy_machine_id);
             let creator = bs58::encode(creator).into_string();
             get_cm_creator_metadata_accounts(&client, &creator, 0)?
