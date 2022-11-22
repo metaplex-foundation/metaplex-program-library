@@ -42,6 +42,7 @@ pub fn pay_royalties<'a>(
     system_program: &AccountInfo<'a>,
 ) -> ProgramResult {
     let royalty = *model.royalties.get(&instruction).unwrap_or(&0);
+    solana_program::msg!("Here");
     invoke(
         &system_instruction::transfer(
             payer.key,
@@ -54,6 +55,7 @@ pub fn pay_royalties<'a>(
             system_program.clone(),
         ],
     )?;
+    solana_program::msg!("Here also");
 
     model.royalty_balance += royalty
         .checked_mul(8)

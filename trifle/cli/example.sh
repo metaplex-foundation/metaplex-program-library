@@ -12,7 +12,7 @@ echo "[\"$TOKEN\"]" > tokens.json
 # Create Constraint Model
 ts-node src/trifle-cli.ts create model -r http://localhost:8899 -k ~/.config/solana/id.json -n test -s none | jq
 
-ts-node src/trifle-cli.ts create constraint none -r http://localhost:8899 -k ~/.config/solana/id.json -mn test -cn first | jq
+ts-node src/trifle-cli.ts create constraint none -r http://localhost:8899 -k ~/.config/solana/id.json -mn test -cn first -tl 1 # | jq
 ts-node src/trifle-cli.ts create constraint collection -r http://localhost:8899 -k ~/.config/solana/id.json -mn test -cn second -tl 1 -c $COLLECTION | jq
 ts-node src/trifle-cli.ts create constraint tokens -r http://localhost:8899 -k ~/.config/solana/id.json -mn test -cn third -tl 1 -p tokens.json | jq
 

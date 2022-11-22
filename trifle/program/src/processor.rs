@@ -38,7 +38,10 @@ use solana_program::{
     pubkey::Pubkey,
     rent::Rent,
     system_instruction,
-    sysvar::{instructions::get_instruction_relative, Sysvar},
+    sysvar::{
+        instructions::{get_instruction_relative, load_current_index_checked},
+        Sysvar,
+    },
 };
 use spl_token::state::{Account, Mint};
 
@@ -843,12 +846,16 @@ fn add_none_constraint_to_escrow_constraint_model(
         transfer_effects: args.transfer_effects,
     };
 
-    let prev_ix = get_instruction_relative(-1, sysvar_instruction_info)?;
+    let mut creation_ix = false;
+    if load_current_index_checked(sysvar_instruction_info)? > 0 {
+        let prev_ix = get_instruction_relative(-1, sysvar_instruction_info)?;
+        creation_ix = is_creation_instruction(*prev_ix.data.first().unwrap_or(&255));
+    }
 
     add_constraint_to_escrow_constraint_model(
         program_id,
         accounts,
-        !is_creation_instruction(*prev_ix.data.first().unwrap_or(&255)),
+        !creation_ix,
         args.constraint_name,
         constraint,
     )
@@ -881,12 +888,16 @@ fn add_collection_constraint_to_escrow_constraint_model(
         transfer_effects: args.transfer_effects,
     };
 
-    let prev_ix = get_instruction_relative(-1, sysvar_instruction_info)?;
+    let mut creation_ix = false;
+    if load_current_index_checked(sysvar_instruction_info)? > 0 {
+        let prev_ix = get_instruction_relative(-1, sysvar_instruction_info)?;
+        creation_ix = is_creation_instruction(*prev_ix.data.first().unwrap_or(&255));
+    }
 
     add_constraint_to_escrow_constraint_model(
         program_id,
         accounts,
-        !is_creation_instruction(*prev_ix.data.first().unwrap_or(&255)),
+        !creation_ix,
         args.constraint_name,
         constraint,
     )
@@ -911,12 +922,16 @@ fn add_tokens_constraint_to_escrow_constraint_model(
         transfer_effects: args.transfer_effects,
     };
 
-    let prev_ix = get_instruction_relative(-1, sysvar_instruction_info)?;
+    let mut creation_ix = false;
+    if load_current_index_checked(sysvar_instruction_info)? > 0 {
+        let prev_ix = get_instruction_relative(-1, sysvar_instruction_info)?;
+        creation_ix = is_creation_instruction(*prev_ix.data.first().unwrap_or(&255));
+    }
 
     add_constraint_to_escrow_constraint_model(
         program_id,
         accounts,
-        !is_creation_instruction(*prev_ix.data.first().unwrap_or(&255)),
+        !creation_ix,
         args.constraint_name,
         constraint,
     )
