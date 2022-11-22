@@ -187,6 +187,7 @@ module.exports = async (
 
   // if fork, clean up by creating a pull request and commenting on the source pull request
   if (isPrFromFork(change_config.from_repository, change_config.to_repository)) {
+    console.log('PR is from fork!');
     const [fromOwner, fromRepo] = change_config.from_repository.split('/');
     const { data: pullRequest } = await github.pulls.create({
       owner: fromOwner,
