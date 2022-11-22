@@ -284,7 +284,12 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
     } else if null_or_none(&trimmed) {
         None
     } else {
-        let date = dateparser::parse_with(&date, &Local, NaiveTime::from_hms(0, 0, 0))?;
+        let date = dateparser::parse_with(
+            &date,
+            &Local,
+            NaiveTime::from_hms_opt(0, 0, 0)
+                .ok_or_else(|| anyhow!("Failed to parse go live date"))?,
+        )?;
         Some(date.to_rfc3339())
     };
 

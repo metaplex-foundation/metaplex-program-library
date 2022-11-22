@@ -133,7 +133,8 @@ pub fn process_show(args: ShowArgs) -> Result<()> {
         cndy_data.retain_authority.to_string(),
     );
     if let Some(date) = cndy_data.go_live_date {
-        let date = NaiveDateTime::from_timestamp(date, 0);
+        let date = NaiveDateTime::from_timestamp_opt(date, 0)
+            .ok_or_else(|| anyhow!("Failed to parse go live date"))?;
         print_with_style(
             "",
             "go live date",
@@ -160,7 +161,8 @@ pub fn process_show(args: ShowArgs) -> Result<()> {
         match end_settings.end_setting_type {
             EndSettingType::Date => {
                 print_with_style(":   ", "end setting type", "date".to_string());
-                let date = NaiveDateTime::from_timestamp(end_settings.number as i64, 0);
+                let date = NaiveDateTime::from_timestamp_opt(end_settings.number as i64, 0)
+                    .ok_or_else(|| anyhow!("Failed to parse end date"))?;
                 print_with_style(
                     ":   ",
                     "number",
