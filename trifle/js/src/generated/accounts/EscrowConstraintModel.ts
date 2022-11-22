@@ -10,7 +10,7 @@ import * as beet from '@metaplex-foundation/beet';
 import * as beetSolana from '@metaplex-foundation/beet-solana';
 import { Key, keyBeet } from '../types/Key';
 import { EscrowConstraint, escrowConstraintBeet } from '../types/EscrowConstraint';
-import { RoyaltyModel, royaltyModelBeet } from '../types/RoyaltyModel';
+import { RoyaltyInstruction, royaltyInstructionBeet } from '../types/RoyaltyInstruction';
 
 /**
  * Arguments used to create {@link EscrowConstraintModel}
@@ -25,7 +25,7 @@ export type EscrowConstraintModelArgs = {
   updateAuthority: web3.PublicKey;
   count: beet.bignum;
   schemaUri: beet.COption<string>;
-  royalties: RoyaltyModel;
+  royalties: Map<RoyaltyInstruction, Partial<beet.bignum>>;
   royaltyBalance: beet.bignum;
 };
 /**
@@ -44,7 +44,7 @@ export class EscrowConstraintModel implements EscrowConstraintModelArgs {
     readonly updateAuthority: web3.PublicKey,
     readonly count: beet.bignum,
     readonly schemaUri: beet.COption<string>,
-    readonly royalties: RoyaltyModel,
+    readonly royalties: Map<RoyaltyInstruction, Partial<beet.bignum>>,
     readonly royaltyBalance: beet.bignum,
   ) {}
 
@@ -208,7 +208,7 @@ export const escrowConstraintModelBeet = new beet.FixableBeetStruct<
     ['updateAuthority', beetSolana.publicKey],
     ['count', beet.u64],
     ['schemaUri', beet.coption(beet.utf8String)],
-    ['royalties', royaltyModelBeet],
+    ['royalties', beet.map(royaltyInstructionBeet, beet.u64)],
     ['royaltyBalance', beet.u64],
   ],
   EscrowConstraintModel.fromArgs,

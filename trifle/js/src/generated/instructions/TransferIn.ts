@@ -39,7 +39,7 @@ export const TransferInStruct = new beet.FixableBeetArgsStruct<
  * @property [_writable_] trifle The trifle account to use
  * @property [_writable_, **signer**] trifleAuthority Trifle Authority - the account that can sign transactions for the trifle account
  * @property [_writable_, **signer**] payer Wallet paying for the transaction
- * @property [] constraintModel The escrow constraint model of the Trifle account
+ * @property [_writable_] constraintModel The escrow constraint model of the Trifle account
  * @property [] escrow The escrow account of the Trifle account
  * @property [] escrowMint (optional) The escrow account's base token mint
  * @property [_writable_] escrowToken (optional) The token account of the escrow account's base token
@@ -76,7 +76,6 @@ export type TransferInInstructionAccounts = {
   splToken: web3.PublicKey;
   splAssociatedTokenAccount: web3.PublicKey;
   tokenMetadataProgram: web3.PublicKey;
-  rent?: web3.PublicKey;
 };
 
 export const transferInInstructionDiscriminator = 2;
@@ -121,7 +120,7 @@ export function createTransferInInstruction(
     },
     {
       pubkey: accounts.constraintModel,
-      isWritable: false,
+      isWritable: true,
       isSigner: false,
     },
     {
@@ -191,11 +190,6 @@ export function createTransferInInstruction(
     },
     {
       pubkey: accounts.tokenMetadataProgram,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.rent ?? web3.SYSVAR_RENT_PUBKEY,
       isWritable: false,
       isSigner: false,
     },

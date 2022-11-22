@@ -7,81 +7,72 @@
 
 import * as beet from '@metaplex-foundation/beet';
 import * as web3 from '@solana/web3.js';
-import {
-  AddCollectionConstraintToEscrowConstraintModelArgs,
-  addCollectionConstraintToEscrowConstraintModelArgsBeet,
-} from '../types/AddCollectionConstraintToEscrowConstraintModelArgs';
+import { WithdrawRoyaltiesArgs, withdrawRoyaltiesArgsBeet } from '../types/WithdrawRoyaltiesArgs';
 
 /**
  * @category Instructions
- * @category AddCollectionConstraintToEscrowConstraintModel
+ * @category WithdrawRoyalties
  * @category generated
  */
-export type AddCollectionConstraintToEscrowConstraintModelInstructionArgs = {
-  addCollectionConstraintToEscrowConstraintModelArgs: AddCollectionConstraintToEscrowConstraintModelArgs;
+export type WithdrawRoyaltiesInstructionArgs = {
+  withdrawRoyaltiesArgs: WithdrawRoyaltiesArgs;
 };
 /**
  * @category Instructions
- * @category AddCollectionConstraintToEscrowConstraintModel
+ * @category WithdrawRoyalties
  * @category generated
  */
-export const AddCollectionConstraintToEscrowConstraintModelStruct = new beet.FixableBeetArgsStruct<
-  AddCollectionConstraintToEscrowConstraintModelInstructionArgs & {
+export const WithdrawRoyaltiesStruct = new beet.FixableBeetArgsStruct<
+  WithdrawRoyaltiesInstructionArgs & {
     instructionDiscriminator: number;
   }
 >(
   [
     ['instructionDiscriminator', beet.u8],
-    [
-      'addCollectionConstraintToEscrowConstraintModelArgs',
-      addCollectionConstraintToEscrowConstraintModelArgsBeet,
-    ],
+    ['withdrawRoyaltiesArgs', withdrawRoyaltiesArgsBeet],
   ],
-  'AddCollectionConstraintToEscrowConstraintModelInstructionArgs',
+  'WithdrawRoyaltiesInstructionArgs',
 );
 /**
- * Accounts required by the _AddCollectionConstraintToEscrowConstraintModel_ instruction
+ * Accounts required by the _WithdrawRoyalties_ instruction
  *
  * @property [_writable_] constraintModel Constraint model account
  * @property [_writable_, **signer**] payer Wallet paying for the transaction and new account, will be set as the creator of the constraint model
  * @property [**signer**] updateAuthority Update authority of the constraint model
- * @property [] collectionMint Collection mint account
- * @property [] collectionMintMetadata Collection mint metadata account
+ * @property [] destination The account to withdraw the royalties to
  * @property [] sysvarInstructions Instructions sysvar account
  * @category Instructions
- * @category AddCollectionConstraintToEscrowConstraintModel
+ * @category WithdrawRoyalties
  * @category generated
  */
-export type AddCollectionConstraintToEscrowConstraintModelInstructionAccounts = {
+export type WithdrawRoyaltiesInstructionAccounts = {
   constraintModel: web3.PublicKey;
   payer: web3.PublicKey;
   updateAuthority: web3.PublicKey;
-  collectionMint: web3.PublicKey;
-  collectionMintMetadata: web3.PublicKey;
+  destination: web3.PublicKey;
   systemProgram?: web3.PublicKey;
   sysvarInstructions: web3.PublicKey;
 };
 
-export const addCollectionConstraintToEscrowConstraintModelInstructionDiscriminator = 5;
+export const withdrawRoyaltiesInstructionDiscriminator = 9;
 
 /**
- * Creates a _AddCollectionConstraintToEscrowConstraintModel_ instruction.
+ * Creates a _WithdrawRoyalties_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
  * @param args to provide as instruction data to the program
  *
  * @category Instructions
- * @category AddCollectionConstraintToEscrowConstraintModel
+ * @category WithdrawRoyalties
  * @category generated
  */
-export function createAddCollectionConstraintToEscrowConstraintModelInstruction(
-  accounts: AddCollectionConstraintToEscrowConstraintModelInstructionAccounts,
-  args: AddCollectionConstraintToEscrowConstraintModelInstructionArgs,
+export function createWithdrawRoyaltiesInstruction(
+  accounts: WithdrawRoyaltiesInstructionAccounts,
+  args: WithdrawRoyaltiesInstructionArgs,
   programId = new web3.PublicKey('trifMWutwBxkSuatmpPVnEe7NoE3BJKgjVi8sSyoXWX'),
 ) {
-  const [data] = AddCollectionConstraintToEscrowConstraintModelStruct.serialize({
-    instructionDiscriminator:
-      addCollectionConstraintToEscrowConstraintModelInstructionDiscriminator,
+  const [data] = WithdrawRoyaltiesStruct.serialize({
+    instructionDiscriminator: withdrawRoyaltiesInstructionDiscriminator,
     ...args,
   });
   const keys: web3.AccountMeta[] = [
@@ -101,12 +92,7 @@ export function createAddCollectionConstraintToEscrowConstraintModelInstruction(
       isSigner: true,
     },
     {
-      pubkey: accounts.collectionMint,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.collectionMintMetadata,
+      pubkey: accounts.destination,
       isWritable: false,
       isSigner: false,
     },

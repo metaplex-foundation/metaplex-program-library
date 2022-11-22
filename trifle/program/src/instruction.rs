@@ -5,6 +5,9 @@ use solana_program::{
     pubkey::Pubkey,
     system_program, sysvar,
 };
+use std::str::FromStr;
+
+use crate::state::escrow_constraints::RoyaltyInstruction;
 
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
@@ -64,6 +67,21 @@ pub struct RemoveConstraintFromEscrowConstraintModelArgs {
     pub constraint_name: String,
 }
 
+#[repr(C)]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+pub struct SetRoyaltiesArgs {
+    pub name: String,
+    pub royalties: Vec<(RoyaltyInstruction, u64)>,
+}
+
+#[repr(C)]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+pub struct WithdrawRoyaltiesArgs {
+    pub name: String,
+}
+
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(ShankInstruction, Debug, BorshSerialize, Clone, BorshDeserialize)]
 #[rustfmt::skip]
@@ -96,7 +114,7 @@ pub enum TrifleInstruction {
     #[account(0, writable, name = "trifle", desc = "The trifle account to use")]
     #[account(1, writable, signer, name = "trifle_authority", desc = "Trifle Authority - the account that can sign transactions for the trifle account")]
     #[account(2, writable, signer, name = "payer", desc = "Wallet paying for the transaction" )]
-    #[account(3, name = "constraint_model", desc = "The escrow constraint model of the Trifle account")]
+    #[account(3, writable, name = "constraint_model", desc = "The escrow constraint model of the Trifle account")]
     #[account(4, name = "escrow", desc = "The escrow account of the Trifle account")]
     #[account(5, optional, name = "escrow_mint", desc = "The escrow account's base token mint")]
     #[account(6, optional, writable, name = "escrow_token", desc = "The token account of the escrow account's base token")]
@@ -111,7 +129,6 @@ pub enum TrifleInstruction {
     #[account(15, name = "spl_token", desc = "Token program")]
     #[account(16, name = "spl_associated_token_account", desc = "Associated token account program")]
     #[account(17, name = "token_metadata_program", desc = "Token Metadata program")]
-    #[account(18, name = "rent", desc = "Rent sysvar")]
     TransferIn(TransferInArgs),
 
     /// Transfer tokens out of the Trifle escrow account.
@@ -132,15 +149,15 @@ pub enum TrifleInstruction {
     #[account(13, name="system_program", desc="The system program")]
     #[account(14, name="spl_associated_token_account", desc="The associated token account program")]
     #[account(15, name="spl_token", desc="The spl token program")]
-    #[account(16, name="rent", desc="The rent sysvar")]
-    #[account(17, name="token_metadata_program", desc="The token metadata program")]
-    #[account(18, name="sysvar_instructions", desc="Instructions sysvar account")]
+    #[account(16, name="token_metadata_program", desc="The token metadata program")]
+    #[account(17, name="sysvar_instructions", desc="Instructions sysvar account")]
     TransferOut(TransferOutArgs),
 
     #[account(0, writable, name = "constraint_model", desc = "Constraint model account")]
     #[account(1, writable, signer, name = "payer", desc = "Wallet paying for the transaction and new account, will be set as the creator of the constraint model")]
     #[account(2, signer, name = "update_authority", desc = "Update authority of the constraint model")]
     #[account(3, name = "system_program", desc = "System program")]
+    #[account(4, name="sysvar_instructions", desc="Instructions sysvar account")]
     AddNoneConstraintToEscrowConstraintModel(AddNoneConstraintToEscrowConstraintModelArgs),
 
     #[account(0, writable, name = "constraint_model", desc = "Constraint model account")]
@@ -149,12 +166,14 @@ pub enum TrifleInstruction {
     #[account(3, name = "collection_mint", desc = "Collection mint account")]
     #[account(4, name = "collection_mint_metadata", desc = "Collection mint metadata account")]
     #[account(5, name = "system_program", desc = "System program")]
+    #[account(6, name="sysvar_instructions", desc="Instructions sysvar account")]
     AddCollectionConstraintToEscrowConstraintModel(AddCollectionConstraintToEscrowConstraintModelArgs),
 
     #[account(0, writable, name = "constraint_model", desc = "Constraint model account")]
     #[account(1, writable, signer, name = "payer", desc = "Wallet paying for the transaction and new account, will be set as the creator of the constraint model")]
     #[account(2, signer, name = "update_authority", desc = "Update authority of the constraint model")]
     #[account(3, name = "system_program", desc = "System program")]
+    #[account(4, name="sysvar_instructions", desc="Instructions sysvar account")]
     AddTokensConstraintToEscrowConstraintModel(AddTokensConstraintToEscrowConstraintModelArgs),
 
     #[default_optional_accounts]
@@ -162,8 +181,23 @@ pub enum TrifleInstruction {
     #[account(1, writable, signer, name = "payer", desc = "Wallet paying for the transaction")]
     #[account(2, signer, name = "update_authority", desc = "Update authority of the constraint model")]
     #[account(3, name = "system_program", desc = "System program")]
+    #[account(4, name="sysvar_instructions", desc="Instructions sysvar account")]
     RemoveConstraintFromEscrowConstraintModel(RemoveConstraintFromEscrowConstraintModelArgs),
 
+    #[account(0, writable, name = "constraint_model", desc = "Constraint model account")]
+    #[account(1, writable, signer, name = "payer", desc = "Wallet paying for the transaction and new account, will be set as the creator of the constraint model")]
+    #[account(2, signer, name = "update_authority", desc = "Update authority of the constraint model")]
+    #[account(3, name = "system_program", desc = "System program")]
+    #[account(4, name="sysvar_instructions", desc="Instructions sysvar account")]
+    SetRoyalties(SetRoyaltiesArgs),
+
+    #[account(0, writable, name = "constraint_model", desc = "Constraint model account")]
+    #[account(1, writable, signer, name = "payer", desc = "Wallet paying for the transaction and new account, will be set as the creator of the constraint model")]
+    #[account(2, signer, name = "update_authority", desc = "Update authority of the constraint model")]
+    #[account(3, name = "destination", desc = "The account to withdraw the royalties to")]
+    #[account(4, name = "system_program", desc = "System program")]
+    #[account(5, name="sysvar_instructions", desc="Instructions sysvar account")]
+    WithdrawRoyalties(WithdrawRoyaltiesArgs),
 }
 
 pub fn create_escrow_constraint_model_account(
@@ -179,6 +213,7 @@ pub fn create_escrow_constraint_model_account(
         AccountMeta::new(*payer, true),
         AccountMeta::new_readonly(*update_authority, false),
         AccountMeta::new_readonly(solana_program::system_program::id(), false),
+        AccountMeta::new_readonly(sysvar::instructions::id(), false),
     ];
 
     Instruction {
@@ -206,6 +241,7 @@ pub fn add_none_constraint_to_escrow_constraint_model(
         AccountMeta::new(*payer, true),
         AccountMeta::new_readonly(*update_authority, false),
         AccountMeta::new_readonly(solana_program::system_program::id(), false),
+        AccountMeta::new_readonly(sysvar::instructions::id(), false),
     ];
 
     Instruction {
@@ -241,6 +277,7 @@ pub fn add_collection_constraint_to_escrow_constraint_model(
         AccountMeta::new_readonly(*collection_mint, false),
         AccountMeta::new_readonly(*collection_mint_metadata, false),
         AccountMeta::new_readonly(solana_program::system_program::id(), false),
+        AccountMeta::new_readonly(sysvar::instructions::id(), false),
     ];
 
     Instruction {
@@ -273,6 +310,7 @@ pub fn add_tokens_constraint_to_escrow_constraint_model(
         AccountMeta::new(*payer, true),
         AccountMeta::new_readonly(*update_authority, false),
         AccountMeta::new_readonly(solana_program::system_program::id(), false),
+        AccountMeta::new_readonly(sysvar::instructions::id(), false),
     ];
 
     Instruction {
@@ -311,7 +349,7 @@ pub fn create_trifle_account(
         AccountMeta::new_readonly(*edition, false),
         AccountMeta::new(*trifle_account, false),
         AccountMeta::new_readonly(*trifle_authority, false),
-        AccountMeta::new_readonly(*escrow_constraint_model, false),
+        AccountMeta::new(*escrow_constraint_model, false),
         AccountMeta::new(*payer, true),
         AccountMeta::new_readonly(mpl_token_metadata::id(), false),
         AccountMeta::new_readonly(solana_program::system_program::id(), false),
@@ -348,7 +386,7 @@ pub fn transfer_in(
         AccountMeta::new(trifle_account, false),
         AccountMeta::new(trifle_authority, true),
         AccountMeta::new(payer, true),
-        AccountMeta::new_readonly(constraint_model, false),
+        AccountMeta::new(constraint_model, false),
         AccountMeta::new_readonly(escrow_account, false),
         AccountMeta::new_readonly(escrow_mint.unwrap_or(program_id), false),
         AccountMeta::new(escrow_token_account.unwrap_or(program_id), false),
@@ -364,7 +402,6 @@ pub fn transfer_in(
         AccountMeta::new_readonly(spl_token::id(), false),
         AccountMeta::new_readonly(spl_associated_token_account::id(), false),
         AccountMeta::new_readonly(mpl_token_metadata::id(), false),
-        AccountMeta::new_readonly(sysvar::rent::id(), false),
     ];
 
     let data = TrifleInstruction::TransferIn(TransferInArgs { slot, amount })
@@ -398,7 +435,7 @@ pub fn transfer_out(
 ) -> Instruction {
     let accounts = vec![
         AccountMeta::new(trifle_account, false),
-        AccountMeta::new_readonly(constraint_model, false),
+        AccountMeta::new(constraint_model, false),
         AccountMeta::new_readonly(escrow_account, false),
         AccountMeta::new(escrow_token_account, false),
         AccountMeta::new(escrow_mint, false),
@@ -413,7 +450,6 @@ pub fn transfer_out(
         AccountMeta::new_readonly(solana_program::system_program::id(), false),
         AccountMeta::new_readonly(spl_associated_token_account::id(), false),
         AccountMeta::new_readonly(spl_token::id(), false),
-        AccountMeta::new_readonly(solana_program::sysvar::rent::id(), false),
         AccountMeta::new_readonly(mpl_token_metadata::id(), false),
         AccountMeta::new_readonly(sysvar::instructions::id(), false),
     ];
@@ -451,5 +487,60 @@ pub fn remove_constraint_from_escrow_constraint_model(
         )
         .try_to_vec()
         .unwrap(),
+    }
+}
+
+pub fn set_royalties(
+    program_id: &Pubkey,
+    escrow_constraint_model: &Pubkey,
+    payer: &Pubkey,
+    update_authority: &Pubkey,
+    name: String,
+    royalties: Vec<(RoyaltyInstruction, u64)>,
+) -> Instruction {
+    let accounts = vec![
+        AccountMeta::new(*escrow_constraint_model, false),
+        AccountMeta::new(*payer, true),
+        AccountMeta::new_readonly(*update_authority, false),
+        AccountMeta::new_readonly(solana_program::system_program::id(), false),
+        AccountMeta::new_readonly(sysvar::instructions::id(), false),
+    ];
+
+    Instruction {
+        program_id: *program_id,
+        accounts,
+        data: TrifleInstruction::SetRoyalties(SetRoyaltiesArgs { name, royalties })
+            .try_to_vec()
+            .unwrap(),
+    }
+}
+
+pub fn withdraw_royalties(
+    program_id: &Pubkey,
+    escrow_constraint_model: &Pubkey,
+    payer: &Pubkey,
+    update_authority: &Pubkey,
+    destination: &Pubkey,
+    name: String,
+) -> Instruction {
+    let accounts = vec![
+        AccountMeta::new(*escrow_constraint_model, false),
+        AccountMeta::new(*payer, true),
+        AccountMeta::new_readonly(*update_authority, false),
+        AccountMeta::new_readonly(*destination, false),
+        AccountMeta::new_readonly(
+            Pubkey::from_str("BHkk3RTd4Ue6JnqXpa9QHTXbn575ycR8hxVmYx4E254k").unwrap(),
+            false,
+        ),
+        AccountMeta::new_readonly(solana_program::system_program::id(), false),
+        AccountMeta::new_readonly(sysvar::instructions::id(), false),
+    ];
+
+    Instruction {
+        program_id: *program_id,
+        accounts,
+        data: TrifleInstruction::WithdrawRoyalties(WithdrawRoyaltiesArgs { name })
+            .try_to_vec()
+            .unwrap(),
     }
 }
