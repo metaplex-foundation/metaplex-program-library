@@ -27,11 +27,21 @@ pub fn handle_add_config_lines(
     let current_count = get_config_count(&account.data.borrow_mut())?;
     let mut data = account.data.borrow_mut();
     let mut fixed_config_lines = Vec::with_capacity(config_lines.len());
-    // No risk overflow because you literally cant store this many in an account
-    // going beyond u32 only happens with the hidden store candies, which dont use this.
-    if index > (candy_machine.data.items_available as u32) - 1 {
+
+    // no risk overflow because you literally cannot store this many in an account
+    // going beyond u32 only happens with the hidden settings candies
+    let total = index
+        .checked_add(config_lines.len() as u32)
+        .ok_or(CandyError::NumericalOverflowError)?;
+
+    if total > (candy_machine.data.items_available as u32) {
         return err!(CandyError::IndexGreaterThanLength);
+    } else if config_lines.is_empty() {
+        // there is nothing to do, so we can stop early
+        msg!("Config lines array empty");
+        return Ok(());
     }
+
     if candy_machine.data.hidden_settings.is_some() {
         return err!(CandyError::HiddenSettingsConfigsDoNotHaveConfigLines);
     }

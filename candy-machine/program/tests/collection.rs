@@ -5,13 +5,18 @@ use mpl_candy_machine::CandyError;
 use mpl_token_metadata::state::CollectionDetails;
 use solana_program::instruction::InstructionError;
 use solana_program_test::*;
-use solana_sdk::signature::{Keypair, Signer};
-use solana_sdk::transaction::TransactionError;
+use solana_sdk::{
+    signature::{Keypair, Signer},
+    transaction::TransactionError,
+};
 
-use crate::utils::helpers::test_start;
 use crate::{
     core::helpers::airdrop,
-    utils::{auto_config, candy_machine_program_test, helpers::sol, CandyManager},
+    utils::{
+        auto_config, candy_machine_program_test,
+        helpers::{sol, test_start},
+        CandyManager,
+    },
 };
 
 mod core;

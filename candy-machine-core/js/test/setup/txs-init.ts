@@ -173,6 +173,7 @@ export class InitTransactions {
     candyMachine: PublicKey,
     payer: Keypair,
     lines: program.ConfigLine[],
+    index: number,
   ): Promise<{ txs: Transaction[] }> {
     const accounts: program.AddConfigLinesInstructionAccounts = {
       candyMachine: candyMachine,
@@ -187,13 +188,14 @@ export class InitTransactions {
       const limit = Math.min(lines.length - start, 10);
       const args: program.AddConfigLinesInstructionArgs = {
         configLines: lines.slice(start, start + limit),
-        index: start,
+        index,
       };
 
       const ix = program.createAddConfigLinesInstruction(accounts, args);
       txs.push(new Transaction().add(ix));
 
-      start = start + limit;
+      start += limit;
+      index += limit;
     }
 
     return { txs };

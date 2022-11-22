@@ -53,7 +53,7 @@ test('mint (authority)', async (t) => {
     };
   }
 
-  const { txs } = await API.addConfigLines(t, address, payerPair, lines);
+  const { txs } = await API.addConfigLines(t, address, payerPair, lines, 0);
   for (const tx of txs) {
     await fstTxHandler
       .sendAndConfirmTransaction(tx, [payerPair], 'tx: AddConfigLines')
@@ -111,7 +111,7 @@ test('mint (sequential)', async (t) => {
     };
   }
 
-  const { txs } = await API.addConfigLines(t, address, payerPair, lines);
+  const { txs } = await API.addConfigLines(t, address, payerPair, lines, 0);
   for (const tx of txs) {
     await fstTxHandler
       .sendAndConfirmTransaction(tx, [payerPair], 'tx: AddConfigLines')
@@ -175,7 +175,7 @@ test('mint (random)', async (t) => {
     };
   }
 
-  const { txs } = await API.addConfigLines(t, address, payerPair, lines);
+  const { txs } = await API.addConfigLines(t, address, payerPair, lines, 0);
   for (const tx of txs) {
     await fstTxHandler
       .sendAndConfirmTransaction(tx, [payerPair], 'tx: AddConfigLines')
