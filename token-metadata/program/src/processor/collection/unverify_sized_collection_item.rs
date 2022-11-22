@@ -1,9 +1,7 @@
-use borsh::BorshSerialize;
 use mpl_utils::assert_signer;
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
-    instruction::{AccountMeta, Instruction},
     pubkey::Pubkey,
 };
 
@@ -14,62 +12,9 @@ use crate::{
     },
     deser::clean_write_metadata,
     error::MetadataError,
-    instruction::MetadataInstruction,
     state::{Metadata, TokenMetadataAccount},
     utils::decrement_collection_size,
 };
-
-pub(crate) mod instruction {
-    use super::*;
-
-    /// # Unverify Collection V2 -- Supports v1.3 Collection Details
-    ///
-    /// If a MetadataAccount Has a Collection allow an Authority of the Collection to unverify an NFT in a Collection
-    ///
-    /// ### Accounts:
-    ///
-    ///   0. `[writable]` Metadata account
-    ///   1. `[signer]` Collection Authority
-    ///   2. `[signer]` payer
-    ///   3. `[]` Mint of the Collection
-    ///   4. `[writable]` Metadata Account of the Collection
-    ///   5. `[]` MasterEdition2 Account of the Collection Token
-    #[allow(clippy::too_many_arguments)]
-    pub fn unverify_sized_collection_item(
-        program_id: Pubkey,
-        metadata: Pubkey,
-        collection_authority: Pubkey,
-        payer: Pubkey,
-        collection_mint: Pubkey,
-        collection: Pubkey,
-        collection_master_edition_account: Pubkey,
-        collection_authority_record: Option<Pubkey>,
-    ) -> Instruction {
-        let mut accounts = vec![
-            AccountMeta::new(metadata, false),
-            AccountMeta::new_readonly(collection_authority, true),
-            AccountMeta::new(payer, true),
-            AccountMeta::new_readonly(collection_mint, false),
-            AccountMeta::new(collection, false),
-            AccountMeta::new_readonly(collection_master_edition_account, false),
-        ];
-
-        if let Some(collection_authority_record) = collection_authority_record {
-            accounts.push(AccountMeta::new_readonly(
-                collection_authority_record,
-                false,
-            ));
-        }
-
-        Instruction {
-            program_id,
-            accounts,
-            data: MetadataInstruction::UnverifySizedCollectionItem
-                .try_to_vec()
-                .unwrap(),
-        }
-    }
-}
 
 pub fn unverify_sized_collection_item(
     program_id: &Pubkey,

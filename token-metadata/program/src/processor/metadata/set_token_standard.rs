@@ -1,8 +1,6 @@
-use borsh::BorshSerialize;
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
-    instruction::{AccountMeta, Instruction},
     pubkey::Pubkey,
 };
 
@@ -12,39 +10,9 @@ use crate::{
     },
     deser::clean_write_metadata,
     error::MetadataError,
-    instruction_old::MetadataInstruction,
     state::{Metadata, TokenMetadataAccount, EDITION, PREFIX},
     utils::check_token_standard,
 };
-
-pub(crate) mod instruction {
-    use super::*;
-
-    pub fn set_token_standard(
-        program_id: Pubkey,
-        metadata_account: Pubkey,
-        update_authority: Pubkey,
-        mint_account: Pubkey,
-        edition_account: Option<Pubkey>,
-    ) -> Instruction {
-        let mut accounts = vec![
-            AccountMeta::new(metadata_account, false),
-            AccountMeta::new(update_authority, true),
-            AccountMeta::new_readonly(mint_account, false),
-        ];
-        let data = MetadataInstruction::SetTokenStandard.try_to_vec().unwrap();
-
-        if let Some(edition_account) = edition_account {
-            accounts.push(AccountMeta::new_readonly(edition_account, false));
-        }
-
-        Instruction {
-            program_id,
-            accounts,
-            data,
-        }
-    }
-}
 
 pub fn process_set_token_standard(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
     let account_info_iter = &mut accounts.iter();

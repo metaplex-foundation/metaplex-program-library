@@ -1,9 +1,7 @@
-use borsh::BorshSerialize;
 use mpl_utils::assert_signer;
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
-    instruction::{AccountMeta, Instruction},
     program_memory::sol_memset,
     pubkey::Pubkey,
 };
@@ -11,50 +9,13 @@ use solana_program::{
 use crate::{
     assertions::{assert_owned_by, collection::assert_has_collection_authority},
     error::MetadataError,
-    instruction::MetadataInstruction,
     state::{Metadata, TokenMetadataAccount, USE_AUTHORITY_RECORD_SIZE},
 };
 
-pub(crate) mod instruction {
-    use super::*;
-
-    //# Revoke Collection Authority
-    ///
-    ///Revoke account to call [verify_collection] on this NFT
-    ///
-    ///### Accounts:
-    ///
-    ///   0. `[writable]` Collection Authority Record PDA
-    ///   1. `[writable]` The Authority that was delegated to
-    ///   2. `[signer]` The Original Update Authority or Delegated Authority
-    ///   2. `[]` Metadata account
-    ///   3. `[]` Mint of Metadata
-    #[allow(clippy::too_many_arguments)]
-    pub fn revoke_collection_authority(
-        program_id: Pubkey,
-        collection_authority_record: Pubkey,
-        delegate_authority: Pubkey,
-        revoke_authority: Pubkey,
-        metadata: Pubkey,
-        mint: Pubkey,
-    ) -> Instruction {
-        Instruction {
-            program_id,
-            accounts: vec![
-                AccountMeta::new(collection_authority_record, false),
-                AccountMeta::new_readonly(delegate_authority, false),
-                AccountMeta::new(revoke_authority, true),
-                AccountMeta::new_readonly(metadata, false),
-                AccountMeta::new_readonly(mint, false),
-            ],
-            data: MetadataInstruction::RevokeCollectionAuthority
-                .try_to_vec()
-                .unwrap(),
-        }
-    }
-}
-
-pub fn revoke_collection_authority(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
+pub fn process_revoke_collection_authority(
+    program_id: &Pubkey,
+    accounts: &[AccountInfo],
+) -> ProgramResult {
     let account_info_iter = &mut accounts.iter();
     let collection_authority_record = next_account_info(account_info_iter)?;
     let delegate_authority = next_account_info(account_info_iter)?;

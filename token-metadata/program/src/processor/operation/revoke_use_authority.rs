@@ -1,9 +1,7 @@
-use borsh::BorshSerialize;
 use mpl_utils::assert_signer;
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
-    instruction::{AccountMeta, Instruction},
     program::invoke,
     program_memory::sol_memset,
     pubkey::Pubkey,
@@ -19,61 +17,15 @@ use crate::{
         },
     },
     error::MetadataError,
-    instruction::MetadataInstruction,
     state::{
         Metadata, TokenMetadataAccount, UseAuthorityRecord, UseMethod, USE_AUTHORITY_RECORD_SIZE,
     },
 };
 
-pub(crate) mod instruction {
-    use super::*;
-
-    //# Revoke Use Authority
-    ///
-    ///Revoke account to call [utilize] on this NFT
-    ///
-    ///### Accounts:
-    ///
-    ///   0. `[writable]` Use Authority Record PDA
-    ///   1. `[writable]` Owned Token Account Of Mint
-    ///   2. `[signer]` Owner
-    ///   3. `[signer]` Payer
-    ///   4. `[]` A Use Authority
-    ///   5. `[]` Metadata account
-    ///   6. `[]` Mint of Metadata
-    ///   7. `[]` Token program
-    ///   8. `[]` System program
-    ///   9. Optional `[]` Rent info
-    #[allow(clippy::too_many_arguments)]
-    pub fn revoke_use_authority(
-        program_id: Pubkey,
-        use_authority_record: Pubkey,
-        user: Pubkey,
-        owner: Pubkey,
-        owner_token_account: Pubkey,
-        metadata: Pubkey,
-        mint: Pubkey,
-    ) -> Instruction {
-        Instruction {
-            program_id,
-            accounts: vec![
-                AccountMeta::new(use_authority_record, false),
-                AccountMeta::new(owner, true),
-                AccountMeta::new_readonly(user, false),
-                AccountMeta::new(owner_token_account, false),
-                AccountMeta::new_readonly(mint, false),
-                AccountMeta::new_readonly(metadata, false),
-                AccountMeta::new_readonly(spl_token::id(), false),
-                AccountMeta::new_readonly(solana_program::system_program::id(), false),
-            ],
-            data: MetadataInstruction::RevokeUseAuthority
-                .try_to_vec()
-                .unwrap(),
-        }
-    }
-}
-
-pub fn revoke_use_authority(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
+pub fn process_revoke_use_authority(
+    program_id: &Pubkey,
+    accounts: &[AccountInfo],
+) -> ProgramResult {
     let account_info_iter = &mut accounts.iter();
     let use_authority_record_info = next_account_info(account_info_iter)?;
     let owner_info = next_account_info(account_info_iter)?;

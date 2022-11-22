@@ -1,60 +1,16 @@
-use borsh::{BorshDeserialize, BorshSerialize};
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
-    instruction::{AccountMeta, Instruction},
     pubkey::Pubkey,
 };
 
-use self::instruction::SetCollectionSizeArgs;
 use crate::{
     assertions::{assert_owned_by, collection::assert_has_collection_authority},
     deser::clean_write_metadata,
     error::MetadataError,
-    instruction::MetadataInstruction,
+    instruction::SetCollectionSizeArgs,
     state::{CollectionDetails, Metadata, TokenMetadataAccount},
 };
-
-pub(crate) mod instruction {
-    #[cfg(feature = "serde-feature")]
-    use serde::{Deserialize, Serialize};
-
-    use super::*;
-
-    #[repr(C)]
-    #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-    #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
-    pub struct SetCollectionSizeArgs {
-        pub size: u64,
-    }
-
-    pub fn set_collection_size(
-        program_id: Pubkey,
-        metadata_account: Pubkey,
-        update_authority: Pubkey,
-        mint: Pubkey,
-        collection_authority_record: Option<Pubkey>,
-        size: u64,
-    ) -> Instruction {
-        let mut accounts = vec![
-            AccountMeta::new(metadata_account, false),
-            AccountMeta::new_readonly(update_authority, true),
-            AccountMeta::new_readonly(mint, false),
-        ];
-
-        if let Some(record) = collection_authority_record {
-            accounts.push(AccountMeta::new_readonly(record, false));
-        }
-
-        Instruction {
-            program_id,
-            accounts,
-            data: MetadataInstruction::SetCollectionSize(SetCollectionSizeArgs { size })
-                .try_to_vec()
-                .unwrap(),
-        }
-    }
-}
 
 pub fn set_collection_size(
     program_id: &Pubkey,

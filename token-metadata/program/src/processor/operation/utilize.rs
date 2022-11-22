@@ -1,4 +1,4 @@
-use borsh::{BorshDeserialize, BorshSerialize};
+use borsh::BorshSerialize;
 use mpl_utils::{
     assert_signer,
     token::{spl_token_burn, TokenBurnParams},
@@ -24,80 +24,7 @@ use crate::{
     state::{Metadata, TokenMetadataAccount, UseAuthorityRecord, UseMethod, Uses, BURN, PREFIX},
 };
 
-pub(crate) mod instruction {
-    #[cfg(feature = "serde-feature")]
-    use serde::{Deserialize, Serialize};
-    use solana_program::instruction::{AccountMeta, Instruction};
-
-    use super::*;
-    use crate::instruction::MetadataInstruction;
-
-    #[repr(C)]
-    #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-    #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
-    pub struct UtilizeArgs {
-        pub number_of_uses: u64,
-    }
-
-    ///# Utilize
-    ///
-    ///Utilize or Use an NFT , burns the NFT and returns the lamports to the update authority if the use method is burn and its out of uses.
-    ///Use Authority can be the Holder of the NFT, or a Delegated Use Authority.
-    ///
-    ///### Accounts:
-    ///
-    ///   0. `[writable]` Metadata account
-    ///   1. `[writable]` Token Account Of NFT
-    ///   2. `[writable]` Mint of the Metadata
-    ///   2. `[signer]` A Use Authority / Can be the current Owner of the NFT
-    ///   3. `[signer]` Payer
-    ///   4. `[]` Owner
-    ///   5. `[]` Token program
-    ///   6. `[]` Associated Token program
-    ///   7. `[]` System program
-    ///   8. Optional `[]` Rent info
-    ///   9. Optional `[writable]` Use Authority Record PDA If present the program Assumes a delegated use authority
-    #[allow(clippy::too_many_arguments)]
-    pub fn utilize(
-        program_id: Pubkey,
-        metadata: Pubkey,
-        token_account: Pubkey,
-        mint: Pubkey,
-        use_authority_record_pda: Option<Pubkey>,
-        use_authority: Pubkey,
-        owner: Pubkey,
-        burner: Option<Pubkey>,
-        number_of_uses: u64,
-    ) -> Instruction {
-        let mut accounts = vec![
-            AccountMeta::new(metadata, false),
-            AccountMeta::new(token_account, false),
-            AccountMeta::new(mint, false),
-            AccountMeta::new(use_authority, true),
-            AccountMeta::new_readonly(owner, false),
-            AccountMeta::new_readonly(spl_token::id(), false),
-            AccountMeta::new_readonly(spl_associated_token_account::id(), false),
-            AccountMeta::new_readonly(solana_program::system_program::id(), false),
-        ];
-        if let Some(use_authority_record_pda) = use_authority_record_pda {
-            accounts.push(AccountMeta::new(use_authority_record_pda, false));
-        }
-
-        if let Some(burner) = burner {
-            accounts.push(AccountMeta::new_readonly(burner, false));
-        }
-
-        Instruction {
-            program_id,
-            accounts,
-            data: MetadataInstruction::Utilize(UtilizeArgs { number_of_uses })
-                .try_to_vec()
-                .unwrap(),
-        }
-    }
-}
-
-pub fn utilize(
+pub fn process_utilize(
     program_id: &Pubkey,
     accounts: &[AccountInfo],
     number_of_uses: u64,

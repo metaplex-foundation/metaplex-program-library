@@ -2,13 +2,15 @@ mod bubblegum;
 mod collection;
 pub(crate) mod deprecated;
 mod edition;
-mod escrow;
+pub(crate) mod escrow;
 mod metadata;
 mod operation;
 
 use borsh::BorshDeserialize;
 pub use bubblegum::*;
 pub use collection::*;
+// Have to reexport for backwards compatibility
+pub use deprecated::process_deprecated_mint_new_edition_from_master_edition_via_vault_proxy;
 pub use edition::*;
 pub use escrow::*;
 pub use metadata::*;
@@ -17,18 +19,16 @@ use solana_program::{account_info::AccountInfo, entrypoint::ProgramResult, msg, 
 
 use crate::{
     deprecated_processor::{
-        process_deprecated_create_metadata_accounts,
-        process_deprecated_mint_new_edition_from_master_edition_via_vault_proxy,
-        process_deprecated_update_metadata_accounts,
+        process_deprecated_create_metadata_accounts, process_deprecated_update_metadata_accounts,
     },
     error::MetadataError,
-    instruction_old::MetadataInstruction,
+    instruction::MetadataInstruction,
     processor::{
         edition::{
             process_convert_master_edition_v1_to_v2, process_create_master_edition,
             process_mint_new_edition_from_master_edition_via_token,
         },
-        escrow::{close_escrow_account, create_escrow_account, transfer_out_of_escrow},
+        escrow::process_transfer_out_of_escrow,
     },
 };
 
@@ -166,39 +166,39 @@ pub fn process_instruction<'a>(
         }
         MetadataInstruction::Utilize(args) => {
             msg!("Instruction: Use/Utilize Token");
-            utilize(program_id, accounts, args.number_of_uses)
+            process_utilize(program_id, accounts, args.number_of_uses)
         }
         MetadataInstruction::ApproveUseAuthority(args) => {
             msg!("Instruction: Approve Use Authority");
-            approve_use_authority(program_id, accounts, args.number_of_uses)
+            process_approve_use_authority(program_id, accounts, args.number_of_uses)
         }
         MetadataInstruction::RevokeUseAuthority => {
             msg!("Instruction: Revoke Use Authority");
-            revoke_use_authority(program_id, accounts)
+            process_revoke_use_authority(program_id, accounts)
         }
         MetadataInstruction::ApproveCollectionAuthority => {
             msg!("Instruction: Approve Collection Authority");
-            approve_collection_authority(program_id, accounts)
+            process_approve_collection_authority(program_id, accounts)
         }
         MetadataInstruction::RevokeCollectionAuthority => {
             msg!("Instruction: Revoke Collection Authority");
-            revoke_collection_authority(program_id, accounts)
+            process_revoke_collection_authority(program_id, accounts)
         }
         MetadataInstruction::FreezeDelegatedAccount => {
             msg!("Instruction: Freeze Delegated Account");
-            freeze_delegated_account(program_id, accounts)
+            process_freeze_delegated_account(program_id, accounts)
         }
         MetadataInstruction::ThawDelegatedAccount => {
             msg!("Instruction: Thaw Delegated Account");
-            thaw_delegated_account(program_id, accounts)
+            process_thaw_delegated_account(program_id, accounts)
         }
         MetadataInstruction::BurnNft => {
             msg!("Instruction: Burn NFT");
-            burn_nft(program_id, accounts)
+            process_burn_nft(program_id, accounts)
         }
         MetadataInstruction::BurnEditionNft => {
             msg!("Instruction: Burn Edition NFT");
-            burn_edition_nft(program_id, accounts)
+            process_burn_edition_nft(program_id, accounts)
         }
         MetadataInstruction::VerifySizedCollectionItem => {
             msg!("Instruction: Verify Collection V2");
@@ -214,7 +214,7 @@ pub fn process_instruction<'a>(
         }
         MetadataInstruction::SetCollectionSize(args) => {
             msg!("Instruction: Set Collection Size");
-            collection::set_collection_size(program_id, accounts, args)
+            set_collection_size(program_id, accounts, args)
         }
         MetadataInstruction::SetTokenStandard => {
             msg!("Instruction: Set Token Standard");
@@ -222,19 +222,19 @@ pub fn process_instruction<'a>(
         }
         MetadataInstruction::BubblegumSetCollectionSize(args) => {
             msg!("Instruction: Bubblegum Program Set Collection Size");
-            bubblegum::set_collection_size(program_id, accounts, args)
+            bubblegum_set_collection_size(program_id, accounts, args)
         }
         MetadataInstruction::CreateEscrowAccount => {
             msg!("Instruction: Create Escrow Account");
-            create_escrow_account(program_id, accounts)
+            process_create_escrow_account(program_id, accounts)
         }
         MetadataInstruction::CloseEscrowAccount => {
             msg!("Instruction: Close Escrow Account");
-            close_escrow_account(program_id, accounts)
+            process_close_escrow_account(program_id, accounts)
         }
         MetadataInstruction::TransferOutOfEscrow(args) => {
             msg!("Instruction: Transfer Out Of Escrow");
-            transfer_out_of_escrow(program_id, accounts, args)
+            process_transfer_out_of_escrow(program_id, accounts, args)
         }
     }
 }

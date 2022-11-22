@@ -1,8 +1,6 @@
-use borsh::{BorshDeserialize, BorshSerialize};
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
-    instruction::{AccountMeta, Instruction},
     pubkey::Pubkey,
 };
 
@@ -15,62 +13,9 @@ use crate::{
     },
     deser::clean_write_metadata,
     error::MetadataError,
-    instruction_old::MetadataInstruction,
     state::{DataV2, Metadata, TokenMetadataAccount},
     utils::puff_out_data_fields,
 };
-
-pub(crate) mod instruction {
-    #[cfg(feature = "serde-feature")]
-    use {
-        serde::{Deserialize, Serialize},
-        serde_with::{As, DisplayFromStr},
-    };
-
-    use super::*;
-
-    #[repr(C)]
-    #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-    #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
-    /// Args for update call
-    pub struct UpdateMetadataAccountArgsV2 {
-        pub data: Option<DataV2>,
-        #[cfg_attr(
-            feature = "serde-feature",
-            serde(with = "As::<Option<DisplayFromStr>>")
-        )]
-        pub update_authority: Option<Pubkey>,
-        pub primary_sale_happened: Option<bool>,
-        pub is_mutable: Option<bool>,
-    }
-
-    // update metadata account v2 instruction
-    pub fn update_metadata_accounts_v2(
-        program_id: Pubkey,
-        metadata_account: Pubkey,
-        update_authority: Pubkey,
-        new_update_authority: Option<Pubkey>,
-        data: Option<DataV2>,
-        primary_sale_happened: Option<bool>,
-        is_mutable: Option<bool>,
-    ) -> Instruction {
-        Instruction {
-            program_id,
-            accounts: vec![
-                AccountMeta::new(metadata_account, false),
-                AccountMeta::new_readonly(update_authority, true),
-            ],
-            data: MetadataInstruction::UpdateMetadataAccountV2(UpdateMetadataAccountArgsV2 {
-                data,
-                update_authority: new_update_authority,
-                primary_sale_happened,
-                is_mutable,
-            })
-            .try_to_vec()
-            .unwrap(),
-        }
-    }
-}
 
 // Update existing account instruction
 pub fn process_update_metadata_accounts_v2(

@@ -1,26 +1,29 @@
+mod bubblegum;
+mod collection;
+pub(crate) mod deprecated;
+mod edition;
+pub(crate) mod escrow;
+mod metadata;
+mod operation;
+
 use borsh::{BorshDeserialize, BorshSerialize};
+pub use bubblegum::*;
+pub use collection::*;
+pub use edition::*;
+pub use escrow::*;
+pub use metadata::*;
+pub use operation::*;
 #[cfg(feature = "serde-feature")]
 use serde::{Deserialize, Serialize};
 use shank::ShankInstruction;
 
-use crate::{
-    deprecated_instruction::{
-        CreateMetadataAccountArgs, MintPrintingTokensViaTokenArgs, SetReservationListArgs,
-        UpdateMetadataAccountArgs,
-    },
-    instruction::{
-        ApproveUseAuthorityArgs, CreateMasterEditionArgs, CreateMetadataAccountArgsV2,
-        CreateMetadataAccountArgsV3, MintNewEditionFromMasterEditionViaTokenArgs,
-        SetCollectionSizeArgs, UpdateMetadataAccountArgsV2, UtilizeArgs,
-    },
-    processor::escrow_instructions::TransferOutOfEscrowArgs,
-};
+pub use crate::deprecated_instruction::{CreateMetadataAccountArgs, UpdateMetadataAccountArgs};
+use crate::deprecated_instruction::{MintPrintingTokensViaTokenArgs, SetReservationListArgs};
 
 /// Instructions supported by the Metadata program.
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, Clone, ShankInstruction)]
 #[rustfmt::skip]
-
 pub enum MetadataInstruction {
     /// Create Metadata object.
     #[account(0, writable, name="metadata", desc="Metadata key (pda of ['metadata', program id, mint id])")]

@@ -2,29 +2,14 @@ use borsh::BorshSerialize;
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
-    instruction::{AccountMeta, Instruction},
     pubkey::Pubkey,
 };
 
 use crate::{
     assertions::assert_owned_by,
-    instruction_old::MetadataInstruction,
     state::{Metadata, TokenMetadataAccount, EDITION, PREFIX},
     utils::puff_out_data_fields,
 };
-
-pub(crate) mod instruction {
-    use super::*;
-
-    /// puff metadata account instruction
-    pub fn puff_metadata_account(program_id: Pubkey, metadata_account: Pubkey) -> Instruction {
-        Instruction {
-            program_id,
-            accounts: vec![AccountMeta::new(metadata_account, false)],
-            data: MetadataInstruction::PuffMetadata.try_to_vec().unwrap(),
-        }
-    }
-}
 
 /// Puff out the variable length fields to a fixed length on a metadata
 /// account in a permissionless way.

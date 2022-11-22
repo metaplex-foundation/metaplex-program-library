@@ -2,7 +2,6 @@ use borsh::BorshSerialize;
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
-    instruction::{AccountMeta, Instruction},
     program_error::ProgramError,
     pubkey::Pubkey,
 };
@@ -11,34 +10,8 @@ use spl_token::state::Account;
 use crate::{
     assertions::{assert_initialized, assert_owned_by},
     error::MetadataError,
-    instruction_old::MetadataInstruction,
     state::{Metadata, TokenMetadataAccount},
 };
-
-pub(crate) mod instruction {
-    use super::*;
-
-    /// creates a update_primary_sale_happened_via_token instruction
-    #[allow(clippy::too_many_arguments)]
-    pub fn update_primary_sale_happened_via_token(
-        program_id: Pubkey,
-        metadata: Pubkey,
-        owner: Pubkey,
-        token: Pubkey,
-    ) -> Instruction {
-        Instruction {
-            program_id,
-            accounts: vec![
-                AccountMeta::new(metadata, false),
-                AccountMeta::new_readonly(owner, true),
-                AccountMeta::new_readonly(token, false),
-            ],
-            data: MetadataInstruction::UpdatePrimarySaleHappenedViaToken
-                .try_to_vec()
-                .unwrap(),
-        }
-    }
-}
 
 pub fn process_update_primary_sale_happened_via_token(
     program_id: &Pubkey,

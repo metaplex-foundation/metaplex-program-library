@@ -1,93 +1,13 @@
-use borsh::{BorshDeserialize, BorshSerialize};
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
-    instruction::{AccountMeta, Instruction},
     pubkey::Pubkey,
 };
 
-use crate::{
-    instruction_old::MetadataInstruction,
-    state::{EDITION, EDITION_MARKER_BIT_SIZE, PREFIX},
-    utils::{
-        process_mint_new_edition_from_master_edition_via_token_logic,
-        MintNewEditionFromMasterEditionViaTokenLogicArgs,
-    },
+use crate::utils::{
+    process_mint_new_edition_from_master_edition_via_token_logic,
+    MintNewEditionFromMasterEditionViaTokenLogicArgs,
 };
-
-pub(crate) mod instruction {
-    #[cfg(feature = "serde-feature")]
-    use {
-        serde::{Deserialize, Serialize},
-        serde_with::{As, DisplayFromStr},
-    };
-
-    use super::*;
-
-    #[repr(C)]
-    #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-    #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
-    pub struct MintNewEditionFromMasterEditionViaTokenArgs {
-        pub edition: u64,
-    }
-
-    /// creates a mint_new_edition_from_master_edition instruction
-    #[allow(clippy::too_many_arguments)]
-    pub fn mint_new_edition_from_master_edition_via_token(
-        program_id: Pubkey,
-        new_metadata: Pubkey,
-        new_edition: Pubkey,
-        master_edition: Pubkey,
-        new_mint: Pubkey,
-        new_mint_authority: Pubkey,
-        payer: Pubkey,
-        token_account_owner: Pubkey,
-        token_account: Pubkey,
-        new_metadata_update_authority: Pubkey,
-        metadata: Pubkey,
-        metadata_mint: Pubkey,
-        edition: u64,
-    ) -> Instruction {
-        let edition_number = edition.checked_div(EDITION_MARKER_BIT_SIZE).unwrap();
-        let as_string = edition_number.to_string();
-        let (edition_mark_pda, _) = Pubkey::find_program_address(
-            &[
-                PREFIX.as_bytes(),
-                program_id.as_ref(),
-                metadata_mint.as_ref(),
-                EDITION.as_bytes(),
-                as_string.as_bytes(),
-            ],
-            &program_id,
-        );
-
-        let accounts = vec![
-            AccountMeta::new(new_metadata, false),
-            AccountMeta::new(new_edition, false),
-            AccountMeta::new(master_edition, false),
-            AccountMeta::new(new_mint, false),
-            AccountMeta::new(edition_mark_pda, false),
-            AccountMeta::new_readonly(new_mint_authority, true),
-            AccountMeta::new(payer, true),
-            AccountMeta::new_readonly(token_account_owner, true),
-            AccountMeta::new_readonly(token_account, false),
-            AccountMeta::new_readonly(new_metadata_update_authority, false),
-            AccountMeta::new_readonly(metadata, false),
-            AccountMeta::new_readonly(spl_token::id(), false),
-            AccountMeta::new_readonly(solana_program::system_program::id(), false),
-        ];
-
-        Instruction {
-            program_id,
-            accounts,
-            data: MetadataInstruction::MintNewEditionFromMasterEditionViaToken(
-                MintNewEditionFromMasterEditionViaTokenArgs { edition },
-            )
-            .try_to_vec()
-            .unwrap(),
-        }
-    }
-}
 
 pub fn process_mint_new_edition_from_master_edition_via_token<'a>(
     program_id: &'a Pubkey,

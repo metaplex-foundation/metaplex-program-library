@@ -1,9 +1,7 @@
-use borsh::BorshSerialize;
 use mpl_utils::assert_signer;
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
-    instruction::{AccountMeta, Instruction},
     program::invoke_signed,
     pubkey::Pubkey,
 };
@@ -15,47 +13,13 @@ use crate::{
         assert_initialized, assert_owned_by,
     },
     error::MetadataError,
-    instruction::MetadataInstruction,
     state::{EDITION, PREFIX},
 };
 
-pub(crate) mod instruction {
-    use super::*;
-
-    ///# Thaw delegated account
-    ///
-    ///Allow thawing of an NFT if this user is the delegate of the NFT
-    ///
-    ///### Accounts:
-    ///   0. `[signer]` Delegate
-    ///   1. `[writable]` Token account to thaw
-    ///   2. `[]` Edition
-    ///   3. `[]` Token mint
-    #[allow(clippy::too_many_arguments)]
-    pub fn thaw_delegated_account(
-        program_id: Pubkey,
-        delegate: Pubkey,
-        token_account: Pubkey,
-        edition: Pubkey,
-        mint: Pubkey,
-    ) -> Instruction {
-        Instruction {
-            program_id,
-            accounts: vec![
-                AccountMeta::new(delegate, true),
-                AccountMeta::new(token_account, false),
-                AccountMeta::new_readonly(edition, false),
-                AccountMeta::new_readonly(mint, false),
-                AccountMeta::new_readonly(spl_token::id(), false),
-            ],
-            data: MetadataInstruction::ThawDelegatedAccount
-                .try_to_vec()
-                .unwrap(),
-        }
-    }
-}
-
-pub fn thaw_delegated_account(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
+pub fn process_thaw_delegated_account(
+    program_id: &Pubkey,
+    accounts: &[AccountInfo],
+) -> ProgramResult {
     let account_info_iter = &mut accounts.iter();
     let delegate_info = next_account_info(account_info_iter)?;
     let token_account_info = next_account_info(account_info_iter)?;

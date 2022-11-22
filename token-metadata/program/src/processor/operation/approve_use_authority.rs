@@ -1,9 +1,8 @@
-use borsh::{BorshDeserialize, BorshSerialize};
+use borsh::BorshSerialize;
 use mpl_utils::{assert_signer, create_or_allocate_account_raw};
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
-    instruction::{AccountMeta, Instruction},
     program::invoke,
     pubkey::Pubkey,
 };
@@ -15,84 +14,13 @@ use crate::{
         uses::{assert_burner, assert_use_authority_derivation, process_use_authority_validation},
     },
     error::MetadataError,
-    instruction::MetadataInstruction,
     state::{
         Key, Metadata, TokenMetadataAccount, UseAuthorityRecord, UseMethod, PREFIX, USER,
         USE_AUTHORITY_RECORD_SIZE,
     },
 };
 
-pub(crate) mod instruction {
-    #[cfg(feature = "serde-feature")]
-    use serde::{Deserialize, Serialize};
-
-    use super::*;
-
-    #[repr(C)]
-    #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-    #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
-    pub struct ApproveUseAuthorityArgs {
-        pub number_of_uses: u64,
-    }
-
-    ///# Approve Use Authority
-    ///
-    ///Approve another account to call [utilize] on this NFT
-    ///
-    ///### Args:
-    ///
-    ///See: [ApproveUseAuthorityArgs]
-    ///
-    ///### Accounts:
-    ///
-    ///   0. `[writable]` Use Authority Record PDA
-    ///   1. `[writable]` Owned Token Account Of Mint
-    ///   2. `[signer]` Owner
-    ///   3. `[signer]` Payer
-    ///   4. `[]` A Use Authority
-    ///   5. `[]` Metadata account
-    ///   6. `[]` Mint of Metadata
-    ///   7. `[]` Program As Signer (Burner)
-    ///   8. `[]` Token program
-    ///   9. `[]` System program
-    ///   10. Optional `[]` Rent info
-    #[allow(clippy::too_many_arguments)]
-    pub fn approve_use_authority(
-        program_id: Pubkey,
-        use_authority_record: Pubkey,
-        user: Pubkey,
-        owner: Pubkey,
-        payer: Pubkey,
-        owner_token_account: Pubkey,
-        metadata: Pubkey,
-        mint: Pubkey,
-        burner: Pubkey,
-        number_of_uses: u64,
-    ) -> Instruction {
-        Instruction {
-            program_id,
-            accounts: vec![
-                AccountMeta::new(use_authority_record, false),
-                AccountMeta::new(owner, true),
-                AccountMeta::new(payer, true),
-                AccountMeta::new_readonly(user, false),
-                AccountMeta::new(owner_token_account, false),
-                AccountMeta::new_readonly(metadata, false),
-                AccountMeta::new_readonly(mint, false),
-                AccountMeta::new_readonly(burner, false),
-                AccountMeta::new_readonly(spl_token::id(), false),
-                AccountMeta::new_readonly(solana_program::system_program::id(), false),
-            ],
-            data: MetadataInstruction::ApproveUseAuthority(ApproveUseAuthorityArgs {
-                number_of_uses,
-            })
-            .try_to_vec()
-            .unwrap(),
-        }
-    }
-}
-
-pub fn approve_use_authority(
+pub fn process_approve_use_authority(
     program_id: &Pubkey,
     accounts: &[AccountInfo],
     number_of_uses: u64,

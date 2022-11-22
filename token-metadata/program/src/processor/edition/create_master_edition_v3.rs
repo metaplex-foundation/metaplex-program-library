@@ -1,9 +1,8 @@
-use borsh::{BorshDeserialize, BorshSerialize};
+use borsh::BorshSerialize;
 use mpl_utils::create_or_allocate_account_raw;
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
-    instruction::{AccountMeta, Instruction},
     pubkey::Pubkey,
 };
 use spl_token::state::Mint;
@@ -14,65 +13,12 @@ use crate::{
         assert_token_program_matches_package, metadata::assert_update_authority_is_correct,
     },
     error::MetadataError,
-    instruction_old::MetadataInstruction,
     state::{
         Key, MasterEditionV2, Metadata, TokenMetadataAccount, TokenStandard, EDITION,
         MAX_MASTER_EDITION_LEN, PREFIX,
     },
     utils::transfer_mint_authority,
 };
-
-pub(crate) mod instruction {
-    #[cfg(feature = "serde-feature")]
-    use {
-        serde::{Deserialize, Serialize},
-        serde_with::{As, DisplayFromStr},
-    };
-
-    use super::*;
-
-    #[repr(C)]
-    #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-    #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
-    pub struct CreateMasterEditionArgs {
-        /// If set, means that no more than this number of editions can ever be minted. This is immutable.
-        pub max_supply: Option<u64>,
-    }
-
-    /// creates a create_master_edition instruction
-    #[allow(clippy::too_many_arguments)]
-    pub fn create_master_edition_v3(
-        program_id: Pubkey,
-        edition: Pubkey,
-        mint: Pubkey,
-        update_authority: Pubkey,
-        mint_authority: Pubkey,
-        metadata: Pubkey,
-        payer: Pubkey,
-        max_supply: Option<u64>,
-    ) -> Instruction {
-        let accounts = vec![
-            AccountMeta::new(edition, false),
-            AccountMeta::new(mint, false),
-            AccountMeta::new_readonly(update_authority, true),
-            AccountMeta::new_readonly(mint_authority, true),
-            AccountMeta::new(payer, true),
-            AccountMeta::new(metadata, false),
-            AccountMeta::new_readonly(spl_token::id(), false),
-            AccountMeta::new_readonly(solana_program::system_program::id(), false),
-        ];
-
-        Instruction {
-            program_id,
-            accounts,
-            data: MetadataInstruction::CreateMasterEditionV3(CreateMasterEditionArgs {
-                max_supply,
-            })
-            .try_to_vec()
-            .unwrap(),
-        }
-    }
-}
 
 /// Create master edition
 pub fn process_create_master_edition(

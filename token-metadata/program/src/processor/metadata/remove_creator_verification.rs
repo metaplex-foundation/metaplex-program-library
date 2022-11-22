@@ -3,39 +3,14 @@ use mpl_utils::assert_signer;
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
-    instruction::{AccountMeta, Instruction},
     pubkey::Pubkey,
 };
 
 use crate::{
     assertions::assert_owned_by,
     error::MetadataError,
-    instruction_old::MetadataInstruction,
     state::{Metadata, TokenMetadataAccount},
 };
-
-pub(crate) mod instruction {
-    use super::*;
-
-    /// Remove Creator Verificaton
-    #[allow(clippy::too_many_arguments)]
-    pub fn remove_creator_verification(
-        program_id: Pubkey,
-        metadata: Pubkey,
-        creator: Pubkey,
-    ) -> Instruction {
-        Instruction {
-            program_id,
-            accounts: vec![
-                AccountMeta::new(metadata, false),
-                AccountMeta::new_readonly(creator, true),
-            ],
-            data: MetadataInstruction::RemoveCreatorVerification
-                .try_to_vec()
-                .unwrap(),
-        }
-    }
-}
 
 pub fn process_remove_creator_verification(
     program_id: &Pubkey,

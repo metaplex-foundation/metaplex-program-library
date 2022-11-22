@@ -1,8 +1,7 @@
-use borsh::{BorshDeserialize, BorshSerialize};
+use borsh::BorshSerialize;
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
-    instruction::{AccountMeta, Instruction},
     pubkey::Pubkey,
 };
 
@@ -12,60 +11,9 @@ use crate::{
         metadata::{assert_data_valid, assert_update_authority_is_correct},
     },
     error::MetadataError,
-    instruction_old::MetadataInstruction,
     state::{Data, Metadata, TokenMetadataAccount},
     utils::puff_out_data_fields,
 };
-
-pub(crate) mod instruction {
-    #[cfg(feature = "serde-feature")]
-    use {
-        serde::{Deserialize, Serialize},
-        serde_with::{As, DisplayFromStr},
-    };
-
-    use super::*;
-
-    #[repr(C)]
-    #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-    #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
-    /// Args for update call
-    pub struct UpdateMetadataAccountArgs {
-        pub data: Option<Data>,
-        #[cfg_attr(
-            feature = "serde-feature",
-            serde(with = "As::<Option<DisplayFromStr>>")
-        )]
-        pub update_authority: Option<Pubkey>,
-        pub primary_sale_happened: Option<bool>,
-    }
-
-    /// update metadata account instruction
-    /// #[deprecated(since="1.1.0", note="please use `update_metadata_accounts_v2` instead")]
-    pub fn update_metadata_accounts(
-        program_id: Pubkey,
-        metadata_account: Pubkey,
-        update_authority: Pubkey,
-        new_update_authority: Option<Pubkey>,
-        data: Option<Data>,
-        primary_sale_happened: Option<bool>,
-    ) -> Instruction {
-        Instruction {
-            program_id,
-            accounts: vec![
-                AccountMeta::new(metadata_account, false),
-                AccountMeta::new_readonly(update_authority, true),
-            ],
-            data: MetadataInstruction::UpdateMetadataAccount(UpdateMetadataAccountArgs {
-                data,
-                update_authority: new_update_authority,
-                primary_sale_happened,
-            })
-            .try_to_vec()
-            .unwrap(),
-        }
-    }
-}
 
 /// Update existing account instruction
 pub fn process_deprecated_update_metadata_accounts(

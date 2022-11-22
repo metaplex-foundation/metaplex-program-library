@@ -3,64 +3,24 @@ use mpl_utils::{assert_signer, create_or_allocate_account_raw};
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
-    instruction::{AccountMeta, Instruction},
     program_memory::sol_memcpy,
     pubkey::Pubkey,
-    sysvar,
 };
 
 use super::find_escrow_seeds;
 use crate::{
     assertions::{assert_derivation, assert_initialized, assert_owned_by},
     error::MetadataError,
-    instruction_old::MetadataInstruction,
     state::{
         EscrowAuthority, Key, Metadata, TokenMetadataAccount, TokenOwnedEscrow, TokenStandard,
     },
     utils::check_token_standard,
 };
 
-pub(crate) mod instruction {
-    use super::*;
-
-    pub fn create_escrow_account(
-        program_id: Pubkey,
-        escrow_account: Pubkey,
-        metadata_account: Pubkey,
-        mint_account: Pubkey,
-        token_account: Pubkey,
-        edition_account: Pubkey,
-        payer_account: Pubkey,
-        authority: Option<Pubkey>,
-    ) -> Instruction {
-        let mut accounts = vec![
-            AccountMeta::new(escrow_account, false),
-            AccountMeta::new(metadata_account, false),
-            AccountMeta::new_readonly(mint_account, false),
-            AccountMeta::new_readonly(token_account, false),
-            AccountMeta::new_readonly(edition_account, false),
-            AccountMeta::new(payer_account, true),
-            AccountMeta::new_readonly(solana_program::system_program::id(), false),
-            AccountMeta::new_readonly(sysvar::instructions::id(), false),
-        ];
-
-        if let Some(authority) = authority {
-            accounts.push(AccountMeta::new_readonly(authority, true));
-        }
-
-        let data = MetadataInstruction::CreateEscrowAccount
-            .try_to_vec()
-            .unwrap();
-
-        Instruction {
-            program_id,
-            accounts,
-            data,
-        }
-    }
-}
-
-pub fn create_escrow_account(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
+pub fn process_create_escrow_account(
+    program_id: &Pubkey,
+    accounts: &[AccountInfo],
+) -> ProgramResult {
     let account_info_iter = &mut accounts.iter();
 
     let escrow_account_info = next_account_info(account_info_iter)?;

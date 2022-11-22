@@ -9,7 +9,6 @@ use mpl_utils::{
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
-    instruction::{AccountMeta, Instruction},
     program_memory::sol_memset,
     pubkey::Pubkey,
 };
@@ -20,7 +19,6 @@ use crate::{
         assert_derivation, assert_initialized, assert_owned_by, metadata::assert_currently_holding,
     },
     error::MetadataError,
-    instruction::MetadataInstruction,
     state::{
         Edition, EditionMarker, MasterEditionV2, Metadata, TokenMetadataAccount, EDITION,
         EDITION_MARKER_BIT_SIZE, MAX_METADATA_LEN, PREFIX,
@@ -28,60 +26,7 @@ use crate::{
     utils::{is_master_edition, is_print_edition},
 };
 
-pub(crate) mod instruction {
-    use super::*;
-
-    ///# Burn Edition NFT
-    ///
-    /// Burn an Edition NFT, closing its token, metadata and edition accounts, and reducing the Master Edition supply.
-    ///
-    /// ### Accounts:
-    ///
-    ///   0. [writable] Print NFT Metadata Account
-    ///   1. [writable, signer]</code> Owner of Print NFT
-    ///   2. [writable] Mint of Print Edition NFT
-    ///   3. [writable] Mint of Master Edition NFT
-    ///   4. [writable] Print Edition Token Account
-    ///   5. [writable] Master Edition Token Account
-    ///   6. [writable] Master Edition PDA Account
-    ///   7. [writable] Print Edition PDA Account
-    ///   8. [writable] Edition Marker PDA Account
-    ///   9. [] SPL Token program.
-    pub fn burn_edition_nft(
-        program_id: Pubkey,
-        metadata: Pubkey,
-        owner: Pubkey,
-        print_edition_mint: Pubkey,
-        master_edition_mint: Pubkey,
-        print_edition_token: Pubkey,
-        master_edition_token: Pubkey,
-        master_edition: Pubkey,
-        print_edition: Pubkey,
-        edition_marker: Pubkey,
-        spl_token: Pubkey,
-    ) -> Instruction {
-        let accounts = vec![
-            AccountMeta::new(metadata, false),
-            AccountMeta::new(owner, true),
-            AccountMeta::new(print_edition_mint, false),
-            AccountMeta::new_readonly(master_edition_mint, false),
-            AccountMeta::new(print_edition_token, false),
-            AccountMeta::new_readonly(master_edition_token, false),
-            AccountMeta::new(master_edition, false),
-            AccountMeta::new(print_edition, false),
-            AccountMeta::new(edition_marker, false),
-            AccountMeta::new_readonly(spl_token, false),
-        ];
-
-        Instruction {
-            program_id,
-            accounts,
-            data: MetadataInstruction::BurnEditionNft.try_to_vec().unwrap(),
-        }
-    }
-}
-
-pub fn burn_edition_nft(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
+pub fn process_burn_edition_nft(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
     let account_info_iter = &mut accounts.iter();
 
     let metadata_info = next_account_info(account_info_iter)?;

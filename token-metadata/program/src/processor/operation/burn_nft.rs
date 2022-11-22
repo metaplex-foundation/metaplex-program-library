@@ -1,5 +1,4 @@
 use arrayref::array_ref;
-use borsh::BorshSerialize;
 use mpl_utils::{
     assert_signer,
     token::{spl_token_burn, spl_token_close, TokenBurnParams, TokenCloseParams},
@@ -7,7 +6,6 @@ use mpl_utils::{
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
-    instruction::{AccountMeta, Instruction},
     program_memory::sol_memset,
     pubkey::Pubkey,
 };
@@ -19,58 +17,12 @@ use crate::{
     },
     deser::clean_write_metadata,
     error::MetadataError,
-    instruction::MetadataInstruction,
     state::{
         CollectionDetails, Key, Metadata, TokenMetadataAccount, EDITION, MAX_METADATA_LEN, PREFIX,
     },
 };
 
-pub(crate) mod instruction {
-    use super::*;
-
-    ///# Burn NFT
-    ///
-    /// Burn an NFT, closing its token, metadata and edition accounts.
-    ///
-    /// 0. `[writable]` NFT metadata
-    /// 1. `[writable, signer]` Owner of NFT
-    /// 2. `[writable]` Mint of NFT
-    /// 3. `[writable]` NFT token account
-    /// 4. `[writable]` NFT edition account
-    /// 5. `[]` SPL Token program.
-    /// 6. Optional `[writable]` Collection metadata account
-    pub fn burn_nft(
-        program_id: Pubkey,
-        metadata: Pubkey,
-        owner: Pubkey,
-        mint: Pubkey,
-        token: Pubkey,
-        edition: Pubkey,
-        spl_token: Pubkey,
-        collection_metadata: Option<Pubkey>,
-    ) -> Instruction {
-        let mut accounts = vec![
-            AccountMeta::new(metadata, false),
-            AccountMeta::new(owner, true),
-            AccountMeta::new(mint, false),
-            AccountMeta::new(token, false),
-            AccountMeta::new(edition, false),
-            AccountMeta::new_readonly(spl_token, false),
-        ];
-
-        if let Some(collection_metadata) = collection_metadata {
-            accounts.push(AccountMeta::new(collection_metadata, false));
-        }
-
-        Instruction {
-            program_id,
-            accounts,
-            data: MetadataInstruction::BurnNft.try_to_vec().unwrap(),
-        }
-    }
-}
-
-pub fn burn_nft(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
+pub fn process_burn_nft(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
     let account_info_iter = &mut accounts.iter();
 
     let metadata_info = next_account_info(account_info_iter)?;

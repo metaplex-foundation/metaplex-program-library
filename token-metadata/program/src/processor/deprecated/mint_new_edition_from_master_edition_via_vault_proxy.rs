@@ -1,80 +1,20 @@
 use arrayref::array_ref;
-use borsh::BorshSerialize;
 use mpl_token_vault::{error::VaultError, state::VaultState};
 use mpl_utils::{assert_signer, token::get_owner_from_token_account};
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
-    instruction::{AccountMeta, Instruction},
     pubkey::Pubkey,
 };
 
 use crate::{
     assertions::assert_owned_by,
     error::MetadataError,
-    instruction::MintNewEditionFromMasterEditionViaTokenArgs,
-    instruction_old::MetadataInstruction,
     utils::{
         process_mint_new_edition_from_master_edition_via_token_logic,
         MintNewEditionFromMasterEditionViaTokenLogicArgs,
     },
 };
-
-pub(crate) mod instruction {
-    use super::*;
-
-    /// creates a mint_edition_proxy instruction
-    #[deprecated(since = "1.4.0")]
-    #[allow(clippy::too_many_arguments)]
-    pub fn mint_edition_from_master_edition_via_vault_proxy(
-        program_id: Pubkey,
-        new_metadata: Pubkey,
-        new_edition: Pubkey,
-        master_edition: Pubkey,
-        new_mint: Pubkey,
-        edition_mark_pda: Pubkey,
-        new_mint_authority: Pubkey,
-        payer: Pubkey,
-        vault_authority: Pubkey,
-        safety_deposit_store: Pubkey,
-        safety_deposit_box: Pubkey,
-        vault: Pubkey,
-        new_metadata_update_authority: Pubkey,
-        metadata: Pubkey,
-        token_program: Pubkey,
-        token_vault_program_info: Pubkey,
-        edition: u64,
-    ) -> Instruction {
-        let accounts = vec![
-            AccountMeta::new(new_metadata, false),
-            AccountMeta::new(new_edition, false),
-            AccountMeta::new(master_edition, false),
-            AccountMeta::new(new_mint, false),
-            AccountMeta::new(edition_mark_pda, false),
-            AccountMeta::new_readonly(new_mint_authority, true),
-            AccountMeta::new(payer, true),
-            AccountMeta::new_readonly(vault_authority, true),
-            AccountMeta::new_readonly(safety_deposit_store, false),
-            AccountMeta::new_readonly(safety_deposit_box, false),
-            AccountMeta::new_readonly(vault, false),
-            AccountMeta::new_readonly(new_metadata_update_authority, false),
-            AccountMeta::new_readonly(metadata, false),
-            AccountMeta::new_readonly(token_program, false),
-            AccountMeta::new_readonly(token_vault_program_info, false),
-            AccountMeta::new_readonly(solana_program::system_program::id(), false),
-        ];
-
-        Instruction {
-            program_id,
-            accounts,
-            data: MetadataInstruction::MintNewEditionFromMasterEditionViaVaultProxy(
-                MintNewEditionFromMasterEditionViaTokenArgs { edition },
-            )
-            .try_to_vec()
-            .unwrap(),
-        }
-    }
-}
 
 pub fn process_deprecated_mint_new_edition_from_master_edition_via_vault_proxy<'a>(
     program_id: &'a Pubkey,
