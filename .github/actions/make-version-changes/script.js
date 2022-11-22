@@ -18,8 +18,6 @@ const wrappedExec = (cmd, cwd) => {
   execSync(cmd, args);
 };
 
-const isPrFromFork = (head, base) => head !== base;
-
 const isPackageType = (actual, target) => actual === target;
 // additional equality checks can match other subdirs, e.g. `rust|test|cli|<etc>`
 const isCratesPackage = (actual) => isPackageType(actual, 'program');
@@ -128,14 +126,6 @@ module.exports = async (
   wrappedExec('git config user.name github-actions[bot]');
   wrappedExec('git config user.email github-actions[bot]@users.noreply.github.com');
 
-  // we can't push direclty to a fork, so we need to open a PR
-  let newBranch;
-  if (isPrFromFork(change_config.from_repository, change_config.to_repository)) {
-    // random 8 alphanumeric postfix in case there are multiple version PRs
-    newBranch = `${change_config.from_branch}-${(Math.random() + 1).toString(36).substr(2, 10)}`;
-    wrappedExec(`git checkout -b ${newBranch} && git push -u origin ${newBranch}`);
-  }
-
   // versioning = [semvar:pkg:type]
   for (const version of versioning) {
     const [semvar, targetPkg, targetType] = parseVersioningCommand(version);
@@ -183,31 +173,5 @@ module.exports = async (
       cwdArgs.pop();
       cwdArgs.pop();
     }
-  }
-
-  // if fork, clean up by creating a pull request and commenting on the source pull request
-  if (isPrFromFork(change_config.from_repository, change_config.to_repository)) {
-    console.log('PR is from fork!');
-    const [fromOwner, fromRepo] = change_config.from_repository.split('/');
-    const { data: pullRequest } = await github.pulls.create({
-      owner: fromOwner,
-      repo: fromRepo,
-      head: newBranch,
-      base: change_config.from_branch,
-      title: `versioning: ${newBranch} to ${change_config.from_branch}`,
-      body: `Version bump requested on https://github.com/${change_config.to_repository}/pull/${change_config.pull_number}`,
-    });
-
-    console.log('created pullRequest info: ', pullRequest);
-
-    const [toOwner, toRepo] = change_config.to_repository.split('/');
-    const { data: commentResult } = await github.issues.createComment({
-      owner: toOwner,
-      repo: toRepo,
-      issue_number: change_config.pull_number,
-      body: `Created a PR with version changes https://github.com/${change_config.from_repository}/pull/${pullRequest.number}. Please review and merge changes to update this PR.`,
-    });
-
-    console.log('created comment info: ', commentResult);
   }
 };
