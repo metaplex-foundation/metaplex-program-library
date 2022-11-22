@@ -10,7 +10,10 @@ use borsh::BorshDeserialize;
 pub use bubblegum::*;
 pub use collection::*;
 // Have to reexport for backwards compatibility
-pub use deprecated::process_deprecated_mint_new_edition_from_master_edition_via_vault_proxy;
+pub use deprecated::{
+    process_create_metadata_accounts_v2,
+    process_deprecated_mint_new_edition_from_master_edition_via_vault_proxy,
+};
 pub use edition::*;
 pub use escrow::*;
 pub use metadata::*;

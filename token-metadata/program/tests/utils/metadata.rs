@@ -1,13 +1,13 @@
-use crate::*;
 use mpl_token_metadata::{
     id, instruction,
     state::{Collection, CollectionDetails, Creator, Data, DataV2, Uses, PREFIX},
 };
 use solana_program::borsh::try_from_slice_unchecked;
-
 use solana_sdk::{
     pubkey::Pubkey, signature::Signer, signer::keypair::Keypair, transaction::Transaction,
 };
+
+use crate::*;
 
 #[derive(Debug)]
 pub struct Metadata {

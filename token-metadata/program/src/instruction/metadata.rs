@@ -18,64 +18,6 @@ use crate::{
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 /// Args for create call
-pub struct CreateMetadataAccountArgsV2 {
-    /// Note that unique metadatas are disabled for now.
-    pub data: DataV2,
-    /// Whether you want your metadata to be updateable in the future.
-    pub is_mutable: bool,
-}
-
-/// Creates an CreateMetadataAccounts instruction
-#[allow(clippy::too_many_arguments)]
-/// #[deprecated(since="1.3.0", note="please use `create_metadata_accounts_v3` instead")]
-pub fn create_metadata_accounts_v2(
-    program_id: Pubkey,
-    metadata_account: Pubkey,
-    mint: Pubkey,
-    mint_authority: Pubkey,
-    payer: Pubkey,
-    update_authority: Pubkey,
-    name: String,
-    symbol: String,
-    uri: String,
-    creators: Option<Vec<Creator>>,
-    seller_fee_basis_points: u16,
-    update_authority_is_signer: bool,
-    is_mutable: bool,
-    collection: Option<Collection>,
-    uses: Option<Uses>,
-) -> Instruction {
-    Instruction {
-        program_id,
-        accounts: vec![
-            AccountMeta::new(metadata_account, false),
-            AccountMeta::new_readonly(mint, false),
-            AccountMeta::new_readonly(mint_authority, true),
-            AccountMeta::new(payer, true),
-            AccountMeta::new_readonly(update_authority, update_authority_is_signer),
-            AccountMeta::new_readonly(solana_program::system_program::id(), false),
-        ],
-        data: MetadataInstruction::CreateMetadataAccountV2(CreateMetadataAccountArgsV2 {
-            data: DataV2 {
-                name,
-                symbol,
-                uri,
-                seller_fee_basis_points,
-                creators,
-                collection,
-                uses,
-            },
-            is_mutable,
-        })
-        .try_to_vec()
-        .unwrap(),
-    }
-}
-
-#[repr(C)]
-#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
-/// Args for create call
 pub struct CreateMetadataAccountArgsV3 {
     /// Note that unique metadatas are disabled for now.
     pub data: DataV2,
