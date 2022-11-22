@@ -88,7 +88,6 @@ merged.
 | Bubblegum          | [mpl-bubblegum][mpl-bubblegum-npm]                   | [![NPM][mpl-bubblegum-nimg]][mpl-bubblegum-npm]                   |
 | Candy Machine Core | [mpl-candy-machine-core][mpl-candy-machine-core-npm] | [![NPM][mpl-candy-machine-core-nimg]][mpl-candy-machine-core-npm] |
 | Candy Machine      | [mpl-candy-machine][mpl-candy-machine-npm]           | [![NPM][mpl-candy-machine-nimg]][mpl-candy-machine-npm]           |
-| Core               | [mpl-core][mpl-core-npm]                             | [![NPM][mpl-core-nimg]][mpl-core-npm]                             |
 | Fixed Price Sale   | [mpl-fixed-price-sale][mpl-fixed-price-sale-npm]     | [![NPM][mpl-fixed-price-sale-nimg]][mpl-fixed-price-sale-npm]     |
 | Gumdrop            | [mpl-gumdrop][mpl-gumdrop-npm]                       | [![NPM][mpl-gumdrop-nimg]][mpl-gumdrop-npm]                       |
 | Hydra              | [mpl-hydra][mpl-hydra-npm]                           | [![NPM][mpl-hydra-nimg]][mpl-hydra-npm]                           |
@@ -209,9 +208,6 @@ under either the [MIT][mit-license] or the [Apache][apache-license] licenses.
 
 [mpl-fixed-price-sale-nimg-long]:https://img.shields.io/npm/v/@metaplex-foundation/mpl-fixed-price-sale?label=npm%20%7C%20mpl-fixed-price-sale&logo=typescript
 [mpl-fixed-price-sale-nimg]:https://img.shields.io/npm/v/@metaplex-foundation/mpl-fixed-price-sale?logo=typescript
-
-[mpl-core-nimg-long]:https://img.shields.io/npm/v/@metaplex-foundation/mpl-core?label=npm%20%7C%20mpl-core&logo=typescript
-[mpl-core-nimg]:https://img.shields.io/npm/v/@metaplex-foundation/mpl-core?logo=typescript
 
 [mpl-gumdrop-nimg-long]:https://img.shields.io/npm/v/@metaplex-foundation/mpl-gumdrop?label=npm%20%7C%20mpl-gumdrop&logo=typescript
 [mpl-gumdrop-nimg]:https://img.shields.io/npm/v/@metaplex-foundation/mpl-gumdrop?logo=typescript

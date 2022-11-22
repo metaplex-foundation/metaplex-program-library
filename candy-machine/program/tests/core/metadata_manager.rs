@@ -1,7 +1,6 @@
-use mpl_token_metadata::state::CollectionDetails;
 use mpl_token_metadata::{
     instruction,
-    state::{Collection, Creator, Metadata, Uses, PREFIX},
+    state::{Collection, CollectionDetails, Creator, Metadata, Uses, PREFIX},
 };
 use solana_program::borsh::try_from_slice_unchecked;
 use solana_program_test::{BanksClientError, ProgramTestContext};
@@ -9,10 +8,10 @@ use solana_sdk::{
     pubkey::Pubkey, signature::Signer, signer::keypair::Keypair, transaction::Transaction,
 };
 
-use crate::core::helpers::{
-    clone_keypair, create_mint, get_account, mint_to_wallets, update_blockhash,
+use crate::core::{
+    helpers::{clone_keypair, create_mint, get_account, mint_to_wallets, update_blockhash},
+    MasterEditionManager,
 };
-use crate::core::MasterEditionManager;
 
 #[derive(Debug)]
 pub struct MetadataManager {

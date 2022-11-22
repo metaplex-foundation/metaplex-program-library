@@ -28,7 +28,6 @@ jobs:
     runs-on: ubuntu-latest
     # Set job outputs to values from filter step
     outputs:
-      core: ${{ steps.filter.outputs.core }}
       package: ${{ steps.filter.outputs.package }}
       workflow: ${{ steps.filter.outputs.workflow }}
     steps:
@@ -38,8 +37,6 @@ jobs:
         id: filter
         with:
           filters: |
-            core:
-              - 'core/js/**'
             package:
               - '${{ inputs.name }}/js/**'
             workflow:
@@ -50,7 +47,6 @@ jobs:
     needs: changes
     if: |
       inputs.changes == false ||
-      needs.changes.outputs.core == 'true' || 
       needs.changes.outputs.package == 'true' || 
       needs.changes.outputs.workflow == 'true'
     runs-on: ubuntu-latest

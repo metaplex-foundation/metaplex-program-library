@@ -1,13 +1,9 @@
-import BN from 'bn.js';
 import test from 'tape';
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore createInitializeMintInstruction export actually exist but isn't setup correctly
 import { getAssociatedTokenAddress } from '@solana/spl-token';
-import { assertConfirmedTransaction, defaultSendOptions } from '@metaplex-foundation/amman';
-import { deprecated } from '@metaplex-foundation/mpl-token-metadata';
 import { findPayoutTicketAddress, findTradeHistoryAddress } from '../src/utils';
 import { closeMarket, createBuyTransaction, createWithdrawTransaction } from './transactions';
 import { killStuckProcess, logDebug, sleep } from './utils';
+import { Metaplex, toBigNumber } from '@metaplex-foundation/js';
 import {
   createPrerequisites,
   createStore,
@@ -94,15 +90,17 @@ test('withdraw: success', async (t) => {
 
   logDebug('new mint', newMint.publicKey.toBase58());
 
-  const newMintEdition = await deprecated.Edition.getPDA(newMint.publicKey);
-  const newMintMetadata = await deprecated.Metadata.getPDA(newMint.publicKey);
+  const metaplex = Metaplex.make(connection);
+  const pdas = metaplex.nfts().pdas();
+  const newMintEdition = pdas.edition({ mint: newMint.publicKey });
+  const newMintMetadata = pdas.metadata({ mint: newMint.publicKey });
 
-  const resourceMintMasterEdition = await deprecated.Edition.getPDA(resourceMint.publicKey);
-  const resourceMintMetadata = await deprecated.Metadata.getPDA(resourceMint.publicKey);
-  const resourceMintEditionMarker = await deprecated.EditionMarker.getPDA(
-    resourceMint.publicKey,
-    new BN(1),
-  );
+  const resourceMintMasterEdition = pdas.edition({ mint: resourceMint.publicKey });
+  const resourceMintMetadata = pdas.metadata({ mint: resourceMint.publicKey });
+  const resourceMintEditionMarker = pdas.editionMarker({
+    mint: resourceMint.publicKey,
+    edition: toBigNumber(1),
+  });
 
   await sleep(1000);
 
@@ -127,14 +125,8 @@ test('withdraw: success', async (t) => {
     newTokenAccount: mintAta.publicKey,
   });
 
-  const buyRes = await transactionHandler.sendAndConfirmTransaction(
-    buyTx,
-    [payer],
-    defaultSendOptions,
-  );
-
+  await transactionHandler.sendAndConfirmTransaction(buyTx, [payer]).assertSuccess(t);
   logDebug('buy:: successful purchase');
-  assertConfirmedTransaction(t, buyRes.txConfirmed);
 
   await sleep(3000);
 
@@ -145,14 +137,8 @@ test('withdraw: success', async (t) => {
     market,
   });
 
-  const marketRes = await transactionHandler.sendAndConfirmTransaction(
-    marketTx,
-    [payer],
-    defaultSendOptions,
-  );
-
+  await transactionHandler.sendAndConfirmTransaction(marketTx, [payer]).assertSuccess(t);
   logDebug(`market: ${market.publicKey}`);
-  assertConfirmedTransaction(t, marketRes.txConfirmed);
 
   const [payoutTicket, payoutTicketBump] = await findPayoutTicketAddress(
     market.publicKey,
@@ -161,7 +147,7 @@ test('withdraw: success', async (t) => {
 
   const destination = await getAssociatedTokenAddress(treasuryMint.publicKey, payer.publicKey);
 
-  const metadata = await deprecated.Metadata.getPDA(resourceMint.publicKey);
+  const metadata = pdas.metadata({ mint: resourceMint.publicKey });
 
   const withdrawTx = await createWithdrawTransaction({
     connection,
@@ -179,13 +165,7 @@ test('withdraw: success', async (t) => {
     primaryMetadataCreators,
   });
 
-  const withdrawRes = await transactionHandler.sendAndConfirmTransaction(
-    withdrawTx,
-    [payer],
-    defaultSendOptions,
-  );
-
-  assertConfirmedTransaction(t, withdrawRes.txConfirmed);
+  await transactionHandler.sendAndConfirmTransaction(withdrawTx, [payer]).assertSuccess(t);
 
   const payoutTicketData = await connection.getAccountInfo(payoutTicket);
   t.ok(payoutTicketData?.owner);

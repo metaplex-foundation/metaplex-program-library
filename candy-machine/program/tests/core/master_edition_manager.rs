@@ -1,7 +1,6 @@
-use mpl_token_metadata::state::Metadata;
 use mpl_token_metadata::{
     instruction::{self},
-    state::{MasterEditionV2, EDITION, PREFIX},
+    state::{MasterEditionV2, Metadata, EDITION, PREFIX},
 };
 use solana_program::borsh::try_from_slice_unchecked;
 use solana_sdk::{pubkey::Pubkey, signature::Signer, transaction::Transaction};

@@ -1,6 +1,6 @@
 {
   "name": "@metaplex-foundation/mpl-bubblegum",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "programVersion": "0.4.0",
   "description": "SDK for MPL Bubblegum contract",
   "main": "dist/src/index.js",
@@ -47,7 +47,7 @@
     "@metaplex-foundation/mpl-token-metadata": "^2.3.3",
     "@metaplex-foundation/rustbin": "^0.3.1",
     "@metaplex-foundation/solita": "^0.18.0",
-    "@solana/spl-account-compression": "^0.1.1",
+    "@solana/spl-account-compression": "^0.1.4",
     "@metaplex-foundation/cusper": "^0.0.2",
     "@project-serum/anchor": "0.24.2",
     "@solana/spl-token": "^0.1.8",
