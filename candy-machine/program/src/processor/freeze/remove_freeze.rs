@@ -1,5 +1,4 @@
-use anchor_lang::prelude::*;
-use anchor_lang::AccountsClose;
+use anchor_lang::{prelude::*, AccountsClose};
 
 use crate::{
     constants::{FREEZE_FEATURE_INDEX, FREEZE_LOCK_FEATURE_INDEX},

@@ -648,7 +648,7 @@
     wait-on "^6.0.0"
     yargs "^17.3.0"
 
-"@metaplex-foundation/beet-solana@0.4.0":
+"@metaplex-foundation/beet-solana@0.4.0", "@metaplex-foundation/beet-solana@^0.4.0":
   version "0.4.0"
   resolved "https://registry.yarnpkg.com/@metaplex-foundation/beet-solana/-/beet-solana-0.4.0.tgz#52891e78674aaa54e0031f1bca5bfbc40de12e8d"
   integrity sha512-B1L94N3ZGMo53b0uOSoznbuM5GBNJ8LwSeznxBxJ+OThvfHQ4B5oMUqb+0zdLRfkKGS7Q6tpHK9P+QK0j3w2cQ==
@@ -853,12 +853,13 @@
   dependencies:
     buffer "~6.0.3"
 
-"@solana/spl-account-compression@^0.1.1":
-  version "0.1.1"
-  resolved "https://registry.yarnpkg.com/@solana/spl-account-compression/-/spl-account-compression-0.1.1.tgz#4b0491828c255556d32ee3e8bef3dae225abf961"
-  integrity sha512-BCty9FLJx6WKwbU6Y8aZY3/U5nkovcQw68h9PPiPy+DzOBuCUA0zohNAByWZTLY6lNfGqh+TbdzmdIIVr8/dGg==
+"@solana/spl-account-compression@^0.1.4":
+  version "0.1.4"
+  resolved "https://registry.yarnpkg.com/@solana/spl-account-compression/-/spl-account-compression-0.1.4.tgz#a401d7c47b3d960d00ea18fe1b423877fb3dc380"
+  integrity sha512-y4kD1Ecw1R4qjp0A0SouV2GxKSIbffVo17kROJh/gt9zzGyROQ10KL5pPpirEJ1Yj7GjIjF8MiFxKBGm+Jrygw==
   dependencies:
-    "@types/bn.js" "^5.1.1"
+    "@metaplex-foundation/beet" "^0.7.1"
+    "@metaplex-foundation/beet-solana" "^0.4.0"
     bn.js "^5.2.1"
     borsh "^0.7.0"
 
@@ -965,13 +966,6 @@
   integrity sha512-FcFaxOr2V5KZCviw1TnutEMVUVsGt4D2hP1TAfXZAMKuHYW3xQhe3jTxNPWutgCJ3/X1c5yX8ZoGVEItxKbwBg==
   dependencies:
     "@babel/types" "^7.3.0"
-
-"@types/bn.js@^5.1.1":
-  version "5.1.1"
-  resolved "https://registry.yarnpkg.com/@types/bn.js/-/bn.js-5.1.1.tgz#b51e1b55920a4ca26e9285ff79936bbdec910682"
-  integrity sha512-qNrYbZqMx0uJAfKnKclPh+dTwK33KfLHYqtyODwd5HnXOjnkhc4qgn3BrK6RWyGZm5+sIFE7Q7Vz6QQtJB7w7g==
-  dependencies:
-    "@types/node" "*"
 
 "@types/chai@^4.3.0":
   version "4.3.3"

@@ -21,9 +21,18 @@ pub fn add_config_lines(
 
     // no risk overflow because you literally cannot store this many in an account
     // going beyond u32 only happens with the hidden settings candies
-    if index > (candy_machine.data.items_available as u32) - 1 {
+    let total = index
+        .checked_add(config_lines.len() as u32)
+        .ok_or(CandyError::NumericalOverflowError)?;
+
+    if total > (candy_machine.data.items_available as u32) {
         return err!(CandyError::IndexGreaterThanLength);
+    } else if config_lines.is_empty() {
+        // there is nothing to do, so we can stop early
+        msg!("Config lines array empty");
+        return Ok(());
     }
+
     // hidden settings candies do not store config lines
     if candy_machine.data.hidden_settings.is_some() {
         return err!(CandyError::HiddenSettingsDoNotHaveConfigLines);

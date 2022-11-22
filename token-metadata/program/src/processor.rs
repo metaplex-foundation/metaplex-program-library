@@ -4,7 +4,7 @@ use crate::{
     assertions::{
         collection::{
             assert_collection_update_is_valid, assert_collection_verify_is_valid,
-            assert_has_collection_authority,
+            assert_has_collection_authority, assert_is_collection_delegated_authority,
         },
         uses::{assert_valid_use, process_use_authority_validation},
     },
@@ -37,7 +37,7 @@ use crate::{
         process_mint_new_edition_from_master_edition_via_token_logic, puff_out_data_fields,
         spl_token_burn, spl_token_close, transfer_mint_authority, CreateMetadataAccountsLogicArgs,
         MintNewEditionFromMasterEditionViaTokenLogicArgs, TokenBurnParams, TokenCloseParams,
-        BUBBLEGUM_ACTIVATED, BUBBLEGUM_PROGRAM_ADDRESS,
+        BUBBLEGUM_ACTIVATED, BUBBLEGUM_SIGNER,
     },
 };
 use arrayref::array_ref;
@@ -1412,6 +1412,7 @@ pub fn process_approve_collection_authority(
     let mut record = CollectionAuthorityRecord::from_account_info(collection_authority_record)?;
     record.key = Key::CollectionAuthorityRecord;
     record.bump = collection_authority_bump_seed[0];
+    record.update_authority = Some(*update_authority.key);
     record.serialize(&mut *collection_authority_record.try_borrow_mut_data()?)?;
     Ok(())
 }
@@ -1442,12 +1443,13 @@ pub fn process_revoke_collection_authority(
     if collection_authority_info_empty {
         return Err(MetadataError::CollectionAuthorityDoesNotExist.into());
     }
-    assert_has_collection_authority(
-        delegate_authority,
-        &metadata,
+
+    assert_is_collection_delegated_authority(
+        collection_authority_record,
+        delegate_authority.key,
         mint_info.key,
-        Some(collection_authority_record),
     )?;
+
     let lamports = collection_authority_record.lamports();
     **collection_authority_record.try_borrow_mut_lamports()? = 0;
     **revoke_authority.try_borrow_mut_lamports()? = revoke_authority
@@ -2182,7 +2184,9 @@ pub fn bubblegum_set_collection_size(
     }
 
     // This instruction can only be called by the Bubblegum program.
-    assert_owned_by(bubblegum_signer_info, &BUBBLEGUM_PROGRAM_ADDRESS)?;
+    if *bubblegum_signer_info.key != BUBBLEGUM_SIGNER {
+        return Err(MetadataError::InvalidBubblegumSigner.into());
+    }
     assert_signer(bubblegum_signer_info)?;
 
     // Owned by token-metadata program.

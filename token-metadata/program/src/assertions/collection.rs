@@ -63,9 +63,17 @@ pub fn assert_has_collection_authority(
         if data.len() == 0 {
             return Err(MetadataError::InvalidCollectionUpdateAuthority.into());
         }
-        let bump_match = CollectionAuthorityRecord::from_bytes(&data)?;
-        if bump_match.bump != bump {
+        let record = CollectionAuthorityRecord::from_bytes(&data)?;
+        if record.bump != bump {
             return Err(MetadataError::InvalidCollectionUpdateAuthority.into());
+        }
+        match record.update_authority {
+            Some(update_authority) => {
+                if update_authority != collection_data.update_authority {
+                    return Err(MetadataError::InvalidCollectionUpdateAuthority.into());
+                }
+            }
+            None => return Err(MetadataError::InvalidCollectionUpdateAuthority.into()),
         }
     } else if collection_data.update_authority != *collection_authority_info.key {
         return Err(MetadataError::InvalidCollectionUpdateAuthority.into());

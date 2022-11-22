@@ -1,5 +1,7 @@
-use anchor_lang::prelude::*;
-use anchor_lang::system_program::{transfer, Transfer};
+use anchor_lang::{
+    prelude::*,
+    system_program::{transfer, Transfer},
+};
 use anchor_spl::token::{Mint, Token, TokenAccount};
 use mpl_token_metadata::instruction::thaw_delegated_account;
 use solana_program::program::{invoke, invoke_signed};

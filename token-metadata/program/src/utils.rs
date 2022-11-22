@@ -972,6 +972,7 @@ pub const SEED_AUTHORITY: Pubkey = Pubkey::new_from_array([
 // the Bubblegum program.
 pub const BUBBLEGUM_PROGRAM_ADDRESS: Pubkey =
     pubkey!("BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY");
+pub const BUBBLEGUM_SIGNER: Pubkey = pubkey!("4ewWZC5gT6TGpm5LZNDs9wVonfUT2q5PP5sc9kVbwMAK");
 // This flag activates certain program authority features of the Bubblegum program.
 pub const BUBBLEGUM_ACTIVATED: bool = true;
 

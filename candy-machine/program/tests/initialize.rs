@@ -27,13 +27,12 @@ use mpl_candy_machine::{
 };
 use utils::{custom_config, GatekeeperInfo};
 
-use crate::core::helpers::{assert_account_empty, get_balance};
-use crate::utils::helpers::test_start;
 use crate::{
-    core::helpers::airdrop,
+    core::helpers::{airdrop, assert_account_empty, get_balance},
     utils::{
-        auto_config, candy_machine_program_test, helpers::sol, CandyManager, GatekeeperConfig,
-        WhitelistConfig,
+        auto_config, candy_machine_program_test,
+        helpers::{sol, test_start},
+        CandyManager, GatekeeperConfig, WhitelistConfig,
     },
 };
 

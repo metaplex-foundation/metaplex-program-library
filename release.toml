@@ -1,4 +1,3 @@
 consolidate-commits = false
-consolidate-pushes = false
 dependent-version = "ignore"
 pre-release-commit-message = "(cargo-release) {{crate_name}} v{{version}}"
