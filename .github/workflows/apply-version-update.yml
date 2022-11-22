@@ -2,7 +2,7 @@ name: Apply Version Update
 
 on:
   pull_request_review:
-    types: [submitted, edited]
+    types: [ submitted, edited ]
 
 permissions:
   id-token: write
@@ -19,6 +19,7 @@ env:
 
 jobs:
   dump-context:
+    if: github.event.pull_request.head.repo.full_name == github.event.pull_request.base.repo.full_name
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -28,8 +29,10 @@ jobs:
         run: echo "$GITHUB_CONTEXT"
 
   get-changes-scope:
-    if:
-      contains(fromJson('["OWNER", "MEMBER", "CONTRIBUTOR"]'), github.event.review.author_association) == true && contains(fromJson('["approved", "commented"]'), github.event.review.state) == true
+    if: |
+      github.event.pull_request.head.repo.full_name == github.event.pull_request.base.repo.full_name &&
+      contains(fromJson('["OWNER", "MEMBER", "CONTRIBUTOR"]'), github.event.review.author_association) == true && 
+      contains(fromJson('["approved", "commented"]'), github.event.review.state) == true
     runs-on: ubuntu-latest
     outputs:
       changed-packages: ${{ steps.get-changed-package-scope.outputs.packages }}
@@ -77,8 +80,10 @@ jobs:
         shell: bash
 
   get-version-scope:
-    if:
-      contains(fromJson('["OWNER", "MEMBER", "CONTRIBUTOR"]'), github.event.review.author_association) == true && contains(fromJson('["approved", "commented"]'), github.event.review.state) == true
+    if: |
+      github.event.pull_request.head.repo.full_name == github.event.pull_request.base.repo.full_name &&
+      contains(fromJson('["OWNER", "MEMBER", "CONTRIBUTOR"]'), github.event.review.author_association) == true && 
+      contains(fromJson('["approved", "commented"]'), github.event.review.state) == true
     runs-on: ubuntu-latest
     outputs:
       versioning: ${{ steps.parse-version-info.outputs.versioning }}
@@ -113,7 +118,7 @@ jobs:
           body: ${{ steps.process-content-body.outputs.content }}
 
   update-pr-with-changes:
-    needs: [get-changes-scope, get-version-scope]
+    needs: [ get-changes-scope, get-version-scope ]
     if: needs.get-version-scope.outputs.has-versioning == 'true' && needs.get-changes-scope.outputs.num-packages > 0
     runs-on: ubuntu-latest
     steps:
@@ -132,8 +137,5 @@ jobs:
         with:
           changed-packages: ${{ needs.get-changes-scope.outputs.changed-packages }}
           versioning: ${{ needs.get-version-scope.outputs.versioning }}
-          to-branch: ${{ github.event.pull_request.base.ref }}
-          to-repository: ${{ github.event.pull_request.base.repo.full_name }}
           from-branch: ${{ github.event.pull_request.head.ref }}
           from-repository: ${{ github.event.pull_request.head.repo.full_name }}
-          pull-number: ${{ github.event.pull_request.number }}

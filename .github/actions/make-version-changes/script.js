@@ -99,19 +99,12 @@ const updateNpmPackage = (cwdArgs, _pkg, semvar) => {
  * @param {core} obj An @actions/core object
  * @param {glob} obj An @actions/glob object
  * @param {io} obj An @actions/io object
- * @param {change_config} obj An object with event invocation context
  * @param {packages} arr List of packages to process in the form <pkg-name>/<sub-dir>
  * @param {versioning} arr List of version commands in the form semvar:pkg:type where type = `program|js`
  * @return void
  *
  */
-module.exports = async (
-  { github, context, core, glob, io, change_config },
-  packages,
-  versioning,
-) => {
-  console.log('change_config: ', change_config);
-
+module.exports = async ({ github, context, core, glob, io }, packages, versioning) => {
   const base = process.env.GITHUB_ACTION_PATH; // alt: path.join(__dirname);
   const splitBase = base.split('/');
   const parentDirsToHome = 4; // ~/<home>/./.github/actions/<name>
