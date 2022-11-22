@@ -1,12 +1,9 @@
 use std::{fmt::Debug, str::FromStr};
 
 use anchor_lang::AccountDeserialize;
-use mpl_token_metadata::pda::find_collection_authority_account;
-use mpl_token_metadata::state::Metadata;
+use mpl_token_metadata::{pda::find_collection_authority_account, state::Metadata};
 use solana_gateway::state::{get_expire_address_with_seed, get_gateway_token_address_with_seed};
-use solana_program::clock::Clock;
-use solana_program::program_option::COption;
-use solana_program::pubkey::Pubkey;
+use solana_program::{clock::Clock, program_option::COption, pubkey::Pubkey};
 use solana_program_test::ProgramTestContext;
 use solana_sdk::{
     signature::{Keypair, Signer},
@@ -15,31 +12,26 @@ use solana_sdk::{
 use spl_associated_token_account::get_associated_token_address;
 use spl_token::state::AccountState;
 
-use mpl_candy_machine::constants::{FREEZE_FEATURE_INDEX, FREEZE_LOCK_FEATURE_INDEX};
 use mpl_candy_machine::{
-    constants::BOT_FEE,
+    constants::{BOT_FEE, FREEZE_FEATURE_INDEX, FREEZE_LOCK_FEATURE_INDEX},
     is_feature_active, CandyMachine, CandyMachineData, CollectionPDA, FreezePDA, WhitelistMintMode,
     WhitelistMintMode::{BurnEveryTime, NeverBurn},
 };
 
-use crate::core::helpers::create_associated_token_account;
-use crate::utils::helpers::CandyTestLogger;
-use crate::utils::{
-    remove_freeze, set_freeze, thaw_nft, unlock_funds, update_authority, withdraw_funds,
-};
 use crate::{
     core::{
         helpers::{
-            airdrop, assert_account_empty, clone_keypair, create_mint, get_account, get_balance,
-            get_token_account, get_token_balance, mint_to_wallets, prepare_nft,
+            airdrop, assert_account_empty, clone_keypair, create_associated_token_account,
+            create_mint, get_account, get_balance, get_token_account, get_token_balance,
+            mint_to_wallets, prepare_nft,
         },
         MasterEditionManager, MetadataManager,
     },
     utils::{
         add_all_config_lines,
-        helpers::{find_candy_creator, find_collection_pda, sol},
-        initialize_candy_machine, mint_nft, remove_collection, set_collection,
-        update_candy_machine,
+        helpers::{find_candy_creator, find_collection_pda, sol, CandyTestLogger},
+        initialize_candy_machine, mint_nft, remove_collection, remove_freeze, set_collection,
+        set_freeze, thaw_nft, unlock_funds, update_authority, update_candy_machine, withdraw_funds,
     },
 };
 

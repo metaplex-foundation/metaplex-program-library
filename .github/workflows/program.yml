@@ -10,8 +10,12 @@ on:
     inputs:
       cache:
         description: 'Use Cached Dependencies'
-        required: false
-        default: true
+        required: true
+        type: boolean
+      changes:
+        description: 'Only run when files change'
+        required: true
+        type: boolean
 
 jobs:
   program-tests:
@@ -20,42 +24,19 @@ jobs:
       fail-fast: false
       matrix:
         node:
-          - name: "auction-house"
-            verify_rust: true
-            cargo_test: true
           - name: "auctioneer"
-            verify_rust: true
-            cargo_test: true
           - name: "bubblegum"
-            verify_rust: false
-            cargo_test: false
           - name: "candy-machine"
-            verify_rust: true
-            cargo_test: true
+          - name: "auction-house"
           - name: "fixed-price-sale"
-            verify_rust: false
-            cargo_test: false
           - name: "gumdrop"
-            verify_rust: false
-            cargo_test: true
           - name: "hydra"
-            verify_rust: true
-            cargo_test: true
           - name: "nft-packs"
-            verify_rust: false
-            cargo_test: false
           - name: "token-entangler"
-            verify_rust: true
-            cargo_test: true
           - name: "token-metadata"
-            verify_rust: true
-            cargo_test: true
 
     uses: ./.github/workflows/program-reusable.yml
     with:
       name: ${{ matrix.node.name }}
-      verify_rust: ${{ matrix.node.verify_rust }}
-      cargo_test: ${{ matrix.node.cargo_test }}
-      cache: ${{ (github.event_name == 'workflow_dispatch' && github.event.workflow_dispatch.inputs.cache == 'true') ||
-        (github.event_name != 'workflow_dispatch' && false) }}
-# CHANGE `&& false` to `&& true` to default the workflow to use caching.
+      cache: ${{ contains(inputs.cache, 'true') }}
+      changes: ${{ !contains(inputs.changes, 'false') }}

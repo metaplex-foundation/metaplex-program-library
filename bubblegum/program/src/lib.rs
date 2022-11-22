@@ -84,6 +84,46 @@ pub struct MintV1<'info> {
 }
 
 #[derive(Accounts)]
+pub struct MintToCollectionV1<'info> {
+    #[account(
+        mut,
+        seeds = [merkle_tree.key().as_ref()],
+        bump,
+    )]
+    pub tree_authority: Account<'info, TreeConfig>,
+    /// CHECK: This account is neither written to nor read from.
+    pub leaf_owner: AccountInfo<'info>,
+    /// CHECK: This account is neither written to nor read from.
+    pub leaf_delegate: AccountInfo<'info>,
+    #[account(mut)]
+    /// CHECK: unsafe
+    pub merkle_tree: UncheckedAccount<'info>,
+    pub payer: Signer<'info>,
+    pub tree_delegate: Signer<'info>,
+    pub collection_authority: Signer<'info>,
+    /// CHECK: Optional collection authority record PDA.
+    /// If there is no collecton authority record PDA then
+    /// this must be the Bubblegum program address.
+    pub collection_authority_record_pda: UncheckedAccount<'info>,
+    /// CHECK: This account is checked in the instruction
+    pub collection_mint: UncheckedAccount<'info>,
+    #[account(mut)]
+    pub collection_metadata: Box<Account<'info, TokenMetadata>>,
+    /// CHECK: This account is checked in the instruction
+    pub edition_account: UncheckedAccount<'info>,
+    /// CHECK: This is just used as a signing PDA.
+    #[account(
+        seeds = [COLLECTION_CPI_PREFIX.as_ref()],
+        bump,
+    )]
+    pub bubblegum_signer: UncheckedAccount<'info>,
+    pub log_wrapper: Program<'info, Wrapper>,
+    pub compression_program: Program<'info, SplAccountCompression>,
+    pub token_metadata_program: Program<'info, MplTokenMetadata>,
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
 pub struct Burn<'info> {
     #[account(
         seeds = [merkle_tree.key().as_ref()],
@@ -461,15 +501,14 @@ fn process_mint_v1<'info>(
     merkle_tree: &AccountInfo<'info>,
     wrapper: &Program<'info, Wrapper>,
     compression_program: &AccountInfo<'info>,
+    allow_verified_collection: bool,
 ) -> Result<()> {
     assert_metadata_is_mpl_compatible(&message)?;
-    // TODO -> Separate V1 / V1 into seperate instructions
-
-    // Currently, not allowing a collection to be verified outside of `verify_collection`
-    // instruction to have parity with token-metadata.
-    if let Some(collection) = &message.collection {
-        if collection.verified {
-            return Err(BubblegumError::CollectionCannotBeVerifiedInThisInstruction.into());
+    if !allow_verified_collection {
+        if let Some(collection) = &message.collection {
+            if collection.verified {
+                return Err(BubblegumError::CollectionCannotBeVerifiedInThisInstruction.into());
+            }
         }
     }
 
@@ -628,41 +667,29 @@ fn process_creator_verification<'info>(
     )
 }
 
-fn process_collection_verification<'info>(
-    ctx: Context<'_, '_, '_, 'info, CollectionVerification<'info>>,
-    root: [u8; 32],
-    data_hash: [u8; 32],
-    creator_hash: [u8; 32],
-    nonce: u64,
-    index: u32,
-    mut message: MetadataArgs,
+fn process_collection_verification_mpl_only<'info>(
+    collection_metadata: &Box<Account<'info, TokenMetadata>>,
+    collection_mint: &AccountInfo<'info>,
+    collection_authority: &AccountInfo<'info>,
+    collection_authority_record_pda: &AccountInfo<'info>,
+    edition_account: &AccountInfo<'info>,
+    bubblegum_signer: &AccountInfo<'info>,
+    bubblegum_bump: u8,
+    token_metadata_program: &AccountInfo<'info>,
+    message: &mut MetadataArgs,
     verify: bool,
     new_collection: Option<Pubkey>,
 ) -> Result<()> {
-    let owner = ctx.accounts.leaf_owner.to_account_info();
-    let delegate = ctx.accounts.leaf_delegate.to_account_info();
-    let merkle_tree = ctx.accounts.merkle_tree.to_account_info();
-    let collection_metadata = &ctx.accounts.collection_metadata;
-    let collection_mint = ctx.accounts.collection_mint.to_account_info();
-    let edition_account = ctx.accounts.edition_account.to_account_info();
-    let collection_authority = ctx.accounts.collection_authority.to_account_info();
-    let collection_authority_record_pda = ctx
-        .accounts
-        .collection_authority_record_pda
-        .to_account_info();
-    let bubblegum_signer = ctx.accounts.bubblegum_signer.to_account_info();
-    let token_metadata_program = ctx.accounts.token_metadata_program.to_account_info();
-
     // See if a collection authority record PDA was provided.
     let collection_authority_record = if collection_authority_record_pda.key() == crate::id() {
         None
     } else {
-        Some(&collection_authority_record_pda)
+        Some(collection_authority_record_pda)
     };
 
     // Verify correct account ownerships.
     require!(
-        *collection_metadata.to_account_info().owner == ctx.accounts.token_metadata_program.key(),
+        *collection_metadata.to_account_info().owner == token_metadata_program.key(),
         BubblegumError::IncorrectOwner
     );
     require!(
@@ -670,15 +697,9 @@ fn process_collection_verification<'info>(
         BubblegumError::IncorrectOwner
     );
     require!(
-        *edition_account.owner == ctx.accounts.token_metadata_program.key(),
+        *edition_account.owner == token_metadata_program.key(),
         BubblegumError::IncorrectOwner
     );
-
-    // User-provided metadata must result in same user-provided data hash.
-    let incoming_data_hash = hash_metadata(&message)?;
-    if data_hash != incoming_data_hash {
-        return Err(BubblegumError::DataHashMismatch.into());
-    }
 
     // If new collection was provided, set it in the NFT metadata.
     if new_collection.is_some() {
@@ -759,11 +780,56 @@ fn process_collection_verification<'info>(
                 new_size,
             ),
             bubblegum_set_collection_size_infos.as_slice(),
-            &[&[
-                COLLECTION_CPI_PREFIX.as_bytes(),
-                &[ctx.bumps["bubblegum_signer"]],
-            ]],
+            &[&[COLLECTION_CPI_PREFIX.as_bytes(), &[bubblegum_bump]]],
         )?;
+    }
+
+    Ok(())
+}
+
+fn process_collection_verification<'info>(
+    ctx: Context<'_, '_, '_, 'info, CollectionVerification<'info>>,
+    root: [u8; 32],
+    data_hash: [u8; 32],
+    creator_hash: [u8; 32],
+    nonce: u64,
+    index: u32,
+    mut message: MetadataArgs,
+    verify: bool,
+    new_collection: Option<Pubkey>,
+) -> Result<()> {
+    let owner = ctx.accounts.leaf_owner.to_account_info();
+    let delegate = ctx.accounts.leaf_delegate.to_account_info();
+    let merkle_tree = ctx.accounts.merkle_tree.to_account_info();
+    let collection_metadata = &ctx.accounts.collection_metadata;
+    let collection_mint = ctx.accounts.collection_mint.to_account_info();
+    let edition_account = ctx.accounts.edition_account.to_account_info();
+    let collection_authority = ctx.accounts.collection_authority.to_account_info();
+    let collection_authority_record_pda = ctx
+        .accounts
+        .collection_authority_record_pda
+        .to_account_info();
+    let bubblegum_signer = ctx.accounts.bubblegum_signer.to_account_info();
+    let token_metadata_program = ctx.accounts.token_metadata_program.to_account_info();
+
+    process_collection_verification_mpl_only(
+        &collection_metadata,
+        &collection_mint,
+        &collection_authority,
+        &collection_authority_record_pda,
+        &edition_account,
+        &bubblegum_signer,
+        ctx.bumps["bubblegum_signer"],
+        &token_metadata_program,
+        &mut message,
+        verify,
+        new_collection,
+    )?;
+
+    // User-provided metadata must result in same user-provided data hash.
+    let incoming_data_hash = hash_metadata(&message)?;
+    if data_hash != incoming_data_hash {
+        return Err(BubblegumError::DataHashMismatch.into());
     }
 
     // Calculate new data hash.
@@ -890,6 +956,91 @@ pub mod bubblegum {
             merkle_tree,
             &ctx.accounts.log_wrapper,
             &ctx.accounts.compression_program,
+            false,
+        )?;
+
+        authority.increment_mint_count();
+
+        Ok(())
+    }
+
+    pub fn mint_to_collection_v1(
+        ctx: Context<MintToCollectionV1>,
+        metadata_args: MetadataArgs,
+    ) -> Result<()> {
+        let mut message = metadata_args.clone();
+        // TODO -> Separate V1 / V1 into seperate instructions
+        let payer = ctx.accounts.payer.key();
+        let incoming_tree_delegate = ctx.accounts.tree_delegate.key();
+        let owner = ctx.accounts.leaf_owner.key();
+        let delegate = ctx.accounts.leaf_delegate.key();
+        let authority = &mut ctx.accounts.tree_authority;
+        let tree_creator = authority.tree_creator;
+        let tree_delegate = authority.tree_delegate;
+        let merkle_tree = &ctx.accounts.merkle_tree;
+
+        let collection_metadata = &ctx.accounts.collection_metadata;
+        let collection_mint = ctx.accounts.collection_mint.to_account_info();
+        let edition_account = ctx.accounts.edition_account.to_account_info();
+        let collection_authority = ctx.accounts.collection_authority.to_account_info();
+        let collection_authority_record_pda = ctx
+            .accounts
+            .collection_authority_record_pda
+            .to_account_info();
+        let bubblegum_signer = ctx.accounts.bubblegum_signer.to_account_info();
+        let token_metadata_program = ctx.accounts.token_metadata_program.to_account_info();
+
+        if !authority.is_public {
+            require!(
+                incoming_tree_delegate == tree_creator || incoming_tree_delegate == tree_delegate,
+                BubblegumError::TreeAuthorityIncorrect,
+            );
+        }
+
+        if !authority.contains_mint_capacity(1) {
+            return Err(BubblegumError::InsufficientMintCapacity.into());
+        }
+
+        // Create a HashSet to store signers to use with creator validation.  Any signer can be
+        // counted as a validated creator.
+        let mut metadata_auth = HashSet::<Pubkey>::new();
+        metadata_auth.insert(payer);
+        metadata_auth.insert(tree_delegate);
+
+        // If there are any remaining accounts that are also signers, they can also be used for
+        // creator validation.
+        metadata_auth.extend(
+            ctx.remaining_accounts
+                .iter()
+                .filter(|a| a.is_signer)
+                .map(|a| a.key()),
+        );
+
+        process_collection_verification_mpl_only(
+            &collection_metadata,
+            &collection_mint,
+            &collection_authority,
+            &collection_authority_record_pda,
+            &edition_account,
+            &bubblegum_signer,
+            ctx.bumps["bubblegum_signer"],
+            &token_metadata_program,
+            &mut message,
+            true,
+            None,
+        )?;
+
+        process_mint_v1(
+            message,
+            owner,
+            delegate,
+            metadata_auth,
+            *ctx.bumps.get("tree_authority").unwrap(),
+            authority,
+            merkle_tree,
+            &ctx.accounts.log_wrapper,
+            &ctx.accounts.compression_program,
+            true,
         )?;
 
         authority.increment_mint_count();

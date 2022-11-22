@@ -254,8 +254,6 @@ pub fn get_proving_process_data<'a>(
 ) -> Result<ProvingProcess, ProgramError> {
     let unpack = ProvingProcess::unpack(&account_info.data.borrow_mut());
 
-    
-
     match unpack {
         Ok(data) => Ok(data),
         Err(_) => {
