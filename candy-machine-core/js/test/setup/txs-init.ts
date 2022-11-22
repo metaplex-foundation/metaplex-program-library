@@ -34,6 +34,7 @@ import {
   findMetadataPda,
   keypairIdentity,
   Metaplex,
+  NftWithToken,
 } from '@metaplex-foundation/js';
 
 const METAPLEX_PROGRAM_ID = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s');
@@ -312,5 +313,58 @@ export class InitTransactions {
     const tx = new Transaction().add(ix);
 
     return { tx: handler.sendAndConfirmTransaction(tx, [payer], 'tx: Withdraw') };
+  }
+
+  async setCollection(
+    t: Test,
+    payer: Keypair,
+    candyMachine: PublicKey,
+    collection: PublicKey,
+    newCollection: NftWithToken,
+    handler: PayerTransactionHandler,
+    connection: Connection,
+  ): Promise<{ tx: ConfirmedTransactionAssertablePromise }> {
+    const authorityPda = findCandyMachineCreatorPda(candyMachine, program.PROGRAM_ID);
+
+    await amman.addr.addLabel('New Collection Mint', newCollection.address);
+
+    const newCollectionAuthorityRecord = findCollectionAuthorityRecordPda(
+      newCollection.mint.address,
+      authorityPda,
+    );
+    await amman.addr.addLabel('New Collection Authority Record', newCollectionAuthorityRecord);
+
+    const newCollectionMetadata = findMetadataPda(newCollection.mint.address);
+    await amman.addr.addLabel('New Collection Metadata', newCollectionMetadata);
+
+    const newCollectionMasterEdition = findMasterEditionV2Pda(newCollection.mint.address);
+    await amman.addr.addLabel('New Collection Master Edition', newCollectionMasterEdition);
+
+    // current collection details
+    const collectionMetadata = findMetadataPda(collection);
+    const collectionAuthorityRecord = findCollectionAuthorityRecordPda(collection, authorityPda);
+
+    const accounts: program.SetCollectionInstructionAccounts = {
+      authorityPda,
+      candyMachine: candyMachine,
+      authority: payer.publicKey,
+      payer: payer.publicKey,
+      collectionAuthorityRecord,
+      collectionMetadata,
+      collectionMint: collection,
+      newCollectionAuthorityRecord,
+      newCollectionMasterEdition,
+      newCollectionMetadata,
+      newCollectionMint: newCollection.address,
+      newCollectionUpdateAuthority: newCollection.updateAuthorityAddress,
+      tokenMetadataProgram: METAPLEX_PROGRAM_ID,
+    };
+
+    const ix = program.createSetCollectionInstruction(accounts);
+    const tx = new Transaction().add(ix);
+
+    const txPromise = handler.sendAndConfirmTransaction(tx, [payer], 'tx: SetCollection');
+
+    return { tx: txPromise };
   }
 }
