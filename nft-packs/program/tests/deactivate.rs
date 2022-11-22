@@ -1,3 +1,4 @@
+#![cfg(feature = "test-bpf")]
 mod utils;
 
 use mpl_nft_packs::{
@@ -212,6 +213,6 @@ async fn fail_invalid_state() {
 
     context.warp_to_slot(3).unwrap();
 
-    let result = test_pack_set.deactivate(&mut context).await;
-    assert_custom_error!(result.unwrap_err(), NFTPacksError::PackSetNotActivated, 0);
+    let result = test_pack_set.deactivate(&mut context).await.unwrap_err();
+    assert_custom_error!(result, NFTPacksError::PackSetNotActivated, 0);
 }

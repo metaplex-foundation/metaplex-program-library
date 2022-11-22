@@ -1,0 +1,38 @@
+name: 'Publish version changes'
+description: 'Publish version changes via respective package managers'
+
+inputs:
+  changed-packages:
+    description: 'Changed packages - in format of <package>/<type>'
+    required: true
+  cargo-token:
+    description: 'Token with which we can publish crates'
+    required: true
+  npm-token:
+    description: 'Token with which we can publish NPM packages'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - uses: actions/checkout@v3
+
+    - name: Install dependency packages for script
+      # YARN_ENABLE_IMMUTABLE_INSTALLS=false so that we can temporarily use the packages for the action.
+      run: |
+        YARN_ENABLE_IMMUTABLE_INSTALLS=false yarn && yarn add -D @iarna/toml axios
+      shell: bash
+
+    - name: Make version changes
+      uses: actions/github-script@v4
+      with:
+        script: |
+          process.env['CI_PUBLISH'] = true;
+          const script = require('.github/actions/publish-version-changes/script.js')
+          await script(${{ inputs.changed-packages }}, '${{ inputs.cargo-token }}', '${{ inputs.npm-token }}')
+
+    - name: Cleanup dependency installs
+      # remove dependencies from package.json and then reset yarn.lock
+      run: |
+        yarn remove @iarna/toml axios
+      shell: bash

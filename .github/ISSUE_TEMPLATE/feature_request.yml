@@ -9,16 +9,17 @@ body:
       label: Which package is this feature request for?
       options:
         - auction-house
-        - auction
+        - auctioneer
+        - bubblegum
         - candy-machine
+        - candy-machine-core
         - core
         - fixed-price-sale
         - gumdrop
-        - metaplex
+        - hydra
         - nft-packs
         - token-entangler
         - token-metadata
-        - token-vault
     validations:
       required: true
   - type: textarea

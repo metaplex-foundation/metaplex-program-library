@@ -9,6 +9,7 @@ use crate::{
 };
 use borsh::{BorshDeserialize, BorshSerialize};
 use mpl_token_metadata::state::{MasterEdition, MasterEditionV2};
+use shank::ShankAccount;
 use solana_program::{
     borsh::try_from_slice_unchecked,
     msg,
@@ -18,7 +19,7 @@ use solana_program::{
 };
 
 /// Pack state
-#[derive(Clone, Debug, PartialEq, BorshDeserialize, BorshSerialize, BorshSchema)]
+#[derive(Clone, Debug, PartialEq, Eq, BorshDeserialize, BorshSerialize, BorshSchema)]
 pub enum PackSetState {
     /// Not activated
     NotActivated,
@@ -37,7 +38,7 @@ impl Default for PackSetState {
 }
 
 /// Distribution type
-#[derive(Clone, Debug, PartialEq, BorshDeserialize, BorshSerialize, BorshSchema)]
+#[derive(Clone, Debug, PartialEq, Eq, BorshDeserialize, BorshSerialize, BorshSchema)]
 pub enum PackDistributionType {
     /// Max supply
     MaxSupply,
@@ -55,7 +56,17 @@ impl Default for PackDistributionType {
 
 /// Pack set
 #[repr(C)]
-#[derive(Debug, Clone, PartialEq, BorshSerialize, BorshDeserialize, BorshSchema, Default)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    BorshSerialize,
+    BorshDeserialize,
+    BorshSchema,
+    Default,
+    ShankAccount,
+)]
 pub struct PackSet {
     /// Account type - PackSet
     pub account_type: AccountType,

@@ -30,7 +30,7 @@ export type BidReceiptArgs = {
   canceledAt: beet.COption<beet.bignum>;
 };
 
-const bidReceiptDiscriminator = [186, 150, 141, 135, 59, 122, 39, 99];
+export const bidReceiptDiscriminator = [186, 150, 141, 135, 59, 122, 39, 99];
 /**
  * Holds the data for the {@link BidReceipt} Account and provides de/serialization
  * functionality for that data
@@ -102,6 +102,18 @@ export class BidReceipt implements BidReceiptArgs {
   }
 
   /**
+   * Provides a {@link web3.Connection.getProgramAccounts} config builder,
+   * to fetch accounts matching filters that can be specified via that builder.
+   *
+   * @param programId - the program that owns the accounts we are filtering
+   */
+  static gpaBuilder(
+    programId: web3.PublicKey = new web3.PublicKey('hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk'),
+  ) {
+    return beetSolana.GpaBuilder.fromStruct(programId, bidReceiptBeet);
+  }
+
+  /**
    * Deserializes the {@link BidReceipt} from the provided data Buffer.
    * @returns a tuple of the account data and the offset up to which the buffer was read to obtain it.
    */
@@ -164,11 +176,41 @@ export class BidReceipt implements BidReceiptArgs {
       metadata: this.metadata.toBase58(),
       tokenAccount: this.tokenAccount,
       purchaseReceipt: this.purchaseReceipt,
-      price: this.price,
-      tokenSize: this.tokenSize,
+      price: (() => {
+        const x = <{ toNumber: () => number }>this.price;
+        if (typeof x.toNumber === 'function') {
+          try {
+            return x.toNumber();
+          } catch (_) {
+            return x;
+          }
+        }
+        return x;
+      })(),
+      tokenSize: (() => {
+        const x = <{ toNumber: () => number }>this.tokenSize;
+        if (typeof x.toNumber === 'function') {
+          try {
+            return x.toNumber();
+          } catch (_) {
+            return x;
+          }
+        }
+        return x;
+      })(),
       bump: this.bump,
       tradeStateBump: this.tradeStateBump,
-      createdAt: this.createdAt,
+      createdAt: (() => {
+        const x = <{ toNumber: () => number }>this.createdAt;
+        if (typeof x.toNumber === 'function') {
+          try {
+            return x.toNumber();
+          } catch (_) {
+            return x;
+          }
+        }
+        return x;
+      })(),
       canceledAt: this.canceledAt,
     };
   }

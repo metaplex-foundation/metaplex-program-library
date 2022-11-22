@@ -55,7 +55,13 @@ impl TestMetadata {
         token_account: &Keypair,
         token_owner: &Pubkey,
     ) -> transport::Result<()> {
-        create_mint(context, &self.mint, &context.payer.pubkey(), None).await?;
+        create_mint(
+            context,
+            &self.mint,
+            &context.payer.pubkey(),
+            Some(&context.payer.pubkey()),
+        )
+        .await?;
         create_token_account(context, token_account, &self.mint.pubkey(), token_owner).await?;
         mint_tokens(
             context,
@@ -88,7 +94,13 @@ impl TestMetadata {
             context.last_blockhash,
         );
 
-        Ok(context.banks_client.process_transaction(tx).await?)
+        context
+            .banks_client
+            .process_transaction_with_commitment(
+                tx,
+                solana_sdk::commitment_config::CommitmentLevel::Confirmed,
+            )
+            .await
     }
 
     pub async fn update_primary_sale_happened_via_token(
@@ -107,7 +119,13 @@ impl TestMetadata {
             context.last_blockhash,
         );
 
-        Ok(context.banks_client.process_transaction(tx).await?)
+        context
+            .banks_client
+            .process_transaction_with_commitment(
+                tx,
+                solana_sdk::commitment_config::CommitmentLevel::Confirmed,
+            )
+            .await
     }
 
     pub async fn update(
@@ -139,6 +157,12 @@ impl TestMetadata {
             context.last_blockhash,
         );
 
-        Ok(context.banks_client.process_transaction(tx).await?)
+        context
+            .banks_client
+            .process_transaction_with_commitment(
+                tx,
+                solana_sdk::commitment_config::CommitmentLevel::Confirmed,
+            )
+            .await
     }
 }

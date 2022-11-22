@@ -13,7 +13,7 @@ import * as web3 from '@solana/web3.js';
  * @category CancelBidReceipt
  * @category generated
  */
-const cancelBidReceiptStruct = new beet.BeetArgsStruct<{
+export const cancelBidReceiptStruct = new beet.BeetArgsStruct<{
   instructionDiscriminator: number[] /* size: 8 */;
 }>(
   [['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)]],
@@ -21,52 +21,63 @@ const cancelBidReceiptStruct = new beet.BeetArgsStruct<{
 );
 /**
  * Accounts required by the _cancelBidReceipt_ instruction
+ *
+ * @property [_writable_] receipt
+ * @property [] instruction
  * @category Instructions
  * @category CancelBidReceipt
  * @category generated
  */
 export type CancelBidReceiptInstructionAccounts = {
   receipt: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
   instruction: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
 };
 
-const cancelBidReceiptInstructionDiscriminator = [246, 108, 27, 229, 220, 42, 176, 43];
+export const cancelBidReceiptInstructionDiscriminator = [246, 108, 27, 229, 220, 42, 176, 43];
 
 /**
  * Creates a _CancelBidReceipt_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
- *
  * @category Instructions
  * @category CancelBidReceipt
  * @category generated
  */
-export function createCancelBidReceiptInstruction(accounts: CancelBidReceiptInstructionAccounts) {
-  const { receipt, instruction } = accounts;
-
+export function createCancelBidReceiptInstruction(
+  accounts: CancelBidReceiptInstructionAccounts,
+  programId = new web3.PublicKey('hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk'),
+) {
   const [data] = cancelBidReceiptStruct.serialize({
     instructionDiscriminator: cancelBidReceiptInstructionDiscriminator,
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: receipt,
+      pubkey: accounts.receipt,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: web3.SystemProgram.programId,
+      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: instruction,
+      pubkey: accounts.instruction,
       isWritable: false,
       isSigner: false,
     },
   ];
 
+  if (accounts.anchorRemainingAccounts != null) {
+    for (const acc of accounts.anchorRemainingAccounts) {
+      keys.push(acc);
+    }
+  }
+
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey('hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk'),
+    programId,
     keys,
     data,
   });

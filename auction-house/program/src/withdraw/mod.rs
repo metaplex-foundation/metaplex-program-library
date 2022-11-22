@@ -24,7 +24,7 @@ pub struct Withdraw<'info> {
             auction_house.key().as_ref(),
             wallet.key().as_ref()
         ],
-        bump=escrow_payment_bump
+        bump
     )]
     pub escrow_payment_account: UncheckedAccount<'info>,
 
@@ -75,7 +75,7 @@ impl<'info> From<AuctioneerWithdraw<'info>> for Withdraw<'info> {
             receipt_account: a.receipt_account,
             escrow_payment_account: a.escrow_payment_account,
             treasury_mint: a.treasury_mint,
-            authority: a.auctioneer_authority,
+            authority: a.authority,
             auction_house: a.auction_house,
             auction_house_fee_account: a.auction_house_fee_account,
             token_program: a.token_program,
@@ -95,8 +95,17 @@ pub fn withdraw<'info>(
     let auction_house = &ctx.accounts.auction_house;
 
     // If it has an auctioneer authority delegated must use auctioneer_* handler.
-    if auction_house.has_auctioneer {
+    if auction_house.has_auctioneer && auction_house.scopes[AuthorityScope::Withdraw as usize] {
         return Err(AuctionHouseError::MustUseAuctioneerHandler.into());
+    }
+
+    if escrow_payment_bump
+        != *ctx
+            .bumps
+            .get("escrow_payment_account")
+            .ok_or(AuctionHouseError::BumpSeedNotInHashMap)?
+    {
+        return Err(AuctionHouseError::BumpSeedNotInHashMap.into());
     }
 
     withdraw_logic(ctx.accounts, escrow_payment_bump, amount)
@@ -124,7 +133,7 @@ pub struct AuctioneerWithdraw<'info> {
             auction_house.key().as_ref(),
             wallet.key().as_ref()
         ],
-        bump=escrow_payment_bump
+        bump
     )]
     pub escrow_payment_account: UncheckedAccount<'info>,
 
@@ -132,9 +141,13 @@ pub struct AuctioneerWithdraw<'info> {
     pub treasury_mint: Box<Account<'info, Mint>>,
 
     /// CHECK: Validated in withdraw_logic.
+    /// Auction House instance authority account.
+    pub authority: UncheckedAccount<'info>,
+
+    /// CHECK: Validated in withdraw_logic.
     /// The auctioneer authority - typically a PDA of the Auctioneer program running this action.
-    #[account(mut)]
-    pub auctioneer_authority: UncheckedAccount<'info>,
+    //#[account(mut)]
+    pub auctioneer_authority: Signer<'info>,
 
     /// Auction House instance PDA account.
     #[account(
@@ -170,10 +183,9 @@ pub struct AuctioneerWithdraw<'info> {
             auction_house.key().as_ref(),
             auctioneer_authority.key().as_ref()
         ],
-        bump = auction_house.auctioneer_pda_bump
+        bump = ah_auctioneer_pda.bump
     )]
-    pub ah_auctioneer_pda: UncheckedAccount<'info>,
-
+    pub ah_auctioneer_pda: Account<'info, Auctioneer>,
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
     pub ata_program: Program<'info, AssociatedToken>,
@@ -195,11 +207,20 @@ pub fn auctioneer_withdraw<'info>(
     }
 
     assert_valid_auctioneer_and_scope(
-        &auction_house.key(),
+        auction_house,
         &auctioneer_authority.key(),
         ah_auctioneer_pda,
         AuthorityScope::Withdraw,
     )?;
+
+    if escrow_payment_bump
+        != *ctx
+            .bumps
+            .get("escrow_payment_account")
+            .ok_or(AuctionHouseError::BumpSeedNotInHashMap)?
+    {
+        return Err(AuctionHouseError::BumpSeedNotInHashMap.into());
+    }
 
     let mut accounts: Withdraw<'info> = (*ctx.accounts).clone().into();
 
@@ -309,8 +330,11 @@ fn withdraw_logic<'info>(
         )?;
     } else {
         assert_keys_equal(receipt_account.key(), wallet.key())?;
+        let rent_shortfall = verify_withdrawal(escrow_payment_account.to_account_info(), amount)?;
+        let checked_amount = amount
+            .checked_sub(rent_shortfall)
+            .ok_or(AuctionHouseError::InsufficientFunds)?;
 
-        let checked_amount = rent_checked_sub(escrow_payment_account.to_account_info(), amount)?;
         invoke_signed(
             &system_instruction::transfer(
                 &escrow_payment_account.key(),

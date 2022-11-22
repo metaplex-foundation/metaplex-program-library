@@ -14,10 +14,9 @@ import * as web3 from '@solana/web3.js';
  * @category RevokeUseAuthority
  * @category generated
  */
-const RevokeUseAuthorityStruct = new beet.BeetArgsStruct<{ instructionDiscriminator: number }>(
-  [['instructionDiscriminator', beet.u8]],
-  'RevokeUseAuthorityInstructionArgs',
-);
+export const RevokeUseAuthorityStruct = new beet.BeetArgsStruct<{
+  instructionDiscriminator: number;
+}>([['instructionDiscriminator', beet.u8]], 'RevokeUseAuthorityInstructionArgs');
 /**
  * Accounts required by the _RevokeUseAuthority_ instruction
  *
@@ -38,9 +37,12 @@ export type RevokeUseAuthorityInstructionAccounts = {
   ownerTokenAccount: web3.PublicKey;
   mint: web3.PublicKey;
   metadata: web3.PublicKey;
+  tokenProgram?: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
+  rent?: web3.PublicKey;
 };
 
-const revokeUseAuthorityInstructionDiscriminator = 21;
+export const revokeUseAuthorityInstructionDiscriminator = 21;
 
 /**
  * Creates a _RevokeUseAuthority_ instruction.
@@ -52,62 +54,64 @@ const revokeUseAuthorityInstructionDiscriminator = 21;
  */
 export function createRevokeUseAuthorityInstruction(
   accounts: RevokeUseAuthorityInstructionAccounts,
+  programId = new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
 ) {
-  const { useAuthorityRecord, owner, user, ownerTokenAccount, mint, metadata } = accounts;
-
   const [data] = RevokeUseAuthorityStruct.serialize({
     instructionDiscriminator: revokeUseAuthorityInstructionDiscriminator,
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: useAuthorityRecord,
+      pubkey: accounts.useAuthorityRecord,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: owner,
+      pubkey: accounts.owner,
       isWritable: true,
       isSigner: true,
     },
     {
-      pubkey: user,
+      pubkey: accounts.user,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: ownerTokenAccount,
+      pubkey: accounts.ownerTokenAccount,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: mint,
+      pubkey: accounts.mint,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: metadata,
+      pubkey: accounts.metadata,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: splToken.TOKEN_PROGRAM_ID,
+      pubkey: accounts.tokenProgram ?? splToken.TOKEN_PROGRAM_ID,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: web3.SystemProgram.programId,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: web3.SYSVAR_RENT_PUBKEY,
+      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
       isWritable: false,
       isSigner: false,
     },
   ];
 
+  if (accounts.rent != null) {
+    keys.push({
+      pubkey: accounts.rent,
+      isWritable: false,
+      isSigner: false,
+    });
+  }
+
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
+    programId,
     keys,
     data,
   });

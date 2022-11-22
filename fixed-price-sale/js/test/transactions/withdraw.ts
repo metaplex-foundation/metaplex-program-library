@@ -1,6 +1,8 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { ASSOCIATED_TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { Connection, Keypair, PublicKey, Transaction, SYSVAR_CLOCK_PUBKEY } from '@solana/web3.js';
 import { createAndSignTransaction } from '../utils';
+import * as web3 from '@solana/web3.js';
 import { createWithdrawInstruction } from '../../src/generated/instructions';
 
 interface WithdrawParams {
@@ -34,6 +36,11 @@ export const createWithdrawTransaction = async ({
   treasuryOwner,
   primaryMetadataCreators,
 }: WithdrawParams): Promise<Transaction> => {
+  const remainingAccounts: web3.AccountMeta[] = [];
+  for (const creator of primaryMetadataCreators) {
+    remainingAccounts.push({ pubkey: creator!, isWritable: true, isSigner: false });
+  }
+
   const instruction = await createWithdrawInstruction(
     {
       market,
@@ -47,7 +54,7 @@ export const createWithdrawTransaction = async ({
       payer: payer.publicKey,
       payoutTicket: payoutTicket,
       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-      primaryMetadataCreators: primaryMetadataCreators,
+      anchorRemainingAccounts: remainingAccounts,
       clock: SYSVAR_CLOCK_PUBKEY,
     },
     {

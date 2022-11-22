@@ -2165,6 +2165,696 @@ createErrorFromNameLookup.set(
 );
 
 /**
+ * TokenCloseFailed: 'Token close failed'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class TokenCloseFailedError extends Error {
+  readonly code: number = 0x64;
+  readonly name: string = 'TokenCloseFailed';
+  constructor() {
+    super('Token close failed');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, TokenCloseFailedError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x64, () => new TokenCloseFailedError());
+createErrorFromNameLookup.set('TokenCloseFailed', () => new TokenCloseFailedError());
+
+/**
+ * UnsizedCollection: 'Can't use this function on unsized collection'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class UnsizedCollectionError extends Error {
+  readonly code: number = 0x65;
+  readonly name: string = 'UnsizedCollection';
+  constructor() {
+    super("Can't use this function on unsized collection");
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, UnsizedCollectionError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x65, () => new UnsizedCollectionError());
+createErrorFromNameLookup.set('UnsizedCollection', () => new UnsizedCollectionError());
+
+/**
+ * SizedCollection: 'Can't use this function on a sized collection'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class SizedCollectionError extends Error {
+  readonly code: number = 0x66;
+  readonly name: string = 'SizedCollection';
+  constructor() {
+    super("Can't use this function on a sized collection");
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, SizedCollectionError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x66, () => new SizedCollectionError());
+createErrorFromNameLookup.set('SizedCollection', () => new SizedCollectionError());
+
+/**
+ * MissingCollectionMetadata: 'Can't burn a verified member of a collection w/o providing collection metadata account'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MissingCollectionMetadataError extends Error {
+  readonly code: number = 0x67;
+  readonly name: string = 'MissingCollectionMetadata';
+  constructor() {
+    super("Can't burn a verified member of a collection w/o providing collection metadata account");
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MissingCollectionMetadataError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x67, () => new MissingCollectionMetadataError());
+createErrorFromNameLookup.set(
+  'MissingCollectionMetadata',
+  () => new MissingCollectionMetadataError(),
+);
+
+/**
+ * NotAMemberOfCollection: 'This NFT is not a member of the specified collection.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class NotAMemberOfCollectionError extends Error {
+  readonly code: number = 0x68;
+  readonly name: string = 'NotAMemberOfCollection';
+  constructor() {
+    super('This NFT is not a member of the specified collection.');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, NotAMemberOfCollectionError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x68, () => new NotAMemberOfCollectionError());
+createErrorFromNameLookup.set('NotAMemberOfCollection', () => new NotAMemberOfCollectionError());
+
+/**
+ * NotVerifiedMemberOfCollection: 'This NFT is not a verified member of the specified collection.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class NotVerifiedMemberOfCollectionError extends Error {
+  readonly code: number = 0x69;
+  readonly name: string = 'NotVerifiedMemberOfCollection';
+  constructor() {
+    super('This NFT is not a verified member of the specified collection.');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, NotVerifiedMemberOfCollectionError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x69, () => new NotVerifiedMemberOfCollectionError());
+createErrorFromNameLookup.set(
+  'NotVerifiedMemberOfCollection',
+  () => new NotVerifiedMemberOfCollectionError(),
+);
+
+/**
+ * NotACollectionParent: 'This NFT is not a collection parent NFT.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class NotACollectionParentError extends Error {
+  readonly code: number = 0x6a;
+  readonly name: string = 'NotACollectionParent';
+  constructor() {
+    super('This NFT is not a collection parent NFT.');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, NotACollectionParentError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x6a, () => new NotACollectionParentError());
+createErrorFromNameLookup.set('NotACollectionParent', () => new NotACollectionParentError());
+
+/**
+ * CouldNotDetermineTokenStandard: 'Could not determine a TokenStandard type.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class CouldNotDetermineTokenStandardError extends Error {
+  readonly code: number = 0x6b;
+  readonly name: string = 'CouldNotDetermineTokenStandard';
+  constructor() {
+    super('Could not determine a TokenStandard type.');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, CouldNotDetermineTokenStandardError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x6b, () => new CouldNotDetermineTokenStandardError());
+createErrorFromNameLookup.set(
+  'CouldNotDetermineTokenStandard',
+  () => new CouldNotDetermineTokenStandardError(),
+);
+
+/**
+ * MissingEditionAccount: 'This mint account has an edition but none was provided.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MissingEditionAccountError extends Error {
+  readonly code: number = 0x6c;
+  readonly name: string = 'MissingEditionAccount';
+  constructor() {
+    super('This mint account has an edition but none was provided.');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MissingEditionAccountError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x6c, () => new MissingEditionAccountError());
+createErrorFromNameLookup.set('MissingEditionAccount', () => new MissingEditionAccountError());
+
+/**
+ * NotAMasterEdition: 'This edition is not a Master Edition'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class NotAMasterEditionError extends Error {
+  readonly code: number = 0x6d;
+  readonly name: string = 'NotAMasterEdition';
+  constructor() {
+    super('This edition is not a Master Edition');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, NotAMasterEditionError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x6d, () => new NotAMasterEditionError());
+createErrorFromNameLookup.set('NotAMasterEdition', () => new NotAMasterEditionError());
+
+/**
+ * MasterEditionHasPrints: 'This Master Edition has existing prints'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MasterEditionHasPrintsError extends Error {
+  readonly code: number = 0x6e;
+  readonly name: string = 'MasterEditionHasPrints';
+  constructor() {
+    super('This Master Edition has existing prints');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MasterEditionHasPrintsError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x6e, () => new MasterEditionHasPrintsError());
+createErrorFromNameLookup.set('MasterEditionHasPrints', () => new MasterEditionHasPrintsError());
+
+/**
+ * BorshDeserializationError: 'Borsh Deserialization Error'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class BorshDeserializationErrorError extends Error {
+  readonly code: number = 0x6f;
+  readonly name: string = 'BorshDeserializationError';
+  constructor() {
+    super('Borsh Deserialization Error');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, BorshDeserializationErrorError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x6f, () => new BorshDeserializationErrorError());
+createErrorFromNameLookup.set(
+  'BorshDeserializationError',
+  () => new BorshDeserializationErrorError(),
+);
+
+/**
+ * CannotUpdateVerifiedCollection: 'Cannot update a verified colleciton in this command'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class CannotUpdateVerifiedCollectionError extends Error {
+  readonly code: number = 0x70;
+  readonly name: string = 'CannotUpdateVerifiedCollection';
+  constructor() {
+    super('Cannot update a verified colleciton in this command');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, CannotUpdateVerifiedCollectionError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x70, () => new CannotUpdateVerifiedCollectionError());
+createErrorFromNameLookup.set(
+  'CannotUpdateVerifiedCollection',
+  () => new CannotUpdateVerifiedCollectionError(),
+);
+
+/**
+ * CollectionMasterEditionAccountInvalid: 'Edition account doesnt match collection '
+ *
+ * @category Errors
+ * @category generated
+ */
+export class CollectionMasterEditionAccountInvalidError extends Error {
+  readonly code: number = 0x71;
+  readonly name: string = 'CollectionMasterEditionAccountInvalid';
+  constructor() {
+    super('Edition account doesnt match collection ');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, CollectionMasterEditionAccountInvalidError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x71, () => new CollectionMasterEditionAccountInvalidError());
+createErrorFromNameLookup.set(
+  'CollectionMasterEditionAccountInvalid',
+  () => new CollectionMasterEditionAccountInvalidError(),
+);
+
+/**
+ * AlreadyVerified: 'Item is already verified.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class AlreadyVerifiedError extends Error {
+  readonly code: number = 0x72;
+  readonly name: string = 'AlreadyVerified';
+  constructor() {
+    super('Item is already verified.');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, AlreadyVerifiedError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x72, () => new AlreadyVerifiedError());
+createErrorFromNameLookup.set('AlreadyVerified', () => new AlreadyVerifiedError());
+
+/**
+ * AlreadyUnverified: 'Item is already unverified.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class AlreadyUnverifiedError extends Error {
+  readonly code: number = 0x73;
+  readonly name: string = 'AlreadyUnverified';
+  constructor() {
+    super('Item is already unverified.');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, AlreadyUnverifiedError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x73, () => new AlreadyUnverifiedError());
+createErrorFromNameLookup.set('AlreadyUnverified', () => new AlreadyUnverifiedError());
+
+/**
+ * NotAPrintEdition: 'This edition is not a Print Edition'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class NotAPrintEditionError extends Error {
+  readonly code: number = 0x74;
+  readonly name: string = 'NotAPrintEdition';
+  constructor() {
+    super('This edition is not a Print Edition');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, NotAPrintEditionError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x74, () => new NotAPrintEditionError());
+createErrorFromNameLookup.set('NotAPrintEdition', () => new NotAPrintEditionError());
+
+/**
+ * InvalidMasterEdition: 'Invalid Master Edition'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidMasterEditionError extends Error {
+  readonly code: number = 0x75;
+  readonly name: string = 'InvalidMasterEdition';
+  constructor() {
+    super('Invalid Master Edition');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidMasterEditionError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x75, () => new InvalidMasterEditionError());
+createErrorFromNameLookup.set('InvalidMasterEdition', () => new InvalidMasterEditionError());
+
+/**
+ * InvalidPrintEdition: 'Invalid Print Edition'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidPrintEditionError extends Error {
+  readonly code: number = 0x76;
+  readonly name: string = 'InvalidPrintEdition';
+  constructor() {
+    super('Invalid Print Edition');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidPrintEditionError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x76, () => new InvalidPrintEditionError());
+createErrorFromNameLookup.set('InvalidPrintEdition', () => new InvalidPrintEditionError());
+
+/**
+ * InvalidEditionMarker: 'Invalid Edition Marker'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidEditionMarkerError extends Error {
+  readonly code: number = 0x77;
+  readonly name: string = 'InvalidEditionMarker';
+  constructor() {
+    super('Invalid Edition Marker');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidEditionMarkerError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x77, () => new InvalidEditionMarkerError());
+createErrorFromNameLookup.set('InvalidEditionMarker', () => new InvalidEditionMarkerError());
+
+/**
+ * ReservationListDeprecated: 'Reservation List is Deprecated'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class ReservationListDeprecatedError extends Error {
+  readonly code: number = 0x78;
+  readonly name: string = 'ReservationListDeprecated';
+  constructor() {
+    super('Reservation List is Deprecated');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, ReservationListDeprecatedError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x78, () => new ReservationListDeprecatedError());
+createErrorFromNameLookup.set(
+  'ReservationListDeprecated',
+  () => new ReservationListDeprecatedError(),
+);
+
+/**
+ * PrintEditionDoesNotMatchMasterEdition: 'Print Edition does not match Master Edition'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class PrintEditionDoesNotMatchMasterEditionError extends Error {
+  readonly code: number = 0x79;
+  readonly name: string = 'PrintEditionDoesNotMatchMasterEdition';
+  constructor() {
+    super('Print Edition does not match Master Edition');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, PrintEditionDoesNotMatchMasterEditionError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x79, () => new PrintEditionDoesNotMatchMasterEditionError());
+createErrorFromNameLookup.set(
+  'PrintEditionDoesNotMatchMasterEdition',
+  () => new PrintEditionDoesNotMatchMasterEditionError(),
+);
+
+/**
+ * EditionNumberGreaterThanMaxSupply: 'Edition Number greater than max supply'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class EditionNumberGreaterThanMaxSupplyError extends Error {
+  readonly code: number = 0x7a;
+  readonly name: string = 'EditionNumberGreaterThanMaxSupply';
+  constructor() {
+    super('Edition Number greater than max supply');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, EditionNumberGreaterThanMaxSupplyError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x7a, () => new EditionNumberGreaterThanMaxSupplyError());
+createErrorFromNameLookup.set(
+  'EditionNumberGreaterThanMaxSupply',
+  () => new EditionNumberGreaterThanMaxSupplyError(),
+);
+
+/**
+ * MustUnverify: 'Must unverify before migrating collections.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MustUnverifyError extends Error {
+  readonly code: number = 0x7b;
+  readonly name: string = 'MustUnverify';
+  constructor() {
+    super('Must unverify before migrating collections.');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MustUnverifyError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x7b, () => new MustUnverifyError());
+createErrorFromNameLookup.set('MustUnverify', () => new MustUnverifyError());
+
+/**
+ * InvalidEscrowBumpSeed: 'Invalid Escrow Account Bump Seed'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidEscrowBumpSeedError extends Error {
+  readonly code: number = 0x7c;
+  readonly name: string = 'InvalidEscrowBumpSeed';
+  constructor() {
+    super('Invalid Escrow Account Bump Seed');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidEscrowBumpSeedError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x7c, () => new InvalidEscrowBumpSeedError());
+createErrorFromNameLookup.set('InvalidEscrowBumpSeed', () => new InvalidEscrowBumpSeedError());
+
+/**
+ * MustBeEscrowAuthority: 'Must Escrow Authority'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MustBeEscrowAuthorityError extends Error {
+  readonly code: number = 0x7d;
+  readonly name: string = 'MustBeEscrowAuthority';
+  constructor() {
+    super('Must Escrow Authority');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MustBeEscrowAuthorityError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x7d, () => new MustBeEscrowAuthorityError());
+createErrorFromNameLookup.set('MustBeEscrowAuthority', () => new MustBeEscrowAuthorityError());
+
+/**
+ * InvalidSystemProgram: 'Invalid System Program'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidSystemProgramError extends Error {
+  readonly code: number = 0x7e;
+  readonly name: string = 'InvalidSystemProgram';
+  constructor() {
+    super('Invalid System Program');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidSystemProgramError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x7e, () => new InvalidSystemProgramError());
+createErrorFromNameLookup.set('InvalidSystemProgram', () => new InvalidSystemProgramError());
+
+/**
+ * MustBeNonFungible: 'Must be a Non Fungible Token'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MustBeNonFungibleError extends Error {
+  readonly code: number = 0x7f;
+  readonly name: string = 'MustBeNonFungible';
+  constructor() {
+    super('Must be a Non Fungible Token');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MustBeNonFungibleError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x7f, () => new MustBeNonFungibleError());
+createErrorFromNameLookup.set('MustBeNonFungible', () => new MustBeNonFungibleError());
+
+/**
+ * InsufficientTokens: 'Insufficient tokens for transfer'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InsufficientTokensError extends Error {
+  readonly code: number = 0x80;
+  readonly name: string = 'InsufficientTokens';
+  constructor() {
+    super('Insufficient tokens for transfer');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InsufficientTokensError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x80, () => new InsufficientTokensError());
+createErrorFromNameLookup.set('InsufficientTokens', () => new InsufficientTokensError());
+
+/**
+ * BorshSerializationError: 'Borsh Serialization Error'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class BorshSerializationErrorError extends Error {
+  readonly code: number = 0x81;
+  readonly name: string = 'BorshSerializationError';
+  constructor() {
+    super('Borsh Serialization Error');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, BorshSerializationErrorError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x81, () => new BorshSerializationErrorError());
+createErrorFromNameLookup.set('BorshSerializationError', () => new BorshSerializationErrorError());
+
+/**
+ * NoFreezeAuthoritySet: 'Cannot create NFT with no Freeze Authority.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class NoFreezeAuthoritySetError extends Error {
+  readonly code: number = 0x82;
+  readonly name: string = 'NoFreezeAuthoritySet';
+  constructor() {
+    super('Cannot create NFT with no Freeze Authority.');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, NoFreezeAuthoritySetError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x82, () => new NoFreezeAuthoritySetError());
+createErrorFromNameLookup.set('NoFreezeAuthoritySet', () => new NoFreezeAuthoritySetError());
+
+/**
+ * InvalidCollectionSizeChange: 'Invalid collection size change'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidCollectionSizeChangeError extends Error {
+  readonly code: number = 0x83;
+  readonly name: string = 'InvalidCollectionSizeChange';
+  constructor() {
+    super('Invalid collection size change');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidCollectionSizeChangeError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x83, () => new InvalidCollectionSizeChangeError());
+createErrorFromNameLookup.set(
+  'InvalidCollectionSizeChange',
+  () => new InvalidCollectionSizeChangeError(),
+);
+
+/**
+ * InvalidBubblegumSigner: 'Invalid bubblegum signer'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidBubblegumSignerError extends Error {
+  readonly code: number = 0x84;
+  readonly name: string = 'InvalidBubblegumSigner';
+  constructor() {
+    super('Invalid bubblegum signer');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidBubblegumSignerError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x84, () => new InvalidBubblegumSignerError());
+createErrorFromNameLookup.set('InvalidBubblegumSigner', () => new InvalidBubblegumSignerError());
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

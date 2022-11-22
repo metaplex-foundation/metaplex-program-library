@@ -11,7 +11,7 @@ use thiserror::Error;
 /// Errors that may be returned by the Metadata program.
 #[derive(Clone, Debug, Eq, Error, FromPrimitive, PartialEq)]
 pub enum MetadataError {
-    /// Failed to unpack instruction data
+    /// 0 Failed to unpack instruction data
     #[error("Failed to unpack instruction data")]
     InstructionUnpackError,
 
@@ -51,7 +51,7 @@ pub enum MetadataError {
     #[error("You must be the mint authority and signer on this transaction")]
     NotMintAuthority,
 
-    /// Mint authority provided does not match the authority on the mint
+    /// 10 - Mint authority provided does not match the authority on the mint
     #[error("Mint authority provided does not match the authority on the mint")]
     InvalidMintAuthority,
 
@@ -91,7 +91,7 @@ pub enum MetadataError {
     #[error("The master edition record passed must match the master record on the edition given")]
     MasterRecordMismatch,
 
-    /// The destination account does not have the right mint
+    /// 20 - The destination account does not have the right mint
     #[error("The destination account does not have the right mint")]
     DestinationMintMismatch,
 
@@ -131,7 +131,7 @@ pub enum MetadataError {
     #[error("The One Time Printing Auth mint does not match that on the master edition!")]
     OneTimePrintingAuthMintMismatch,
 
-    /// The mint of the token account does not match the Printing mint!
+    /// 30 - The mint of the token account does not match the Printing mint!
     #[error("The mint of the token account does not match the Printing mint!")]
     TokenAccountMintMismatch,
 
@@ -173,7 +173,7 @@ pub enum MetadataError {
     #[error("This metadata does not have creators")]
     NoCreatorsPresentOnMetadata,
 
-    /// This creator address was not found
+    /// 40 - This creator address was not found
     #[error("This creator address was not found")]
     CreatorNotFound,
 
@@ -213,7 +213,7 @@ pub enum MetadataError {
     #[error("This reservation list has already been set!")]
     ReservationAlreadyMade,
 
-    /// Provided more addresses than max allowed in single reservation
+    /// 50 - Provided more addresses than max allowed in single reservation
     #[error("Provided more addresses than max allowed in single reservation")]
     BeyondMaxAddressSize,
 
@@ -253,7 +253,7 @@ pub enum MetadataError {
     #[error("Data is immutable")]
     DataIsImmutable,
 
-    /// No duplicate creator addresses
+    /// 60 - No duplicate creator addresses
     #[error("No duplicate creator addresses")]
     DuplicateCreatorAddress,
 
@@ -293,7 +293,7 @@ pub enum MetadataError {
     #[error("Printing mint supply must be zero for conversion")]
     PrintingMintSupplyMustBeZeroForConversion,
 
-    /// One Time Auth mint supply must be zero for conversion
+    /// 70 - One Time Auth mint supply must be zero for conversion
     #[error("One Time Auth mint supply must be zero for conversion")]
     OneTimeAuthMintSupplyMustBeZeroForConversion,
 
@@ -320,12 +320,14 @@ pub enum MetadataError {
 
     #[error("This use method is invalid")]
     InvalidUseMethod,
+
     #[error("Cannot Change Use Method after the first use")]
     CannotChangeUseMethodAfterFirstUse,
 
     #[error("Cannot Change Remaining or Available uses after the first use")]
     CannotChangeUsesAfterFirstUse,
 
+    // 80
     #[error("Collection Not Found on Metadata")]
     CollectionNotFound,
 
@@ -356,11 +358,13 @@ pub enum MetadataError {
     #[error("This Use Authority Record is invalid.")]
     InvalidUseAuthorityRecord,
 
+    // 90
     #[error("This Collection Authority Record is invalid.")]
     InvalidCollectionAuthorityRecord,
 
     #[error("Metadata does not match the freeze authority on the mint")]
     InvalidFreezeAuthority,
+
     #[error("All tokens in this account have not been delegated to this user.")]
     InvalidDelegate,
 
@@ -386,6 +390,140 @@ pub enum MetadataError {
     /// Revoke Collection Authority signer is incorrect
     #[error("Revoke Collection Authority signer is incorrect")]
     RevokeCollectionAuthoritySignerIncorrect,
+
+    // 100
+    #[error("Token close failed")]
+    TokenCloseFailed,
+
+    /// 101 - Calling v1.3 function on unsized collection
+    #[error("Can't use this function on unsized collection")]
+    UnsizedCollection,
+
+    /// 102 - Calling v1.2 function on a sized collection
+    #[error("Can't use this function on a sized collection")]
+    SizedCollection,
+
+    /// 103 - Can't burn a verified member of a collection w/o providing collection metadata account
+    #[error(
+        "Can't burn a verified member of a collection w/o providing collection metadata account"
+    )]
+    MissingCollectionMetadata,
+
+    /// 104 - This NFT is not a member of the specified collection.
+    #[error("This NFT is not a member of the specified collection.")]
+    NotAMemberOfCollection,
+
+    /// 105 - This NFT is not a verified member of the specified collection.
+    #[error("This NFT is not a verified member of the specified collection.")]
+    NotVerifiedMemberOfCollection,
+
+    /// 106 - This NFT is not a collection parent NFT.
+    #[error("This NFT is not a collection parent NFT.")]
+    NotACollectionParent,
+
+    /// 107 - Could not determine a TokenStandard type.
+    #[error("Could not determine a TokenStandard type.")]
+    CouldNotDetermineTokenStandard,
+
+    /// 108 - Missing edition account for a non-fungible token type.
+    #[error("This mint account has an edition but none was provided.")]
+    MissingEditionAccount,
+
+    /// 109 - Not a Master Edition
+    #[error("This edition is not a Master Edition")]
+    NotAMasterEdition,
+
+    /// 110 - Master Edition has prints.
+    #[error("This Master Edition has existing prints")]
+    MasterEditionHasPrints,
+
+    /// 111 - Borsh Deserialization Error
+    #[error("Borsh Deserialization Error")]
+    BorshDeserializationError,
+
+    /// 112 - Cannot update a verified colleciton in this command
+    #[error("Cannot update a verified colleciton in this command")]
+    CannotUpdateVerifiedCollection,
+
+    /// 113 - Edition Account Doesnt Match Collection
+    #[error("Edition account doesnt match collection ")]
+    CollectionMasterEditionAccountInvalid,
+
+    /// 114 - Item is already verified.
+    #[error("Item is already verified.")]
+    AlreadyVerified,
+
+    /// 115 - Item is already unverified.
+    #[error("Item is already unverified.")]
+    AlreadyUnverified,
+
+    /// 116 - Not a Print Edition
+    #[error("This edition is not a Print Edition")]
+    NotAPrintEdition,
+
+    /// 117 - Invalid Edition Marker
+    #[error("Invalid Master Edition")]
+    InvalidMasterEdition,
+
+    /// 118 - Invalid Edition Marker
+    #[error("Invalid Print Edition")]
+    InvalidPrintEdition,
+
+    /// 119 - Invalid Edition Marker
+    #[error("Invalid Edition Marker")]
+    InvalidEditionMarker,
+
+    /// 120 - Reservation List is Deprecated
+    #[error("Reservation List is Deprecated")]
+    ReservationListDeprecated,
+
+    /// 121 - Print Edition doesn't match Master Edition
+    #[error("Print Edition does not match Master Edition")]
+    PrintEditionDoesNotMatchMasterEdition,
+
+    /// 122 - Edition Number greater than max supply
+    #[error("Edition Number greater than max supply")]
+    EditionNumberGreaterThanMaxSupply,
+
+    /// 123 - Must unverify before migrating collections.
+    #[error("Must unverify before migrating collections.")]
+    MustUnverify,
+
+    /// 124 - Invalid Escrow Account Bump Seed
+    #[error("Invalid Escrow Account Bump Seed")]
+    InvalidEscrowBumpSeed,
+
+    /// 125 - Must be Escrow Authority
+    #[error("Must Escrow Authority")]
+    MustBeEscrowAuthority,
+
+    /// 126 - Invalid System Program
+    #[error("Invalid System Program")]
+    InvalidSystemProgram,
+
+    /// 127 - Must be a Non Fungible Token
+    #[error("Must be a Non Fungible Token")]
+    MustBeNonFungible,
+
+    /// 128 - Insufficient tokens for transfer
+    #[error("Insufficient tokens for transfer")]
+    InsufficientTokens,
+
+    /// 129 - Borsh Serialization Error
+    #[error("Borsh Serialization Error")]
+    BorshSerializationError,
+
+    /// 130 - Cannot create NFT with no Freeze Authority.
+    #[error("Cannot create NFT with no Freeze Authority.")]
+    NoFreezeAuthoritySet,
+
+    /// 131
+    #[error("Invalid collection size change")]
+    InvalidCollectionSizeChange,
+
+    /// 132
+    #[error("Invalid bubblegum signer")]
+    InvalidBubblegumSigner,
 }
 
 impl PrintProgramError for MetadataError {

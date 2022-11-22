@@ -1,14 +1,16 @@
+use solana_program::native_token::LAMPORTS_PER_SOL;
 use solana_program::pubkey::Pubkey;
 use solana_sdk::signer::Signer;
 
 use mpl_candy_machine::{
-    CandyMachineData, Creator, EndSettings, GatekeeperConfig, HiddenSettings, WhitelistMintSettings,
+    CandyMachineData, Creator, EndSettings, GatekeeperConfig as GKConfig, HiddenSettings,
+    WhitelistMintSettings,
 };
 
-use crate::CandyManager;
+use crate::utils::CandyManager;
 
 pub const DEFAULT_UUID: &str = "ABCDEF";
-pub const DEFAULT_PRICE: u64 = 1e9 as u64;
+pub const DEFAULT_PRICE: u64 = LAMPORTS_PER_SOL;
 pub const ITEMS_AVAILABLE: u64 = 11;
 pub const DEFAULT_SYMBOL: &str = "SYMBOL";
 
@@ -55,7 +57,7 @@ pub fn custom_config(
     end_settings: Option<EndSettings>,
     hidden_settings: Option<HiddenSettings>,
     whitelist_mint_settings: Option<WhitelistMintSettings>,
-    gatekeeper: Option<GatekeeperConfig>,
+    gatekeeper: Option<GKConfig>,
 ) -> CandyMachineData {
     CandyMachineData {
         uuid: DEFAULT_UUID.to_string(),

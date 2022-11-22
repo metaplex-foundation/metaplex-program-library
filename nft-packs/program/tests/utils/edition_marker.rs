@@ -139,7 +139,13 @@ impl TestEditionMarker {
             context.last_blockhash,
         );
 
-        Ok(context.banks_client.process_transaction(tx).await?)
+        context
+            .banks_client
+            .process_transaction_with_commitment(
+                tx,
+                solana_sdk::commitment_config::CommitmentLevel::Confirmed,
+            )
+            .await
     }
 
     pub async fn create(
@@ -149,7 +155,13 @@ impl TestEditionMarker {
         token_authority: &Keypair,
         master_token_acc: &Pubkey,
     ) -> transport::Result<()> {
-        create_mint(context, &self.mint, &authority.pubkey(), None).await?;
+        create_mint(
+            context,
+            &self.mint,
+            &authority.pubkey(),
+            Some(&authority.pubkey()),
+        )
+        .await?;
         create_token_account(
             context,
             &self.token,
@@ -188,7 +200,13 @@ impl TestEditionMarker {
             context.last_blockhash,
         );
 
-        Ok(context.banks_client.process_transaction(tx).await?)
+        context
+            .banks_client
+            .process_transaction_with_commitment(
+                tx,
+                solana_sdk::commitment_config::CommitmentLevel::Confirmed,
+            )
+            .await
     }
 
     pub async fn create_with_invalid_token_program(
@@ -247,6 +265,12 @@ impl TestEditionMarker {
             context.last_blockhash,
         );
 
-        Ok(context.banks_client.process_transaction(tx).await?)
+        context
+            .banks_client
+            .process_transaction_with_commitment(
+                tx,
+                solana_sdk::commitment_config::CommitmentLevel::Confirmed,
+            )
+            .await
     }
 }

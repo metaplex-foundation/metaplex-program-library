@@ -236,18 +236,25 @@ fn main() -> Result<(), error::Error> {
                 if !metadata_state.primary_sale_happened
                     && utils::is_account_empty(&client, &primary_metadata_creators)?
                 {
+                    let creators = if let Some(metadata_creators) = metadata_state.data.creators {
+                        metadata_creators
+                            .iter()
+                            .map(|item| mpl_fixed_price_sale::state::Creator::from(item.clone()))
+                            .collect()
+                    } else {
+                        vec![mpl_fixed_price_sale::state::Creator {
+                            address: payer_wallet.pubkey(),
+                            verified: false,
+                            share: 100,
+                        }]
+                    };
+
                     let (tx, ui_info) = processor::save_primary_metadata_creators(
                         &client,
                         &payer_wallet,
                         &payer_wallet,
                         &metadata,
-                        &metadata_state.data.creators.unwrap_or(vec![
-                            mpl_token_metadata::state::Creator {
-                                address: payer_wallet.pubkey(),
-                                verified: false,
-                                share: 100,
-                            },
-                        ]),
+                        &creators,
                     )?;
 
                     bundle.push((tx, ui_info));
@@ -365,7 +372,7 @@ fn main() -> Result<(), error::Error> {
                             )
                             .unwrap();
 
-                            mpl_token_metadata::state::Creator {
+                            mpl_fixed_price_sale::state::Creator {
                                 address,
                                 verified: false,
                                 share: obj.get("share").unwrap().as_u64().unwrap() as u8,
@@ -373,7 +380,7 @@ fn main() -> Result<(), error::Error> {
                         })
                         .collect()
                 } else {
-                    vec![mpl_token_metadata::state::Creator {
+                    vec![mpl_fixed_price_sale::state::Creator {
                         address: admin.pubkey(),
                         verified: false,
                         share: 100,

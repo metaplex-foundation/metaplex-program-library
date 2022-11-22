@@ -6,7 +6,7 @@ use num_traits::FromPrimitive;
 use solana_program_test::*;
 use solana_sdk::{
     instruction::InstructionError, signature::Signer, transaction::Transaction,
-    transaction::TransactionError, transport::TransportError,
+    transaction::TransactionError,
 };
 
 use utils::*;
@@ -40,7 +40,6 @@ mod uses {
                 None,
                 10,
                 false,
-                None,
                 None,
                 Some(Uses {
                     use_method: UseMethod::Single,
@@ -101,7 +100,6 @@ mod uses {
                 10,
                 false,
                 None,
-                None,
                 Some(Uses {
                     use_method: UseMethod::Single,
                     total: 1,
@@ -156,7 +154,6 @@ mod uses {
                 None,
                 10,
                 false,
-                None,
                 None,
                 Some(Uses {
                     use_method: UseMethod::Single,
@@ -213,7 +210,6 @@ mod uses {
                 None,
                 10,
                 false,
-                None,
                 None,
                 Some(Uses {
                     use_method: UseMethod::Multiple,
@@ -299,7 +295,6 @@ mod uses {
                 None,
                 10,
                 false,
-                None,
                 None,
                 Some(Uses {
                     use_method: UseMethod::Multiple,
@@ -433,7 +428,6 @@ mod uses {
                 10,
                 false,
                 None,
-                None,
                 Some(Uses {
                     use_method: UseMethod::Burn,
                     total: 1,
@@ -523,7 +517,6 @@ mod uses {
                 None,
                 10,
                 false,
-                None,
                 None,
                 Some(Uses {
                     use_method: UseMethod::Burn,

@@ -6,7 +6,7 @@ use anchor_lang::{
     prelude::*,
     solana_program::{
         program::invoke_signed,
-        program_memory::sol_memcmp,
+        program_memory::{sol_memcmp, sol_memset},
         program_option::COption,
         program_pack::{IsInitialized, Pack},
         pubkey::PUBKEY_BYTES,
@@ -15,10 +15,11 @@ use anchor_lang::{
 };
 use anchor_spl::token::{Mint, Token, TokenAccount};
 use arrayref::array_ref;
-use metaplex_token_metadata::state::Metadata;
+use mpl_token_metadata::state::{Metadata, TokenMetadataAccount};
 use spl_associated_token_account::get_associated_token_address;
 use spl_token::{instruction::initialize_account2, state::Account as SplAccount};
 use std::{convert::TryInto, slice::Iter};
+
 pub fn assert_is_ata(ata: &AccountInfo, wallet: &Pubkey, mint: &Pubkey) -> Result<SplAccount> {
     assert_owned_by(ata, &spl_token::id())?;
     let ata_account: SplAccount = assert_initialized(ata)?;
@@ -48,7 +49,7 @@ pub fn make_ata<'a>(
     };
 
     invoke_signed(
-        &spl_associated_token_account::create_associated_token_account(
+        &spl_associated_token_account::instruction::create_associated_token_account(
             fee_payer.key,
             wallet.key,
             mint.key,
@@ -163,7 +164,15 @@ pub fn assert_valid_delegation(
 
 pub fn assert_keys_equal(key1: Pubkey, key2: Pubkey) -> Result<()> {
     if sol_memcmp(key1.as_ref(), key2.as_ref(), PUBKEY_BYTES) != 0 {
-        return err!(AuctionHouseError::PublicKeyMismatch);
+        err!(AuctionHouseError::PublicKeyMismatch)
+    } else {
+        Ok(())
+    }
+}
+
+pub fn assert_keys_equal_err(key1: Pubkey, key2: Pubkey) -> Result<()> {
+    if sol_memcmp(key1.as_ref(), key2.as_ref(), PUBKEY_BYTES) != 0 {
+        err!(AuctionHouseError::PublicKeyMismatch)
     } else {
         Ok(())
     }
@@ -231,7 +240,7 @@ pub fn assert_program_cancel_instruction(sighash: &[u8]) -> Result<CancelType> {
 
 pub fn assert_program_instruction_equal(sighash: &[u8], expected_sighash: [u8; 8]) -> Result<()> {
     if sighash != expected_sighash {
-        return err!(AuctionHouseError::InstructionMismatch);
+        err!(AuctionHouseError::InstructionMismatch)
     } else {
         Ok(())
     }
@@ -240,7 +249,7 @@ pub fn assert_program_instruction_equal(sighash: &[u8], expected_sighash: [u8; 8
 pub fn assert_initialized<T: Pack + IsInitialized>(account_info: &AccountInfo) -> Result<T> {
     let account: T = T::unpack_unchecked(&account_info.data.borrow())?;
     if !account.is_initialized() {
-        return err!(AuctionHouseError::UninitializedAccount);
+        err!(AuctionHouseError::UninitializedAccount)
     } else {
         Ok(account)
     }
@@ -248,7 +257,7 @@ pub fn assert_initialized<T: Pack + IsInitialized>(account_info: &AccountInfo) -
 
 pub fn assert_owned_by(account: &AccountInfo, owner: &Pubkey) -> Result<()> {
     if account.owner != owner {
-        return err!(AuctionHouseError::IncorrectOwner);
+        err!(AuctionHouseError::IncorrectOwner)
     } else {
         Ok(())
     }
@@ -586,6 +595,7 @@ pub fn assert_valid_trade_state(
             &token_size_bytes,
         ],
     );
+
     let canonical_public_bump = assert_derivation(
         &crate::id(),
         trade_state,
@@ -607,64 +617,56 @@ pub fn assert_valid_trade_state(
     }
 }
 
-pub fn rent_checked_sub(escrow_account: AccountInfo, diff: u64) -> Result<u64> {
-    let rent_minimum: u64 = (Rent::get()?).minimum_balance(escrow_account.data_len());
-    let account_lamports: u64 = escrow_account
+// This function verifies that there are enough funds in `account` such that `amount` can be
+// withdrawn.  If there are not sufficent funds it returns an error.  If there are sufficient
+// funds, it returns any additional amount needed to keep the account above the rent exempt
+// threshold.
+pub fn verify_withdrawal(account: AccountInfo, amount: u64) -> Result<u64> {
+    let rent_minimum = (Rent::get()?).minimum_balance(account.data_len());
+    let diff = account
         .lamports()
-        .checked_sub(diff)
-        .ok_or(AuctionHouseError::NumericalOverflow)?;
+        .checked_sub(amount)
+        .ok_or(AuctionHouseError::InsufficientFunds)?;
 
-    if account_lamports < rent_minimum {
-        Ok(escrow_account.lamports() - rent_minimum)
-    } else {
-        Ok(diff)
-    }
+    Ok(rent_minimum.saturating_sub(diff))
 }
 
-pub fn rent_checked_add(escrow_account: AccountInfo, diff: u64) -> Result<u64> {
-    let rent_minimum: u64 = (Rent::get()?).minimum_balance(escrow_account.data_len());
-    let account_lamports: u64 = escrow_account
+// This function verifies that `amount` can be added to `account`.  This should be true under
+// normal circumstances since lamport amounts should never be overflowing.  The function returns
+// any additional amount needed to keep the account above the rent exempt threshold.
+pub fn verify_deposit(account: AccountInfo, amount: u64) -> Result<u64> {
+    let rent_minimum = (Rent::get()?).minimum_balance(account.data_len());
+    let total = account
         .lamports()
-        .checked_add(diff)
+        .checked_add(amount)
         .ok_or(AuctionHouseError::NumericalOverflow)?;
 
-    if account_lamports < rent_minimum {
-        Ok(rent_minimum - account_lamports)
-    } else {
-        Ok(diff)
-    }
+    Ok(rent_minimum.saturating_sub(total))
 }
 
 pub fn assert_valid_auctioneer_and_scope(
-    auction_house_instance: &Pubkey,
+    auction_house_instance: &Account<AuctionHouse>,
     auctioneer_authority: &Pubkey,
-    auctioneer_pda: &AccountInfo,
+    auctioneer_pda: &Account<Auctioneer>,
     scope: AuthorityScope,
 ) -> Result<()> {
-    let sale_authority_seeds = [
-        AUCTIONEER.as_bytes(),
-        auction_house_instance.as_ref(),
-        auctioneer_authority.as_ref(),
-    ];
-
-    // Assert we're given the correctly derived account.
-    assert_derivation(&crate::id(), auctioneer_pda, &sale_authority_seeds)?;
-
-    // Deserialize into the Rust struct.
-    let data = auctioneer_pda.data.borrow_mut();
-    let auctioneer = Auctioneer::try_deserialize(&mut data.as_ref())
-        .expect("Failed to deserialize Auctioneer account");
-
+    // Assert the Auctioneer is tagged on the auction house
+    assert_keys_equal(
+        auction_house_instance.auctioneer_address,
+        auctioneer_pda.key(),
+    )
+    .map_err(|_e| AuctionHouseError::InvalidAuctioneer)?;
+    // Assert the auctioneer_authority is tagged in the Auctioneer
+    assert_keys_equal(
+        auctioneer_pda.auctioneer_authority,
+        auctioneer_authority.key(),
+    )
+    .map_err(|_e| AuctionHouseError::InvalidAuctioneer)?;
     // Assert authority, auction house instance and scopes are correct.
-    if auctioneer.auction_house != *auction_house_instance {
-        return Err(AuctionHouseError::InvalidAuctioneer.into());
-    }
+    assert_keys_equal(auctioneer_pda.auction_house, auction_house_instance.key())
+        .map_err(|_e| AuctionHouseError::InvalidAuctioneer)?;
 
-    if auctioneer.auctioneer_authority != *auctioneer_authority {
-        return Err(AuctionHouseError::InvalidAuctioneer.into());
-    }
-
-    if !(auctioneer.scopes[scope as usize]) {
+    if !(auction_house_instance.scopes[scope as usize]) {
         return Err(AuctionHouseError::MissingAuctioneerScope.into());
     }
 
@@ -680,6 +682,28 @@ pub fn assert_scopes_eq(
             return Err(AuctionHouseError::MissingAuctioneerScope.into());
         }
     }
+
+    Ok(())
+}
+
+pub fn close_account<'a>(
+    source_account: &AccountInfo<'a>,
+    receiver_account: &AccountInfo<'a>,
+) -> Result<()> {
+    let current_lamports = source_account.lamports();
+    let account_data_size = source_account.data_len();
+
+    **source_account.lamports.borrow_mut() = 0;
+    **receiver_account.lamports.borrow_mut() = receiver_account
+        .lamports()
+        .checked_add(current_lamports)
+        .ok_or(AuctionHouseError::NumericalOverflow)?;
+
+    sol_memset(
+        &mut *source_account.try_borrow_mut_data()?,
+        0,
+        account_data_size,
+    );
 
     Ok(())
 }

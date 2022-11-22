@@ -9,7 +9,9 @@ mod withdraw {
             setup_functions::{setup_selling_resource, setup_store},
         },
     };
-    use anchor_lang::{AccountDeserialize, Id, InstructionData, System, ToAccountMetas};
+    use anchor_lang::{
+        system_program::System, AccountDeserialize, Id, InstructionData, ToAccountMetas,
+    };
     use mpl_fixed_price_sale::{
         accounts as mpl_fixed_price_sale_accounts, instruction as mpl_fixed_price_sale_instruction,
         state::SellingResource,
@@ -22,6 +24,7 @@ mod withdraw {
     use solana_program_test::*;
     use solana_sdk::{
         account::ReadableAccount,
+        commitment_config::CommitmentLevel,
         instruction::{AccountMeta, Instruction},
         program_pack::Pack,
         pubkey::Pubkey,
@@ -29,7 +32,6 @@ mod withdraw {
         signer::Signer,
         system_program, sysvar,
         transaction::Transaction,
-        transport::TransportError,
     };
 
     #[tokio::test]
@@ -138,7 +140,11 @@ mod withdraw {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await.unwrap();
+        context
+            .banks_client
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+            .await
+            .unwrap();
 
         let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
         context.warp_to_slot(clock.slot + 1500).unwrap();
@@ -265,8 +271,8 @@ mod withdraw {
         let primary_royalties_holder = Keypair::new();
 
         let data = mpl_fixed_price_sale_instruction::SavePrimaryMetadataCreators {
-            primary_metadata_creators_bump: primary_metadata_creators_bump,
-            creators: vec![mpl_token_metadata::state::Creator {
+            primary_metadata_creators_bump,
+            creators: vec![mpl_fixed_price_sale::state::Creator {
                 address: primary_royalties_holder.pubkey(),
                 verified: false,
                 share: 100,
@@ -287,7 +293,11 @@ mod withdraw {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await.unwrap();
+        context
+            .banks_client
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+            .await
+            .unwrap();
 
         // Buy
         let accounts = mpl_fixed_price_sale_accounts::Buy {
@@ -333,7 +343,11 @@ mod withdraw {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await.unwrap();
+        context
+            .banks_client
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+            .await
+            .unwrap();
 
         let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
         context.warp_to_slot(clock.slot + 3).unwrap();
@@ -361,7 +375,11 @@ mod withdraw {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await.unwrap();
+        context
+            .banks_client
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+            .await
+            .unwrap();
 
         // Withdraw
         let (payout_ticket, payout_ticket_bump) = find_payout_ticket_address(
@@ -422,7 +440,11 @@ mod withdraw {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await.unwrap();
+        context
+            .banks_client
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+            .await
+            .unwrap();
 
         // Checks
         let payout_ticket_acc = context
@@ -473,7 +495,7 @@ mod withdraw {
         let (treasury_owner, treasyry_owner_bump) =
             find_treasury_owner_address(&treasury_mint, &selling_resource_keypair.pubkey());
 
-        let treasury_holder = treasury_owner.clone();
+        let treasury_holder = treasury_owner;
 
         let start_date = context
             .banks_client
@@ -532,7 +554,11 @@ mod withdraw {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await.unwrap();
+        context
+            .banks_client
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+            .await
+            .unwrap();
 
         let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
         context.warp_to_slot(clock.slot + 1500).unwrap();
@@ -644,8 +670,8 @@ mod withdraw {
         let primary_royalties_holder = Keypair::new();
 
         let data = mpl_fixed_price_sale_instruction::SavePrimaryMetadataCreators {
-            primary_metadata_creators_bump: primary_metadata_creators_bump,
-            creators: vec![mpl_token_metadata::state::Creator {
+            primary_metadata_creators_bump,
+            creators: vec![mpl_fixed_price_sale::state::Creator {
                 address: primary_royalties_holder.pubkey(),
                 verified: false,
                 share: 100,
@@ -666,7 +692,11 @@ mod withdraw {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await.unwrap();
+        context
+            .banks_client
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+            .await
+            .unwrap();
 
         // Buy
         let accounts = mpl_fixed_price_sale_accounts::Buy {
@@ -712,7 +742,11 @@ mod withdraw {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await.unwrap();
+        context
+            .banks_client
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+            .await
+            .unwrap();
 
         let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
         context.warp_to_slot(clock.slot + 3).unwrap();
@@ -740,7 +774,11 @@ mod withdraw {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await.unwrap();
+        context
+            .banks_client
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+            .await
+            .unwrap();
 
         // Withdraw
         let (payout_ticket, payout_ticket_bump) = find_payout_ticket_address(
@@ -798,7 +836,11 @@ mod withdraw {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await.unwrap();
+        context
+            .banks_client
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+            .await
+            .unwrap();
 
         // Checks
         let payout_ticket_acc = context
@@ -924,7 +966,11 @@ mod withdraw {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await.unwrap();
+        context
+            .banks_client
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+            .await
+            .unwrap();
 
         let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
         context.warp_to_slot(clock.slot + 1500).unwrap();
@@ -1080,7 +1126,11 @@ mod withdraw {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await.unwrap();
+        context
+            .banks_client
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+            .await
+            .unwrap();
 
         let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
         context.warp_to_slot(clock.slot + 3).unwrap();
@@ -1108,7 +1158,11 @@ mod withdraw {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await.unwrap();
+        context
+            .banks_client
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+            .await
+            .unwrap();
 
         // Withdraw
         let (payout_ticket, payout_ticket_bump) = find_payout_ticket_address(
@@ -1167,12 +1221,13 @@ mod withdraw {
 
         let tx_err = context
             .banks_client
-            .process_transaction(tx)
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
             .await
             .unwrap_err();
         match tx_err {
-            TransportError::Custom(_) => assert!(true),
-            TransportError::TransactionError(_) => assert!(true),
+            BanksClientError::ClientError(_) => assert!(true),
+            BanksClientError::RpcError(_) => assert!(true),
+            BanksClientError::TransactionError(_) => assert!(true),
             _ => assert!(false),
         }
     }
@@ -1283,7 +1338,11 @@ mod withdraw {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await.unwrap();
+        context
+            .banks_client
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+            .await
+            .unwrap();
 
         let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
         context.warp_to_slot(clock.slot + 1500).unwrap();
@@ -1439,7 +1498,11 @@ mod withdraw {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await.unwrap();
+        context
+            .banks_client
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+            .await
+            .unwrap();
 
         let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
         context.warp_to_slot(clock.slot + 3).unwrap();
@@ -1467,7 +1530,11 @@ mod withdraw {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await.unwrap();
+        context
+            .banks_client
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+            .await
+            .unwrap();
 
         // Withdraw
         let funder = Pubkey::new_unique();
@@ -1525,12 +1592,13 @@ mod withdraw {
 
         let tx_err = context
             .banks_client
-            .process_transaction(tx)
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
             .await
             .unwrap_err();
         match tx_err {
-            TransportError::Custom(_) => assert!(true),
-            TransportError::TransactionError(_) => assert!(true),
+            BanksClientError::ClientError(_) => assert!(true),
+            BanksClientError::RpcError(_) => assert!(true),
+            BanksClientError::TransactionError(_) => assert!(true),
             _ => assert!(false),
         }
     }
@@ -1641,7 +1709,11 @@ mod withdraw {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await.unwrap();
+        context
+            .banks_client
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+            .await
+            .unwrap();
 
         let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
         context.warp_to_slot(clock.slot + 1500).unwrap();
@@ -1768,8 +1840,8 @@ mod withdraw {
         let primary_royalties_holder = Keypair::new();
 
         let data = mpl_fixed_price_sale_instruction::SavePrimaryMetadataCreators {
-            primary_metadata_creators_bump: primary_metadata_creators_bump,
-            creators: vec![mpl_token_metadata::state::Creator {
+            primary_metadata_creators_bump,
+            creators: vec![mpl_fixed_price_sale::state::Creator {
                 address: primary_royalties_holder.pubkey(),
                 verified: false,
                 share: 100,
@@ -1790,7 +1862,11 @@ mod withdraw {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await.unwrap();
+        context
+            .banks_client
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+            .await
+            .unwrap();
 
         // Buy
         let accounts = mpl_fixed_price_sale_accounts::Buy {
@@ -1836,7 +1912,11 @@ mod withdraw {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await.unwrap();
+        context
+            .banks_client
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+            .await
+            .unwrap();
 
         let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
         context.warp_to_slot(clock.slot + 3).unwrap();
@@ -1864,7 +1944,11 @@ mod withdraw {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await.unwrap();
+        context
+            .banks_client
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+            .await
+            .unwrap();
 
         // Withdraw
         let (payout_ticket, payout_ticket_bump) = find_payout_ticket_address(
@@ -1925,7 +2009,11 @@ mod withdraw {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await.unwrap();
+        context
+            .banks_client
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+            .await
+            .unwrap();
 
         let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
         context.warp_to_slot(clock.slot + 3).unwrap();
@@ -1972,12 +2060,13 @@ mod withdraw {
 
         let tx_err = context
             .banks_client
-            .process_transaction(tx)
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
             .await
             .unwrap_err();
         match tx_err {
-            TransportError::Custom(_) => assert!(true),
-            TransportError::TransactionError(_) => assert!(true),
+            BanksClientError::ClientError(_) => assert!(true),
+            BanksClientError::RpcError(_) => assert!(true),
+            BanksClientError::TransactionError(_) => assert!(true),
             _ => assert!(false),
         }
     }

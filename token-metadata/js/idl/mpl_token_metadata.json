@@ -1,5 +1,5 @@
 {
-  "version": "1.2.10",
+  "version": "1.6.1",
   "name": "mpl_token_metadata",
   "instructions": [
     {
@@ -721,7 +721,8 @@
           "name": "rent",
           "isMut": false,
           "isSigner": false,
-          "desc": "Rent info"
+          "desc": "Rent info",
+          "optional": true
         }
       ],
       "args": [
@@ -868,7 +869,8 @@
           "name": "rent",
           "isMut": false,
           "isSigner": false,
-          "desc": "Rent info"
+          "desc": "Rent info",
+          "optional": true
         }
       ],
       "args": [
@@ -972,7 +974,8 @@
           "name": "rent",
           "isMut": false,
           "isSigner": false,
-          "desc": "Rent info"
+          "desc": "Rent info",
+          "optional": true
         }
       ],
       "args": [
@@ -1043,7 +1046,8 @@
           "name": "rent",
           "isMut": false,
           "isSigner": false,
-          "desc": "Rent info"
+          "desc": "Rent info",
+          "optional": true
         }
       ],
       "args": [
@@ -1257,7 +1261,8 @@
           "name": "rent",
           "isMut": false,
           "isSigner": false,
-          "desc": "Rent info"
+          "desc": "Rent info",
+          "optional": true
         }
       ],
       "args": [
@@ -1328,7 +1333,8 @@
           "name": "rent",
           "isMut": false,
           "isSigner": false,
-          "desc": "Rent info"
+          "desc": "Rent info",
+          "optional": true
         }
       ],
       "args": [],
@@ -1433,7 +1439,8 @@
           "name": "rent",
           "isMut": false,
           "isSigner": false,
-          "desc": "Rent info"
+          "desc": "Rent info",
+          "optional": true
         }
       ],
       "args": [],
@@ -1454,7 +1461,7 @@
         {
           "name": "delegateAuthority",
           "isMut": true,
-          "isSigner": true,
+          "isSigner": false,
           "desc": "Delegated Collection Authority"
         },
         {
@@ -1642,6 +1649,698 @@
         "type": "u8",
         "value": 28
       }
+    },
+    {
+      "name": "BurnNft",
+      "accounts": [
+        {
+          "name": "metadata",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Metadata (pda of ['metadata', program id, mint id])"
+        },
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true,
+          "desc": "NFT owner"
+        },
+        {
+          "name": "mint",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Mint of the NFT"
+        },
+        {
+          "name": "tokenAccount",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Token account to close"
+        },
+        {
+          "name": "masterEditionAccount",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "MasterEdition2 of the NFT"
+        },
+        {
+          "name": "splTokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "SPL Token Program"
+        },
+        {
+          "name": "collectionMetadata",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Metadata of the Collection",
+          "optional": true
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 29
+      }
+    },
+    {
+      "name": "VerifySizedCollectionItem",
+      "accounts": [
+        {
+          "name": "metadata",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Metadata account"
+        },
+        {
+          "name": "collectionAuthority",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "Collection Update authority"
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "desc": "payer"
+        },
+        {
+          "name": "collectionMint",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Mint of the Collection"
+        },
+        {
+          "name": "collection",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Metadata Account of the Collection"
+        },
+        {
+          "name": "collectionMasterEditionAccount",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "MasterEdition2 Account of the Collection Token"
+        },
+        {
+          "name": "collectionAuthorityRecord",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Collection Authority Record PDA",
+          "optional": true
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 30
+      }
+    },
+    {
+      "name": "UnverifySizedCollectionItem",
+      "accounts": [
+        {
+          "name": "metadata",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Metadata account"
+        },
+        {
+          "name": "collectionAuthority",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "Collection Authority"
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "desc": "payer"
+        },
+        {
+          "name": "collectionMint",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Mint of the Collection"
+        },
+        {
+          "name": "collection",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Metadata Account of the Collection"
+        },
+        {
+          "name": "collectionMasterEditionAccount",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "MasterEdition2 Account of the Collection Token"
+        },
+        {
+          "name": "collectionAuthorityRecord",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Collection Authority Record PDA",
+          "optional": true
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 31
+      }
+    },
+    {
+      "name": "SetAndVerifySizedCollectionItem",
+      "accounts": [
+        {
+          "name": "metadata",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Metadata account"
+        },
+        {
+          "name": "collectionAuthority",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "Collection Update authority"
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "desc": "payer"
+        },
+        {
+          "name": "updateAuthority",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Update Authority of Collection NFT and NFT"
+        },
+        {
+          "name": "collectionMint",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Mint of the Collection"
+        },
+        {
+          "name": "collection",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Metadata Account of the Collection"
+        },
+        {
+          "name": "collectionMasterEditionAccount",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "MasterEdition2 Account of the Collection Token"
+        },
+        {
+          "name": "collectionAuthorityRecord",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Collection Authority Record PDA",
+          "optional": true
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 32
+      }
+    },
+    {
+      "name": "CreateMetadataAccountV3",
+      "accounts": [
+        {
+          "name": "metadata",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Metadata key (pda of ['metadata', program id, mint id])"
+        },
+        {
+          "name": "mint",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Mint of token asset"
+        },
+        {
+          "name": "mintAuthority",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "Mint authority"
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "desc": "payer"
+        },
+        {
+          "name": "updateAuthority",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "update authority info"
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "System program"
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Rent info",
+          "optional": true
+        }
+      ],
+      "args": [
+        {
+          "name": "createMetadataAccountArgsV3",
+          "type": {
+            "defined": "CreateMetadataAccountArgsV3"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 33
+      }
+    },
+    {
+      "name": "SetCollectionSize",
+      "accounts": [
+        {
+          "name": "collectionMetadata",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Collection Metadata account"
+        },
+        {
+          "name": "collectionAuthority",
+          "isMut": true,
+          "isSigner": true,
+          "desc": "Collection Update authority"
+        },
+        {
+          "name": "collectionMint",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Mint of the Collection"
+        },
+        {
+          "name": "collectionAuthorityRecord",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Collection Authority Record PDA",
+          "optional": true
+        }
+      ],
+      "args": [
+        {
+          "name": "setCollectionSizeArgs",
+          "type": {
+            "defined": "SetCollectionSizeArgs"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 34
+      }
+    },
+    {
+      "name": "SetTokenStandard",
+      "accounts": [
+        {
+          "name": "metadata",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Metadata account"
+        },
+        {
+          "name": "updateAuthority",
+          "isMut": true,
+          "isSigner": true,
+          "desc": "Metadata update authority"
+        },
+        {
+          "name": "mint",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Mint account"
+        },
+        {
+          "name": "edition",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Edition account",
+          "optional": true
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 35
+      }
+    },
+    {
+      "name": "BubblegumSetCollectionSize",
+      "accounts": [
+        {
+          "name": "collectionMetadata",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Collection Metadata account"
+        },
+        {
+          "name": "collectionAuthority",
+          "isMut": true,
+          "isSigner": true,
+          "desc": "Collection Update authority"
+        },
+        {
+          "name": "collectionMint",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Mint of the Collection"
+        },
+        {
+          "name": "bubblegumSigner",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "Signing PDA of Bubblegum program"
+        },
+        {
+          "name": "collectionAuthorityRecord",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Collection Authority Record PDA",
+          "optional": true
+        }
+      ],
+      "args": [
+        {
+          "name": "setCollectionSizeArgs",
+          "type": {
+            "defined": "SetCollectionSizeArgs"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 36
+      }
+    },
+    {
+      "name": "BurnEditionNft",
+      "accounts": [
+        {
+          "name": "metadata",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Metadata (pda of ['metadata', program id, mint id])"
+        },
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true,
+          "desc": "NFT owner"
+        },
+        {
+          "name": "printEditionMint",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Mint of the print edition NFT"
+        },
+        {
+          "name": "masterEditionMint",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Mint of the original/master NFT"
+        },
+        {
+          "name": "printEditionTokenAccount",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Token account the print edition NFT is in"
+        },
+        {
+          "name": "masterEditionTokenAccount",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Token account the Master Edition NFT is in"
+        },
+        {
+          "name": "masterEditionAccount",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "MasterEdition2 of the original NFT"
+        },
+        {
+          "name": "printEditionAccount",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Print Edition account of the NFT"
+        },
+        {
+          "name": "editionMarkerAccount",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Edition Marker PDA of the NFT"
+        },
+        {
+          "name": "splTokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "SPL Token Program"
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 37
+      }
+    },
+    {
+      "name": "CreateEscrowAccount",
+      "accounts": [
+        {
+          "name": "escrow",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Escrow account"
+        },
+        {
+          "name": "metadata",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Metadata account"
+        },
+        {
+          "name": "mint",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Mint account"
+        },
+        {
+          "name": "tokenAccount",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Token account of the token"
+        },
+        {
+          "name": "edition",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Edition account"
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "desc": "Wallet paying for the transaction and new account"
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "System program"
+        },
+        {
+          "name": "sysvarInstructions",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Instructions sysvar account"
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "Authority/creator of the escrow account",
+          "optional": true
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 38
+      }
+    },
+    {
+      "name": "CloseEscrowAccount",
+      "accounts": [
+        {
+          "name": "escrow",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Escrow account"
+        },
+        {
+          "name": "metadata",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Metadata account"
+        },
+        {
+          "name": "mint",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Mint account"
+        },
+        {
+          "name": "tokenAccount",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Token account"
+        },
+        {
+          "name": "edition",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Edition account"
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "desc": "Wallet paying for the transaction and new account"
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "System program"
+        },
+        {
+          "name": "sysvarInstructions",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Instructions sysvar account"
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 39
+      }
+    },
+    {
+      "name": "TransferOutOfEscrow",
+      "accounts": [
+        {
+          "name": "escrow",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Escrow account"
+        },
+        {
+          "name": "metadata",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Metadata account"
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "desc": "Wallet paying for the transaction and new account"
+        },
+        {
+          "name": "attributeMint",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Mint account for the new attribute"
+        },
+        {
+          "name": "attributeSrc",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Token account source for the new attribute"
+        },
+        {
+          "name": "attributeDst",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Token account, owned by TM, destination for the new attribute"
+        },
+        {
+          "name": "escrowMint",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Mint account that the escrow is attached"
+        },
+        {
+          "name": "escrowAccount",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Token account that holds the token the escrow is attached to"
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "System program"
+        },
+        {
+          "name": "ataProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Associated Token program"
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Token program"
+        },
+        {
+          "name": "sysvarInstructions",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Instructions sysvar account"
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "Authority/creator of the escrow account",
+          "optional": true
+        }
+      ],
+      "args": [
+        {
+          "name": "transferOutOfEscrowArgs",
+          "type": {
+            "defined": "TransferOutOfEscrowArgs"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 40
+      }
     }
   ],
   "accounts": [
@@ -1745,6 +2444,14 @@
             "type": {
               "option": {
                 "defined": "Uses"
+              }
+            }
+          },
+          {
+            "name": "collectionDetails",
+            "type": {
+              "option": {
+                "defined": "CollectionDetails"
               }
             }
           }
@@ -1923,6 +2630,34 @@
           }
         ]
       }
+    },
+    {
+      "name": "TokenOwnedEscrow",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "key",
+            "type": {
+              "defined": "Key"
+            }
+          },
+          {
+            "name": "baseToken",
+            "type": "publicKey"
+          },
+          {
+            "name": "authority",
+            "type": {
+              "defined": "EscrowAuthority"
+            }
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
     }
   ],
   "types": [
@@ -2067,6 +2802,32 @@
       }
     },
     {
+      "name": "CreateMetadataAccountArgsV3",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "data",
+            "type": {
+              "defined": "DataV2"
+            }
+          },
+          {
+            "name": "isMutable",
+            "type": "bool"
+          },
+          {
+            "name": "collectionDetails",
+            "type": {
+              "option": {
+                "defined": "CollectionDetails"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
       "name": "CreateMasterEditionArgs",
       "type": {
         "kind": "struct",
@@ -2111,6 +2872,18 @@
         "fields": [
           {
             "name": "numberOfUses",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SetCollectionSizeArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "size",
             "type": "u64"
           }
         ]
@@ -2299,6 +3072,18 @@
       }
     },
     {
+      "name": "TransferOutOfEscrowArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "amount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
       "name": "Key",
       "type": {
         "kind": "enum",
@@ -2332,6 +3117,9 @@
           },
           {
             "name": "CollectionAuthorityRecord"
+          },
+          {
+            "name": "TokenOwnedEscrow"
           }
         ]
       }
@@ -2354,6 +3142,23 @@
       }
     },
     {
+      "name": "CollectionDetails",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "V1",
+            "fields": [
+              {
+                "name": "size",
+                "type": "u64"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
       "name": "TokenStandard",
       "type": {
         "kind": "enum",
@@ -2369,6 +3174,23 @@
           },
           {
             "name": "NonFungibleEdition"
+          }
+        ]
+      }
+    },
+    {
+      "name": "EscrowAuthority",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "TokenOwner"
+          },
+          {
+            "name": "Creator",
+            "fields": [
+              "publicKey"
+            ]
           }
         ]
       }
@@ -2874,12 +3696,177 @@
       "code": 99,
       "name": "RevokeCollectionAuthoritySignerIncorrect",
       "msg": "Revoke Collection Authority signer is incorrect"
+    },
+    {
+      "code": 100,
+      "name": "TokenCloseFailed",
+      "msg": "Token close failed"
+    },
+    {
+      "code": 101,
+      "name": "UnsizedCollection",
+      "msg": "Can't use this function on unsized collection"
+    },
+    {
+      "code": 102,
+      "name": "SizedCollection",
+      "msg": "Can't use this function on a sized collection"
+    },
+    {
+      "code": 103,
+      "name": "MissingCollectionMetadata",
+      "msg": "Can't burn a verified member of a collection w/o providing collection metadata account"
+    },
+    {
+      "code": 104,
+      "name": "NotAMemberOfCollection",
+      "msg": "This NFT is not a member of the specified collection."
+    },
+    {
+      "code": 105,
+      "name": "NotVerifiedMemberOfCollection",
+      "msg": "This NFT is not a verified member of the specified collection."
+    },
+    {
+      "code": 106,
+      "name": "NotACollectionParent",
+      "msg": "This NFT is not a collection parent NFT."
+    },
+    {
+      "code": 107,
+      "name": "CouldNotDetermineTokenStandard",
+      "msg": "Could not determine a TokenStandard type."
+    },
+    {
+      "code": 108,
+      "name": "MissingEditionAccount",
+      "msg": "This mint account has an edition but none was provided."
+    },
+    {
+      "code": 109,
+      "name": "NotAMasterEdition",
+      "msg": "This edition is not a Master Edition"
+    },
+    {
+      "code": 110,
+      "name": "MasterEditionHasPrints",
+      "msg": "This Master Edition has existing prints"
+    },
+    {
+      "code": 111,
+      "name": "BorshDeserializationError",
+      "msg": "Borsh Deserialization Error"
+    },
+    {
+      "code": 112,
+      "name": "CannotUpdateVerifiedCollection",
+      "msg": "Cannot update a verified colleciton in this command"
+    },
+    {
+      "code": 113,
+      "name": "CollectionMasterEditionAccountInvalid",
+      "msg": "Edition account doesnt match collection "
+    },
+    {
+      "code": 114,
+      "name": "AlreadyVerified",
+      "msg": "Item is already verified."
+    },
+    {
+      "code": 115,
+      "name": "AlreadyUnverified",
+      "msg": "Item is already unverified."
+    },
+    {
+      "code": 116,
+      "name": "NotAPrintEdition",
+      "msg": "This edition is not a Print Edition"
+    },
+    {
+      "code": 117,
+      "name": "InvalidMasterEdition",
+      "msg": "Invalid Master Edition"
+    },
+    {
+      "code": 118,
+      "name": "InvalidPrintEdition",
+      "msg": "Invalid Print Edition"
+    },
+    {
+      "code": 119,
+      "name": "InvalidEditionMarker",
+      "msg": "Invalid Edition Marker"
+    },
+    {
+      "code": 120,
+      "name": "ReservationListDeprecated",
+      "msg": "Reservation List is Deprecated"
+    },
+    {
+      "code": 121,
+      "name": "PrintEditionDoesNotMatchMasterEdition",
+      "msg": "Print Edition does not match Master Edition"
+    },
+    {
+      "code": 122,
+      "name": "EditionNumberGreaterThanMaxSupply",
+      "msg": "Edition Number greater than max supply"
+    },
+    {
+      "code": 123,
+      "name": "MustUnverify",
+      "msg": "Must unverify before migrating collections."
+    },
+    {
+      "code": 124,
+      "name": "InvalidEscrowBumpSeed",
+      "msg": "Invalid Escrow Account Bump Seed"
+    },
+    {
+      "code": 125,
+      "name": "MustBeEscrowAuthority",
+      "msg": "Must Escrow Authority"
+    },
+    {
+      "code": 126,
+      "name": "InvalidSystemProgram",
+      "msg": "Invalid System Program"
+    },
+    {
+      "code": 127,
+      "name": "MustBeNonFungible",
+      "msg": "Must be a Non Fungible Token"
+    },
+    {
+      "code": 128,
+      "name": "InsufficientTokens",
+      "msg": "Insufficient tokens for transfer"
+    },
+    {
+      "code": 129,
+      "name": "BorshSerializationError",
+      "msg": "Borsh Serialization Error"
+    },
+    {
+      "code": 130,
+      "name": "NoFreezeAuthoritySet",
+      "msg": "Cannot create NFT with no Freeze Authority."
+    },
+    {
+      "code": 131,
+      "name": "InvalidCollectionSizeChange",
+      "msg": "Invalid collection size change"
+    },
+    {
+      "code": 132,
+      "name": "InvalidBubblegumSigner",
+      "msg": "Invalid bubblegum signer"
     }
   ],
   "metadata": {
     "origin": "shank",
     "address": "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s",
-    "binaryVersion": "0.0.2",
-    "libVersion": "~0.0.2"
+    "binaryVersion": "0.0.9",
+    "libVersion": "0.0.9"
   }
 }

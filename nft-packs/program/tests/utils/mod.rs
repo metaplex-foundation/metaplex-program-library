@@ -11,8 +11,6 @@ mod pack_voucher;
 mod user;
 mod vault;
 
-pub use assert::*;
-pub use edition::*;
 pub use edition_marker::TestEditionMarker;
 pub use external_price::TestExternalPrice;
 pub use master_edition_v2::TestMasterEditionV2;
@@ -23,18 +21,24 @@ pub use pack_voucher::TestPackVoucher;
 use solana_program::clock::Clock;
 use solana_program_test::*;
 use solana_sdk::{
-    account::Account, program_pack::Pack, pubkey::Pubkey, signature::Signer,
-    signer::keypair::Keypair, system_instruction, transaction::Transaction, transport,
+    account::Account,
+    program_pack::Pack,
+    pubkey::Pubkey,
+    signature::Signer,
+    signer::keypair::Keypair,
+    system_instruction,
+    transaction::Transaction,
+    transport::{self, TransportError},
 };
 use spl_token::state::Mint;
-use std::time;
+use std::{env, time};
 pub use user::*;
 pub use vault::TestVault;
 
-pub fn nft_packs_program_test<'a>() -> ProgramTest {
+pub fn nft_packs_program_test() -> ProgramTest {
     let mut program = ProgramTest::new("mpl_nft_packs", mpl_nft_packs::id(), None);
-    program.add_program("mpl_metaplex", mpl_metaplex::id(), None);
     program.add_program("mpl_token_metadata", mpl_token_metadata::id(), None);
+    program.add_program("mpl_metaplex", mpl_metaplex::id(), None);
     program.prefer_bpf(false);
     program
 }
@@ -109,7 +113,13 @@ pub async fn mint_tokens(
         context.last_blockhash,
     );
 
-    context.banks_client.process_transaction(tx).await
+    context
+        .banks_client
+        .process_transaction_with_commitment(
+            tx,
+            solana_sdk::commitment_config::CommitmentLevel::Confirmed,
+        )
+        .await
 }
 
 pub async fn create_token_account(
@@ -142,7 +152,13 @@ pub async fn create_token_account(
         context.last_blockhash,
     );
 
-    context.banks_client.process_transaction(tx).await
+    context
+        .banks_client
+        .process_transaction_with_commitment(
+            tx,
+            solana_sdk::commitment_config::CommitmentLevel::Confirmed,
+        )
+        .await
 }
 
 pub async fn transfer_token(
@@ -167,7 +183,13 @@ pub async fn transfer_token(
         context.last_blockhash,
     );
 
-    context.banks_client.process_transaction(tx).await
+    context
+        .banks_client
+        .process_transaction_with_commitment(
+            tx,
+            solana_sdk::commitment_config::CommitmentLevel::Confirmed,
+        )
+        .await
 }
 
 pub async fn create_account<S: Pack>(
@@ -190,7 +212,13 @@ pub async fn create_account<S: Pack>(
         context.last_blockhash,
     );
 
-    context.banks_client.process_transaction(tx).await
+    context
+        .banks_client
+        .process_transaction_with_commitment(
+            tx,
+            solana_sdk::commitment_config::CommitmentLevel::Confirmed,
+        )
+        .await
 }
 
 pub async fn create_mint(
@@ -224,7 +252,13 @@ pub async fn create_mint(
         context.last_blockhash,
     );
 
-    context.banks_client.process_transaction(tx).await
+    context
+        .banks_client
+        .process_transaction_with_commitment(
+            tx,
+            solana_sdk::commitment_config::CommitmentLevel::Confirmed,
+        )
+        .await
 }
 
 pub async fn create_store(
@@ -255,7 +289,39 @@ pub async fn create_store(
         context.last_blockhash,
     );
 
-    context.banks_client.process_transaction(tx).await.unwrap();
+    unwrap_ignoring_io_error_in_ci(
+        context
+            .banks_client
+            .process_transaction_with_commitment(
+                tx,
+                solana_sdk::commitment_config::CommitmentLevel::Confirmed,
+            )
+            .await,
+    );
 
     Ok(store_key)
+}
+
+/// See `assert_error_ignoring_io_error_in_ci` for more details regarding this workaround
+pub fn unwrap_ignoring_io_error_in_ci(result: Result<(), TransportError>) {
+    match result {
+        Ok(()) => (),
+        Err(error) => match error {
+            TransportError::IoError(err) if env::var("CI").is_ok() => match err.kind() {
+                std::io::ErrorKind::Other
+                    if &err.to_string() == "the request exceeded its deadline" =>
+                {
+                    eprintln!("Encountered {:#?} error", err);
+                    eprintln!("However since we are running in CI this is acceptable and we can ignore it");
+                }
+                _ => {
+                    eprintln!("Encountered {:#?} error ({})", err, err);
+                    panic!("Encountered unknown IoError");
+                }
+            },
+            _ => {
+                panic!("Encountered: {:#?}", error);
+            }
+        },
+    }
 }

@@ -26,7 +26,7 @@ export type MintNewEditionFromMasterEditionViaVaultProxyInstructionArgs = {
  * @category MintNewEditionFromMasterEditionViaVaultProxy
  * @category generated
  */
-const MintNewEditionFromMasterEditionViaVaultProxyStruct = new beet.BeetArgsStruct<
+export const MintNewEditionFromMasterEditionViaVaultProxyStruct = new beet.BeetArgsStruct<
   MintNewEditionFromMasterEditionViaVaultProxyInstructionArgs & {
     instructionDiscriminator: number;
   }
@@ -75,10 +75,13 @@ export type MintNewEditionFromMasterEditionViaVaultProxyInstructionAccounts = {
   vault: web3.PublicKey;
   newMetadataUpdateAuthority: web3.PublicKey;
   metadata: web3.PublicKey;
+  tokenProgram?: web3.PublicKey;
   tokenVaultProgram: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
+  rent?: web3.PublicKey;
 };
 
-const mintNewEditionFromMasterEditionViaVaultProxyInstructionDiscriminator = 13;
+export const mintNewEditionFromMasterEditionViaVaultProxyInstructionDiscriminator = 13;
 
 /**
  * Creates a _MintNewEditionFromMasterEditionViaVaultProxy_ instruction.
@@ -93,118 +96,105 @@ const mintNewEditionFromMasterEditionViaVaultProxyInstructionDiscriminator = 13;
 export function createMintNewEditionFromMasterEditionViaVaultProxyInstruction(
   accounts: MintNewEditionFromMasterEditionViaVaultProxyInstructionAccounts,
   args: MintNewEditionFromMasterEditionViaVaultProxyInstructionArgs,
+  programId = new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
 ) {
-  const {
-    newMetadata,
-    newEdition,
-    masterEdition,
-    newMint,
-    editionMarkPda,
-    newMintAuthority,
-    payer,
-    vaultAuthority,
-    safetyDepositStore,
-    safetyDepositBox,
-    vault,
-    newMetadataUpdateAuthority,
-    metadata,
-    tokenVaultProgram,
-  } = accounts;
-
   const [data] = MintNewEditionFromMasterEditionViaVaultProxyStruct.serialize({
     instructionDiscriminator: mintNewEditionFromMasterEditionViaVaultProxyInstructionDiscriminator,
     ...args,
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: newMetadata,
+      pubkey: accounts.newMetadata,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: newEdition,
+      pubkey: accounts.newEdition,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: masterEdition,
+      pubkey: accounts.masterEdition,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: newMint,
+      pubkey: accounts.newMint,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: editionMarkPda,
+      pubkey: accounts.editionMarkPda,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: newMintAuthority,
+      pubkey: accounts.newMintAuthority,
       isWritable: false,
       isSigner: true,
     },
     {
-      pubkey: payer,
+      pubkey: accounts.payer,
       isWritable: true,
       isSigner: true,
     },
     {
-      pubkey: vaultAuthority,
+      pubkey: accounts.vaultAuthority,
       isWritable: false,
       isSigner: true,
     },
     {
-      pubkey: safetyDepositStore,
+      pubkey: accounts.safetyDepositStore,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: safetyDepositBox,
+      pubkey: accounts.safetyDepositBox,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: vault,
+      pubkey: accounts.vault,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: newMetadataUpdateAuthority,
+      pubkey: accounts.newMetadataUpdateAuthority,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: metadata,
+      pubkey: accounts.metadata,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: splToken.TOKEN_PROGRAM_ID,
+      pubkey: accounts.tokenProgram ?? splToken.TOKEN_PROGRAM_ID,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: tokenVaultProgram,
+      pubkey: accounts.tokenVaultProgram,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: web3.SystemProgram.programId,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: web3.SYSVAR_RENT_PUBKEY,
+      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
       isWritable: false,
       isSigner: false,
     },
   ];
 
+  if (accounts.rent != null) {
+    keys.push({
+      pubkey: accounts.rent,
+      isWritable: false,
+      isSigner: false,
+    });
+  }
+
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
+    programId,
     keys,
     data,
   });

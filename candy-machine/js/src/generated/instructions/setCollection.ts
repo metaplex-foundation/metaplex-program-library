@@ -13,7 +13,7 @@ import * as web3 from '@solana/web3.js';
  * @category SetCollection
  * @category generated
  */
-const setCollectionStruct = new beet.BeetArgsStruct<{
+export const setCollectionStruct = new beet.BeetArgsStruct<{
   instructionDiscriminator: number[] /* size: 8 */;
 }>(
   [['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)]],
@@ -40,14 +40,17 @@ export type SetCollectionInstructionAccounts = {
   authority: web3.PublicKey;
   collectionPda: web3.PublicKey;
   payer: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
+  rent?: web3.PublicKey;
   metadata: web3.PublicKey;
   mint: web3.PublicKey;
   edition: web3.PublicKey;
   collectionAuthorityRecord: web3.PublicKey;
   tokenMetadataProgram: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
 };
 
-const setCollectionInstructionDiscriminator = [192, 254, 206, 76, 168, 182, 59, 223];
+export const setCollectionInstructionDiscriminator = [192, 254, 206, 76, 168, 182, 59, 223];
 
 /**
  * Creates a _SetCollection_ instruction.
@@ -57,82 +60,79 @@ const setCollectionInstructionDiscriminator = [192, 254, 206, 76, 168, 182, 59, 
  * @category SetCollection
  * @category generated
  */
-export function createSetCollectionInstruction(accounts: SetCollectionInstructionAccounts) {
-  const {
-    candyMachine,
-    authority,
-    collectionPda,
-    payer,
-    metadata,
-    mint,
-    edition,
-    collectionAuthorityRecord,
-    tokenMetadataProgram,
-  } = accounts;
-
+export function createSetCollectionInstruction(
+  accounts: SetCollectionInstructionAccounts,
+  programId = new web3.PublicKey('cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ'),
+) {
   const [data] = setCollectionStruct.serialize({
     instructionDiscriminator: setCollectionInstructionDiscriminator,
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: candyMachine,
+      pubkey: accounts.candyMachine,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: authority,
+      pubkey: accounts.authority,
       isWritable: false,
       isSigner: true,
     },
     {
-      pubkey: collectionPda,
+      pubkey: accounts.collectionPda,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: payer,
+      pubkey: accounts.payer,
       isWritable: false,
       isSigner: true,
     },
     {
-      pubkey: web3.SystemProgram.programId,
+      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: web3.SYSVAR_RENT_PUBKEY,
+      pubkey: accounts.rent ?? web3.SYSVAR_RENT_PUBKEY,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: metadata,
+      pubkey: accounts.metadata,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: mint,
+      pubkey: accounts.mint,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: edition,
+      pubkey: accounts.edition,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: collectionAuthorityRecord,
+      pubkey: accounts.collectionAuthorityRecord,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: tokenMetadataProgram,
+      pubkey: accounts.tokenMetadataProgram,
       isWritable: false,
       isSigner: false,
     },
   ];
 
+  if (accounts.anchorRemainingAccounts != null) {
+    for (const acc of accounts.anchorRemainingAccounts) {
+      keys.push(acc);
+    }
+  }
+
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey('cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ'),
+    programId,
     keys,
     data,
   });

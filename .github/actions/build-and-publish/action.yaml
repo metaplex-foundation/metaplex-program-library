@@ -1,0 +1,84 @@
+name: 'Build program and upload output to S3'
+description: 'Uploads verifiable build output and metadata to S3'
+inputs:
+  program-binary:
+    description: 'Program binary to upload'
+    required: true
+  name:
+    description: 'The file name that will be exist in S3'
+    required: true
+  account-id:
+    description: 'AWS account ID'
+    required: true
+  region:
+    description: 'AWS region'
+    required: true
+  role:
+    description: 'AWS role with permissions to perform desired action'
+    required: true
+  bucket:
+    description: 'S3 bucket to which file will upload'
+    required: true
+  prefix:
+    description: 'Prefix in the bucket to which the file will upload'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - uses: actions/checkout@v3
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+    - uses: ./.github/actions/anchor-build/
+    - uses: actions/upload-artifact@v2
+      with:
+        name: ${{ inputs.program-binary }}
+        # this is referencing the workspace since upload-artifact does not respect relative the working-directory
+        path: target/verifiable/${{ inputs.program-binary }}
+        if-no-files-found: error
+
+    # todo: parse toml for version and use that in S3 prefix
+    - name: Upload binary to S3
+      uses: ./.github/actions/upload-to-s3/
+      id: upload-binary
+      with:
+        # should be at root of workspace, which is where target/ dir is
+        path-to-file: ${{ inputs.program-binary }}
+        name: ${{ inputs.program-binary }}
+        account-id: ${{ inputs.account-id }}
+        region: ${{ inputs.region }}
+        role: ${{ inputs.role }}
+        bucket: ${{ inputs.bucket }}
+        prefix: ${{ inputs.prefix }}/${{ github.event.head_commit.id }}
+
+    # dump commit context to index.json & upload that
+    - name: Dump context to metadata
+      run: |
+        echo "$(cat <<-END
+            {
+                "binary_path": "${{ steps.upload-binary.outputs.uploaded-file-path }}",
+                "id": "${{ github.event.head_commit.id }}",
+                "url": "${{ github.event.head_commit.url }}",
+                "timestamp": "${{ github.event.head_commit.timestamp }}"
+            }
+        END
+        )" > ~/program-binary-context.json
+      shell: bash
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: program-binary-context.json
+        path: ~/program-binary-context.json
+        if-no-files-found: error
+
+    - name: Upload binary metadata to S3
+      uses: ./.github/actions/upload-to-s3/
+      id: upload-binary-metadata
+      with:
+        path-to-file: program-binary-context.json
+        name: index.json
+        account-id: ${{ inputs.account-id }}
+        region: ${{ inputs.region }}
+        role: ${{ inputs.role }}
+        bucket: ${{ inputs.bucket }}
+        prefix: ${{ inputs.prefix }}

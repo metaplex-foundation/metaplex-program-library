@@ -13,7 +13,7 @@ import * as web3 from '@solana/web3.js';
  * @category WithdrawFunds
  * @category generated
  */
-const withdrawFundsStruct = new beet.BeetArgsStruct<{
+export const withdrawFundsStruct = new beet.BeetArgsStruct<{
   instructionDiscriminator: number[] /* size: 8 */;
 }>(
   [['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)]],
@@ -23,7 +23,7 @@ const withdrawFundsStruct = new beet.BeetArgsStruct<{
  * Accounts required by the _withdrawFunds_ instruction
  *
  * @property [_writable_] candyMachine
- * @property [**signer**] authority
+ * @property [_writable_, **signer**] authority
  * @category Instructions
  * @category WithdrawFunds
  * @category generated
@@ -31,9 +31,10 @@ const withdrawFundsStruct = new beet.BeetArgsStruct<{
 export type WithdrawFundsInstructionAccounts = {
   candyMachine: web3.PublicKey;
   authority: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
 };
 
-const withdrawFundsInstructionDiscriminator = [241, 36, 29, 111, 208, 31, 104, 217];
+export const withdrawFundsInstructionDiscriminator = [241, 36, 29, 111, 208, 31, 104, 217];
 
 /**
  * Creates a _WithdrawFunds_ instruction.
@@ -43,27 +44,34 @@ const withdrawFundsInstructionDiscriminator = [241, 36, 29, 111, 208, 31, 104, 2
  * @category WithdrawFunds
  * @category generated
  */
-export function createWithdrawFundsInstruction(accounts: WithdrawFundsInstructionAccounts) {
-  const { candyMachine, authority } = accounts;
-
+export function createWithdrawFundsInstruction(
+  accounts: WithdrawFundsInstructionAccounts,
+  programId = new web3.PublicKey('cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ'),
+) {
   const [data] = withdrawFundsStruct.serialize({
     instructionDiscriminator: withdrawFundsInstructionDiscriminator,
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: candyMachine,
+      pubkey: accounts.candyMachine,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: authority,
-      isWritable: false,
+      pubkey: accounts.authority,
+      isWritable: true,
       isSigner: true,
     },
   ];
 
+  if (accounts.anchorRemainingAccounts != null) {
+    for (const acc of accounts.anchorRemainingAccounts) {
+      keys.push(acc);
+    }
+  }
+
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey('cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ'),
+    programId,
     keys,
     data,
   });

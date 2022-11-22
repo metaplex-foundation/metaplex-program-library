@@ -14,7 +14,6 @@ use solana_sdk::{
     instruction::InstructionError,
     signature::{Keypair, Signer},
     transaction::{Transaction, TransactionError},
-    transport::TransportError,
 };
 use utils::*;
 
@@ -34,7 +33,7 @@ mod create_meta_accounts {
         let puffed_uri = puffed_out_string(&uri, MAX_URI_LENGTH);
 
         test_metadata
-            .create(&mut context, name, symbol, uri, None, 10, false)
+            .create(&mut context, name, symbol, uri, None, 10, false, 0)
             .await
             .unwrap();
 
@@ -84,7 +83,6 @@ mod create_meta_accounts {
                 10,
                 false,
                 None,
-                None,
                 uses.to_owned(),
             )
             .await
@@ -113,7 +111,7 @@ mod create_meta_accounts {
         let fake_mint_authority = Keypair::new();
         let payer_pubkey = context.payer.pubkey();
 
-        create_mint(&mut context, &test_metadata.mint, &payer_pubkey, None)
+        create_mint(&mut context, &test_metadata.mint, &payer_pubkey, None, 0)
             .await
             .unwrap();
         create_token_account(
@@ -219,6 +217,7 @@ mod create_meta_accounts {
                 None,
                 10,
                 false,
+                0,
             )
             .await
             .unwrap_err();
@@ -232,7 +231,7 @@ mod create_meta_accounts {
     async fn fail_creators(
         mut context: ProgramTestContext,
         creators: Vec<Creator>,
-    ) -> TransportError {
+    ) -> BanksClientError {
         Metadata::new()
             .create_v2(
                 &mut context,
@@ -242,7 +241,6 @@ mod create_meta_accounts {
                 Some(creators),
                 10,
                 false,
-                None,
                 None,
                 None,
             )
@@ -375,7 +373,6 @@ mod create_meta_accounts {
                 false,
                 None,
                 None,
-                None,
             )
             .await
             .unwrap();
@@ -424,6 +421,23 @@ mod create_meta_accounts {
 
         pass_creators(context, creators).await;
     }
+
+    #[tokio::test]
+    async fn two_unverified_creators_update_authority_not_creator() {
+        let context = program_test().start_with_context().await;
+        let (creator1, creator2) = (Keypair::new(), Keypair::new());
+        let creators = vec![&creator1, &creator2]
+            .into_iter()
+            .map(|creator| Creator {
+                address: creator.pubkey(),
+                share: 50,
+                verified: false,
+            })
+            .collect::<Vec<Creator>>();
+
+        pass_creators(context, creators).await;
+    }
+
     // -----------------
     // Uses Failures
     // -----------------
@@ -438,7 +452,6 @@ mod create_meta_accounts {
                 None,
                 10,
                 false,
-                None,
                 None,
                 Some(uses),
             )
@@ -512,7 +525,6 @@ mod create_meta_accounts {
                 None,
                 10,
                 false,
-                None,
                 None,
                 Some(uses.clone()),
             )

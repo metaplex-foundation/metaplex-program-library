@@ -3,7 +3,7 @@ use borsh::ser::BorshSerialize;
 use mpl_token_metadata::{
     id,
     instruction::{self, CreateMasterEditionArgs, MetadataInstruction},
-    state::{EDITION, PREFIX},
+    state::{MasterEditionV2 as ProgramMasterEdition, TokenMetadataAccount, EDITION, PREFIX},
 };
 use solana_program::{
     borsh::try_from_slice_unchecked,
@@ -15,7 +15,6 @@ use solana_sdk::{
     pubkey::Pubkey,
     signature::{Keypair, Signer},
     transaction::Transaction,
-    transport,
 };
 
 #[derive(Debug)]
@@ -50,7 +49,7 @@ impl MasterEditionV2 {
         context: &mut ProgramTestContext,
     ) -> mpl_token_metadata::state::MasterEditionV2 {
         let account = get_account(context, &self.pubkey).await;
-        try_from_slice_unchecked(&account.data).unwrap()
+        ProgramMasterEdition::safe_deserialize(&account.data).unwrap()
     }
 
     pub async fn get_data_from_account(
@@ -65,7 +64,7 @@ impl MasterEditionV2 {
         &self,
         context: &mut ProgramTestContext,
         max_supply: Option<u64>,
-    ) -> transport::Result<()> {
+    ) -> Result<(), BanksClientError> {
         let fake_token_program = Keypair::new();
 
         let fake_instruction = Instruction {
@@ -100,7 +99,7 @@ impl MasterEditionV2 {
         &self,
         context: &mut ProgramTestContext,
         max_supply: Option<u64>,
-    ) -> transport::Result<()> {
+    ) -> Result<(), BanksClientError> {
         let tx = Transaction::new_signed_with_payer(
             &[instruction::create_master_edition(
                 id(),
@@ -124,7 +123,7 @@ impl MasterEditionV2 {
         &self,
         context: &mut ProgramTestContext,
         max_supply: Option<u64>,
-    ) -> transport::Result<()> {
+    ) -> Result<(), BanksClientError> {
         let tx = Transaction::new_signed_with_payer(
             &[instruction::create_master_edition_v3(
                 id(),
@@ -142,5 +141,27 @@ impl MasterEditionV2 {
         );
 
         context.banks_client.process_transaction(tx).await
+    }
+
+    pub async fn mint_editions(
+        &self,
+        context: &mut ProgramTestContext,
+        nft: &Metadata,
+        number: u64,
+    ) -> Result<Vec<EditionMarker>, BanksClientError> {
+        let mut editions = Vec::new();
+
+        for i in 1..=number {
+            let print_edition = EditionMarker::new(nft, self, i);
+            print_edition.create(context).await?;
+            editions.push(print_edition);
+        }
+
+        Ok(editions)
+    }
+
+    pub async fn get_supplies(&self, context: &mut ProgramTestContext) -> (u64, u64) {
+        let master_edition = self.get_data(context).await;
+        (master_edition.supply, master_edition.max_supply.unwrap())
     }
 }

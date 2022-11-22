@@ -11,12 +11,12 @@ pub use metadata::Metadata;
 use solana_program_test::*;
 use solana_sdk::{
     account::Account, program_pack::Pack, pubkey::Pubkey, signature::Signer,
-    signer::keypair::Keypair, system_instruction, transaction::Transaction, transport,
+    signer::keypair::Keypair, system_instruction, transaction::Transaction,
 };
 use spl_token::state::Mint;
 pub use vault::Vault;
 
-pub fn program_test<'a>() -> ProgramTest {
+pub fn program_test() -> ProgramTest {
     ProgramTest::new("mpl_token_metadata", mpl_token_metadata::id(), None)
 }
 
@@ -41,7 +41,7 @@ pub async fn mint_tokens(
     amount: u64,
     owner: &Pubkey,
     additional_signer: Option<&Keypair>,
-) -> transport::Result<()> {
+) -> Result<(), BanksClientError> {
     let mut signing_keypairs = vec![&context.payer];
     if let Some(signer) = additional_signer {
         signing_keypairs.push(signer);
@@ -65,7 +65,7 @@ pub async fn create_token_account(
     account: &Keypair,
     mint: &Pubkey,
     manager: &Pubkey,
-) -> transport::Result<()> {
+) -> Result<(), BanksClientError> {
     let rent = context.banks_client.get_rent().await.unwrap();
 
     let tx = Transaction::new_signed_with_payer(
@@ -86,7 +86,7 @@ pub async fn create_token_account(
             .unwrap(),
         ],
         Some(&context.payer.pubkey()),
-        &[&context.payer, &account],
+        &[&context.payer, account],
         context.last_blockhash,
     );
 
@@ -98,7 +98,7 @@ pub async fn create_mint(
     mint: &Keypair,
     manager: &Pubkey,
     freeze_authority: Option<&Pubkey>,
-) -> transport::Result<()> {
+) -> Result<(), BanksClientError> {
     let rent = context.banks_client.get_rent().await.unwrap();
 
     let tx = Transaction::new_signed_with_payer(
@@ -113,14 +113,14 @@ pub async fn create_mint(
             spl_token::instruction::initialize_mint(
                 &spl_token::id(),
                 &mint.pubkey(),
-                &manager,
+                manager,
                 freeze_authority,
                 0,
             )
             .unwrap(),
         ],
         Some(&context.payer.pubkey()),
-        &[&context.payer, &mint],
+        &[&context.payer, mint],
         context.last_blockhash,
     );
 

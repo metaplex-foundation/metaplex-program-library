@@ -1,16 +1,18 @@
-use crate::{error::ErrorCode, utils::*, SavePrimaryMetadataCreators};
+use crate::{error::ErrorCode, state::Creator, utils::*, SavePrimaryMetadataCreators};
 use anchor_lang::prelude::*;
+use mpl_token_metadata::state::TokenMetadataAccount;
 
 impl<'info> SavePrimaryMetadataCreators<'info> {
     pub fn process(
         &mut self,
         _primary_metadata_creators_bump: u8,
-        creators: Vec<mpl_token_metadata::state::Creator>,
+        creators: Vec<Creator>,
     ) -> Result<()> {
         let metadata = &self.metadata;
         let admin = &self.admin;
         let secondary_metadata_creators = &mut self.primary_metadata_creators;
-        let metadata_state = mpl_token_metadata::state::Metadata::from_account_info(&metadata)?;
+        let metadata_state: mpl_token_metadata::state::Metadata =
+            mpl_token_metadata::state::Metadata::from_account_info(metadata)?;
 
         if creators.len() > MAX_PRIMARY_CREATORS_LEN {
             return Err(ErrorCode::CreatorsIsGtThanAvailable.into());

@@ -1,6 +1,6 @@
 use crate::{
     error::ErrorCode,
-    state::{MarketState, PrimaryMetadataCreators},
+    state::{Creator, MarketState, PrimaryMetadataCreators},
     utils::*,
     Withdraw,
 };
@@ -9,6 +9,7 @@ use anchor_spl::{
     associated_token::{self, get_associated_token_address},
     token,
 };
+use mpl_token_metadata::state::TokenMetadataAccount;
 
 impl<'info> Withdraw<'info> {
     pub fn process(
@@ -33,8 +34,8 @@ impl<'info> Withdraw<'info> {
         let clock = &self.clock;
         let metadata = &self.metadata.to_account_info();
 
-        let selling_resource_key = selling_resource.key().clone();
-        let treasury_mint_key = market.treasury_mint.clone();
+        let selling_resource_key = selling_resource.key();
+        let treasury_mint_key = market.treasury_mint;
         let funder_key = funder.key();
 
         // Check, that `Market` is `Ended`
@@ -42,10 +43,8 @@ impl<'info> Withdraw<'info> {
             if clock.unix_timestamp as u64 <= end_date {
                 return Err(ErrorCode::MarketInInvalidState.into());
             }
-        } else {
-            if market.state != MarketState::Ended {
-                return Err(ErrorCode::MarketInInvalidState.into());
-            }
+        } else if market.state != MarketState::Ended {
+            return Err(ErrorCode::MarketInInvalidState.into());
         }
 
         // Check, that provided metadata is correct
@@ -60,9 +59,10 @@ impl<'info> Withdraw<'info> {
         )?;
 
         // Obtain right creators according to sale type
-        let metadata = mpl_token_metadata::state::Metadata::from_account_info(&metadata)?;
+        let metadata: mpl_token_metadata::state::Metadata =
+            mpl_token_metadata::state::Metadata::from_account_info(metadata)?;
         let actual_creators = if !metadata.primary_sale_happened {
-            if remaining_accounts.len() == 0 {
+            if remaining_accounts.is_empty() {
                 return Err(ErrorCode::PrimaryMetadataCreatorsNotProvided.into());
             }
 
@@ -71,15 +71,22 @@ impl<'info> Withdraw<'info> {
                 &primary_metadata_creators_data,
             )?;
             Box::new(Some(primary_metadata_creators.creators))
+        } else if let Some(creators) = metadata.data.creators {
+            Box::new(Some(
+                creators
+                    .iter()
+                    .map(|item| Creator::from(item.clone()))
+                    .collect(),
+            ))
         } else {
-            Box::new(metadata.data.creators)
+            Box::new(None)
         };
 
         // Check, that funder is `Creator` or `Market` owner
         // `Some` mean funder is `Creator`
         // `None` mean funder is `Market` owner
         let funder_creator = if let Some(creators) = *actual_creators {
-            let funder_creator = creators.iter().find(|&c| c.address == funder_key).cloned();
+            let funder_creator = creators.iter().find(|c| c.address == funder_key).cloned();
             if funder_creator.is_none() && funder_key != market.owner {
                 return Err(ErrorCode::FunderIsInvalid.into());
             }
@@ -132,15 +139,13 @@ impl<'info> Withdraw<'info> {
                     metadata.data.seller_fee_basis_points as u64,
                 )?
             }
+        } else if let Some(funder_creator) = funder_creator {
+            calculate_primary_shares_for_creator(
+                market.funds_collected,
+                funder_creator.share as u64,
+            )?
         } else {
-            if let Some(funder_creator) = funder_creator {
-                calculate_primary_shares_for_creator(
-                    market.funds_collected,
-                    funder_creator.share as u64,
-                )?
-            } else {
-                return Err(ErrorCode::MarketOwnerDoesntHaveShares.into());
-            }
+            return Err(ErrorCode::MarketOwnerDoesntHaveShares.into());
         };
 
         // Transfer royalties

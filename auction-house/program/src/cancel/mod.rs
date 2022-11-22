@@ -63,7 +63,7 @@ impl<'info> From<AuctioneerCancel<'info>> for Cancel<'info> {
             wallet: a.wallet,
             token_account: a.token_account,
             token_mint: a.token_mint,
-            authority: a.auctioneer_authority,
+            authority: a.authority,
             auction_house: a.auction_house,
             auction_house_fee_account: a.auction_house_fee_account,
             trade_state: a.trade_state,
@@ -88,9 +88,13 @@ pub struct AuctioneerCancel<'info> {
     /// Token mint account of SPL token.
     pub token_mint: Box<Account<'info, Mint>>,
 
+    /// CHECK: Validated as a signer in cancel_logic.
+    /// Auction House instance authority account.
+    pub authority: UncheckedAccount<'info>,
+
     /// CHECK: Validated in ah_auctioneer_pda seeds anbd as a signer in cancel_logic.
     /// The auctioneer authority - typically a PDA of the Auctioneer program running this action.
-    pub auctioneer_authority: UncheckedAccount<'info>,
+    pub auctioneer_authority: Signer<'info>,
 
     /// Auction House instance PDA account.
     #[account(
@@ -100,6 +104,7 @@ pub struct AuctioneerCancel<'info> {
             auction_house.treasury_mint.as_ref()
         ],
         bump=auction_house.bump,
+        has_one=authority,
         has_one=auction_house_fee_account
     )]
     pub auction_house: Box<Account<'info, AuctionHouse>>,
@@ -130,9 +135,9 @@ pub struct AuctioneerCancel<'info> {
             auction_house.key().as_ref(),
             auctioneer_authority.key().as_ref()
         ],
-        bump = auction_house.auctioneer_pda_bump
+        bump = ah_auctioneer_pda.bump
     )]
-    pub ah_auctioneer_pda: UncheckedAccount<'info>,
+    pub ah_auctioneer_pda: Account<'info, Auctioneer>,
 
     pub token_program: Program<'info, Token>,
 }
@@ -146,7 +151,7 @@ pub fn cancel<'info>(
     let auction_house = &ctx.accounts.auction_house;
 
     // If it has an auctioneer authority delegated must use auctioneer_* handler.
-    if auction_house.has_auctioneer {
+    if auction_house.has_auctioneer && auction_house.scopes[AuthorityScope::Cancel as usize] {
         return Err(AuctionHouseError::MustUseAuctioneerHandler.into());
     }
 
@@ -167,7 +172,7 @@ pub fn auctioneer_cancel<'info>(
     }
 
     assert_valid_auctioneer_and_scope(
-        &auction_house.key(),
+        auction_house,
         &auctioneer_authority.key(),
         ah_auctioneer_pda,
         AuthorityScope::Cancel,

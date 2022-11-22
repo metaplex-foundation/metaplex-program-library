@@ -25,7 +25,7 @@ pub mod token_entangler {
 
     pub fn create_entangled_pair<'info>(
         ctx: Context<'_, '_, '_, 'info, CreateEntangledPair<'info>>,
-        bump: u8,
+        _bump: u8,
         _reverse_bump: u8,
         token_a_escrow_bump: u8,
         token_b_escrow_bump: u8,
@@ -55,7 +55,10 @@ pub mod token_entangler {
             return Err(ErrorCode::EntangledPairExists.into());
         }
 
-        entangled_pair.bump = bump;
+        entangled_pair.bump = *ctx
+            .bumps
+            .get("entangled_pair")
+            .ok_or(ErrorCode::BumpSeedNotInHashMap)?;
         entangled_pair.token_a_escrow_bump = token_a_escrow_bump;
         entangled_pair.token_b_escrow_bump = token_b_escrow_bump;
         entangled_pair.price = price;
@@ -102,16 +105,16 @@ pub mod token_entangler {
         let mint_b_key = mint_b.key();
         let token_a_escrow_seeds = [
             PREFIX.as_bytes(),
-            &mint_a_key.as_ref(),
-            &mint_b_key.as_ref(),
+            mint_a_key.as_ref(),
+            mint_b_key.as_ref(),
             ESCROW.as_bytes(),
             A_NAME.as_bytes(),
             &[token_a_escrow_bump],
         ];
         let token_b_escrow_seeds = [
             PREFIX.as_bytes(),
-            &mint_a_key.as_ref(),
-            &mint_b_key.as_ref(),
+            mint_a_key.as_ref(),
+            mint_b_key.as_ref(),
             ESCROW.as_bytes(),
             B_NAME.as_bytes(),
             &[token_b_escrow_bump],
@@ -120,7 +123,7 @@ pub mod token_entangler {
         create_program_token_account_if_not_present(
             token_a_escrow,
             system_program,
-            &payer,
+            payer,
             token_program,
             &mint_a.to_account_info(),
             &entangled_pair.to_account_info(),
@@ -132,7 +135,7 @@ pub mod token_entangler {
         create_program_token_account_if_not_present(
             token_b_escrow,
             system_program,
-            &payer,
+            payer,
             token_program,
             &mint_b.to_account_info(),
             &entangled_pair.to_account_info(),
@@ -221,8 +224,8 @@ pub mod token_entangler {
 
         let signer_seeds = [
             PREFIX.as_bytes(),
-            &entangled_pair.mint_a.as_ref(),
-            &entangled_pair.mint_b.as_ref(),
+            entangled_pair.mint_a.as_ref(),
+            entangled_pair.mint_b.as_ref(),
             &[entangled_pair.bump],
         ];
 
@@ -288,10 +291,10 @@ pub mod token_entangler {
         if !entangled_pair.paid || entangled_pair.pays_every_time {
             pay_creator_fees(
                 &mut ctx.remaining_accounts.iter(),
-                &replacement_token_metadata,
-                &payment_account,
-                &payment_transfer_authority,
-                &payer,
+                replacement_token_metadata,
+                payment_account,
+                payment_transfer_authority,
+                payer,
                 &treasury_mint.to_account_info(),
                 &ata_program.to_account_info(),
                 &token_program.to_account_info(),
@@ -447,4 +450,6 @@ pub enum ErrorCode {
     EntangledPairExists,
     #[msg("Must have supply one!")]
     MustHaveSupplyOne,
+    #[msg("Bump seed not in hash map")]
+    BumpSeedNotInHashMap,
 }

@@ -8,7 +8,6 @@ use solana_sdk::{
     instruction::InstructionError,
     signature::{Keypair, Signer},
     transaction::{Transaction, TransactionError},
-    transport::TransportError,
 };
 use utils::*;
 
@@ -30,6 +29,7 @@ mod create_master_edition {
                 None,
                 10,
                 false,
+                0,
             )
             .await
             .unwrap();
@@ -69,7 +69,6 @@ mod create_master_edition {
                 None,
                 10,
                 false,
-                None,
                 None,
                 None,
             )
@@ -112,6 +111,7 @@ mod create_master_edition {
                 None,
                 10,
                 false,
+                0,
             )
             .await
             .unwrap();
@@ -156,6 +156,7 @@ mod create_master_edition {
                 None,
                 10,
                 false,
+                0,
             )
             .await
             .unwrap();
@@ -185,11 +186,12 @@ mod create_master_edition {
                 None,
                 10,
                 false,
+                0,
             )
             .await
             .unwrap();
 
-        create_mint(&mut context, &fake_mint, &payer_pubkey, None)
+        create_mint(&mut context, &fake_mint, &payer_pubkey, None, 0)
             .await
             .unwrap();
         create_token_account(
@@ -241,6 +243,7 @@ mod create_master_edition {
                 None,
                 10,
                 false,
+                0,
             )
             .await
             .unwrap();
@@ -286,7 +289,6 @@ mod create_master_edition {
                 None,
                 10,
                 false,
-                None,
                 None,
                 None,
             )
@@ -338,12 +340,11 @@ mod create_master_edition {
                 false,
                 None,
                 None,
-                None,
             )
             .await
             .unwrap();
 
-        create_mint(&mut context, &fake_mint, &payer_pubkey, None)
+        create_mint(&mut context, &fake_mint, &payer_pubkey, None, 0)
             .await
             .unwrap();
         create_token_account(

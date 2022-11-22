@@ -86,14 +86,14 @@ export const createBuyTransaction = async ({
       // metaplex token metadata program address
       tokenMetadataProgram: PROGRAM_ID,
       clock: SYSVAR_CLOCK_PUBKEY,
-      additionalKeys,
+      anchorRemainingAccounts: additionalKeys,
     },
     { tradeHistoryBump, vaultOwnerBump },
   );
 
   const tx = new Transaction();
   tx.add(instruction);
-  tx.recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
+  tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
   tx.feePayer = buyer;
 
   return { tx };

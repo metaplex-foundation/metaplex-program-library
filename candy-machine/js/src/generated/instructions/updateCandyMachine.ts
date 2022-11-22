@@ -22,7 +22,7 @@ export type UpdateCandyMachineInstructionArgs = {
  * @category UpdateCandyMachine
  * @category generated
  */
-const updateCandyMachineStruct = new beet.FixableBeetArgsStruct<
+export const updateCandyMachineStruct = new beet.FixableBeetArgsStruct<
   UpdateCandyMachineInstructionArgs & {
     instructionDiscriminator: number[] /* size: 8 */;
   }
@@ -47,9 +47,10 @@ export type UpdateCandyMachineInstructionAccounts = {
   candyMachine: web3.PublicKey;
   authority: web3.PublicKey;
   wallet: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
 };
 
-const updateCandyMachineInstructionDiscriminator = [243, 251, 124, 156, 211, 211, 118, 239];
+export const updateCandyMachineInstructionDiscriminator = [243, 251, 124, 156, 211, 211, 118, 239];
 
 /**
  * Creates a _UpdateCandyMachine_ instruction.
@@ -64,33 +65,38 @@ const updateCandyMachineInstructionDiscriminator = [243, 251, 124, 156, 211, 211
 export function createUpdateCandyMachineInstruction(
   accounts: UpdateCandyMachineInstructionAccounts,
   args: UpdateCandyMachineInstructionArgs,
+  programId = new web3.PublicKey('cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ'),
 ) {
-  const { candyMachine, authority, wallet } = accounts;
-
   const [data] = updateCandyMachineStruct.serialize({
     instructionDiscriminator: updateCandyMachineInstructionDiscriminator,
     ...args,
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: candyMachine,
+      pubkey: accounts.candyMachine,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: authority,
+      pubkey: accounts.authority,
       isWritable: false,
       isSigner: true,
     },
     {
-      pubkey: wallet,
+      pubkey: accounts.wallet,
       isWritable: false,
       isSigner: false,
     },
   ];
 
+  if (accounts.anchorRemainingAccounts != null) {
+    for (const acc of accounts.anchorRemainingAccounts) {
+      keys.push(acc);
+    }
+  }
+
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey('cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ'),
+    programId,
     keys,
     data,
   });

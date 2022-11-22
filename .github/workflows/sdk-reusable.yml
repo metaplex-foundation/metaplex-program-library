@@ -1,0 +1,59 @@
+name: SDK Reusable Test
+
+on:
+  workflow_call:
+    inputs:
+      name:
+        required: true
+        type: string
+      skip_test:
+        required: true
+        type: boolean
+      cache:
+        required: true
+        type: boolean
+      changes:
+        required: true
+        type: boolean
+
+env:
+  CARGO_TERM_COLOR: always
+  SOLANA_VERSION: 1.10.40
+  RUST_TOOLCHAIN: stable
+  CACHE: ${{ inputs.cache }}
+
+jobs:
+  changes:
+    name: Changes
+    runs-on: ubuntu-latest
+    # Set job outputs to values from filter step
+    outputs:
+      package: ${{ steps.filter.outputs.package }}
+      workflow: ${{ steps.filter.outputs.workflow }}
+    steps:
+      - uses: actions/checkout@v3
+      # For pull requests it's not necessary to checkout the code
+      - uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            package:
+              - '${{ inputs.name }}/js/**'
+            workflow:
+              - '.github/workflows/sdk-reusable.yml'
+
+  build-lint-and-test:
+    name: Build Lint and Test
+    needs: changes
+    if: |
+      inputs.changes == false ||
+      needs.changes.outputs.package == 'true' || 
+      needs.changes.outputs.workflow == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ./.github/actions/yarn-install-and-verify
+        with:
+          cache_id: sdk-${{ inputs.name }}
+          working_dir: ./${{ inputs.name }}/js
+          skip_test: ${{ inputs.skip_test }}

@@ -9,7 +9,6 @@ use solana_sdk::{
     instruction::InstructionError,
     signature::{Keypair, Signer},
     transaction::{Transaction, TransactionError},
-    transport::TransportError,
 };
 use utils::*;
 mod freeze_delegated {
@@ -18,7 +17,6 @@ mod freeze_delegated {
     #[tokio::test]
     async fn freeze_delegated_token_success() {
         let mut context = program_test().start_with_context().await;
-        let freeze_authority = &context.payer.pubkey();
         let delegate = Keypair::new();
 
         // create metadata
@@ -32,7 +30,6 @@ mod freeze_delegated {
                 None,
                 10,
                 false,
-                Some(freeze_authority),
                 None,
                 None,
             )
@@ -114,7 +111,6 @@ mod freeze_delegated {
     #[tokio::test]
     async fn freeze_delegated_no_freeze_authority() {
         let mut context = program_test().start_with_context().await;
-        let freeze_authority = &context.payer.pubkey();
         let delegate = Keypair::new();
 
         // create metadata
@@ -128,7 +124,6 @@ mod freeze_delegated {
                 None,
                 10,
                 false,
-                Some(freeze_authority),
                 None,
                 None,
             )
@@ -173,7 +168,6 @@ mod freeze_delegated {
     #[tokio::test]
     async fn freeze_delegated_token_not_delegated() {
         let mut context = program_test().start_with_context().await;
-        let freeze_authority = &context.payer.pubkey();
         let _delegate = Keypair::new();
 
         // create metadata
@@ -187,7 +181,6 @@ mod freeze_delegated {
                 None,
                 10,
                 false,
-                Some(freeze_authority),
                 None,
                 None,
             )
@@ -229,7 +222,6 @@ mod freeze_delegated {
     #[tokio::test]
     async fn freeze_delegated_token_try_thaw() {
         let mut context = program_test().start_with_context().await;
-        let freeze_authority = &context.payer.pubkey();
         let delegate = Keypair::new();
 
         // create metadata
@@ -243,7 +235,6 @@ mod freeze_delegated {
                 None,
                 10,
                 false,
-                Some(freeze_authority),
                 None,
                 None,
             )

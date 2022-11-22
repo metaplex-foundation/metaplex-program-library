@@ -30,7 +30,7 @@ export type CreateMarketInstructionArgs = {
  * @category CreateMarket
  * @category generated
  */
-const createMarketStruct = new beet.FixableBeetArgsStruct<
+export const createMarketStruct = new beet.FixableBeetArgsStruct<
   CreateMarketInstructionArgs & {
     instructionDiscriminator: number[] /* size: 8 */;
   }
@@ -51,6 +51,14 @@ const createMarketStruct = new beet.FixableBeetArgsStruct<
 );
 /**
  * Accounts required by the _createMarket_ instruction
+ *
+ * @property [_writable_, **signer**] market
+ * @property [] store
+ * @property [_writable_, **signer**] sellingResourceOwner
+ * @property [_writable_] sellingResource
+ * @property [] mint
+ * @property [_writable_] treasuryHolder
+ * @property [] owner
  * @category Instructions
  * @category CreateMarket
  * @category generated
@@ -63,10 +71,11 @@ export type CreateMarketInstructionAccounts = {
   mint: web3.PublicKey;
   treasuryHolder: web3.PublicKey;
   owner: web3.PublicKey;
-  collectionMint?: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
 };
 
-const createMarketInstructionDiscriminator = [103, 226, 97, 235, 200, 188, 251, 254];
+export const createMarketInstructionDiscriminator = [103, 226, 97, 235, 200, 188, 251, 254];
 
 /**
  * Creates a _CreateMarket_ instruction.
@@ -81,75 +90,63 @@ const createMarketInstructionDiscriminator = [103, 226, 97, 235, 200, 188, 251, 
 export function createCreateMarketInstruction(
   accounts: CreateMarketInstructionAccounts,
   args: CreateMarketInstructionArgs,
+  programId = new web3.PublicKey('SaLeTjyUa5wXHnGuewUSyJ5JWZaHwz3TxqUntCE9czo'),
 ) {
-  const {
-    market,
-    store,
-    sellingResourceOwner,
-    sellingResource,
-    mint,
-    treasuryHolder,
-    owner,
-    collectionMint,
-  } = accounts;
-
   const [data] = createMarketStruct.serialize({
     instructionDiscriminator: createMarketInstructionDiscriminator,
     ...args,
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: market,
+      pubkey: accounts.market,
       isWritable: true,
       isSigner: true,
     },
     {
-      pubkey: store,
+      pubkey: accounts.store,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: sellingResourceOwner,
+      pubkey: accounts.sellingResourceOwner,
       isWritable: true,
       isSigner: true,
     },
     {
-      pubkey: sellingResource,
+      pubkey: accounts.sellingResource,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: mint,
+      pubkey: accounts.mint,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: treasuryHolder,
+      pubkey: accounts.treasuryHolder,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: owner,
+      pubkey: accounts.owner,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: web3.SystemProgram.programId,
+      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
       isWritable: false,
       isSigner: false,
     },
   ];
 
-  if (collectionMint) {
-    keys.push({
-      pubkey: collectionMint,
-      isWritable: false,
-      isSigner: false,
-    });
+  if (accounts.anchorRemainingAccounts != null) {
+    for (const acc of accounts.anchorRemainingAccounts) {
+      keys.push(acc);
+    }
   }
 
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey('SaLeTjyUa5wXHnGuewUSyJ5JWZaHwz3TxqUntCE9czo'),
+    programId,
     keys,
     data,
   });

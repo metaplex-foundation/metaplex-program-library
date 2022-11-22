@@ -1,6 +1,6 @@
 use crate::{
     error::MetadataError,
-    state::{Data, DataV2, Metadata},
+    state::{Data, DataV2, Metadata, TokenMetadataAccount},
     utils::{
         assert_data_valid, assert_owned_by, assert_update_authority_is_correct,
         process_create_metadata_accounts_logic, puff_out_data_fields,
@@ -18,7 +18,6 @@ pub fn process_deprecated_create_metadata_accounts<'a>(
     program_id: &'a Pubkey,
     accounts: &'a [AccountInfo<'a>],
     data: Data,
-    allow_direct_creator_writes: bool,
     is_mutable: bool,
 ) -> ProgramResult {
     let account_info_iter = &mut accounts.iter();
@@ -28,7 +27,6 @@ pub fn process_deprecated_create_metadata_accounts<'a>(
     let payer_account_info = next_account_info(account_info_iter)?;
     let update_authority_info = next_account_info(account_info_iter)?;
     let system_account_info = next_account_info(account_info_iter)?;
-    let rent_info = next_account_info(account_info_iter)?;
 
     process_create_metadata_accounts_logic(
         program_id,
@@ -39,7 +37,6 @@ pub fn process_deprecated_create_metadata_accounts<'a>(
             payer_account_info,
             update_authority_info,
             system_account_info,
-            rent_info,
         },
         DataV2 {
             name: data.name,
@@ -50,10 +47,11 @@ pub fn process_deprecated_create_metadata_accounts<'a>(
             collection: None,
             uses: None,
         },
-        allow_direct_creator_writes,
+        false,
         is_mutable,
         false,
         false,
+        None, // Does not support collection parents.
     )
 }
 
@@ -82,7 +80,6 @@ pub fn process_deprecated_update_metadata_accounts(
                 &metadata,
                 false,
                 update_authority_info.is_signer,
-                true,
             )?;
             metadata.data = data;
         } else {

@@ -26,7 +26,7 @@ export type CreateMasterEditionV3InstructionArgs = {
  * @category CreateMasterEditionV3
  * @category generated
  */
-const CreateMasterEditionV3Struct = new beet.FixableBeetArgsStruct<
+export const CreateMasterEditionV3Struct = new beet.FixableBeetArgsStruct<
   CreateMasterEditionV3InstructionArgs & {
     instructionDiscriminator: number;
   }
@@ -57,9 +57,12 @@ export type CreateMasterEditionV3InstructionAccounts = {
   mintAuthority: web3.PublicKey;
   payer: web3.PublicKey;
   metadata: web3.PublicKey;
+  tokenProgram?: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
+  rent?: web3.PublicKey;
 };
 
-const createMasterEditionV3InstructionDiscriminator = 17;
+export const createMasterEditionV3InstructionDiscriminator = 17;
 
 /**
  * Creates a _CreateMasterEditionV3_ instruction.
@@ -74,63 +77,65 @@ const createMasterEditionV3InstructionDiscriminator = 17;
 export function createCreateMasterEditionV3Instruction(
   accounts: CreateMasterEditionV3InstructionAccounts,
   args: CreateMasterEditionV3InstructionArgs,
+  programId = new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
 ) {
-  const { edition, mint, updateAuthority, mintAuthority, payer, metadata } = accounts;
-
   const [data] = CreateMasterEditionV3Struct.serialize({
     instructionDiscriminator: createMasterEditionV3InstructionDiscriminator,
     ...args,
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: edition,
+      pubkey: accounts.edition,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: mint,
+      pubkey: accounts.mint,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: updateAuthority,
+      pubkey: accounts.updateAuthority,
       isWritable: false,
       isSigner: true,
     },
     {
-      pubkey: mintAuthority,
+      pubkey: accounts.mintAuthority,
       isWritable: false,
       isSigner: true,
     },
     {
-      pubkey: payer,
+      pubkey: accounts.payer,
       isWritable: true,
       isSigner: true,
     },
     {
-      pubkey: metadata,
+      pubkey: accounts.metadata,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: splToken.TOKEN_PROGRAM_ID,
+      pubkey: accounts.tokenProgram ?? splToken.TOKEN_PROGRAM_ID,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: web3.SystemProgram.programId,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: web3.SYSVAR_RENT_PUBKEY,
+      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
       isWritable: false,
       isSigner: false,
     },
   ];
 
+  if (accounts.rent != null) {
+    keys.push({
+      pubkey: accounts.rent,
+      isWritable: false,
+      isSigner: false,
+    });
+  }
+
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
+    programId,
     keys,
     data,
   });
