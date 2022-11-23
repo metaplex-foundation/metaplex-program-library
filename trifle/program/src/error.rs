@@ -71,6 +71,9 @@ pub enum TrifleError {
 
     #[error("Failed to borrow account data")]
     FailedToBorrowAccountData,
+
+    #[error("Failed to deserialize collection")]
+    InvalidCollection,
 }
 
 impl From<TrifleError> for ProgramError {
