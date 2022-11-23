@@ -361,12 +361,22 @@ fn transfer_in(
         EscrowConstraintModel::try_from_slice(&constraint_model_info.data.borrow())
             .map_err(|_| TrifleError::InvalidEscrowConstraintModel)?;
 
-    constraint_model.validate(attribute_mint_info.key, &args.slot)?;
-
     let constraint = constraint_model
         .constraints
         .get(&args.slot)
         .ok_or(TrifleError::InvalidEscrowConstraint)?;
+
+    if let EscrowConstraintType::Collection(_) = constraint.constraint_type {
+        let collection_key = attribute_metadata
+            .collection
+            .clone()
+            .ok_or(TrifleError::InvalidCollection)?
+            .key;
+
+        constraint_model.validate(&collection_key, &args.slot)?;
+    } else {
+        constraint_model.validate(attribute_mint_info.key, &args.slot)?;
+    }
 
     let transfer_effects = TransferEffects::from(constraint.transfer_effects);
 
