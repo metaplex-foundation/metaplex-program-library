@@ -41,8 +41,10 @@ pub fn pay_royalties<'a>(
     royalty_recipient: &AccountInfo<'a>,
     system_program: &AccountInfo<'a>,
 ) -> ProgramResult {
+    // Fetch the royalty fee from the royalties map.
     let royalty = *model.royalties.get(&instruction).unwrap_or(&0);
-    solana_program::msg!("Here");
+
+    // Transfer royalties from the payer to the Constraint Model
     invoke(
         &system_instruction::transfer(
             payer.key,
@@ -55,8 +57,8 @@ pub fn pay_royalties<'a>(
             system_program.clone(),
         ],
     )?;
-    solana_program::msg!("Here also");
 
+    // Update the royalties balance on the Constraint Model minus the 20% Metaplex cut.
     model.royalty_balance += royalty
         .checked_mul(8)
         .ok_or(TrifleError::NumericalOverflow)?
@@ -66,7 +68,7 @@ pub fn pay_royalties<'a>(
     Ok(())
 }
 
+// Check for matches against Create Constraint Model or any of the Add Constraint instructions.
 pub fn is_creation_instruction(hash: u8) -> bool {
-    // Check for matches against Create Constraint Model or any of the Add Constraint instructions.
     matches!(hash, 0 | 4 | 5 | 6)
 }

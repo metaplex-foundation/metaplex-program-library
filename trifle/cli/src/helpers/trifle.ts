@@ -98,14 +98,11 @@ export const addNoneConstraint = async (
     },
   );
 
-  console.log(JSON.stringify(addIX, null, 2));
-
   const tx = new Transaction().add(addIX);
 
   const { blockhash } = await connection.getLatestBlockhash();
   tx.recentBlockhash = blockhash;
   tx.feePayer = keypair.publicKey;
-  console.log(JSON.stringify(tx, null, 2));
   const sig = await connection.sendTransaction(tx, [keypair], {skipPreflight: true});
   await connection.confirmTransaction(sig, "finalized");
 };

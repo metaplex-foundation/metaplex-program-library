@@ -806,6 +806,7 @@ fn add_constraint_to_escrow_constraint_model(
         .constraints
         .insert(constraint_name, escrow_constraint);
 
+    // Pay royalties and protocol fees if we haven't already.
     if take_fees {
         pay_royalties(
             RoyaltyInstruction::AddConstraint,
@@ -856,6 +857,7 @@ fn add_none_constraint_to_escrow_constraint_model(
         transfer_effects: args.transfer_effects,
     };
 
+    // Check if the previous instruction was a creation instruction, so we don't double-charge protocol fees.
     let mut creation_ix = false;
     if load_current_index_checked(sysvar_instruction_info)? > 0 {
         let prev_ix = get_instruction_relative(-1, sysvar_instruction_info)?;
@@ -898,6 +900,7 @@ fn add_collection_constraint_to_escrow_constraint_model(
         transfer_effects: args.transfer_effects,
     };
 
+    // Check if the previous instruction was a creation instruction, so we don't double-charge protocol fees.
     let mut creation_ix = false;
     if load_current_index_checked(sysvar_instruction_info)? > 0 {
         let prev_ix = get_instruction_relative(-1, sysvar_instruction_info)?;
@@ -932,6 +935,7 @@ fn add_tokens_constraint_to_escrow_constraint_model(
         transfer_effects: args.transfer_effects,
     };
 
+    // Check if the previous instruction was a creation instruction, so we don't double-charge protocol fees.
     let mut creation_ix = false;
     if load_current_index_checked(sysvar_instruction_info)? > 0 {
         let prev_ix = get_instruction_relative(-1, sysvar_instruction_info)?;
@@ -1038,6 +1042,8 @@ fn set_royalties(
         EscrowConstraintModel::try_from_slice(&constraint_model_info.data.borrow())
             .map_err(|_| TrifleError::InvalidEscrowConstraintModel)?;
 
+    // Royalties are set on a per-instruction basis, so loop through each
+    // IX:Royalty pair and set the royalty in the map.
     for ix_type in args.royalties {
         constraint_model
             .royalties
@@ -1115,6 +1121,8 @@ fn withdraw_royalties(
 
     // Check that the payer is the update authority before paying out royalties.
     if payer_info.key == update_authority_info.key {
+        // Transfer the creator royalties balance to the destination account
+        // and set the balance to 0 afterwards.
         invoke_signed(
             &system_instruction::transfer(
                 constraint_model_info.key,
@@ -1137,6 +1145,8 @@ fn withdraw_royalties(
         .try_to_vec()
         .map_err(|_| TrifleError::FailedToSerialize)?;
 
+    // Transfer the remaining balance to the Metaplex DAO. The untracked balance
+    // (account.lamports - rent - royalty_balance) is the total collected protocol fees.
     invoke_signed(
         &system_instruction::transfer(
             constraint_model_info.key,
