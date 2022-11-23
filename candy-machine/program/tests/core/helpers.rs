@@ -1,7 +1,7 @@
 use solana_program_test::{BanksClientError, ProgramTestContext};
-use solana_sdk::commitment_config::CommitmentLevel;
 use solana_sdk::{
     account::Account,
+    commitment_config::CommitmentLevel,
     program_pack::Pack,
     pubkey::Pubkey,
     signer::{keypair::Keypair, Signer},

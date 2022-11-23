@@ -3,19 +3,22 @@
 
 use anchor_client::solana_sdk::transaction::Transaction;
 use mpl_candy_machine::WhitelistMintMode;
-use solana_program::instruction::InstructionError;
-use solana_program::pubkey::Pubkey;
+use solana_program::{instruction::InstructionError, pubkey::Pubkey};
 use solana_program_test::*;
-use solana_sdk::account::{AccountSharedData, WritableAccount};
-use solana_sdk::transaction::TransactionError;
-use solana_sdk::{signature::Keypair, signer::Signer};
+use solana_sdk::{
+    account::{AccountSharedData, WritableAccount},
+    signature::Keypair,
+    signer::Signer,
+    transaction::TransactionError,
+};
 
-use crate::core::helpers::{prepare_nft, update_blockhash};
-use crate::utils::helpers::{find_candy_creator, test_start};
-use crate::utils::{mint_nft, mint_nft_ix, WhitelistConfig, WhitelistInfo};
 use crate::{
-    core::helpers::airdrop,
-    utils::{auto_config, candy_machine_program_test, helpers::sol, CandyManager},
+    core::helpers::{airdrop, prepare_nft, update_blockhash},
+    utils::{
+        auto_config, candy_machine_program_test,
+        helpers::{find_candy_creator, sol, test_start},
+        mint_nft, mint_nft_ix, CandyManager, WhitelistConfig, WhitelistInfo,
+    },
 };
 
 pub mod core;

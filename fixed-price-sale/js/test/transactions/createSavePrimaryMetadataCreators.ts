@@ -1,4 +1,4 @@
-import { PayerTransactionHandler } from '@metaplex-foundation/amman';
+import { PayerTransactionHandler } from '@metaplex-foundation/amman-client';
 import { Connection, Keypair, PublicKey, TransactionInstruction } from '@solana/web3.js';
 
 import {

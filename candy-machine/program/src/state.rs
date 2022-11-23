@@ -1,5 +1,4 @@
-use crate::constants::FREEZE_FEE;
-use crate::CandyError;
+use crate::{constants::FREEZE_FEE, CandyError};
 use anchor_lang::prelude::*;
 
 /// Candy machine state and config data.

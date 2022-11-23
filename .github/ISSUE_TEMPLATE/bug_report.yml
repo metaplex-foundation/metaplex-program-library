@@ -10,7 +10,6 @@ body:
       options:
         - auction-house
         - candy-machine
-        - core
         - fixed-price-sale
         - gumdrop
         - hydra

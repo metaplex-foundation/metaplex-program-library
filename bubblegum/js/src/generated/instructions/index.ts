@@ -4,6 +4,7 @@ export * from './compress';
 export * from './createTree';
 export * from './decompressV1';
 export * from './delegate';
+export * from './mintToCollectionV1';
 export * from './mintV1';
 export * from './redeem';
 export * from './setAndVerifyCollection';

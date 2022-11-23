@@ -1771,6 +1771,7 @@ dependencies = [
  "solana-client",
  "solana-program",
  "solana-sdk",
+ "spl-associated-token-account",
  "spl-token",
 ]
 
@@ -1840,7 +1841,7 @@ dependencies = [
 
 [[package]]
 name = "mpl-token-metadata"
-version = "1.6.1"
+version = "1.6.2"
 dependencies = [
  "arrayref",
  "borsh",

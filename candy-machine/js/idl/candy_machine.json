@@ -303,7 +303,10 @@
         {
           "name": "clock",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Account not actually used."
+          ]
         },
         {
           "name": "recentBlockhashes",
@@ -543,6 +546,9 @@
   "accounts": [
     {
       "name": "CandyMachine",
+      "docs": [
+        "Candy machine state and config data."
+      ],
       "type": {
         "kind": "struct",
         "fields": [
@@ -575,6 +581,9 @@
     },
     {
       "name": "CollectionPDA",
+      "docs": [
+        "Collection PDA account"
+      ],
       "type": {
         "kind": "struct",
         "fields": [
@@ -591,6 +600,9 @@
     },
     {
       "name": "FreezePDA",
+      "docs": [
+        "Collection PDA account"
+      ],
       "type": {
         "kind": "struct",
         "fields": [
@@ -627,6 +639,9 @@
   "types": [
     {
       "name": "CandyMachineData",
+      "docs": [
+        "Candy machine settings data."
+      ],
       "type": {
         "kind": "struct",
         "fields": [
@@ -640,10 +655,16 @@
           },
           {
             "name": "symbol",
+            "docs": [
+              "The symbol for the asset"
+            ],
             "type": "string"
           },
           {
             "name": "sellerFeeBasisPoints",
+            "docs": [
+              "Royalty basis points that goes to creators in secondary sales (0-10000)"
+            ],
             "type": "u16"
           },
           {
@@ -702,6 +723,9 @@
           },
           {
             "name": "gatekeeper",
+            "docs": [
+              "If [`Some`] requires gateway tokens on mint"
+            ],
             "type": {
               "option": {
                 "defined": "GatekeeperConfig"
@@ -713,6 +737,9 @@
     },
     {
       "name": "ConfigLine",
+      "docs": [
+        "Individual config line for storing NFT data pre-mint."
+      ],
       "type": {
         "kind": "struct",
         "fields": [
@@ -722,6 +749,9 @@
           },
           {
             "name": "uri",
+            "docs": [
+              "URI pointing to JSON representing the asset"
+            ],
             "type": "string"
           }
         ]
@@ -767,6 +797,9 @@
     },
     {
       "name": "HiddenSettings",
+      "docs": [
+        "Hidden Settings for large mints used with offline data."
+      ],
       "type": {
         "kind": "struct",
         "fields": [
@@ -820,15 +853,25 @@
     },
     {
       "name": "GatekeeperConfig",
+      "docs": [
+        "Configurations options for the gatekeeper."
+      ],
       "type": {
         "kind": "struct",
         "fields": [
           {
             "name": "gatekeeperNetwork",
+            "docs": [
+              "The network for the gateway token required"
+            ],
             "type": "publicKey"
           },
           {
             "name": "expireOnUse",
+            "docs": [
+              "Whether or not the token should expire after minting.",
+              "The gatekeeper network must support this if true."
+            ],
             "type": "bool"
           }
         ]
@@ -1124,5 +1167,11 @@
       "name": "CannotSwitchFromHiddenSettings",
       "msg": "Cannot remove Hidden Settings."
     }
-  ]
+  ],
+  "metadata": {
+    "address": "cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ",
+    "origin": "anchor",
+    "binaryVersion": "0.25.0",
+    "libVersion": "0.25.0"
+  }
 }

@@ -1,9 +1,5 @@
 import test from 'tape';
-import {
-  assertConfirmedTransaction,
-  defaultSendOptions,
-  PayerTransactionHandler,
-} from '@metaplex-foundation/amman';
+import { PayerTransactionHandler } from '@metaplex-foundation/amman-client';
 import { Connection, Keypair } from '@solana/web3.js';
 
 import {
@@ -40,14 +36,8 @@ export const createStore = async ({
 
   const transaction = await createAndSignTransaction(connection, payer, [instruction], [store]);
 
-  const createStoreRes = await transactionHandler.sendAndConfirmTransaction(
-    transaction,
-    [store],
-    defaultSendOptions,
-  );
+  await transactionHandler.sendAndConfirmTransaction(transaction, [store]).assertSuccess(test);
   logDebug(`store: ${store.publicKey}`);
-
-  assertConfirmedTransaction(test, createStoreRes.txConfirmed);
 
   return store;
 };

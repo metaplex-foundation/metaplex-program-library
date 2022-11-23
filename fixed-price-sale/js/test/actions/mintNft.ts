@@ -1,27 +1,20 @@
 import { Connection, Keypair, PublicKey } from '@solana/web3.js';
+import { PayerTransactionHandler } from '@metaplex-foundation/amman-client';
 import {
-  defaultSendOptions,
-  TransactionHandler,
-  assertConfirmedTransaction,
-} from '@metaplex-foundation/amman';
-import {
-  PROGRAM_ID,
-  deprecated,
   createCreateMasterEditionV3Instruction,
   Creator,
   DataV2,
   createCreateMetadataAccountV2Instruction,
 } from '@metaplex-foundation/mpl-token-metadata';
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore createMintToInstruction export actually exist but isn't setup correctly
 import { createMintToInstruction } from '@solana/spl-token';
 import { strict as assert } from 'assert';
 
 import { createTokenAccount } from '../transactions/createTokenAccount';
 import { CreateMint } from './createMintAccount';
+import { Metaplex } from '@metaplex-foundation/js';
 
 type MintNFTParams = {
-  transactionHandler: TransactionHandler;
+  transactionHandler: PayerTransactionHandler;
   payer: Keypair;
   connection: Connection;
   maxSupply?: number;
@@ -43,12 +36,7 @@ export async function mintNFT({
   maxSupply = 100,
 }: MintNFTParams) {
   const { mint, createMintTx } = await CreateMint.createMintAccount(connection, payer.publicKey);
-  const mintRes = await transactionHandler.sendAndConfirmTransaction(
-    createMintTx,
-    [mint],
-    defaultSendOptions,
-  );
-  assertConfirmedTransaction(assert, mintRes.txConfirmed);
+  await transactionHandler.sendAndConfirmTransaction(createMintTx, [mint]).assertSuccess(assert);
 
   const { tokenAccount, createTokenTx } = await createTokenAccount({
     payer: payer.publicKey,
@@ -74,8 +62,9 @@ export async function mintNFT({
       : null,
     uses: null,
   };
-
-  const metadata = await deprecated.Metadata.getPDA(mint.publicKey);
+  const metaplex = Metaplex.make(connection);
+  const pdas = metaplex.nfts().pdas();
+  const metadata = pdas.metadata({ mint: mint.publicKey });
 
   const createMetadataInstruction = createCreateMetadataAccountV2Instruction(
     {
@@ -90,15 +79,7 @@ export async function mintNFT({
 
   createTokenTx.add(createMetadataInstruction);
 
-  const [edition, editionBump] = await PublicKey.findProgramAddress(
-    [
-      Buffer.from(deprecated.MetadataProgram.PREFIX),
-      PROGRAM_ID.toBuffer(),
-      new PublicKey(mint.publicKey).toBuffer(),
-      Buffer.from(deprecated.MasterEdition.EDITION_PREFIX),
-    ],
-    PROGRAM_ID,
-  );
+  const edition = pdas.edition({ mint: mint.publicKey });
 
   const masterEditionInstruction = createCreateMasterEditionV3Instruction(
     {
@@ -116,12 +97,9 @@ export async function mintNFT({
 
   createTokenTx.add(masterEditionInstruction);
 
-  const res = await transactionHandler.sendAndConfirmTransaction(
-    createTokenTx,
-    [tokenAccount],
-    defaultSendOptions,
-  );
-  assertConfirmedTransaction(assert, res.txConfirmed);
+  await transactionHandler
+    .sendAndConfirmTransaction(createTokenTx, [tokenAccount])
+    .assertSuccess(assert);
 
-  return { tokenAccount, edition, editionBump, mint, metadata };
+  return { tokenAccount, edition, editionBump: edition.bump, mint, metadata };
 }
