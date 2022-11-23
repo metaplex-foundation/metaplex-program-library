@@ -94,4 +94,5 @@ pub struct FileAttr {
     pub uri: String,
     #[serde(rename = "type")]
     pub file_type: String,
+    pub cdn: Option<bool>,
 }
