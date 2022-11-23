@@ -69,6 +69,7 @@ pub fn process_approve_collection_authority(
     let mut record = CollectionAuthorityRecord::from_account_info(collection_authority_record)?;
     record.key = Key::CollectionAuthorityRecord;
     record.bump = collection_authority_bump_seed[0];
+    record.update_authority = Some(*update_authority.key);
     record.serialize(&mut *collection_authority_record.try_borrow_mut_data()?)?;
     Ok(())
 }

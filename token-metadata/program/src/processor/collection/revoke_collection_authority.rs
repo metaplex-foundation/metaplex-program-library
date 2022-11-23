@@ -6,8 +6,9 @@ use solana_program::{
     pubkey::Pubkey,
 };
 
+use crate::assertions::collection::assert_is_collection_delegated_authority;
 use crate::{
-    assertions::{assert_owned_by, collection::assert_has_collection_authority},
+    assertions::assert_owned_by,
     error::MetadataError,
     state::{Metadata, TokenMetadataAccount, USE_AUTHORITY_RECORD_SIZE},
 };
@@ -36,17 +37,17 @@ pub fn process_revoke_collection_authority(
     if metadata.mint != *mint_info.key {
         return Err(MetadataError::MintMismatch.into());
     }
-
     let collection_authority_info_empty = collection_authority_record.try_data_is_empty()?;
     if collection_authority_info_empty {
         return Err(MetadataError::CollectionAuthorityDoesNotExist.into());
     }
-    assert_has_collection_authority(
-        delegate_authority,
-        &metadata,
+
+    assert_is_collection_delegated_authority(
+        collection_authority_record,
+        delegate_authority.key,
         mint_info.key,
-        Some(collection_authority_record),
     )?;
+
     let lamports = collection_authority_record.lamports();
     **collection_authority_record.try_borrow_mut_lamports()? = 0;
     **revoke_authority.try_borrow_mut_lamports()? = revoke_authority
