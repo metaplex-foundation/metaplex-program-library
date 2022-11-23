@@ -1,8 +1,8 @@
-name: Version updates
+name: Apply Version Update
 
 on:
   pull_request_review:
-    types: [submitted, edited]
+    types: [ submitted, edited ]
 
 permissions:
   id-token: write
@@ -19,6 +19,7 @@ env:
 
 jobs:
   dump-context:
+    if: github.event.pull_request.head.repo.full_name == github.event.pull_request.base.repo.full_name
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -28,10 +29,14 @@ jobs:
         run: echo "$GITHUB_CONTEXT"
 
   get-changes-scope:
-    if: contains(fromJson('["OWNER", "MEMBER", "CONTRIBUTOR"]'), github.event.review.author_association) == true && contains(fromJson('["approved", "commented"]'), github.event.review.state) == true
+    if: |
+      github.event.pull_request.head.repo.full_name == github.event.pull_request.base.repo.full_name &&
+      contains(fromJson('["OWNER", "MEMBER", "CONTRIBUTOR"]'), github.event.review.author_association) == true && 
+      contains(fromJson('["approved", "commented"]'), github.event.review.state) == true
     runs-on: ubuntu-latest
     outputs:
-      changed-packages: ${{ steps.get-changed-package-scope.outputs.result }}
+      changed-packages: ${{ steps.get-changed-package-scope.outputs.packages }}
+      num-packages: ${{ steps.get-changed-package-scope.outputs.num-packages }}
     steps:
       - uses: actions/checkout@v3
       - name: List changed files
@@ -39,7 +44,12 @@ jobs:
         id: list-changed-files
         with:
           pull-number: ${{ github.event.pull_request.number }}
-          exclude: '[".github", "Cargo.lock", "Cargo.toml", "js/idl", "packge.json", "yarn.lock"]'
+          # we ignore js/idl because that's an output of updating the package's rust version
+          # note: rust version updates also result in package.json changes, so multiple version updates
+          #       will result in the js package also getting updated. but, i think this is ok since there
+          #       haven't been any PRs to date with multiple version changes. and, in the long term, we
+          #       want more granular version commands
+          exclude: '["js/idl"]'
 
       # map fetched changed files to package / lang (list)
       - name: Get scope of changed packages
@@ -58,10 +68,22 @@ jobs:
               }
               return p
             }, {})
-            return JSON.stringify(Array.from(Object.keys(uniqueFilesObj)).map((el) => `\"${el}\"`))
+            const changedPackages = Array.from(Object.keys(uniqueFilesObj))
+            core.setOutput('packages', JSON.stringify(changedPackages.map((el) => `\"${el}\"`)))
+            core.setOutput('num-packages', changedPackages.length)
+
+      - name: Print changed scope output
+        id: print-changed-scope-output
+        run: |
+          echo "num packages -> ${{ steps.get-changed-package-scope.outputs.num-packages }}"
+          echo "packages -> ${{ steps.get-changed-package-scope.outputs.packages }}"
+        shell: bash
 
   get-version-scope:
-    if: contains(fromJson('["OWNER", "MEMBER", "CONTRIBUTOR"]'), github.event.review.author_association) == true && contains(fromJson('["approved", "commented"]'), github.event.review.state) == true
+    if: |
+      github.event.pull_request.head.repo.full_name == github.event.pull_request.base.repo.full_name &&
+      contains(fromJson('["OWNER", "MEMBER", "CONTRIBUTOR"]'), github.event.review.author_association) == true && 
+      contains(fromJson('["approved", "commented"]'), github.event.review.state) == true
     runs-on: ubuntu-latest
     outputs:
       versioning: ${{ steps.parse-version-info.outputs.versioning }}
@@ -96,19 +118,18 @@ jobs:
           body: ${{ steps.process-content-body.outputs.content }}
 
   update-pr-with-changes:
-    needs: [get-changes-scope, get-version-scope]
-    if: ${{ needs.get-version-scope.outputs.has-versioning == 'true' }}
-    runs-on: ubuntu-latest
+    needs: [ get-changes-scope, get-version-scope ]
+    if: needs.get-version-scope.outputs.has-versioning == 'true' && needs.get-changes-scope.outputs.num-packages > 0
+    runs-on: buildjet-16vcpu-ubuntu-2204
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/actions/install-linux-build-deps
-      - uses: ./.github/actions/install-solana
-        with:
-          solana_version: ${{ env.SOLANA_VERSION_STABLE }}
+      # - uses: ./.github/actions/install-solana
+      #   with:
+      #     solana_version: ${{ env.SOLANA_VERSION_STABLE }}
       - uses: ./.github/actions/install-rust
         with:
           toolchain: ${{ env.RUST_TOOLCHAIN }}
-      - uses: ./.github/actions/install-anchor/
 
       - name: Make version changes
         uses: ./.github/actions/make-version-changes
@@ -116,8 +137,5 @@ jobs:
         with:
           changed-packages: ${{ needs.get-changes-scope.outputs.changed-packages }}
           versioning: ${{ needs.get-version-scope.outputs.versioning }}
-          to-branch: ${{ github.event.pull_request.base.ref }}
-          to-repository: ${{ github.event.pull_request.base.repo.full_name }}
           from-branch: ${{ github.event.pull_request.head.ref }}
           from-repository: ${{ github.event.pull_request.head.repo.full_name }}
-          pull-number: ${{ github.event.pull_request.number }}
