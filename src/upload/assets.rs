@@ -236,7 +236,7 @@ pub fn get_asset_pairs(assets_dir: &str) -> Result<HashMap<isize, AssetPair>> {
             let animation_filepath = Path::new(assets_dir)
                 .join(&animation_filenames[0])
                 .to_str()
-                .expect("Failed to convert image path from unicode.")
+                .expect("Failed to convert animation path from unicode.")
                 .to_string();
 
             Some(animation_filepath)
@@ -352,4 +352,8 @@ pub fn get_updated_metadata(
     }
 
     Ok(serde_json::to_string(&metadata).unwrap())
+}
+
+pub fn is_complete_uri(value: &str) -> bool {
+    matches!(url::Url::parse(value), Ok(_))
 }

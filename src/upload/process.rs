@@ -3,6 +3,7 @@ use std::{
     collections::HashSet,
     ffi::OsStr,
     fmt::Write as _,
+    fs::OpenOptions,
     sync::{
         atomic::{AtomicBool, Ordering},
         Arc,
@@ -65,13 +66,52 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
     };
 
     for (index, pair) in &asset_pairs {
+        // checks if we have complete URIs in the metadata file;
+        // if true, no upload is necessary and we will use the
+        // existing URIs
+
+        let m: Metadata = {
+            let m = OpenOptions::new()
+                .read(true)
+                .open(&pair.metadata)
+                .map_err(|e| {
+                    anyhow!(
+                        "Failed to read metadata file '{}' with error: {}",
+                        &pair.metadata,
+                        e
+                    )
+                })?;
+            serde_json::from_reader(&m)?
+        };
+
+        // retrieve the existring image uri from the metadata
+        let existing_image = if is_complete_uri(&m.image) {
+            m.image.clone()
+        } else {
+            String::new()
+        };
+
+        // retrieve the existring animation uri from the metadata
+        let existing_animation = match m.animation_url {
+            Some(ref url) => {
+                if is_complete_uri(url) {
+                    url.clone()
+                } else {
+                    String::new()
+                }
+            }
+            None => String::new(),
+        };
+
         match cache.items.get_mut(&index.to_string()) {
             Some(item) => {
-                let image_changed =
-                    !item.image_hash.eq(&pair.image_hash) || item.image_link.is_empty();
+                let image_changed = (!item.image_hash.eq(&pair.image_hash)
+                    || item.image_link.is_empty())
+                    && existing_image.is_empty();
 
-                let animation_changed = !item.animation_hash.eq(&pair.animation_hash)
-                    || (item.animation_link.is_none() && pair.animation.is_some());
+                let animation_changed = (!item.animation_hash.eq(&pair.animation_hash)
+                    || (item.animation_link.is_none() && pair.animation.is_some()))
+                    && existing_animation.is_empty();
 
                 let metadata_changed =
                     !item.metadata_hash.eq(&pair.metadata_hash) || item.metadata_link.is_empty();
@@ -81,6 +121,9 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
                     item.image_hash = pair.image_hash.clone();
                     item.image_link = String::new();
                     indices.image.push(*index);
+                } else if !existing_image.is_empty() {
+                    item.image_hash = pair.image_hash.clone();
+                    item.image_link = existing_image;
                 }
 
                 if animation_changed {
@@ -88,6 +131,9 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
                     item.animation_hash = pair.animation_hash.clone();
                     item.animation_link = None;
                     indices.animation.push(*index);
+                } else if !existing_animation.is_empty() {
+                    item.animation_hash = pair.animation_hash.clone();
+                    item.animation_link = Some(existing_animation);
                 }
 
                 if metadata_changed || image_changed || animation_changed {
@@ -100,16 +146,28 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
                 }
             }
             None => {
-                cache
-                    .items
-                    .insert(index.to_string(), pair.clone().into_cache_item());
-                // we need to upload both image/metadata
-                indices.image.push(*index);
-                indices.metadata.push(*index);
+                let mut item = pair.clone().into_cache_item();
+
+                // check if we need to upload the image
+                if existing_image.is_empty() {
+                    indices.image.push(*index);
+                } else {
+                    item.image_hash = pair.image_hash.clone();
+                    item.image_link = existing_image;
+                }
+
                 // and we might need to upload the animation
                 if pair.animation.is_some() {
-                    indices.animation.push(*index);
+                    if existing_animation.is_empty() {
+                        indices.animation.push(*index);
+                    } else {
+                        item.animation_hash = pair.animation_hash.clone();
+                        item.animation_link = Some(existing_animation);
+                    }
                 }
+
+                indices.metadata.push(*index);
+                cache.items.insert(index.to_string(), item);
             }
         }
         // sanity check: verifies that both symbol and seller-fee-basis-points are the
