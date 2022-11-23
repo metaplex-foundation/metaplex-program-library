@@ -5,7 +5,7 @@ use {
     clap::{crate_description, crate_name, crate_version, App, Arg, ArgMatches, SubCommand},
     mpl_token_metadata::{
         instruction::{
-            create_master_edition, create_metadata_accounts,
+            create_master_edition, create_metadata_accounts_v2,
             mint_new_edition_from_master_edition_via_token, puff_metadata_account,
             update_metadata_accounts,
         },
@@ -28,6 +28,7 @@ use {
         system_instruction::create_account,
         transaction::Transaction,
     },
+    spl_associated_token_account::{create_associated_token_account, get_associated_token_address},
     spl_token::{
         instruction::{initialize_account, initialize_mint, mint_to},
         state::{Account, Mint},
@@ -259,7 +260,8 @@ fn mint_edition_via_token_call(
     .unwrap();
 
     let new_mint_key = Keypair::new();
-    let added_token_account = Keypair::new();
+
+    let added_token_account = get_associated_token_address(&payer.pubkey(), &new_mint_key.pubkey());
     let new_mint_pub = new_mint_key.pubkey();
     let metadata_seeds = &[
         PREFIX.as_bytes(),
@@ -294,7 +296,7 @@ fn mint_edition_via_token_call(
     let master_edition_account = client.get_account(&master_edition_key).unwrap();
     let master_edition: MasterEditionV2 =
         try_from_slice_unchecked(&master_edition_account.data).unwrap();
-    let signers = vec![&account_authority, &new_mint_key, &added_token_account];
+    let signers = vec![&account_authority, &new_mint_key];
     let mut instructions = vec![
         create_account(
             &payer.pubkey(),
@@ -313,26 +315,11 @@ fn mint_edition_via_token_call(
             0,
         )
         .unwrap(),
-        create_account(
-            &payer.pubkey(),
-            &added_token_account.pubkey(),
-            client
-                .get_minimum_balance_for_rent_exemption(Account::LEN)
-                .unwrap(),
-            Account::LEN as u64,
-            &token_key,
-        ),
-        initialize_account(
-            &token_key,
-            &added_token_account.pubkey(),
-            &new_mint_key.pubkey(),
-            &payer.pubkey(),
-        )
-        .unwrap(),
+        create_associated_token_account(&payer.pubkey(), &payer.pubkey(), &new_mint_key.pubkey()),
         mint_to(
             &token_key,
             &new_mint_key.pubkey(),
-            &added_token_account.pubkey(),
+            &added_token_account,
             &payer.pubkey(),
             &[&payer.pubkey()],
             1,
@@ -406,37 +393,23 @@ fn master_edition_call(
         .value_of("max_supply")
         .map(|val| val.parse::<u64>().unwrap());
 
-    let added_token_account = Keypair::new();
+    let added_token_account = get_associated_token_address(&payer.pubkey(), &mint_key);
 
     let needs_a_token = app_matches.is_present("add_one_token");
-    let mut signers = vec![&update_authority, &mint_authority];
+    let signers = vec![&update_authority, &mint_authority];
     let mut instructions = vec![];
 
     if needs_a_token {
-        signers.push(&added_token_account);
-        instructions.push(create_account(
+        instructions.push(create_associated_token_account(
             &payer.pubkey(),
-            &added_token_account.pubkey(),
-            client
-                .get_minimum_balance_for_rent_exemption(Account::LEN)
-                .unwrap(),
-            Account::LEN as u64,
-            &token_key,
+            &payer.pubkey(),
+            &mint_key,
         ));
-        instructions.push(
-            initialize_account(
-                &token_key,
-                &added_token_account.pubkey(),
-                &metadata.mint,
-                &payer.pubkey(),
-            )
-            .unwrap(),
-        );
         instructions.push(
             mint_to(
                 &token_key,
                 &metadata.mint,
-                &added_token_account.pubkey(),
+                &added_token_account,
                 &payer.pubkey(),
                 &[&payer.pubkey()],
                 1,
@@ -580,7 +553,7 @@ fn create_metadata_account_call(
         mint.mint_authority.expect("Mint has no mint authority.")
     };
 
-    let new_metadata_instruction = create_metadata_accounts(
+    let new_metadata_instruction = create_metadata_accounts_v2(
         program_key,
         metadata_key,
         mint_key,
@@ -594,6 +567,8 @@ fn create_metadata_account_call(
         0,
         update_authority.pubkey() != payer.pubkey(),
         mutable,
+        None,
+        None,
     );
 
     instructions.push(new_metadata_instruction);

@@ -27,7 +27,7 @@ runs:
       uses: actions/github-script@v4
       with:
         script: |
-          export CI_PUBLISH=true
+          process.env['CI_PUBLISH'] = true;
           const script = require('.github/actions/publish-version-changes/script.js')
           await script(${{ inputs.changed-packages }}, '${{ inputs.cargo-token }}', '${{ inputs.npm-token }}')
 

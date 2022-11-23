@@ -1,8 +1,7 @@
 #![cfg(feature = "test-bpf")]
 #![allow(dead_code)]
 
-use crate::utils::helpers::test_start;
-use crate::utils::{auto_config, candy_machine_program_test, CandyManager};
+use crate::utils::{auto_config, candy_machine_program_test, helpers::test_start, CandyManager};
 use solana_program_test::*;
 use solana_sdk::signature::{Keypair, Signer};
 
