@@ -20,8 +20,8 @@ use sugar_cli::{
     deploy::{process_deploy, DeployArgs},
     guard::{
         process_guard_add, process_guard_remove, process_guard_show, process_guard_update,
-        process_guard_withdraw, GuardAddArgs, GuardRemoveArgs, GuardShowArgs, GuardUpdateArgs,
-        GuardWithdrawArgs,
+        process_guard_withdraw, process_thaw, process_unlock_funds, GuardAddArgs, GuardRemoveArgs,
+        GuardShowArgs, GuardUpdateArgs, GuardWithdrawArgs, ThawArgs, UnlockFundsArgs,
     },
     hash::{process_hash, HashArgs},
     launch::{process_launch, LaunchArgs},
@@ -231,6 +231,51 @@ async fn run() -> Result<()> {
                 rpc_url,
                 cache,
                 candy_guard,
+            })?,
+            GuardCommand::Thaw {
+                keypair,
+                rpc_url,
+                cache,
+                config,
+                all,
+                nft_mint,
+                candy_guard,
+                candy_machine,
+                destination,
+                label,
+            } => {
+                process_thaw(ThawArgs {
+                    keypair,
+                    rpc_url,
+                    cache,
+                    config,
+                    all,
+                    nft_mint,
+                    candy_guard,
+                    candy_machine,
+                    destination,
+                    label,
+                })
+                .await?
+            }
+            GuardCommand::UnlockFunds {
+                keypair,
+                rpc_url,
+                cache,
+                config,
+                candy_guard,
+                candy_machine,
+                destination,
+                label,
+            } => process_unlock_funds(UnlockFundsArgs {
+                keypair,
+                rpc_url,
+                cache,
+                config,
+                candy_guard,
+                candy_machine,
+                destination,
+                label,
             })?,
             GuardCommand::Update {
                 keypair,

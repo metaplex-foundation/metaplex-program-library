@@ -421,6 +421,81 @@ pub enum GuardCommand {
         #[clap(long)]
         candy_guard: Option<String>,
     },
+    /// Thaw a NFT or all NFTs in a candy guard.
+    Thaw {
+        /// Path to the keypair file, uses Sol config or defaults to "~/.config/solana/id.json"
+        #[clap(short, long)]
+        keypair: Option<String>,
+
+        /// RPC Url
+        #[clap(short, long)]
+        rpc_url: Option<String>,
+
+        /// Path to the cache file, defaults to "cache.json"
+        #[clap(long, default_value = DEFAULT_CACHE)]
+        cache: String,
+
+        /// Path to the config file
+        #[clap(short, long, default_value = DEFAULT_CONFIG)]
+        config: String,
+
+        /// Unthaw all NFTs in the candy machine.
+        #[clap(long)]
+        all: bool,
+
+        /// Address of the NFT to thaw.
+        nft_mint: Option<String>,
+
+        /// Address of candy guard to update [defaults to cache value].
+        #[clap(long)]
+        candy_guard: Option<String>,
+
+        /// Address of candy machine to update [defaults to cache value].
+        #[clap(long)]
+        candy_machine: Option<String>,
+
+        /// Address of the destination (treaury) account.
+        #[clap(long)]
+        destination: Option<String>,
+
+        /// Candy guard group label.
+        #[clap(long)]
+        label: Option<String>,
+    },
+    /// Unlock treasury funds after freeze is turned off or expires.
+    UnlockFunds {
+        /// Path to the keypair file, uses Sol config or defaults to "~/.config/solana/id.json"
+        #[clap(short, long)]
+        keypair: Option<String>,
+
+        /// RPC Url
+        #[clap(short, long)]
+        rpc_url: Option<String>,
+
+        /// Path to the cache file, defaults to "cache.json"
+        #[clap(long, default_value = DEFAULT_CACHE)]
+        cache: String,
+
+        /// Path to the config file
+        #[clap(short, long, default_value = DEFAULT_CONFIG)]
+        config: String,
+
+        /// Address of candy guard to update [defaults to cache value].
+        #[clap(long)]
+        candy_guard: Option<String>,
+
+        /// Address of candy machine to update [defaults to cache value].
+        #[clap(long)]
+        candy_machine: Option<String>,
+
+        /// Address of the destination (treasury) account.
+        #[clap(long)]
+        destination: Option<String>,
+
+        /// Candy guard group label.
+        #[clap(long)]
+        label: Option<String>,
+    },
     /// Update the configuration of a candy guard
     Update {
         /// Path to the keypair file, uses Sol config or defaults to "~/.config/solana/id.json"
