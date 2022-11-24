@@ -58,9 +58,9 @@ pub fn pay_royalties<'a>(
         ],
     )?;
 
-    // Update the royalties balance on the Constraint Model minus the 20% Metaplex cut.
+    // Update the royalties balance on the Constraint Model minus the 10% Metaplex cut.
     model.royalty_balance += royalty
-        .checked_mul(8)
+        .checked_mul(9)
         .ok_or(TrifleError::NumericalOverflow)?
         .checked_div(10)
         .ok_or(TrifleError::NumericalOverflow)?;

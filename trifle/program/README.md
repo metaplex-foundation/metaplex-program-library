@@ -38,7 +38,7 @@ The Trifle program allows for an alternate royalties revenue model where a proje
 The royalties are then stored in the Constraint Model which doubles as a treasury account. Royalties can be withdrawn by the update authority/creator on the Constraint Model account.
 
 ## Protocol Fees
-Metaplex charges minimal protocol fees for Trifle interactions. Creator creation is free with the creation of the Constraint Model having no associated fee. Further modifications require per-transaction 0.1 SOL fee. Standard Trifle functions have a 0.02 SOL associated protocol fee. 20% of the optional Creator royalties are also counted toward protocol fees.
+Metaplex charges minimal protocol fees for Trifle interactions. Creator creation is free with the creation of the Constraint Model having no associated fee. Further modifications require per-transaction 0.1 SOL fee. Standard Trifle functions have a 0.02 SOL associated protocol fee. 10% of the optional Creator royalties are also counted toward protocol fees.
 
 ## Using Trifle
 * Composable Images - The NFT Image is redrawn based on the tokens it contains in escrow (e.g. outfits, armor, layering images, composable attributes, etc.)
