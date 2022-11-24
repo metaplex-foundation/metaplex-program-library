@@ -148,7 +148,7 @@
         },
         {
           "name": "constraintModel",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false,
           "desc": "The escrow constraint model of the Trifle account"
         },
@@ -244,12 +244,6 @@
           "isMut": false,
           "isSigner": false,
           "desc": "Token Metadata program"
-        },
-        {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "Rent sysvar"
         }
       ],
       "args": [
@@ -367,12 +361,6 @@
           "desc": "The spl token program"
         },
         {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "The rent sysvar"
-        },
-        {
           "name": "tokenMetadataProgram",
           "isMut": false,
           "isSigner": false,
@@ -425,6 +413,12 @@
           "isMut": false,
           "isSigner": false,
           "desc": "System program"
+        },
+        {
+          "name": "sysvarInstructions",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Instructions sysvar account"
         }
       ],
       "args": [
@@ -478,6 +472,12 @@
           "isMut": false,
           "isSigner": false,
           "desc": "System program"
+        },
+        {
+          "name": "sysvarInstructions",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Instructions sysvar account"
         }
       ],
       "args": [
@@ -519,6 +519,12 @@
           "isMut": false,
           "isSigner": false,
           "desc": "System program"
+        },
+        {
+          "name": "sysvarInstructions",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Instructions sysvar account"
         }
       ],
       "args": [
@@ -560,6 +566,12 @@
           "isMut": false,
           "isSigner": false,
           "desc": "System program"
+        },
+        {
+          "name": "sysvarInstructions",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Instructions sysvar account"
         }
       ],
       "args": [
@@ -574,6 +586,106 @@
       "discriminant": {
         "type": "u8",
         "value": 7
+      }
+    },
+    {
+      "name": "SetRoyalties",
+      "accounts": [
+        {
+          "name": "constraintModel",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Constraint model account"
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "desc": "Wallet paying for the transaction and new account, will be set as the creator of the constraint model"
+        },
+        {
+          "name": "updateAuthority",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "Update authority of the constraint model"
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "System program"
+        },
+        {
+          "name": "sysvarInstructions",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Instructions sysvar account"
+        }
+      ],
+      "args": [
+        {
+          "name": "setRoyaltiesArgs",
+          "type": {
+            "defined": "SetRoyaltiesArgs"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 8
+      }
+    },
+    {
+      "name": "WithdrawRoyalties",
+      "accounts": [
+        {
+          "name": "constraintModel",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Constraint model account"
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "desc": "Wallet paying for the transaction and new account, will be set as the creator of the constraint model"
+        },
+        {
+          "name": "updateAuthority",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "Update authority of the constraint model"
+        },
+        {
+          "name": "destination",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "The account to withdraw the royalties to"
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "System program"
+        },
+        {
+          "name": "sysvarInstructions",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Instructions sysvar account"
+        }
+      ],
+      "args": [
+        {
+          "name": "withdrawRoyaltiesArgs",
+          "type": {
+            "defined": "WithdrawRoyaltiesArgs"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 9
       }
     }
   ],
@@ -625,7 +737,12 @@
           {
             "name": "royalties",
             "type": {
-              "defined": "RoyaltyModel"
+              "hashMap": [
+                {
+                  "defined": "RoyaltyInstruction"
+                },
+                "u64"
+              ]
             }
           },
           {
@@ -690,34 +807,6 @@
           {
             "name": "transferEffects",
             "type": "u16"
-          }
-        ]
-      }
-    },
-    {
-      "name": "RoyaltyModel",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "createModel",
-            "type": "u64"
-          },
-          {
-            "name": "createTrifle",
-            "type": "u64"
-          },
-          {
-            "name": "transferIn",
-            "type": "u64"
-          },
-          {
-            "name": "transferOut",
-            "type": "u64"
-          },
-          {
-            "name": "addConstraint",
-            "type": "u64"
           }
         ]
       }
@@ -851,6 +940,43 @@
       }
     },
     {
+      "name": "SetRoyaltiesArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "royalties",
+            "type": {
+              "vec": {
+                "tuple": [
+                  {
+                    "defined": "RoyaltyInstruction"
+                  },
+                  "u64"
+                ]
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "WithdrawRoyaltiesArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
       "name": "TokenAmount",
       "type": {
         "kind": "struct",
@@ -887,6 +1013,32 @@
                 "hashSet": "publicKey"
               }
             ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "RoyaltyInstruction",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "CreateModel"
+          },
+          {
+            "name": "CreateTrifle"
+          },
+          {
+            "name": "TransferIn"
+          },
+          {
+            "name": "TransferOut"
+          },
+          {
+            "name": "AddConstraint"
+          },
+          {
+            "name": "RemoveConstraint"
           }
         ]
       }

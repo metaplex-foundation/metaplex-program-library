@@ -4,16 +4,18 @@ use crate::{
         AddCollectionConstraintToEscrowConstraintModelArgs,
         AddNoneConstraintToEscrowConstraintModelArgs,
         AddTokensConstraintToEscrowConstraintModelArgs, CreateEscrowConstraintModelAccountArgs,
-        RemoveConstraintFromEscrowConstraintModelArgs, TransferInArgs, TransferOutArgs,
-        TrifleInstruction,
+        RemoveConstraintFromEscrowConstraintModelArgs, SetRoyaltiesArgs, TransferInArgs,
+        TransferOutArgs, TrifleInstruction, WithdrawRoyaltiesArgs,
     },
     state::{
-        escrow_constraints::{EscrowConstraint, EscrowConstraintModel, EscrowConstraintType, FEES},
+        escrow_constraints::{
+            EscrowConstraint, EscrowConstraintModel, EscrowConstraintType, RoyaltyInstruction,
+        },
         transfer_effects::TransferEffects,
         trifle::Trifle,
         Key, SolanaAccount, ESCROW_SEED, TRIFLE_SEED,
     },
-    util::resize_or_reallocate_account_raw,
+    util::{is_creation_instruction, pay_royalties, resize_or_reallocate_account_raw},
 };
 use borsh::{BorshDeserialize, BorshSerialize};
 use mpl_token_metadata::{
@@ -34,6 +36,12 @@ use solana_program::{
     program_memory::sol_memcpy,
     program_pack::Pack,
     pubkey::Pubkey,
+    rent::Rent,
+    system_instruction,
+    sysvar::{
+        instructions::{get_instruction_relative, load_current_index_checked},
+        Sysvar,
+    },
 };
 use spl_token::state::{Account, Mint};
 
@@ -77,6 +85,14 @@ pub fn process_instruction(
             msg!("Instruction: Remove Constraint From Escrow Constraint Model");
             remove_constraint_from_escrow_constraint_model(program_id, accounts, args)
         }
+        TrifleInstruction::SetRoyalties(args) => {
+            msg!("Instruction: Set Royalties");
+            set_royalties(program_id, accounts, args)
+        }
+        TrifleInstruction::WithdrawRoyalties(args) => {
+            msg!("Instruction: Withdraw Royalties");
+            withdraw_royalties(program_id, accounts, args)
+        }
     }
 }
 
@@ -118,12 +134,13 @@ fn create_escrow_constraints_model_account(
         &[bump],
     ];
 
-    solana_program::system_instruction::transfer(
-        payer_info.key,
-        escrow_constraint_model_info.key,
-        escrow_constraint_model.royalties.create_model + FEES.create_model,
-    );
-    escrow_constraint_model.royalty_balance += escrow_constraint_model.royalties.create_model;
+    pay_royalties(
+        RoyaltyInstruction::CreateModel,
+        &mut escrow_constraint_model,
+        payer_info,
+        escrow_constraint_model_info,
+        system_program_info,
+    )?;
 
     let serialized_data = escrow_constraint_model
         .try_to_vec()
@@ -209,12 +226,13 @@ fn create_trifle_account(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progr
     let mut constraint_model =
         EscrowConstraintModel::try_from_slice(&escrow_constraint_model_info.data.borrow())
             .map_err(|_| TrifleError::InvalidEscrowConstraintModel)?;
-    solana_program::system_instruction::transfer(
-        payer_info.key,
-        escrow_constraint_model_info.key,
-        constraint_model.royalties.create_trifle + FEES.create_trifle,
-    );
-    constraint_model.royalty_balance += constraint_model.royalties.create_trifle;
+    pay_royalties(
+        RoyaltyInstruction::CreateTrifle,
+        &mut constraint_model,
+        payer_info,
+        escrow_constraint_model_info,
+        system_program_info,
+    )?;
 
     let serialized_data = constraint_model
         .try_to_vec()
@@ -307,7 +325,6 @@ fn transfer_in(
     let token_program_info = next_account_info(account_info_iter)?;
     let _associated_token_account_program_info = next_account_info(account_info_iter)?;
     let token_metadata_program_info = next_account_info(account_info_iter)?;
-    let rent_info = next_account_info(account_info_iter)?;
 
     assert_signer(payer_info)?;
     assert_signer(trifle_authority_info)?;
@@ -386,27 +403,6 @@ fn transfer_in(
         return Err(TrifleError::TransferEffectConflict.into());
     }
 
-    // collect and track royalties
-    solana_program::system_instruction::transfer(
-        payer_info.key,
-        constraint_model_info.key,
-        constraint_model.royalties.transfer_in + FEES.transfer_in,
-    );
-    constraint_model.royalty_balance += constraint_model.royalties.transfer_in;
-
-    // save constraint model
-    let serialized_data = constraint_model
-        .try_to_vec()
-        .map_err(|_| TrifleError::FailedToSerialize)?;
-
-    sol_memcpy(
-        &mut **constraint_model_info
-            .try_borrow_mut_data()
-            .map_err(|_| TrifleError::FailedToBorrowAccountData)?,
-        &serialized_data,
-        serialized_data.len(),
-    );
-
     // If burn is not set, create an ATA for the incoming token and perform the transfer.
     if !transfer_effects.burn() {
         // Allocate the escrow accounts new ATA.
@@ -426,7 +422,6 @@ fn transfer_in(
                 attribute_mint_info.clone(),
                 system_program_info.clone(),
                 token_program_info.clone(),
-                rent_info.clone(),
             ],
         )?;
 
@@ -550,6 +545,28 @@ fn transfer_in(
         );
     }
 
+    // collect and track royalties
+    pay_royalties(
+        RoyaltyInstruction::TransferIn,
+        &mut constraint_model,
+        payer_info,
+        constraint_model_info,
+        system_program_info,
+    )?;
+
+    // save constraint model
+    let serialized_data = constraint_model
+        .try_to_vec()
+        .map_err(|_| TrifleError::FailedToSerialize)?;
+
+    sol_memcpy(
+        &mut **constraint_model_info
+            .try_borrow_mut_data()
+            .map_err(|_| TrifleError::FailedToBorrowAccountData)?,
+        &serialized_data,
+        serialized_data.len(),
+    );
+
     Ok(())
 }
 
@@ -576,7 +593,6 @@ fn transfer_out(
     let system_program_info = next_account_info(account_info_iter)?;
     let _ata_program_info = next_account_info(account_info_iter)?;
     let _spl_token_program_info = next_account_info(account_info_iter)?;
-    let rent_info = next_account_info(account_info_iter)?;
     let token_metadata_program_info = next_account_info(account_info_iter)?;
     let sysvar_ix_account_info = next_account_info(account_info_iter)?;
 
@@ -647,7 +663,6 @@ fn transfer_out(
             escrow_mint_info.clone(),
             escrow_token_info.clone(),
             trifle_info.clone(),
-            rent_info.clone(),
             escrow_metadata_info.clone(),
             sysvar_ix_account_info.clone(),
         ],
@@ -663,12 +678,13 @@ fn transfer_out(
             .map_err(|_| TrifleError::InvalidEscrowConstraintModel)?;
 
     // collect fees and save the model.
-    solana_program::system_instruction::transfer(
-        payer_info.key,
-        constraint_model_info.key,
-        constraint_model.royalties.transfer_out + FEES.transfer_out,
-    );
-    constraint_model.royalty_balance += constraint_model.royalties.transfer_out;
+    pay_royalties(
+        RoyaltyInstruction::TransferOut,
+        &mut constraint_model,
+        payer_info,
+        constraint_model_info,
+        system_program_info,
+    )?;
 
     let serialized_data = constraint_model
         .try_to_vec()
@@ -747,6 +763,7 @@ fn transfer_out(
 fn add_constraint_to_escrow_constraint_model(
     program_id: &Pubkey,
     accounts: &[AccountInfo],
+    take_fees: bool,
     constraint_name: String,
     escrow_constraint: EscrowConstraint,
 ) -> ProgramResult {
@@ -789,12 +806,16 @@ fn add_constraint_to_escrow_constraint_model(
         .constraints
         .insert(constraint_name, escrow_constraint);
 
-    solana_program::system_instruction::transfer(
-        payer_info.key,
-        escrow_constraint_model_info.key,
-        escrow_constraint_model.royalties.add_constraint + FEES.add_constraint,
-    );
-    escrow_constraint_model.royalty_balance += escrow_constraint_model.royalties.add_constraint;
+    // Pay royalties and protocol fees if we haven't already.
+    if take_fees {
+        pay_royalties(
+            RoyaltyInstruction::AddConstraint,
+            &mut escrow_constraint_model,
+            payer_info,
+            escrow_constraint_model_info,
+            system_program_info,
+        )?;
+    }
 
     let serialized_data = escrow_constraint_model
         .try_to_vec()
@@ -823,15 +844,30 @@ fn add_none_constraint_to_escrow_constraint_model(
     accounts: &[AccountInfo],
     args: AddNoneConstraintToEscrowConstraintModelArgs,
 ) -> ProgramResult {
+    let accounts_iter = &mut accounts.iter();
+    accounts_iter.next(); // skip the escrow constraint model
+    accounts_iter.next(); // skip the payer
+    accounts_iter.next(); // skip the update authority
+    accounts_iter.next(); // skip the system program
+    let sysvar_instruction_info = next_account_info(accounts_iter)?;
+
     let constraint = EscrowConstraint {
         constraint_type: EscrowConstraintType::None,
         token_limit: args.token_limit,
         transfer_effects: args.transfer_effects,
     };
 
+    // Check if the previous instruction was a creation instruction, so we don't double-charge protocol fees.
+    let mut creation_ix = false;
+    if load_current_index_checked(sysvar_instruction_info)? > 0 {
+        let prev_ix = get_instruction_relative(-1, sysvar_instruction_info)?;
+        creation_ix = is_creation_instruction(*prev_ix.data.first().unwrap_or(&255));
+    }
+
     add_constraint_to_escrow_constraint_model(
         program_id,
         accounts,
+        !creation_ix,
         args.constraint_name,
         constraint,
     )
@@ -847,9 +883,10 @@ fn add_collection_constraint_to_escrow_constraint_model(
     accounts_iter.next(); // skip the escrow constraint model
     accounts_iter.next(); // skip the payer
     accounts_iter.next(); // skip the update authority
-
     let collection_mint_info = next_account_info(accounts_iter)?;
     let collection_metadata_info = next_account_info(accounts_iter)?;
+    accounts_iter.next(); // skip the system program
+    let sysvar_instruction_info = next_account_info(accounts_iter)?;
 
     assert_owned_by(collection_mint_info, &spl_token::id())?;
     assert_owned_by(collection_metadata_info, &mpl_token_metadata::id())?;
@@ -863,9 +900,17 @@ fn add_collection_constraint_to_escrow_constraint_model(
         transfer_effects: args.transfer_effects,
     };
 
+    // Check if the previous instruction was a creation instruction, so we don't double-charge protocol fees.
+    let mut creation_ix = false;
+    if load_current_index_checked(sysvar_instruction_info)? > 0 {
+        let prev_ix = get_instruction_relative(-1, sysvar_instruction_info)?;
+        creation_ix = is_creation_instruction(*prev_ix.data.first().unwrap_or(&255));
+    }
+
     add_constraint_to_escrow_constraint_model(
         program_id,
         accounts,
+        !creation_ix,
         args.constraint_name,
         constraint,
     )
@@ -876,17 +921,31 @@ fn add_tokens_constraint_to_escrow_constraint_model(
     accounts: &[AccountInfo],
     args: AddTokensConstraintToEscrowConstraintModelArgs,
 ) -> ProgramResult {
+    let accounts_iter = &mut accounts.iter();
+
+    accounts_iter.next(); // skip the escrow constraint model
+    accounts_iter.next(); // skip the payer
+    accounts_iter.next(); // skip the update authority
+    accounts_iter.next(); // skip the system program
+    let sysvar_instruction_info = next_account_info(accounts_iter)?;
+
     let constraint = EscrowConstraint {
         constraint_type: EscrowConstraintType::tokens_from_slice(&args.tokens),
         token_limit: args.token_limit,
         transfer_effects: args.transfer_effects,
     };
 
-    msg!("Tokens: {:#?}", args.tokens);
+    // Check if the previous instruction was a creation instruction, so we don't double-charge protocol fees.
+    let mut creation_ix = false;
+    if load_current_index_checked(sysvar_instruction_info)? > 0 {
+        let prev_ix = get_instruction_relative(-1, sysvar_instruction_info)?;
+        creation_ix = is_creation_instruction(*prev_ix.data.first().unwrap_or(&255));
+    }
 
     add_constraint_to_escrow_constraint_model(
         program_id,
         accounts,
+        !creation_ix,
         args.constraint_name,
         constraint,
     )
@@ -919,6 +978,14 @@ fn remove_constraint_from_escrow_constraint_model(
         .constraints
         .remove(&args.constraint_name);
 
+    pay_royalties(
+        RoyaltyInstruction::RemoveConstraint,
+        &mut escrow_constraint_model,
+        payer_info,
+        escrow_constraint_model_info,
+        system_program_info,
+    )?;
+
     let serialized_data = escrow_constraint_model
         .try_to_vec()
         .map_err(|_| TrifleError::FailedToSerialize)?;
@@ -938,6 +1005,184 @@ fn remove_constraint_from_escrow_constraint_model(
         &serialized_data,
         serialized_data.len(),
     );
+
+    Ok(())
+}
+
+fn set_royalties(
+    program_id: &Pubkey,
+    accounts: &[AccountInfo],
+    args: SetRoyaltiesArgs,
+) -> ProgramResult {
+    let accounts_iter = &mut accounts.iter();
+    let constraint_model_info = next_account_info(accounts_iter)?;
+    let payer_info = next_account_info(accounts_iter)?;
+    let _update_authority_info = next_account_info(accounts_iter)?;
+    let system_program_info = next_account_info(accounts_iter)?;
+    let _sysvar_instruction_info = next_account_info(accounts_iter)?;
+
+    let bump = assert_derivation(
+        program_id,
+        constraint_model_info,
+        &[
+            ESCROW_SEED.as_bytes(),
+            payer_info.key.as_ref(),
+            args.name.as_bytes(),
+        ],
+    )?;
+
+    let _constraint_model_seeds = &[
+        ESCROW_SEED.as_ref(),
+        payer_info.key.as_ref(),
+        args.name.as_ref(),
+        &[bump],
+    ];
+
+    let mut constraint_model =
+        EscrowConstraintModel::try_from_slice(&constraint_model_info.data.borrow())
+            .map_err(|_| TrifleError::InvalidEscrowConstraintModel)?;
+
+    // Royalties are set on a per-instruction basis, so loop through each
+    // IX:Royalty pair and set the royalty in the map.
+    for ix_type in args.royalties {
+        constraint_model
+            .royalties
+            .entry(ix_type.0)
+            .or_insert_with(|| ix_type.1);
+    }
+
+    // collect fees and save the model.
+    pay_royalties(
+        RoyaltyInstruction::TransferOut,
+        &mut constraint_model,
+        payer_info,
+        constraint_model_info,
+        system_program_info,
+    )?;
+
+    let serialized_data = constraint_model
+        .try_to_vec()
+        .map_err(|_| TrifleError::FailedToSerialize)?;
+
+    resize_or_reallocate_account_raw(
+        constraint_model_info,
+        payer_info,
+        system_program_info,
+        serialized_data.len(),
+    )?;
+
+    sol_memcpy(
+        &mut **constraint_model_info
+            .try_borrow_mut_data()
+            .map_err(|_| TrifleError::FailedToBorrowAccountData)?,
+        &serialized_data,
+        serialized_data.len(),
+    );
+
+    Ok(())
+}
+
+fn withdraw_royalties(
+    program_id: &Pubkey,
+    accounts: &[AccountInfo],
+    args: WithdrawRoyaltiesArgs,
+) -> ProgramResult {
+    let accounts_iter = &mut accounts.iter();
+    let constraint_model_info = next_account_info(accounts_iter)?;
+    let payer_info = next_account_info(accounts_iter)?;
+    let update_authority_info = next_account_info(accounts_iter)?;
+    let destination_info = next_account_info(accounts_iter)?;
+    let new_dest_info = next_account_info(accounts_iter)?;
+    let system_program_info = next_account_info(accounts_iter)?;
+    let _sysvar_instruction_info = next_account_info(accounts_iter)?;
+
+    assert_signer(payer_info)?;
+
+    let bump = assert_derivation(
+        program_id,
+        constraint_model_info,
+        &[
+            ESCROW_SEED.as_bytes(),
+            update_authority_info.key.as_ref(),
+            args.name.as_bytes(),
+        ],
+    )?;
+
+    let constraint_model_seeds = &[
+        ESCROW_SEED.as_ref(),
+        update_authority_info.key.as_ref(),
+        args.name.as_ref(),
+        &[bump],
+    ];
+
+    let mut constraint_model =
+        EscrowConstraintModel::try_from_slice(&constraint_model_info.data.borrow())
+            .map_err(|_| TrifleError::InvalidEscrowConstraintModel)?;
+
+    // Check that the payer is the update authority before paying out royalties.
+    if payer_info.key == update_authority_info.key {
+        // Transfer the creator royalties balance to the destination account
+        // and set the balance to 0 afterwards.
+        invoke_signed(
+            &system_instruction::transfer(
+                constraint_model_info.key,
+                destination_info.key,
+                constraint_model.royalty_balance,
+            ),
+            &[
+                constraint_model_info.clone(),
+                destination_info.clone(),
+                constraint_model_info.clone(),
+                system_program_info.clone(),
+            ],
+            &[constraint_model_seeds],
+        )?;
+
+        constraint_model.royalty_balance = 0;
+    }
+
+    let serialized_data = constraint_model
+        .try_to_vec()
+        .map_err(|_| TrifleError::FailedToSerialize)?;
+
+    // Transfer the remaining balance to the Metaplex DAO. The untracked balance
+    // (account.lamports - rent - royalty_balance) is the total collected protocol fees.
+    invoke_signed(
+        &system_instruction::transfer(
+            constraint_model_info.key,
+            new_dest_info.key,
+            constraint_model_info
+                .lamports()
+                .checked_sub(constraint_model.royalty_balance)
+                .ok_or(TrifleError::NumericalOverflow)?
+                .checked_sub(Rent::get()?.minimum_balance(serialized_data.len()))
+                .ok_or(TrifleError::NumericalOverflow)?,
+        ),
+        &[
+            constraint_model_info.clone(),
+            new_dest_info.clone(),
+            constraint_model_info.clone(),
+            system_program_info.clone(),
+        ],
+        &[constraint_model_seeds],
+    )?;
+
+    if payer_info.key == update_authority_info.key {
+        resize_or_reallocate_account_raw(
+            constraint_model_info,
+            payer_info,
+            system_program_info,
+            serialized_data.len(),
+        )?;
+
+        sol_memcpy(
+            &mut **constraint_model_info
+                .try_borrow_mut_data()
+                .map_err(|_| TrifleError::FailedToBorrowAccountData)?,
+            &serialized_data,
+            serialized_data.len(),
+        );
+    }
 
     Ok(())
 }

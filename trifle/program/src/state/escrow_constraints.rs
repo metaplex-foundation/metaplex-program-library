@@ -11,14 +11,24 @@ use super::SolanaAccount;
 #[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, ShankAccount)]
 pub struct EscrowConstraintModel {
+    /// The type of account
     pub key: Key,
+    /// The creator of the Constraint Model
     pub creator: Pubkey,
+    /// The Constraint Model name
     pub name: String,
+    /// A map of constraints stored as Slot Name -> Constraint
     pub constraints: HashMap<String, EscrowConstraint>,
+    /// The address with permission to modify this account
     pub update_authority: Pubkey,
+    /// The number of times this Constraint Model is used, to prevent deletion of a used CM
     pub count: u64,
+    /// Optional URI pointing to a schema for composing NFT metadata
     pub schema_uri: Option<String>,
-    pub royalties: RoyaltyModel,
+    /// A list of creator royalties attached to Trifle
+    /// This is stored as a map of Instruction -> royalty for granular control
+    pub royalties: HashMap<RoyaltyInstruction, u64>,
+    /// The current balance (in lamports) of paid fees stored in the Constraint Model account
     pub royalty_balance: u64,
 }
 
@@ -42,7 +52,10 @@ impl Default for EscrowConstraintModel {
             update_authority: Pubkey::default(),
             count: 0,
             schema_uri: None,
-            royalties: RoyaltyModel::default(),
+            royalties: HashMap::from([
+                (RoyaltyInstruction::TransferIn, 0),
+                (RoyaltyInstruction::TransferOut, 0),
+            ]),
             royalty_balance: 0,
         }
     }
@@ -100,21 +113,30 @@ impl Default for EscrowConstraintType {
     }
 }
 
-pub const FEES: RoyaltyModel = RoyaltyModel {
-    create_model: 694200,
-    create_trifle: 694200,
-    transfer_in: 694200,
-    transfer_out: 694200,
-    add_constraint: 694200,
-};
+// Protocol fees for Trifle
+const TRIFLE_FEE: u64 = 20_000_000;
+const MODEL_FEE: u64 = 100_000_000;
+
+pub fn fees() -> HashMap<RoyaltyInstruction, u64> {
+    let mut m = HashMap::new();
+    m.insert(RoyaltyInstruction::CreateModel, 0);
+    m.insert(RoyaltyInstruction::CreateTrifle, TRIFLE_FEE);
+    m.insert(RoyaltyInstruction::TransferIn, TRIFLE_FEE);
+    m.insert(RoyaltyInstruction::TransferOut, TRIFLE_FEE);
+    m.insert(RoyaltyInstruction::AddConstraint, MODEL_FEE);
+    m.insert(RoyaltyInstruction::RemoveConstraint, MODEL_FEE);
+    m
+}
+
 #[repr(C)]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, Default)]
-pub struct RoyaltyModel {
-    pub create_model: u64,
-    pub create_trifle: u64,
-    pub transfer_in: u64,
-    pub transfer_out: u64,
-    pub add_constraint: u64,
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, Hash, PartialOrd)]
+pub enum RoyaltyInstruction {
+    CreateModel,
+    CreateTrifle,
+    TransferIn,
+    TransferOut,
+    AddConstraint,
+    RemoveConstraint,
 }
 
 impl SolanaAccount for EscrowConstraintModel {

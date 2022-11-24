@@ -7,50 +7,44 @@
 
 import * as beet from '@metaplex-foundation/beet';
 import * as web3 from '@solana/web3.js';
-import {
-  AddNoneConstraintToEscrowConstraintModelArgs,
-  addNoneConstraintToEscrowConstraintModelArgsBeet,
-} from '../types/AddNoneConstraintToEscrowConstraintModelArgs';
+import { SetRoyaltiesArgs, setRoyaltiesArgsBeet } from '../types/SetRoyaltiesArgs';
 
 /**
  * @category Instructions
- * @category AddNoneConstraintToEscrowConstraintModel
+ * @category SetRoyalties
  * @category generated
  */
-export type AddNoneConstraintToEscrowConstraintModelInstructionArgs = {
-  addNoneConstraintToEscrowConstraintModelArgs: AddNoneConstraintToEscrowConstraintModelArgs;
+export type SetRoyaltiesInstructionArgs = {
+  setRoyaltiesArgs: SetRoyaltiesArgs;
 };
 /**
  * @category Instructions
- * @category AddNoneConstraintToEscrowConstraintModel
+ * @category SetRoyalties
  * @category generated
  */
-export const AddNoneConstraintToEscrowConstraintModelStruct = new beet.FixableBeetArgsStruct<
-  AddNoneConstraintToEscrowConstraintModelInstructionArgs & {
+export const SetRoyaltiesStruct = new beet.FixableBeetArgsStruct<
+  SetRoyaltiesInstructionArgs & {
     instructionDiscriminator: number;
   }
 >(
   [
     ['instructionDiscriminator', beet.u8],
-    [
-      'addNoneConstraintToEscrowConstraintModelArgs',
-      addNoneConstraintToEscrowConstraintModelArgsBeet,
-    ],
+    ['setRoyaltiesArgs', setRoyaltiesArgsBeet],
   ],
-  'AddNoneConstraintToEscrowConstraintModelInstructionArgs',
+  'SetRoyaltiesInstructionArgs',
 );
 /**
- * Accounts required by the _AddNoneConstraintToEscrowConstraintModel_ instruction
+ * Accounts required by the _SetRoyalties_ instruction
  *
  * @property [_writable_] constraintModel Constraint model account
  * @property [_writable_, **signer**] payer Wallet paying for the transaction and new account, will be set as the creator of the constraint model
  * @property [**signer**] updateAuthority Update authority of the constraint model
  * @property [] sysvarInstructions Instructions sysvar account
  * @category Instructions
- * @category AddNoneConstraintToEscrowConstraintModel
+ * @category SetRoyalties
  * @category generated
  */
-export type AddNoneConstraintToEscrowConstraintModelInstructionAccounts = {
+export type SetRoyaltiesInstructionAccounts = {
   constraintModel: web3.PublicKey;
   payer: web3.PublicKey;
   updateAuthority: web3.PublicKey;
@@ -58,25 +52,25 @@ export type AddNoneConstraintToEscrowConstraintModelInstructionAccounts = {
   sysvarInstructions: web3.PublicKey;
 };
 
-export const addNoneConstraintToEscrowConstraintModelInstructionDiscriminator = 4;
+export const setRoyaltiesInstructionDiscriminator = 8;
 
 /**
- * Creates a _AddNoneConstraintToEscrowConstraintModel_ instruction.
+ * Creates a _SetRoyalties_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
  * @param args to provide as instruction data to the program
  *
  * @category Instructions
- * @category AddNoneConstraintToEscrowConstraintModel
+ * @category SetRoyalties
  * @category generated
  */
-export function createAddNoneConstraintToEscrowConstraintModelInstruction(
-  accounts: AddNoneConstraintToEscrowConstraintModelInstructionAccounts,
-  args: AddNoneConstraintToEscrowConstraintModelInstructionArgs,
+export function createSetRoyaltiesInstruction(
+  accounts: SetRoyaltiesInstructionAccounts,
+  args: SetRoyaltiesInstructionArgs,
   programId = new web3.PublicKey('trifMWutwBxkSuatmpPVnEe7NoE3BJKgjVi8sSyoXWX'),
 ) {
-  const [data] = AddNoneConstraintToEscrowConstraintModelStruct.serialize({
-    instructionDiscriminator: addNoneConstraintToEscrowConstraintModelInstructionDiscriminator,
+  const [data] = SetRoyaltiesStruct.serialize({
+    instructionDiscriminator: setRoyaltiesInstructionDiscriminator,
     ...args,
   });
   const keys: web3.AccountMeta[] = [

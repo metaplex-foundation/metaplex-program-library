@@ -3,6 +3,11 @@ use solana_program::{
     system_instruction, sysvar::Sysvar,
 };
 
+use crate::{
+    error::TrifleError,
+    state::escrow_constraints::{fees, EscrowConstraintModel, RoyaltyInstruction},
+};
+
 /// Resize an account using realloc, lifted from Solana Cookbook
 #[inline(always)]
 pub fn resize_or_reallocate_account_raw<'a>(
@@ -27,4 +32,43 @@ pub fn resize_or_reallocate_account_raw<'a>(
     target_account.realloc(new_size, false)?;
 
     Ok(())
+}
+
+pub fn pay_royalties<'a>(
+    instruction: RoyaltyInstruction,
+    model: &mut EscrowConstraintModel,
+    payer: &AccountInfo<'a>,
+    royalty_recipient: &AccountInfo<'a>,
+    system_program: &AccountInfo<'a>,
+) -> ProgramResult {
+    // Fetch the royalty fee from the royalties map.
+    let royalty = *model.royalties.get(&instruction).unwrap_or(&0);
+
+    // Transfer royalties from the payer to the Constraint Model
+    invoke(
+        &system_instruction::transfer(
+            payer.key,
+            royalty_recipient.key,
+            royalty + fees().get(&instruction).unwrap_or(&0),
+        ),
+        &[
+            payer.clone(),
+            royalty_recipient.clone(),
+            system_program.clone(),
+        ],
+    )?;
+
+    // Update the royalties balance on the Constraint Model minus the 10% Metaplex cut.
+    model.royalty_balance += royalty
+        .checked_mul(9)
+        .ok_or(TrifleError::NumericalOverflow)?
+        .checked_div(10)
+        .ok_or(TrifleError::NumericalOverflow)?;
+
+    Ok(())
+}
+
+// Check for matches against Create Constraint Model or any of the Add Constraint instructions.
+pub fn is_creation_instruction(hash: u8) -> bool {
+    matches!(hash, 0 | 4 | 5 | 6)
 }

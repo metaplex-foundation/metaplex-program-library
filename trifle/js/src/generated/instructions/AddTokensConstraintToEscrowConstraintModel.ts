@@ -45,6 +45,7 @@ export const AddTokensConstraintToEscrowConstraintModelStruct = new beet.Fixable
  * @property [_writable_] constraintModel Constraint model account
  * @property [_writable_, **signer**] payer Wallet paying for the transaction and new account, will be set as the creator of the constraint model
  * @property [**signer**] updateAuthority Update authority of the constraint model
+ * @property [] sysvarInstructions Instructions sysvar account
  * @category Instructions
  * @category AddTokensConstraintToEscrowConstraintModel
  * @category generated
@@ -54,6 +55,7 @@ export type AddTokensConstraintToEscrowConstraintModelInstructionAccounts = {
   payer: web3.PublicKey;
   updateAuthority: web3.PublicKey;
   systemProgram?: web3.PublicKey;
+  sysvarInstructions: web3.PublicKey;
 };
 
 export const addTokensConstraintToEscrowConstraintModelInstructionDiscriminator = 6;
@@ -95,6 +97,11 @@ export function createAddTokensConstraintToEscrowConstraintModelInstruction(
     },
     {
       pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.sysvarInstructions,
       isWritable: false,
       isSigner: false,
     },

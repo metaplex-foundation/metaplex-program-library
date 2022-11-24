@@ -7,6 +7,7 @@ import {
   Connection,
   Keypair,
   PublicKey,
+  SystemProgram,
   SYSVAR_INSTRUCTIONS_PUBKEY,
   Transaction,
 } from "@solana/web3.js";
@@ -85,6 +86,8 @@ export const addNoneConstraint = async (
       constraintModel: model,
       payer: keypair.publicKey,
       updateAuthority: keypair.publicKey,
+      systemProgram: SystemProgram.programId,
+      sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
     },
     {
       addNoneConstraintToEscrowConstraintModelArgs: {
@@ -100,7 +103,7 @@ export const addNoneConstraint = async (
   const { blockhash } = await connection.getLatestBlockhash();
   tx.recentBlockhash = blockhash;
   tx.feePayer = keypair.publicKey;
-  const sig = await connection.sendTransaction(tx, [keypair]);
+  const sig = await connection.sendTransaction(tx, [keypair], {skipPreflight: true});
   await connection.confirmTransaction(sig, "finalized");
 };
 
@@ -121,6 +124,7 @@ export const addCollectionConstraint = async (
       updateAuthority: keypair.publicKey,
       collectionMint: collection,
       collectionMintMetadata,
+      sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
     },
     {
       addCollectionConstraintToEscrowConstraintModelArgs: {
@@ -156,6 +160,7 @@ export const addTokensConstraint = async (
       constraintModel: model,
       payer: keypair.publicKey,
       updateAuthority: keypair.publicKey,
+      sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
     },
     {
       addTokensConstraintToEscrowConstraintModelArgs: {

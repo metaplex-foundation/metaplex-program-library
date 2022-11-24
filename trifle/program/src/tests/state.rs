@@ -5,9 +5,7 @@ mod escrow {
     use crate::{
         error::TrifleError,
         state::{
-            escrow_constraints::{
-                EscrowConstraint, EscrowConstraintModel, EscrowConstraintType, RoyaltyModel,
-            },
+            escrow_constraints::{EscrowConstraint, EscrowConstraintModel, EscrowConstraintType},
             transfer_effects::TransferEffects,
             trifle::Trifle,
             Key,
@@ -82,7 +80,7 @@ mod escrow {
             creator: Keypair::new().pubkey(),
             constraints,
             schema_uri: None,
-            royalties: RoyaltyModel::default(),
+            royalties: HashMap::new(),
             royalty_balance: 0,
         };
 
@@ -140,7 +138,7 @@ mod escrow {
             creator: Keypair::new().pubkey(),
             constraints,
             schema_uri: Some("test".to_string()),
-            royalties: RoyaltyModel::default(),
+            royalties: HashMap::new(),
             royalty_balance: 0,
         };
 

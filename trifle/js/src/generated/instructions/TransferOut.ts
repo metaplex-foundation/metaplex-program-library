@@ -74,7 +74,6 @@ export type TransferOutInstructionAccounts = {
   systemProgram?: web3.PublicKey;
   splAssociatedTokenAccount: web3.PublicKey;
   splToken: web3.PublicKey;
-  rent?: web3.PublicKey;
   tokenMetadataProgram: web3.PublicKey;
   sysvarInstructions: web3.PublicKey;
 };
@@ -181,11 +180,6 @@ export function createTransferOutInstruction(
     },
     {
       pubkey: accounts.splToken,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.rent ?? web3.SYSVAR_RENT_PUBKEY,
       isWritable: false,
       isSigner: false,
     },

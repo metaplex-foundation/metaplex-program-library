@@ -26,12 +26,6 @@ impl TokenAmount {
     }
 }
 
-// impl Trifle {
-//     pub fn try_len(&self) -> Result<usize, ProgramError> {
-//         Ok(1 + mem::size_of::<Pubkey>() + mem::size_of::<Pubkey>())
-//     }
-// }
-
 impl Default for Trifle {
     fn default() -> Self {
         Self {

@@ -446,10 +446,10 @@ mod trifle {
 async fn create_nft(
     context: &mut ProgramTestContext,
     create_collection: bool,
-    freeze_authority: Option<Pubkey>,
+    _freeze_authority: Option<Pubkey>,
 ) -> (Metadata, MasterEditionV2, Option<Metadata>) {
     if create_collection {
-        let payer_pubkey = context.payer.pubkey().to_owned();
+        let _payer_pubkey = context.payer.pubkey().to_owned();
         let collection = Metadata::new();
         let collection_master_edition = MasterEditionV2::new(&collection);
         collection
