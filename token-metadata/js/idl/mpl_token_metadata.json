@@ -1,5 +1,5 @@
 {
-  "version": "1.6.1",
+  "version": "1.6.2",
   "name": "mpl_token_metadata",
   "instructions": [
     {
@@ -2380,6 +2380,12 @@
           {
             "name": "bump",
             "type": "u8"
+          },
+          {
+            "name": "updateAuthority",
+            "type": {
+              "option": "publicKey"
+            }
           }
         ]
       }
@@ -2662,6 +2668,82 @@
   ],
   "types": [
     {
+      "name": "SetCollectionSizeArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "size",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CreateMetadataAccountArgsV2",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "data",
+            "type": {
+              "defined": "DataV2"
+            }
+          },
+          {
+            "name": "isMutable",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CreateMetadataAccountArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "data",
+            "type": {
+              "defined": "Data"
+            }
+          },
+          {
+            "name": "isMutable",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UpdateMetadataAccountArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "data",
+            "type": {
+              "option": {
+                "defined": "Data"
+              }
+            }
+          },
+          {
+            "name": "updateAuthority",
+            "type": {
+              "option": "publicKey"
+            }
+          },
+          {
+            "name": "primarySaleHappened",
+            "type": {
+              "option": "bool"
+            }
+          }
+        ]
+      }
+    },
+    {
       "name": "MintPrintingTokensViaTokenArgs",
       "type": {
         "kind": "struct",
@@ -2704,28 +2786,64 @@
       }
     },
     {
-      "name": "UpdateMetadataAccountArgs",
+      "name": "CreateMasterEditionArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "maxSupply",
+            "type": {
+              "option": "u64"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "MintNewEditionFromMasterEditionViaTokenArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "edition",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TransferOutOfEscrowArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "amount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CreateMetadataAccountArgsV3",
       "type": {
         "kind": "struct",
         "fields": [
           {
             "name": "data",
             "type": {
+              "defined": "DataV2"
+            }
+          },
+          {
+            "name": "isMutable",
+            "type": "bool"
+          },
+          {
+            "name": "collectionDetails",
+            "type": {
               "option": {
-                "defined": "Data"
+                "defined": "CollectionDetails"
               }
-            }
-          },
-          {
-            "name": "updateAuthority",
-            "type": {
-              "option": "publicKey"
-            }
-          },
-          {
-            "name": "primarySaleHappened",
-            "type": {
-              "option": "bool"
             }
           }
         ]
@@ -2766,94 +2884,6 @@
       }
     },
     {
-      "name": "CreateMetadataAccountArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "data",
-            "type": {
-              "defined": "Data"
-            }
-          },
-          {
-            "name": "isMutable",
-            "type": "bool"
-          }
-        ]
-      }
-    },
-    {
-      "name": "CreateMetadataAccountArgsV2",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "data",
-            "type": {
-              "defined": "DataV2"
-            }
-          },
-          {
-            "name": "isMutable",
-            "type": "bool"
-          }
-        ]
-      }
-    },
-    {
-      "name": "CreateMetadataAccountArgsV3",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "data",
-            "type": {
-              "defined": "DataV2"
-            }
-          },
-          {
-            "name": "isMutable",
-            "type": "bool"
-          },
-          {
-            "name": "collectionDetails",
-            "type": {
-              "option": {
-                "defined": "CollectionDetails"
-              }
-            }
-          }
-        ]
-      }
-    },
-    {
-      "name": "CreateMasterEditionArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "maxSupply",
-            "type": {
-              "option": "u64"
-            }
-          }
-        ]
-      }
-    },
-    {
-      "name": "MintNewEditionFromMasterEditionViaTokenArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "edition",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
       "name": "ApproveUseAuthorityArgs",
       "type": {
         "kind": "struct",
@@ -2872,18 +2902,6 @@
         "fields": [
           {
             "name": "numberOfUses",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "SetCollectionSizeArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "size",
             "type": "u64"
           }
         ]
@@ -3067,18 +3085,6 @@
           {
             "name": "totalSpots",
             "type": "u8"
-          }
-        ]
-      }
-    },
-    {
-      "name": "TransferOutOfEscrowArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "amount",
-            "type": "u64"
           }
         ]
       }
@@ -3866,7 +3872,7 @@
   "metadata": {
     "origin": "shank",
     "address": "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s",
-    "binaryVersion": "0.0.9",
-    "libVersion": "0.0.9"
+    "binaryVersion": "0.0.10",
+    "libVersion": "0.0.10"
   }
 }

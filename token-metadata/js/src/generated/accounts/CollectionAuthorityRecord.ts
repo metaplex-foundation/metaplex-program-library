@@ -5,8 +5,8 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet';
 import * as web3 from '@solana/web3.js';
+import * as beet from '@metaplex-foundation/beet';
 import * as beetSolana from '@metaplex-foundation/beet-solana';
 import { Key, keyBeet } from '../types/Key';
 
@@ -18,6 +18,7 @@ import { Key, keyBeet } from '../types/Key';
 export type CollectionAuthorityRecordArgs = {
   key: Key;
   bump: number;
+  updateAuthority: beet.COption<web3.PublicKey>;
 };
 /**
  * Holds the data for the {@link CollectionAuthorityRecord} Account and provides de/serialization
@@ -27,13 +28,17 @@ export type CollectionAuthorityRecordArgs = {
  * @category generated
  */
 export class CollectionAuthorityRecord implements CollectionAuthorityRecordArgs {
-  private constructor(readonly key: Key, readonly bump: number) {}
+  private constructor(
+    readonly key: Key,
+    readonly bump: number,
+    readonly updateAuthority: beet.COption<web3.PublicKey>,
+  ) {}
 
   /**
    * Creates a {@link CollectionAuthorityRecord} instance from the provided args.
    */
   static fromArgs(args: CollectionAuthorityRecordArgs) {
-    return new CollectionAuthorityRecord(args.key, args.bump);
+    return new CollectionAuthorityRecord(args.key, args.bump, args.updateAuthority);
   }
 
   /**
@@ -56,8 +61,9 @@ export class CollectionAuthorityRecord implements CollectionAuthorityRecordArgs 
   static async fromAccountAddress(
     connection: web3.Connection,
     address: web3.PublicKey,
+    commitmentOrConfig?: web3.Commitment | web3.GetAccountInfoConfig,
   ): Promise<CollectionAuthorityRecord> {
-    const accountInfo = await connection.getAccountInfo(address);
+    const accountInfo = await connection.getAccountInfo(address, commitmentOrConfig);
     if (accountInfo == null) {
       throw new Error(`Unable to find CollectionAuthorityRecord account at ${address}`);
     }
@@ -94,34 +100,33 @@ export class CollectionAuthorityRecord implements CollectionAuthorityRecordArgs 
 
   /**
    * Returns the byteSize of a {@link Buffer} holding the serialized data of
-   * {@link CollectionAuthorityRecord}
+   * {@link CollectionAuthorityRecord} for the provided args.
+   *
+   * @param args need to be provided since the byte size for this account
+   * depends on them
    */
-  static get byteSize() {
-    return collectionAuthorityRecordBeet.byteSize;
+  static byteSize(args: CollectionAuthorityRecordArgs) {
+    const instance = CollectionAuthorityRecord.fromArgs(args);
+    return collectionAuthorityRecordBeet.toFixedFromValue(instance).byteSize;
   }
 
   /**
    * Fetches the minimum balance needed to exempt an account holding
    * {@link CollectionAuthorityRecord} data from rent
    *
+   * @param args need to be provided since the byte size for this account
+   * depends on them
    * @param connection used to retrieve the rent exemption information
    */
   static async getMinimumBalanceForRentExemption(
+    args: CollectionAuthorityRecordArgs,
     connection: web3.Connection,
     commitment?: web3.Commitment,
   ): Promise<number> {
     return connection.getMinimumBalanceForRentExemption(
-      CollectionAuthorityRecord.byteSize,
+      CollectionAuthorityRecord.byteSize(args),
       commitment,
     );
-  }
-
-  /**
-   * Determines if the provided {@link Buffer} has the correct byte size to
-   * hold {@link CollectionAuthorityRecord} data.
-   */
-  static hasCorrectByteSize(buf: Buffer, offset = 0) {
-    return buf.byteLength - offset === CollectionAuthorityRecord.byteSize;
   }
 
   /**
@@ -132,6 +137,7 @@ export class CollectionAuthorityRecord implements CollectionAuthorityRecordArgs 
     return {
       key: 'Key.' + Key[this.key],
       bump: this.bump,
+      updateAuthority: this.updateAuthority,
     };
   }
 }
@@ -140,13 +146,14 @@ export class CollectionAuthorityRecord implements CollectionAuthorityRecordArgs 
  * @category Accounts
  * @category generated
  */
-export const collectionAuthorityRecordBeet = new beet.BeetStruct<
+export const collectionAuthorityRecordBeet = new beet.FixableBeetStruct<
   CollectionAuthorityRecord,
   CollectionAuthorityRecordArgs
 >(
   [
     ['key', keyBeet],
     ['bump', beet.u8],
+    ['updateAuthority', beet.coption(beetSolana.publicKey)],
   ],
   CollectionAuthorityRecord.fromArgs,
   'CollectionAuthorityRecord',
