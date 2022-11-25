@@ -1806,7 +1806,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "mpl_trifle"
+name = "mpl-trifle"
 version = "0.1.0"
 dependencies = [
  "borsh",
