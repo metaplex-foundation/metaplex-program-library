@@ -748,6 +748,10 @@
           {
             "name": "royaltyBalance",
             "type": "u64"
+          },
+          {
+            "name": "padding",
+            "type": "u8"
           }
         ]
       }
@@ -783,6 +787,10 @@
           {
             "name": "escrowConstraintModel",
             "type": "publicKey"
+          },
+          {
+            "name": "padding",
+            "type": "u8"
           }
         ]
       }
@@ -1151,6 +1159,11 @@
       "code": 17,
       "name": "FailedToBorrowAccountData",
       "msg": "Failed to borrow account data"
+    },
+    {
+      "code": 18,
+      "name": "InvalidCollection",
+      "msg": "Failed to deserialize collection"
     }
   ],
   "metadata": {

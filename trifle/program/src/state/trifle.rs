@@ -8,10 +8,16 @@ use super::{escrow_constraints::EscrowConstraint, SolanaAccount};
 
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, ShankAccount)]
 pub struct Trifle {
+    /// The type of account
     pub key: Key,
+    /// The pubkey of the COE on the parent NFT's metadata account
     pub token_escrow: Pubkey,
+    /// A map of the Slot:Token pairs. Each slot can contain multiple token mints and amounts
     pub tokens: HashMap<String, Vec<TokenAmount>>,
+    /// The pubkey of the Escrow Constraint Model
     pub escrow_constraint_model: Pubkey,
+    /// Buffer for future expansion
+    pub padding: u8,
 }
 
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
@@ -33,6 +39,7 @@ impl Default for Trifle {
             token_escrow: Pubkey::default(),
             tokens: HashMap::new(),
             escrow_constraint_model: Pubkey::default(),
+            padding: 0,
         }
     }
 }

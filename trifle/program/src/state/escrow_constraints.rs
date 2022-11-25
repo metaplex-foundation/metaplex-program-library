@@ -30,6 +30,8 @@ pub struct EscrowConstraintModel {
     pub royalties: HashMap<RoyaltyInstruction, u64>,
     /// The current balance (in lamports) of paid fees stored in the Constraint Model account
     pub royalty_balance: u64,
+    /// Buffer for future expansion
+    pub padding: u8,
 }
 
 impl EscrowConstraintModel {
@@ -57,6 +59,7 @@ impl Default for EscrowConstraintModel {
                 (RoyaltyInstruction::TransferOut, 0),
             ]),
             royalty_balance: 0,
+            padding: 0,
         }
     }
 }

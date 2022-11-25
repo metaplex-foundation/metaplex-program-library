@@ -384,6 +384,26 @@ createErrorFromNameLookup.set(
 );
 
 /**
+ * InvalidCollection: 'Failed to deserialize collection'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidCollectionError extends Error {
+  readonly code: number = 0x12;
+  readonly name: string = 'InvalidCollection';
+  constructor() {
+    super('Failed to deserialize collection');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidCollectionError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x12, () => new InvalidCollectionError());
+createErrorFromNameLookup.set('InvalidCollection', () => new InvalidCollectionError());
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

@@ -21,6 +21,7 @@ export type TrifleArgs = {
   tokenEscrow: web3.PublicKey;
   tokens: Map<string, TokenAmount[]>;
   escrowConstraintModel: web3.PublicKey;
+  padding: number;
 };
 /**
  * Holds the data for the {@link Trifle} Account and provides de/serialization
@@ -35,13 +36,20 @@ export class Trifle implements TrifleArgs {
     readonly tokenEscrow: web3.PublicKey,
     readonly tokens: Map<string, TokenAmount[]>,
     readonly escrowConstraintModel: web3.PublicKey,
+    readonly padding: number,
   ) {}
 
   /**
    * Creates a {@link Trifle} instance from the provided args.
    */
   static fromArgs(args: TrifleArgs) {
-    return new Trifle(args.key, args.tokenEscrow, args.tokens, args.escrowConstraintModel);
+    return new Trifle(
+      args.key,
+      args.tokenEscrow,
+      args.tokens,
+      args.escrowConstraintModel,
+      args.padding,
+    );
   }
 
   /**
@@ -136,6 +144,7 @@ export class Trifle implements TrifleArgs {
       tokenEscrow: this.tokenEscrow.toBase58(),
       tokens: this.tokens,
       escrowConstraintModel: this.escrowConstraintModel.toBase58(),
+      padding: this.padding,
     };
   }
 }
@@ -150,6 +159,7 @@ export const trifleBeet = new beet.FixableBeetStruct<Trifle, TrifleArgs>(
     ['tokenEscrow', beetSolana.publicKey],
     ['tokens', beet.map(beet.utf8String, beet.array(tokenAmountBeet))],
     ['escrowConstraintModel', beetSolana.publicKey],
+    ['padding', beet.u8],
   ],
   Trifle.fromArgs,
   'Trifle',

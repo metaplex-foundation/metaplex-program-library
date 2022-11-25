@@ -82,6 +82,7 @@ mod escrow {
             schema_uri: None,
             royalties: HashMap::new(),
             royalty_balance: 0,
+            padding: 0,
         };
 
         let mut buf_escrow_constraints_model = Vec::new();
@@ -140,6 +141,7 @@ mod escrow {
             schema_uri: Some("test".to_string()),
             royalties: HashMap::new(),
             royalty_balance: 0,
+            padding: 0,
         };
 
         escrow_constraints_model
