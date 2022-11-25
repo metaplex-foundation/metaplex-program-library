@@ -1,5 +1,5 @@
 // @ts-nocheck until 5.2.1 is released in DefinitelyTyped.
-import BN from "bn.js";
+import BN from 'bn.js';
 
 export class TransferEffects {
   _bn: BN;
@@ -12,7 +12,7 @@ export class TransferEffects {
     return this._bn.testn(0);
   }
 
-  withTrack(bool: boolean = true): this {
+  withTrack(bool: true): this {
     this._bn.setn(0, bool);
     return this;
   }
@@ -21,7 +21,7 @@ export class TransferEffects {
     return this._bn.testn(1);
   }
 
-  withBurn(bool: boolean = true): this {
+  withBurn(bool: true): this {
     this._bn.setn(1, bool);
     return this;
   }
@@ -30,7 +30,7 @@ export class TransferEffects {
     return this._bn.testn(2);
   }
 
-  withFreeze(bool: boolean = true): this {
+  withFreeze(bool: true): this {
     this._bn.setn(2, bool);
     return this;
   }
@@ -39,7 +39,7 @@ export class TransferEffects {
     return this._bn.testn(3);
   }
 
-  withFreezeParent(bool: boolean = true): this {
+  withFreezeParent(bool: true): this {
     this._bn.setn(3, bool);
     return this;
   }

@@ -1,2 +1,2 @@
-export * from "./generated";
-export { TransferEffects } from "./transfer-effects";
+export * from './generated';
+export { TransferEffects } from './transfer-effects';
