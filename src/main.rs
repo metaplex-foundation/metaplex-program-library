@@ -243,6 +243,7 @@ async fn run() -> Result<()> {
                 candy_machine,
                 destination,
                 label,
+                use_cache,
             } => {
                 process_thaw(ThawArgs {
                     keypair,
@@ -255,6 +256,7 @@ async fn run() -> Result<()> {
                     candy_machine,
                     destination,
                     label,
+                    use_cache,
                 })
                 .await?
             }

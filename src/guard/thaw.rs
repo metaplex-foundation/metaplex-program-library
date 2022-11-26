@@ -18,6 +18,7 @@ pub struct ThawArgs {
     pub candy_machine: Option<String>,
     pub destination: Option<String>,
     pub label: Option<String>,
+    pub use_cache: bool,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -238,18 +239,25 @@ pub async fn process_thaw(args: ThawArgs) -> Result<()> {
         solana_cluster
     };
 
-    let mint_pubkeys = match solana_cluster {
-        Cluster::Devnet | Cluster::Localnet | Cluster::Mainnet => {
-            let (creator, _) = find_candy_machine_creator_pda(&candy_machine);
-            let creator = bs58::encode(creator).into_string();
-            get_cm_creator_mint_accounts(&client, &creator, 0)?
-        }
-        _ => {
-            return Err(anyhow!(
-                "Cluster being used is unsupported for this command."
-            ))
-        }
-    };
+    // should use existing cache or not?
+    let mint_pubkeys: Vec<Pubkey> =
+        if args.use_cache && Path::exists(Path::new("mint_pubkeys_cache.json")) {
+            let mint_pubkeys_cache = File::open("mint_pubkeys_cache.json")?;
+            serde_json::from_reader(mint_pubkeys_cache)?
+        } else {
+            match solana_cluster {
+                Cluster::Devnet | Cluster::Localnet | Cluster::Mainnet => {
+                    let (creator, _) = find_candy_machine_creator_pda(&candy_machine);
+                    let creator = bs58::encode(creator).into_string();
+                    get_cm_creator_mint_accounts(&client, &creator, 0)?
+                }
+                _ => {
+                    return Err(anyhow!(
+                        "Cluster being used is unsupported for this command."
+                    ))
+                }
+            }
+        };
 
     if mint_pubkeys.is_empty() {
         pb.finish_with_message(format!("{}", style("No NFTs found.").green().bold()));
@@ -258,6 +266,12 @@ pub async fn process_thaw(args: ThawArgs) -> Result<()> {
         )));
     } else {
         pb.finish_with_message(format!("Found {:?} accounts", mint_pubkeys.len() as u64));
+    }
+
+    // create a cache of the mint list
+    if args.use_cache {
+        let mint_pubkeys_cache = File::create("mint_pubkeys_cache.json")?;
+        serde_json::to_writer(mint_pubkeys_cache, &mint_pubkeys)?;
     }
 
     let pb = progress_bar_with_style(mint_pubkeys.len() as u64);

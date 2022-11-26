@@ -461,6 +461,10 @@ pub enum GuardCommand {
         /// Candy guard group label.
         #[clap(long)]
         label: Option<String>,
+
+        /// Indicates to use a cache file for mint pubkeys.
+        #[clap(long)]
+        use_cache: bool,
     },
     /// Unlock treasury funds after freeze is turned off or expires.
     UnlockFunds {
