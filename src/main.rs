@@ -359,12 +359,14 @@ async fn run() -> Result<()> {
             rpc_url,
             cache,
             config,
+            timeout,
         } => {
             process_reveal(RevealArgs {
                 keypair,
                 rpc_url,
                 cache,
                 config,
+                timeout,
             })
             .await?
         }

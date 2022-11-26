@@ -169,6 +169,10 @@ pub enum Commands {
         /// Path to the config file
         #[clap(short, long, default_value = DEFAULT_CONFIG)]
         config: String,
+
+        /// RPC timeout to retrieve the mint list (in seconds).
+        #[clap(short, long)]
+        timeout: Option<u64>,
     },
 
     /// Show the on-chain config of an existing candy machine
