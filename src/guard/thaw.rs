@@ -271,7 +271,7 @@ pub async fn process_thaw(args: ThawArgs) -> Result<()> {
     // create a cache of the mint list
     if args.use_cache {
         let mint_pubkeys_cache = File::create("mint_pubkeys_cache.json")?;
-        serde_json::to_writer(mint_pubkeys_cache, &mint_pubkeys)?;
+        serde_json::to_writer_pretty(mint_pubkeys_cache, &mint_pubkeys)?;
     }
 
     let pb = progress_bar_with_style(mint_pubkeys.len() as u64);
