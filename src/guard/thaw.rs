@@ -19,6 +19,7 @@ pub struct ThawArgs {
     pub destination: Option<String>,
     pub label: Option<String>,
     pub use_cache: bool,
+    pub timeout: Option<u64>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -53,12 +54,10 @@ pub struct JRpcResponse {
 struct TokenAccount {
     address: String,
     amount: String,
-    // decimals: u8,
-    // #[serde(rename = "uiAmount")]
-    // ui_amount: f32,
-    // #[serde(rename = "uiAmountString")]
-    // ui_amount_string: String,
 }
+
+// Default timeout for 300 seconds (5 minutes).
+const DEFAULT_TIMEOUT: u64 = 300;
 
 pub async fn process_thaw(args: ThawArgs) -> Result<()> {
     let sugar_config = sugar_setup(args.keypair.clone(), args.rpc_url.clone())?;
@@ -231,7 +230,14 @@ pub async fn process_thaw(args: ThawArgs) -> Result<()> {
 
     let solana_cluster: Cluster = get_cluster(program.rpc())?;
     let rpc_url = get_rpc_url(args.rpc_url);
-    let client = RpcClient::new_with_timeout(&rpc_url, Duration::from_secs(300));
+    let client = RpcClient::new_with_timeout(
+        &rpc_url,
+        Duration::from_secs(if let Some(timeout) = args.timeout {
+            timeout
+        } else {
+            DEFAULT_TIMEOUT
+        }),
+    );
 
     let solana_cluster = if rpc_url.ends_with("8899") {
         Cluster::Localnet
@@ -243,7 +249,15 @@ pub async fn process_thaw(args: ThawArgs) -> Result<()> {
     let mint_pubkeys: Vec<Pubkey> =
         if args.use_cache && Path::exists(Path::new("mint_pubkeys_cache.json")) {
             let mint_pubkeys_cache = File::open("mint_pubkeys_cache.json")?;
-            serde_json::from_reader(mint_pubkeys_cache)?
+            let cache: Vec<String> = serde_json::from_reader(mint_pubkeys_cache)?;
+            cache
+                .iter()
+                .map(|x| {
+                    Pubkey::from_str(x)
+                        .map_err(|_| anyhow!("Invalid pubkey found: {}", x))
+                        .unwrap()
+                })
+                .collect()
         } else {
             match solana_cluster {
                 Cluster::Devnet | Cluster::Localnet | Cluster::Mainnet => {
@@ -271,8 +285,12 @@ pub async fn process_thaw(args: ThawArgs) -> Result<()> {
     // create a cache of the mint list
     if args.use_cache {
         let mint_pubkeys_cache = File::create("mint_pubkeys_cache.json")?;
-        serde_json::to_writer_pretty(mint_pubkeys_cache, &mint_pubkeys)?;
+        let mint_list: Vec<String> = mint_pubkeys.iter().map(|x| x.to_string()).collect();
+        serde_json::to_writer_pretty(mint_pubkeys_cache, &mint_list)?;
     }
+
+    // padding
+    println!();
 
     let pb = progress_bar_with_style(mint_pubkeys.len() as u64);
     pb.set_message("Getting NFT information....");
@@ -359,10 +377,13 @@ pub async fn process_thaw(args: ThawArgs) -> Result<()> {
 
     pb.finish_with_message(format!(
         "{}",
-        style("Finished fetching NFT information.").green().bold()
+        style("Finished fetching NFT information ").green().bold()
     ));
 
     let config = Arc::new(sugar_config);
+
+    // padding
+    println!();
 
     let nfts = thaw_nfts.lock().unwrap().clone();
     let thaw_pb = progress_bar_with_style(nfts.len() as u64);
@@ -408,7 +429,7 @@ pub async fn process_thaw(args: ThawArgs) -> Result<()> {
     if !thaw_errors.lock().unwrap().is_empty() || !failed_thaws.lock().unwrap().is_empty() {
         thaw_pb.abandon_with_message(format!(
             "{}",
-            style("Failed to Thaw all NFTs.").red().bold()
+            style("Failed to Thaw all NFTs ").red().bold()
         ));
         let failed_thaws = Arc::try_unwrap(failed_thaws).unwrap().into_inner().unwrap();
 
@@ -419,14 +440,16 @@ pub async fn process_thaw(args: ThawArgs) -> Result<()> {
     } else {
         thaw_pb.finish_with_message(format!(
             "{}",
-            style("All NFTs thawed successfully.").green().bold()
+            style("All NFTs thawed successfully ").green().bold()
         ));
     }
 
     let remaining_nfts = Arc::try_unwrap(failed_thaws).unwrap().into_inner().unwrap();
 
-    let remaining_items_cache = File::create("remaining_thaw_items_cache.json")?;
-    serde_json::to_writer_pretty(remaining_items_cache, &remaining_nfts)?;
+    if !remaining_nfts.is_empty() {
+        let remaining_items_cache = File::create("remaining_thaw_items_cache.json")?;
+        serde_json::to_writer_pretty(remaining_items_cache, &remaining_nfts)?;
+    }
 
     Ok(())
 }

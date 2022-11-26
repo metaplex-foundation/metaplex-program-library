@@ -462,9 +462,13 @@ pub enum GuardCommand {
         #[clap(long)]
         label: Option<String>,
 
-        /// Indicates to use a cache file for mint pubkeys.
+        /// Indicates to create/use a cache file for mint list.
         #[clap(long)]
         use_cache: bool,
+
+        /// RPC timeout to retrieve the mint list (in seconds).
+        #[clap(short, long)]
+        timeout: Option<u64>,
     },
     /// Unlock treasury funds after freeze is turned off or expires.
     UnlockFunds {
