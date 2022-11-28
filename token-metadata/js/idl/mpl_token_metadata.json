@@ -2345,28 +2345,6 @@
   ],
   "accounts": [
     {
-      "name": "UseAuthorityRecord",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "key",
-            "type": {
-              "defined": "Key"
-            }
-          },
-          {
-            "name": "allowedUses",
-            "type": "u64"
-          },
-          {
-            "name": "bump",
-            "type": "u8"
-          }
-        ]
-      }
-    },
-    {
       "name": "CollectionAuthorityRecord",
       "type": {
         "kind": "struct",
@@ -2386,6 +2364,135 @@
             "type": {
               "option": "publicKey"
             }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Edition",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "key",
+            "type": {
+              "defined": "Key"
+            }
+          },
+          {
+            "name": "parent",
+            "type": "publicKey"
+          },
+          {
+            "name": "edition",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "EditionMarker",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "key",
+            "type": {
+              "defined": "Key"
+            }
+          },
+          {
+            "name": "ledger",
+            "type": {
+              "array": [
+                "u8",
+                31
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "TokenOwnedEscrow",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "key",
+            "type": {
+              "defined": "Key"
+            }
+          },
+          {
+            "name": "baseToken",
+            "type": "publicKey"
+          },
+          {
+            "name": "authority",
+            "type": {
+              "defined": "EscrowAuthority"
+            }
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "MasterEditionV2",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "key",
+            "type": {
+              "defined": "Key"
+            }
+          },
+          {
+            "name": "supply",
+            "type": "u64"
+          },
+          {
+            "name": "maxSupply",
+            "type": {
+              "option": "u64"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "MasterEditionV1",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "key",
+            "type": {
+              "defined": "Key"
+            }
+          },
+          {
+            "name": "supply",
+            "type": "u64"
+          },
+          {
+            "name": "maxSupply",
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "printingMint",
+            "type": "publicKey"
+          },
+          {
+            "name": "oneTimePrintingAuthorizationMint",
+            "type": "publicKey"
           }
         ]
       }
@@ -2465,84 +2572,6 @@
       }
     },
     {
-      "name": "MasterEditionV2",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "key",
-            "type": {
-              "defined": "Key"
-            }
-          },
-          {
-            "name": "supply",
-            "type": "u64"
-          },
-          {
-            "name": "maxSupply",
-            "type": {
-              "option": "u64"
-            }
-          }
-        ]
-      }
-    },
-    {
-      "name": "MasterEditionV1",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "key",
-            "type": {
-              "defined": "Key"
-            }
-          },
-          {
-            "name": "supply",
-            "type": "u64"
-          },
-          {
-            "name": "maxSupply",
-            "type": {
-              "option": "u64"
-            }
-          },
-          {
-            "name": "printingMint",
-            "type": "publicKey"
-          },
-          {
-            "name": "oneTimePrintingAuthorizationMint",
-            "type": "publicKey"
-          }
-        ]
-      }
-    },
-    {
-      "name": "Edition",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "key",
-            "type": {
-              "defined": "Key"
-            }
-          },
-          {
-            "name": "parent",
-            "type": "publicKey"
-          },
-          {
-            "name": "edition",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
       "name": "ReservationListV2",
       "type": {
         "kind": "struct",
@@ -2615,7 +2644,7 @@
       }
     },
     {
-      "name": "EditionMarker",
+      "name": "UseAuthorityRecord",
       "type": {
         "kind": "struct",
         "fields": [
@@ -2626,37 +2655,8 @@
             }
           },
           {
-            "name": "ledger",
-            "type": {
-              "array": [
-                "u8",
-                31
-              ]
-            }
-          }
-        ]
-      }
-    },
-    {
-      "name": "TokenOwnedEscrow",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "key",
-            "type": {
-              "defined": "Key"
-            }
-          },
-          {
-            "name": "baseToken",
-            "type": "publicKey"
-          },
-          {
-            "name": "authority",
-            "type": {
-              "defined": "EscrowAuthority"
-            }
+            "name": "allowedUses",
+            "type": "u64"
           },
           {
             "name": "bump",
@@ -2908,6 +2908,42 @@
       }
     },
     {
+      "name": "Collection",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "verified",
+            "type": "bool"
+          },
+          {
+            "name": "key",
+            "type": "publicKey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Creator",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "address",
+            "type": "publicKey"
+          },
+          {
+            "name": "verified",
+            "type": "bool"
+          },
+          {
+            "name": "share",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
       "name": "Data",
       "type": {
         "kind": "struct",
@@ -2992,64 +3028,6 @@
       }
     },
     {
-      "name": "Uses",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "useMethod",
-            "type": {
-              "defined": "UseMethod"
-            }
-          },
-          {
-            "name": "remaining",
-            "type": "u64"
-          },
-          {
-            "name": "total",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "Collection",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "verified",
-            "type": "bool"
-          },
-          {
-            "name": "key",
-            "type": "publicKey"
-          }
-        ]
-      }
-    },
-    {
-      "name": "Creator",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "address",
-            "type": "publicKey"
-          },
-          {
-            "name": "verified",
-            "type": "bool"
-          },
-          {
-            "name": "share",
-            "type": "u8"
-          }
-        ]
-      }
-    },
-    {
       "name": "Reservation",
       "type": {
         "kind": "struct",
@@ -3085,6 +3063,48 @@
           {
             "name": "totalSpots",
             "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Uses",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "useMethod",
+            "type": {
+              "defined": "UseMethod"
+            }
+          },
+          {
+            "name": "remaining",
+            "type": "u64"
+          },
+          {
+            "name": "total",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TokenStandard",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "NonFungible"
+          },
+          {
+            "name": "FungibleAsset"
+          },
+          {
+            "name": "Fungible"
+          },
+          {
+            "name": "NonFungibleEdition"
           }
         ]
       }
@@ -3131,23 +3151,6 @@
       }
     },
     {
-      "name": "UseMethod",
-      "type": {
-        "kind": "enum",
-        "variants": [
-          {
-            "name": "Burn"
-          },
-          {
-            "name": "Multiple"
-          },
-          {
-            "name": "Single"
-          }
-        ]
-      }
-    },
-    {
       "name": "CollectionDetails",
       "type": {
         "kind": "enum",
@@ -3165,26 +3168,6 @@
       }
     },
     {
-      "name": "TokenStandard",
-      "type": {
-        "kind": "enum",
-        "variants": [
-          {
-            "name": "NonFungible"
-          },
-          {
-            "name": "FungibleAsset"
-          },
-          {
-            "name": "Fungible"
-          },
-          {
-            "name": "NonFungibleEdition"
-          }
-        ]
-      }
-    },
-    {
       "name": "EscrowAuthority",
       "type": {
         "kind": "enum",
@@ -3197,6 +3180,23 @@
             "fields": [
               "publicKey"
             ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "UseMethod",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Burn"
+          },
+          {
+            "name": "Multiple"
+          },
+          {
+            "name": "Single"
           }
         ]
       }
