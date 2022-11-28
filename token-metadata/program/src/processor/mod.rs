@@ -1,24 +1,28 @@
 mod bubblegum;
+mod burn;
 mod collection;
 pub(crate) mod deprecated;
 mod edition;
 pub(crate) mod escrow;
+mod freeze;
 mod metadata;
-mod operation;
+mod uses;
 
 use borsh::BorshDeserialize;
 pub use bubblegum::*;
 pub use collection::*;
 // Have to reexport for backwards compatibility
+pub use burn::*;
 pub use deprecated::{
     process_create_metadata_accounts_v2,
     process_deprecated_mint_new_edition_from_master_edition_via_vault_proxy,
 };
 pub use edition::*;
 pub use escrow::*;
+pub use freeze::*;
 pub use metadata::*;
-pub use operation::*;
 use solana_program::{account_info::AccountInfo, entrypoint::ProgramResult, msg, pubkey::Pubkey};
+pub use uses::*;
 
 use crate::{
     deprecated_processor::{

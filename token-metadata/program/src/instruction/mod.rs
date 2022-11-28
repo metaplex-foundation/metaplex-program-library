@@ -1,21 +1,25 @@
 mod bubblegum;
+mod burn;
 mod collection;
 pub(crate) mod deprecated;
 mod edition;
 pub(crate) mod escrow;
+mod freeze;
 mod metadata;
-mod operation;
+mod uses;
 
 use borsh::{BorshDeserialize, BorshSerialize};
 pub use bubblegum::*;
+pub use burn::*;
 pub use collection::*;
 pub use edition::*;
 pub use escrow::*;
+pub use freeze::*;
 pub use metadata::*;
-pub use operation::*;
 #[cfg(feature = "serde-feature")]
 use serde::{Deserialize, Serialize};
 use shank::ShankInstruction;
+pub use uses::*;
 
 #[allow(deprecated)]
 pub use crate::deprecated_instruction::{
