@@ -1,12 +1,9 @@
 use borsh::{BorshDeserialize, BorshSerialize};
+#[cfg(feature = "serde-feature")]
+use serde::{Deserialize, Serialize};
 use solana_program::{
     instruction::{AccountMeta, Instruction},
     pubkey::Pubkey,
-};
-#[cfg(feature = "serde-feature")]
-use {
-    serde::{Deserialize, Serialize},
-    serde_with::{As, DisplayFromStr},
 };
 
 use crate::instruction::MetadataInstruction;

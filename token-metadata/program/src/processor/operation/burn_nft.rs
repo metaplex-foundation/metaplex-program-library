@@ -15,11 +15,11 @@ use crate::{
         assert_derivation, assert_owned_by,
         metadata::{assert_currently_holding, assert_verified_member_of_collection},
     },
-    deser::clean_write_metadata,
     error::MetadataError,
     state::{
         CollectionDetails, Key, Metadata, TokenMetadataAccount, EDITION, MAX_METADATA_LEN, PREFIX,
     },
+    utils::clean_write_metadata,
 };
 
 pub fn process_burn_nft(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {

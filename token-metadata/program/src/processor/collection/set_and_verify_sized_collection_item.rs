@@ -10,10 +10,9 @@ use crate::{
         assert_owned_by,
         collection::{assert_collection_verify_is_valid, assert_has_collection_authority},
     },
-    deser::clean_write_metadata,
     error::MetadataError,
     state::{Collection, Metadata, TokenMetadataAccount},
-    utils::increment_collection_size,
+    utils::{clean_write_metadata, increment_collection_size},
 };
 
 pub fn set_and_verify_sized_collection_item(

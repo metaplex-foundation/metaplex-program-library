@@ -8,10 +8,9 @@ use crate::{
     assertions::{
         assert_derivation, assert_owned_by, metadata::assert_update_authority_is_correct,
     },
-    deser::clean_write_metadata,
     error::MetadataError,
     state::{Metadata, TokenMetadataAccount, EDITION, PREFIX},
-    utils::check_token_standard,
+    utils::{check_token_standard, clean_write_metadata},
 };
 
 pub fn process_set_token_standard(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {

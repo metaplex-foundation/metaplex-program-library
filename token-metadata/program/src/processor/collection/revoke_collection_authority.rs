@@ -6,9 +6,8 @@ use solana_program::{
     pubkey::Pubkey,
 };
 
-use crate::assertions::collection::assert_is_collection_delegated_authority;
 use crate::{
-    assertions::assert_owned_by,
+    assertions::{assert_owned_by, collection::assert_is_collection_delegated_authority},
     error::MetadataError,
     state::{Metadata, TokenMetadataAccount, USE_AUTHORITY_RECORD_SIZE},
 };

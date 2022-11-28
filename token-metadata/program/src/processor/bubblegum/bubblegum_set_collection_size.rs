@@ -9,11 +9,10 @@ use solana_program::{
 
 use crate::{
     assertions::{assert_owned_by, collection::assert_has_collection_authority},
-    deser::clean_write_metadata,
     error::MetadataError,
     instruction::SetCollectionSizeArgs,
     state::{CollectionDetails, Metadata, TokenMetadataAccount},
-    utils::{BUBBLEGUM_ACTIVATED, BUBBLEGUM_SIGNER},
+    utils::{clean_write_metadata, BUBBLEGUM_ACTIVATED, BUBBLEGUM_SIGNER},
 };
 
 pub fn bubblegum_set_collection_size(

@@ -6,10 +6,10 @@ use solana_program::{
 
 use crate::{
     assertions::{assert_owned_by, collection::assert_has_collection_authority},
-    deser::clean_write_metadata,
     error::MetadataError,
     instruction::SetCollectionSizeArgs,
     state::{CollectionDetails, Metadata, TokenMetadataAccount},
+    utils::clean_write_metadata,
 };
 
 pub fn set_collection_size(

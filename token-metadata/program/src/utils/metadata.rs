@@ -1,7 +1,195 @@
 use borsh::{maybestd::io::Error as BorshError, BorshDeserialize, BorshSerialize};
-use solana_program::{account_info::AccountInfo, entrypoint::ProgramResult, pubkey::Pubkey};
+use mpl_utils::{create_or_allocate_account_raw, token::get_mint_authority};
+use solana_program::{
+    account_info::AccountInfo, entrypoint::ProgramResult, program_option::COption, pubkey,
+    pubkey::Pubkey,
+};
 
-use crate::state::{Collection, CollectionDetails, Data, Key, Metadata, TokenStandard, Uses};
+use super::*;
+use crate::{
+    assertions::{
+        assert_mint_authority_matches_mint, assert_owned_by,
+        collection::assert_collection_update_is_valid, metadata::assert_data_valid,
+        uses::assert_valid_use,
+    },
+    constants::{EDITION, MAX_METADATA_LEN, PREFIX},
+    state::{Collection, CollectionDetails, Data, DataV2, Key, Metadata, TokenStandard, Uses},
+};
+
+// This equals the program address of the metadata program:
+//
+// AqH29mZfQFgRpfwaPoTMWSKJ5kqauoc1FwVBRksZyQrt
+//
+// IMPORTANT NOTE
+// This allows the upgrade authority of the Token Metadata program to create metadata for SPL tokens.
+// This only allows the upgrade authority to do create general metadata for the SPL token, it does not
+// allow the upgrade authority to add or change creators.
+pub const SEED_AUTHORITY: Pubkey = Pubkey::new_from_array([
+    0x92, 0x17, 0x2c, 0xc4, 0x72, 0x5d, 0xc0, 0x41, 0xf9, 0xdd, 0x8c, 0x51, 0x52, 0x60, 0x04, 0x26,
+    0x00, 0x93, 0xa3, 0x0b, 0x02, 0x73, 0xdc, 0xfa, 0x74, 0x92, 0x17, 0xfc, 0x94, 0xa2, 0x40, 0x49,
+]);
+
+// This allows the Bubblegum program to add verified creators since they were verified as part of
+// the Bubblegum program.
+pub const BUBBLEGUM_PROGRAM_ADDRESS: Pubkey =
+    pubkey!("BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY");
+
+pub const BUBBLEGUM_SIGNER: Pubkey = pubkey!("4ewWZC5gT6TGpm5LZNDs9wVonfUT2q5PP5sc9kVbwMAK");
+
+// This flag activates certain program authority features of the Bubblegum program.
+pub const BUBBLEGUM_ACTIVATED: bool = true;
+
+pub struct CreateMetadataAccountsLogicArgs<'a> {
+    pub metadata_account_info: &'a AccountInfo<'a>,
+    pub mint_info: &'a AccountInfo<'a>,
+    pub mint_authority_info: &'a AccountInfo<'a>,
+    pub payer_account_info: &'a AccountInfo<'a>,
+    pub update_authority_info: &'a AccountInfo<'a>,
+    pub system_account_info: &'a AccountInfo<'a>,
+}
+
+/// Create a new account instruction
+pub fn process_create_metadata_accounts_logic(
+    program_id: &Pubkey,
+    accounts: CreateMetadataAccountsLogicArgs,
+    data: DataV2,
+    allow_direct_creator_writes: bool,
+    mut is_mutable: bool,
+    is_edition: bool,
+    add_token_standard: bool,
+    collection_details: Option<CollectionDetails>,
+) -> ProgramResult {
+    let CreateMetadataAccountsLogicArgs {
+        metadata_account_info,
+        mint_info,
+        mint_authority_info,
+        payer_account_info,
+        update_authority_info,
+        system_account_info,
+    } = accounts;
+
+    let mut update_authority_key = *update_authority_info.key;
+    let existing_mint_authority = get_mint_authority(mint_info)?;
+    // IMPORTANT NOTE
+    // This allows the Metaplex Foundation to Create but not update metadata for SPL tokens that have not populated their metadata.
+    assert_mint_authority_matches_mint(&existing_mint_authority, mint_authority_info).or_else(
+        |e| {
+            // Allow seeding by the authority seed populator
+            if mint_authority_info.key == &SEED_AUTHORITY && mint_authority_info.is_signer {
+                // When metadata is seeded, the mint authority should be able to change it
+                if let COption::Some(auth) = existing_mint_authority {
+                    update_authority_key = auth;
+                    is_mutable = true;
+                }
+                Ok(())
+            } else {
+                Err(e)
+            }
+        },
+    )?;
+    assert_owned_by(mint_info, &spl_token::id())?;
+
+    let metadata_seeds = &[
+        PREFIX.as_bytes(),
+        program_id.as_ref(),
+        mint_info.key.as_ref(),
+    ];
+    let (metadata_key, metadata_bump_seed) =
+        Pubkey::find_program_address(metadata_seeds, program_id);
+    let metadata_authority_signer_seeds = &[
+        PREFIX.as_bytes(),
+        program_id.as_ref(),
+        mint_info.key.as_ref(),
+        &[metadata_bump_seed],
+    ];
+
+    if metadata_account_info.key != &metadata_key {
+        return Err(MetadataError::InvalidMetadataKey.into());
+    }
+
+    create_or_allocate_account_raw(
+        *program_id,
+        metadata_account_info,
+        system_account_info,
+        payer_account_info,
+        MAX_METADATA_LEN,
+        metadata_authority_signer_seeds,
+    )?;
+
+    let mut metadata = Metadata::from_account_info(metadata_account_info)?;
+    let compatible_data = data.to_v1();
+
+    // This allows the Bubblegum program to create metadata with verified creators since they were
+    // verified already by the Bubblegum program.
+    let allow_direct_creator_writes = if BUBBLEGUM_ACTIVATED
+        && mint_authority_info.owner == &BUBBLEGUM_PROGRAM_ADDRESS
+        && mint_authority_info.is_signer
+    {
+        true
+    } else {
+        allow_direct_creator_writes
+    };
+
+    assert_data_valid(
+        &compatible_data,
+        &update_authority_key,
+        &metadata,
+        allow_direct_creator_writes,
+        update_authority_info.is_signer,
+    )?;
+
+    let mint_decimals = get_mint_decimals(mint_info)?;
+
+    metadata.mint = *mint_info.key;
+    metadata.key = Key::MetadataV1;
+    metadata.data = data.to_v1();
+    metadata.is_mutable = is_mutable;
+    metadata.update_authority = update_authority_key;
+
+    assert_valid_use(&data.uses, &None)?;
+    metadata.uses = data.uses;
+
+    assert_collection_update_is_valid(is_edition, &None, &data.collection)?;
+    metadata.collection = data.collection;
+
+    // We want to create new collections with a size of zero but we use the
+    // collection details enum for forward compatibility.
+    if let Some(details) = collection_details {
+        match details {
+            CollectionDetails::V1 { size: _size } => {
+                metadata.collection_details = Some(CollectionDetails::V1 { size: 0 });
+            }
+        }
+    } else {
+        metadata.collection_details = None;
+    }
+
+    if add_token_standard {
+        let token_standard = if is_edition {
+            TokenStandard::NonFungibleEdition
+        } else if mint_decimals == 0 {
+            TokenStandard::FungibleAsset
+        } else {
+            TokenStandard::Fungible
+        };
+        metadata.token_standard = Some(token_standard);
+    } else {
+        metadata.token_standard = None;
+    }
+    puff_out_data_fields(&mut metadata);
+
+    let edition_seeds = &[
+        PREFIX.as_bytes(),
+        program_id.as_ref(),
+        metadata.mint.as_ref(),
+        EDITION.as_bytes(),
+    ];
+    let (_, edition_bump_seed) = Pubkey::find_program_address(edition_seeds, program_id);
+    metadata.edition_nonce = Some(edition_bump_seed);
+    metadata.serialize(&mut *metadata_account_info.data.borrow_mut())?;
+
+    Ok(())
+}
 
 // Custom deserialization function to handle NFTs with corrupted data.
 // This function is used in a custom deserialization implementation for the

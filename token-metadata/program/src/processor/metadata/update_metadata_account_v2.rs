@@ -11,10 +11,9 @@ use crate::{
         metadata::{assert_data_valid, assert_update_authority_is_correct},
         uses::assert_valid_use,
     },
-    deser::clean_write_metadata,
     error::MetadataError,
     state::{DataV2, Metadata, TokenMetadataAccount},
-    utils::puff_out_data_fields,
+    utils::{clean_write_metadata, puff_out_data_fields},
 };
 
 // Update existing account instruction
