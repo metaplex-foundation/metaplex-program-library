@@ -55,7 +55,8 @@ jobs:
 
   build-lint-and-test:
     name: Build Lint and Test
-    runs-on: ubuntu-latest-8-cores
+    runs-on:
+      labels: ubuntu-latest-8-cores
     needs: changes
     if: |
       inputs.changes == false ||

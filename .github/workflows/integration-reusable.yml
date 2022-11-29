@@ -47,7 +47,8 @@ jobs:
               - '.github/workflows/integration-reusable.yml'
   build-and-test:
     name: Build and Test
-    runs-on: ubuntu-latest-8-cores
+    runs-on:
+      labels: ubuntu-latest-8-cores
     needs: changes
     if: |
       inputs.changes == false ||
