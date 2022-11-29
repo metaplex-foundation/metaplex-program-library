@@ -1,13 +1,13 @@
-use crate::*;
 use mpl_token_metadata::{
     id, instruction,
     state::{Collection, CollectionDetails, Creator, Data, DataV2, Uses, PREFIX},
 };
 use solana_program::borsh::try_from_slice_unchecked;
-
 use solana_sdk::{
     pubkey::Pubkey, signature::Signer, signer::keypair::Keypair, transaction::Transaction,
 };
+
+use crate::*;
 
 #[derive(Debug)]
 pub struct Metadata {
@@ -40,6 +40,7 @@ impl Metadata {
         try_from_slice_unchecked(&account.data).unwrap()
     }
 
+    #[allow(deprecated)]
     pub async fn create(
         &self,
         context: &mut ProgramTestContext,
@@ -100,6 +101,7 @@ impl Metadata {
         context.banks_client.process_transaction(tx).await
     }
 
+    #[allow(deprecated)]
     pub async fn create_v2(
         &self,
         context: &mut ProgramTestContext,
@@ -430,6 +432,7 @@ impl Metadata {
         context.banks_client.process_transaction(tx).await
     }
 
+    #[allow(deprecated)]
     pub async fn update(
         &self,
         context: &mut ProgramTestContext,

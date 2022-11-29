@@ -1,26 +1,23 @@
 #![cfg(feature = "test-bpf")]
 pub mod utils;
 
-use mpl_token_metadata::pda::find_collection_authority_account;
-use mpl_token_metadata::state::{
-    Collection, CollectionAuthorityRecord, COLLECTION_AUTHORITY_RECORD_SIZE,
-};
-use mpl_token_metadata::state::{UseMethod, Uses};
 use mpl_token_metadata::{
     error::MetadataError,
-    state::{Key, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH},
+    pda::find_collection_authority_account,
+    state::{
+        Collection, CollectionAuthorityRecord, Key, UseMethod, Uses,
+        COLLECTION_AUTHORITY_RECORD_SIZE, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH,
+    },
     utils::puffed_out_string,
 };
 use num_traits::FromPrimitive;
-use solana_program::borsh::try_from_slice_unchecked;
-use solana_program::native_token::LAMPORTS_PER_SOL;
+use solana_program::{borsh::try_from_slice_unchecked, native_token::LAMPORTS_PER_SOL};
 use solana_program_test::*;
-use solana_sdk::account::{Account, AccountSharedData};
-use solana_sdk::transaction::Transaction;
 use solana_sdk::{
+    account::{Account, AccountSharedData},
     instruction::InstructionError,
     signature::{Keypair, Signer},
-    transaction::TransactionError,
+    transaction::{Transaction, TransactionError},
 };
 use utils::*;
 mod verify_collection {

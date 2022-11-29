@@ -1,6 +1,17 @@
 use solana_program::pubkey::Pubkey;
 
-use crate::state::{BURN, COLLECTION_AUTHORITY, EDITION, PREFIX, USER};
+/// prefix used for PDAs to avoid certain collision attacks:
+/// https://en.wikipedia.org/wiki/Collision_attack#Chosen-prefix_collision_attack
+
+pub const PREFIX: &str = "metadata";
+
+pub const EDITION: &str = "edition";
+
+pub const USER: &str = "user";
+
+pub const BURN: &str = "burn";
+
+pub const COLLECTION_AUTHORITY: &str = "collection_authority";
 
 pub fn find_edition_account(mint: &Pubkey, edition_number: String) -> (Pubkey, u8) {
     Pubkey::find_program_address(
