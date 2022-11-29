@@ -1,6 +1,7 @@
 use solana_client::rpc_request::TokenAccountsFilter;
 use solana_sdk::account::ReadableAccount;
 
+#[allow(deprecated)]
 use {
     clap::{crate_description, crate_name, crate_version, App, Arg, ArgMatches, SubCommand},
     mpl_token_metadata::{
@@ -223,6 +224,7 @@ fn show(app_matches: &ArgMatches, _payer: Keypair, client: RpcClient) {
     }
 }
 
+#[allow(deprecated)]
 fn mint_edition_via_token_call(
     app_matches: &ArgMatches,
     payer: Keypair,
@@ -353,6 +355,7 @@ fn mint_edition_via_token_call(
     (edition, edition_key, new_mint_key.pubkey())
 }
 
+#[allow(deprecated)]
 fn master_edition_call(
     app_matches: &ArgMatches,
     payer: Keypair,
@@ -439,6 +442,7 @@ fn master_edition_call(
     (master_edition, master_edition_key)
 }
 
+#[allow(deprecated)]
 fn update_metadata_account_call(
     app_matches: &ArgMatches,
     payer: Keypair,
@@ -492,6 +496,7 @@ fn update_metadata_account_call(
     (metadata, metadata_key)
 }
 
+#[allow(deprecated)]
 fn create_metadata_account_call(
     app_matches: &ArgMatches,
     payer: Keypair,
@@ -620,7 +625,7 @@ fn main() {
                 .help("Update authority filepath or url to keypair besides yourself, defaults to normal keypair"),
         )
         .subcommand(
-     SubCommand::with_name("create_metadata_accounts")
+            SubCommand::with_name("create_metadata_accounts")
                 .about("Create Metadata Accounts")
                 .arg(
                     Arg::with_name("name")
@@ -663,35 +668,35 @@ fn main() {
                         .help("Permit future metadata updates"),
                 )
         ).subcommand(
-            SubCommand::with_name("mint_coins")
-                       .about("Mint coins to your mint to an account")
-                       .arg(
-                        Arg::with_name("mint")
-                            .long("mint")
-                            .value_name("MINT")
-                            .required(true)
-                            .validator(is_valid_pubkey)
-                            .takes_value(true)
-                            .help("Mint of the Metadata"),
-                    ).arg(
-                        Arg::with_name("destination")
-                            .long("destination")
-                            .value_name("DESTINATION")
-                            .required(false)
-                            .validator(is_valid_pubkey)
-                            .takes_value(true)
-                            .help("Destination account. If one isnt given, one is made."),
-                    ).arg(
-                        Arg::with_name("amount")
-                            .long("amount")
-                            .value_name("AMOUNT")
-                            .required(true)
-                            .takes_value(true)
-                            .help("How many"),
-                    )
-               )
+        SubCommand::with_name("mint_coins")
+            .about("Mint coins to your mint to an account")
+            .arg(
+                Arg::with_name("mint")
+                    .long("mint")
+                    .value_name("MINT")
+                    .required(true)
+                    .validator(is_valid_pubkey)
+                    .takes_value(true)
+                    .help("Mint of the Metadata"),
+            ).arg(
+            Arg::with_name("destination")
+                .long("destination")
+                .value_name("DESTINATION")
+                .required(false)
+                .validator(is_valid_pubkey)
+                .takes_value(true)
+                .help("Destination account. If one isnt given, one is made."),
+        ).arg(
+            Arg::with_name("amount")
+                .long("amount")
+                .value_name("AMOUNT")
+                .required(true)
+                .takes_value(true)
+                .help("How many"),
+        )
+    )
         .subcommand(
-     SubCommand::with_name("update_metadata_accounts")
+            SubCommand::with_name("update_metadata_accounts")
                 .about("Update Metadata Accounts")
                 .arg(
                     Arg::with_name("mint")
@@ -727,30 +732,30 @@ fn main() {
                         .takes_value(true)
                         .help("New update authority"))
         ).subcommand(
-            SubCommand::with_name("show")
-                .about("Show")
-                .arg(
-                    Arg::with_name("mint")
-                        .long("mint")
-                        .value_name("MINT")
-                        .required(true)
-                        .validator(is_valid_pubkey)
-                        .takes_value(true)
-                        .help("Metadata mint"),
-                )
-        ).subcommand(
-            SubCommand::with_name("show_reservation_list")
-                .about("Show Reservation List")
-                .arg(
-                    Arg::with_name("key")
-                        .long("key")
-                        .value_name("KEY")
-                        .required(true)
-                        .validator(is_valid_pubkey)
-                        .takes_value(true)
-                        .help("Account key of reservation list"),
-                )
-        )
+        SubCommand::with_name("show")
+            .about("Show")
+            .arg(
+                Arg::with_name("mint")
+                    .long("mint")
+                    .value_name("MINT")
+                    .required(true)
+                    .validator(is_valid_pubkey)
+                    .takes_value(true)
+                    .help("Metadata mint"),
+            )
+    ).subcommand(
+        SubCommand::with_name("show_reservation_list")
+            .about("Show Reservation List")
+            .arg(
+                Arg::with_name("key")
+                    .long("key")
+                    .value_name("KEY")
+                    .required(true)
+                    .validator(is_valid_pubkey)
+                    .takes_value(true)
+                    .help("Account key of reservation list"),
+            )
+    )
         .subcommand(
             SubCommand::with_name("create_master_edition")
                 .about("Create Master Edition out of Metadata")
@@ -762,61 +767,61 @@ fn main() {
                         .takes_value(false)
                         .help("Add a token to this mint before calling (useful if your mint has zero tokens, this action requires one to be present)"),
                 ).arg(
-                    Arg::with_name("max_supply")
-                        .long("max_supply")
-                        .value_name("MAX_SUPPLY")
-                        .required(false)
-                        .takes_value(true)
-                        .help("Set a maximum supply that can be minted."),
-                ).arg(
-                    Arg::with_name("mint")
-                        .long("mint")
-                        .value_name("MINT")
-                        .required(true)
-                        .validator(is_valid_pubkey)
-                        .takes_value(true)
-                        .help("Metadata mint to from which to create a master edition."),
-                ).arg(
-                    Arg::with_name("mint_authority")
-                        .long("mint_authority")
-                        .value_name("MINT_AUTHORITY")
-                        .validator(is_valid_signer)
-                        .takes_value(true)
-                        .required(false)
-                        .help("Filepath or URL to a keypair representing mint authority, defaults to you"),
-                )
+                Arg::with_name("max_supply")
+                    .long("max_supply")
+                    .value_name("MAX_SUPPLY")
+                    .required(false)
+                    .takes_value(true)
+                    .help("Set a maximum supply that can be minted."),
+            ).arg(
+                Arg::with_name("mint")
+                    .long("mint")
+                    .value_name("MINT")
+                    .required(true)
+                    .validator(is_valid_pubkey)
+                    .takes_value(true)
+                    .help("Metadata mint to from which to create a master edition."),
+            ).arg(
+                Arg::with_name("mint_authority")
+                    .long("mint_authority")
+                    .value_name("MINT_AUTHORITY")
+                    .validator(is_valid_signer)
+                    .takes_value(true)
+                    .required(false)
+                    .help("Filepath or URL to a keypair representing mint authority, defaults to you"),
+            )
         ).subcommand(
-                SubCommand::with_name("mint_new_edition_from_master_edition_via_token")
-                        .about("Mint new edition from master edition via a token - this will just also mint the token for you and submit it.")
-                        .arg(
-                            Arg::with_name("mint")
-                                .long("mint")
-                                .value_name("MINT")
-                                .required(true)
-                                .validator(is_valid_pubkey)
-                                .takes_value(true)
-                                .help("Metadata Mint from which to mint this new edition"),
-                        ).arg(
-                            Arg::with_name("account")
-                                .long("account")
-                                .value_name("ACCOUNT")
-                                .required(false)
-                                .validator(is_valid_pubkey)
-                                .takes_value(true)
-                                .help("Account which contains authorization token. If not provided, one will be made."),
-                        ).arg(
-                            Arg::with_name("account_authority")
-                                .long("account_authority")
-                                .value_name("ACCOUNT_AUTHORITY")
-                                .required(false)
-                                .validator(is_valid_signer)
-                                .takes_value(true)
-                                .help("Account's authority, defaults to you"),
-                        )
+        SubCommand::with_name("mint_new_edition_from_master_edition_via_token")
+            .about("Mint new edition from master edition via a token - this will just also mint the token for you and submit it.")
+            .arg(
+                Arg::with_name("mint")
+                    .long("mint")
+                    .value_name("MINT")
+                    .required(true)
+                    .validator(is_valid_pubkey)
+                    .takes_value(true)
+                    .help("Metadata Mint from which to mint this new edition"),
+            ).arg(
+            Arg::with_name("account")
+                .long("account")
+                .value_name("ACCOUNT")
+                .required(false)
+                .validator(is_valid_pubkey)
+                .takes_value(true)
+                .help("Account which contains authorization token. If not provided, one will be made."),
+        ).arg(
+            Arg::with_name("account_authority")
+                .long("account_authority")
+                .value_name("ACCOUNT_AUTHORITY")
+                .required(false)
+                .validator(is_valid_signer)
+                .takes_value(true)
+                .help("Account's authority, defaults to you"),
+        )
 
-        ).subcommand(
-                SubCommand::with_name("puff_unpuffed_metadata")
-                        .about("Take metadata that still have variable length name, symbol, and uri fields and stretch them out with null symbols so they can be searched more easily by RPC.")).get_matches();
+    ).subcommand(
+        SubCommand::with_name("puff_unpuffed_metadata")
+            .about("Take metadata that still have variable length name, symbol, and uri fields and stretch them out with null symbols so they can be searched more easily by RPC.")).get_matches();
 
     let client = RpcClient::new(
         app_matches
