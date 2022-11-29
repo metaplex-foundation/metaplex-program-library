@@ -1,9 +1,5 @@
 import { Connection, Keypair, Transaction } from '@solana/web3.js';
-import {
-  defaultSendOptions,
-  TransactionHandler,
-  assertConfirmedTransaction,
-} from '@metaplex-foundation/amman';
+import { PayerTransactionHandler } from '@metaplex-foundation/amman-client';
 import {
   VerifyCollectionInstructionAccounts,
   createVerifyCollectionInstruction,
@@ -14,7 +10,7 @@ import { strict as assert } from 'assert';
 import { createAndSignTransaction } from '../utils';
 
 type Params = Omit<VerifyCollectionInstructionAccounts, 'payer'> & {
-  transactionHandler: TransactionHandler;
+  transactionHandler: PayerTransactionHandler;
   connection: Connection;
   payer: Keypair;
 };
@@ -37,10 +33,5 @@ export async function verifyCollection({
     [payer],
   );
 
-  const res = await transactionHandler.sendAndConfirmTransaction(
-    verifyCollectionTx,
-    [],
-    defaultSendOptions,
-  );
-  assertConfirmedTransaction(assert, res.txConfirmed);
+  await transactionHandler.sendAndConfirmTransaction(verifyCollectionTx, []).assertSuccess(assert);
 }

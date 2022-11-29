@@ -47,6 +47,7 @@ export type UpdateCandyMachineInstructionAccounts = {
   candyMachine: web3.PublicKey;
   authority: web3.PublicKey;
   wallet: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
 };
 
 export const updateCandyMachineInstructionDiscriminator = [243, 251, 124, 156, 211, 211, 118, 239];
@@ -87,6 +88,12 @@ export function createUpdateCandyMachineInstruction(
       isSigner: false,
     },
   ];
+
+  if (accounts.anchorRemainingAccounts != null) {
+    for (const acc of accounts.anchorRemainingAccounts) {
+      keys.push(acc);
+    }
+  }
 
   const ix = new web3.TransactionInstruction({
     programId,

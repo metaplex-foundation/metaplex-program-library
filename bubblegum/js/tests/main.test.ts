@@ -14,6 +14,8 @@ import {
   ConcurrentMerkleTreeAccount,
   SPL_ACCOUNT_COMPRESSION_PROGRAM_ID,
   SPL_NOOP_PROGRAM_ID,
+  ValidDepthSizePair,
+  createVerifyLeafInstruction,
 } from '@solana/spl-account-compression';
 
 import {
@@ -56,8 +58,10 @@ async function setupTreeWithCompressedNFT(
   connection: Connection,
   payerKeypair: Keypair,
   compressedNFT: MetadataArgs,
-  maxDepth = 14,
-  maxBufferSize = 64,
+  depthSizePair: ValidDepthSizePair = {
+    maxDepth: 14,
+    maxBufferSize: 64
+  }
 ): Promise<{
   merkleTree: PublicKey;
 }> {
@@ -65,7 +69,7 @@ async function setupTreeWithCompressedNFT(
 
   const merkleTreeKeypair = Keypair.generate();
   const merkleTree = merkleTreeKeypair.publicKey;
-  const space = getConcurrentMerkleTreeAccountSize(maxDepth, maxBufferSize);
+  const space = getConcurrentMerkleTreeAccountSize(depthSizePair.maxDepth, depthSizePair.maxBufferSize);
   const allocTreeIx = SystemProgram.createAccount({
     fromPubkey: payer,
     newAccountPubkey: merkleTree,
@@ -87,8 +91,8 @@ async function setupTreeWithCompressedNFT(
       compressionProgram: SPL_ACCOUNT_COMPRESSION_PROGRAM_ID,
     },
     {
-      maxBufferSize,
-      maxDepth,
+      maxBufferSize: depthSizePair.maxBufferSize,
+      maxDepth: depthSizePair.maxDepth,
       public: false,
     },
     BUBBLEGUM_PROGRAM_ID,
@@ -145,7 +149,7 @@ describe('Bubblegum tests', () => {
       sellerFeeBasisPoints: 0,
       isMutable: false,
     };
-    await setupTreeWithCompressedNFT(connection, payerKeypair, compressedNFT, 14, 64);
+    await setupTreeWithCompressedNFT(connection, payerKeypair, compressedNFT, { maxDepth: 14, maxBufferSize: 64 });
   });
 
   describe('Unit test compressed NFT instructions', () => {
@@ -157,8 +161,10 @@ describe('Bubblegum tests', () => {
         connection,
         payerKeypair,
         originalCompressedNFT,
-        14,
-        64,
+        {
+          maxDepth: 14,
+          maxBufferSize: 64,
+        }
       );
       merkleTree = result.merkleTree;
     });
@@ -172,10 +178,12 @@ describe('Bubblegum tests', () => {
       const assetId = await getLeafAssetId(merkleTree, leafIndex);
       const verifyLeafIx = createVerifyLeafIx(
         merkleTree,
-        account.getCurrentRoot(),
-        computeCompressedNFTHash(assetId, payer, payer, leafIndex, originalCompressedNFT),
-        0,
-        [],
+        {
+          root: account.getCurrentRoot(),
+          leaf: computeCompressedNFTHash(assetId, payer, payer, leafIndex, originalCompressedNFT),
+          leafIndex: 0,
+          proof: [],
+        }
       );
       const tx = new Transaction().add(verifyLeafIx);
       const txId = await sendAndConfirmTransaction(connection, tx, [payerKeypair], {

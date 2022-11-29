@@ -3856,6 +3856,11 @@
       "code": 131,
       "name": "InvalidCollectionSizeChange",
       "msg": "Invalid collection size change"
+    },
+    {
+      "code": 132,
+      "name": "InvalidBubblegumSigner",
+      "msg": "Invalid bubblegum signer"
     }
   ],
   "metadata": {

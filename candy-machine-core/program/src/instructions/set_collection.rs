@@ -14,8 +14,11 @@ use crate::{
 pub fn set_collection(ctx: Context<SetCollection>) -> Result<()> {
     let accounts = ctx.accounts;
     let candy_machine = &mut accounts.candy_machine;
+
     if candy_machine.items_redeemed > 0 {
         return err!(CandyError::NoChangingCollectionDuringMint);
+    } else if !cmp_pubkeys(accounts.collection_mint.key, &candy_machine.collection_mint) {
+        return err!(CandyError::MintMismatch);
     }
 
     // Revoking old collection authority
@@ -129,23 +132,23 @@ pub fn approve_collection_authority_helper(
 }
 
 pub struct ApproveCollectionAuthorityHelperAccounts<'info> {
-    /// CHECK:
+    /// CHECK: account checked in CPI
     pub payer: AccountInfo<'info>,
-    /// CHECK:
+    /// CHECK: account checked in CPI
     pub authority_pda: AccountInfo<'info>,
-    /// CHECK:
+    /// CHECK: account checked in CPI
     pub collection_update_authority: AccountInfo<'info>,
-    /// CHECK:
+    /// CHECK: account checked in CPI
     pub collection_mint: AccountInfo<'info>,
-    /// CHECK:
+    /// CHECK: account checked in CPI
     pub collection_metadata: AccountInfo<'info>,
-    /// CHECK:
+    /// CHECK: account checked in CPI
     pub collection_master_edition: AccountInfo<'info>,
-    /// CHECK:
+    /// CHECK: account checked in CPI
     pub collection_authority_record: AccountInfo<'info>,
-    /// CHECK:
+    /// CHECK: account checked in CPI
     pub token_metadata_program: AccountInfo<'info>,
-    /// CHECK:
+    /// CHECK: account checked in CPI
     pub system_program: AccountInfo<'info>,
 }
 

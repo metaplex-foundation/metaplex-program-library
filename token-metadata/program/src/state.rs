@@ -89,7 +89,7 @@ pub const EDITION_MARKER_BIT_SIZE: u64 = 248;
 
 pub const USE_AUTHORITY_RECORD_SIZE: usize = 18; //8 byte padding
 
-pub const COLLECTION_AUTHORITY_RECORD_SIZE: usize = 11; //10 byte padding
+pub const COLLECTION_AUTHORITY_RECORD_SIZE: usize = 35;
 
 pub trait TokenMetadataAccount: BorshDeserialize {
     fn key() -> Key;
@@ -286,8 +286,9 @@ impl UseAuthorityRecord {
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, ShankAccount)]
 pub struct CollectionAuthorityRecord {
-    pub key: Key, //1
-    pub bump: u8, //1
+    pub key: Key,                         //1
+    pub bump: u8,                         //1
+    pub update_authority: Option<Pubkey>, //33 (1 + 32)
 }
 
 impl Default for CollectionAuthorityRecord {
@@ -295,6 +296,7 @@ impl Default for CollectionAuthorityRecord {
         CollectionAuthorityRecord {
             key: Key::CollectionAuthorityRecord,
             bump: 255,
+            update_authority: None,
         }
     }
 }
