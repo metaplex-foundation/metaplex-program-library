@@ -1,6 +1,7 @@
 use solana_client::rpc_request::TokenAccountsFilter;
 use solana_sdk::account::ReadableAccount;
 
+#[allow(deprecated)]
 use {
     clap::{crate_description, crate_name, crate_version, App, Arg, ArgMatches, SubCommand},
     mpl_token_metadata::{
@@ -223,6 +224,7 @@ fn show(app_matches: &ArgMatches, _payer: Keypair, client: RpcClient) {
     }
 }
 
+#[allow(deprecated)]
 fn mint_edition_via_token_call(
     app_matches: &ArgMatches,
     payer: Keypair,
@@ -353,6 +355,7 @@ fn mint_edition_via_token_call(
     (edition, edition_key, new_mint_key.pubkey())
 }
 
+#[allow(deprecated)]
 fn master_edition_call(
     app_matches: &ArgMatches,
     payer: Keypair,
@@ -439,6 +442,7 @@ fn master_edition_call(
     (master_edition, master_edition_key)
 }
 
+#[allow(deprecated)]
 fn update_metadata_account_call(
     app_matches: &ArgMatches,
     payer: Keypair,
@@ -492,6 +496,7 @@ fn update_metadata_account_call(
     (metadata, metadata_key)
 }
 
+#[allow(deprecated)]
 fn create_metadata_account_call(
     app_matches: &ArgMatches,
     payer: Keypair,

@@ -40,6 +40,7 @@ impl Metadata {
         try_from_slice_unchecked(&account.data).unwrap()
     }
 
+    #[allow(deprecated)]
     pub async fn create(
         &self,
         context: &mut ProgramTestContext,
@@ -100,6 +101,7 @@ impl Metadata {
         context.banks_client.process_transaction(tx).await
     }
 
+    #[allow(deprecated)]
     pub async fn create_v2(
         &self,
         context: &mut ProgramTestContext,
@@ -430,6 +432,7 @@ impl Metadata {
         context.banks_client.process_transaction(tx).await
     }
 
+    #[allow(deprecated)]
     pub async fn update(
         &self,
         context: &mut ProgramTestContext,

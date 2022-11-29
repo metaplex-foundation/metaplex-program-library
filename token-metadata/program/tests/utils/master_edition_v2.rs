@@ -95,6 +95,7 @@ impl MasterEditionV2 {
         context.banks_client.process_transaction(tx).await
     }
 
+    #[allow(deprecated)]
     pub async fn create(
         &self,
         context: &mut ProgramTestContext,
