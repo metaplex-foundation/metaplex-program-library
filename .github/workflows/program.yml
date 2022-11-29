@@ -38,5 +38,5 @@ jobs:
     uses: ./.github/workflows/program-reusable.yml
     with:
       name: ${{ matrix.node.name }}
-      cache: ${{ contains(inputs.cache, 'true') }}
+      cache: ${{ !contains(inputs.cache, 'false') }}
       changes: ${{ !contains(inputs.changes, 'false') }}

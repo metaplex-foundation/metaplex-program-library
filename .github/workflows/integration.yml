@@ -31,5 +31,5 @@ jobs:
     with:
       name: ${{ matrix.node.name }}
       build_token_metadata: ${{ !contains(matrix.node.build_token_metadata, 'false') }}
-      cache: ${{ contains(inputs.cache, 'true') }}
+      cache: ${{ !contains(inputs.cache, 'false') }}
       changes: ${{ !contains(inputs.changes, 'false') }}
