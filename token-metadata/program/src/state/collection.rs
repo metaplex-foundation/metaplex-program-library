@@ -1,5 +1,7 @@
 use super::*;
 
+pub const COLLECTION_AUTHORITY_RECORD_SIZE: usize = 35;
+
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]

@@ -15,7 +15,6 @@ pub struct ApproveUseAuthorityArgs {
     pub number_of_uses: u64,
 }
 
-
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]

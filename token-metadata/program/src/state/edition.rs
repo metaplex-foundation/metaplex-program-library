@@ -1,5 +1,7 @@
 use super::*;
 
+pub const MAX_EDITION_LEN: usize = 1 + 32 + 8 + 200;
+
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(Clone, Debug, PartialEq, Eq, BorshSerialize, BorshDeserialize, ShankAccount)]

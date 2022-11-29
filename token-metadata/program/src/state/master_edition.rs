@@ -1,5 +1,10 @@
 use super::*;
 
+// Large buffer because the older master editions have two pubkeys in them,
+// need to keep two versions same size because the conversion process actually
+// changes the same account by rewriting it.
+pub const MAX_MASTER_EDITION_LEN: usize = 1 + 9 + 8 + 264;
+
 pub trait MasterEdition {
     fn key(&self) -> Key;
     fn supply(&self) -> u64;

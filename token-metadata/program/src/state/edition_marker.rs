@@ -1,5 +1,9 @@
 use super::*;
 
+pub const MAX_EDITION_MARKER_SIZE: usize = 32;
+
+pub const EDITION_MARKER_BIT_SIZE: u64 = 248;
+
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, ShankAccount)]

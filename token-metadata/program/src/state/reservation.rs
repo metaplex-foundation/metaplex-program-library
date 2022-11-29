@@ -1,5 +1,15 @@
 use super::*;
 
+pub const RESERVATION: &str = "reservation";
+
+pub const MAX_RESERVATIONS: usize = 200;
+
+// can hold up to 200 keys per reservation, note: the extra 8 is for number of elements in the vec
+pub const MAX_RESERVATION_LIST_V1_SIZE: usize = 1 + 32 + 8 + 8 + MAX_RESERVATIONS * 34 + 100;
+
+// can hold up to 200 keys per reservation, note: the extra 8 is for number of elements in the vec
+pub const MAX_RESERVATION_LIST_SIZE: usize = 1 + 32 + 8 + 8 + MAX_RESERVATIONS * 48 + 8 + 8 + 84;
+
 pub trait ReservationList {
     fn master_edition(&self) -> Pubkey;
     fn supply_snapshot(&self) -> Option<u64>;

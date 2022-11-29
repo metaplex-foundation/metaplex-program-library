@@ -1,5 +1,7 @@
 use super::*;
 
+pub const USE_AUTHORITY_RECORD_SIZE: usize = 18; //8 byte padding
+
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, FromPrimitive)]

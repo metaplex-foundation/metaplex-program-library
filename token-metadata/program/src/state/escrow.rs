@@ -1,5 +1,7 @@
 use super::*;
 
+pub const ESCROW_POSTFIX: &str = "escrow";
+
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, Copy)]

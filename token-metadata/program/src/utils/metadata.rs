@@ -12,8 +12,10 @@ use crate::{
         collection::assert_collection_update_is_valid, metadata::assert_data_valid,
         uses::assert_valid_use,
     },
-    constants::{EDITION, MAX_METADATA_LEN, PREFIX},
-    state::{Collection, CollectionDetails, Data, DataV2, Key, Metadata, TokenStandard, Uses},
+    state::{
+        Collection, CollectionDetails, Data, DataV2, Key, Metadata, TokenStandard, Uses, EDITION,
+        MAX_METADATA_LEN, PREFIX,
+    },
 };
 
 // This equals the program address of the metadata program:

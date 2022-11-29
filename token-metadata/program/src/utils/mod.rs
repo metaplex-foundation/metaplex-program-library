@@ -170,7 +170,7 @@ mod tests {
     pub use solana_program::pubkey::Pubkey;
 
     use crate::{
-        constants::MAX_METADATA_LEN,
+        state::MAX_METADATA_LEN,
         utils::{
             metadata::tests::{expected_pesky_metadata, pesky_data},
             try_from_slice_checked,

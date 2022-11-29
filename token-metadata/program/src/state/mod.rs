@@ -36,7 +36,7 @@ use {
 };
 
 // Re-export constants to maintain compatibility.
-pub use crate::constants::*;
+pub use crate::pda::{BURN, COLLECTION_AUTHORITY, EDITION, PREFIX, USER};
 use crate::{
     assertions::assert_owned_by,
     error::MetadataError,
