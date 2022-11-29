@@ -89,8 +89,7 @@ jobs:
         if: ${{ env.CACHE != 'false' }}
       # Run lint checks
       - name: "Clippy and Fmt: ${{ inputs.name }}"
-        with:
-          working-directory: ./${{ inputs.name }}/program
+        working-directory: ./${{ inputs.name }}/program
         run: |
           cargo +${{ env.RUST_TOOLCHAIN }} fmt
           cargo +${{ env.RUST_TOOLCHAIN }} clippy
