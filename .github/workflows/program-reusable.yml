@@ -88,9 +88,12 @@ jobs:
           key: program-${{ inputs.name }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
         if: ${{ env.CACHE != 'false' }}
       # Run lint checks
-      - uses: ./.github/actions/verify-rust
+      - name: "Clippy and Fmt: ${{ inputs.name }}"
         with:
           working-directory: ./${{ inputs.name }}/program
+        run: |
+          cargo +${{ env.RUST_TOOLCHAIN }} fmt
+          cargo +${{ env.RUST_TOOLCHAIN }} clippy
 
       # Build deps
       - uses: ./.github/actions/program
