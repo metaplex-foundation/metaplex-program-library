@@ -16,7 +16,6 @@ use anchor_lang::{
 use anchor_spl::token::{Mint, Token, TokenAccount};
 use arrayref::array_ref;
 use mpl_token_metadata::state::{Metadata, TokenMetadataAccount};
-use spl_associated_token_account::get_associated_token_address;
 use spl_token::{instruction::initialize_account2, state::Account as SplAccount};
 use std::{convert::TryInto, slice::Iter};
 
@@ -25,7 +24,7 @@ pub fn assert_is_ata(ata: &AccountInfo, wallet: &Pubkey, mint: &Pubkey) -> Resul
     let ata_account: SplAccount = assert_initialized(ata)?;
     assert_keys_equal(ata_account.owner, *wallet)?;
     assert_keys_equal(ata_account.mint, *mint)?;
-    assert_keys_equal(get_associated_token_address(wallet, mint), *ata.key)?;
+
     Ok(ata_account)
 }
 
