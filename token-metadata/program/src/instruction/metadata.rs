@@ -265,13 +265,17 @@ pub fn update_primary_sale_happened_via_token(
 ///   5. `[signer]` Update authority
 ///   6. `[]` System program
 ///   7. `[]` Instructions sysvar account
-///   8. `[optional]` Asset authorization rules account
+///   8. `[]` SPL Token program
+///   9. `[]` SPL Associated Token Account program
+///   10. `[optional]` Master edition account
+///   11. `[optional]` Asset authorization rules account
 #[allow(clippy::too_many_arguments)]
 pub fn mint(
     program_id: Pubkey,
-    token_account: Pubkey,
-    metadata_account: Pubkey,
-    mint_account: Pubkey,
+    token: Pubkey,
+    metadata: Pubkey,
+    master_edition: Option<Pubkey>,
+    mint: Pubkey,
     mint_authority: Pubkey,
     payer: Pubkey,
     update_authority: Pubkey,
@@ -279,16 +283,20 @@ pub fn mint(
     update_authority_as_signer: bool,
 ) -> Instruction {
     let mut accounts = vec![
-        AccountMeta::new(token_account, false),
-        AccountMeta::new(metadata_account, false),
-        AccountMeta::new_readonly(mint_account, false),
+        AccountMeta::new(token, false),
+        AccountMeta::new(metadata, false),
+        AccountMeta::new_readonly(mint, false),
         AccountMeta::new_readonly(mint_authority, true),
         AccountMeta::new(payer, true),
         AccountMeta::new_readonly(update_authority, update_authority_as_signer),
         AccountMeta::new_readonly(solana_program::system_program::id(), false),
         AccountMeta::new_readonly(sysvar::id(), false),
     ];
-
+    // checks whether we have a master edition
+    if let Some(master_edition) = master_edition {
+        accounts.push(AccountMeta::new(master_edition, false));
+    }
+    // checks whether we have authorization rules
     if let Some(config) = &data.programmable_config {
         accounts.push(AccountMeta::new_readonly(config.rule_set, false));
     }

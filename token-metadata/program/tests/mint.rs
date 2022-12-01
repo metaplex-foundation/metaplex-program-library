@@ -16,7 +16,7 @@ use utils::*;
 
 mod mint {
 
-    use mpl_token_metadata::state::{AssetData, Metadata, TokenStandard, PREFIX};
+    use mpl_token_metadata::state::{AssetData, Metadata, TokenStandard, EDITION, PREFIX};
     use solana_program::borsh::try_from_slice_unchecked;
 
     use super::*;
@@ -46,15 +46,24 @@ mod mint {
 
         let mint_pubkey = mint.pubkey();
         let program_id = id();
-
+        // metadata PDA address
         let metadata_seeds = &[PREFIX.as_bytes(), program_id.as_ref(), mint_pubkey.as_ref()];
-        let (pubkey, _) = Pubkey::find_program_address(metadata_seeds, &id());
+        let (metadata, _) = Pubkey::find_program_address(metadata_seeds, &id());
+        // master edition PDA address
+        let master_edition_seeds = &[
+            PREFIX.as_bytes(),
+            program_id.as_ref(),
+            mint_pubkey.as_ref(),
+            EDITION.as_bytes(),
+        ];
+        let (master_edition, _) = Pubkey::find_program_address(master_edition_seeds, &id());
 
         let payer_pubkey = context.payer.pubkey();
         let mint_ix = instruction::mint(
             /* program id       */ id(),
             /* token account    */ token.pubkey(),
-            /* metadata account */ pubkey,
+            /* metadata account */ metadata,
+            /* master edition   */ Some(master_edition),
             /* mint account     */ mint.pubkey(),
             /* mint authority   */ payer_pubkey,
             /* payer            */ payer_pubkey,
@@ -74,7 +83,7 @@ mod mint {
 
         // checks the created metadata values
 
-        let metadata_account = get_account(&mut context, &pubkey).await;
+        let metadata_account = get_account(&mut context, &metadata).await;
         let metadata: Metadata = try_from_slice_unchecked(&metadata_account.data).unwrap();
 
         assert_eq!(metadata.data.name, name);

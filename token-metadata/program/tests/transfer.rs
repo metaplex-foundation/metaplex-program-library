@@ -20,7 +20,7 @@ mod transfer {
 
     use mpl_token_metadata::{
         instruction::TransferArgs,
-        state::{AssetData, TokenStandard, PREFIX},
+        state::{AssetData, TokenStandard, PREFIX, EDITION},
     };
 
     use super::*;
@@ -50,15 +50,24 @@ mod transfer {
 
         let mint_pubkey = mint.pubkey();
         let program_id = id();
-
+        // metadata PDA address
         let metadata_seeds = &[PREFIX.as_bytes(), program_id.as_ref(), mint_pubkey.as_ref()];
-        let (pubkey, _) = Pubkey::find_program_address(metadata_seeds, &id());
+        let (metadata, _) = Pubkey::find_program_address(metadata_seeds, &id());
+        // master edition PDA address
+        let master_edition_seeds = &[
+            PREFIX.as_bytes(),
+            program_id.as_ref(),
+            mint_pubkey.as_ref(),
+            EDITION.as_bytes(),
+        ];
+        let (master_edition, _) = Pubkey::find_program_address(master_edition_seeds, &id());
 
         let payer_pubkey = context.payer.pubkey();
         let mint_ix = instruction::mint(
             /* program id       */ id(),
             /* token account    */ token.pubkey(),
-            /* metadata account */ pubkey,
+            /* metadata account */ metadata,
+            /* master edition   */ Some(master_edition),
             /* mint account     */ mint.pubkey(),
             /* mint authority   */ payer_pubkey,
             /* payer            */ payer_pubkey,
@@ -106,7 +115,7 @@ mod transfer {
             .process_transaction(transfer_tx)
             .await
             .unwrap_err();
-        // it shoudl fail since the accoutn should be frozen
+        // it shoudl fail since the account should be frozen
         assert_custom_error!(err, spl_token::error::TokenError::AccountFrozen);
 
         // transfer the asset via Token Metadata
@@ -114,7 +123,7 @@ mod transfer {
         let transfer_ix = instruction::transfer(
             /* program id            */ id(),
             /* token account         */ token.pubkey(),
-            /* metadata account      */ pubkey,
+            /* metadata account      */ metadata,
             /* mint account          */ mint.pubkey(),
             /* destination           */ destination.pubkey(),
             /* destination ata       */ destination_ata,

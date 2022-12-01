@@ -493,8 +493,11 @@ pub enum MetadataInstruction {
     //---- New API
 
     /// Creates a new asset.
-    /// 
-    /// The configurable `authorization_rules` only apply to `ProgrammableNonFungible` assets.
+    ///
+    /// Depending of the token standard selected for the new mint, optional accounts need
+    /// to be present:
+    ///  1. `master_edition`: when creating a variant of `*NonFungible` asset
+    ///  2. `authorization_rules`: when creating a variant of `Programmable*` asset
     #[account(0, writable, name="token", desc="Token account key")]
     #[account(1, writable, name="metadata", desc="Metadata account key (pda of ['metadata', program id, mint id])")]
     #[account(2, name="mint", desc="Mint of token asset")]
@@ -505,7 +508,8 @@ pub enum MetadataInstruction {
     #[account(7, name="ata_program", desc="Associated Token program")]
     #[account(8, name="spl_token_program", desc="SPL Token program")]
     #[account(9, name="sysvar_instructions", desc="Instructions sysvar account")]
-    #[account(10, optional, name="authorization_rules", desc="Token Authorization Rules account")]
+    #[account(10, optional, name="master_edition", desc="Unallocated edition account with address as pda of ['metadata', program id, mint, 'edition']")]
+    #[account(11, optional, name="authorization_rules", desc="Token Authorization Rules account")]
     Mint(MintArgs),
 
     /// Updates the metadata of an asset.
