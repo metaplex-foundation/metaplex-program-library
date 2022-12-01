@@ -1,4 +1,6 @@
 use borsh::{BorshDeserialize, BorshSerialize};
+#[cfg(feature = "serde-feature")]
+use serde::{Deserialize, Serialize};
 use solana_program::{
     instruction::{AccountMeta, Instruction},
     pubkey::Pubkey,
@@ -96,6 +98,8 @@ pub fn burn_nft(
     }
 }
 
+#[repr(C)]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub enum BurnArgs {
     V1,

@@ -178,6 +178,7 @@ pub fn utilize(
 }
 
 #[repr(C)]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub enum UseAssetArgs {
     V1 { use_count: u64 },

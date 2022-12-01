@@ -1,3 +1,4 @@
+pub(crate) mod asset_data;
 pub(crate) mod collection;
 pub(crate) mod creator;
 pub(crate) mod data;
@@ -9,6 +10,7 @@ pub(crate) mod metadata;
 pub(crate) mod reservation;
 pub(crate) mod uses;
 
+pub use asset_data::*;
 use borsh::{maybestd::io::Error as BorshError, BorshDeserialize, BorshSerialize};
 pub use collection::*;
 pub use creator::*;

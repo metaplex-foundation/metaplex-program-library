@@ -11,8 +11,12 @@ use {
 
 use crate::{
     instruction::MetadataInstruction,
-    state::{Collection, CollectionDetails, Creator, DataV2, Uses},
+    state::{AssetData, Collection, CollectionDetails, Creator, DataV2, Uses},
 };
+
+//----------------------+
+// Instruction args     |
+//----------------------+
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
@@ -26,6 +30,49 @@ pub struct CreateMetadataAccountArgsV3 {
     /// If this is a collection parent NFT.
     pub collection_details: Option<CollectionDetails>,
 }
+
+#[repr(C)]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+pub enum MintArgs {
+    V1(AssetData),
+}
+
+#[repr(C)]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+pub enum TransferArgs {
+    V1,
+}
+
+#[repr(C)]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+pub enum UpdateArgs {
+    V1 {
+        data: Option<AssetData>,
+        update_authority: Option<Pubkey>,
+    },
+}
+
+#[repr(C)]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+/// Args for update call
+pub struct UpdateMetadataAccountArgsV2 {
+    pub data: Option<DataV2>,
+    #[cfg_attr(
+        feature = "serde-feature",
+        serde(with = "As::<Option<DisplayFromStr>>")
+    )]
+    pub update_authority: Option<Pubkey>,
+    pub primary_sale_happened: Option<bool>,
+    pub is_mutable: Option<bool>,
+}
+
+//----------------------+
+// Instruction builders |
+//----------------------+
 
 ///# Create Metadata Accounts V3 -- Supports v1.3 Collection Details
 ///
@@ -155,21 +202,6 @@ pub fn sign_metadata(program_id: Pubkey, metadata: Pubkey, creator: Pubkey) -> I
     }
 }
 
-#[repr(C)]
-#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
-/// Args for update call
-pub struct UpdateMetadataAccountArgsV2 {
-    pub data: Option<DataV2>,
-    #[cfg_attr(
-        feature = "serde-feature",
-        serde(with = "As::<Option<DisplayFromStr>>")
-    )]
-    pub update_authority: Option<Pubkey>,
-    pub primary_sale_happened: Option<bool>,
-    pub is_mutable: Option<bool>,
-}
-
 // update metadata account v2 instruction
 pub fn update_metadata_accounts_v2(
     program_id: Pubkey,
@@ -218,46 +250,44 @@ pub fn update_primary_sale_happened_via_token(
     }
 }
 
-#[repr(C)]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
-pub enum MintArgs {
-    V1 {
-        data: DataV2,
-        /// Whether you want your metadata to be updateable in the future.
-        is_mutable: bool,
-        /// If this is a collection parent NFT.
-        collection_details: Option<CollectionDetails>,
-    },
-}
-/*
-impl MintArgs {
-    pub fn to_account_infos<'a>(&self, accounts: &'a [AccountInfo<'a>]) -> MintAccounts<'a> {
-        match self {
-            V1 => MintAccounts {
-                metadata: &accounts[0],
-                mint: &accounts[1],
-                mint_authority: &accounts[2],
-                payer: &accounts[3],
-                system_program: &accounts[4],
-                update_authority: &accounts[5],
-            },
-        }
-    }
-}
-*/
-#[repr(C)]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
-pub enum UpdateArgs {
-    V1 {
-        data: Option<DataV2>,
-        update_authority: Option<Pubkey>,
-        primary_sale_happened: Option<bool>,
-        is_mutable: Option<bool>,
-    },
-}
 
-#[repr(C)]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
-pub enum TransferArgs {
-    V1,
+
+/// Creates an instruction to mint a new asset and associated metadata accounts.
+///
+/// # Accounts:
+///
+///   0. `[writable]` Token account
+///   1. `[writable]` Metadata account
+///   2. `[]` Mint account
+///   3. `[signer]` Mint authority
+///   4. `[signer]` Payer
+///   5. `[signer]` Update authority
+///   6. `[]` System program
+#[allow(clippy::too_many_arguments)]
+pub fn mint(
+    program_id: Pubkey,
+    token_account: Pubkey,
+    metadata_account: Pubkey,
+    mint_account: Pubkey,
+    mint_authority: Pubkey,
+    payer: Pubkey,
+    update_authority: Pubkey,
+    data: AssetData,
+    update_authority_as_signer: bool,
+) -> Instruction {
+    Instruction {
+        program_id,
+        accounts: vec![
+            AccountMeta::new(token_account, false),
+            AccountMeta::new(metadata_account, false),
+            AccountMeta::new_readonly(mint_account, false),
+            AccountMeta::new_readonly(mint_authority, true),
+            AccountMeta::new(payer, true),
+            AccountMeta::new_readonly(update_authority, update_authority_as_signer),
+            AccountMeta::new_readonly(solana_program::system_program::id(), false),
+        ],
+        data: MetadataInstruction::Mint(MintArgs::V1(data))
+            .try_to_vec()
+            .unwrap(),
+    }
 }
