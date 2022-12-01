@@ -555,14 +555,16 @@ pub enum MetadataInstruction {
     /// 
     /// The configurable `authorization_rules` only apply to `ProgrammableNonFungible` assets and
     /// it may require additional accounts to validate the rules.
-    #[account(0, writable, name="metadata", desc="Metadata (pda of ['metadata', program id, mint id])")]
-    #[account(1, name="mint", desc="Mint of token asset")]
-    #[account(2, writable, name="token_account", desc="Token account")]
-    #[account(3, signer, writable, name="owner", desc="Asset owner")]
-    #[account(4, name="spl_token_program", desc="SPL Token Program")]
-    #[account(5, name="ata_program", desc="Associated Token program")]
-    #[account(6, optional, name="authorization_rules", desc="Token Authorization Rules account")]
-    #[account(7, optional, name="authorization_rules_program", desc="Token Authorization Rules Program")]
+    #[account(0, writable, name="token", desc="Token account")]
+    #[account(1, writable, name="metadata", desc="Metadata (pda of ['metadata', program id, mint id])")]
+    #[account(2, name="mint", desc="Mint of token asset")]
+    #[account(3, name="destination", desc="Destination address")]
+    #[account(4, writable, name="destination_ata", desc="Destination ATA account address")]
+    #[account(5, signer, writable, name="owner", desc="Asset owner")]
+    #[account(6, name="spl_token_program", desc="SPL Token Program")]
+    #[account(7, name="spl_ata_program", desc="SPL Associated Token program")]
+    #[account(8, optional, name="authorization_rules", desc="Token Authorization Rules account")]
+    #[account(9, optional, name="authorization_rules_program", desc="Token Authorization Rules Program")]
     Transfer(TransferArgs),
 
     /// Verifies that an asset belongs in an specified collection.

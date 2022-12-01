@@ -42,7 +42,9 @@ pub enum MintArgs {
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub enum TransferArgs {
-    V1,
+    V1 {
+        authorization_payload: Option<Vec<u8>>,
+    },
 }
 
 #[repr(C)]
@@ -250,8 +252,6 @@ pub fn update_primary_sale_happened_via_token(
     }
 }
 
-
-
 /// Creates an instruction to mint a new asset and associated metadata accounts.
 ///
 /// # Accounts:
@@ -289,5 +289,60 @@ pub fn mint(
         data: MetadataInstruction::Mint(MintArgs::V1(data))
             .try_to_vec()
             .unwrap(),
+    }
+}
+
+/// Creates an instruction to mint a new asset and associated metadata accounts.
+///
+/// # Accounts:
+///   0. `[writable]` Token account
+///   1. `[writable]` Metadata account
+///   2. `[]` Mint account
+///   3. `[]` Destination account
+///   4. `[writable]` Destination associate token account
+///   5. `[signer]` Owner
+///   6. `[]` STL Token program
+///   7. `[]` STL Associate Token program
+///   8. `[]` System program
+///   9. `[optional]` Asset authorization rules account
+///   10. `[optional]` Token Authorization Rules program
+#[allow(clippy::too_many_arguments)]
+pub fn transfer(
+    program_id: Pubkey,
+    token_account: Pubkey,
+    metadata_account: Pubkey,
+    mint_account: Pubkey,
+    destination: Pubkey,
+    destination_token_account: Pubkey,
+    owner: Pubkey,
+    args: TransferArgs,
+    authorization_rules: Option<Pubkey>,
+    additional_accounts: Option<Vec<AccountMeta>>,
+) -> Instruction {
+    let mut accounts = vec![
+        AccountMeta::new(token_account, false),
+        AccountMeta::new(metadata_account, false),
+        AccountMeta::new_readonly(mint_account, false),
+        AccountMeta::new_readonly(destination, false),
+        AccountMeta::new(destination_token_account, false),
+        AccountMeta::new(owner, true),
+        AccountMeta::new_readonly(solana_program::system_program::id(), false),
+        AccountMeta::new_readonly(spl_token::id(), false),
+        AccountMeta::new_readonly(spl_associated_token_account::id(), false),
+    ];
+
+    if let Some(authorization_rules) = authorization_rules {
+        accounts.push(AccountMeta::new_readonly(authorization_rules, false));
+        //accounts.push(AccountMeta::new_readonly(token_authorization::id(), false));
+    }
+
+    if let Some(additional_accounts) = additional_accounts {
+        accounts.extend(additional_accounts);
+    }
+
+    Instruction {
+        program_id,
+        accounts,
+        data: MetadataInstruction::Transfer(args).try_to_vec().unwrap(),
     }
 }
