@@ -1,4 +1,4 @@
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 use solana_program::{
     instruction::{AccountMeta, Instruction},
     pubkey::Pubkey,
@@ -94,4 +94,9 @@ pub fn burn_nft(
         accounts,
         data: MetadataInstruction::BurnNft.try_to_vec().unwrap(),
     }
+}
+
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+pub enum BurnArgs {
+    V1,
 }

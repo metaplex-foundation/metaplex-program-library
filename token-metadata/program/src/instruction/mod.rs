@@ -489,4 +489,92 @@ pub enum MetadataInstruction {
     #[account(11, name="sysvar_instructions", desc="Instructions sysvar account")]
     #[account(12, optional, signer, name="authority", desc="Authority/creator of the escrow account")]
     TransferOutOfEscrow(TransferOutOfEscrowArgs),
+
+    //---- New API
+
+    /// Creates a new asset.
+    /// 
+    /// The configurable `authorization_rules` only apply to `ProgrammableNonFungible` assets.
+    #[account(0, writable, name="metadata", desc="Metadata key (pda of ['metadata', program id, mint id])")]
+    #[account(1, name="mint", desc="Mint of token asset")]
+    #[account(2, signer, name="mint_authority", desc="Mint authority")]
+    #[account(3, signer, writable, name="payer", desc="payer")]
+    #[account(4, name="update_authority", desc="update authority info")]
+    #[account(5, name="system_program", desc="System program")]
+    #[account(6, name="ata_program", desc="Associated Token program")]
+    #[account(7, name="spl_token_program", desc="SPL Token program")]
+    #[account(8, optional, name="authorization_rules", desc="Token Authorization Rules account")]
+    Mint(MintArgs),
+
+    /// Updates the metadata of an asset.
+    /// 
+    /// The configurable `authorization_rules` only apply to `ProgrammableNonFungible` assets and
+    /// it may require additional accounts to validate the rules.
+    #[account(0, writable, name="metadata", desc="Metadata account")]
+    #[account(1, signer, name="update_authority", desc="Update authority key")]
+    #[account(2, optional, name="authorization_rules", desc="Token Authorization Rules account")]
+    #[account(3, optional, name="authorization_rules_program", desc="Token Authorization Rules Program")]
+    Update(UpdateArgs),
+
+    /// Burns an asset, closing associated accounts.
+    /// 
+    /// The configurable `authorization_rules` only apply to `ProgrammableNonFungible` assets and
+    /// it may require additional accounts to validate the rules.
+    #[account(0, writable, name="metadata", desc="Metadata (pda of ['metadata', program id, mint id])")]
+    #[account(1, signer, writable, name="owner", desc="Asset owner")]
+    #[account(2, writable, name="mint", desc="Mint of token asset")]
+    #[account(3, writable, name="token_account", desc="Token account to close")]
+    #[account(4, writable, name="master_edition_account", desc="MasterEdition of the asset")]
+    #[account(5, name="spl_token_program", desc="SPL Token Program")]
+    #[account(6, optional, writable, name="collection_metadata", desc="Metadata of the Collection")]
+    #[account(7, optional, name="authorization_rules", desc="Token Authorization Rules account")]
+    #[account(8, optional, name="authorization_rules_program", desc="Token Authorization Rules Program")]
+    Burn(BurnArgs),
+
+    /// Uses an asset.
+    /// 
+    /// Use Authority can be the owner of the asset or a delegated use authority.
+    /// 
+    /// The configurable `authorization_rules` only apply to `ProgrammableNonFungible` assets and
+    /// it may require additional accounts to validate the rules.
+    #[account(0, writable, name="metadata", desc="Metadata account")]
+    #[account(1, writable, name="token_account", desc="Token Account Of NFT")]
+    #[account(2, writable, name="mint", desc="Mint of the Metadata")]
+    #[account(3, signer, writable, name="use_authority", desc="Use authority or current owner of the asset")]
+    #[account(4, name="owner", desc="Owner")]
+    #[account(5, name="spl_token_program", desc="SPL Token program")]
+    #[account(6, name="ata_program", desc="Associated Token program")]
+    #[account(7, name="system_program", desc="System program")]
+    #[account(8, optional, writable, name="use_authority_record", desc="Use Authority Record PDA (if present the program assumes a delegated use authority)")]
+    #[account(9, optional, name="authorization_rules", desc="Token Authorization Rules account")]
+    #[account(10, optional, name="authorization_rules_program", desc="Token Authorization Rules Program")]
+    UseAsset(UseAssetArgs),
+
+    /// Transfer an asset.
+    /// 
+    /// The configurable `authorization_rules` only apply to `ProgrammableNonFungible` assets and
+    /// it may require additional accounts to validate the rules.
+    #[account(0, writable, name="metadata", desc="Metadata (pda of ['metadata', program id, mint id])")]
+    #[account(1, name="mint", desc="Mint of token asset")]
+    #[account(2, writable, name="token_account", desc="Token account")]
+    #[account(3, signer, writable, name="owner", desc="Asset owner")]
+    #[account(4, name="spl_token_program", desc="SPL Token Program")]
+    #[account(5, name="ata_program", desc="Associated Token program")]
+    #[account(6, optional, name="authorization_rules", desc="Token Authorization Rules account")]
+    #[account(7, optional, name="authorization_rules_program", desc="Token Authorization Rules Program")]
+    Transfer(TransferArgs),
+
+    /// Verifies that an asset belongs in an specified collection.
+    /// 
+    /// The configurable `authorization_rules` only apply to `ProgrammableNonFungible` assets and
+    /// it may require additional accounts to validate the rules.
+    /// 
+    /// Depending on the type of veryfication (e.g., creator or collection), additional accounts
+    /// are required.
+    #[account(0, writable, name="metadata", desc="Metadata account")]
+    #[account(1, signer, writable, name="collection_authority", desc="Collection Update authority")]
+    #[account(2, signer, writable, name="payer", desc="payer")]
+    #[account(3, optional, name="authorization_rules", desc="Token Authorization Rules account")]
+    #[account(4, optional, name="authorization_rules_program", desc="Token Authorization Rules Program")]
+    Verify(VerifyArgs),
 }

@@ -9,8 +9,6 @@ pub(crate) mod metadata;
 pub(crate) mod reservation;
 pub(crate) mod uses;
 
-use std::io::ErrorKind;
-
 use borsh::{maybestd::io::Error as BorshError, BorshDeserialize, BorshSerialize};
 pub use collection::*;
 pub use creator::*;
@@ -20,6 +18,7 @@ pub use edition_marker::*;
 pub use escrow::*;
 pub use master_edition::*;
 pub use metadata::*;
+
 use num_derive::FromPrimitive;
 use num_traits::FromPrimitive;
 pub use reservation::*;
@@ -28,6 +27,7 @@ use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
     pubkey::Pubkey,
 };
+use std::io::ErrorKind;
 pub use uses::*;
 #[cfg(feature = "serde-feature")]
 use {
@@ -48,10 +48,11 @@ use crate::{
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, FromPrimitive)]
 pub enum TokenStandard {
-    NonFungible,        // This is a master edition
-    FungibleAsset,      // A token with metadata that can also have attrributes
-    Fungible,           // A token with simple metadata
-    NonFungibleEdition, // This is a limited edition
+    NonFungible,             // This is a master edition
+    FungibleAsset,           // A token with metadata that can also have attrributes
+    Fungible,                // A token with simple metadata
+    NonFungibleEdition,      // This is a limited edition
+    ProgrammableNonFungible, // NonFungible with programmable configuration
 }
 
 pub trait TokenMetadataAccount: BorshDeserialize {

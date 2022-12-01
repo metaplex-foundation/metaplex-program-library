@@ -176,3 +176,9 @@ pub fn utilize(
             .unwrap(),
     }
 }
+
+#[repr(C)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+pub enum UseAssetArgs {
+    V1 { use_count: u64 },
+}

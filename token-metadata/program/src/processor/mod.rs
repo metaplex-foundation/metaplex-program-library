@@ -8,9 +8,7 @@ mod freeze;
 mod metadata;
 mod uses;
 
-use borsh::BorshDeserialize;
 pub use bubblegum::*;
-// Have to reexport for backwards compatibility
 pub use burn::*;
 pub use collection::*;
 pub use deprecated::{
@@ -21,8 +19,10 @@ pub use edition::*;
 pub use escrow::*;
 pub use freeze::*;
 pub use metadata::*;
-use solana_program::{account_info::AccountInfo, entrypoint::ProgramResult, msg, pubkey::Pubkey};
 pub use uses::*;
+
+use borsh::BorshDeserialize;
+use solana_program::{account_info::AccountInfo, entrypoint::ProgramResult, msg, pubkey::Pubkey};
 
 use crate::{
     deprecated_processor::{
@@ -242,6 +242,31 @@ pub fn process_instruction<'a>(
         MetadataInstruction::TransferOutOfEscrow(args) => {
             msg!("Instruction: Transfer Out Of Escrow");
             process_transfer_out_of_escrow(program_id, accounts, args)
+        }
+        //--- new instructions
+        MetadataInstruction::Mint(args) => {
+            msg!("Instruction: Mint");
+            metadata::mint(program_id, accounts, args)
+        }
+        MetadataInstruction::Update(args) => {
+            msg!("Instruction: Update");
+            metadata::update(program_id, accounts, args)
+        }
+        MetadataInstruction::Burn(args) => {
+            msg!("Instruction: Burn");
+            burn::burn(program_id, accounts, args)
+        }
+        MetadataInstruction::UseAsset(args) => {
+            msg!("Instruction: UseAsset");
+            uses::use_asset(program_id, accounts, args)
+        }
+        MetadataInstruction::Transfer(args) => {
+            msg!("Instruction: Transfer");
+            metadata::transfer(program_id, accounts, args)
+        }
+        MetadataInstruction::Verify(args) => {
+            msg!("Instruction: Verify");
+            collection::verify(program_id, accounts, args)
         }
     }
 }

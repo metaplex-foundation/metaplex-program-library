@@ -217,3 +217,47 @@ pub fn update_primary_sale_happened_via_token(
             .unwrap(),
     }
 }
+
+#[repr(C)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+pub enum MintArgs {
+    V1 {
+        data: DataV2,
+        /// Whether you want your metadata to be updateable in the future.
+        is_mutable: bool,
+        /// If this is a collection parent NFT.
+        collection_details: Option<CollectionDetails>,
+    },
+}
+/*
+impl MintArgs {
+    pub fn to_account_infos<'a>(&self, accounts: &'a [AccountInfo<'a>]) -> MintAccounts<'a> {
+        match self {
+            V1 => MintAccounts {
+                metadata: &accounts[0],
+                mint: &accounts[1],
+                mint_authority: &accounts[2],
+                payer: &accounts[3],
+                system_program: &accounts[4],
+                update_authority: &accounts[5],
+            },
+        }
+    }
+}
+*/
+#[repr(C)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+pub enum UpdateArgs {
+    V1 {
+        data: Option<DataV2>,
+        update_authority: Option<Pubkey>,
+        primary_sale_happened: Option<bool>,
+        is_mutable: Option<bool>,
+    },
+}
+
+#[repr(C)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+pub enum TransferArgs {
+    V1,
+}

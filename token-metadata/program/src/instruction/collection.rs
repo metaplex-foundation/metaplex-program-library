@@ -406,3 +406,8 @@ pub fn verify_sized_collection_item(
             .unwrap(),
     }
 }
+
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+pub enum VerifyArgs {
+    V1,
+}
