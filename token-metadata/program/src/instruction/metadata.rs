@@ -2,6 +2,7 @@ use borsh::{BorshDeserialize, BorshSerialize};
 use solana_program::{
     instruction::{AccountMeta, Instruction},
     pubkey::Pubkey,
+    sysvar,
 };
 #[cfg(feature = "serde-feature")]
 use {
@@ -263,6 +264,8 @@ pub fn update_primary_sale_happened_via_token(
 ///   4. `[signer]` Payer
 ///   5. `[signer]` Update authority
 ///   6. `[]` System program
+///   7. `[]` Instructions sysvar account
+///   8. `[optional]` Asset authorization rules account
 #[allow(clippy::too_many_arguments)]
 pub fn mint(
     program_id: Pubkey,
@@ -275,17 +278,24 @@ pub fn mint(
     data: AssetData,
     update_authority_as_signer: bool,
 ) -> Instruction {
+    let mut accounts = vec![
+        AccountMeta::new(token_account, false),
+        AccountMeta::new(metadata_account, false),
+        AccountMeta::new_readonly(mint_account, false),
+        AccountMeta::new_readonly(mint_authority, true),
+        AccountMeta::new(payer, true),
+        AccountMeta::new_readonly(update_authority, update_authority_as_signer),
+        AccountMeta::new_readonly(solana_program::system_program::id(), false),
+        AccountMeta::new_readonly(sysvar::id(), false),
+    ];
+
+    if let Some(config) = &data.programmable_config {
+        accounts.push(AccountMeta::new_readonly(config.rule_set, false));
+    }
+
     Instruction {
         program_id,
-        accounts: vec![
-            AccountMeta::new(token_account, false),
-            AccountMeta::new(metadata_account, false),
-            AccountMeta::new_readonly(mint_account, false),
-            AccountMeta::new_readonly(mint_authority, true),
-            AccountMeta::new(payer, true),
-            AccountMeta::new_readonly(update_authority, update_authority_as_signer),
-            AccountMeta::new_readonly(solana_program::system_program::id(), false),
-        ],
+        accounts,
         data: MetadataInstruction::Mint(MintArgs::V1(data))
             .try_to_vec()
             .unwrap(),
@@ -304,8 +314,9 @@ pub fn mint(
 ///   6. `[]` STL Token program
 ///   7. `[]` STL Associate Token program
 ///   8. `[]` System program
-///   9. `[optional]` Asset authorization rules account
-///   10. `[optional]` Token Authorization Rules program
+///   9. `[]` Instructions sysvar account
+///   10. `[optional]` Asset authorization rules account
+///   11. `[optional]` Token Authorization Rules program
 #[allow(clippy::too_many_arguments)]
 pub fn transfer(
     program_id: Pubkey,
@@ -329,6 +340,7 @@ pub fn transfer(
         AccountMeta::new_readonly(solana_program::system_program::id(), false),
         AccountMeta::new_readonly(spl_token::id(), false),
         AccountMeta::new_readonly(spl_associated_token_account::id(), false),
+        AccountMeta::new_readonly(sysvar::id(), false),
     ];
 
     if let Some(authorization_rules) = authorization_rules {

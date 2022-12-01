@@ -504,7 +504,8 @@ pub enum MetadataInstruction {
     #[account(6, name="system_program", desc="System program")]
     #[account(7, name="ata_program", desc="Associated Token program")]
     #[account(8, name="spl_token_program", desc="SPL Token program")]
-    #[account(9, optional, name="authorization_rules", desc="Token Authorization Rules account")]
+    #[account(9, name="sysvar_instructions", desc="Instructions sysvar account")]
+    #[account(10, optional, name="authorization_rules", desc="Token Authorization Rules account")]
     Mint(MintArgs),
 
     /// Updates the metadata of an asset.
@@ -561,10 +562,12 @@ pub enum MetadataInstruction {
     #[account(3, name="destination", desc="Destination address")]
     #[account(4, writable, name="destination_ata", desc="Destination ATA account address")]
     #[account(5, signer, writable, name="owner", desc="Asset owner")]
-    #[account(6, name="spl_token_program", desc="SPL Token Program")]
-    #[account(7, name="spl_ata_program", desc="SPL Associated Token program")]
-    #[account(8, optional, name="authorization_rules", desc="Token Authorization Rules account")]
-    #[account(9, optional, name="authorization_rules_program", desc="Token Authorization Rules Program")]
+    #[account(6, name="system_program", desc="System Program")]
+    #[account(7, name="spl_token_program", desc="SPL Token Program")]
+    #[account(8, name="spl_ata_program", desc="SPL Associated Token program")]
+    #[account(9, name="sysvar_instructions", desc="Instructions sysvar account")]
+    #[account(10, optional, name="authorization_rules", desc="Token Authorization Rules account")]
+    #[account(11, optional, name="authorization_rules_program", desc="Token Authorization Rules Program")]
     Transfer(TransferArgs),
 
     /// Verifies that an asset belongs in an specified collection.
