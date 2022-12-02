@@ -1,6 +1,7 @@
 mod bubblegum;
 mod burn;
 mod collection;
+mod delegate;
 pub(crate) mod deprecated;
 mod edition;
 pub(crate) mod escrow;
@@ -11,6 +12,7 @@ mod uses;
 pub use bubblegum::*;
 pub use burn::*;
 pub use collection::*;
+pub use delegate::*;
 pub use deprecated::{
     process_create_metadata_accounts_v2,
     process_deprecated_mint_new_edition_from_master_edition_via_vault_proxy,
@@ -267,6 +269,10 @@ pub fn process_instruction<'a>(
         MetadataInstruction::Verify(args) => {
             msg!("Instruction: Verify");
             collection::verify(program_id, accounts, args)
+        }
+        MetadataInstruction::Delegate(args) => {
+            msg!("Instruction: Delegate");
+            delegate::delegate(program_id, accounts, args)
         }
     }
 }

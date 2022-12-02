@@ -36,6 +36,8 @@ pub struct AssetData {
     pub collection_details: Option<CollectionDetails>,
     // Programmable configuration for the asset.
     pub programmable_config: Option<ProgrammableConfig>,
+    // Delegate status.
+    pub delegate_state: Option<DelegateState>,
 }
 
 impl AssetData {
@@ -54,6 +56,7 @@ impl AssetData {
             uses: None,
             collection_details: None,
             programmable_config: None,
+            delegate_state: None,
         }
     }
 }
@@ -64,4 +67,13 @@ impl AssetData {
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct ProgrammableConfig {
     pub rule_set: Pubkey,
+}
+
+#[repr(C)]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+/// Different delegate states for a token. Some actions are
+/// not allowed depending of the degate state.
+pub enum DelegateState {
+    Sale(Pubkey),
 }

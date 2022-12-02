@@ -1,6 +1,7 @@
 mod bubblegum;
 mod burn;
 mod collection;
+mod delegate;
 pub(crate) mod deprecated;
 mod edition;
 pub(crate) mod escrow;
@@ -8,14 +9,16 @@ mod freeze;
 mod metadata;
 mod uses;
 
-use borsh::{BorshDeserialize, BorshSerialize};
 pub use bubblegum::*;
 pub use burn::*;
 pub use collection::*;
+pub use delegate::*;
 pub use edition::*;
 pub use escrow::*;
 pub use freeze::*;
 pub use metadata::*;
+
+use borsh::{BorshDeserialize, BorshSerialize};
 #[cfg(feature = "serde-feature")]
 use serde::{Deserialize, Serialize};
 use shank::ShankInstruction;
@@ -568,7 +571,7 @@ pub enum MetadataInstruction {
     #[account(5, signer, writable, name="owner", desc="Asset owner")]
     #[account(6, name="system_program", desc="System Program")]
     #[account(7, name="spl_token_program", desc="SPL Token Program")]
-    #[account(8, name="spl_ata_program", desc="SPL Associated Token program")]
+    #[account(8, name="spl_ata_program", desc="SPL Associated Token Account program")]
     #[account(9, name="sysvar_instructions", desc="Instructions sysvar account")]
     #[account(10, optional, name="authorization_rules", desc="Token Authorization Rules account")]
     #[account(11, optional, name="authorization_rules_program", desc="Token Authorization Rules Program")]
@@ -587,4 +590,19 @@ pub enum MetadataInstruction {
     #[account(3, optional, name="authorization_rules", desc="Token Authorization Rules account")]
     #[account(4, optional, name="authorization_rules_program", desc="Token Authorization Rules Program")]
     Verify(VerifyArgs),
+
+    /// Approve another account to call [utilize] on this NFT.
+    #[account(0, writable, name="delegate", desc="Delegate account key (pda of ['metadata', program id, mint id, delegate role, user id, owner id])")]
+    #[account(1, name="user", desc="Delegated user")]
+    #[account(2, signer, name="owner", desc="Token owner")]
+    #[account(3, signer, writable, name="payer", desc="Payer")]
+    #[account(4, writable, name="token_account", desc="Owned Token Account of mint")]
+    #[account(5, writable, name="metadata", desc="Metadata account")]
+    #[account(6, name="mint", desc="Mint of metadata")]
+    #[account(7, name="system_program", desc="System Program")]
+    #[account(8, name="spl_token_program", desc="SPL Token Program")]
+    #[account(9, name="sysvar_instructions", desc="Instructions sysvar account")]
+    #[account(10, optional, name="authorization_rules", desc="Token Authorization Rules account")]
+    #[account(11, optional, name="authorization_rules_program", desc="Token Authorization Rules Program")]
+    Delegate(DelegateArgs),
 }

@@ -1,5 +1,7 @@
 use solana_program::pubkey::Pubkey;
 
+use crate::instruction::DelegateRole;
+
 /// prefix used for PDAs to avoid certain collision attacks:
 /// https://en.wikipedia.org/wiki/Collision_attack#Chosen-prefix_collision_attack
 
@@ -73,6 +75,25 @@ pub fn find_collection_authority_account(mint: &Pubkey, authority: &Pubkey) -> (
 pub fn find_program_as_burner_account() -> (Pubkey, u8) {
     Pubkey::find_program_address(
         &[PREFIX.as_bytes(), crate::id().as_ref(), BURN.as_bytes()],
+        &crate::id(),
+    )
+}
+
+pub fn find_delegate_account(
+    mint: &Pubkey,
+    role: DelegateRole,
+    user: &Pubkey,
+    owner: &Pubkey,
+) -> (Pubkey, u8) {
+    Pubkey::find_program_address(
+        &[
+            PREFIX.as_bytes(),
+            crate::id().as_ref(),
+            mint.as_ref(),
+            role.to_string().as_bytes(),
+            user.as_ref(),
+            owner.as_ref(),
+        ],
         &crate::id(),
     )
 }
