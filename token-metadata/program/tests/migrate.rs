@@ -36,6 +36,7 @@ mod migrate {
         let collection_nft = MetadataManager::create_default_sized_parent(context)
             .await
             .unwrap();
+
         master_edition_manager
             .create_v3(context, Some(0))
             .await

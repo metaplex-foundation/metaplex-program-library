@@ -72,7 +72,7 @@ mod update {
         let payer_pubkey = context.payer.pubkey();
         let new_update_authority = None;
         let authority = AuthorityType::UpdateAuthority(payer_pubkey);
-        let mint_ix = instruction::update(
+        let update_ix = instruction::update(
             /* program id       */ id(),
             /* metadata account */ metadata_manager.pubkey,
             /* mint account     */ metadata_manager.mint.pubkey(),
@@ -85,7 +85,7 @@ mod update {
         );
 
         let tx = Transaction::new_signed_with_payer(
-            &[mint_ix],
+            &[update_ix],
             Some(&context.payer.pubkey()),
             &[&context.payer],
             context.last_blockhash,

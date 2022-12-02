@@ -488,7 +488,7 @@ pub fn migrate(
         AccountMeta::new(token_account, false),
         AccountMeta::new_readonly(mint, false),
         AccountMeta::new_readonly(update_authority, true),
-        AccountMeta::new_readonly(collection_metadata, true),
+        AccountMeta::new_readonly(collection_metadata, false),
         AccountMeta::new_readonly(spl_token::id(), false),
         AccountMeta::new_readonly(system_program::id(), false),
         AccountMeta::new_readonly(sysvar::instructions::id(), false),
