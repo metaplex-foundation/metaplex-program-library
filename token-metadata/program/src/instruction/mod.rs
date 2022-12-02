@@ -520,9 +520,16 @@ pub enum MetadataInstruction {
     /// The configurable `authorization_rules` only apply to `ProgrammableNonFungible` assets and
     /// it may require additional accounts to validate the rules.
     #[account(0, writable, name="metadata", desc="Metadata account")]
-    #[account(1, signer, name="update_authority", desc="Update authority key")]
-    #[account(2, optional, name="authorization_rules", desc="Token Authorization Rules account")]
-    #[account(3, optional, name="authorization_rules_program", desc="Token Authorization Rules Program")]
+    #[account(1, name="mint", desc="Mint account")]
+    #[account(2, name="system_program", desc="System program")]
+    #[account(3, name="sysvar_instructions", desc="System program")]
+    #[account(4, optional, name="master_edition", desc="Master edition account")]
+    #[account(5, optional, name="new_update_authority", desc="New update authority")]
+    #[account(6, signer, optional, name="update_authority", desc="Update authority")]
+    #[account(7, signer, optional, name="token_holder", desc="Token holder")]
+    #[account(8, signer, optional, name="token_account", desc="Token account")]
+    #[account(9, optional, name="authorization_rules", desc="Token Authorization Rules account")]
+    #[account(10, optional, name="authorization_rules_program", desc="Token Authorization Rules Program")]
     Update(UpdateArgs),
 
     /// Burns an asset, closing associated accounts.

@@ -384,11 +384,11 @@ pub struct AuthorizationRules {
 ///
 /// # Accounts:
 ///
-///   1. `[writable]` Metadata account
-///   1. `[]` Master edition account
-///   2. `[]` Mint account
-///   3. `[]` System program
-///   4. `[]` Instructions sysvar account
+///   0. `[writable]` Metadata account
+///   1. `[]` Mint account
+///   2. `[]` System program
+///   3. `[]` Instructions sysvar account
+///   4. `[optional]` Master edition account
 ///   5. `[optional]` New update authority
 ///   6. `[signer, optional]` Update authority
 ///   7. `[signer, optional]` Token holder
