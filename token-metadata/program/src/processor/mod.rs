@@ -278,5 +278,9 @@ pub fn process_instruction<'a>(
             msg!("Instruction: Migrate");
             metadata::migrate(program_id, accounts, args)
         }
+        MetadataInstruction::Revoke(args) => {
+            msg!("Instruction: Revoke");
+            delegate::revoke(program_id, accounts, args)
+        }
     }
 }
