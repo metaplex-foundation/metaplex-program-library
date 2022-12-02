@@ -2,7 +2,7 @@ use borsh::{BorshDeserialize, BorshSerialize};
 use solana_program::{
     instruction::{AccountMeta, Instruction},
     pubkey::Pubkey,
-    sysvar,
+    system_program, sysvar,
 };
 #[cfg(feature = "serde-feature")]
 use {
@@ -56,6 +56,13 @@ pub enum UpdateArgs {
         data: Option<AssetData>,
         update_authority: Option<Pubkey>,
     },
+}
+
+#[repr(C)]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+pub enum MigrateArgs {
+    V1,
 }
 
 #[repr(C)]
@@ -375,11 +382,6 @@ pub enum AuthorityType {
     },
 }
 
-pub struct AuthorizationRules {
-    authorization_rules: Pubkey,
-    program_id: Pubkey,
-}
-
 /// Creates an instruction to update an existing asset.
 ///
 /// # Accounts:
@@ -403,7 +405,7 @@ pub fn update(
     master_edition_account: Option<Pubkey>,
     new_update_authority: Option<Pubkey>,
     authority: AuthorityType,
-    authorization_rules: Option<AuthorizationRules>,
+    authorization_rules: Option<Pubkey>,
     data: Option<AssetData>,
     additional_accounts: Option<Vec<AccountMeta>>,
 ) -> Instruction {
@@ -435,9 +437,9 @@ pub fn update(
         }
     }
 
-    if let Some(rules) = &authorization_rules {
-        accounts.push(AccountMeta::new_readonly(rules.authorization_rules, false));
-        accounts.push(AccountMeta::new_readonly(rules.program_id, false));
+    if let Some(authorization_rules) = authorization_rules {
+        accounts.push(AccountMeta::new_readonly(authorization_rules, false));
+        // accounts.push(AccountMeta::new_readonly(token_authorization::id(), false));
     }
 
     accounts.extend(additional_accounts.unwrap_or_default());
@@ -451,5 +453,59 @@ pub fn update(
         })
         .try_to_vec()
         .unwrap(),
+    }
+}
+
+/// Creates an instruction to migrate an asset to a ProgrammableAsset.
+///
+/// # Accounts:
+///
+///   0. `[writable]` Metadata account
+///   1. `[]` Mint account
+///   2. `[]` System program
+///   3. `[]` Instructions sysvar account
+///   4. `[]` Master edition account
+///   6. `[signer]` Update authority
+///   8. `[optional]` Token account
+///   7. `[signer, optional]` Token holder
+///   9. `[optional]` Asset authorization rules account
+//   10. `[optional]` Authorization rules program
+#[allow(clippy::too_many_arguments)]
+pub fn migrate(
+    program_id: Pubkey,
+    metadata_account: Pubkey,
+    master_edition_account: Pubkey,
+    mint: Pubkey,
+    token_account: Pubkey,
+    update_authority: Pubkey,
+    collection_metadata: Pubkey,
+    authorization_rules: Option<Pubkey>,
+    additional_accounts: Option<Vec<AccountMeta>>,
+) -> Instruction {
+    let mut accounts = vec![
+        AccountMeta::new(metadata_account, false),
+        AccountMeta::new_readonly(master_edition_account, false),
+        AccountMeta::new(token_account, false),
+        AccountMeta::new_readonly(mint, false),
+        AccountMeta::new_readonly(update_authority, true),
+        AccountMeta::new_readonly(collection_metadata, true),
+        AccountMeta::new_readonly(spl_token::id(), false),
+        AccountMeta::new_readonly(system_program::id(), false),
+        AccountMeta::new_readonly(sysvar::instructions::id(), false),
+    ];
+
+    if let Some(authorization_rules) = authorization_rules {
+        accounts.push(AccountMeta::new_readonly(authorization_rules, false));
+        //accounts.push(AccountMeta::new_readonly(token_authorization::id(), false));
+    }
+
+    accounts.extend(additional_accounts.unwrap_or_default());
+
+    Instruction {
+        program_id,
+        accounts,
+        data: MetadataInstruction::Migrate(MigrateArgs::V1)
+            .try_to_vec()
+            .unwrap(),
     }
 }

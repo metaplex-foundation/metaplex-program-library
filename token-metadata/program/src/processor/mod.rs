@@ -274,5 +274,9 @@ pub fn process_instruction<'a>(
             msg!("Instruction: Delegate");
             delegate::delegate(program_id, accounts, args)
         }
+        MetadataInstruction::Migrate(args) => {
+            msg!("Instruction: Migrate");
+            metadata::migrate(program_id, accounts, args)
+        }
     }
 }

@@ -43,3 +43,8 @@ impl UpdateAccounts {
         infos
     }
 }
+
+pub struct AuthorizationRules {
+    authorization_rules: Pubkey,
+    program_id: Pubkey,
+}

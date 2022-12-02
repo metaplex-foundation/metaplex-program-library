@@ -8,6 +8,7 @@ use mpl_token_metadata::{
 };
 use solana_program_test::*;
 use solana_sdk::{signature::Signer, transaction::Transaction};
+use utils::MasterEditionV2 as MasterEditionV2Manager;
 use utils::Metadata as MetadataManager;
 use utils::*;
 
@@ -16,11 +17,12 @@ mod update {
     use mpl_token_metadata::instruction::AuthorityType;
     use mpl_token_metadata::state::{AssetData, Metadata, TokenStandard, PREFIX};
     use solana_program::borsh::try_from_slice_unchecked;
+    use solana_sdk::signature::Keypair;
 
     use super::*;
     #[tokio::test]
     async fn success_update() {
-        let mut context = program_test().start_with_context().await;
+        let mut context = &mut program_test().start_with_context().await;
 
         // asset details
 
@@ -32,8 +34,31 @@ mod update {
 
         // mint a default NFT
 
-        let nft = MetadataManager::new();
-        nft.create_v3_default(&mut context).await.unwrap();
+        let update_authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+
+        let metadata_manager = MetadataManager::new();
+        metadata_manager.create_v3_default(context).await.unwrap();
+
+        let master_edition_manager = MasterEditionV2Manager::new(&metadata_manager);
+        let collection_nft = MetadataManager::create_default_sized_parent(context)
+            .await
+            .unwrap();
+        master_edition_manager
+            .create_v3(context, Some(0))
+            .await
+            .unwrap();
+        metadata_manager
+            .set_and_verify_sized_collection_item(
+                context,
+                collection_nft.0.pubkey,
+                &update_authority,
+                update_authority.pubkey(),
+                collection_nft.0.mint.pubkey(),
+                collection_nft.1.pubkey,
+                None,
+            )
+            .await
+            .unwrap();
 
         // Build the update txn
 
@@ -49,14 +74,14 @@ mod update {
         let authority = AuthorityType::UpdateAuthority(payer_pubkey);
         let mint_ix = instruction::update(
             /* program id       */ id(),
-            /* metadata account */ nft.pubkey,
-            /* mint account     */ nft.mint.pubkey(),
+            /* metadata account */ metadata_manager.pubkey,
+            /* mint account     */ metadata_manager.mint.pubkey(),
             /* master edition   */ None,
-            /* mint authority   */ new_update_authority,
-            /* payer            */ authority,
-            /* update authority */ None,
+            /* new auth         */ new_update_authority,
+            /* authority        */ authority,
+            /* auth rules       */ None,
             /* asset data       */ Some(new_asset),
-            /* authority signer */ None,
+            /* additional       */ None,
         );
 
         let tx = Transaction::new_signed_with_payer(
@@ -70,7 +95,7 @@ mod update {
 
         // checks the created metadata values
 
-        let metadata_account = get_account(&mut context, &nft.pubkey).await;
+        let metadata_account = get_account(context, &metadata_manager.pubkey).await;
         let metadata: Metadata = try_from_slice_unchecked(&metadata_account.data).unwrap();
 
         assert_eq!(metadata.data.name, name);
