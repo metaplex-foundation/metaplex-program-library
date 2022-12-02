@@ -366,3 +366,90 @@ pub fn transfer(
         data: MetadataInstruction::Transfer(args).try_to_vec().unwrap(),
     }
 }
+
+pub enum AuthorityType {
+    UpdateAuthority(Pubkey),
+    Holder {
+        holder: Pubkey,
+        token_account: Pubkey,
+    },
+}
+
+pub struct AuthorizationRules {
+    authorization_rules: Pubkey,
+    program_id: Pubkey,
+}
+
+/// Creates an instruction to update an existing asset.
+///
+/// # Accounts:
+///
+///   1. `[writable]` Metadata account
+///   1. `[]` Master edition account
+///   2. `[]` Mint account
+///   3. `[]` System program
+///   4. `[]` Instructions sysvar account
+///   5. `[optional]` New update authority
+///   6. `[signer, optional]` Update authority
+///   7. `[signer, optional]` Token holder
+///   8. `[optional]` Token account
+///   9. `[optional]` Asset authorization rules account
+///   10. `[optional]` Authorization rules program
+#[allow(clippy::too_many_arguments)]
+pub fn update(
+    program_id: Pubkey,
+    metadata_account: Pubkey,
+    mint_account: Pubkey,
+    master_edition_account: Option<Pubkey>,
+    new_update_authority: Option<Pubkey>,
+    authority: AuthorityType,
+    authorization_rules: Option<AuthorizationRules>,
+    data: Option<AssetData>,
+    additional_accounts: Option<Vec<AccountMeta>>,
+) -> Instruction {
+    let mut accounts: Vec<AccountMeta> = vec![
+        AccountMeta::new(metadata_account, false),
+        AccountMeta::new(mint_account, false),
+        AccountMeta::new_readonly(solana_program::system_program::id(), false),
+        AccountMeta::new_readonly(sysvar::instructions::id(), false),
+    ];
+
+    if let Some(master_edition_account) = master_edition_account {
+        accounts.push(AccountMeta::new(master_edition_account, false));
+    }
+
+    if let Some(new_update_authority) = new_update_authority {
+        accounts.push(AccountMeta::new_readonly(new_update_authority, false));
+    }
+
+    match authority {
+        AuthorityType::UpdateAuthority(authority) => {
+            accounts.push(AccountMeta::new_readonly(authority, true))
+        }
+        AuthorityType::Holder {
+            holder,
+            token_account,
+        } => {
+            accounts.push(AccountMeta::new_readonly(holder, true));
+            accounts.push(AccountMeta::new_readonly(token_account, false));
+        }
+    }
+
+    if let Some(rules) = &authorization_rules {
+        accounts.push(AccountMeta::new_readonly(rules.authorization_rules, false));
+        accounts.push(AccountMeta::new_readonly(rules.program_id, false));
+    }
+
+    accounts.extend(additional_accounts.unwrap_or_default());
+
+    Instruction {
+        program_id,
+        accounts,
+        data: MetadataInstruction::Update(UpdateArgs::V1 {
+            data,
+            update_authority: new_update_authority,
+        })
+        .try_to_vec()
+        .unwrap(),
+    }
+}

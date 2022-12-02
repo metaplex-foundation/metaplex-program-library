@@ -20,7 +20,7 @@ mod transfer {
 
     use mpl_token_metadata::{
         instruction::TransferArgs,
-        state::{AssetData, TokenStandard, PREFIX, EDITION},
+        state::{AssetData, TokenStandard, EDITION, PREFIX},
     };
 
     use super::*;
