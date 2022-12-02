@@ -461,15 +461,15 @@ pub fn update(
 /// # Accounts:
 ///
 ///   0. `[writable]` Metadata account
-///   1. `[]` Mint account
-///   2. `[]` System program
-///   3. `[]` Instructions sysvar account
-///   4. `[]` Master edition account
-///   6. `[signer]` Update authority
-///   8. `[optional]` Token account
-///   7. `[signer, optional]` Token holder
-///   9. `[optional]` Asset authorization rules account
-//   10. `[optional]` Authorization rules program
+///   1. `[]` Master edition account
+///   2. `[writable]` Token account
+///   3. `[]` Mint account
+///   4. `[signer]` Update authority
+///   6. `[]` Collection metadata account
+///   8. `[]` Token Program
+///   7. `[]` System program
+///   9. `[]` Instruction sysvar account
+//   10. optional, name="authorization_rules", desc="Token Authorization Rules account"
 #[allow(clippy::too_many_arguments)]
 pub fn migrate(
     program_id: Pubkey,

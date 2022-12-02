@@ -618,11 +618,11 @@ pub enum MetadataInstruction {
     #[account(1, name="master_edition", desc="Master edition account")]
     #[account(2, writable, name="token_account", desc="Token account")]
     #[account(3, name="mint", desc="Mint account")]
-    #[account(4, signer, optional, name="update_authority", desc="Update authority")]
+    #[account(4, signer, name="update_authority", desc="Update authority")]
     #[account(5, name="collection_metadata", desc="Collection metadata account")]
     #[account(6, name="token_program", desc="Token Program")]
     #[account(7, name="system_program", desc="System program")]
-    #[account(8, name="sysvar_instructions", desc="System program")]
+    #[account(8, name="sysvar_instructions", desc="Instruction sysvar account")]
     #[account(9, optional, name="authorization_rules", desc="Token Authorization Rules account")]
     Migrate(MigrateArgs),
 }
