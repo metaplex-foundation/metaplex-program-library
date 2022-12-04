@@ -3,7 +3,7 @@ use borsh::{BorshDeserialize, BorshSerialize};
 use serde::{Deserialize, Serialize};
 use solana_program::pubkey::Pubkey;
 
-use super::{Collection, CollectionDetails, Creator, TokenStandard, Uses};
+use super::{Collection, CollectionDetails, Creator, DataV2, TokenStandard, Uses};
 
 /// Data representation of an asset.
 #[repr(C)]
@@ -57,6 +57,18 @@ impl AssetData {
             collection_details: None,
             programmable_config: None,
             delegate_state: None,
+        }
+    }
+
+    pub fn as_data(&self) -> DataV2 {
+        DataV2 {
+            collection: self.collection.clone(),
+            creators: self.creators.clone(),
+            name: self.name.clone(),
+            seller_fee_basis_points: self.seller_fee_basis_points,
+            symbol: self.symbol.clone(),
+            uri: self.uri.clone(),
+            uses: self.uses.clone(),
         }
     }
 }

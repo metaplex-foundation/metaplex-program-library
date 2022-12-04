@@ -72,6 +72,7 @@ mod delegate {
             /* payer            */ payer_pubkey,
             /* update authority */ payer_pubkey,
             /* asset data       */ asset,
+            /* initialize mint  */ true,
             /* authority signer */ true,
         );
 

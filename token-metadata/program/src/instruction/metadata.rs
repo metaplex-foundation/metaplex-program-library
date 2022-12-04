@@ -287,17 +287,24 @@ pub fn mint(
     payer: Pubkey,
     update_authority: Pubkey,
     data: AssetData,
+    initialize_mint: bool,
     update_authority_as_signer: bool,
 ) -> Instruction {
     let mut accounts = vec![
         AccountMeta::new(token, false),
         AccountMeta::new(metadata, false),
-        AccountMeta::new_readonly(mint, false),
+        if initialize_mint {
+            AccountMeta::new(mint, true)
+        } else {
+            AccountMeta::new_readonly(mint, false)
+        },
         AccountMeta::new_readonly(mint_authority, true),
         AccountMeta::new(payer, true),
         AccountMeta::new_readonly(update_authority, update_authority_as_signer),
         AccountMeta::new_readonly(solana_program::system_program::id(), false),
         AccountMeta::new_readonly(sysvar::instructions::id(), false),
+        AccountMeta::new_readonly(spl_token::id(), false),
+        AccountMeta::new_readonly(spl_associated_token_account::id(), false),
     ];
     // checks whether we have a master edition
     if let Some(master_edition) = master_edition {

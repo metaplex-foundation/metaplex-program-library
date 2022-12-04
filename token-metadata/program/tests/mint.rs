@@ -35,16 +35,24 @@ mod mint {
         asset.seller_fee_basis_points = 500;
         /*
         asset.programmable_config = Some(ProgrammableConfig {
-            rule_set: <PUBKEY>,
+            rule_set: Pubkey::from_str("Cex6GAMtCwD9E17VsEK4rQTbmcVtSdHxWcxhwdwXkuAN")?,
         });
         */
 
         // build the mint transaction
 
-        let token = Keypair::new();
+        let payer_pubkey = context.payer.pubkey();
         let mint = Keypair::new();
-
         let mint_pubkey = mint.pubkey();
+        let (token, _) = Pubkey::find_program_address(
+            &[
+                &payer_pubkey.to_bytes(),
+                &spl_token::id().to_bytes(),
+                &mint_pubkey.to_bytes(),
+            ],
+            &spl_associated_token_account::id(),
+        );
+
         let program_id = id();
         // metadata PDA address
         let metadata_seeds = &[PREFIX.as_bytes(), program_id.as_ref(), mint_pubkey.as_ref()];
@@ -58,10 +66,9 @@ mod mint {
         ];
         let (master_edition, _) = Pubkey::find_program_address(master_edition_seeds, &id());
 
-        let payer_pubkey = context.payer.pubkey();
         let mint_ix = instruction::mint(
             /* program id       */ id(),
-            /* token account    */ token.pubkey(),
+            /* token account    */ token,
             /* metadata account */ metadata,
             /* master edition   */ Some(master_edition),
             /* mint account     */ mint.pubkey(),
@@ -69,13 +76,14 @@ mod mint {
             /* payer            */ payer_pubkey,
             /* update authority */ payer_pubkey,
             /* asset data       */ asset,
+            /* initialize mint  */ true,
             /* authority signer */ true,
         );
 
         let tx = Transaction::new_signed_with_payer(
             &[mint_ix],
             Some(&context.payer.pubkey()),
-            &[&context.payer],
+            &[&context.payer, &mint],
             context.last_blockhash,
         );
 
@@ -98,10 +106,12 @@ mod mint {
         assert_eq!(metadata.update_authority, context.payer.pubkey());
         assert_eq!(metadata.key, Key::MetadataV1);
 
+        /*
         assert_eq!(
             metadata.token_standard,
             Some(TokenStandard::ProgrammableNonFungible)
         );
+        */
         assert_eq!(metadata.collection, None);
         assert_eq!(metadata.uses, None);
     }
