@@ -66,7 +66,7 @@ pub fn replace_leaf<'info>(
         spl_account_compression::cpi::accounts::Modify {
             authority: authority.clone(),
             merkle_tree: merkle_tree.clone(),
-            log_wrapper: log_wrapper.clone(),
+            noop: log_wrapper.clone(),
         },
         authority_pda_signer,
     )
@@ -90,7 +90,7 @@ pub fn append_leaf<'info>(
         spl_account_compression::cpi::accounts::Modify {
             authority: authority.clone(),
             merkle_tree: merkle_tree.clone(),
-            log_wrapper: log_wrapper.clone(),
+            noop: log_wrapper.clone(),
         },
         authority_pda_signer,
     );

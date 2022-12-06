@@ -1,6 +1,6 @@
 [package]
 name = "mpl-bubblegum"
-version = "0.4.0"
+version = "0.4.1"
 description = "NFT Compression"
 authors = ["Metaplex Developers <dev@metaplex.com>"]
 repository = "https://github.com/metaplex-foundation/metaplex-program-library"
@@ -24,7 +24,7 @@ anchor-lang = { version = "0.25.0", features = ["init-if-needed"] }
 bytemuck = "1.8.0"
 mpl-token-metadata = { version = "1.5.0", features = ["no-entrypoint"] }
 solana-program = "1.10.29"
-spl-account-compression = { version="0.1.2", features = ["cpi"] }
+spl-account-compression = { version="0.1.5", features = ["cpi"] }
 spl-associated-token-account = { version = "~1.0.5", features = ["no-entrypoint"] }
 spl-token = { version = "~3.3.1", features = ["no-entrypoint"] }
 
