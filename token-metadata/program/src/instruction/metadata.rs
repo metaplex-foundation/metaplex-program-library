@@ -330,11 +330,11 @@ pub fn mint(
 ///   0. `[writable]` Token account
 ///   1. `[writable]` Metadata account
 ///   2. `[]` Mint account
-///   3. `[]` Destination account
-///   4. `[writable]` Destination associate token account
 ///   5. `[signer]` Owner
-///   6. `[]` STL Token program
-///   7. `[]` STL Associate Token program
+///   4. `[writable]` Destination associate token account
+///   3. `[]` Destination owner
+///   6. `[]` SPL Token program
+///   7. `[]` SPL Associate Token program
 ///   8. `[]` System program
 ///   9. `[]` Instructions sysvar account
 ///   10. `[optional]` Asset authorization rules account
@@ -345,9 +345,9 @@ pub fn transfer(
     token_account: Pubkey,
     metadata_account: Pubkey,
     mint_account: Pubkey,
-    destination: Pubkey,
-    destination_token_account: Pubkey,
     owner: Pubkey,
+    destination_token_account: Pubkey,
+    destination_owner: Pubkey,
     args: TransferArgs,
     authorization_rules: Option<Pubkey>,
     additional_accounts: Option<Vec<AccountMeta>>,
@@ -356,9 +356,9 @@ pub fn transfer(
         AccountMeta::new(token_account, false),
         AccountMeta::new(metadata_account, false),
         AccountMeta::new_readonly(mint_account, false),
-        AccountMeta::new_readonly(destination, false),
-        AccountMeta::new(destination_token_account, false),
         AccountMeta::new(owner, true),
+        AccountMeta::new(destination_token_account, false),
+        AccountMeta::new_readonly(destination_owner, false),
         AccountMeta::new_readonly(solana_program::system_program::id(), false),
         AccountMeta::new_readonly(spl_token::id(), false),
         AccountMeta::new_readonly(spl_associated_token_account::id(), false),

@@ -48,3 +48,99 @@ pub struct AuthorizationRules {
     authorization_rules: Pubkey,
     program_id: Pubkey,
 }
+
+// #[non_exhaustive]
+// pub struct TransferAccounts<'info> {
+//     token_account: &'info AccountInfo<'info>,
+//     metadata: &'info AccountInfo<'info>,
+//     mint: &'info AccountInfo<'info>,
+//     owner: &'info AccountInfo<'info>,
+//     destination_token_account: &'info AccountInfo<'info>,
+//     destination_owner: &'info AccountInfo<'info>,
+//     spl_token_program: &'info AccountInfo<'info>,
+//     spl_associated_token_program: &'info AccountInfo<'info>,
+//     system_program: &'info AccountInfo<'info>,
+//     sysvar_instructions: &'info AccountInfo<'info>,
+//     authorization_payload: Option<AuthorizationPayloadAccounts<'info>>,
+// }
+//
+// impl<'info> TransferAccounts<'info> {
+//     pub fn new(
+//         token_account: &'info AccountInfo<'info>,
+//         metadata: &'info AccountInfo<'info>,
+//         mint: &'info AccountInfo<'info>,
+//         owner: &'info AccountInfo<'info>,
+//         destination_token_account: &'info AccountInfo<'info>,
+//         destination_owner: &'info AccountInfo<'info>,
+//         spl_token_program: &'info AccountInfo<'info>,
+//         spl_associated_token_program: &'info AccountInfo<'info>,
+//         system_program: &'info AccountInfo<'info>,
+//         sysvar_instructions: &'info AccountInfo<'info>,
+//         authorization_payload: Option<AuthorizationPayloadAccounts<'info>>,
+//     ) -> Self {
+//         Self {
+//             token_account,
+//             metadata,
+//             mint,
+//             owner,
+//             destination_token_account,
+//             destination_owner,
+//             spl_token_program,
+//             spl_associated_token_program,
+//             system_program,
+//             sysvar_instructions,
+//             authorization_payload,
+//         }
+//     }
+//
+//     pub fn from_args<'a>(
+//         args: TransferArgs,
+//         accounts: &'a [AccountInfo<'a>],
+//     ) -> Result<Self, ProgramError> {
+//         // match args {
+//         // TransferArgs::V1 {
+//         //     authorization_payload,
+//         // } => {
+//         //     let token_account = accounts.get(0);
+//         //     let metadata = next_account_info(account_info_iter)?;
+//         //     let mint = next_account_info(account_info_iter)?;
+//         //     let owner = next_account_info(account_info_iter)?;
+//         //     let destination_token_account = next_account_info(account_info_iter)?;
+//         //     let destination_owner = next_account_info(account_info_iter)?;
+//         //     let spl_token_program = next_account_info(account_info_iter)?;
+//         //     let spl_associated_token_program = next_account_info(account_info_iter)?;
+//         //     let system_program = next_account_info(account_info_iter)?;
+//         //     let sysvar_instructions = next_account_info(account_info_iter)?;
+//         //     let authorization_payload = if authorization_payload.is_some() {
+//         //         let authorization_rules = next_account_info(account_info_iter)?;
+//         //         let authorization_rules_program = next_account_info(account_info_iter)?;
+//         //         Some(AuthorizationPayloadAccounts {
+//         //             authorization_rules,
+//         //             authorization_rules_program,
+//         //         })
+//         //     } else {
+//         //         None
+//         //     };
+//         //     asso
+//         //     Ok(Self {
+//         //         token_account,
+//         //         metadata,
+//         //         mint,
+//         //         owner,
+//         //         destination_token_account,
+//         //         destination_owner,
+//         //         spl_token_program,
+//         //         spl_associated_token_program,
+//         //         system_program,
+//         //         sysvar_instructions,
+//         //         authorization_payload,
+//         //     })
+//         // }
+//         // }
+//         todo!()
+//     }
+//
+//     pub fn validate(&self) -> ProgramResult {
+//         todo!()
+//     }
+// }

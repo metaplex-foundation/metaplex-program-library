@@ -80,7 +80,7 @@ mod transfer {
         let tx = Transaction::new_signed_with_payer(
             &[mint_ix],
             Some(&context.payer.pubkey()),
-            &[&context.payer],
+            &[&context.payer, &mint],
             context.last_blockhash,
         );
 
