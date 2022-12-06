@@ -106,6 +106,7 @@ mod escrow {
             &context.payer.pubkey(),
             &escrow_address.0,
             &attribute_test_metadata.mint.pubkey(),
+            &spl_token::ID,
         );
         let ix1 = spl_token::instruction::transfer(
             &spl_token::id(),

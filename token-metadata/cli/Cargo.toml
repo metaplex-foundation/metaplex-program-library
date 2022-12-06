@@ -9,14 +9,14 @@ edition = "2021"
 publish = false
 
 [dependencies]
-solana-client = "1.9.5"
-solana-program = "1.9.5"
-solana-sdk = "1.9.5"
+solana-client = "1.13.5"
+solana-program = "1.13.5"
+solana-sdk = "1.13.5"
 bincode = "1.3.2"
 borsh = "0.9.1"
 clap = "2.33.0"
-solana-clap-utils = "1.9.5"
-solana-cli-config = "1.9.5"
+solana-clap-utils = "1.13.5"
+solana-cli-config = "1.13.5"
 mpl-token-metadata = { path="../program", features = [ "no-entrypoint" ] }
 spl-token = { version="3.2.0", features = [ "no-entrypoint" ] }
 spl-associated-token-account = { version ="*", features = [ "no-entrypoint" ] }

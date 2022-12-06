@@ -1,12 +1,13 @@
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
+    msg,
     program::invoke,
     program_pack::Pack,
     pubkey::Pubkey,
     rent::Rent,
     system_instruction,
-    sysvar::Sysvar, msg,
+    sysvar::Sysvar,
 };
 use spl_token::native_mint::DECIMALS;
 
@@ -103,6 +104,7 @@ pub fn mint<'a>(
                 payer_info.key,
                 payer_info.key,
                 mint_info.key,
+                &spl_token::ID,
             ),
             &[payer_info.clone(), mint_info.clone(), token_info.clone()],
         )?;
@@ -135,7 +137,7 @@ pub fn mint<'a>(
 
     process_create_metadata_accounts_logic(
         program_id,
-        CreateMetadataAccountsLogicArgs {      
+        CreateMetadataAccountsLogicArgs {
             metadata_account_info: metadata_info,
             mint_info,
             mint_authority_info,

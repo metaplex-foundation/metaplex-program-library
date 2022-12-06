@@ -211,6 +211,7 @@ impl EditionMarker {
             &context.payer.pubkey(),
             new_owner,
             &self.mint.pubkey(),
+            &spl_token::ID,
         );
 
         let transfer_ix = spl_token::instruction::transfer(
