@@ -464,7 +464,7 @@ pub enum InstructionName {
     VerifyCollection,
     UnverifyCollection,
     SetAndVerifyCollection,
-    MintToCollectionV1
+    MintToCollectionV1,
 }
 
 pub fn get_instruction_type(full_bytes: &[u8]) -> InstructionName {
@@ -726,13 +726,13 @@ fn process_collection_verification_mpl_only<'info>(
         assert_collection_verify_is_valid(
             &Some(collection.adapt()),
             collection_metadata,
-            &collection_mint,
-            &edition_account,
+            collection_mint,
+            edition_account,
         )?;
 
         // Collection authority assert from token-metadata.
         assert_has_collection_authority(
-            &collection_authority,
+            collection_authority,
             collection_metadata,
             collection_mint.key,
             collection_authority_record,
@@ -816,7 +816,7 @@ fn process_collection_verification<'info>(
     let token_metadata_program = ctx.accounts.token_metadata_program.to_account_info();
 
     process_collection_verification_mpl_only(
-        &collection_metadata,
+        collection_metadata,
         &collection_mint,
         &collection_authority,
         &collection_authority_record_pda,
@@ -971,7 +971,7 @@ pub mod bubblegum {
         ctx: Context<MintToCollectionV1>,
         metadata_args: MetadataArgs,
     ) -> Result<()> {
-        let mut message = metadata_args.clone();
+        let mut message = metadata_args;
         // TODO -> Separate V1 / V1 into seperate instructions
         let payer = ctx.accounts.payer.key();
         let incoming_tree_delegate = ctx.accounts.tree_delegate.key();
@@ -1020,7 +1020,7 @@ pub mod bubblegum {
         );
 
         process_collection_verification_mpl_only(
-            &collection_metadata,
+            collection_metadata,
             &collection_mint,
             &collection_authority,
             &collection_authority_record_pda,
