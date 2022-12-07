@@ -41,7 +41,7 @@ pub struct AssetData {
 }
 
 impl AssetData {
-    pub fn new(name: String, symbol: String, uri: String) -> Self {
+    pub fn new(token_standard: TokenStandard, name: String, symbol: String, uri: String) -> Self {
         Self {
             name,
             symbol,
@@ -51,7 +51,7 @@ impl AssetData {
             primary_sale_happened: false,
             is_mutable: false,
             edition_nonce: None,
-            token_standard: Some(TokenStandard::NonFungible),
+            token_standard: Some(token_standard),
             collection: None,
             uses: None,
             collection_details: None,

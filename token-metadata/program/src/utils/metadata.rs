@@ -13,8 +13,8 @@ use crate::{
         uses::assert_valid_use,
     },
     state::{
-        Collection, CollectionDetails, Data, DataV2, Key, Metadata, TokenStandard, Uses, EDITION,
-        MAX_METADATA_LEN, PREFIX,
+        Collection, CollectionDetails, Data, DataV2, Key, Metadata, ProgrammableConfig,
+        TokenStandard, Uses, EDITION, MAX_METADATA_LEN, PREFIX,
     },
 };
 
@@ -72,8 +72,10 @@ pub fn process_create_metadata_accounts_logic(
 
     let mut update_authority_key = *update_authority_info.key;
     let existing_mint_authority = get_mint_authority(mint_info)?;
-    // IMPORTANT NOTE
-    // This allows the Metaplex Foundation to Create but not update metadata for SPL tokens that have not populated their metadata.
+
+    // IMPORTANT NOTE:
+    // This allows the Metaplex Foundation to Create but not update metadata for SPL tokens that
+    // have not populated their metadata.
     assert_mint_authority_matches_mint(&existing_mint_authority, mint_authority_info).or_else(
         |e| {
             // Allow seeding by the authority seed populator
@@ -188,7 +190,8 @@ pub fn process_create_metadata_accounts_logic(
     ];
     let (_, edition_bump_seed) = Pubkey::find_program_address(edition_seeds, program_id);
     metadata.edition_nonce = Some(edition_bump_seed);
-    metadata.serialize(&mut *metadata_account_info.data.borrow_mut())?;
+    // saves the changes to the account data
+    metadata.save(&mut metadata_account_info.data.borrow_mut())?;
 
     Ok(())
 }
@@ -220,9 +223,13 @@ pub fn meta_deser_unchecked(buf: &mut &[u8]) -> Result<Metadata, BorshError> {
     let collection_details_res: Result<Option<CollectionDetails>, BorshError> =
         BorshDeserialize::deserialize(buf);
 
-    /* We can have accidentally valid, but corrupted data, particularly on the Collection struct,
-    so to increase probability of catching errors If any of these deserializations fail, set all values to None.
-    */
+    // Programmable assets
+    let programmable_config_res: Result<Option<ProgrammableConfig>, BorshError> =
+        BorshDeserialize::deserialize(buf);
+
+    // We can have accidentally valid, but corrupted data, particularly on the Collection struct,
+    // so to increase probability of catching errors. If any of these deserializations fail, set
+    // all values to None.
     let (token_standard, collection, uses) = match (token_standard_res, collection_res, uses_res) {
         (Ok(token_standard_res), Ok(collection_res), Ok(uses_res)) => {
             (token_standard_res, collection_res, uses_res)
@@ -230,9 +237,15 @@ pub fn meta_deser_unchecked(buf: &mut &[u8]) -> Result<Metadata, BorshError> {
         _ => (None, None, None),
     };
 
-    // Handle v1.3 separately
+    // V1.3
     let collection_details = match collection_details_res {
         Ok(details) => details,
+        Err(_) => None,
+    };
+
+    // Programmable assets
+    let programmable_config = match programmable_config_res {
+        Ok(config) => config,
         Err(_) => None,
     };
 
@@ -248,6 +261,7 @@ pub fn meta_deser_unchecked(buf: &mut &[u8]) -> Result<Metadata, BorshError> {
         collection,
         uses,
         collection_details,
+        programmable_config,
     };
 
     Ok(metadata)
@@ -349,6 +363,7 @@ pub mod tests {
             collection: None,
             uses: None,
             collection_details: None,
+            programmable_config: None,
         };
 
         puff_out_data_fields(&mut metadata);

@@ -66,7 +66,12 @@ mod update {
         let symbol = puffed_out_string("PRG", MAX_SYMBOL_LENGTH);
         let uri = puffed_out_string("uri", MAX_URI_LENGTH);
 
-        let mut new_asset = AssetData::new(name.clone(), symbol.clone(), uri.clone());
+        let mut new_asset = AssetData::new(
+            TokenStandard::ProgrammableNonFungible,
+            name.clone(),
+            symbol.clone(),
+            uri.clone(),
+        );
         new_asset.seller_fee_basis_points = 500;
 
         let payer_pubkey = context.payer.pubkey();

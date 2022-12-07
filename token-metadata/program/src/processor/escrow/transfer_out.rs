@@ -59,7 +59,7 @@ pub fn process_transfer_out_of_escrow(
     assert_signer(payer_info)?;
 
     // Allocate the target ATA if it doesn't exist.
-    if !is_initialized_account(*attribute_dst_info.data.borrow()) {
+    if !is_initialized_account(&attribute_dst_info.data.borrow()) {
         #[allow(deprecated)]
         let create_escrow_ata_ix =
             spl_associated_token_account::instruction::create_associated_token_account(

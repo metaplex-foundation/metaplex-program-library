@@ -36,7 +36,11 @@ pub struct CreateMetadataAccountArgsV3 {
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub enum MintArgs {
-    V1(AssetData),
+    V1 {
+        asset_data: AssetData,
+        decimals: Option<u8>,
+        max_supply: Option<u64>,
+    },
 }
 
 #[repr(C)]
@@ -264,34 +268,31 @@ pub fn update_primary_sale_happened_via_token(
 ///
 /// # Accounts:
 ///
-///   0. `[writable]` Token account
-///   1. `[writable]` Metadata account
-///   2. `[]` Mint account
-///   3. `[signer]` Mint authority
-///   4. `[signer]` Payer
-///   5. `[signer]` Update authority
-///   6. `[]` System program
-///   7. `[]` Instructions sysvar account
-///   8. `[]` SPL Token program
-///   9. `[]` SPL Associated Token Account program
-///   10. `[optional]` Master edition account
-///   11. `[optional]` Asset authorization rules account
+///   0. `[writable]` Metadata account
+///   1. `[]` Mint account
+///   2. `[signer]` Mint authority
+///   3. `[signer]` Payer
+///   4. `[signer]` Update authority
+///   5. `[]` System program
+///   6. `[]` Instructions sysvar account
+///   7. `[]` SPL Token program
+///   8. `[optional]` Master edition account
+///   9. `[optional]` Asset authorization rules account
 #[allow(clippy::too_many_arguments)]
 pub fn mint(
-    program_id: Pubkey,
-    token: Pubkey,
     metadata: Pubkey,
     master_edition: Option<Pubkey>,
     mint: Pubkey,
     mint_authority: Pubkey,
     payer: Pubkey,
     update_authority: Pubkey,
-    data: AssetData,
+    asset_data: AssetData,
     initialize_mint: bool,
     update_authority_as_signer: bool,
+    decimals: Option<u8>,
+    max_supply: Option<u64>,
 ) -> Instruction {
     let mut accounts = vec![
-        AccountMeta::new(token, false),
         AccountMeta::new(metadata, false),
         if initialize_mint {
             AccountMeta::new(mint, true)
@@ -304,23 +305,26 @@ pub fn mint(
         AccountMeta::new_readonly(solana_program::system_program::id(), false),
         AccountMeta::new_readonly(sysvar::instructions::id(), false),
         AccountMeta::new_readonly(spl_token::id(), false),
-        AccountMeta::new_readonly(spl_associated_token_account::id(), false),
     ];
     // checks whether we have a master edition
     if let Some(master_edition) = master_edition {
         accounts.push(AccountMeta::new(master_edition, false));
     }
     // checks whether we have authorization rules
-    if let Some(config) = &data.programmable_config {
+    if let Some(config) = &asset_data.programmable_config {
         accounts.push(AccountMeta::new_readonly(config.rule_set, false));
     }
 
     Instruction {
-        program_id,
+        program_id: crate::id(),
         accounts,
-        data: MetadataInstruction::Mint(MintArgs::V1(data))
-            .try_to_vec()
-            .unwrap(),
+        data: MetadataInstruction::Mint(MintArgs::V1 {
+            asset_data,
+            decimals,
+            max_supply,
+        })
+        .try_to_vec()
+        .unwrap(),
     }
 }
 

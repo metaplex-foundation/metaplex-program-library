@@ -49,8 +49,19 @@ pub struct Metadata {
     pub collection: Option<Collection>,
     /// Uses
     pub uses: Option<Uses>,
-    /// Item Details
+    /// Collection Details
     pub collection_details: Option<CollectionDetails>,
+    /// Programmable Config
+    pub programmable_config: Option<ProgrammableConfig>,
+}
+
+impl Metadata {
+    pub fn save(&self, data: &mut [u8]) -> Result<(), BorshError> {
+        let mut bytes = Vec::with_capacity(MAX_METADATA_LEN);
+        BorshSerialize::serialize(&self, &mut bytes)?;
+        data[..bytes.len()].copy_from_slice(&bytes);
+        Ok(())
+    }
 }
 
 impl Default for Metadata {
@@ -67,6 +78,7 @@ impl Default for Metadata {
             collection: None,
             uses: None,
             collection_details: None,
+            programmable_config: None,
         }
     }
 }

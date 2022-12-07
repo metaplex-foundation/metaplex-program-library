@@ -30,8 +30,12 @@ mod mint {
         let symbol = puffed_out_string("PRG", MAX_SYMBOL_LENGTH);
         let uri = puffed_out_string("uri", MAX_URI_LENGTH);
 
-        let mut asset = AssetData::new(name.clone(), symbol.clone(), uri.clone());
-        asset.token_standard = Some(TokenStandard::ProgrammableNonFungible);
+        let mut asset = AssetData::new(
+            TokenStandard::ProgrammableNonFungible,
+            name.clone(),
+            symbol.clone(),
+            uri.clone(),
+        );
         asset.seller_fee_basis_points = 500;
         /*
         asset.programmable_config = Some(ProgrammableConfig {
@@ -44,14 +48,6 @@ mod mint {
         let payer_pubkey = context.payer.pubkey();
         let mint = Keypair::new();
         let mint_pubkey = mint.pubkey();
-        let (token, _) = Pubkey::find_program_address(
-            &[
-                &payer_pubkey.to_bytes(),
-                &spl_token::id().to_bytes(),
-                &mint_pubkey.to_bytes(),
-            ],
-            &spl_associated_token_account::id(),
-        );
 
         let program_id = id();
         // metadata PDA address
@@ -67,8 +63,6 @@ mod mint {
         let (master_edition, _) = Pubkey::find_program_address(master_edition_seeds, &id());
 
         let mint_ix = instruction::mint(
-            /* program id       */ id(),
-            /* token account    */ token,
             /* metadata account */ metadata,
             /* master edition   */ Some(master_edition),
             /* mint account     */ mint.pubkey(),
@@ -78,6 +72,8 @@ mod mint {
             /* asset data       */ asset,
             /* initialize mint  */ true,
             /* authority signer */ true,
+            /* decimals         */ Some(0),
+            /* max supply       */ Some(0),
         );
 
         let tx = Transaction::new_signed_with_payer(
@@ -106,13 +102,12 @@ mod mint {
         assert_eq!(metadata.update_authority, context.payer.pubkey());
         assert_eq!(metadata.key, Key::MetadataV1);
 
-        /*
         assert_eq!(
             metadata.token_standard,
             Some(TokenStandard::ProgrammableNonFungible)
         );
-        */
-        assert_eq!(metadata.collection, None);
         assert_eq!(metadata.uses, None);
+        assert_eq!(metadata.collection, None);
+        assert_eq!(metadata.programmable_config, None);
     }
 }

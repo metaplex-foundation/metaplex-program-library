@@ -462,11 +462,11 @@ pub fn mint_limited_edition<'a>(
 }
 
 /// Creates a new master edition account for the specified `edition_account_info` and
-/// `mint_info`.
+/// `mint_info`. Master editions only exist for non-fungible assets, therefore the supply
+/// of the mint must thei either 0 or 1; any value higher than that will generate an
+/// error.
 ///
 /// After a master edition is created, it becomes the mint authority of the mint account.
-/// This effectively prevents minting more tokens from the master edtion but it is still
-/// possible to mint new editions up to the specifiec `max_supply`.
 pub fn create_master_edition<'a>(
     program_id: &Pubkey,
     edition_account_info: &'a AccountInfo<'a>,
@@ -479,9 +479,7 @@ pub fn create_master_edition<'a>(
     system_account_info: &'a AccountInfo<'a>,
     max_supply: Option<u64>,
 ) -> ProgramResult {
-    msg!("Deserializing metadata...");
     let metadata = Metadata::from_account_info(metadata_account_info)?;
-    msg!("ok.");
     let mint: Mint = assert_initialized(mint_info)?;
 
     let bump_seed = assert_derivation(
@@ -510,7 +508,7 @@ pub fn create_master_edition<'a>(
 
     assert_update_authority_is_correct(&metadata, update_authority_info)?;
 
-    if mint.supply != 1 {
+    if mint.supply > 1 {
         return Err(MetadataError::EditionsMustHaveExactlyOneToken.into());
     }
 
@@ -537,13 +535,14 @@ pub fn create_master_edition<'a>(
     edition.supply = 0;
     edition.max_supply = max_supply;
     edition.serialize(&mut *edition_account_info.try_borrow_mut_data()?)?;
+
     if metadata_account_info.is_writable {
         let mut metadata_mut = Metadata::from_account_info(metadata_account_info)?;
         metadata_mut.token_standard = Some(TokenStandard::NonFungible);
-        metadata_mut.serialize(&mut *metadata_account_info.try_borrow_mut_data()?)?;
+        metadata_mut.save(&mut metadata_account_info.try_borrow_mut_data()?)?;
     }
 
-    // while you can't mint any more of your master record, you can
+    // while you can't mint only mint 1 token from your master record, you can
     // mint as many limited editions as you like within your max supply
     transfer_mint_authority(
         edition_account_info.key,

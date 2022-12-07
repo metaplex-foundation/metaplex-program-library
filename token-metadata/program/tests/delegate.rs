@@ -33,8 +33,12 @@ mod delegate {
         let symbol = puffed_out_string("PRG", MAX_SYMBOL_LENGTH);
         let uri = puffed_out_string("uri", MAX_URI_LENGTH);
 
-        let mut asset = AssetData::new(name.clone(), symbol.clone(), uri.clone());
-        asset.token_standard = Some(TokenStandard::ProgrammableNonFungible);
+        let mut asset = AssetData::new(
+            TokenStandard::ProgrammableNonFungible,
+            name.clone(),
+            symbol.clone(),
+            uri.clone(),
+        );
         asset.seller_fee_basis_points = 500;
         /*
         asset.programmable_config = Some(ProgrammableConfig {
@@ -63,8 +67,6 @@ mod delegate {
 
         let payer_pubkey = context.payer.pubkey();
         let mint_ix = instruction::mint(
-            /* program id       */ id(),
-            /* token account    */ token.pubkey(),
             /* metadata account */ metadata,
             /* master edition   */ Some(master_edition),
             /* mint account     */ mint.pubkey(),
@@ -74,6 +76,8 @@ mod delegate {
             /* asset data       */ asset,
             /* initialize mint  */ true,
             /* authority signer */ true,
+            /* decimals         */ Some(0),
+            /* max supply       */ Some(0),
         );
 
         let tx = Transaction::new_signed_with_payer(

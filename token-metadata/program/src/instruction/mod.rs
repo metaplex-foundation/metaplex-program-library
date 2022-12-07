@@ -501,18 +501,16 @@ pub enum MetadataInstruction {
     /// to be present:
     ///  1. `master_edition`: when creating a variant of `*NonFungible` asset
     ///  2. `authorization_rules`: when creating a variant of `Programmable*` asset
-    #[account(0, writable, name="token", desc="Token account key")]
-    #[account(1, writable, name="metadata", desc="Metadata account key (pda of ['metadata', program id, mint id])")]
-    #[account(2, name="mint", desc="Mint of token asset")]
-    #[account(3, signer, name="mint_authority", desc="Mint authority")]
-    #[account(4, signer, writable, name="payer", desc="payer")]
-    #[account(5, name="update_authority", desc="update authority info")]
-    #[account(6, name="system_program", desc="System program")]
-    #[account(7, name="ata_program", desc="Associated Token program")]
-    #[account(8, name="spl_token_program", desc="SPL Token program")]
-    #[account(9, name="sysvar_instructions", desc="Instructions sysvar account")]
-    #[account(10, optional, name="master_edition", desc="Unallocated edition account with address as pda of ['metadata', program id, mint, 'edition']")]
-    #[account(11, optional, name="authorization_rules", desc="Token Authorization Rules account")]
+    #[account(0, writable, name="metadata", desc="Metadata account key (pda of ['metadata', program id, mint id])")]
+    #[account(1, name="mint", desc="Mint of token asset")]
+    #[account(2, signer, name="mint_authority", desc="Mint authority")]
+    #[account(3, signer, writable, name="payer", desc="payer")]
+    #[account(4, name="update_authority", desc="update authority info")]
+    #[account(5, name="system_program", desc="System program")]
+    #[account(6, name="spl_token_program", desc="SPL Token program")]
+    #[account(7, name="sysvar_instructions", desc="Instructions sysvar account")]
+    #[account(8, optional, name="master_edition", desc="Unallocated edition account with address as pda of ['metadata', program id, mint, 'edition']")]
+    #[account(9, optional, name="authorization_rules", desc="Token Authorization Rules account")]
     Mint(MintArgs),
 
     /// Updates the metadata of an asset.

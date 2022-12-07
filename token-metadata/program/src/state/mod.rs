@@ -48,7 +48,7 @@ use crate::{
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, FromPrimitive)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, Copy, FromPrimitive)]
 pub enum TokenStandard {
     NonFungible,             // This is a master edition
     FungibleAsset,           // A token with metadata that can also have attrributes

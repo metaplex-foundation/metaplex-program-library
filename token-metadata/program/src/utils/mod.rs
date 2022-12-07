@@ -219,6 +219,7 @@ mod tests {
             uses: None,
             token_standard: None,
             collection_details: None,
+            programmable_config: None,
         };
 
         puff_out_data_fields(&mut metadata);

@@ -524,6 +524,22 @@ pub enum MetadataError {
     /// 132
     #[error("Invalid bubblegum signer")]
     InvalidBubblegumSigner,
+
+     /// 133
+     #[error("Mint needs to be signer to initialize the account")]
+     MintIsNotSigner,
+
+    /// 134
+    #[error("Invalid token standard")]
+    InvalidTokenStandard,
+
+    /// 135
+    #[error("Invalid mint account for specified token standard")]
+    InvalidMintForTokenStandard,
+
+    /// 136
+    #[error("Invalid authorization rules account")]
+    InvalidAuthorizationRules,
 }
 
 impl PrintProgramError for MetadataError {
