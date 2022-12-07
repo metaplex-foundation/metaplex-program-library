@@ -244,8 +244,12 @@ mod transfer {
         let symbol = puffed_out_string("PRG", MAX_SYMBOL_LENGTH);
         let uri = puffed_out_string("uri", MAX_URI_LENGTH);
 
-        let mut asset = AssetData::new(name.clone(), symbol.clone(), uri.clone());
-        asset.token_standard = Some(TokenStandard::FungibleAsset);
+        let mut asset = AssetData::new(
+            TokenStandard::FungibleAsset,
+            name.clone(),
+            symbol.clone(),
+            uri.clone(),
+        );
         asset.seller_fee_basis_points = 500;
 
         let mint = Keypair::new();
@@ -254,25 +258,37 @@ mod transfer {
 
         let payer = context.payer.pubkey();
 
-        let mint_ix = instruction::mint(
-            /* program id       */ id(),
-            /* token account    */ ata,
-            /* metadata account */ metadata,
-            /* master edition   */ None,
-            /* mint account     */ mint.pubkey(),
-            /* mint authority   */ payer,
-            /* payer            */ payer,
-            /* update authority */ payer,
-            /* asset data       */ asset,
-            /* initialize mint  */ true,
-            /* authority signer */ true,
-            /* asset data       */ asset,
-            /* decimals         */ Some(0),
-            /* max supply       */ Some(0),
+        let token_amount = 10;
+
+        let create_ix = instruction::create_metadata(
+            metadata,
+            None,
+            mint.pubkey(),
+            payer,
+            payer,
+            payer,
+            true,
+            true,
+            asset,
+            Some(0),
+            Some(1000),
         );
 
+        let create_assoc_account_ix =
+            create_associated_token_account(&payer, &payer, &mint.pubkey(), &spl_token::ID);
+
+        let mint_ix = mint_to(
+            &spl_token::ID,
+            &mint.pubkey(),
+            &ata,
+            &payer,
+            &[],
+            token_amount,
+        )
+        .unwrap();
+
         let tx = Transaction::new_signed_with_payer(
-            &[mint_ix],
+            &[create_ix, create_assoc_account_ix, mint_ix],
             Some(&context.payer.pubkey()),
             &[&context.payer, &mint],
             context.last_blockhash,

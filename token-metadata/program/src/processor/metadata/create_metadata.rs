@@ -2,6 +2,7 @@ use mpl_utils::{assert_initialized, cmp_pubkeys};
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
+    msg,
     program::invoke,
     program_error::ProgramError,
     program_pack::Pack,
@@ -74,6 +75,7 @@ fn create_metadata_v1<'a>(
     // if the account does not exist, we will allocate a new mint
 
     if mint.data_is_empty() {
+        msg!("Creating mint");
         // mint account must be a signer in the transaction
         if !mint.is_signer {
             return Err(MetadataError::MintIsNotSigner.into());
