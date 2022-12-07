@@ -105,6 +105,7 @@ mod create_meta_accounts {
     }
 
     #[tokio::test]
+    #[allow(deprecated)]
     async fn fail_invalid_mint_authority() {
         let mut context = program_test().start_with_context().await;
         let test_metadata = Metadata::new();

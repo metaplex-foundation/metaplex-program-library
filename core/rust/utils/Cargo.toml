@@ -1,0 +1,27 @@
+[package]
+name = "mpl-utils"
+version = "0.0.5"
+edition = "2021"
+description = "MPL Core Utils library"
+authors = ["Metaplex Developers <dev@metaplex.com>"]
+repository = "https://github.com/metaplex-foundation/metaplex-program-library"
+license-file = "../../../LICENSE"
+readme = "README.md"
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+crate-type = ["lib", "cdylib"]
+path = "src/lib.rs"
+
+[dependencies]
+solana-program = "1.10"
+borsh = "0.9.3"
+arrayref = "0.3.6"
+spl-token = { version = "3.2.0", features = ["no-entrypoint"], optional = true }
+
+[features]
+token = ["spl-token"]
+default = ["token"]
+
+[profile.release]
+overflow-checks = true     # Enable integer overflow checks.

@@ -15,6 +15,7 @@ mod create_master_edition {
     use super::*;
 
     #[tokio::test]
+    #[allow(deprecated)]
     async fn success() {
         let mut context = program_test().start_with_context().await;
         let test_metadata = Metadata::new();
@@ -96,6 +97,7 @@ mod create_master_edition {
     }
 
     #[tokio::test]
+    #[allow(deprecated)]
     async fn fail_invalid_mint_authority() {
         let mut context = program_test().start_with_context().await;
         let test_metadata = Metadata::new();
@@ -228,6 +230,7 @@ mod create_master_edition {
     }
 
     #[tokio::test]
+    #[allow(deprecated)]
     async fn fail_invalid_update_authority() {
         let mut context = program_test().start_with_context().await;
         let test_metadata = Metadata::new();

@@ -42,26 +42,26 @@
     "@metaplex-foundation/beet": "^0.7.1",
     "@metaplex-foundation/beet-solana": "^0.4.0",
     "@metaplex-foundation/cusper": "^0.0.2",
-    "@solana/spl-token": "^0.2.0",
-    "@solana/web3.js": "^1.35.1",
+    "@solana/spl-token": "^0.3.6",
+    "@solana/web3.js": "^1.66.2",
     "bn.js": "^5.2.0",
-    "debug": "^4.3.3"
+    "debug": "^4.3.4"
   },
   "devDependencies": {
-    "@metaplex-foundation/solita": "^0.12.1",
-    "@types/bn.js": "^5.1.0",
+    "@metaplex-foundation/solita": "^0.19.1",
+    "@types/bn.js": "^5.1.1",
     "@types/debug": "^4.1.7",
     "@types/tape": "^4.13.2",
-    "@typescript-eslint/eslint-plugin": "^5.4.0",
-    "@typescript-eslint/parser": "^5.4.0",
+    "@typescript-eslint/eslint-plugin": "^5.44.0",
+    "@typescript-eslint/parser": "^5.44.0",
     "cpr": "^3.0.1",
     "eslint": "^8.3.0",
-    "eslint-config-prettier": "^8.3.0",
-    "eslint-plugin-prettier": "^4.0.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-prettier": "^4.2.1",
     "rimraf": "^3.0.2",
     "spok": "^1.4.3",
-    "supports-color": "^9.2.1",
+    "supports-color": "^9.2.3",
     "tape": "^5.5.3",
-    "typescript": "^4.6.2"
+    "typescript": "^4.9.3"
   }
 }

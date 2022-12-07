@@ -1,4 +1,3 @@
-use crate::*;
 use borsh::ser::BorshSerialize;
 use mpl_token_metadata::{
     id,
@@ -10,12 +9,13 @@ use solana_program::{
     instruction::{AccountMeta, Instruction},
     sysvar,
 };
-
 use solana_sdk::{
     pubkey::Pubkey,
     signature::{Keypair, Signer},
     transaction::Transaction,
 };
+
+use crate::*;
 
 #[derive(Debug)]
 pub struct MasterEditionV2 {
@@ -95,6 +95,7 @@ impl MasterEditionV2 {
         context.banks_client.process_transaction(tx).await
     }
 
+    #[allow(deprecated)]
     pub async fn create(
         &self,
         context: &mut ProgramTestContext,

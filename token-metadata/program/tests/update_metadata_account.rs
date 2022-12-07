@@ -68,6 +68,7 @@ mod update_metadata_account {
     }
 
     #[tokio::test]
+    #[allow(deprecated)]
     async fn fail_invalid_update_authority() {
         let mut context = program_test().start_with_context().await;
         let test_metadata = Metadata::new();

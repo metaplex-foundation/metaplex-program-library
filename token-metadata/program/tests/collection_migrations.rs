@@ -3,8 +3,11 @@ pub mod utils;
 
 use num_traits::FromPrimitive;
 use solana_program_test::*;
-use solana_sdk::signature::{Keypair, Signer};
-use solana_sdk::{instruction::InstructionError, transaction::TransactionError};
+use solana_sdk::{
+    instruction::InstructionError,
+    signature::{Keypair, Signer},
+    transaction::TransactionError,
+};
 use utils::*;
 
 // We need to check that all four migration cases work as expected:

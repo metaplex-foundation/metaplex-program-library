@@ -29,7 +29,7 @@ use mpl_token_metadata::{
     state::CollectionDetails,
 };
 use spl_account_compression::{
-    program::SplAccountCompression, wrap_application_data_v1, Node, Wrapper,
+    program::SplAccountCompression, wrap_application_data_v1, Node, Noop,
 };
 use spl_token::state::Mint as SplMint;
 use std::collections::HashSet;
@@ -56,7 +56,7 @@ pub struct CreateTree<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
     pub tree_creator: Signer<'info>,
-    pub log_wrapper: Program<'info, Wrapper>,
+    pub log_wrapper: Program<'info, Noop>,
     pub compression_program: Program<'info, SplAccountCompression>,
     pub system_program: Program<'info, System>,
 }
@@ -78,7 +78,7 @@ pub struct MintV1<'info> {
     pub merkle_tree: UncheckedAccount<'info>,
     pub payer: Signer<'info>,
     pub tree_delegate: Signer<'info>,
-    pub log_wrapper: Program<'info, Wrapper>,
+    pub log_wrapper: Program<'info, Noop>,
     pub compression_program: Program<'info, SplAccountCompression>,
     pub system_program: Program<'info, System>,
 }
@@ -117,7 +117,7 @@ pub struct MintToCollectionV1<'info> {
         bump,
     )]
     pub bubblegum_signer: UncheckedAccount<'info>,
-    pub log_wrapper: Program<'info, Wrapper>,
+    pub log_wrapper: Program<'info, Noop>,
     pub compression_program: Program<'info, SplAccountCompression>,
     pub token_metadata_program: Program<'info, MplTokenMetadata>,
     pub system_program: Program<'info, System>,
@@ -137,7 +137,7 @@ pub struct Burn<'info> {
     #[account(mut)]
     /// CHECK: This account is modified in the downstream program
     pub merkle_tree: UncheckedAccount<'info>,
-    pub log_wrapper: Program<'info, Wrapper>,
+    pub log_wrapper: Program<'info, Noop>,
     pub compression_program: Program<'info, SplAccountCompression>,
     pub system_program: Program<'info, System>,
 }
@@ -158,7 +158,7 @@ pub struct CreatorVerification<'info> {
     pub merkle_tree: UncheckedAccount<'info>,
     pub payer: Signer<'info>,
     pub creator: Signer<'info>,
-    pub log_wrapper: Program<'info, Wrapper>,
+    pub log_wrapper: Program<'info, Noop>,
     pub compression_program: Program<'info, SplAccountCompression>,
     pub system_program: Program<'info, System>,
 }
@@ -199,7 +199,7 @@ pub struct CollectionVerification<'info> {
         bump,
     )]
     pub bubblegum_signer: UncheckedAccount<'info>,
-    pub log_wrapper: Program<'info, Wrapper>,
+    pub log_wrapper: Program<'info, Noop>,
     pub compression_program: Program<'info, SplAccountCompression>,
     pub token_metadata_program: Program<'info, MplTokenMetadata>,
     pub system_program: Program<'info, System>,
@@ -222,7 +222,7 @@ pub struct Transfer<'info> {
     #[account(mut)]
     /// CHECK: This account is modified in the downstream program
     pub merkle_tree: UncheckedAccount<'info>,
-    pub log_wrapper: Program<'info, Wrapper>,
+    pub log_wrapper: Program<'info, Noop>,
     pub compression_program: Program<'info, SplAccountCompression>,
     pub system_program: Program<'info, System>,
 }
@@ -243,7 +243,7 @@ pub struct Delegate<'info> {
     #[account(mut)]
     /// CHECK: This account is modified in the downstream program
     pub merkle_tree: UncheckedAccount<'info>,
-    pub log_wrapper: Program<'info, Wrapper>,
+    pub log_wrapper: Program<'info, Noop>,
     pub compression_program: Program<'info, SplAccountCompression>,
     pub system_program: Program<'info, System>,
 }
@@ -282,7 +282,7 @@ pub struct Redeem<'info> {
     bump
     )]
     pub voucher: Account<'info, Voucher>,
-    pub log_wrapper: Program<'info, Wrapper>,
+    pub log_wrapper: Program<'info, Noop>,
     pub compression_program: Program<'info, SplAccountCompression>,
     pub system_program: Program<'info, System>,
 }
@@ -311,7 +311,7 @@ pub struct CancelRedeem<'info> {
     bump
     )]
     pub voucher: Account<'info, Voucher>,
-    pub log_wrapper: Program<'info, Wrapper>,
+    pub log_wrapper: Program<'info, Noop>,
     pub compression_program: Program<'info, SplAccountCompression>,
     pub system_program: Program<'info, System>,
 }
@@ -365,7 +365,7 @@ pub struct DecompressV1<'info> {
     pub token_program: UncheckedAccount<'info>,
     /// CHECK:
     pub associated_token_program: UncheckedAccount<'info>,
-    pub log_wrapper: Program<'info, Wrapper>,
+    pub log_wrapper: Program<'info, Noop>,
 }
 
 #[derive(Accounts)]
@@ -395,7 +395,7 @@ pub struct Compress<'info> {
     pub master_edition: Box<Account<'info, MasterEdition>>,
     #[account(mut)]
     pub payer: Signer<'info>,
-    pub log_wrapper: Program<'info, Wrapper>,
+    pub log_wrapper: Program<'info, Noop>,
     pub compression_program: Program<'info, SplAccountCompression>,
     /// CHECK:
     pub token_program: UncheckedAccount<'info>,
@@ -464,6 +464,7 @@ pub enum InstructionName {
     VerifyCollection,
     UnverifyCollection,
     SetAndVerifyCollection,
+    MintToCollectionV1,
 }
 
 pub fn get_instruction_type(full_bytes: &[u8]) -> InstructionName {
@@ -474,6 +475,7 @@ pub fn get_instruction_type(full_bytes: &[u8]) -> InstructionName {
     };
     match disc {
         [145, 98, 192, 118, 184, 147, 118, 104] => InstructionName::MintV1,
+        [153, 18, 178, 47, 197, 158, 86, 15] => InstructionName::MintToCollectionV1,
         [111, 76, 232, 50, 39, 175, 48, 242] => InstructionName::CancelRedeem,
         [184, 12, 86, 149, 70, 196, 97, 225] => InstructionName::Redeem,
         [163, 52, 200, 231, 140, 3, 69, 186] => InstructionName::Transfer,
@@ -487,6 +489,7 @@ pub fn get_instruction_type(full_bytes: &[u8]) -> InstructionName {
         [56, 113, 101, 253, 79, 55, 122, 169] => InstructionName::VerifyCollection,
         [250, 251, 42, 106, 41, 137, 186, 168] => InstructionName::UnverifyCollection,
         [235, 242, 121, 216, 158, 234, 180, 234] => InstructionName::SetAndVerifyCollection,
+
         _ => InstructionName::Unknown,
     }
 }
@@ -499,7 +502,7 @@ fn process_mint_v1<'info>(
     authority_bump: u8,
     authority: &mut Account<'info, TreeConfig>,
     merkle_tree: &AccountInfo<'info>,
-    wrapper: &Program<'info, Wrapper>,
+    wrapper: &Program<'info, Noop>,
     compression_program: &AccountInfo<'info>,
     allow_verified_collection: bool,
 ) -> Result<()> {
@@ -723,13 +726,13 @@ fn process_collection_verification_mpl_only<'info>(
         assert_collection_verify_is_valid(
             &Some(collection.adapt()),
             collection_metadata,
-            &collection_mint,
-            &edition_account,
+            collection_mint,
+            edition_account,
         )?;
 
         // Collection authority assert from token-metadata.
         assert_has_collection_authority(
-            &collection_authority,
+            collection_authority,
             collection_metadata,
             collection_mint.key,
             collection_authority_record,
@@ -813,7 +816,7 @@ fn process_collection_verification<'info>(
     let token_metadata_program = ctx.accounts.token_metadata_program.to_account_info();
 
     process_collection_verification_mpl_only(
-        &collection_metadata,
+        collection_metadata,
         &collection_mint,
         &collection_authority,
         &collection_authority_record_pda,
@@ -898,7 +901,7 @@ pub mod bubblegum {
             spl_account_compression::cpi::accounts::Initialize {
                 authority: ctx.accounts.tree_authority.to_account_info(),
                 merkle_tree,
-                log_wrapper: ctx.accounts.log_wrapper.to_account_info(),
+                noop: ctx.accounts.log_wrapper.to_account_info(),
             },
             authority_pda_signer,
         );
@@ -968,7 +971,7 @@ pub mod bubblegum {
         ctx: Context<MintToCollectionV1>,
         metadata_args: MetadataArgs,
     ) -> Result<()> {
-        let mut message = metadata_args.clone();
+        let mut message = metadata_args;
         // TODO -> Separate V1 / V1 into seperate instructions
         let payer = ctx.accounts.payer.key();
         let incoming_tree_delegate = ctx.accounts.tree_delegate.key();
@@ -1017,7 +1020,7 @@ pub mod bubblegum {
         );
 
         process_collection_verification_mpl_only(
-            &collection_metadata,
+            collection_metadata,
             &collection_mint,
             &collection_authority,
             &collection_authority_record_pda,
