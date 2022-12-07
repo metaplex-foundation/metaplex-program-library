@@ -495,12 +495,15 @@ pub enum MetadataInstruction {
 
     //---- New API
 
-    /// Creates a new asset.
+    /// Creates the metadata for a mint account.
     ///
     /// Depending of the token standard selected for the new mint, optional accounts need
     /// to be present:
     ///  1. `master_edition`: when creating a variant of `*NonFungible` asset
     ///  2. `authorization_rules`: when creating a variant of `Programmable*` asset
+    /// 
+    /// This instruction will also initialized the mint account if it does not exist and
+    /// the mint key is a signer on the transaction.
     #[account(0, writable, name="metadata", desc="Metadata account key (pda of ['metadata', program id, mint id])")]
     #[account(1, name="mint", desc="Mint of token asset")]
     #[account(2, signer, name="mint_authority", desc="Mint authority")]
@@ -511,7 +514,7 @@ pub enum MetadataInstruction {
     #[account(7, name="sysvar_instructions", desc="Instructions sysvar account")]
     #[account(8, optional, name="master_edition", desc="Unallocated edition account with address as pda of ['metadata', program id, mint, 'edition']")]
     #[account(9, optional, name="authorization_rules", desc="Token Authorization Rules account")]
-    Mint(MintArgs),
+    CreateMetadata(CreateMetadataArgs),
 
     /// Updates the metadata of an asset.
     /// 

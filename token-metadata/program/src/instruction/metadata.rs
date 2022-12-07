@@ -35,7 +35,7 @@ pub struct CreateMetadataAccountArgsV3 {
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
-pub enum MintArgs {
+pub enum CreateMetadataArgs {
     V1 {
         asset_data: AssetData,
         decimals: Option<u8>,
@@ -264,7 +264,7 @@ pub fn update_primary_sale_happened_via_token(
     }
 }
 
-/// Creates an instruction to mint a new asset and associated metadata accounts.
+/// Creates the metadata for a mint account.
 ///
 /// # Accounts:
 ///
@@ -279,16 +279,16 @@ pub fn update_primary_sale_happened_via_token(
 ///   8. `[optional]` Master edition account
 ///   9. `[optional]` Asset authorization rules account
 #[allow(clippy::too_many_arguments)]
-pub fn mint(
+pub fn create_metadata(
     metadata: Pubkey,
     master_edition: Option<Pubkey>,
     mint: Pubkey,
     mint_authority: Pubkey,
     payer: Pubkey,
     update_authority: Pubkey,
-    asset_data: AssetData,
     initialize_mint: bool,
     update_authority_as_signer: bool,
+    asset_data: AssetData,
     decimals: Option<u8>,
     max_supply: Option<u64>,
 ) -> Instruction {
@@ -318,7 +318,7 @@ pub fn mint(
     Instruction {
         program_id: crate::id(),
         accounts,
-        data: MetadataInstruction::Mint(MintArgs::V1 {
+        data: MetadataInstruction::CreateMetadata(CreateMetadataArgs::V1 {
             asset_data,
             decimals,
             max_supply,
