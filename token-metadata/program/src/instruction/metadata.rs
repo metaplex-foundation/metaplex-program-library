@@ -370,8 +370,8 @@ pub fn transfer(
     ];
 
     if let Some(authorization_rules) = authorization_rules {
+        accounts.push(AccountMeta::new_readonly(mpl_token_auth_rules::ID, false));
         accounts.push(AccountMeta::new_readonly(authorization_rules, false));
-        //accounts.push(AccountMeta::new_readonly(token_authorization::id(), false));
     }
 
     if let Some(additional_accounts) = additional_accounts {

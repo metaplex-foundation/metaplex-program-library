@@ -1816,11 +1816,29 @@ dependencies = [
 ]
 
 [[package]]
+name = "mpl-token-auth-rules"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f54c65b9bb913d4a5e60e2d447adeed2d405497053cefe5ebdf61d78bb9f5d7d"
+dependencies = [
+ "borsh",
+ "num-derive",
+ "num-traits",
+ "rmp-serde",
+ "serde",
+ "serde_json",
+ "shank",
+ "solana-program",
+ "thiserror",
+]
+
+[[package]]
 name = "mpl-token-metadata"
 version = "1.6.2"
 dependencies = [
  "arrayref",
  "borsh",
+ "mpl-token-auth-rules",
  "mpl-token-vault",
  "mpl-utils",
  "num-derive",
@@ -1834,7 +1852,6 @@ dependencies = [
  "spl-associated-token-account",
  "spl-token",
  "thiserror",
- "token-authorization-rules",
 ]
 
 [[package]]
@@ -4248,22 +4265,6 @@ name = "tinyvec_macros"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cda74da7e1a664f795bb1f8a87ec406fb89a02522cf6e50620d016add6dbbf5c"
-
-[[package]]
-name = "token-authorization-rules"
-version = "0.1.0"
-source = "git+https://github.com/metaplex-foundation/token-authorization-rules/#2fb79e45455e87417d3de1c14b588f83c34a29d4"
-dependencies = [
- "borsh",
- "num-derive",
- "num-traits",
- "rmp-serde",
- "serde",
- "serde_json",
- "shank",
- "solana-program",
- "thiserror",
-]
 
 [[package]]
 name = "tokio"
