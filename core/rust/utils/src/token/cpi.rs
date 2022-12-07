@@ -150,7 +150,7 @@ pub fn spl_token_transfer(params: TokenTransferParams<'_, '_>) -> ProgramResult 
             &[authority.key],
             amount,
         )?,
-        &[source, mint, authority],
+        &[source, destination, authority],
         seeds.as_slice(),
     )
 }

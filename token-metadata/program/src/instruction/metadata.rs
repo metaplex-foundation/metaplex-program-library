@@ -363,9 +363,9 @@ pub fn transfer(
         AccountMeta::new(owner, true),
         AccountMeta::new(destination_token_account, false),
         AccountMeta::new_readonly(destination_owner, false),
-        AccountMeta::new_readonly(solana_program::system_program::id(), false),
         AccountMeta::new_readonly(spl_token::id(), false),
         AccountMeta::new_readonly(spl_associated_token_account::id(), false),
+        AccountMeta::new_readonly(solana_program::system_program::id(), false),
         AccountMeta::new_readonly(sysvar::instructions::id(), false),
     ];
 
