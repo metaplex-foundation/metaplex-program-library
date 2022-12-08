@@ -3,12 +3,17 @@ pub mod utils;
 
 use mpl_token_metadata::instruction;
 use solana_program_test::*;
-use solana_sdk::{signature::Signer, transaction::Transaction};
+use solana_sdk::{
+    instruction::InstructionError,
+    signature::Signer,
+    transaction::{Transaction, TransactionError},
+};
 use utils::*;
 
 mod mint {
 
-    use mpl_token_metadata::state::TokenStandard;
+    use mpl_token_metadata::{error::MetadataError, state::TokenStandard};
+    use num_traits::FromPrimitive;
     use solana_program::{program_pack::Pack, pubkey::Pubkey};
     use spl_token::state::Account;
 
@@ -153,5 +158,36 @@ mod mint {
             assert_eq!(token_account.mint, asset.mint.pubkey());
             assert_eq!(token_account.owner, context.payer.pubkey());
         }
+    }
+
+    #[tokio::test]
+    async fn try_mint_multiple_programmable_nonfungible() {
+        let mut context = program_test().start_with_context().await;
+
+        let mut asset = DigitalAsset::default();
+        let error = asset
+            .create_and_mint(
+                &mut context,
+                TokenStandard::ProgrammableNonFungible,
+                None,
+                2,
+            )
+            .await
+            .unwrap_err();
+
+        assert_custom_error!(error, MetadataError::EditionsMustHaveExactlyOneToken);
+    }
+
+    #[tokio::test]
+    async fn try_mint_multiple_nonfungible() {
+        let mut context = program_test().start_with_context().await;
+
+        let mut asset = DigitalAsset::default();
+        let error = asset
+            .create_and_mint(&mut context, TokenStandard::NonFungible, None, 2)
+            .await
+            .unwrap_err();
+
+        assert_custom_error!(error, MetadataError::EditionsMustHaveExactlyOneToken);
     }
 }

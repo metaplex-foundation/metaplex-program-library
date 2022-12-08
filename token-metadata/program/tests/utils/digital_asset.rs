@@ -154,10 +154,27 @@ impl DigitalAsset {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await.unwrap();
+        match context.banks_client.process_transaction(tx).await {
+            Ok(_) => {
+                self.token = Some(token);
+                Ok(())
+            }
+            Err(error) => Err(error),
+        }
+    }
 
-        self.token = Some(token);
-
-        Ok(())
+    pub async fn create_and_mint(
+        &mut self,
+        context: &mut ProgramTestContext,
+        token_standard: TokenStandard,
+        authorization_rules: Option<Pubkey>,
+        amount: u64,
+    ) -> Result<(), BanksClientError> {
+        // creates the metadata
+        self.create(context, token_standard, authorization_rules)
+            .await
+            .unwrap();
+        // mints tokens
+        self.mint(context, authorization_rules, amount).await
     }
 }
