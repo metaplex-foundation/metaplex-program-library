@@ -35,7 +35,7 @@ pub struct CreateMetadataAccountArgsV3 {
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
-pub enum CreateMetadataArgs {
+pub enum CreateArgs {
     V1 {
         asset_data: AssetData,
         decimals: Option<u8>,
@@ -286,7 +286,7 @@ pub fn update_primary_sale_happened_via_token(
 ///   8. `[optional]` Master edition account
 ///   9. `[optional]` Asset authorization rules account
 #[allow(clippy::too_many_arguments)]
-pub fn create_metadata(
+pub fn create(
     metadata: Pubkey,
     master_edition: Option<Pubkey>,
     mint: Pubkey,
@@ -325,7 +325,7 @@ pub fn create_metadata(
     Instruction {
         program_id: crate::id(),
         accounts,
-        data: MetadataInstruction::CreateMetadata(CreateMetadataArgs::V1 {
+        data: MetadataInstruction::Create(CreateArgs::V1 {
             asset_data,
             decimals,
             max_supply,

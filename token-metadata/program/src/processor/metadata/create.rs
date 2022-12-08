@@ -15,7 +15,7 @@ use spl_token::{native_mint::DECIMALS, state::Mint};
 
 use crate::{
     error::MetadataError,
-    instruction::CreateMetadataArgs,
+    instruction::CreateArgs,
     state::{Metadata, TokenMetadataAccount, TokenStandard},
     utils::{
         create_master_edition, process_create_metadata_accounts_logic,
@@ -37,23 +37,23 @@ use crate::{
 ///   7. `[]` SPL Token program
 ///   8. `[optional]` Master edition account
 ///   9. `[optional]` Asset authorization rules account
-pub fn create_metadata<'a>(
+pub fn create<'a>(
     program_id: &Pubkey,
     accounts: &'a [AccountInfo<'a>],
-    args: CreateMetadataArgs,
+    args: CreateArgs,
 ) -> ProgramResult {
     match args {
-        CreateMetadataArgs::V1 { .. } => create_metadata_v1(program_id, accounts, args),
+        CreateArgs::V1 { .. } => create_v1(program_id, accounts, args),
     }
 }
 
-fn create_metadata_v1<'a>(
+fn create_v1<'a>(
     program_id: &Pubkey,
     accounts: &'a [AccountInfo<'a>],
-    args: CreateMetadataArgs,
+    args: CreateArgs,
 ) -> ProgramResult {
     // get the accounts for the instruction
-    let CreateMetadataAccounts::V1 {
+    let CreateAccounts::V1 {
         metadata,
         mint,
         mint_authority,
@@ -66,7 +66,7 @@ fn create_metadata_v1<'a>(
         ..
     } = args.get_accounts(accounts)?;
     // get the args for the instruction
-    let CreateMetadataArgs::V1 {
+    let CreateArgs::V1 {
         ref asset_data,
         decimals,
         max_supply,
@@ -202,7 +202,7 @@ fn create_metadata_v1<'a>(
     Ok(())
 }
 
-enum CreateMetadataAccounts<'a> {
+enum CreateAccounts<'a> {
     V1 {
         metadata: &'a AccountInfo<'a>,
         mint: &'a AccountInfo<'a>,
@@ -217,15 +217,15 @@ enum CreateMetadataAccounts<'a> {
     },
 }
 
-impl CreateMetadataArgs {
+impl CreateArgs {
     fn get_accounts<'a>(
         &self,
         accounts: &'a [AccountInfo<'a>],
-    ) -> Result<CreateMetadataAccounts<'a>, ProgramError> {
+    ) -> Result<CreateAccounts<'a>, ProgramError> {
         let account_info_iter = &mut accounts.iter();
 
         match *self {
-            CreateMetadataArgs::V1 { .. } => {
+            CreateArgs::V1 { .. } => {
                 let metadata = next_account_info(account_info_iter)?;
                 let mint = next_account_info(account_info_iter)?;
                 let mint_authority = next_account_info(account_info_iter)?;
@@ -249,7 +249,7 @@ impl CreateMetadataArgs {
                         None
                     };
 
-                Ok(CreateMetadataAccounts::V1 {
+                Ok(CreateAccounts::V1 {
                     authorization_rules,
                     master_edition,
                     metadata,

@@ -514,7 +514,7 @@ pub enum MetadataInstruction {
     #[account(7, name="spl_token_program", desc="SPL Token program")]
     #[account(8, optional, name="master_edition", desc="Unallocated edition account with address as pda of ['metadata', program id, mint, 'edition']")]
     #[account(9, optional, name="authorization_rules", desc="Token Authorization Rules account")]
-    CreateMetadata(CreateMetadataArgs),
+    Create(CreateArgs),
 
     /// Mints tokens from a mint account.
     ///

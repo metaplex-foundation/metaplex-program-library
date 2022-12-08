@@ -259,7 +259,7 @@ mod transfer {
 
         let token_amount = 10;
 
-        let create_ix = instruction::create_metadata(
+        let create_ix = instruction::create(
             metadata,
             None,
             mint.pubkey(),

@@ -246,9 +246,9 @@ pub fn process_instruction<'a>(
             process_transfer_out_of_escrow(program_id, accounts, args)
         }
         //--- new instructions
-        MetadataInstruction::CreateMetadata(args) => {
+        MetadataInstruction::Create(args) => {
             msg!("Instruction: CreateMetadata");
-            metadata::create_metadata(program_id, accounts, args)
+            metadata::create(program_id, accounts, args)
         }
         MetadataInstruction::Mint(args) => {
             msg!("Instruction: Mint");

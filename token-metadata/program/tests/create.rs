@@ -14,7 +14,7 @@ use solana_sdk::{
 };
 use utils::*;
 
-mod create_metadata {
+mod create {
 
     use mpl_token_metadata::state::{AssetData, Metadata, TokenStandard, EDITION, PREFIX};
     use solana_program::borsh::try_from_slice_unchecked;
@@ -62,7 +62,7 @@ mod create_metadata {
         ];
         let (master_edition, _) = Pubkey::find_program_address(master_edition_seeds, &id());
 
-        let create_ix = instruction::create_metadata(
+        let create_ix = instruction::create(
             /* metadata account */ metadata,
             /* master edition   */ Some(master_edition),
             /* mint account     */ mint.pubkey(),

@@ -66,7 +66,7 @@ mod revoke {
         let (master_edition, _) = Pubkey::find_program_address(master_edition_seeds, &id());
 
         let payer_pubkey = context.payer.pubkey();
-        let mint_ix = instruction::create_metadata(
+        let mint_ix = instruction::create(
             /* metadata account */ metadata,
             /* master edition   */ Some(master_edition),
             /* mint account     */ mint.pubkey(),
