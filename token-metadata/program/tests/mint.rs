@@ -17,6 +17,8 @@ use utils::*;
 mod mint {
 
     use mpl_token_metadata::state::{AssetData, TokenStandard, EDITION, PREFIX};
+    use solana_program::program_pack::Pack;
+    use spl_token::state::Account;
 
     use super::*;
     #[tokio::test]
@@ -96,14 +98,14 @@ mod mint {
         );
 
         let mint_ix = instruction::mint(
-            /* token account         */ token,
-            /* metadata account      */ metadata,
-            /* mint account          */ mint.pubkey(),
-            /* payer                 */ payer_pubkey,
-            /* mint authority        */ master_edition,
-            /* authorization rules   */ None,
-            /* mint authority signer */ false,
-            /* amount                */ 1,
+            /* token account       */ token,
+            /* metadata account    */ metadata,
+            /* mint account        */ mint.pubkey(),
+            /* payer               */ payer_pubkey,
+            /* authority           */ payer_pubkey,
+            /* master edition      */ Some(master_edition),
+            /* authorization rules */ None,
+            /* amount              */ 1,
         );
 
         let tx = Transaction::new_signed_with_payer(
@@ -114,5 +116,12 @@ mod mint {
         );
 
         context.banks_client.process_transaction(tx).await.unwrap();
+
+        let account = get_account(&mut context, &token).await;
+        let token_account = Account::unpack(&account.data).unwrap();
+        assert!(token_account.is_frozen());
+        assert_eq!(token_account.amount, 1);
+        assert_eq!(token_account.mint, mint.pubkey());
+        assert_eq!(token_account.owner, payer_pubkey);
     }
 }

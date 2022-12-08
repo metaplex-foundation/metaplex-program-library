@@ -343,20 +343,21 @@ pub fn create(
 ///   1. `[]` Metadata account key (pda of ['metadata', program id, mint id])")]
 ///   2. `[writable]` Mint of token asset
 ///   3. `[signer, writable]` Payer
-///   4. `[signer]` Mint authority
+///   4. `[signer]` Authority (mint authority or metadata's update authority for NonFungible asests)
 ///   5. `[]` System program
 ///   6. `[]` Instructions sysvar account
 ///   7. `[]` SPL Token program
 ///   8. `[]` SPL Associated Token Account program
-///   9. `[optional]` Token Authorization Rules account
+///   9. `[optional]` Master Edition account
+///   10. `[optional]` Token Authorization Rules account
 pub fn mint(
     token: Pubkey,
     metadata: Pubkey,
     mint: Pubkey,
     payer: Pubkey,
-    mint_authority: Pubkey,
+    authority: Pubkey,
+    master_edition: Option<Pubkey>,
     authorization_rules: Option<Pubkey>,
-    mint_authority_as_signer: bool,
     amount: u64,
 ) -> Instruction {
     let mut accounts = vec![
@@ -364,12 +365,16 @@ pub fn mint(
         AccountMeta::new_readonly(metadata, false),
         AccountMeta::new(mint, false),
         AccountMeta::new(payer, true),
-        AccountMeta::new(mint_authority, mint_authority_as_signer),
+        AccountMeta::new(authority, true),
         AccountMeta::new_readonly(solana_program::system_program::id(), false),
         AccountMeta::new_readonly(sysvar::instructions::id(), false),
         AccountMeta::new_readonly(spl_token::id(), false),
         AccountMeta::new_readonly(spl_associated_token_account::id(), false),
     ];
+    // checks whether we have master edition
+    if let Some(master_edition) = master_edition {
+        accounts.push(AccountMeta::new(master_edition, false));
+    }
     // checks whether we have authorization rules
     if let Some(authorization_rules) = authorization_rules {
         accounts.push(AccountMeta::new(authorization_rules, false));

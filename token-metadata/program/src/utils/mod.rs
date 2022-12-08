@@ -1,10 +1,13 @@
 pub(crate) mod collection;
 pub(crate) mod master_edition;
 pub(crate) mod metadata;
+pub(crate) mod programmable_asset;
 
 pub use collection::*;
 pub use master_edition::*;
 pub use metadata::*;
+pub use programmable_asset::*;
+
 use mpl_utils::token::{get_mint_decimals, get_mint_freeze_authority, get_mint_supply};
 use solana_program::{
     account_info::AccountInfo, borsh::try_from_slice_unchecked, entrypoint::ProgramResult, msg,
