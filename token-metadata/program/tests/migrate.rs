@@ -4,9 +4,7 @@ pub mod utils;
 use mpl_token_metadata::{id, instruction};
 use solana_program_test::*;
 use solana_sdk::{signature::Signer, transaction::Transaction};
-use utils::MasterEditionV2 as MasterEditionV2Manager;
-use utils::Metadata as MetadataManager;
-use utils::*;
+use utils::{MasterEditionV2 as MasterEditionV2Manager, Metadata as MetadataManager, *};
 
 mod migrate {
     use mpl_token_metadata::state::{Metadata, TokenStandard};

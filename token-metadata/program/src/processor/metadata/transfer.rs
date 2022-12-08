@@ -1,10 +1,16 @@
 use mpl_utils::token::TokenTransferParams;
-use solana_program::account_info::next_account_info;
-use solana_program::program_error::ProgramError;
-use solana_program::{account_info::AccountInfo, entrypoint::ProgramResult, msg, pubkey::Pubkey};
+use solana_program::{
+    account_info::{next_account_info, AccountInfo},
+    entrypoint::ProgramResult,
+    msg,
+    program_error::ProgramError,
+    pubkey::Pubkey,
+};
 
-use crate::instruction::TransferArgs;
-use crate::state::{Metadata, TokenMetadataAccount, TokenStandard};
+use crate::{
+    instruction::TransferArgs,
+    state::{Metadata, TokenMetadataAccount, TokenStandard},
+};
 
 pub fn transfer<'a>(
     program_id: &Pubkey,

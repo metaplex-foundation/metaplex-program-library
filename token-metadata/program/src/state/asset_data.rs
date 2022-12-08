@@ -81,11 +81,11 @@ pub struct ProgrammableConfig {
     pub rule_set: Pubkey,
 }
 
+/// Different delegate states for a token. Some actions are
+/// not allowed depending of the degate state.
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
-/// Different delegate states for a token. Some actions are
-/// not allowed depending of the degate state.
 pub enum DelegateState {
     Sale(Pubkey),
 }

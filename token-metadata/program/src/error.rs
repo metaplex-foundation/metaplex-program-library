@@ -525,9 +525,9 @@ pub enum MetadataError {
     #[error("Invalid bubblegum signer")]
     InvalidBubblegumSigner,
 
-     /// 133
-     #[error("Mint needs to be signer to initialize the account")]
-     MintIsNotSigner,
+    /// 133
+    #[error("Mint needs to be signer to initialize the account")]
+    MintIsNotSigner,
 
     /// 134
     #[error("Invalid token standard")]

@@ -20,6 +20,7 @@ mod create {
     use solana_program::borsh::try_from_slice_unchecked;
 
     use super::*;
+
     #[tokio::test]
     async fn create_programmable_nonfungible() {
         let mut context = program_test().start_with_context().await;
@@ -109,5 +110,137 @@ mod create {
         assert_eq!(metadata.uses, None);
         assert_eq!(metadata.collection, None);
         assert_eq!(metadata.programmable_config, None);
+    }
+
+    #[tokio::test]
+    async fn create_nonfungible() {
+        let mut context = program_test().start_with_context().await;
+
+        // asset
+
+        let mut asset = DigitalAsset::default();
+        asset
+            .create(&mut context, TokenStandard::NonFungible, None)
+            .await
+            .unwrap();
+
+        // checks the created metadata values
+
+        let metadata_account = get_account(&mut context, &asset.metadata).await;
+        let metadata: Metadata = try_from_slice_unchecked(&metadata_account.data).unwrap();
+
+        assert_eq!(
+            metadata.data.name,
+            puffed_out_string(DEFAULT_NAME, MAX_NAME_LENGTH)
+        );
+        assert_eq!(
+            metadata.data.symbol,
+            puffed_out_string(DEFAULT_SYMBOL, MAX_SYMBOL_LENGTH)
+        );
+        assert_eq!(
+            metadata.data.uri,
+            puffed_out_string(DEFAULT_URI, MAX_URI_LENGTH)
+        );
+        assert!(metadata.data.creators.is_some());
+
+        assert!(!metadata.primary_sale_happened);
+        assert!(!metadata.is_mutable);
+        assert_eq!(metadata.mint, asset.mint.pubkey());
+        assert_eq!(metadata.update_authority, context.payer.pubkey());
+        assert_eq!(metadata.key, Key::MetadataV1);
+
+        assert_eq!(metadata.token_standard, Some(TokenStandard::NonFungible));
+        assert_eq!(metadata.uses, None);
+        assert_eq!(metadata.collection, None);
+        assert_eq!(metadata.programmable_config, None);
+        assert!(asset.master_edition.is_some());
+    }
+
+    #[tokio::test]
+    async fn create_fungible() {
+        let mut context = program_test().start_with_context().await;
+
+        // asset
+
+        let mut asset = DigitalAsset::default();
+        asset
+            .create(&mut context, TokenStandard::Fungible, None)
+            .await
+            .unwrap();
+
+        // checks the created metadata values
+
+        let metadata_account = get_account(&mut context, &asset.metadata).await;
+        let metadata: Metadata = try_from_slice_unchecked(&metadata_account.data).unwrap();
+
+        assert_eq!(
+            metadata.data.name,
+            puffed_out_string(DEFAULT_NAME, MAX_NAME_LENGTH)
+        );
+        assert_eq!(
+            metadata.data.symbol,
+            puffed_out_string(DEFAULT_SYMBOL, MAX_SYMBOL_LENGTH)
+        );
+        assert_eq!(
+            metadata.data.uri,
+            puffed_out_string(DEFAULT_URI, MAX_URI_LENGTH)
+        );
+        assert!(metadata.data.creators.is_some());
+
+        assert!(!metadata.primary_sale_happened);
+        assert!(!metadata.is_mutable);
+        assert_eq!(metadata.mint, asset.mint.pubkey());
+        assert_eq!(metadata.update_authority, context.payer.pubkey());
+        assert_eq!(metadata.key, Key::MetadataV1);
+
+        assert_eq!(metadata.token_standard, Some(TokenStandard::Fungible));
+        assert_eq!(metadata.uses, None);
+        assert_eq!(metadata.collection, None);
+        assert_eq!(metadata.programmable_config, None);
+        assert!(asset.master_edition.is_none());
+    }
+
+    #[tokio::test]
+    async fn create_fungible_asset() {
+        let mut context = program_test().start_with_context().await;
+
+        // asset
+
+        let mut asset = DigitalAsset::default();
+        asset
+            .create(&mut context, TokenStandard::FungibleAsset, None)
+            .await
+            .unwrap();
+
+        // checks the created metadata values
+
+        let metadata_account = get_account(&mut context, &asset.metadata).await;
+        let metadata: Metadata = try_from_slice_unchecked(&metadata_account.data).unwrap();
+
+        assert_eq!(
+            metadata.data.name,
+            puffed_out_string(DEFAULT_NAME, MAX_NAME_LENGTH)
+        );
+        assert_eq!(
+            metadata.data.symbol,
+            puffed_out_string(DEFAULT_SYMBOL, MAX_SYMBOL_LENGTH)
+        );
+        assert_eq!(
+            metadata.data.uri,
+            puffed_out_string(DEFAULT_URI, MAX_URI_LENGTH)
+        );
+        assert!(metadata.data.creators.is_some());
+
+        assert!(!metadata.primary_sale_happened);
+        assert!(!metadata.is_mutable);
+        assert_eq!(metadata.mint, asset.mint.pubkey());
+        assert_eq!(metadata.update_authority, context.payer.pubkey());
+        assert_eq!(metadata.key, Key::MetadataV1);
+
+        assert_eq!(metadata.token_standard, Some(TokenStandard::FungibleAsset));
+        assert_eq!(metadata.uses, None);
+        assert_eq!(metadata.collection, None);
+        assert_eq!(metadata.programmable_config, None);
+        assert!(asset.master_edition.is_none());
     }
 }

@@ -8,14 +8,14 @@ use mpl_token_metadata::{
 };
 use solana_program_test::*;
 use solana_sdk::{signature::Signer, transaction::Transaction};
-use utils::MasterEditionV2 as MasterEditionV2Manager;
-use utils::Metadata as MetadataManager;
-use utils::*;
+use utils::{MasterEditionV2 as MasterEditionV2Manager, Metadata as MetadataManager, *};
 
 mod update {
 
-    use mpl_token_metadata::instruction::AuthorityType;
-    use mpl_token_metadata::state::{AssetData, Metadata, TokenStandard, PREFIX};
+    use mpl_token_metadata::{
+        instruction::AuthorityType,
+        state::{AssetData, Metadata, TokenStandard, PREFIX},
+    };
     use solana_program::borsh::try_from_slice_unchecked;
     use solana_sdk::signature::Keypair;
 

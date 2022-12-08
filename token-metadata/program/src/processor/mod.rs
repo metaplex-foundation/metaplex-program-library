@@ -9,6 +9,7 @@ mod freeze;
 mod metadata;
 mod uses;
 
+use borsh::BorshDeserialize;
 pub use bubblegum::*;
 pub use burn::*;
 pub use collection::*;
@@ -21,10 +22,8 @@ pub use edition::*;
 pub use escrow::*;
 pub use freeze::*;
 pub use metadata::*;
-pub use uses::*;
-
-use borsh::BorshDeserialize;
 use solana_program::{account_info::AccountInfo, entrypoint::ProgramResult, msg, pubkey::Pubkey};
+pub use uses::*;
 
 use crate::{
     deprecated_processor::{

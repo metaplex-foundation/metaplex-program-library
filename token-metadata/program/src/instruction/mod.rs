@@ -9,6 +9,7 @@ mod freeze;
 mod metadata;
 mod uses;
 
+use borsh::{BorshDeserialize, BorshSerialize};
 pub use bubblegum::*;
 pub use burn::*;
 pub use collection::*;
@@ -17,8 +18,6 @@ pub use edition::*;
 pub use escrow::*;
 pub use freeze::*;
 pub use metadata::*;
-
-use borsh::{BorshDeserialize, BorshSerialize};
 #[cfg(feature = "serde-feature")]
 use serde::{Deserialize, Serialize};
 use shank::ShankInstruction;

@@ -10,6 +10,8 @@ pub(crate) mod metadata;
 pub(crate) mod reservation;
 pub(crate) mod uses;
 
+use std::io::ErrorKind;
+
 pub use asset_data::*;
 use borsh::{maybestd::io::Error as BorshError, BorshDeserialize, BorshSerialize};
 pub use collection::*;
@@ -20,7 +22,6 @@ pub use edition_marker::*;
 pub use escrow::*;
 pub use master_edition::*;
 pub use metadata::*;
-
 use num_derive::FromPrimitive;
 use num_traits::FromPrimitive;
 pub use reservation::*;
@@ -29,7 +30,6 @@ use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
     pubkey::Pubkey,
 };
-use std::io::ErrorKind;
 pub use uses::*;
 #[cfg(feature = "serde-feature")]
 use {
