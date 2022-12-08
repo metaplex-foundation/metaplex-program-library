@@ -23,7 +23,11 @@ use crate::{
     },
 };
 
-/// Mint a new asset and associated metadata accounts.
+/// Create the associated metadata accounts for mint.
+///
+/// The instruction will also initialize the mint if the account does not
+/// exist. For `Programmable*` assets, if authorization rules are specified,
+/// the instruction will check if the account exists.
 ///
 /// # Accounts:
 ///
@@ -47,6 +51,7 @@ pub fn create<'a>(
     }
 }
 
+/// V1 implementation of the create instruction.
 fn create_v1<'a>(
     program_id: &Pubkey,
     accounts: &'a [AccountInfo<'a>],
@@ -93,12 +98,12 @@ fn create_v1<'a>(
         )?;
 
         let decimals = match asset_data.token_standard {
-            // for NonFungible and FungibleAsset variants, we ignore the argument
-            // and always use 0 decimals
-            Some(TokenStandard::NonFungible)
-            | Some(TokenStandard::ProgrammableNonFungible)
-            | Some(TokenStandard::FungibleAsset) => 0,
-            Some(TokenStandard::Fungible) => match decimals {
+            // for NonFungible variants, we ignore the argument and
+            // always use 0 decimals
+            Some(TokenStandard::NonFungible) | Some(TokenStandard::ProgrammableNonFungible) => 0,
+            // for Fungile variants, we either use the specified decimals or the default
+            // DECIMALS from spl-token
+            Some(TokenStandard::FungibleAsset) | Some(TokenStandard::Fungible) => match decimals {
                 Some(decimals) => decimals,
                 // if decimals not provided, use the default
                 None => DECIMALS,
@@ -121,23 +126,14 @@ fn create_v1<'a>(
         )?;
     } else {
         let mint: Mint = assert_initialized(mint, MetadataError::Uninitialized)?;
-        // checks that the mint details match the requirements of the
-        // token standard selected
-        match asset_data.token_standard {
-            // for NonFungible and FungibleAsset variants, we ignore the argument
-            // and always use 0 decimals
-            Some(TokenStandard::NonFungible) | Some(TokenStandard::ProgrammableNonFungible) => {
-                if mint.decimals > 0 || mint.supply > 1 {
-                    return Err(MetadataError::InvalidMintForTokenStandard.into());
-                }
-            }
-            Some(TokenStandard::FungibleAsset) => {
-                if mint.decimals > 0 {
-                    return Err(MetadataError::InvalidMintForTokenStandard.into());
-                }
-            }
-            _ => { /* nothing to check */ }
-        };
+        // NonFungible asset must have decimals = 0 and supply no greater than 1
+        if matches!(
+            asset_data.token_standard,
+            Some(TokenStandard::NonFungible) | Some(TokenStandard::ProgrammableNonFungible)
+        ) && (mint.decimals > 0 || mint.supply > 1)
+        {
+            return Err(MetadataError::InvalidMintForTokenStandard.into());
+        }
     }
 
     // creates the metadata account
@@ -160,30 +156,34 @@ fn create_v1<'a>(
         asset_data.collection_details.clone(),
     )?;
 
-    // creates the metadata account (only for NonFungible assets)
+    // creates the master edition account (only for NonFungible assets)
 
-    if let Some(master_edition) = master_edition {
-        match asset_data.token_standard {
-            Some(TokenStandard::NonFungible) | Some(TokenStandard::ProgrammableNonFungible) => {
-                create_master_edition(
-                    program_id,
-                    master_edition,
-                    mint,
-                    update_authority,
-                    mint_authority,
-                    payer,
-                    metadata,
-                    spl_token_program,
-                    system_program,
-                    max_supply,
-                )?
-            }
-            _ => { /* noting to do */ }
+    if matches!(
+        asset_data.token_standard,
+        Some(TokenStandard::NonFungible) | Some(TokenStandard::ProgrammableNonFungible)
+    ) {
+        if let Some(master_edition) = master_edition {
+            create_master_edition(
+                program_id,
+                master_edition,
+                mint,
+                update_authority,
+                mint_authority,
+                payer,
+                metadata,
+                spl_token_program,
+                system_program,
+                max_supply,
+            )?;
+        } else {
+            return Err(MetadataError::InvalidMasterEdition.into());
         }
     }
 
     let mut asset_metadata = Metadata::from_account_info(metadata)?;
     asset_metadata.token_standard = asset_data.token_standard;
+
+    // sets the programmable config (if present)
 
     if let Some(config) = &asset_data.programmable_config {
         if let Some(authorization_rules) = authorization_rules {
