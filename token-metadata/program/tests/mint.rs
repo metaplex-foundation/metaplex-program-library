@@ -3,7 +3,7 @@ pub mod utils;
 
 use mpl_token_metadata::{
     id, instruction,
-    state::{Key, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH},
+    state::{MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH},
     utils::puffed_out_string,
 };
 use solana_program::pubkey::Pubkey;
@@ -14,14 +14,13 @@ use solana_sdk::{
 };
 use utils::*;
 
-mod create_metadata {
+mod mint {
 
-    use mpl_token_metadata::state::{AssetData, Metadata, TokenStandard, EDITION, PREFIX};
-    use solana_program::borsh::try_from_slice_unchecked;
+    use mpl_token_metadata::state::{AssetData, TokenStandard, EDITION, PREFIX};
 
     use super::*;
     #[tokio::test]
-    async fn create_programmable_nonfungible() {
+    async fn mint_programmable_nonfungible() {
         let mut context = program_test().start_with_context().await;
 
         // asset details
@@ -85,29 +84,35 @@ mod create_metadata {
 
         context.banks_client.process_transaction(tx).await.unwrap();
 
-        // checks the created metadata values
+        // mints one token
 
-        let metadata_account = get_account(&mut context, &metadata).await;
-        let metadata: Metadata = try_from_slice_unchecked(&metadata_account.data).unwrap();
-
-        assert_eq!(metadata.data.name, name);
-        assert_eq!(metadata.data.symbol, symbol);
-        assert_eq!(metadata.data.uri, uri);
-        assert_eq!(metadata.data.seller_fee_basis_points, 500);
-        assert_eq!(metadata.data.creators, None);
-
-        assert!(!metadata.primary_sale_happened);
-        assert!(!metadata.is_mutable);
-        assert_eq!(metadata.mint, mint_pubkey);
-        assert_eq!(metadata.update_authority, context.payer.pubkey());
-        assert_eq!(metadata.key, Key::MetadataV1);
-
-        assert_eq!(
-            metadata.token_standard,
-            Some(TokenStandard::ProgrammableNonFungible)
+        let (token, _) = Pubkey::find_program_address(
+            &[
+                &payer_pubkey.to_bytes(),
+                &spl_token::id().to_bytes(),
+                &mint_pubkey.to_bytes(),
+            ],
+            &spl_associated_token_account::id(),
         );
-        assert_eq!(metadata.uses, None);
-        assert_eq!(metadata.collection, None);
-        assert_eq!(metadata.programmable_config, None);
+
+        let mint_ix = instruction::mint(
+            /* token account         */ token,
+            /* metadata account      */ metadata,
+            /* mint account          */ mint.pubkey(),
+            /* payer                 */ payer_pubkey,
+            /* mint authority        */ master_edition,
+            /* authorization rules   */ None,
+            /* mint authority signer */ false,
+            /* amount                */ 1,
+        );
+
+        let tx = Transaction::new_signed_with_payer(
+            &[mint_ix],
+            Some(&context.payer.pubkey()),
+            &[&context.payer],
+            context.last_blockhash,
+        );
+
+        context.banks_client.process_transaction(tx).await.unwrap();
     }
 }

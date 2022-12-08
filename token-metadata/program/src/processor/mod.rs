@@ -247,8 +247,12 @@ pub fn process_instruction<'a>(
         }
         //--- new instructions
         MetadataInstruction::CreateMetadata(args) => {
-            msg!("Instruction: Mint");
+            msg!("Instruction: CreateMetadata");
             metadata::create_metadata(program_id, accounts, args)
+        }
+        MetadataInstruction::Mint(args) => {
+            msg!("Instruction: Mint");
+            metadata::mint(program_id, accounts, args)
         }
         MetadataInstruction::Update(args) => {
             msg!("Instruction: Update");

@@ -46,6 +46,13 @@ pub enum CreateMetadataArgs {
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+pub enum MintArgs {
+    V1 { amount: u64 },
+}
+
+#[repr(C)]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub enum TransferArgs {
     V1 {
         authorization_payload: Option<Vec<u8>>,
@@ -325,6 +332,55 @@ pub fn create_metadata(
         })
         .try_to_vec()
         .unwrap(),
+    }
+}
+
+/// Mints tokens from a mint account.
+///
+/// # Accounts:
+///
+///   0. `[writable`] Token account key
+///   1. `[]` Metadata account key (pda of ['metadata', program id, mint id])")]
+///   2. `[writable]` Mint of token asset
+///   3. `[signer, writable]` Payer
+///   4. `[signer]` Mint authority
+///   5. `[]` System program
+///   6. `[]` Instructions sysvar account
+///   7. `[]` SPL Token program
+///   8. `[]` SPL Associated Token Account program
+///   9. `[optional]` Token Authorization Rules account
+pub fn mint(
+    token: Pubkey,
+    metadata: Pubkey,
+    mint: Pubkey,
+    payer: Pubkey,
+    mint_authority: Pubkey,
+    authorization_rules: Option<Pubkey>,
+    mint_authority_as_signer: bool,
+    amount: u64,
+) -> Instruction {
+    let mut accounts = vec![
+        AccountMeta::new(token, false),
+        AccountMeta::new_readonly(metadata, false),
+        AccountMeta::new(mint, false),
+        AccountMeta::new(payer, true),
+        AccountMeta::new(mint_authority, mint_authority_as_signer),
+        AccountMeta::new_readonly(solana_program::system_program::id(), false),
+        AccountMeta::new_readonly(sysvar::instructions::id(), false),
+        AccountMeta::new_readonly(spl_token::id(), false),
+        AccountMeta::new_readonly(spl_associated_token_account::id(), false),
+    ];
+    // checks whether we have authorization rules
+    if let Some(authorization_rules) = authorization_rules {
+        accounts.push(AccountMeta::new(authorization_rules, false));
+    }
+
+    Instruction {
+        program_id: crate::id(),
+        accounts,
+        data: MetadataInstruction::Mint(MintArgs::V1 { amount })
+            .try_to_vec()
+            .unwrap(),
     }
 }
 
