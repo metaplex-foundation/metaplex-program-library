@@ -53,6 +53,8 @@ pub struct Metadata {
     pub collection_details: Option<CollectionDetails>,
     /// Programmable Config
     pub programmable_config: Option<ProgrammableConfig>,
+    /// Active delegate (for now, only the sale delegate is persisted)
+    pub delegate: Option<Pubkey>,
 }
 
 impl Metadata {
@@ -79,6 +81,7 @@ impl Default for Metadata {
             uses: None,
             collection_details: None,
             programmable_config: None,
+            delegate: None,
         }
     }
 }

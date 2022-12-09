@@ -17,7 +17,7 @@ use utils::*;
 mod revoke {
 
     use mpl_token_metadata::{
-        instruction::{DelegateArgs, DelegateRole, RevokeArgs},
+        instruction::{DelegateRole, RevokeArgs},
         pda::find_delegate_account,
         state::{AssetData, TokenStandard, EDITION, PREFIX},
     };
@@ -109,10 +109,7 @@ mod revoke {
             /* payer                 */ payer_pubkey,
             /* token                 */ token.pubkey(),
             /* metadata              */ payer_pubkey,
-            /* transfer args         */
-            DelegateArgs::V1 {
-                role: DelegateRole::Sale,
-            },
+            /* delegate role         */ DelegateRole::Sale,
             /* authorization payload */ None,
             /* additional accounts   */ None,
         );

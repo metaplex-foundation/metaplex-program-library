@@ -2,6 +2,7 @@ pub(crate) mod asset_data;
 pub(crate) mod collection;
 pub(crate) mod creator;
 pub(crate) mod data;
+pub(crate) mod delegate;
 pub(crate) mod edition;
 pub(crate) mod edition_marker;
 pub(crate) mod escrow;
@@ -17,6 +18,7 @@ use borsh::{maybestd::io::Error as BorshError, BorshDeserialize, BorshSerialize}
 pub use collection::*;
 pub use creator::*;
 pub use data::*;
+pub use delegate::*;
 pub use edition::*;
 pub use edition_marker::*;
 pub use escrow::*;
@@ -121,4 +123,5 @@ pub enum Key {
     UseAuthorityRecord,
     CollectionAuthorityRecord,
     TokenOwnedEscrow,
+    Delegate,
 }

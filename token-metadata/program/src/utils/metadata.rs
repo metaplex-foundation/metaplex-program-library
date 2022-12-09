@@ -227,6 +227,9 @@ pub fn meta_deser_unchecked(buf: &mut &[u8]) -> Result<Metadata, BorshError> {
     let programmable_config_res: Result<Option<ProgrammableConfig>, BorshError> =
         BorshDeserialize::deserialize(buf);
 
+    // Delegate
+    let delegate_res: Result<Option<Pubkey>, BorshError> = BorshDeserialize::deserialize(buf);
+
     // We can have accidentally valid, but corrupted data, particularly on the Collection struct,
     // so to increase probability of catching errors. If any of these deserializations fail, set
     // all values to None.
@@ -249,6 +252,12 @@ pub fn meta_deser_unchecked(buf: &mut &[u8]) -> Result<Metadata, BorshError> {
         Err(_) => None,
     };
 
+    // Delegate
+    let delegate = match delegate_res {
+        Ok(delegate) => delegate,
+        Err(_) => None,
+    };
+
     let metadata = Metadata {
         key,
         update_authority,
@@ -262,6 +271,7 @@ pub fn meta_deser_unchecked(buf: &mut &[u8]) -> Result<Metadata, BorshError> {
         uses,
         collection_details,
         programmable_config,
+        delegate,
     };
 
     Ok(metadata)
@@ -364,6 +374,7 @@ pub mod tests {
             uses: None,
             collection_details: None,
             programmable_config: None,
+            delegate: None,
         };
 
         puff_out_data_fields(&mut metadata);
