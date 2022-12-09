@@ -46,6 +46,7 @@ pub fn create<'a>(
     accounts: &'a [AccountInfo<'a>],
     args: CreateArgs,
 ) -> ProgramResult {
+    msg!("Create instruction");
     match args {
         CreateArgs::V1 { .. } => create_v1(program_id, accounts, args),
     }
@@ -125,6 +126,7 @@ fn create_v1<'a>(
             &[mint.clone(), mint_authority.clone()],
         )?;
     } else {
+        msg!("Mint exists");
         let mint: Mint = assert_initialized(mint, MetadataError::Uninitialized)?;
         // NonFungible asset must have decimals = 0 and supply no greater than 1
         if matches!(

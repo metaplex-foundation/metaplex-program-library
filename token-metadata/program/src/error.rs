@@ -540,6 +540,10 @@ pub enum MetadataError {
     /// 136
     #[error("Invalid authorization rules account")]
     InvalidAuthorizationRules,
+
+    /// 137
+    #[error("Missing authorization rules account")]
+    MissingAuthorizationRules,
 }
 
 impl PrintProgramError for MetadataError {

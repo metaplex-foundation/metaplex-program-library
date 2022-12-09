@@ -7,19 +7,23 @@ use mpl_token_metadata::{
     state::{MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH},
     utils::puffed_out_string,
 };
+use num_traits::FromPrimitive;
 use solana_program_test::*;
 use solana_sdk::{
+    instruction::InstructionError,
     signature::{Keypair, Signer},
-    transaction::Transaction,
+    transaction::{Transaction, TransactionError},
 };
 use utils::*;
 
 mod transfer {
 
+    use mpl_token_auth_rules::Payload;
     use mpl_token_metadata::{
-        instruction::{create_metadata_accounts_v3, TransferArgs},
-        pda::find_metadata_account,
-        state::{AssetData, TokenStandard},
+        instruction::{create_escrow_account, create_metadata_accounts_v3, mint, TransferArgs},
+        pda::{find_master_edition_account, find_metadata_account},
+        processor::find_escrow_account,
+        state::{AssetData, EscrowAuthority, TokenStandard},
     };
     use solana_program::{
         native_token::LAMPORTS_PER_SOL, program_pack::Pack, system_instruction::create_account,
@@ -64,11 +68,13 @@ mod transfer {
             nft.token.pubkey(),
             nft.pubkey,
             nft.mint.pubkey(),
+            None,
             context.payer.pubkey(),
             recipient_ata,
             recipient.pubkey(),
             TransferArgs::V1 {
-                authorization_payload: None,
+                authorization_data: None,
+                amount: 1,
             },
             None,
             None,
@@ -109,7 +115,7 @@ mod transfer {
 
         let mint_layout: u64 = 82;
         let token_amount = 10;
-        // let transfer_amount = 5;
+        let transfer_amount = 5;
 
         let payer = context.payer.pubkey();
 
@@ -201,11 +207,13 @@ mod transfer {
             ata,
             metadata,
             mint.pubkey(),
+            None,
             context.payer.pubkey(),
             recipient_ata,
             recipient.pubkey(),
             TransferArgs::V1 {
-                authorization_payload: None,
+                authorization_data: None,
+                amount: transfer_amount,
             },
             None,
             None,
@@ -231,7 +239,7 @@ mod transfer {
         )
         .unwrap();
 
-        assert_eq!(token_account.amount, 1);
+        assert_eq!(token_account.amount, transfer_amount);
     }
 
     #[tokio::test]
@@ -258,6 +266,7 @@ mod transfer {
         let payer = context.payer.pubkey();
 
         let token_amount = 10;
+        let transfer_amount = 5;
 
         let create_ix = instruction::create(
             metadata,
@@ -314,11 +323,13 @@ mod transfer {
             ata,
             metadata,
             mint.pubkey(),
+            None,
             context.payer.pubkey(),
             recipient_ata,
             recipient.pubkey(),
             TransferArgs::V1 {
-                authorization_payload: None,
+                authorization_data: None,
+                amount: transfer_amount,
             },
             None,
             None,
@@ -344,129 +355,201 @@ mod transfer {
         )
         .unwrap();
 
-        assert_eq!(token_account.amount, 1);
+        assert_eq!(token_account.amount, transfer_amount);
     }
 
-    // #[tokio::test]
-    // async fn success_transfer() {
-    //     let mut context = program_test().start_with_context().await;
+    #[tokio::test]
+    async fn transfer_programmable_nft() {
+        let mut program_test = ProgramTest::new("mpl_token_metadata", mpl_token_metadata::ID, None);
+        program_test.add_program("mpl_token_auth_rules", mpl_token_auth_rules::ID, None);
+        let mut context = program_test.start_with_context().await;
 
-    //     // asset details
+        // Create NFT for owning the TOE account.
+        // Create a NonFungible token using the old handlers.
+        let nft = Metadata::new();
+        nft.create_v3_default(&mut context).await.unwrap();
 
-    //     let name = puffed_out_string("Programmable NFT", MAX_NAME_LENGTH);
-    //     let symbol = puffed_out_string("PRG", MAX_SYMBOL_LENGTH);
-    //     let uri = puffed_out_string("uri", MAX_URI_LENGTH);
+        let nft_master_edition = MasterEditionV2::new(&nft);
+        nft_master_edition
+            .create_v3(&mut context, Some(0))
+            .await
+            .unwrap();
 
-    //     let mut asset = AssetData::new(name.clone(), symbol.clone(), uri.clone());
-    //     asset.token_standard = Some(TokenStandard::ProgrammableNonFungible);
-    //     asset.seller_fee_basis_points = 500;
-    //     /*
-    //     asset.programmable_config = Some(ProgrammableConfig {
-    //         rule_set: <PUBKEY>,
-    //     });
-    //     */
+        // Create NFT for transfer tests.
+        let name = puffed_out_string("Fungible", MAX_NAME_LENGTH);
+        let symbol = puffed_out_string("PRG", MAX_SYMBOL_LENGTH);
+        let uri = puffed_out_string("uri", MAX_URI_LENGTH);
 
-    //     // build the mint transaction
+        let mut asset = AssetData::new(
+            TokenStandard::ProgrammableNonFungible,
+            name.clone(),
+            symbol.clone(),
+            uri.clone(),
+        );
+        asset.seller_fee_basis_points = 500;
 
-    //     let token = Keypair::new();
-    //     let mint = Keypair::new();
+        let mint_key = Keypair::new();
+        let ata = get_associated_token_address(&context.payer.pubkey(), &mint_key.pubkey());
+        let (metadata, _) = find_metadata_account(&mint_key.pubkey());
+        let (master_edition, _) = find_master_edition_account(&mint_key.pubkey());
 
-    //     let mint_pubkey = mint.pubkey();
-    //     let program_id = id();
-    //     // metadata PDA address
-    //     let metadata_seeds = &[PREFIX.as_bytes(), program_id.as_ref(), mint_pubkey.as_ref()];
-    //     let (metadata, _) = Pubkey::find_program_address(metadata_seeds, &id());
-    //     // master edition PDA address
-    //     let master_edition_seeds = &[
-    //         PREFIX.as_bytes(),
-    //         program_id.as_ref(),
-    //         mint_pubkey.as_ref(),
-    //         EDITION.as_bytes(),
-    //     ];
-    //     let (master_edition, _) = Pubkey::find_program_address(master_edition_seeds, &id());
+        let payer = context.payer.pubkey();
 
-    //     let payer_pubkey = context.payer.pubkey();
-    //     let mint_ix = instruction::mint(
-    //         /* program id       */ id(),
-    //         /* token account    */ token.pubkey(),
-    //         /* metadata account */ metadata,
-    //         /* master edition   */ Some(master_edition),
-    //         /* mint account     */ mint.pubkey(),
-    //         /* mint authority   */ payer_pubkey,
-    //         /* payer            */ payer_pubkey,
-    //         /* update authority */ payer_pubkey,
-    //         /* asset data       */ asset,
-    //         /* initialize mint  */ true,
-    //         /* authority signer */ true,
-    //     );
+        let token_amount = 1;
 
-    //     let tx = Transaction::new_signed_with_payer(
-    //         &[mint_ix],
-    //         Some(&context.payer.pubkey()),
-    //         &[&context.payer, &mint],
-    //         context.last_blockhash,
-    //     );
+        let create_ix = instruction::create(
+            metadata,
+            Some(master_edition),
+            mint_key.pubkey(),
+            payer,
+            payer,
+            payer,
+            true,
+            true,
+            asset,
+            Some(0),
+            Some(0),
+        );
 
-    //     context.banks_client.process_transaction(tx).await.unwrap();
+        let mint_ix = mint(
+            ata,
+            metadata,
+            mint_key.pubkey(),
+            payer,
+            payer,
+            Some(master_edition),
+            None,
+            token_amount,
+        );
 
-    //     // tries to transfer via spl-token (should fail)
+        let tx = Transaction::new_signed_with_payer(
+            &[create_ix, mint_ix],
+            Some(&context.payer.pubkey()),
+            &[&context.payer, &mint_key],
+            context.last_blockhash,
+        );
 
-    //     let destination = Keypair::new();
-    //     let destination_seeds = &[
-    //         PREFIX.as_bytes(),
-    //         spl_token::ID.as_ref(),
-    //         mint_pubkey.as_ref(),
-    //     ];
-    //     let (destination_ata, _) = Pubkey::find_program_address(destination_seeds, &id());
+        context.banks_client.process_transaction(tx).await.unwrap();
 
-    //     let transfer_ix = spl_token::instruction::transfer(
-    //         &spl_token::id(),
-    //         &token.pubkey(),
-    //         &destination_ata,
-    //         &payer_pubkey,
-    //         &[],
-    //         1,
-    //     )
-    //     .unwrap();
-    //     let transfer_tx = Transaction::new_signed_with_payer(
-    //         &[transfer_ix],
-    //         Some(&payer_pubkey),
-    //         &[&context.payer],
-    //         context.last_blockhash,
-    //     );
-    //     let err = context
-    //         .banks_client
-    //         .process_transaction(transfer_tx)
-    //         .await
-    //         .unwrap_err();
-    //     // it shoudl fail since the account should be frozen
-    //     assert_custom_error!(err, spl_token::error::TokenError::AccountFrozen);
+        let recipient = Keypair::new();
+        airdrop(&mut context, &recipient.pubkey(), LAMPORTS_PER_SOL)
+            .await
+            .unwrap();
 
-    //     // transfer the asset via Token Metadata
+        let recipient_ata = get_associated_token_address(&recipient.pubkey(), &mint_key.pubkey());
 
-    //     let transfer_ix = instruction::transfer(
-    //         /* program id            */ id(),
-    //         /* token account         */ token.pubkey(),
-    //         /* metadata account      */ metadata,
-    //         /* mint account          */ mint.pubkey(),
-    //         /* destination           */ destination.pubkey(),
-    //         /* destination ata       */ destination_ata,
-    //         /* owner                 */ payer_pubkey,
-    //         /* transfer args         */
-    //         TransferArgs::V1 {
-    //             authorization_payload: None,
-    //         },
-    //         /* authorization payload */ None,
-    //         /* additional accounts   */ None,
-    //     );
+        let ata_ix = create_associated_token_account(
+            &context.payer.pubkey(),
+            &recipient.pubkey(),
+            &mint_key.pubkey(),
+            &spl_token::id(),
+        );
 
-    //     let tx = Transaction::new_signed_with_payer(
-    //         &[transfer_ix],
-    //         Some(&context.payer.pubkey()),
-    //         &[&context.payer],
-    //         context.last_blockhash,
-    //     );
+        // Create rule-set for the transfer
+        let (ruleset_pda, mut auth_data) =
+            create_royalty_ruleset(&mut context, recipient.pubkey()).await;
 
-    //     context.banks_client.process_transaction(tx).await.unwrap();
-    // }
+        let transfer_ix = instruction::transfer(
+            id(),
+            ata,
+            metadata,
+            mint_key.pubkey(),
+            Some(master_edition),
+            context.payer.pubkey(),
+            recipient_ata,
+            recipient.pubkey(),
+            TransferArgs::V1 {
+                authorization_data: Some(auth_data.clone()),
+                amount: 1,
+            },
+            Some(ruleset_pda),
+            None,
+        );
+
+        let tx = Transaction::new_signed_with_payer(
+            &[ata_ix, transfer_ix],
+            Some(&context.payer.pubkey()),
+            &[&context.payer],
+            context.last_blockhash,
+        );
+
+        let err = context
+            .banks_client
+            .process_transaction(tx)
+            .await
+            .unwrap_err();
+
+        // Should fail because the recipient is not owned by Token Metadata
+        assert_custom_error_ix!(
+            1,
+            err,
+            mpl_token_auth_rules::error::RuleSetError::ProgramOwnedCheckFailed
+        );
+
+        // Create TOE account and try to transfer to it. This should succeed.
+        let (escrow_account, _) =
+            find_escrow_account(&nft.mint.pubkey(), &EscrowAuthority::TokenOwner);
+
+        let create_escrow_ix = create_escrow_account(
+            id(),
+            escrow_account,
+            nft.pubkey,
+            nft.mint.pubkey(),
+            nft.token.pubkey(),
+            nft_master_edition.pubkey,
+            payer,
+            Some(payer),
+        );
+
+        // Change destination in payload.
+        auth_data.payload = Payload::new(Some(escrow_account), None, Some(1), None);
+
+        let recipient_ata = get_associated_token_address(&escrow_account, &mint_key.pubkey());
+
+        let ata_ix = create_associated_token_account(
+            &context.payer.pubkey(),
+            &escrow_account,
+            &mint_key.pubkey(),
+            &spl_token::id(),
+        );
+
+        let transfer_ix = instruction::transfer(
+            id(),
+            ata,
+            metadata,
+            mint_key.pubkey(),
+            Some(master_edition),
+            context.payer.pubkey(),
+            recipient_ata,
+            escrow_account,
+            TransferArgs::V1 {
+                authorization_data: Some(auth_data),
+                amount: 1,
+            },
+            Some(ruleset_pda),
+            None,
+        );
+
+        let tx = Transaction::new_signed_with_payer(
+            &[create_escrow_ix, ata_ix, transfer_ix],
+            Some(&context.payer.pubkey()),
+            &[&context.payer],
+            context.last_blockhash,
+        );
+
+        context.banks_client.process_transaction(tx).await.unwrap();
+
+        let token_account = spl_token::state::Account::unpack(
+            &context
+                .banks_client
+                .get_account(recipient_ata)
+                .await
+                .unwrap()
+                .unwrap()
+                .data,
+        )
+        .unwrap();
+
+        assert_eq!(token_account.amount, 1);
+    }
 }

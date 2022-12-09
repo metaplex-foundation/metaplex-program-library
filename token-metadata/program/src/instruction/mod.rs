@@ -18,6 +18,7 @@ pub use edition::*;
 pub use escrow::*;
 pub use freeze::*;
 pub use metadata::*;
+
 #[cfg(feature = "serde-feature")]
 use serde::{Deserialize, Serialize};
 use shank::ShankInstruction;
@@ -31,8 +32,9 @@ pub use crate::deprecated_instruction::{
 };
 use crate::deprecated_instruction::{MintPrintingTokensViaTokenArgs, SetReservationListArgs};
 
-/// Instructions supported by the Metadata program.
+#[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
+/// Instructions supported by the Metadata program.
 #[derive(BorshSerialize, BorshDeserialize, Clone, ShankInstruction)]
 #[rustfmt::skip]
 pub enum MetadataInstruction {

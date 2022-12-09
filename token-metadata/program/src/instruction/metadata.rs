@@ -4,6 +4,7 @@ use solana_program::{
     pubkey::Pubkey,
     system_program, sysvar,
 };
+
 #[cfg(feature = "serde-feature")]
 use {
     serde::{Deserialize, Serialize},
@@ -12,6 +13,7 @@ use {
 
 use crate::{
     instruction::MetadataInstruction,
+    processor::AuthorizationData,
     state::{AssetData, Collection, CollectionDetails, Creator, DataV2, Uses},
 };
 
@@ -50,12 +52,11 @@ pub enum MintArgs {
     V1 { amount: u64 },
 }
 
-#[repr(C)]
-#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub enum TransferArgs {
     V1 {
-        authorization_payload: Option<Vec<u8>>,
+        authorization_data: Option<AuthorizationData>,
+        amount: u64,
     },
 }
 
@@ -410,6 +411,7 @@ pub fn transfer(
     token_account: Pubkey,
     metadata_account: Pubkey,
     mint_account: Pubkey,
+    edition: Option<Pubkey>,
     owner: Pubkey,
     destination_token_account: Pubkey,
     destination_owner: Pubkey,
@@ -421,6 +423,13 @@ pub fn transfer(
         AccountMeta::new(token_account, false),
         AccountMeta::new(metadata_account, false),
         AccountMeta::new_readonly(mint_account, false),
+    ];
+
+    if let Some(edition) = edition {
+        accounts.push(AccountMeta::new(edition, false));
+    };
+
+    accounts.extend(vec![
         AccountMeta::new(owner, true),
         AccountMeta::new(destination_token_account, false),
         AccountMeta::new_readonly(destination_owner, false),
@@ -428,11 +437,11 @@ pub fn transfer(
         AccountMeta::new_readonly(spl_associated_token_account::id(), false),
         AccountMeta::new_readonly(solana_program::system_program::id(), false),
         AccountMeta::new_readonly(sysvar::instructions::id(), false),
-    ];
+    ]);
 
     if let Some(authorization_rules) = authorization_rules {
         accounts.push(AccountMeta::new_readonly(mpl_token_auth_rules::ID, false));
-        accounts.push(AccountMeta::new_readonly(authorization_rules, false));
+        accounts.push(AccountMeta::new(authorization_rules, false));
     }
 
     if let Some(additional_accounts) = additional_accounts {

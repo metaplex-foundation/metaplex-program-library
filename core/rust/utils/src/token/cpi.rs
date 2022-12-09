@@ -129,7 +129,7 @@ pub struct TokenMintToParams<'a: 'b, 'b> {
 
 pub fn spl_token_transfer(params: TokenTransferParams<'_, '_>) -> ProgramResult {
     let TokenTransferParams {
-        mint,
+        mint: _,
         source,
         destination,
         amount,
