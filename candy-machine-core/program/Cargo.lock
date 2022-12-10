@@ -774,6 +774,7 @@ dependencies = [
  "anchor-lang",
  "arrayref",
  "mpl-token-metadata",
+ "mpl-utils",
  "solana-program",
  "spl-associated-token-account",
  "spl-token",
@@ -781,13 +782,14 @@ dependencies = [
 
 [[package]]
 name = "mpl-token-metadata"
-version = "1.5.0"
+version = "1.6.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f36ab16f4c83f2f18e136f53157a8c9ab3783d84eaefdec7962bf19c0e4d5548"
+checksum = "971c30b15f9c6d8baeec960256560431b500f0329de2ca98b652d005070b6be8"
 dependencies = [
  "arrayref",
  "borsh",
  "mpl-token-vault",
+ "mpl-utils",
  "num-derive",
  "num-traits",
  "shank",
@@ -809,6 +811,18 @@ dependencies = [
  "solana-program",
  "spl-token",
  "thiserror",
+]
+
+[[package]]
+name = "mpl-utils"
+version = "0.0.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "330468b3ea93d306ed5ae5e389b0b64cfbc43fcd29a4eeae74e20f13c979e7a5"
+dependencies = [
+ "arrayref",
+ "borsh",
+ "solana-program",
+ "spl-token",
 ]
 
 [[package]]
@@ -1169,18 +1183,18 @@ dependencies = [
 
 [[package]]
 name = "shank"
-version = "0.0.9"
+version = "0.0.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b54c657cbe18aaff6d5042a4d48f643fdd2a826dfc7161de98ee28e5bd7e85e0"
+checksum = "b63e565b5e95ad88ab38f312e89444c749360641c509ef2de0093b49f55974a5"
 dependencies = [
  "shank_macro",
 ]
 
 [[package]]
 name = "shank_macro"
-version = "0.0.9"
+version = "0.0.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1b43a02ae007b64b177f4dbb21d322f276458e4860f9fefbd8b9b791c21644ab"
+checksum = "63927d22a1e8b74bda98cc6e151fcdf178b7abb0dc6c4f81e0bbf5ffe2fc4ec8"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1190,9 +1204,9 @@ dependencies = [
 
 [[package]]
 name = "shank_macro_impl"
-version = "0.0.9"
+version = "0.0.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4d36cdf68202db080a13ef0300c369fc691695265e3d0ab0fa08d4734b0cfb66"
+checksum = "40ce03403df682f80f4dc1efafa87a4d0cb89b03726d0565e6364bdca5b9a441"
 dependencies = [
  "anyhow",
  "proc-macro2",
