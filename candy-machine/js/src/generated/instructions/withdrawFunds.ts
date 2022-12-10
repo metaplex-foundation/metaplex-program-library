@@ -31,7 +31,6 @@ export const withdrawFundsStruct = new beet.BeetArgsStruct<{
 export type WithdrawFundsInstructionAccounts = {
   candyMachine: web3.PublicKey;
   authority: web3.PublicKey;
-  anchorRemainingAccounts?: web3.AccountMeta[];
 };
 
 export const withdrawFundsInstructionDiscriminator = [241, 36, 29, 111, 208, 31, 104, 217];
@@ -63,12 +62,6 @@ export function createWithdrawFundsInstruction(
       isSigner: true,
     },
   ];
-
-  if (accounts.anchorRemainingAccounts != null) {
-    for (const acc of accounts.anchorRemainingAccounts) {
-      keys.push(acc);
-    }
-  }
 
   const ix = new web3.TransactionInstruction({
     programId,
