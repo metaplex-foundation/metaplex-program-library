@@ -1,0 +1,87 @@
+# Direct questions to StackOverflow.
+question:
+  close: true
+  comment: >
+    Hi @{issue-author},
+
+
+    Thank you for your question!
+
+
+    We'd like to make sure our GitHub issue tracker remains the best place to 
+    manage issues that affect the development of the Metaplex Program Library itself.
+
+
+    Your question deserves a purpose-built Q&A forum like StackOverflow so it is 
+    more searchable and encourages others to contribute to and benefit from the answer.
+
+
+    Unless there exists evidence that this is a bug with the Metaplex Program Library itself, would 
+    you **please post your question to the Solana Stack Exchange** using the following link:
+
+
+    **[https://solana.stackexchange.com/questions/ask?tags=metaplex](https://solana.stackexchange.com/questions/ask?tags=metaplex)**
+
+
+    If you could please share the link to the newly created question here afterwards, that would be very helpful for anyone following this thread.
+
+
+    ---
+
+    _This [automated message](https://github.com/metaplex-foundation/metaplex-program-library/tree/master/.github/configs/issue-label-automations.yml) is a result of having added the "question" label._
+
+# Direct feature requests to Canny.
+'feature request':
+  close: true
+  comment: >
+    Hi @{issue-author},
+
+
+    Thank you for raising this!
+
+    
+    We'd like to make sure our GitHub issue tracker remains the best place to 
+    manage issues that affect the development of the Metaplex Program Library itself. 
+    It looks like your issue is suggesting an improvement rather than raising a bug.
+
+
+    Unless there exists evidence that this is a bug with the Metaplex Program Library itself, 
+    **please use our Feature Request boards** to create new posts or upvote existing ones. 
+    You may use the following links to access the relevant Feature Request board:
+
+
+    - **[Token Metadata](https://metaplex.canny.io/developers?category=token-metadata)**
+    - **[Candy Machine](https://metaplex.canny.io/developers?category=candy-machine)**
+    - **[Auction House](https://metaplex.canny.io/developers?category=auction-house)**
+    - **[All Categories](https://metaplex.canny.io/developers)**
+
+
+    If you could please share the link to the relevant Feature Request here afterwards,
+    that would be very helpful for anyone following this thread.
+
+
+    ---
+
+    _This [automated message](https://github.com/metaplex-foundation/metaplex-program-library/tree/master/.github/configs/issue-label-automations.yml) is a result of having added the "feature request" label._
+
+# Ask for community contributions.
+'community contribution':
+  comment: >
+    Hi there,
+
+
+    We're kindly asking for community contributions on this issue. This is the perfect opportunity for anyone to contribute to the NFT ecosystem of Solana.
+
+
+    We've made sure to provide a detailed set of requirements that we believe would benefit the community. Feel free to ask any questions you might have before tackling this issue.
+
+
+    If you are currently working on this issue and are confident that you can fully implement it, please clearly state this on this thread to avoid having multiple people working on the same task.
+
+
+    Thank you in advance for your contribution to the Metaplex ecosystem!
+
+
+    ---
+
+    _This [automated message](https://github.com/metaplex-foundation/metaplex-program-library/tree/master/.github/configs/issue-label-automations.yml) is a result of having added the "community contribution" label._
