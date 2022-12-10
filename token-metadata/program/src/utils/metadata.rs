@@ -5,7 +5,7 @@ use solana_program::{
     pubkey::Pubkey,
 };
 
-use super::*;
+use super::{compression::is_decompression, *};
 use crate::{
     assertions::{
         assert_mint_authority_matches_mint, assert_owned_by,
@@ -33,13 +33,6 @@ pub const SEED_AUTHORITY: Pubkey = Pubkey::new_from_array([
 
 // This allows the Bubblegum program to add verified creators since they were verified as part of
 // the Bubblegum program.
-pub const BUBBLEGUM_PROGRAM_ADDRESS: Pubkey =
-    pubkey!("BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY");
-
-pub const BUBBLEGUM_SIGNER: Pubkey = pubkey!("4ewWZC5gT6TGpm5LZNDs9wVonfUT2q5PP5sc9kVbwMAK");
-
-// This flag activates certain program authority features of the Bubblegum program.
-pub const BUBBLEGUM_ACTIVATED: bool = true;
 
 pub struct CreateMetadataAccountsLogicArgs<'a> {
     pub metadata_account_info: &'a AccountInfo<'a>,
@@ -123,14 +116,9 @@ pub fn process_create_metadata_accounts_logic(
 
     // This allows the Bubblegum program to create metadata with verified creators since they were
     // verified already by the Bubblegum program.
-    let allow_direct_creator_writes = if BUBBLEGUM_ACTIVATED
-        && mint_authority_info.owner == &BUBBLEGUM_PROGRAM_ADDRESS
-        && mint_authority_info.is_signer
-    {
-        true
-    } else {
-        allow_direct_creator_writes
-    };
+    // 
+    let allow_direct_creator_writes =
+        allow_direct_creator_writes || is_decompression(mint_info, mint_authority_info);
 
     assert_data_valid(
         &compatible_data,

@@ -32,7 +32,7 @@ import { BN } from 'bn.js';
 
 function keypairFromSeed(seed: string) {
   const expandedSeed = Uint8Array.from(
-    Buffer.from(`${seed}                                           `),
+    Buffer.from(`${seed}`),
   );
   return Keypair.fromSeed(expandedSeed.slice(0, 32));
 }

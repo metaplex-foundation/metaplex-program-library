@@ -1,8 +1,10 @@
 pub(crate) mod collection;
+pub(crate) mod compression;
 pub(crate) mod master_edition;
 pub(crate) mod metadata;
 
 pub use collection::*;
+pub use compression::*;
 pub use master_edition::*;
 pub use metadata::*;
 use mpl_utils::token::{get_mint_decimals, get_mint_freeze_authority, get_mint_supply};

@@ -1,5 +1,5 @@
 {
-  "version": "0.4.1",
+  "version": "0.6.0",
   "name": "bubblegum",
   "instructions": [
     {
@@ -1241,7 +1241,7 @@
         },
         {
           "name": "mintAuthority",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -1892,6 +1892,11 @@
       "code": 6025,
       "name": "LeafAuthorityMustSign",
       "msg": "This transaction must be signed by either the leaf owner or leaf delegate"
+    },
+    {
+      "code": 6026,
+      "name": "CollectionMustBeSized",
+      "msg": "Collection Not Compatable with Compression, Must be Sized"
     }
   ],
   "metadata": {
