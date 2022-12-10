@@ -45,10 +45,10 @@
     "@metaplex-foundation/beet-solana": "0.4.0",
     "@metaplex-foundation/cusper": "^0.0.2",
     "@metaplex-foundation/mpl-token-metadata": "^2.5.2",
-    "bn.js": "^5.2.0",
     "@solana/spl-account-compression": "^0.1.4",
     "@solana/spl-token": "^0.1.8",
     "@solana/web3.js": "^1.50.1",
+    "bn.js": "^5.2.0",
     "js-sha3": "^0.8.0"
   },
   "devDependencies": {
@@ -56,6 +56,7 @@
     "@metaplex-foundation/rustbin": "^0.3.1",
     "@metaplex-foundation/solita": "0.19.1",
     "@solana/spl-account-compression": "^0.1.4",
+    "@types/bn.js": "^5.1.1",
     "@types/chai": "^4.3.0",
     "@types/jest": "^29.1.1",
     "@types/mocha": "^9.0.0",

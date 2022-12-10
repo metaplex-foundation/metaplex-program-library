@@ -3,8 +3,8 @@ use arrayref::array_ref;
 use mpl_token_metadata::{
     error::MetadataError,
     state::{EDITION, PREFIX},
-    utils::assert_derivation,
 };
+use mpl_utils::assert_derivation;
 use solana_program::{
     account_info::AccountInfo,
     program::invoke,
@@ -99,8 +99,8 @@ pub fn assert_edition_from_mint(
             mint_account.key().as_ref(),
             EDITION.as_bytes(),
         ],
-    )
-    .map_err(|_| MetadataError::CollectionMasterEditionAccountInvalid)?;
+        MetadataError::CollectionMasterEditionAccountInvalid,
+    )?;
     Ok(())
 }
 
