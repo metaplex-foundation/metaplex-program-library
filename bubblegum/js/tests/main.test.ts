@@ -14,8 +14,7 @@ import {
   ConcurrentMerkleTreeAccount,
   SPL_ACCOUNT_COMPRESSION_PROGRAM_ID,
   SPL_NOOP_PROGRAM_ID,
-  ValidDepthSizePair,
-  createVerifyLeafInstruction,
+  ValidDepthSizePair
 } from '@solana/spl-account-compression';
 
 import {
@@ -128,7 +127,7 @@ async function setupTreeWithCompressedNFT(
 
 describe('Bubblegum tests', () => {
   const connection = new Connection('http://localhost:8899');
-  const payerKeypair = keypairFromSeed('metaplex-test');
+  const payerKeypair = keypairFromSeed('metaplex-test09870987098709870987009709870987098709870987');
   const payer = payerKeypair.publicKey;
 
   beforeEach(async () => {
