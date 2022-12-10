@@ -92,9 +92,8 @@ export class Metadata implements MetadataArgs {
   static async fromAccountAddress(
     connection: web3.Connection,
     address: web3.PublicKey,
-    commitmentOrConfig?: web3.Commitment | web3.GetAccountInfoConfig,
   ): Promise<Metadata> {
-    const accountInfo = await connection.getAccountInfo(address, commitmentOrConfig);
+    const accountInfo = await connection.getAccountInfo(address);
     if (accountInfo == null) {
       throw new Error(`Unable to find Metadata account at ${address}`);
     }

@@ -69,9 +69,8 @@ export class ReservationListV1 implements ReservationListV1Args {
   static async fromAccountAddress(
     connection: web3.Connection,
     address: web3.PublicKey,
-    commitmentOrConfig?: web3.Commitment | web3.GetAccountInfoConfig,
   ): Promise<ReservationListV1> {
-    const accountInfo = await connection.getAccountInfo(address, commitmentOrConfig);
+    const accountInfo = await connection.getAccountInfo(address);
     if (accountInfo == null) {
       throw new Error(`Unable to find ReservationListV1 account at ${address}`);
     }
