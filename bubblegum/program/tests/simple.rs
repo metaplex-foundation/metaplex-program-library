@@ -38,10 +38,9 @@ const DEFAULT_NUM_MINTS: u64 = 10;
 
 // TODO: will add some exta checks to the tests below (i.e. read accounts and
 // assert on values therein).
-
 // Creates a `BubblegumTestContext`, a `Tree` with default arguments, and also mints an NFT
 // with the default `LeafArgs`.
-async fn context_tree_and_leaves() -> Result<(
+pub async fn context_tree_and_leaves() -> Result<(
     BubblegumTestContext,
     Tree<MAX_DEPTH, MAX_BUF_SIZE>,
     Vec<LeafArgs>,
@@ -195,9 +194,12 @@ async fn test_reedem_and_cancel_passes() {
 
 #[tokio::test]
 async fn test_decompress_passes() {
-    let (_, tree, leaves) = context_tree_and_leaves().await.unwrap();
+    let (ctx, tree, mut leaves) = context_tree_and_leaves().await.unwrap();
 
-    for leaf in leaves.iter() {
+    for leaf in leaves.iter_mut() {
+        tree.verify_creator(leaf, &ctx.default_creators[0])
+            .await
+            .unwrap();
         tree.redeem(leaf).await.unwrap();
         let voucher = tree.read_voucher(leaf.nonce).await.unwrap();
 
@@ -257,6 +259,8 @@ async fn test_decompress_passes() {
             });
         }
 
+        assert!(expected_creators[0].verified);
+
         let expected_meta = mpl_token_metadata::state::Metadata {
             key: mpl_token_metadata::state::Key::MetadataV1,
             update_authority: decompress_mint_auth_pda(mint_key),
@@ -292,7 +296,6 @@ async fn test_decompress_passes() {
             supply: 0,
             max_supply: Some(0),
         };
-
         assert_eq!(me, expected_me);
     }
 }

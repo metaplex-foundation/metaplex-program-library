@@ -7,7 +7,7 @@ MPL_ROOT=$(git rev-parse --show-toplevel)
 mkdir -p $MPL_ROOT/test-programs
 
 mkdir -p solana_program_library
-curl -LkSs https://api.github.com/repos/solana-labs/solana-program-library/tarball/b0d84fc4 | tar -xz --strip-components=1 -C ./solana_program_library
+curl -LkSs https://api.github.com/repos/solana-labs/solana-program-library/tarball | tar -xz --strip-components=1 -C ./solana_program_library
 
 pushd solana_program_library/account-compression/programs/account-compression
   cargo build-bpf --bpf-out-dir $MPL_ROOT/test-programs
