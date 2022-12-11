@@ -3,10 +3,12 @@ import * as beetSolana from '@metaplex-foundation/beet-solana';
 import { Metadata } from '../generated/accounts/Metadata';
 import { collectionBeet } from '../generated/types/Collection';
 import { collectionDetailsBeet } from '../generated/types/CollectionDetails';
+import { programmableConfigBeet } from '../generated/types/ProgrammableConfig';
 import { dataBeet } from '../generated/types/Data';
 import { keyBeet } from '../generated/types/Key';
 import { tokenStandardBeet } from '../generated/types/TokenStandard';
 import { usesBeet } from '../generated/types/Uses';
+import { publicKey } from '@metaplex-foundation/beet-solana';
 
 const NONE_BYTE_SIZE = beet.coptionNone('').byteSize;
 
@@ -87,8 +89,27 @@ export function deserialize(buf: Buffer, offset = 0): [Metadata, number] {
       : tryReadOption(beet.coption(collectionDetailsBeet), buf, cursor);
   cursor += collectionDetailsDelta;
 
+  // programmable_config
+  const [programmableConfig, programmableConfigDelta, programmableConfigCorrupted] =
+    tokenCorrupted || collectionCorrupted || usesCorrupted
+      ? [null, NONE_BYTE_SIZE, true]
+      : tryReadOption(beet.coption(programmableConfigBeet), buf, cursor);
+  cursor += programmableConfigDelta;
+
+  // programmable_config
+  const [delegate, delegateDelta, delegateCorrupted] =
+    tokenCorrupted || collectionCorrupted || usesCorrupted
+      ? [null, NONE_BYTE_SIZE, true]
+      : tryReadOption(beet.coption(publicKey), buf, cursor);
+  cursor += delegateDelta;
+
   const anyCorrupted =
-    tokenCorrupted || collectionCorrupted || usesCorrupted || collectionDetailsCorrupted;
+    tokenCorrupted ||
+    collectionCorrupted ||
+    usesCorrupted ||
+    collectionDetailsCorrupted ||
+    programmableConfigCorrupted ||
+    delegateCorrupted;
 
   const args = {
     key,
@@ -102,6 +123,8 @@ export function deserialize(buf: Buffer, offset = 0): [Metadata, number] {
     collection: anyCorrupted ? null : collection,
     uses: anyCorrupted ? null : uses,
     collectionDetails: anyCorrupted ? null : collectionDetails,
+    programmableConfig: anyCorrupted ? null : programmableConfig,
+    delegate: anyCorrupted ? null : delegate,
   };
 
   return [Metadata.fromArgs(args), cursor];
