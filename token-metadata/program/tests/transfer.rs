@@ -21,10 +21,11 @@ mod transfer {
 
     use mpl_token_auth_rules::Payload;
     use mpl_token_metadata::{
+        error::MetadataError,
         instruction::{create_escrow_account, create_metadata_accounts_v3, mint, TransferArgs},
         pda::{find_master_edition_account, find_metadata_account},
         processor::find_escrow_account,
-        state::{AssetData, EscrowAuthority, TokenStandard},
+        state::{AssetData, EscrowAuthority, ProgrammableConfig, TokenStandard},
     };
     use solana_program::{
         native_token::LAMPORTS_PER_SOL, program_pack::Pack, system_instruction::create_account,
@@ -407,7 +408,7 @@ mod transfer {
             payer,
             true,
             true,
-            asset,
+            asset.clone(),
             Some(0),
             Some(0),
         );
@@ -447,8 +448,10 @@ mod transfer {
         );
 
         // Create rule-set for the transfer
-        let (ruleset_pda, mut auth_data) =
+        let (rule_set, mut auth_data) =
             create_royalty_ruleset(&mut context, recipient.pubkey()).await;
+
+        asset.programmable_config = Some(ProgrammableConfig { rule_set });
 
         let transfer_ix = instruction::transfer(
             id(),
@@ -463,7 +466,7 @@ mod transfer {
                 authorization_data: Some(auth_data.clone()),
                 amount: 1,
             },
-            Some(ruleset_pda),
+            Some(rule_set),
             None,
         );
 
@@ -484,7 +487,8 @@ mod transfer {
         assert_custom_error_ix!(
             1,
             err,
-            mpl_token_auth_rules::error::RuleSetError::ProgramOwnedCheckFailed
+            // mpl_token_auth_rules::error::RuleSetError::ProgramOwnedCheckFailed
+            MetadataError::MissingProgrammableConfig
         );
 
         // Create TOE account and try to transfer to it. This should succeed.
@@ -531,7 +535,7 @@ mod transfer {
                 authorization_data: Some(auth_data),
                 amount: 1,
             },
-            Some(ruleset_pda),
+            Some(rule_set),
             None,
         );
 

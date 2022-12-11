@@ -71,6 +71,10 @@ fn transfer_v1<'a>(
                     return Err(MetadataError::MissingAuthorizationRules.into());
                 }
 
+                if metadata_data.programmable_config.is_none() {
+                    return Err(MetadataError::MissingProgrammableConfig.into());
+                }
+
                 if edition.is_none() {
                     return Err(MetadataError::MissingEditionAccount.into());
                 }

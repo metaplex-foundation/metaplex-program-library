@@ -544,6 +544,14 @@ pub enum MetadataError {
     /// 137
     #[error("Missing authorization rules account")]
     MissingAuthorizationRules,
+
+    /// 138
+    #[error("Missing programmable configuration")]
+    MissingProgrammableConfig,
+
+    /// 139
+    #[error("Invalid programmable configuration")]
+    InvalidProgrammableConfig,
 }
 
 impl PrintProgramError for MetadataError {
