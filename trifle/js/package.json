@@ -1,7 +1,7 @@
 {
   "name": "@metaplex-foundation/mpl-trifle",
-  "version": "0.1.0",
-  "contractVersion": "0.1.0",
+  "version": "0.2.0",
+  "contractVersion": "0.2.0",
   "description": "MPL Trifle JavaScript API.",
   "main": "dist/src/mpl-token-metadata.js",
   "types": "dist/src/mpl-token-metadata.d.ts",
