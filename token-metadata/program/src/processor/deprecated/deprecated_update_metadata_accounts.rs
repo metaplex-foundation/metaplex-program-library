@@ -1,14 +1,6 @@
+use solana_program::{account_info::AccountInfo, entrypoint::ProgramResult, pubkey::Pubkey};
 
-use solana_program::{
-    account_info::{AccountInfo},
-    entrypoint::ProgramResult,
-    pubkey::Pubkey,
-};
-
-use crate::{
-    error::MetadataError,
-    state::{Data},
-};
+use crate::{error::MetadataError, state::Data};
 
 /// Update existing account instruction
 pub fn process_deprecated_update_metadata_accounts(
