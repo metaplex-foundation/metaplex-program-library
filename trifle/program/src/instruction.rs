@@ -239,7 +239,7 @@ pub fn add_none_constraint_to_escrow_constraint_model(
     let accounts = vec![
         AccountMeta::new(*escrow_constraint_model, false),
         AccountMeta::new(*payer, true),
-        AccountMeta::new_readonly(*update_authority, false),
+        AccountMeta::new_readonly(*update_authority, true),
         AccountMeta::new_readonly(solana_program::system_program::id(), false),
         AccountMeta::new_readonly(sysvar::instructions::id(), false),
     ];
@@ -273,7 +273,7 @@ pub fn add_collection_constraint_to_escrow_constraint_model(
     let accounts = vec![
         AccountMeta::new(*escrow_constraint_model, false),
         AccountMeta::new(*payer, true),
-        AccountMeta::new_readonly(*update_authority, false),
+        AccountMeta::new_readonly(*update_authority, true),
         AccountMeta::new_readonly(*collection_mint, false),
         AccountMeta::new_readonly(*collection_mint_metadata, false),
         AccountMeta::new_readonly(solana_program::system_program::id(), false),
@@ -308,7 +308,7 @@ pub fn add_tokens_constraint_to_escrow_constraint_model(
     let accounts = vec![
         AccountMeta::new(*escrow_constraint_model, false),
         AccountMeta::new(*payer, true),
-        AccountMeta::new_readonly(*update_authority, false),
+        AccountMeta::new_readonly(*update_authority, true),
         AccountMeta::new_readonly(solana_program::system_program::id(), false),
         AccountMeta::new_readonly(sysvar::instructions::id(), false),
     ];
