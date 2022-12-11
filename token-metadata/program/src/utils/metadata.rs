@@ -1,8 +1,7 @@
 use borsh::{maybestd::io::Error as BorshError, BorshDeserialize, BorshSerialize};
 use mpl_utils::{create_or_allocate_account_raw, token::get_mint_authority};
 use solana_program::{
-    account_info::AccountInfo, entrypoint::ProgramResult, program_option::COption,
-    pubkey::Pubkey,
+    account_info::AccountInfo, entrypoint::ProgramResult, program_option::COption, pubkey::Pubkey,
 };
 
 use super::{compression::is_decompression, *};
