@@ -622,7 +622,7 @@ async fn create_trifle(
 ) -> (Pubkey, Pubkey) {
     let (trifle_addr, _) = find_trifle_address(&metadata.mint.pubkey(), &context.payer.pubkey());
 
-    let (escrow_addr, _) = mpl_token_metadata::escrow::pda::find_escrow_account(
+    let (escrow_addr, _) = mpl_token_metadata::processor::find_escrow_account(
         &metadata.mint.pubkey(),
         &EscrowAuthority::Creator(trifle_addr.to_owned()),
     );

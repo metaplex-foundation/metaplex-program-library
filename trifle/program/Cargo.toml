@@ -23,7 +23,8 @@ spl-associated-token-account = { version = "~1.0.5", features = [
     "no-entrypoint",
 ] }
 thiserror = "1.0.35"
-mpl-token-metadata = { version = "1.6.1", features = ["no-entrypoint"] }
+mpl-utils = "0.0.5"
+mpl-token-metadata = { version = "1.6.2", features = ["no-entrypoint"] }
 num-derive = "0.3.3"
 num-traits = "0.2.14"
 modular-bitfield = "0.11.2"

@@ -5,7 +5,7 @@ pub mod trifle;
 use std::io::ErrorKind;
 
 use borsh::{maybestd::io::Error as BorshError, BorshDeserialize, BorshSerialize};
-use mpl_token_metadata::utils::assert_owned_by;
+use mpl_token_metadata::assertions::assert_owned_by;
 use num_derive::FromPrimitive;
 use num_traits::FromPrimitive;
 use solana_program::{account_info::AccountInfo, program_error::ProgramError};

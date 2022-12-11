@@ -19,14 +19,13 @@ use crate::{
 };
 use borsh::{BorshDeserialize, BorshSerialize};
 use mpl_token_metadata::{
+    assertions::{assert_derivation, assert_owned_by},
     error::MetadataError,
     id as token_metadata_program_id,
     state::{EscrowAuthority, Metadata, TokenMetadataAccount, ESCROW_POSTFIX, PREFIX},
-    utils::{
-        assert_derivation, assert_owned_by, assert_signer, create_or_allocate_account_raw,
-        is_print_edition,
-    },
+    utils::is_print_edition,
 };
+use mpl_utils::{assert_signer, create_or_allocate_account_raw};
 use solana_program::{
     account_info::next_account_info,
     account_info::AccountInfo,
