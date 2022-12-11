@@ -10,19 +10,19 @@ import * as beet from '@metaplex-foundation/beet';
  * @category enums
  * @category generated
  */
-export enum TokenStandard {
-  NonFungible,
-  FungibleAsset,
-  Fungible,
-  NonFungibleEdition,
-  ProgrammableNonFungible,
+export enum DelegateRole {
+  Authority,
+  Collection,
+  Sale,
+  Use,
+  Utility,
 }
 
 /**
  * @category userTypes
  * @category generated
  */
-export const tokenStandardBeet = beet.fixedScalarEnum(TokenStandard) as beet.FixedSizeBeet<
-  TokenStandard,
-  TokenStandard
+export const delegateRoleBeet = beet.fixedScalarEnum(DelegateRole) as beet.FixedSizeBeet<
+  DelegateRole,
+  DelegateRole
 >;

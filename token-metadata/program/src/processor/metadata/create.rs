@@ -2,7 +2,6 @@ use mpl_utils::{assert_initialized, cmp_pubkeys};
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
-    msg,
     program::invoke,
     program_error::ProgramError,
     program_pack::Pack,
@@ -46,7 +45,6 @@ pub fn create<'a>(
     accounts: &'a [AccountInfo<'a>],
     args: CreateArgs,
 ) -> ProgramResult {
-    msg!("Create instruction");
     match args {
         CreateArgs::V1 { .. } => create_v1(program_id, accounts, args),
     }
@@ -81,7 +79,6 @@ fn create_v1<'a>(
     // if the account does not exist, we will allocate a new mint
 
     if mint.data_is_empty() {
-        msg!("Creating mint");
         // mint account must be a signer in the transaction
         if !mint.is_signer {
             return Err(MetadataError::MintIsNotSigner.into());
@@ -126,7 +123,6 @@ fn create_v1<'a>(
             &[mint.clone(), mint_authority.clone()],
         )?;
     } else {
-        msg!("Mint exists");
         let mint: Mint = assert_initialized(mint, MetadataError::Uninitialized)?;
         // NonFungible asset must have decimals = 0 and supply no greater than 1
         if matches!(

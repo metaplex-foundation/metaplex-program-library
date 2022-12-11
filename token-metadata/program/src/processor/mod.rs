@@ -244,9 +244,11 @@ pub fn process_instruction<'a>(
             msg!("Instruction: Transfer Out Of Escrow");
             process_transfer_out_of_escrow(program_id, accounts, args)
         }
+
         //--- new instructions
+
         MetadataInstruction::Create(args) => {
-            msg!("Instruction: CreateMetadata");
+            msg!("Instruction: Create");
             metadata::create(program_id, accounts, args)
         }
         MetadataInstruction::Mint(args) => {

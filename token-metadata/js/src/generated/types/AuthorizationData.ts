@@ -6,23 +6,19 @@
  */
 
 import * as beet from '@metaplex-foundation/beet';
-/**
- * @category enums
- * @category generated
- */
-export enum TokenStandard {
-  NonFungible,
-  FungibleAsset,
-  Fungible,
-  NonFungibleEdition,
-  ProgrammableNonFungible,
-}
+export type AuthorizationData = {
+  payload: Uint8Array;
+  name: string;
+};
 
 /**
  * @category userTypes
  * @category generated
  */
-export const tokenStandardBeet = beet.fixedScalarEnum(TokenStandard) as beet.FixedSizeBeet<
-  TokenStandard,
-  TokenStandard
->;
+export const authorizationDataBeet = new beet.FixableBeetArgsStruct<AuthorizationData>(
+  [
+    ['payload', beet.bytes],
+    ['name', beet.utf8String],
+  ],
+  'AuthorizationData',
+);

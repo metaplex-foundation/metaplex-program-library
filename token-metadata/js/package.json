@@ -19,7 +19,9 @@
     "fix:lint": "yarn lint --fix",
     "prettier": "prettier \"{src,test}/**/*.ts\" --check",
     "fix:prettier": "prettier --write src/",
-    "fix": "yarn fix:lint && yarn fix:prettier"
+    "fix": "yarn fix:lint && yarn fix:prettier",
+    "amman:start": "amman start",
+    "amman:stop": "amman stop"
   },
   "files": [
     "/dist/src"
@@ -48,6 +50,8 @@
     "debug": "^4.3.4"
   },
   "devDependencies": {
+    "@metaplex-foundation/amman": "^0.12.0",
+    "@metaplex-foundation/amman-client": "^0.2.2",
     "@metaplex-foundation/solita": "^0.19.1",
     "@types/bn.js": "^5.1.1",
     "@types/debug": "^4.1.7",
@@ -55,13 +59,17 @@
     "@typescript-eslint/eslint-plugin": "^5.44.0",
     "@typescript-eslint/parser": "^5.44.0",
     "cpr": "^3.0.1",
+    "esbuild": "0.15.12",
+    "esbuild-runner": "^2.2.1",
     "eslint": "^8.3.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-prettier": "^4.2.1",
+    "prettier": "^2.5.1",
     "rimraf": "^3.0.2",
     "spok": "^1.4.3",
     "supports-color": "^9.2.3",
     "tape": "^5.5.3",
+    "typedoc": "^0.23.16",
     "typescript": "^4.9.3"
   }
 }

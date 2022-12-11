@@ -10,19 +10,15 @@ import * as beet from '@metaplex-foundation/beet';
  * @category enums
  * @category generated
  */
-export enum TokenStandard {
-  NonFungible,
-  FungibleAsset,
-  Fungible,
-  NonFungibleEdition,
-  ProgrammableNonFungible,
+export enum VerifyArgs {
+  V1,
 }
 
 /**
  * @category userTypes
  * @category generated
  */
-export const tokenStandardBeet = beet.fixedScalarEnum(TokenStandard) as beet.FixedSizeBeet<
-  TokenStandard,
-  TokenStandard
+export const verifyArgsBeet = beet.fixedScalarEnum(VerifyArgs) as beet.FixedSizeBeet<
+  VerifyArgs,
+  VerifyArgs
 >;

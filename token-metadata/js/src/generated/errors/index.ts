@@ -2855,6 +2855,115 @@ createErrorFromCodeLookup.set(0x84, () => new InvalidBubblegumSignerError());
 createErrorFromNameLookup.set('InvalidBubblegumSigner', () => new InvalidBubblegumSignerError());
 
 /**
+ * MintIsNotSigner: 'Mint needs to be signer to initialize the account'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MintIsNotSignerError extends Error {
+  readonly code: number = 0x85;
+  readonly name: string = 'MintIsNotSigner';
+  constructor() {
+    super('Mint needs to be signer to initialize the account');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MintIsNotSignerError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x85, () => new MintIsNotSignerError());
+createErrorFromNameLookup.set('MintIsNotSigner', () => new MintIsNotSignerError());
+
+/**
+ * InvalidTokenStandard: 'Invalid token standard'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidTokenStandardError extends Error {
+  readonly code: number = 0x86;
+  readonly name: string = 'InvalidTokenStandard';
+  constructor() {
+    super('Invalid token standard');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidTokenStandardError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x86, () => new InvalidTokenStandardError());
+createErrorFromNameLookup.set('InvalidTokenStandard', () => new InvalidTokenStandardError());
+
+/**
+ * InvalidMintForTokenStandard: 'Invalid mint account for specified token standard'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidMintForTokenStandardError extends Error {
+  readonly code: number = 0x87;
+  readonly name: string = 'InvalidMintForTokenStandard';
+  constructor() {
+    super('Invalid mint account for specified token standard');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidMintForTokenStandardError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x87, () => new InvalidMintForTokenStandardError());
+createErrorFromNameLookup.set(
+  'InvalidMintForTokenStandard',
+  () => new InvalidMintForTokenStandardError(),
+);
+
+/**
+ * InvalidAuthorizationRules: 'Invalid authorization rules account'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidAuthorizationRulesError extends Error {
+  readonly code: number = 0x88;
+  readonly name: string = 'InvalidAuthorizationRules';
+  constructor() {
+    super('Invalid authorization rules account');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidAuthorizationRulesError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x88, () => new InvalidAuthorizationRulesError());
+createErrorFromNameLookup.set(
+  'InvalidAuthorizationRules',
+  () => new InvalidAuthorizationRulesError(),
+);
+
+/**
+ * MissingAuthorizationRules: 'Missing authorization rules account'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MissingAuthorizationRulesError extends Error {
+  readonly code: number = 0x89;
+  readonly name: string = 'MissingAuthorizationRules';
+  constructor() {
+    super('Missing authorization rules account');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MissingAuthorizationRulesError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x89, () => new MissingAuthorizationRulesError());
+createErrorFromNameLookup.set(
+  'MissingAuthorizationRules',
+  () => new MissingAuthorizationRulesError(),
+);
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

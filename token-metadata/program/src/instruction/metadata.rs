@@ -52,6 +52,8 @@ pub enum MintArgs {
     V1 { amount: u64 },
 }
 
+#[repr(C)]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub enum TransferArgs {
     V1 {
@@ -351,6 +353,7 @@ pub fn create(
 ///   8. `[]` SPL Associated Token Account program
 ///   9. `[optional]` Master Edition account
 ///   10. `[optional]` Token Authorization Rules account
+///   11. `[optional]` Token Authorization Rules program
 pub fn mint(
     token: Pubkey,
     metadata: Pubkey,
@@ -379,6 +382,7 @@ pub fn mint(
     // checks whether we have authorization rules
     if let Some(authorization_rules) = authorization_rules {
         accounts.push(AccountMeta::new(authorization_rules, false));
+        accounts.push(AccountMeta::new(mpl_token_auth_rules::id(), false));
     }
 
     Instruction {

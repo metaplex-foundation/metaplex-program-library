@@ -1,3 +1,4 @@
+use borsh::BorshSerialize;
 use mpl_token_auth_rules::{
     state::{Operation, Rule, RuleSet},
     Payload,
@@ -76,7 +77,13 @@ pub async fn create_royalty_ruleset(
         .expect("creation should succeed");
 
     let payload = Payload::new(Some(destination), None, Some(1), None);
-    let auth_data = AuthorizationData { payload, name };
+    let mut serialized_data = Vec::new();
+    payload.serialize(&mut serialized_data).unwrap();
+
+    let auth_data = AuthorizationData {
+        payload: serialized_data,
+        name,
+    };
 
     (ruleset_addr, auth_data)
 }

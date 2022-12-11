@@ -25,7 +25,7 @@ use serde::{Deserialize, Serialize};
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct AuthorizationData {
-    pub payload: Payload,
+    pub payload: Vec<u8>,
     pub name: String,
 }
 
@@ -80,11 +80,14 @@ fn transfer_v1<'a>(
                 let auth_data = authorization_data.unwrap();
 
                 msg!("destination key: {:?}", destination_owner.key);
+                /*
                 msg!(
                     "payload destination key: {:?}",
                     auth_data.payload.destination_key.unwrap()
                 );
+                */
                 msg!("destination key owner: {:?}", destination_owner.owner);
+                let payload = Payload::deserialize(&mut auth_data.payload.as_slice())?;
 
                 let validate_ix = validate(
                     mpl_token_auth_rules::ID,
@@ -92,7 +95,7 @@ fn transfer_v1<'a>(
                     *auth_pda.key,
                     auth_data.name.clone(),
                     Operation::Transfer,
-                    auth_data.payload.clone(),
+                    payload.clone(),
                     vec![],
                     vec![*destination_owner.key],
                 );
@@ -110,7 +113,7 @@ fn transfer_v1<'a>(
                     mint: mint.clone(),
                     source: token_account.clone(),
                     destination: destination_token_account.clone(),
-                    amount: auth_data.payload.amount.unwrap(),
+                    amount: payload.amount.unwrap(),
                     authority: owner.clone(),
                     authority_signer_seeds: None,
                     token_program: spl_token_program.clone(),

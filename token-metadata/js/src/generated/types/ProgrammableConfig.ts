@@ -5,24 +5,18 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
+import * as web3 from '@solana/web3.js';
+import * as beetSolana from '@metaplex-foundation/beet-solana';
 import * as beet from '@metaplex-foundation/beet';
-/**
- * @category enums
- * @category generated
- */
-export enum TokenStandard {
-  NonFungible,
-  FungibleAsset,
-  Fungible,
-  NonFungibleEdition,
-  ProgrammableNonFungible,
-}
+export type ProgrammableConfig = {
+  ruleSet: web3.PublicKey;
+};
 
 /**
  * @category userTypes
  * @category generated
  */
-export const tokenStandardBeet = beet.fixedScalarEnum(TokenStandard) as beet.FixedSizeBeet<
-  TokenStandard,
-  TokenStandard
->;
+export const programmableConfigBeet = new beet.BeetArgsStruct<ProgrammableConfig>(
+  [['ruleSet', beetSolana.publicKey]],
+  'ProgrammableConfig',
+);

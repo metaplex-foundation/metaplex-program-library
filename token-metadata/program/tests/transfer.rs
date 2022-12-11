@@ -2,6 +2,7 @@
 
 pub mod utils;
 
+use borsh::BorshSerialize;
 use mpl_token_metadata::{
     id, instruction,
     state::{MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH},
@@ -502,7 +503,11 @@ mod transfer {
         );
 
         // Change destination in payload.
-        auth_data.payload = Payload::new(Some(escrow_account), None, Some(1), None);
+
+        let payload = Payload::new(Some(escrow_account), None, Some(1), None);
+        let mut serialized_data = Vec::new();
+        payload.serialize(&mut serialized_data).unwrap();
+        auth_data.payload = serialized_data;
 
         let recipient_ata = get_associated_token_address(&escrow_account, &mint_key.pubkey());
 

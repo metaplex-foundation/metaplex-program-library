@@ -526,12 +526,14 @@ pub enum MetadataInstruction {
     #[account(1, name="metadata", desc="Metadata account key (pda of ['metadata', program id, mint id])")]
     #[account(2, writable, name="mint", desc="Mint of token asset")]
     #[account(3, signer, writable, name="payer", desc="Payer")]
-    #[account(4, signer, name="mint_authority", desc="Mint authority")]
+    #[account(4, signer, name="authority", desc="(Mint or Update) authority")]
     #[account(5, name="system_program", desc="System program")]
     #[account(6, name="sysvar_instructions", desc="Instructions sysvar account")]
     #[account(7, name="spl_token_program", desc="SPL Token program")]
     #[account(8, name="spl_ata_program", desc="SPL Associated Token Account program")]
-    #[account(9, optional, name="authorization_rules", desc="Token Authorization Rules account")]
+    #[account(9, optional, writable, name="master_edition", desc="Master Edition account")]
+    #[account(10, optional, name="authorization_rules", desc="Token Authorization Rules account")]
+    #[account(11, optional, name="token_auth_rules_program", desc="Token Authorization Rules program")]
     Mint(MintArgs),
 
     /// Updates the metadata of an asset.
