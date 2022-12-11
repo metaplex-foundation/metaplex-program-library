@@ -1,11 +1,9 @@
 use borsh::{BorshDeserialize, BorshSerialize};
-use mpl_token_auth_rules::{instruction::validate, state::Operation, Payload};
 use mpl_utils::token::TokenTransferParams;
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
     msg,
-    program::invoke_signed,
     program_error::ProgramError,
     pubkey::Pubkey,
 };
@@ -15,7 +13,7 @@ use crate::{
     instruction::TransferArgs,
     pda::find_master_edition_account,
     state::{Metadata, TokenMetadataAccount, TokenStandard},
-    utils::{freeze, thaw},
+    utils::{freeze, thaw, validate},
 };
 
 #[cfg(feature = "serde-feature")]
@@ -25,8 +23,26 @@ use serde::{Deserialize, Serialize};
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct AuthorizationData {
-    pub payload: Vec<u8>,
+    pub derived_key_seeds: Option<Vec<Vec<u8>>>,
+    pub leaf_info: Option<LeafInfo>,
     pub name: String,
+}
+
+#[repr(C)]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+pub struct LeafInfo {
+    pub leaf: [u8; 32],
+    pub proof: Vec<[u8; 32]>,
+}
+
+impl LeafInfo {
+    pub fn into_native(self) -> mpl_token_auth_rules::LeafInfo {
+        mpl_token_auth_rules::LeafInfo {
+            leaf: self.leaf,
+            proof: self.proof,
+        }
+    }
 }
 
 pub fn transfer<'a>(
@@ -82,34 +98,9 @@ fn transfer_v1<'a>(
 
                 let auth_pda = authorization_rules.unwrap();
                 let auth_data = authorization_data.unwrap();
+                let amount = args.get_amount();
 
-                msg!("destination key: {:?}", destination_owner.key);
-                /*
-                msg!(
-                    "payload destination key: {:?}",
-                    auth_data.payload.destination_key.unwrap()
-                );
-                */
-                msg!("destination key owner: {:?}", destination_owner.owner);
-                let payload = Payload::deserialize(&mut auth_data.payload.as_slice())?;
-
-                let validate_ix = validate(
-                    mpl_token_auth_rules::ID,
-                    *owner.key,
-                    *auth_pda.key,
-                    auth_data.name.clone(),
-                    Operation::Transfer,
-                    payload.clone(),
-                    vec![],
-                    vec![*destination_owner.key],
-                );
-
-                invoke_signed(
-                    &validate_ix,
-                    &[owner.clone(), auth_pda.clone(), destination_owner.clone()],
-                    &[],
-                )
-                .unwrap();
+                validate(owner, auth_pda, destination_owner, auth_data, Some(amount));
 
                 thaw(mint, token_account, master_edition, spl_token_program)?;
 
@@ -117,7 +108,7 @@ fn transfer_v1<'a>(
                     mint: mint.clone(),
                     source: token_account.clone(),
                     destination: destination_token_account.clone(),
-                    amount: payload.amount.unwrap(),
+                    amount,
                     authority: owner.clone(),
                     authority_signer_seeds: None,
                     token_program: spl_token_program.clone(),

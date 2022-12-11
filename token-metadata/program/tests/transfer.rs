@@ -2,7 +2,6 @@
 
 pub mod utils;
 
-use borsh::BorshSerialize;
 use mpl_token_metadata::{
     id, instruction,
     state::{MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH},
@@ -19,9 +18,7 @@ use utils::*;
 
 mod transfer {
 
-    use mpl_token_auth_rules::Payload;
     use mpl_token_metadata::{
-        error::MetadataError,
         instruction::{create_escrow_account, create_metadata_accounts_v3, mint, TransferArgs},
         pda::{find_master_edition_account, find_metadata_account},
         processor::find_escrow_account,
@@ -390,6 +387,10 @@ mod transfer {
         );
         asset.seller_fee_basis_points = 500;
 
+        // Create rule-set for the transfer
+        let (rule_set, auth_data) = create_royalty_ruleset(&mut context).await;
+        asset.programmable_config = Some(ProgrammableConfig { rule_set });
+
         let mint_key = Keypair::new();
         let ata = get_associated_token_address(&context.payer.pubkey(), &mint_key.pubkey());
         let (metadata, _) = find_metadata_account(&mint_key.pubkey());
@@ -447,12 +448,6 @@ mod transfer {
             &spl_token::id(),
         );
 
-        // Create rule-set for the transfer
-        let (rule_set, mut auth_data) =
-            create_royalty_ruleset(&mut context, recipient.pubkey()).await;
-
-        asset.programmable_config = Some(ProgrammableConfig { rule_set });
-
         let transfer_ix = instruction::transfer(
             id(),
             ata,
@@ -487,8 +482,7 @@ mod transfer {
         assert_custom_error_ix!(
             1,
             err,
-            // mpl_token_auth_rules::error::RuleSetError::ProgramOwnedCheckFailed
-            MetadataError::MissingProgrammableConfig
+            mpl_token_auth_rules::error::RuleSetError::ProgramOwnedCheckFailed
         );
 
         // Create TOE account and try to transfer to it. This should succeed.
@@ -505,13 +499,6 @@ mod transfer {
             payer,
             Some(payer),
         );
-
-        // Change destination in payload.
-
-        let payload = Payload::new(Some(escrow_account), None, Some(1), None);
-        let mut serialized_data = Vec::new();
-        payload.serialize(&mut serialized_data).unwrap();
-        auth_data.payload = serialized_data;
 
         let recipient_ata = get_associated_token_address(&escrow_account, &mint_key.pubkey());
 

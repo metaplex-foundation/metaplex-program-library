@@ -1,8 +1,4 @@
-use borsh::BorshSerialize;
-use mpl_token_auth_rules::{
-    state::{Operation, Rule, RuleSet},
-    Payload,
-};
+use mpl_token_auth_rules::state::{Operation, Rule, RuleSet};
 use mpl_token_metadata::processor::AuthorizationData;
 use rmp_serde::Serializer;
 use serde::Serialize;
@@ -12,7 +8,6 @@ use crate::*;
 
 pub async fn create_royalty_ruleset(
     context: &mut ProgramTestContext,
-    destination: Pubkey,
 ) -> (Pubkey, AuthorizationData) {
     // --------------------------------
     // Create RuleSet
@@ -76,12 +71,9 @@ pub async fn create_royalty_ruleset(
         .await
         .expect("creation should succeed");
 
-    let payload = Payload::new(Some(destination), None, Some(1), None);
-    let mut serialized_data = Vec::new();
-    payload.serialize(&mut serialized_data).unwrap();
-
     let auth_data = AuthorizationData {
-        payload: serialized_data,
+        derived_key_seeds: None,
+        leaf_info: None,
         name,
     };
 
