@@ -41,7 +41,6 @@ export type RemoveCollectionInstructionAccounts = {
   mint: web3.PublicKey;
   collectionAuthorityRecord: web3.PublicKey;
   tokenMetadataProgram: web3.PublicKey;
-  anchorRemainingAccounts?: web3.AccountMeta[];
 };
 
 export const removeCollectionInstructionDiscriminator = [223, 52, 106, 217, 61, 220, 36, 160];
@@ -98,12 +97,6 @@ export function createRemoveCollectionInstruction(
       isSigner: false,
     },
   ];
-
-  if (accounts.anchorRemainingAccounts != null) {
-    for (const acc of accounts.anchorRemainingAccounts) {
-      keys.push(acc);
-    }
-  }
 
   const ix = new web3.TransactionInstruction({
     programId,
