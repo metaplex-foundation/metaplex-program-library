@@ -6,8 +6,10 @@
  */
 
 import * as beet from '@metaplex-foundation/beet';
+import { LeafInfo, leafInfoBeet } from './LeafInfo';
 export type AuthorizationData = {
-  payload: Uint8Array;
+  derivedKeySeeds: beet.COption<Uint8Array[]>;
+  leafInfo: beet.COption<LeafInfo>;
   name: string;
 };
 
@@ -17,7 +19,8 @@ export type AuthorizationData = {
  */
 export const authorizationDataBeet = new beet.FixableBeetArgsStruct<AuthorizationData>(
   [
-    ['payload', beet.bytes],
+    ['derivedKeySeeds', beet.coption(beet.array(beet.bytes))],
+    ['leafInfo', beet.coption(leafInfoBeet)],
     ['name', beet.utf8String],
   ],
   'AuthorizationData',

@@ -14,7 +14,7 @@ mod delegate {
     use mpl_token_metadata::{
         instruction::DelegateRole,
         pda::find_delegate_account,
-        state::{Delegate, Key, Metadata, TokenStandard},
+        state::{DelegateRecord, Key, Metadata, TokenStandard},
     };
     use solana_program::borsh::try_from_slice_unchecked;
     use std::borrow::Borrow;

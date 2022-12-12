@@ -3190,7 +3190,7 @@
       }
     },
     {
-      "name": "Delegate",
+      "name": "DelegateRecord",
       "type": {
         "kind": "struct",
         "fields": [
@@ -3772,12 +3772,52 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "payload",
-            "type": "bytes"
+            "name": "derivedKeySeeds",
+            "type": {
+              "option": {
+                "vec": "bytes"
+              }
+            }
+          },
+          {
+            "name": "leafInfo",
+            "type": {
+              "option": {
+                "defined": "LeafInfo"
+              }
+            }
           },
           {
             "name": "name",
             "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "LeafInfo",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "leaf",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "proof",
+            "type": {
+              "vec": {
+                "array": [
+                  "u8",
+                  32
+                ]
+              }
+            }
           }
         ]
       }
@@ -5106,6 +5146,16 @@
       "code": 137,
       "name": "MissingAuthorizationRules",
       "msg": "Missing authorization rules account"
+    },
+    {
+      "code": 138,
+      "name": "MissingProgrammableConfig",
+      "msg": "Missing programmable configuration"
+    },
+    {
+      "code": 139,
+      "name": "InvalidProgrammableConfig",
+      "msg": "Invalid programmable configuration"
     }
   ],
   "metadata": {

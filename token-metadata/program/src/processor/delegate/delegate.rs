@@ -14,7 +14,7 @@ use crate::{
     error::MetadataError,
     instruction::{DelegateArgs, DelegateRole},
     pda::PREFIX,
-    state::{Delegate, Key, Metadata, TokenMetadataAccount},
+    state::{DelegateRecord, Key, Metadata, TokenMetadataAccount},
 };
 
 /// Delegates an action over an asset to a specific account.
@@ -127,11 +127,11 @@ fn set_sale_delegate<'a>(
         delegate,
         system_program,
         payer,
-        Delegate::size(),
+        DelegateRecord::size(),
         &delegate_seeds,
     )?;
 
-    let mut delegate_account = Delegate::from_account_info(delegate)?;
+    let mut delegate_account = DelegateRecord::from_account_info(delegate)?;
     delegate_account.key = Key::Delegate;
     delegate_account.role = DelegateRole::Sale;
     delegate_account.bump = bump[0];

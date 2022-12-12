@@ -17,6 +17,7 @@ export * from './DelegateRole';
 export * from './DelegateState';
 export * from './EscrowAuthority';
 export * from './Key';
+export * from './LeafInfo';
 export * from './MigrateArgs';
 export * from './MintArgs';
 export * from './MintNewEditionFromMasterEditionViaTokenArgs';

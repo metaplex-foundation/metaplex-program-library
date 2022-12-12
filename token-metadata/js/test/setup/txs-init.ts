@@ -23,7 +23,7 @@ import {
   MintInstructionArgs,
   PROGRAM_ID,
   TokenStandard,
-} from 'src/generated';
+} from '../../src/generated';
 import { Test } from 'tape';
 import { amman } from '.';
 

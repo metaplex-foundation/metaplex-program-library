@@ -12,43 +12,46 @@ import { Key, keyBeet } from '../types/Key';
 import { DelegateRole, delegateRoleBeet } from '../types/DelegateRole';
 
 /**
- * Arguments used to create {@link Delegate}
+ * Arguments used to create {@link DelegateRecord}
  * @category Accounts
  * @category generated
  */
-export type DelegateArgs = {
+export type DelegateRecordArgs = {
   key: Key;
   role: DelegateRole;
   bump: number;
 };
 /**
- * Holds the data for the {@link Delegate} Account and provides de/serialization
+ * Holds the data for the {@link DelegateRecord} Account and provides de/serialization
  * functionality for that data
  *
  * @category Accounts
  * @category generated
  */
-export class Delegate implements DelegateArgs {
+export class DelegateRecord implements DelegateRecordArgs {
   private constructor(readonly key: Key, readonly role: DelegateRole, readonly bump: number) {}
 
   /**
-   * Creates a {@link Delegate} instance from the provided args.
+   * Creates a {@link DelegateRecord} instance from the provided args.
    */
-  static fromArgs(args: DelegateArgs) {
-    return new Delegate(args.key, args.role, args.bump);
+  static fromArgs(args: DelegateRecordArgs) {
+    return new DelegateRecord(args.key, args.role, args.bump);
   }
 
   /**
-   * Deserializes the {@link Delegate} from the data of the provided {@link web3.AccountInfo}.
+   * Deserializes the {@link DelegateRecord} from the data of the provided {@link web3.AccountInfo}.
    * @returns a tuple of the account data and the offset up to which the buffer was read to obtain it.
    */
-  static fromAccountInfo(accountInfo: web3.AccountInfo<Buffer>, offset = 0): [Delegate, number] {
-    return Delegate.deserialize(accountInfo.data, offset);
+  static fromAccountInfo(
+    accountInfo: web3.AccountInfo<Buffer>,
+    offset = 0,
+  ): [DelegateRecord, number] {
+    return DelegateRecord.deserialize(accountInfo.data, offset);
   }
 
   /**
    * Retrieves the account info from the provided address and deserializes
-   * the {@link Delegate} from its data.
+   * the {@link DelegateRecord} from its data.
    *
    * @throws Error if no account info is found at the address or if deserialization fails
    */
@@ -56,12 +59,12 @@ export class Delegate implements DelegateArgs {
     connection: web3.Connection,
     address: web3.PublicKey,
     commitmentOrConfig?: web3.Commitment | web3.GetAccountInfoConfig,
-  ): Promise<Delegate> {
+  ): Promise<DelegateRecord> {
     const accountInfo = await connection.getAccountInfo(address, commitmentOrConfig);
     if (accountInfo == null) {
-      throw new Error(`Unable to find Delegate account at ${address}`);
+      throw new Error(`Unable to find DelegateRecord account at ${address}`);
     }
-    return Delegate.fromAccountInfo(accountInfo, 0)[0];
+    return DelegateRecord.fromAccountInfo(accountInfo, 0)[0];
   }
 
   /**
@@ -73,36 +76,36 @@ export class Delegate implements DelegateArgs {
   static gpaBuilder(
     programId: web3.PublicKey = new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
   ) {
-    return beetSolana.GpaBuilder.fromStruct(programId, delegateBeet);
+    return beetSolana.GpaBuilder.fromStruct(programId, delegateRecordBeet);
   }
 
   /**
-   * Deserializes the {@link Delegate} from the provided data Buffer.
+   * Deserializes the {@link DelegateRecord} from the provided data Buffer.
    * @returns a tuple of the account data and the offset up to which the buffer was read to obtain it.
    */
-  static deserialize(buf: Buffer, offset = 0): [Delegate, number] {
-    return delegateBeet.deserialize(buf, offset);
+  static deserialize(buf: Buffer, offset = 0): [DelegateRecord, number] {
+    return delegateRecordBeet.deserialize(buf, offset);
   }
 
   /**
-   * Serializes the {@link Delegate} into a Buffer.
+   * Serializes the {@link DelegateRecord} into a Buffer.
    * @returns a tuple of the created Buffer and the offset up to which the buffer was written to store it.
    */
   serialize(): [Buffer, number] {
-    return delegateBeet.serialize(this);
+    return delegateRecordBeet.serialize(this);
   }
 
   /**
    * Returns the byteSize of a {@link Buffer} holding the serialized data of
-   * {@link Delegate}
+   * {@link DelegateRecord}
    */
   static get byteSize() {
-    return delegateBeet.byteSize;
+    return delegateRecordBeet.byteSize;
   }
 
   /**
    * Fetches the minimum balance needed to exempt an account holding
-   * {@link Delegate} data from rent
+   * {@link DelegateRecord} data from rent
    *
    * @param connection used to retrieve the rent exemption information
    */
@@ -110,19 +113,19 @@ export class Delegate implements DelegateArgs {
     connection: web3.Connection,
     commitment?: web3.Commitment,
   ): Promise<number> {
-    return connection.getMinimumBalanceForRentExemption(Delegate.byteSize, commitment);
+    return connection.getMinimumBalanceForRentExemption(DelegateRecord.byteSize, commitment);
   }
 
   /**
    * Determines if the provided {@link Buffer} has the correct byte size to
-   * hold {@link Delegate} data.
+   * hold {@link DelegateRecord} data.
    */
   static hasCorrectByteSize(buf: Buffer, offset = 0) {
-    return buf.byteLength - offset === Delegate.byteSize;
+    return buf.byteLength - offset === DelegateRecord.byteSize;
   }
 
   /**
-   * Returns a readable version of {@link Delegate} properties
+   * Returns a readable version of {@link DelegateRecord} properties
    * and can be used to convert to JSON and/or logging
    */
   pretty() {
@@ -138,12 +141,12 @@ export class Delegate implements DelegateArgs {
  * @category Accounts
  * @category generated
  */
-export const delegateBeet = new beet.BeetStruct<Delegate, DelegateArgs>(
+export const delegateRecordBeet = new beet.BeetStruct<DelegateRecord, DelegateRecordArgs>(
   [
     ['key', keyBeet],
     ['role', delegateRoleBeet],
     ['bump', beet.u8],
   ],
-  Delegate.fromArgs,
-  'Delegate',
+  DelegateRecord.fromArgs,
+  'DelegateRecord',
 );

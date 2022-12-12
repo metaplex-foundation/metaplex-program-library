@@ -5,6 +5,6 @@
     "baseUrl": ".",
     "strict": false
   },
-  "include": ["./src"],
+  "include": ["./src", "./test"],
   "exclude": ["node_modules", "dist", "build", "lib"]
 }

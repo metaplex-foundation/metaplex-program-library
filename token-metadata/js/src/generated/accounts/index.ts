@@ -1,5 +1,5 @@
 export * from './CollectionAuthorityRecord';
-export * from './Delegate';
+export * from './DelegateRecord';
 export * from './Edition';
 export * from './EditionMarker';
 export * from './MasterEditionV1';
@@ -11,7 +11,7 @@ export * from './TokenOwnedEscrow';
 export * from './UseAuthorityRecord';
 
 import { CollectionAuthorityRecord } from './CollectionAuthorityRecord';
-import { Delegate } from './Delegate';
+import { DelegateRecord } from './DelegateRecord';
 import { Edition } from './Edition';
 import { EditionMarker } from './EditionMarker';
 import { TokenOwnedEscrow } from './TokenOwnedEscrow';
@@ -24,7 +24,7 @@ import { UseAuthorityRecord } from './UseAuthorityRecord';
 
 export const accountProviders = {
   CollectionAuthorityRecord,
-  Delegate,
+  DelegateRecord,
   Edition,
   EditionMarker,
   TokenOwnedEscrow,

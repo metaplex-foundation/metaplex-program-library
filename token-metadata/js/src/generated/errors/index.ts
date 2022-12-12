@@ -2964,6 +2964,52 @@ createErrorFromNameLookup.set(
 );
 
 /**
+ * MissingProgrammableConfig: 'Missing programmable configuration'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MissingProgrammableConfigError extends Error {
+  readonly code: number = 0x8a;
+  readonly name: string = 'MissingProgrammableConfig';
+  constructor() {
+    super('Missing programmable configuration');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MissingProgrammableConfigError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x8a, () => new MissingProgrammableConfigError());
+createErrorFromNameLookup.set(
+  'MissingProgrammableConfig',
+  () => new MissingProgrammableConfigError(),
+);
+
+/**
+ * InvalidProgrammableConfig: 'Invalid programmable configuration'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidProgrammableConfigError extends Error {
+  readonly code: number = 0x8b;
+  readonly name: string = 'InvalidProgrammableConfig';
+  constructor() {
+    super('Invalid programmable configuration');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidProgrammableConfigError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x8b, () => new InvalidProgrammableConfigError());
+createErrorFromNameLookup.set(
+  'InvalidProgrammableConfig',
+  () => new InvalidProgrammableConfigError(),
+);
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

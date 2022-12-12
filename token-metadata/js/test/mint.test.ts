@@ -2,7 +2,7 @@ import { getAccount } from '@solana/spl-token';
 import { PublicKey } from '@solana/web3.js';
 import { BN } from 'bn.js';
 import spok from 'spok';
-import { AssetData, PROGRAM_ID, TokenStandard } from 'src/generated';
+import { AssetData, PROGRAM_ID, TokenStandard } from '../src/generated';
 import test from 'tape';
 import { amman, InitTransactions, killStuckProcess } from './setup';
 import { spokSameBigint } from './utils';

@@ -1,5 +1,5 @@
 import spok from 'spok';
-import { AssetData, Metadata, TokenStandard } from 'src/generated';
+import { AssetData, Metadata, TokenStandard } from '../src/generated';
 import test from 'tape';
 import { InitTransactions, killStuckProcess } from './setup';
 
