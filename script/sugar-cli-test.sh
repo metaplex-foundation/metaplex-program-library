@@ -94,7 +94,7 @@ function mainnet_env() {
 
 function devnet_env() {
     ENV_URL="devnet"
-    RPC="https://devnet.genesysgo.net"
+    RPC="https://api.devnet.solana.com"
 }
 
 #-----------------------------------------------------------------------------#
