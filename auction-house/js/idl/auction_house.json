@@ -3329,6 +3329,11 @@
       "code": 6043,
       "name": "InsufficientFunds",
       "msg": "Insufficient funds in escrow account to purchase."
+    },
+    {
+      "code": 6044,
+      "name": "SaleRequiresExactlyOneSigner",
+      "msg": "This sale requires exactly one signer: either the seller or the authority."
     }
   ],
   "metadata": {
