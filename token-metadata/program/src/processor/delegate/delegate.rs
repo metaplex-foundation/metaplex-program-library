@@ -13,7 +13,6 @@ use crate::{
     assertions::{assert_derivation, assert_owned_by},
     error::MetadataError,
     instruction::{DelegateArgs, DelegateRole},
-    pda::PREFIX,
     state::{DelegateRecord, Key, Metadata, TokenMetadataAccount},
 };
 
@@ -109,8 +108,6 @@ fn set_sale_delegate<'a>(
     let role = DelegateRole::Sale.to_string();
     // validates the delegate derivation
     let mut delegate_seeds = vec![
-        PREFIX.as_bytes(),
-        program_id.as_ref(),
         mint.key.as_ref(),
         role.as_bytes(),
         delegate_owner.key.as_ref(),

@@ -14,7 +14,7 @@ mod update {
 
     use mpl_token_metadata::{
         instruction::AuthorityType,
-        state::{AssetData, Metadata, TokenStandard, PREFIX},
+        state::{AssetData, Metadata, TokenStandard},
     };
     use solana_program::borsh::try_from_slice_unchecked;
     use solana_sdk::signature::Keypair;
@@ -22,7 +22,7 @@ mod update {
     use super::*;
     #[tokio::test]
     async fn success_update() {
-        let mut context = &mut program_test().start_with_context().await;
+        let context = &mut program_test().start_with_context().await;
 
         // asset details
 
