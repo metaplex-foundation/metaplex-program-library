@@ -49,6 +49,51 @@ case "$PROCESSOR" in
         # good to go
         ;;
 esac
+
+# determine the latest release
+
+echo "Checking available releases..."
+echo ""
+
+TAGS=`curl -L --silent https://api.github.com/repos/metaplex-foundation/sugar/releases | grep tag_name`
+
+TAGS_V1=""
+TAGS_V2=""
+
+for TAG in $TAGS
+do
+  if [[ "$TAG" != *tag_name* ]]; then
+    # v1 release
+    if [[ "$TAG" == *v1* ]]; then
+      if [[ "$TAG" > "\"v1" ]] && [ -z "$TAG_V1" ]; then
+        TAG_V1=`echo $TAG | sed "s/\"//g;s/,//"`
+      fi
+    fi
+    # v2 release
+    if [[ "$TAG" == *alpha* ]]; then
+      if [[ "$TAG" > "\"alpha" ]] && [ -z "$TAG_V2" ]; then
+        TAG_V2=`echo $TAG | sed "s/\"//g;s/,//"`
+      fi
+    fi
+  fi
+done
+
+echo "🧰 $(CYN "Available releases:")"
+echo ""
+echo "1. $TAG_V1 (Metaplex Candy Machine v2)"
+echo "2. $TAG_V2 (Metaplex Candy Machine v3)"
+echo ""
+echo -n "$(CYN "Select a release [1-2]") (default 2): "
+read Version
+
+case "$Version" in
+    1)
+        RELEASE=$TAG_V1
+    ;;
+    *)
+        RELEASE=$TAG_V2
+    ;;
+esac
  
 BIN="sugar"
 VERSION="ubuntu-latest"
@@ -69,12 +114,12 @@ DIST="$VERSION"
 # creates a temporary directory to save the distribution file
 SOURCE="$(mktemp -d)"
 
-echo "$(CYN "1.") 🖥  $(CYN "Downloading distribution")"
 echo ""
+echo "🖥  $(CYN "Downloading binary")"
 
 # downloads the distribution file
-REMOTE="https://github.com/metaplex-foundation/sugar/releases/latest/download/"
-curl -L $REMOTE$BIN"-"$DIST --output "$SOURCE/$DIST"
+REMOTE="https://github.com/metaplex-foundation/sugar/releases/download/$RELEASE/"
+curl -L --progress-bar $REMOTE$BIN"-"$DIST --output "$SOURCE/$DIST"
 abort_on_error $?
 
 SIZE=$(wc -c "$SOURCE/$DIST" | grep -oE "[0-9]+" | head -n 1)
@@ -89,7 +134,7 @@ chmod u+x "$SOURCE/$DIST"
 abort_on_error $?
 
 echo ""
-echo "$(CYN "2.") 📤 $(CYN "Moving binary into place")"
+echo "📤 $(CYN "Moving binary into place")"
 echo ""
 
 if [ ! "$(command -v $BIN)" = "" ]; then
