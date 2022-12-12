@@ -91,7 +91,7 @@ pub fn validate<'a>(
         *ruleset.key,
         auth_data.name.clone(),
         Operation::Transfer,
-        payload.clone(),
+        payload,
         vec![],
         vec![*destination_owner.key],
     );
