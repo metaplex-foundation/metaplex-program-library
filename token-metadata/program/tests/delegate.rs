@@ -76,7 +76,7 @@ mod delegate {
         context.banks_client.process_transaction(tx).await.unwrap();
 
         let delegate_account = get_account(&mut context, &delegate).await;
-        let delegate = Delegate::from_bytes(delegate_account.data.borrow()).unwrap();
+        let delegate = DelegateRecord::from_bytes(delegate_account.data.borrow()).unwrap();
         assert_eq!(delegate.key, Key::Delegate);
         assert_eq!(delegate.role, DelegateRole::Sale);
 
