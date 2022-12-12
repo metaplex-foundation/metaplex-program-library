@@ -3,8 +3,8 @@
   "version": "0.2.0",
   "contractVersion": "0.2.0",
   "description": "MPL Trifle JavaScript API.",
-  "main": "dist/src/mpl-token-metadata.js",
-  "types": "dist/src/mpl-token-metadata.d.ts",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "scripts": {
     "check:publish-ready": "yarn build && yarn lint",
     "preversion": "yarn check:publish-ready",
