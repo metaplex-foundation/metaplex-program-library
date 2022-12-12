@@ -94,4 +94,10 @@ pub struct FileAttr {
     pub uri: String,
     #[serde(rename = "type")]
     pub file_type: String,
+    #[serde(default, skip_serializing_if = "bool_is_false")]
+    pub cdn: bool,
+}
+
+fn bool_is_false(value: &bool) -> bool {
+    !value
 }

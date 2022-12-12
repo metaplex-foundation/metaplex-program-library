@@ -170,12 +170,17 @@ fn print_guard_set(guard_set: &GuardSet, padding: String) -> Result<()> {
     // start date
     if let Some(start_date) = &guard_set.start_date {
         print_with_style(&padding, "start date", EMPTY_STR.to_string());
-        let date = NaiveDateTime::from_timestamp(start_date.date, 0);
-        print_with_style(
-            &format!("{}:   ", padding),
-            "date",
-            date.format("%a %B %e %Y %H:%M:%S UTC").to_string(),
-        );
+        if let Some(date) = NaiveDateTime::from_timestamp_opt(start_date.date, 0) {
+            print_with_style(
+                &format!("{}:   ", padding),
+                "date",
+                date.format("%a %B %e %Y %H:%M:%S UTC").to_string(),
+            );
+        } else {
+            // this should not happen, but adding a message so it can be
+            // flag to the user
+            print_with_style(&format!("{}:   ", padding), "date", "<parse error>");
+        }
     } else {
         print_with_style(&padding, "start date", "none".to_string());
     }
@@ -229,12 +234,17 @@ fn print_guard_set(guard_set: &GuardSet, padding: String) -> Result<()> {
     // end date
     if let Some(end_date) = &guard_set.end_date {
         print_with_style(&padding, "end date", EMPTY_STR.to_string());
-        let date = NaiveDateTime::from_timestamp(end_date.date, 0);
-        print_with_style(
-            &format!("{}:   ", padding),
-            "date",
-            date.format("%a %B %e %Y %H:%M:%S UTC").to_string(),
-        );
+        if let Some(date) = NaiveDateTime::from_timestamp_opt(end_date.date, 0) {
+            print_with_style(
+                &format!("{}:   ", padding),
+                "date",
+                date.format("%a %B %e %Y %H:%M:%S UTC").to_string(),
+            );
+        } else {
+            // this should not happen, but adding a message so it can be
+            // flag to the user
+            print_with_style(&format!("{}:   ", padding), "date", "<parse error>");
+        }
     } else {
         print_with_style(&padding, "end date", "none".to_string());
     }

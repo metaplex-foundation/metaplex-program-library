@@ -66,6 +66,10 @@ pub const DEFAULT_ASSETS: &str = "assets";
 /// Default path for cache file.
 pub const DEFAULT_CACHE: &str = "cache.json";
 
+/// Default path for airdrop list
+pub const DEFAULT_AIRDROP_LIST: &str = "airdrop_list.json";
+pub const DEFAULT_AIRDROP_LIST_HELP: &str = "Path to airdrop targets list, format: \n{\n\"address1\": number_of_tokens,\n\"address2\": number_of_tokens\n}\n";
+
 /// Default path for config file.
 pub const DEFAULT_CONFIG: &str = "config.json";
 

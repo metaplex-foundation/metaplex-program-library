@@ -12,6 +12,7 @@ use anyhow::{anyhow, Result};
 use clap::Parser;
 use console::style;
 use sugar_cli::{
+    airdrop::{process_airdrop, AirdropArgs},
     bundlr::{process_bundlr, BundlrArgs},
     cli::{Cli, CollectionSubcommands, Commands, GuardCommand},
     collections::{process_set_collection, SetCollectionArgs},
@@ -351,6 +352,22 @@ async fn run() -> Result<()> {
                 number,
                 receiver,
                 candy_machine,
+            })
+            .await?
+        }
+        Commands::Airdrop {
+            keypair,
+            rpc_url,
+            cache,
+            candy_machine,
+            airdrop_list,
+        } => {
+            process_airdrop(AirdropArgs {
+                keypair,
+                rpc_url,
+                cache,
+                candy_machine,
+                airdrop_list,
             })
             .await?
         }

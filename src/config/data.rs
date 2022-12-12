@@ -134,7 +134,11 @@ where
 }
 
 pub fn parse_string_as_date(go_live_date: &str) -> Result<String> {
-    let date = dateparser::parse_with(go_live_date, &Local, NaiveTime::from_hms(0, 0, 0))?;
+    let date = dateparser::parse_with(
+        go_live_date,
+        &Local,
+        NaiveTime::from_hms_opt(0, 0, 0).ok_or_else(|| anyhow!("Failed to parse go live date"))?,
+    )?;
 
     Ok(date.to_rfc3339())
 }

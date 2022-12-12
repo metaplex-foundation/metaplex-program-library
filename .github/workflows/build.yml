@@ -2,8 +2,10 @@ name: Build and Release
 
 on:
   workflow_dispatch:
+  pull_request:
+    types: [opened, reopened]
   push:
-    branches: "*"
+    branches: "**"
     tags:
       - "v*.*.*"
 
@@ -41,6 +43,7 @@ jobs:
           cargo install cargo-cache
 
       - name: Cache Dependencies
+        if: runner.os == 'Linux' || runner.os == 'macOS'
         uses: actions/cache@v3
         with:
           path: |
