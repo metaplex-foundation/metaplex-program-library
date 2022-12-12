@@ -14,15 +14,19 @@ use console::style;
 use sugar_cli::{
     airdrop::{process_airdrop, AirdropArgs},
     bundlr::{process_bundlr, BundlrArgs},
-    cli::{Cli, CollectionSubcommands, Commands, GuardCommand},
+    cli::{Cli, CollectionSubcommands, Commands, FreezeCommand, GuardCommand},
     collections::{process_set_collection, SetCollectionArgs},
     constants::{COMPLETE_EMOJI, ERROR_EMOJI},
     create_config::{process_create_config, CreateConfigArgs},
     deploy::{process_deploy, DeployArgs},
+    freeze::{
+        process_initialize, process_thaw, process_unlock_funds, InitializeArgs, ThawArgs,
+        UnlockFundsArgs,
+    },
     guard::{
         process_guard_add, process_guard_remove, process_guard_show, process_guard_update,
-        process_guard_withdraw, process_thaw, process_unlock_funds, GuardAddArgs, GuardRemoveArgs,
-        GuardShowArgs, GuardUpdateArgs, GuardWithdrawArgs, ThawArgs, UnlockFundsArgs,
+        process_guard_withdraw, GuardAddArgs, GuardRemoveArgs, GuardShowArgs, GuardUpdateArgs,
+        GuardWithdrawArgs,
     },
     hash::{process_hash, HashArgs},
     launch::{process_launch, LaunchArgs},
@@ -193,6 +197,76 @@ async fn run() -> Result<()> {
             })
             .await?
         }
+        Commands::Freeze { command } => match command {
+            FreezeCommand::Initialize {
+                keypair,
+                rpc_url,
+                cache,
+                config,
+                candy_guard,
+                candy_machine,
+                destination,
+                label,
+            } => process_initialize(InitializeArgs {
+                keypair,
+                rpc_url,
+                cache,
+                config,
+                candy_guard,
+                candy_machine,
+                destination,
+                label,
+            })?,
+            FreezeCommand::Thaw {
+                keypair,
+                rpc_url,
+                cache,
+                config,
+                all,
+                nft_mint,
+                candy_guard,
+                candy_machine,
+                destination,
+                label,
+                use_cache,
+                timeout,
+            } => {
+                process_thaw(ThawArgs {
+                    keypair,
+                    rpc_url,
+                    cache,
+                    config,
+                    all,
+                    nft_mint,
+                    candy_guard,
+                    candy_machine,
+                    destination,
+                    label,
+                    use_cache,
+                    timeout,
+                })
+                .await?
+            }
+            FreezeCommand::UnlockFunds {
+                keypair,
+                rpc_url,
+                cache,
+                config,
+                candy_guard,
+                candy_machine,
+                destination,
+                label,
+            } => process_unlock_funds(UnlockFundsArgs {
+                keypair,
+                rpc_url,
+                cache,
+                config,
+                candy_guard,
+                candy_machine,
+                destination,
+                label,
+            })?,
+        },
         Commands::Guard { command } => match command {
             GuardCommand::Add {
                 keypair,
@@ -232,55 +306,6 @@ async fn run() -> Result<()> {
                 rpc_url,
                 cache,
                 candy_guard,
-            })?,
-            GuardCommand::Thaw {
-                keypair,
-                rpc_url,
-                cache,
-                config,
-                all,
-                nft_mint,
-                candy_guard,
-                candy_machine,
-                destination,
-                label,
-                use_cache,
-                timeout,
-            } => {
-                process_thaw(ThawArgs {
-                    keypair,
-                    rpc_url,
-                    cache,
-                    config,
-                    all,
-                    nft_mint,
-                    candy_guard,
-                    candy_machine,
-                    destination,
-                    label,
-                    use_cache,
-                    timeout,
-                })
-                .await?
-            }
-            GuardCommand::UnlockFunds {
-                keypair,
-                rpc_url,
-                cache,
-                config,
-                candy_guard,
-                candy_machine,
-                destination,
-                label,
-            } => process_unlock_funds(UnlockFundsArgs {
-                keypair,
-                rpc_url,
-                cache,
-                config,
-                candy_guard,
-                candy_machine,
-                destination,
-                label,
             })?,
             GuardCommand::Update {
                 keypair,
