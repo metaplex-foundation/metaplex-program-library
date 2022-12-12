@@ -86,7 +86,6 @@ pub async fn process_deploy(args: DeployArgs) -> Result<()> {
     let num_items = config_data.number;
     let hidden = config_data.hidden_settings.is_some();
     let collection_in_cache = cache.items.get("-1").is_some();
-    let mut _item_redeemed = false;
 
     let cache_items_sans_collection = (cache.items.len() - collection_in_cache as usize) as u64;
 
@@ -205,15 +204,21 @@ pub async fn process_deploy(args: DeployArgs) -> Result<()> {
             }
         };
 
-        match get_candy_machine_state(&Arc::clone(&sugar_config), &candy_pubkey) {
-            Ok(candy_state) => {
-                if candy_state.items_redeemed > 0 {
-                    _item_redeemed = true;
-                }
-            }
-            Err(_) => {
-                return Err(anyhow!("Candy machine from cache does't exist on chain!"));
-            }
+        if get_candy_machine_state(&Arc::clone(&sugar_config), &candy_pubkey).is_err() {
+            println!(
+                "\n{} Candy machine {} not found on-chain",
+                WARNING_EMOJI, candy_machine_address
+            );
+            println!(
+                "\nThis can happen if you are trying to re-deploy a candy machine from \
+                    a previously used cache file. If this is the case, re-run the deploy command \
+                    with the option '--new'.",
+            );
+
+            return Err(anyhow!(
+                "Candy machine from cache does't exist on chain: {}",
+                candy_machine_address
+            ));
         }
 
         candy_pubkey
