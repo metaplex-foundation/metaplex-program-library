@@ -181,16 +181,21 @@ fn create_v1<'a>(
     let mut asset_metadata = Metadata::from_account_info(metadata)?;
     asset_metadata.token_standard = asset_data.token_standard;
 
-    // sets the programmable config (if present)
+    // sets the programmable config (if present) for programmable assets
 
-    if let Some(config) = &asset_data.programmable_config {
-        if let Some(authorization_rules) = authorization_rules {
-            if !cmp_pubkeys(&config.rule_set, authorization_rules.key)
-                || authorization_rules.data_is_empty()
-            {
-                return Err(MetadataError::InvalidAuthorizationRules.into());
+    if matches!(
+        asset_data.token_standard,
+        Some(TokenStandard::ProgrammableNonFungible)
+    ) {
+        if let Some(config) = &asset_data.programmable_config {
+            if let Some(authorization_rules) = authorization_rules {
+                if !cmp_pubkeys(&config.rule_set, authorization_rules.key)
+                    || authorization_rules.data_is_empty()
+                {
+                    return Err(MetadataError::InvalidAuthorizationRules.into());
+                }
+                asset_metadata.programmable_config = Some(config.clone());
             }
-            asset_metadata.programmable_config = Some(config.clone());
         }
     }
 

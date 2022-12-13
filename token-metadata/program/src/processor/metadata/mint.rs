@@ -7,7 +7,7 @@ use solana_program::{
     program_error::ProgramError,
     pubkey::Pubkey,
 };
-use spl_token::state::Mint;
+use spl_token::state::{Account, Mint};
 
 use crate::{
     assertions::{
@@ -17,7 +17,7 @@ use crate::{
     instruction::MintArgs,
     pda::{EDITION, PREFIX},
     state::{Metadata, TokenMetadataAccount, TokenStandard},
-    utils::freeze,
+    utils::{freeze, thaw},
 };
 
 /// Mints tokens from a mint account.
@@ -65,23 +65,29 @@ pub fn mint_v1<'a>(
     // get the args for the instruction
     let MintArgs::V1 { amount } = args;
 
+    // checks that we have the required signers
+    assert_signer(authority)?;
+    assert_signer(payer)?;
+
+    // validates the accounts
+
+    assert_owned_by(metadata, program_id)?;
     let asset_metadata = Metadata::from_account_info(metadata)?;
 
     assert_owned_by(mint, &spl_token::id())?;
-    let token_mint: Mint = assert_initialized(mint)?;
-    // checks that we have the required signer
-    assert_signer(authority)?;
-
-    // validates the mint
-
-    assert_owned_by(metadata, program_id)?;
-    assert_owned_by(mint, &spl_token::id())?;
+    let mint_account: Mint = assert_initialized(mint)?;
 
     if asset_metadata.mint != *mint.key {
         return Err(MetadataError::MintMismatch.into());
     }
 
-    // validates the mint authority (NonFungible must have a "valid" master edition)
+    if !cmp_pubkeys(spl_token_program.key, &spl_token::id()) {
+        return Err(ProgramError::IncorrectProgramId);
+    }
+
+    // validates the authority
+    // - NonFungible must have a "valid" master edition
+    // - Fungible must have the authority as the mint_authority
 
     match asset_metadata.token_standard {
         Some(TokenStandard::ProgrammableNonFungible) | Some(TokenStandard::NonFungible) => {
@@ -101,12 +107,17 @@ pub fn mint_v1<'a>(
                 return Err(MetadataError::InvalidMasterEdition.into());
             }
 
-            if token_mint.supply > 0 || amount > 1 {
+            if mint_account.supply > 0 || amount > 1 {
                 return Err(MetadataError::EditionsMustHaveExactlyOneToken.into());
+            }
+
+            // authority must be the update_authority of the metadata account
+            if !cmp_pubkeys(&asset_metadata.update_authority, authority.key) {
+                return Err(MetadataError::UpdateAuthorityIncorrect.into());
             }
         }
         _ => {
-            assert_mint_authority_matches_mint(&token_mint.mint_authority, authority)?;
+            assert_mint_authority_matches_mint(&mint_account.mint_authority, authority)?;
         }
     }
 
@@ -150,9 +161,12 @@ pub fn mint_v1<'a>(
             ),
             &[payer.clone(), mint.clone(), token.clone()],
         )?;
+    } else {
+        assert_owned_by(token, &spl_token::id())?;
     }
 
     msg!("Minting {} token(s) from mint {}", amount, mint.key);
+    let token_account: Account = assert_initialized(token)?;
 
     match asset_metadata.token_standard {
         Some(TokenStandard::NonFungible) | Some(TokenStandard::ProgrammableNonFungible) => {
@@ -173,6 +187,16 @@ pub fn mint_v1<'a>(
             } else {
                 return Err(MetadataError::InvalidMasterEdition.into());
             };
+
+            if matches!(
+                asset_metadata.token_standard,
+                Some(TokenStandard::ProgrammableNonFungible)
+            ) && token_account.is_frozen()
+            {
+                // thaw the token account for programmable assets; the account
+                // is not frozen if we just initialized it
+                thaw(mint, token, master_edition, spl_token_program)?;
+            }
 
             invoke_signed(
                 &spl_token::instruction::mint_to(
