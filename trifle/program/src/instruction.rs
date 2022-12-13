@@ -101,7 +101,7 @@ pub enum TrifleInstruction {
     #[account(3, writable, name = "token_account", desc = "Token account (base token)")]
     #[account(4, name = "edition", desc = "Edition account")]
     #[account(5, writable, name = "trifle_account", desc = "Trifle account")]
-    #[account(6, name = "trifle_authority", desc = "Trifle Authority - the account that can sign transactions for the trifle account")]
+    #[account(6, signer, name = "trifle_authority", desc = "Trifle Authority - the account that can sign transactions for the trifle account")]
     #[account(7, writable, name = "constraint_model", desc = "Escrow constraint model")]
     #[account(8, writable, signer, name = "payer", desc = "Wallet paying for the transaction")]
     #[account(9, name = "token_metadata_program", desc = "Token Metadata program")]
@@ -348,7 +348,7 @@ pub fn create_trifle_account(
         AccountMeta::new_readonly(*token_account, false),
         AccountMeta::new_readonly(*edition, false),
         AccountMeta::new(*trifle_account, false),
-        AccountMeta::new_readonly(*trifle_authority, false),
+        AccountMeta::new_readonly(*trifle_authority, true),
         AccountMeta::new(*escrow_constraint_model, false),
         AccountMeta::new(*payer, true),
         AccountMeta::new_readonly(mpl_token_metadata::id(), false),
