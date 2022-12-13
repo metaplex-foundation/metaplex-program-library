@@ -85,7 +85,7 @@
         {
           "name": "trifleAuthority",
           "isMut": false,
-          "isSigner": false,
+          "isSigner": true,
           "desc": "Trifle Authority - the account that can sign transactions for the trifle account"
         },
         {
