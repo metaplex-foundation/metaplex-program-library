@@ -1,14 +1,16 @@
 use borsh::{BorshDeserialize, BorshSerialize};
-use mpl_utils::token::TokenTransferParams;
+use mpl_utils::{assert_signer, token::TokenTransferParams};
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
     msg,
     program_error::ProgramError,
     pubkey::Pubkey,
+    sysvar,
 };
 
 use crate::{
+    assertions::assert_owned_by,
     error::MetadataError,
     instruction::TransferArgs,
     pda::find_master_edition_account,
@@ -56,7 +58,7 @@ pub fn transfer<'a>(
 }
 
 fn transfer_v1<'a>(
-    _program_id: &Pubkey,
+    program_id: &Pubkey,
     accounts: &'a [AccountInfo<'a>],
     args: TransferArgs,
 ) -> ProgramResult {
@@ -69,11 +71,42 @@ fn transfer_v1<'a>(
         destination_token_account,
         destination_owner,
         spl_token_program,
-        _spl_associated_token_program: _,
-        _system_program: _,
-        _sysvar_instructions: _,
+        spl_associated_token_program,
+        system_program,
+        sysvar_instructions,
         authorization_rules,
     } = args.get_accounts(accounts)?;
+    //** Account Validation **/
+    // Check signers
+    assert_signer(owner)?;
+    // Additional account signers?
+
+    // Assert program ownership
+    assert_owned_by(metadata, program_id)?;
+    assert_owned_by(token_account, &spl_token::id())?;
+    assert_owned_by(mint, &spl_token::id())?;
+    assert_owned_by(destination_token_account, &spl_token::id())?;
+
+    if let Some(edition) = edition {
+        assert_owned_by(edition, program_id)?;
+    }
+
+    // Check program IDs.
+    if spl_token_program.key != &spl_token::id() {
+        return Err(ProgramError::IncorrectProgramId);
+    }
+
+    if spl_associated_token_program.key != &spl_associated_token_account::id() {
+        return Err(ProgramError::IncorrectProgramId);
+    }
+
+    if system_program.key != &solana_program::system_program::id() {
+        return Err(ProgramError::IncorrectProgramId);
+    }
+
+    if sysvar_instructions.key != &sysvar::instructions::id() {
+        return Err(ProgramError::IncorrectProgramId);
+    }
 
     // Deserialize metadata to determine its type
     let metadata_data = Metadata::from_account_info(metadata)?;
@@ -157,9 +190,9 @@ enum TransferAccounts<'a> {
         destination_token_account: &'a AccountInfo<'a>,
         destination_owner: &'a AccountInfo<'a>,
         spl_token_program: &'a AccountInfo<'a>,
-        _spl_associated_token_program: &'a AccountInfo<'a>,
-        _system_program: &'a AccountInfo<'a>,
-        _sysvar_instructions: &'a AccountInfo<'a>,
+        spl_associated_token_program: &'a AccountInfo<'a>,
+        system_program: &'a AccountInfo<'a>,
+        sysvar_instructions: &'a AccountInfo<'a>,
         authorization_rules: Option<&'a AccountInfo<'a>>,
     },
 }
@@ -186,9 +219,9 @@ impl TransferArgs {
                 let destination_owner = next_account_info(account_info_iter)?;
                 let spl_token_program = next_account_info(account_info_iter)?;
 
-                let _spl_associated_token_program = next_account_info(account_info_iter)?;
-                let _system_program = next_account_info(account_info_iter)?;
-                let _sysvar_instructions = next_account_info(account_info_iter)?;
+                let spl_associated_token_program = next_account_info(account_info_iter)?;
+                let system_program = next_account_info(account_info_iter)?;
+                let sysvar_instructions = next_account_info(account_info_iter)?;
 
                 // let maybe_next_account = account_info_iter.peek();
 
@@ -222,9 +255,9 @@ impl TransferArgs {
                     destination_token_account,
                     destination_owner,
                     spl_token_program,
-                    _spl_associated_token_program,
-                    _system_program,
-                    _sysvar_instructions,
+                    spl_associated_token_program,
+                    system_program,
+                    sysvar_instructions,
                     authorization_rules,
                 })
             }
