@@ -1,5 +1,5 @@
 {
-  "version": "0.2.0",
+  "version": "0.3.0",
   "name": "mpl_trifle",
   "instructions": [
     {
@@ -137,7 +137,7 @@
         {
           "name": "trifleAuthority",
           "isMut": true,
-          "isSigner": true,
+          "isSigner": false,
           "desc": "Trifle Authority - the account that can sign transactions for the trifle account"
         },
         {
@@ -1164,6 +1164,11 @@
       "code": 18,
       "name": "InvalidCollection",
       "msg": "Failed to deserialize collection"
+    },
+    {
+      "code": 19,
+      "name": "MustBeHolder",
+      "msg": "Only the holder is allowed to perform this action"
     }
   ],
   "metadata": {

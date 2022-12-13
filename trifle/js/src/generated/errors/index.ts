@@ -404,6 +404,26 @@ createErrorFromCodeLookup.set(0x12, () => new InvalidCollectionError());
 createErrorFromNameLookup.set('InvalidCollection', () => new InvalidCollectionError());
 
 /**
+ * MustBeHolder: 'Only the holder is allowed to perform this action'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MustBeHolderError extends Error {
+  readonly code: number = 0x13;
+  readonly name: string = 'MustBeHolder';
+  constructor() {
+    super('Only the holder is allowed to perform this action');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MustBeHolderError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x13, () => new MustBeHolderError());
+createErrorFromNameLookup.set('MustBeHolder', () => new MustBeHolderError());
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

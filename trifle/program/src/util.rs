@@ -1,6 +1,6 @@
 use solana_program::{
-    account_info::AccountInfo, entrypoint::ProgramResult, program::invoke, rent::Rent,
-    system_instruction, sysvar::Sysvar,
+    account_info::AccountInfo, entrypoint::ProgramResult, instruction::AccountMeta,
+    program::invoke, pubkey::Pubkey, rent::Rent, system_instruction, sysvar::Sysvar,
 };
 
 use crate::{
@@ -71,4 +71,22 @@ pub fn pay_royalties<'a>(
 // Check for matches against Create Constraint Model or any of the Add Constraint instructions.
 pub fn is_creation_instruction(hash: u8) -> bool {
     matches!(hash, 0 | 4 | 5 | 6)
+}
+
+pub fn assert_holder(
+    token_account: &spl_token::state::Account,
+    account_info: &AccountInfo,
+) -> ProgramResult {
+    if token_account.owner != *account_info.key {
+        Err(TrifleError::MustBeHolder.into())
+    } else {
+        Ok(())
+    }
+}
+
+pub fn account_meta_new_or_readonly(account: Option<Pubkey>, program_id: Pubkey) -> AccountMeta {
+    match account {
+        Some(pubkey) => AccountMeta::new(pubkey, false),
+        None => AccountMeta::new_readonly(program_id, false),
+    }
 }

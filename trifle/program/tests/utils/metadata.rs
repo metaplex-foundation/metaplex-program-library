@@ -76,6 +76,7 @@ impl Metadata {
         )
         .await?;
 
+        #[allow(deprecated)]
         let tx = Transaction::new_signed_with_payer(
             &[instruction::create_metadata_accounts(
                 id(),
@@ -137,6 +138,7 @@ impl Metadata {
         )
         .await?;
 
+        #[allow(deprecated)]
         let tx = Transaction::new_signed_with_payer(
             &[instruction::create_metadata_accounts_v2(
                 id(),
@@ -439,6 +441,7 @@ impl Metadata {
         creators: Option<Vec<Creator>>,
         seller_fee_basis_points: u16,
     ) -> Result<(), BanksClientError> {
+        #[allow(deprecated)]
         let tx = Transaction::new_signed_with_payer(
             &[instruction::update_metadata_accounts(
                 id(),

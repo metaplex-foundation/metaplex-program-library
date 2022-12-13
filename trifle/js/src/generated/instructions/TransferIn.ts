@@ -37,7 +37,7 @@ export const TransferInStruct = new beet.FixableBeetArgsStruct<
  * Accounts required by the _TransferIn_ instruction
  *
  * @property [_writable_] trifle The trifle account to use
- * @property [_writable_, **signer**] trifleAuthority Trifle Authority - the account that can sign transactions for the trifle account
+ * @property [_writable_] trifleAuthority Trifle Authority - the account that can sign transactions for the trifle account
  * @property [_writable_, **signer**] payer Wallet paying for the transaction
  * @property [_writable_] constraintModel The escrow constraint model of the Trifle account
  * @property [] escrow The escrow account of the Trifle account
@@ -111,7 +111,7 @@ export function createTransferInInstruction(
     {
       pubkey: accounts.trifleAuthority,
       isWritable: true,
-      isSigner: true,
+      isSigner: false,
     },
     {
       pubkey: accounts.payer,

@@ -100,6 +100,7 @@ impl MasterEditionV2 {
         context: &mut ProgramTestContext,
         max_supply: Option<u64>,
     ) -> Result<(), BanksClientError> {
+        #[allow(deprecated)]
         let tx = Transaction::new_signed_with_payer(
             &[instruction::create_master_edition(
                 id(),

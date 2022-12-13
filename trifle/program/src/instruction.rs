@@ -7,7 +7,7 @@ use solana_program::{
 };
 use std::str::FromStr;
 
-use crate::state::escrow_constraints::RoyaltyInstruction;
+use crate::{state::escrow_constraints::RoyaltyInstruction, util::account_meta_new_or_readonly};
 
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
@@ -112,7 +112,7 @@ pub enum TrifleInstruction {
     /// Transfer tokens into the Trifle escrow account.
     #[default_optional_accounts]
     #[account(0, writable, name = "trifle", desc = "The trifle account to use")]
-    #[account(1, writable, signer, name = "trifle_authority", desc = "Trifle Authority - the account that can sign transactions for the trifle account")]
+    #[account(1, writable, name = "trifle_authority", desc = "Trifle Authority - the account that can sign transactions for the trifle account")]
     #[account(2, writable, signer, name = "payer", desc = "Wallet paying for the transaction" )]
     #[account(3, writable, name = "constraint_model", desc = "The escrow constraint model of the Trifle account")]
     #[account(4, name = "escrow", desc = "The escrow account of the Trifle account")]
@@ -384,20 +384,20 @@ pub fn transfer_in(
 ) -> Instruction {
     let accounts = vec![
         AccountMeta::new(trifle_account, false),
-        AccountMeta::new(trifle_authority, true),
+        AccountMeta::new(trifle_authority, false),
         AccountMeta::new(payer, true),
         AccountMeta::new(constraint_model, false),
         AccountMeta::new_readonly(escrow_account, false),
-        AccountMeta::new_readonly(escrow_mint.unwrap_or(program_id), false),
-        AccountMeta::new(escrow_token_account.unwrap_or(program_id), false),
-        AccountMeta::new(escrow_edition.unwrap_or(program_id), false),
+        account_meta_new_or_readonly(escrow_mint, program_id),
+        account_meta_new_or_readonly(escrow_token_account, program_id),
+        account_meta_new_or_readonly(escrow_edition, program_id),
         AccountMeta::new(attribute_mint, false),
         AccountMeta::new(attribute_src_token_account, false),
-        AccountMeta::new(attribute_dst_token_account.unwrap_or(program_id), false),
+        account_meta_new_or_readonly(attribute_dst_token_account, program_id),
         // TODO: attribute metadata doesn't need to be writable unless burning.
-        AccountMeta::new(attribute_metadata.unwrap_or(program_id), false),
-        AccountMeta::new(attribute_edition.unwrap_or(program_id), false),
-        AccountMeta::new(attribute_collection_metadata.unwrap_or(program_id), false),
+        account_meta_new_or_readonly(attribute_metadata, program_id),
+        account_meta_new_or_readonly(attribute_edition, program_id),
+        account_meta_new_or_readonly(attribute_collection_metadata, program_id),
         AccountMeta::new_readonly(system_program::id(), false),
         AccountMeta::new_readonly(spl_token::id(), false),
         AccountMeta::new_readonly(spl_associated_token_account::id(), false),
@@ -440,7 +440,7 @@ pub fn transfer_out(
         AccountMeta::new(escrow_token_account, false),
         AccountMeta::new(escrow_mint, false),
         AccountMeta::new(escrow_metadata, false),
-        AccountMeta::new(escrow_edition.unwrap_or(program_id), false),
+        account_meta_new_or_readonly(escrow_edition, program_id),
         AccountMeta::new(payer, true),
         AccountMeta::new_readonly(trifle_authority, false),
         AccountMeta::new_readonly(attribute_mint, false),

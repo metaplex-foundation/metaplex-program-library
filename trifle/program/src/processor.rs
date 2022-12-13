@@ -15,7 +15,9 @@ use crate::{
         trifle::Trifle,
         Key, SolanaAccount, ESCROW_SEED, TRIFLE_SEED,
     },
-    util::{is_creation_instruction, pay_royalties, resize_or_reallocate_account_raw},
+    util::{
+        assert_holder, is_creation_instruction, pay_royalties, resize_or_reallocate_account_raw,
+    },
 };
 use borsh::{BorshDeserialize, BorshSerialize};
 use mpl_token_metadata::{
@@ -326,8 +328,11 @@ fn transfer_in(
     let token_metadata_program_info = next_account_info(account_info_iter)?;
 
     assert_signer(payer_info)?;
-    assert_signer(trifle_authority_info)?;
     assert_owned_by(attribute_metadata_info, token_metadata_program_info.key)?;
+
+    let escrow_token_account_data = Account::unpack(&escrow_token_info.data.borrow())?;
+    // Only the parent NFT holder can transfer in
+    assert_holder(&escrow_token_account_data, payer_info)?;
 
     let attribute_metadata: Metadata = Metadata::from_account_info(attribute_metadata_info)?;
     let mut escrow_seeds = vec![
@@ -633,7 +638,7 @@ fn transfer_out(
 
     let escrow_token_account_data = Account::unpack(&escrow_token_info.data.borrow())?;
     // Only the parent NFT holder can transfer out
-    assert!(escrow_token_account_data.owner == *payer_info.key);
+    assert_holder(&escrow_token_account_data, payer_info)?;
 
     // Transfer the token out of the escrow
     let transfer_ix = mpl_token_metadata::escrow::transfer_out_of_escrow(
