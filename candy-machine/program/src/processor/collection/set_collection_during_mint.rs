@@ -1,9 +1,10 @@
 use anchor_lang::prelude::*;
 use mpl_token_metadata::{
+    assertions::assert_derivation,
     instruction::{set_and_verify_collection, set_and_verify_sized_collection_item},
     state::{Metadata, TokenMetadataAccount},
-    utils::assert_derivation,
 };
+
 use solana_program::{
     program::invoke_signed, sysvar, sysvar::instructions::get_instruction_relative,
 };
