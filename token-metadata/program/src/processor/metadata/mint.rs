@@ -34,7 +34,8 @@ use crate::{
 ///   7. `[]` SPL Token program
 ///   8. `[]` SPL Associated Token Account program
 ///   9. `[optional]` Master Edition account
-///   10. `[optional]` Token Authorization Rules account
+///   10. `[optional]` Token Authorization Rules program
+///   11. `[optional]` Token Authorization Rules account
 pub fn mint<'a>(
     program_id: &Pubkey,
     accounts: &'a [AccountInfo<'a>],
@@ -130,10 +131,19 @@ pub fn mint_v1<'a>(
         if let Some(config) = asset_metadata.programmable_config {
             if let Some(rules) = authorization_rules {
                 if !cmp_pubkeys(&config.rule_set, rules.key) {
-                    // wrong authorization rules
+                    return Err(MetadataError::InvalidAuthorizationRules.into());
                 }
+                /*
+                validate(
+                    payer,
+                    rules,
+                    self,
+                    authorization_data.as_ref(),
+                    Some(amount),
+                )?;
+                */
             } else {
-                // missing authorization rules
+                return Err(MetadataError::MissingAuthorizationRules.into());
             }
         }
     }

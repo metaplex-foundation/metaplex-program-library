@@ -49,7 +49,9 @@ pub enum CreateArgs {
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub enum MintArgs {
-    V1 { amount: u64 },
+    V1 {
+        amount: u64,
+    },
 }
 
 #[repr(C)]
@@ -352,8 +354,8 @@ pub fn create(
 ///   7. `[]` SPL Token program
 ///   8. `[]` SPL Associated Token Account program
 ///   9. `[optional]` Master Edition account
-///   10. `[optional]` Token Authorization Rules account
-///   11. `[optional]` Token Authorization Rules program
+///   10. `[optional]` Token Authorization Rules program
+///   11. `[optional]` Token Authorization Rules account
 pub fn mint(
     token: Pubkey,
     metadata: Pubkey,
@@ -362,7 +364,7 @@ pub fn mint(
     authority: Pubkey,
     master_edition: Option<Pubkey>,
     authorization_rules: Option<Pubkey>,
-    amount: u64,
+    args: MintArgs,
 ) -> Instruction {
     let mut accounts = vec![
         AccountMeta::new(token, false),
@@ -381,16 +383,14 @@ pub fn mint(
     }
     // checks whether we have authorization rules
     if let Some(authorization_rules) = authorization_rules {
-        accounts.push(AccountMeta::new(authorization_rules, false));
         accounts.push(AccountMeta::new(mpl_token_auth_rules::id(), false));
+        accounts.push(AccountMeta::new(authorization_rules, false));
     }
 
     Instruction {
         program_id: crate::id(),
         accounts,
-        data: MetadataInstruction::Mint(MintArgs::V1 { amount })
-            .try_to_vec()
-            .unwrap(),
+        data: MetadataInstruction::Mint(args).try_to_vec().unwrap(),
     }
 }
 

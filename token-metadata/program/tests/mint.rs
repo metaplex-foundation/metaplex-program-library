@@ -12,7 +12,7 @@ use utils::*;
 
 mod mint {
 
-    use mpl_token_metadata::{error::MetadataError, state::TokenStandard};
+    use mpl_token_metadata::{error::MetadataError, instruction::MintArgs, state::TokenStandard};
     use num_traits::FromPrimitive;
     use solana_program::{program_pack::Pack, pubkey::Pubkey};
     use spl_token::state::Account;
@@ -52,7 +52,7 @@ mod mint {
             /* authority           */ payer_pubkey,
             /* master edition      */ asset.master_edition,
             /* authorization rules */ None,
-            /* amount              */ 1,
+            /* amount              */ MintArgs::V1 { amount: 1 },
         );
 
         let tx = Transaction::new_signed_with_payer(

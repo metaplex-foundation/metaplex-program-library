@@ -1,5 +1,6 @@
 use mpl_token_metadata::{
-    id, instruction,
+    id,
+    instruction::{self, MintArgs},
     state::{AssetData, Creator, ProgrammableConfig, TokenStandard, EDITION, PREFIX},
 };
 use solana_program::pubkey::Pubkey;
@@ -144,7 +145,7 @@ impl DigitalAsset {
             /* authority           */ payer_pubkey,
             /* master edition      */ self.master_edition,
             /* authorization rules */ authorization_rules,
-            /* amount              */ amount,
+            /* amount              */ MintArgs::V1 { amount },
         );
 
         let tx = Transaction::new_signed_with_payer(
