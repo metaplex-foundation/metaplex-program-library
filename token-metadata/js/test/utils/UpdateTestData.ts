@@ -10,7 +10,7 @@ import {
   DelegateState,
 } from '../../src/generated';
 
-export type UpdateTestData = {
+export class UpdateTestData {
   newUpdateAuthority: PublicKey;
   data: Data;
   primarySaleHappened: boolean;
@@ -22,4 +22,18 @@ export type UpdateTestData = {
   programmableConfig: ProgrammableConfig;
   delegateState: DelegateState;
   authorizationData: AuthorizationData;
-};
+
+  constructor() {
+    this.newUpdateAuthority = null;
+    this.data = null;
+    this.primarySaleHappened = null;
+    this.isMutable = null;
+    this.tokenStandard = null;
+    this.collection = null;
+    this.uses = null;
+    this.collectionDetails = null;
+    this.programmableConfig = null;
+    this.delegateState = null;
+    this.authorizationData = null;
+  }
+}

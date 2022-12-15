@@ -5,6 +5,7 @@ import { InitTransactions, killStuckProcess } from './setup';
 import { Connection, Keypair } from '@solana/web3.js';
 import { DigitalAssetManager } from './utils/DigitalAssetManager';
 import { PayerTransactionHandler } from '@metaplex-foundation/amman-client';
+import { UpdateTestData } from './utils/UpdateTestData';
 
 killStuckProcess();
 
@@ -136,53 +137,218 @@ test('Update: NonFungible asset', async (t) => {
   t.equal(updatedMetadata.data.uri.replace(/\0+/, ''), data.uri);
 });
 
-// test('Update: Cannot Flip IsMutable to True', async (t) => {
-//   const API = new InitTransactions();
-//   const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
+test('Update: Cannot Flip IsMutable to True', async (t) => {
+  const API = new InitTransactions();
+  const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
 
-//   const daManager = await createDefaultAsset(t, API, connection, handler, payer);
-//   const { mint, metadata, masterEdition } = daManager;
-//   const assetData = await daManager.getAssetData(connection);
+  const daManager = await createDefaultAsset(t, API, connection, handler, payer);
+  const { mint, metadata, masterEdition } = daManager;
 
-//   const authorizationData = {
-//     derivedKeySeeds: null,
-//     leafInfo: null,
-//     name: 'rule-name',
-//   };
+  // Flip isMutable to false
+  const updateData = new UpdateTestData();
+  updateData.isMutable = false;
 
-//   // Flip isMutable to false
-//   assetData.isMutable = false;
+  const { tx: updateTx } = await API.update(
+    t,
+    payer,
+    mint,
+    metadata,
+    masterEdition,
+    updateData,
+    handler,
+  );
+  await updateTx.assertSuccess(t);
 
-//   const { tx: updateTx } = await API.update(
-//     t,
-//     payer,
-//     mint,
-//     metadata,
-//     masterEdition,
-//     assetData,
-//     authorizationData,
-//     handler,
-//   );
-//   await updateTx.assertSuccess(t);
+  const updatedMetadata = await Metadata.fromAccountAddress(connection, metadata);
 
-//   const updatedMetadata = await Metadata.fromAccountAddress(connection, metadata);
+  spok(t, updatedMetadata, {
+    isMutable: false,
+  });
 
-//   spok(t, updatedMetadata, {
-//     isMutable: false,
-//   });
+  // Try to flip isMutable to true
+  updateData.isMutable = true;
 
-//   // Try to flip isMutable to true
-//   assetData.isMutable = true;
+  const { tx: updateTx2 } = await API.update(
+    t,
+    payer,
+    mint,
+    metadata,
+    masterEdition,
+    updateData,
+    handler,
+  );
+  await updateTx2.assertError(t, /Is Mutable can only be flipped to false/i);
+});
 
-//   const { tx: updateTx2 } = await API.update(
-//     t,
-//     payer,
-//     mint,
-//     metadata,
-//     masterEdition,
-//     assetData,
-//     authorizationData,
-//     handler,
-//   );
-//   await updateTx2.assertError(t, /Is Mutable can only be flipped to false/i);
-// });
+test('Update: Cannot Flip PrimarySaleHappened to False', async (t) => {
+  const API = new InitTransactions();
+  const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
+
+  const daManager = await createDefaultAsset(t, API, connection, handler, payer);
+  const { mint, metadata, masterEdition } = daManager;
+
+  // Flip to true
+  const updateData = new UpdateTestData();
+  updateData.primarySaleHappened = true;
+
+  const { tx: updateTx } = await API.update(
+    t,
+    payer,
+    mint,
+    metadata,
+    masterEdition,
+    updateData,
+    handler,
+  );
+  await updateTx.assertSuccess(t);
+
+  const updatedMetadata = await Metadata.fromAccountAddress(connection, metadata);
+
+  spok(t, updatedMetadata, {
+    primarySaleHappened: true,
+  });
+
+  // Try to flip false -- this should fail
+  updateData.primarySaleHappened = false;
+
+  const { tx: updateTx2 } = await API.update(
+    t,
+    payer,
+    mint,
+    metadata,
+    masterEdition,
+    updateData,
+    handler,
+  );
+  await updateTx2.assertError(t, /Primary sale can only be flipped to true/i);
+});
+
+test('Update: Set New Update Authority', async (t) => {
+  const API = new InitTransactions();
+  const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
+
+  const daManager = await createDefaultAsset(t, API, connection, handler, payer);
+  const { mint, metadata, masterEdition } = daManager;
+
+  const newUpdateAuthority = new Keypair().publicKey;
+
+  // Flip to true
+  const updateData = new UpdateTestData();
+  updateData.newUpdateAuthority = newUpdateAuthority;
+
+  const { tx: updateTx } = await API.update(
+    t,
+    payer,
+    mint,
+    metadata,
+    masterEdition,
+    updateData,
+    handler,
+  );
+  await updateTx.assertSuccess(t);
+
+  const updatedMetadata = await Metadata.fromAccountAddress(connection, metadata);
+
+  spok(t, updatedMetadata, {
+    updateAuthority: newUpdateAuthority,
+  });
+});
+
+test('Update: Cannot Update Immutable Data', async (t) => {
+  const API = new InitTransactions();
+  const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
+
+  const daManager = await createDefaultAsset(t, API, connection, handler, payer);
+  const { mint, metadata, masterEdition } = daManager;
+
+  // Flip isMutable to false
+  const updateData = new UpdateTestData();
+  updateData.isMutable = false;
+
+  const { tx: updateTx } = await API.update(
+    t,
+    payer,
+    mint,
+    metadata,
+    masterEdition,
+    updateData,
+    handler,
+  );
+  await updateTx.assertSuccess(t);
+
+  // Try to write some data.
+  updateData.data = {
+    name: 'new-name',
+    symbol: 'new-symbol',
+    uri: 'new-uri',
+    sellerFeeBasisPoints: 500,
+    creators: null,
+  };
+
+  const { tx: updateTx2 } = await API.update(
+    t,
+    payer,
+    mint,
+    metadata,
+    masterEdition,
+    updateData,
+    handler,
+  );
+  await updateTx2.assertError(t, /Data is immutable/i);
+});
+
+test('Update: SellerFeeBasisPoints Cannot Exceed 10_000', async (t) => {
+  const API = new InitTransactions();
+  const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
+
+  const daManager = await createDefaultAsset(t, API, connection, handler, payer);
+  const { mint, metadata, masterEdition } = daManager;
+
+  const updateData = new UpdateTestData();
+  updateData.data = {
+    name: 'new-name',
+    symbol: 'new-symbol',
+    uri: 'new-uri',
+    sellerFeeBasisPoints: 10_005,
+    creators: null,
+  };
+
+  const { tx: updateTx } = await API.update(
+    t,
+    payer,
+    mint,
+    metadata,
+    masterEdition,
+    updateData,
+    handler,
+  );
+  await updateTx.assertError(t, /Basis points cannot be more than 10000/i);
+});
+
+test('Update: URI Cannot Exceed 200 Bytes', async (t) => {
+  const API = new InitTransactions();
+  const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
+
+  const daManager = await createDefaultAsset(t, API, connection, handler, payer);
+  const { mint, metadata, masterEdition } = daManager;
+
+  const updateData = new UpdateTestData();
+  updateData.data = {
+    name: 'new-name',
+    symbol: 'new-symbol',
+    uri: 'new-uriabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz',
+    sellerFeeBasisPoints: 100,
+    creators: null,
+  };
+
+  const { tx: updateTx } = await API.update(
+    t,
+    payer,
+    mint,
+    metadata,
+    masterEdition,
+    updateData,
+    handler,
+  );
+  await updateTx.assertError(t, /Uri too long/i);
+});
