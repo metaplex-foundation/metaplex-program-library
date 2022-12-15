@@ -556,6 +556,10 @@ pub enum MetadataError {
     /// 140
     #[error("Delegate already exists")]
     DelegateAlreadyExists,
+
+    /// 141
+    #[error("Delegate not found")]
+    DelegateNotFound,
 }
 
 impl PrintProgramError for MetadataError {

@@ -174,9 +174,6 @@ fn delegate_sale_v1<'a>(
     if asset_metadata.mint != *mint.key {
         return Err(MetadataError::MintMismatch.into());
     }
-    if asset_metadata.delegate.is_some() {
-        return Err(MetadataError::DelegateAlreadyExists.into());
-    }
 
     // authority must be the owner of the token account
     let token_account = Account::unpack(&token.try_borrow_data()?).unwrap();
