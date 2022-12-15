@@ -56,8 +56,9 @@ export class EditionMarker implements EditionMarkerArgs {
   static async fromAccountAddress(
     connection: web3.Connection,
     address: web3.PublicKey,
+    commitmentOrConfig?: web3.Commitment | web3.GetAccountInfoConfig,
   ): Promise<EditionMarker> {
-    const accountInfo = await connection.getAccountInfo(address);
+    const accountInfo = await connection.getAccountInfo(address, commitmentOrConfig);
     if (accountInfo == null) {
       throw new Error(`Unable to find EditionMarker account at ${address}`);
     }

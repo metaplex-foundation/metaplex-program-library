@@ -63,6 +63,11 @@ export const deprecatedMintNewEditionFromMasterEditionViaPrintingTokenInstructio
 /**
  * Creates a _DeprecatedMintNewEditionFromMasterEditionViaPrintingToken_ instruction.
  *
+ * Optional accounts that are not provided will be omitted from the accounts
+ * array passed with the instruction.
+ * An optional account that is set cannot follow an optional account that is unset.
+ * Otherwise an Error is raised.
+ *
  * @param accounts that will be accessed while the instruction is processed
  * @category Instructions
  * @category DeprecatedMintNewEditionFromMasterEditionViaPrintingToken
