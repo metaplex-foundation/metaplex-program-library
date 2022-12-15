@@ -21,6 +21,10 @@ import {
   createMintInstruction,
   MintInstructionAccounts,
   MintInstructionArgs,
+  createUpdateInstruction,
+  AuthorizationData,
+  UpdateInstructionAccounts,
+  UpdateInstructionArgs,
   PROGRAM_ID,
   TokenStandard,
 } from '../../src/generated';
@@ -57,7 +61,12 @@ export class InitTransactions {
     decimals: number,
     maxSupply: number,
     handler: PayerTransactionHandler,
-  ): Promise<{ tx: ConfirmedTransactionAssertablePromise; mint: PublicKey; metadata: PublicKey }> {
+  ): Promise<{
+    tx: ConfirmedTransactionAssertablePromise;
+    mint: PublicKey;
+    metadata: PublicKey;
+    masterEdition?: PublicKey;
+  }> {
     // mint account
     const [, mint] = await this.getKeypair('Mint Account');
     // metadata account
@@ -88,12 +97,14 @@ export class InitTransactions {
 
     const createIx = createCreateInstruction(accounts, args);
 
+    let masterEdition = null;
+
     if (
       assetData.tokenStandard == TokenStandard.NonFungible ||
       assetData.tokenStandard == TokenStandard.ProgrammableNonFungible
     ) {
       // master edition (optional)
-      const [masterEdition] = PublicKey.findProgramAddressSync(
+      [masterEdition] = PublicKey.findProgramAddressSync(
         [
           Buffer.from('metadata'),
           PROGRAM_ID.toBuffer(),
@@ -126,6 +137,7 @@ export class InitTransactions {
       tx: handler.sendAndConfirmTransaction(tx, [payer, mint], 'tx: Create'),
       mint: mint.publicKey,
       metadata,
+      masterEdition,
     };
   }
 
@@ -172,6 +184,45 @@ export class InitTransactions {
     return {
       tx: handler.sendAndConfirmTransaction(tx, [payer], 'tx: Mint'),
       token,
+    };
+  }
+
+  async update(
+    t: Test,
+    payer: Keypair,
+    mint: PublicKey,
+    metadata: PublicKey,
+    masterEdition: PublicKey,
+    assetData: AssetData,
+    authorizationData: AuthorizationData,
+    handler: PayerTransactionHandler,
+  ): Promise<{ tx: ConfirmedTransactionAssertablePromise }> {
+    amman.addr.addLabel('Mint Account', mint);
+    amman.addr.addLabel('Metadata Account', metadata);
+    amman.addr.addLabel('Master Edition Account', masterEdition);
+
+    const updateAcccounts: UpdateInstructionAccounts = {
+      metadata,
+      mint,
+      sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
+      masterEdition,
+      updateAuthority: payer.publicKey,
+    };
+
+    const updateArgs: UpdateInstructionArgs = {
+      updateArgs: {
+        __kind: 'V1',
+        assetData,
+        authorizationData,
+      },
+    };
+
+    const updateIx = createUpdateInstruction(updateAcccounts, updateArgs);
+
+    const tx = new Transaction().add(updateIx);
+
+    return {
+      tx: handler.sendAndConfirmTransaction(tx, [payer], 'tx: Update'),
     };
   }
 }

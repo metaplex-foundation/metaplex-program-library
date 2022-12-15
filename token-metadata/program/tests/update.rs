@@ -3,20 +3,19 @@ pub mod utils;
 
 use mpl_token_metadata::{
     id, instruction,
-    state::{Key, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH},
+    state::{MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH},
     utils::puffed_out_string,
 };
 use solana_program_test::*;
 use solana_sdk::{signature::Signer, transaction::Transaction};
-use utils::{MasterEditionV2 as MasterEditionV2Manager, Metadata as MetadataManager, *};
+use utils::{DigitalAsset, *};
 
 mod update {
 
     use mpl_token_metadata::{
-        instruction::AuthorityType,
-        state::{AssetData, Metadata, TokenStandard},
+        instruction::{AuthorityType, UpdateArgs},
+        state::TokenStandard,
     };
-    use solana_program::borsh::try_from_slice_unchecked;
     use solana_sdk::signature::Keypair;
 
     use super::*;
@@ -24,101 +23,78 @@ mod update {
     async fn success_update() {
         let context = &mut program_test().start_with_context().await;
 
-        // asset details
-
-        /*
-        asset.programmable_config = Some(ProgrammableConfig {
-            rule_set: <PUBKEY>,
-        });
-        */
-
-        // mint a default NFT
-
         let update_authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+        let new_update_authority = Keypair::new();
 
-        let metadata_manager = MetadataManager::new();
-        metadata_manager.create_v3_default(context).await.unwrap();
-
-        let master_edition_manager = MasterEditionV2Manager::new(&metadata_manager);
-        let collection_nft = MetadataManager::create_default_sized_parent(context)
-            .await
-            .unwrap();
-        master_edition_manager
-            .create_v3(context, Some(0))
-            .await
-            .unwrap();
-        metadata_manager
-            .set_and_verify_sized_collection_item(
-                context,
-                collection_nft.0.pubkey,
-                &update_authority,
-                update_authority.pubkey(),
-                collection_nft.0.mint.pubkey(),
-                collection_nft.1.pubkey,
-                None,
-            )
+        let mut digital_asset = DigitalAsset::new();
+        digital_asset
+            .create(context, TokenStandard::NonFungible, None)
             .await
             .unwrap();
 
-        // Build the update txn
-
-        let name = puffed_out_string("Programmable NFT", MAX_NAME_LENGTH);
-        let symbol = puffed_out_string("PRG", MAX_SYMBOL_LENGTH);
-        let uri = puffed_out_string("uri", MAX_URI_LENGTH);
-
-        let mut new_asset = AssetData::new(
-            TokenStandard::ProgrammableNonFungible,
-            name.clone(),
-            symbol.clone(),
-            uri.clone(),
+        let metadata = digital_asset.get_metadata(context).await;
+        assert_eq!(
+            metadata.data.name,
+            puffed_out_string(DEFAULT_NAME, MAX_NAME_LENGTH)
         );
-        new_asset.seller_fee_basis_points = 500;
+        assert_eq!(
+            metadata.data.symbol,
+            puffed_out_string(DEFAULT_SYMBOL, MAX_SYMBOL_LENGTH)
+        );
+        assert_eq!(
+            metadata.data.uri,
+            puffed_out_string(DEFAULT_URI, MAX_URI_LENGTH)
+        );
+        assert_eq!(metadata.update_authority, update_authority.pubkey());
 
-        let payer_pubkey = context.payer.pubkey();
-        let new_update_authority = None;
-        let authority = AuthorityType::UpdateAuthority(payer_pubkey);
+        let new_name = puffed_out_string("New Name", MAX_NAME_LENGTH);
+        let new_symbol = puffed_out_string("NEW", MAX_SYMBOL_LENGTH);
+        let new_uri = puffed_out_string("https://new.digital.asset.org", MAX_URI_LENGTH);
+
+        // Change a few values and update the metadata.
+        let mut asset_data = digital_asset.get_asset_data(context).await;
+        asset_data.name = new_name.clone();
+        asset_data.symbol = new_symbol.clone();
+        asset_data.uri = new_uri.clone();
+        asset_data.is_mutable = false;
+        asset_data.primary_sale_happened = true;
+        asset_data.update_authority = new_update_authority.pubkey();
+
+        let authority = AuthorityType::UpdateAuthority(update_authority.pubkey());
+        let args = UpdateArgs::V1 {
+            authorization_data: None,
+            asset_data: Some(asset_data.clone()),
+        };
+
         let update_ix = instruction::update(
             /* program id       */ id(),
-            /* metadata account */ metadata_manager.pubkey,
-            /* mint account     */ metadata_manager.mint.pubkey(),
-            /* master edition   */ None,
-            /* new auth         */ new_update_authority,
+            /* metadata account */ digital_asset.metadata,
+            /* mint account     */ digital_asset.mint.pubkey(),
+            /* master edition   */ digital_asset.master_edition,
             /* authority        */ authority,
             /* auth rules       */ None,
-            /* asset data       */ Some(new_asset),
+            /* update args      */ args,
             /* additional       */ None,
         );
 
         let tx = Transaction::new_signed_with_payer(
             &[update_ix],
-            Some(&context.payer.pubkey()),
-            &[&context.payer],
+            Some(&update_authority.pubkey()),
+            &[&update_authority],
             context.last_blockhash,
         );
 
         context.banks_client.process_transaction(tx).await.unwrap();
 
         // checks the created metadata values
+        let metadata = digital_asset.get_metadata(context).await;
 
-        let metadata_account = get_account(context, &metadata_manager.pubkey).await;
-        let metadata: Metadata = try_from_slice_unchecked(&metadata_account.data).unwrap();
+        asset_data.update_authority = update_authority.pubkey();
 
-        assert_eq!(metadata.data.name, name);
-        assert_eq!(metadata.data.symbol, symbol);
-        assert_eq!(metadata.data.uri, uri);
-        assert_eq!(metadata.data.seller_fee_basis_points, 500);
-        assert_eq!(metadata.data.creators, None);
+        assert_eq!(metadata.data.name, new_name);
+        assert_eq!(metadata.data.symbol, new_symbol);
+        assert_eq!(metadata.data.uri, new_uri);
 
-        assert!(!metadata.primary_sale_happened);
-        assert!(!metadata.is_mutable);
-        assert_eq!(metadata.update_authority, context.payer.pubkey());
-        assert_eq!(metadata.key, Key::MetadataV1);
-
-        // assert_eq!(
-        //     metadata.token_standard,
-        //     Some(TokenStandard::ProgrammableNonFungible)
-        // );
-        assert_eq!(metadata.collection, None);
-        assert_eq!(metadata.uses, None);
+        digital_asset.compare_asset_data(context, &asset_data).await;
     }
 }

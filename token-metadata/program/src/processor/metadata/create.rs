@@ -146,7 +146,7 @@ fn create_v1<'a>(
             update_authority_info: update_authority,
             system_account_info: system_program,
         },
-        asset_data.as_data(),
+        asset_data.as_data_v2(),
         false,
         asset_data.is_mutable,
         false,

@@ -90,6 +90,9 @@ fn transfer_v1<'a>(
     if let Some(edition) = edition {
         assert_owned_by(edition, program_id)?;
     }
+    if let Some(authorization_rules) = authorization_rules {
+        assert_owned_by(authorization_rules, &mpl_token_auth_rules::ID)?;
+    }
 
     // Check program IDs.
     if spl_token_program.key != &spl_token::id() {
@@ -211,7 +214,6 @@ impl TransferArgs {
                 let mint = next_account_info(account_info_iter)?;
 
                 let (edition_pda, _) = find_master_edition_account(mint.key);
-
                 let edition = account_info_iter.next_if(|a| a.key == &edition_pda);
 
                 let owner = next_account_info(account_info_iter)?;
@@ -222,17 +224,6 @@ impl TransferArgs {
                 let spl_associated_token_program = next_account_info(account_info_iter)?;
                 let system_program = next_account_info(account_info_iter)?;
                 let sysvar_instructions = next_account_info(account_info_iter)?;
-
-                // let maybe_next_account = account_info_iter.peek();
-
-                // let authorization_rules = if maybe_next_account.is_some()
-                //     && maybe_next_account.unwrap().key == &mpl_token_auth_rules::ID
-                // {
-                //     let _ = next_account_info(account_info_iter)?;
-                //     Some(next_account_info(account_info_iter)?)
-                // } else {
-                //     None
-                // };
 
                 // If the next account is the mpl_token_auth_rules ID, then we consume it
                 // and read the next account which will be the authorization rules account.

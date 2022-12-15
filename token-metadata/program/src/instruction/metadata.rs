@@ -14,7 +14,10 @@ use {
 use crate::{
     instruction::MetadataInstruction,
     processor::AuthorizationData,
-    state::{AssetData, Collection, CollectionDetails, Creator, DataV2, Uses},
+    state::{
+        AssetData, Collection, CollectionDetails, Creator, Data, DataV2, DelegateState,
+        ProgrammableConfig, TokenStandard, Uses,
+    },
 };
 
 //----------------------+
@@ -49,9 +52,7 @@ pub enum CreateArgs {
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub enum MintArgs {
-    V1 {
-        amount: u64,
-    },
+    V1 { amount: u64 },
 }
 
 #[repr(C)]
@@ -69,8 +70,17 @@ pub enum TransferArgs {
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub enum UpdateArgs {
     V1 {
-        data: Option<AssetData>,
-        update_authority: Option<Pubkey>,
+        authorization_data: Option<AuthorizationData>,
+        new_update_authority: Option<Pubkey>,
+        data: Option<Data>,
+        primary_sale_happened: Option<bool>,
+        is_mutable: Option<bool>,
+        token_standard: Option<TokenStandard>,
+        collection: Option<Collection>,
+        uses: Option<Uses>,
+        collection_details: Option<CollectionDetails>,
+        programmable_config: Option<ProgrammableConfig>,
+        delegate_state: Option<DelegateState>,
     },
 }
 
@@ -488,25 +498,20 @@ pub fn update(
     metadata_account: Pubkey,
     mint_account: Pubkey,
     master_edition_account: Option<Pubkey>,
-    new_update_authority: Option<Pubkey>,
     authority: AuthorityType,
     authorization_rules: Option<Pubkey>,
-    data: Option<AssetData>,
     additional_accounts: Option<Vec<AccountMeta>>,
+    args: UpdateArgs,
 ) -> Instruction {
     let mut accounts: Vec<AccountMeta> = vec![
         AccountMeta::new(metadata_account, false),
-        AccountMeta::new(mint_account, false),
+        AccountMeta::new_readonly(mint_account, false),
         AccountMeta::new_readonly(solana_program::system_program::id(), false),
         AccountMeta::new_readonly(sysvar::instructions::id(), false),
     ];
 
     if let Some(master_edition_account) = master_edition_account {
         accounts.push(AccountMeta::new(master_edition_account, false));
-    }
-
-    if let Some(new_update_authority) = new_update_authority {
-        accounts.push(AccountMeta::new_readonly(new_update_authority, false));
     }
 
     match authority {
@@ -523,21 +528,18 @@ pub fn update(
     }
 
     if let Some(authorization_rules) = authorization_rules {
+        accounts.push(AccountMeta::new_readonly(mpl_token_auth_rules::ID, false));
         accounts.push(AccountMeta::new_readonly(authorization_rules, false));
-        // accounts.push(AccountMeta::new_readonly(token_authorization::id(), false));
     }
 
-    accounts.extend(additional_accounts.unwrap_or_default());
+    if let Some(additional_accounts) = additional_accounts {
+        accounts.extend(additional_accounts);
+    }
 
     Instruction {
         program_id,
         accounts,
-        data: MetadataInstruction::Update(UpdateArgs::V1 {
-            data,
-            update_authority: new_update_authority,
-        })
-        .try_to_vec()
-        .unwrap(),
+        data: MetadataInstruction::Update(args).try_to_vec().unwrap(),
     }
 }
 

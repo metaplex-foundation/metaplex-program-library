@@ -3,13 +3,15 @@ use borsh::{BorshDeserialize, BorshSerialize};
 use serde::{Deserialize, Serialize};
 use solana_program::pubkey::Pubkey;
 
-use super::{Collection, CollectionDetails, Creator, DataV2, TokenStandard, Uses};
+use super::{Collection, CollectionDetails, Creator, Data, DataV2, TokenStandard, Uses};
 
 /// Data representation of an asset.
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct AssetData {
+    /// Update Authority for the asset.
+    pub update_authority: Pubkey,
     /// The name of the asset.
     pub name: String,
     /// The symbol for the asset.
@@ -41,15 +43,22 @@ pub struct AssetData {
 }
 
 impl AssetData {
-    pub fn new(token_standard: TokenStandard, name: String, symbol: String, uri: String) -> Self {
+    pub fn new(
+        token_standard: TokenStandard,
+        name: String,
+        symbol: String,
+        uri: String,
+        update_authority: Pubkey,
+    ) -> Self {
         Self {
             name,
             symbol,
             uri,
             seller_fee_basis_points: 0,
+            update_authority,
             creators: None,
             primary_sale_happened: false,
-            is_mutable: false,
+            is_mutable: true,
             edition_nonce: None,
             token_standard: Some(token_standard),
             collection: None,
@@ -60,7 +69,7 @@ impl AssetData {
         }
     }
 
-    pub fn as_data(&self) -> DataV2 {
+    pub fn as_data_v2(&self) -> DataV2 {
         DataV2 {
             collection: self.collection.clone(),
             creators: self.creators.clone(),
@@ -69,6 +78,16 @@ impl AssetData {
             symbol: self.symbol.clone(),
             uri: self.uri.clone(),
             uses: self.uses.clone(),
+        }
+    }
+
+    pub fn as_data(&self) -> Data {
+        Data {
+            name: self.name.clone(),
+            symbol: self.symbol.clone(),
+            uri: self.uri.clone(),
+            seller_fee_basis_points: self.seller_fee_basis_points,
+            creators: self.creators.clone(),
         }
     }
 }

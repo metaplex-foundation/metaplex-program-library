@@ -1,7 +1,10 @@
 use mpl_token_metadata::{
-    id,
-    instruction::{self, MintArgs},
-    state::{AssetData, Creator, ProgrammableConfig, TokenStandard, EDITION, PREFIX},
+    id, instruction,
+    instruction::MintArgs,
+    state::{
+        AssetData, Creator, Metadata, ProgrammableConfig, TokenMetadataAccount, TokenStandard,
+        EDITION, PREFIX,
+    },
 };
 use solana_program::pubkey::Pubkey;
 use solana_program_test::{BanksClientError, ProgramTestContext};
@@ -55,6 +58,7 @@ impl DigitalAsset {
             String::from(DEFAULT_NAME),
             String::from(DEFAULT_SYMBOL),
             String::from(DEFAULT_URI),
+            context.payer.pubkey(),
         );
         asset.seller_fee_basis_points = 500;
 
@@ -70,8 +74,6 @@ impl DigitalAsset {
                 rule_set: authorization_rules,
             });
         }
-
-        // build the mint transaction
 
         let payer_pubkey = context.payer.pubkey();
         let mint_pubkey = self.mint.pubkey();
@@ -177,5 +179,34 @@ impl DigitalAsset {
             .unwrap();
         // mints tokens
         self.mint(context, authorization_rules, amount).await
+    }
+
+    pub async fn get_metadata(&self, context: &mut ProgramTestContext) -> Metadata {
+        let metadata_account = context
+            .banks_client
+            .get_account(self.metadata)
+            .await
+            .unwrap()
+            .unwrap();
+
+        let metadata = Metadata::safe_deserialize(&metadata_account.data).unwrap();
+
+        metadata
+    }
+
+    pub async fn get_asset_data(&self, context: &mut ProgramTestContext) -> AssetData {
+        let metadata = self.get_metadata(context).await;
+
+        metadata.into_asset_data()
+    }
+
+    pub async fn compare_asset_data(
+        &self,
+        context: &mut ProgramTestContext,
+        asset_data: &AssetData,
+    ) {
+        let on_chain_asset_data = self.get_asset_data(context).await;
+
+        assert_eq!(on_chain_asset_data, *asset_data);
     }
 }

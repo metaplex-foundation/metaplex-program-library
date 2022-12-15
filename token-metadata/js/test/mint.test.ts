@@ -14,6 +14,7 @@ test('Mint: ProgrammableNonFungible asset', async (t) => {
   const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
 
   const data: AssetData = {
+    updateAuthority: payer.publicKey,
     name: 'ProgrammableNonFungible',
     symbol: 'PNF',
     uri: 'uri',

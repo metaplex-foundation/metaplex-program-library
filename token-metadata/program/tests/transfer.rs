@@ -257,6 +257,7 @@ mod transfer {
             name.clone(),
             symbol.clone(),
             uri.clone(),
+            context.payer.pubkey(),
         );
         asset.seller_fee_basis_points = 500;
 
@@ -386,6 +387,7 @@ mod transfer {
             name.clone(),
             symbol.clone(),
             uri.clone(),
+            context.payer.pubkey(),
         );
         asset.seller_fee_basis_points = 500;
 

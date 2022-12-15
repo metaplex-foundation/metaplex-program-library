@@ -14,6 +14,7 @@ test('Create: ProgrammableNonFungible asset', async (t) => {
     symbol: 'PNF',
     uri: 'uri',
     sellerFeeBasisPoints: 0,
+    updateAuthority: payer.publicKey,
     creators: [
       {
         address: payer.publicKey,

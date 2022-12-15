@@ -6,8 +6,7 @@
  */
 
 import * as beet from '@metaplex-foundation/beet';
-import * as web3 from '@solana/web3.js';
-import * as beetSolana from '@metaplex-foundation/beet-solana';
+import { AuthorizationData, authorizationDataBeet } from './AuthorizationData';
 import { AssetData, assetDataBeet } from './AssetData';
 /**
  * This type is used to derive the {@link UpdateArgs} type as well as the de/serializer.
@@ -19,7 +18,7 @@ import { AssetData, assetDataBeet } from './AssetData';
  * @private
  */
 export type UpdateArgsRecord = {
-  V1: { data: beet.COption<AssetData>; updateAuthority: beet.COption<web3.PublicKey> };
+  V1: { authorizationData: beet.COption<AuthorizationData>; assetData: beet.COption<AssetData> };
 };
 
 /**
@@ -47,8 +46,8 @@ export const updateArgsBeet = beet.dataEnum<UpdateArgsRecord>([
     'V1',
     new beet.FixableBeetArgsStruct<UpdateArgsRecord['V1']>(
       [
-        ['data', beet.coption(assetDataBeet)],
-        ['updateAuthority', beet.coption(beetSolana.publicKey)],
+        ['authorizationData', beet.coption(authorizationDataBeet)],
+        ['assetData', beet.coption(assetDataBeet)],
       ],
       'UpdateArgsRecord["V1"]',
     ),

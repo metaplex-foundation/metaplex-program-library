@@ -2542,16 +2542,9 @@
         },
         {
           "name": "masterEdition",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false,
           "desc": "Master edition account",
-          "optional": true
-        },
-        {
-          "name": "newUpdateAuthority",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "New update authority",
           "optional": true
         },
         {
@@ -2571,15 +2564,8 @@
         {
           "name": "tokenAccount",
           "isMut": false,
-          "isSigner": true,
-          "desc": "Token account",
-          "optional": true
-        },
-        {
-          "name": "authorizationRules",
-          "isMut": false,
           "isSigner": false,
-          "desc": "Token Authorization Rules account",
+          "desc": "Token account",
           "optional": true
         },
         {
@@ -2587,6 +2573,13 @@
           "isMut": false,
           "isSigner": false,
           "desc": "Token Authorization Rules Program",
+          "optional": true
+        },
+        {
+          "name": "authorizationRules",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Token Authorization Rules account",
           "optional": true
         }
       ],
@@ -3844,6 +3837,10 @@
             "type": "u16"
           },
           {
+            "name": "updateAuthority",
+            "type": "publicKey"
+          },
+          {
             "name": "creators",
             "type": {
               "option": {
@@ -4277,17 +4274,19 @@
             "name": "V1",
             "fields": [
               {
-                "name": "data",
+                "name": "authorization_data",
                 "type": {
                   "option": {
-                    "defined": "AssetData"
+                    "defined": "AuthorizationData"
                   }
                 }
               },
               {
-                "name": "update_authority",
+                "name": "asset_data",
                 "type": {
-                  "option": "publicKey"
+                  "option": {
+                    "defined": "AssetData"
+                  }
                 }
               }
             ]

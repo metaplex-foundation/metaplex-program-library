@@ -39,13 +39,12 @@ export const UpdateStruct = new beet.FixableBeetArgsStruct<
  * @property [_writable_] metadata Metadata account
  * @property [] mint Mint account
  * @property [] sysvarInstructions System program
- * @property [] masterEdition (optional) Master edition account
- * @property [] newUpdateAuthority (optional) New update authority
+ * @property [_writable_] masterEdition (optional) Master edition account
  * @property [**signer**] updateAuthority (optional) Update authority
  * @property [**signer**] tokenHolder (optional) Token holder
- * @property [**signer**] tokenAccount (optional) Token account
- * @property [] authorizationRules (optional) Token Authorization Rules account
+ * @property [] tokenAccount (optional) Token account
  * @property [] authorizationRulesProgram (optional) Token Authorization Rules Program
+ * @property [] authorizationRules (optional) Token Authorization Rules account
  * @category Instructions
  * @category Update
  * @category generated
@@ -56,12 +55,11 @@ export type UpdateInstructionAccounts = {
   systemProgram?: web3.PublicKey;
   sysvarInstructions: web3.PublicKey;
   masterEdition?: web3.PublicKey;
-  newUpdateAuthority?: web3.PublicKey;
   updateAuthority?: web3.PublicKey;
   tokenHolder?: web3.PublicKey;
   tokenAccount?: web3.PublicKey;
-  authorizationRules?: web3.PublicKey;
   authorizationRulesProgram?: web3.PublicKey;
+  authorizationRules?: web3.PublicKey;
 };
 
 export const updateInstructionDiscriminator = 43;
@@ -116,28 +114,15 @@ export function createUpdateInstruction(
   if (accounts.masterEdition != null) {
     keys.push({
       pubkey: accounts.masterEdition,
-      isWritable: false,
-      isSigner: false,
-    });
-  }
-
-  if (accounts.newUpdateAuthority != null) {
-    if (accounts.masterEdition == null) {
-      throw new Error(
-        "When providing 'newUpdateAuthority' then 'accounts.masterEdition' need(s) to be provided as well.",
-      );
-    }
-    keys.push({
-      pubkey: accounts.newUpdateAuthority,
-      isWritable: false,
+      isWritable: true,
       isSigner: false,
     });
   }
 
   if (accounts.updateAuthority != null) {
-    if (accounts.masterEdition == null || accounts.newUpdateAuthority == null) {
+    if (accounts.masterEdition == null) {
       throw new Error(
-        "When providing 'updateAuthority' then 'accounts.masterEdition', 'accounts.newUpdateAuthority' need(s) to be provided as well.",
+        "When providing 'updateAuthority' then 'accounts.masterEdition' need(s) to be provided as well.",
       );
     }
     keys.push({
@@ -148,13 +133,9 @@ export function createUpdateInstruction(
   }
 
   if (accounts.tokenHolder != null) {
-    if (
-      accounts.masterEdition == null ||
-      accounts.newUpdateAuthority == null ||
-      accounts.updateAuthority == null
-    ) {
+    if (accounts.masterEdition == null || accounts.updateAuthority == null) {
       throw new Error(
-        "When providing 'tokenHolder' then 'accounts.masterEdition', 'accounts.newUpdateAuthority', 'accounts.updateAuthority' need(s) to be provided as well.",
+        "When providing 'tokenHolder' then 'accounts.masterEdition', 'accounts.updateAuthority' need(s) to be provided as well.",
       );
     }
     keys.push({
@@ -167,35 +148,15 @@ export function createUpdateInstruction(
   if (accounts.tokenAccount != null) {
     if (
       accounts.masterEdition == null ||
-      accounts.newUpdateAuthority == null ||
       accounts.updateAuthority == null ||
       accounts.tokenHolder == null
     ) {
       throw new Error(
-        "When providing 'tokenAccount' then 'accounts.masterEdition', 'accounts.newUpdateAuthority', 'accounts.updateAuthority', 'accounts.tokenHolder' need(s) to be provided as well.",
+        "When providing 'tokenAccount' then 'accounts.masterEdition', 'accounts.updateAuthority', 'accounts.tokenHolder' need(s) to be provided as well.",
       );
     }
     keys.push({
       pubkey: accounts.tokenAccount,
-      isWritable: false,
-      isSigner: true,
-    });
-  }
-
-  if (accounts.authorizationRules != null) {
-    if (
-      accounts.masterEdition == null ||
-      accounts.newUpdateAuthority == null ||
-      accounts.updateAuthority == null ||
-      accounts.tokenHolder == null ||
-      accounts.tokenAccount == null
-    ) {
-      throw new Error(
-        "When providing 'authorizationRules' then 'accounts.masterEdition', 'accounts.newUpdateAuthority', 'accounts.updateAuthority', 'accounts.tokenHolder', 'accounts.tokenAccount' need(s) to be provided as well.",
-      );
-    }
-    keys.push({
-      pubkey: accounts.authorizationRules,
       isWritable: false,
       isSigner: false,
     });
@@ -204,18 +165,35 @@ export function createUpdateInstruction(
   if (accounts.authorizationRulesProgram != null) {
     if (
       accounts.masterEdition == null ||
-      accounts.newUpdateAuthority == null ||
       accounts.updateAuthority == null ||
       accounts.tokenHolder == null ||
-      accounts.tokenAccount == null ||
-      accounts.authorizationRules == null
+      accounts.tokenAccount == null
     ) {
       throw new Error(
-        "When providing 'authorizationRulesProgram' then 'accounts.masterEdition', 'accounts.newUpdateAuthority', 'accounts.updateAuthority', 'accounts.tokenHolder', 'accounts.tokenAccount', 'accounts.authorizationRules' need(s) to be provided as well.",
+        "When providing 'authorizationRulesProgram' then 'accounts.masterEdition', 'accounts.updateAuthority', 'accounts.tokenHolder', 'accounts.tokenAccount' need(s) to be provided as well.",
       );
     }
     keys.push({
       pubkey: accounts.authorizationRulesProgram,
+      isWritable: false,
+      isSigner: false,
+    });
+  }
+
+  if (accounts.authorizationRules != null) {
+    if (
+      accounts.masterEdition == null ||
+      accounts.updateAuthority == null ||
+      accounts.tokenHolder == null ||
+      accounts.tokenAccount == null ||
+      accounts.authorizationRulesProgram == null
+    ) {
+      throw new Error(
+        "When providing 'authorizationRules' then 'accounts.masterEdition', 'accounts.updateAuthority', 'accounts.tokenHolder', 'accounts.tokenAccount', 'accounts.authorizationRulesProgram' need(s) to be provided as well.",
+      );
+    }
+    keys.push({
+      pubkey: accounts.authorizationRules,
       isWritable: false,
       isSigner: false,
     });

@@ -1,3 +1,11 @@
+use crate::{
+    assertions::{
+        collection::assert_collection_update_is_valid, metadata::assert_data_valid,
+        uses::assert_valid_use,
+    },
+    instruction::UpdateArgs,
+};
+
 use super::*;
 
 pub const MAX_NAME_LENGTH: usize = 32;
@@ -63,6 +71,137 @@ impl Metadata {
         BorshSerialize::serialize(&self, &mut bytes)?;
         data[..bytes.len()].copy_from_slice(&bytes);
         Ok(())
+    }
+
+    pub fn update_data<'a>(
+        &mut self,
+        args: UpdateArgs,
+        update_authority: &AccountInfo<'a>,
+    ) -> ProgramResult {
+        let (
+            data,
+            primary_sale_happened,
+            is_mutable,
+            _token_standard,
+            collection,
+            uses,
+            _collection_details,
+            _programmable_config,
+            _delegate_state,
+            _authorization_data,
+            new_update_authority,
+        ) = match args {
+            UpdateArgs::V1 {
+                data,
+                primary_sale_happened,
+                is_mutable,
+                token_standard,
+                collection,
+                uses,
+                collection_details,
+                programmable_config,
+                delegate_state,
+                authorization_data,
+                new_update_authority,
+            } => (
+                data,
+                primary_sale_happened,
+                is_mutable,
+                token_standard,
+                collection,
+                uses,
+                collection_details,
+                programmable_config,
+                delegate_state,
+                authorization_data,
+                new_update_authority,
+            ),
+        };
+
+        if let Some(data) = data {
+            if self.is_mutable {
+                assert_data_valid(
+                    &data,
+                    update_authority.key,
+                    &self,
+                    false,
+                    update_authority.is_signer,
+                )?;
+                self.data = data;
+
+                // If the user passes in Collection data, only allow updating if it's unverified
+                // or if it exactly matches the existing collection info.
+                // If the user passes in None for the Collection data then only set it if it's unverified.
+                if collection.is_some() {
+                    assert_collection_update_is_valid(false, &self.collection, &collection)?;
+                    self.collection = collection;
+                } else if let Some(current_collection) = self.collection.as_ref() {
+                    // Can't change a verified collection in this command.
+                    if current_collection.verified {
+                        return Err(MetadataError::CannotUpdateVerifiedCollection.into());
+                    }
+                    // If it's unverified, it's ok to set to None.
+                    self.collection = collection;
+                }
+
+                // If already None leave it as None.
+                assert_valid_use(&uses, &self.uses)?;
+                self.uses = uses;
+            } else {
+                return Err(MetadataError::DataIsImmutable.into());
+            }
+        }
+
+        if let Some(val) = new_update_authority {
+            self.update_authority = val;
+        }
+
+        if let Some(val) = primary_sale_happened {
+            // If received val is true, flip to true.
+            if val || !self.primary_sale_happened {
+                self.primary_sale_happened = val
+            } else {
+                return Err(MetadataError::PrimarySaleCanOnlyBeFlippedToTrue.into());
+            }
+        }
+
+        if let Some(val) = is_mutable {
+            // If received value is false, flip to false.
+            if !val || self.is_mutable {
+                self.is_mutable = val
+            } else {
+                return Err(MetadataError::IsMutableCanOnlyBeFlippedToFalse.into());
+            }
+        }
+
+        Ok(())
+    }
+
+    pub fn into_asset_data(self) -> AssetData {
+        let mut asset_data = AssetData::new(
+            self.token_standard.unwrap_or(TokenStandard::NonFungible),
+            self.data.name,
+            self.data.symbol,
+            self.data.uri,
+            self.update_authority,
+        );
+        asset_data.seller_fee_basis_points = self.data.seller_fee_basis_points;
+        asset_data.creators = self.data.creators;
+        asset_data.primary_sale_happened = self.primary_sale_happened;
+        asset_data.is_mutable = self.is_mutable;
+        asset_data.edition_nonce = self.edition_nonce;
+        asset_data.collection = self.collection;
+        asset_data.uses = self.uses;
+        asset_data.collection_details = self.collection_details;
+        asset_data.programmable_config = self.programmable_config;
+        let delegate_state = if let Some(delegate) = self.delegate {
+            Some(DelegateState::Sale(delegate))
+        } else {
+            None
+        };
+        asset_data.delegate_state = delegate_state;
+
+        asset_data
     }
 }
 
