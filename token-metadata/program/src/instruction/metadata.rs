@@ -84,6 +84,24 @@ pub enum UpdateArgs {
     },
 }
 
+impl Default for UpdateArgs {
+    fn default() -> Self {
+        Self::V1 {
+            authorization_data: None,
+            new_update_authority: None,
+            data: None,
+            primary_sale_happened: None,
+            is_mutable: None,
+            token_standard: None,
+            collection: None,
+            uses: None,
+            collection_details: None,
+            programmable_config: None,
+            delegate_state: None,
+        }
+    }
+}
+
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
