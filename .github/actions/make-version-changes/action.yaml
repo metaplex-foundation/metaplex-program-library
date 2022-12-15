@@ -47,7 +47,3 @@ runs:
         script: |
           const script = require('.github/actions/make-version-changes/script.js')
           await script({github, context, core, glob, io}, ${{ inputs.changed-packages }}, ${{ inputs.versioning }})
-
-    - name: Cleanup dependency installs
-      run: git restore yarn.lock
-      shell: bash
