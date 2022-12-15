@@ -46,8 +46,9 @@ const generatePackageLib = (cwdArgs, pkg) => {
   // generate lib for package
   wrappedExec(`yarn api:gen`, packageLibDir);
 
-  // restore root yarn.lock after installs
-  wrappedExec(`git restore ../../yarn.lock`, packageLibDir);
+  // No longer needed due to root yarn.lock not existing.
+  // // restore root yarn.lock after installs
+  // wrappedExec(`git restore ../../yarn.lock`, packageLibDir);
 
   // add any changes to the lib dir after generation
   wrappedExec(`git add ${packageLibDir} && git commit --amend -C HEAD`);
@@ -63,16 +64,18 @@ const updateCratesPackage = async (io, cwdArgs, pkg, semvar) => {
     currentDir,
   );
 
-  const rootDir = cwdArgs.slice(0, cwdArgs.length - 2);
-  // if we globally installed `@iarna/toml`, the root `yarn.lock` file will have been committed
-  // along with `cargo release` command. so, we need to resolve this.
-  const rootYarnLockPath = [...rootDir, 'yarn.lock'].join('/');
-  wrappedExec(`git restore --source=HEAD^ --staged -- ${rootYarnLockPath}`);
-  wrappedExec('git commit --amend --allow-empty -C HEAD');
+  // No longer needed due to root yarn.lock not existing.
+
+  // const rootDir = cwdArgs.slice(0, cwdArgs.length - 2);
+  // // if we globally installed `@iarna/toml`, the root `yarn.lock` file will have been committed
+  // // along with `cargo release` command. so, we need to resolve this.
+  // const rootYarnLockPath = [...rootDir, 'yarn.lock'].join('/');
+  // wrappedExec(`git restore --source=HEAD^ --staged -- ${rootYarnLockPath}`);
+  // wrappedExec('git commit --amend --allow-empty -C HEAD');
 
   const crateInfo = getCrateInfo(currentDir);
   console.log(
-    `Generating client lib for crate: ${crateInfo.name} at versio = ${crateInfo.version}`,
+    `Generating client lib for crate: ${crateInfo.name} at version = ${crateInfo.version}`,
   );
 
   generatePackageLib(cwdArgs, pkg);
