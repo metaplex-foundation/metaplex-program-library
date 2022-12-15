@@ -104,7 +104,6 @@ export function createVerifyInstruction(
       isSigner: false,
     });
   }
-
   if (accounts.authorizationRulesProgram != null) {
     if (accounts.authorizationRules == null) {
       throw new Error(

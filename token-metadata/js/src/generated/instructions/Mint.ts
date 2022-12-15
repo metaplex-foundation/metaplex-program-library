@@ -45,8 +45,8 @@ export const MintStruct = new beet.FixableBeetArgsStruct<
  * @property [] splTokenProgram SPL Token program
  * @property [] splAtaProgram SPL Associated Token Account program
  * @property [_writable_] masterEdition (optional) Master Edition account
- * @property [] authorizationRules (optional) Token Authorization Rules account
  * @property [] tokenAuthRulesProgram (optional) Token Authorization Rules program
+ * @property [] authorizationRules (optional) Token Authorization Rules account
  * @category Instructions
  * @category Mint
  * @category generated
@@ -62,8 +62,8 @@ export type MintInstructionAccounts = {
   splTokenProgram: web3.PublicKey;
   splAtaProgram: web3.PublicKey;
   masterEdition?: web3.PublicKey;
-  authorizationRules?: web3.PublicKey;
   tokenAuthRulesProgram?: web3.PublicKey;
+  authorizationRules?: web3.PublicKey;
 };
 
 export const mintInstructionDiscriminator = 42;
@@ -147,28 +147,26 @@ export function createMintInstruction(
       isSigner: false,
     });
   }
-
-  if (accounts.authorizationRules != null) {
+  if (accounts.tokenAuthRulesProgram != null) {
     if (accounts.masterEdition == null) {
       throw new Error(
-        "When providing 'authorizationRules' then 'accounts.masterEdition' need(s) to be provided as well.",
-      );
-    }
-    keys.push({
-      pubkey: accounts.authorizationRules,
-      isWritable: false,
-      isSigner: false,
-    });
-  }
-
-  if (accounts.tokenAuthRulesProgram != null) {
-    if (accounts.masterEdition == null || accounts.authorizationRules == null) {
-      throw new Error(
-        "When providing 'tokenAuthRulesProgram' then 'accounts.masterEdition', 'accounts.authorizationRules' need(s) to be provided as well.",
+        "When providing 'tokenAuthRulesProgram' then 'accounts.masterEdition' need(s) to be provided as well.",
       );
     }
     keys.push({
       pubkey: accounts.tokenAuthRulesProgram,
+      isWritable: false,
+      isSigner: false,
+    });
+  }
+  if (accounts.authorizationRules != null) {
+    if (accounts.masterEdition == null || accounts.tokenAuthRulesProgram == null) {
+      throw new Error(
+        "When providing 'authorizationRules' then 'accounts.masterEdition', 'accounts.tokenAuthRulesProgram' need(s) to be provided as well.",
+      );
+    }
+    keys.push({
+      pubkey: accounts.authorizationRules,
       isWritable: false,
       isSigner: false,
     });

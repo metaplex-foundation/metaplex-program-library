@@ -138,7 +138,6 @@ export function createCreateInstruction(
       isSigner: false,
     });
   }
-
   if (accounts.authorizationRules != null) {
     if (accounts.masterEdition == null) {
       throw new Error(

@@ -22,7 +22,7 @@ export type RevokeInstructionArgs = {
  * @category Revoke
  * @category generated
  */
-export const RevokeStruct = new beet.FixableBeetArgsStruct<
+export const RevokeStruct = new beet.BeetArgsStruct<
   RevokeInstructionArgs & {
     instructionDiscriminator: number;
   }
@@ -36,15 +36,16 @@ export const RevokeStruct = new beet.FixableBeetArgsStruct<
 /**
  * Accounts required by the _Revoke_ instruction
  *
- * @property [_writable_] delegate Delegate account key (pda of ['metadata', program id, mint id, delegate role, user id, owner id])
- * @property [] user Delegated user
- * @property [**signer**] owner Token owner
- * @property [_writable_, **signer**] payer Payer
- * @property [_writable_] tokenAccount Owned Token Account of mint
- * @property [_writable_] metadata Metadata account
+ * @property [_writable_] delegate Delegate account key (pda of [mint id, delegate role, user id, authority id])
+ * @property [] delegateOwner Owner of the delegated account
  * @property [] mint Mint of metadata
- * @property [] splTokenProgram SPL Token Program
+ * @property [_writable_] metadata Metadata account
+ * @property [_writable_] masterEdition (optional) Master Edition account
+ * @property [**signer**] authority Authority to approve the delegation
+ * @property [_writable_, **signer**] payer Payer
  * @property [] sysvarInstructions Instructions sysvar account
+ * @property [] splTokenProgram (optional) SPL Token Program
+ * @property [_writable_] tokenAccount (optional) Owned Token Account of mint
  * @property [] authorizationRules (optional) Token Authorization Rules account
  * @property [] authorizationRulesProgram (optional) Token Authorization Rules Program
  * @category Instructions
@@ -53,15 +54,16 @@ export const RevokeStruct = new beet.FixableBeetArgsStruct<
  */
 export type RevokeInstructionAccounts = {
   delegate: web3.PublicKey;
-  user: web3.PublicKey;
-  owner: web3.PublicKey;
-  payer: web3.PublicKey;
-  tokenAccount: web3.PublicKey;
-  metadata: web3.PublicKey;
+  delegateOwner: web3.PublicKey;
   mint: web3.PublicKey;
+  metadata: web3.PublicKey;
+  masterEdition?: web3.PublicKey;
+  authority: web3.PublicKey;
+  payer: web3.PublicKey;
   systemProgram?: web3.PublicKey;
-  splTokenProgram: web3.PublicKey;
   sysvarInstructions: web3.PublicKey;
+  splTokenProgram?: web3.PublicKey;
+  tokenAccount?: web3.PublicKey;
   authorizationRules?: web3.PublicKey;
   authorizationRulesProgram?: web3.PublicKey;
 };
@@ -99,28 +101,8 @@ export function createRevokeInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.user,
+      pubkey: accounts.delegateOwner,
       isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.owner,
-      isWritable: false,
-      isSigner: true,
-    },
-    {
-      pubkey: accounts.payer,
-      isWritable: true,
-      isSigner: true,
-    },
-    {
-      pubkey: accounts.tokenAccount,
-      isWritable: true,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.metadata,
-      isWritable: true,
       isSigner: false,
     },
     {
@@ -129,34 +111,88 @@ export function createRevokeInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.splTokenProgram,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.sysvarInstructions,
-      isWritable: false,
+      pubkey: accounts.metadata,
+      isWritable: true,
       isSigner: false,
     },
   ];
 
+  if (accounts.masterEdition != null) {
+    keys.push({
+      pubkey: accounts.masterEdition,
+      isWritable: true,
+      isSigner: false,
+    });
+  }
+  keys.push({
+    pubkey: accounts.authority,
+    isWritable: false,
+    isSigner: true,
+  });
+  keys.push({
+    pubkey: accounts.payer,
+    isWritable: true,
+    isSigner: true,
+  });
+  keys.push({
+    pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
+    isWritable: false,
+    isSigner: false,
+  });
+  keys.push({
+    pubkey: accounts.sysvarInstructions,
+    isWritable: false,
+    isSigner: false,
+  });
+  if (accounts.splTokenProgram != null) {
+    if (accounts.masterEdition == null) {
+      throw new Error(
+        "When providing 'splTokenProgram' then 'accounts.masterEdition' need(s) to be provided as well.",
+      );
+    }
+    keys.push({
+      pubkey: accounts.splTokenProgram,
+      isWritable: false,
+      isSigner: false,
+    });
+  }
+  if (accounts.tokenAccount != null) {
+    if (accounts.masterEdition == null || accounts.splTokenProgram == null) {
+      throw new Error(
+        "When providing 'tokenAccount' then 'accounts.masterEdition', 'accounts.splTokenProgram' need(s) to be provided as well.",
+      );
+    }
+    keys.push({
+      pubkey: accounts.tokenAccount,
+      isWritable: true,
+      isSigner: false,
+    });
+  }
   if (accounts.authorizationRules != null) {
+    if (
+      accounts.masterEdition == null ||
+      accounts.splTokenProgram == null ||
+      accounts.tokenAccount == null
+    ) {
+      throw new Error(
+        "When providing 'authorizationRules' then 'accounts.masterEdition', 'accounts.splTokenProgram', 'accounts.tokenAccount' need(s) to be provided as well.",
+      );
+    }
     keys.push({
       pubkey: accounts.authorizationRules,
       isWritable: false,
       isSigner: false,
     });
   }
-
   if (accounts.authorizationRulesProgram != null) {
-    if (accounts.authorizationRules == null) {
+    if (
+      accounts.masterEdition == null ||
+      accounts.splTokenProgram == null ||
+      accounts.tokenAccount == null ||
+      accounts.authorizationRules == null
+    ) {
       throw new Error(
-        "When providing 'authorizationRulesProgram' then 'accounts.authorizationRules' need(s) to be provided as well.",
+        "When providing 'authorizationRulesProgram' then 'accounts.masterEdition', 'accounts.splTokenProgram', 'accounts.tokenAccount', 'accounts.authorizationRules' need(s) to be provided as well.",
       );
     }
     keys.push({

@@ -127,7 +127,6 @@ export function createBurnInstruction(
       isSigner: false,
     });
   }
-
   if (accounts.authorizationRules != null) {
     if (accounts.collectionMetadata == null) {
       throw new Error(
@@ -140,7 +139,6 @@ export function createBurnInstruction(
       isSigner: false,
     });
   }
-
   if (accounts.authorizationRulesProgram != null) {
     if (accounts.collectionMetadata == null || accounts.authorizationRules == null) {
       throw new Error(

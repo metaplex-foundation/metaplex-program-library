@@ -16,11 +16,11 @@ import { CollectionDetails, collectionDetailsBeet } from './CollectionDetails';
 import { ProgrammableConfig, programmableConfigBeet } from './ProgrammableConfig';
 import { DelegateState, delegateStateBeet } from './DelegateState';
 export type AssetData = {
+  updateAuthority: web3.PublicKey;
   name: string;
   symbol: string;
   uri: string;
   sellerFeeBasisPoints: number;
-  updateAuthority: web3.PublicKey;
   creators: beet.COption<Creator[]>;
   primarySaleHappened: boolean;
   isMutable: boolean;
@@ -39,11 +39,11 @@ export type AssetData = {
  */
 export const assetDataBeet = new beet.FixableBeetArgsStruct<AssetData>(
   [
+    ['updateAuthority', beetSolana.publicKey],
     ['name', beet.utf8String],
     ['symbol', beet.utf8String],
     ['uri', beet.utf8String],
     ['sellerFeeBasisPoints', beet.u16],
-    ['updateAuthority', beetSolana.publicKey],
     ['creators', beet.coption(beet.array(creatorBeet))],
     ['primarySaleHappened', beet.bool],
     ['isMutable', beet.bool],

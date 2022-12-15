@@ -6,46 +6,20 @@
  */
 
 import * as beet from '@metaplex-foundation/beet';
-import { DelegateRole, delegateRoleBeet } from './DelegateRole';
 /**
- * This type is used to derive the {@link RevokeArgs} type as well as the de/serializer.
- * However don't refer to it in your code but use the {@link RevokeArgs} type instead.
- *
- * @category userTypes
- * @category enums
- * @category generated
- * @private
- */
-export type RevokeArgsRecord = {
-  V1: { role: DelegateRole };
-};
-
-/**
- * Union type respresenting the RevokeArgs data enum defined in Rust.
- *
- * NOTE: that it includes a `__kind` property which allows to narrow types in
- * switch/if statements.
- * Additionally `isRevokeArgs*` type guards are exposed below to narrow to a specific variant.
- *
- * @category userTypes
  * @category enums
  * @category generated
  */
-export type RevokeArgs = beet.DataEnumKeyAsKind<RevokeArgsRecord>;
-
-export const isRevokeArgsV1 = (x: RevokeArgs): x is RevokeArgs & { __kind: 'V1' } =>
-  x.__kind === 'V1';
+export enum RevokeArgs {
+  CollectionV1,
+  SaleV1,
+}
 
 /**
  * @category userTypes
  * @category generated
  */
-export const revokeArgsBeet = beet.dataEnum<RevokeArgsRecord>([
-  [
-    'V1',
-    new beet.BeetArgsStruct<RevokeArgsRecord['V1']>(
-      [['role', delegateRoleBeet]],
-      'RevokeArgsRecord["V1"]',
-    ),
-  ],
-]) as beet.FixableBeet<RevokeArgs>;
+export const revokeArgsBeet = beet.fixedScalarEnum(RevokeArgs) as beet.FixedSizeBeet<
+  RevokeArgs,
+  RevokeArgs
+>;

@@ -52,7 +52,7 @@
   "devDependencies": {
     "@metaplex-foundation/amman": "^0.12.0",
     "@metaplex-foundation/amman-client": "^0.2.2",
-    "@metaplex-foundation/solita": "^0.19.1",
+    "@metaplex-foundation/solita": "^0.19.2",
     "@types/bn.js": "^5.1.1",
     "@types/debug": "^4.1.7",
     "@types/tape": "^4.13.2",

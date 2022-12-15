@@ -6,8 +6,16 @@
  */
 
 import * as beet from '@metaplex-foundation/beet';
+import * as web3 from '@solana/web3.js';
+import * as beetSolana from '@metaplex-foundation/beet-solana';
 import { AuthorizationData, authorizationDataBeet } from './AuthorizationData';
-import { AssetData, assetDataBeet } from './AssetData';
+import { Data, dataBeet } from './Data';
+import { TokenStandard, tokenStandardBeet } from './TokenStandard';
+import { Collection, collectionBeet } from './Collection';
+import { Uses, usesBeet } from './Uses';
+import { CollectionDetails, collectionDetailsBeet } from './CollectionDetails';
+import { ProgrammableConfig, programmableConfigBeet } from './ProgrammableConfig';
+import { DelegateState, delegateStateBeet } from './DelegateState';
 /**
  * This type is used to derive the {@link UpdateArgs} type as well as the de/serializer.
  * However don't refer to it in your code but use the {@link UpdateArgs} type instead.
@@ -18,7 +26,19 @@ import { AssetData, assetDataBeet } from './AssetData';
  * @private
  */
 export type UpdateArgsRecord = {
-  V1: { authorizationData: beet.COption<AuthorizationData>; assetData: beet.COption<AssetData> };
+  V1: {
+    authorizationData: beet.COption<AuthorizationData>;
+    newUpdateAuthority: beet.COption<web3.PublicKey>;
+    data: beet.COption<Data>;
+    primarySaleHappened: beet.COption<boolean>;
+    isMutable: beet.COption<boolean>;
+    tokenStandard: beet.COption<TokenStandard>;
+    collection: beet.COption<Collection>;
+    uses: beet.COption<Uses>;
+    collectionDetails: beet.COption<CollectionDetails>;
+    programmableConfig: beet.COption<ProgrammableConfig>;
+    delegateState: beet.COption<DelegateState>;
+  };
 };
 
 /**
@@ -47,7 +67,16 @@ export const updateArgsBeet = beet.dataEnum<UpdateArgsRecord>([
     new beet.FixableBeetArgsStruct<UpdateArgsRecord['V1']>(
       [
         ['authorizationData', beet.coption(authorizationDataBeet)],
-        ['assetData', beet.coption(assetDataBeet)],
+        ['newUpdateAuthority', beet.coption(beetSolana.publicKey)],
+        ['data', beet.coption(dataBeet)],
+        ['primarySaleHappened', beet.coption(beet.bool)],
+        ['isMutable', beet.coption(beet.bool)],
+        ['tokenStandard', beet.coption(tokenStandardBeet)],
+        ['collection', beet.coption(collectionBeet)],
+        ['uses', beet.coption(usesBeet)],
+        ['collectionDetails', beet.coption(collectionDetailsBeet)],
+        ['programmableConfig', beet.coption(programmableConfigBeet)],
+        ['delegateState', beet.coption(delegateStateBeet)],
       ],
       'UpdateArgsRecord["V1"]',
     ),

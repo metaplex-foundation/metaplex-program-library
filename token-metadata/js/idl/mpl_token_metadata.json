@@ -2486,17 +2486,17 @@
           "optional": true
         },
         {
-          "name": "authorizationRules",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "Token Authorization Rules account",
-          "optional": true
-        },
-        {
           "name": "tokenAuthRulesProgram",
           "isMut": false,
           "isSigner": false,
           "desc": "Token Authorization Rules program",
+          "optional": true
+        },
+        {
+          "name": "authorizationRules",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Token Authorization Rules account",
           "optional": true
         }
       ],
@@ -2903,31 +2903,19 @@
           "name": "delegate",
           "isMut": true,
           "isSigner": false,
-          "desc": "Delegate account key (pda of ['metadata', program id, mint id, delegate role, user id, owner id])"
+          "desc": "Delegate account key (pda of [mint id, delegate role, user id, authority id])"
         },
         {
           "name": "delegateOwner",
           "isMut": false,
           "isSigner": false,
-          "desc": "Delegated account owner"
+          "desc": "Owner of the delegated account"
         },
         {
-          "name": "owner",
+          "name": "mint",
           "isMut": false,
-          "isSigner": true,
-          "desc": "Token owner"
-        },
-        {
-          "name": "payer",
-          "isMut": true,
-          "isSigner": true,
-          "desc": "Payer"
-        },
-        {
-          "name": "tokenAccount",
-          "isMut": true,
           "isSigner": false,
-          "desc": "Owned Token Account of mint"
+          "desc": "Mint of metadata"
         },
         {
           "name": "metadata",
@@ -2936,10 +2924,23 @@
           "desc": "Metadata account"
         },
         {
-          "name": "mint",
-          "isMut": false,
+          "name": "masterEdition",
+          "isMut": true,
           "isSigner": false,
-          "desc": "Mint of metadata"
+          "desc": "Master Edition account",
+          "optional": true
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "Authority to approve the delegation"
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "desc": "Payer"
         },
         {
           "name": "systemProgram",
@@ -2957,7 +2958,15 @@
           "name": "splTokenProgram",
           "isMut": false,
           "isSigner": false,
-          "desc": "SPL Token Program"
+          "desc": "SPL Token Program",
+          "optional": true
+        },
+        {
+          "name": "tokenAccount",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Owned Token Account of mint",
+          "optional": true
         },
         {
           "name": "authorizationRules",
@@ -3072,37 +3081,13 @@
           "name": "delegate",
           "isMut": true,
           "isSigner": false,
-          "desc": "Delegate account key (pda of ['metadata', program id, mint id, delegate role, user id, owner id])"
+          "desc": "Delegate account key (pda of [mint id, delegate role, user id, authority id])"
         },
         {
-          "name": "user",
+          "name": "delegateOwner",
           "isMut": false,
           "isSigner": false,
-          "desc": "Delegated user"
-        },
-        {
-          "name": "owner",
-          "isMut": false,
-          "isSigner": true,
-          "desc": "Token owner"
-        },
-        {
-          "name": "payer",
-          "isMut": true,
-          "isSigner": true,
-          "desc": "Payer"
-        },
-        {
-          "name": "tokenAccount",
-          "isMut": true,
-          "isSigner": false,
-          "desc": "Owned Token Account of mint"
-        },
-        {
-          "name": "metadata",
-          "isMut": true,
-          "isSigner": false,
-          "desc": "Metadata account"
+          "desc": "Owner of the delegated account"
         },
         {
           "name": "mint",
@@ -3111,22 +3096,55 @@
           "desc": "Mint of metadata"
         },
         {
+          "name": "metadata",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Metadata account"
+        },
+        {
+          "name": "masterEdition",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Master Edition account",
+          "optional": true
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "Authority to approve the delegation"
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "desc": "Payer"
+        },
+        {
           "name": "systemProgram",
           "isMut": false,
           "isSigner": false,
           "desc": "System Program"
         },
         {
-          "name": "splTokenProgram",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "SPL Token Program"
-        },
-        {
           "name": "sysvarInstructions",
           "isMut": false,
           "isSigner": false,
           "desc": "Instructions sysvar account"
+        },
+        {
+          "name": "splTokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "SPL Token Program",
+          "optional": true
+        },
+        {
+          "name": "tokenAccount",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Owned Token Account of mint",
+          "optional": true
         },
         {
           "name": "authorizationRules",
@@ -3821,6 +3839,10 @@
         "kind": "struct",
         "fields": [
           {
+            "name": "updateAuthority",
+            "type": "publicKey"
+          },
+          {
             "name": "name",
             "type": "string"
           },
@@ -3835,10 +3857,6 @@
           {
             "name": "sellerFeeBasisPoints",
             "type": "u16"
-          },
-          {
-            "name": "updateAuthority",
-            "type": "publicKey"
           },
           {
             "name": "creators",
@@ -4137,13 +4155,14 @@
         "kind": "enum",
         "variants": [
           {
-            "name": "V1",
+            "name": "CollectionV1"
+          },
+          {
+            "name": "SaleV1",
             "fields": [
               {
-                "name": "role",
-                "type": {
-                  "defined": "DelegateRole"
-                }
+                "name": "amount",
+                "type": "u64"
               }
             ]
           }
@@ -4156,15 +4175,10 @@
         "kind": "enum",
         "variants": [
           {
-            "name": "V1",
-            "fields": [
-              {
-                "name": "role",
-                "type": {
-                  "defined": "DelegateRole"
-                }
-              }
-            ]
+            "name": "CollectionV1"
+          },
+          {
+            "name": "SaleV1"
           }
         ]
       }
@@ -4282,10 +4296,76 @@
                 }
               },
               {
-                "name": "asset_data",
+                "name": "new_update_authority",
+                "type": {
+                  "option": "publicKey"
+                }
+              },
+              {
+                "name": "data",
                 "type": {
                   "option": {
-                    "defined": "AssetData"
+                    "defined": "Data"
+                  }
+                }
+              },
+              {
+                "name": "primary_sale_happened",
+                "type": {
+                  "option": "bool"
+                }
+              },
+              {
+                "name": "is_mutable",
+                "type": {
+                  "option": "bool"
+                }
+              },
+              {
+                "name": "token_standard",
+                "type": {
+                  "option": {
+                    "defined": "TokenStandard"
+                  }
+                }
+              },
+              {
+                "name": "collection",
+                "type": {
+                  "option": {
+                    "defined": "Collection"
+                  }
+                }
+              },
+              {
+                "name": "uses",
+                "type": {
+                  "option": {
+                    "defined": "Uses"
+                  }
+                }
+              },
+              {
+                "name": "collection_details",
+                "type": {
+                  "option": {
+                    "defined": "CollectionDetails"
+                  }
+                }
+              },
+              {
+                "name": "programmable_config",
+                "type": {
+                  "option": {
+                    "defined": "ProgrammableConfig"
+                  }
+                }
+              },
+              {
+                "name": "delegate_state",
+                "type": {
+                  "option": {
+                    "defined": "DelegateState"
                   }
                 }
               }
@@ -5155,6 +5235,16 @@
       "code": 139,
       "name": "InvalidProgrammableConfig",
       "msg": "Invalid programmable configuration"
+    },
+    {
+      "code": 140,
+      "name": "DelegateAlreadyExists",
+      "msg": "Delegate already exists"
+    },
+    {
+      "code": 141,
+      "name": "DelegateNotFound",
+      "msg": "Delegate not found"
     }
   ],
   "metadata": {

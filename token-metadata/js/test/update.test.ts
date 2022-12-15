@@ -1,5 +1,5 @@
 import spok from 'spok';
-import { AssetData, AuthorizationData, Metadata, TokenStandard } from '../src/generated';
+import { AssetData, AuthorizationData, Data, Metadata, TokenStandard } from '../src/generated';
 import test from 'tape';
 import { InitTransactions, killStuckProcess } from './setup';
 import { Connection, Keypair } from '@solana/web3.js';
@@ -81,15 +81,32 @@ test('Update: NonFungible asset', async (t) => {
   const assetData = await daManager.getAssetData(connection);
 
   // Change some values and run update.
-  assetData.name = 'DigitalAsset2';
-  assetData.symbol = 'DA2';
-  assetData.uri = 'uri2';
-  assetData.isMutable = false;
+  const data: Data = {
+    name: 'DigitalAsset2',
+    symbol: 'DA2',
+    uri: 'uri2',
+    sellerFeeBasisPoints: 0,
+    creators: assetData.creators,
+  };
 
   const authorizationData: AuthorizationData = {
     derivedKeySeeds: null,
     leafInfo: null,
     name: 'rule-name',
+  };
+
+  const updateData = {
+    newUpdateAuthority: null,
+    data: data,
+    primarySaleHappened: null,
+    isMutable: null,
+    tokenStandard: null,
+    collection: null,
+    uses: null,
+    collectionDetails: null,
+    programmableConfig: null,
+    delegateState: null,
+    authorizationData: authorizationData,
   };
 
   const { tx: updateTx } = await API.update(
@@ -98,8 +115,7 @@ test('Update: NonFungible asset', async (t) => {
     mint,
     metadata,
     masterEdition,
-    assetData,
-    authorizationData,
+    updateData,
     handler,
   );
   await updateTx.assertSuccess(t);
@@ -111,13 +127,13 @@ test('Update: NonFungible asset', async (t) => {
       sellerFeeBasisPoints: 0,
     },
     primarySaleHappened: false,
-    isMutable: false,
+    isMutable: true,
     tokenStandard: TokenStandard.NonFungible,
   });
 
-  t.equal(updatedMetadata.data.name.replace(/\0+/, ''), assetData.name);
-  t.equal(updatedMetadata.data.symbol.replace(/\0+/, ''), assetData.symbol);
-  t.equal(updatedMetadata.data.uri.replace(/\0+/, ''), assetData.uri);
+  t.equal(updatedMetadata.data.name.replace(/\0+/, ''), data.name);
+  t.equal(updatedMetadata.data.symbol.replace(/\0+/, ''), data.symbol);
+  t.equal(updatedMetadata.data.uri.replace(/\0+/, ''), data.uri);
 });
 
 // test('Update: Cannot Flip IsMutable to True', async (t) => {

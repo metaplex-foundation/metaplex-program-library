@@ -140,7 +140,6 @@ export function createUseAssetInstruction(
       isSigner: false,
     });
   }
-
   if (accounts.authorizationRules != null) {
     if (accounts.useAuthorityRecord == null) {
       throw new Error(
@@ -153,7 +152,6 @@ export function createUseAssetInstruction(
       isSigner: false,
     });
   }
-
   if (accounts.authorizationRulesProgram != null) {
     if (accounts.useAuthorityRecord == null || accounts.authorizationRules == null) {
       throw new Error(

@@ -6,7 +6,6 @@
  */
 
 import * as beet from '@metaplex-foundation/beet';
-import { DelegateRole, delegateRoleBeet } from './DelegateRole';
 /**
  * This type is used to derive the {@link DelegateArgs} type as well as the de/serializer.
  * However don't refer to it in your code but use the {@link DelegateArgs} type instead.
@@ -17,7 +16,8 @@ import { DelegateRole, delegateRoleBeet } from './DelegateRole';
  * @private
  */
 export type DelegateArgsRecord = {
-  V1: { role: DelegateRole };
+  CollectionV1: void /* scalar variant */;
+  SaleV1: { amount: beet.bignum };
 };
 
 /**
@@ -33,19 +33,24 @@ export type DelegateArgsRecord = {
  */
 export type DelegateArgs = beet.DataEnumKeyAsKind<DelegateArgsRecord>;
 
-export const isDelegateArgsV1 = (x: DelegateArgs): x is DelegateArgs & { __kind: 'V1' } =>
-  x.__kind === 'V1';
+export const isDelegateArgsCollectionV1 = (
+  x: DelegateArgs,
+): x is DelegateArgs & { __kind: 'CollectionV1' } => x.__kind === 'CollectionV1';
+export const isDelegateArgsSaleV1 = (x: DelegateArgs): x is DelegateArgs & { __kind: 'SaleV1' } =>
+  x.__kind === 'SaleV1';
 
 /**
  * @category userTypes
  * @category generated
  */
 export const delegateArgsBeet = beet.dataEnum<DelegateArgsRecord>([
+  ['CollectionV1', beet.unit],
+
   [
-    'V1',
-    new beet.BeetArgsStruct<DelegateArgsRecord['V1']>(
-      [['role', delegateRoleBeet]],
-      'DelegateArgsRecord["V1"]',
+    'SaleV1',
+    new beet.BeetArgsStruct<DelegateArgsRecord['SaleV1']>(
+      [['amount', beet.u64]],
+      'DelegateArgsRecord["SaleV1"]',
     ),
   ],
 ]) as beet.FixableBeet<DelegateArgs>;

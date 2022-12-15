@@ -3010,6 +3010,46 @@ createErrorFromNameLookup.set(
 );
 
 /**
+ * DelegateAlreadyExists: 'Delegate already exists'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class DelegateAlreadyExistsError extends Error {
+  readonly code: number = 0x8c;
+  readonly name: string = 'DelegateAlreadyExists';
+  constructor() {
+    super('Delegate already exists');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, DelegateAlreadyExistsError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x8c, () => new DelegateAlreadyExistsError());
+createErrorFromNameLookup.set('DelegateAlreadyExists', () => new DelegateAlreadyExistsError());
+
+/**
+ * DelegateNotFound: 'Delegate not found'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class DelegateNotFoundError extends Error {
+  readonly code: number = 0x8d;
+  readonly name: string = 'DelegateNotFound';
+  constructor() {
+    super('Delegate not found');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, DelegateNotFoundError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x8d, () => new DelegateNotFoundError());
+createErrorFromNameLookup.set('DelegateNotFound', () => new DelegateNotFoundError());
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

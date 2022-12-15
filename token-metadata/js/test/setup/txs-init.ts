@@ -22,7 +22,6 @@ import {
   MintInstructionAccounts,
   MintInstructionArgs,
   createUpdateInstruction,
-  AuthorizationData,
   UpdateInstructionAccounts,
   UpdateInstructionArgs,
   PROGRAM_ID,
@@ -30,6 +29,7 @@ import {
 } from '../../src/generated';
 import { Test } from 'tape';
 import { amman } from '.';
+import { UpdateTestData } from 'test/utils/UpdateTestData';
 
 export class InitTransactions {
   readonly getKeypair: LoadOrGenKeypair | GenLabeledKeypair;
@@ -193,8 +193,7 @@ export class InitTransactions {
     mint: PublicKey,
     metadata: PublicKey,
     masterEdition: PublicKey,
-    assetData: AssetData,
-    authorizationData: AuthorizationData,
+    updateTestData: UpdateTestData,
     handler: PayerTransactionHandler,
   ): Promise<{ tx: ConfirmedTransactionAssertablePromise }> {
     amman.addr.addLabel('Mint Account', mint);
@@ -212,8 +211,17 @@ export class InitTransactions {
     const updateArgs: UpdateInstructionArgs = {
       updateArgs: {
         __kind: 'V1',
-        assetData,
-        authorizationData,
+        newUpdateAuthority: updateTestData.newUpdateAuthority,
+        data: updateTestData.data,
+        primarySaleHappened: updateTestData.primarySaleHappened,
+        isMutable: updateTestData.isMutable,
+        tokenStandard: updateTestData.tokenStandard,
+        collection: updateTestData.collection,
+        uses: updateTestData.uses,
+        collectionDetails: updateTestData.collectionDetails,
+        programmableConfig: updateTestData.programmableConfig,
+        delegateState: updateTestData.delegateState,
+        authorizationData: updateTestData.authorizationData,
       },
     };
 

@@ -118,7 +118,6 @@ export function createUpdateInstruction(
       isSigner: false,
     });
   }
-
   if (accounts.updateAuthority != null) {
     if (accounts.masterEdition == null) {
       throw new Error(
@@ -131,7 +130,6 @@ export function createUpdateInstruction(
       isSigner: true,
     });
   }
-
   if (accounts.tokenHolder != null) {
     if (accounts.masterEdition == null || accounts.updateAuthority == null) {
       throw new Error(
@@ -144,7 +142,6 @@ export function createUpdateInstruction(
       isSigner: true,
     });
   }
-
   if (accounts.tokenAccount != null) {
     if (
       accounts.masterEdition == null ||
@@ -161,7 +158,6 @@ export function createUpdateInstruction(
       isSigner: false,
     });
   }
-
   if (accounts.authorizationRulesProgram != null) {
     if (
       accounts.masterEdition == null ||
@@ -179,7 +175,6 @@ export function createUpdateInstruction(
       isSigner: false,
     });
   }
-
   if (accounts.authorizationRules != null) {
     if (
       accounts.masterEdition == null ||
