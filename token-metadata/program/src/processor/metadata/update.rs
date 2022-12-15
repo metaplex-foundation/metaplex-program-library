@@ -13,10 +13,7 @@ use crate::{
     instruction::UpdateArgs,
     pda::find_master_edition_account,
     state::{Metadata, TokenMetadataAccount, TokenStandard},
-    utils::{clean_write_metadata, puff_out_data_fields},
 };
-
-use super::AuthorizationData;
 
 pub fn update<'a>(
     program_id: &Pubkey,
@@ -85,10 +82,7 @@ fn update_v1<'a>(
         | TokenStandard::NonFungibleEdition
         | TokenStandard::Fungible
         | TokenStandard::FungibleAsset => {
-            metadata_data.update_data(args, update_authority)?;
-
-            puff_out_data_fields(&mut metadata_data);
-            clean_write_metadata(&mut metadata_data, metadata)?;
+            metadata_data.update_data(args, update_authority, metadata)?;
         }
     }
 
@@ -153,14 +147,6 @@ impl UpdateArgs {
                     sysvar_instructions,
                 })
             }
-        }
-    }
-
-    fn get_auth_data(&self) -> Option<&AuthorizationData> {
-        match self {
-            UpdateArgs::V1 {
-                authorization_data, ..
-            } => authorization_data.as_ref(),
         }
     }
 }

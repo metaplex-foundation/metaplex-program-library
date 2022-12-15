@@ -4,6 +4,7 @@ use crate::{
         uses::assert_valid_use,
     },
     instruction::UpdateArgs,
+    utils::{clean_write_metadata, puff_out_data_fields},
 };
 
 use super::*;
@@ -77,6 +78,7 @@ impl Metadata {
         &mut self,
         args: UpdateArgs,
         update_authority: &AccountInfo<'a>,
+        metadata: &AccountInfo<'a>,
     ) -> ProgramResult {
         let (
             data,
@@ -173,6 +175,9 @@ impl Metadata {
                 return Err(MetadataError::IsMutableCanOnlyBeFlippedToFalse.into());
             }
         }
+
+        puff_out_data_fields(self);
+        clean_write_metadata(self, metadata)?;
 
         Ok(())
     }
