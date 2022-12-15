@@ -19,7 +19,9 @@ use utils::*;
 mod transfer {
 
     use mpl_token_metadata::{
-        instruction::{create_escrow_account, create_metadata_accounts_v3, mint, TransferArgs},
+        instruction::{
+            create_escrow_account, create_metadata_accounts_v3, mint, MintArgs, TransferArgs,
+        },
         pda::{find_master_edition_account, find_metadata_account},
         processor::find_escrow_account,
         state::{AssetData, EscrowAuthority, ProgrammableConfig, TokenStandard},
@@ -422,7 +424,9 @@ mod transfer {
             payer,
             Some(master_edition),
             None,
-            token_amount,
+            MintArgs::V1 {
+                amount: token_amount,
+            },
         );
 
         let tx = Transaction::new_signed_with_payer(

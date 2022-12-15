@@ -1,20 +1,24 @@
 use borsh::BorshSerialize;
 use mpl_utils::{assert_signer, create_or_allocate_account_raw};
 use solana_program::{
-    account_info::{next_account_info, AccountInfo},
-    entrypoint::ProgramResult,
-    program_error::ProgramError,
-    program_pack::Pack,
-    pubkey::Pubkey,
+    account_info::AccountInfo, entrypoint::ProgramResult, program::invoke,
+    program_error::ProgramError, program_pack::Pack, pubkey::Pubkey,
 };
 use spl_token::state::Account;
 
 use crate::{
-    assertions::{assert_derivation, assert_owned_by},
+    assertions::{
+        assert_derivation, assert_owned_by, metadata::assert_update_authority_is_correct,
+    },
     error::MetadataError,
     instruction::{DelegateArgs, DelegateRole},
-    state::{DelegateRecord, Key, Metadata, TokenMetadataAccount},
+    processor::{try_get_account_info, try_get_optional_account_info},
+    state::{DelegateRecord, Key, Metadata, TokenMetadataAccount, TokenStandard},
+    utils::{freeze, thaw},
 };
+
+// Number of expected accounts in the instruction (including optional accounts).
+const EXPECTED_ACCOUNTS_LEN: usize = 13;
 
 /// Delegates an action over an asset to a specific account.
 ///
@@ -22,82 +26,213 @@ use crate::{
 ///
 ///   0. `[writable]` Delegate account key
 ///   1. `[]` Delegated owner
-///   2. `[signer]` Owner
-///   3. `[signer, writable]` Payer
-///   4. `[writable]` Token account
-///   5. `[writable]` Metadata account
-///   6. `[]` Mint account
+///   2. `[]` Mint account
+///   3. `[writable]` Metadata account
+///   4. `[optional]` Master Edition account
+///   5. `[signer]` Authority to approve the delegation
+///   6. `[signer, writable]` Payer
 ///   7. `[]` System Program
 ///   8. `[]` Instructions sysvar account
-///   9. `[]` SPL Token Program
-///   10. `[optional]` Token Authorization Rules account
+///   9. `[optional]` SPL Token Program
+///   10. `[optional, writable]` Token account
 ///   11. `[optional]` Token Authorization Rules program
+///   12. `[optional]` Token Authorization Rules account
 pub fn delegate<'a>(
     program_id: &Pubkey,
     accounts: &'a [AccountInfo<'a>],
     args: DelegateArgs,
 ) -> ProgramResult {
     match args {
-        DelegateArgs::V1 { .. } => delegate_v1(program_id, accounts, args),
+        DelegateArgs::CollectionV1 { .. } => delegate_collection_v1(program_id, accounts, args),
+        DelegateArgs::SaleV1 { .. } => delegate_sale_v1(program_id, accounts, args),
     }
 }
 
-fn delegate_v1<'a>(
+fn delegate_collection_v1<'a>(
     program_id: &Pubkey,
     accounts: &'a [AccountInfo<'a>],
     args: DelegateArgs,
 ) -> ProgramResult {
+    // TODO: do this on a macro rules
+    // accounts!()
     // get the accounts for the instruction
-    let DelegateAccounts::V1 {
-        delegate,
-        delegate_owner,
-        owner,
-        payer,
-        token,
-        metadata,
-        mint,
-        system_program,
-        ..
-    } = args.get_accounts(accounts)?;
-    // get the args for the instruction
-    let DelegateArgs::V1 { role } = args;
+    let (delegate, delegate_owner, mint, metadata, authority, payer, system_program) =
+        if let DelegateAccounts::CollectionV1 {
+            delegate,
+            delegate_owner,
+            mint,
+            metadata,
+            authority,
+            payer,
+            system_program,
+            _sysvars,
+            _authorization_rules,
+            _auth_rules_program,
+        } = args.get_accounts(accounts)?
+        {
+            (
+                delegate,
+                delegate_owner,
+                mint,
+                metadata,
+                authority,
+                payer,
+                system_program,
+            )
+        } else {
+            unimplemented!();
+        };
 
-    let mut asset_metadata = Metadata::from_account_info(metadata)?;
+    // validates accounts
+
     assert_owned_by(metadata, program_id)?;
     assert_owned_by(mint, &spl_token::id())?;
-    assert_signer(owner)?;
-    assert_signer(payer)?;
 
-    let token_account = Account::unpack(&token.try_borrow_data()?).unwrap();
-    if token_account.owner != *owner.key {
-        return Err(MetadataError::IncorrectOwner.into());
-    }
+    let asset_metadata = Metadata::from_account_info(metadata)?;
+    assert_update_authority_is_correct(&asset_metadata, authority)?;
 
     if asset_metadata.mint != *mint.key {
         return Err(MetadataError::MintMismatch.into());
     }
 
-    if role == DelegateRole::Sale {
-        set_sale_delegate(
-            program_id,
-            &mut asset_metadata,
-            delegate,
-            delegate_owner,
-            mint,
-            owner,
-            payer,
-            system_program,
-        )?;
+    assert_signer(payer)?;
+    assert_signer(authority)?;
+
+    if !delegate.data_is_empty() {
+        return Err(MetadataError::DelegateAlreadyExists.into());
     }
 
+    // process the delegation creation (the derivation is checked
+    // by the create helper)
+
+    create_delegate(
+        program_id,
+        DelegateRole::Collection,
+        delegate,
+        delegate_owner,
+        mint,
+        authority,
+        payer,
+        system_program,
+    )
+}
+
+fn delegate_sale_v1<'a>(
+    program_id: &Pubkey,
+    accounts: &'a [AccountInfo<'a>],
+    args: DelegateArgs,
+) -> ProgramResult {
+    // get the accounts for the instruction
+    let (
+        delegate_owner,
+        mint,
+        metadata,
+        master_edition,
+        authority,
+        payer,
+        spl_token_program,
+        token,
+    ) = if let DelegateAccounts::SaleV1 {
+        delegate_owner,
+        mint,
+        metadata,
+        master_edition,
+        authority,
+        payer,
+        spl_token_program,
+        token,
+        ..
+    } = args.get_accounts(accounts)?
+    {
+        (
+            delegate_owner,
+            mint,
+            metadata,
+            master_edition,
+            authority,
+            payer,
+            spl_token_program,
+            token,
+        )
+    } else {
+        unimplemented!();
+    };
+    // get the args for the instruction
+    let amount = if let DelegateArgs::SaleV1 { amount } = args {
+        amount
+    } else {
+        unimplemented!();
+    };
+
+    // validates accounts
+
+    assert_owned_by(metadata, program_id)?;
+    assert_owned_by(mint, &spl_token::id())?;
+    assert_signer(payer)?;
+
+    let mut asset_metadata = Metadata::from_account_info(metadata)?;
+    if asset_metadata.mint != *mint.key {
+        return Err(MetadataError::MintMismatch.into());
+    }
+    if asset_metadata.delegate.is_some() {
+        return Err(MetadataError::DelegateAlreadyExists.into());
+    }
+
+    // authority must be the owner of the token account
+    let token_account = Account::unpack(&token.try_borrow_data()?).unwrap();
+    if token_account.owner != *authority.key {
+        return Err(MetadataError::IncorrectOwner.into());
+    }
+
+    // and must be a signer of the transaction
+    assert_signer(authority)?;
+
+    // process the delegation
+
+    if matches!(
+        asset_metadata.token_standard,
+        Some(TokenStandard::ProgrammableNonFungible)
+    ) {
+        if let Some(master_edition) = master_edition {
+            thaw(mint, token, master_edition, spl_token_program)?;
+        } else {
+            return Err(MetadataError::MissingEditionAccount.into());
+        }
+    }
+
+    invoke(
+        &spl_token::instruction::approve(
+            spl_token_program.key,
+            token.key,
+            delegate_owner.key,
+            authority.key,
+            &[],
+            amount,
+        )?,
+        &[token.clone(), delegate_owner.clone(), authority.clone()],
+    )?;
+
+    if matches!(
+        asset_metadata.token_standard,
+        Some(TokenStandard::ProgrammableNonFungible)
+    ) {
+        if let Some(master_edition) = master_edition {
+            freeze(mint, token, master_edition, spl_token_program)?;
+        } else {
+            return Err(MetadataError::MissingEditionAccount.into());
+        }
+    }
+
+    // sale delegate is set to the metadata account
+    asset_metadata.delegate = Some(*delegate_owner.key);
     asset_metadata.save(&mut metadata.try_borrow_mut_data()?)?;
 
     Ok(())
 }
 
-fn set_sale_delegate<'a>(
+fn create_delegate<'a>(
     program_id: &Pubkey,
-    metadata: &mut Metadata,
+    delegate_role: DelegateRole,
     delegate: &'a AccountInfo<'a>,
     delegate_owner: &'a AccountInfo<'a>,
     mint: &'a AccountInfo<'a>,
@@ -105,7 +240,7 @@ fn set_sale_delegate<'a>(
     payer: &'a AccountInfo<'a>,
     system_program: &'a AccountInfo<'a>,
 ) -> ProgramResult {
-    let role = DelegateRole::Sale.to_string();
+    let role = delegate_role.to_string();
     // validates the delegate derivation
     let mut delegate_seeds = vec![
         mint.key.as_ref(),
@@ -130,33 +265,38 @@ fn set_sale_delegate<'a>(
 
     let mut delegate_account = DelegateRecord::from_account_info(delegate)?;
     delegate_account.key = Key::Delegate;
-    delegate_account.role = DelegateRole::Sale;
+    delegate_account.role = delegate_role;
     delegate_account.bump = bump[0];
     delegate_account.serialize(&mut *delegate.try_borrow_mut_data()?)?;
-
-    // save the delegate owner information
-
-    if let Some(_delegate) = metadata.delegate {
-        // revoke delegate
-    }
-
-    metadata.delegate = Some(*delegate_owner.key);
 
     Ok(())
 }
 
 enum DelegateAccounts<'a> {
-    V1 {
+    CollectionV1 {
         delegate: &'a AccountInfo<'a>,
         delegate_owner: &'a AccountInfo<'a>,
-        owner: &'a AccountInfo<'a>,
-        payer: &'a AccountInfo<'a>,
-        token: &'a AccountInfo<'a>,
-        metadata: &'a AccountInfo<'a>,
         mint: &'a AccountInfo<'a>,
+        metadata: &'a AccountInfo<'a>,
+        authority: &'a AccountInfo<'a>,
+        payer: &'a AccountInfo<'a>,
         system_program: &'a AccountInfo<'a>,
         _sysvars: &'a AccountInfo<'a>,
-        _spl_token_program: &'a AccountInfo<'a>,
+        _authorization_rules: Option<&'a AccountInfo<'a>>,
+        _auth_rules_program: Option<&'a AccountInfo<'a>>,
+    },
+    SaleV1 {
+        _delegate: &'a AccountInfo<'a>,
+        delegate_owner: &'a AccountInfo<'a>,
+        mint: &'a AccountInfo<'a>,
+        metadata: &'a AccountInfo<'a>,
+        master_edition: Option<&'a AccountInfo<'a>>,
+        authority: &'a AccountInfo<'a>,
+        payer: &'a AccountInfo<'a>,
+        _system_program: &'a AccountInfo<'a>,
+        _sysvars: &'a AccountInfo<'a>,
+        spl_token_program: &'a AccountInfo<'a>,
+        token: &'a AccountInfo<'a>,
         _authorization_rules: Option<&'a AccountInfo<'a>>,
         _auth_rules_program: Option<&'a AccountInfo<'a>>,
     },
@@ -167,48 +307,68 @@ impl DelegateArgs {
         &self,
         accounts: &'a [AccountInfo<'a>],
     ) -> Result<DelegateAccounts<'a>, ProgramError> {
-        let account_info_iter = &mut accounts.iter();
+        // validates that we got the correct number of accounts
+        if accounts.len() < EXPECTED_ACCOUNTS_LEN {
+            return Err(ProgramError::NotEnoughAccountKeys);
+        }
 
         match *self {
-            DelegateArgs::V1 { .. } => {
-                let delegate = next_account_info(account_info_iter)?;
-                let delegate_owner = next_account_info(account_info_iter)?;
-                let owner = next_account_info(account_info_iter)?;
-                let payer = next_account_info(account_info_iter)?;
-                let token = next_account_info(account_info_iter)?;
-                let metadata = next_account_info(account_info_iter)?;
-                let mint = next_account_info(account_info_iter)?;
-                let system_program = next_account_info(account_info_iter)?;
-                let _sysvars = next_account_info(account_info_iter)?;
-                let _spl_token_program = next_account_info(account_info_iter)?;
+            DelegateArgs::CollectionV1 { .. } => {
+                let delegate = try_get_account_info(accounts, 0)?;
+                let delegate_owner = try_get_account_info(accounts, 1)?;
+                let mint = try_get_account_info(accounts, 2)?;
+                let metadata = try_get_account_info(accounts, 3)?;
+                let authority = try_get_account_info(accounts, 5)?;
+                let payer = try_get_account_info(accounts, 6)?;
+                let system_program = try_get_account_info(accounts, 7)?;
+                let _sysvars = try_get_account_info(accounts, 8)?;
+                // optional accounts
+                let _authorization_rules = try_get_optional_account_info(accounts, 11)?;
+                let _auth_rules_program = try_get_optional_account_info(accounts, 12)?;
 
-                let _authorization_rules =
-                    if let Ok(authorization_rules) = next_account_info(account_info_iter) {
-                        Some(authorization_rules)
-                    } else {
-                        None
-                    };
-
-                let _auth_rules_program =
-                    if let Ok(auth_rules_program) = next_account_info(account_info_iter) {
-                        Some(auth_rules_program)
-                    } else {
-                        None
-                    };
-
-                Ok(DelegateAccounts::V1 {
-                    _sysvars,
-                    _auth_rules_program,
-                    _authorization_rules,
+                Ok(DelegateAccounts::CollectionV1 {
                     delegate,
                     delegate_owner,
-                    metadata,
                     mint,
-                    owner,
+                    metadata,
+                    authority,
                     payer,
-                    _spl_token_program,
                     system_program,
+                    _sysvars,
+                    _authorization_rules,
+                    _auth_rules_program,
+                })
+            }
+            DelegateArgs::SaleV1 { .. } => {
+                let _delegate = try_get_account_info(accounts, 0)?;
+                let delegate_owner = try_get_account_info(accounts, 1)?;
+                let mint = try_get_account_info(accounts, 2)?;
+                let metadata = try_get_account_info(accounts, 3)?;
+                let master_edition = try_get_optional_account_info(accounts, 4)?;
+                let authority = try_get_account_info(accounts, 5)?;
+                let payer = try_get_account_info(accounts, 6)?;
+                let _system_program = try_get_account_info(accounts, 7)?;
+                let _sysvars = try_get_account_info(accounts, 8)?;
+                let spl_token_program = try_get_account_info(accounts, 9)?;
+                let token = try_get_account_info(accounts, 10)?;
+                // optional accounts
+                let _authorization_rules = try_get_optional_account_info(accounts, 11)?;
+                let _auth_rules_program = try_get_optional_account_info(accounts, 12)?;
+
+                Ok(DelegateAccounts::SaleV1 {
+                    _delegate,
+                    delegate_owner,
+                    mint,
+                    metadata,
+                    master_edition,
+                    authority,
+                    payer,
+                    _system_program,
+                    _sysvars,
+                    spl_token_program,
                     token,
+                    _authorization_rules,
+                    _auth_rules_program,
                 })
             }
         }

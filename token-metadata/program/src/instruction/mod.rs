@@ -532,8 +532,8 @@ pub enum MetadataInstruction {
     #[account(7, name="spl_token_program", desc="SPL Token program")]
     #[account(8, name="spl_ata_program", desc="SPL Associated Token Account program")]
     #[account(9, optional, writable, name="master_edition", desc="Master Edition account")]
-    #[account(10, optional, name="authorization_rules", desc="Token Authorization Rules account")]
-    #[account(11, optional, name="token_auth_rules_program", desc="Token Authorization Rules program")]
+    #[account(10, optional, name="token_auth_rules_program", desc="Token Authorization Rules program")]
+    #[account(11, optional, name="authorization_rules", desc="Token Authorization Rules account")]
     Mint(MintArgs),
 
     /// Updates the metadata of an asset.
@@ -622,18 +622,19 @@ pub enum MetadataInstruction {
     /// Creates a delegate for an asset.
     /// 
     /// A delegate has a role associated, which determines what actions the delegate can perform.
-    #[account(0, writable, name="delegate", desc="Delegate account key (pda of ['metadata', program id, mint id, delegate role, user id, owner id])")]
-    #[account(1, name="delegate_owner", desc="Delegated account owner")]
-    #[account(2, signer, name="owner", desc="Token owner")]
-    #[account(3, signer, writable, name="payer", desc="Payer")]
-    #[account(4, writable, name="token_account", desc="Owned Token Account of mint")]
-    #[account(5, writable, name="metadata", desc="Metadata account")]
-    #[account(6, name="mint", desc="Mint of metadata")]
+    #[account(0, writable, name="delegate", desc="Delegate account key (pda of [mint id, delegate role, user id, authority id])")]
+    #[account(1, name="delegate_owner", desc="Owner of the delegated account")]
+    #[account(2, name="mint", desc="Mint of metadata")]
+    #[account(3, writable, name="metadata", desc="Metadata account")]
+    #[account(4, optional, writable, name="master_edition", desc="Master Edition account")]
+    #[account(5, signer, name="authority", desc="Authority to approve the delegation")]
+    #[account(6, signer, writable, name="payer", desc="Payer")]
     #[account(7, name="system_program", desc="System Program")]
     #[account(8, name="sysvar_instructions", desc="Instructions sysvar account")]
-    #[account(9, name="spl_token_program", desc="SPL Token Program")]
-    #[account(10, optional, name="authorization_rules", desc="Token Authorization Rules account")]
-    #[account(11, optional, name="authorization_rules_program", desc="Token Authorization Rules Program")]
+    #[account(9, optional, name="spl_token_program", desc="SPL Token Program")]
+    #[account(10, optional, writable, name="token_account", desc="Owned Token Account of mint")]
+    #[account(11, optional, name="authorization_rules", desc="Token Authorization Rules account")]
+    #[account(12, optional, name="authorization_rules_program", desc="Token Authorization Rules Program")]
     Delegate(DelegateArgs),
 
     /// Migrates an asset to a ProgrammableAsset type.

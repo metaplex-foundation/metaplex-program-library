@@ -552,6 +552,10 @@ pub enum MetadataError {
     /// 139
     #[error("Invalid programmable configuration")]
     InvalidProgrammableConfig,
+
+    /// 140
+    #[error("Delegate already exists")]
+    DelegateAlreadyExists,
 }
 
 impl PrintProgramError for MetadataError {

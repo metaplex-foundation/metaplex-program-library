@@ -15,7 +15,8 @@ use crate::instruction::MetadataInstruction;
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub enum DelegateArgs {
-    V1 { role: DelegateRole },
+    CollectionV1,
+    SaleV1 { amount: u64 },
 }
 
 #[repr(C)]
@@ -56,44 +57,64 @@ impl fmt::Display for DelegateRole {
 ///
 ///   0. `[writable]` Delegate account key
 ///   1. `[]` Delegated owner
-///   2. `[signer]` Owner
-///   3. `[signer, writable]` Payer
-///   4. `[writable]` Token account
-///   5. `[writable]` Metadata account
-///   6. `[]` Mint account
+///   2. `[]` Mint account
+///   3. `[writable]` Metadata account
+///   4. `[optional]` Master Edition account
+///   5. `[signer]` Authority to approve the delegation
+///   6. `[signer, writable]` Payer
 ///   7. `[]` System Program
 ///   8. `[]` Instructions sysvar account
-///   9. `[]` SPL Token Program
-///   10. `[optional]` Token Authorization Rules account
+///   9. `[optional]` SPL Token Program
+///   10. `[optional, writable]` Token account
 ///   11. `[optional]` Token Authorization Rules program
+///   12. `[optional]` Token Authorization Rules account
 pub fn delegate(
     delegate: Pubkey,
     delegate_owner: Pubkey,
-    owner: Pubkey,
-    payer: Pubkey,
-    token: Pubkey,
-    metadata: Pubkey,
     mint: Pubkey,
-    role: DelegateRole,
+    metadata: Pubkey,
+    master_edition: Option<Pubkey>,
+    authority: Pubkey,
+    payer: Pubkey,
+    token: Option<Pubkey>,
     authorization_rules: Option<Pubkey>,
     additional_accounts: Option<Vec<AccountMeta>>,
+    args: DelegateArgs,
 ) -> Instruction {
     let mut accounts = vec![
         AccountMeta::new(delegate, false),
         AccountMeta::new_readonly(delegate_owner, false),
-        AccountMeta::new_readonly(owner, true),
-        AccountMeta::new(payer, true),
-        AccountMeta::new(token, false),
-        AccountMeta::new(metadata, false),
         AccountMeta::new_readonly(mint, false),
+        AccountMeta::new(metadata, false),
+        AccountMeta::new(
+            if let Some(master_edition) = master_edition {
+                master_edition
+            } else {
+                crate::id()
+            },
+            false,
+        ),
+        AccountMeta::new_readonly(authority, true),
+        AccountMeta::new(payer, true),
         AccountMeta::new_readonly(system_program::id(), false),
         AccountMeta::new_readonly(sysvar::instructions::id(), false),
         AccountMeta::new_readonly(spl_token::id(), false),
+        AccountMeta::new(
+            if let Some(token) = token {
+                token
+            } else {
+                crate::id()
+            },
+            false,
+        ),
     ];
 
     if let Some(authorization_rules) = authorization_rules {
+        accounts.push(AccountMeta::new_readonly(mpl_token_auth_rules::ID, false));
         accounts.push(AccountMeta::new_readonly(authorization_rules, false));
-        //accounts.push(AccountMeta::new_readonly(token_authorization::id(), false));
+    } else {
+        accounts.push(AccountMeta::new_readonly(crate::ID, false));
+        accounts.push(AccountMeta::new_readonly(crate::ID, false));
     }
 
     if let Some(additional_accounts) = additional_accounts {
@@ -103,9 +124,7 @@ pub fn delegate(
     Instruction {
         program_id: crate::id(),
         accounts,
-        data: MetadataInstruction::Delegate(DelegateArgs::V1 { role })
-            .try_to_vec()
-            .unwrap(),
+        data: MetadataInstruction::Delegate(args).try_to_vec().unwrap(),
     }
 }
 
