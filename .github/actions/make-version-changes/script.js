@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
-const toml = require('@iarna/toml');
+// const toml = require('@iarna/toml');
 
 const wrappedExec = (cmd, cwd) => {
   let args = {
@@ -73,10 +73,10 @@ const updateCratesPackage = async (io, cwdArgs, pkg, semvar) => {
   // wrappedExec(`git restore --source=HEAD^ --staged -- ${rootYarnLockPath}`);
   // wrappedExec('git commit --amend --allow-empty -C HEAD');
 
-  const crateInfo = getCrateInfo(currentDir);
-  console.log(
-    `Generating client lib for crate: ${crateInfo.name} at version = ${crateInfo.version}`,
-  );
+  // const crateInfo = getCrateInfo(currentDir);
+  // console.log(
+  //   `Generating client lib for crate: ${crateInfo.name} at version = ${crateInfo.version}`,
+  // );
 
   generatePackageLib(cwdArgs, pkg);
 

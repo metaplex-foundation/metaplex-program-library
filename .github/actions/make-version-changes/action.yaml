@@ -36,10 +36,10 @@ runs:
       shell: bash
       run: |
         cargo install cargo-release
-
-    - name: Install dependency packages for script
-      run: npm install -g @iarna/toml && npm link @iarna/toml
-      shell: bash
+#
+#    - name: Install dependency packages for script
+#      run: npm install -g @iarna/toml && npm link @iarna/toml
+#      shell: bash
 
     - name: Make version changes
       uses: actions/github-script@v4
