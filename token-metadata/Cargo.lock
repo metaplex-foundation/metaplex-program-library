@@ -1841,7 +1841,7 @@ dependencies = [
 
 [[package]]
 name = "mpl-token-metadata"
-version = "1.6.2"
+version = "1.6.4"
 dependencies = [
  "arrayref",
  "borsh",

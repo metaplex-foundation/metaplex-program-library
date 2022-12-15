@@ -47,7 +47,6 @@ export type SetFreezeInstructionAccounts = {
   authority: web3.PublicKey;
   freezePda: web3.PublicKey;
   systemProgram?: web3.PublicKey;
-  anchorRemainingAccounts?: web3.AccountMeta[];
 };
 
 export const setFreezeInstructionDiscriminator = [202, 80, 109, 208, 130, 144, 26, 233];
@@ -93,12 +92,6 @@ export function createSetFreezeInstruction(
       isSigner: false,
     },
   ];
-
-  if (accounts.anchorRemainingAccounts != null) {
-    for (const acc of accounts.anchorRemainingAccounts) {
-      keys.push(acc);
-    }
-  }
 
   const ix = new web3.TransactionInstruction({
     programId,

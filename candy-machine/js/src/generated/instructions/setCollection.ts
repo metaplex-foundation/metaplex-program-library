@@ -47,7 +47,6 @@ export type SetCollectionInstructionAccounts = {
   edition: web3.PublicKey;
   collectionAuthorityRecord: web3.PublicKey;
   tokenMetadataProgram: web3.PublicKey;
-  anchorRemainingAccounts?: web3.AccountMeta[];
 };
 
 export const setCollectionInstructionDiscriminator = [192, 254, 206, 76, 168, 182, 59, 223];
@@ -124,12 +123,6 @@ export function createSetCollectionInstruction(
       isSigner: false,
     },
   ];
-
-  if (accounts.anchorRemainingAccounts != null) {
-    for (const acc of accounts.anchorRemainingAccounts) {
-      keys.push(acc);
-    }
-  }
 
   const ix = new web3.TransactionInstruction({
     programId,

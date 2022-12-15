@@ -1,8 +1,7 @@
 use borsh::{maybestd::io::Error as BorshError, BorshDeserialize, BorshSerialize};
 use mpl_utils::{create_or_allocate_account_raw, token::get_mint_authority};
 use solana_program::{
-    account_info::AccountInfo, entrypoint::ProgramResult, program_option::COption, pubkey,
-    pubkey::Pubkey,
+    account_info::AccountInfo, entrypoint::ProgramResult, program_option::COption, pubkey::Pubkey,
 };
 
 use super::{compression::is_decompression, *};
@@ -116,7 +115,7 @@ pub fn process_create_metadata_accounts_logic(
 
     // This allows the Bubblegum program to create metadata with verified creators since they were
     // verified already by the Bubblegum program.
-    // 
+    //
     let allow_direct_creator_writes =
         allow_direct_creator_writes || is_decompression(mint_info, mint_authority_info);
 
