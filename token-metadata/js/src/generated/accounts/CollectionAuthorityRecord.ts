@@ -61,8 +61,9 @@ export class CollectionAuthorityRecord implements CollectionAuthorityRecordArgs 
   static async fromAccountAddress(
     connection: web3.Connection,
     address: web3.PublicKey,
+    commitmentOrConfig?: web3.Commitment | web3.GetAccountInfoConfig,
   ): Promise<CollectionAuthorityRecord> {
-    const accountInfo = await connection.getAccountInfo(address);
+    const accountInfo = await connection.getAccountInfo(address, commitmentOrConfig);
     if (accountInfo == null) {
       throw new Error(`Unable to find CollectionAuthorityRecord account at ${address}`);
     }
