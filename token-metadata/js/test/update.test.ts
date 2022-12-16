@@ -1,61 +1,12 @@
 import spok from 'spok';
-import { AssetData, AuthorizationData, Data, Metadata, TokenStandard } from '../src/generated';
+import { AuthorizationData, Data, Metadata } from '../src/generated';
 import test from 'tape';
 import { amman, InitTransactions, killStuckProcess } from './setup';
 import { Keypair } from '@solana/web3.js';
-import { DigitalAssetManager } from './utils/DigitalAssetManager';
-import { PayerTransactionHandler } from '@metaplex-foundation/amman-client';
+import { createDefaultAsset } from './utils/DigitalAssetManager';
 import { UpdateTestData } from './utils/UpdateTestData';
 
 killStuckProcess();
-
-async function createDefaultAsset(
-  t: test.Test,
-  API: InitTransactions,
-  handler: PayerTransactionHandler,
-  payer: Keypair,
-): Promise<DigitalAssetManager> {
-  const name = 'DigitalAsset';
-  const symbol = 'DA';
-  const uri = 'uri';
-
-  // Create the initial asset and ensure it was created successfully
-  const assetData: AssetData = {
-    name,
-    symbol,
-    uri,
-    sellerFeeBasisPoints: 0,
-    updateAuthority: payer.publicKey,
-    creators: [
-      {
-        address: payer.publicKey,
-        share: 100,
-        verified: false,
-      },
-    ],
-    primarySaleHappened: false,
-    isMutable: true,
-    editionNonce: null,
-    tokenStandard: TokenStandard.NonFungible,
-    collection: null,
-    uses: null,
-    collectionDetails: null,
-    programmableConfig: null,
-    delegateState: null,
-  };
-
-  const {
-    tx: createTx,
-    mint,
-    metadata,
-    masterEdition,
-  } = await API.create(t, payer, assetData, 0, 0, handler);
-  await createTx.assertSuccess(t);
-
-  const daManager = new DigitalAssetManager(mint, metadata, masterEdition);
-
-  return daManager;
-}
 
 test('Update: NonFungible asset', async (t) => {
   const API = new InitTransactions();

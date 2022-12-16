@@ -440,19 +440,20 @@ pub fn mint(
 #[allow(clippy::too_many_arguments)]
 pub fn transfer(
     program_id: Pubkey,
-    token_account: Pubkey,
+    owner: Pubkey,
+    token: Pubkey,
     metadata_account: Pubkey,
     mint_account: Pubkey,
     edition: Option<Pubkey>,
-    owner: Pubkey,
-    destination_token_account: Pubkey,
     destination_owner: Pubkey,
+    destination_token: Pubkey,
     args: TransferArgs,
     authorization_rules: Option<Pubkey>,
     additional_accounts: Option<Vec<AccountMeta>>,
 ) -> Instruction {
     let mut accounts = vec![
-        AccountMeta::new(token_account, false),
+        AccountMeta::new(owner, true),
+        AccountMeta::new(token, false),
         AccountMeta::new(metadata_account, false),
         AccountMeta::new_readonly(mint_account, false),
     ];
@@ -462,13 +463,12 @@ pub fn transfer(
     };
 
     accounts.extend(vec![
-        AccountMeta::new(owner, true),
-        AccountMeta::new(destination_token_account, false),
         AccountMeta::new_readonly(destination_owner, false),
-        AccountMeta::new_readonly(spl_token::id(), false),
-        AccountMeta::new_readonly(spl_associated_token_account::id(), false),
-        AccountMeta::new_readonly(solana_program::system_program::id(), false),
-        AccountMeta::new_readonly(sysvar::instructions::id(), false),
+        AccountMeta::new(destination_token, false),
+        AccountMeta::new_readonly(spl_token::ID, false),
+        AccountMeta::new_readonly(spl_associated_token_account::ID, false),
+        AccountMeta::new_readonly(solana_program::system_program::ID, false),
+        AccountMeta::new_readonly(sysvar::instructions::ID, false),
     ]);
 
     if let Some(authorization_rules) = authorization_rules {

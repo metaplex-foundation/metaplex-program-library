@@ -2760,10 +2760,16 @@
       "name": "Transfer",
       "accounts": [
         {
-          "name": "token",
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true,
+          "desc": "Asset owner"
+        },
+        {
+          "name": "ata",
           "isMut": true,
           "isSigner": false,
-          "desc": "Token account"
+          "desc": "Associated Token account"
         },
         {
           "name": "metadata",
@@ -2778,6 +2784,13 @@
           "desc": "Mint of token asset"
         },
         {
+          "name": "edition",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Edition of token asset",
+          "optional": true
+        },
+        {
           "name": "destination",
           "isMut": false,
           "isSigner": false,
@@ -2790,18 +2803,6 @@
           "desc": "Destination ATA account address"
         },
         {
-          "name": "owner",
-          "isMut": true,
-          "isSigner": true,
-          "desc": "Asset owner"
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "System Program"
-        },
-        {
           "name": "splTokenProgram",
           "isMut": false,
           "isSigner": false,
@@ -2812,6 +2813,12 @@
           "isMut": false,
           "isSigner": false,
           "desc": "SPL Associated Token Account program"
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "System Program"
         },
         {
           "name": "sysvarInstructions",

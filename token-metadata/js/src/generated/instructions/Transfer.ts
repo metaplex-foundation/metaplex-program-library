@@ -36,12 +36,13 @@ export const TransferStruct = new beet.FixableBeetArgsStruct<
 /**
  * Accounts required by the _Transfer_ instruction
  *
- * @property [_writable_] token Token account
+ * @property [_writable_, **signer**] owner Asset owner
+ * @property [_writable_] ata Associated Token account
  * @property [_writable_] metadata Metadata (pda of ['metadata', program id, mint id])
  * @property [] mint Mint of token asset
+ * @property [] edition (optional) Edition of token asset
  * @property [] destination Destination address
  * @property [_writable_] destinationAta Destination ATA account address
- * @property [_writable_, **signer**] owner Asset owner
  * @property [] splTokenProgram SPL Token Program
  * @property [] splAtaProgram SPL Associated Token Account program
  * @property [] sysvarInstructions Instructions sysvar account
@@ -52,15 +53,16 @@ export const TransferStruct = new beet.FixableBeetArgsStruct<
  * @category generated
  */
 export type TransferInstructionAccounts = {
-  token: web3.PublicKey;
+  owner: web3.PublicKey;
+  ata: web3.PublicKey;
   metadata: web3.PublicKey;
   mint: web3.PublicKey;
+  edition?: web3.PublicKey;
   destination: web3.PublicKey;
   destinationAta: web3.PublicKey;
-  owner: web3.PublicKey;
-  systemProgram?: web3.PublicKey;
   splTokenProgram: web3.PublicKey;
   splAtaProgram: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
   sysvarInstructions: web3.PublicKey;
   authorizationRules?: web3.PublicKey;
   authorizationRulesProgram?: web3.PublicKey;
@@ -94,7 +96,12 @@ export function createTransferInstruction(
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: accounts.token,
+      pubkey: accounts.owner,
+      isWritable: true,
+      isSigner: true,
+    },
+    {
+      pubkey: accounts.ata,
       isWritable: true,
       isSigner: false,
     },
@@ -108,44 +115,51 @@ export function createTransferInstruction(
       isWritable: false,
       isSigner: false,
     },
-    {
-      pubkey: accounts.destination,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.destinationAta,
-      isWritable: true,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.owner,
-      isWritable: true,
-      isSigner: true,
-    },
-    {
-      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.splTokenProgram,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.splAtaProgram,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.sysvarInstructions,
-      isWritable: false,
-      isSigner: false,
-    },
   ];
 
+  if (accounts.edition != null) {
+    keys.push({
+      pubkey: accounts.edition,
+      isWritable: false,
+      isSigner: false,
+    });
+  }
+  keys.push({
+    pubkey: accounts.destination,
+    isWritable: false,
+    isSigner: false,
+  });
+  keys.push({
+    pubkey: accounts.destinationAta,
+    isWritable: true,
+    isSigner: false,
+  });
+  keys.push({
+    pubkey: accounts.splTokenProgram,
+    isWritable: false,
+    isSigner: false,
+  });
+  keys.push({
+    pubkey: accounts.splAtaProgram,
+    isWritable: false,
+    isSigner: false,
+  });
+  keys.push({
+    pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
+    isWritable: false,
+    isSigner: false,
+  });
+  keys.push({
+    pubkey: accounts.sysvarInstructions,
+    isWritable: false,
+    isSigner: false,
+  });
   if (accounts.authorizationRules != null) {
+    if (accounts.edition == null) {
+      throw new Error(
+        "When providing 'authorizationRules' then 'accounts.edition' need(s) to be provided as well.",
+      );
+    }
     keys.push({
       pubkey: accounts.authorizationRules,
       isWritable: false,
@@ -153,9 +167,9 @@ export function createTransferInstruction(
     });
   }
   if (accounts.authorizationRulesProgram != null) {
-    if (accounts.authorizationRules == null) {
+    if (accounts.edition == null || accounts.authorizationRules == null) {
       throw new Error(
-        "When providing 'authorizationRulesProgram' then 'accounts.authorizationRules' need(s) to be provided as well.",
+        "When providing 'authorizationRulesProgram' then 'accounts.edition', 'accounts.authorizationRules' need(s) to be provided as well.",
       );
     }
     keys.push({

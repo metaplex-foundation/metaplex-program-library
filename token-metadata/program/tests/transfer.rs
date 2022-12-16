@@ -66,13 +66,13 @@ mod transfer {
 
         let transfer_ix = instruction::transfer(
             id(),
+            context.payer.pubkey(),
             nft.token.pubkey(),
             nft.pubkey,
             nft.mint.pubkey(),
             None,
-            context.payer.pubkey(),
-            recipient_ata,
             recipient.pubkey(),
+            recipient_ata,
             TransferArgs::V1 {
                 authorization_data: None,
                 amount: 1,
@@ -205,13 +205,13 @@ mod transfer {
 
         let transfer_ix = instruction::transfer(
             id(),
+            context.payer.pubkey(),
             ata,
             metadata,
             mint.pubkey(),
             None,
-            context.payer.pubkey(),
-            recipient_ata,
             recipient.pubkey(),
+            recipient_ata,
             TransferArgs::V1 {
                 authorization_data: None,
                 amount: transfer_amount,
@@ -322,13 +322,13 @@ mod transfer {
 
         let transfer_ix = instruction::transfer(
             id(),
+            context.payer.pubkey(),
             ata,
             metadata,
             mint.pubkey(),
             None,
-            context.payer.pubkey(),
-            recipient_ata,
             recipient.pubkey(),
+            recipient_ata,
             TransferArgs::V1 {
                 authorization_data: None,
                 amount: transfer_amount,
@@ -456,13 +456,13 @@ mod transfer {
 
         let transfer_ix = instruction::transfer(
             id(),
+            context.payer.pubkey(),
             ata,
             metadata,
             mint_key.pubkey(),
             Some(master_edition),
-            context.payer.pubkey(),
-            recipient_ata,
             recipient.pubkey(),
+            recipient_ata,
             TransferArgs::V1 {
                 authorization_data: Some(auth_data.clone()),
                 amount: 1,
@@ -517,13 +517,13 @@ mod transfer {
 
         let transfer_ix = instruction::transfer(
             id(),
+            context.payer.pubkey(),
             ata,
             metadata,
             mint_key.pubkey(),
             Some(master_edition),
-            context.payer.pubkey(),
-            recipient_ata,
             escrow_account,
+            recipient_ata,
             TransferArgs::V1 {
                 authorization_data: Some(auth_data),
                 amount: 1,

@@ -1,10 +1,15 @@
 import { Connection, PublicKey } from '@solana/web3.js';
-import { AssetData, DelegateState, Metadata } from 'src/generated';
+import { AssetData, DelegateState, Metadata, TokenStandard } from 'src/generated';
+import { InitTransactions } from '../setup';
+import test from 'tape';
+import { PayerTransactionHandler } from '@metaplex-foundation/amman-client';
+import { Keypair } from '@solana/web3.js';
 
 export class DigitalAssetManager {
   mint: PublicKey;
   metadata: PublicKey;
   masterEdition: PublicKey;
+  token?: PublicKey;
 
   constructor(mint: PublicKey, metadata: PublicKey, masterEdition: PublicKey) {
     this.mint = mint;
@@ -41,4 +46,69 @@ export class DigitalAssetManager {
       delegateState,
     };
   }
+}
+
+export async function createDefaultAsset(
+  t: test.Test,
+  API: InitTransactions,
+  handler: PayerTransactionHandler,
+  payer: Keypair,
+): Promise<DigitalAssetManager> {
+  const name = 'DigitalAsset';
+  const symbol = 'DA';
+  const uri = 'uri';
+
+  // Create the initial asset and ensure it was created successfully
+  const assetData: AssetData = {
+    name,
+    symbol,
+    uri,
+    sellerFeeBasisPoints: 0,
+    updateAuthority: payer.publicKey,
+    creators: [
+      {
+        address: payer.publicKey,
+        share: 100,
+        verified: false,
+      },
+    ],
+    primarySaleHappened: false,
+    isMutable: true,
+    editionNonce: null,
+    tokenStandard: TokenStandard.NonFungible,
+    collection: null,
+    uses: null,
+    collectionDetails: null,
+    programmableConfig: null,
+    delegateState: null,
+  };
+
+  const {
+    tx: createTx,
+    mint,
+    metadata,
+    masterEdition,
+  } = await API.create(t, payer, assetData, 0, 0, handler);
+  await createTx.assertSuccess(t);
+
+  const daManager = new DigitalAssetManager(mint, metadata, masterEdition);
+
+  return daManager;
+}
+
+export async function createAndMintDefaultAsset(
+  t: test.Test,
+  API: InitTransactions,
+  handler: PayerTransactionHandler,
+  payer: Keypair,
+): Promise<DigitalAssetManager> {
+  const daManager = await createDefaultAsset(t, API, handler, payer);
+  const { mint, metadata, masterEdition } = daManager;
+
+  const { tx: mintTx, token } = await API.mint(t, payer, mint, metadata, masterEdition, handler);
+  await mintTx.assertSuccess(t);
+
+  daManager.token = token;
+
+  return daManager;
 }

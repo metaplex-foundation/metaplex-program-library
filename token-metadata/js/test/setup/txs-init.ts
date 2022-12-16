@@ -10,6 +10,7 @@ import {
   Connection,
   Keypair,
   PublicKey,
+  SystemProgram,
   SYSVAR_INSTRUCTIONS_PUBKEY,
   Transaction,
 } from '@solana/web3.js';
@@ -22,10 +23,13 @@ import {
   MintInstructionAccounts,
   MintInstructionArgs,
   createUpdateInstruction,
+  createTransferInstruction,
   UpdateInstructionAccounts,
   UpdateInstructionArgs,
   PROGRAM_ID,
   TokenStandard,
+  TransferInstructionAccounts,
+  TransferInstructionArgs,
 } from '../../src/generated';
 import { Test } from 'tape';
 import { amman } from '.';
@@ -184,6 +188,51 @@ export class InitTransactions {
     return {
       tx: handler.sendAndConfirmTransaction(tx, [payer], 'tx: Mint'),
       token,
+    };
+  }
+
+  async transfer(
+    owner: Keypair,
+    ata: PublicKey,
+    mint: PublicKey,
+    metadata: PublicKey,
+    masterEdition: PublicKey,
+    destination: PublicKey,
+    destinationAta: PublicKey,
+    amount: number,
+    handler: PayerTransactionHandler,
+  ): Promise<{ tx: ConfirmedTransactionAssertablePromise }> {
+    amman.addr.addLabel('Mint Account', mint);
+    amman.addr.addLabel('Metadata Account', metadata);
+    amman.addr.addLabel('Master Edition Account', masterEdition);
+
+    const transferAcccounts: TransferInstructionAccounts = {
+      owner: owner.publicKey,
+      ata,
+      metadata,
+      mint,
+      destination,
+      destinationAta,
+      splTokenProgram: splToken.TOKEN_PROGRAM_ID,
+      splAtaProgram: splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
+      systemProgram: SystemProgram.programId,
+      sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
+    };
+
+    const transferArgs: TransferInstructionArgs = {
+      transferArgs: {
+        __kind: 'V1',
+        amount,
+        authorizationData: null,
+      },
+    };
+
+    const transferIx = createTransferInstruction(transferAcccounts, transferArgs);
+
+    const tx = new Transaction().add(transferIx);
+
+    return {
+      tx: handler.sendAndConfirmTransaction(tx, [owner], 'tx: Transfer'),
     };
   }
 

@@ -10,7 +10,7 @@ use solana_program::{
 };
 
 use crate::{
-    assertions::assert_owned_by,
+    assertions::{assert_owned_by, metadata::assert_currently_holding},
     error::MetadataError,
     instruction::TransferArgs,
     pda::find_master_edition_account,
@@ -63,95 +63,134 @@ fn transfer_v1<'a>(
     args: TransferArgs,
 ) -> ProgramResult {
     let TransferAccounts::V1 {
-        token_account,
-        metadata,
-        mint,
-        edition,
-        owner,
-        destination_token_account,
-        destination_owner,
-        spl_token_program,
-        spl_associated_token_program,
-        system_program,
-        sysvar_instructions,
-        authorization_rules,
+        owner_info,
+        token_account_info,
+        metadata_info,
+        mint_info,
+        edition_opt_info,
+        destination_owner_info,
+        destination_token_account_info,
+        spl_token_program_info,
+        spl_associated_token_program_info,
+        system_program_info,
+        sysvar_instructions_info,
+        authorization_rules_opt_info,
     } = args.get_accounts(accounts)?;
     //** Account Validation **/
+    msg!("Account Validation");
+
     // Check signers
-    assert_signer(owner)?;
+    assert_signer(owner_info)?;
     // Additional account signers?
 
     // Assert program ownership
-    assert_owned_by(metadata, program_id)?;
-    assert_owned_by(token_account, &spl_token::id())?;
-    assert_owned_by(mint, &spl_token::id())?;
-    assert_owned_by(destination_token_account, &spl_token::id())?;
+    assert_owned_by(metadata_info, program_id)?;
+    assert_owned_by(mint_info, &spl_token::ID)?;
 
-    if let Some(edition) = edition {
+    if let Some(edition) = edition_opt_info {
         assert_owned_by(edition, program_id)?;
     }
-    if let Some(authorization_rules) = authorization_rules {
+    if let Some(authorization_rules) = authorization_rules_opt_info {
         assert_owned_by(authorization_rules, &mpl_token_auth_rules::ID)?;
     }
 
     // Check program IDs.
-    if spl_token_program.key != &spl_token::id() {
+    msg!("Check program IDs");
+    if spl_token_program_info.key != &spl_token::ID {
         return Err(ProgramError::IncorrectProgramId);
     }
 
-    if spl_associated_token_program.key != &spl_associated_token_account::id() {
+    if spl_associated_token_program_info.key != &spl_associated_token_account::ID {
         return Err(ProgramError::IncorrectProgramId);
     }
 
-    if system_program.key != &solana_program::system_program::id() {
+    if system_program_info.key != &solana_program::system_program::ID {
         return Err(ProgramError::IncorrectProgramId);
     }
 
-    if sysvar_instructions.key != &sysvar::instructions::id() {
+    if sysvar_instructions_info.key != &sysvar::instructions::ID {
         return Err(ProgramError::IncorrectProgramId);
     }
 
     // Deserialize metadata to determine its type
-    let metadata_data = Metadata::from_account_info(metadata)?;
+    let metadata = Metadata::from_account_info(metadata_info)?;
 
-    if let Some(token_standard) = metadata_data.token_standard {
+    // Check that owner account info is either the owner or the delegate.
+    let currently_holding = assert_currently_holding(
+        program_id,
+        owner_info,
+        metadata_info,
+        &metadata,
+        mint_info,
+        token_account_info,
+    )
+    .is_ok();
+
+    msg!("Must be Owner or Delegate.");
+    if let Some(delegate) = metadata.delegate {
+        if !currently_holding && owner_info.key != &delegate {
+            return Err(MetadataError::InvalidOwner.into());
+        }
+    } else {
+        if !currently_holding {
+            return Err(MetadataError::InvalidOwner.into());
+        }
+    }
+
+    if let Some(token_standard) = metadata.token_standard {
         match token_standard {
             TokenStandard::ProgrammableNonFungible => {
                 let authorization_data = args.get_data();
 
-                if authorization_rules.is_none() || authorization_data.is_none() {
+                if authorization_rules_opt_info.is_none() || authorization_data.is_none() {
                     return Err(MetadataError::MissingAuthorizationRules.into());
                 }
 
-                if metadata_data.programmable_config.is_none() {
+                if metadata.programmable_config.is_none() {
                     return Err(MetadataError::MissingProgrammableConfig.into());
                 }
 
-                if edition.is_none() {
+                if edition_opt_info.is_none() {
                     return Err(MetadataError::MissingEditionAccount.into());
                 }
-                let master_edition = edition.unwrap();
+                let master_edition_info = edition_opt_info.unwrap();
 
-                let auth_pda = authorization_rules.unwrap();
+                let auth_pda = authorization_rules_opt_info.unwrap();
                 let auth_data = authorization_data.unwrap();
                 let amount = args.get_amount();
 
-                validate(owner, auth_pda, destination_owner, auth_data, Some(amount));
+                validate(
+                    owner_info,
+                    auth_pda,
+                    destination_owner_info,
+                    auth_data,
+                    Some(amount),
+                );
 
-                thaw(mint, token_account, master_edition, spl_token_program)?;
+                thaw(
+                    mint_info,
+                    token_account_info,
+                    master_edition_info,
+                    spl_token_program_info,
+                )?;
 
                 let token_transfer_params: TokenTransferParams = TokenTransferParams {
-                    mint: mint.clone(),
-                    source: token_account.clone(),
-                    destination: destination_token_account.clone(),
+                    mint: mint_info.clone(),
+                    source: token_account_info.clone(),
+                    destination: destination_token_account_info.clone(),
                     amount,
-                    authority: owner.clone(),
+                    authority: owner_info.clone(),
                     authority_signer_seeds: None,
-                    token_program: spl_token_program.clone(),
+                    token_program: spl_token_program_info.clone(),
                 };
                 mpl_utils::token::spl_token_transfer(token_transfer_params).unwrap();
 
-                freeze(mint, token_account, master_edition, spl_token_program)?;
+                freeze(
+                    mint_info,
+                    token_account_info,
+                    master_edition_info,
+                    spl_token_program_info,
+                )?;
             }
             TokenStandard::NonFungible
             | TokenStandard::NonFungibleEdition
@@ -162,16 +201,17 @@ fn transfer_v1<'a>(
                     TokenStandard::Fungible | TokenStandard::FungibleAsset => args.get_amount(),
                     _ => panic!("Invalid token standard"),
                 };
+                msg!("amount: {}", amount);
 
                 msg!("Transferring NFT normally");
                 let token_transfer_params: TokenTransferParams = TokenTransferParams {
-                    mint: mint.clone(),
-                    source: token_account.clone(),
-                    destination: destination_token_account.clone(),
+                    mint: mint_info.clone(),
+                    source: token_account_info.clone(),
+                    destination: destination_token_account_info.clone(),
                     amount,
-                    authority: owner.clone(),
+                    authority: owner_info.clone(),
                     authority_signer_seeds: None,
-                    token_program: spl_token_program.clone(),
+                    token_program: spl_token_program_info.clone(),
                 };
                 mpl_utils::token::spl_token_transfer(token_transfer_params).unwrap();
             }
@@ -185,18 +225,18 @@ fn transfer_v1<'a>(
 
 enum TransferAccounts<'a> {
     V1 {
-        token_account: &'a AccountInfo<'a>,
-        metadata: &'a AccountInfo<'a>,
-        mint: &'a AccountInfo<'a>,
-        edition: Option<&'a AccountInfo<'a>>,
-        owner: &'a AccountInfo<'a>,
-        destination_token_account: &'a AccountInfo<'a>,
-        destination_owner: &'a AccountInfo<'a>,
-        spl_token_program: &'a AccountInfo<'a>,
-        spl_associated_token_program: &'a AccountInfo<'a>,
-        system_program: &'a AccountInfo<'a>,
-        sysvar_instructions: &'a AccountInfo<'a>,
-        authorization_rules: Option<&'a AccountInfo<'a>>,
+        owner_info: &'a AccountInfo<'a>,
+        token_account_info: &'a AccountInfo<'a>,
+        metadata_info: &'a AccountInfo<'a>,
+        mint_info: &'a AccountInfo<'a>,
+        edition_opt_info: Option<&'a AccountInfo<'a>>,
+        destination_owner_info: &'a AccountInfo<'a>,
+        destination_token_account_info: &'a AccountInfo<'a>,
+        spl_token_program_info: &'a AccountInfo<'a>,
+        spl_associated_token_program_info: &'a AccountInfo<'a>,
+        system_program_info: &'a AccountInfo<'a>,
+        sysvar_instructions_info: &'a AccountInfo<'a>,
+        authorization_rules_opt_info: Option<&'a AccountInfo<'a>>,
     },
 }
 
@@ -209,25 +249,26 @@ impl TransferArgs {
 
         match self {
             TransferArgs::V1 { .. } => {
-                let token_account = next_account_info(account_info_iter)?;
-                let metadata = next_account_info(account_info_iter)?;
-                let mint = next_account_info(account_info_iter)?;
+                let owner_info = next_account_info(account_info_iter)?;
+                let token_account_info = next_account_info(account_info_iter)?;
+                let metadata_info = next_account_info(account_info_iter)?;
+                let mint_info = next_account_info(account_info_iter)?;
 
-                let (edition_pda, _) = find_master_edition_account(mint.key);
-                let edition = account_info_iter.next_if(|a| a.key == &edition_pda);
+                let (edition_pda, _) = find_master_edition_account(mint_info.key);
+                let edition_opt_info = account_info_iter.next_if(|a| a.key == &edition_pda);
 
-                let owner = next_account_info(account_info_iter)?;
-                let destination_token_account = next_account_info(account_info_iter)?;
-                let destination_owner = next_account_info(account_info_iter)?;
-                let spl_token_program = next_account_info(account_info_iter)?;
+                let destination_owner_info = next_account_info(account_info_iter)?;
+                let destination_token_account_info = next_account_info(account_info_iter)?;
 
-                let spl_associated_token_program = next_account_info(account_info_iter)?;
-                let system_program = next_account_info(account_info_iter)?;
-                let sysvar_instructions = next_account_info(account_info_iter)?;
+                let spl_token_program_info = next_account_info(account_info_iter)?;
+                let spl_associated_token_program_info = next_account_info(account_info_iter)?;
+
+                let system_program_info = next_account_info(account_info_iter)?;
+                let sysvar_instructions_info = next_account_info(account_info_iter)?;
 
                 // If the next account is the mpl_token_auth_rules ID, then we consume it
                 // and read the next account which will be the authorization rules account.
-                let authorization_rules = if account_info_iter
+                let authorization_rules_opt_info = if account_info_iter
                     .next_if(|a| a.key == &mpl_token_auth_rules::ID)
                     .is_some()
                 {
@@ -238,18 +279,18 @@ impl TransferArgs {
                 };
 
                 Ok(TransferAccounts::V1 {
-                    token_account,
-                    metadata,
-                    mint,
-                    edition,
-                    owner,
-                    destination_token_account,
-                    destination_owner,
-                    spl_token_program,
-                    spl_associated_token_program,
-                    system_program,
-                    sysvar_instructions,
-                    authorization_rules,
+                    owner_info,
+                    token_account_info,
+                    metadata_info,
+                    mint_info,
+                    edition_opt_info,
+                    destination_owner_info,
+                    destination_token_account_info,
+                    spl_token_program_info,
+                    spl_associated_token_program_info,
+                    system_program_info,
+                    sysvar_instructions_info,
+                    authorization_rules_opt_info,
                 })
             }
         }
