@@ -151,6 +151,7 @@ export class InitTransactions {
     mint: PublicKey,
     metadata: PublicKey,
     masterEdition: PublicKey,
+    amount: number,
     handler: PayerTransactionHandler,
   ): Promise<{ tx: ConfirmedTransactionAssertablePromise; token: PublicKey }> {
     // token account
@@ -175,7 +176,7 @@ export class InitTransactions {
     const mintArgs: MintInstructionArgs = {
       mintArgs: {
         __kind: 'V1',
-        amount: 1,
+        amount,
       },
     };
 
@@ -204,7 +205,13 @@ export class InitTransactions {
   ): Promise<{ tx: ConfirmedTransactionAssertablePromise }> {
     amman.addr.addLabel('Mint Account', mint);
     amman.addr.addLabel('Metadata Account', metadata);
-    amman.addr.addLabel('Master Edition Account', masterEdition);
+    if (masterEdition != null) {
+      amman.addr.addLabel('Master Edition Account', masterEdition);
+    }
+    amman.addr.addLabel('Owner', owner.publicKey);
+    amman.addr.addLabel('Token Account', ata);
+    amman.addr.addLabel('Destination', destination);
+    amman.addr.addLabel('Destination Token Account', destinationAta);
 
     const transferAcccounts: TransferInstructionAccounts = {
       owner: owner.publicKey,

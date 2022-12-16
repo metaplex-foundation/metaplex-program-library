@@ -53,6 +53,7 @@ export async function createDefaultAsset(
   API: InitTransactions,
   handler: PayerTransactionHandler,
   payer: Keypair,
+  tokenStandard: TokenStandard = TokenStandard.NonFungible,
 ): Promise<DigitalAssetManager> {
   const name = 'DigitalAsset';
   const symbol = 'DA';
@@ -75,7 +76,7 @@ export async function createDefaultAsset(
     primarySaleHappened: false,
     isMutable: true,
     editionNonce: null,
-    tokenStandard: TokenStandard.NonFungible,
+    tokenStandard,
     collection: null,
     uses: null,
     collectionDetails: null,
@@ -101,11 +102,21 @@ export async function createAndMintDefaultAsset(
   API: InitTransactions,
   handler: PayerTransactionHandler,
   payer: Keypair,
+  tokenStandard: TokenStandard = TokenStandard.NonFungible,
+  amount = 1,
 ): Promise<DigitalAssetManager> {
-  const daManager = await createDefaultAsset(t, API, handler, payer);
+  const daManager = await createDefaultAsset(t, API, handler, payer, tokenStandard);
   const { mint, metadata, masterEdition } = daManager;
 
-  const { tx: mintTx, token } = await API.mint(t, payer, mint, metadata, masterEdition, handler);
+  const { tx: mintTx, token } = await API.mint(
+    t,
+    payer,
+    mint,
+    metadata,
+    masterEdition,
+    amount,
+    handler,
+  );
   await mintTx.assertSuccess(t);
 
   daManager.token = token;
