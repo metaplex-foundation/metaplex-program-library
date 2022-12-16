@@ -5,11 +5,13 @@ use borsh::BorshSerialize;
 use mpl_token_metadata::{
     error::MetadataError,
     id, instruction,
-    state::{Key, MAX_MASTER_EDITION_LEN},
+    state::{Creator, Key, MAX_MASTER_EDITION_LEN},
 };
+use mpl_token_metadata::{instruction::sign_metadata, state::Collection};
 use num_traits::FromPrimitive;
 use solana_program_test::*;
 use solana_sdk::{
+    account::AccountSharedData,
     instruction::InstructionError,
     signature::{Keypair, Signer},
     transaction::{Transaction, TransactionError},
@@ -19,13 +21,14 @@ use utils::*;
 // NOTE: these tests depend on the token-vault program having been compiled
 // via (cd ../../token-vault/program/ && cargo build-bpf)
 mod mint_new_edition_from_master_edition_via_token {
-    use mpl_token_metadata::state::Collection;
-    use solana_sdk::account::AccountSharedData;
+
+    use solana_program::native_token::LAMPORTS_PER_SOL;
 
     use super::*;
     #[tokio::test]
     async fn success() {
         let mut context = program_test().start_with_context().await;
+        let payer_key = context.payer.pubkey().clone();
         let test_metadata = Metadata::new();
         let test_master_edition = MasterEditionV2::new(&test_metadata);
         let test_edition_marker = EditionMarker::new(&test_metadata, &test_master_edition, 1);
@@ -36,7 +39,11 @@ mod mint_new_edition_from_master_edition_via_token {
                 "Test".to_string(),
                 "TST".to_string(),
                 "uri".to_string(),
-                None,
+                Some(vec![Creator {
+                    address: payer_key,
+                    verified: true,
+                    share: 100,
+                }]),
                 10,
                 false,
                 0,
@@ -61,6 +68,13 @@ mod mint_new_edition_from_master_edition_via_token {
     async fn success_v2() {
         let mut context = program_test().start_with_context().await;
         let test_metadata = Metadata::new();
+        let payer_key = context.payer.pubkey().clone();
+        let creator = Keypair::new();
+
+        let creator_pub = creator.pubkey().clone();
+        airdrop(&mut context, &creator_pub.clone(), 3 * LAMPORTS_PER_SOL)
+            .await
+            .unwrap();
         let test_master_edition = MasterEditionV2::new(&test_metadata);
         let test_collection = Metadata::new();
         test_collection
@@ -78,7 +92,11 @@ mod mint_new_edition_from_master_edition_via_token {
                 "Test".to_string(),
                 "TST".to_string(),
                 "uri".to_string(),
-                None,
+                Some(vec![Creator {
+                    address: creator_pub.clone(),
+                    verified: false,
+                    share: 100,
+                }]),
                 10,
                 false,
                 Some(Collection {
@@ -94,6 +112,20 @@ mod mint_new_edition_from_master_edition_via_token {
             .create(&mut context, Some(10))
             .await
             .unwrap();
+
+        let tx = Transaction::new_signed_with_payer(
+            &[instruction::sign_metadata(
+                mpl_token_metadata::id(),
+                test_metadata.pubkey,
+                creator_pub,
+            )]
+            .as_ref(),
+            Some(&creator_pub),
+            &[&creator],
+            context.last_blockhash,
+        );
+        let result = context.banks_client.process_transaction(tx).await;
+
         let kpbytes = &context.payer;
         let kp = Keypair::from_bytes(&kpbytes.to_bytes()).unwrap();
         test_metadata

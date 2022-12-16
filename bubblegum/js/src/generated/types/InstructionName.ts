@@ -26,6 +26,7 @@ export enum InstructionName {
   VerifyCollection,
   UnverifyCollection,
   SetAndVerifyCollection,
+  MintToCollectionV1,
 }
 
 /**

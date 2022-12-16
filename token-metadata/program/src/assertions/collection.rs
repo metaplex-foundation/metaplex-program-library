@@ -10,23 +10,37 @@ use crate::{
     },
 };
 
+/// Checks whether the collection update is allowed or not based on the `verified` status.
 pub fn assert_collection_update_is_valid(
     edition: bool,
     existing: &Option<Collection>,
     incoming: &Option<Collection>,
 ) -> Result<(), ProgramError> {
-    let is_incoming_verified_true = incoming.is_some() && incoming.as_ref().unwrap().verified;
+    let is_incoming_verified = if let Some(status) = incoming {
+        status.verified
+    } else {
+        false
+    };
 
-    // If incoming verified is true. Confirm incoming and existing are identical
-    let is_incoming_data_valid = !is_incoming_verified_true
-        || (existing.is_some()
-            && incoming.as_ref().unwrap().verified == existing.as_ref().unwrap().verified
-            && incoming.as_ref().unwrap().key == existing.as_ref().unwrap().key);
+    let is_existing_verified = if let Some(status) = existing {
+        status.verified
+    } else {
+        false
+    };
 
-    if !is_incoming_data_valid && !edition {
-        // Never allow a collection to be verified outside of verify_collection instruction
+    let valid_update = if is_incoming_verified {
+        // verified: can only update if the details match
+        is_existing_verified && (existing.as_ref().unwrap().key == incoming.as_ref().unwrap().key)
+    } else {
+        // unverified: can only update if existing is unverified
+        !is_existing_verified
+    };
+
+    // overrule: if we are dealing with an edition
+    if !valid_update && !edition {
         return Err(MetadataError::CollectionCannotBeVerifiedInThisInstruction.into());
     }
+
     Ok(())
 }
 
@@ -128,4 +142,120 @@ pub fn assert_master_edition(
         return Err(MetadataError::CollectionMustBeAUniqueMasterEdition.into());
     }
     Ok(())
+}
+
+#[cfg(test)]
+pub mod tests {
+    use super::*;
+
+    #[test]
+    fn test_assert_collection_update_is_valid() {
+        let key_1 = Pubkey::new_unique();
+        let key_2 = Pubkey::new_unique();
+
+        // collection 1
+
+        let collection_key1_false = Collection {
+            key: key_1,
+            verified: false,
+        };
+
+        let collection_key1_true = Collection {
+            key: key_1,
+            verified: true,
+        };
+
+        // collection 2
+
+        let collection_key2_false = Collection {
+            key: key_2,
+            verified: false,
+        };
+
+        let collection_key2_true = Collection {
+            key: key_2,
+            verified: true,
+        };
+
+        // [OK] "unverified" same collection details
+
+        assert_collection_update_is_valid(
+            false,
+            &Some(collection_key1_false.clone()),
+            &Some(collection_key1_false.clone()),
+        )
+        .unwrap();
+
+        // [OK] "verified" same collection details
+
+        assert_collection_update_is_valid(
+            false,
+            &Some(collection_key1_true.clone()),
+            &Some(collection_key1_true.clone()),
+        )
+        .unwrap();
+
+        // [ERROR] "unverify" collection
+
+        assert_collection_update_is_valid(
+            false,
+            &Some(collection_key1_true.clone()),
+            &Some(collection_key1_false.clone()),
+        )
+        .unwrap_err();
+
+        // [ERROR] "verify" collection
+
+        assert_collection_update_is_valid(
+            false,
+            &Some(collection_key1_false.clone()),
+            &Some(collection_key1_true.clone()),
+        )
+        .unwrap_err();
+
+        // [OK] "unverified" update collection details
+
+        assert_collection_update_is_valid(
+            false,
+            &Some(collection_key1_false.clone()),
+            &Some(collection_key2_false.clone()),
+        )
+        .unwrap();
+
+        // [ERROR] "verified" update collection details
+
+        assert_collection_update_is_valid(
+            false,
+            &Some(collection_key1_false),
+            &Some(collection_key2_true.clone()),
+        )
+        .unwrap_err();
+
+        // [ERROR] "verified" update collection details
+
+        assert_collection_update_is_valid(
+            false,
+            &Some(collection_key1_true.clone()),
+            &Some(collection_key2_false),
+        )
+        .unwrap_err();
+
+        // [ERROR] "verified" update collection details
+
+        assert_collection_update_is_valid(
+            false,
+            &Some(collection_key1_true.clone()),
+            &Some(collection_key2_true.clone()),
+        )
+        .unwrap_err();
+
+        // [OK] "edition" override
+
+        assert_collection_update_is_valid(
+            true,
+            &Some(collection_key1_true),
+            &Some(collection_key2_true),
+        )
+        .unwrap();
+    }
 }

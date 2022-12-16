@@ -550,6 +550,26 @@ createErrorFromCodeLookup.set(0x1789, () => new LeafAuthorityMustSignError());
 createErrorFromNameLookup.set('LeafAuthorityMustSign', () => new LeafAuthorityMustSignError());
 
 /**
+ * CollectionMustBeSized: 'Collection Not Compatable with Compression, Must be Sized'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class CollectionMustBeSizedError extends Error {
+  readonly code: number = 0x178a;
+  readonly name: string = 'CollectionMustBeSized';
+  constructor() {
+    super('Collection Not Compatable with Compression, Must be Sized');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, CollectionMustBeSizedError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x178a, () => new CollectionMustBeSizedError());
+createErrorFromNameLookup.set('CollectionMustBeSized', () => new CollectionMustBeSizedError());
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

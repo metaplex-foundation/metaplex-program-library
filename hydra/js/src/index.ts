@@ -4,7 +4,6 @@ import { AnchorProvider, BorshAccountsCoder } from '@project-serum/anchor';
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   NATIVE_MINT,
-  Token,
   TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
 import {
@@ -38,14 +37,8 @@ import {
 } from './generated/instructions';
 import { MembershipModel } from './generated/types';
 import { Fanout } from './generated/accounts';
-import { deprecated } from '@metaplex-foundation/mpl-token-metadata';
-import {
-  BigInstructionResult,
-  InstructionResult,
-  sendMultipleInstructions,
-} from '@strata-foundation/spl-utils';
+import { PROGRAM_ADDRESS as TM_PROGRAM_ADDRESS } from '@metaplex-foundation/mpl-token-metadata';
 import bs58 from 'bs58';
-import { getTokenAccount, Provider as ProviderClass } from '@project-serum/common';
 import { chunks } from './utils';
 
 export * from './generated/types';
@@ -137,7 +130,7 @@ interface RemoveMemberArgs {
   destination: PublicKey;
 }
 
-const MPL_TM_BUF = deprecated.MetadataProgram.PUBKEY.toBuffer();
+const MPL_TM_BUF = new PublicKey(TM_PROGRAM_ADDRESS).toBuffer();
 const MPL_TM_PREFIX = 'metadata';
 
 export interface TransactionResult {
@@ -156,7 +149,6 @@ export interface Wallet {
 export class FanoutClient {
   connection: Connection;
   wallet: Wallet;
-  provider: ProviderClass;
 
   static ID = new PublicKey('hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg');
 
@@ -167,7 +159,6 @@ export class FanoutClient {
   constructor(connection: Connection, wallet: Wallet) {
     this.connection = connection;
     this.wallet = wallet;
-    this.provider = new ProviderClass(connection, wallet, {});
   }
 
   async fetch<T>(key: PublicKey, type: any): Promise<T> {
@@ -479,7 +470,7 @@ export class FanoutClient {
     const signers: Signer[] = [];
     const [metadata, _md] = await PublicKey.findProgramAddress(
       [Buffer.from(MPL_TM_PREFIX), MPL_TM_BUF, opts.membershipKey.toBuffer()],
-      deprecated.MetadataProgram.PUBKEY,
+      new PublicKey(TM_PROGRAM_ADDRESS),
     );
     instructions.push(
       createProcessAddMemberNftInstruction(
@@ -731,7 +722,7 @@ export class FanoutClient {
         authority: authority,
         holdingAccount: holdingAccount,
         metadata: opts.metadata,
-        tokenMetadataProgram: deprecated.MetadataProgram.PUBKEY,
+        tokenMetadataProgram: new PublicKey(TM_PROGRAM_ADDRESS),
       }),
     );
     return {
