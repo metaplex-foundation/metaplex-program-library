@@ -9,7 +9,9 @@ mod freeze;
 mod metadata;
 mod uses;
 
-use borsh::BorshDeserialize;
+use std::collections::HashMap;
+
+use borsh::{BorshDeserialize, BorshSerialize};
 pub use bubblegum::*;
 pub use burn::*;
 pub use collection::*;
@@ -22,6 +24,7 @@ pub use edition::*;
 pub use escrow::*;
 pub use freeze::*;
 pub use metadata::*;
+use mpl_token_auth_rules::payload::{PayloadKey, PayloadType};
 use mpl_utils::cmp_pubkeys;
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, msg, program_error::ProgramError,
@@ -43,6 +46,17 @@ use crate::{
         escrow::process_transfer_out_of_escrow,
     },
 };
+
+#[cfg(feature = "serde-feature")]
+use serde::{Deserialize, Serialize};
+
+#[repr(C)]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+pub struct AuthorizationData {
+    pub payload: HashMap<PayloadKey, PayloadType>,
+    pub name: String,
+}
 
 pub fn process_instruction<'a>(
     program_id: &'a Pubkey,

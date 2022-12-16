@@ -394,6 +394,8 @@ pub fn mint(
     authorization_rules: Option<Pubkey>,
     args: MintArgs,
 ) -> Instruction {
+    println!("Authorization Rules: {:?}", authorization_rules);
+
     let mut accounts = vec![
         AccountMeta::new(token, false),
         AccountMeta::new_readonly(metadata, false),
@@ -411,8 +413,8 @@ pub fn mint(
     }
     // checks whether we have authorization rules
     if let Some(authorization_rules) = authorization_rules {
-        accounts.push(AccountMeta::new(mpl_token_auth_rules::id(), false));
         accounts.push(AccountMeta::new(authorization_rules, false));
+        accounts.push(AccountMeta::new_readonly(mpl_token_auth_rules::id(), false));
     }
 
     Instruction {

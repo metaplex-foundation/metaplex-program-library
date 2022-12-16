@@ -378,7 +378,7 @@ mod transfer {
             .unwrap();
 
         // Create NFT for transfer tests.
-        let name = puffed_out_string("Fungible", MAX_NAME_LENGTH);
+        let name = puffed_out_string("NonFungible", MAX_NAME_LENGTH);
         let symbol = puffed_out_string("PRG", MAX_SYMBOL_LENGTH);
         let uri = puffed_out_string("uri", MAX_URI_LENGTH);
 
@@ -402,7 +402,7 @@ mod transfer {
 
         let payer = context.payer.pubkey();
 
-        let token_amount = 1;
+        let amount = 1;
 
         let create_ix = instruction::create(
             metadata,
@@ -425,10 +425,8 @@ mod transfer {
             payer,
             payer,
             Some(master_edition),
-            None,
-            MintArgs::V1 {
-                amount: token_amount,
-            },
+            Some(rule_set),
+            MintArgs::V1 { amount },
         );
 
         let tx = Transaction::new_signed_with_payer(

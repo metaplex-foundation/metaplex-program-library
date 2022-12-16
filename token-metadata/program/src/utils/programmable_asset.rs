@@ -1,4 +1,4 @@
-use mpl_token_auth_rules::{payload::SeedsVec, state::Operation, Payload};
+use mpl_token_auth_rules::state::Operation;
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program::invoke_signed,
 };
@@ -71,27 +71,14 @@ pub fn validate<'a>(
     ruleset: &'a AccountInfo<'a>,
     destination_owner: &'a AccountInfo<'a>,
     auth_data: &AuthorizationData,
-    amount: Option<u64>,
 ) {
-    let seeds_vec = auth_data
-        .derived_key_seeds
-        .clone()
-        .map(|seeds| SeedsVec { seeds });
-
-    let leaf_info = auth_data
-        .leaf_info
-        .clone()
-        .map(|leaf_info| leaf_info.into_native());
-
-    let payload = Payload::new(Some(*destination_owner.key), seeds_vec, amount, leaf_info);
-
     let validate_ix = mpl_token_auth_rules::instruction::validate(
         mpl_token_auth_rules::ID,
         *payer.key,
         *ruleset.key,
         auth_data.name.clone(),
         Operation::Transfer,
-        payload,
+        auth_data.payload.clone(),
         vec![],
         vec![*destination_owner.key],
     );

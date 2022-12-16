@@ -1,5 +1,5 @@
-use borsh::{BorshDeserialize, BorshSerialize};
-use mpl_utils::{assert_signer, token::TokenTransferParams};
+use mpl_token_auth_rules::payload::{PayloadKey, PayloadType};
+use mpl_utils::{assert_signer, cmp_pubkeys, token::TokenTransferParams};
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
@@ -14,38 +14,10 @@ use crate::{
     error::MetadataError,
     instruction::TransferArgs,
     pda::find_master_edition_account,
+    processor::AuthorizationData,
     state::{Metadata, TokenMetadataAccount, TokenStandard},
     utils::{freeze, thaw, validate},
 };
-
-#[cfg(feature = "serde-feature")]
-use serde::{Deserialize, Serialize};
-
-#[repr(C)]
-#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
-pub struct AuthorizationData {
-    pub derived_key_seeds: Option<Vec<Vec<u8>>>,
-    pub leaf_info: Option<LeafInfo>,
-    pub name: String,
-}
-
-#[repr(C)]
-#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
-pub struct LeafInfo {
-    pub leaf: [u8; 32],
-    pub proof: Vec<[u8; 32]>,
-}
-
-impl LeafInfo {
-    pub fn into_native(self) -> mpl_token_auth_rules::LeafInfo {
-        mpl_token_auth_rules::LeafInfo {
-            leaf: self.leaf,
-            proof: self.proof,
-        }
-    }
-}
 
 pub fn transfer<'a>(
     program_id: &Pubkey,
@@ -140,7 +112,7 @@ fn transfer_v1<'a>(
     if let Some(token_standard) = metadata.token_standard {
         match token_standard {
             TokenStandard::ProgrammableNonFungible => {
-                let authorization_data = args.get_data();
+                let authorization_data = args.get_auth_data();
 
                 if authorization_rules_opt_info.is_none() || authorization_data.is_none() {
                     return Err(MetadataError::MissingAuthorizationRules.into());
@@ -156,16 +128,19 @@ fn transfer_v1<'a>(
                 let master_edition_info = edition_opt_info.unwrap();
 
                 let auth_pda = authorization_rules_opt_info.unwrap();
-                let auth_data = authorization_data.unwrap();
+                let mut auth_data = authorization_data.unwrap();
                 let amount = args.get_amount();
 
-                validate(
-                    owner_info,
-                    auth_pda,
-                    destination_owner_info,
-                    auth_data,
-                    Some(amount),
+                // Insert auth rules for Transfer
+                auth_data
+                    .payload
+                    .insert(PayloadKey::Amount, PayloadType::Number(amount));
+                auth_data.payload.insert(
+                    PayloadKey::Target,
+                    PayloadType::Pubkey(*destination_owner_info.key),
                 );
+
+                validate(owner_info, auth_pda, destination_owner_info, &auth_data);
 
                 thaw(
                     mint_info,
@@ -255,7 +230,8 @@ impl TransferArgs {
                 let mint_info = next_account_info(account_info_iter)?;
 
                 let (edition_pda, _) = find_master_edition_account(mint_info.key);
-                let edition_opt_info = account_info_iter.next_if(|a| a.key == &edition_pda);
+                let edition_opt_info =
+                    account_info_iter.next_if(|a| cmp_pubkeys(a.key, &edition_pda));
 
                 let destination_owner_info = next_account_info(account_info_iter)?;
                 let destination_token_account_info = next_account_info(account_info_iter)?;
@@ -269,7 +245,7 @@ impl TransferArgs {
                 // If the next account is the mpl_token_auth_rules ID, then we consume it
                 // and read the next account which will be the authorization rules account.
                 let authorization_rules_opt_info = if account_info_iter
-                    .next_if(|a| a.key == &mpl_token_auth_rules::ID)
+                    .next_if(|a| cmp_pubkeys(a.key, &mpl_token_auth_rules::ID))
                     .is_some()
                 {
                     // Auth rules account
@@ -296,11 +272,11 @@ impl TransferArgs {
         }
     }
 
-    fn get_data(&self) -> Option<&AuthorizationData> {
+    fn get_auth_data(&self) -> Option<AuthorizationData> {
         match self {
             TransferArgs::V1 {
                 authorization_data, ..
-            } => authorization_data.as_ref(),
+            } => authorization_data.clone(),
         }
     }
 

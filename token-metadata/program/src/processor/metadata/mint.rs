@@ -63,6 +63,11 @@ pub fn mint_v1<'a>(
         master_edition,
         ..
     } = args.get_accounts(accounts)?;
+    msg!(
+        "authorization_rules: {:?}",
+        authorization_rules.map(|a| a.key)
+    );
+    msg!("master_edition: {:?}", master_edition.map(|a| a.key));
     // get the args for the instruction
     let MintArgs::V1 { amount } = args;
 

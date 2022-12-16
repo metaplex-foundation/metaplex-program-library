@@ -1,4 +1,9 @@
-use mpl_token_auth_rules::state::{Operation, Rule, RuleSet};
+use std::collections::HashMap;
+
+use mpl_token_auth_rules::{
+    payload::PayloadKey,
+    state::{Operation, Rule, RuleSet},
+};
 use mpl_token_metadata::processor::AuthorizationData;
 use rmp_serde::Serializer;
 use serde::Serialize;
@@ -16,11 +21,12 @@ pub async fn create_royalty_ruleset(
     let name = "basic_royalty_enforcement".to_string();
 
     let (ruleset_addr, _ruleset_bump) =
-        mpl_token_auth_rules::pda::find_ruleset_address(context.payer.pubkey(), name.clone());
+        mpl_token_auth_rules::pda::find_rule_set_address(context.payer.pubkey(), name.clone());
 
     // Rule for Transfers: Allow transfers to a Token Owned Escrow account.
     let owned_by_token_metadata = Rule::ProgramOwned {
         program: mpl_token_metadata::id(),
+        field: PayloadKey::Target,
     };
 
     // Merkle tree root generated in a different test program.
@@ -33,6 +39,7 @@ pub async fn create_royalty_ruleset(
     // member of the marketplace Merkle tree.
     let leaf_in_marketplace_tree = Rule::PubkeyTreeMatch {
         root: marketplace_tree_root,
+        field: PayloadKey::Target,
     };
 
     // Create Basic Royalty Enforcement Ruleset.
@@ -71,11 +78,10 @@ pub async fn create_royalty_ruleset(
         .await
         .expect("creation should succeed");
 
-    let auth_data = AuthorizationData {
-        derived_key_seeds: None,
-        leaf_info: None,
-        name,
-    };
+    // Client can add additional rules to the Payload but does not need to in this case.
+    let payload = HashMap::new();
+
+    let auth_data = AuthorizationData { payload, name };
 
     (ruleset_addr, auth_data)
 }
