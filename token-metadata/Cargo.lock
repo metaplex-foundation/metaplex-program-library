@@ -1817,15 +1817,16 @@ dependencies = [
 
 [[package]]
 name = "mpl-token-auth-rules"
-version = "0.1.1"
+version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4bf10280e3bdb1f0c56fa8f2f20956d61b2c0887dc02144a841244b756283890"
+checksum = "a23e961c08a4e247bbb336c9f1deffb5e01561c4d25eca05db145d475d2df426"
 dependencies = [
  "borsh",
  "num-derive",
  "num-traits",
  "rmp-serde",
  "serde",
+ "serde_with",
  "shank",
  "solana-program",
  "thiserror",
