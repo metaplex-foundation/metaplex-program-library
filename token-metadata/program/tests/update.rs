@@ -58,6 +58,7 @@ mod update {
             creators: None,
             seller_fee_basis_points: 0,
         };
+
         let mut update_args = UpdateArgs::default();
         let UpdateArgs::V1 {
             data: current_data, ..
