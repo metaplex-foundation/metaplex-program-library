@@ -1,6 +1,8 @@
 use mpl_token_metadata::{
-    id, instruction,
+    id,
+    instruction::{self, DelegateArgs, DelegateRole},
     instruction::{MintArgs, TransferArgs},
+    pda::find_delegate_account,
     processor::AuthorizationData,
     state::{
         AssetData, Creator, Metadata, ProgrammableConfig, TokenMetadataAccount, TokenStandard,
@@ -183,9 +185,58 @@ impl DigitalAsset {
         self.mint(context, authorization_rules, amount).await
     }
 
+    pub async fn delegate(
+        &mut self,
+        context: &mut ProgramTestContext,
+        authority: Keypair,
+        delegate: Pubkey,
+        delegate_role: DelegateRole,
+        amount_opt: Option<u64>,
+    ) -> Result<(), BanksClientError> {
+        // delegate PDA
+        let (delegate_record, _) = find_delegate_account(
+            &self.mint.pubkey(),
+            delegate_role.clone(),
+            &delegate,
+            &authority.pubkey(),
+        );
+
+        let args = match delegate_role {
+            DelegateRole::Transfer => DelegateArgs::TransferV1 {
+                amount: amount_opt.unwrap(),
+            },
+            DelegateRole::Collection => DelegateArgs::CollectionV1,
+            _ => panic!("currently unsupported delegate role"),
+        };
+
+        let delegate_ix = instruction::delegate(
+            /* delegate record       */ delegate_record,
+            /* delegate              */ delegate,
+            /* mint                  */ self.mint.pubkey(),
+            /* metadata              */ self.metadata,
+            /* master_edition        */ self.master_edition,
+            /* authority             */ authority.pubkey(),
+            /* payer                 */ authority.pubkey(),
+            /* token                 */ self.token,
+            /* authorization payload */ None,
+            /* additional accounts   */ None,
+            /* delegate args         */ args,
+        );
+
+        let tx = Transaction::new_signed_with_payer(
+            &[delegate_ix],
+            Some(&authority.pubkey()),
+            &[&authority],
+            context.last_blockhash,
+        );
+
+        context.banks_client.process_transaction(tx).await
+    }
+
     pub async fn transfer(
         &mut self,
         context: &mut ProgramTestContext,
+        owner: Keypair,
         destination: Pubkey,
         destination_token: Option<Pubkey>,
         authorization_rules: Option<Pubkey>,
@@ -198,7 +249,7 @@ impl DigitalAsset {
             destination_token
         } else {
             instructions.push(create_associated_token_account(
-                &context.payer.pubkey(),
+                &owner.pubkey(),
                 &destination,
                 &self.mint.pubkey(),
                 &spl_token::id(),
@@ -209,7 +260,7 @@ impl DigitalAsset {
 
         instructions.push(instruction::transfer(
             id(),
-            context.payer.pubkey(),
+            owner.pubkey(),
             self.token.unwrap(),
             self.metadata,
             self.mint.pubkey(),
@@ -226,8 +277,8 @@ impl DigitalAsset {
 
         let tx = Transaction::new_signed_with_payer(
             &instructions,
-            Some(&context.payer.pubkey()),
-            &[&context.payer],
+            Some(&owner.pubkey()),
+            &[&owner],
             context.last_blockhash,
         );
 

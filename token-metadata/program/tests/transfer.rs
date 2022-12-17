@@ -14,7 +14,8 @@ use utils::*;
 mod transfer {
 
     use mpl_token_metadata::{
-        instruction::create_escrow_account,
+        error::MetadataError,
+        instruction::{create_escrow_account, DelegateRole},
         processor::find_escrow_account,
         state::{EscrowAuthority, TokenStandard},
     };
@@ -41,8 +42,18 @@ mod transfer {
             .await
             .unwrap();
 
+        let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+
         digital_asset
-            .transfer(&mut context, destination.pubkey(), None, None, None, 1)
+            .transfer(
+                &mut context,
+                payer,
+                destination.pubkey(),
+                None,
+                None,
+                None,
+                1,
+            )
             .await
             .unwrap();
 
@@ -80,9 +91,12 @@ mod transfer {
             .await
             .unwrap();
 
+        let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+
         digital_asset
             .transfer(
                 &mut context,
+                payer,
                 destination.pubkey(),
                 None,
                 None,
@@ -131,9 +145,12 @@ mod transfer {
             .await
             .unwrap();
 
+        let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+
         digital_asset
             .transfer(
                 &mut context,
+                payer,
                 destination.pubkey(),
                 None,
                 None,
@@ -192,9 +209,12 @@ mod transfer {
             .await
             .unwrap();
 
+        let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+
         let err = nft
             .transfer(
                 &mut context,
+                payer,
                 destination.pubkey(),
                 None,
                 Some(rule_set),
@@ -235,8 +255,11 @@ mod transfer {
 
         context.banks_client.process_transaction(tx).await.unwrap();
 
+        let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+
         nft.transfer(
             &mut context,
+            payer,
             escrow_account,
             None,
             Some(rule_set),
@@ -272,6 +295,24 @@ mod transfer {
             .await
             .unwrap();
 
+        let delegate = Keypair::new();
+        airdrop(&mut context, &delegate.pubkey(), LAMPORTS_PER_SOL)
+            .await
+            .unwrap();
+
+        let authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+
+        digital_asset
+            .delegate(
+                &mut context,
+                authority,
+                delegate.pubkey(),
+                DelegateRole::Transfer,
+                Some(1),
+            )
+            .await
+            .unwrap();
+
         let destination = Keypair::new();
         let destination_token =
             get_associated_token_address(&destination.pubkey(), &digital_asset.mint.pubkey());
@@ -280,7 +321,15 @@ mod transfer {
             .unwrap();
 
         digital_asset
-            .transfer(&mut context, destination.pubkey(), None, None, None, 1)
+            .transfer(
+                &mut context,
+                delegate,
+                destination.pubkey(),
+                None,
+                None,
+                None,
+                1,
+            )
             .await
             .unwrap();
 
@@ -296,5 +345,29 @@ mod transfer {
         .unwrap();
 
         assert_eq!(token_account.amount, 1);
+
+        // Sanity check.
+        let fake_delegate = Keypair::new();
+        airdrop(&mut context, &fake_delegate.pubkey(), LAMPORTS_PER_SOL)
+            .await
+            .unwrap();
+
+        // Associated token account already exists so we pass it in,
+        // otherwise we will get an "IllegalOwner" errror.
+
+        let err = digital_asset
+            .transfer(
+                &mut context,
+                fake_delegate,
+                destination.pubkey(),
+                Some(destination_token), // <-- Associated token account
+                None,
+                None,
+                1,
+            )
+            .await
+            .unwrap_err();
+
+        assert_custom_error_ix!(0, err, MetadataError::InvalidOwner);
     }
 }
