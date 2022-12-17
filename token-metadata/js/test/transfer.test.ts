@@ -43,6 +43,48 @@ test('Transfer: NonFungible', async (t) => {
   await transferTx.assertSuccess(t);
 });
 
+// test('Transfer: ProgrammableNonFungible', async (t) => {
+//   const API = new InitTransactions();
+//   const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
+
+//   const programmableConfig = {
+//     ruleset,
+//   };
+
+//   const { mint, metadata, masterEdition, token } = await createAndMintDefaultAsset(
+//     t,
+//     API,
+//     handler,
+//     payer,
+//     TokenStandard.ProgrammableNonFungible,
+//     programmableConfig,
+//   );
+
+//   const owner = payer;
+//   const destination = Keypair.generate();
+//   const destinationToken = await createAssociatedTokenAccount(
+//     connection,
+//     payer,
+//     mint,
+//     destination.publicKey,
+//   );
+//   const amount = 1;
+
+//   const { tx: transferTx } = await API.transfer(
+//     owner,
+//     token,
+//     mint,
+//     metadata,
+//     masterEdition,
+//     destination.publicKey,
+//     destinationToken,
+//     amount,
+//     handler,
+//   );
+
+//   await transferTx.assertSuccess(t);
+// });
+
 // test('Transfer: NonFungibleEdition', async (t) => {
 //   const API = new InitTransactions();
 //   const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
@@ -91,6 +133,7 @@ test('Transfer: Fungible', async (t) => {
     handler,
     payer,
     TokenStandard.Fungible,
+    null,
     10,
   );
 
@@ -129,6 +172,7 @@ test('Transfer: FungibleAsset', async (t) => {
     handler,
     payer,
     TokenStandard.FungibleAsset,
+    null,
     10,
   );
 
@@ -179,6 +223,7 @@ test('Transfer: FungibleAsset', async (t) => {
 //   const amount = 1;
 
 //   // Approve delegate
+//   panic('Not implemented');
 
 //   const { tx: transferTx } = await API.transfer(
 //     owner,

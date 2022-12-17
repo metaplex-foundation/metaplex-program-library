@@ -218,6 +218,7 @@ export class InitTransactions {
       ata,
       metadata,
       mint,
+      edition: masterEdition,
       destination,
       destinationAta,
       splTokenProgram: splToken.TOKEN_PROGRAM_ID,

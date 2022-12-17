@@ -435,7 +435,7 @@ pub fn mint(
 ///   3. `[]` Destination owner
 ///   6. `[]` SPL Token program
 ///   7. `[]` SPL Associate Token program
-///   8. `[]` System program
+///   8. `[]` System programe
 ///   9. `[]` Instructions sysvar account
 ///   10. `[optional]` Asset authorization rules account
 ///   11. `[optional]` Token Authorization Rules program

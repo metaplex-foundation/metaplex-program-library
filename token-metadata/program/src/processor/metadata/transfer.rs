@@ -1,4 +1,7 @@
-use mpl_token_auth_rules::payload::{PayloadKey, PayloadType};
+use mpl_token_auth_rules::{
+    payload::{PayloadKey, PayloadType},
+    state::Operation,
+};
 use mpl_utils::{assert_signer, cmp_pubkeys, token::TokenTransferParams};
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
@@ -10,7 +13,10 @@ use solana_program::{
 };
 
 use crate::{
-    assertions::{assert_owned_by, metadata::assert_currently_holding},
+    assertions::{
+        assert_owned_by, metadata::assert_currently_holding,
+        programmable::assert_valid_authorization,
+    },
     error::MetadataError,
     instruction::TransferArgs,
     pda::find_master_edition_account,
@@ -39,14 +45,14 @@ fn transfer_v1<'a>(
         token_account_info,
         metadata_info,
         mint_info,
-        edition_opt_info,
+        edition_info_opt,
         destination_owner_info,
         destination_token_account_info,
         spl_token_program_info,
         spl_associated_token_program_info,
         system_program_info,
         sysvar_instructions_info,
-        authorization_rules_opt_info,
+        authorization_rules_info_opt,
     } = args.get_accounts(accounts)?;
     //** Account Validation **/
     msg!("Account Validation");
@@ -59,10 +65,10 @@ fn transfer_v1<'a>(
     assert_owned_by(metadata_info, program_id)?;
     assert_owned_by(mint_info, &spl_token::ID)?;
 
-    if let Some(edition) = edition_opt_info {
+    if let Some(edition) = edition_info_opt {
         assert_owned_by(edition, program_id)?;
     }
-    if let Some(authorization_rules) = authorization_rules_opt_info {
+    if let Some(authorization_rules) = authorization_rules_info_opt {
         assert_owned_by(authorization_rules, &mpl_token_auth_rules::ID)?;
     }
 
@@ -109,27 +115,30 @@ fn transfer_v1<'a>(
         }
     }
 
-    if let Some(token_standard) = metadata.token_standard {
-        match token_standard {
-            TokenStandard::ProgrammableNonFungible => {
+    if metadata.token_standard.is_none() {
+        return Err(MetadataError::InvalidTokenStandard.into());
+    }
+    let token_standard = metadata.token_standard.unwrap();
+
+    match token_standard {
+        TokenStandard::ProgrammableNonFungible => {
+            let amount = args.get_amount();
+
+            msg!("checking programmable config");
+            if let Some(ref config) = metadata.programmable_config {
                 let authorization_data = args.get_auth_data();
 
-                if authorization_rules_opt_info.is_none() || authorization_data.is_none() {
-                    return Err(MetadataError::MissingAuthorizationRules.into());
-                }
+                msg!("asserting valid authorization");
+                assert_valid_authorization(
+                    &authorization_data,
+                    authorization_rules_info_opt,
+                    &config,
+                )?;
 
-                if metadata.programmable_config.is_none() {
-                    return Err(MetadataError::MissingProgrammableConfig.into());
-                }
-
-                if edition_opt_info.is_none() {
-                    return Err(MetadataError::MissingEditionAccount.into());
-                }
-                let master_edition_info = edition_opt_info.unwrap();
-
-                let auth_pda = authorization_rules_opt_info.unwrap();
+                // We can safely unwrap here because they were all checked for existence
+                // in the assertion above.
+                let auth_pda = authorization_rules_info_opt.unwrap();
                 let mut auth_data = authorization_data.unwrap();
-                let amount = args.get_amount();
 
                 // Insert auth rules for Transfer
                 auth_data
@@ -140,59 +149,70 @@ fn transfer_v1<'a>(
                     PayloadType::Pubkey(*destination_owner_info.key),
                 );
 
-                validate(owner_info, auth_pda, destination_owner_info, &auth_data);
-
-                thaw(
-                    mint_info,
-                    token_account_info,
-                    master_edition_info,
-                    spl_token_program_info,
-                )?;
-
-                let token_transfer_params: TokenTransferParams = TokenTransferParams {
-                    mint: mint_info.clone(),
-                    source: token_account_info.clone(),
-                    destination: destination_token_account_info.clone(),
-                    amount,
-                    authority: owner_info.clone(),
-                    authority_signer_seeds: None,
-                    token_program: spl_token_program_info.clone(),
-                };
-                mpl_utils::token::spl_token_transfer(token_transfer_params).unwrap();
-
-                freeze(
-                    mint_info,
-                    token_account_info,
-                    master_edition_info,
-                    spl_token_program_info,
-                )?;
+                // This panics if the CPI into the auth rules program fails.
+                validate(
+                    owner_info,
+                    auth_pda,
+                    Operation::Transfer,
+                    destination_owner_info,
+                    &auth_data,
+                );
             }
-            TokenStandard::NonFungible
-            | TokenStandard::NonFungibleEdition
-            | TokenStandard::Fungible
-            | TokenStandard::FungibleAsset => {
-                let amount = match token_standard {
-                    TokenStandard::NonFungible | TokenStandard::NonFungibleEdition => 1,
-                    TokenStandard::Fungible | TokenStandard::FungibleAsset => args.get_amount(),
-                    _ => panic!("Invalid token standard"),
-                };
-                msg!("amount: {}", amount);
 
-                msg!("Transferring NFT normally");
-                let token_transfer_params: TokenTransferParams = TokenTransferParams {
-                    mint: mint_info.clone(),
-                    source: token_account_info.clone(),
-                    destination: destination_token_account_info.clone(),
-                    amount,
-                    authority: owner_info.clone(),
-                    authority_signer_seeds: None,
-                    token_program: spl_token_program_info.clone(),
-                };
-                mpl_utils::token::spl_token_transfer(token_transfer_params).unwrap();
+            // We need the edition account regardless of if there's a rule set,
+            // because we need to thaw the token account.
+            if edition_info_opt.is_none() {
+                return Err(MetadataError::MissingEditionAccount.into());
             }
+            let master_edition_info = edition_info_opt.unwrap();
+
+            thaw(
+                mint_info,
+                token_account_info,
+                master_edition_info,
+                spl_token_program_info,
+            )?;
+
+            let token_transfer_params: TokenTransferParams = TokenTransferParams {
+                mint: mint_info.clone(),
+                source: token_account_info.clone(),
+                destination: destination_token_account_info.clone(),
+                amount,
+                authority: owner_info.clone(),
+                authority_signer_seeds: None,
+                token_program: spl_token_program_info.clone(),
+            };
+            mpl_utils::token::spl_token_transfer(token_transfer_params).unwrap();
+
+            freeze(
+                mint_info,
+                token_account_info,
+                master_edition_info,
+                spl_token_program_info,
+            )?;
         }
-    } else {
-        return Err(MetadataError::CouldNotDetermineTokenStandard.into());
+        TokenStandard::NonFungible
+        | TokenStandard::NonFungibleEdition
+        | TokenStandard::Fungible
+        | TokenStandard::FungibleAsset => {
+            let amount = match token_standard {
+                TokenStandard::NonFungible | TokenStandard::NonFungibleEdition => 1,
+                TokenStandard::Fungible | TokenStandard::FungibleAsset => args.get_amount(),
+                _ => panic!("Invalid token standard"),
+            };
+
+            msg!("Transferring NFT normally");
+            let token_transfer_params: TokenTransferParams = TokenTransferParams {
+                mint: mint_info.clone(),
+                source: token_account_info.clone(),
+                destination: destination_token_account_info.clone(),
+                amount,
+                authority: owner_info.clone(),
+                authority_signer_seeds: None,
+                token_program: spl_token_program_info.clone(),
+            };
+            mpl_utils::token::spl_token_transfer(token_transfer_params).unwrap();
+        }
     }
 
     Ok(())
@@ -204,14 +224,14 @@ enum TransferAccounts<'a> {
         token_account_info: &'a AccountInfo<'a>,
         metadata_info: &'a AccountInfo<'a>,
         mint_info: &'a AccountInfo<'a>,
-        edition_opt_info: Option<&'a AccountInfo<'a>>,
+        edition_info_opt: Option<&'a AccountInfo<'a>>,
         destination_owner_info: &'a AccountInfo<'a>,
         destination_token_account_info: &'a AccountInfo<'a>,
         spl_token_program_info: &'a AccountInfo<'a>,
         spl_associated_token_program_info: &'a AccountInfo<'a>,
         system_program_info: &'a AccountInfo<'a>,
         sysvar_instructions_info: &'a AccountInfo<'a>,
-        authorization_rules_opt_info: Option<&'a AccountInfo<'a>>,
+        authorization_rules_info_opt: Option<&'a AccountInfo<'a>>,
     },
 }
 
@@ -230,7 +250,7 @@ impl TransferArgs {
                 let mint_info = next_account_info(account_info_iter)?;
 
                 let (edition_pda, _) = find_master_edition_account(mint_info.key);
-                let edition_opt_info =
+                let edition_info_opt =
                     account_info_iter.next_if(|a| cmp_pubkeys(a.key, &edition_pda));
 
                 let destination_owner_info = next_account_info(account_info_iter)?;
@@ -244,7 +264,7 @@ impl TransferArgs {
 
                 // If the next account is the mpl_token_auth_rules ID, then we consume it
                 // and read the next account which will be the authorization rules account.
-                let authorization_rules_opt_info = if account_info_iter
+                let authorization_rules_info_opt = if account_info_iter
                     .next_if(|a| cmp_pubkeys(a.key, &mpl_token_auth_rules::ID))
                     .is_some()
                 {
@@ -259,14 +279,14 @@ impl TransferArgs {
                     token_account_info,
                     metadata_info,
                     mint_info,
-                    edition_opt_info,
+                    edition_info_opt,
                     destination_owner_info,
                     destination_token_account_info,
                     spl_token_program_info,
                     spl_associated_token_program_info,
                     system_program_info,
                     sysvar_instructions_info,
-                    authorization_rules_opt_info,
+                    authorization_rules_info_opt,
                 })
             }
         }

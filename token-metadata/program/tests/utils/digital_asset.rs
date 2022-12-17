@@ -1,6 +1,7 @@
 use mpl_token_metadata::{
     id, instruction,
-    instruction::MintArgs,
+    instruction::{MintArgs, TransferArgs},
+    processor::AuthorizationData,
     state::{
         AssetData, Creator, Metadata, ProgrammableConfig, TokenMetadataAccount, TokenStandard,
         EDITION, PREFIX,
@@ -11,6 +12,9 @@ use solana_program_test::{BanksClientError, ProgramTestContext};
 use solana_sdk::{
     signature::{Keypair, Signer},
     transaction::Transaction,
+};
+use spl_associated_token_account::{
+    get_associated_token_address, instruction::create_associated_token_account,
 };
 
 pub const DEFAULT_NAME: &str = "Digital Asset";
@@ -116,11 +120,9 @@ impl DigitalAsset {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await.unwrap();
-
         self.master_edition = master_edition;
 
-        Ok(())
+        context.banks_client.process_transaction(tx).await
     }
 
     pub async fn mint(
@@ -179,6 +181,57 @@ impl DigitalAsset {
             .unwrap();
         // mints tokens
         self.mint(context, authorization_rules, amount).await
+    }
+
+    pub async fn transfer(
+        &mut self,
+        context: &mut ProgramTestContext,
+        destination: Pubkey,
+        destination_token: Option<Pubkey>,
+        authorization_rules: Option<Pubkey>,
+        authorization_data: Option<AuthorizationData>,
+        amount: u64,
+    ) -> Result<(), BanksClientError> {
+        let mut instructions = vec![];
+
+        let destination_token = if let Some(destination_token) = destination_token {
+            destination_token
+        } else {
+            instructions.push(create_associated_token_account(
+                &context.payer.pubkey(),
+                &destination,
+                &self.mint.pubkey(),
+                &spl_token::id(),
+            ));
+
+            get_associated_token_address(&destination, &self.mint.pubkey())
+        };
+
+        instructions.push(instruction::transfer(
+            id(),
+            context.payer.pubkey(),
+            self.token.unwrap(),
+            self.metadata,
+            self.mint.pubkey(),
+            self.master_edition,
+            destination,
+            destination_token,
+            TransferArgs::V1 {
+                authorization_data,
+                amount,
+            },
+            authorization_rules,
+            None,
+        ));
+
+        let tx = Transaction::new_signed_with_payer(
+            &instructions,
+            Some(&context.payer.pubkey()),
+            &[&context.payer],
+            context.last_blockhash,
+        );
+
+        context.banks_client.process_transaction(tx).await
     }
 
     pub async fn get_metadata(&self, context: &mut ProgramTestContext) -> Metadata {

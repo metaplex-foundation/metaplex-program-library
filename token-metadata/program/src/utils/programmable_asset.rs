@@ -69,6 +69,7 @@ pub fn thaw<'a>(
 pub fn validate<'a>(
     payer: &'a AccountInfo<'a>,
     ruleset: &'a AccountInfo<'a>,
+    operation: Operation,
     destination_owner: &'a AccountInfo<'a>,
     auth_data: &AuthorizationData,
 ) {
@@ -76,8 +77,8 @@ pub fn validate<'a>(
         mpl_token_auth_rules::ID,
         *payer.key,
         *ruleset.key,
-        auth_data.name.clone(),
-        Operation::Transfer,
+        "basic_royalty_enforcement".to_string(),
+        operation,
         auth_data.payload.clone(),
         vec![],
         vec![*destination_owner.key],

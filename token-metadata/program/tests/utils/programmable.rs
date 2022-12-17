@@ -1,7 +1,5 @@
-use std::collections::HashMap;
-
 use mpl_token_auth_rules::{
-    payload::PayloadKey,
+    payload::{Payload, PayloadKey},
     state::{Operation, Rule, RuleSet},
 };
 use mpl_token_metadata::processor::AuthorizationData;
@@ -79,9 +77,9 @@ pub async fn create_royalty_ruleset(
         .expect("creation should succeed");
 
     // Client can add additional rules to the Payload but does not need to in this case.
-    let payload = HashMap::new();
+    let payload = Payload::new();
 
-    let auth_data = AuthorizationData { payload, name };
+    let auth_data = AuthorizationData { payload };
 
     (ruleset_addr, auth_data)
 }

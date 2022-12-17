@@ -12,6 +12,7 @@ use crate::{
     error::MetadataError,
     instruction::UpdateArgs,
     pda::find_master_edition_account,
+    processor::AuthorizationData,
     state::{Metadata, TokenMetadataAccount, TokenStandard},
 };
 
@@ -76,7 +77,20 @@ fn update_v1<'a>(
 
     match metadata_data.token_standard.unwrap() {
         TokenStandard::ProgrammableNonFungible => {
-            todo!()
+            let authorization_data = args.get_auth_data();
+
+            if authorization_rules.is_none() || authorization_data.is_none() {
+                return Err(MetadataError::MissingAuthorizationRules.into());
+            }
+
+            if metadata_data.programmable_config.is_none() {
+                return Err(MetadataError::MissingProgrammableConfig.into());
+            }
+
+            if master_edition.is_none() {
+                return Err(MetadataError::MissingEditionAccount.into());
+            }
+            let master_edition_info = master_edition.unwrap();
         }
         TokenStandard::NonFungible
         | TokenStandard::NonFungibleEdition
@@ -147,6 +161,14 @@ impl UpdateArgs {
                     sysvar_instructions,
                 })
             }
+        }
+    }
+
+    fn get_auth_data(&self) -> Option<AuthorizationData> {
+        match self {
+            UpdateArgs::V1 {
+                authorization_data, ..
+            } => authorization_data.clone(),
         }
     }
 }

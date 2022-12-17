@@ -1,5 +1,11 @@
 import { Connection, PublicKey } from '@solana/web3.js';
-import { AssetData, DelegateState, Metadata, TokenStandard } from 'src/generated';
+import {
+  AssetData,
+  DelegateState,
+  Metadata,
+  ProgrammableConfig,
+  TokenStandard,
+} from 'src/generated';
 import { InitTransactions } from '../setup';
 import test from 'tape';
 import { PayerTransactionHandler } from '@metaplex-foundation/amman-client';
@@ -54,6 +60,7 @@ export async function createDefaultAsset(
   handler: PayerTransactionHandler,
   payer: Keypair,
   tokenStandard: TokenStandard = TokenStandard.NonFungible,
+  programmableConfig: ProgrammableConfig | null = null,
 ): Promise<DigitalAssetManager> {
   const name = 'DigitalAsset';
   const symbol = 'DA';
@@ -80,7 +87,7 @@ export async function createDefaultAsset(
     collection: null,
     uses: null,
     collectionDetails: null,
-    programmableConfig: null,
+    programmableConfig,
     delegateState: null,
   };
 
@@ -103,9 +110,17 @@ export async function createAndMintDefaultAsset(
   handler: PayerTransactionHandler,
   payer: Keypair,
   tokenStandard: TokenStandard = TokenStandard.NonFungible,
+  programmableConfig: ProgrammableConfig | null = null,
   amount = 1,
 ): Promise<DigitalAssetManager> {
-  const daManager = await createDefaultAsset(t, API, handler, payer, tokenStandard);
+  const daManager = await createDefaultAsset(
+    t,
+    API,
+    handler,
+    payer,
+    tokenStandard,
+    programmableConfig,
+  );
   const { mint, metadata, masterEdition } = daManager;
 
   const { tx: mintTx, token } = await API.mint(
