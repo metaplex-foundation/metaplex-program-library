@@ -44,7 +44,7 @@ pub fn delegate<'a>(
 ) -> ProgramResult {
     match args {
         DelegateArgs::CollectionV1 { .. } => delegate_collection_v1(program_id, accounts, args),
-        DelegateArgs::SaleV1 { .. } => delegate_sale_v1(program_id, accounts, args),
+        DelegateArgs::TransferV1 { .. } => delegate_transfer_v1(program_id, accounts, args),
     }
 }
 
@@ -117,7 +117,7 @@ fn delegate_collection_v1<'a>(
     )
 }
 
-fn delegate_sale_v1<'a>(
+fn delegate_transfer_v1<'a>(
     program_id: &Pubkey,
     accounts: &'a [AccountInfo<'a>],
     args: DelegateArgs,
@@ -158,7 +158,7 @@ fn delegate_sale_v1<'a>(
         unimplemented!();
     };
     // get the args for the instruction
-    let amount = if let DelegateArgs::SaleV1 { amount } = args {
+    let amount = if let DelegateArgs::TransferV1 { amount } = args {
         amount
     } else {
         unimplemented!();
@@ -336,7 +336,7 @@ impl DelegateArgs {
                     _auth_rules_program,
                 })
             }
-            DelegateArgs::SaleV1 { .. } => {
+            DelegateArgs::TransferV1 { .. } => {
                 let _delegate = try_get_account_info(accounts, 0)?;
                 let delegate_owner = try_get_account_info(accounts, 1)?;
                 let mint = try_get_account_info(accounts, 2)?;

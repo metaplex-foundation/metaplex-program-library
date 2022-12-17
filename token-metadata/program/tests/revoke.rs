@@ -23,7 +23,7 @@ mod revoke {
     use super::*;
 
     #[tokio::test]
-    async fn revoke_sale_delegate_programmable_nonfungible() {
+    async fn revoke_transfer_delegate_programmable_nonfungible() {
         let mut context = program_test().start_with_context().await;
 
         // asset
@@ -66,7 +66,7 @@ mod revoke {
             /* token                 */ asset.token,
             /* authorization payload */ None,
             /* additional accounts   */ None,
-            /* delegate args         */ DelegateArgs::SaleV1 { amount: 1 },
+            /* delegate args         */ DelegateArgs::TransferV1 { amount: 1 },
         );
 
         let tx = Transaction::new_signed_with_payer(
@@ -100,7 +100,7 @@ mod revoke {
             /* token                 */ asset.token,
             /* authorization payload */ None,
             /* additional accounts   */ None,
-            /* delegate args         */ RevokeArgs::SaleV1,
+            /* delegate args         */ RevokeArgs::TransferV1,
         );
 
         let tx = Transaction::new_signed_with_payer(

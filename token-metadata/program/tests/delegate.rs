@@ -23,7 +23,7 @@ mod delegate {
 
     use super::*;
     #[tokio::test]
-    async fn set_sale_delegate_programmable_nonfungible() {
+    async fn set_transfer_delegate_programmable_nonfungible() {
         let mut context = program_test().start_with_context().await;
 
         // asset
@@ -41,7 +41,7 @@ mod delegate {
 
         assert!(asset.token.is_some());
 
-        // delegates the asset for sale
+        // delegates the asset for transfer
 
         let user = Keypair::new();
         let user_pubkey = user.pubkey();
@@ -66,7 +66,7 @@ mod delegate {
             /* token                 */ asset.token,
             /* authorization payload */ None,
             /* additional accounts   */ None,
-            /* delegate args         */ DelegateArgs::SaleV1 { amount: 1 },
+            /* delegate args         */ DelegateArgs::TransferV1 { amount: 1 },
         );
 
         let tx = Transaction::new_signed_with_payer(

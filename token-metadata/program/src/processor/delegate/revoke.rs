@@ -43,7 +43,7 @@ pub fn revoke<'a>(
 ) -> ProgramResult {
     match args {
         RevokeArgs::CollectionV1 => revoke_collection_v1(program_id, accounts, args),
-        RevokeArgs::SaleV1 => revoke_sale_v1(program_id, accounts, args),
+        RevokeArgs::TransferV1 => revoke_sale_v1(program_id, accounts, args),
     }
 }
 
@@ -306,7 +306,7 @@ impl RevokeArgs {
                     _auth_rules_program,
                 })
             }
-            RevokeArgs::SaleV1 { .. } => {
+            RevokeArgs::TransferV1 { .. } => {
                 let _delegate = try_get_account_info(accounts, 0)?;
                 let delegate_owner = try_get_account_info(accounts, 1)?;
                 let mint = try_get_account_info(accounts, 2)?;

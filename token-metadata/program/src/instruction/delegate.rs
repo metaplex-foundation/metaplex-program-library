@@ -16,7 +16,7 @@ use crate::instruction::MetadataInstruction;
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub enum DelegateArgs {
     CollectionV1,
-    SaleV1 { amount: u64 },
+    TransferV1 { amount: u64 },
 }
 
 #[repr(C)]
@@ -24,7 +24,7 @@ pub enum DelegateArgs {
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub enum RevokeArgs {
     CollectionV1,
-    SaleV1,
+    TransferV1,
 }
 
 #[repr(C)]
