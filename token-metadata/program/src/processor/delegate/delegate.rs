@@ -233,7 +233,7 @@ fn create_delegate<'a>(
     delegate: &'a AccountInfo<'a>,
     delegate_owner: &'a AccountInfo<'a>,
     mint: &'a AccountInfo<'a>,
-    owner: &'a AccountInfo<'a>,
+    authority: &'a AccountInfo<'a>,
     payer: &'a AccountInfo<'a>,
     system_program: &'a AccountInfo<'a>,
 ) -> ProgramResult {
@@ -243,7 +243,7 @@ fn create_delegate<'a>(
         mint.key.as_ref(),
         role.as_bytes(),
         delegate_owner.key.as_ref(),
-        owner.key.as_ref(),
+        authority.key.as_ref(),
     ];
     let bump = &[assert_derivation(program_id, delegate, &delegate_seeds)?];
 

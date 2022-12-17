@@ -84,16 +84,14 @@ pub fn find_delegate_account(
     mint: &Pubkey,
     role: DelegateRole,
     user: &Pubkey,
-    owner: &Pubkey,
+    authority: &Pubkey,
 ) -> (Pubkey, u8) {
     Pubkey::find_program_address(
         &[
-            PREFIX.as_bytes(),
-            crate::id().as_ref(),
             mint.as_ref(),
             role.to_string().as_bytes(),
             user.as_ref(),
-            owner.as_ref(),
+            authority.as_ref(),
         ],
         &crate::id(),
     )
