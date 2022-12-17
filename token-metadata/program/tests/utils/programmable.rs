@@ -5,21 +5,25 @@ use mpl_token_auth_rules::{
 use mpl_token_metadata::processor::AuthorizationData;
 use rmp_serde::Serializer;
 use serde::Serialize;
-use solana_sdk::{pubkey::Pubkey, signature::Signer, transaction::Transaction};
+use solana_sdk::{
+    pubkey::Pubkey,
+    signature::{Keypair, Signer},
+    transaction::Transaction,
+};
 
 use crate::*;
 
-pub async fn create_royalty_ruleset(
+pub async fn create_test_ruleset(
     context: &mut ProgramTestContext,
+    payer: Keypair,
+    name: String,
 ) -> (Pubkey, AuthorizationData) {
     // --------------------------------
     // Create RuleSet
     // --------------------------------
     // Find RuleSet PDA.
-    let name = "basic_royalty_enforcement".to_string();
-
     let (ruleset_addr, _ruleset_bump) =
-        mpl_token_auth_rules::pda::find_rule_set_address(context.payer.pubkey(), name.clone());
+        mpl_token_auth_rules::pda::find_rule_set_address(payer.pubkey(), name.clone());
 
     // Rule for Transfers: Allow transfers to a Token Owned Escrow account.
     let owned_by_token_metadata = Rule::ProgramOwned {
@@ -41,10 +45,16 @@ pub async fn create_royalty_ruleset(
     };
 
     // Create Basic Royalty Enforcement Ruleset.
-    let mut basic_royalty_enforcement_rule_set = RuleSet::new();
-    basic_royalty_enforcement_rule_set.add(Operation::Transfer, owned_by_token_metadata);
-    basic_royalty_enforcement_rule_set.add(Operation::Delegate, leaf_in_marketplace_tree.clone());
-    basic_royalty_enforcement_rule_set.add(Operation::SaleTransfer, leaf_in_marketplace_tree);
+    let mut basic_royalty_enforcement_rule_set = RuleSet::new(name, payer.pubkey());
+    basic_royalty_enforcement_rule_set
+        .add(Operation::Transfer, owned_by_token_metadata)
+        .unwrap();
+    basic_royalty_enforcement_rule_set
+        .add(Operation::Delegate, leaf_in_marketplace_tree.clone())
+        .unwrap();
+    basic_royalty_enforcement_rule_set
+        .add(Operation::SaleTransfer, leaf_in_marketplace_tree)
+        .unwrap();
 
     // Serialize the RuleSet using RMP serde.
     let mut serialized_data = Vec::new();
@@ -54,18 +64,18 @@ pub async fn create_royalty_ruleset(
 
     // Create a `create` instruction.
     let create_ix = mpl_token_auth_rules::instruction::create(
-        mpl_token_auth_rules::id(),
-        context.payer.pubkey(),
+        mpl_token_auth_rules::ID,
+        payer.pubkey(),
         ruleset_addr,
-        name.clone(),
         serialized_data,
+        vec![],
     );
 
     // Add it to a transaction.
     let create_tx = Transaction::new_signed_with_payer(
         &[create_ix],
-        Some(&context.payer.pubkey()),
-        &[&context.payer],
+        Some(&payer.pubkey()),
+        &[&payer],
         context.last_blockhash,
     );
 

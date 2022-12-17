@@ -188,8 +188,11 @@ mod transfer {
             .await
             .unwrap();
 
+        let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+
         // Create rule-set for the transfer
-        let (rule_set, auth_data) = create_royalty_ruleset(&mut context).await;
+        let (rule_set, auth_data) =
+            create_test_ruleset(&mut context, payer, "royalty".to_string()).await;
 
         // Create NFT for transfer tests.
         let mut nft = DigitalAsset::new();

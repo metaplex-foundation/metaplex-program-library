@@ -15,7 +15,7 @@ pub use master_edition_v2::MasterEditionV2;
 pub use metadata::{assert_collection_size, Metadata};
 pub use mpl_token_metadata::instruction;
 use mpl_token_metadata::state::CollectionDetails;
-pub use programmable::create_royalty_ruleset;
+pub use programmable::create_test_ruleset;
 
 use solana_program_test::*;
 use solana_sdk::{

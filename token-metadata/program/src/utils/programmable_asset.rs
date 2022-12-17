@@ -75,9 +75,7 @@ pub fn validate<'a>(
 ) {
     let validate_ix = mpl_token_auth_rules::instruction::validate(
         mpl_token_auth_rules::ID,
-        *payer.key,
         *ruleset.key,
-        "basic_royalty_enforcement".to_string(),
         operation,
         auth_data.payload.clone(),
         vec![],
