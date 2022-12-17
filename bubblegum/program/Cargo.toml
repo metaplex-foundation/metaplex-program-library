@@ -20,17 +20,17 @@ test-bpf = []
 default = []
 
 [dependencies]
-anchor-lang = { version = "0.25.0", features = ["init-if-needed"] }
+anchor-lang = { version = "0.26.0", features = ["init-if-needed"] }
 bytemuck = "1.8.0"
-mpl-token-metadata = { version = "1.5.0", features = ["no-entrypoint"] }
+mpl-token-metadata = { path = "../../token-metadata/program", version = "1.5.0", features = ["no-entrypoint"] }
 solana-program = "1.10.29"
-spl-account-compression = { version="0.1.5", features = ["cpi"] }
-spl-associated-token-account = { version = "~1.0.5", features = ["no-entrypoint"] }
-spl-token = { version = "~3.3.1", features = ["no-entrypoint"] }
+spl-account-compression = { git = "https://github.com/ChewingGlass/solana-program-library", branch = "feature/anchor-26", version="0.1.5", features = ["cpi"] }
+spl-associated-token-account = { version = "1.1.2", features = ["no-entrypoint"] }
+spl-token = { version = "3.3.1", features = ["no-entrypoint"] }
 
 [dev-dependencies]
-solana-program-test = "1.10"
-solana-sdk = "1.10"
+solana-program-test = "1.13.5"
+solana-sdk = "1.13.5"
 spl-concurrent-merkle-tree = "0.1.1"
 spl-merkle-tree-reference = "0.1.0"
 spl-noop = { version = "0.1.2", features = ["no-entrypoint"] }
