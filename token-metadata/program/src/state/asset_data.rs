@@ -106,5 +106,5 @@ pub struct ProgrammableConfig {
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub enum DelegateState {
-    Sale(Pubkey),
+    Transfer(Pubkey),
 }
