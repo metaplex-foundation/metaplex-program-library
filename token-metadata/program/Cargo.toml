@@ -35,9 +35,5 @@ solana-sdk = "1.13.5"
 solana-program-test = "1.13.5"
 serde = { version = "1.0.147", features = ["derive"]}
 
-
 [lib]
 crate-type = ["cdylib", "lib"]
-
-[profile.release]
-overflow-checks = true     # Enable integer overflow checks.

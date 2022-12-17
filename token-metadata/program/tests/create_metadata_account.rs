@@ -576,8 +576,9 @@ mod create_meta_accounts {
     }
 
     #[tokio::test]
+    #[allow(deprecated)]
     async fn fail_bubblegum_owner() {
-        let mut context = &mut program_test().start_with_context().await;
+        let context = &mut program_test().start_with_context().await;
         let test_metadata = Metadata::new();
         let name = "Test".to_string();
         let symbol = "TST".to_string();

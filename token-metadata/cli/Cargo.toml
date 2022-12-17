@@ -20,8 +20,3 @@ solana-cli-config = "1.13.5"
 mpl-token-metadata = { path="../program", features = [ "no-entrypoint" ] }
 spl-token = { version="3.2.0", features = [ "no-entrypoint" ] }
 spl-associated-token-account = { version ="*", features = [ "no-entrypoint" ] }
-
-
-[profile.release]
-overflow-checks = true     # Enable integer overflow checks.
-

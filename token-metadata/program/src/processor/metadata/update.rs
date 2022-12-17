@@ -90,7 +90,7 @@ fn update_v1<'a>(
             if master_edition.is_none() {
                 return Err(MetadataError::MissingEditionAccount.into());
             }
-            let master_edition_info = master_edition.unwrap();
+            let _master_edition_info = master_edition.unwrap();
         }
         TokenStandard::NonFungible
         | TokenStandard::NonFungibleEdition

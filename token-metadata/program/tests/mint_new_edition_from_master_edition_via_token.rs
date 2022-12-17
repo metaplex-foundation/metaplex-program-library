@@ -2,12 +2,12 @@
 pub mod utils;
 
 use borsh::BorshSerialize;
+use mpl_token_metadata::state::Collection;
 use mpl_token_metadata::{
     error::MetadataError,
     id, instruction,
     state::{Creator, Key, MAX_MASTER_EDITION_LEN},
 };
-use mpl_token_metadata::{instruction::sign_metadata, state::Collection};
 use num_traits::FromPrimitive;
 use solana_program_test::*;
 use solana_sdk::{
@@ -68,7 +68,6 @@ mod mint_new_edition_from_master_edition_via_token {
     async fn success_v2() {
         let mut context = program_test().start_with_context().await;
         let test_metadata = Metadata::new();
-        let payer_key = context.payer.pubkey().clone();
         let creator = Keypair::new();
 
         let creator_pub = creator.pubkey().clone();
@@ -124,7 +123,7 @@ mod mint_new_edition_from_master_edition_via_token {
             &[&creator],
             context.last_blockhash,
         );
-        let result = context.banks_client.process_transaction(tx).await;
+        let _result = context.banks_client.process_transaction(tx).await;
 
         let kpbytes = &context.payer;
         let kp = Keypair::from_bytes(&kpbytes.to_bytes()).unwrap();

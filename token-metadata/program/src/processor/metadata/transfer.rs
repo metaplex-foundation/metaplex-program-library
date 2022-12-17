@@ -109,10 +109,8 @@ fn transfer_v1<'a>(
         if !currently_holding && owner_info.key != &delegate {
             return Err(MetadataError::InvalidOwner.into());
         }
-    } else {
-        if !currently_holding {
-            return Err(MetadataError::InvalidOwner.into());
-        }
+    } else if !currently_holding {
+        return Err(MetadataError::InvalidOwner.into());
     }
 
     if metadata.token_standard.is_none() {
@@ -132,7 +130,7 @@ fn transfer_v1<'a>(
                 assert_valid_authorization(
                     &authorization_data,
                     authorization_rules_info_opt,
-                    &config,
+                    config,
                 )?;
 
                 // We can safely unwrap here because they were all checked for existence
