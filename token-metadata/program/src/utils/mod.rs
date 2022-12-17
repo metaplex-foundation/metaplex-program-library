@@ -20,7 +20,6 @@ pub use collection::*;
 pub use compression::*;
 pub use master_edition::*;
 pub use metadata::*;
-use mpl_utils::token::{get_mint_decimals, get_mint_freeze_authority, get_mint_supply};
 pub use mpl_utils::{
     assert_signer, close_account_raw, create_or_allocate_account_raw,
     resize_or_reallocate_account_raw,
