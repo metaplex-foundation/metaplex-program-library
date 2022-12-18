@@ -532,8 +532,8 @@ pub enum MetadataInstruction {
     #[account(7, name="spl_token_program", desc="SPL Token program")]
     #[account(8, name="spl_ata_program", desc="SPL Associated Token Account program")]
     #[account(9, optional, writable, name="master_edition", desc="Master Edition account")]
-    #[account(10, optional, name="token_auth_rules_program", desc="Token Authorization Rules program")]
-    #[account(11, optional, name="authorization_rules", desc="Token Authorization Rules account")]
+    #[account(10, optional, name="authorization_rules", desc="Token Authorization Rules account")]
+    #[account(11, optional, name="token_auth_rules_program", desc="Token Authorization Rules program")]
     Mint(MintArgs),
 
     /// Updates the metadata of an asset.
@@ -626,7 +626,7 @@ pub enum MetadataInstruction {
     #[account(1, name="delegate_owner", desc="Owner of the delegated account")]
     #[account(2, name="mint", desc="Mint of metadata")]
     #[account(3, writable, name="metadata", desc="Metadata account")]
-    #[account(4, optional, writable, name="master_edition", desc="Master Edition account")]
+    #[account(4, optional, name="master_edition", desc="Master Edition account")]
     #[account(5, signer, name="authority", desc="Authority to approve the delegation")]
     #[account(6, signer, writable, name="payer", desc="Payer")]
     #[account(7, name="system_program", desc="System Program")]
@@ -655,7 +655,7 @@ pub enum MetadataInstruction {
     #[account(1, name="delegate_owner", desc="Owner of the delegated account")]
     #[account(2, name="mint", desc="Mint of metadata")]
     #[account(3, writable, name="metadata", desc="Metadata account")]
-    #[account(4, optional, writable, name="master_edition", desc="Master Edition account")]
+    #[account(4, optional, name="master_edition", desc="Master Edition account")]
     #[account(5, signer, name="authority", desc="Authority to approve the delegation")]
     #[account(6, signer, writable, name="payer", desc="Payer")]
     #[account(7, name="system_program", desc="System Program")]

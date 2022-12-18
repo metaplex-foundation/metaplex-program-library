@@ -337,7 +337,9 @@ pub fn create(
         if initialize_mint {
             AccountMeta::new(mint, true)
         } else {
-            AccountMeta::new_readonly(mint, false)
+            // even with an existing mint, we require the account to be writable since
+            // in some cases the mint authority will be updated
+            AccountMeta::new(mint, false)
         },
         AccountMeta::new_readonly(mint_authority, true),
         AccountMeta::new(payer, true),
@@ -349,10 +351,14 @@ pub fn create(
     // checks whether we have a master edition
     if let Some(master_edition) = master_edition {
         accounts.push(AccountMeta::new(master_edition, false));
+    } else {
+        accounts.push(AccountMeta::new_readonly(crate::id(), false));
     }
     // checks whether we have authorization rules
     if let Some(config) = &asset_data.programmable_config {
         accounts.push(AccountMeta::new_readonly(config.rule_set, false));
+    } else {
+        accounts.push(AccountMeta::new_readonly(crate::id(), false));
     }
 
     Instruction {

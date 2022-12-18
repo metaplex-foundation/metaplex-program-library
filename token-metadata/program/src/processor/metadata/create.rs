@@ -15,6 +15,7 @@ use spl_token::{native_mint::DECIMALS, state::Mint};
 use crate::{
     error::MetadataError,
     instruction::CreateArgs,
+    processor::next_optional_account_info,
     state::{Metadata, TokenMetadataAccount, TokenStandard},
     utils::{
         create_master_edition, process_create_metadata_accounts_logic,
@@ -58,15 +59,15 @@ fn create_v1<'a>(
 ) -> ProgramResult {
     // get the accounts for the instruction
     let CreateAccounts::V1 {
-        metadata,
-        mint,
-        mint_authority,
-        payer,
-        update_authority,
-        system_program,
-        spl_token_program,
-        master_edition,
-        authorization_rules,
+        metadata_info,
+        mint_info,
+        mint_authority_info,
+        payer_info,
+        update_authority_info,
+        system_program_info,
+        spl_token_program_info,
+        master_edition_info,
+        authorization_rules_info,
         ..
     } = args.get_accounts(accounts)?;
     // get the args for the instruction
@@ -78,21 +79,21 @@ fn create_v1<'a>(
 
     // if the account does not exist, we will allocate a new mint
 
-    if mint.data_is_empty() {
+    if mint_info.data_is_empty() {
         // mint account must be a signer in the transaction
-        if !mint.is_signer {
+        if !mint_info.is_signer {
             return Err(MetadataError::MintIsNotSigner.into());
         }
 
         invoke(
             &system_instruction::create_account(
-                payer.key,
-                mint.key,
+                payer_info.key,
+                mint_info.key,
                 Rent::get()?.minimum_balance(spl_token::state::Mint::LEN),
                 spl_token::state::Mint::LEN as u64,
                 &spl_token::id(),
             ),
-            &[payer.clone(), mint.clone()],
+            &[payer_info.clone(), mint_info.clone()],
         )?;
 
         let decimals = match asset_data.token_standard {
@@ -114,16 +115,16 @@ fn create_v1<'a>(
         // initializing the mint account
         invoke(
             &spl_token::instruction::initialize_mint2(
-                spl_token_program.key,
-                mint.key,
-                mint_authority.key,
-                Some(mint_authority.key),
+                spl_token_program_info.key,
+                mint_info.key,
+                mint_authority_info.key,
+                Some(mint_authority_info.key),
                 decimals,
             )?,
-            &[mint.clone(), mint_authority.clone()],
+            &[mint_info.clone(), mint_authority_info.clone()],
         )?;
     } else {
-        let mint: Mint = assert_initialized(mint, MetadataError::Uninitialized)?;
+        let mint: Mint = assert_initialized(mint_info, MetadataError::Uninitialized)?;
         // NonFungible asset must have decimals = 0 and supply no greater than 1
         if matches!(
             asset_data.token_standard,
@@ -139,12 +140,12 @@ fn create_v1<'a>(
     process_create_metadata_accounts_logic(
         program_id,
         CreateMetadataAccountsLogicArgs {
-            metadata_account_info: metadata,
-            mint_info: mint,
-            mint_authority_info: mint_authority,
-            payer_account_info: payer,
-            update_authority_info: update_authority,
-            system_account_info: system_program,
+            metadata_account_info: metadata_info,
+            mint_info,
+            mint_authority_info,
+            payer_account_info: payer_info,
+            update_authority_info,
+            system_account_info: system_program_info,
         },
         asset_data.as_data_v2(),
         false,
@@ -160,17 +161,17 @@ fn create_v1<'a>(
         asset_data.token_standard,
         Some(TokenStandard::NonFungible) | Some(TokenStandard::ProgrammableNonFungible)
     ) {
-        if let Some(master_edition) = master_edition {
+        if let Some(master_edition) = master_edition_info {
             create_master_edition(
                 program_id,
                 master_edition,
-                mint,
-                update_authority,
-                mint_authority,
-                payer,
-                metadata,
-                spl_token_program,
-                system_program,
+                mint_info,
+                update_authority_info,
+                mint_authority_info,
+                payer_info,
+                metadata_info,
+                spl_token_program_info,
+                system_program_info,
                 max_supply,
             )?;
         } else {
@@ -178,8 +179,8 @@ fn create_v1<'a>(
         }
     }
 
-    let mut asset_metadata = Metadata::from_account_info(metadata)?;
-    asset_metadata.token_standard = asset_data.token_standard;
+    let mut metadata = Metadata::from_account_info(metadata_info)?;
+    metadata.token_standard = asset_data.token_standard;
 
     // sets the programmable config (if present) for programmable assets
 
@@ -188,35 +189,35 @@ fn create_v1<'a>(
         Some(TokenStandard::ProgrammableNonFungible)
     ) {
         if let Some(config) = &asset_data.programmable_config {
-            if let Some(authorization_rules) = authorization_rules {
+            if let Some(authorization_rules) = authorization_rules_info {
                 if !cmp_pubkeys(&config.rule_set, authorization_rules.key)
                     || authorization_rules.data_is_empty()
                 {
                     return Err(MetadataError::InvalidAuthorizationRules.into());
                 }
-                asset_metadata.programmable_config = Some(config.clone());
+                metadata.programmable_config = Some(config.clone());
             }
         }
     }
 
     // saves the state
-    asset_metadata.save(&mut metadata.try_borrow_mut_data()?)?;
+    metadata.save(&mut metadata_info.try_borrow_mut_data()?)?;
 
     Ok(())
 }
 
 enum CreateAccounts<'a> {
     V1 {
-        metadata: &'a AccountInfo<'a>,
-        mint: &'a AccountInfo<'a>,
-        mint_authority: &'a AccountInfo<'a>,
-        payer: &'a AccountInfo<'a>,
-        update_authority: &'a AccountInfo<'a>,
-        system_program: &'a AccountInfo<'a>,
-        _sysvars: &'a AccountInfo<'a>,
-        spl_token_program: &'a AccountInfo<'a>,
-        master_edition: Option<&'a AccountInfo<'a>>,
-        authorization_rules: Option<&'a AccountInfo<'a>>,
+        metadata_info: &'a AccountInfo<'a>,
+        mint_info: &'a AccountInfo<'a>,
+        mint_authority_info: &'a AccountInfo<'a>,
+        payer_info: &'a AccountInfo<'a>,
+        update_authority_info: &'a AccountInfo<'a>,
+        system_program_info: &'a AccountInfo<'a>,
+        _sysvars_info: &'a AccountInfo<'a>,
+        spl_token_program_info: &'a AccountInfo<'a>,
+        master_edition_info: Option<&'a AccountInfo<'a>>,
+        authorization_rules_info: Option<&'a AccountInfo<'a>>,
     },
 }
 
@@ -229,40 +230,28 @@ impl CreateArgs {
 
         match *self {
             CreateArgs::V1 { .. } => {
-                let metadata = next_account_info(account_info_iter)?;
-                let mint = next_account_info(account_info_iter)?;
-                let mint_authority = next_account_info(account_info_iter)?;
-                let payer = next_account_info(account_info_iter)?;
-                let update_authority = next_account_info(account_info_iter)?;
-                let system_program = next_account_info(account_info_iter)?;
-                let _sysvars = next_account_info(account_info_iter)?;
-                let spl_token_program = next_account_info(account_info_iter)?;
-
-                let master_edition =
-                    if let Ok(master_edition) = next_account_info(account_info_iter) {
-                        Some(master_edition)
-                    } else {
-                        None
-                    };
-
-                let authorization_rules =
-                    if let Ok(authorization_rules) = next_account_info(account_info_iter) {
-                        Some(authorization_rules)
-                    } else {
-                        None
-                    };
+                let metadata_info = next_account_info(account_info_iter)?;
+                let mint_info = next_account_info(account_info_iter)?;
+                let mint_authority_info = next_account_info(account_info_iter)?;
+                let payer_info = next_account_info(account_info_iter)?;
+                let update_authority_info = next_account_info(account_info_iter)?;
+                let system_program_info = next_account_info(account_info_iter)?;
+                let _sysvars_info = next_account_info(account_info_iter)?;
+                let spl_token_program_info = next_account_info(account_info_iter)?;
+                let master_edition_info = next_optional_account_info(account_info_iter)?;
+                let authorization_rules_info = next_optional_account_info(account_info_iter)?;
 
                 Ok(CreateAccounts::V1 {
-                    authorization_rules,
-                    master_edition,
-                    metadata,
-                    mint,
-                    mint_authority,
-                    payer,
-                    spl_token_program,
-                    system_program,
-                    _sysvars,
-                    update_authority,
+                    authorization_rules_info,
+                    master_edition_info,
+                    metadata_info,
+                    mint_info,
+                    mint_authority_info,
+                    payer_info,
+                    spl_token_program_info,
+                    system_program_info,
+                    _sysvars_info,
+                    update_authority_info,
                 })
             }
         }
