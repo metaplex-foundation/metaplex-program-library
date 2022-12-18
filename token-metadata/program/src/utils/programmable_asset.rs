@@ -72,7 +72,7 @@ pub fn validate<'a>(
     operation: Operation,
     destination_owner: &'a AccountInfo<'a>,
     auth_data: &AuthorizationData,
-) {
+) -> ProgramResult {
     let validate_ix = mpl_token_auth_rules::instruction::validate(
         mpl_token_auth_rules::ID,
         *ruleset.key,
@@ -87,5 +87,4 @@ pub fn validate<'a>(
         &[payer.clone(), ruleset.clone(), destination_owner.clone()],
         &[],
     )
-    .unwrap();
 }

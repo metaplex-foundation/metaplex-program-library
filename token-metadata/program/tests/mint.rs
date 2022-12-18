@@ -52,7 +52,11 @@ mod mint {
             /* authority           */ payer_pubkey,
             /* master edition      */ asset.master_edition,
             /* authorization rules */ None,
-            /* amount              */ MintArgs::V1 { amount: 1 },
+            /* amount              */
+            MintArgs::V1 {
+                amount: 1,
+                authorization_data: None,
+            },
         );
 
         let tx = Transaction::new_signed_with_payer(
@@ -87,7 +91,7 @@ mod mint {
 
         // mints one token
 
-        asset.mint(&mut context, None, 1).await.unwrap();
+        asset.mint(&mut context, None, None, 1).await.unwrap();
 
         assert!(asset.token.is_some());
 
@@ -116,7 +120,7 @@ mod mint {
 
         // mints one token
 
-        asset.mint(&mut context, None, 100).await.unwrap();
+        asset.mint(&mut context, None, None, 100).await.unwrap();
 
         assert!(asset.token.is_some());
 
@@ -145,7 +149,7 @@ mod mint {
 
         // mints one token
 
-        asset.mint(&mut context, None, 50).await.unwrap();
+        asset.mint(&mut context, None, None, 50).await.unwrap();
 
         assert!(asset.token.is_some());
 
@@ -170,6 +174,7 @@ mod mint {
                 &mut context,
                 TokenStandard::ProgrammableNonFungible,
                 None,
+                None,
                 2,
             )
             .await
@@ -184,7 +189,7 @@ mod mint {
 
         let mut asset = DigitalAsset::default();
         let error = asset
-            .create_and_mint(&mut context, TokenStandard::NonFungible, None, 2)
+            .create_and_mint(&mut context, TokenStandard::NonFungible, None, None, 2)
             .await
             .unwrap_err();
 

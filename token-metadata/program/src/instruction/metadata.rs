@@ -52,7 +52,10 @@ pub enum CreateArgs {
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub enum MintArgs {
-    V1 { amount: u64 },
+    V1 {
+        amount: u64,
+        authorization_data: Option<AuthorizationData>,
+    },
 }
 
 #[repr(C)]
@@ -400,8 +403,6 @@ pub fn mint(
     authorization_rules: Option<Pubkey>,
     args: MintArgs,
 ) -> Instruction {
-    println!("Authorization Rules: {:?}", authorization_rules);
-
     let mut accounts = vec![
         AccountMeta::new(token, false),
         AccountMeta::new_readonly(metadata, false),
@@ -413,14 +414,20 @@ pub fn mint(
         AccountMeta::new_readonly(spl_token::id(), false),
         AccountMeta::new_readonly(spl_associated_token_account::id(), false),
     ];
-    // checks whether we have master edition
+    // checks whether we have a master edition
     if let Some(master_edition) = master_edition {
         accounts.push(AccountMeta::new(master_edition, false));
+    } else {
+        accounts.push(AccountMeta::new_readonly(crate::id(), false));
     }
     // checks whether we have authorization rules
     if let Some(authorization_rules) = authorization_rules {
         accounts.push(AccountMeta::new(authorization_rules, false));
         accounts.push(AccountMeta::new_readonly(mpl_token_auth_rules::id(), false));
+    }
+    else {
+        accounts.push(AccountMeta::new_readonly(crate::id(), false));
+        accounts.push(AccountMeta::new_readonly(crate::id(), false));
     }
 
     Instruction {

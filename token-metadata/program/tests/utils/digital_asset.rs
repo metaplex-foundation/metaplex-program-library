@@ -131,6 +131,7 @@ impl DigitalAsset {
         &mut self,
         context: &mut ProgramTestContext,
         authorization_rules: Option<Pubkey>,
+        authorization_data: Option<AuthorizationData>,
         amount: u64,
     ) -> Result<(), BanksClientError> {
         let payer_pubkey = context.payer.pubkey();
@@ -151,7 +152,11 @@ impl DigitalAsset {
             /* authority           */ payer_pubkey,
             /* master edition      */ self.master_edition,
             /* authorization rules */ authorization_rules,
-            /* amount              */ MintArgs::V1 { amount },
+            /* amount              */
+            MintArgs::V1 {
+                amount,
+                authorization_data,
+            },
         );
 
         let tx = Transaction::new_signed_with_payer(
@@ -175,6 +180,7 @@ impl DigitalAsset {
         context: &mut ProgramTestContext,
         token_standard: TokenStandard,
         authorization_rules: Option<Pubkey>,
+        authorization_data: Option<AuthorizationData>,
         amount: u64,
     ) -> Result<(), BanksClientError> {
         // creates the metadata
@@ -182,7 +188,8 @@ impl DigitalAsset {
             .await
             .unwrap();
         // mints tokens
-        self.mint(context, authorization_rules, amount).await
+        self.mint(context, authorization_rules, authorization_data, amount)
+            .await
     }
 
     pub async fn delegate(

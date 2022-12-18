@@ -35,6 +35,7 @@ mod delegate {
                 &mut context,
                 TokenStandard::ProgrammableNonFungible,
                 None,
+                None,
                 1,
             )
             .await
@@ -111,6 +112,7 @@ mod delegate {
             .create_and_mint(
                 &mut context,
                 TokenStandard::ProgrammableNonFungible,
+                None,
                 None,
                 1,
             )

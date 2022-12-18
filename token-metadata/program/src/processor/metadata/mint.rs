@@ -1,3 +1,4 @@
+use mpl_token_auth_rules::payload::{PayloadKey, PayloadType};
 use mpl_utils::{assert_signer, cmp_pubkeys};
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
@@ -12,10 +13,12 @@ use spl_token::state::{Account, Mint};
 use crate::{
     assertions::{
         assert_derivation, assert_initialized, assert_mint_authority_matches_mint, assert_owned_by,
+        programmable::assert_valid_authorization,
     },
     error::MetadataError,
     instruction::MintArgs,
     pda::{EDITION, PREFIX},
+    processor::next_optional_account_info,
     state::{Metadata, TokenMetadataAccount, TokenStandard},
     utils::{freeze, thaw},
 };
@@ -53,59 +56,103 @@ pub fn mint_v1<'a>(
 ) -> ProgramResult {
     // get the accounts for the instruction
     let MintAccounts::V1 {
-        token,
-        metadata,
-        mint,
-        payer,
-        spl_token_program,
-        authority,
-        authorization_rules,
-        master_edition,
+        token_info,
+        metadata_info,
+        mint_info,
+        payer_info,
+        spl_token_program_info,
+        authority_info,
+        master_edition_info,
+        authorization_rules_info,
+        auth_rules_program_info,
         ..
     } = args.get_accounts(accounts)?;
-    msg!(
-        "authorization_rules: {:?}",
-        authorization_rules.map(|a| a.key)
-    );
-    msg!("master_edition: {:?}", master_edition.map(|a| a.key));
     // get the args for the instruction
-    let MintArgs::V1 { amount } = args;
+    let MintArgs::V1 {
+        amount,
+        authorization_data,
+    } = args;
 
     // checks that we have the required signers
-    assert_signer(authority)?;
-    assert_signer(payer)?;
+    assert_signer(authority_info)?;
+    assert_signer(payer_info)?;
 
     // validates the accounts
 
-    assert_owned_by(metadata, program_id)?;
-    let asset_metadata = Metadata::from_account_info(metadata)?;
+    assert_owned_by(metadata_info, program_id)?;
+    let metadata = Metadata::from_account_info(metadata_info)?;
 
-    assert_owned_by(mint, &spl_token::id())?;
-    let mint_account: Mint = assert_initialized(mint)?;
-
-    if asset_metadata.mint != *mint.key {
+    if metadata.mint != *mint_info.key {
         return Err(MetadataError::MintMismatch.into());
     }
 
-    if !cmp_pubkeys(spl_token_program.key, &spl_token::id()) {
+    assert_owned_by(mint_info, &spl_token::id())?;
+    let mint: Mint = assert_initialized(mint_info)?;
+
+    if !cmp_pubkeys(spl_token_program_info.key, &spl_token::id()) {
         return Err(ProgramError::IncorrectProgramId);
+    }
+
+    // validate authorization rules
+
+    if let Some(programmable_config) = &metadata.programmable_config {
+        if let Some(auth_rules_program_info) = auth_rules_program_info {
+            if !cmp_pubkeys(auth_rules_program_info.key, &mpl_token_auth_rules::id()) {
+                return Err(ProgramError::IncorrectProgramId);
+            }
+        } else {
+            msg!("Missing authorization rules program account");
+            return Err(ProgramError::NotEnoughAccountKeys);
+        }
+
+        if let Some(authorization_rules) = authorization_rules_info {
+            assert_owned_by(authorization_rules, &mpl_token_auth_rules::id())?;
+        };
+
+        assert_valid_authorization(
+            &authorization_data,
+            authorization_rules_info,
+            programmable_config,
+        )?;
+        // safe to unwrap since the assert was valid
+        // let auth_pda = authorization_rules_info.unwrap();
+        let mut auth_data = authorization_data.unwrap();
+
+        // add the required input for the operation; since we are minting
+        // new tokens to a specific address, we validate the operation as
+        // a transfer operetion
+        auth_data
+            .payload
+            .insert(PayloadKey::Amount, PayloadType::Number(amount));
+        auth_data
+            .payload
+            .insert(PayloadKey::Target, PayloadType::Pubkey(*token_info.key));
+        /*
+        validate(
+            payer_info,
+            auth_pda,
+            Operation::MigrateClass,
+            token_info,
+            &auth_data,
+        )?;
+        */
     }
 
     // validates the authority
     // - NonFungible must have a "valid" master edition
     // - Fungible must have the authority as the mint_authority
 
-    match asset_metadata.token_standard {
+    match metadata.token_standard {
         Some(TokenStandard::ProgrammableNonFungible) | Some(TokenStandard::NonFungible) => {
             // for NonFungible assets, the mint authority is the master edition
-            if let Some(master_edition) = master_edition {
+            if let Some(master_edition_info) = master_edition_info {
                 assert_derivation(
                     program_id,
-                    master_edition,
+                    master_edition_info,
                     &[
                         PREFIX.as_bytes(),
                         program_id.as_ref(),
-                        mint.key.as_ref(),
+                        mint_info.key.as_ref(),
                         EDITION.as_bytes(),
                     ],
                 )?;
@@ -113,43 +160,17 @@ pub fn mint_v1<'a>(
                 return Err(MetadataError::InvalidMasterEdition.into());
             }
 
-            if mint_account.supply > 0 || amount > 1 {
+            if mint.supply > 0 || amount > 1 {
                 return Err(MetadataError::EditionsMustHaveExactlyOneToken.into());
             }
 
             // authority must be the update_authority of the metadata account
-            if !cmp_pubkeys(&asset_metadata.update_authority, authority.key) {
+            if !cmp_pubkeys(&metadata.update_authority, authority_info.key) {
                 return Err(MetadataError::UpdateAuthorityIncorrect.into());
             }
         }
         _ => {
-            assert_mint_authority_matches_mint(&mint_account.mint_authority, authority)?;
-        }
-    }
-
-    // validates authorization rules
-
-    if matches!(
-        asset_metadata.token_standard,
-        Some(TokenStandard::ProgrammableNonFungible)
-    ) {
-        if let Some(config) = asset_metadata.programmable_config {
-            if let Some(rules) = authorization_rules {
-                if !cmp_pubkeys(&config.rule_set, rules.key) {
-                    return Err(MetadataError::InvalidAuthorizationRules.into());
-                }
-                /*
-                validate(
-                    payer,
-                    rules,
-                    self,
-                    authorization_data.as_ref(),
-                    Some(amount),
-                )?;
-                */
-            } else {
-                return Err(MetadataError::MissingAuthorizationRules.into());
-            }
+            assert_mint_authority_matches_mint(&mint.mint_authority, authority_info)?;
         }
     }
 
@@ -157,38 +178,38 @@ pub fn mint_v1<'a>(
 
     assert_derivation(
         &spl_associated_token_account::id(),
-        token,
+        token_info,
         &[
-            payer.key.as_ref(),
+            payer_info.key.as_ref(),
             spl_token::id().as_ref(),
-            mint.key.as_ref(),
+            mint_info.key.as_ref(),
         ],
     )?;
 
-    if token.data_is_empty() {
+    if token_info.data_is_empty() {
         // creating the associated token account
         invoke(
             &spl_associated_token_account::instruction::create_associated_token_account(
-                payer.key,
-                payer.key,
-                mint.key,
+                payer_info.key,
+                payer_info.key,
+                mint_info.key,
                 &spl_token::id(),
             ),
-            &[payer.clone(), mint.clone(), token.clone()],
+            &[payer_info.clone(), mint_info.clone(), token_info.clone()],
         )?;
     } else {
-        assert_owned_by(token, &spl_token::id())?;
+        assert_owned_by(token_info, &spl_token::id())?;
     }
 
-    msg!("Minting {} token(s) from mint {}", amount, mint.key);
-    let token_account: Account = assert_initialized(token)?;
+    msg!("Minting {} token(s) from mint {}", amount, mint_info.key);
+    let token_account: Account = assert_initialized(token_info)?;
 
-    match asset_metadata.token_standard {
+    match metadata.token_standard {
         Some(TokenStandard::NonFungible) | Some(TokenStandard::ProgrammableNonFungible) => {
             let mut signer_seeds = vec![
                 PREFIX.as_bytes(),
                 program_id.as_ref(),
-                mint.key.as_ref(),
+                mint_info.key.as_ref(),
                 EDITION.as_bytes(),
             ];
 
@@ -197,54 +218,77 @@ pub fn mint_v1<'a>(
             let bump_seed = [bump];
             signer_seeds.push(&bump_seed);
 
-            let master_edition = if let Some(master_edition) = master_edition {
-                master_edition
+            let master_edition_info = if let Some(master_edition_info) = master_edition_info {
+                master_edition_info
             } else {
-                return Err(MetadataError::InvalidMasterEdition.into());
+                msg!("Missing master edition account");
+                return Err(ProgramError::NotEnoughAccountKeys);
             };
 
+            if !cmp_pubkeys(master_edition_info.key, &master_edition_key) {
+                return Err(MetadataError::InvalidMasterEdition.into());
+            }
+
             if matches!(
-                asset_metadata.token_standard,
+                metadata.token_standard,
                 Some(TokenStandard::ProgrammableNonFungible)
             ) && token_account.is_frozen()
             {
                 // thaw the token account for programmable assets; the account
                 // is not frozen if we just initialized it
-                thaw(mint, token, master_edition, spl_token_program)?;
+                thaw(
+                    mint_info,
+                    token_info,
+                    master_edition_info,
+                    spl_token_program_info,
+                )?;
             }
 
             invoke_signed(
                 &spl_token::instruction::mint_to(
-                    spl_token_program.key,
-                    mint.key,
-                    token.key,
+                    spl_token_program_info.key,
+                    mint_info.key,
+                    token_info.key,
                     &master_edition_key,
                     &[],
                     amount,
                 )?,
-                &[mint.clone(), token.clone(), master_edition.clone()],
+                &[
+                    mint_info.clone(),
+                    token_info.clone(),
+                    master_edition_info.clone(),
+                ],
                 &[&signer_seeds],
             )?;
 
             if matches!(
-                asset_metadata.token_standard,
+                metadata.token_standard,
                 Some(TokenStandard::ProgrammableNonFungible)
             ) {
                 // programmable assets are always in a frozen state
-                freeze(mint, token, master_edition, spl_token_program)?;
+                freeze(
+                    mint_info,
+                    token_info,
+                    master_edition_info,
+                    spl_token_program_info,
+                )?;
             }
         }
         _ => {
             invoke(
                 &spl_token::instruction::mint_to(
-                    spl_token_program.key,
-                    mint.key,
-                    token.key,
-                    authority.key,
+                    spl_token_program_info.key,
+                    mint_info.key,
+                    token_info.key,
+                    authority_info.key,
                     &[],
                     amount,
                 )?,
-                &[mint.clone(), token.clone(), authority.clone()],
+                &[
+                    mint_info.clone(),
+                    token_info.clone(),
+                    authority_info.clone(),
+                ],
             )?;
         }
     }
@@ -254,17 +298,18 @@ pub fn mint_v1<'a>(
 
 enum MintAccounts<'a> {
     V1 {
-        token: &'a AccountInfo<'a>,
-        metadata: &'a AccountInfo<'a>,
-        mint: &'a AccountInfo<'a>,
-        payer: &'a AccountInfo<'a>,
-        authority: &'a AccountInfo<'a>,
-        _system_program: &'a AccountInfo<'a>,
-        _sysvars: &'a AccountInfo<'a>,
-        spl_token_program: &'a AccountInfo<'a>,
-        _spl_ata_program: &'a AccountInfo<'a>,
-        master_edition: Option<&'a AccountInfo<'a>>,
-        authorization_rules: Option<&'a AccountInfo<'a>>,
+        token_info: &'a AccountInfo<'a>,
+        metadata_info: &'a AccountInfo<'a>,
+        mint_info: &'a AccountInfo<'a>,
+        payer_info: &'a AccountInfo<'a>,
+        authority_info: &'a AccountInfo<'a>,
+        _system_program_info: &'a AccountInfo<'a>,
+        _sysvars_info: &'a AccountInfo<'a>,
+        spl_token_program_info: &'a AccountInfo<'a>,
+        _spl_ata_program_info: &'a AccountInfo<'a>,
+        master_edition_info: Option<&'a AccountInfo<'a>>,
+        authorization_rules_info: Option<&'a AccountInfo<'a>>,
+        auth_rules_program_info: Option<&'a AccountInfo<'a>>,
     },
 }
 
@@ -277,42 +322,33 @@ impl MintArgs {
 
         match *self {
             MintArgs::V1 { .. } => {
-                let token = next_account_info(account_info_iter)?;
-                let metadata = next_account_info(account_info_iter)?;
-                let mint = next_account_info(account_info_iter)?;
-                let payer = next_account_info(account_info_iter)?;
-                let authority = next_account_info(account_info_iter)?;
-                let _system_program = next_account_info(account_info_iter)?;
-                let _sysvars = next_account_info(account_info_iter)?;
-                let spl_token_program = next_account_info(account_info_iter)?;
-                let _spl_ata_program = next_account_info(account_info_iter)?;
-
-                let master_edition =
-                    if let Ok(master_edition) = next_account_info(account_info_iter) {
-                        Some(master_edition)
-                    } else {
-                        None
-                    };
-
-                let authorization_rules =
-                    if let Ok(authorization_rules) = next_account_info(account_info_iter) {
-                        Some(authorization_rules)
-                    } else {
-                        None
-                    };
+                let token_info = next_account_info(account_info_iter)?;
+                let metadata_info = next_account_info(account_info_iter)?;
+                let mint_info = next_account_info(account_info_iter)?;
+                let payer_info = next_account_info(account_info_iter)?;
+                let authority_info = next_account_info(account_info_iter)?;
+                let _system_program_info = next_account_info(account_info_iter)?;
+                let _sysvars_info = next_account_info(account_info_iter)?;
+                let spl_token_program_info = next_account_info(account_info_iter)?;
+                let _spl_ata_program_info = next_account_info(account_info_iter)?;
+                // optional accounts
+                let master_edition_info = next_optional_account_info(account_info_iter)?;
+                let authorization_rules_info = next_optional_account_info(account_info_iter)?;
+                let auth_rules_program_info = next_optional_account_info(account_info_iter)?;
 
                 Ok(MintAccounts::V1 {
-                    _sysvars,
-                    authorization_rules,
-                    master_edition,
-                    metadata,
-                    mint,
-                    authority,
-                    payer,
-                    _spl_ata_program,
-                    spl_token_program,
-                    _system_program,
-                    token,
+                    token_info,
+                    metadata_info,
+                    mint_info,
+                    payer_info,
+                    authority_info,
+                    _system_program_info,
+                    _sysvars_info,
+                    spl_token_program_info,
+                    _spl_ata_program_info,
+                    master_edition_info,
+                    authorization_rules_info,
+                    auth_rules_program_info,
                 })
             }
         }

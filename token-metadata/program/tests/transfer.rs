@@ -31,7 +31,7 @@ mod transfer {
 
         let mut digital_asset = DigitalAsset::new();
         digital_asset
-            .create_and_mint(&mut context, TokenStandard::NonFungible, None, 1)
+            .create_and_mint(&mut context, TokenStandard::NonFungible, None, None, 1)
             .await
             .unwrap();
 
@@ -80,7 +80,13 @@ mod transfer {
 
         let mut digital_asset = DigitalAsset::new();
         digital_asset
-            .create_and_mint(&mut context, TokenStandard::Fungible, None, mint_amount)
+            .create_and_mint(
+                &mut context,
+                TokenStandard::Fungible,
+                None,
+                None,
+                mint_amount,
+            )
             .await
             .unwrap();
 
@@ -133,6 +139,7 @@ mod transfer {
                 &mut context,
                 TokenStandard::FungibleAsset,
                 None,
+                None,
                 mint_amount,
             )
             .await
@@ -184,7 +191,7 @@ mod transfer {
         // Create a NonFungible token using the old handlers.
         let mut toe_nft = DigitalAsset::new();
         toe_nft
-            .create_and_mint(&mut context, TokenStandard::NonFungible, None, 1)
+            .create_and_mint(&mut context, TokenStandard::NonFungible, None, None, 1)
             .await
             .unwrap();
 
@@ -200,6 +207,7 @@ mod transfer {
             &mut context,
             TokenStandard::ProgrammableNonFungible,
             Some(rule_set),
+            Some(auth_data.clone()),
             1,
         )
         .await
@@ -294,7 +302,7 @@ mod transfer {
 
         let mut digital_asset = DigitalAsset::new();
         digital_asset
-            .create_and_mint(&mut context, TokenStandard::NonFungible, None, 1)
+            .create_and_mint(&mut context, TokenStandard::NonFungible, None, None, 1)
             .await
             .unwrap();
 

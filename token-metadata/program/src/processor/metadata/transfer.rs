@@ -154,7 +154,7 @@ fn transfer_v1<'a>(
                     Operation::Transfer,
                     destination_owner_info,
                     &auth_data,
-                );
+                )?;
             }
 
             // We need the edition account regardless of if there's a rule set,

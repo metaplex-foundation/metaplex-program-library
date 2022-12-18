@@ -533,7 +533,7 @@ pub enum MetadataInstruction {
     #[account(8, name="spl_ata_program", desc="SPL Associated Token Account program")]
     #[account(9, optional, writable, name="master_edition", desc="Master Edition account")]
     #[account(10, optional, name="authorization_rules", desc="Token Authorization Rules account")]
-    #[account(11, optional, name="token_auth_rules_program", desc="Token Authorization Rules program")]
+    #[account(11, optional, name="auth_rules_program", desc="Token Authorization Rules program")]
     Mint(MintArgs),
 
     /// Updates the metadata of an asset.
@@ -601,7 +601,7 @@ pub enum MetadataInstruction {
     #[account(8, name="spl_ata_program", desc="SPL Associated Token Account program")]
     #[account(9, name="system_program", desc="System Program")]
     #[account(10, name="sysvar_instructions", desc="Instructions sysvar account")]
-    #[account(11, optional, name="authorization_rules", desc="Token Authorization Rules account")]
+    #[account(11, optional, writable, name="authorization_rules", desc="Token Authorization Rules account")]
     #[account(12, optional, name="authorization_rules_program", desc="Token Authorization Rules Program")]
     Transfer(TransferArgs),
 
