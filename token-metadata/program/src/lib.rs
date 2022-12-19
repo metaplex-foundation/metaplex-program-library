@@ -16,6 +16,7 @@ pub mod escrow {
     pub use crate::{instruction::escrow::*, processor::escrow::*};
 }
 
+pub mod accounts;
 pub mod entrypoint;
 pub mod error;
 pub mod instruction;
