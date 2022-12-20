@@ -20,7 +20,7 @@ use crate::{
     utils::{freeze, thaw, validate},
 };
 
-const TRANSFER_EXPECTED_ACCOUNTS_LEN: usize = 13;
+const EXPECTED_ACCOUNTS_LEN: usize = 13;
 
 pub fn transfer<'a>(
     program_id: &Pubkey,
@@ -241,7 +241,7 @@ impl TransferArgs {
         accounts: &'a [AccountInfo<'a>],
     ) -> Result<TransferAccounts<'a>, ProgramError> {
         // validates that we got the correct number of accounts
-        if accounts.len() < TRANSFER_EXPECTED_ACCOUNTS_LEN {
+        if accounts.len() < EXPECTED_ACCOUNTS_LEN {
             return Err(ProgramError::NotEnoughAccountKeys);
         }
 

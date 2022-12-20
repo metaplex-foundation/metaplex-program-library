@@ -531,15 +531,13 @@ pub fn update(
         AccountMeta::new_readonly(mint_account, false),
         AccountMeta::new_readonly(solana_program::system_program::id(), false),
         AccountMeta::new_readonly(sysvar::instructions::id(), false),
+        AccountMeta::new(master_edition_account.unwrap_or(crate::ID), false),
     ];
-
-    if let Some(master_edition_account) = master_edition_account {
-        accounts.push(AccountMeta::new(master_edition_account, false));
-    }
 
     match authority {
         AuthorityType::UpdateAuthority(authority) => {
-            accounts.push(AccountMeta::new_readonly(authority, true))
+            accounts.push(AccountMeta::new_readonly(authority, true));
+            accounts.push(AccountMeta::new_readonly(crate::ID, false));
         }
         AuthorityType::Holder {
             holder,
@@ -551,8 +549,11 @@ pub fn update(
     }
 
     if let Some(authorization_rules) = authorization_rules {
-        accounts.push(AccountMeta::new_readonly(mpl_token_auth_rules::ID, false));
+        accounts.push(AccountMeta::new_readonly(mpl_token_auth_rules::id(), false));
         accounts.push(AccountMeta::new_readonly(authorization_rules, false));
+    } else {
+        accounts.push(AccountMeta::new_readonly(crate::id(), false));
+        accounts.push(AccountMeta::new_readonly(crate::id(), false));
     }
 
     if let Some(additional_accounts) = additional_accounts {
