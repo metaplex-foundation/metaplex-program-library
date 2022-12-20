@@ -18,7 +18,7 @@ import * as beetSolana from '@metaplex-foundation/beet-solana';
  * @private
  */
 export type DelegateStateRecord = {
-  Sale: { fields: [web3.PublicKey] };
+  Transfer: { fields: [web3.PublicKey] };
 };
 
 /**
@@ -34,8 +34,9 @@ export type DelegateStateRecord = {
  */
 export type DelegateState = beet.DataEnumKeyAsKind<DelegateStateRecord>;
 
-export const isDelegateStateSale = (x: DelegateState): x is DelegateState & { __kind: 'Sale' } =>
-  x.__kind === 'Sale';
+export const isDelegateStateTransfer = (
+  x: DelegateState,
+): x is DelegateState & { __kind: 'Transfer' } => x.__kind === 'Transfer';
 
 /**
  * @category userTypes
@@ -43,10 +44,10 @@ export const isDelegateStateSale = (x: DelegateState): x is DelegateState & { __
  */
 export const delegateStateBeet = beet.dataEnum<DelegateStateRecord>([
   [
-    'Sale',
-    new beet.BeetArgsStruct<DelegateStateRecord['Sale']>(
+    'Transfer',
+    new beet.BeetArgsStruct<DelegateStateRecord['Transfer']>(
       [['fields', beet.fixedSizeTuple([beetSolana.publicKey])]],
-      'DelegateStateRecord["Sale"]',
+      'DelegateStateRecord["Transfer"]',
     ),
   ],
 ]) as beet.FixableBeet<DelegateState>;

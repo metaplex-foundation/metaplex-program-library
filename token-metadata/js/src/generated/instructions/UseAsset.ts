@@ -69,10 +69,8 @@ export const useAssetInstructionDiscriminator = 45;
 /**
  * Creates a _UseAsset_ instruction.
  *
- * Optional accounts that are not provided will be omitted from the accounts
- * array passed with the instruction.
- * An optional account that is set cannot follow an optional account that is unset.
- * Otherwise an Error is raised.
+ * Optional accounts that are not provided default to the program ID since
+ * this was indicated in the IDL from which this instruction was generated.
  *
  * @param accounts that will be accessed while the instruction is processed
  * @param args to provide as instruction data to the program
@@ -131,39 +129,22 @@ export function createUseAssetInstruction(
       isWritable: false,
       isSigner: false,
     },
+    {
+      pubkey: accounts.useAuthorityRecord ?? programId,
+      isWritable: accounts.useAuthorityRecord != null,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.authorizationRules ?? programId,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.authorizationRulesProgram ?? programId,
+      isWritable: false,
+      isSigner: false,
+    },
   ];
-
-  if (accounts.useAuthorityRecord != null) {
-    keys.push({
-      pubkey: accounts.useAuthorityRecord,
-      isWritable: true,
-      isSigner: false,
-    });
-  }
-  if (accounts.authorizationRules != null) {
-    if (accounts.useAuthorityRecord == null) {
-      throw new Error(
-        "When providing 'authorizationRules' then 'accounts.useAuthorityRecord' need(s) to be provided as well.",
-      );
-    }
-    keys.push({
-      pubkey: accounts.authorizationRules,
-      isWritable: false,
-      isSigner: false,
-    });
-  }
-  if (accounts.authorizationRulesProgram != null) {
-    if (accounts.useAuthorityRecord == null || accounts.authorizationRules == null) {
-      throw new Error(
-        "When providing 'authorizationRulesProgram' then 'accounts.useAuthorityRecord', 'accounts.authorizationRules' need(s) to be provided as well.",
-      );
-    }
-    keys.push({
-      pubkey: accounts.authorizationRulesProgram,
-      isWritable: false,
-      isSigner: false,
-    });
-  }
 
   const ix = new web3.TransactionInstruction({
     programId,

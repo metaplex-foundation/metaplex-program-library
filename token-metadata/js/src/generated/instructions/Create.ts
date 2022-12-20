@@ -67,10 +67,8 @@ export const createInstructionDiscriminator = 41;
 /**
  * Creates a _Create_ instruction.
  *
- * Optional accounts that are not provided will be omitted from the accounts
- * array passed with the instruction.
- * An optional account that is set cannot follow an optional account that is unset.
- * Otherwise an Error is raised.
+ * Optional accounts that are not provided default to the program ID since
+ * this was indicated in the IDL from which this instruction was generated.
  *
  * @param accounts that will be accessed while the instruction is processed
  * @param args to provide as instruction data to the program
@@ -129,27 +127,17 @@ export function createCreateInstruction(
       isWritable: false,
       isSigner: false,
     },
+    {
+      pubkey: accounts.masterEdition ?? programId,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.authorizationRules ?? programId,
+      isWritable: false,
+      isSigner: false,
+    },
   ];
-
-  if (accounts.masterEdition != null) {
-    keys.push({
-      pubkey: accounts.masterEdition,
-      isWritable: false,
-      isSigner: false,
-    });
-  }
-  if (accounts.authorizationRules != null) {
-    if (accounts.masterEdition == null) {
-      throw new Error(
-        "When providing 'authorizationRules' then 'accounts.masterEdition' need(s) to be provided as well.",
-      );
-    }
-    keys.push({
-      pubkey: accounts.authorizationRules,
-      isWritable: false,
-      isSigner: false,
-    });
-  }
 
   const ix = new web3.TransactionInstruction({
     programId,

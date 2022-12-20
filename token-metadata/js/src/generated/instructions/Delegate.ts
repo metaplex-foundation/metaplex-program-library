@@ -40,7 +40,7 @@ export const DelegateStruct = new beet.FixableBeetArgsStruct<
  * @property [] delegateOwner Owner of the delegated account
  * @property [] mint Mint of metadata
  * @property [_writable_] metadata Metadata account
- * @property [_writable_] masterEdition (optional) Master Edition account
+ * @property [] masterEdition (optional) Master Edition account
  * @property [**signer**] authority Authority to approve the delegation
  * @property [_writable_, **signer**] payer Payer
  * @property [] sysvarInstructions Instructions sysvar account
@@ -73,10 +73,8 @@ export const delegateInstructionDiscriminator = 48;
 /**
  * Creates a _Delegate_ instruction.
  *
- * Optional accounts that are not provided will be omitted from the accounts
- * array passed with the instruction.
- * An optional account that is set cannot follow an optional account that is unset.
- * Otherwise an Error is raised.
+ * Optional accounts that are not provided default to the program ID since
+ * this was indicated in the IDL from which this instruction was generated.
  *
  * @param accounts that will be accessed while the instruction is processed
  * @param args to provide as instruction data to the program
@@ -115,92 +113,52 @@ export function createDelegateInstruction(
       isWritable: true,
       isSigner: false,
     },
+    {
+      pubkey: accounts.masterEdition ?? programId,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.authority,
+      isWritable: false,
+      isSigner: true,
+    },
+    {
+      pubkey: accounts.payer,
+      isWritable: true,
+      isSigner: true,
+    },
+    {
+      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.sysvarInstructions,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.splTokenProgram ?? programId,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.tokenAccount ?? programId,
+      isWritable: accounts.tokenAccount != null,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.authorizationRules ?? programId,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.authorizationRulesProgram ?? programId,
+      isWritable: false,
+      isSigner: false,
+    },
   ];
-
-  if (accounts.masterEdition != null) {
-    keys.push({
-      pubkey: accounts.masterEdition,
-      isWritable: true,
-      isSigner: false,
-    });
-  }
-  keys.push({
-    pubkey: accounts.authority,
-    isWritable: false,
-    isSigner: true,
-  });
-  keys.push({
-    pubkey: accounts.payer,
-    isWritable: true,
-    isSigner: true,
-  });
-  keys.push({
-    pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
-    isWritable: false,
-    isSigner: false,
-  });
-  keys.push({
-    pubkey: accounts.sysvarInstructions,
-    isWritable: false,
-    isSigner: false,
-  });
-  if (accounts.splTokenProgram != null) {
-    if (accounts.masterEdition == null) {
-      throw new Error(
-        "When providing 'splTokenProgram' then 'accounts.masterEdition' need(s) to be provided as well.",
-      );
-    }
-    keys.push({
-      pubkey: accounts.splTokenProgram,
-      isWritable: false,
-      isSigner: false,
-    });
-  }
-  if (accounts.tokenAccount != null) {
-    if (accounts.masterEdition == null || accounts.splTokenProgram == null) {
-      throw new Error(
-        "When providing 'tokenAccount' then 'accounts.masterEdition', 'accounts.splTokenProgram' need(s) to be provided as well.",
-      );
-    }
-    keys.push({
-      pubkey: accounts.tokenAccount,
-      isWritable: true,
-      isSigner: false,
-    });
-  }
-  if (accounts.authorizationRules != null) {
-    if (
-      accounts.masterEdition == null ||
-      accounts.splTokenProgram == null ||
-      accounts.tokenAccount == null
-    ) {
-      throw new Error(
-        "When providing 'authorizationRules' then 'accounts.masterEdition', 'accounts.splTokenProgram', 'accounts.tokenAccount' need(s) to be provided as well.",
-      );
-    }
-    keys.push({
-      pubkey: accounts.authorizationRules,
-      isWritable: false,
-      isSigner: false,
-    });
-  }
-  if (accounts.authorizationRulesProgram != null) {
-    if (
-      accounts.masterEdition == null ||
-      accounts.splTokenProgram == null ||
-      accounts.tokenAccount == null ||
-      accounts.authorizationRules == null
-    ) {
-      throw new Error(
-        "When providing 'authorizationRulesProgram' then 'accounts.masterEdition', 'accounts.splTokenProgram', 'accounts.tokenAccount', 'accounts.authorizationRules' need(s) to be provided as well.",
-      );
-    }
-    keys.push({
-      pubkey: accounts.authorizationRulesProgram,
-      isWritable: false,
-      isSigner: false,
-    });
-  }
 
   const ix = new web3.TransactionInstruction({
     programId,

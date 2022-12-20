@@ -62,15 +62,13 @@ export type MigrateInstructionAccounts = {
   authorizationRules?: web3.PublicKey;
 };
 
-export const migrateInstructionDiscriminator = 49;
+export const migrateInstructionDiscriminator = 50;
 
 /**
  * Creates a _Migrate_ instruction.
  *
- * Optional accounts that are not provided will be omitted from the accounts
- * array passed with the instruction.
- * An optional account that is set cannot follow an optional account that is unset.
- * Otherwise an Error is raised.
+ * Optional accounts that are not provided default to the program ID since
+ * this was indicated in the IDL from which this instruction was generated.
  *
  * @param accounts that will be accessed while the instruction is processed
  * @param args to provide as instruction data to the program
@@ -134,15 +132,12 @@ export function createMigrateInstruction(
       isWritable: false,
       isSigner: false,
     },
-  ];
-
-  if (accounts.authorizationRules != null) {
-    keys.push({
-      pubkey: accounts.authorizationRules,
+    {
+      pubkey: accounts.authorizationRules ?? programId,
       isWritable: false,
       isSigner: false,
-    });
-  }
+    },
+  ];
 
   const ix = new web3.TransactionInstruction({
     programId,

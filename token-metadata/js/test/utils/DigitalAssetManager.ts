@@ -5,6 +5,7 @@ import {
   Metadata,
   ProgrammableConfig,
   TokenStandard,
+  AuthorizationData,
 } from 'src/generated';
 import { InitTransactions } from '../setup';
 import test from 'tape';
@@ -23,13 +24,21 @@ export class DigitalAssetManager {
     this.masterEdition = masterEdition;
   }
 
+  emptyAuthorizationData(): AuthorizationData {
+    return {
+      payload: {
+        map: new Map(),
+      },
+    };
+  }
+
   async getAssetData(connection: Connection): Promise<AssetData> {
     const md = await Metadata.fromAccountAddress(connection, this.metadata);
 
     let delegateState: DelegateState | null = null;
     if (md.delegate != null) {
       delegateState = {
-        __kind: 'Sale',
+        __kind: 'Transfer',
         fields: [md.delegate],
       };
     }
@@ -129,6 +138,7 @@ export async function createAndMintDefaultAsset(
     mint,
     metadata,
     masterEdition,
+    daManager.emptyAuthorizationData(),
     amount,
     handler,
   );

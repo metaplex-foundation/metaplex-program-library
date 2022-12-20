@@ -10,6 +10,7 @@ pub(crate) mod master_edition;
 pub(crate) mod metadata;
 pub(crate) mod programmable;
 pub(crate) mod reservation;
+pub(crate) mod token_auth_payload;
 pub(crate) mod uses;
 
 use std::io::ErrorKind;

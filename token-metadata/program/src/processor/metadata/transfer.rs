@@ -252,7 +252,7 @@ impl TransferArgs {
                 let spl_associated_token_program_info = try_get_account_info(accounts, 8)?;
                 let system_program_info = try_get_account_info(accounts, 9)?;
                 let sysvar_instructions_info = try_get_account_info(accounts, 10)?;
-                let _mpl_token_auth_rules_info = try_get_account_info(accounts, 11)?;
+                let _mpl_token_auth_rules_info = try_get_optional_account_info(accounts, 11)?;
                 let authorization_rules_opt_info = try_get_optional_account_info(accounts, 12)?;
 
                 Ok(TransferAccounts::V1 {

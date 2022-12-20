@@ -30,6 +30,8 @@ import {
   TokenStandard,
   TransferInstructionAccounts,
   TransferInstructionArgs,
+  AuthorizationData,
+  Payload,
 } from '../../src/generated';
 import { Test } from 'tape';
 import { amman } from '.';
@@ -119,11 +121,11 @@ export class InitTransactions {
       );
       amman.addr.addLabel('Master Edition Account', masterEdition);
 
-      createIx.keys.push({
+      createIx.keys[8] = {
         pubkey: masterEdition,
         isSigner: false,
         isWritable: true,
-      });
+      };
     }
 
     // this test always initializes the mint, we we need to set the
@@ -151,6 +153,7 @@ export class InitTransactions {
     mint: PublicKey,
     metadata: PublicKey,
     masterEdition: PublicKey,
+    authorizationData: AuthorizationData | null = null,
     amount: number,
     handler: PayerTransactionHandler,
   ): Promise<{ tx: ConfirmedTransactionAssertablePromise; token: PublicKey }> {
@@ -173,10 +176,21 @@ export class InitTransactions {
       masterEdition,
     };
 
+    const payload: Payload = {
+      map: new Map(),
+    };
+
+    if (!authorizationData) {
+      authorizationData = {
+        payload,
+      };
+    }
+
     const mintArgs: MintInstructionArgs = {
       mintArgs: {
         __kind: 'V1',
         amount,
+        authorizationData,
       },
     };
 
@@ -236,6 +250,8 @@ export class InitTransactions {
     };
 
     const transferIx = createTransferInstruction(transferAcccounts, transferArgs);
+
+    console.log('accounts length: ' + transferIx.keys.length);
 
     const tx = new Transaction().add(transferIx);
 

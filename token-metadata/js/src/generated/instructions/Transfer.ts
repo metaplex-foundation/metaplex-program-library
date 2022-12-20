@@ -46,7 +46,7 @@ export const TransferStruct = new beet.FixableBeetArgsStruct<
  * @property [] splTokenProgram SPL Token Program
  * @property [] splAtaProgram SPL Associated Token Account program
  * @property [] sysvarInstructions Instructions sysvar account
- * @property [] authorizationRules (optional) Token Authorization Rules account
+ * @property [_writable_] authorizationRules (optional) Token Authorization Rules account
  * @property [] authorizationRulesProgram (optional) Token Authorization Rules Program
  * @category Instructions
  * @category Transfer
@@ -73,10 +73,8 @@ export const transferInstructionDiscriminator = 46;
 /**
  * Creates a _Transfer_ instruction.
  *
- * Optional accounts that are not provided will be omitted from the accounts
- * array passed with the instruction.
- * An optional account that is set cannot follow an optional account that is unset.
- * Otherwise an Error is raised.
+ * Optional accounts that are not provided default to the program ID since
+ * this was indicated in the IDL from which this instruction was generated.
  *
  * @param accounts that will be accessed while the instruction is processed
  * @param args to provide as instruction data to the program
@@ -115,69 +113,52 @@ export function createTransferInstruction(
       isWritable: false,
       isSigner: false,
     },
+    {
+      pubkey: accounts.edition ?? programId,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.destination,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.destinationAta,
+      isWritable: true,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.splTokenProgram,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.splAtaProgram,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.sysvarInstructions,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.authorizationRules ?? programId,
+      isWritable: accounts.authorizationRules != null,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.authorizationRulesProgram ?? programId,
+      isWritable: false,
+      isSigner: false,
+    },
   ];
-
-  if (accounts.edition != null) {
-    keys.push({
-      pubkey: accounts.edition,
-      isWritable: false,
-      isSigner: false,
-    });
-  }
-  keys.push({
-    pubkey: accounts.destination,
-    isWritable: false,
-    isSigner: false,
-  });
-  keys.push({
-    pubkey: accounts.destinationAta,
-    isWritable: true,
-    isSigner: false,
-  });
-  keys.push({
-    pubkey: accounts.splTokenProgram,
-    isWritable: false,
-    isSigner: false,
-  });
-  keys.push({
-    pubkey: accounts.splAtaProgram,
-    isWritable: false,
-    isSigner: false,
-  });
-  keys.push({
-    pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
-    isWritable: false,
-    isSigner: false,
-  });
-  keys.push({
-    pubkey: accounts.sysvarInstructions,
-    isWritable: false,
-    isSigner: false,
-  });
-  if (accounts.authorizationRules != null) {
-    if (accounts.edition == null) {
-      throw new Error(
-        "When providing 'authorizationRules' then 'accounts.edition' need(s) to be provided as well.",
-      );
-    }
-    keys.push({
-      pubkey: accounts.authorizationRules,
-      isWritable: false,
-      isSigner: false,
-    });
-  }
-  if (accounts.authorizationRulesProgram != null) {
-    if (accounts.edition == null || accounts.authorizationRules == null) {
-      throw new Error(
-        "When providing 'authorizationRulesProgram' then 'accounts.edition', 'accounts.authorizationRules' need(s) to be provided as well.",
-      );
-    }
-    keys.push({
-      pubkey: accounts.authorizationRulesProgram,
-      isWritable: false,
-      isSigner: false,
-    });
-  }
 
   const ix = new web3.TransactionInstruction({
     programId,
