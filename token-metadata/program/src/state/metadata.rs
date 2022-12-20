@@ -199,11 +199,7 @@ impl Metadata {
         asset_data.uses = self.uses;
         asset_data.collection_details = self.collection_details;
         asset_data.programmable_config = self.programmable_config;
-        let delegate_state = if let Some(delegate) = self.delegate {
-            Some(DelegateState::Transfer(delegate))
-        } else {
-            None
-        };
+        let delegate_state = self.delegate.map(DelegateState::Transfer);
         asset_data.delegate_state = delegate_state;
 
         asset_data

@@ -424,8 +424,7 @@ pub fn mint(
     if let Some(authorization_rules) = authorization_rules {
         accounts.push(AccountMeta::new(authorization_rules, false));
         accounts.push(AccountMeta::new_readonly(mpl_token_auth_rules::id(), false));
-    }
-    else {
+    } else {
         accounts.push(AccountMeta::new_readonly(crate::id(), false));
         accounts.push(AccountMeta::new_readonly(crate::id(), false));
     }
@@ -471,25 +470,16 @@ pub fn transfer(
         AccountMeta::new(token, false),
         AccountMeta::new(metadata_account, false),
         AccountMeta::new_readonly(mint_account, false),
-    ];
-
-    if let Some(edition) = edition {
-        accounts.push(AccountMeta::new(edition, false));
-    };
-
-    accounts.extend(vec![
+        AccountMeta::new(edition.unwrap_or(crate::ID), false),
         AccountMeta::new_readonly(destination_owner, false),
         AccountMeta::new(destination_token, false),
         AccountMeta::new_readonly(spl_token::ID, false),
         AccountMeta::new_readonly(spl_associated_token_account::ID, false),
         AccountMeta::new_readonly(solana_program::system_program::ID, false),
         AccountMeta::new_readonly(sysvar::instructions::ID, false),
-    ]);
-
-    if let Some(authorization_rules) = authorization_rules {
-        accounts.push(AccountMeta::new_readonly(mpl_token_auth_rules::ID, false));
-        accounts.push(AccountMeta::new(authorization_rules, false));
-    }
+        AccountMeta::new_readonly(mpl_token_auth_rules::ID, false),
+        AccountMeta::new(authorization_rules.unwrap_or(crate::ID), false),
+    ];
 
     if let Some(additional_accounts) = additional_accounts {
         accounts.extend(additional_accounts);
