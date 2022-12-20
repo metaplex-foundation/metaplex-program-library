@@ -27,7 +27,7 @@ export type EscrowConstraintModelArgs = {
   schemaUri: beet.COption<string>;
   royalties: Map<RoyaltyInstruction, Partial<beet.bignum>>;
   royaltyBalance: beet.bignum;
-  padding: number;
+  padding: number[] /* size: 32 */;
 };
 /**
  * Holds the data for the {@link EscrowConstraintModel} Account and provides de/serialization
@@ -47,7 +47,7 @@ export class EscrowConstraintModel implements EscrowConstraintModelArgs {
     readonly schemaUri: beet.COption<string>,
     readonly royalties: Map<RoyaltyInstruction, Partial<beet.bignum>>,
     readonly royaltyBalance: beet.bignum,
-    readonly padding: number,
+    readonly padding: number[] /* size: 32 */,
   ) {}
 
   /**
@@ -214,7 +214,7 @@ export const escrowConstraintModelBeet = new beet.FixableBeetStruct<
     ['schemaUri', beet.coption(beet.utf8String)],
     ['royalties', beet.map(royaltyInstructionBeet, beet.u64)],
     ['royaltyBalance', beet.u64],
-    ['padding', beet.u8],
+    ['padding', beet.uniformFixedSizeArray(beet.u8, 32)],
   ],
   EscrowConstraintModel.fromArgs,
   'EscrowConstraintModel',

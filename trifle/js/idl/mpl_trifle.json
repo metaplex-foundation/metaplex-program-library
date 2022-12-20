@@ -1,5 +1,5 @@
 {
-  "version": "0.3.1",
+  "version": "0.3.2",
   "name": "mpl_trifle",
   "instructions": [
     {
@@ -751,7 +751,12 @@
           },
           {
             "name": "padding",
-            "type": "u8"
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
           }
         ]
       }
@@ -790,7 +795,12 @@
           },
           {
             "name": "padding",
-            "type": "u8"
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
           }
         ]
       }

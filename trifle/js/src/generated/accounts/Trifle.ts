@@ -21,7 +21,7 @@ export type TrifleArgs = {
   tokenEscrow: web3.PublicKey;
   tokens: Map<string, TokenAmount[]>;
   escrowConstraintModel: web3.PublicKey;
-  padding: number;
+  padding: number[] /* size: 32 */;
 };
 /**
  * Holds the data for the {@link Trifle} Account and provides de/serialization
@@ -36,7 +36,7 @@ export class Trifle implements TrifleArgs {
     readonly tokenEscrow: web3.PublicKey,
     readonly tokens: Map<string, TokenAmount[]>,
     readonly escrowConstraintModel: web3.PublicKey,
-    readonly padding: number,
+    readonly padding: number[] /* size: 32 */,
   ) {}
 
   /**
@@ -159,7 +159,7 @@ export const trifleBeet = new beet.FixableBeetStruct<Trifle, TrifleArgs>(
     ['tokenEscrow', beetSolana.publicKey],
     ['tokens', beet.map(beet.utf8String, beet.array(tokenAmountBeet))],
     ['escrowConstraintModel', beetSolana.publicKey],
-    ['padding', beet.u8],
+    ['padding', beet.uniformFixedSizeArray(beet.u8, 32)],
   ],
   Trifle.fromArgs,
   'Trifle',
