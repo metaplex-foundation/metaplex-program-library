@@ -17,7 +17,7 @@ pub struct Trifle {
     /// The pubkey of the Escrow Constraint Model
     pub escrow_constraint_model: Pubkey,
     /// Buffer for future expansion
-    pub padding: u8,
+    pub padding: [u8; 32],
 }
 
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
@@ -39,7 +39,7 @@ impl Default for Trifle {
             token_escrow: Pubkey::default(),
             tokens: HashMap::new(),
             escrow_constraint_model: Pubkey::default(),
-            padding: 0,
+            padding: [0; 32],
         }
     }
 }
