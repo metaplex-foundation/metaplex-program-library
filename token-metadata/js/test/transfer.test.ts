@@ -18,8 +18,6 @@ test('Transfer: NonFungible', async (t) => {
     payer,
   );
 
-  console.log('created and minted');
-
   const owner = payer;
   const destination = Keypair.generate();
   const destinationToken = await createAssociatedTokenAccount(
@@ -29,8 +27,6 @@ test('Transfer: NonFungible', async (t) => {
     destination.publicKey,
   );
   const amount = 1;
-
-  console.log('created destination token account');
 
   const { tx: transferTx } = await API.transfer(
     owner,
@@ -43,8 +39,6 @@ test('Transfer: NonFungible', async (t) => {
     amount,
     handler,
   );
-
-  console.log('transfer tx created');
 
   await transferTx.assertSuccess(t);
 });

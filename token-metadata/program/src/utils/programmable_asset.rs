@@ -7,6 +7,7 @@ use crate::{
     assertions::assert_derivation,
     pda::{EDITION, PREFIX},
     processor::AuthorizationData,
+    state::ToAccountMeta,
 };
 
 pub fn freeze<'a>(
@@ -72,13 +73,11 @@ pub fn validate<'a>(
     auth_data: &AuthorizationData,
 ) -> ProgramResult {
     let validate_ix = mpl_token_auth_rules::instruction::validate(
-        mpl_token_auth_rules::ID,
         *ruleset.key,
         operation,
         auth_data.payload.clone(),
         false,
-        vec![],
-        vec![*destination_owner.key],
+        vec![destination_owner.to_account_meta()],
     );
 
     invoke_signed(

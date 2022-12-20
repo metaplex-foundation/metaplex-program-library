@@ -21,7 +21,7 @@ solana-program = "1.13.5"
 mpl-token-vault = { version = "0.1.0", features = ["no-entrypoint"] }
 spl-token = { version = "3.2.0", features = ["no-entrypoint"] }
 spl-associated-token-account = { version = "1.1.1", features = ["no-entrypoint"] }
-mpl-token-auth-rules = { version = "0.1.5", features = ["no-entrypoint", "serde-feature"] }
+mpl-token-auth-rules = { version = "0.1.6", features = ["no-entrypoint", "serde-feature"] }
 thiserror = "1.0"
 borsh = "0.9.2"
 shank = { version = "0.0.11" }

@@ -6,6 +6,7 @@ import { AssetData, PROGRAM_ID, TokenStandard } from '../src/generated';
 import test from 'tape';
 import { amman, InitTransactions, killStuckProcess } from './setup';
 import { spokSameBigint } from './utils';
+import { DigitalAssetManager } from './utils/DigitalAssetManager';
 
 killStuckProcess();
 
@@ -42,13 +43,25 @@ test('Mint: ProgrammableNonFungible asset', async (t) => {
 
   // mint 1 asset
 
+  const amount = 1;
+
   const [masterEdition] = PublicKey.findProgramAddressSync(
     [Buffer.from('metadata'), PROGRAM_ID.toBuffer(), mint.toBuffer(), Buffer.from('edition')],
     PROGRAM_ID,
   );
   amman.addr.addLabel('Master Edition Account', masterEdition);
+  const daManager = new DigitalAssetManager(mint, metadata, masterEdition);
 
-  const { tx: mintTx, token } = await API.mint(t, payer, mint, metadata, masterEdition, handler);
+  const { tx: mintTx, token } = await API.mint(
+    t,
+    payer,
+    mint,
+    metadata,
+    masterEdition,
+    daManager.emptyAuthorizationData(),
+    amount,
+    handler,
+  );
   await mintTx.assertSuccess(t);
 
   const tokenAccount = await getAccount(connection, token);

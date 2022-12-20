@@ -1,5 +1,5 @@
 import spok from 'spok';
-import { AuthorizationData, Data, Metadata } from '../src/generated';
+import { Data, Metadata } from '../src/generated';
 import test from 'tape';
 import { amman, InitTransactions, killStuckProcess } from './setup';
 import { Keypair } from '@solana/web3.js';
@@ -25,11 +25,7 @@ test('Update: NonFungible asset', async (t) => {
     creators: assetData.creators,
   };
 
-  const authorizationData: AuthorizationData = {
-    derivedKeySeeds: null,
-    leafInfo: null,
-    name: 'rule-name',
-  };
+  const authorizationData = daManager.emptyAuthorizationData();
 
   const updateData = {
     newUpdateAuthority: null,
@@ -42,7 +38,7 @@ test('Update: NonFungible asset', async (t) => {
     collectionDetails: null,
     programmableConfig: null,
     delegateState: null,
-    authorizationData: authorizationData,
+    authorizationData,
   };
 
   const { tx: updateTx } = await API.update(

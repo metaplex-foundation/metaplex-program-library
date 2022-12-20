@@ -153,7 +153,7 @@ export class InitTransactions {
     mint: PublicKey,
     metadata: PublicKey,
     masterEdition: PublicKey,
-    authorizationData: AuthorizationData | null = null,
+    authorizationData: AuthorizationData,
     amount: number,
     handler: PayerTransactionHandler,
   ): Promise<{ tx: ConfirmedTransactionAssertablePromise; token: PublicKey }> {
@@ -250,8 +250,6 @@ export class InitTransactions {
     };
 
     const transferIx = createTransferInstruction(transferAcccounts, transferArgs);
-
-    console.log('accounts length: ' + transferIx.keys.length);
 
     const tx = new Transaction().add(transferIx);
 

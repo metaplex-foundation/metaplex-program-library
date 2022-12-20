@@ -74,7 +74,6 @@ pub async fn create_test_ruleset(
 
     // Create a `create` instruction.
     let create_ix = mpl_token_auth_rules::instruction::create(
-        mpl_token_auth_rules::ID,
         payer.pubkey(),
         ruleset_addr,
         serialized_data,
