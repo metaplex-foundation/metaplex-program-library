@@ -1,8 +1,6 @@
-use mpl_token_auth_rules::{
-    payload::{PayloadKey, PayloadType},
-    state::Operation as TempOperation,
-};
+use mpl_token_auth_rules::payload::{PayloadKey, PayloadType};
 use mpl_utils::{assert_signer, token::TokenTransferParams};
+use num_traits::ToPrimitive;
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, msg, program_error::ProgramError,
     pubkey::Pubkey, sysvar,
@@ -113,7 +111,9 @@ fn transfer_v1<'a>(
             return Err(MetadataError::InvalidOwner.into());
         }
         Operation::Transfer
-    };
+    }
+    .to_u16()
+    .ok_or(MetadataError::InvalidOperation)?;
 
     if metadata.token_standard.is_none() {
         return Err(MetadataError::InvalidTokenStandard.into());
@@ -150,13 +150,7 @@ fn transfer_v1<'a>(
                 );
 
                 // This panics if the CPI into the auth rules program fails.
-                validate(
-                    owner_info,
-                    auth_pda,
-                    TempOperation::Transfer, // replace with local type during token-auth-rules refactor
-                    destination_owner_info,
-                    &auth_data,
-                )?;
+                validate(auth_pda, operation, destination_owner_info, &auth_data)?;
             }
 
             // We need the edition account regardless of if there's a rule set,

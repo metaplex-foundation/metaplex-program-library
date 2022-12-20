@@ -1,4 +1,3 @@
-use mpl_token_auth_rules::state::Operation;
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program::invoke_signed,
 };
@@ -67,9 +66,8 @@ pub fn thaw<'a>(
 }
 
 pub fn validate<'a>(
-    payer: &'a AccountInfo<'a>,
     ruleset: &'a AccountInfo<'a>,
-    operation: Operation,
+    operation: u16,
     destination_owner: &'a AccountInfo<'a>,
     auth_data: &AuthorizationData,
 ) -> ProgramResult {
@@ -78,13 +76,14 @@ pub fn validate<'a>(
         *ruleset.key,
         operation,
         auth_data.payload.clone(),
+        false,
         vec![],
         vec![*destination_owner.key],
     );
 
     invoke_signed(
         &validate_ix,
-        &[payer.clone(), ruleset.clone(), destination_owner.clone()],
+        &[ruleset.clone(), destination_owner.clone()],
         &[],
     )
 }

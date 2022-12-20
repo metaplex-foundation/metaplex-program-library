@@ -471,14 +471,14 @@ pub fn transfer(
         AccountMeta::new(metadata_account, false),
         AccountMeta::new_readonly(mint_account, false),
         AccountMeta::new(edition.unwrap_or(crate::ID), false),
-        AccountMeta::new_readonly(destination_owner, false),
+        AccountMeta::new(destination_owner, false),
         AccountMeta::new(destination_token, false),
         AccountMeta::new_readonly(spl_token::ID, false),
         AccountMeta::new_readonly(spl_associated_token_account::ID, false),
         AccountMeta::new_readonly(solana_program::system_program::ID, false),
         AccountMeta::new_readonly(sysvar::instructions::ID, false),
         AccountMeta::new_readonly(mpl_token_auth_rules::ID, false),
-        AccountMeta::new(authorization_rules.unwrap_or(crate::ID), false),
+        AccountMeta::new_readonly(authorization_rules.unwrap_or(crate::ID), false),
     ];
 
     if let Some(additional_accounts) = additional_accounts {
