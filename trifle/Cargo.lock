@@ -1808,7 +1808,7 @@ dependencies = [
 
 [[package]]
 name = "mpl-trifle"
-version = "0.3.1"
+version = "0.3.2"
 dependencies = [
  "borsh",
  "modular-bitfield",
