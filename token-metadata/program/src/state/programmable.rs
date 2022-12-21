@@ -7,6 +7,7 @@ pub enum Operation {
     Transfer,
     DelegatedTransfer,
     MigrateClass,
+    Update,
 }
 
 pub trait ToAccountMeta {

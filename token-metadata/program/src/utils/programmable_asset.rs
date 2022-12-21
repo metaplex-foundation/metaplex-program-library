@@ -69,7 +69,7 @@ pub fn thaw<'a>(
 pub fn validate<'a>(
     ruleset: &'a AccountInfo<'a>,
     operation: u16,
-    destination_owner: &'a AccountInfo<'a>,
+    target: &'a AccountInfo<'a>,
     auth_data: &AuthorizationData,
 ) -> ProgramResult {
     let validate_ix = mpl_token_auth_rules::instruction::validate(
@@ -77,12 +77,8 @@ pub fn validate<'a>(
         operation,
         auth_data.payload.clone(),
         false,
-        vec![destination_owner.to_account_meta()],
+        vec![target.to_account_meta()],
     );
 
-    invoke_signed(
-        &validate_ix,
-        &[ruleset.clone(), destination_owner.clone()],
-        &[],
-    )
+    invoke_signed(&validate_ix, &[ruleset.clone(), target.clone()], &[])
 }

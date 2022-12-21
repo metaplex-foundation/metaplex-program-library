@@ -74,7 +74,7 @@ impl Metadata {
         Ok(())
     }
 
-    pub fn update_data<'a>(
+    pub(crate) fn update<'a>(
         &mut self,
         args: UpdateArgs,
         update_authority: &AccountInfo<'a>,
@@ -121,38 +121,38 @@ impl Metadata {
         };
 
         if let Some(data) = data {
-            if self.is_mutable {
-                assert_data_valid(
-                    &data,
-                    update_authority.key,
-                    self,
-                    false,
-                    update_authority.is_signer,
-                )?;
-                self.data = data;
-
-                // If the user passes in Collection data, only allow updating if it's unverified
-                // or if it exactly matches the existing collection info.
-                // If the user passes in None for the Collection data then only set it if it's unverified.
-                if collection.is_some() {
-                    assert_collection_update_is_valid(false, &self.collection, &collection)?;
-                    self.collection = collection;
-                } else if let Some(current_collection) = self.collection.as_ref() {
-                    // Can't change a verified collection in this command.
-                    if current_collection.verified {
-                        return Err(MetadataError::CannotUpdateVerifiedCollection.into());
-                    }
-                    // If it's unverified, it's ok to set to None.
-                    self.collection = collection;
-                }
-
-                // If already None leave it as None.
-                assert_valid_use(&uses, &self.uses)?;
-                self.uses = uses;
-            } else {
+            if !self.is_mutable {
                 return Err(MetadataError::DataIsImmutable.into());
             }
+
+            assert_data_valid(
+                &data,
+                update_authority.key,
+                self,
+                false,
+                update_authority.is_signer,
+            )?;
+            self.data = data;
         }
+
+        // If the user passes in Collection data, only allow updating if it's unverified
+        // or if it exactly matches the existing collection info.
+        // If the user passes in None for the Collection data then only set it if it's unverified.
+        if collection.is_some() {
+            assert_collection_update_is_valid(false, &self.collection, &collection)?;
+            self.collection = collection;
+        } else if let Some(current_collection) = self.collection.as_ref() {
+            // Can't change a verified collection in this command.
+            if current_collection.verified {
+                return Err(MetadataError::CannotUpdateVerifiedCollection.into());
+            }
+            // If it's unverified, it's ok to set to None.
+            self.collection = collection;
+        }
+
+        // If already None leave it as None.
+        assert_valid_use(&uses, &self.uses)?;
+        self.uses = uses;
 
         if let Some(val) = new_update_authority {
             self.update_authority = val;

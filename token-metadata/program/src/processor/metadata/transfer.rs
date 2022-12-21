@@ -149,7 +149,7 @@ fn transfer_v1<'a>(
                     PayloadType::Pubkey(*destination_owner_info.key),
                 );
 
-                // This panics if the CPI into the auth rules program fails.
+                // This panics if the CPI into the auth rules program fails, so unwrapping is ok.
                 validate(auth_pda, operation, destination_owner_info, &auth_data)?;
             }
 

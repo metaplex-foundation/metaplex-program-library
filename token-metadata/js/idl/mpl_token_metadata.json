@@ -5011,7 +5011,7 @@
     {
       "code": 74,
       "name": "CollectionCannotBeVerifiedInThisInstruction",
-      "msg": "Cannont Verify Collection in this Instruction"
+      "msg": "Collection cannot be verified in this instruction"
     },
     {
       "code": 75,
@@ -5201,7 +5201,7 @@
     {
       "code": 112,
       "name": "CannotUpdateVerifiedCollection",
-      "msg": "Cannot update a verified colleciton in this command"
+      "msg": "Cannot update a verified collection in this command"
     },
     {
       "code": 113,

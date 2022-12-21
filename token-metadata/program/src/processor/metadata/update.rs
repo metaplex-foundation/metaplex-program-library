@@ -1,15 +1,16 @@
-use mpl_utils::assert_signer;
+use num_traits::ToPrimitive;
 use solana_program::{
-    account_info::AccountInfo, entrypoint::ProgramResult, msg, program_error::ProgramError,
+    account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
     pubkey::Pubkey, sysvar,
 };
 
 use crate::{
-    assertions::assert_owned_by,
+    assertions::{assert_owned_by, programmable::assert_valid_authorization},
     error::MetadataError,
     instruction::UpdateArgs,
     processor::{try_get_account_info, try_get_optional_account_info, AuthorizationData},
-    state::{Metadata, TokenMetadataAccount, TokenStandard},
+    state::{Metadata, Operation, TokenMetadataAccount, TokenStandard},
+    utils::{assert_update_authority_is_correct, validate},
 };
 
 const EXPECTED_ACCOUNTS_LEN: usize = 9;
@@ -40,11 +41,7 @@ fn update_v1<'a>(
         authorization_rules_opt_info,
     } = args.get_accounts(accounts)?;
 
-    msg!("account validation");
     //** Account Validation **/
-    // Check signers
-    assert_signer(update_authority_info)?;
-
     // Assert program ownership
     assert_owned_by(metadata_info, program_id)?;
     assert_owned_by(mint_info, &spl_token::ID)?;
@@ -59,6 +56,13 @@ fn update_v1<'a>(
         assert_owned_by(holder_token_account, &spl_token::ID)?;
     }
 
+    // Deserialize metadata to determine its type
+    let mut metadata = Metadata::from_account_info(metadata_info)?;
+
+    // Check signers
+    // Check update authority
+    assert_update_authority_is_correct(&metadata, update_authority_info)?;
+
     // Check program IDs.
     if system_program_info.key != &solana_program::system_program::ID {
         return Err(ProgramError::IncorrectProgramId);
@@ -67,37 +71,47 @@ fn update_v1<'a>(
         return Err(ProgramError::IncorrectProgramId);
     }
 
-    // Deserialize metadata to determine its type
-    let mut metadata_data = Metadata::from_account_info(metadata_info)?;
-
-    if metadata_data.token_standard.is_none() {
+    if metadata.token_standard.is_none() {
         return Err(MetadataError::CouldNotDetermineTokenStandard.into());
     }
 
-    match metadata_data.token_standard.unwrap() {
-        TokenStandard::ProgrammableNonFungible => {
+    let token_standard = metadata.token_standard.unwrap();
+
+    // The token being frozen has no effect on updating the metadata account,
+    // so we do not have to thaw and re-freeze here.
+    //
+    // If the NFT has a programmable config set, we have to get the authorization
+    // rules and validate if this action is allowed.
+    //
+    // Authorization rules only apply to the ProgrammableNonFungible asset type
+    // currently.
+    if matches!(token_standard, TokenStandard::ProgrammableNonFungible) {
+        if let Some(ref config) = metadata.programmable_config {
             let authorization_data = args.get_auth_data();
 
-            if authorization_rules_opt_info.is_none() || authorization_data.is_none() {
-                return Err(MetadataError::MissingAuthorizationRules.into());
-            }
+            assert_valid_authorization(&authorization_data, authorization_rules_opt_info, config)?;
 
-            if metadata_data.programmable_config.is_none() {
-                return Err(MetadataError::MissingProgrammableConfig.into());
-            }
+            // We can safely unwrap here because they were all checked for existence
+            // in the assertion above.
+            let auth_pda = authorization_rules_opt_info.unwrap();
+            let auth_data = authorization_data.unwrap();
 
-            if master_edition_opt_info.is_none() {
-                return Err(MetadataError::MissingEditionAccount.into());
-            }
-            let _master_edition_info = master_edition_opt_info.unwrap();
-        }
-        TokenStandard::NonFungible
-        | TokenStandard::NonFungibleEdition
-        | TokenStandard::Fungible
-        | TokenStandard::FungibleAsset => {
-            metadata_data.update_data(args, update_authority_info, metadata_info)?;
+            /* Insert auth rules for Update.
+            // Currently no required auth rules for Update.
+             */
+
+            // This panics if the CPI into the auth rules program fails, so unwrapping is ok.
+            validate(
+                auth_pda,
+                Operation::Update.to_u16().unwrap(),
+                update_authority_info,
+                &auth_data,
+            )
+            .unwrap();
         }
     }
+    // For other token types we can simply update the metadata.
+    metadata.update(args, update_authority_info, metadata_info)?;
 
     Ok(())
 }
