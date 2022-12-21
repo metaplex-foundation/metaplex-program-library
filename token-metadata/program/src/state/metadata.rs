@@ -1,3 +1,4 @@
+use super::*;
 use crate::{
     assertions::{
         collection::assert_collection_update_is_valid, metadata::assert_data_valid,
@@ -6,8 +7,6 @@ use crate::{
     instruction::UpdateArgs,
     utils::{clean_write_metadata, puff_out_data_fields},
 };
-
-use super::*;
 
 pub const MAX_NAME_LENGTH: usize = 32;
 

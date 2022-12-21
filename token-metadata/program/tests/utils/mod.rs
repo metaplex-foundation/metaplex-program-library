@@ -16,7 +16,6 @@ pub use metadata::{assert_collection_size, Metadata};
 pub use mpl_token_metadata::instruction;
 use mpl_token_metadata::state::CollectionDetails;
 pub use programmable::create_test_ruleset;
-
 use solana_program_test::*;
 use solana_sdk::{
     account::Account, program_pack::Pack, pubkey::Pubkey, signature::Signer,

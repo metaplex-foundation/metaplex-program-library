@@ -2,11 +2,10 @@
 pub mod utils;
 
 use borsh::BorshSerialize;
-use mpl_token_metadata::state::Collection;
 use mpl_token_metadata::{
     error::MetadataError,
     id, instruction,
-    state::{Creator, Key, MAX_MASTER_EDITION_LEN},
+    state::{Collection, Creator, Key, MAX_MASTER_EDITION_LEN},
 };
 use num_traits::FromPrimitive;
 use solana_program_test::*;

@@ -1,6 +1,5 @@
-use crate::instruction::DelegateRole;
-
 use super::*;
+use crate::instruction::DelegateRole;
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
