@@ -437,47 +437,87 @@ test('Update: Creator Shares Must Equal 100', async (t) => {
   await updateTx.assertError(t, /Share total must equal 100 for creator array/i);
 });
 
-// test('Update: Cannot Unverify Another Creator', async (t) => {
-//   const API = new InitTransactions();
-//   const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
+test('Update: Cannot Unverify Another Creator', async (t) => {
+  const API = new InitTransactions();
+  const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
 
-//   const daManager = await createDefaultAsset(t, API, handler, payer);
-//   const { mint, metadata, masterEdition } = daManager;
+  const daManager = await createDefaultAsset(t, API, handler, payer);
+  const { mint, metadata, masterEdition } = daManager;
 
-//   const creatorKey = new Keypair();
-//   await amman.airdrop(connection, creatorKey.publicKey, 1);
+  // Create a new creator with a different keypair.
+  const creatorKey = new Keypair();
+  await amman.airdrop(connection, creatorKey.publicKey, 1);
 
-//   // Verify the creator once the verify function is done.
+  // Add new creator to metadata.
+  const updateData = new UpdateTestData();
+  updateData.data = {
+    name: 'new-name',
+    symbol: 'new-symbol',
+    uri: 'new-uri',
+    sellerFeeBasisPoints: 100,
+    creators: [
+      {
+        address: payer.publicKey,
+        share: 100,
+        verified: false,
+      },
+      {
+        address: creatorKey.publicKey,
+        share: 0,
+        verified: false,
+      },
+    ],
+  };
 
-//   // Have a different keypair try to unverify it.
-//   const newCreators = [];
-//   newCreators.push({
-//     address: creatorKey.publicKey,
-//     verified: false,
-//     share: 100,
-//   });
+  // Update metadata with new creator.
+  const { tx: updateTx } = await API.update(
+    t,
+    payer,
+    mint,
+    metadata,
+    masterEdition,
+    updateData,
+    handler,
+  );
+  await updateTx.assertSuccess(t);
 
-//   const updateData2 = new UpdateTestData();
-//   updateData2.data = {
-//     name: 'new-name',
-//     symbol: 'new-symbol',
-//     uri: 'new-uri',
-//     sellerFeeBasisPoints: 100,
-//     creators: newCreators,
-//   };
+  // Sign metadata with new creator.
+  const { tx: signMetadataTx } = await API.signMetadata(t, creatorKey, metadata, handler);
+  await signMetadataTx.assertSuccess(t);
 
-//   const { tx: updateTx2 } = await API.update(
-//     t,
-//     payer,
-//     mint,
-//     metadata,
-//     masterEdition,
-//     updateData2,
-//     handler,
-//   );
+  const updatedMetadata = await Metadata.fromAccountAddress(connection, metadata);
 
-//   await updateTx2.assertError(t, /cannot unilaterally unverify another creator/i);
-// });
+  t.equal(updatedMetadata.data.creators[1].verified, true);
+
+  // Have the original keypair try to unverify it.
+  const newCreators = [];
+  newCreators.push({
+    address: creatorKey.publicKey,
+    verified: false,
+    share: 100,
+  });
+
+  const updateData2 = new UpdateTestData();
+  updateData2.data = {
+    name: 'new-name',
+    symbol: 'new-symbol',
+    uri: 'new-uri',
+    sellerFeeBasisPoints: 100,
+    creators: newCreators,
+  };
+
+  const { tx: updateTx2 } = await API.update(
+    t,
+    payer,
+    mint,
+    metadata,
+    masterEdition,
+    updateData2,
+    handler,
+  );
+
+  await updateTx2.assertError(t, /cannot unilaterally unverify another creator/i);
+});
 
 test('Update: Cannot Verify Another Creator', async (t) => {
   const API = new InitTransactions();
@@ -693,74 +733,91 @@ test('Update: Fail to Verify an Unverified Collection', async (t) => {
   await updateTx.assertError(t, /Collection cannot be verified in this instruction/);
 });
 
-// test('Update: Fail to Update a Verified Collection', async (t) => {
-//   const API = new InitTransactions();
-//   const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
+test('Update: Fail to Update a Verified Collection', async (t) => {
+  const API = new InitTransactions();
+  const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
 
-//   const name = 'DigitalAsset';
-//   const symbol = 'DA';
-//   const uri = 'uri';
+  const name = 'DigitalAsset';
+  const symbol = 'DA';
+  const uri = 'uri';
 
-//   const collectionParent = new Keypair();
-//   const newCollectionParent = new Keypair();
+  // Create parent NFT.
+  const daManager = await createDefaultAsset(t, API, handler, payer);
+  const {
+    mint: collectionMint,
+    metadata: collectionMetadata,
+    masterEdition: collectionMasterEdition,
+  } = daManager;
 
-//   // Create the initial asset and ensure it was created successfully
-//   const assetData: AssetData = {
-//     name,
-//     symbol,
-//     uri,
-//     sellerFeeBasisPoints: 0,
-//     updateAuthority: payer.publicKey,
-//     creators: [
-//       {
-//         address: payer.publicKey,
-//         share: 100,
-//         verified: false,
-//       },
-//     ],
-//     primarySaleHappened: false,
-//     isMutable: true,
-//     editionNonce: null,
-//     tokenStandard: TokenStandard.NonFungible,
-//     collection: { key: collectionParent.publicKey, verified: false },
-//     uses: null,
-//     collectionDetails: null,
-//     programmableConfig: null,
-//     delegateState: null,
-//   };
+  const newCollectionParent = new Keypair();
 
-//   const {
-//     tx: createTx,
-//     mint,
-//     metadata,
-//     masterEdition,
-//   } = await API.create(t, payer, assetData, 0, 0, handler);
-//   await createTx.assertSuccess(t);
+  // Create the initial asset and ensure it was created successfully
+  const assetData: AssetData = {
+    name,
+    symbol,
+    uri,
+    sellerFeeBasisPoints: 0,
+    updateAuthority: payer.publicKey,
+    creators: [
+      {
+        address: payer.publicKey,
+        share: 100,
+        verified: false,
+      },
+    ],
+    primarySaleHappened: false,
+    isMutable: true,
+    editionNonce: null,
+    tokenStandard: TokenStandard.NonFungible,
+    collection: { key: collectionMint, verified: false },
+    uses: null,
+    collectionDetails: null,
+    programmableConfig: null,
+    delegateState: null,
+  };
 
-//   // Call VERIFY on the collection
+  const {
+    tx: createTx,
+    mint,
+    metadata,
+    masterEdition,
+  } = await API.create(t, payer, assetData, 0, 0, handler);
+  await createTx.assertSuccess(t);
 
-//   const createdMetadata = await Metadata.fromAccountAddress(connection, metadata);
-//   spok(t, createdMetadata, {
-//     collection: {
-//       key: collectionParent.publicKey,
-//       verified: true,
-//     },
-//   });
+  const createdMetadata = await Metadata.fromAccountAddress(connection, metadata);
+  spok(t, createdMetadata, {
+    collection: {
+      key: collectionMint,
+      verified: false,
+    },
+  });
 
-//   const updateData = new UpdateTestData();
-//   updateData.collection = { key: newCollectionParent.publicKey, verified: true };
+  const { tx: verifyCollectionTx } = await API.verifyCollection(
+    t,
+    payer,
+    metadata,
+    collectionMint,
+    collectionMetadata,
+    collectionMasterEdition,
+    payer,
+    handler,
+  );
+  await verifyCollectionTx.assertSuccess(t);
 
-//   const { tx: updateTx } = await API.update(
-//     t,
-//     payer,
-//     mint,
-//     metadata,
-//     masterEdition,
-//     updateData,
-//     handler,
-//   );
-//   await updateTx.assertError(t, /Collection cannot be verified in this instruction/);
-// });
+  const updateData = new UpdateTestData();
+  updateData.collection = { key: newCollectionParent.publicKey, verified: true };
+
+  const { tx: updateTx } = await API.update(
+    t,
+    payer,
+    mint,
+    metadata,
+    masterEdition,
+    updateData,
+    handler,
+  );
+  await updateTx.assertError(t, /Collection cannot be verified in this instruction/);
+});
 
 test('Update: Update a ProgrammableNonFungible', async (t) => {
   const API = new InitTransactions();

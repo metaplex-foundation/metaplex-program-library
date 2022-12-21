@@ -32,6 +32,10 @@ import {
   TransferInstructionArgs,
   AuthorizationData,
   Payload,
+  SignMetadataInstructionAccounts,
+  VerifyCollectionInstructionAccounts,
+  createVerifyCollectionInstruction,
+  createSignMetadataInstruction,
 } from '../../src/generated';
 import { Test } from 'tape';
 import { amman } from '.';
@@ -302,6 +306,62 @@ export class InitTransactions {
 
     return {
       tx: handler.sendAndConfirmTransaction(tx, [payer], 'tx: Update'),
+    };
+  }
+
+  async verifyCollection(
+    t: Test,
+    payer: Keypair,
+    metadata: PublicKey,
+    collectionMint: PublicKey,
+    collectionMetadata: PublicKey,
+    collectionMasterEdition: PublicKey,
+    collectionAuthority: Keypair,
+    handler: PayerTransactionHandler,
+  ): Promise<{ tx: ConfirmedTransactionAssertablePromise }> {
+    amman.addr.addLabel('Metadata Account', metadata);
+    amman.addr.addLabel('Collection Mint Account', collectionMint);
+    amman.addr.addLabel('Collection Metadata Account', collectionMetadata);
+    amman.addr.addLabel('Collection Master Edition Account', collectionMasterEdition);
+
+    const verifyCollectionAcccounts: VerifyCollectionInstructionAccounts = {
+      metadata,
+      collectionAuthority: collectionAuthority.publicKey,
+      collectionMint,
+      collection: collectionMetadata,
+      collectionMasterEditionAccount: collectionMasterEdition,
+      payer: payer.publicKey,
+    };
+
+    const verifyInstruction = createVerifyCollectionInstruction(verifyCollectionAcccounts);
+    const tx = new Transaction().add(verifyInstruction);
+
+    return {
+      tx: handler.sendAndConfirmTransaction(
+        tx,
+        [payer, collectionAuthority],
+        'tx: Verify Collection',
+      ),
+    };
+  }
+  async signMetadata(
+    t: Test,
+    creator: Keypair,
+    metadata: PublicKey,
+    handler: PayerTransactionHandler,
+  ): Promise<{ tx: ConfirmedTransactionAssertablePromise }> {
+    amman.addr.addLabel('Metadata Account', metadata);
+
+    const signMetadataAcccounts: SignMetadataInstructionAccounts = {
+      metadata,
+      creator: creator.publicKey,
+    };
+
+    const signMetadataInstruction = createSignMetadataInstruction(signMetadataAcccounts);
+    const tx = new Transaction().add(signMetadataInstruction);
+
+    return {
+      tx: handler.sendAndConfirmTransaction(tx, [creator], 'tx: Sign Metadata'),
     };
   }
 }
