@@ -18,11 +18,12 @@ pub use edition::*;
 pub use escrow::*;
 pub use freeze::*;
 pub use metadata::*;
-
+use mpl_token_metadata_context_derive::AccountContext;
 #[cfg(feature = "serde-feature")]
 use serde::{Deserialize, Serialize};
 use shank::ShankInstruction;
 pub use uses::*;
+use solana_program::account_info::AccountInfo;
 
 #[allow(deprecated)]
 pub use crate::deprecated_instruction::{
@@ -35,7 +36,7 @@ use crate::deprecated_instruction::{MintPrintingTokensViaTokenArgs, SetReservati
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 /// Instructions supported by the Metadata program.
-#[derive(BorshSerialize, BorshDeserialize, Clone, ShankInstruction)]
+#[derive(BorshSerialize, BorshDeserialize, Clone, ShankInstruction, AccountContext)]
 #[rustfmt::skip]
 pub enum MetadataInstruction {
     /// Create Metadata object.
@@ -370,7 +371,7 @@ pub enum MetadataInstruction {
     #[account(2, writable, name="mint", desc="Mint of the NFT")]
     #[account(3, writable, name="token_account", desc="Token account to close")]
     #[account(4, writable, name="master_edition_account", desc="MasterEdition2 of the NFT")]
-    #[account(5, name="spl token program", desc="SPL Token Program")]
+    #[account(5, name="spl_token_program", desc="SPL Token Program")]
     #[account(6, optional, writable, name="collection_metadata", desc="Metadata of the Collection")]
     BurnNft,
 
@@ -452,7 +453,7 @@ pub enum MetadataInstruction {
     #[account(6, writable, name="master_edition_account", desc="MasterEdition2 of the original NFT")]
     #[account(7, writable, name="print_edition_account", desc="Print Edition account of the NFT")]
     #[account(8, writable, name="edition_marker_account", desc="Edition Marker PDA of the NFT")]
-    #[account(9, name="spl token program", desc="SPL Token Program")]
+    #[account(9, name="spl_token_program", desc="SPL Token Program")]
     BurnEditionNft,
 
     /// Create an escrow account to hold tokens.
@@ -515,6 +516,8 @@ pub enum MetadataInstruction {
     #[account(7, name="spl_token_program", desc="SPL Token program")]
     #[account(8, optional, name="master_edition", desc="Unallocated edition account with address as pda of ['metadata', program id, mint, 'edition']")]
     #[account(9, optional, name="authorization_rules", desc="Token Authorization Rules account")]
+    #[args(initialize_mint: bool)]
+    #[args(update_authority_as_signer: bool)]
     Create(CreateArgs),
 
     /// Mints tokens from a mint account.
@@ -534,6 +537,8 @@ pub enum MetadataInstruction {
     #[account(9, optional, writable, name="master_edition", desc="Master Edition account")]
     #[account(10, optional, name="authorization_rules", desc="Token Authorization Rules account")]
     #[account(11, optional, name="auth_rules_program", desc="Token Authorization Rules program")]
+    #[args(mint_as_signer: bool)]
+    #[args(authority_as_signer: bool)]
     Mint(MintArgs),
 
     /// Updates the metadata of an asset.
@@ -665,4 +670,13 @@ pub enum MetadataInstruction {
     #[account(11, optional, name="authorization_rules", desc="Token Authorization Rules account")]
     #[account(12, optional, name="authorization_rules_program", desc="Token Authorization Rules Program")]
     Revoke(RevokeArgs),
+}
+
+pub struct Context<'a, T> {
+    pub accounts: T,
+    pub remaining_accounts: Vec<&'a AccountInfo<'a>>,
+}
+
+pub trait InstructionBuilder {
+    fn instruction(&self) -> solana_program::instruction::Instruction;
 }

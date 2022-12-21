@@ -1,7 +1,9 @@
 use mpl_token_metadata::{
     id,
-    instruction::{self, DelegateArgs, DelegateRole},
-    instruction::{MintArgs, TransferArgs},
+    instruction::{
+        self, builders::CreateBuilder, CreateArgs, DelegateArgs, DelegateRole, InstructionBuilder,
+        MintArgs, TransferArgs,
+    },
     pda::find_delegate_account,
     processor::AuthorizationData,
     state::{
@@ -85,6 +87,15 @@ impl DigitalAsset {
         let mint_pubkey = self.mint.pubkey();
 
         let program_id = id();
+        let mut builder = CreateBuilder::new();
+        builder
+            .metadata(self.metadata)
+            .mint(self.mint.pubkey())
+            .mint_authority(payer_pubkey)
+            .payer(payer_pubkey)
+            .update_authority(payer_pubkey)
+            .initialize_mint(true)
+            .update_authority_as_signer(true);
 
         let master_edition = match token_standard {
             TokenStandard::NonFungible | TokenStandard::ProgrammableNonFungible => {
@@ -96,24 +107,21 @@ impl DigitalAsset {
                     EDITION.as_bytes(),
                 ];
                 let (master_edition, _) = Pubkey::find_program_address(master_edition_seeds, &id());
+                // sets the master edition to the builder
+                builder.master_edition(master_edition);
                 Some(master_edition)
             }
             _ => None,
         };
-
-        let create_ix = instruction::create(
-            /* metadata account */ self.metadata,
-            /* master edition   */ master_edition,
-            /* mint account     */ self.mint.pubkey(),
-            /* mint authority   */ payer_pubkey,
-            /* payer            */ payer_pubkey,
-            /* update authority */ payer_pubkey,
-            /* initialize mint  */ true,
-            /* authority signer */ true,
-            /* asset data       */ asset,
-            /* decimals         */ Some(0),
-            /* max supply       */ Some(0),
-        );
+        // builds the instruction
+        let create_ix = builder
+            .build(CreateArgs::V1 {
+                asset_data: asset,
+                decimals: Some(0),
+                max_supply: Some(0),
+            })
+            .unwrap()
+            .instruction();
 
         let tx = Transaction::new_signed_with_payer(
             &[create_ix],

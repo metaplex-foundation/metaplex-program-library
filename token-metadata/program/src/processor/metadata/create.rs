@@ -6,9 +6,8 @@ use solana_program::{
 use spl_token::{native_mint::DECIMALS, state::Mint};
 
 use crate::{
-    accounts::{Context, Create},
     error::MetadataError,
-    instruction::CreateArgs,
+    instruction::{Create, CreateArgs, Context},
     state::{Metadata, TokenMetadataAccount, TokenStandard},
     utils::{
         create_master_edition, process_create_metadata_accounts_logic,

@@ -2,7 +2,7 @@
 pub mod utils;
 
 use mpl_token_metadata::{
-    id, instruction,
+    id,
     state::{Key, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH},
     utils::puffed_out_string,
 };
@@ -20,6 +20,7 @@ mod create {
 
     use mpl_token_metadata::{
         error::MetadataError,
+        instruction::{builders::CreateBuilder, CreateArgs, InstructionBuilder},
         state::{AssetData, Metadata, TokenStandard, EDITION, PREFIX},
     };
     use solana_program::borsh::try_from_slice_unchecked;
@@ -69,19 +70,22 @@ mod create {
         ];
         let (master_edition, _) = Pubkey::find_program_address(master_edition_seeds, &id());
 
-        let create_ix = instruction::create(
-            /* metadata account */ metadata,
-            /* master edition   */ Some(master_edition),
-            /* mint account     */ mint.pubkey(),
-            /* mint authority   */ payer_pubkey,
-            /* payer            */ payer_pubkey,
-            /* update authority */ payer_pubkey,
-            /* initialize mint  */ true,
-            /* authority signer */ true,
-            /* asset data       */ asset,
-            /* decimals         */ Some(0),
-            /* max supply       */ Some(0),
-        );
+        let create_ix = CreateBuilder::new()
+            .metadata(metadata)
+            .master_edition(master_edition)
+            .mint(mint.pubkey())
+            .mint_authority(payer_pubkey)
+            .payer(payer_pubkey)
+            .update_authority(payer_pubkey)
+            .initialize_mint(true)
+            .update_authority_as_signer(true)
+            .build(CreateArgs::V1 {
+                asset_data: asset,
+                decimals: Some(0),
+                max_supply: Some(0),
+            })
+            .unwrap()
+            .instruction();
 
         let tx = Transaction::new_signed_with_payer(
             &[create_ix],
@@ -167,19 +171,22 @@ mod create {
         ];
         let (master_edition, _) = Pubkey::find_program_address(master_edition_seeds, &id());
 
-        let create_ix = instruction::create(
-            /* metadata account */ metadata,
-            /* master edition   */ Some(master_edition),
-            /* mint account     */ mint.pubkey(),
-            /* mint authority   */ payer_pubkey,
-            /* payer            */ payer_pubkey,
-            /* update authority */ payer_pubkey,
-            /* initialize mint  */ false,
-            /* authority signer */ true,
-            /* asset data       */ asset,
-            /* decimals         */ Some(0),
-            /* max supply       */ Some(0),
-        );
+        let create_ix = CreateBuilder::new()
+            .metadata(metadata)
+            .master_edition(master_edition)
+            .mint(mint.pubkey())
+            .mint_authority(payer_pubkey)
+            .payer(payer_pubkey)
+            .update_authority(payer_pubkey)
+            .initialize_mint(false)
+            .update_authority_as_signer(true)
+            .build(CreateArgs::V1 {
+                asset_data: asset,
+                decimals: Some(0),
+                max_supply: Some(0),
+            })
+            .unwrap()
+            .instruction();
 
         let tx = Transaction::new_signed_with_payer(
             &[create_ix],
@@ -266,19 +273,22 @@ mod create {
         ];
         let (master_edition, _) = Pubkey::find_program_address(master_edition_seeds, &id());
 
-        let create_ix = instruction::create(
-            /* metadata account */ metadata,
-            /* master edition   */ Some(master_edition),
-            /* mint account     */ mint.pubkey(),
-            /* mint authority   */ payer_pubkey,
-            /* payer            */ payer_pubkey,
-            /* update authority */ payer_pubkey,
-            /* initialize mint  */ false,
-            /* authority signer */ true,
-            /* asset data       */ asset,
-            /* decimals         */ Some(0),
-            /* max supply       */ Some(0),
-        );
+        let create_ix = CreateBuilder::new()
+            .metadata(metadata)
+            .master_edition(master_edition)
+            .mint(mint.pubkey())
+            .mint_authority(payer_pubkey)
+            .payer(payer_pubkey)
+            .update_authority(payer_pubkey)
+            .initialize_mint(false)
+            .update_authority_as_signer(true)
+            .build(CreateArgs::V1 {
+                asset_data: asset,
+                decimals: Some(0),
+                max_supply: Some(0),
+            })
+            .unwrap()
+            .instruction();
 
         let tx = Transaction::new_signed_with_payer(
             &[create_ix],
