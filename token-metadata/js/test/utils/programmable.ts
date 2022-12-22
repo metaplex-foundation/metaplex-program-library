@@ -1,8 +1,19 @@
 // @ts-ignore
-import { RuleSet } from '@metaplex-foundation/mpl-token-auth-rules';
+import { encode } from '@msgpack/msgpack';
+import { PublicKey } from '@solana/web3.js';
 
-async function createRuleSet(): Promise<RuleSet> {
-  const ruleset = new RuleSet();
+export function createPassRuleSet(
+  ruleSetName: string,
+  owner: PublicKey,
+  operation: string,
+): Uint8Array {
+  const operations = {};
+  operations[operation] = 'Pass';
 
-  return ruleset;
+  const ruleSet = {
+    ruleSetName,
+    owner: Array.from(owner.toBytes()),
+    operations,
+  };
+  return encode(ruleSet);
 }

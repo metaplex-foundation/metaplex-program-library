@@ -1,4 +1,4 @@
-use num_traits::ToPrimitive;
+use mpl_token_auth_rules::payload::{PayloadKey, PayloadType};
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
     pubkey::Pubkey, sysvar,
@@ -94,16 +94,22 @@ fn update_v1<'a>(
             // We can safely unwrap here because they were all checked for existence
             // in the assertion above.
             let auth_pda = authorization_rules_opt_info.unwrap();
-            let auth_data = authorization_data.unwrap();
+            let mut auth_data = authorization_data.unwrap();
 
-            /* Insert auth rules for Update.
-            // Currently no required auth rules for Update.
+            /*
+            Insert auth rules for Update.
+            Generic target for update_authority to allow for different rules
+            for who can update.
              */
+            auth_data.payload.insert(
+                PayloadKey::Target,
+                PayloadType::Pubkey(*update_authority_info.key),
+            );
 
             // This panics if the CPI into the auth rules program fails, so unwrapping is ok.
             validate(
                 auth_pda,
-                Operation::Update.to_u16().unwrap(),
+                Operation::Update,
                 update_authority_info,
                 &auth_data,
             )
@@ -157,9 +163,9 @@ impl UpdateArgs {
                     master_edition_opt_info,
                     update_authority_info,
                     holder_token_account_opt_info,
-                    authorization_rules_opt_info,
                     system_program_info,
                     sysvar_instructions_info,
+                    authorization_rules_opt_info,
                 })
             }
         }

@@ -4,12 +4,8 @@ import { Keypair, PublicKey } from '@solana/web3.js';
 import { createAndMintDefaultAsset } from './utils/DigitalAssetManager';
 import { createAssociatedTokenAccount, getAccount, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { Metadata, ProgrammableConfig, TokenStandard } from 'src/generated';
-import {
-  PayloadKey,
-  PROGRAM_ID as TOKEN_AUTH_RULES_ID,
-} from '@metaplex-foundation/mpl-token-auth-rules';
-import { encode, decode } from '@msgpack/msgpack';
-import * as fs from 'fs';
+import { PROGRAM_ID as TOKEN_AUTH_RULES_ID } from '@metaplex-foundation/mpl-token-auth-rules';
+import { encode } from '@msgpack/msgpack';
 
 killStuckProcess();
 

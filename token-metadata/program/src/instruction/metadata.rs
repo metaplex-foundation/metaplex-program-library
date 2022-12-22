@@ -549,11 +549,11 @@ pub fn update(
     }
 
     if let Some(authorization_rules) = authorization_rules {
-        accounts.push(AccountMeta::new_readonly(mpl_token_auth_rules::id(), false));
+        accounts.push(AccountMeta::new_readonly(mpl_token_auth_rules::ID, false));
         accounts.push(AccountMeta::new_readonly(authorization_rules, false));
     } else {
-        accounts.push(AccountMeta::new_readonly(crate::id(), false));
-        accounts.push(AccountMeta::new_readonly(crate::id(), false));
+        accounts.push(AccountMeta::new_readonly(crate::ID, false));
+        accounts.push(AccountMeta::new_readonly(crate::ID, false));
     }
 
     if let Some(additional_accounts) = additional_accounts {

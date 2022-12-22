@@ -3,7 +3,6 @@ use mpl_token_auth_rules::{
     state::{Rule, RuleSet},
 };
 use mpl_token_metadata::{processor::AuthorizationData, state::Operation};
-use num_traits::ToPrimitive;
 use rmp_serde::Serializer;
 use serde::Serialize;
 use solana_sdk::{
@@ -48,22 +47,16 @@ pub async fn create_test_ruleset(
     // Create Basic Royalty Enforcement Ruleset.
     let mut basic_royalty_enforcement_rule_set = RuleSet::new(name, payer.pubkey());
     basic_royalty_enforcement_rule_set
-        .add(
-            Operation::Transfer.to_u16().unwrap(),
-            owned_by_token_metadata,
-        )
+        .add(Operation::Transfer.to_string(), owned_by_token_metadata)
         .unwrap();
     basic_royalty_enforcement_rule_set
         .add(
-            Operation::Delegate.to_u16().unwrap(),
+            Operation::Delegate.to_string(),
             leaf_in_marketplace_tree.clone(),
         )
         .unwrap();
     basic_royalty_enforcement_rule_set
-        .add(
-            Operation::DelegatedTransfer.to_u16().unwrap(),
-            leaf_in_marketplace_tree,
-        )
+        .add(Operation::Sale.to_string(), leaf_in_marketplace_tree)
         .unwrap();
 
     // Serialize the RuleSet using RMP serde.

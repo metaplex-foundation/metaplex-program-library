@@ -548,10 +548,9 @@ pub enum MetadataInstruction {
     #[account(3, name="sysvar_instructions", desc="System program")]
     #[account(4, optional, writable, name="master_edition", desc="Master edition account")]
     #[account(5, signer, optional, name="update_authority", desc="Update authority")]
-    #[account(6, signer, optional, name="token_holder", desc="Token holder")]
-    #[account(7, optional, name="token_account", desc="Token account")]
-    #[account(8, optional, name="authorization_rules_program", desc="Token Authorization Rules Program")]
-    #[account(9, optional, name="authorization_rules", desc="Token Authorization Rules account")]
+    #[account(6, optional, name="token_account", desc="Token account")]
+    #[account(7, optional, name="authorization_rules_program", desc="Token Authorization Rules Program")]
+    #[account(8, optional, name="authorization_rules", desc="Token Authorization Rules account")]
     #[default_optional_accounts]
     Update(UpdateArgs),
 

@@ -41,7 +41,6 @@ export const UpdateStruct = new beet.FixableBeetArgsStruct<
  * @property [] sysvarInstructions System program
  * @property [_writable_] masterEdition (optional) Master edition account
  * @property [**signer**] updateAuthority (optional) Update authority
- * @property [**signer**] tokenHolder (optional) Token holder
  * @property [] tokenAccount (optional) Token account
  * @property [] authorizationRulesProgram (optional) Token Authorization Rules Program
  * @property [] authorizationRules (optional) Token Authorization Rules account
@@ -56,7 +55,6 @@ export type UpdateInstructionAccounts = {
   sysvarInstructions: web3.PublicKey;
   masterEdition?: web3.PublicKey;
   updateAuthority?: web3.PublicKey;
-  tokenHolder?: web3.PublicKey;
   tokenAccount?: web3.PublicKey;
   authorizationRulesProgram?: web3.PublicKey;
   authorizationRules?: web3.PublicKey;
@@ -116,11 +114,6 @@ export function createUpdateInstruction(
       pubkey: accounts.updateAuthority ?? programId,
       isWritable: false,
       isSigner: accounts.updateAuthority != null,
-    },
-    {
-      pubkey: accounts.tokenHolder ?? programId,
-      isWritable: false,
-      isSigner: accounts.tokenHolder != null,
     },
     {
       pubkey: accounts.tokenAccount ?? programId,

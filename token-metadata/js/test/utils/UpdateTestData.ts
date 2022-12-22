@@ -1,6 +1,5 @@
 import { PublicKey } from '@solana/web3.js';
 import {
-  AuthorizationData,
   TokenStandard,
   Data,
   Collection,
@@ -21,7 +20,6 @@ export class UpdateTestData {
   collectionDetails: CollectionDetails;
   programmableConfig: ProgrammableConfig;
   delegateState: DelegateState;
-  authorizationData: AuthorizationData;
 
   constructor() {
     this.newUpdateAuthority = null;
@@ -34,6 +32,5 @@ export class UpdateTestData {
     this.collectionDetails = null;
     this.programmableConfig = null;
     this.delegateState = null;
-    this.authorizationData = null;
   }
 }

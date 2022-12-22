@@ -12,7 +12,7 @@ test('Update: NonFungible asset', async (t) => {
   const API = new InitTransactions();
   const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
 
-  const daManager = await createDefaultAsset(t, API, handler, payer);
+  const daManager = await createDefaultAsset(t, connection, API, handler, payer);
   const { mint, metadata, masterEdition } = daManager;
   const assetData = await daManager.getAssetData(connection);
 
@@ -43,12 +43,12 @@ test('Update: NonFungible asset', async (t) => {
 
   const { tx: updateTx } = await API.update(
     t,
+    handler,
     payer,
     mint,
     metadata,
     masterEdition,
     updateData,
-    handler,
   );
   await updateTx.assertSuccess(t);
 });
@@ -57,7 +57,7 @@ test('Update: Cannot Flip IsMutable to True', async (t) => {
   const API = new InitTransactions();
   const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
 
-  const daManager = await createDefaultAsset(t, API, handler, payer);
+  const daManager = await createDefaultAsset(t, connection, API, handler, payer);
   const { mint, metadata, masterEdition } = daManager;
 
   // Flip isMutable to false
@@ -66,12 +66,12 @@ test('Update: Cannot Flip IsMutable to True', async (t) => {
 
   const { tx: updateTx } = await API.update(
     t,
+    handler,
     payer,
     mint,
     metadata,
     masterEdition,
     updateData,
-    handler,
   );
   await updateTx.assertSuccess(t);
 
@@ -86,12 +86,12 @@ test('Update: Cannot Flip IsMutable to True', async (t) => {
 
   const { tx: updateTx2 } = await API.update(
     t,
+    handler,
     payer,
     mint,
     metadata,
     masterEdition,
     updateData,
-    handler,
   );
   await updateTx2.assertError(t, /Is Mutable can only be flipped to false/i);
 });
@@ -100,7 +100,7 @@ test('Update: Cannot Flip PrimarySaleHappened to False', async (t) => {
   const API = new InitTransactions();
   const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
 
-  const daManager = await createDefaultAsset(t, API, handler, payer);
+  const daManager = await createDefaultAsset(t, connection, API, handler, payer);
   const { mint, metadata, masterEdition } = daManager;
 
   // Flip to true
@@ -109,12 +109,12 @@ test('Update: Cannot Flip PrimarySaleHappened to False', async (t) => {
 
   const { tx: updateTx } = await API.update(
     t,
+    handler,
     payer,
     mint,
     metadata,
     masterEdition,
     updateData,
-    handler,
   );
   await updateTx.assertSuccess(t);
 
@@ -129,12 +129,12 @@ test('Update: Cannot Flip PrimarySaleHappened to False', async (t) => {
 
   const { tx: updateTx2 } = await API.update(
     t,
+    handler,
     payer,
     mint,
     metadata,
     masterEdition,
     updateData,
-    handler,
   );
   await updateTx2.assertError(t, /Primary sale can only be flipped to true/i);
 });
@@ -143,7 +143,7 @@ test('Update: Set New Update Authority', async (t) => {
   const API = new InitTransactions();
   const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
 
-  const daManager = await createDefaultAsset(t, API, handler, payer);
+  const daManager = await createDefaultAsset(t, connection, API, handler, payer);
   const { mint, metadata, masterEdition } = daManager;
 
   const newUpdateAuthority = new Keypair().publicKey;
@@ -154,12 +154,12 @@ test('Update: Set New Update Authority', async (t) => {
 
   const { tx: updateTx } = await API.update(
     t,
+    handler,
     payer,
     mint,
     metadata,
     masterEdition,
     updateData,
-    handler,
   );
   await updateTx.assertSuccess(t);
 
@@ -172,9 +172,9 @@ test('Update: Set New Update Authority', async (t) => {
 
 test('Update: Cannot Update Immutable Data', async (t) => {
   const API = new InitTransactions();
-  const { fstTxHandler: handler, payerPair: payer } = await API.payer();
+  const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
 
-  const daManager = await createDefaultAsset(t, API, handler, payer);
+  const daManager = await createDefaultAsset(t, connection, API, handler, payer);
   const { mint, metadata, masterEdition } = daManager;
 
   // Flip isMutable to false
@@ -183,12 +183,12 @@ test('Update: Cannot Update Immutable Data', async (t) => {
 
   const { tx: updateTx } = await API.update(
     t,
+    handler,
     payer,
     mint,
     metadata,
     masterEdition,
     updateData,
-    handler,
   );
   await updateTx.assertSuccess(t);
 
@@ -203,21 +203,21 @@ test('Update: Cannot Update Immutable Data', async (t) => {
 
   const { tx: updateTx2 } = await API.update(
     t,
+    handler,
     payer,
     mint,
     metadata,
     masterEdition,
     updateData,
-    handler,
   );
   await updateTx2.assertError(t, /Data is immutable/i);
 });
 
 test('Update: Name Cannot Exceed 32 Bytes', async (t) => {
   const API = new InitTransactions();
-  const { fstTxHandler: handler, payerPair: payer } = await API.payer();
+  const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
 
-  const daManager = await createDefaultAsset(t, API, handler, payer);
+  const daManager = await createDefaultAsset(t, connection, API, handler, payer);
   const { mint, metadata, masterEdition } = daManager;
 
   const updateData = new UpdateTestData();
@@ -231,21 +231,21 @@ test('Update: Name Cannot Exceed 32 Bytes', async (t) => {
 
   const { tx: updateTx } = await API.update(
     t,
+    handler,
     payer,
     mint,
     metadata,
     masterEdition,
     updateData,
-    handler,
   );
   await updateTx.assertError(t, /Name too long/i);
 });
 
 test('Update: Symbol Cannot Exceed 10 Bytes', async (t) => {
   const API = new InitTransactions();
-  const { fstTxHandler: handler, payerPair: payer } = await API.payer();
+  const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
 
-  const daManager = await createDefaultAsset(t, API, handler, payer);
+  const daManager = await createDefaultAsset(t, connection, API, handler, payer);
   const { mint, metadata, masterEdition } = daManager;
 
   const updateData = new UpdateTestData();
@@ -259,21 +259,21 @@ test('Update: Symbol Cannot Exceed 10 Bytes', async (t) => {
 
   const { tx: updateTx } = await API.update(
     t,
+    handler,
     payer,
     mint,
     metadata,
     masterEdition,
     updateData,
-    handler,
   );
   await updateTx.assertError(t, /Symbol too long/i);
 });
 
 test('Update: URI Cannot Exceed 200 Bytes', async (t) => {
   const API = new InitTransactions();
-  const { fstTxHandler: handler, payerPair: payer } = await API.payer();
+  const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
 
-  const daManager = await createDefaultAsset(t, API, handler, payer);
+  const daManager = await createDefaultAsset(t, connection, API, handler, payer);
   const { mint, metadata, masterEdition } = daManager;
 
   const updateData = new UpdateTestData();
@@ -287,21 +287,21 @@ test('Update: URI Cannot Exceed 200 Bytes', async (t) => {
 
   const { tx: updateTx } = await API.update(
     t,
+    handler,
     payer,
     mint,
     metadata,
     masterEdition,
     updateData,
-    handler,
   );
   await updateTx.assertError(t, /Uri too long/i);
 });
 
 test('Update: SellerFeeBasisPoints Cannot Exceed 10_000', async (t) => {
   const API = new InitTransactions();
-  const { fstTxHandler: handler, payerPair: payer } = await API.payer();
+  const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
 
-  const daManager = await createDefaultAsset(t, API, handler, payer);
+  const daManager = await createDefaultAsset(t, connection, API, handler, payer);
   const { mint, metadata, masterEdition } = daManager;
 
   const updateData = new UpdateTestData();
@@ -315,21 +315,21 @@ test('Update: SellerFeeBasisPoints Cannot Exceed 10_000', async (t) => {
 
   const { tx: updateTx } = await API.update(
     t,
+    handler,
     payer,
     mint,
     metadata,
     masterEdition,
     updateData,
-    handler,
   );
   await updateTx.assertError(t, /Basis points cannot be more than 10000/i);
 });
 
 test('Update: Creators Array Cannot Exceed Five Items', async (t) => {
   const API = new InitTransactions();
-  const { fstTxHandler: handler, payerPair: payer } = await API.payer();
+  const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
 
-  const daManager = await createDefaultAsset(t, API, handler, payer);
+  const daManager = await createDefaultAsset(t, connection, API, handler, payer);
   const { mint, metadata, masterEdition } = daManager;
 
   const creators = [];
@@ -353,21 +353,21 @@ test('Update: Creators Array Cannot Exceed Five Items', async (t) => {
 
   const { tx: updateTx } = await API.update(
     t,
+    handler,
     payer,
     mint,
     metadata,
     masterEdition,
     updateData,
-    handler,
   );
   await updateTx.assertError(t, /Creators list too long/i);
 });
 
 test('Update: No Duplicate Creator Addresses', async (t) => {
   const API = new InitTransactions();
-  const { fstTxHandler: handler, payerPair: payer } = await API.payer();
+  const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
 
-  const daManager = await createDefaultAsset(t, API, handler, payer);
+  const daManager = await createDefaultAsset(t, connection, API, handler, payer);
   const { mint, metadata, masterEdition } = daManager;
 
   const creators = [];
@@ -391,21 +391,21 @@ test('Update: No Duplicate Creator Addresses', async (t) => {
 
   const { tx: updateTx } = await API.update(
     t,
+    handler,
     payer,
     mint,
     metadata,
     masterEdition,
     updateData,
-    handler,
   );
   await updateTx.assertError(t, /No duplicate creator addresses/i);
 });
 
 test('Update: Creator Shares Must Equal 100', async (t) => {
   const API = new InitTransactions();
-  const { fstTxHandler: handler, payerPair: payer } = await API.payer();
+  const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
 
-  const daManager = await createDefaultAsset(t, API, handler, payer);
+  const daManager = await createDefaultAsset(t, connection, API, handler, payer);
   const { mint, metadata, masterEdition } = daManager;
 
   const creators = [];
@@ -427,12 +427,12 @@ test('Update: Creator Shares Must Equal 100', async (t) => {
 
   const { tx: updateTx } = await API.update(
     t,
+    handler,
     payer,
     mint,
     metadata,
     masterEdition,
     updateData,
-    handler,
   );
   await updateTx.assertError(t, /Share total must equal 100 for creator array/i);
 });
@@ -441,7 +441,7 @@ test('Update: Cannot Unverify Another Creator', async (t) => {
   const API = new InitTransactions();
   const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
 
-  const daManager = await createDefaultAsset(t, API, handler, payer);
+  const daManager = await createDefaultAsset(t, connection, API, handler, payer);
   const { mint, metadata, masterEdition } = daManager;
 
   // Create a new creator with a different keypair.
@@ -472,12 +472,12 @@ test('Update: Cannot Unverify Another Creator', async (t) => {
   // Update metadata with new creator.
   const { tx: updateTx } = await API.update(
     t,
+    handler,
     payer,
     mint,
     metadata,
     masterEdition,
     updateData,
-    handler,
   );
   await updateTx.assertSuccess(t);
 
@@ -508,12 +508,12 @@ test('Update: Cannot Unverify Another Creator', async (t) => {
 
   const { tx: updateTx2 } = await API.update(
     t,
+    handler,
     payer,
     mint,
     metadata,
     masterEdition,
     updateData2,
-    handler,
   );
 
   await updateTx2.assertError(t, /cannot unilaterally unverify another creator/i);
@@ -523,7 +523,7 @@ test('Update: Cannot Verify Another Creator', async (t) => {
   const API = new InitTransactions();
   const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
 
-  const daManager = await createDefaultAsset(t, API, handler, payer);
+  const daManager = await createDefaultAsset(t, connection, API, handler, payer);
   const { mint, metadata, masterEdition } = daManager;
 
   const creatorKey = new Keypair();
@@ -548,12 +548,12 @@ test('Update: Cannot Verify Another Creator', async (t) => {
 
   const { tx: updateTx } = await API.update(
     t,
+    handler,
     payer,
     mint,
     metadata,
     masterEdition,
     updateData,
-    handler,
   );
   await updateTx.assertSuccess(t);
 
@@ -582,12 +582,12 @@ test('Update: Cannot Verify Another Creator', async (t) => {
 
   const { tx: updateTx2 } = await API.update(
     t,
+    handler,
     payer,
     mint,
     metadata,
     masterEdition,
     updateData2,
-    handler,
   );
 
   await updateTx2.assertError(t, /cannot unilaterally verify another creator, they must sign/i);
@@ -650,12 +650,12 @@ test('Update: Update Unverified Collection Key', async (t) => {
 
   const { tx: updateTx } = await API.update(
     t,
+    handler,
     payer,
     mint,
     metadata,
     masterEdition,
     updateData,
-    handler,
   );
   await updateTx.assertSuccess(t);
 
@@ -723,12 +723,12 @@ test('Update: Fail to Verify an Unverified Collection', async (t) => {
 
   const { tx: updateTx } = await API.update(
     t,
+    handler,
     payer,
     mint,
     metadata,
     masterEdition,
     updateData,
-    handler,
   );
   await updateTx.assertError(t, /Collection cannot be verified in this instruction/);
 });
@@ -742,7 +742,7 @@ test('Update: Fail to Update a Verified Collection', async (t) => {
   const uri = 'uri';
 
   // Create parent NFT.
-  const daManager = await createDefaultAsset(t, API, handler, payer);
+  const daManager = await createDefaultAsset(t, connection, API, handler, payer);
   const {
     mint: collectionMint,
     metadata: collectionMetadata,
@@ -809,21 +809,21 @@ test('Update: Fail to Update a Verified Collection', async (t) => {
 
   const { tx: updateTx } = await API.update(
     t,
+    handler,
     payer,
     mint,
     metadata,
     masterEdition,
     updateData,
-    handler,
   );
   await updateTx.assertError(t, /Collection cannot be verified in this instruction/);
 });
 
 test('Update: Invalid Update Authority Fails', async (t) => {
   const API = new InitTransactions();
-  const { fstTxHandler: handler, payerPair: payer } = await API.payer();
+  const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
 
-  const daManager = await createDefaultAsset(t, API, handler, payer);
+  const daManager = await createDefaultAsset(t, connection, API, handler, payer);
   const { mint, metadata, masterEdition } = daManager;
 
   const invalidUpdateAuthority = new Keypair();
@@ -840,12 +840,12 @@ test('Update: Invalid Update Authority Fails', async (t) => {
 
   const { tx: updateTx } = await API.update(
     t,
+    handler,
     invalidUpdateAuthority,
     mint,
     metadata,
     masterEdition,
     updateData,
-    handler,
   );
   await updateTx.assertError(t, /Update Authority given does not match/);
 });

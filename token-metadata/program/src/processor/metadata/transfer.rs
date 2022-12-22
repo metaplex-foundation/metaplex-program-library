@@ -1,6 +1,5 @@
 use mpl_token_auth_rules::payload::{PayloadKey, PayloadType};
 use mpl_utils::{assert_signer, token::TokenTransferParams};
-use num_traits::ToPrimitive;
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, msg, program_error::ProgramError,
     pubkey::Pubkey, sysvar,
@@ -111,9 +110,7 @@ fn transfer_v1<'a>(
             return Err(MetadataError::InvalidOwner.into());
         }
         Operation::Transfer
-    }
-    .to_u16()
-    .ok_or(MetadataError::InvalidOperation)?;
+    };
 
     if metadata.token_standard.is_none() {
         return Err(MetadataError::InvalidTokenStandard.into());

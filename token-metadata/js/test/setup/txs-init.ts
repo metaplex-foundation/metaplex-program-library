@@ -281,12 +281,14 @@ export class InitTransactions {
 
   async update(
     t: Test,
+    handler: PayerTransactionHandler,
     payer: Keypair,
     mint: PublicKey,
     metadata: PublicKey,
     masterEdition: PublicKey,
     updateTestData: UpdateTestData,
-    handler: PayerTransactionHandler,
+    ruleSetPda: PublicKey | null = null,
+    authorizationData: AuthorizationData | null = null,
   ): Promise<{ tx: ConfirmedTransactionAssertablePromise }> {
     amman.addr.addLabel('Mint Account', mint);
     amman.addr.addLabel('Metadata Account', metadata);
@@ -295,9 +297,12 @@ export class InitTransactions {
     const updateAcccounts: UpdateInstructionAccounts = {
       metadata,
       mint,
+      systemProgram: SystemProgram.programId,
       sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
       masterEdition,
       updateAuthority: payer.publicKey,
+      authorizationRulesProgram: ruleSetPda ? TOKEN_AUTH_RULES_ID : PROGRAM_ID,
+      authorizationRules: ruleSetPda,
     };
 
     const updateArgs: UpdateInstructionArgs = {
@@ -313,7 +318,7 @@ export class InitTransactions {
         collectionDetails: updateTestData.collectionDetails,
         programmableConfig: updateTestData.programmableConfig,
         delegateState: updateTestData.delegateState,
-        authorizationData: updateTestData.authorizationData,
+        authorizationData: authorizationData,
       },
     };
 

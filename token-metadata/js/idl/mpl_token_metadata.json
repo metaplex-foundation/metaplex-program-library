@@ -2557,13 +2557,6 @@
           "optional": true
         },
         {
-          "name": "tokenHolder",
-          "isMut": false,
-          "isSigner": true,
-          "desc": "Token holder",
-          "optional": true
-        },
-        {
           "name": "tokenAccount",
           "isMut": false,
           "isSigner": false,
