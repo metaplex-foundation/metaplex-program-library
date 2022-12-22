@@ -940,6 +940,29 @@ createErrorFromCodeLookup.set(0x179b, () => new InsufficientFundsError());
 createErrorFromNameLookup.set('InsufficientFunds', () => new InsufficientFundsError());
 
 /**
+ * SaleRequiresExactlyOneSigner: 'This sale requires exactly one signer: either the seller or the authority.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class SaleRequiresExactlyOneSignerError extends Error {
+  readonly code: number = 0x179c;
+  readonly name: string = 'SaleRequiresExactlyOneSigner';
+  constructor() {
+    super('This sale requires exactly one signer: either the seller or the authority.');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, SaleRequiresExactlyOneSignerError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x179c, () => new SaleRequiresExactlyOneSignerError());
+createErrorFromNameLookup.set(
+  'SaleRequiresExactlyOneSigner',
+  () => new SaleRequiresExactlyOneSignerError(),
+);
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated
