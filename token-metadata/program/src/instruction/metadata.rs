@@ -10,6 +10,7 @@ use {
     serde_with::{As, DisplayFromStr},
 };
 
+use super::InstructionBuilder;
 use crate::{
     instruction::MetadataInstruction,
     processor::AuthorizationData,
@@ -18,8 +19,6 @@ use crate::{
         ProgrammableConfig, TokenStandard, Uses,
     },
 };
-
-use super::InstructionBuilder;
 
 //----------------------+
 // Instruction args     |

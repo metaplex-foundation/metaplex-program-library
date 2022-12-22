@@ -22,8 +22,8 @@ use mpl_token_metadata_context_derive::AccountContext;
 #[cfg(feature = "serde-feature")]
 use serde::{Deserialize, Serialize};
 use shank::ShankInstruction;
-pub use uses::*;
 use solana_program::account_info::AccountInfo;
+pub use uses::*;
 
 #[allow(deprecated)]
 pub use crate::deprecated_instruction::{
@@ -537,8 +537,6 @@ pub enum MetadataInstruction {
     #[account(9, optional, writable, name="master_edition", desc="Master Edition account")]
     #[account(10, optional, name="authorization_rules", desc="Token Authorization Rules account")]
     #[account(11, optional, name="auth_rules_program", desc="Token Authorization Rules program")]
-    #[args(mint_as_signer: bool)]
-    #[args(authority_as_signer: bool)]
     Mint(MintArgs),
 
     /// Updates the metadata of an asset.

@@ -7,7 +7,7 @@ use spl_token::{native_mint::DECIMALS, state::Mint};
 
 use crate::{
     error::MetadataError,
-    instruction::{Create, CreateArgs, Context},
+    instruction::{Context, Create, CreateArgs},
     state::{Metadata, TokenMetadataAccount, TokenStandard},
     utils::{
         create_master_edition, process_create_metadata_accounts_logic,
