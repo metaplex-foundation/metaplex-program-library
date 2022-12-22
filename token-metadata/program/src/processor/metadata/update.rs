@@ -89,7 +89,7 @@ fn update_v1<'a>(
         if let Some(ref config) = metadata.programmable_config {
             let authorization_data = args.get_auth_data();
 
-            assert_valid_authorization(&authorization_data, authorization_rules_opt_info, config)?;
+            assert_valid_authorization(authorization_rules_opt_info, config)?;
 
             // We can safely unwrap here because they were all checked for existence
             // in the assertion above.

@@ -129,11 +129,7 @@ fn transfer_v1<'a>(
                 let authorization_data = args.get_auth_data();
 
                 msg!("asserting valid authorization");
-                assert_valid_authorization(
-                    &authorization_data,
-                    authorization_rules_opt_info,
-                    config,
-                )?;
+                assert_valid_authorization(authorization_rules_opt_info, config)?;
 
                 // We can safely unwrap here because they were all checked for existence
                 // in the assertion above.
