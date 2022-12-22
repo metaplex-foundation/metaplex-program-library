@@ -105,7 +105,7 @@ fn transfer_v1<'a>(
         if !currently_holding && owner_info.key != &delegate {
             return Err(MetadataError::InvalidOwner.into());
         }
-        Operation::DelegatedTransfer
+        Operation::Sale
     } else {
         if !currently_holding {
             return Err(MetadataError::InvalidOwner.into());

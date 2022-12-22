@@ -5,7 +5,7 @@ use solana_program::{account_info::AccountInfo, instruction::AccountMeta};
 pub enum Operation {
     Delegate,
     Transfer,
-    DelegatedTransfer,
+    Sale,
     MigrateClass,
     Update,
 }
