@@ -2,8 +2,8 @@ use proc_macro::TokenStream;
 use quote::quote;
 use std::collections::HashMap;
 use syn::{
-    self, parse_macro_input, DeriveInput, Expr, ExprPath, Lit, Meta, MetaList, MetaNameValue,
-    NestedMeta, Path, Type, TypePath,
+    self, parse_macro_input, DeriveInput, Expr, ExprPath, GenericArgument, Lit, Meta, MetaList,
+    MetaNameValue, NestedMeta, Path, PathArguments, Type, TypePath,
 };
 
 #[derive(Default)]
@@ -11,7 +11,8 @@ struct Variant {
     pub name: String,
     pub tuple: Option<String>,
     pub accounts: Vec<Account>,
-    pub args: Vec<(String, String)>,
+    // (name, type, generic type)
+    pub args: Vec<(String, String, Option<String>)>,
 }
 
 #[derive(Debug)]
@@ -140,14 +141,34 @@ pub fn account_context_derive(input: TokenStream) -> TokenStream {
                             _ => panic!("#[args] requires an expression 'name: type'"),
                         };
                         // type
-                        let ty = match *args_tokens.ty {
+                        match *args_tokens.ty {
                             Type::Path(TypePath {
                                 path: Path { segments, .. },
                                 ..
-                            }) => segments.first().unwrap().ident.to_string(),
+                            }) => {
+                                let segment = segments.first().unwrap();
+
+                                // check whether we are dealing with a generic type
+                                let generic_ty = match &segment.arguments {
+                                    PathArguments::AngleBracketed(arguments) => {
+                                        if let Some(GenericArgument::Type(Type::Path(ty))) =
+                                            arguments.args.first()
+                                        {
+                                            Some(
+                                                ty.path.segments.first().unwrap().ident.to_string(),
+                                            )
+                                        } else {
+                                            None
+                                        }
+                                    }
+                                    _ => None,
+                                };
+
+                                let ty = segment.ident.to_string();
+                                variant.args.push((name, ty, generic_ty));
+                            }
                             _ => panic!("#[args] requires an expression 'name: type'"),
-                        };
-                        variant.args.push((name, ty));
+                        }
                     }
                 }
             }
@@ -301,9 +322,16 @@ fn generate_builders(variants: &[Variant]) -> TokenStream {
         });
 
         // args
-        let struct_args = variant.args.iter().map(|(name, ty)| {
+        let struct_args = variant.args.iter().map(|(name, ty, generic_ty)| {
+            let ident_ty = syn::parse_str::<syn::Ident>(ty).unwrap();
+            let arg_ty = if let Some(genetic_ty) = generic_ty {
+                let arg_generic_ty = syn::parse_str::<syn::Ident>(genetic_ty).unwrap();
+                quote! { #ident_ty<#arg_generic_ty> }
+            } else {
+                quote! { #ident_ty }
+            };
             let arg_name = syn::parse_str::<syn::Ident>(name).unwrap();
-            let arg_ty = syn::parse_str::<syn::Ident>(ty).unwrap();
+              
             quote! {
                 pub #arg_name: #arg_ty
             }
@@ -329,16 +357,23 @@ fn generate_builders(variants: &[Variant]) -> TokenStream {
         });
 
         // args
-        let builder_args = variant.args.iter().map(|(name, ty)| {
+        let builder_args = variant.args.iter().map(|(name, ty, generic_ty)| {
+            let ident_ty = syn::parse_str::<syn::Ident>(ty).unwrap();
+            let arg_ty = if let Some(genetic_ty) = generic_ty {
+                let arg_generic_ty = syn::parse_str::<syn::Ident>(genetic_ty).unwrap();
+                quote! { #ident_ty<#arg_generic_ty> }
+            } else {
+                quote! { #ident_ty }
+            };
             let arg_name = syn::parse_str::<syn::Ident>(name).unwrap();
-            let arg_ty = syn::parse_str::<syn::Ident>(ty).unwrap();
+
             quote! {
                 pub #arg_name: Option<#arg_ty>
             }
         });
 
         // args initialization
-        let builder_initialize_args = variant.args.iter().map(|(name, _ty)| {
+        let builder_initialize_args = variant.args.iter().map(|(name, _ty, _generi_ty)| {
             let arg_name = syn::parse_str::<syn::Ident>(name).unwrap();
             quote! {
                 #arg_name: None
@@ -357,9 +392,16 @@ fn generate_builders(variants: &[Variant]) -> TokenStream {
         });
 
         // args setter methods
-        let builder_args_methods = variant.args.iter().map(|(name, ty)| {
+        let builder_args_methods = variant.args.iter().map(|(name, ty, generic_ty)| {
+            let ident_ty = syn::parse_str::<syn::Ident>(ty).unwrap();
+            let arg_ty = if let Some(genetic_ty) = generic_ty {
+                let arg_generic_ty = syn::parse_str::<syn::Ident>(genetic_ty).unwrap();
+                quote! { #ident_ty<#arg_generic_ty> }
+            } else {
+                quote! { #ident_ty }
+            };
             let arg_name = syn::parse_str::<syn::Ident>(name).unwrap();
-            let arg_ty = syn::parse_str::<syn::Ident>(ty).unwrap();
+
             quote! {
                 pub fn #arg_name(&mut self, #arg_name: #arg_ty) -> &mut Self {
                     self.#arg_name = Some(#arg_name);
@@ -389,16 +431,16 @@ fn generate_builders(variants: &[Variant]) -> TokenStream {
                 }
             } else {
                 quote! {
-                    #account_name: self.#account_name.clone().ok_or::<solana_program::sysvar::slot_history::ProgramError>(crate::error::MetadataError::MissingAccountInBuilder.into())?
+                    #account_name: self.#account_name.clone().ok_or(concat!(stringify!(#account_name), " is not set"))?
                 }
             }
         });
 
         // required args
-        let required_args = variant.args.iter().map(|(name, _ty)| {
+        let required_args = variant.args.iter().map(|(name, _ty, _generic_ty)| {
             let arg_name = syn::parse_str::<syn::Ident>(name).unwrap();
             quote! {
-                #arg_name: self.#arg_name.clone().ok_or::<solana_program::sysvar::slot_history::ProgramError>(crate::error::MetadataError::MissingArgumentInBuilder.into())?
+                #arg_name: self.#arg_name.clone().ok_or(concat!(stringify!(#arg_name), " is not set"))?
             }
         });
 
@@ -451,7 +493,7 @@ fn generate_builders(variants: &[Variant]) -> TokenStream {
                 #(#builder_accounts_methods)*
                 #(#builder_args_methods)*
 
-                pub fn build(#args) -> Result<#name, solana_program::sysvar::slot_history::ProgramError> {
+                pub fn build(#args) -> Result<#name, Box<dyn std::error::Error>> {
                     Ok(#name {
                         #(#required_accounts,)*
                         #(#required_args,)*
