@@ -65,6 +65,7 @@ export class DigitalAssetManager {
 
 export async function createDefaultAsset(
   t: test.Test,
+  connection: Connection,
   API: InitTransactions,
   handler: PayerTransactionHandler,
   payer: Keypair,
@@ -115,6 +116,7 @@ export async function createDefaultAsset(
 
 export async function createAndMintDefaultAsset(
   t: test.Test,
+  connection: Connection,
   API: InitTransactions,
   handler: PayerTransactionHandler,
   payer: Keypair,
@@ -124,6 +126,7 @@ export async function createAndMintDefaultAsset(
 ): Promise<DigitalAssetManager> {
   const daManager = await createDefaultAsset(
     t,
+    connection,
     API,
     handler,
     payer,
@@ -132,8 +135,11 @@ export async function createAndMintDefaultAsset(
   );
   const { mint, metadata, masterEdition } = daManager;
 
+  console.log(programmableConfig);
+
   const { tx: mintTx, token } = await API.mint(
     t,
+    connection,
     payer,
     mint,
     metadata,

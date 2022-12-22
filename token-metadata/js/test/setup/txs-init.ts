@@ -36,11 +36,17 @@ import {
   VerifyCollectionInstructionAccounts,
   createVerifyCollectionInstruction,
   createSignMetadataInstruction,
+  Metadata,
 } from '../../src/generated';
 import { Test } from 'tape';
 import { amman } from '.';
 import { UpdateTestData } from 'test/utils/UpdateTestData';
-
+import {
+  CreateInstructionAccounts as CreateRuleSetInstructionAccounts,
+  CreateInstructionArgs as CreateRuleSetInstructionArgs,
+  createCreateInstruction as createCreateRuleSetInstruction,
+  PROGRAM_ID as TOKEN_AUTH_RULES_ID,
+} from '@metaplex-foundation/mpl-token-auth-rules';
 export class InitTransactions {
   readonly getKeypair: LoadOrGenKeypair | GenLabeledKeypair;
 
@@ -94,6 +100,9 @@ export class InitTransactions {
       splTokenProgram: splToken.TOKEN_PROGRAM_ID,
       sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
       updateAuthority: payer.publicKey,
+      authorizationRules: assetData.programmableConfig
+        ? assetData.programmableConfig.ruleSet
+        : undefined,
     };
 
     const args: CreateInstructionArgs = {
@@ -153,6 +162,7 @@ export class InitTransactions {
 
   async mint(
     t: Test,
+    connection: Connection,
     payer: Keypair,
     mint: PublicKey,
     metadata: PublicKey,
@@ -168,6 +178,8 @@ export class InitTransactions {
     );
     amman.addr.addLabel('Token Account', token);
 
+    const metadataAccount = await Metadata.fromAccountAddress(connection, metadata);
+
     const mintAcccounts: MintInstructionAccounts = {
       token,
       metadata,
@@ -178,6 +190,8 @@ export class InitTransactions {
       splAtaProgram: splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
       splTokenProgram: splToken.TOKEN_PROGRAM_ID,
       masterEdition,
+      authorizationRules: metadataAccount.programmableConfig.ruleSet,
+      authRulesProgram: TOKEN_AUTH_RULES_ID,
     };
 
     const payload: Payload = {
@@ -218,6 +232,7 @@ export class InitTransactions {
     masterEdition: PublicKey,
     destination: PublicKey,
     destinationAta: PublicKey,
+    authorizationRules: PublicKey,
     amount: number,
     handler: PayerTransactionHandler,
   ): Promise<{ tx: ConfirmedTransactionAssertablePromise }> {
@@ -243,6 +258,8 @@ export class InitTransactions {
       splAtaProgram: splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
       systemProgram: SystemProgram.programId,
       sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
+      authorizationRules,
+      authorizationRulesProgram: TOKEN_AUTH_RULES_ID,
     };
 
     const transferArgs: TransferInstructionArgs = {
@@ -362,6 +379,38 @@ export class InitTransactions {
 
     return {
       tx: handler.sendAndConfirmTransaction(tx, [creator], 'tx: Sign Metadata'),
+    };
+  }
+
+  async createRuleSet(
+    t: Test,
+    payer: Keypair,
+    ruleSetPda: PublicKey,
+    serializedRuleSet: Uint8Array,
+    handler: PayerTransactionHandler,
+  ): Promise<{ tx: ConfirmedTransactionAssertablePromise }> {
+    amman.addr.addLabel('Rule Set Account', ruleSetPda);
+    amman.addr.addLabel('Payer', payer.publicKey);
+
+    const createRuleSetAccounts: CreateRuleSetInstructionAccounts = {
+      ruleSetPda,
+      payer: payer.publicKey,
+    };
+
+    const createRuleSetArgs: CreateRuleSetInstructionArgs = {
+      createArgs: {
+        serializedRuleSet,
+      },
+    };
+
+    const createRuleSetInstruction = createCreateRuleSetInstruction(
+      createRuleSetAccounts,
+      createRuleSetArgs,
+    );
+    const tx = new Transaction().add(createRuleSetInstruction);
+
+    return {
+      tx: handler.sendAndConfirmTransaction(tx, [payer], 'tx: Create Rule Set'),
     };
   }
 }

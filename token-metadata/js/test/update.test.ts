@@ -819,49 +819,6 @@ test('Update: Fail to Update a Verified Collection', async (t) => {
   await updateTx.assertError(t, /Collection cannot be verified in this instruction/);
 });
 
-test('Update: Update a ProgrammableNonFungible', async (t) => {
-  const API = new InitTransactions();
-  const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
-  const daManager = await createDefaultAsset(
-    t,
-    API,
-    handler,
-    payer,
-    TokenStandard.ProgrammableNonFungible,
-  );
-  const { mint, metadata, masterEdition } = daManager;
-
-  const updateData = new UpdateTestData();
-  updateData.data = {
-    name: 'new-name',
-    symbol: 'new-symbol',
-    uri: 'new-uri',
-    sellerFeeBasisPoints: 500,
-    creators: null,
-  };
-
-  const { tx: updateTx } = await API.update(
-    t,
-    payer,
-    mint,
-    metadata,
-    masterEdition,
-    updateData,
-    handler,
-  );
-  await updateTx.assertSuccess(t);
-
-  const updatedMetadata = await Metadata.fromAccountAddress(connection, metadata);
-  spok(t, updatedMetadata.data, {
-    sellerFeeBasisPoints: updateData.data.sellerFeeBasisPoints,
-    creators: updateData.data.creators,
-  });
-
-  t.equal(updatedMetadata.data.name.replace(/\0+/, ''), updateData.data.name);
-  t.equal(updatedMetadata.data.symbol.replace(/\0+/, ''), updateData.data.symbol);
-  t.equal(updatedMetadata.data.uri.replace(/\0+/, ''), updateData.data.uri);
-});
-
 test('Update: Invalid Update Authority Fails', async (t) => {
   const API = new InitTransactions();
   const { fstTxHandler: handler, payerPair: payer } = await API.payer();
