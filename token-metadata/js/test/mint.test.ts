@@ -54,6 +54,7 @@ test('Mint: ProgrammableNonFungible asset', async (t) => {
 
   const { tx: mintTx, token } = await API.mint(
     t,
+    connection,
     payer,
     mint,
     metadata,

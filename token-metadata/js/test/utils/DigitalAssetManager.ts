@@ -135,8 +135,6 @@ export async function createAndMintDefaultAsset(
   );
   const { mint, metadata, masterEdition } = daManager;
 
-  console.log(programmableConfig);
-
   const { tx: mintTx, token } = await API.mint(
     t,
     connection,

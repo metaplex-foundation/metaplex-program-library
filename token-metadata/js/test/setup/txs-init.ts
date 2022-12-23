@@ -37,11 +37,15 @@ import {
   createVerifyCollectionInstruction,
   createSignMetadataInstruction,
   Metadata,
+  DelegateInstructionAccounts,
+  DelegateInstructionArgs,
+  DelegateArgs,
+  createDelegateInstruction,
   AuthorityType,
 } from '../../src/generated';
 import { Test } from 'tape';
 import { amman } from '.';
-import { UpdateTestData } from 'test/utils/UpdateTestData';
+import { UpdateTestData } from '../utils/UpdateTestData';
 import {
   CreateInstructionAccounts as CreateRuleSetInstructionAccounts,
   CreateInstructionArgs as CreateRuleSetInstructionArgs,
@@ -425,6 +429,62 @@ export class InitTransactions {
 
     return {
       tx: handler.sendAndConfirmTransaction(tx, [payer], 'tx: Create Rule Set'),
+    };
+  }
+
+  async delegate(
+    t: Test,
+    mint: PublicKey,
+    metadata: PublicKey,
+    masterEdition: PublicKey,
+    authority: PublicKey,
+    payer: Keypair,
+    args: DelegateArgs,
+    handler: PayerTransactionHandler,
+    token: PublicKey | null = null,
+    ruleSetPda: PublicKey | null = null,
+    authorizationData: AuthorizationData | null = null,
+  ): Promise<{ tx: ConfirmedTransactionAssertablePromise; delegate: PublicKey }> {
+    const [delegate] = await this.getKeypair('Delegate');
+    // delegate PDA
+    const [delegateRecord] = PublicKey.findProgramAddressSync(
+      [
+        mint.toBuffer(),
+        Buffer.from('collection_delegate'),
+        delegate.toBuffer(),
+        authority.toBuffer(),
+      ],
+      PROGRAM_ID,
+    );
+    amman.addr.addLabel('Delegate Record', delegateRecord);
+
+    const delegateAcccounts: DelegateInstructionAccounts = {
+      delegate: delegateRecord,
+      delegateOwner: delegate,
+      mint,
+      metadata,
+      masterEdition,
+      authority: payer.publicKey,
+      payer: payer.publicKey,
+      sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
+      splTokenProgram: splToken.TOKEN_PROGRAM_ID,
+      tokenAccount: token,
+      authorizationRules: ruleSetPda,
+    };
+
+    const mintArgs: DelegateInstructionArgs = {
+      delegateArgs: args,
+    };
+
+    const mintIx = createDelegateInstruction(delegateAcccounts, mintArgs);
+
+    // creates the transaction
+
+    const tx = new Transaction().add(mintIx);
+
+    return {
+      tx: handler.sendAndConfirmTransaction(tx, [payer], 'tx: Delegate'),
+      delegate,
     };
   }
 }
