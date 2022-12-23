@@ -16,6 +16,7 @@ use crate::instruction::MetadataInstruction;
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub enum DelegateArgs {
     CollectionV1,
+    SaleV1 { amount: u64 },
     TransferV1 { amount: u64 },
 }
 
@@ -36,6 +37,8 @@ pub enum DelegateRole {
     Transfer,
     Use,
     Utility,
+    Sale,
+    Update,
 }
 
 impl fmt::Display for DelegateRole {
@@ -46,6 +49,8 @@ impl fmt::Display for DelegateRole {
             Self::Transfer => "sale_delegate".to_string(),
             Self::Use => "use_delegate".to_string(),
             Self::Utility => "utility_delegate".to_string(),
+            Self::Sale => "sale_delegate".to_string(),
+            Self::Update => "update_delegate".to_string(),
         };
 
         write!(f, "{}", message)

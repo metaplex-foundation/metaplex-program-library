@@ -44,17 +44,24 @@ pub fn delegate<'a>(
 ) -> ProgramResult {
     match args {
         DelegateArgs::CollectionV1 { .. } => delegate_collection_v1(program_id, accounts, args),
-        DelegateArgs::TransferV1 { .. } => delegate_transfer_v1(program_id, accounts, args),
+        DelegateArgs::SaleV1 { amount } => {
+            // the sale delegate is a special type of transfer
+            delegate_transfer_v1(program_id, accounts, args, DelegateRole::Sale, amount)
+        }
+        DelegateArgs::TransferV1 { amount } => {
+            delegate_transfer_v1(program_id, accounts, args, DelegateRole::Transfer, amount)
+        }
     }
 }
 
+/// Creates a `DelegateRole::Collection` delegate.
+///
+/// There can be multiple collections delegates set at any time.
 fn delegate_collection_v1<'a>(
     program_id: &Pubkey,
     accounts: &'a [AccountInfo<'a>],
     args: DelegateArgs,
 ) -> ProgramResult {
-    // TODO: do this on a macro rules
-    // accounts!()
     // get the accounts for the instruction
     let (delegate, delegate_owner, mint, metadata, authority, payer, system_program) =
         if let DelegateAccounts::CollectionV1 {
@@ -117,10 +124,16 @@ fn delegate_collection_v1<'a>(
     )
 }
 
+/// Creates a transfer-related delegate.
+///
+/// The delegate can only be either `DelegateRole::Sale` or `DelegateRole::Transfer`. Note
+/// that `DelegateRole::Sale` is only available for programmable assets.
 fn delegate_transfer_v1<'a>(
     program_id: &Pubkey,
     accounts: &'a [AccountInfo<'a>],
     args: DelegateArgs,
+    role: DelegateRole,
+    amount: u64,
 ) -> ProgramResult {
     // get the accounts for the instruction
     let (
@@ -157,12 +170,6 @@ fn delegate_transfer_v1<'a>(
     } else {
         unimplemented!();
     };
-    // get the args for the instruction
-    let amount = if let DelegateArgs::TransferV1 { amount } = args {
-        amount
-    } else {
-        unimplemented!();
-    };
 
     // validates accounts
 
@@ -195,6 +202,9 @@ fn delegate_transfer_v1<'a>(
         } else {
             return Err(MetadataError::MissingEditionAccount.into());
         }
+    } else if matches!(role, DelegateRole::Sale) {
+        // Sale delegate only available for programmable assets
+        return Err(MetadataError::InvalidTokenStandard.into());
     }
 
     invoke(
@@ -220,9 +230,9 @@ fn delegate_transfer_v1<'a>(
         }
     }
 
-    // sale delegate is set to the metadata account
+    // we replace the existing delegate (if there is one)
     asset_metadata.delegate_state = Some(DelegateState {
-        role: DelegateRole::Transfer,
+        role,
         delegate: *delegate_owner.key,
         has_data: false,
     });
@@ -340,7 +350,7 @@ impl DelegateArgs {
                     _auth_rules_program,
                 })
             }
-            DelegateArgs::TransferV1 { .. } => {
+            DelegateArgs::SaleV1 { .. } | DelegateArgs::TransferV1 { .. } => {
                 let _delegate = try_get_account_info(accounts, 0)?;
                 let delegate_owner = try_get_account_info(accounts, 1)?;
                 let mint = try_get_account_info(accounts, 2)?;
