@@ -3050,6 +3050,26 @@ createErrorFromCodeLookup.set(0x8d, () => new DelegateNotFoundError());
 createErrorFromNameLookup.set('DelegateNotFound', () => new DelegateNotFoundError());
 
 /**
+ * FeatureNotSupported: 'Feature not supported currently'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class FeatureNotSupportedError extends Error {
+  readonly code: number = 0x8e;
+  readonly name: string = 'FeatureNotSupported';
+  constructor() {
+    super('Feature not supported currently');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, FeatureNotSupportedError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x8e, () => new FeatureNotSupportedError());
+createErrorFromNameLookup.set('FeatureNotSupported', () => new FeatureNotSupportedError());
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

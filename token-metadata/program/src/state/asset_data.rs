@@ -38,7 +38,7 @@ pub struct AssetData {
     pub collection_details: Option<CollectionDetails>,
     // Programmable configuration for the asset.
     pub programmable_config: Option<ProgrammableConfig>,
-    // Delegate status.
+    // Delegate status
     pub delegate_state: Option<DelegateState>,
 }
 

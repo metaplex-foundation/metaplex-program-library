@@ -84,6 +84,7 @@ pub enum UpdateArgs {
         collection_details: Option<CollectionDetails>,
         programmable_config: Option<ProgrammableConfig>,
         delegate_state: Option<DelegateState>,
+        authority_type: AuthorityType,
     },
 }
 
@@ -101,6 +102,7 @@ impl Default for UpdateArgs {
             collection_details: None,
             programmable_config: None,
             delegate_state: None,
+            authority_type: AuthorityType::Metadata,
         }
     }
 }
@@ -492,12 +494,14 @@ pub fn transfer(
     }
 }
 
+#[repr(C)]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub enum AuthorityType {
-    UpdateAuthority(Pubkey),
-    Holder {
-        holder: Pubkey,
-        token_account: Pubkey,
-    },
+    Metadata,
+    Delegate,
+    Holder,
+    Other,
 }
 
 /// Creates an instruction to update an existing asset.
@@ -521,7 +525,9 @@ pub fn update(
     metadata_account: Pubkey,
     mint_account: Pubkey,
     master_edition_account: Option<Pubkey>,
-    authority: AuthorityType,
+    authority: Pubkey,
+    token_account: Option<Pubkey>,
+    delegate_record: Option<Pubkey>,
     authorization_rules: Option<Pubkey>,
     additional_accounts: Option<Vec<AccountMeta>>,
     args: UpdateArgs,
@@ -532,21 +538,10 @@ pub fn update(
         AccountMeta::new_readonly(solana_program::system_program::id(), false),
         AccountMeta::new_readonly(sysvar::instructions::id(), false),
         AccountMeta::new(master_edition_account.unwrap_or(crate::ID), false),
+        AccountMeta::new_readonly(authority, true),
+        AccountMeta::new_readonly(token_account.unwrap_or(crate::ID), false),
+        AccountMeta::new_readonly(delegate_record.unwrap_or(crate::ID), false),
     ];
-
-    match authority {
-        AuthorityType::UpdateAuthority(authority) => {
-            accounts.push(AccountMeta::new_readonly(authority, true));
-            accounts.push(AccountMeta::new_readonly(crate::ID, false));
-        }
-        AuthorityType::Holder {
-            holder,
-            token_account,
-        } => {
-            accounts.push(AccountMeta::new_readonly(holder, true));
-            accounts.push(AccountMeta::new_readonly(token_account, false));
-        }
-    }
 
     if let Some(authorization_rules) = authorization_rules {
         accounts.push(AccountMeta::new_readonly(mpl_token_auth_rules::ID, false));

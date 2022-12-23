@@ -1,16 +1,15 @@
-use mpl_token_auth_rules::payload::{PayloadKey, PayloadType};
+use mpl_utils::assert_signer;
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
     pubkey::Pubkey, sysvar,
 };
 
 use crate::{
-    assertions::{assert_owned_by, programmable::assert_valid_authorization},
+    assertions::{assert_owned_by, metadata::assert_metadata_authority},
     error::MetadataError,
-    instruction::UpdateArgs,
+    instruction::{AuthorityType, UpdateArgs},
     processor::{try_get_account_info, try_get_optional_account_info, AuthorizationData},
-    state::{Metadata, Operation, TokenMetadataAccount, TokenStandard},
-    utils::{assert_update_authority_is_correct, validate},
+    state::{Metadata, TokenMetadataAccount, TokenStandard},
 };
 
 const EXPECTED_ACCOUNTS_LEN: usize = 9;
@@ -34,14 +33,20 @@ fn update_v1<'a>(
         metadata_info,
         mint_info,
         master_edition_opt_info,
-        update_authority_info,
+        authority_info,
         holder_token_account_opt_info,
+        _delegate_record_opt_info,
         system_program_info,
         sysvar_instructions_info,
         authorization_rules_opt_info,
     } = args.get_accounts(accounts)?;
 
     //** Account Validation **/
+    // Assert signers
+    // This account should always be a signer regardless of the authority type,
+    // because at least one signer is required to update the metadata.
+    assert_signer(authority_info)?;
+
     // Assert program ownership
     assert_owned_by(metadata_info, program_id)?;
     assert_owned_by(mint_info, &spl_token::ID)?;
@@ -56,13 +61,6 @@ fn update_v1<'a>(
         assert_owned_by(holder_token_account, &spl_token::ID)?;
     }
 
-    // Deserialize metadata to determine its type
-    let mut metadata = Metadata::from_account_info(metadata_info)?;
-
-    // Check signers
-    // Check update authority
-    assert_update_authority_is_correct(&metadata, update_authority_info)?;
-
     // Check program IDs.
     if system_program_info.key != &solana_program::system_program::ID {
         return Err(ProgramError::IncorrectProgramId);
@@ -71,53 +69,73 @@ fn update_v1<'a>(
         return Err(ProgramError::IncorrectProgramId);
     }
 
-    if metadata.token_standard.is_none() {
-        return Err(MetadataError::CouldNotDetermineTokenStandard.into());
+    // Deserialize metadata to determine its type
+    let mut metadata = Metadata::from_account_info(metadata_info)?;
+
+    // Validate relationships
+
+    // Mint must match metadata mint
+    if metadata.mint != *mint_info.key {
+        return Err(MetadataError::MintMismatch.into());
     }
 
-    let token_standard = metadata.token_standard.unwrap();
+    let token_standard = metadata
+        .token_standard
+        .ok_or(MetadataError::InvalidTokenStandard)?;
 
-    // The token being frozen has no effect on updating the metadata account,
-    // so we do not have to thaw and re-freeze here.
-    //
-    // If the NFT has a programmable config set, we have to get the authorization
-    // rules and validate if this action is allowed.
-    //
-    // Authorization rules only apply to the ProgrammableNonFungible asset type
-    // currently.
-    if matches!(token_standard, TokenStandard::ProgrammableNonFungible) {
-        if let Some(ref config) = metadata.programmable_config {
-            let authorization_data = args.get_auth_data();
+    // We have to validate authorization rules if the token standard is a Programmable type
+    // and the metadata has a programmable config set.
+    let _auth_rules_apply = matches!(token_standard, TokenStandard::ProgrammableNonFungible)
+        && metadata.programmable_config.is_some();
 
-            assert_valid_authorization(authorization_rules_opt_info, config)?;
+    let authority_type = args.get_authority_type();
 
-            // We can safely unwrap here because they were all checked for existence
-            // in the assertion above.
-            let auth_pda = authorization_rules_opt_info.unwrap();
-            let mut auth_data = authorization_data.unwrap();
+    match authority_type {
+        AuthorityType::Metadata => {
+            // Check is signer and matches update authority on metadata.
+            assert_metadata_authority(&metadata, authority_info)?;
 
-            /*
-            Insert auth rules for Update.
-            Generic target for update_authority to allow for different rules
-            for who can update.
-             */
-            auth_data.payload.insert(
-                PayloadKey::Target,
-                PayloadType::Pubkey(*update_authority_info.key),
-            );
+            // Metadata authority is the paramount authority so is not subject to auth rules.
+            // Exit the branch with no error and proceed to update.
+        }
+        AuthorityType::Delegate => {
+            // If delegate_record_opt_info is None, then return an error.
+            // Otherwise, validate delegate_record PDA derivation
+            // seeds: mint, "update", authority as delegate, metadata.update_authority
+            //
+            // if auth_rules_apply:
+            // we can unwrap programmable config
+            // call the auth rules function to perform all auth rules checks
+            //     - get authorization data
+            //     - assert_valid_authorization
+            //     - add required payload values
+            //     - call validate function
+            // if the auth rules function returns with no error, then we
+            // exit this branch with no error
+            //
+            // else: it's a valid update delegate so we exit this branch with no error
 
-            // This panics if the CPI into the auth rules program fails, so unwrapping is ok.
-            validate(
-                auth_pda,
-                Operation::Update,
-                update_authority_info,
-                &auth_data,
-            )
-            .unwrap();
+            return Err(MetadataError::FeatureNotSupported.into());
+        }
+        AuthorityType::Holder => {
+            // Rules TBD
+            // Ensure that the holder token account is passed in
+            // Ensure owner is currently holding the token and is the proper owner
+            // Ensure mint matches metadata
+            return Err(MetadataError::FeatureNotSupported.into());
+        }
+        AuthorityType::Other => {
+            // Rules TBD, additional authority type for supporting PayloadKey::Target
+            // and support flexible authorization rules.
+            // This one should fail without authorization rules set as there is no valid
+            // update without it.
+            return Err(MetadataError::FeatureNotSupported.into());
         }
     }
-    // For other token types we can simply update the metadata.
-    metadata.update(args, update_authority_info, metadata_info)?;
+
+    // If we reach here without errors we have validated that the authority is allowed to
+    // perform an update.
+    metadata.update(args, authority_info, metadata_info)?;
 
     Ok(())
 }
@@ -126,11 +144,12 @@ enum UpdateAccounts<'a> {
     V1 {
         metadata_info: &'a AccountInfo<'a>,
         mint_info: &'a AccountInfo<'a>,
-        master_edition_opt_info: Option<&'a AccountInfo<'a>>,
-        update_authority_info: &'a AccountInfo<'a>,
-        holder_token_account_opt_info: Option<&'a AccountInfo<'a>>,
         system_program_info: &'a AccountInfo<'a>,
         sysvar_instructions_info: &'a AccountInfo<'a>,
+        master_edition_opt_info: Option<&'a AccountInfo<'a>>,
+        authority_info: &'a AccountInfo<'a>,
+        holder_token_account_opt_info: Option<&'a AccountInfo<'a>>,
+        _delegate_record_opt_info: Option<&'a AccountInfo<'a>>,
         authorization_rules_opt_info: Option<&'a AccountInfo<'a>>,
     },
 }
@@ -152,30 +171,38 @@ impl UpdateArgs {
                 let system_program_info = try_get_account_info(accounts, 2)?;
                 let sysvar_instructions_info = try_get_account_info(accounts, 3)?;
                 let master_edition_opt_info = try_get_optional_account_info(accounts, 4)?;
-                let update_authority_info = try_get_account_info(accounts, 5)?;
+                let authority_info = try_get_account_info(accounts, 5)?;
                 let holder_token_account_opt_info = try_get_optional_account_info(accounts, 6)?;
-                let _mpl_token_auth_rules_info = try_get_optional_account_info(accounts, 7)?;
-                let authorization_rules_opt_info = try_get_optional_account_info(accounts, 8)?;
+                let _delegate_record_opt_info = try_get_optional_account_info(accounts, 7)?;
+                let _mpl_token_auth_rules_info = try_get_optional_account_info(accounts, 8)?;
+                let authorization_rules_opt_info = try_get_optional_account_info(accounts, 9)?;
 
                 Ok(UpdateAccounts::V1 {
                     metadata_info,
                     mint_info,
                     master_edition_opt_info,
-                    update_authority_info,
-                    holder_token_account_opt_info,
                     system_program_info,
                     sysvar_instructions_info,
+                    authority_info,
+                    holder_token_account_opt_info,
+                    _delegate_record_opt_info,
                     authorization_rules_opt_info,
                 })
             }
         }
     }
 
-    fn get_auth_data(&self) -> Option<AuthorizationData> {
+    fn _get_auth_data(&self) -> Option<AuthorizationData> {
         match self {
             UpdateArgs::V1 {
                 authorization_data, ..
             } => authorization_data.clone(),
+        }
+    }
+
+    fn get_authority_type(&self) -> AuthorityType {
+        match self {
+            UpdateArgs::V1 { authority_type, .. } => authority_type.clone(),
         }
     }
 }

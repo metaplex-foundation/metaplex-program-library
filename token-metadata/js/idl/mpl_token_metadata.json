@@ -2550,7 +2550,7 @@
           "optional": true
         },
         {
-          "name": "updateAuthority",
+          "name": "authority",
           "isMut": false,
           "isSigner": true,
           "desc": "Update authority",
@@ -2561,6 +2561,13 @@
           "isMut": false,
           "isSigner": false,
           "desc": "Token account",
+          "optional": true
+        },
+        {
+          "name": "delegateRecord",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Delegate record PDA",
           "optional": true
         },
         {
@@ -4407,6 +4414,12 @@
                     "defined": "DelegateState"
                   }
                 }
+              },
+              {
+                "name": "authority_type",
+                "type": {
+                  "defined": "AuthorityType"
+                }
               }
             ]
           }
@@ -4420,6 +4433,26 @@
         "variants": [
           {
             "name": "V1"
+          }
+        ]
+      }
+    },
+    {
+      "name": "AuthorityType",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Metadata"
+          },
+          {
+            "name": "Delegate"
+          },
+          {
+            "name": "Holder"
+          },
+          {
+            "name": "Other"
           }
         ]
       }
@@ -5340,6 +5373,11 @@
       "code": 141,
       "name": "DelegateNotFound",
       "msg": "Delegate not found"
+    },
+    {
+      "code": 142,
+      "name": "FeatureNotSupported",
+      "msg": "Feature not supported currently"
     }
   ],
   "metadata": {

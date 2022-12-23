@@ -90,6 +90,7 @@ impl Metadata {
             _collection_details,
             _programmable_config,
             _delegate_state,
+            _authority_type,
             _authorization_data,
             new_update_authority,
         ) = match args {
@@ -103,6 +104,7 @@ impl Metadata {
                 collection_details,
                 programmable_config,
                 delegate_state,
+                authority_type,
                 authorization_data,
                 new_update_authority,
             } => (
@@ -115,6 +117,7 @@ impl Metadata {
                 collection_details,
                 programmable_config,
                 delegate_state,
+                authority_type,
                 authorization_data,
                 new_update_authority,
             ),

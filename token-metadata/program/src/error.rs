@@ -560,6 +560,10 @@ pub enum MetadataError {
     /// 141
     #[error("Delegate not found")]
     DelegateNotFound,
+
+    /// 142
+    #[error("Feature not supported currently")]
+    FeatureNotSupported,
 }
 
 impl PrintProgramError for MetadataError {

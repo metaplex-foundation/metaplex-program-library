@@ -37,6 +37,7 @@ import {
   createVerifyCollectionInstruction,
   createSignMetadataInstruction,
   Metadata,
+  AuthorityType,
 } from '../../src/generated';
 import { Test } from 'tape';
 import { amman } from '.';
@@ -179,6 +180,7 @@ export class InitTransactions {
     amman.addr.addLabel('Token Account', token);
 
     const metadataAccount = await Metadata.fromAccountAddress(connection, metadata);
+    const authConfig = metadataAccount.programmableConfig;
 
     const mintAcccounts: MintInstructionAccounts = {
       token,
@@ -190,7 +192,7 @@ export class InitTransactions {
       splAtaProgram: splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
       splTokenProgram: splToken.TOKEN_PROGRAM_ID,
       masterEdition,
-      authorizationRules: metadataAccount.programmableConfig.ruleSet,
+      authorizationRules: authConfig ? authConfig.ruleSet : null,
       authRulesProgram: TOKEN_AUTH_RULES_ID,
     };
 
@@ -282,17 +284,22 @@ export class InitTransactions {
   async update(
     t: Test,
     handler: PayerTransactionHandler,
-    payer: Keypair,
     mint: PublicKey,
     metadata: PublicKey,
     masterEdition: PublicKey,
+    authority: Keypair,
+    authorityType: AuthorityType = AuthorityType.Metadata,
     updateTestData: UpdateTestData,
-    ruleSetPda: PublicKey | null = null,
-    authorizationData: AuthorizationData | null = null,
+    delegateRecord?: PublicKey | null,
+    tokenAccount?: PublicKey | null,
+    ruleSetPda?: PublicKey | null,
+    authorizationData?: AuthorizationData | null,
   ): Promise<{ tx: ConfirmedTransactionAssertablePromise }> {
     amman.addr.addLabel('Mint Account', mint);
     amman.addr.addLabel('Metadata Account', metadata);
-    amman.addr.addLabel('Master Edition Account', masterEdition);
+    if (masterEdition != null) {
+      amman.addr.addLabel('Master Edition Account', masterEdition);
+    }
 
     const updateAcccounts: UpdateInstructionAccounts = {
       metadata,
@@ -300,7 +307,9 @@ export class InitTransactions {
       systemProgram: SystemProgram.programId,
       sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
       masterEdition,
-      updateAuthority: payer.publicKey,
+      authority: authority.publicKey,
+      tokenAccount,
+      delegateRecord,
       authorizationRulesProgram: ruleSetPda ? TOKEN_AUTH_RULES_ID : PROGRAM_ID,
       authorizationRules: ruleSetPda,
     };
@@ -318,7 +327,8 @@ export class InitTransactions {
         collectionDetails: updateTestData.collectionDetails,
         programmableConfig: updateTestData.programmableConfig,
         delegateState: updateTestData.delegateState,
-        authorizationData: authorizationData,
+        authorizationData,
+        authorityType,
       },
     };
 
@@ -327,7 +337,7 @@ export class InitTransactions {
     const tx = new Transaction().add(updateIx);
 
     return {
-      tx: handler.sendAndConfirmTransaction(tx, [payer], 'tx: Update'),
+      tx: handler.sendAndConfirmTransaction(tx, [authority], 'tx: Update'),
     };
   }
 
@@ -394,7 +404,6 @@ export class InitTransactions {
     serializedRuleSet: Uint8Array,
     handler: PayerTransactionHandler,
   ): Promise<{ tx: ConfirmedTransactionAssertablePromise }> {
-    amman.addr.addLabel('Rule Set Account', ruleSetPda);
     amman.addr.addLabel('Payer', payer.publicKey);
 
     const createRuleSetAccounts: CreateRuleSetInstructionAccounts = {

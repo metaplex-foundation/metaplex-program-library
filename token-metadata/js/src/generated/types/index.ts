@@ -1,5 +1,6 @@
 export * from './ApproveUseAuthorityArgs';
 export * from './AssetData';
+export * from './AuthorityType';
 export * from './AuthorizationData';
 export * from './BurnArgs';
 export * from './Collection';
