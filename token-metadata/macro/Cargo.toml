@@ -2,6 +2,11 @@
 name = "mpl-token-metadata-context-derive"
 version = "0.0.1"
 edition = "2021"
+description = "Metaplex Metadata"
+authors = ["Metaplex Developers <dev@metaplex.com>"]
+repository = "https://github.com/metaplex-foundation/metaplex-program-library"
+license-file = "../../LICENSE"
+readme = "README.md"
 
 [lib]
 proc-macro = true
