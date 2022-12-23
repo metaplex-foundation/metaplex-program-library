@@ -26,6 +26,7 @@ pub enum DelegateArgs {
 pub enum RevokeArgs {
     CollectionV1,
     TransferV1,
+    SaleV1,
 }
 
 #[repr(C)]

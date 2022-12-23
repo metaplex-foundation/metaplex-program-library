@@ -43,7 +43,13 @@ pub fn revoke<'a>(
 ) -> ProgramResult {
     match args {
         RevokeArgs::CollectionV1 => revoke_collection_v1(program_id, accounts, args),
-        RevokeArgs::TransferV1 => revoke_sale_v1(program_id, accounts, args),
+        RevokeArgs::SaleV1 => {
+            // the sale delegate is a special type of transfer
+            revoke_transfer_v1(program_id, accounts, args, DelegateRole::Sale)
+        }
+        RevokeArgs::TransferV1 => {
+            revoke_transfer_v1(program_id, accounts, args, DelegateRole::Transfer)
+        }
     }
 }
 
@@ -104,10 +110,11 @@ fn revoke_collection_v1<'a>(
     )
 }
 
-fn revoke_sale_v1<'a>(
+fn revoke_transfer_v1<'a>(
     program_id: &Pubkey,
     accounts: &'a [AccountInfo<'a>],
     args: RevokeArgs,
+    role: DelegateRole,
 ) -> ProgramResult {
     // get the accounts for the instruction
     let (
@@ -119,7 +126,7 @@ fn revoke_sale_v1<'a>(
         payer,
         spl_token_program,
         token,
-    ) = if let RevokeAccounts::SaleV1 {
+    ) = if let RevokeAccounts::TransferV1 {
         delegate_owner,
         mint,
         metadata,
@@ -157,7 +164,7 @@ fn revoke_sale_v1<'a>(
     }
 
     if let Some(existing) = &asset_metadata.delegate_state {
-        if !cmp_pubkeys(&existing.delegate, delegate_owner.key) {
+        if !cmp_pubkeys(&existing.delegate, delegate_owner.key) || existing.role != role {
             return Err(MetadataError::InvalidDelegate.into());
         }
     } else {
@@ -252,7 +259,7 @@ enum RevokeAccounts<'a> {
         _authorization_rules: Option<&'a AccountInfo<'a>>,
         _auth_rules_program: Option<&'a AccountInfo<'a>>,
     },
-    SaleV1 {
+    TransferV1 {
         _delegate: &'a AccountInfo<'a>,
         delegate_owner: &'a AccountInfo<'a>,
         mint: &'a AccountInfo<'a>,
@@ -306,6 +313,38 @@ impl RevokeArgs {
                     _auth_rules_program,
                 })
             }
+            RevokeArgs::SaleV1 { .. } => {
+                let _delegate = try_get_account_info(accounts, 0)?;
+                let delegate_owner = try_get_account_info(accounts, 1)?;
+                let mint = try_get_account_info(accounts, 2)?;
+                let metadata = try_get_account_info(accounts, 3)?;
+                let master_edition = try_get_optional_account_info(accounts, 4)?;
+                let authority = try_get_account_info(accounts, 5)?;
+                let payer = try_get_account_info(accounts, 6)?;
+                let _system_program = try_get_account_info(accounts, 7)?;
+                let _sysvars = try_get_account_info(accounts, 8)?;
+                let spl_token_program = try_get_account_info(accounts, 9)?;
+                let token = try_get_account_info(accounts, 10)?;
+                // optional accounts
+                let _authorization_rules = try_get_optional_account_info(accounts, 11)?;
+                let _auth_rules_program = try_get_optional_account_info(accounts, 12)?;
+
+                Ok(RevokeAccounts::TransferV1 {
+                    _delegate,
+                    delegate_owner,
+                    mint,
+                    metadata,
+                    master_edition,
+                    authority,
+                    payer,
+                    _system_program,
+                    _sysvars,
+                    spl_token_program,
+                    token,
+                    _authorization_rules,
+                    _auth_rules_program,
+                })
+            }
             RevokeArgs::TransferV1 { .. } => {
                 let _delegate = try_get_account_info(accounts, 0)?;
                 let delegate_owner = try_get_account_info(accounts, 1)?;
@@ -322,7 +361,7 @@ impl RevokeArgs {
                 let _authorization_rules = try_get_optional_account_info(accounts, 11)?;
                 let _auth_rules_program = try_get_optional_account_info(accounts, 12)?;
 
-                Ok(RevokeAccounts::SaleV1 {
+                Ok(RevokeAccounts::TransferV1 {
                     _delegate,
                     delegate_owner,
                     mint,
