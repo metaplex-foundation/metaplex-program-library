@@ -4,7 +4,6 @@ use solana_program::{
     pubkey::Pubkey,
     system_program, sysvar,
 };
-
 #[cfg(feature = "serde-feature")]
 use {
     serde::{Deserialize, Serialize},

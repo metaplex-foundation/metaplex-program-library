@@ -18,7 +18,6 @@ pub use edition::*;
 pub use escrow::*;
 pub use freeze::*;
 pub use metadata::*;
-
 #[cfg(feature = "serde-feature")]
 use serde::{Deserialize, Serialize};
 use shank::ShankInstruction;
@@ -646,8 +645,8 @@ pub enum MetadataInstruction {
     Delegate(DelegateArgs),
 
     /// Revokes a delegate.
-    #[account(0, writable, name="delegate", desc="Delegate account key (pda of [mint id, delegate role, user id, authority id])")]
-    #[account(1, name="delegate_owner", desc="Owner of the delegated account")]
+    #[account(0, writable, name="delegate_record", desc="Delegate account key (pda of [mint id, delegate role, user id, authority id])")]
+    #[account(1, name="delegate", desc="Owner of the delegated account")]
     #[account(2, name="mint", desc="Mint of metadata")]
     #[account(3, writable, name="metadata", desc="Metadata account")]
     #[account(4, optional, name="master_edition", desc="Master Edition account")]

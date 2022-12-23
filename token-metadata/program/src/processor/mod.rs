@@ -24,6 +24,8 @@ pub use freeze::*;
 pub use metadata::*;
 use mpl_token_auth_rules::payload::Payload;
 use mpl_utils::cmp_pubkeys;
+#[cfg(feature = "serde-feature")]
+use serde::{Deserialize, Serialize};
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, msg, program_error::ProgramError,
     pubkey::Pubkey,
@@ -44,9 +46,6 @@ use crate::{
         escrow::process_transfer_out_of_escrow,
     },
 };
-
-#[cfg(feature = "serde-feature")]
-use serde::{Deserialize, Serialize};
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
