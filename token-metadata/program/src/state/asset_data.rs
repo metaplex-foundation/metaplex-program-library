@@ -29,7 +29,7 @@ pub struct AssetData {
     /// nonce for easy calculation of editions (if present).
     pub edition_nonce: Option<u8>,
     /// Type of the token.
-    pub token_standard: Option<TokenStandard>,
+    pub token_standard: TokenStandard,
     /// Collection information.
     pub collection: Option<Collection>,
     /// Uses information.
@@ -60,7 +60,7 @@ impl AssetData {
             primary_sale_happened: false,
             is_mutable: true,
             edition_nonce: None,
-            token_standard: Some(token_standard),
+            token_standard,
             collection: None,
             uses: None,
             collection_details: None,
