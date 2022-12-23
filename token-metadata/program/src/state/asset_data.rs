@@ -3,9 +3,8 @@ use borsh::{BorshDeserialize, BorshSerialize};
 use serde::{Deserialize, Serialize};
 use solana_program::pubkey::Pubkey;
 
-use crate::instruction::DelegateRole;
-
 use super::{Collection, CollectionDetails, Creator, Data, DataV2, TokenStandard, Uses};
+use crate::instruction::DelegateRole;
 
 /// Data representation of an asset.
 #[repr(C)]
