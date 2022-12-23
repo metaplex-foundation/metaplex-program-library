@@ -17,6 +17,7 @@ import * as beet from '@metaplex-foundation/beet';
  */
 export type DelegateArgsRecord = {
   CollectionV1: void /* scalar variant */;
+  SaleV1: { amount: beet.bignum };
   TransferV1: { amount: beet.bignum };
 };
 
@@ -36,6 +37,8 @@ export type DelegateArgs = beet.DataEnumKeyAsKind<DelegateArgsRecord>;
 export const isDelegateArgsCollectionV1 = (
   x: DelegateArgs,
 ): x is DelegateArgs & { __kind: 'CollectionV1' } => x.__kind === 'CollectionV1';
+export const isDelegateArgsSaleV1 = (x: DelegateArgs): x is DelegateArgs & { __kind: 'SaleV1' } =>
+  x.__kind === 'SaleV1';
 export const isDelegateArgsTransferV1 = (
   x: DelegateArgs,
 ): x is DelegateArgs & { __kind: 'TransferV1' } => x.__kind === 'TransferV1';
@@ -46,6 +49,14 @@ export const isDelegateArgsTransferV1 = (
  */
 export const delegateArgsBeet = beet.dataEnum<DelegateArgsRecord>([
   ['CollectionV1', beet.unit],
+
+  [
+    'SaleV1',
+    new beet.BeetArgsStruct<DelegateArgsRecord['SaleV1']>(
+      [['amount', beet.u64]],
+      'DelegateArgsRecord["SaleV1"]',
+    ),
+  ],
 
   [
     'TransferV1',

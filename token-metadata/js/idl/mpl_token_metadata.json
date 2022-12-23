@@ -3015,13 +3015,13 @@
       "name": "Revoke",
       "accounts": [
         {
-          "name": "delegate",
+          "name": "delegateRecord",
           "isMut": true,
           "isSigner": false,
           "desc": "Delegate account key (pda of [mint id, delegate role, user id, authority id])"
         },
         {
-          "name": "delegateOwner",
+          "name": "delegate",
           "isMut": false,
           "isSigner": false,
           "desc": "Owner of the delegated account"
@@ -3450,9 +3450,11 @@
             }
           },
           {
-            "name": "delegate",
+            "name": "delegateState",
             "type": {
-              "option": "publicKey"
+              "option": {
+                "defined": "DelegateState"
+              }
             }
           }
         ]
@@ -3860,9 +3862,7 @@
           {
             "name": "tokenStandard",
             "type": {
-              "option": {
-                "defined": "TokenStandard"
-              }
+              "defined": "TokenStandard"
             }
           },
           {
@@ -3916,6 +3916,28 @@
           {
             "name": "ruleSet",
             "type": "publicKey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "DelegateState",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "role",
+            "type": {
+              "defined": "DelegateRole"
+            }
+          },
+          {
+            "name": "delegate",
+            "type": "publicKey"
+          },
+          {
+            "name": "hasData",
+            "type": "bool"
           }
         ]
       }
@@ -4196,6 +4218,15 @@
             "name": "CollectionV1"
           },
           {
+            "name": "SaleV1",
+            "fields": [
+              {
+                "name": "amount",
+                "type": "u64"
+              }
+            ]
+          },
+          {
             "name": "TransferV1",
             "fields": [
               {
@@ -4240,6 +4271,12 @@
           },
           {
             "name": "Utility"
+          },
+          {
+            "name": "Sale"
+          },
+          {
+            "name": "Update"
           }
         ]
       }
@@ -4537,20 +4574,6 @@
           },
           {
             "name": "Delegate"
-          }
-        ]
-      }
-    },
-    {
-      "name": "DelegateState",
-      "type": {
-        "kind": "enum",
-        "variants": [
-          {
-            "name": "Transfer",
-            "fields": [
-              "publicKey"
-            ]
           }
         ]
       }

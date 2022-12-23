@@ -16,6 +16,8 @@ export enum DelegateRole {
   Transfer,
   Use,
   Utility,
+  Sale,
+  Update,
 }
 
 /**

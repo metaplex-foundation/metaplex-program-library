@@ -25,7 +25,7 @@ export type AssetData = {
   primarySaleHappened: boolean;
   isMutable: boolean;
   editionNonce: beet.COption<number>;
-  tokenStandard: beet.COption<TokenStandard>;
+  tokenStandard: TokenStandard;
   collection: beet.COption<Collection>;
   uses: beet.COption<Uses>;
   collectionDetails: beet.COption<CollectionDetails>;
@@ -48,7 +48,7 @@ export const assetDataBeet = new beet.FixableBeetArgsStruct<AssetData>(
     ['primarySaleHappened', beet.bool],
     ['isMutable', beet.bool],
     ['editionNonce', beet.coption(beet.u8)],
-    ['tokenStandard', beet.coption(tokenStandardBeet)],
+    ['tokenStandard', tokenStandardBeet],
     ['collection', beet.coption(collectionBeet)],
     ['uses', beet.coption(usesBeet)],
     ['collectionDetails', beet.coption(collectionDetailsBeet)],
