@@ -61,8 +61,8 @@ pub struct Metadata {
     pub collection_details: Option<CollectionDetails>,
     /// Programmable Config
     pub programmable_config: Option<ProgrammableConfig>,
-    /// Active delegate (for now, only the sale delegate is persisted)
-    pub delegate: Option<Pubkey>,
+    /// Active delegate state (for now, only the sale and transfer delegates are persisted)
+    pub delegate_state: Option<DelegateState>,
 }
 
 impl Metadata {
@@ -201,8 +201,7 @@ impl Metadata {
         asset_data.uses = self.uses;
         asset_data.collection_details = self.collection_details;
         asset_data.programmable_config = self.programmable_config;
-        let delegate_state = self.delegate.map(DelegateState::Transfer);
-        asset_data.delegate_state = delegate_state;
+        asset_data.delegate_state = self.delegate_state;
 
         asset_data
     }
@@ -223,7 +222,7 @@ impl Default for Metadata {
             uses: None,
             collection_details: None,
             programmable_config: None,
-            delegate: None,
+            delegate_state: None,
         }
     }
 }

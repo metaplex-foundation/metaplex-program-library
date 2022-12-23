@@ -100,8 +100,8 @@ fn transfer_v1<'a>(
 
     msg!("Must be Owner or Delegate.");
     // Use this for the payload operation in refactor.
-    let operation = if let Some(delegate) = metadata.delegate {
-        if !currently_holding && owner_info.key != &delegate {
+    let operation = if let Some(delegate_state) = metadata.delegate_state {
+        if !currently_holding && owner_info.key != &delegate_state.delegate {
             return Err(MetadataError::InvalidOwner.into());
         }
         Operation::Sale

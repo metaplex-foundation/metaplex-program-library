@@ -156,8 +156,8 @@ fn revoke_sale_v1<'a>(
         return Err(MetadataError::MintMismatch.into());
     }
 
-    if let Some(existing) = &asset_metadata.delegate {
-        if !cmp_pubkeys(existing, delegate_owner.key) {
+    if let Some(existing) = &asset_metadata.delegate_state {
+        if !cmp_pubkeys(&existing.delegate, delegate_owner.key) {
             return Err(MetadataError::InvalidDelegate.into());
         }
     } else {
@@ -211,7 +211,7 @@ fn revoke_sale_v1<'a>(
     }
 
     // sale delegate is set to the metadata account
-    asset_metadata.delegate = None;
+    asset_metadata.delegate_state = None;
     asset_metadata.save(&mut metadata.try_borrow_mut_data()?)?;
 
     Ok(())

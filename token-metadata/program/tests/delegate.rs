@@ -85,8 +85,8 @@ mod delegate {
         let metadata_account = get_account(&mut context, &asset.metadata).await;
         let metadata: Metadata = try_from_slice_unchecked(&metadata_account.data).unwrap();
         assert_eq!(
-            metadata.delegate,
-            Some(user_pubkey) /* delegate owner */
+            metadata.delegate_state.unwrap().delegate,
+            user_pubkey /* delegate */
         );
 
         if let Some(token) = asset.token {

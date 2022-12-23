@@ -84,8 +84,8 @@ mod revoke {
         let metadata_account = get_account(&mut context, &asset.metadata).await;
         let metadata: Metadata = try_from_slice_unchecked(&metadata_account.data).unwrap();
         assert_eq!(
-            metadata.delegate,
-            Some(user_pubkey) /* delegate owner */
+            metadata.delegate_state.unwrap().delegate,
+            user_pubkey /* delegate owner */
         );
 
         // revokes the delegate
@@ -117,7 +117,7 @@ mod revoke {
 
         let metadata_account = get_account(&mut context, &asset.metadata).await;
         let metadata: Metadata = try_from_slice_unchecked(&metadata_account.data).unwrap();
-        assert_eq!(metadata.delegate, None);
+        assert_eq!(metadata.delegate_state, None);
 
         if let Some(token) = asset.token {
             let account = get_account(&mut context, &token).await;

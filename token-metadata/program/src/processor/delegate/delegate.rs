@@ -13,7 +13,7 @@ use crate::{
     error::MetadataError,
     instruction::{DelegateArgs, DelegateRole},
     processor::{try_get_account_info, try_get_optional_account_info},
-    state::{DelegateRecord, Key, Metadata, TokenMetadataAccount, TokenStandard},
+    state::{DelegateRecord, Key, Metadata, TokenMetadataAccount, TokenStandard, DelegateState},
     utils::{freeze, thaw},
 };
 
@@ -221,7 +221,11 @@ fn delegate_transfer_v1<'a>(
     }
 
     // sale delegate is set to the metadata account
-    asset_metadata.delegate = Some(*delegate_owner.key);
+    asset_metadata.delegate_state = Some(DelegateState {
+        role: DelegateRole::Transfer,
+        delegate: *delegate_owner.key,
+        has_data: false
+    });
     asset_metadata.save(&mut metadata.try_borrow_mut_data()?)?;
 
     Ok(())
