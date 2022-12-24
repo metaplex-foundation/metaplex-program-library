@@ -1,8 +1,9 @@
 use mpl_token_metadata::{
     id,
     instruction::{
-        builders::{CreateBuilder, DelegateBuilder, MintBuilder, TransferBuilder},
-        CreateArgs, DelegateArgs, DelegateRole, InstructionBuilder, MintArgs, TransferArgs,
+        builders::{CreateBuilder, DelegateBuilder, MintBuilder, RevokeBuilder, TransferBuilder},
+        CreateArgs, DelegateArgs, DelegateRole, InstructionBuilder, MintArgs, RevokeArgs,
+        TransferArgs,
     },
     pda::find_delegate_account,
     processor::AuthorizationData,
@@ -235,6 +236,9 @@ impl DigitalAsset {
                 amount: amount_opt.unwrap(),
             },
             DelegateRole::Collection => DelegateArgs::CollectionV1,
+            DelegateRole::Sale => DelegateArgs::SaleV1 {
+                amount: amount_opt.unwrap(),
+            },
             _ => panic!("currently unsupported delegate role"),
         };
 
@@ -259,6 +263,57 @@ impl DigitalAsset {
 
         let tx = Transaction::new_signed_with_payer(
             &[delegate_ix],
+            Some(&authority.pubkey()),
+            &[&authority],
+            context.last_blockhash,
+        );
+
+        context.banks_client.process_transaction(tx).await
+    }
+
+    pub async fn revoke(
+        &mut self,
+        context: &mut ProgramTestContext,
+        authority: Keypair,
+        delegate: Pubkey,
+        delegate_role: DelegateRole,
+    ) -> Result<(), BanksClientError> {
+        // delegate PDA
+        let (delegate_record, _) = find_delegate_account(
+            &self.mint.pubkey(),
+            delegate_role.clone(),
+            &delegate,
+            &authority.pubkey(),
+        );
+
+        let args = match delegate_role {
+            DelegateRole::Transfer => RevokeArgs::TransferV1,
+            DelegateRole::Collection => RevokeArgs::CollectionV1,
+            DelegateRole::Sale => RevokeArgs::SaleV1,
+            _ => panic!("currently unsupported delegate role"),
+        };
+
+        let mut builder = RevokeBuilder::new();
+        builder
+            .delegate(delegate)
+            .delegate_record(delegate_record)
+            .mint(self.mint.pubkey())
+            .metadata(self.metadata)
+            .payer(authority.pubkey())
+            .authority(authority.pubkey());
+
+        if let Some(edition) = self.master_edition {
+            builder.master_edition(edition);
+        }
+
+        if let Some(token) = self.token {
+            builder.token(token);
+        }
+
+        let revoke_ix = builder.build(args.clone()).unwrap().instruction();
+
+        let tx = Transaction::new_signed_with_payer(
+            &[revoke_ix],
             Some(&authority.pubkey()),
             &[&authority],
             context.last_blockhash,

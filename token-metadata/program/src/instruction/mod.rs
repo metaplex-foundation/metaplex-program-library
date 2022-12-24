@@ -536,8 +536,8 @@ pub enum MetadataInstruction {
     #[account(7, name="spl_token_program", desc="SPL Token program")]
     #[account(8, name="spl_ata_program", desc="SPL Associated Token Account program")]
     #[account(9, optional, writable, name="master_edition", desc="Master Edition account")]
-    #[account(10, optional, name="authorization_rules", desc="Token Authorization Rules account")]
-    #[account(11, optional, name="auth_rules_program", desc="Token Authorization Rules program")]
+    #[account(10, optional, name="auth_rules_program", desc="Token Authorization Rules program")]
+    #[account(11, optional, name="authorization_rules", desc="Token Authorization Rules account")]
     #[default_optional_accounts]
     Mint(MintArgs),
 
@@ -661,7 +661,7 @@ pub enum MetadataInstruction {
     #[account(7, name="system_program", desc="System Program")]
     #[account(8, name="sysvar_instructions", desc="Instructions sysvar account")]
     #[account(9, optional, name="spl_token_program", desc="SPL Token Program")]
-    #[account(10, optional, writable, name="token_account", desc="Owned Token Account of mint")]
+    #[account(10, optional, writable, name="token", desc="Owned Token Account of mint")]
     #[account(11, optional, name="authorization_rules", desc="Token Authorization Rules account")]
     #[account(12, optional, name="authorization_rules_program", desc="Token Authorization Rules Program")]
     #[default_optional_accounts]

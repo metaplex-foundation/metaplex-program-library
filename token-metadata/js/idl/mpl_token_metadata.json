@@ -2487,17 +2487,17 @@
           "optional": true
         },
         {
-          "name": "authorizationRules",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "Token Authorization Rules account",
-          "optional": true
-        },
-        {
           "name": "authRulesProgram",
           "isMut": false,
           "isSigner": false,
           "desc": "Token Authorization Rules program",
+          "optional": true
+        },
+        {
+          "name": "authorizationRules",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Token Authorization Rules account",
           "optional": true
         }
       ],
@@ -3089,7 +3089,7 @@
           "optional": true
         },
         {
-          "name": "tokenAccount",
+          "name": "token",
           "isMut": true,
           "isSigner": false,
           "desc": "Owned Token Account of mint",

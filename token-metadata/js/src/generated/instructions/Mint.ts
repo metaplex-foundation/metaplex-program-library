@@ -45,8 +45,8 @@ export const MintStruct = new beet.FixableBeetArgsStruct<
  * @property [] splTokenProgram SPL Token program
  * @property [] splAtaProgram SPL Associated Token Account program
  * @property [_writable_] masterEdition (optional) Master Edition account
- * @property [] authorizationRules (optional) Token Authorization Rules account
  * @property [] authRulesProgram (optional) Token Authorization Rules program
+ * @property [] authorizationRules (optional) Token Authorization Rules account
  * @category Instructions
  * @category Mint
  * @category generated
@@ -62,8 +62,8 @@ export type MintInstructionAccounts = {
   splTokenProgram: web3.PublicKey;
   splAtaProgram: web3.PublicKey;
   masterEdition?: web3.PublicKey;
-  authorizationRules?: web3.PublicKey;
   authRulesProgram?: web3.PublicKey;
+  authorizationRules?: web3.PublicKey;
 };
 
 export const mintInstructionDiscriminator = 42;
@@ -142,12 +142,12 @@ export function createMintInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.authorizationRules ?? programId,
+      pubkey: accounts.authRulesProgram ?? programId,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: accounts.authRulesProgram ?? programId,
+      pubkey: accounts.authorizationRules ?? programId,
       isWritable: false,
       isSigner: false,
     },

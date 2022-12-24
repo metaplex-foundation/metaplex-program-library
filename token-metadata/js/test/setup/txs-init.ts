@@ -506,7 +506,7 @@ export class InitTransactions {
       payer: payer.publicKey,
       sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
       splTokenProgram: splToken.TOKEN_PROGRAM_ID,
-      tokenAccount: token,
+      token,
       authorizationRules: ruleSetPda,
     };
 

@@ -45,7 +45,7 @@ export const RevokeStruct = new beet.BeetArgsStruct<
  * @property [_writable_, **signer**] payer Payer
  * @property [] sysvarInstructions Instructions sysvar account
  * @property [] splTokenProgram (optional) SPL Token Program
- * @property [_writable_] tokenAccount (optional) Owned Token Account of mint
+ * @property [_writable_] token (optional) Owned Token Account of mint
  * @property [] authorizationRules (optional) Token Authorization Rules account
  * @property [] authorizationRulesProgram (optional) Token Authorization Rules Program
  * @category Instructions
@@ -63,7 +63,7 @@ export type RevokeInstructionAccounts = {
   systemProgram?: web3.PublicKey;
   sysvarInstructions: web3.PublicKey;
   splTokenProgram?: web3.PublicKey;
-  tokenAccount?: web3.PublicKey;
+  token?: web3.PublicKey;
   authorizationRules?: web3.PublicKey;
   authorizationRulesProgram?: web3.PublicKey;
 };
@@ -144,8 +144,8 @@ export function createRevokeInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.tokenAccount ?? programId,
-      isWritable: accounts.tokenAccount != null,
+      pubkey: accounts.token ?? programId,
+      isWritable: accounts.token != null,
       isSigner: false,
     },
     {

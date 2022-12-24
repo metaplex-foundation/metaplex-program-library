@@ -91,7 +91,7 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
     if ctx.accounts.sysvar_instructions_info.key != &sysvar::instructions::ID {
         return Err(ProgramError::IncorrectProgramId);
     }
-
+    msg!("Check auth rules program ID");
     if let Some(auth_rules_program) = ctx.accounts.authorization_rules_program_info {
         if auth_rules_program.key != &mpl_token_auth_rules::ID {
             return Err(ProgramError::IncorrectProgramId);

@@ -5,7 +5,7 @@ use solana_program_test::*;
 use solana_sdk::{
     instruction::InstructionError,
     signature::{Keypair, Signer},
-    transaction::{Transaction, TransactionError},
+    transaction::TransactionError,
 };
 use utils::*;
 
@@ -13,7 +13,7 @@ mod revoke {
 
     use mpl_token_metadata::{
         error::MetadataError,
-        instruction::{DelegateArgs, DelegateRole, RevokeArgs},
+        instruction::DelegateRole,
         pda::find_delegate_account,
         state::{DelegateRecord, Key, Metadata, TokenStandard},
     };
@@ -49,40 +49,18 @@ mod revoke {
 
         let user = Keypair::new();
         let user_pubkey = user.pubkey();
-        let payer_pubkey = context.payer.pubkey();
+        let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
 
-        // delegate PDA
-        let (delegate, _) = find_delegate_account(
-            &asset.mint.pubkey(),
-            DelegateRole::Transfer,
-            &user_pubkey,
-            &payer_pubkey,
-        );
-
-        let delegate_ix = instruction::delegate(
-            /* delegate              */ delegate,
-            /* delegate owner        */ user_pubkey,
-            /* mint                  */ asset.mint.pubkey(),
-            /* metadata              */ asset.metadata,
-            /* master_edition        */ asset.master_edition,
-            /* authority             */ payer_pubkey,
-            /* payer                 */ payer_pubkey,
-            /* token                 */ asset.token,
-            /* authorization payload */ None,
-            /* additional accounts   */ None,
-            /* delegate args         */ DelegateArgs::TransferV1 { amount: 1 },
-        );
-
-        let tx = Transaction::new_signed_with_payer(
-            &[delegate_ix],
-            Some(&context.payer.pubkey()),
-            &[&context.payer],
-            context.last_blockhash,
-        );
-
-        context.banks_client.process_transaction(tx).await.unwrap();
-
-        // checks that the delagate exists
+        asset
+            .delegate(
+                &mut context,
+                payer,
+                user_pubkey,
+                DelegateRole::Transfer,
+                Some(1),
+            )
+            .await
+            .unwrap();
 
         let metadata_account = get_account(&mut context, &asset.metadata).await;
         let metadata: Metadata = try_from_slice_unchecked(&metadata_account.data).unwrap();
@@ -92,31 +70,12 @@ mod revoke {
         );
 
         // revokes the delegate
+        let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
 
-        let revoke_ix = instruction::revoke(
-            /* delegate              */ delegate,
-            /* user                  */ user_pubkey,
-            /* mint                  */ asset.mint.pubkey(),
-            /* metadata              */ asset.metadata,
-            /* master_edition        */ asset.master_edition,
-            /* authority             */ payer_pubkey,
-            /* payer                 */ payer_pubkey,
-            /* token                 */ asset.token,
-            /* authorization payload */ None,
-            /* additional accounts   */ None,
-            /* delegate args         */ RevokeArgs::TransferV1,
-        );
-
-        let tx = Transaction::new_signed_with_payer(
-            &[revoke_ix],
-            Some(&context.payer.pubkey()),
-            &[&context.payer],
-            context.last_blockhash,
-        );
-
-        context.banks_client.process_transaction(tx).await.unwrap();
-
-        // assert
+        asset
+            .revoke(&mut context, payer, user_pubkey, DelegateRole::Transfer)
+            .await
+            .unwrap();
 
         let metadata_account = get_account(&mut context, &asset.metadata).await;
         let metadata: Metadata = try_from_slice_unchecked(&metadata_account.data).unwrap();
@@ -157,74 +116,43 @@ mod revoke {
         let metadata: Metadata = try_from_slice_unchecked(&metadata_account.data).unwrap();
         assert_eq!(metadata.update_authority, context.payer.pubkey());
 
-        // delegates the asset for transfer
-
+        // // delegates the asset for transfer
         let user = Keypair::new();
         let user_pubkey = user.pubkey();
-        let payer_pubkey = context.payer.pubkey();
+        let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
 
-        // delegate PDA
+        // // delegate PDA
         let (delegate_pda, _) = find_delegate_account(
             &asset.mint.pubkey(),
             DelegateRole::Collection,
             &user_pubkey,
-            &payer_pubkey,
+            &payer.pubkey(),
         );
 
-        let delegate_ix = instruction::delegate(
-            /* delegate              */ delegate_pda,
-            /* delegate owner        */ user_pubkey,
-            /* mint                  */ asset.mint.pubkey(),
-            /* metadata              */ asset.metadata,
-            /* master_edition        */ asset.master_edition,
-            /* authority             */ payer_pubkey,
-            /* payer                 */ payer_pubkey,
-            /* token                 */ None,
-            /* authorization payload */ None,
-            /* additional accounts   */ None,
-            /* delegate args         */ DelegateArgs::CollectionV1,
-        );
+        asset
+            .delegate(
+                &mut context,
+                payer,
+                user_pubkey,
+                DelegateRole::Collection,
+                Some(1),
+            )
+            .await
+            .unwrap();
 
-        let tx = Transaction::new_signed_with_payer(
-            &[delegate_ix],
-            Some(&context.payer.pubkey()),
-            &[&context.payer],
-            context.last_blockhash,
-        );
-
-        context.banks_client.process_transaction(tx).await.unwrap();
-
-        // checks that the delagate exists
-
+        // // checks that the delegate exists
         let delegate_account = get_account(&mut context, &delegate_pda).await;
         let delegate: DelegateRecord = DelegateRecord::from_bytes(&delegate_account.data).unwrap();
         assert_eq!(delegate.key, Key::Delegate);
         assert_eq!(delegate.role, DelegateRole::Collection);
 
         // revokes the delegate
+        let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
 
-        let revoke_ix = instruction::revoke(
-            /* delegate              */ delegate_pda,
-            /* user                  */ user_pubkey,
-            /* mint                  */ asset.mint.pubkey(),
-            /* metadata              */ asset.metadata,
-            /* master_edition        */ asset.master_edition,
-            /* authority             */ payer_pubkey,
-            /* payer                 */ payer_pubkey,
-            /* token                 */ None,
-            /* authorization payload */ None,
-            /* additional accounts   */ None,
-            /* delegate args         */ RevokeArgs::CollectionV1,
-        );
-
-        let tx = Transaction::new_signed_with_payer(
-            &[revoke_ix],
-            Some(&context.payer.pubkey()),
-            &[&context.payer],
-            context.last_blockhash,
-        );
-
-        context.banks_client.process_transaction(tx).await.unwrap();
+        asset
+            .revoke(&mut context, payer, user_pubkey, DelegateRole::Collection)
+            .await
+            .unwrap();
 
         // checks that the delagate exists (it should not exist)
 
@@ -257,41 +185,20 @@ mod revoke {
         assert!(asset.token.is_some());
 
         // delegates the asset for sale
-
         let user = Keypair::new();
         let user_pubkey = user.pubkey();
-        let payer_pubkey = context.payer.pubkey();
+        let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
 
-        // delegate PDA
-        let (delegate, _) = find_delegate_account(
-            &asset.mint.pubkey(),
-            DelegateRole::Sale,
-            &user_pubkey,
-            &payer_pubkey,
-        );
-
-        let delegate_ix = instruction::delegate(
-            /* delegate              */ delegate,
-            /* delegate owner        */ user_pubkey,
-            /* mint                  */ asset.mint.pubkey(),
-            /* metadata              */ asset.metadata,
-            /* master_edition        */ asset.master_edition,
-            /* authority             */ payer_pubkey,
-            /* payer                 */ payer_pubkey,
-            /* token                 */ asset.token,
-            /* authorization payload */ None,
-            /* additional accounts   */ None,
-            /* delegate args         */ DelegateArgs::SaleV1 { amount: 1 },
-        );
-
-        let tx = Transaction::new_signed_with_payer(
-            &[delegate_ix],
-            Some(&context.payer.pubkey()),
-            &[&context.payer],
-            context.last_blockhash,
-        );
-
-        context.banks_client.process_transaction(tx).await.unwrap();
+        asset
+            .delegate(
+                &mut context,
+                payer,
+                user_pubkey,
+                DelegateRole::Sale,
+                Some(1),
+            )
+            .await
+            .unwrap();
 
         // checks that the delagate exists
 
@@ -302,33 +209,23 @@ mod revoke {
             user_pubkey /* delegate owner */
         );
 
+        let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+
+        // // delegate PDA
+        // let (delegate_pda, _) = find_delegate_account(
+        //     &asset.mint.pubkey(),
+        //     DelegateRole::Sale,
+        //     &user_pubkey,
+        //     &payer.pubkey(),
+        // );
+
         // revokes the delegate
-
-        let revoke_ix = instruction::revoke(
-            /* delegate              */ delegate,
-            /* user                  */ user_pubkey,
-            /* mint                  */ asset.mint.pubkey(),
-            /* metadata              */ asset.metadata,
-            /* master_edition        */ asset.master_edition,
-            /* authority             */ payer_pubkey,
-            /* payer                 */ payer_pubkey,
-            /* token                 */ asset.token,
-            /* authorization payload */ None,
-            /* additional accounts   */ None,
-            /* delegate args         */ RevokeArgs::SaleV1,
-        );
-
-        let tx = Transaction::new_signed_with_payer(
-            &[revoke_ix],
-            Some(&context.payer.pubkey()),
-            &[&context.payer],
-            context.last_blockhash,
-        );
-
-        context.banks_client.process_transaction(tx).await.unwrap();
+        asset
+            .revoke(&mut context, payer, user_pubkey, DelegateRole::Sale)
+            .await
+            .unwrap();
 
         // assert
-
         let metadata_account = get_account(&mut context, &asset.metadata).await;
         let metadata: Metadata = try_from_slice_unchecked(&metadata_account.data).unwrap();
         assert_eq!(metadata.delegate_state, None);
@@ -349,7 +246,6 @@ mod revoke {
         let mut context = program_test().start_with_context().await;
 
         // asset
-
         let mut asset = DigitalAsset::default();
         asset
             .create_and_mint(
@@ -365,41 +261,20 @@ mod revoke {
         assert!(asset.token.is_some());
 
         // delegates the asset for sale
-
         let user = Keypair::new();
         let user_pubkey = user.pubkey();
-        let payer_pubkey = context.payer.pubkey();
+        let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
 
-        // delegate PDA
-        let (delegate, _) = find_delegate_account(
-            &asset.mint.pubkey(),
-            DelegateRole::Sale,
-            &user_pubkey,
-            &payer_pubkey,
-        );
-
-        let delegate_ix = instruction::delegate(
-            /* delegate              */ delegate,
-            /* delegate owner        */ user_pubkey,
-            /* mint                  */ asset.mint.pubkey(),
-            /* metadata              */ asset.metadata,
-            /* master_edition        */ asset.master_edition,
-            /* authority             */ payer_pubkey,
-            /* payer                 */ payer_pubkey,
-            /* token                 */ asset.token,
-            /* authorization payload */ None,
-            /* additional accounts   */ None,
-            /* delegate args         */ DelegateArgs::SaleV1 { amount: 1 },
-        );
-
-        let tx = Transaction::new_signed_with_payer(
-            &[delegate_ix],
-            Some(&context.payer.pubkey()),
-            &[&context.payer],
-            context.last_blockhash,
-        );
-
-        context.banks_client.process_transaction(tx).await.unwrap();
+        asset
+            .delegate(
+                &mut context,
+                payer,
+                user_pubkey,
+                DelegateRole::Sale,
+                Some(1),
+            )
+            .await
+            .unwrap();
 
         // checks that the delagate exists
 
@@ -410,32 +285,11 @@ mod revoke {
             user_pubkey /* delegate owner */
         );
 
+        let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+
         // revokes the delegate
-
-        let revoke_ix = instruction::revoke(
-            /* delegate              */ delegate,
-            /* user                  */ user_pubkey,
-            /* mint                  */ asset.mint.pubkey(),
-            /* metadata              */ asset.metadata,
-            /* master_edition        */ asset.master_edition,
-            /* authority             */ payer_pubkey,
-            /* payer                 */ payer_pubkey,
-            /* token                 */ asset.token,
-            /* authorization payload */ None,
-            /* additional accounts   */ None,
-            /* delegate args         */ RevokeArgs::TransferV1,
-        );
-
-        let tx = Transaction::new_signed_with_payer(
-            &[revoke_ix],
-            Some(&context.payer.pubkey()),
-            &[&context.payer],
-            context.last_blockhash,
-        );
-
-        let error = context
-            .banks_client
-            .process_transaction(tx)
+        let error = asset
+            .revoke(&mut context, payer, user_pubkey, DelegateRole::Transfer)
             .await
             .unwrap_err();
 

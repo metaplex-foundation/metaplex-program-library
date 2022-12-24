@@ -1,7 +1,7 @@
 use mpl_utils::{assert_signer, close_account_raw, cmp_pubkeys};
 use solana_program::{
-    account_info::AccountInfo, entrypoint::ProgramResult, program::invoke,
-    program_error::ProgramError, program_option::COption, program_pack::Pack, pubkey::Pubkey,
+    account_info::AccountInfo, entrypoint::ProgramResult, program::invoke, program_option::COption,
+    program_pack::Pack, pubkey::Pubkey,
 };
 use spl_token::state::Account;
 
@@ -10,14 +10,10 @@ use crate::{
         assert_derivation, assert_owned_by, metadata::assert_update_authority_is_correct,
     },
     error::MetadataError,
-    instruction::{DelegateRole, RevokeArgs},
-    processor::{try_get_account_info, try_get_optional_account_info},
+    instruction::{Context, DelegateRole, Revoke, RevokeArgs},
     state::{Metadata, TokenMetadataAccount, TokenStandard},
     utils::{freeze, thaw},
 };
-
-// Number of expected accounts in the instruction (including optional accounts).
-const EXPECTED_ACCOUNTS_LEN: usize = 13;
 
 /// Revoke a delegation of the token.
 ///
@@ -41,58 +37,41 @@ pub fn revoke<'a>(
     accounts: &'a [AccountInfo<'a>],
     args: RevokeArgs,
 ) -> ProgramResult {
+    let context = Revoke::as_context(accounts)?;
+
     match args {
-        RevokeArgs::CollectionV1 => revoke_collection_v1(program_id, accounts, args),
+        RevokeArgs::CollectionV1 => revoke_collection_v1(program_id, context, args),
         RevokeArgs::SaleV1 => {
             // the sale delegate is a special type of transfer
-            revoke_transfer_v1(program_id, accounts, args, DelegateRole::Sale)
+            revoke_transfer_v1(program_id, context, args, DelegateRole::Sale)
         }
         RevokeArgs::TransferV1 => {
-            revoke_transfer_v1(program_id, accounts, args, DelegateRole::Transfer)
+            revoke_transfer_v1(program_id, context, args, DelegateRole::Transfer)
         }
     }
 }
 
 fn revoke_collection_v1<'a>(
     program_id: &Pubkey,
-    accounts: &'a [AccountInfo<'a>],
-    args: RevokeArgs,
+    ctx: Context<Revoke>,
+    _args: RevokeArgs,
 ) -> ProgramResult {
-    let (delegate, delegate_owner, mint, metadata, authority, payer) =
-        if let RevokeAccounts::CollectionV1 {
-            delegate,
-            delegate_owner,
-            mint,
-            metadata,
-            authority,
-            payer,
-            _system_program,
-            _sysvars,
-            _authorization_rules,
-            _auth_rules_program,
-        } = args.get_accounts(accounts)?
-        {
-            (delegate, delegate_owner, mint, metadata, authority, payer)
-        } else {
-            unimplemented!();
-        };
-
     // validates accounts
 
-    assert_owned_by(metadata, program_id)?;
-    assert_owned_by(mint, &spl_token::id())?;
+    assert_owned_by(ctx.accounts.metadata_info, program_id)?;
+    assert_owned_by(ctx.accounts.mint_info, &spl_token::id())?;
 
-    let asset_metadata = Metadata::from_account_info(metadata)?;
-    assert_update_authority_is_correct(&asset_metadata, authority)?;
+    let asset_metadata = Metadata::from_account_info(ctx.accounts.metadata_info)?;
+    assert_update_authority_is_correct(&asset_metadata, ctx.accounts.authority_info)?;
 
-    if asset_metadata.mint != *mint.key {
+    if asset_metadata.mint != *ctx.accounts.mint_info.key {
         return Err(MetadataError::MintMismatch.into());
     }
 
-    assert_signer(payer)?;
-    assert_signer(authority)?;
+    assert_signer(ctx.accounts.payer_info)?;
+    assert_signer(ctx.accounts.authority_info)?;
 
-    if delegate.data_is_empty() {
+    if ctx.accounts.delegate_record_info.data_is_empty() {
         return Err(MetadataError::Uninitialized.into());
     }
 
@@ -102,69 +81,44 @@ fn revoke_collection_v1<'a>(
     revoke_delegate(
         program_id,
         DelegateRole::Collection,
-        delegate,
-        delegate_owner,
-        mint,
-        authority,
-        payer,
+        ctx.accounts.delegate_record_info,
+        ctx.accounts.delegate_info,
+        ctx.accounts.mint_info,
+        ctx.accounts.authority_info,
+        ctx.accounts.payer_info,
     )
 }
 
 fn revoke_transfer_v1<'a>(
     program_id: &Pubkey,
-    accounts: &'a [AccountInfo<'a>],
-    args: RevokeArgs,
+    ctx: Context<Revoke>,
+    _args: RevokeArgs,
     role: DelegateRole,
 ) -> ProgramResult {
-    // get the accounts for the instruction
-    let (
-        delegate_owner,
-        mint,
-        metadata,
-        master_edition,
-        authority,
-        payer,
-        spl_token_program,
-        token,
-    ) = if let RevokeAccounts::TransferV1 {
-        delegate_owner,
-        mint,
-        metadata,
-        master_edition,
-        authority,
-        payer,
-        spl_token_program,
-        token,
-        ..
-    } = args.get_accounts(accounts)?
-    {
-        (
-            delegate_owner,
-            mint,
-            metadata,
-            master_edition,
-            authority,
-            payer,
-            spl_token_program,
-            token,
-        )
-    } else {
-        unimplemented!();
-    };
-
     // validates accounts
 
-    assert_owned_by(metadata, program_id)?;
-    assert_owned_by(mint, &spl_token::id())?;
-    assert_signer(payer)?;
+    assert_owned_by(ctx.accounts.metadata_info, program_id)?;
+    assert_owned_by(ctx.accounts.mint_info, &spl_token::id())?;
+    assert_signer(ctx.accounts.payer_info)?;
 
-    let mut asset_metadata = Metadata::from_account_info(metadata)?;
-    if asset_metadata.mint != *mint.key {
+    // Transfer delegate must have a token account and spl token program
+    if ctx.accounts.token_info.is_none() {
+        return Err(MetadataError::MissingTokenAccount.into());
+    }
+    if ctx.accounts.spl_token_program_info.is_none() {
+        return Err(MetadataError::MissingSplTokenProgram.into());
+    }
+    let token_info = ctx.accounts.token_info.unwrap();
+    let spl_token_program_info = ctx.accounts.spl_token_program_info.unwrap();
+
+    let mut asset_metadata = Metadata::from_account_info(ctx.accounts.metadata_info)?;
+    if asset_metadata.mint != *ctx.accounts.mint_info.key {
         return Err(MetadataError::MintMismatch.into());
     }
 
     if let Some(existing) = &asset_metadata.delegate_state {
-        if !cmp_pubkeys(&existing.delegate, delegate_owner.key) || existing.role != role {
+        if !cmp_pubkeys(&existing.delegate, ctx.accounts.delegate_info.key) || existing.role != role
+        {
             return Err(MetadataError::InvalidDelegate.into());
         }
     } else {
@@ -172,13 +126,13 @@ fn revoke_transfer_v1<'a>(
     }
 
     // authority must be the owner of the token account
-    let token_account = Account::unpack(&token.try_borrow_data()?).unwrap();
-    if token_account.owner != *authority.key {
+    let token_account = Account::unpack(&token_info.try_borrow_data()?).unwrap();
+    if token_account.owner != *ctx.accounts.authority_info.key {
         return Err(MetadataError::IncorrectOwner.into());
     }
 
     if let COption::Some(existing) = &token_account.delegate {
-        if !cmp_pubkeys(existing, delegate_owner.key) {
+        if !cmp_pubkeys(existing, ctx.accounts.delegate_info.key) {
             return Err(MetadataError::InvalidDelegate.into());
         }
     } else {
@@ -186,7 +140,7 @@ fn revoke_transfer_v1<'a>(
     }
 
     // and must be a signer of the transaction
-    assert_signer(authority)?;
+    assert_signer(ctx.accounts.authority_info)?;
 
     // process the delegation
 
@@ -194,12 +148,12 @@ fn revoke_transfer_v1<'a>(
         asset_metadata.token_standard,
         Some(TokenStandard::ProgrammableNonFungible)
     ) {
-        if let Some(master_edition) = master_edition {
+        if let Some(master_edition_info) = ctx.accounts.master_edition_info {
             thaw(
-                mint.clone(),
-                token.clone(),
-                master_edition.clone(),
-                spl_token_program.clone(),
+                ctx.accounts.mint_info.clone(),
+                token_info.clone(),
+                master_edition_info.clone(),
+                spl_token_program_info.clone(),
             )?;
         } else {
             return Err(MetadataError::MissingEditionAccount.into());
@@ -207,20 +161,29 @@ fn revoke_transfer_v1<'a>(
     }
 
     invoke(
-        &spl_token::instruction::revoke(spl_token_program.key, token.key, authority.key, &[])?,
-        &[token.clone(), delegate_owner.clone(), authority.clone()],
+        &spl_token::instruction::revoke(
+            spl_token_program_info.key,
+            token_info.key,
+            ctx.accounts.authority_info.key,
+            &[],
+        )?,
+        &[
+            token_info.clone(),
+            ctx.accounts.delegate_info.clone(),
+            ctx.accounts.authority_info.clone(),
+        ],
     )?;
 
     if matches!(
         asset_metadata.token_standard,
         Some(TokenStandard::ProgrammableNonFungible)
     ) {
-        if let Some(master_edition) = master_edition {
+        if let Some(master_edition_info) = ctx.accounts.master_edition_info {
             freeze(
-                mint.clone(),
-                token.clone(),
-                master_edition.clone(),
-                spl_token_program.clone(),
+                ctx.accounts.mint_info.clone(),
+                token_info.clone(),
+                master_edition_info.clone(),
+                spl_token_program_info.clone(),
             )?;
         } else {
             return Err(MetadataError::MissingEditionAccount.into());
@@ -229,7 +192,7 @@ fn revoke_transfer_v1<'a>(
 
     // sale delegate is set to the metadata account
     asset_metadata.delegate_state = None;
-    asset_metadata.save(&mut metadata.try_borrow_mut_data()?)?;
+    asset_metadata.save(&mut ctx.accounts.metadata_info.try_borrow_mut_data()?)?;
 
     Ok(())
 }
@@ -254,139 +217,4 @@ fn revoke_delegate<'a>(
     assert_derivation(program_id, delegate, &delegate_seeds)?;
     // closes the delegate account
     close_account_raw(payer, delegate)
-}
-
-enum RevokeAccounts<'a> {
-    CollectionV1 {
-        delegate: &'a AccountInfo<'a>,
-        delegate_owner: &'a AccountInfo<'a>,
-        mint: &'a AccountInfo<'a>,
-        metadata: &'a AccountInfo<'a>,
-        authority: &'a AccountInfo<'a>,
-        payer: &'a AccountInfo<'a>,
-        _system_program: &'a AccountInfo<'a>,
-        _sysvars: &'a AccountInfo<'a>,
-        _authorization_rules: Option<&'a AccountInfo<'a>>,
-        _auth_rules_program: Option<&'a AccountInfo<'a>>,
-    },
-    TransferV1 {
-        _delegate: &'a AccountInfo<'a>,
-        delegate_owner: &'a AccountInfo<'a>,
-        mint: &'a AccountInfo<'a>,
-        metadata: &'a AccountInfo<'a>,
-        master_edition: Option<&'a AccountInfo<'a>>,
-        authority: &'a AccountInfo<'a>,
-        payer: &'a AccountInfo<'a>,
-        _system_program: &'a AccountInfo<'a>,
-        _sysvars: &'a AccountInfo<'a>,
-        spl_token_program: &'a AccountInfo<'a>,
-        token: &'a AccountInfo<'a>,
-        _authorization_rules: Option<&'a AccountInfo<'a>>,
-        _auth_rules_program: Option<&'a AccountInfo<'a>>,
-    },
-}
-
-impl RevokeArgs {
-    fn get_accounts<'a>(
-        &self,
-        accounts: &'a [AccountInfo<'a>],
-    ) -> Result<RevokeAccounts<'a>, ProgramError> {
-        // validates that we got the correct number of accounts
-        if accounts.len() < EXPECTED_ACCOUNTS_LEN {
-            return Err(ProgramError::NotEnoughAccountKeys);
-        }
-
-        match *self {
-            RevokeArgs::CollectionV1 { .. } => {
-                let delegate = try_get_account_info(accounts, 0)?;
-                let delegate_owner = try_get_account_info(accounts, 1)?;
-                let mint = try_get_account_info(accounts, 2)?;
-                let metadata = try_get_account_info(accounts, 3)?;
-                let authority = try_get_account_info(accounts, 5)?;
-                let payer = try_get_account_info(accounts, 6)?;
-                let _system_program = try_get_account_info(accounts, 7)?;
-                let _sysvars = try_get_account_info(accounts, 8)?;
-                // optional accounts
-                let _authorization_rules = try_get_optional_account_info(accounts, 11)?;
-                let _auth_rules_program = try_get_optional_account_info(accounts, 12)?;
-
-                Ok(RevokeAccounts::CollectionV1 {
-                    delegate,
-                    delegate_owner,
-                    mint,
-                    metadata,
-                    authority,
-                    payer,
-                    _system_program,
-                    _sysvars,
-                    _authorization_rules,
-                    _auth_rules_program,
-                })
-            }
-            RevokeArgs::SaleV1 { .. } => {
-                let _delegate = try_get_account_info(accounts, 0)?;
-                let delegate_owner = try_get_account_info(accounts, 1)?;
-                let mint = try_get_account_info(accounts, 2)?;
-                let metadata = try_get_account_info(accounts, 3)?;
-                let master_edition = try_get_optional_account_info(accounts, 4)?;
-                let authority = try_get_account_info(accounts, 5)?;
-                let payer = try_get_account_info(accounts, 6)?;
-                let _system_program = try_get_account_info(accounts, 7)?;
-                let _sysvars = try_get_account_info(accounts, 8)?;
-                let spl_token_program = try_get_account_info(accounts, 9)?;
-                let token = try_get_account_info(accounts, 10)?;
-                // optional accounts
-                let _authorization_rules = try_get_optional_account_info(accounts, 11)?;
-                let _auth_rules_program = try_get_optional_account_info(accounts, 12)?;
-
-                Ok(RevokeAccounts::TransferV1 {
-                    _delegate,
-                    delegate_owner,
-                    mint,
-                    metadata,
-                    master_edition,
-                    authority,
-                    payer,
-                    _system_program,
-                    _sysvars,
-                    spl_token_program,
-                    token,
-                    _authorization_rules,
-                    _auth_rules_program,
-                })
-            }
-            RevokeArgs::TransferV1 { .. } => {
-                let _delegate = try_get_account_info(accounts, 0)?;
-                let delegate_owner = try_get_account_info(accounts, 1)?;
-                let mint = try_get_account_info(accounts, 2)?;
-                let metadata = try_get_account_info(accounts, 3)?;
-                let master_edition = try_get_optional_account_info(accounts, 4)?;
-                let authority = try_get_account_info(accounts, 5)?;
-                let payer = try_get_account_info(accounts, 6)?;
-                let _system_program = try_get_account_info(accounts, 7)?;
-                let _sysvars = try_get_account_info(accounts, 8)?;
-                let spl_token_program = try_get_account_info(accounts, 9)?;
-                let token = try_get_account_info(accounts, 10)?;
-                // optional accounts
-                let _authorization_rules = try_get_optional_account_info(accounts, 11)?;
-                let _auth_rules_program = try_get_optional_account_info(accounts, 12)?;
-
-                Ok(RevokeAccounts::TransferV1 {
-                    _delegate,
-                    delegate_owner,
-                    mint,
-                    metadata,
-                    master_edition,
-                    authority,
-                    payer,
-                    _system_program,
-                    _sysvars,
-                    spl_token_program,
-                    token,
-                    _authorization_rules,
-                    _auth_rules_program,
-                })
-            }
-        }
-    }
 }
