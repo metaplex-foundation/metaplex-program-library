@@ -4248,6 +4248,9 @@
           },
           {
             "name": "TransferV1"
+          },
+          {
+            "name": "SaleV1"
           }
         ]
       }

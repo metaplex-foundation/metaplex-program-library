@@ -13,6 +13,7 @@ import * as beet from '@metaplex-foundation/beet';
 export enum RevokeArgs {
   CollectionV1,
   TransferV1,
+  SaleV1,
 }
 
 /**

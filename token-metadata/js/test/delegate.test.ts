@@ -1,11 +1,12 @@
-import { DelegateArgs, DelegateRole, Metadata, TokenStandard } from '../src/generated';
+import { DelegateArgs, DelegateRole, Metadata, PROGRAM_ID, TokenStandard } from '../src/generated';
 import test from 'tape';
-import { InitTransactions, killStuckProcess } from './setup';
+import { amman, InitTransactions, killStuckProcess } from './setup';
 import { createAndMintDefaultAsset } from './utils/DigitalAssetManager';
 import spok from 'spok';
 import { spokSameBigint, spokSamePubkey } from './utils';
 import { BN } from 'bn.js';
 import { getAccount } from '@solana/spl-token';
+import { PublicKey } from '@solana/web3.js';
 
 killStuckProcess();
 
@@ -24,12 +25,27 @@ test('Delegate: create collection delegate', async (t) => {
 
   // creates a delegate
 
+  const [delegate] = await API.getKeypair('Delegate');
+  // delegate PDA
+  const [delegateRecord] = PublicKey.findProgramAddressSync(
+    [
+      manager.mint.toBuffer(),
+      Buffer.from('collection_delegate'),
+      delegate.toBuffer(),
+      payer.publicKey.toBuffer(),
+    ],
+    PROGRAM_ID,
+  );
+  amman.addr.addLabel('Delegate Record', delegateRecord);
+
   const args: DelegateArgs = {
     __kind: 'CollectionV1',
   };
 
   const { tx: delegateTx } = await API.delegate(
     t,
+    delegateRecord,
+    delegate,
     manager.mint,
     manager.metadata,
     manager.masterEdition,
@@ -57,13 +73,28 @@ test('Delegate: create sale delegate', async (t) => {
 
   // creates a delegate
 
+  const [delegate] = await API.getKeypair('Delegate');
+  // delegate PDA
+  const [delegateRecord] = PublicKey.findProgramAddressSync(
+    [
+      manager.mint.toBuffer(),
+      Buffer.from('sale_delegate'),
+      delegate.toBuffer(),
+      payer.publicKey.toBuffer(),
+    ],
+    PROGRAM_ID,
+  );
+  amman.addr.addLabel('Delegate Record', delegateRecord);
+
   const args: DelegateArgs = {
     __kind: 'SaleV1',
     amount: 1,
   };
 
-  const { tx: delegateTx, delegate } = await API.delegate(
+  const { tx: delegateTx } = await API.delegate(
     t,
+    delegateRecord,
+    delegate,
     manager.mint,
     manager.metadata,
     manager.masterEdition,
@@ -111,13 +142,28 @@ test('Delegate: create transfer delegate', async (t) => {
 
   // creates a delegate
 
+  const [delegate] = await API.getKeypair('Delegate');
+  // delegate PDA
+  const [delegateRecord] = PublicKey.findProgramAddressSync(
+    [
+      manager.mint.toBuffer(),
+      Buffer.from('transfer_delegate'),
+      delegate.toBuffer(),
+      payer.publicKey.toBuffer(),
+    ],
+    PROGRAM_ID,
+  );
+  amman.addr.addLabel('Delegate Record', delegateRecord);
+
   const args: DelegateArgs = {
     __kind: 'TransferV1',
     amount: 1,
   };
 
-  const { tx: delegateTx, delegate } = await API.delegate(
+  const { tx: delegateTx } = await API.delegate(
     t,
+    delegateRecord,
+    delegate,
     manager.mint,
     manager.metadata,
     manager.masterEdition,

@@ -42,6 +42,10 @@ import {
   DelegateArgs,
   createDelegateInstruction,
   AuthorityType,
+  RevokeInstructionAccounts,
+  RevokeInstructionArgs,
+  createRevokeInstruction,
+  RevokeArgs,
 } from '../../src/generated';
 import { Test } from 'tape';
 import { amman } from '.';
@@ -434,6 +438,8 @@ export class InitTransactions {
 
   async delegate(
     t: Test,
+    delegateRecord: PublicKey,
+    delegate: PublicKey,
     mint: PublicKey,
     metadata: PublicKey,
     masterEdition: PublicKey,
@@ -444,20 +450,7 @@ export class InitTransactions {
     token: PublicKey | null = null,
     ruleSetPda: PublicKey | null = null,
     authorizationData: AuthorizationData | null = null,
-  ): Promise<{ tx: ConfirmedTransactionAssertablePromise; delegate: PublicKey }> {
-    const [delegate] = await this.getKeypair('Delegate');
-    // delegate PDA
-    const [delegateRecord] = PublicKey.findProgramAddressSync(
-      [
-        mint.toBuffer(),
-        Buffer.from('collection_delegate'),
-        delegate.toBuffer(),
-        authority.toBuffer(),
-      ],
-      PROGRAM_ID,
-    );
-    amman.addr.addLabel('Delegate Record', delegateRecord);
-
+  ): Promise<{ tx: ConfirmedTransactionAssertablePromise }> {
     const delegateAcccounts: DelegateInstructionAccounts = {
       delegate: delegateRecord,
       delegateOwner: delegate,
@@ -484,6 +477,50 @@ export class InitTransactions {
 
     return {
       tx: handler.sendAndConfirmTransaction(tx, [payer], 'tx: Delegate'),
+    };
+  }
+
+  async revoke(
+    t: Test,
+    delegateRecord: PublicKey,
+    delegate: PublicKey,
+    mint: PublicKey,
+    metadata: PublicKey,
+    masterEdition: PublicKey,
+    authority: PublicKey,
+    payer: Keypair,
+    args: RevokeArgs,
+    handler: PayerTransactionHandler,
+    token: PublicKey | null = null,
+    ruleSetPda: PublicKey | null = null,
+    authorizationData: AuthorizationData | null = null,
+  ): Promise<{ tx: ConfirmedTransactionAssertablePromise; delegate: PublicKey }> {
+    const revokeAcccounts: RevokeInstructionAccounts = {
+      delegateRecord: delegateRecord,
+      delegate,
+      mint,
+      metadata,
+      masterEdition,
+      authority: payer.publicKey,
+      payer: payer.publicKey,
+      sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
+      splTokenProgram: splToken.TOKEN_PROGRAM_ID,
+      tokenAccount: token,
+      authorizationRules: ruleSetPda,
+    };
+
+    const revokeArgs: RevokeInstructionArgs = {
+      revokeArgs: args,
+    };
+
+    const mintIx = createRevokeInstruction(revokeAcccounts, revokeArgs);
+
+    // creates the transaction
+
+    const tx = new Transaction().add(mintIx);
+
+    return {
+      tx: handler.sendAndConfirmTransaction(tx, [payer], 'tx: Revoke'),
       delegate,
     };
   }
