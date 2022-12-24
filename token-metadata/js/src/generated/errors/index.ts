@@ -3156,6 +3156,46 @@ createErrorFromNameLookup.set(
 );
 
 /**
+ * MissingTokenAccount: 'Missing token account'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MissingTokenAccountError extends Error {
+  readonly code: number = 0x93;
+  readonly name: string = 'MissingTokenAccount';
+  constructor() {
+    super('Missing token account');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MissingTokenAccountError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x93, () => new MissingTokenAccountError());
+createErrorFromNameLookup.set('MissingTokenAccount', () => new MissingTokenAccountError());
+
+/**
+ * MissingSplTokenProgram: 'Missing SPL token program'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MissingSplTokenProgramError extends Error {
+  readonly code: number = 0x94;
+  readonly name: string = 'MissingSplTokenProgram';
+  constructor() {
+    super('Missing SPL token program');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MissingSplTokenProgramError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x94, () => new MissingSplTokenProgramError());
+createErrorFromNameLookup.set('MissingSplTokenProgram', () => new MissingSplTokenProgramError());
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

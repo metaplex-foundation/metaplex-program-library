@@ -1,18 +1,13 @@
 #![cfg(feature = "test-bpf")]
 pub mod utils;
 
-use mpl_token_metadata::instruction;
 use solana_program_test::*;
-use solana_sdk::{
-    instruction::InstructionError,
-    signature::Signer,
-    transaction::{Transaction, TransactionError},
-};
+use solana_sdk::{instruction::InstructionError, signature::Signer, transaction::TransactionError};
 use utils::*;
 
 mod mint {
 
-    use mpl_token_metadata::{error::MetadataError, instruction::MintArgs, state::TokenStandard};
+    use mpl_token_metadata::{error::MetadataError, state::TokenStandard};
     use num_traits::FromPrimitive;
     use solana_program::{program_pack::Pack, pubkey::Pubkey};
     use spl_token::state::Account;
@@ -44,29 +39,7 @@ mod mint {
         );
         asset.token = Some(token);
 
-        let mint_ix = instruction::mint(
-            /* token account       */ token,
-            /* metadata account    */ asset.metadata,
-            /* mint account        */ asset.mint.pubkey(),
-            /* payer               */ payer_pubkey,
-            /* authority           */ payer_pubkey,
-            /* master edition      */ asset.master_edition,
-            /* authorization rules */ None,
-            /* amount              */
-            MintArgs::V1 {
-                amount: 1,
-                authorization_data: None,
-            },
-        );
-
-        let tx = Transaction::new_signed_with_payer(
-            &[mint_ix],
-            Some(&context.payer.pubkey()),
-            &[&context.payer],
-            context.last_blockhash,
-        );
-
-        context.banks_client.process_transaction(tx).await.unwrap();
+        asset.mint(&mut context, None, None, 1).await.unwrap();
 
         let account = get_account(&mut context, &token).await;
         let token_account = Account::unpack(&account.data).unwrap();

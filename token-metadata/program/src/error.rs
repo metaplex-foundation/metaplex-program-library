@@ -580,6 +580,14 @@ pub enum MetadataError {
     /// 144
     #[error("Only the sale delegate can transfer while its set")]
     OnlySaleDelegateCanTransfer,
+
+    /// 145
+    #[error("Missing token account")]
+    MissingTokenAccount,
+
+    /// 146
+    #[error("Missing SPL token program")]
+    MissingSplTokenProgram,
 }
 
 impl PrintProgramError for MetadataError {

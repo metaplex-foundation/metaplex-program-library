@@ -634,8 +634,8 @@ pub enum MetadataInstruction {
     /// Creates a delegate for an asset.
     /// 
     /// A delegate has a role associated, which determines what actions the delegate can perform.
-    #[account(0, writable, name="delegate", desc="Delegate account key (pda of [mint id, delegate role, user id, authority id])")]
-    #[account(1, name="delegate_owner", desc="Owner of the delegated account")]
+    #[account(0, writable, name="delegate_record", desc="Delegate account key (pda of [mint id, delegate role, user id, authority id])")]
+    #[account(1, name="delegate", desc="Owner of the delegated account")]
     #[account(2, name="mint", desc="Mint of metadata")]
     #[account(3, writable, name="metadata", desc="Metadata account")]
     #[account(4, optional, name="master_edition", desc="Master Edition account")]
@@ -644,7 +644,7 @@ pub enum MetadataInstruction {
     #[account(7, name="system_program", desc="System Program")]
     #[account(8, name="sysvar_instructions", desc="Instructions sysvar account")]
     #[account(9, optional, name="spl_token_program", desc="SPL Token Program")]
-    #[account(10, optional, writable, name="token_account", desc="Owned Token Account of mint")]
+    #[account(10, optional, writable, name="token", desc="Owned Token Account of mint")]
     #[account(11, optional, name="authorization_rules", desc="Token Authorization Rules account")]
     #[account(12, optional, name="authorization_rules_program", desc="Token Authorization Rules Program")]
     #[default_optional_accounts]

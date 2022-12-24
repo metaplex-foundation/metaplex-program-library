@@ -2926,13 +2926,13 @@
       "name": "Delegate",
       "accounts": [
         {
-          "name": "delegate",
+          "name": "delegateRecord",
           "isMut": true,
           "isSigner": false,
           "desc": "Delegate account key (pda of [mint id, delegate role, user id, authority id])"
         },
         {
-          "name": "delegateOwner",
+          "name": "delegate",
           "isMut": false,
           "isSigner": false,
           "desc": "Owner of the delegated account"
@@ -2988,7 +2988,7 @@
           "optional": true
         },
         {
-          "name": "tokenAccount",
+          "name": "token",
           "isMut": true,
           "isSigner": false,
           "desc": "Owned Token Account of mint",
@@ -5436,6 +5436,16 @@
       "code": 146,
       "name": "OnlySaleDelegateCanTransfer",
       "msg": "Only the sale delegate can transfer while its set"
+    },
+    {
+      "code": 147,
+      "name": "MissingTokenAccount",
+      "msg": "Missing token account"
+    },
+    {
+      "code": 148,
+      "name": "MissingSplTokenProgram",
+      "msg": "Missing SPL token program"
     }
   ],
   "metadata": {

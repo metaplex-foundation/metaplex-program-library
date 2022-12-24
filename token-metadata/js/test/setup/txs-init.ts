@@ -454,8 +454,8 @@ export class InitTransactions {
     ruleSetPda: PublicKey | null = null,
   ): Promise<{ tx: ConfirmedTransactionAssertablePromise }> {
     const delegateAcccounts: DelegateInstructionAccounts = {
-      delegate: delegateRecord,
-      delegateOwner: delegate,
+      delegateRecord,
+      delegate,
       mint,
       metadata,
       masterEdition,
@@ -463,7 +463,7 @@ export class InitTransactions {
       payer: payer.publicKey,
       sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
       splTokenProgram: splToken.TOKEN_PROGRAM_ID,
-      tokenAccount: token,
+      token,
       authorizationRules: ruleSetPda,
     };
 

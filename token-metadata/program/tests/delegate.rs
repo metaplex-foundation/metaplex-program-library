@@ -50,40 +50,18 @@ mod delegate {
 
         let user = Keypair::new();
         let user_pubkey = user.pubkey();
-        let payer_pubkey = context.payer.pubkey();
+        let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
 
-        // delegate PDA
-        let (delegate, _) = find_delegate_account(
-            &asset.mint.pubkey(),
-            DelegateRole::Transfer,
-            &user_pubkey,
-            &payer_pubkey,
-        );
-
-        let delegate_ix = instruction::delegate(
-            /* delegate              */ delegate,
-            /* delegate owner        */ user_pubkey,
-            /* mint                  */ asset.mint.pubkey(),
-            /* metadata              */ asset.metadata,
-            /* master_edition        */ asset.master_edition,
-            /* authority             */ payer_pubkey,
-            /* payer                 */ payer_pubkey,
-            /* token                 */ asset.token,
-            /* authorization payload */ None,
-            /* additional accounts   */ None,
-            /* delegate args         */ DelegateArgs::TransferV1 { amount: 1 },
-        );
-
-        let tx = Transaction::new_signed_with_payer(
-            &[delegate_ix],
-            Some(&context.payer.pubkey()),
-            &[&context.payer],
-            context.last_blockhash,
-        );
-
-        context.banks_client.process_transaction(tx).await.unwrap();
-
-        // asserts
+        asset
+            .delegate(
+                &mut context,
+                payer,
+                user_pubkey,
+                DelegateRole::Transfer,
+                Some(1),
+            )
+            .await
+            .unwrap();
 
         let metadata_account = get_account(&mut context, &asset.metadata).await;
         let metadata: Metadata = try_from_slice_unchecked(&metadata_account.data).unwrap();
@@ -135,42 +113,53 @@ mod delegate {
 
         let user = Keypair::new();
         let user_pubkey = user.pubkey();
-        let payer_pubkey = context.payer.pubkey();
+        let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
 
         // delegate PDA
-        let (delegate, _) = find_delegate_account(
+        let (delegate_record, _) = find_delegate_account(
             &asset.mint.pubkey(),
             DelegateRole::Collection,
             &user_pubkey,
-            &payer_pubkey,
+            &payer.pubkey(),
         );
 
-        let delegate_ix = instruction::delegate(
-            /* delegate              */ delegate,
-            /* delegate owner        */ user_pubkey,
-            /* mint                  */ asset.mint.pubkey(),
-            /* metadata              */ asset.metadata,
-            /* master_edition        */ asset.master_edition,
-            /* authority             */ payer_pubkey,
-            /* payer                 */ payer_pubkey,
-            /* token                 */ None,
-            /* authorization payload */ None,
-            /* additional accounts   */ None,
-            /* delegate args         */ DelegateArgs::CollectionV1,
-        );
+        asset
+            .delegate(
+                &mut context,
+                payer,
+                user_pubkey,
+                DelegateRole::Collection,
+                Some(1),
+            )
+            .await
+            .unwrap();
 
-        let tx = Transaction::new_signed_with_payer(
-            &[delegate_ix],
-            Some(&context.payer.pubkey()),
-            &[&context.payer],
-            context.last_blockhash,
-        );
+        // let delegate_ix = instruction::delegate(
+        //     /* delegate              */ delegate,
+        //     /* delegate owner        */ user_pubkey,
+        //     /* mint                  */ asset.mint.pubkey(),
+        //     /* metadata              */ asset.metadata,
+        //     /* master_edition        */ asset.master_edition,
+        //     /* authority             */ payer_pubkey,
+        //     /* payer                 */ payer_pubkey,
+        //     /* token                 */ None,
+        //     /* authorization payload */ None,
+        //     /* additional accounts   */ None,
+        //     /* delegate args         */ DelegateArgs::CollectionV1,
+        // );
 
-        context.banks_client.process_transaction(tx).await.unwrap();
+        // let tx = Transaction::new_signed_with_payer(
+        //     &[delegate_ix],
+        //     Some(&context.payer.pubkey()),
+        //     &[&context.payer],
+        //     context.last_blockhash,
+        // );
+
+        // context.banks_client.process_transaction(tx).await.unwrap();
 
         // asserts
 
-        let delegate_account = get_account(&mut context, &delegate).await;
+        let delegate_account = get_account(&mut context, &delegate_record).await;
         let delegate: DelegateRecord = DelegateRecord::from_bytes(&delegate_account.data).unwrap();
         assert_eq!(delegate.key, Key::Delegate);
         assert_eq!(delegate.role, DelegateRole::Collection);

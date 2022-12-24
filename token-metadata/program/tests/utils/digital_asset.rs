@@ -1,8 +1,7 @@
 use mpl_token_metadata::{
     id,
     instruction::{
-        self,
-        builders::{CreateBuilder, MintBuilder, TransferBuilder},
+        builders::{CreateBuilder, DelegateBuilder, MintBuilder, TransferBuilder},
         CreateArgs, DelegateArgs, DelegateRole, InstructionBuilder, MintArgs, TransferArgs,
     },
     pda::find_delegate_account,
@@ -239,19 +238,24 @@ impl DigitalAsset {
             _ => panic!("currently unsupported delegate role"),
         };
 
-        let delegate_ix = instruction::delegate(
-            /* delegate record       */ delegate_record,
-            /* delegate              */ delegate,
-            /* mint                  */ self.mint.pubkey(),
-            /* metadata              */ self.metadata,
-            /* master_edition        */ self.master_edition,
-            /* authority             */ authority.pubkey(),
-            /* payer                 */ authority.pubkey(),
-            /* token                 */ self.token,
-            /* authorization payload */ None,
-            /* additional accounts   */ None,
-            /* delegate args         */ args,
-        );
+        let mut builder = DelegateBuilder::new();
+        builder
+            .delegate(delegate)
+            .delegate_record(delegate_record)
+            .mint(self.mint.pubkey())
+            .metadata(self.metadata)
+            .payer(authority.pubkey())
+            .authority(authority.pubkey());
+
+        if let Some(edition) = self.master_edition {
+            builder.master_edition(edition);
+        }
+
+        if let Some(token) = self.token {
+            builder.token(token);
+        }
+
+        let delegate_ix = builder.build(args.clone()).unwrap().instruction();
 
         let tx = Transaction::new_signed_with_payer(
             &[delegate_ix],
