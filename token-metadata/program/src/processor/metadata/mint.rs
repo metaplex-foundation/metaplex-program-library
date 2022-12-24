@@ -28,14 +28,14 @@ use crate::{
 ///
 ///   0. `[writable`] Token account key
 ///   1. `[]` Metadata account key (pda of ['metadata', program id, mint id])")]
-///   2. `[]` Mint of token asset
-///   3. `[signer, writable]` Payer
-///   4. `[signer]` Authority (mint authority or metadata's update authority for NonFungible asests)
-///   5. `[]` System program
-///   6. `[]` Instructions sysvar account
-///   7. `[]` SPL Token program
-///   8. `[]` SPL Associated Token Account program
-///   9. `[optional]` Master Edition account
+///   2. `[optional]` Master Edition account
+///   3. `[]` Mint of token asset
+///   4. `[signer, writable]` Payer
+///   5. `[signer]` Authority (mint authority or metadata's update authority for NonFungible asests)
+///   6. `[]` System program
+///   7. `[]` Instructions sysvar account
+///   8. `[]` SPL Token program
+///   9. `[]` SPL Associated Token Account program
 ///   10. `[optional]` Token Authorization Rules program
 ///   11. `[optional]` Token Authorization Rules account
 pub fn mint<'a>(
@@ -79,7 +79,7 @@ pub fn mint_v1(program_id: &Pubkey, ctx: Context<Mint>, args: MintArgs) -> Progr
     // validate authorization rules
 
     if let Some(programmable_config) = &metadata.programmable_config {
-        if let Some(auth_rules_program_info) = ctx.accounts.auth_rules_program_info {
+        if let Some(auth_rules_program_info) = ctx.accounts.authorization_rules_program_info {
             if !cmp_pubkeys(auth_rules_program_info.key, &mpl_token_auth_rules::id()) {
                 return Err(ProgramError::IncorrectProgramId);
             }

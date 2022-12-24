@@ -2431,6 +2431,13 @@
           "desc": "Metadata account key (pda of ['metadata', program id, mint id])"
         },
         {
+          "name": "masterEdition",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Master Edition account",
+          "optional": true
+        },
+        {
           "name": "mint",
           "isMut": true,
           "isSigner": false,
@@ -2473,14 +2480,7 @@
           "desc": "SPL Associated Token Account program"
         },
         {
-          "name": "masterEdition",
-          "isMut": true,
-          "isSigner": false,
-          "desc": "Master Edition account",
-          "optional": true
-        },
-        {
-          "name": "authRulesProgram",
+          "name": "authorizationRulesProgram",
           "isMut": false,
           "isSigner": false,
           "desc": "Token Authorization Rules program",

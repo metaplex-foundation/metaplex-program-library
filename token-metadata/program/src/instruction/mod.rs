@@ -521,18 +521,19 @@ pub enum MetadataInstruction {
     ///
     /// This instruction will also initialized the associated token account if it does not exist. When
     /// minting `*NonFungible` assets, the `mint_authority` must the the master edition PDA of
-    /// ['metadata', program id, mint, 'edition'].
+    /// ['metadata', program id, mint, 'edition']. For the other cases, it must be the `mint_authority`
+    /// from the mint account.
     #[account(0, writable, name="token", desc="Token account key")]
     #[account(1, name="metadata", desc="Metadata account key (pda of ['metadata', program id, mint id])")]
-    #[account(2, writable, name="mint", desc="Mint of token asset")]
-    #[account(3, signer, writable, name="payer", desc="Payer")]
-    #[account(4, signer, name="authority", desc="(Mint or Update) authority")]
-    #[account(5, name="system_program", desc="System program")]
-    #[account(6, name="sysvar_instructions", desc="Instructions sysvar account")]
-    #[account(7, name="spl_token_program", desc="SPL Token program")]
-    #[account(8, name="spl_ata_program", desc="SPL Associated Token Account program")]
-    #[account(9, optional, writable, name="master_edition", desc="Master Edition account")]
-    #[account(10, optional, name="auth_rules_program", desc="Token Authorization Rules program")]
+    #[account(2, optional, name="master_edition", desc="Master Edition account")]
+    #[account(3, writable, name="mint", desc="Mint of token asset")]
+    #[account(4, signer, writable, name="payer", desc="Payer")]
+    #[account(5, signer, name="authority", desc="(Mint or Update) authority")]
+    #[account(6, name="system_program", desc="System program")]
+    #[account(7, name="sysvar_instructions", desc="Instructions sysvar account")]
+    #[account(8, name="spl_token_program", desc="SPL Token program")]
+    #[account(9, name="spl_ata_program", desc="SPL Associated Token Account program")]
+    #[account(10, optional, name="authorization_rules_program", desc="Token Authorization Rules program")]
     #[account(11, optional, name="authorization_rules", desc="Token Authorization Rules account")]
     #[default_optional_accounts]
     Mint(MintArgs),

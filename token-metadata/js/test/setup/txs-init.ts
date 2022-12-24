@@ -185,15 +185,15 @@ export class InitTransactions {
     const mintAcccounts: MintInstructionAccounts = {
       token,
       metadata,
+      masterEdition,
       mint,
       payer: payer.publicKey,
       authority: payer.publicKey,
       sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
       splAtaProgram: splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
       splTokenProgram: splToken.TOKEN_PROGRAM_ID,
-      masterEdition,
       authorizationRules: authConfig ? authConfig.ruleSet : null,
-      authRulesProgram: TOKEN_AUTH_RULES_ID,
+      authorizationRulesProgram: TOKEN_AUTH_RULES_ID,
     };
 
     const payload: Payload = {

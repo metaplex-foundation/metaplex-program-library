@@ -38,14 +38,14 @@ export const MintStruct = new beet.FixableBeetArgsStruct<
  *
  * @property [_writable_] token Token account key
  * @property [] metadata Metadata account key (pda of ['metadata', program id, mint id])
+ * @property [] masterEdition (optional) Master Edition account
  * @property [_writable_] mint Mint of token asset
  * @property [_writable_, **signer**] payer Payer
  * @property [**signer**] authority (Mint or Update) authority
  * @property [] sysvarInstructions Instructions sysvar account
  * @property [] splTokenProgram SPL Token program
  * @property [] splAtaProgram SPL Associated Token Account program
- * @property [_writable_] masterEdition (optional) Master Edition account
- * @property [] authRulesProgram (optional) Token Authorization Rules program
+ * @property [] authorizationRulesProgram (optional) Token Authorization Rules program
  * @property [] authorizationRules (optional) Token Authorization Rules account
  * @category Instructions
  * @category Mint
@@ -54,6 +54,7 @@ export const MintStruct = new beet.FixableBeetArgsStruct<
 export type MintInstructionAccounts = {
   token: web3.PublicKey;
   metadata: web3.PublicKey;
+  masterEdition?: web3.PublicKey;
   mint: web3.PublicKey;
   payer: web3.PublicKey;
   authority: web3.PublicKey;
@@ -61,8 +62,7 @@ export type MintInstructionAccounts = {
   sysvarInstructions: web3.PublicKey;
   splTokenProgram: web3.PublicKey;
   splAtaProgram: web3.PublicKey;
-  masterEdition?: web3.PublicKey;
-  authRulesProgram?: web3.PublicKey;
+  authorizationRulesProgram?: web3.PublicKey;
   authorizationRules?: web3.PublicKey;
 };
 
@@ -102,6 +102,11 @@ export function createMintInstruction(
       isSigner: false,
     },
     {
+      pubkey: accounts.masterEdition ?? programId,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
       pubkey: accounts.mint,
       isWritable: true,
       isSigner: false,
@@ -137,12 +142,7 @@ export function createMintInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.masterEdition ?? programId,
-      isWritable: accounts.masterEdition != null,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.authRulesProgram ?? programId,
+      pubkey: accounts.authorizationRulesProgram ?? programId,
       isWritable: false,
       isSigner: false,
     },

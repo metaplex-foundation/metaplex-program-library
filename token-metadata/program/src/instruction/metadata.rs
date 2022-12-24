@@ -317,6 +317,8 @@ pub fn update_primary_sale_happened_via_token(
     }
 }
 
+//- Instruction Builders
+
 /// Builds the instruction to create metadata and associated accounts.
 ///
 /// # Accounts:
@@ -359,11 +361,28 @@ impl InstructionBuilder for super::builders::Create {
     }
 }
 
+/// Mints tokens from a mint account.
+///
+/// # Accounts:
+///
+///   0. `[writable`] Token account key
+///   1. `[]` Metadata account key (pda of ['metadata', program id, mint id])")]
+///   2. `[optional]` Master Edition account
+///   3. `[]` Mint of token asset
+///   4. `[signer, writable]` Payer
+///   5. `[signer]` Authority (mint authority or metadata's update authority for NonFungible asests)
+///   6. `[]` System program
+///   7. `[]` Instructions sysvar account
+///   8. `[]` SPL Token program
+///   9. `[]` SPL Associated Token Account program
+///   10. `[optional]` Token Authorization Rules program
+///   11. `[optional]` Token Authorization Rules account
 impl InstructionBuilder for super::builders::Mint {
     fn instruction(&self) -> solana_program::instruction::Instruction {
         let mut accounts = vec![
             AccountMeta::new(self.token, false),
             AccountMeta::new_readonly(self.metadata, false),
+            AccountMeta::new_readonly(self.master_edition.unwrap_or(crate::ID), false),
             AccountMeta::new(self.mint, false),
             AccountMeta::new(self.payer, true),
             AccountMeta::new_readonly(self.authority, true),
@@ -372,12 +391,6 @@ impl InstructionBuilder for super::builders::Mint {
             AccountMeta::new_readonly(self.spl_token_program, false),
             AccountMeta::new_readonly(self.spl_ata_program, false),
         ];
-        // checks whether we have a master edition
-        if let Some(master_edition) = self.master_edition {
-            accounts.push(AccountMeta::new(master_edition, false));
-        } else {
-            accounts.push(AccountMeta::new_readonly(crate::ID, false));
-        }
         // Optional authorization rules accounts
         if let Some(rules) = &self.authorization_rules {
             accounts.push(AccountMeta::new_readonly(mpl_token_auth_rules::ID, false));
