@@ -235,13 +235,14 @@ export class InitTransactions {
   }
 
   async transfer(
-    owner: Keypair,
-    ata: PublicKey,
+    authority: Keypair,
+    sourceOwner: PublicKey,
+    sourceToken: PublicKey,
     mint: PublicKey,
     metadata: PublicKey,
     masterEdition: PublicKey,
-    destination: PublicKey,
-    destinationAta: PublicKey,
+    destinationOwner: PublicKey,
+    destinationToken: PublicKey,
     authorizationRules: PublicKey,
     amount: number,
     handler: PayerTransactionHandler,
@@ -251,19 +252,21 @@ export class InitTransactions {
     if (masterEdition != null) {
       amman.addr.addLabel('Master Edition Account', masterEdition);
     }
-    amman.addr.addLabel('Owner', owner.publicKey);
-    amman.addr.addLabel('Token Account', ata);
-    amman.addr.addLabel('Destination', destination);
-    amman.addr.addLabel('Destination Token Account', destinationAta);
+    amman.addr.addLabel('Authority', authority.publicKey);
+    amman.addr.addLabel('Owner', sourceOwner);
+    amman.addr.addLabel('Token Account', sourceToken);
+    amman.addr.addLabel('Destination', destinationOwner);
+    amman.addr.addLabel('Destination Token Account', destinationToken);
 
     const transferAcccounts: TransferInstructionAccounts = {
-      owner: owner.publicKey,
-      ata,
+      authority: authority.publicKey,
+      sourceOwner,
+      sourceToken,
       metadata,
       mint,
       edition: masterEdition,
-      destination,
-      destinationAta,
+      destinationOwner,
+      destinationToken,
       splTokenProgram: splToken.TOKEN_PROGRAM_ID,
       splAtaProgram: splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
       systemProgram: SystemProgram.programId,
@@ -285,7 +288,7 @@ export class InitTransactions {
     const tx = new Transaction().add(transferIx);
 
     return {
-      tx: handler.sendAndConfirmTransaction(tx, [owner], 'tx: Transfer'),
+      tx: handler.sendAndConfirmTransaction(tx, [authority], 'tx: Transfer'),
     };
   }
 
@@ -294,19 +297,19 @@ export class InitTransactions {
     handler: PayerTransactionHandler,
     mint: PublicKey,
     metadata: PublicKey,
-    masterEdition: PublicKey,
+    edition: PublicKey,
     authority: Keypair,
     authorityType: AuthorityType = AuthorityType.Metadata,
     updateTestData: UpdateTestData,
     delegateRecord?: PublicKey | null,
-    tokenAccount?: PublicKey | null,
+    token?: PublicKey | null,
     ruleSetPda?: PublicKey | null,
     authorizationData?: AuthorizationData | null,
   ): Promise<{ tx: ConfirmedTransactionAssertablePromise }> {
     amman.addr.addLabel('Mint Account', mint);
     amman.addr.addLabel('Metadata Account', metadata);
-    if (masterEdition != null) {
-      amman.addr.addLabel('Master Edition Account', masterEdition);
+    if (edition != null) {
+      amman.addr.addLabel('Master Edition Account', edition);
     }
 
     const updateAcccounts: UpdateInstructionAccounts = {
@@ -314,9 +317,9 @@ export class InitTransactions {
       mint,
       systemProgram: SystemProgram.programId,
       sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
-      masterEdition,
+      edition,
       authority: authority.publicKey,
-      tokenAccount,
+      token,
       delegateRecord,
       authorizationRulesProgram: ruleSetPda ? TOKEN_AUTH_RULES_ID : PROGRAM_ID,
       authorizationRules: ruleSetPda,
@@ -449,7 +452,6 @@ export class InitTransactions {
     handler: PayerTransactionHandler,
     token: PublicKey | null = null,
     ruleSetPda: PublicKey | null = null,
-    authorizationData: AuthorizationData | null = null,
   ): Promise<{ tx: ConfirmedTransactionAssertablePromise }> {
     const delegateAcccounts: DelegateInstructionAccounts = {
       delegate: delegateRecord,
@@ -493,7 +495,6 @@ export class InitTransactions {
     handler: PayerTransactionHandler,
     token: PublicKey | null = null,
     ruleSetPda: PublicKey | null = null,
-    authorizationData: AuthorizationData | null = null,
   ): Promise<{ tx: ConfirmedTransactionAssertablePromise; delegate: PublicKey }> {
     const revokeAcccounts: RevokeInstructionAccounts = {
       delegateRecord: delegateRecord,

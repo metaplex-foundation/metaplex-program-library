@@ -82,4 +82,4 @@ export const payloadTypeBeet = beet.dataEnum<PayloadTypeRecord>([
       'PayloadTypeRecord["Number"]',
     ),
   ],
-]) as beet.FixableBeet<PayloadType, PayloadType>;
+]) as beet.FixableBeet<PayloadType>;

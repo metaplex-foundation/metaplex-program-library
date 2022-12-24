@@ -36,36 +36,40 @@ export const TransferStruct = new beet.FixableBeetArgsStruct<
 /**
  * Accounts required by the _Transfer_ instruction
  *
- * @property [_writable_, **signer**] owner Asset owner
- * @property [_writable_] ata Associated Token account
- * @property [_writable_] metadata Metadata (pda of ['metadata', program id, mint id])
+ * @property [_writable_, **signer**] authority Transfer authority
+ * @property [] sourceOwner Source token account owner
+ * @property [_writable_] sourceToken Source token account
+ * @property [] destinationOwner Destination token account owner
+ * @property [_writable_] destinationToken Destination token account address
  * @property [] mint Mint of token asset
- * @property [] edition (optional) Edition of token asset
- * @property [] destination Destination address
- * @property [_writable_] destinationAta Destination ATA account address
+ * @property [_writable_] metadata Metadata (pda of ['metadata', program id, mint id])
  * @property [] splTokenProgram SPL Token Program
  * @property [] splAtaProgram SPL Associated Token Account program
  * @property [] sysvarInstructions Instructions sysvar account
- * @property [_writable_] authorizationRules (optional) Token Authorization Rules account
+ * @property [] edition (optional) Edition of token asset
+ * @property [] delegateRecord (optional) Delegate record PDA
  * @property [] authorizationRulesProgram (optional) Token Authorization Rules Program
+ * @property [_writable_] authorizationRules (optional) Token Authorization Rules account
  * @category Instructions
  * @category Transfer
  * @category generated
  */
 export type TransferInstructionAccounts = {
-  owner: web3.PublicKey;
-  ata: web3.PublicKey;
-  metadata: web3.PublicKey;
+  authority: web3.PublicKey;
+  sourceOwner: web3.PublicKey;
+  sourceToken: web3.PublicKey;
+  destinationOwner: web3.PublicKey;
+  destinationToken: web3.PublicKey;
   mint: web3.PublicKey;
-  edition?: web3.PublicKey;
-  destination: web3.PublicKey;
-  destinationAta: web3.PublicKey;
+  metadata: web3.PublicKey;
   splTokenProgram: web3.PublicKey;
   splAtaProgram: web3.PublicKey;
   systemProgram?: web3.PublicKey;
   sysvarInstructions: web3.PublicKey;
-  authorizationRules?: web3.PublicKey;
+  edition?: web3.PublicKey;
+  delegateRecord?: web3.PublicKey;
   authorizationRulesProgram?: web3.PublicKey;
+  authorizationRules?: web3.PublicKey;
 };
 
 export const transferInstructionDiscriminator = 46;
@@ -94,17 +98,27 @@ export function createTransferInstruction(
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: accounts.owner,
+      pubkey: accounts.authority,
       isWritable: true,
       isSigner: true,
     },
     {
-      pubkey: accounts.ata,
+      pubkey: accounts.sourceOwner,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.sourceToken,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: accounts.metadata,
+      pubkey: accounts.destinationOwner,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.destinationToken,
       isWritable: true,
       isSigner: false,
     },
@@ -114,17 +128,7 @@ export function createTransferInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.edition ?? programId,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.destination,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.destinationAta,
+      pubkey: accounts.metadata,
       isWritable: true,
       isSigner: false,
     },
@@ -149,13 +153,23 @@ export function createTransferInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.authorizationRules ?? programId,
-      isWritable: accounts.authorizationRules != null,
+      pubkey: accounts.edition ?? programId,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.delegateRecord ?? programId,
+      isWritable: false,
       isSigner: false,
     },
     {
       pubkey: accounts.authorizationRulesProgram ?? programId,
       isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.authorizationRules ?? programId,
+      isWritable: accounts.authorizationRules != null,
       isSigner: false,
     },
   ];

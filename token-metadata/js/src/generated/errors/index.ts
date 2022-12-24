@@ -3050,13 +3050,56 @@ createErrorFromCodeLookup.set(0x8d, () => new DelegateNotFoundError());
 createErrorFromNameLookup.set('DelegateNotFound', () => new DelegateNotFoundError());
 
 /**
+ * MissingAccountInBuilder: 'Required account not set in instruction builder'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MissingAccountInBuilderError extends Error {
+  readonly code: number = 0x8e;
+  readonly name: string = 'MissingAccountInBuilder';
+  constructor() {
+    super('Required account not set in instruction builder');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MissingAccountInBuilderError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x8e, () => new MissingAccountInBuilderError());
+createErrorFromNameLookup.set('MissingAccountInBuilder', () => new MissingAccountInBuilderError());
+
+/**
+ * MissingArgumentInBuilder: 'Required argument not set in instruction builder'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MissingArgumentInBuilderError extends Error {
+  readonly code: number = 0x8f;
+  readonly name: string = 'MissingArgumentInBuilder';
+  constructor() {
+    super('Required argument not set in instruction builder');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MissingArgumentInBuilderError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x8f, () => new MissingArgumentInBuilderError());
+createErrorFromNameLookup.set(
+  'MissingArgumentInBuilder',
+  () => new MissingArgumentInBuilderError(),
+);
+
+/**
  * FeatureNotSupported: 'Feature not supported currently'
  *
  * @category Errors
  * @category generated
  */
 export class FeatureNotSupportedError extends Error {
-  readonly code: number = 0x8e;
+  readonly code: number = 0x90;
   readonly name: string = 'FeatureNotSupported';
   constructor() {
     super('Feature not supported currently');
@@ -3066,8 +3109,51 @@ export class FeatureNotSupportedError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x8e, () => new FeatureNotSupportedError());
+createErrorFromCodeLookup.set(0x90, () => new FeatureNotSupportedError());
 createErrorFromNameLookup.set('FeatureNotSupported', () => new FeatureNotSupportedError());
+
+/**
+ * InvalidSystemWallet: 'Invalid system wallet'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidSystemWalletError extends Error {
+  readonly code: number = 0x91;
+  readonly name: string = 'InvalidSystemWallet';
+  constructor() {
+    super('Invalid system wallet');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidSystemWalletError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x91, () => new InvalidSystemWalletError());
+createErrorFromNameLookup.set('InvalidSystemWallet', () => new InvalidSystemWalletError());
+
+/**
+ * OnlySaleDelegateCanTransfer: 'Only the sale delegate can transfer while its set'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class OnlySaleDelegateCanTransferError extends Error {
+  readonly code: number = 0x92;
+  readonly name: string = 'OnlySaleDelegateCanTransfer';
+  constructor() {
+    super('Only the sale delegate can transfer while its set');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, OnlySaleDelegateCanTransferError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x92, () => new OnlySaleDelegateCanTransferError());
+createErrorFromNameLookup.set(
+  'OnlySaleDelegateCanTransfer',
+  () => new OnlySaleDelegateCanTransferError(),
+);
 
 /**
  * Attempts to resolve a custom program error from the provided error code.

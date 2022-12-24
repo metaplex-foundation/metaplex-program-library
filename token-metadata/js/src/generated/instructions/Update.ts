@@ -36,12 +36,12 @@ export const UpdateStruct = new beet.FixableBeetArgsStruct<
 /**
  * Accounts required by the _Update_ instruction
  *
+ * @property [**signer**] authority Update authority
  * @property [_writable_] metadata Metadata account
  * @property [] mint Mint account
  * @property [] sysvarInstructions System program
- * @property [_writable_] masterEdition (optional) Master edition account
- * @property [**signer**] authority (optional) Update authority
- * @property [] tokenAccount (optional) Token account
+ * @property [_writable_] edition (optional) Master Edition account
+ * @property [] token (optional) Token account
  * @property [] delegateRecord (optional) Delegate record PDA
  * @property [] authorizationRulesProgram (optional) Token Authorization Rules Program
  * @property [] authorizationRules (optional) Token Authorization Rules account
@@ -50,13 +50,13 @@ export const UpdateStruct = new beet.FixableBeetArgsStruct<
  * @category generated
  */
 export type UpdateInstructionAccounts = {
+  authority: web3.PublicKey;
   metadata: web3.PublicKey;
   mint: web3.PublicKey;
   systemProgram?: web3.PublicKey;
   sysvarInstructions: web3.PublicKey;
-  masterEdition?: web3.PublicKey;
-  authority?: web3.PublicKey;
-  tokenAccount?: web3.PublicKey;
+  edition?: web3.PublicKey;
+  token?: web3.PublicKey;
   delegateRecord?: web3.PublicKey;
   authorizationRulesProgram?: web3.PublicKey;
   authorizationRules?: web3.PublicKey;
@@ -88,6 +88,11 @@ export function createUpdateInstruction(
   });
   const keys: web3.AccountMeta[] = [
     {
+      pubkey: accounts.authority,
+      isWritable: false,
+      isSigner: true,
+    },
+    {
       pubkey: accounts.metadata,
       isWritable: true,
       isSigner: false,
@@ -108,17 +113,12 @@ export function createUpdateInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.masterEdition ?? programId,
-      isWritable: accounts.masterEdition != null,
+      pubkey: accounts.edition ?? programId,
+      isWritable: accounts.edition != null,
       isSigner: false,
     },
     {
-      pubkey: accounts.authority ?? programId,
-      isWritable: false,
-      isSigner: accounts.authority != null,
-    },
-    {
-      pubkey: accounts.tokenAccount ?? programId,
+      pubkey: accounts.token ?? programId,
       isWritable: false,
       isSigner: false,
     },

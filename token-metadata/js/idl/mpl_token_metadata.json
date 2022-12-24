@@ -2519,6 +2519,12 @@
       "name": "Update",
       "accounts": [
         {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "Update authority"
+        },
+        {
           "name": "metadata",
           "isMut": true,
           "isSigner": false,
@@ -2543,21 +2549,14 @@
           "desc": "System program"
         },
         {
-          "name": "masterEdition",
+          "name": "edition",
           "isMut": true,
           "isSigner": false,
-          "desc": "Master edition account",
+          "desc": "Master Edition account",
           "optional": true
         },
         {
-          "name": "authority",
-          "isMut": false,
-          "isSigner": true,
-          "desc": "Update authority",
-          "optional": true
-        },
-        {
-          "name": "tokenAccount",
+          "name": "token",
           "isMut": false,
           "isSigner": false,
           "desc": "Token account",
@@ -2765,22 +2764,34 @@
       "name": "Transfer",
       "accounts": [
         {
-          "name": "owner",
+          "name": "authority",
           "isMut": true,
           "isSigner": true,
-          "desc": "Asset owner"
+          "desc": "Transfer authority"
         },
         {
-          "name": "ata",
-          "isMut": true,
+          "name": "sourceOwner",
+          "isMut": false,
           "isSigner": false,
-          "desc": "Associated Token account"
+          "desc": "Source token account owner"
         },
         {
-          "name": "metadata",
+          "name": "sourceToken",
           "isMut": true,
           "isSigner": false,
-          "desc": "Metadata (pda of ['metadata', program id, mint id])"
+          "desc": "Source token account"
+        },
+        {
+          "name": "destinationOwner",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Destination token account owner"
+        },
+        {
+          "name": "destinationToken",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Destination token account address"
         },
         {
           "name": "mint",
@@ -2789,23 +2800,10 @@
           "desc": "Mint of token asset"
         },
         {
-          "name": "edition",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "Edition of token asset",
-          "optional": true
-        },
-        {
-          "name": "destination",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "Destination address"
-        },
-        {
-          "name": "destinationAta",
+          "name": "metadata",
           "isMut": true,
           "isSigner": false,
-          "desc": "Destination ATA account address"
+          "desc": "Metadata (pda of ['metadata', program id, mint id])"
         },
         {
           "name": "splTokenProgram",
@@ -2832,10 +2830,17 @@
           "desc": "Instructions sysvar account"
         },
         {
-          "name": "authorizationRules",
-          "isMut": true,
+          "name": "edition",
+          "isMut": false,
           "isSigner": false,
-          "desc": "Token Authorization Rules account",
+          "desc": "Edition of token asset",
+          "optional": true
+        },
+        {
+          "name": "delegateRecord",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Delegate record PDA",
           "optional": true
         },
         {
@@ -2843,6 +2848,13 @@
           "isMut": false,
           "isSigner": false,
           "desc": "Token Authorization Rules Program",
+          "optional": true
+        },
+        {
+          "name": "authorizationRules",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Token Authorization Rules account",
           "optional": true
         }
       ],
@@ -5402,8 +5414,28 @@
     },
     {
       "code": 142,
+      "name": "MissingAccountInBuilder",
+      "msg": "Required account not set in instruction builder"
+    },
+    {
+      "code": 143,
+      "name": "MissingArgumentInBuilder",
+      "msg": "Required argument not set in instruction builder"
+    },
+    {
+      "code": 144,
       "name": "FeatureNotSupported",
       "msg": "Feature not supported currently"
+    },
+    {
+      "code": 145,
+      "name": "InvalidSystemWallet",
+      "msg": "Invalid system wallet"
+    },
+    {
+      "code": 146,
+      "name": "OnlySaleDelegateCanTransfer",
+      "msg": "Only the sale delegate can transfer while its set"
     }
   ],
   "metadata": {

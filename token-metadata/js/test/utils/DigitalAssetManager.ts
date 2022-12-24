@@ -1,7 +1,6 @@
 import { Connection, PublicKey } from '@solana/web3.js';
 import {
   AssetData,
-  DelegateState,
   Metadata,
   ProgrammableConfig,
   TokenStandard,
@@ -35,14 +34,6 @@ export class DigitalAssetManager {
   async getAssetData(connection: Connection): Promise<AssetData> {
     const md = await Metadata.fromAccountAddress(connection, this.metadata);
 
-    let delegateState: DelegateState | null = null;
-    if (md.delegate != null) {
-      delegateState = {
-        __kind: 'Transfer',
-        fields: [md.delegate],
-      };
-    }
-
     return {
       name: md.data.name,
       symbol: md.data.symbol,
@@ -58,7 +49,7 @@ export class DigitalAssetManager {
       uses: md.uses,
       collectionDetails: md.collectionDetails,
       programmableConfig: md.programmableConfig,
-      delegateState,
+      delegateState: md.delegateState,
     };
   }
 }

@@ -65,4 +65,4 @@ export const delegateArgsBeet = beet.dataEnum<DelegateArgsRecord>([
       'DelegateArgsRecord["TransferV1"]',
     ),
   ],
-]) as beet.FixableBeet<DelegateArgs, DelegateArgs>;
+]) as beet.FixableBeet<DelegateArgs>;
