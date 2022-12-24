@@ -233,10 +233,10 @@ pub fn mint_v1<'a>(
                 // thaw the token account for programmable assets; the account
                 // is not frozen if we just initialized it
                 thaw(
-                    mint_info,
-                    token_info,
-                    master_edition_info,
-                    spl_token_program_info,
+                    mint_info.clone(),
+                    token_info.clone(),
+                    master_edition_info.clone(),
+                    spl_token_program_info.clone(),
                 )?;
             }
 
@@ -263,10 +263,10 @@ pub fn mint_v1<'a>(
             ) {
                 // programmable assets are always in a frozen state
                 freeze(
-                    mint_info,
-                    token_info,
-                    master_edition_info,
-                    spl_token_program_info,
+                    mint_info.clone(),
+                    token_info.clone(),
+                    master_edition_info.clone(),
+                    spl_token_program_info.clone(),
                 )?;
             }
         }

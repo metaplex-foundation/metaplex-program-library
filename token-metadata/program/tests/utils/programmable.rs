@@ -27,7 +27,7 @@ pub async fn create_test_ruleset(
 
     // Rule for Transfers: Allow transfers to a Token Owned Escrow account.
     let owned_by_token_metadata = Rule::ProgramOwned {
-        program: mpl_token_metadata::id(),
+        program: mpl_token_metadata::ID,
         field: PayloadKey::Target,
     };
 

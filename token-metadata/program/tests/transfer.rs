@@ -17,7 +17,7 @@ mod transfer {
         error::MetadataError,
         instruction::{create_escrow_account, DelegateRole},
         processor::find_escrow_account,
-        state::{EscrowAuthority, TokenStandard},
+        state::{EscrowAuthority, ProgrammableConfig, TokenStandard},
     };
     use solana_program::{native_token::LAMPORTS_PER_SOL, program_pack::Pack};
     use solana_sdk::transaction::Transaction;
@@ -47,8 +47,10 @@ mod transfer {
         digital_asset
             .transfer(
                 &mut context,
+                payer.pubkey(),
                 payer,
                 destination.pubkey(),
+                None,
                 None,
                 None,
                 None,
@@ -102,8 +104,10 @@ mod transfer {
         digital_asset
             .transfer(
                 &mut context,
+                payer.pubkey(),
                 payer,
                 destination.pubkey(),
+                None,
                 None,
                 None,
                 None,
@@ -157,8 +161,10 @@ mod transfer {
         digital_asset
             .transfer(
                 &mut context,
+                payer.pubkey(),
                 payer,
                 destination.pubkey(),
+                None,
                 None,
                 None,
                 None,
@@ -182,7 +188,110 @@ mod transfer {
     }
 
     #[tokio::test]
-    async fn transfer_programmable_nft() {
+    async fn transfer_programmable_wallet_to_wallet() {
+        let mut program_test = ProgramTest::new("mpl_token_metadata", mpl_token_metadata::ID, None);
+        program_test.add_program("mpl_token_auth_rules", mpl_token_auth_rules::ID, None);
+        let mut context = program_test.start_with_context().await;
+
+        let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+
+        // Create rule-set for the transfer requiring the destination to be program owned
+        // by Token Metadata program. (Token Owned Escrow scenario.)
+        let (rule_set, auth_data) =
+            create_test_ruleset(&mut context, payer, "royalty".to_string()).await;
+
+        // Create NFT for transfer tests.
+        let mut nft = DigitalAsset::new();
+        nft.create_and_mint(
+            &mut context,
+            TokenStandard::ProgrammableNonFungible,
+            Some(rule_set),
+            Some(auth_data.clone()),
+            1,
+        )
+        .await
+        .unwrap();
+
+        let metadata = nft.get_metadata(&mut context).await;
+        assert_eq!(
+            metadata.token_standard,
+            Some(TokenStandard::ProgrammableNonFungible)
+        );
+        assert_eq!(
+            metadata.programmable_config,
+            Some(ProgrammableConfig { rule_set })
+        );
+
+        let transfer_amount = 1;
+
+        // Our first destination will be an account owned by
+        // the mpl-token-auth-rules. This should fail because it's not
+        // owned by the Token Metadata program and also not a wallet-to-wallet
+        // transfer.
+        let destination = rule_set;
+
+        let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+
+        let err = nft
+            .transfer(
+                &mut context,
+                payer.pubkey(),
+                payer,
+                destination,
+                None,
+                None,
+                Some(rule_set),
+                Some(auth_data.clone()),
+                transfer_amount,
+            )
+            .await
+            .unwrap_err();
+
+        assert_custom_error_ix!(
+            1,
+            err,
+            mpl_token_auth_rules::error::RuleSetError::ProgramOwnedCheckFailed
+        );
+
+        // Our second destination will be a wallet-to-wallet transfer so should
+        // circumvent the program owned check and should succeed.
+        let destination = Keypair::new();
+
+        let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+
+        nft.transfer(
+            &mut context,
+            payer.pubkey(),
+            payer,
+            destination.pubkey(),
+            None,
+            None,
+            Some(rule_set),
+            Some(auth_data.clone()),
+            transfer_amount,
+        )
+        .await
+        .unwrap();
+
+        let destination_token =
+            get_associated_token_address(&destination.pubkey(), &nft.mint.pubkey());
+
+        let token_account = spl_token::state::Account::unpack(
+            &context
+                .banks_client
+                .get_account(destination_token)
+                .await
+                .unwrap()
+                .unwrap()
+                .data,
+        )
+        .unwrap();
+
+        assert_eq!(token_account.amount, transfer_amount);
+    }
+
+    #[tokio::test]
+    async fn transfer_programmable_program_owned() {
         let mut program_test = ProgramTest::new("mpl_token_metadata", mpl_token_metadata::ID, None);
         program_test.add_program("mpl_token_auth_rules", mpl_token_auth_rules::ID, None);
         let mut context = program_test.start_with_context().await;
@@ -215,18 +324,21 @@ mod transfer {
 
         let transfer_amount = 1;
 
-        let destination = Keypair::new();
-        airdrop(&mut context, &destination.pubkey(), LAMPORTS_PER_SOL)
-            .await
-            .unwrap();
+        // Our first destination will be an account owned by
+        // the mpl-token-auth-rules. This should fail because it's not
+        // owned by the Token Metadata program and also not a wallet-to-wallet
+        // transfer.
+        let destination = rule_set;
 
         let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
 
         let err = nft
             .transfer(
                 &mut context,
+                payer.pubkey(),
                 payer,
-                destination.pubkey(),
+                destination,
+                None,
                 None,
                 Some(rule_set),
                 Some(auth_data.clone()),
@@ -235,7 +347,6 @@ mod transfer {
             .await
             .unwrap_err();
 
-        // Should fail because the recipient is not owned by Token Metadata
         assert_custom_error_ix!(
             1,
             err,
@@ -272,8 +383,10 @@ mod transfer {
 
         nft.transfer(
             &mut context,
+            payer.pubkey(),
             payer,
             escrow_account,
+            None,
             None,
             Some(rule_set),
             Some(auth_data),
@@ -314,6 +427,7 @@ mod transfer {
             .unwrap();
 
         let authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+        let owner = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
 
         digital_asset
             .delegate(
@@ -326,6 +440,12 @@ mod transfer {
             .await
             .unwrap();
 
+        let metadata = digital_asset.get_metadata(&mut context).await;
+        assert_eq!(
+            metadata.delegate_state.unwrap().role,
+            DelegateRole::Transfer
+        );
+
         let destination = Keypair::new();
         let destination_token =
             get_associated_token_address(&destination.pubkey(), &digital_asset.mint.pubkey());
@@ -336,8 +456,10 @@ mod transfer {
         digital_asset
             .transfer(
                 &mut context,
+                owner.pubkey(),
                 delegate,
                 destination.pubkey(),
+                None,
                 None,
                 None,
                 None,
@@ -371,9 +493,11 @@ mod transfer {
         let err = digital_asset
             .transfer(
                 &mut context,
+                owner.pubkey(),
                 fake_delegate,
                 destination.pubkey(),
                 Some(destination_token), // <-- Associated token account
+                None,
                 None,
                 None,
                 1,
@@ -381,6 +505,6 @@ mod transfer {
             .await
             .unwrap_err();
 
-        assert_custom_error_ix!(0, err, MetadataError::InvalidOwner);
+        assert_custom_error_ix!(0, err, MetadataError::InvalidDelegate);
     }
 }

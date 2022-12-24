@@ -195,7 +195,12 @@ fn revoke_transfer_v1<'a>(
         Some(TokenStandard::ProgrammableNonFungible)
     ) {
         if let Some(master_edition) = master_edition {
-            thaw(mint, token, master_edition, spl_token_program)?;
+            thaw(
+                mint.clone(),
+                token.clone(),
+                master_edition.clone(),
+                spl_token_program.clone(),
+            )?;
         } else {
             return Err(MetadataError::MissingEditionAccount.into());
         }
@@ -211,7 +216,12 @@ fn revoke_transfer_v1<'a>(
         Some(TokenStandard::ProgrammableNonFungible)
     ) {
         if let Some(master_edition) = master_edition {
-            freeze(mint, token, master_edition, spl_token_program)?;
+            freeze(
+                mint.clone(),
+                token.clone(),
+                master_edition.clone(),
+                spl_token_program.clone(),
+            )?;
         } else {
             return Err(MetadataError::MissingEditionAccount.into());
         }

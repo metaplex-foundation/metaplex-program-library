@@ -572,6 +572,14 @@ pub enum MetadataError {
     /// 144
     #[error("Feature not supported currently")]
     FeatureNotSupported,
+
+    /// 143
+    #[error("Invalid system wallet")]
+    InvalidSystemWallet,
+
+    /// 144
+    #[error("Only the sale delegate can transfer while its set")]
+    OnlySaleDelegateCanTransfer,
 }
 
 impl PrintProgramError for MetadataError {

@@ -61,6 +61,7 @@ impl DigitalAsset {
         token_standard: TokenStandard,
         authorization_rules: Option<Pubkey>,
     ) -> Result<(), BanksClientError> {
+        println!("create: authorization rules: {authorization_rules:?}");
         let mut asset = AssetData::new(
             token_standard,
             String::from(DEFAULT_NAME),
@@ -77,12 +78,6 @@ impl DigitalAsset {
         }];
         asset.creators = Some(creators);
 
-        if let Some(authorization_rules) = authorization_rules {
-            asset.programmable_config = Some(ProgrammableConfig {
-                rule_set: authorization_rules,
-            });
-        }
-
         let payer_pubkey = context.payer.pubkey();
         let mint_pubkey = self.mint.pubkey();
 
@@ -96,6 +91,14 @@ impl DigitalAsset {
             .update_authority(payer_pubkey)
             .initialize_mint(true)
             .update_authority_as_signer(true);
+
+        if let Some(authorization_rules) = authorization_rules {
+            println!("setting authorization rules on asset");
+            asset.programmable_config = Some(ProgrammableConfig {
+                rule_set: authorization_rules,
+            });
+            builder.authorization_rules(authorization_rules);
+        }
 
         let master_edition = match token_standard {
             TokenStandard::NonFungible | TokenStandard::ProgrammableNonFungible => {
@@ -191,6 +194,8 @@ impl DigitalAsset {
         authorization_data: Option<AuthorizationData>,
         amount: u64,
     ) -> Result<(), BanksClientError> {
+        println!("create and mint: authorization rules: {authorization_rules:?}");
+
         // creates the metadata
         self.create(context, token_standard, authorization_rules)
             .await
@@ -251,9 +256,11 @@ impl DigitalAsset {
     pub async fn transfer(
         &mut self,
         context: &mut ProgramTestContext,
-        owner: Keypair,
+        owner: Pubkey,
+        authority: Keypair,
         destination: Pubkey,
         destination_token: Option<Pubkey>,
+        delegate_record: Option<Pubkey>,
         authorization_rules: Option<Pubkey>,
         authorization_data: Option<AuthorizationData>,
         amount: u64,
@@ -264,7 +271,7 @@ impl DigitalAsset {
             destination_token
         } else {
             instructions.push(create_associated_token_account(
-                &owner.pubkey(),
+                &authority.pubkey(),
                 &destination,
                 &self.mint.pubkey(),
                 &spl_token::id(),
@@ -275,13 +282,15 @@ impl DigitalAsset {
 
         instructions.push(instruction::transfer(
             id(),
-            owner.pubkey(),
+            owner,
+            authority.pubkey(),
             self.token.unwrap(),
             self.metadata,
             self.mint.pubkey(),
             self.master_edition,
             destination,
             destination_token,
+            delegate_record,
             TransferArgs::V1 {
                 authorization_data,
                 amount,
@@ -292,8 +301,8 @@ impl DigitalAsset {
 
         let tx = Transaction::new_signed_with_payer(
             &instructions,
-            Some(&owner.pubkey()),
-            &[&owner],
+            Some(&authority.pubkey()),
+            &[&authority],
             context.last_blockhash,
         );
 

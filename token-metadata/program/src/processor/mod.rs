@@ -54,6 +54,17 @@ pub struct AuthorizationData {
     pub payload: Payload,
 }
 
+impl AuthorizationData {
+    pub fn new(payload: Payload) -> Self {
+        Self { payload }
+    }
+    pub fn new_empty() -> Self {
+        Self {
+            payload: Payload::new(),
+        }
+    }
+}
+
 pub fn process_instruction<'a>(
     program_id: &'a Pubkey,
     accounts: &'a [AccountInfo<'a>],
