@@ -34,7 +34,9 @@ pub const MAX_DATA_SIZE: usize = 4
 #[derive(Clone, BorshSerialize, Debug, PartialEq, Eq, ShankAccount)]
 pub struct Metadata {
     pub key: Key,
+    #[cfg_attr(feature = "serde-feature", serde(with = "As::<DisplayFromStr>"))]
     pub update_authority: Pubkey,
+    #[cfg_attr(feature = "serde-feature", serde(with = "As::<DisplayFromStr>"))]
     pub mint: Pubkey,
     pub data: Data,
     // Immutable, once flipped, all sales of this metadata are considered secondary.
