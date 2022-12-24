@@ -372,6 +372,44 @@ impl InstructionBuilder for super::builders::Create {
     }
 }
 
+impl InstructionBuilder for super::builders::Mint {
+    fn instruction(&self) -> solana_program::instruction::Instruction {
+        let mut accounts = vec![
+            AccountMeta::new(self.token, false),
+            AccountMeta::new_readonly(self.metadata, false),
+            AccountMeta::new(self.mint, false),
+            AccountMeta::new(self.payer, true),
+            AccountMeta::new_readonly(self.authority, true),
+            AccountMeta::new_readonly(self.system_program, false),
+            AccountMeta::new_readonly(self.sysvar_instructions, false),
+            AccountMeta::new_readonly(self.spl_token_program, false),
+            AccountMeta::new_readonly(self.spl_ata_program, false),
+        ];
+        // checks whether we have a master edition
+        if let Some(master_edition) = self.master_edition {
+            accounts.push(AccountMeta::new(master_edition, false));
+        } else {
+            accounts.push(AccountMeta::new_readonly(crate::ID, false));
+        }
+        // Optional authorization rules accounts
+        if let Some(rules) = &self.authorization_rules {
+            accounts.push(AccountMeta::new_readonly(mpl_token_auth_rules::ID, false));
+            accounts.push(AccountMeta::new_readonly(*rules, false));
+        } else {
+            accounts.push(AccountMeta::new_readonly(crate::ID, false));
+            accounts.push(AccountMeta::new_readonly(crate::ID, false));
+        }
+
+        Instruction {
+            program_id: crate::ID,
+            accounts,
+            data: MetadataInstruction::Mint(self.args.clone())
+                .try_to_vec()
+                .unwrap(),
+        }
+    }
+}
+
 impl InstructionBuilder for super::builders::Transfer {
     fn instruction(&self) -> solana_program::instruction::Instruction {
         let mut accounts = vec![
