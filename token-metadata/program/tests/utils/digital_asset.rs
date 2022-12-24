@@ -1,8 +1,9 @@
 use mpl_token_metadata::{
     id,
     instruction::{
-        self, builders::CreateBuilder, CreateArgs, DelegateArgs, DelegateRole, InstructionBuilder,
-        MintArgs, TransferArgs,
+        self,
+        builders::{CreateBuilder, TransferBuilder},
+        CreateArgs, DelegateArgs, DelegateRole, InstructionBuilder, MintArgs, TransferArgs,
     },
     pda::find_delegate_account,
     processor::AuthorizationData,
@@ -253,18 +254,17 @@ impl DigitalAsset {
         context.banks_client.process_transaction(tx).await
     }
 
-    pub async fn transfer(
-        &mut self,
-        context: &mut ProgramTestContext,
-        owner: Pubkey,
-        authority: Keypair,
-        destination: Pubkey,
-        destination_token: Option<Pubkey>,
-        delegate_record: Option<Pubkey>,
-        authorization_rules: Option<Pubkey>,
-        authorization_data: Option<AuthorizationData>,
-        amount: u64,
-    ) -> Result<(), BanksClientError> {
+    pub async fn transfer(&self, params: OwnerTransferParams<'_>) -> Result<(), BanksClientError> {
+        let OwnerTransferParams {
+            context,
+            authority,
+            source_owner,
+            destination_owner,
+            destination_token,
+            authorization_rules,
+            args,
+        } = params;
+
         let mut instructions = vec![];
 
         let destination_token = if let Some(destination_token) = destination_token {
@@ -272,37 +272,40 @@ impl DigitalAsset {
         } else {
             instructions.push(create_associated_token_account(
                 &authority.pubkey(),
-                &destination,
+                &destination_owner,
                 &self.mint.pubkey(),
                 &spl_token::id(),
             ));
 
-            get_associated_token_address(&destination, &self.mint.pubkey())
+            get_associated_token_address(&destination_owner, &self.mint.pubkey())
         };
 
-        instructions.push(instruction::transfer(
-            id(),
-            owner,
-            authority.pubkey(),
-            self.token.unwrap(),
-            self.metadata,
-            self.mint.pubkey(),
-            self.master_edition,
-            destination,
-            destination_token,
-            delegate_record,
-            TransferArgs::V1 {
-                authorization_data,
-                amount,
-            },
-            authorization_rules,
-            None,
-        ));
+        let mut builder = TransferBuilder::new();
+        builder
+            .authority(authority.pubkey())
+            .source_owner(*source_owner)
+            .source_token(self.token.unwrap())
+            .destination_owner(destination_owner)
+            .destination_token(destination_token)
+            .metadata(self.metadata)
+            .mint(self.mint.pubkey());
+
+        if let Some(master_edition) = self.master_edition {
+            builder.edition(master_edition);
+        }
+
+        if let Some(authorization_rules) = authorization_rules {
+            builder.authorization_rules(authorization_rules);
+        }
+
+        let transfer_ix = builder.build(args).unwrap().instruction();
+
+        instructions.push(transfer_ix);
 
         let tx = Transaction::new_signed_with_payer(
             &instructions,
             Some(&authority.pubkey()),
-            &[&authority],
+            &[authority],
             context.last_blockhash,
         );
 
@@ -337,4 +340,14 @@ impl DigitalAsset {
 
         assert_eq!(on_chain_asset_data, *asset_data);
     }
+}
+
+pub struct OwnerTransferParams<'a> {
+    pub context: &'a mut ProgramTestContext,
+    pub authority: &'a Keypair,
+    pub source_owner: &'a Pubkey,
+    pub destination_owner: Pubkey,
+    pub destination_token: Option<Pubkey>,
+    pub authorization_rules: Option<Pubkey>,
+    pub args: TransferArgs,
 }

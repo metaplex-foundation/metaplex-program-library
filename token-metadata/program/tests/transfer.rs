@@ -15,11 +15,11 @@ mod transfer {
 
     use mpl_token_metadata::{
         error::MetadataError,
-        instruction::{create_escrow_account, DelegateRole},
+        instruction::{create_escrow_account, DelegateRole, TransferArgs},
         processor::find_escrow_account,
         state::{EscrowAuthority, ProgrammableConfig, TokenStandard},
     };
-    use solana_program::{native_token::LAMPORTS_PER_SOL, program_pack::Pack};
+    use solana_program::{native_token::LAMPORTS_PER_SOL, program_pack::Pack, pubkey::Pubkey};
     use solana_sdk::transaction::Transaction;
     use spl_associated_token_account::get_associated_token_address;
 
@@ -29,35 +29,35 @@ mod transfer {
     async fn transfer_nonfungible() {
         let mut context = program_test().start_with_context().await;
 
-        let mut digital_asset = DigitalAsset::new();
-        digital_asset
-            .create_and_mint(&mut context, TokenStandard::NonFungible, None, None, 1)
+        let mut da = DigitalAsset::new();
+        da.create_and_mint(&mut context, TokenStandard::NonFungible, None, None, 1)
             .await
             .unwrap();
 
-        let destination = Keypair::new();
-        let destination_token =
-            get_associated_token_address(&destination.pubkey(), &digital_asset.mint.pubkey());
-        airdrop(&mut context, &destination.pubkey(), LAMPORTS_PER_SOL)
+        let destination_owner = Keypair::new().pubkey();
+        let destination_token = get_associated_token_address(&destination_owner, &da.mint.pubkey());
+        airdrop(&mut context, &destination_owner, LAMPORTS_PER_SOL)
             .await
             .unwrap();
 
-        let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+        let authority = &Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
 
-        digital_asset
-            .transfer(
-                &mut context,
-                payer.pubkey(),
-                payer,
-                destination.pubkey(),
-                None,
-                None,
-                None,
-                None,
-                1,
-            )
-            .await
-            .unwrap();
+        let args = TransferArgs::V1 {
+            authorization_data: None,
+            amount: 1,
+        };
+
+        let params = OwnerTransferParams {
+            context: &mut context,
+            authority,
+            source_owner: &authority.pubkey(),
+            destination_owner,
+            destination_token: None,
+            authorization_rules: None,
+            args,
+        };
+
+        da.transfer(params).await.unwrap();
 
         let token_account = spl_token::state::Account::unpack(
             &context
@@ -78,43 +78,43 @@ mod transfer {
         let mut context = program_test().start_with_context().await;
 
         let mint_amount = 10;
-        let transfer_amount = 5;
+        let amount = 5;
 
-        let mut digital_asset = DigitalAsset::new();
-        digital_asset
-            .create_and_mint(
-                &mut context,
-                TokenStandard::Fungible,
-                None,
-                None,
-                mint_amount,
-            )
+        let mut da = DigitalAsset::new();
+        da.create_and_mint(
+            &mut context,
+            TokenStandard::Fungible,
+            None,
+            None,
+            mint_amount,
+        )
+        .await
+        .unwrap();
+
+        let destination_owner = Keypair::new().pubkey();
+        let destination_token = get_associated_token_address(&destination_owner, &da.mint.pubkey());
+        airdrop(&mut context, &destination_owner, LAMPORTS_PER_SOL)
             .await
             .unwrap();
 
-        let destination = Keypair::new();
-        let destination_token =
-            get_associated_token_address(&destination.pubkey(), &digital_asset.mint.pubkey());
-        airdrop(&mut context, &destination.pubkey(), LAMPORTS_PER_SOL)
-            .await
-            .unwrap();
+        let authority = &Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
 
-        let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+        let args = TransferArgs::V1 {
+            authorization_data: None,
+            amount,
+        };
 
-        digital_asset
-            .transfer(
-                &mut context,
-                payer.pubkey(),
-                payer,
-                destination.pubkey(),
-                None,
-                None,
-                None,
-                None,
-                transfer_amount,
-            )
-            .await
-            .unwrap();
+        let params = OwnerTransferParams {
+            context: &mut context,
+            authority,
+            source_owner: &authority.pubkey(),
+            destination_owner,
+            destination_token: None,
+            authorization_rules: None,
+            args,
+        };
+
+        da.transfer(params).await.unwrap();
 
         let token_account = spl_token::state::Account::unpack(
             &context
@@ -127,7 +127,7 @@ mod transfer {
         )
         .unwrap();
 
-        assert_eq!(token_account.amount, transfer_amount);
+        assert_eq!(token_account.amount, amount);
     }
 
     #[tokio::test]
@@ -137,41 +137,41 @@ mod transfer {
         let mint_amount = 100;
         let transfer_amount = 99;
 
-        let mut digital_asset = DigitalAsset::new();
-        digital_asset
-            .create_and_mint(
-                &mut context,
-                TokenStandard::FungibleAsset,
-                None,
-                None,
-                mint_amount,
-            )
+        let mut da = DigitalAsset::new();
+        da.create_and_mint(
+            &mut context,
+            TokenStandard::FungibleAsset,
+            None,
+            None,
+            mint_amount,
+        )
+        .await
+        .unwrap();
+
+        let destination_owner = Pubkey::new_unique();
+        let destination_token = get_associated_token_address(&destination_owner, &da.mint.pubkey());
+        airdrop(&mut context, &destination_owner, LAMPORTS_PER_SOL)
             .await
             .unwrap();
 
-        let destination = Keypair::new();
-        let destination_token =
-            get_associated_token_address(&destination.pubkey(), &digital_asset.mint.pubkey());
-        airdrop(&mut context, &destination.pubkey(), LAMPORTS_PER_SOL)
-            .await
-            .unwrap();
+        let authority = &Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
 
-        let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+        let args = TransferArgs::V1 {
+            authorization_data: None,
+            amount: transfer_amount,
+        };
 
-        digital_asset
-            .transfer(
-                &mut context,
-                payer.pubkey(),
-                payer,
-                destination.pubkey(),
-                None,
-                None,
-                None,
-                None,
-                transfer_amount,
-            )
-            .await
-            .unwrap();
+        let params = OwnerTransferParams {
+            context: &mut context,
+            authority,
+            source_owner: &authority.pubkey(),
+            destination_owner,
+            destination_token: None,
+            authorization_rules: None,
+            args,
+        };
+
+        da.transfer(params).await.unwrap();
 
         let token_account = spl_token::state::Account::unpack(
             &context
@@ -228,24 +228,26 @@ mod transfer {
         // the mpl-token-auth-rules. This should fail because it's not
         // owned by the Token Metadata program and also not a wallet-to-wallet
         // transfer.
-        let destination = rule_set;
+        let destination_owner = rule_set;
 
-        let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+        let authority = &Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
 
-        let err = nft
-            .transfer(
-                &mut context,
-                payer.pubkey(),
-                payer,
-                destination,
-                None,
-                None,
-                Some(rule_set),
-                Some(auth_data.clone()),
-                transfer_amount,
-            )
-            .await
-            .unwrap_err();
+        let args = TransferArgs::V1 {
+            authorization_data: None,
+            amount: transfer_amount,
+        };
+
+        let params = OwnerTransferParams {
+            context: &mut context,
+            authority,
+            source_owner: &authority.pubkey(),
+            destination_owner,
+            destination_token: None,
+            authorization_rules: Some(rule_set),
+            args: args.clone(),
+        };
+
+        let err = nft.transfer(params).await.unwrap_err();
 
         assert_custom_error_ix!(
             1,
@@ -255,26 +257,24 @@ mod transfer {
 
         // Our second destination will be a wallet-to-wallet transfer so should
         // circumvent the program owned check and should succeed.
-        let destination = Keypair::new();
+        let destination_owner = Pubkey::new_unique();
 
-        let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+        let authority = &Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
 
-        nft.transfer(
-            &mut context,
-            payer.pubkey(),
-            payer,
-            destination.pubkey(),
-            None,
-            None,
-            Some(rule_set),
-            Some(auth_data.clone()),
-            transfer_amount,
-        )
-        .await
-        .unwrap();
+        let params = OwnerTransferParams {
+            context: &mut context,
+            authority,
+            source_owner: &authority.pubkey(),
+            destination_owner,
+            destination_token: None,
+            authorization_rules: Some(rule_set),
+            args,
+        };
+
+        nft.transfer(params).await.unwrap();
 
         let destination_token =
-            get_associated_token_address(&destination.pubkey(), &nft.mint.pubkey());
+            get_associated_token_address(&destination_owner, &nft.mint.pubkey());
 
         let token_account = spl_token::state::Account::unpack(
             &context
@@ -328,32 +328,32 @@ mod transfer {
         // the mpl-token-auth-rules. This should fail because it's not
         // owned by the Token Metadata program and also not a wallet-to-wallet
         // transfer.
-        let destination = rule_set;
+        let destination_owner = rule_set;
 
-        let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+        let authority = &Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
 
-        let err = nft
-            .transfer(
-                &mut context,
-                payer.pubkey(),
-                payer,
-                destination,
-                None,
-                None,
-                Some(rule_set),
-                Some(auth_data.clone()),
-                transfer_amount,
-            )
-            .await
-            .unwrap_err();
+        let args = TransferArgs::V1 {
+            authorization_data: None,
+            amount: transfer_amount,
+        };
+
+        let params = OwnerTransferParams {
+            context: &mut context,
+            authority,
+            source_owner: &authority.pubkey(),
+            destination_owner,
+            destination_token: None,
+            authorization_rules: Some(rule_set),
+            args: args.clone(),
+        };
+
+        let err = nft.transfer(params).await.unwrap_err();
 
         assert_custom_error_ix!(
             1,
             err,
             mpl_token_auth_rules::error::RuleSetError::ProgramOwnedCheckFailed
         );
-
-        // println!("err: {:?}", err);
 
         // Create TOE account and try to transfer to it. This should succeed.
         let (escrow_account, _) =
@@ -379,28 +379,26 @@ mod transfer {
 
         context.banks_client.process_transaction(tx).await.unwrap();
 
-        let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+        let authority = &Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
 
-        nft.transfer(
-            &mut context,
-            payer.pubkey(),
-            payer,
-            escrow_account,
-            None,
-            None,
-            Some(rule_set),
-            Some(auth_data),
-            transfer_amount,
-        )
-        .await
-        .unwrap();
+        let params = OwnerTransferParams {
+            context: &mut context,
+            authority,
+            source_owner: &authority.pubkey(),
+            destination_owner: escrow_account,
+            destination_token: None,
+            authorization_rules: Some(rule_set),
+            args,
+        };
 
-        let recipient_ata = get_associated_token_address(&escrow_account, &nft.mint.pubkey());
+        nft.transfer(params).await.unwrap();
+
+        let destination_token = get_associated_token_address(&escrow_account, &nft.mint.pubkey());
 
         let token_account = spl_token::state::Account::unpack(
             &context
                 .banks_client
-                .get_account(recipient_ata)
+                .get_account(destination_token)
                 .await
                 .unwrap()
                 .unwrap()
@@ -415,9 +413,10 @@ mod transfer {
     async fn transfer_with_delegate() {
         let mut context = program_test().start_with_context().await;
 
-        let mut digital_asset = DigitalAsset::new();
-        digital_asset
-            .create_and_mint(&mut context, TokenStandard::NonFungible, None, None, 1)
+        let transfer_amount = 1;
+
+        let mut da = DigitalAsset::new();
+        da.create_and_mint(&mut context, TokenStandard::NonFungible, None, None, 1)
             .await
             .unwrap();
 
@@ -427,46 +426,48 @@ mod transfer {
             .unwrap();
 
         let authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
-        let owner = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+        let source_owner = &Keypair::from_bytes(&context.payer.to_bytes())
+            .unwrap()
+            .pubkey();
 
-        digital_asset
-            .delegate(
-                &mut context,
-                authority,
-                delegate.pubkey(),
-                DelegateRole::Transfer,
-                Some(1),
-            )
-            .await
-            .unwrap();
+        da.delegate(
+            &mut context,
+            authority,
+            delegate.pubkey(),
+            DelegateRole::Transfer,
+            Some(1),
+        )
+        .await
+        .unwrap();
 
-        let metadata = digital_asset.get_metadata(&mut context).await;
+        let metadata = da.get_metadata(&mut context).await;
         assert_eq!(
             metadata.delegate_state.unwrap().role,
             DelegateRole::Transfer
         );
 
-        let destination = Keypair::new();
-        let destination_token =
-            get_associated_token_address(&destination.pubkey(), &digital_asset.mint.pubkey());
-        airdrop(&mut context, &destination.pubkey(), LAMPORTS_PER_SOL)
+        let destination_owner = Pubkey::new_unique();
+        let destination_token = get_associated_token_address(&destination_owner, &da.mint.pubkey());
+        airdrop(&mut context, &destination_owner, LAMPORTS_PER_SOL)
             .await
             .unwrap();
 
-        digital_asset
-            .transfer(
-                &mut context,
-                owner.pubkey(),
-                delegate,
-                destination.pubkey(),
-                None,
-                None,
-                None,
-                None,
-                1,
-            )
-            .await
-            .unwrap();
+        let args = TransferArgs::V1 {
+            authorization_data: None,
+            amount: transfer_amount,
+        };
+
+        let params = OwnerTransferParams {
+            context: &mut context,
+            authority: &delegate,
+            source_owner,
+            destination_owner,
+            destination_token: None,
+            authorization_rules: None,
+            args: args.clone(),
+        };
+
+        da.transfer(params).await.unwrap();
 
         let token_account = spl_token::state::Account::unpack(
             &context
@@ -479,7 +480,7 @@ mod transfer {
         )
         .unwrap();
 
-        assert_eq!(token_account.amount, 1);
+        assert_eq!(token_account.amount, transfer_amount);
 
         // Sanity check.
         let fake_delegate = Keypair::new();
@@ -490,20 +491,17 @@ mod transfer {
         // Associated token account already exists so we pass it in,
         // otherwise we will get an "IllegalOwner" errror.
 
-        let err = digital_asset
-            .transfer(
-                &mut context,
-                owner.pubkey(),
-                fake_delegate,
-                destination.pubkey(),
-                Some(destination_token), // <-- Associated token account
-                None,
-                None,
-                None,
-                1,
-            )
-            .await
-            .unwrap_err();
+        let params = OwnerTransferParams {
+            context: &mut context,
+            authority: &fake_delegate,
+            source_owner,
+            destination_owner,
+            destination_token: Some(destination_token),
+            authorization_rules: None,
+            args,
+        };
+
+        let err = da.transfer(params).await.unwrap_err();
 
         assert_custom_error_ix!(0, err, MetadataError::InvalidDelegate);
     }

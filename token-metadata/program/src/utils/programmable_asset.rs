@@ -95,7 +95,7 @@ pub struct AuthRulesValidateParams<'a> {
     pub programmable_config: Option<ProgrammableConfig>,
     pub amount: u64,
     pub auth_data: Option<AuthorizationData>,
-    pub auth_rules_opt_info: Option<&'a AccountInfo<'a>>,
+    pub auth_rules_info: Option<&'a AccountInfo<'a>>,
 }
 
 pub fn auth_rules_validate(params: AuthRulesValidateParams) -> ProgramResult {
@@ -105,19 +105,19 @@ pub fn auth_rules_validate(params: AuthRulesValidateParams) -> ProgramResult {
         programmable_config,
         amount,
         auth_data,
-        auth_rules_opt_info,
+        auth_rules_info,
     } = params;
 
     if let Some(ref config) = programmable_config {
         msg!("Programmable config exists");
         let operation = Operation::Transfer;
 
-        assert_valid_authorization(auth_rules_opt_info, config)?;
+        assert_valid_authorization(auth_rules_info, config)?;
 
         msg!("valid auth data. Adding rules...");
         // We can safely unwrap here because they were all checked for existence
         // in the assertion above.
-        let auth_pda = auth_rules_opt_info.unwrap();
+        let auth_pda = auth_rules_info.unwrap();
 
         let mut auth_data = if let Some(auth_data) = auth_data {
             auth_data

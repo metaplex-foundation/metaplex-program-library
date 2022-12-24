@@ -364,6 +364,55 @@ impl InstructionBuilder for super::builders::Create {
     }
 }
 
+impl InstructionBuilder for super::builders::Transfer {
+    fn instruction(&self) -> solana_program::instruction::Instruction {
+        let mut accounts = vec![
+            AccountMeta::new(self.authority, true),
+            AccountMeta::new_readonly(self.source_owner, false),
+            AccountMeta::new(self.source_token, false),
+            AccountMeta::new(self.destination_owner, false),
+            AccountMeta::new(self.destination_token, false),
+            AccountMeta::new_readonly(self.mint, false),
+            AccountMeta::new(self.metadata, false),
+            AccountMeta::new_readonly(self.spl_token_program, false),
+            AccountMeta::new_readonly(self.spl_ata_program, false),
+            AccountMeta::new_readonly(self.system_program, false),
+            AccountMeta::new_readonly(self.sysvar_instructions, false),
+        ];
+
+        // Optional edition account
+        if let Some(edition) = self.edition {
+            accounts.push(AccountMeta::new(edition, false));
+        } else {
+            accounts.push(AccountMeta::new_readonly(crate::ID, false));
+        }
+
+        // Optional delegate record account
+        if let Some(record) = self.delegate_record {
+            accounts.push(AccountMeta::new(record, false));
+        } else {
+            accounts.push(AccountMeta::new_readonly(crate::ID, false));
+        }
+
+        // Optional authorization rules accounts
+        if let Some(rules) = &self.authorization_rules {
+            accounts.push(AccountMeta::new_readonly(mpl_token_auth_rules::ID, false));
+            accounts.push(AccountMeta::new_readonly(*rules, false));
+        } else {
+            accounts.push(AccountMeta::new_readonly(crate::ID, false));
+            accounts.push(AccountMeta::new_readonly(crate::ID, false));
+        }
+
+        Instruction {
+            program_id: crate::ID,
+            accounts,
+            data: MetadataInstruction::Transfer(self.args.clone())
+                .try_to_vec()
+                .unwrap(),
+        }
+    }
+}
+
 /// Mints tokens from a mint account.
 ///
 /// # Accounts:

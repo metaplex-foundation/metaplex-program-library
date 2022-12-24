@@ -7,13 +7,10 @@ use solana_program::{
 use crate::{
     assertions::{assert_delegate, assert_owned_by, metadata::assert_currently_holding},
     error::MetadataError,
-    instruction::{DelegateRole, TransferArgs},
-    processor::{try_get_account_info, try_get_optional_account_info, AuthorizationData},
+    instruction::{Context, DelegateRole, Transfer, TransferArgs},
     state::{Metadata, TokenMetadataAccount, TokenStandard},
     utils::{auth_rules_validate, frozen_transfer, AuthRulesValidateParams},
 };
-
-const EXPECTED_ACCOUNTS_LEN: usize = 15;
 
 #[derive(Debug, PartialEq, Eq)]
 enum TransferAuthority {
@@ -38,32 +35,19 @@ pub fn transfer<'a>(
     accounts: &'a [AccountInfo<'a>],
     args: TransferArgs,
 ) -> ProgramResult {
+    let context = Transfer::as_context(accounts)?;
+
     match args {
-        TransferArgs::V1 { .. } => transfer_v1(program_id, accounts, args),
+        TransferArgs::V1 { .. } => transfer_v1(program_id, context, args),
     }
 }
 
-fn transfer_v1<'a>(
-    program_id: &Pubkey,
-    accounts: &'a [AccountInfo<'a>],
-    args: TransferArgs,
-) -> ProgramResult {
-    let TransferAccounts::V1 {
-        owner_info,
-        authority_info,
-        token_account_info,
-        metadata_info,
-        mint_info,
-        edition_opt_info,
-        destination_owner_info,
-        destination_token_account_info,
-        delegate_record_opt_info,
-        spl_token_program_info,
-        spl_associated_token_program_info,
-        system_program_info,
-        sysvar_instructions_info,
-        authorization_rules_opt_info,
-    } = args.get_accounts(accounts)?;
+fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) -> ProgramResult {
+    let TransferArgs::V1 {
+        authorization_data: auth_data,
+        amount,
+    } = args;
+
     //** Account Validation **/
     msg!("Account Validation");
 
@@ -72,63 +56,67 @@ fn transfer_v1<'a>(
     // This authority must always be a signer, regardless of if it's the
     // actual token owner, a delegate or some other authority authorized
     // by a rule set.
-    assert_signer(authority_info)?;
+    assert_signer(ctx.accounts.authority_info)?;
 
     // Assert program ownership
-    assert_owned_by(metadata_info, program_id)?;
-    assert_owned_by(mint_info, &spl_token::ID)?;
-    assert_owned_by(token_account_info, &spl_token::ID)?;
+    assert_owned_by(ctx.accounts.metadata_info, program_id)?;
+    assert_owned_by(ctx.accounts.mint_info, &spl_token::ID)?;
+    assert_owned_by(ctx.accounts.source_token_info, &spl_token::ID)?;
+    assert_owned_by(ctx.accounts.destination_token_info, &spl_token::ID)?;
 
-    if let Some(delegate_record_info) = delegate_record_opt_info {
+    if let Some(delegate_record_info) = ctx.accounts.delegate_record_info {
         assert_owned_by(delegate_record_info, program_id)?;
     }
-    if let Some(edition) = edition_opt_info {
+    if let Some(edition) = ctx.accounts.edition_info {
         assert_owned_by(edition, program_id)?;
     }
-    if let Some(authorization_rules) = authorization_rules_opt_info {
+    if let Some(authorization_rules) = ctx.accounts.authorization_rules_info {
         assert_owned_by(authorization_rules, &mpl_token_auth_rules::ID)?;
     }
 
     // Check program IDs.
     msg!("Check program IDs");
-    if spl_token_program_info.key != &spl_token::ID {
+    if ctx.accounts.spl_token_program_info.key != &spl_token::ID {
         return Err(ProgramError::IncorrectProgramId);
     }
 
-    if spl_associated_token_program_info.key != &spl_associated_token_account::ID {
+    if ctx.accounts.spl_ata_program_info.key != &spl_associated_token_account::ID {
         return Err(ProgramError::IncorrectProgramId);
     }
 
-    if system_program_info.key != &system_program::ID {
+    if ctx.accounts.system_program_info.key != &system_program::ID {
         return Err(ProgramError::IncorrectProgramId);
     }
 
-    if sysvar_instructions_info.key != &sysvar::instructions::ID {
+    if ctx.accounts.sysvar_instructions_info.key != &sysvar::instructions::ID {
         return Err(ProgramError::IncorrectProgramId);
+    }
+
+    if let Some(auth_rules_program) = ctx.accounts.authorization_rules_program_info {
+        if auth_rules_program.key != &mpl_token_auth_rules::ID {
+            return Err(ProgramError::IncorrectProgramId);
+        }
     }
 
     // Deserialize metadata.
-    let metadata = Metadata::from_account_info(metadata_info)?;
-
-    let amount = args.get_amount();
-    let auth_data = args.get_auth_data();
+    let metadata = Metadata::from_account_info(ctx.accounts.metadata_info)?;
 
     let token_transfer_params: TokenTransferParams = TokenTransferParams {
-        mint: mint_info.clone(),
-        source: token_account_info.clone(),
-        destination: destination_token_account_info.clone(),
+        mint: ctx.accounts.mint_info.clone(),
+        source: ctx.accounts.source_token_info.clone(),
+        destination: ctx.accounts.destination_token_info.clone(),
         amount,
-        authority: authority_info.clone(),
+        authority: ctx.accounts.authority_info.clone(),
         authority_signer_seeds: None,
-        token_program: spl_token_program_info.clone(),
+        token_program: ctx.accounts.spl_token_program_info.clone(),
     };
 
     let auth_rules_validate_params = AuthRulesValidateParams {
-        destination_owner_info,
+        destination_owner_info: ctx.accounts.destination_owner_info,
         programmable_config: metadata.programmable_config.clone(),
         amount,
         auth_data,
-        auth_rules_opt_info: authorization_rules_opt_info,
+        auth_rules_info: ctx.accounts.authorization_rules_info,
     };
 
     if metadata.token_standard.is_none() {
@@ -145,8 +133,8 @@ fn transfer_v1<'a>(
 
     // Wallet-to-wallet transfer are always allowed except if a sale
     // delegate is set.
-    let is_wallet_to_wallet = owner_info.owner == &system_program::ID
-        && destination_owner_info.owner == &system_program::ID;
+    let is_wallet_to_wallet = ctx.accounts.source_owner_info.owner == &system_program::ID
+        && ctx.accounts.destination_owner_info.owner == &system_program::ID;
 
     // Determine transfer type.
     let transfer_authority = if let Some(ref delegate_state) = metadata.delegate_state {
@@ -156,7 +144,7 @@ fn transfer_v1<'a>(
         // those are the only valid delegate roles that can be set on
         // the metadata.
         delegate_state.role.clone().into()
-    } else if owner_info.key == authority_info.key {
+    } else if ctx.accounts.source_owner_info.key == ctx.accounts.authority_info.key {
         // Owner and authority are the same so this is a normal owner transfer.
         TransferAuthority::Owner
     } else {
@@ -165,8 +153,8 @@ fn transfer_v1<'a>(
         TransferAuthority::AuthRules
     };
 
-    // Short circuit here if sale delegate is set and it's not a SaleDelegate trying
-    // to transfer.
+    // Short circuit here if sale delegate is set and it's not a SaleDelegate
+    // trying to transfer.
     if transfer_authority != TransferAuthority::SaleDelegate && is_sale_delegate_set {
         return Err(MetadataError::OnlySaleDelegateCanTransfer.into());
     }
@@ -182,11 +170,11 @@ fn transfer_v1<'a>(
             // mint, token, owner and metadata accounts all match up.
             assert_currently_holding(
                 &crate::ID,
-                owner_info,
-                metadata_info,
+                ctx.accounts.source_owner_info,
+                ctx.accounts.metadata_info,
                 &metadata,
-                mint_info,
-                token_account_info,
+                ctx.accounts.mint_info,
+                ctx.accounts.source_token_info,
             )?;
 
             // If it's not a wallet-to-wallet transfer and is a PNFT then
@@ -196,7 +184,7 @@ fn transfer_v1<'a>(
             {
                 msg!("Program transfer for PNFT");
                 auth_rules_validate(auth_rules_validate_params)?;
-                frozen_transfer(token_transfer_params, edition_opt_info)?;
+                frozen_transfer(token_transfer_params, ctx.accounts.edition_info)?;
                 return Ok(());
             }
             // Otherwise, proceed to transfer normally.
@@ -204,16 +192,17 @@ fn transfer_v1<'a>(
         // A SaleDelegate means no one except that delegate can transfer
         // and the transfer must follow auth rules.
         TransferAuthority::SaleDelegate => {
+            msg!("Sale delegate");
             // Validate the delegate
             assert_delegate(
-                authority_info.key,
+                ctx.accounts.authority_info.key,
                 DelegateRole::Sale,
                 &metadata.delegate_state.unwrap(),
             )?;
 
             if matches!(token_standard, TokenStandard::ProgrammableNonFungible) {
                 auth_rules_validate(auth_rules_validate_params)?;
-                frozen_transfer(token_transfer_params, edition_opt_info)?;
+                frozen_transfer(token_transfer_params, ctx.accounts.edition_info)?;
                 return Ok(());
             } else {
                 panic!("Only programmable NFTs can have a sale delegate");
@@ -223,9 +212,10 @@ fn transfer_v1<'a>(
         // but non-programmable NFTs are transferred normally by either
         // the owner or the delegate.
         TransferAuthority::TransferDelegate => {
+            msg!("Transfer delegate");
             // Validate the delegate
             assert_delegate(
-                authority_info.key,
+                ctx.accounts.authority_info.key,
                 DelegateRole::Transfer,
                 &metadata.delegate_state.unwrap(),
             )?;
@@ -236,7 +226,7 @@ fn transfer_v1<'a>(
                 && matches!(token_standard, TokenStandard::ProgrammableNonFungible)
             {
                 auth_rules_validate(auth_rules_validate_params)?;
-                frozen_transfer(token_transfer_params, edition_opt_info)?;
+                frozen_transfer(token_transfer_params, ctx.accounts.edition_info)?;
                 return Ok(());
             }
             // Otherwise, proceed to transfer normally.
@@ -245,9 +235,10 @@ fn transfer_v1<'a>(
         // allowed by auth rules, so must follow the rules and can only
         // be used for PNFTs.
         TransferAuthority::AuthRules => {
+            msg!("Auth rules transfer");
             if matches!(token_standard, TokenStandard::ProgrammableNonFungible) {
                 auth_rules_validate(auth_rules_validate_params)?;
-                frozen_transfer(token_transfer_params, edition_opt_info)?;
+                frozen_transfer(token_transfer_params, ctx.accounts.edition_info)?;
                 return Ok(());
             } else {
                 panic!("Only programmable NFTs can have a sale delegate");
@@ -258,7 +249,7 @@ fn transfer_v1<'a>(
     match token_standard {
         TokenStandard::ProgrammableNonFungible => {
             msg!("Transferring PNFT");
-            frozen_transfer(token_transfer_params, edition_opt_info)?
+            frozen_transfer(token_transfer_params, ctx.accounts.edition_info)?
         }
         _ => {
             msg!("Transferring NFT normally");
@@ -267,86 +258,4 @@ fn transfer_v1<'a>(
     }
 
     Ok(())
-}
-
-enum TransferAccounts<'a> {
-    V1 {
-        owner_info: &'a AccountInfo<'a>,
-        authority_info: &'a AccountInfo<'a>,
-        token_account_info: &'a AccountInfo<'a>,
-        metadata_info: &'a AccountInfo<'a>,
-        mint_info: &'a AccountInfo<'a>,
-        edition_opt_info: Option<&'a AccountInfo<'a>>,
-        destination_owner_info: &'a AccountInfo<'a>,
-        destination_token_account_info: &'a AccountInfo<'a>,
-        delegate_record_opt_info: Option<&'a AccountInfo<'a>>,
-        spl_token_program_info: &'a AccountInfo<'a>,
-        spl_associated_token_program_info: &'a AccountInfo<'a>,
-        system_program_info: &'a AccountInfo<'a>,
-        sysvar_instructions_info: &'a AccountInfo<'a>,
-        authorization_rules_opt_info: Option<&'a AccountInfo<'a>>,
-    },
-}
-
-impl TransferArgs {
-    fn get_accounts<'a>(
-        &self,
-        accounts: &'a [AccountInfo<'a>],
-    ) -> Result<TransferAccounts<'a>, ProgramError> {
-        // validates that we got the correct number of accounts
-        if accounts.len() < EXPECTED_ACCOUNTS_LEN {
-            return Err(ProgramError::NotEnoughAccountKeys);
-        }
-
-        match self {
-            TransferArgs::V1 { .. } => {
-                let owner_info = try_get_account_info(accounts, 0)?;
-                let authority_info = try_get_account_info(accounts, 1)?;
-                let token_account_info = try_get_account_info(accounts, 2)?;
-                let metadata_info = try_get_account_info(accounts, 3)?;
-                let mint_info = try_get_account_info(accounts, 4)?;
-                let edition_opt_info = try_get_optional_account_info(accounts, 5)?;
-                let destination_owner_info = try_get_account_info(accounts, 6)?;
-                let destination_token_account_info = try_get_account_info(accounts, 7)?;
-                let delegate_record_opt_info = try_get_optional_account_info(accounts, 8)?;
-                let spl_token_program_info = try_get_account_info(accounts, 9)?;
-                let spl_associated_token_program_info = try_get_account_info(accounts, 10)?;
-                let system_program_info = try_get_account_info(accounts, 11)?;
-                let sysvar_instructions_info = try_get_account_info(accounts, 12)?;
-                let _mpl_token_auth_rules_info = try_get_optional_account_info(accounts, 13)?;
-                let authorization_rules_opt_info = try_get_optional_account_info(accounts, 14)?;
-
-                Ok(TransferAccounts::V1 {
-                    owner_info,
-                    authority_info,
-                    token_account_info,
-                    metadata_info,
-                    mint_info,
-                    edition_opt_info,
-                    destination_owner_info,
-                    destination_token_account_info,
-                    delegate_record_opt_info,
-                    spl_token_program_info,
-                    spl_associated_token_program_info,
-                    system_program_info,
-                    sysvar_instructions_info,
-                    authorization_rules_opt_info,
-                })
-            }
-        }
-    }
-
-    pub(crate) fn get_auth_data(&self) -> Option<AuthorizationData> {
-        match self {
-            TransferArgs::V1 {
-                authorization_data, ..
-            } => authorization_data.clone(),
-        }
-    }
-
-    pub(crate) fn get_amount(&self) -> u64 {
-        match self {
-            TransferArgs::V1 { amount, .. } => *amount,
-        }
-    }
 }

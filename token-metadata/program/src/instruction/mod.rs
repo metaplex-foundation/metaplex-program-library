@@ -598,19 +598,21 @@ pub enum MetadataInstruction {
     /// 
     /// The configurable `authorization_rules` only apply to `ProgrammableNonFungible` assets and
     /// it may require additional accounts to validate the rules.
-    #[account(0, signer, writable, name="owner", desc="Asset owner")]
-    #[account(1, writable, name="ata", desc="Associated Token account")]
-    #[account(2, writable, name="metadata", desc="Metadata (pda of ['metadata', program id, mint id])")]
-    #[account(3, name="mint", desc="Mint of token asset")]
-    #[account(4, optional, name="edition", desc="Edition of token asset")]
-    #[account(5, name="destination", desc="Destination address")]
-    #[account(6, writable, name="destination_ata", desc="Destination ATA account address")]
+    #[account(0, signer, writable, name="authority", desc="Transfer authority")]
+    #[account(1, name="source_owner", desc="Source token account owner")]
+    #[account(2, writable, name="source_token", desc="Source token account")]
+    #[account(3, name="destination_owner", desc="Destination token account owner")]
+    #[account(4, writable, name="destination_token", desc="Destination token account address")]
+    #[account(5, name="mint", desc="Mint of token asset")]
+    #[account(6, writable, name="metadata", desc="Metadata (pda of ['metadata', program id, mint id])")]
     #[account(7, name="spl_token_program", desc="SPL Token Program")]
     #[account(8, name="spl_ata_program", desc="SPL Associated Token Account program")]
     #[account(9, name="system_program", desc="System Program")]
     #[account(10, name="sysvar_instructions", desc="Instructions sysvar account")]
-    #[account(11, optional, writable, name="authorization_rules", desc="Token Authorization Rules account")]
-    #[account(12, optional, name="authorization_rules_program", desc="Token Authorization Rules Program")]
+    #[account(11, optional, name="edition", desc="Edition of token asset")]
+    #[account(12, optional, name="delegate_record", desc="Delegate record PDA")]
+    #[account(13, optional, name="authorization_rules_program", desc="Token Authorization Rules Program")]
+    #[account(14, optional, writable, name="authorization_rules", desc="Token Authorization Rules account")]
     #[default_optional_accounts]
     Transfer(TransferArgs),
 
