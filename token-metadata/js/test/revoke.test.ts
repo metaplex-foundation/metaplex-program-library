@@ -51,7 +51,6 @@ test('Revoke: revoke transfer delegate', async (t) => {
   };
 
   const { tx: delegateTx } = await API.delegate(
-    t,
     delegateRecord,
     delegate,
     manager.mint,
@@ -88,7 +87,6 @@ test('Revoke: revoke transfer delegate', async (t) => {
   // revoke
 
   const { tx: revoketeTx } = await API.revoke(
-    t,
     delegateRecord,
     delegate,
     manager.mint,

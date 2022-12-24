@@ -43,7 +43,6 @@ test('Delegate: create collection delegate', async (t) => {
   };
 
   const { tx: delegateTx } = await API.delegate(
-    t,
     delegateRecord,
     delegate,
     manager.mint,
@@ -92,7 +91,6 @@ test('Delegate: create sale delegate', async (t) => {
   };
 
   const { tx: delegateTx } = await API.delegate(
-    t,
     delegateRecord,
     delegate,
     manager.mint,
@@ -161,7 +159,6 @@ test('Delegate: create transfer delegate', async (t) => {
   };
 
   const { tx: delegateTx } = await API.delegate(
-    t,
     delegateRecord,
     delegate,
     manager.mint,

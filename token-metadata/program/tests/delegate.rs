@@ -1,7 +1,6 @@
 #![cfg(feature = "test-bpf")]
 pub mod utils;
 
-use mpl_token_metadata::instruction;
 use solana_program_test::*;
 use solana_sdk::{
     instruction::InstructionError,
@@ -14,7 +13,7 @@ mod delegate {
 
     use mpl_token_metadata::{
         error::MetadataError,
-        instruction::{DelegateArgs, DelegateRole},
+        instruction::{builders::DelegateBuilder, DelegateArgs, DelegateRole, InstructionBuilder},
         pda::find_delegate_account,
         state::{DelegateRecord, Key, Metadata, TokenStandard},
     };
@@ -134,29 +133,6 @@ mod delegate {
             .await
             .unwrap();
 
-        // let delegate_ix = instruction::delegate(
-        //     /* delegate              */ delegate,
-        //     /* delegate owner        */ user_pubkey,
-        //     /* mint                  */ asset.mint.pubkey(),
-        //     /* metadata              */ asset.metadata,
-        //     /* master_edition        */ asset.master_edition,
-        //     /* authority             */ payer_pubkey,
-        //     /* payer                 */ payer_pubkey,
-        //     /* token                 */ None,
-        //     /* authorization payload */ None,
-        //     /* additional accounts   */ None,
-        //     /* delegate args         */ DelegateArgs::CollectionV1,
-        // );
-
-        // let tx = Transaction::new_signed_with_payer(
-        //     &[delegate_ix],
-        //     Some(&context.payer.pubkey()),
-        //     &[&context.payer],
-        //     context.last_blockhash,
-        // );
-
-        // context.banks_client.process_transaction(tx).await.unwrap();
-
         // asserts
 
         let delegate_account = get_account(&mut context, &delegate_record).await;
@@ -199,19 +175,18 @@ mod delegate {
             &payer_pubkey,
         );
 
-        let delegate_ix = instruction::delegate(
-            /* delegate              */ delegate,
-            /* delegate owner        */ user_pubkey,
-            /* mint                  */ asset.mint.pubkey(),
-            /* metadata              */ asset.metadata,
-            /* master_edition        */ asset.master_edition,
-            /* authority             */ payer_pubkey,
-            /* payer                 */ payer_pubkey,
-            /* token                 */ asset.token,
-            /* authorization payload */ None,
-            /* additional accounts   */ None,
-            /* delegate args         */ DelegateArgs::SaleV1 { amount: 1 },
-        );
+        let delegate_ix = DelegateBuilder::new()
+            .delegate_record(delegate)
+            .delegate(user_pubkey)
+            .mint(asset.mint.pubkey())
+            .metadata(asset.metadata)
+            .master_edition(asset.master_edition.unwrap())
+            .authority(payer_pubkey)
+            .payer(payer_pubkey)
+            .token(asset.token.unwrap())
+            .build(DelegateArgs::SaleV1 { amount: 1 })
+            .unwrap()
+            .instruction();
 
         let tx = Transaction::new_signed_with_payer(
             &[delegate_ix],
@@ -231,7 +206,7 @@ mod delegate {
         assert_eq!(delegate_state.delegate, user_pubkey /* delegate */);
         assert_eq!(
             delegate_state.role,
-            DelegateRole::Sale /* transfer delegate */
+            DelegateRole::Sale
         );
 
         if let Some(token) = asset.token {
@@ -274,19 +249,18 @@ mod delegate {
             &payer_pubkey,
         );
 
-        let delegate_ix = instruction::delegate(
-            /* delegate              */ delegate,
-            /* delegate owner        */ user_pubkey,
-            /* mint                  */ asset.mint.pubkey(),
-            /* metadata              */ asset.metadata,
-            /* master_edition        */ asset.master_edition,
-            /* authority             */ payer_pubkey,
-            /* payer                 */ payer_pubkey,
-            /* token                 */ asset.token,
-            /* authorization payload */ None,
-            /* additional accounts   */ None,
-            /* delegate args         */ DelegateArgs::SaleV1 { amount: 1 },
-        );
+        let delegate_ix = DelegateBuilder::new()
+            .delegate_record(delegate)
+            .delegate(user_pubkey)
+            .mint(asset.mint.pubkey())
+            .metadata(asset.metadata)
+            .master_edition(asset.master_edition.unwrap())
+            .authority(payer_pubkey)
+            .payer(payer_pubkey)
+            .token(asset.token.unwrap())
+            .build(DelegateArgs::SaleV1 { amount: 1 })
+            .unwrap()
+            .instruction();
 
         let tx = Transaction::new_signed_with_payer(
             &[delegate_ix],

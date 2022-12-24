@@ -38,16 +38,16 @@ export const RevokeStruct = new beet.BeetArgsStruct<
  *
  * @property [_writable_] delegateRecord Delegate account key (pda of [mint id, delegate role, user id, authority id])
  * @property [] delegate Owner of the delegated account
- * @property [] mint Mint of metadata
  * @property [_writable_] metadata Metadata account
  * @property [] masterEdition (optional) Master Edition account
+ * @property [] mint Mint of metadata
+ * @property [_writable_] token (optional) Owned Token Account of mint
  * @property [**signer**] authority Authority to approve the delegation
  * @property [_writable_, **signer**] payer Payer
  * @property [] sysvarInstructions Instructions sysvar account
  * @property [] splTokenProgram (optional) SPL Token Program
- * @property [_writable_] token (optional) Owned Token Account of mint
- * @property [] authorizationRules (optional) Token Authorization Rules account
  * @property [] authorizationRulesProgram (optional) Token Authorization Rules Program
+ * @property [] authorizationRules (optional) Token Authorization Rules account
  * @category Instructions
  * @category Revoke
  * @category generated
@@ -55,17 +55,17 @@ export const RevokeStruct = new beet.BeetArgsStruct<
 export type RevokeInstructionAccounts = {
   delegateRecord: web3.PublicKey;
   delegate: web3.PublicKey;
-  mint: web3.PublicKey;
   metadata: web3.PublicKey;
   masterEdition?: web3.PublicKey;
+  mint: web3.PublicKey;
+  token?: web3.PublicKey;
   authority: web3.PublicKey;
   payer: web3.PublicKey;
   systemProgram?: web3.PublicKey;
   sysvarInstructions: web3.PublicKey;
   splTokenProgram?: web3.PublicKey;
-  token?: web3.PublicKey;
-  authorizationRules?: web3.PublicKey;
   authorizationRulesProgram?: web3.PublicKey;
+  authorizationRules?: web3.PublicKey;
 };
 
 export const revokeInstructionDiscriminator = 49;
@@ -104,11 +104,6 @@ export function createRevokeInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.mint,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
       pubkey: accounts.metadata,
       isWritable: true,
       isSigner: false,
@@ -116,6 +111,16 @@ export function createRevokeInstruction(
     {
       pubkey: accounts.masterEdition ?? programId,
       isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.mint,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.token ?? programId,
+      isWritable: accounts.token != null,
       isSigner: false,
     },
     {
@@ -144,17 +149,12 @@ export function createRevokeInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.token ?? programId,
-      isWritable: accounts.token != null,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.authorizationRules ?? programId,
+      pubkey: accounts.authorizationRulesProgram ?? programId,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: accounts.authorizationRulesProgram ?? programId,
+      pubkey: accounts.authorizationRules ?? programId,
       isWritable: false,
       isSigner: false,
     },

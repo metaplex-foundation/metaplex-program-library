@@ -110,16 +110,21 @@ fn delegate_transfer_v1(
     assert_owned_by(ctx.accounts.metadata_info, program_id)?;
     assert_owned_by(ctx.accounts.mint_info, &spl_token::id())?;
     assert_signer(ctx.accounts.payer_info)?;
+    assert_signer(ctx.accounts.authority_info)?;
 
-    // Transfer delegate must have a token account and spl token program
-    if ctx.accounts.token_info.is_none() {
+    // transfer delegate must have a token account and spl token program
+    let token_info = if let Some(token_info) = ctx.accounts.token_info {
+        token_info
+    } else {
         return Err(MetadataError::MissingTokenAccount.into());
-    }
-    if ctx.accounts.spl_token_program_info.is_none() {
-        return Err(MetadataError::MissingSplTokenProgram.into());
-    }
-    let token_info = ctx.accounts.token_info.unwrap();
-    let spl_token_program_info = ctx.accounts.spl_token_program_info.unwrap();
+    };
+
+    let spl_token_program_info =
+        if let Some(spl_token_program_info) = ctx.accounts.spl_token_program_info {
+            spl_token_program_info
+        } else {
+            return Err(MetadataError::MissingSplTokenProgram.into());
+        };
 
     let mut asset_metadata = Metadata::from_account_info(ctx.accounts.metadata_info)?;
     if asset_metadata.mint != *ctx.accounts.mint_info.key {
@@ -131,9 +136,6 @@ fn delegate_transfer_v1(
     if token_account.owner != *ctx.accounts.authority_info.key {
         return Err(MetadataError::IncorrectOwner.into());
     }
-
-    // and must be a signer of the transaction
-    assert_signer(ctx.accounts.authority_info)?;
 
     // process the delegation
 

@@ -432,7 +432,6 @@ export class InitTransactions {
   }
 
   async delegate(
-    t: Test,
     delegateRecord: PublicKey,
     delegate: PublicKey,
     mint: PublicKey,
@@ -448,14 +447,15 @@ export class InitTransactions {
     const delegateAcccounts: DelegateInstructionAccounts = {
       delegateRecord,
       delegate,
-      mint,
       metadata,
       masterEdition,
-      authority: payer.publicKey,
+      mint,
+      token,
+      authority,
       payer: payer.publicKey,
       sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
       splTokenProgram: splToken.TOKEN_PROGRAM_ID,
-      token,
+      authorizationRulesProgram: TOKEN_AUTH_RULES_ID,
       authorizationRules: ruleSetPda,
     };
 
@@ -475,7 +475,6 @@ export class InitTransactions {
   }
 
   async revoke(
-    t: Test,
     delegateRecord: PublicKey,
     delegate: PublicKey,
     mint: PublicKey,
@@ -489,16 +488,17 @@ export class InitTransactions {
     ruleSetPda: PublicKey | null = null,
   ): Promise<{ tx: ConfirmedTransactionAssertablePromise; delegate: PublicKey }> {
     const revokeAcccounts: RevokeInstructionAccounts = {
-      delegateRecord: delegateRecord,
+      delegateRecord,
       delegate,
-      mint,
       metadata,
       masterEdition,
-      authority: payer.publicKey,
+      mint,
+      token,
+      authority,
       payer: payer.publicKey,
       sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
       splTokenProgram: splToken.TOKEN_PROGRAM_ID,
-      token,
+      authorizationRulesProgram: TOKEN_AUTH_RULES_ID,
       authorizationRules: ruleSetPda,
     };
 

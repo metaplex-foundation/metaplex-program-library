@@ -3,11 +3,7 @@ use std::fmt;
 use borsh::{BorshDeserialize, BorshSerialize};
 #[cfg(feature = "serde-feature")]
 use serde::{Deserialize, Serialize};
-use solana_program::{
-    instruction::{AccountMeta, Instruction},
-    pubkey::Pubkey,
-    system_program, sysvar,
-};
+use solana_program::instruction::{AccountMeta, Instruction};
 
 use super::InstructionBuilder;
 use crate::instruction::MetadataInstruction;
@@ -65,196 +61,38 @@ impl fmt::Display for DelegateRole {
 ///
 ///   0. `[writable]` Delegate account key
 ///   1. `[]` Delegated owner
-///   2. `[]` Mint account
-///   3. `[writable]` Metadata account
-///   4. `[optional]` Master Edition account
-///   5. `[signer]` Authority to approve the delegation
-///   6. `[signer, writable]` Payer
-///   7. `[]` System Program
-///   8. `[]` Instructions sysvar account
-///   9. `[optional]` SPL Token Program
-///   10. `[optional, writable]` Token account
+///   2. `[writable]` Metadata account
+///   3. `[optional]` Master Edition account
+///   4. `[]` Mint account
+///   5. `[optional, writable]` Token account
+///   6. `[signer]` Authority to approve the delegation
+///   7. `[signer, writable]` Payer
+///   8. `[]` System Program
+///   9. `[]` Instructions sysvar account
+///   10. `[optional]` SPL Token Program
 ///   11. `[optional]` Token Authorization Rules program
 ///   12. `[optional]` Token Authorization Rules account
-pub fn delegate(
-    delegate_record: Pubkey,
-    delegate: Pubkey,
-    mint: Pubkey,
-    metadata: Pubkey,
-    master_edition: Option<Pubkey>,
-    authority: Pubkey,
-    payer: Pubkey,
-    token: Option<Pubkey>,
-    authorization_rules: Option<Pubkey>,
-    additional_accounts: Option<Vec<AccountMeta>>,
-    args: DelegateArgs,
-) -> Instruction {
-    let mut accounts = vec![
-        AccountMeta::new(delegate_record, false),
-        AccountMeta::new_readonly(delegate, false),
-        AccountMeta::new_readonly(mint, false),
-        AccountMeta::new(metadata, false),
-        AccountMeta::new_readonly(
-            if let Some(master_edition) = master_edition {
-                master_edition
-            } else {
-                crate::ID
-            },
-            false,
-        ),
-        AccountMeta::new_readonly(authority, true),
-        AccountMeta::new(payer, true),
-        AccountMeta::new_readonly(system_program::id(), false),
-        AccountMeta::new_readonly(sysvar::instructions::id(), false),
-        AccountMeta::new_readonly(spl_token::id(), false),
-        AccountMeta::new(
-            if let Some(token) = token {
-                token
-            } else {
-                crate::id()
-            },
-            false,
-        ),
-    ];
-
-    if let Some(authorization_rules) = authorization_rules {
-        accounts.push(AccountMeta::new_readonly(mpl_token_auth_rules::id(), false));
-        accounts.push(AccountMeta::new_readonly(authorization_rules, false));
-    } else {
-        accounts.push(AccountMeta::new_readonly(crate::id(), false));
-        accounts.push(AccountMeta::new_readonly(crate::id(), false));
-    }
-
-    if let Some(additional_accounts) = additional_accounts {
-        accounts.extend(additional_accounts);
-    }
-
-    Instruction {
-        program_id: crate::id(),
-        accounts,
-        data: MetadataInstruction::Delegate(args).try_to_vec().unwrap(),
-    }
-}
-
-/// Revoke a delegation of the token.
-///
-/// # Accounts:
-///
-///   0. `[writable]` Delegate account key
-///   1. `[]` Delegated owner
-///   2. `[]` Mint account
-///   3. `[writable]` Metadata account
-///   4. `[optional]` Master Edition account
-///   5. `[signer]` Authority to approve the delegation
-///   6. `[signer, writable]` Payer
-///   7. `[]` System Program
-///   8. `[]` Instructions sysvar account
-///   9. `[optional]` SPL Token Program
-///   10. `[optional, writable]` Token account
-///   11. `[optional]` Token Authorization Rules program
-///   12. `[optional]` Token Authorization Rules account
-pub fn revoke(
-    delegate: Pubkey,
-    delegate_owner: Pubkey,
-    mint: Pubkey,
-    metadata: Pubkey,
-    master_edition: Option<Pubkey>,
-    authority: Pubkey,
-    payer: Pubkey,
-    token: Option<Pubkey>,
-    authorization_rules: Option<Pubkey>,
-    additional_accounts: Option<Vec<AccountMeta>>,
-    args: RevokeArgs,
-) -> Instruction {
-    let mut accounts = vec![
-        AccountMeta::new(delegate, false),
-        AccountMeta::new_readonly(delegate_owner, false),
-        AccountMeta::new_readonly(mint, false),
-        AccountMeta::new(metadata, false),
-        AccountMeta::new_readonly(
-            if let Some(master_edition) = master_edition {
-                master_edition
-            } else {
-                crate::id()
-            },
-            false,
-        ),
-        AccountMeta::new_readonly(authority, true),
-        AccountMeta::new(payer, true),
-        AccountMeta::new_readonly(system_program::id(), false),
-        AccountMeta::new_readonly(sysvar::instructions::id(), false),
-        AccountMeta::new_readonly(spl_token::id(), false),
-        AccountMeta::new(
-            if let Some(token) = token {
-                token
-            } else {
-                crate::id()
-            },
-            false,
-        ),
-    ];
-
-    if let Some(authorization_rules) = authorization_rules {
-        accounts.push(AccountMeta::new_readonly(mpl_token_auth_rules::id(), false));
-        accounts.push(AccountMeta::new_readonly(authorization_rules, false));
-    } else {
-        accounts.push(AccountMeta::new_readonly(crate::id(), false));
-        accounts.push(AccountMeta::new_readonly(crate::id(), false));
-    }
-
-    if let Some(additional_accounts) = additional_accounts {
-        accounts.extend(additional_accounts);
-    }
-
-    Instruction {
-        program_id: crate::id(),
-        accounts,
-        data: MetadataInstruction::Revoke(args).try_to_vec().unwrap(),
-    }
-}
-
 impl InstructionBuilder for super::builders::Delegate {
     fn instruction(&self) -> solana_program::instruction::Instruction {
-        let mut accounts = vec![
+        let accounts = vec![
             AccountMeta::new(self.delegate_record, false),
             AccountMeta::new_readonly(self.delegate, false),
-            AccountMeta::new_readonly(self.mint, false),
             AccountMeta::new(self.metadata, false),
-        ];
-
-        // checks whether we have a master edition
-        if let Some(master_edition) = self.master_edition {
-            accounts.push(AccountMeta::new_readonly(master_edition, false));
-        } else {
-            accounts.push(AccountMeta::new_readonly(crate::ID, false));
-        }
-        accounts.extend(vec![
+            AccountMeta::new_readonly(self.master_edition.unwrap_or(crate::ID), false),
+            AccountMeta::new_readonly(self.mint, false),
+            if let Some(token) = self.token {
+                AccountMeta::new(token, false)
+            } else {
+                AccountMeta::new_readonly(crate::ID, false)
+            },
             AccountMeta::new_readonly(self.authority, true),
             AccountMeta::new(self.payer, true),
             AccountMeta::new_readonly(self.system_program, false),
             AccountMeta::new_readonly(self.sysvar_instructions, false),
-        ]);
-
-        if let Some(token_program) = self.spl_token_program {
-            accounts.push(AccountMeta::new_readonly(token_program, false));
-        } else {
-            accounts.push(AccountMeta::new_readonly(crate::ID, false));
-        }
-
-        if let Some(token) = self.token {
-            accounts.push(AccountMeta::new(token, false));
-        } else {
-            accounts.push(AccountMeta::new_readonly(crate::ID, false));
-        }
-
-        // Optional authorization rules accounts
-        if let Some(rules) = &self.authorization_rules {
-            accounts.push(AccountMeta::new_readonly(mpl_token_auth_rules::ID, false));
-            accounts.push(AccountMeta::new_readonly(*rules, false));
-        } else {
-            accounts.push(AccountMeta::new_readonly(crate::ID, false));
-            accounts.push(AccountMeta::new_readonly(crate::ID, false));
-        }
+            AccountMeta::new_readonly(self.spl_token_program.unwrap_or(crate::ID), false),
+            AccountMeta::new_readonly(self.authorization_rules_program.unwrap_or(crate::ID), false),
+            AccountMeta::new_readonly(self.authorization_rules.unwrap_or(crate::ID), false),
+        ];
 
         Instruction {
             program_id: crate::ID,
@@ -266,48 +104,44 @@ impl InstructionBuilder for super::builders::Delegate {
     }
 }
 
+/// Revokes a delegate.
+///
+/// # Accounts:
+///
+///   0. `[writable]` Delegate account key
+///   1. `[]` Delegated owner
+///   2. `[writable]` Metadata account
+///   3. `[optional]` Master Edition account
+///   4. `[]` Mint account
+///   5. `[optional, writable]` Token account
+///   6. `[signer]` Authority to approve the delegation
+///   7. `[signer, writable]` Payer
+///   8. `[]` System Program
+///   9. `[]` Instructions sysvar account
+///   10. `[optional]` SPL Token Program
+///   11. `[optional]` Token Authorization Rules program
+///   12. `[optional]` Token Authorization Rules account
 impl InstructionBuilder for super::builders::Revoke {
     fn instruction(&self) -> solana_program::instruction::Instruction {
-        let mut accounts = vec![
+        let accounts = vec![
             AccountMeta::new(self.delegate_record, false),
             AccountMeta::new_readonly(self.delegate, false),
-            AccountMeta::new_readonly(self.mint, false),
             AccountMeta::new(self.metadata, false),
-        ];
-
-        // checks whether we have a master edition
-        if let Some(master_edition) = self.master_edition {
-            accounts.push(AccountMeta::new_readonly(master_edition, false));
-        } else {
-            accounts.push(AccountMeta::new_readonly(crate::ID, false));
-        }
-        accounts.extend(vec![
+            AccountMeta::new_readonly(self.master_edition.unwrap_or(crate::ID), false),
+            AccountMeta::new_readonly(self.mint, false),
+            if let Some(token) = self.token {
+                AccountMeta::new(token, false)
+            } else {
+                AccountMeta::new_readonly(crate::ID, false)
+            },
             AccountMeta::new_readonly(self.authority, true),
             AccountMeta::new(self.payer, true),
             AccountMeta::new_readonly(self.system_program, false),
             AccountMeta::new_readonly(self.sysvar_instructions, false),
-        ]);
-
-        if let Some(token_program) = self.spl_token_program {
-            accounts.push(AccountMeta::new_readonly(token_program, false));
-        } else {
-            accounts.push(AccountMeta::new_readonly(crate::ID, false));
-        }
-
-        if let Some(token) = self.token {
-            accounts.push(AccountMeta::new(token, false));
-        } else {
-            accounts.push(AccountMeta::new_readonly(crate::ID, false));
-        }
-
-        // Optional authorization rules accounts
-        if let Some(rules) = &self.authorization_rules {
-            accounts.push(AccountMeta::new_readonly(mpl_token_auth_rules::ID, false));
-            accounts.push(AccountMeta::new_readonly(*rules, false));
-        } else {
-            accounts.push(AccountMeta::new_readonly(crate::ID, false));
-            accounts.push(AccountMeta::new_readonly(crate::ID, false));
-        }
+            AccountMeta::new_readonly(self.spl_token_program.unwrap_or(crate::ID), false),
+            AccountMeta::new_readonly(self.authorization_rules_program.unwrap_or(crate::ID), false),
+            AccountMeta::new_readonly(self.authorization_rules.unwrap_or(crate::ID), false),
+        ];
 
         Instruction {
             program_id: crate::ID,

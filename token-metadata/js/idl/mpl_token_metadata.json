@@ -2931,12 +2931,6 @@
           "desc": "Owner of the delegated account"
         },
         {
-          "name": "mint",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "Mint of metadata"
-        },
-        {
           "name": "metadata",
           "isMut": true,
           "isSigner": false,
@@ -2947,6 +2941,19 @@
           "isMut": false,
           "isSigner": false,
           "desc": "Master Edition account",
+          "optional": true
+        },
+        {
+          "name": "mint",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Mint of metadata"
+        },
+        {
+          "name": "token",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Owned Token Account of mint",
           "optional": true
         },
         {
@@ -2981,10 +2988,10 @@
           "optional": true
         },
         {
-          "name": "token",
-          "isMut": true,
+          "name": "authorizationRulesProgram",
+          "isMut": false,
           "isSigner": false,
-          "desc": "Owned Token Account of mint",
+          "desc": "Token Authorization Rules Program",
           "optional": true
         },
         {
@@ -2992,13 +2999,6 @@
           "isMut": false,
           "isSigner": false,
           "desc": "Token Authorization Rules account",
-          "optional": true
-        },
-        {
-          "name": "authorizationRulesProgram",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "Token Authorization Rules Program",
           "optional": true
         }
       ],
@@ -3032,12 +3032,6 @@
           "desc": "Owner of the delegated account"
         },
         {
-          "name": "mint",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "Mint of metadata"
-        },
-        {
           "name": "metadata",
           "isMut": true,
           "isSigner": false,
@@ -3048,6 +3042,19 @@
           "isMut": false,
           "isSigner": false,
           "desc": "Master Edition account",
+          "optional": true
+        },
+        {
+          "name": "mint",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Mint of metadata"
+        },
+        {
+          "name": "token",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Owned Token Account of mint",
           "optional": true
         },
         {
@@ -3082,10 +3089,10 @@
           "optional": true
         },
         {
-          "name": "token",
-          "isMut": true,
+          "name": "authorizationRulesProgram",
+          "isMut": false,
           "isSigner": false,
-          "desc": "Owned Token Account of mint",
+          "desc": "Token Authorization Rules Program",
           "optional": true
         },
         {
@@ -3093,13 +3100,6 @@
           "isMut": false,
           "isSigner": false,
           "desc": "Token Authorization Rules account",
-          "optional": true
-        },
-        {
-          "name": "authorizationRulesProgram",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "Token Authorization Rules Program",
           "optional": true
         }
       ],
