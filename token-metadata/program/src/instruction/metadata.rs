@@ -10,6 +10,7 @@ use {
     serde_with::{As, DisplayFromStr},
 };
 
+use super::InstructionBuilder;
 use crate::{
     instruction::MetadataInstruction,
     processor::AuthorizationData,
@@ -308,7 +309,7 @@ pub fn update_primary_sale_happened_via_token(
     }
 }
 
-/// Creates the metadata for a mint account.
+/// Builds the instruction to create metadata and associated accounts.
 ///
 /// # Accounts:
 ///
@@ -322,59 +323,44 @@ pub fn update_primary_sale_happened_via_token(
 ///   7. `[]` SPL Token program
 ///   8. `[optional]` Master edition account
 ///   9. `[optional]` Asset authorization rules account
-#[allow(clippy::too_many_arguments)]
-pub fn create(
-    metadata: Pubkey,
-    master_edition: Option<Pubkey>,
-    mint: Pubkey,
-    mint_authority: Pubkey,
-    payer: Pubkey,
-    update_authority: Pubkey,
-    initialize_mint: bool,
-    update_authority_as_signer: bool,
-    asset_data: AssetData,
-    decimals: Option<u8>,
-    max_supply: Option<u64>,
-) -> Instruction {
-    let mut accounts = vec![
-        AccountMeta::new(metadata, false),
-        if initialize_mint {
-            AccountMeta::new(mint, true)
+impl InstructionBuilder for super::builders::Create {
+    fn instruction(&self) -> solana_program::instruction::Instruction {
+        let mut accounts = vec![
+            AccountMeta::new(self.metadata, false),
+            if self.initialize_mint {
+                AccountMeta::new(self.mint, true)
+            } else {
+                // even with an existing mint, we require the account to be writable since
+                // in some cases the mint authority will be updated
+                AccountMeta::new(self.mint, false)
+            },
+            AccountMeta::new_readonly(self.mint_authority, true),
+            AccountMeta::new(self.payer, true),
+            AccountMeta::new_readonly(self.update_authority, self.update_authority_as_signer),
+            AccountMeta::new_readonly(self.system_program, false),
+            AccountMeta::new_readonly(self.sysvar_instructions, false),
+            AccountMeta::new_readonly(self.spl_token_program, false),
+        ];
+        // checks whether we have a master edition
+        if let Some(master_edition) = self.master_edition {
+            accounts.push(AccountMeta::new(master_edition, false));
         } else {
-            // even with an existing mint, we require the account to be writable since
-            // in some cases the mint authority will be updated
-            AccountMeta::new(mint, false)
-        },
-        AccountMeta::new_readonly(mint_authority, true),
-        AccountMeta::new(payer, true),
-        AccountMeta::new_readonly(update_authority, update_authority_as_signer),
-        AccountMeta::new_readonly(solana_program::system_program::id(), false),
-        AccountMeta::new_readonly(sysvar::instructions::id(), false),
-        AccountMeta::new_readonly(spl_token::id(), false),
-    ];
-    // checks whether we have a master edition
-    if let Some(master_edition) = master_edition {
-        accounts.push(AccountMeta::new(master_edition, false));
-    } else {
-        accounts.push(AccountMeta::new_readonly(crate::id(), false));
-    }
-    // checks whether we have authorization rules
-    if let Some(config) = &asset_data.programmable_config {
-        accounts.push(AccountMeta::new_readonly(config.rule_set, false));
-    } else {
-        accounts.push(AccountMeta::new_readonly(crate::id(), false));
-    }
+            accounts.push(AccountMeta::new_readonly(crate::ID, false));
+        }
+        // checks whether we have authorization rules
+        if let Some(rules) = &self.authorization_rules {
+            accounts.push(AccountMeta::new_readonly(*rules, false));
+        } else {
+            accounts.push(AccountMeta::new_readonly(crate::ID, false));
+        }
 
-    Instruction {
-        program_id: crate::id(),
-        accounts,
-        data: MetadataInstruction::Create(CreateArgs::V1 {
-            asset_data,
-            decimals,
-            max_supply,
-        })
-        .try_to_vec()
-        .unwrap(),
+        Instruction {
+            program_id: crate::ID,
+            accounts,
+            data: MetadataInstruction::Create(self.args.clone())
+                .try_to_vec()
+                .unwrap(),
+        }
     }
 }
 

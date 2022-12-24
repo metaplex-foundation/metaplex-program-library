@@ -1839,6 +1839,7 @@ dependencies = [
  "arrayref",
  "borsh",
  "mpl-token-auth-rules",
+ "mpl-token-metadata-context-derive",
  "mpl-token-vault",
  "mpl-utils",
  "num-derive",
@@ -1853,6 +1854,14 @@ dependencies = [
  "spl-associated-token-account",
  "spl-token",
  "thiserror",
+]
+
+[[package]]
+name = "mpl-token-metadata-context-derive"
+version = "0.0.1"
+dependencies = [
+ "quote 1.0.21",
+ "syn 1.0.105",
 ]
 
 [[package]]

@@ -562,6 +562,14 @@ pub enum MetadataError {
     DelegateNotFound,
 
     /// 142
+    #[error("Required account not set in instruction builder")]
+    MissingAccountInBuilder,
+
+    /// 143
+    #[error("Required argument not set in instruction builder")]
+    MissingArgumentInBuilder,
+
+    /// 144
     #[error("Feature not supported currently")]
     FeatureNotSupported,
 }
