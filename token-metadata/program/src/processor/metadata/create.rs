@@ -1,4 +1,4 @@
-use mpl_utils::{assert_initialized, cmp_pubkeys};
+use mpl_utils::assert_initialized;
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program::invoke, program_pack::Pack,
     pubkey::Pubkey, rent::Rent, system_instruction, sysvar::Sysvar,
@@ -172,14 +172,7 @@ fn create_v1(program_id: &Pubkey, ctx: Context<Create>, args: CreateArgs) -> Pro
         TokenStandard::ProgrammableNonFungible
     ) {
         if let Some(config) = &asset_data.programmable_config {
-            if let Some(authorization_rules) = ctx.accounts.authorization_rules_info {
-                if !cmp_pubkeys(&config.rule_set, authorization_rules.key)
-                    || authorization_rules.data_is_empty()
-                {
-                    return Err(MetadataError::InvalidAuthorizationRules.into());
-                }
-                metadata.programmable_config = Some(config.clone());
-            }
+            metadata.programmable_config = Some(config.clone());
         }
     }
 

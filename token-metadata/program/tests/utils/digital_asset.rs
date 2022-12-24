@@ -94,11 +94,9 @@ impl DigitalAsset {
             .update_authority_as_signer(true);
 
         if let Some(authorization_rules) = authorization_rules {
-            println!("setting authorization rules on asset");
             asset.programmable_config = Some(ProgrammableConfig {
                 rule_set: authorization_rules,
             });
-            builder.authorization_rules(authorization_rules);
         }
 
         let master_edition = match token_standard {

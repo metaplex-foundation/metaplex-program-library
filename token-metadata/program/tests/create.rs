@@ -18,10 +18,12 @@ use utils::*;
 
 mod create {
 
+    use std::str::FromStr;
+
     use mpl_token_metadata::{
         error::MetadataError,
         instruction::{builders::CreateBuilder, CreateArgs, InstructionBuilder},
-        state::{AssetData, Metadata, TokenStandard, EDITION, PREFIX},
+        state::{AssetData, Metadata, ProgrammableConfig, TokenStandard, EDITION, PREFIX},
     };
     use solana_program::borsh::try_from_slice_unchecked;
 
@@ -45,11 +47,9 @@ mod create {
             context.payer.pubkey(),
         );
         asset.seller_fee_basis_points = 500;
-        /*
         asset.programmable_config = Some(ProgrammableConfig {
-            rule_set: Pubkey::from_str("Cex6GAMtCwD9E17VsEK4rQTbmcVtSdHxWcxhwdwXkuAN")?,
+            rule_set: Pubkey::from_str("Cex6GAMtCwD9E17VsEK4rQTbmcVtSdHxWcxhwdwXkuAN").unwrap(),
         });
-        */
 
         // build the mint transaction
 
@@ -119,7 +119,12 @@ mod create {
         );
         assert_eq!(metadata.uses, None);
         assert_eq!(metadata.collection, None);
-        assert_eq!(metadata.programmable_config, None);
+        assert_eq!(
+            metadata.programmable_config,
+            Some(ProgrammableConfig {
+                rule_set: Pubkey::from_str("Cex6GAMtCwD9E17VsEK4rQTbmcVtSdHxWcxhwdwXkuAN").unwrap(),
+            })
+        );
     }
 
     #[tokio::test]

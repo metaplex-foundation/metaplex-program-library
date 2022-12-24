@@ -322,26 +322,25 @@ pub fn update_primary_sale_happened_via_token(
 /// # Accounts:
 ///
 ///   0. `[writable]` Metadata account
-///   1. `[]` Mint account
-///   2. `[signer]` Mint authority
-///   3. `[signer]` Payer
-///   4. `[signer]` Update authority
-///   5. `[]` System program
-///   6. `[]` Instructions sysvar account
-///   7. `[]` SPL Token program
-///   8. `[optional]` Master edition account
-///   9. `[optional]` Asset authorization rules account
+///   1. `[optional, writable]` Master edition account
+///   2. `[writable]` Mint account
+///   3. `[signer]` Mint authority
+///   4. `[signer]` Payer
+///   5. `[signer]` Update authority
+///   6. `[]` System program
+///   7. `[]` Instructions sysvar account
+///   8. `[]` SPL Token program
 impl InstructionBuilder for super::builders::Create {
     fn instruction(&self) -> solana_program::instruction::Instruction {
-        let mut accounts = vec![
+        let accounts = vec![
             AccountMeta::new(self.metadata, false),
-            if self.initialize_mint {
-                AccountMeta::new(self.mint, true)
+            // checks whether we have a master edition
+            if let Some(master_edition) = self.master_edition {
+                AccountMeta::new(master_edition, false)
             } else {
-                // even with an existing mint, we require the account to be writable since
-                // in some cases the mint authority will be updated
-                AccountMeta::new(self.mint, false)
+                AccountMeta::new_readonly(crate::ID, false)
             },
+            AccountMeta::new(self.mint, self.initialize_mint),
             AccountMeta::new_readonly(self.mint_authority, true),
             AccountMeta::new(self.payer, true),
             AccountMeta::new_readonly(self.update_authority, self.update_authority_as_signer),
@@ -349,18 +348,6 @@ impl InstructionBuilder for super::builders::Create {
             AccountMeta::new_readonly(self.sysvar_instructions, false),
             AccountMeta::new_readonly(self.spl_token_program, false),
         ];
-        // checks whether we have a master edition
-        if let Some(master_edition) = self.master_edition {
-            accounts.push(AccountMeta::new(master_edition, false));
-        } else {
-            accounts.push(AccountMeta::new_readonly(crate::ID, false));
-        }
-        // checks whether we have authorization rules
-        if let Some(rules) = &self.authorization_rules {
-            accounts.push(AccountMeta::new_readonly(*rules, false));
-        } else {
-            accounts.push(AccountMeta::new_readonly(crate::ID, false));
-        }
 
         Instruction {
             program_id: crate::ID,

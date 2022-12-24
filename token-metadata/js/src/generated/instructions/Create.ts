@@ -37,20 +37,20 @@ export const CreateStruct = new beet.FixableBeetArgsStruct<
  * Accounts required by the _Create_ instruction
  *
  * @property [_writable_] metadata Metadata account key (pda of ['metadata', program id, mint id])
- * @property [] mint Mint of token asset
+ * @property [_writable_] masterEdition (optional) Unallocated edition account with address as pda of ['metadata', program id, mint, 'edition']
+ * @property [_writable_] mint Mint of token asset
  * @property [**signer**] mintAuthority Mint authority
  * @property [_writable_, **signer**] payer Payer
  * @property [] updateAuthority update authority info
  * @property [] sysvarInstructions Instructions sysvar account
  * @property [] splTokenProgram SPL Token program
- * @property [] masterEdition (optional) Unallocated edition account with address as pda of ['metadata', program id, mint, 'edition']
- * @property [] authorizationRules (optional) Token Authorization Rules account
  * @category Instructions
  * @category Create
  * @category generated
  */
 export type CreateInstructionAccounts = {
   metadata: web3.PublicKey;
+  masterEdition?: web3.PublicKey;
   mint: web3.PublicKey;
   mintAuthority: web3.PublicKey;
   payer: web3.PublicKey;
@@ -58,8 +58,6 @@ export type CreateInstructionAccounts = {
   systemProgram?: web3.PublicKey;
   sysvarInstructions: web3.PublicKey;
   splTokenProgram: web3.PublicKey;
-  masterEdition?: web3.PublicKey;
-  authorizationRules?: web3.PublicKey;
 };
 
 export const createInstructionDiscriminator = 41;
@@ -93,8 +91,13 @@ export function createCreateInstruction(
       isSigner: false,
     },
     {
+      pubkey: accounts.masterEdition ?? programId,
+      isWritable: accounts.masterEdition != null,
+      isSigner: false,
+    },
+    {
       pubkey: accounts.mint,
-      isWritable: false,
+      isWritable: true,
       isSigner: false,
     },
     {
@@ -124,16 +127,6 @@ export function createCreateInstruction(
     },
     {
       pubkey: accounts.splTokenProgram,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.masterEdition ?? programId,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.authorizationRules ?? programId,
       isWritable: false,
       isSigner: false,
     },

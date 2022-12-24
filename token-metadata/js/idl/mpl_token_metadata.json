@@ -2352,8 +2352,15 @@
           "desc": "Metadata account key (pda of ['metadata', program id, mint id])"
         },
         {
+          "name": "masterEdition",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Unallocated edition account with address as pda of ['metadata', program id, mint, 'edition']",
+          "optional": true
+        },
+        {
           "name": "mint",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false,
           "desc": "Mint of token asset"
         },
@@ -2392,20 +2399,6 @@
           "isMut": false,
           "isSigner": false,
           "desc": "SPL Token program"
-        },
-        {
-          "name": "masterEdition",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "Unallocated edition account with address as pda of ['metadata', program id, mint, 'edition']",
-          "optional": true
-        },
-        {
-          "name": "authorizationRules",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "Token Authorization Rules account",
-          "optional": true
         }
       ],
       "args": [

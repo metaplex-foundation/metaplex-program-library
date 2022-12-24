@@ -100,31 +100,7 @@ export class InitTransactions {
       PROGRAM_ID,
     );
     amman.addr.addLabel('Metadata Account', metadata);
-
-    const accounts: CreateInstructionAccounts = {
-      metadata,
-      mint: mint.publicKey,
-      mintAuthority: payer.publicKey,
-      payer: payer.publicKey,
-      splTokenProgram: splToken.TOKEN_PROGRAM_ID,
-      sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
-      updateAuthority: payer.publicKey,
-      authorizationRules: assetData.programmableConfig
-        ? assetData.programmableConfig.ruleSet
-        : undefined,
-    };
-
-    const args: CreateInstructionArgs = {
-      createArgs: {
-        __kind: 'V1',
-        assetData,
-        decimals,
-        maxSupply,
-      },
-    };
-
-    const createIx = createCreateInstruction(accounts, args);
-
+    // master edition account
     let masterEdition = null;
 
     if (
@@ -142,13 +118,29 @@ export class InitTransactions {
         PROGRAM_ID,
       );
       amman.addr.addLabel('Master Edition Account', masterEdition);
-
-      createIx.keys[8] = {
-        pubkey: masterEdition,
-        isSigner: false,
-        isWritable: true,
-      };
     }
+
+    const accounts: CreateInstructionAccounts = {
+      metadata,
+      masterEdition,
+      mint: mint.publicKey,
+      mintAuthority: payer.publicKey,
+      payer: payer.publicKey,
+      splTokenProgram: splToken.TOKEN_PROGRAM_ID,
+      sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
+      updateAuthority: payer.publicKey,
+    };
+
+    const args: CreateInstructionArgs = {
+      createArgs: {
+        __kind: 'V1',
+        assetData,
+        decimals,
+        maxSupply,
+      },
+    };
+
+    const createIx = createCreateInstruction(accounts, args);
 
     // this test always initializes the mint, we we need to set the
     // account to be writable and a signer

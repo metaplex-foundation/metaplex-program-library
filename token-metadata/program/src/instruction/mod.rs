@@ -497,25 +497,21 @@ pub enum MetadataInstruction {
 
     //---- New API
 
-    /// Creates the metadata for a mint account.
-    ///
-    /// Depending of the token standard selected for the new mint, optional accounts need
-    /// to be present:
-    ///  1. `master_edition`: when creating a variant of `*NonFungible` asset
-    ///  2. `authorization_rules`: when creating a variant of `Programmable*` asset
+    /// Creates the metadata and associated accounts for a new or existing mint account.
     /// 
-    /// This instruction will also initialized the mint account if it does not exist and
+    /// This instruction will initialize a mint account if it does not exist and
     /// the mint key is a signer on the transaction.
+    ///
+    /// When creating a non-fungible assert, the `master_edition` needs to be specified.
     #[account(0, writable, name="metadata", desc="Metadata account key (pda of ['metadata', program id, mint id])")]
-    #[account(1, name="mint", desc="Mint of token asset")]
-    #[account(2, signer, name="mint_authority", desc="Mint authority")]
-    #[account(3, signer, writable, name="payer", desc="Payer")]
-    #[account(4, name="update_authority", desc="update authority info")]
-    #[account(5, name="system_program", desc="System program")]
-    #[account(6, name="sysvar_instructions", desc="Instructions sysvar account")]
-    #[account(7, name="spl_token_program", desc="SPL Token program")]
-    #[account(8, optional, name="master_edition", desc="Unallocated edition account with address as pda of ['metadata', program id, mint, 'edition']")]
-    #[account(9, optional, name="authorization_rules", desc="Token Authorization Rules account")]
+    #[account(1, optional, writable, name="master_edition", desc="Unallocated edition account with address as pda of ['metadata', program id, mint, 'edition']")]
+    #[account(2, writable, name="mint", desc="Mint of token asset")]
+    #[account(3, signer, name="mint_authority", desc="Mint authority")]
+    #[account(4, signer, writable, name="payer", desc="Payer")]
+    #[account(5, name="update_authority", desc="update authority info")]
+    #[account(6, name="system_program", desc="System program")]
+    #[account(7, name="sysvar_instructions", desc="Instructions sysvar account")]
+    #[account(8, name="spl_token_program", desc="SPL Token program")]
     #[args(initialize_mint: bool)]
     #[args(update_authority_as_signer: bool)]
     #[default_optional_accounts]
