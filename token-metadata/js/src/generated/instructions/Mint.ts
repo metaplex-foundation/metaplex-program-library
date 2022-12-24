@@ -36,7 +36,7 @@ export const MintStruct = new beet.FixableBeetArgsStruct<
 /**
  * Accounts required by the _Mint_ instruction
  *
- * @property [_writable_] token Token account key
+ * @property [_writable_] token Token account
  * @property [] metadata Metadata account key (pda of ['metadata', program id, mint id])
  * @property [] masterEdition (optional) Master Edition account
  * @property [_writable_] mint Mint of token asset

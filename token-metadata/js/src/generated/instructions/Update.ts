@@ -36,11 +36,11 @@ export const UpdateStruct = new beet.FixableBeetArgsStruct<
 /**
  * Accounts required by the _Update_ instruction
  *
- * @property [**signer**] authority Update authority
+ * @property [**signer**] authority Update authority or delegate
  * @property [_writable_] metadata Metadata account
+ * @property [_writable_] masterEdition (optional) Master Edition account
  * @property [] mint Mint account
  * @property [] sysvarInstructions System program
- * @property [_writable_] edition (optional) Master Edition account
  * @property [] token (optional) Token account
  * @property [] delegateRecord (optional) Delegate record PDA
  * @property [] authorizationRulesProgram (optional) Token Authorization Rules Program
@@ -52,10 +52,10 @@ export const UpdateStruct = new beet.FixableBeetArgsStruct<
 export type UpdateInstructionAccounts = {
   authority: web3.PublicKey;
   metadata: web3.PublicKey;
+  masterEdition?: web3.PublicKey;
   mint: web3.PublicKey;
   systemProgram?: web3.PublicKey;
   sysvarInstructions: web3.PublicKey;
-  edition?: web3.PublicKey;
   token?: web3.PublicKey;
   delegateRecord?: web3.PublicKey;
   authorizationRulesProgram?: web3.PublicKey;
@@ -98,6 +98,11 @@ export function createUpdateInstruction(
       isSigner: false,
     },
     {
+      pubkey: accounts.masterEdition ?? programId,
+      isWritable: accounts.masterEdition != null,
+      isSigner: false,
+    },
+    {
       pubkey: accounts.mint,
       isWritable: false,
       isSigner: false,
@@ -110,11 +115,6 @@ export function createUpdateInstruction(
     {
       pubkey: accounts.sysvarInstructions,
       isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.edition ?? programId,
-      isWritable: accounts.edition != null,
       isSigner: false,
     },
     {

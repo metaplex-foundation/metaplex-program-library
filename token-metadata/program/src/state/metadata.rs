@@ -123,23 +123,23 @@ impl Metadata {
         assert_valid_use(&uses, &self.uses)?;
         self.uses = uses;
 
-        if let Some(val) = new_update_authority {
-            self.update_authority = val;
+        if let Some(authority) = new_update_authority {
+            self.update_authority = authority;
         }
 
-        if let Some(val) = primary_sale_happened {
-            // If received val is true, flip to true.
-            if val || !self.primary_sale_happened {
-                self.primary_sale_happened = val
+        if let Some(primary_sale) = primary_sale_happened {
+            // If received primary_sale is true, flip to true.
+            if primary_sale || !self.primary_sale_happened {
+                self.primary_sale_happened = primary_sale
             } else {
                 return Err(MetadataError::PrimarySaleCanOnlyBeFlippedToTrue.into());
             }
         }
 
-        if let Some(val) = is_mutable {
+        if let Some(mutable) = is_mutable {
             // If received value is false, flip to false.
-            if !val || self.is_mutable {
-                self.is_mutable = val
+            if !mutable || self.is_mutable {
+                self.is_mutable = mutable
             } else {
                 return Err(MetadataError::IsMutableCanOnlyBeFlippedToFalse.into());
             }

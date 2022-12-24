@@ -2422,7 +2422,7 @@
           "name": "token",
           "isMut": true,
           "isSigner": false,
-          "desc": "Token account key"
+          "desc": "Token account"
         },
         {
           "name": "metadata",
@@ -2515,13 +2515,20 @@
           "name": "authority",
           "isMut": false,
           "isSigner": true,
-          "desc": "Update authority"
+          "desc": "Update authority or delegate"
         },
         {
           "name": "metadata",
           "isMut": true,
           "isSigner": false,
           "desc": "Metadata account"
+        },
+        {
+          "name": "masterEdition",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Master Edition account",
+          "optional": true
         },
         {
           "name": "mint",
@@ -2540,13 +2547,6 @@
           "isMut": false,
           "isSigner": false,
           "desc": "System program"
-        },
-        {
-          "name": "edition",
-          "isMut": true,
-          "isSigner": false,
-          "desc": "Master Edition account",
-          "optional": true
         },
         {
           "name": "token",
@@ -5438,6 +5438,11 @@
     {
       "code": 148,
       "name": "MissingSplTokenProgram",
+      "msg": "Missing SPL token program"
+    },
+    {
+      "code": 149,
+      "name": "MissingAuthorizationRulesProgram",
       "msg": "Missing SPL token program"
     }
   ],

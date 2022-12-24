@@ -464,17 +464,15 @@ impl InstructionBuilder for super::builders::Update {
         let mut accounts = vec![
             AccountMeta::new_readonly(self.authority, true),
             AccountMeta::new(self.metadata, false),
+            if let Some(edition) = self.master_edition {
+                AccountMeta::new(edition, false)
+            } else {
+                AccountMeta::new_readonly(crate::ID, false)
+            },
             AccountMeta::new_readonly(self.mint, false),
             AccountMeta::new_readonly(self.system_program, false),
             AccountMeta::new_readonly(self.sysvar_instructions, false),
         ];
-
-        // Optional edition account
-        if let Some(edition) = self.edition {
-            accounts.push(AccountMeta::new(edition, false));
-        } else {
-            accounts.push(AccountMeta::new_readonly(crate::ID, false));
-        }
 
         if let Some(token) = self.token {
             accounts.push(AccountMeta::new(token, false));

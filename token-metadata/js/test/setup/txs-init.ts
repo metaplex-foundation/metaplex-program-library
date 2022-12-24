@@ -289,7 +289,7 @@ export class InitTransactions {
     handler: PayerTransactionHandler,
     mint: PublicKey,
     metadata: PublicKey,
-    edition: PublicKey,
+    masterEdition: PublicKey,
     authority: Keypair,
     authorityType: AuthorityType = AuthorityType.Metadata,
     updateTestData: UpdateTestData,
@@ -300,16 +300,16 @@ export class InitTransactions {
   ): Promise<{ tx: ConfirmedTransactionAssertablePromise }> {
     amman.addr.addLabel('Mint Account', mint);
     amman.addr.addLabel('Metadata Account', metadata);
-    if (edition != null) {
-      amman.addr.addLabel('Master Edition Account', edition);
+    if (masterEdition != null) {
+      amman.addr.addLabel('Master Edition Account', masterEdition);
     }
 
     const updateAcccounts: UpdateInstructionAccounts = {
       metadata,
+      masterEdition,
       mint,
       systemProgram: SystemProgram.programId,
       sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
-      edition,
       authority: authority.publicKey,
       token,
       delegateRecord,

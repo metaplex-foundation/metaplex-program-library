@@ -8,7 +8,9 @@ use crate::{
     assertions::{assert_owned_by, metadata::assert_metadata_authority},
     error::MetadataError,
     instruction::{AuthorityType, Context, Update, UpdateArgs},
+    pda::{EDITION, PREFIX},
     state::{Metadata, TokenMetadataAccount, TokenStandard},
+    utils::assert_derivation,
 };
 
 pub fn update<'a>(
@@ -34,8 +36,19 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
     assert_owned_by(ctx.accounts.metadata_info, program_id)?;
     assert_owned_by(ctx.accounts.mint_info, &spl_token::ID)?;
 
-    if let Some(edition) = ctx.accounts.edition_info {
+    if let Some(edition) = ctx.accounts.master_edition_info {
         assert_owned_by(edition, program_id)?;
+        // checks that we got the correct master account
+        assert_derivation(
+            program_id,
+            edition,
+            &[
+                PREFIX.as_bytes(),
+                program_id.as_ref(),
+                ctx.accounts.mint_info.key.as_ref(),
+                EDITION.as_bytes(),
+            ],
+        )?;
     }
     if let Some(authorization_rules) = ctx.accounts.authorization_rules_info {
         assert_owned_by(authorization_rules, &mpl_token_auth_rules::ID)?;
@@ -50,6 +63,15 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
     }
     if ctx.accounts.sysvar_instructions_info.key != &sysvar::instructions::ID {
         return Err(ProgramError::IncorrectProgramId);
+    }
+    if ctx.accounts.authorization_rules_info.is_some() {
+        if let Some(authorization_rules_program) = ctx.accounts.authorization_rules_program_info {
+            if authorization_rules_program.key != &mpl_token_auth_rules::ID {
+                return Err(ProgramError::IncorrectProgramId);
+            }
+        } else {
+            return Err(MetadataError::MissingAuthorizationRulesProgram.into());
+        }
     }
 
     // Deserialize metadata to determine its type
@@ -71,9 +93,7 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
     let _auth_rules_apply = matches!(token_standard, TokenStandard::ProgrammableNonFungible)
         && metadata.programmable_config.is_some();
 
-    let authority_type = args.get_authority_type();
-
-    match authority_type {
+    match args.get_authority_type() {
         AuthorityType::Metadata => {
             // Check is signer and matches update authority on metadata.
             assert_metadata_authority(&metadata, ctx.accounts.authority_info)?;

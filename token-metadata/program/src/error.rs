@@ -588,6 +588,10 @@ pub enum MetadataError {
     /// 146
     #[error("Missing SPL token program")]
     MissingSplTokenProgram,
+
+    /// 147
+    #[error("Missing SPL token program")]
+    MissingAuthorizationRulesProgram,
 }
 
 impl PrintProgramError for MetadataError {

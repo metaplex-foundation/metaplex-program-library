@@ -3196,6 +3196,29 @@ createErrorFromCodeLookup.set(0x94, () => new MissingSplTokenProgramError());
 createErrorFromNameLookup.set('MissingSplTokenProgram', () => new MissingSplTokenProgramError());
 
 /**
+ * MissingAuthorizationRulesProgram: 'Missing SPL token program'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MissingAuthorizationRulesProgramError extends Error {
+  readonly code: number = 0x95;
+  readonly name: string = 'MissingAuthorizationRulesProgram';
+  constructor() {
+    super('Missing SPL token program');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MissingAuthorizationRulesProgramError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x95, () => new MissingAuthorizationRulesProgramError());
+createErrorFromNameLookup.set(
+  'MissingAuthorizationRulesProgram',
+  () => new MissingAuthorizationRulesProgramError(),
+);
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

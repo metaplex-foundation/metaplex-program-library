@@ -523,7 +523,7 @@ pub enum MetadataInstruction {
     /// minting `*NonFungible` assets, the `mint_authority` must the the master edition PDA of
     /// ['metadata', program id, mint, 'edition']. For the other cases, it must be the `mint_authority`
     /// from the mint account.
-    #[account(0, writable, name="token", desc="Token account key")]
+    #[account(0, writable, name="token", desc="Token account")]
     #[account(1, name="metadata", desc="Metadata account key (pda of ['metadata', program id, mint id])")]
     #[account(2, optional, name="master_edition", desc="Master Edition account")]
     #[account(3, writable, name="mint", desc="Mint of token asset")]
@@ -542,12 +542,12 @@ pub enum MetadataInstruction {
     /// 
     /// The configurable `authorization_rules` only apply to `ProgrammableNonFungible` assets and
     /// it may require additional accounts to validate the rules.
-    #[account(0, signer, name="authority", desc="Update authority")]
+    #[account(0, signer, name="authority", desc="Update authority or delegate")]
     #[account(1, writable, name="metadata", desc="Metadata account")]
-    #[account(2, name="mint", desc="Mint account")]
-    #[account(3, name="system_program", desc="System program")]
-    #[account(4, name="sysvar_instructions", desc="System program")]
-    #[account(5, optional, writable, name="edition", desc="Master Edition account")]
+    #[account(2, optional, writable, name="master_edition", desc="Master Edition account")]
+    #[account(3, name="mint", desc="Mint account")]
+    #[account(4, name="system_program", desc="System program")]
+    #[account(5, name="sysvar_instructions", desc="System program")]
     #[account(6, optional, name="token", desc="Token account")]
     #[account(7, optional, name="delegate_record", desc="Delegate record PDA")]
     #[account(8, optional, name="authorization_rules_program", desc="Token Authorization Rules Program")]
