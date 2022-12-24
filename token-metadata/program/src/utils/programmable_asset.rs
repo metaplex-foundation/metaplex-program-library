@@ -1,4 +1,3 @@
-use mpl_token_auth_rules::state::Operation;
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program::invoke_signed,
 };
@@ -8,6 +7,7 @@ use crate::{
     assertions::assert_derivation,
     pda::{EDITION, PREFIX},
     processor::AuthorizationData,
+    state::{Operation, ToAccountMeta},
 };
 
 pub fn freeze<'a>(
@@ -67,24 +67,18 @@ pub fn thaw<'a>(
 }
 
 pub fn validate<'a>(
-    payer: &'a AccountInfo<'a>,
     ruleset: &'a AccountInfo<'a>,
     operation: Operation,
-    destination_owner: &'a AccountInfo<'a>,
+    target: &'a AccountInfo<'a>,
     auth_data: &AuthorizationData,
 ) -> ProgramResult {
     let validate_ix = mpl_token_auth_rules::instruction::validate(
-        mpl_token_auth_rules::ID,
         *ruleset.key,
-        operation,
+        operation.to_string(),
         auth_data.payload.clone(),
-        vec![],
-        vec![*destination_owner.key],
+        false,
+        vec![target.to_account_meta()],
     );
 
-    invoke_signed(
-        &validate_ix,
-        &[payer.clone(), ruleset.clone(), destination_owner.clone()],
-        &[],
-    )
+    invoke_signed(&validate_ix, &[ruleset.clone(), target.clone()], &[])
 }

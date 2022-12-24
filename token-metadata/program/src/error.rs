@@ -309,7 +309,7 @@ pub enum MetadataError {
     #[error("Is Mutable can only be flipped to false")]
     IsMutableCanOnlyBeFlippedToFalse,
 
-    #[error("Cannont Verify Collection in this Instruction")]
+    #[error("Collection cannot be verified in this instruction")]
     CollectionCannotBeVerifiedInThisInstruction,
 
     #[error("This instruction was deprecated in a previous release and is now removed")]
@@ -442,7 +442,7 @@ pub enum MetadataError {
     BorshDeserializationError,
 
     /// 112 - Cannot update a verified colleciton in this command
-    #[error("Cannot update a verified colleciton in this command")]
+    #[error("Cannot update a verified collection in this command")]
     CannotUpdateVerifiedCollection,
 
     /// 113 - Edition Account Doesnt Match Collection
@@ -568,6 +568,10 @@ pub enum MetadataError {
     /// 143
     #[error("Required argument not set in instruction builder")]
     MissingArgumentInBuilder,
+
+    /// 144
+    #[error("Feature not supported currently")]
+    FeatureNotSupported,
 }
 
 impl PrintProgramError for MetadataError {

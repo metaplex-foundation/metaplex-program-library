@@ -15,6 +15,7 @@ import { Collection, collectionBeet } from '../types/Collection';
 import { Uses, usesBeet } from '../types/Uses';
 import { CollectionDetails, collectionDetailsBeet } from '../types/CollectionDetails';
 import { ProgrammableConfig, programmableConfigBeet } from '../types/ProgrammableConfig';
+import { DelegateState, delegateStateBeet } from '../types/DelegateState';
 import * as customSerializer from '../../custom/metadata-deserializer';
 
 /**
@@ -35,7 +36,7 @@ export type MetadataArgs = {
   uses: beet.COption<Uses>;
   collectionDetails: beet.COption<CollectionDetails>;
   programmableConfig: beet.COption<ProgrammableConfig>;
-  delegate: beet.COption<web3.PublicKey>;
+  delegateState: beet.COption<DelegateState>;
 };
 /**
  * Holds the data for the {@link Metadata} Account and provides de/serialization
@@ -58,7 +59,7 @@ export class Metadata implements MetadataArgs {
     readonly uses: beet.COption<Uses>,
     readonly collectionDetails: beet.COption<CollectionDetails>,
     readonly programmableConfig: beet.COption<ProgrammableConfig>,
-    readonly delegate: beet.COption<web3.PublicKey>,
+    readonly delegateState: beet.COption<DelegateState>,
   ) {}
 
   /**
@@ -78,7 +79,7 @@ export class Metadata implements MetadataArgs {
       args.uses,
       args.collectionDetails,
       args.programmableConfig,
-      args.delegate,
+      args.delegateState,
     );
   }
 
@@ -182,7 +183,7 @@ export class Metadata implements MetadataArgs {
       uses: this.uses,
       collectionDetails: this.collectionDetails,
       programmableConfig: this.programmableConfig,
-      delegate: this.delegate,
+      delegateState: this.delegateState,
     };
   }
 }
@@ -205,7 +206,7 @@ export const metadataBeet = new beet.FixableBeetStruct<Metadata, MetadataArgs>(
     ['uses', beet.coption(usesBeet)],
     ['collectionDetails', beet.coption(collectionDetailsBeet)],
     ['programmableConfig', beet.coption(programmableConfigBeet)],
-    ['delegate', beet.coption(beetSolana.publicKey)],
+    ['delegateState', beet.coption(delegateStateBeet)],
   ],
   Metadata.fromArgs,
   'Metadata',

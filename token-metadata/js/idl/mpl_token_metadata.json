@@ -2416,6 +2416,7 @@
           }
         }
       ],
+      "defaultOptionalAccounts": true,
       "discriminant": {
         "type": "u8",
         "value": 41
@@ -2486,17 +2487,17 @@
           "optional": true
         },
         {
-          "name": "tokenAuthRulesProgram",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "Token Authorization Rules program",
-          "optional": true
-        },
-        {
           "name": "authorizationRules",
           "isMut": false,
           "isSigner": false,
           "desc": "Token Authorization Rules account",
+          "optional": true
+        },
+        {
+          "name": "authRulesProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Token Authorization Rules program",
           "optional": true
         }
       ],
@@ -2508,6 +2509,7 @@
           }
         }
       ],
+      "defaultOptionalAccounts": true,
       "discriminant": {
         "type": "u8",
         "value": 42
@@ -2548,17 +2550,10 @@
           "optional": true
         },
         {
-          "name": "updateAuthority",
+          "name": "authority",
           "isMut": false,
           "isSigner": true,
           "desc": "Update authority",
-          "optional": true
-        },
-        {
-          "name": "tokenHolder",
-          "isMut": false,
-          "isSigner": true,
-          "desc": "Token holder",
           "optional": true
         },
         {
@@ -2566,6 +2561,13 @@
           "isMut": false,
           "isSigner": false,
           "desc": "Token account",
+          "optional": true
+        },
+        {
+          "name": "delegateRecord",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Delegate record PDA",
           "optional": true
         },
         {
@@ -2591,6 +2593,7 @@
           }
         }
       ],
+      "defaultOptionalAccounts": true,
       "discriminant": {
         "type": "u8",
         "value": 43
@@ -2665,6 +2668,7 @@
           }
         }
       ],
+      "defaultOptionalAccounts": true,
       "discriminant": {
         "type": "u8",
         "value": 44
@@ -2751,6 +2755,7 @@
           }
         }
       ],
+      "defaultOptionalAccounts": true,
       "discriminant": {
         "type": "u8",
         "value": 45
@@ -2828,7 +2833,7 @@
         },
         {
           "name": "authorizationRules",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false,
           "desc": "Token Authorization Rules account",
           "optional": true
@@ -2849,6 +2854,7 @@
           }
         }
       ],
+      "defaultOptionalAccounts": true,
       "discriminant": {
         "type": "u8",
         "value": 46
@@ -2898,6 +2904,7 @@
           }
         }
       ],
+      "defaultOptionalAccounts": true,
       "discriminant": {
         "type": "u8",
         "value": 47
@@ -2932,7 +2939,7 @@
         },
         {
           "name": "masterEdition",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false,
           "desc": "Master Edition account",
           "optional": true
@@ -2998,9 +3005,111 @@
           }
         }
       ],
+      "defaultOptionalAccounts": true,
       "discriminant": {
         "type": "u8",
         "value": 48
+      }
+    },
+    {
+      "name": "Revoke",
+      "accounts": [
+        {
+          "name": "delegateRecord",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Delegate account key (pda of [mint id, delegate role, user id, authority id])"
+        },
+        {
+          "name": "delegate",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Owner of the delegated account"
+        },
+        {
+          "name": "mint",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Mint of metadata"
+        },
+        {
+          "name": "metadata",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Metadata account"
+        },
+        {
+          "name": "masterEdition",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Master Edition account",
+          "optional": true
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "Authority to approve the delegation"
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "desc": "Payer"
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "System Program"
+        },
+        {
+          "name": "sysvarInstructions",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Instructions sysvar account"
+        },
+        {
+          "name": "splTokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "SPL Token Program",
+          "optional": true
+        },
+        {
+          "name": "tokenAccount",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Owned Token Account of mint",
+          "optional": true
+        },
+        {
+          "name": "authorizationRules",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Token Authorization Rules account",
+          "optional": true
+        },
+        {
+          "name": "authorizationRulesProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Token Authorization Rules Program",
+          "optional": true
+        }
+      ],
+      "args": [
+        {
+          "name": "revokeArgs",
+          "type": {
+            "defined": "RevokeArgs"
+          }
+        }
+      ],
+      "defaultOptionalAccounts": true,
+      "discriminant": {
+        "type": "u8",
+        "value": 49
       }
     },
     {
@@ -3076,106 +3185,7 @@
           }
         }
       ],
-      "discriminant": {
-        "type": "u8",
-        "value": 49
-      }
-    },
-    {
-      "name": "Revoke",
-      "accounts": [
-        {
-          "name": "delegate",
-          "isMut": true,
-          "isSigner": false,
-          "desc": "Delegate account key (pda of [mint id, delegate role, user id, authority id])"
-        },
-        {
-          "name": "delegateOwner",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "Owner of the delegated account"
-        },
-        {
-          "name": "mint",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "Mint of metadata"
-        },
-        {
-          "name": "metadata",
-          "isMut": true,
-          "isSigner": false,
-          "desc": "Metadata account"
-        },
-        {
-          "name": "masterEdition",
-          "isMut": true,
-          "isSigner": false,
-          "desc": "Master Edition account",
-          "optional": true
-        },
-        {
-          "name": "authority",
-          "isMut": false,
-          "isSigner": true,
-          "desc": "Authority to approve the delegation"
-        },
-        {
-          "name": "payer",
-          "isMut": true,
-          "isSigner": true,
-          "desc": "Payer"
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "System Program"
-        },
-        {
-          "name": "sysvarInstructions",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "Instructions sysvar account"
-        },
-        {
-          "name": "splTokenProgram",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "SPL Token Program",
-          "optional": true
-        },
-        {
-          "name": "tokenAccount",
-          "isMut": true,
-          "isSigner": false,
-          "desc": "Owned Token Account of mint",
-          "optional": true
-        },
-        {
-          "name": "authorizationRules",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "Token Authorization Rules account",
-          "optional": true
-        },
-        {
-          "name": "authorizationRulesProgram",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "Token Authorization Rules Program",
-          "optional": true
-        }
-      ],
-      "args": [
-        {
-          "name": "revokeArgs",
-          "type": {
-            "defined": "RevokeArgs"
-          }
-        }
-      ],
+      "defaultOptionalAccounts": true,
       "discriminant": {
         "type": "u8",
         "value": 50
@@ -3440,9 +3450,11 @@
             }
           },
           {
-            "name": "delegate",
+            "name": "delegateState",
             "type": {
-              "option": "publicKey"
+              "option": {
+                "defined": "DelegateState"
+              }
             }
           }
         ]
@@ -3790,51 +3802,9 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "derivedKeySeeds",
+            "name": "payload",
             "type": {
-              "option": {
-                "vec": "bytes"
-              }
-            }
-          },
-          {
-            "name": "leafInfo",
-            "type": {
-              "option": {
-                "defined": "LeafInfo"
-              }
-            }
-          },
-          {
-            "name": "name",
-            "type": "string"
-          }
-        ]
-      }
-    },
-    {
-      "name": "LeafInfo",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "leaf",
-            "type": {
-              "array": [
-                "u8",
-                32
-              ]
-            }
-          },
-          {
-            "name": "proof",
-            "type": {
-              "vec": {
-                "array": [
-                  "u8",
-                  32
-                ]
-              }
+              "defined": "Payload"
             }
           }
         ]
@@ -3892,9 +3862,7 @@
           {
             "name": "tokenStandard",
             "type": {
-              "option": {
-                "defined": "TokenStandard"
-              }
+              "defined": "TokenStandard"
             }
           },
           {
@@ -3948,6 +3916,28 @@
           {
             "name": "ruleSet",
             "type": "publicKey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "DelegateState",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "role",
+            "type": {
+              "defined": "DelegateRole"
+            }
+          },
+          {
+            "name": "delegate",
+            "type": "publicKey"
+          },
+          {
+            "name": "hasData",
+            "type": "bool"
           }
         ]
       }
@@ -4113,6 +4103,69 @@
       }
     },
     {
+      "name": "SeedsVec",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "seeds",
+            "type": {
+              "vec": "bytes"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "LeafInfo",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "leaf",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "proof",
+            "type": {
+              "vec": {
+                "array": [
+                  "u8",
+                  32
+                ]
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Payload",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "map",
+            "type": {
+              "hashMap": [
+                {
+                  "defined": "PayloadKey"
+                },
+                {
+                  "defined": "PayloadType"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
       "name": "Uses",
       "type": {
         "kind": "struct",
@@ -4172,6 +4225,15 @@
                 "type": "u64"
               }
             ]
+          },
+          {
+            "name": "TransferV1",
+            "fields": [
+              {
+                "name": "amount",
+                "type": "u64"
+              }
+            ]
           }
         ]
       }
@@ -4183,6 +4245,9 @@
         "variants": [
           {
             "name": "CollectionV1"
+          },
+          {
+            "name": "TransferV1"
           },
           {
             "name": "SaleV1"
@@ -4202,13 +4267,19 @@
             "name": "Collection"
           },
           {
-            "name": "Sale"
+            "name": "Transfer"
           },
           {
             "name": "Use"
           },
           {
             "name": "Utility"
+          },
+          {
+            "name": "Sale"
+          },
+          {
+            "name": "Update"
           }
         ]
       }
@@ -4255,6 +4326,14 @@
               {
                 "name": "amount",
                 "type": "u64"
+              },
+              {
+                "name": "authorization_data",
+                "type": {
+                  "option": {
+                    "defined": "AuthorizationData"
+                  }
+                }
               }
             ]
           }
@@ -4375,6 +4454,12 @@
                     "defined": "DelegateState"
                   }
                 }
+              },
+              {
+                "name": "authority_type",
+                "type": {
+                  "defined": "AuthorityType"
+                }
               }
             ]
           }
@@ -4388,6 +4473,26 @@
         "variants": [
           {
             "name": "V1"
+          }
+        ]
+      }
+    },
+    {
+      "name": "AuthorityType",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Metadata"
+          },
+          {
+            "name": "Delegate"
+          },
+          {
+            "name": "Holder"
+          },
+          {
+            "name": "Other"
           }
         ]
       }
@@ -4477,20 +4582,6 @@
       }
     },
     {
-      "name": "DelegateState",
-      "type": {
-        "kind": "enum",
-        "variants": [
-          {
-            "name": "Sale",
-            "fields": [
-              "publicKey"
-            ]
-          }
-        ]
-      }
-    },
-    {
       "name": "CollectionDetails",
       "type": {
         "kind": "enum",
@@ -4520,6 +4611,62 @@
             "fields": [
               "publicKey"
             ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "PayloadType",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Pubkey",
+            "fields": [
+              "publicKey"
+            ]
+          },
+          {
+            "name": "Seeds",
+            "fields": [
+              {
+                "defined": "SeedsVec"
+              }
+            ]
+          },
+          {
+            "name": "MerkleProof",
+            "fields": [
+              {
+                "defined": "LeafInfo"
+              }
+            ]
+          },
+          {
+            "name": "Number",
+            "fields": [
+              "u64"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "PayloadKey",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Target"
+          },
+          {
+            "name": "Holder"
+          },
+          {
+            "name": "Authority"
+          },
+          {
+            "name": "Amount"
           }
         ]
       }
@@ -4916,7 +5063,7 @@
     {
       "code": 74,
       "name": "CollectionCannotBeVerifiedInThisInstruction",
-      "msg": "Cannont Verify Collection in this Instruction"
+      "msg": "Collection cannot be verified in this instruction"
     },
     {
       "code": 75,
@@ -5106,7 +5253,7 @@
     {
       "code": 112,
       "name": "CannotUpdateVerifiedCollection",
-      "msg": "Cannot update a verified colleciton in this command"
+      "msg": "Cannot update a verified collection in this command"
     },
     {
       "code": 113,
@@ -5252,6 +5399,11 @@
       "code": 141,
       "name": "DelegateNotFound",
       "msg": "Delegate not found"
+    },
+    {
+      "code": 142,
+      "name": "FeatureNotSupported",
+      "msg": "Feature not supported currently"
     }
   ],
   "metadata": {

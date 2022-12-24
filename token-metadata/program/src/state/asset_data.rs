@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 use solana_program::pubkey::Pubkey;
 
 use super::{Collection, CollectionDetails, Creator, Data, DataV2, TokenStandard, Uses};
+use crate::instruction::DelegateRole;
 
 /// Data representation of an asset.
 #[repr(C)]
@@ -29,7 +30,7 @@ pub struct AssetData {
     /// nonce for easy calculation of editions (if present).
     pub edition_nonce: Option<u8>,
     /// Type of the token.
-    pub token_standard: Option<TokenStandard>,
+    pub token_standard: TokenStandard,
     /// Collection information.
     pub collection: Option<Collection>,
     /// Uses information.
@@ -38,7 +39,7 @@ pub struct AssetData {
     pub collection_details: Option<CollectionDetails>,
     // Programmable configuration for the asset.
     pub programmable_config: Option<ProgrammableConfig>,
-    // Delegate status.
+    // Persistent delegate state.
     pub delegate_state: Option<DelegateState>,
 }
 
@@ -60,7 +61,7 @@ impl AssetData {
             primary_sale_happened: false,
             is_mutable: true,
             edition_nonce: None,
-            token_standard: Some(token_standard),
+            token_standard,
             collection: None,
             uses: None,
             collection_details: None,
@@ -101,10 +102,16 @@ pub struct ProgrammableConfig {
 }
 
 /// Different delegate states for a token. Some actions are
-/// not allowed depending of the degate state.
+/// not allowed depending of the degate state set.
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
-pub enum DelegateState {
-    Transfer(Pubkey),
+pub struct DelegateState {
+    /// The role of the delegate.
+    pub role: DelegateRole,
+    /// Address delegated.
+    pub delegate: Pubkey,
+    /// Indicates whether the delegate has a 'DelegateData' PDA
+    /// or not.
+    pub has_data: bool,
 }

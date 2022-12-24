@@ -1,8 +1,8 @@
 use mpl_token_auth_rules::{
     payload::{Payload, PayloadKey},
-    state::{Operation, Rule, RuleSet},
+    state::{Rule, RuleSet},
 };
-use mpl_token_metadata::processor::AuthorizationData;
+use mpl_token_metadata::{processor::AuthorizationData, state::Operation};
 use rmp_serde::Serializer;
 use serde::Serialize;
 use solana_sdk::{
@@ -47,13 +47,16 @@ pub async fn create_test_ruleset(
     // Create Basic Royalty Enforcement Ruleset.
     let mut basic_royalty_enforcement_rule_set = RuleSet::new(name, payer.pubkey());
     basic_royalty_enforcement_rule_set
-        .add(Operation::Transfer, owned_by_token_metadata)
+        .add(Operation::Transfer.to_string(), owned_by_token_metadata)
         .unwrap();
     basic_royalty_enforcement_rule_set
-        .add(Operation::Delegate, leaf_in_marketplace_tree.clone())
+        .add(
+            Operation::Delegate.to_string(),
+            leaf_in_marketplace_tree.clone(),
+        )
         .unwrap();
     basic_royalty_enforcement_rule_set
-        .add(Operation::SaleTransfer, leaf_in_marketplace_tree)
+        .add(Operation::Sale.to_string(), leaf_in_marketplace_tree)
         .unwrap();
 
     // Serialize the RuleSet using RMP serde.
@@ -64,7 +67,6 @@ pub async fn create_test_ruleset(
 
     // Create a `create` instruction.
     let create_ix = mpl_token_auth_rules::instruction::create(
-        mpl_token_auth_rules::ID,
         payer.pubkey(),
         ruleset_addr,
         serialized_data,

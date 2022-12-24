@@ -6,21 +6,17 @@
  */
 
 import * as beet from '@metaplex-foundation/beet';
-/**
- * @category enums
- * @category generated
- */
-export enum RevokeArgs {
-  CollectionV1,
-  TransferV1,
-  SaleV1,
-}
+import { PayloadKey, payloadKeyBeet } from './PayloadKey';
+import { PayloadType, payloadTypeBeet } from './PayloadType';
+export type Payload = {
+  map: Map<PayloadKey, PayloadType>;
+};
 
 /**
  * @category userTypes
  * @category generated
  */
-export const revokeArgsBeet = beet.fixedScalarEnum(RevokeArgs) as beet.FixedSizeBeet<
-  RevokeArgs,
-  RevokeArgs
->;
+export const payloadBeet = new beet.FixableBeetArgsStruct<Payload>(
+  [['map', beet.map(payloadKeyBeet, payloadTypeBeet)]],
+  'Payload',
+);

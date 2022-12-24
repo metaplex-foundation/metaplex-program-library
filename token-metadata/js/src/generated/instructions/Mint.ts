@@ -45,8 +45,8 @@ export const MintStruct = new beet.FixableBeetArgsStruct<
  * @property [] splTokenProgram SPL Token program
  * @property [] splAtaProgram SPL Associated Token Account program
  * @property [_writable_] masterEdition (optional) Master Edition account
- * @property [] tokenAuthRulesProgram (optional) Token Authorization Rules program
  * @property [] authorizationRules (optional) Token Authorization Rules account
+ * @property [] authRulesProgram (optional) Token Authorization Rules program
  * @category Instructions
  * @category Mint
  * @category generated
@@ -62,8 +62,8 @@ export type MintInstructionAccounts = {
   splTokenProgram: web3.PublicKey;
   splAtaProgram: web3.PublicKey;
   masterEdition?: web3.PublicKey;
-  tokenAuthRulesProgram?: web3.PublicKey;
   authorizationRules?: web3.PublicKey;
+  authRulesProgram?: web3.PublicKey;
 };
 
 export const mintInstructionDiscriminator = 42;
@@ -71,10 +71,8 @@ export const mintInstructionDiscriminator = 42;
 /**
  * Creates a _Mint_ instruction.
  *
- * Optional accounts that are not provided will be omitted from the accounts
- * array passed with the instruction.
- * An optional account that is set cannot follow an optional account that is unset.
- * Otherwise an Error is raised.
+ * Optional accounts that are not provided default to the program ID since
+ * this was indicated in the IDL from which this instruction was generated.
  *
  * @param accounts that will be accessed while the instruction is processed
  * @param args to provide as instruction data to the program
@@ -138,39 +136,22 @@ export function createMintInstruction(
       isWritable: false,
       isSigner: false,
     },
+    {
+      pubkey: accounts.masterEdition ?? programId,
+      isWritable: accounts.masterEdition != null,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.authorizationRules ?? programId,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.authRulesProgram ?? programId,
+      isWritable: false,
+      isSigner: false,
+    },
   ];
-
-  if (accounts.masterEdition != null) {
-    keys.push({
-      pubkey: accounts.masterEdition,
-      isWritable: true,
-      isSigner: false,
-    });
-  }
-  if (accounts.tokenAuthRulesProgram != null) {
-    if (accounts.masterEdition == null) {
-      throw new Error(
-        "When providing 'tokenAuthRulesProgram' then 'accounts.masterEdition' need(s) to be provided as well.",
-      );
-    }
-    keys.push({
-      pubkey: accounts.tokenAuthRulesProgram,
-      isWritable: false,
-      isSigner: false,
-    });
-  }
-  if (accounts.authorizationRules != null) {
-    if (accounts.masterEdition == null || accounts.tokenAuthRulesProgram == null) {
-      throw new Error(
-        "When providing 'authorizationRules' then 'accounts.masterEdition', 'accounts.tokenAuthRulesProgram' need(s) to be provided as well.",
-      );
-    }
-    keys.push({
-      pubkey: accounts.authorizationRules,
-      isWritable: false,
-      isSigner: false,
-    });
-  }
 
   const ix = new web3.TransactionInstruction({
     programId,

@@ -109,11 +109,7 @@ pub fn mint_v1<'a>(
             assert_owned_by(authorization_rules, &mpl_token_auth_rules::id())?;
         };
 
-        assert_valid_authorization(
-            &authorization_data,
-            authorization_rules_info,
-            programmable_config,
-        )?;
+        assert_valid_authorization(authorization_rules_info, programmable_config)?;
         // safe to unwrap since the assert was valid
         // let auth_pda = authorization_rules_info.unwrap();
         let mut auth_data = authorization_data.unwrap();

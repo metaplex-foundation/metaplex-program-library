@@ -1594,7 +1594,7 @@ createErrorFromNameLookup.set(
 );
 
 /**
- * CollectionCannotBeVerifiedInThisInstruction: 'Cannont Verify Collection in this Instruction'
+ * CollectionCannotBeVerifiedInThisInstruction: 'Collection cannot be verified in this instruction'
  *
  * @category Errors
  * @category generated
@@ -1603,7 +1603,7 @@ export class CollectionCannotBeVerifiedInThisInstructionError extends Error {
   readonly code: number = 0x4a;
   readonly name: string = 'CollectionCannotBeVerifiedInThisInstruction';
   constructor() {
-    super('Cannont Verify Collection in this Instruction');
+    super('Collection cannot be verified in this instruction');
     if (typeof Error.captureStackTrace === 'function') {
       Error.captureStackTrace(this, CollectionCannotBeVerifiedInThisInstructionError);
     }
@@ -2417,7 +2417,7 @@ createErrorFromNameLookup.set(
 );
 
 /**
- * CannotUpdateVerifiedCollection: 'Cannot update a verified colleciton in this command'
+ * CannotUpdateVerifiedCollection: 'Cannot update a verified collection in this command'
  *
  * @category Errors
  * @category generated
@@ -2426,7 +2426,7 @@ export class CannotUpdateVerifiedCollectionError extends Error {
   readonly code: number = 0x70;
   readonly name: string = 'CannotUpdateVerifiedCollection';
   constructor() {
-    super('Cannot update a verified colleciton in this command');
+    super('Cannot update a verified collection in this command');
     if (typeof Error.captureStackTrace === 'function') {
       Error.captureStackTrace(this, CannotUpdateVerifiedCollectionError);
     }
@@ -3048,6 +3048,26 @@ export class DelegateNotFoundError extends Error {
 
 createErrorFromCodeLookup.set(0x8d, () => new DelegateNotFoundError());
 createErrorFromNameLookup.set('DelegateNotFound', () => new DelegateNotFoundError());
+
+/**
+ * FeatureNotSupported: 'Feature not supported currently'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class FeatureNotSupportedError extends Error {
+  readonly code: number = 0x8e;
+  readonly name: string = 'FeatureNotSupported';
+  constructor() {
+    super('Feature not supported currently');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, FeatureNotSupportedError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x8e, () => new FeatureNotSupportedError());
+createErrorFromNameLookup.set('FeatureNotSupported', () => new FeatureNotSupportedError());
 
 /**
  * Attempts to resolve a custom program error from the provided error code.

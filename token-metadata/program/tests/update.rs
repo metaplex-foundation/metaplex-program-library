@@ -65,14 +65,20 @@ mod update {
         } = &mut update_args;
         *current_data = Some(data);
 
-        let authority = AuthorityType::UpdateAuthority(update_authority.pubkey());
+        let UpdateArgs::V1 {
+            authority_type: current_authority_type,
+            ..
+        } = &mut update_args;
+        *current_authority_type = AuthorityType::Metadata;
 
         let update_ix = instruction::update(
             id(),
             digital_asset.metadata,
             digital_asset.mint.pubkey(),
             digital_asset.master_edition,
-            authority,
+            update_authority.pubkey(),
+            None,
+            None,
             None,
             None,
             update_args,

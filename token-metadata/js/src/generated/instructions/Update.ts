@@ -40,9 +40,9 @@ export const UpdateStruct = new beet.FixableBeetArgsStruct<
  * @property [] mint Mint account
  * @property [] sysvarInstructions System program
  * @property [_writable_] masterEdition (optional) Master edition account
- * @property [**signer**] updateAuthority (optional) Update authority
- * @property [**signer**] tokenHolder (optional) Token holder
+ * @property [**signer**] authority (optional) Update authority
  * @property [] tokenAccount (optional) Token account
+ * @property [] delegateRecord (optional) Delegate record PDA
  * @property [] authorizationRulesProgram (optional) Token Authorization Rules Program
  * @property [] authorizationRules (optional) Token Authorization Rules account
  * @category Instructions
@@ -55,9 +55,9 @@ export type UpdateInstructionAccounts = {
   systemProgram?: web3.PublicKey;
   sysvarInstructions: web3.PublicKey;
   masterEdition?: web3.PublicKey;
-  updateAuthority?: web3.PublicKey;
-  tokenHolder?: web3.PublicKey;
+  authority?: web3.PublicKey;
   tokenAccount?: web3.PublicKey;
+  delegateRecord?: web3.PublicKey;
   authorizationRulesProgram?: web3.PublicKey;
   authorizationRules?: web3.PublicKey;
 };
@@ -67,10 +67,8 @@ export const updateInstructionDiscriminator = 43;
 /**
  * Creates a _Update_ instruction.
  *
- * Optional accounts that are not provided will be omitted from the accounts
- * array passed with the instruction.
- * An optional account that is set cannot follow an optional account that is unset.
- * Otherwise an Error is raised.
+ * Optional accounts that are not provided default to the program ID since
+ * this was indicated in the IDL from which this instruction was generated.
  *
  * @param accounts that will be accessed while the instruction is processed
  * @param args to provide as instruction data to the program
@@ -109,90 +107,37 @@ export function createUpdateInstruction(
       isWritable: false,
       isSigner: false,
     },
+    {
+      pubkey: accounts.masterEdition ?? programId,
+      isWritable: accounts.masterEdition != null,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.authority ?? programId,
+      isWritable: false,
+      isSigner: accounts.authority != null,
+    },
+    {
+      pubkey: accounts.tokenAccount ?? programId,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.delegateRecord ?? programId,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.authorizationRulesProgram ?? programId,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.authorizationRules ?? programId,
+      isWritable: false,
+      isSigner: false,
+    },
   ];
-
-  if (accounts.masterEdition != null) {
-    keys.push({
-      pubkey: accounts.masterEdition,
-      isWritable: true,
-      isSigner: false,
-    });
-  }
-  if (accounts.updateAuthority != null) {
-    if (accounts.masterEdition == null) {
-      throw new Error(
-        "When providing 'updateAuthority' then 'accounts.masterEdition' need(s) to be provided as well.",
-      );
-    }
-    keys.push({
-      pubkey: accounts.updateAuthority,
-      isWritable: false,
-      isSigner: true,
-    });
-  }
-  if (accounts.tokenHolder != null) {
-    if (accounts.masterEdition == null || accounts.updateAuthority == null) {
-      throw new Error(
-        "When providing 'tokenHolder' then 'accounts.masterEdition', 'accounts.updateAuthority' need(s) to be provided as well.",
-      );
-    }
-    keys.push({
-      pubkey: accounts.tokenHolder,
-      isWritable: false,
-      isSigner: true,
-    });
-  }
-  if (accounts.tokenAccount != null) {
-    if (
-      accounts.masterEdition == null ||
-      accounts.updateAuthority == null ||
-      accounts.tokenHolder == null
-    ) {
-      throw new Error(
-        "When providing 'tokenAccount' then 'accounts.masterEdition', 'accounts.updateAuthority', 'accounts.tokenHolder' need(s) to be provided as well.",
-      );
-    }
-    keys.push({
-      pubkey: accounts.tokenAccount,
-      isWritable: false,
-      isSigner: false,
-    });
-  }
-  if (accounts.authorizationRulesProgram != null) {
-    if (
-      accounts.masterEdition == null ||
-      accounts.updateAuthority == null ||
-      accounts.tokenHolder == null ||
-      accounts.tokenAccount == null
-    ) {
-      throw new Error(
-        "When providing 'authorizationRulesProgram' then 'accounts.masterEdition', 'accounts.updateAuthority', 'accounts.tokenHolder', 'accounts.tokenAccount' need(s) to be provided as well.",
-      );
-    }
-    keys.push({
-      pubkey: accounts.authorizationRulesProgram,
-      isWritable: false,
-      isSigner: false,
-    });
-  }
-  if (accounts.authorizationRules != null) {
-    if (
-      accounts.masterEdition == null ||
-      accounts.updateAuthority == null ||
-      accounts.tokenHolder == null ||
-      accounts.tokenAccount == null ||
-      accounts.authorizationRulesProgram == null
-    ) {
-      throw new Error(
-        "When providing 'authorizationRules' then 'accounts.masterEdition', 'accounts.updateAuthority', 'accounts.tokenHolder', 'accounts.tokenAccount', 'accounts.authorizationRulesProgram' need(s) to be provided as well.",
-      );
-    }
-    keys.push({
-      pubkey: accounts.authorizationRules,
-      isWritable: false,
-      isSigner: false,
-    });
-  }
 
   const ix = new web3.TransactionInstruction({
     programId,

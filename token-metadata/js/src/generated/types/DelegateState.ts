@@ -6,47 +6,24 @@
  */
 
 import * as web3 from '@solana/web3.js';
-import * as beet from '@metaplex-foundation/beet';
 import * as beetSolana from '@metaplex-foundation/beet-solana';
-/**
- * This type is used to derive the {@link DelegateState} type as well as the de/serializer.
- * However don't refer to it in your code but use the {@link DelegateState} type instead.
- *
- * @category userTypes
- * @category enums
- * @category generated
- * @private
- */
-export type DelegateStateRecord = {
-  Sale: { fields: [web3.PublicKey] };
+import * as beet from '@metaplex-foundation/beet';
+import { DelegateRole, delegateRoleBeet } from './DelegateRole';
+export type DelegateState = {
+  role: DelegateRole;
+  delegate: web3.PublicKey;
+  hasData: boolean;
 };
 
 /**
- * Union type respresenting the DelegateState data enum defined in Rust.
- *
- * NOTE: that it includes a `__kind` property which allows to narrow types in
- * switch/if statements.
- * Additionally `isDelegateState*` type guards are exposed below to narrow to a specific variant.
- *
- * @category userTypes
- * @category enums
- * @category generated
- */
-export type DelegateState = beet.DataEnumKeyAsKind<DelegateStateRecord>;
-
-export const isDelegateStateSale = (x: DelegateState): x is DelegateState & { __kind: 'Sale' } =>
-  x.__kind === 'Sale';
-
-/**
  * @category userTypes
  * @category generated
  */
-export const delegateStateBeet = beet.dataEnum<DelegateStateRecord>([
+export const delegateStateBeet = new beet.BeetArgsStruct<DelegateState>(
   [
-    'Sale',
-    new beet.BeetArgsStruct<DelegateStateRecord['Sale']>(
-      [['fields', beet.fixedSizeTuple([beetSolana.publicKey])]],
-      'DelegateStateRecord["Sale"]',
-    ),
+    ['role', delegateRoleBeet],
+    ['delegate', beetSolana.publicKey],
+    ['hasData', beet.bool],
   ],
-]) as beet.FixableBeet<DelegateState>;
+  'DelegateState',
+);

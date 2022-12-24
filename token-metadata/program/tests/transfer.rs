@@ -242,6 +242,8 @@ mod transfer {
             mpl_token_auth_rules::error::RuleSetError::ProgramOwnedCheckFailed
         );
 
+        // println!("err: {:?}", err);
+
         // Create TOE account and try to transfer to it. This should succeed.
         let (escrow_account, _) =
             find_escrow_account(&toe_nft.mint.pubkey(), &EscrowAuthority::TokenOwner);

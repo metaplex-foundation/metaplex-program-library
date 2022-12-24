@@ -8,7 +8,9 @@ pub(crate) mod edition_marker;
 pub(crate) mod escrow;
 pub(crate) mod master_edition;
 pub(crate) mod metadata;
+pub(crate) mod programmable;
 pub(crate) mod reservation;
+pub(crate) mod token_auth_payload;
 pub(crate) mod uses;
 
 use std::io::ErrorKind;
@@ -26,6 +28,7 @@ pub use master_edition::*;
 pub use metadata::*;
 use num_derive::FromPrimitive;
 use num_traits::FromPrimitive;
+pub use programmable::*;
 pub use reservation::*;
 use shank::ShankAccount;
 use solana_program::{

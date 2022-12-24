@@ -61,8 +61,8 @@ pub struct Metadata {
     pub collection_details: Option<CollectionDetails>,
     /// Programmable Config
     pub programmable_config: Option<ProgrammableConfig>,
-    /// Active delegate (for now, only the sale delegate is persisted)
-    pub delegate: Option<Pubkey>,
+    /// Active delegate state (for now, only the sale and transfer delegates are persisted)
+    pub delegate_state: Option<DelegateState>,
 }
 
 impl Metadata {
@@ -73,7 +73,7 @@ impl Metadata {
         Ok(())
     }
 
-    pub fn update_data<'a>(
+    pub(crate) fn update<'a>(
         &mut self,
         args: UpdateArgs,
         update_authority: &AccountInfo<'a>,
@@ -89,6 +89,7 @@ impl Metadata {
             _collection_details,
             _programmable_config,
             _delegate_state,
+            _authority_type,
             _authorization_data,
             new_update_authority,
         ) = match args {
@@ -102,6 +103,7 @@ impl Metadata {
                 collection_details,
                 programmable_config,
                 delegate_state,
+                authority_type,
                 authorization_data,
                 new_update_authority,
             } => (
@@ -114,44 +116,45 @@ impl Metadata {
                 collection_details,
                 programmable_config,
                 delegate_state,
+                authority_type,
                 authorization_data,
                 new_update_authority,
             ),
         };
 
         if let Some(data) = data {
-            if self.is_mutable {
-                assert_data_valid(
-                    &data,
-                    update_authority.key,
-                    self,
-                    false,
-                    update_authority.is_signer,
-                )?;
-                self.data = data;
-
-                // If the user passes in Collection data, only allow updating if it's unverified
-                // or if it exactly matches the existing collection info.
-                // If the user passes in None for the Collection data then only set it if it's unverified.
-                if collection.is_some() {
-                    assert_collection_update_is_valid(false, &self.collection, &collection)?;
-                    self.collection = collection;
-                } else if let Some(current_collection) = self.collection.as_ref() {
-                    // Can't change a verified collection in this command.
-                    if current_collection.verified {
-                        return Err(MetadataError::CannotUpdateVerifiedCollection.into());
-                    }
-                    // If it's unverified, it's ok to set to None.
-                    self.collection = collection;
-                }
-
-                // If already None leave it as None.
-                assert_valid_use(&uses, &self.uses)?;
-                self.uses = uses;
-            } else {
+            if !self.is_mutable {
                 return Err(MetadataError::DataIsImmutable.into());
             }
+
+            assert_data_valid(
+                &data,
+                update_authority.key,
+                self,
+                false,
+                update_authority.is_signer,
+            )?;
+            self.data = data;
         }
+
+        // If the user passes in Collection data, only allow updating if it's unverified
+        // or if it exactly matches the existing collection info.
+        // If the user passes in None for the Collection data then only set it if it's unverified.
+        if collection.is_some() {
+            assert_collection_update_is_valid(false, &self.collection, &collection)?;
+            self.collection = collection;
+        } else if let Some(current_collection) = self.collection.as_ref() {
+            // Can't change a verified collection in this command.
+            if current_collection.verified {
+                return Err(MetadataError::CannotUpdateVerifiedCollection.into());
+            }
+            // If it's unverified, it's ok to set to None.
+            self.collection = collection;
+        }
+
+        // If already None leave it as None.
+        assert_valid_use(&uses, &self.uses)?;
+        self.uses = uses;
 
         if let Some(val) = new_update_authority {
             self.update_authority = val;
@@ -198,12 +201,7 @@ impl Metadata {
         asset_data.uses = self.uses;
         asset_data.collection_details = self.collection_details;
         asset_data.programmable_config = self.programmable_config;
-        let delegate_state = if let Some(delegate) = self.delegate {
-            Some(DelegateState::Transfer(delegate))
-        } else {
-            None
-        };
-        asset_data.delegate_state = delegate_state;
+        asset_data.delegate_state = self.delegate_state;
 
         asset_data
     }
@@ -224,7 +222,7 @@ impl Default for Metadata {
             uses: None,
             collection_details: None,
             programmable_config: None,
-            delegate: None,
+            delegate_state: None,
         }
     }
 }

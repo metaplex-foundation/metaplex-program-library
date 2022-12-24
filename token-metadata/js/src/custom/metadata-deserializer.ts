@@ -8,7 +8,7 @@ import { dataBeet } from '../generated/types/Data';
 import { keyBeet } from '../generated/types/Key';
 import { tokenStandardBeet } from '../generated/types/TokenStandard';
 import { usesBeet } from '../generated/types/Uses';
-import { publicKey } from '@metaplex-foundation/beet-solana';
+import { delegateStateBeet } from 'src/generated';
 
 const NONE_BYTE_SIZE = beet.coptionNone('').byteSize;
 
@@ -97,11 +97,11 @@ export function deserialize(buf: Buffer, offset = 0): [Metadata, number] {
   cursor += programmableConfigDelta;
 
   // programmable_config
-  const [delegate, delegateDelta, delegateCorrupted] =
+  const [delegateState, delegateStateDelta, delegateStateCorrupted] =
     tokenCorrupted || collectionCorrupted || usesCorrupted
       ? [null, NONE_BYTE_SIZE, true]
-      : tryReadOption(beet.coption(publicKey), buf, cursor);
-  cursor += delegateDelta;
+      : tryReadOption(beet.coption(delegateStateBeet), buf, cursor);
+  cursor += delegateStateDelta;
 
   const anyCorrupted =
     tokenCorrupted ||
@@ -109,7 +109,7 @@ export function deserialize(buf: Buffer, offset = 0): [Metadata, number] {
     usesCorrupted ||
     collectionDetailsCorrupted ||
     programmableConfigCorrupted ||
-    delegateCorrupted;
+    delegateStateCorrupted;
 
   const args = {
     key,
@@ -124,7 +124,7 @@ export function deserialize(buf: Buffer, offset = 0): [Metadata, number] {
     uses: anyCorrupted ? null : uses,
     collectionDetails: anyCorrupted ? null : collectionDetails,
     programmableConfig: anyCorrupted ? null : programmableConfig,
-    delegate: anyCorrupted ? null : delegate,
+    delegateState: anyCorrupted ? null : delegateState,
   };
 
   return [Metadata.fromArgs(args), cursor];

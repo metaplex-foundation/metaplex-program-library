@@ -261,43 +261,43 @@ pub fn process_instruction<'a>(
 
         //--- new instructions
         MetadataInstruction::Create(args) => {
-            msg!("Instruction: Create");
+            msg!("Instruction: Token Metadata Create");
             metadata::create(program_id, accounts, args)
         }
         MetadataInstruction::Mint(args) => {
-            msg!("Instruction: Mint");
+            msg!("Instruction: Token Metadata Mint");
             metadata::mint(program_id, accounts, args)
         }
         MetadataInstruction::Update(args) => {
-            msg!("Instruction: Update");
+            msg!("Instruction: Token Metadata Update");
             metadata::update(program_id, accounts, args)
         }
         MetadataInstruction::Burn(args) => {
-            msg!("Instruction: Burn");
+            msg!("Instruction: Token Metadata Burn");
             burn::burn(program_id, accounts, args)
         }
         MetadataInstruction::UseAsset(args) => {
-            msg!("Instruction: UseAsset");
+            msg!("Instruction: Token Metadata UseAsset");
             uses::use_asset(program_id, accounts, args)
         }
         MetadataInstruction::Transfer(args) => {
-            msg!("Instruction: Transfer");
+            msg!("Instruction: Token Metadata Transfer");
             metadata::transfer(program_id, accounts, args)
         }
         MetadataInstruction::Verify(args) => {
-            msg!("Instruction: Verify");
+            msg!("Instruction: Token Metadata Verify");
             collection::verify(program_id, accounts, args)
         }
         MetadataInstruction::Delegate(args) => {
-            msg!("Instruction: Delegate");
+            msg!("Instruction: Token Metadata Delegate");
             delegate::delegate(program_id, accounts, args)
         }
         MetadataInstruction::Migrate(args) => {
-            msg!("Instruction: Migrate");
+            msg!("Instruction: Token Metadata Migrate");
             metadata::migrate(program_id, accounts, args)
         }
         MetadataInstruction::Revoke(args) => {
-            msg!("Instruction: Revoke");
+            msg!("Instruction: Token Metadata Revoke");
             delegate::revoke(program_id, accounts, args)
         }
     }

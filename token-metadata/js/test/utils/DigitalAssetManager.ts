@@ -5,6 +5,7 @@ import {
   Metadata,
   ProgrammableConfig,
   TokenStandard,
+  AuthorizationData,
 } from 'src/generated';
 import { InitTransactions } from '../setup';
 import test from 'tape';
@@ -23,13 +24,21 @@ export class DigitalAssetManager {
     this.masterEdition = masterEdition;
   }
 
+  emptyAuthorizationData(): AuthorizationData {
+    return {
+      payload: {
+        map: new Map(),
+      },
+    };
+  }
+
   async getAssetData(connection: Connection): Promise<AssetData> {
     const md = await Metadata.fromAccountAddress(connection, this.metadata);
 
     let delegateState: DelegateState | null = null;
     if (md.delegate != null) {
       delegateState = {
-        __kind: 'Sale',
+        __kind: 'Transfer',
         fields: [md.delegate],
       };
     }
@@ -56,6 +65,7 @@ export class DigitalAssetManager {
 
 export async function createDefaultAsset(
   t: test.Test,
+  connection: Connection,
   API: InitTransactions,
   handler: PayerTransactionHandler,
   payer: Keypair,
@@ -106,6 +116,7 @@ export async function createDefaultAsset(
 
 export async function createAndMintDefaultAsset(
   t: test.Test,
+  connection: Connection,
   API: InitTransactions,
   handler: PayerTransactionHandler,
   payer: Keypair,
@@ -115,6 +126,7 @@ export async function createAndMintDefaultAsset(
 ): Promise<DigitalAssetManager> {
   const daManager = await createDefaultAsset(
     t,
+    connection,
     API,
     handler,
     payer,
@@ -125,10 +137,12 @@ export async function createAndMintDefaultAsset(
 
   const { tx: mintTx, token } = await API.mint(
     t,
+    connection,
     payer,
     mint,
     metadata,
     masterEdition,
+    daManager.emptyAuthorizationData(),
     amount,
     handler,
   );

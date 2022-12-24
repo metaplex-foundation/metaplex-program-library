@@ -10,17 +10,18 @@ import * as beet from '@metaplex-foundation/beet';
  * @category enums
  * @category generated
  */
-export enum RevokeArgs {
-  CollectionV1,
-  TransferV1,
-  SaleV1,
+export enum AuthorityType {
+  Metadata,
+  Delegate,
+  Holder,
+  Other,
 }
 
 /**
  * @category userTypes
  * @category generated
  */
-export const revokeArgsBeet = beet.fixedScalarEnum(RevokeArgs) as beet.FixedSizeBeet<
-  RevokeArgs,
-  RevokeArgs
+export const authorityTypeBeet = beet.fixedScalarEnum(AuthorityType) as beet.FixedSizeBeet<
+  AuthorityType,
+  AuthorityType
 >;

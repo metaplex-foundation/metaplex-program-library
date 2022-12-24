@@ -30,11 +30,32 @@ import {
   TokenStandard,
   TransferInstructionAccounts,
   TransferInstructionArgs,
+  AuthorizationData,
+  Payload,
+  SignMetadataInstructionAccounts,
+  VerifyCollectionInstructionAccounts,
+  createVerifyCollectionInstruction,
+  createSignMetadataInstruction,
+  Metadata,
+  DelegateInstructionAccounts,
+  DelegateInstructionArgs,
+  DelegateArgs,
+  createDelegateInstruction,
+  AuthorityType,
+  RevokeInstructionAccounts,
+  RevokeInstructionArgs,
+  createRevokeInstruction,
+  RevokeArgs,
 } from '../../src/generated';
 import { Test } from 'tape';
 import { amman } from '.';
-import { UpdateTestData } from 'test/utils/UpdateTestData';
-
+import { UpdateTestData } from '../utils/UpdateTestData';
+import {
+  CreateInstructionAccounts as CreateRuleSetInstructionAccounts,
+  CreateInstructionArgs as CreateRuleSetInstructionArgs,
+  createCreateInstruction as createCreateRuleSetInstruction,
+  PROGRAM_ID as TOKEN_AUTH_RULES_ID,
+} from '@metaplex-foundation/mpl-token-auth-rules';
 export class InitTransactions {
   readonly getKeypair: LoadOrGenKeypair | GenLabeledKeypair;
 
@@ -88,6 +109,9 @@ export class InitTransactions {
       splTokenProgram: splToken.TOKEN_PROGRAM_ID,
       sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
       updateAuthority: payer.publicKey,
+      authorizationRules: assetData.programmableConfig
+        ? assetData.programmableConfig.ruleSet
+        : undefined,
     };
 
     const args: CreateInstructionArgs = {
@@ -119,11 +143,11 @@ export class InitTransactions {
       );
       amman.addr.addLabel('Master Edition Account', masterEdition);
 
-      createIx.keys.push({
+      createIx.keys[8] = {
         pubkey: masterEdition,
         isSigner: false,
         isWritable: true,
-      });
+      };
     }
 
     // this test always initializes the mint, we we need to set the
@@ -147,10 +171,12 @@ export class InitTransactions {
 
   async mint(
     t: Test,
+    connection: Connection,
     payer: Keypair,
     mint: PublicKey,
     metadata: PublicKey,
     masterEdition: PublicKey,
+    authorizationData: AuthorizationData,
     amount: number,
     handler: PayerTransactionHandler,
   ): Promise<{ tx: ConfirmedTransactionAssertablePromise; token: PublicKey }> {
@@ -160,6 +186,9 @@ export class InitTransactions {
       splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
     );
     amman.addr.addLabel('Token Account', token);
+
+    const metadataAccount = await Metadata.fromAccountAddress(connection, metadata);
+    const authConfig = metadataAccount.programmableConfig;
 
     const mintAcccounts: MintInstructionAccounts = {
       token,
@@ -171,12 +200,25 @@ export class InitTransactions {
       splAtaProgram: splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
       splTokenProgram: splToken.TOKEN_PROGRAM_ID,
       masterEdition,
+      authorizationRules: authConfig ? authConfig.ruleSet : null,
+      authRulesProgram: TOKEN_AUTH_RULES_ID,
     };
+
+    const payload: Payload = {
+      map: new Map(),
+    };
+
+    if (!authorizationData) {
+      authorizationData = {
+        payload,
+      };
+    }
 
     const mintArgs: MintInstructionArgs = {
       mintArgs: {
         __kind: 'V1',
         amount,
+        authorizationData,
       },
     };
 
@@ -200,6 +242,7 @@ export class InitTransactions {
     masterEdition: PublicKey,
     destination: PublicKey,
     destinationAta: PublicKey,
+    authorizationRules: PublicKey,
     amount: number,
     handler: PayerTransactionHandler,
   ): Promise<{ tx: ConfirmedTransactionAssertablePromise }> {
@@ -225,6 +268,8 @@ export class InitTransactions {
       splAtaProgram: splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
       systemProgram: SystemProgram.programId,
       sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
+      authorizationRules,
+      authorizationRulesProgram: TOKEN_AUTH_RULES_ID,
     };
 
     const transferArgs: TransferInstructionArgs = {
@@ -246,23 +291,35 @@ export class InitTransactions {
 
   async update(
     t: Test,
-    payer: Keypair,
+    handler: PayerTransactionHandler,
     mint: PublicKey,
     metadata: PublicKey,
     masterEdition: PublicKey,
+    authority: Keypair,
+    authorityType: AuthorityType = AuthorityType.Metadata,
     updateTestData: UpdateTestData,
-    handler: PayerTransactionHandler,
+    delegateRecord?: PublicKey | null,
+    tokenAccount?: PublicKey | null,
+    ruleSetPda?: PublicKey | null,
+    authorizationData?: AuthorizationData | null,
   ): Promise<{ tx: ConfirmedTransactionAssertablePromise }> {
     amman.addr.addLabel('Mint Account', mint);
     amman.addr.addLabel('Metadata Account', metadata);
-    amman.addr.addLabel('Master Edition Account', masterEdition);
+    if (masterEdition != null) {
+      amman.addr.addLabel('Master Edition Account', masterEdition);
+    }
 
     const updateAcccounts: UpdateInstructionAccounts = {
       metadata,
       mint,
+      systemProgram: SystemProgram.programId,
       sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
       masterEdition,
-      updateAuthority: payer.publicKey,
+      authority: authority.publicKey,
+      tokenAccount,
+      delegateRecord,
+      authorizationRulesProgram: ruleSetPda ? TOKEN_AUTH_RULES_ID : PROGRAM_ID,
+      authorizationRules: ruleSetPda,
     };
 
     const updateArgs: UpdateInstructionArgs = {
@@ -278,7 +335,8 @@ export class InitTransactions {
         collectionDetails: updateTestData.collectionDetails,
         programmableConfig: updateTestData.programmableConfig,
         delegateState: updateTestData.delegateState,
-        authorizationData: updateTestData.authorizationData,
+        authorizationData,
+        authorityType,
       },
     };
 
@@ -287,7 +345,183 @@ export class InitTransactions {
     const tx = new Transaction().add(updateIx);
 
     return {
-      tx: handler.sendAndConfirmTransaction(tx, [payer], 'tx: Update'),
+      tx: handler.sendAndConfirmTransaction(tx, [authority], 'tx: Update'),
+    };
+  }
+
+  async verifyCollection(
+    t: Test,
+    payer: Keypair,
+    metadata: PublicKey,
+    collectionMint: PublicKey,
+    collectionMetadata: PublicKey,
+    collectionMasterEdition: PublicKey,
+    collectionAuthority: Keypair,
+    handler: PayerTransactionHandler,
+  ): Promise<{ tx: ConfirmedTransactionAssertablePromise }> {
+    amman.addr.addLabel('Metadata Account', metadata);
+    amman.addr.addLabel('Collection Mint Account', collectionMint);
+    amman.addr.addLabel('Collection Metadata Account', collectionMetadata);
+    amman.addr.addLabel('Collection Master Edition Account', collectionMasterEdition);
+
+    const verifyCollectionAcccounts: VerifyCollectionInstructionAccounts = {
+      metadata,
+      collectionAuthority: collectionAuthority.publicKey,
+      collectionMint,
+      collection: collectionMetadata,
+      collectionMasterEditionAccount: collectionMasterEdition,
+      payer: payer.publicKey,
+    };
+
+    const verifyInstruction = createVerifyCollectionInstruction(verifyCollectionAcccounts);
+    const tx = new Transaction().add(verifyInstruction);
+
+    return {
+      tx: handler.sendAndConfirmTransaction(
+        tx,
+        [payer, collectionAuthority],
+        'tx: Verify Collection',
+      ),
+    };
+  }
+  async signMetadata(
+    t: Test,
+    creator: Keypair,
+    metadata: PublicKey,
+    handler: PayerTransactionHandler,
+  ): Promise<{ tx: ConfirmedTransactionAssertablePromise }> {
+    amman.addr.addLabel('Metadata Account', metadata);
+
+    const signMetadataAcccounts: SignMetadataInstructionAccounts = {
+      metadata,
+      creator: creator.publicKey,
+    };
+
+    const signMetadataInstruction = createSignMetadataInstruction(signMetadataAcccounts);
+    const tx = new Transaction().add(signMetadataInstruction);
+
+    return {
+      tx: handler.sendAndConfirmTransaction(tx, [creator], 'tx: Sign Metadata'),
+    };
+  }
+
+  async createRuleSet(
+    t: Test,
+    payer: Keypair,
+    ruleSetPda: PublicKey,
+    serializedRuleSet: Uint8Array,
+    handler: PayerTransactionHandler,
+  ): Promise<{ tx: ConfirmedTransactionAssertablePromise }> {
+    amman.addr.addLabel('Payer', payer.publicKey);
+
+    const createRuleSetAccounts: CreateRuleSetInstructionAccounts = {
+      ruleSetPda,
+      payer: payer.publicKey,
+    };
+
+    const createRuleSetArgs: CreateRuleSetInstructionArgs = {
+      createArgs: {
+        serializedRuleSet,
+      },
+    };
+
+    const createRuleSetInstruction = createCreateRuleSetInstruction(
+      createRuleSetAccounts,
+      createRuleSetArgs,
+    );
+    const tx = new Transaction().add(createRuleSetInstruction);
+
+    return {
+      tx: handler.sendAndConfirmTransaction(tx, [payer], 'tx: Create Rule Set'),
+    };
+  }
+
+  async delegate(
+    t: Test,
+    delegateRecord: PublicKey,
+    delegate: PublicKey,
+    mint: PublicKey,
+    metadata: PublicKey,
+    masterEdition: PublicKey,
+    authority: PublicKey,
+    payer: Keypair,
+    args: DelegateArgs,
+    handler: PayerTransactionHandler,
+    token: PublicKey | null = null,
+    ruleSetPda: PublicKey | null = null,
+    authorizationData: AuthorizationData | null = null,
+  ): Promise<{ tx: ConfirmedTransactionAssertablePromise }> {
+    const delegateAcccounts: DelegateInstructionAccounts = {
+      delegate: delegateRecord,
+      delegateOwner: delegate,
+      mint,
+      metadata,
+      masterEdition,
+      authority: payer.publicKey,
+      payer: payer.publicKey,
+      sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
+      splTokenProgram: splToken.TOKEN_PROGRAM_ID,
+      tokenAccount: token,
+      authorizationRules: ruleSetPda,
+    };
+
+    const mintArgs: DelegateInstructionArgs = {
+      delegateArgs: args,
+    };
+
+    const mintIx = createDelegateInstruction(delegateAcccounts, mintArgs);
+
+    // creates the transaction
+
+    const tx = new Transaction().add(mintIx);
+
+    return {
+      tx: handler.sendAndConfirmTransaction(tx, [payer], 'tx: Delegate'),
+    };
+  }
+
+  async revoke(
+    t: Test,
+    delegateRecord: PublicKey,
+    delegate: PublicKey,
+    mint: PublicKey,
+    metadata: PublicKey,
+    masterEdition: PublicKey,
+    authority: PublicKey,
+    payer: Keypair,
+    args: RevokeArgs,
+    handler: PayerTransactionHandler,
+    token: PublicKey | null = null,
+    ruleSetPda: PublicKey | null = null,
+    authorizationData: AuthorizationData | null = null,
+  ): Promise<{ tx: ConfirmedTransactionAssertablePromise; delegate: PublicKey }> {
+    const revokeAcccounts: RevokeInstructionAccounts = {
+      delegateRecord: delegateRecord,
+      delegate,
+      mint,
+      metadata,
+      masterEdition,
+      authority: payer.publicKey,
+      payer: payer.publicKey,
+      sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
+      splTokenProgram: splToken.TOKEN_PROGRAM_ID,
+      tokenAccount: token,
+      authorizationRules: ruleSetPda,
+    };
+
+    const revokeArgs: RevokeInstructionArgs = {
+      revokeArgs: args,
+    };
+
+    const mintIx = createRevokeInstruction(revokeAcccounts, revokeArgs);
+
+    // creates the transaction
+
+    const tx = new Transaction().add(mintIx);
+
+    return {
+      tx: handler.sendAndConfirmTransaction(tx, [payer], 'tx: Revoke'),
+      delegate,
     };
   }
 }

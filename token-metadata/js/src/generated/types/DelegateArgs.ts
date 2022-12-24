@@ -18,6 +18,7 @@ import * as beet from '@metaplex-foundation/beet';
 export type DelegateArgsRecord = {
   CollectionV1: void /* scalar variant */;
   SaleV1: { amount: beet.bignum };
+  TransferV1: { amount: beet.bignum };
 };
 
 /**
@@ -38,6 +39,9 @@ export const isDelegateArgsCollectionV1 = (
 ): x is DelegateArgs & { __kind: 'CollectionV1' } => x.__kind === 'CollectionV1';
 export const isDelegateArgsSaleV1 = (x: DelegateArgs): x is DelegateArgs & { __kind: 'SaleV1' } =>
   x.__kind === 'SaleV1';
+export const isDelegateArgsTransferV1 = (
+  x: DelegateArgs,
+): x is DelegateArgs & { __kind: 'TransferV1' } => x.__kind === 'TransferV1';
 
 /**
  * @category userTypes
@@ -53,4 +57,12 @@ export const delegateArgsBeet = beet.dataEnum<DelegateArgsRecord>([
       'DelegateArgsRecord["SaleV1"]',
     ),
   ],
-]) as beet.FixableBeet<DelegateArgs>;
+
+  [
+    'TransferV1',
+    new beet.BeetArgsStruct<DelegateArgsRecord['TransferV1']>(
+      [['amount', beet.u64]],
+      'DelegateArgsRecord["TransferV1"]',
+    ),
+  ],
+]) as beet.FixableBeet<DelegateArgs, DelegateArgs>;

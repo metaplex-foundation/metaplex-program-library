@@ -16,6 +16,7 @@ import { Uses, usesBeet } from './Uses';
 import { CollectionDetails, collectionDetailsBeet } from './CollectionDetails';
 import { ProgrammableConfig, programmableConfigBeet } from './ProgrammableConfig';
 import { DelegateState, delegateStateBeet } from './DelegateState';
+import { AuthorityType, authorityTypeBeet } from './AuthorityType';
 /**
  * This type is used to derive the {@link UpdateArgs} type as well as the de/serializer.
  * However don't refer to it in your code but use the {@link UpdateArgs} type instead.
@@ -38,6 +39,7 @@ export type UpdateArgsRecord = {
     collectionDetails: beet.COption<CollectionDetails>;
     programmableConfig: beet.COption<ProgrammableConfig>;
     delegateState: beet.COption<DelegateState>;
+    authorityType: AuthorityType;
   };
 };
 
@@ -77,8 +79,9 @@ export const updateArgsBeet = beet.dataEnum<UpdateArgsRecord>([
         ['collectionDetails', beet.coption(collectionDetailsBeet)],
         ['programmableConfig', beet.coption(programmableConfigBeet)],
         ['delegateState', beet.coption(delegateStateBeet)],
+        ['authorityType', authorityTypeBeet],
       ],
       'UpdateArgsRecord["V1"]',
     ),
   ],
-]) as beet.FixableBeet<UpdateArgs>;
+]) as beet.FixableBeet<UpdateArgs, UpdateArgs>;

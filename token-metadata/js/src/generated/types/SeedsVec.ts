@@ -6,21 +6,15 @@
  */
 
 import * as beet from '@metaplex-foundation/beet';
-/**
- * @category enums
- * @category generated
- */
-export enum RevokeArgs {
-  CollectionV1,
-  TransferV1,
-  SaleV1,
-}
+export type SeedsVec = {
+  seeds: Uint8Array[];
+};
 
 /**
  * @category userTypes
  * @category generated
  */
-export const revokeArgsBeet = beet.fixedScalarEnum(RevokeArgs) as beet.FixedSizeBeet<
-  RevokeArgs,
-  RevokeArgs
->;
+export const seedsVecBeet = new beet.FixableBeetArgsStruct<SeedsVec>(
+  [['seeds', beet.array(beet.bytes)]],
+  'SeedsVec',
+);

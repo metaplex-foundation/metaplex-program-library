@@ -44,6 +44,8 @@
     "@metaplex-foundation/beet": "^0.7.1",
     "@metaplex-foundation/beet-solana": "^0.4.0",
     "@metaplex-foundation/cusper": "^0.0.2",
+    "@metaplex-foundation/mpl-token-auth-rules": "^0.1.6",
+    "@msgpack/msgpack": "^2.8.0",
     "@solana/spl-token": "^0.3.6",
     "@solana/web3.js": "^1.66.2",
     "bn.js": "^5.2.0",
@@ -52,7 +54,7 @@
   "devDependencies": {
     "@metaplex-foundation/amman": "^0.12.0",
     "@metaplex-foundation/amman-client": "^0.2.2",
-    "@metaplex-foundation/solita": "^0.19.2",
+    "@metaplex-foundation/solita": "^0.19.3",
     "@types/bn.js": "^5.1.1",
     "@types/debug": "^4.1.7",
     "@types/tape": "^4.13.2",

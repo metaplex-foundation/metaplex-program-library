@@ -79,10 +79,10 @@ fn create_v1(program_id: &Pubkey, ctx: Context<Create>, args: CreateArgs) -> Pro
         let decimals = match asset_data.token_standard {
             // for NonFungible variants, we ignore the argument and
             // always use 0 decimals
-            Some(TokenStandard::NonFungible) | Some(TokenStandard::ProgrammableNonFungible) => 0,
+            TokenStandard::NonFungible | TokenStandard::ProgrammableNonFungible => 0,
             // for Fungile variants, we either use the specified decimals or the default
             // DECIMALS from spl-token
-            Some(TokenStandard::FungibleAsset) | Some(TokenStandard::Fungible) => match decimals {
+            TokenStandard::FungibleAsset | TokenStandard::Fungible => match decimals {
                 Some(decimals) => decimals,
                 // if decimals not provided, use the default
                 None => DECIMALS,
@@ -111,7 +111,7 @@ fn create_v1(program_id: &Pubkey, ctx: Context<Create>, args: CreateArgs) -> Pro
         // NonFungible asset must have decimals = 0 and supply no greater than 1
         if matches!(
             asset_data.token_standard,
-            Some(TokenStandard::NonFungible) | Some(TokenStandard::ProgrammableNonFungible)
+            TokenStandard::NonFungible | TokenStandard::ProgrammableNonFungible
         ) && (mint.decimals > 0 || mint.supply > 1)
         {
             return Err(MetadataError::InvalidMintForTokenStandard.into());
@@ -142,7 +142,7 @@ fn create_v1(program_id: &Pubkey, ctx: Context<Create>, args: CreateArgs) -> Pro
 
     if matches!(
         asset_data.token_standard,
-        Some(TokenStandard::NonFungible) | Some(TokenStandard::ProgrammableNonFungible)
+        TokenStandard::NonFungible | TokenStandard::ProgrammableNonFungible
     ) {
         if let Some(master_edition) = ctx.accounts.master_edition_info {
             create_master_edition(
@@ -163,13 +163,13 @@ fn create_v1(program_id: &Pubkey, ctx: Context<Create>, args: CreateArgs) -> Pro
     }
 
     let mut metadata = Metadata::from_account_info(ctx.accounts.metadata_info)?;
-    metadata.token_standard = asset_data.token_standard;
+    metadata.token_standard = Some(asset_data.token_standard);
 
     // sets the programmable config (if present) for programmable assets
 
     if matches!(
         asset_data.token_standard,
-        Some(TokenStandard::ProgrammableNonFungible)
+        TokenStandard::ProgrammableNonFungible
     ) {
         if let Some(config) = &asset_data.programmable_config {
             if let Some(authorization_rules) = ctx.accounts.authorization_rules_info {

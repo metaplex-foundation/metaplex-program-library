@@ -1,15 +1,8 @@
-use mpl_token_auth_rules::{
-    payload::{PayloadKey, PayloadType},
-    state::Operation,
-};
-use mpl_utils::{assert_signer, cmp_pubkeys, token::TokenTransferParams};
+use mpl_token_auth_rules::payload::{PayloadKey, PayloadType};
+use mpl_utils::{assert_signer, token::TokenTransferParams};
 use solana_program::{
-    account_info::{next_account_info, AccountInfo},
-    entrypoint::ProgramResult,
-    msg,
-    program_error::ProgramError,
-    pubkey::Pubkey,
-    sysvar,
+    account_info::AccountInfo, entrypoint::ProgramResult, msg, program_error::ProgramError,
+    pubkey::Pubkey, sysvar,
 };
 
 use crate::{
@@ -19,11 +12,12 @@ use crate::{
     },
     error::MetadataError,
     instruction::TransferArgs,
-    pda::find_master_edition_account,
-    processor::AuthorizationData,
-    state::{Metadata, TokenMetadataAccount, TokenStandard},
+    processor::{try_get_account_info, try_get_optional_account_info, AuthorizationData},
+    state::{Metadata, Operation, TokenMetadataAccount, TokenStandard},
     utils::{freeze, thaw, validate},
 };
+
+const EXPECTED_ACCOUNTS_LEN: usize = 13;
 
 pub fn transfer<'a>(
     program_id: &Pubkey,
@@ -45,14 +39,14 @@ fn transfer_v1<'a>(
         token_account_info,
         metadata_info,
         mint_info,
-        edition_info_opt,
+        edition_opt_info,
         destination_owner_info,
         destination_token_account_info,
         spl_token_program_info,
         spl_associated_token_program_info,
         system_program_info,
         sysvar_instructions_info,
-        authorization_rules_info_opt,
+        authorization_rules_opt_info,
     } = args.get_accounts(accounts)?;
     //** Account Validation **/
     msg!("Account Validation");
@@ -65,10 +59,10 @@ fn transfer_v1<'a>(
     assert_owned_by(metadata_info, program_id)?;
     assert_owned_by(mint_info, &spl_token::ID)?;
 
-    if let Some(edition) = edition_info_opt {
+    if let Some(edition) = edition_opt_info {
         assert_owned_by(edition, program_id)?;
     }
-    if let Some(authorization_rules) = authorization_rules_info_opt {
+    if let Some(authorization_rules) = authorization_rules_opt_info {
         assert_owned_by(authorization_rules, &mpl_token_auth_rules::ID)?;
     }
 
@@ -105,13 +99,18 @@ fn transfer_v1<'a>(
     .is_ok();
 
     msg!("Must be Owner or Delegate.");
-    if let Some(delegate) = metadata.delegate {
-        if !currently_holding && owner_info.key != &delegate {
+    // Use this for the payload operation in refactor.
+    let operation = if let Some(delegate_state) = metadata.delegate_state {
+        if !currently_holding && owner_info.key != &delegate_state.delegate {
             return Err(MetadataError::InvalidOwner.into());
         }
-    } else if !currently_holding {
-        return Err(MetadataError::InvalidOwner.into());
-    }
+        Operation::Sale
+    } else {
+        if !currently_holding {
+            return Err(MetadataError::InvalidOwner.into());
+        }
+        Operation::Transfer
+    };
 
     if metadata.token_standard.is_none() {
         return Err(MetadataError::InvalidTokenStandard.into());
@@ -127,15 +126,11 @@ fn transfer_v1<'a>(
                 let authorization_data = args.get_auth_data();
 
                 msg!("asserting valid authorization");
-                assert_valid_authorization(
-                    &authorization_data,
-                    authorization_rules_info_opt,
-                    config,
-                )?;
+                assert_valid_authorization(authorization_rules_opt_info, config)?;
 
                 // We can safely unwrap here because they were all checked for existence
                 // in the assertion above.
-                let auth_pda = authorization_rules_info_opt.unwrap();
+                let auth_pda = authorization_rules_opt_info.unwrap();
                 let mut auth_data = authorization_data.unwrap();
 
                 // Insert auth rules for Transfer
@@ -147,22 +142,16 @@ fn transfer_v1<'a>(
                     PayloadType::Pubkey(*destination_owner_info.key),
                 );
 
-                // This panics if the CPI into the auth rules program fails.
-                validate(
-                    owner_info,
-                    auth_pda,
-                    Operation::Transfer,
-                    destination_owner_info,
-                    &auth_data,
-                )?;
+                // This panics if the CPI into the auth rules program fails, so unwrapping is ok.
+                validate(auth_pda, operation, destination_owner_info, &auth_data)?;
             }
 
             // We need the edition account regardless of if there's a rule set,
             // because we need to thaw the token account.
-            if edition_info_opt.is_none() {
+            if edition_opt_info.is_none() {
                 return Err(MetadataError::MissingEditionAccount.into());
             }
-            let master_edition_info = edition_info_opt.unwrap();
+            let master_edition_info = edition_opt_info.unwrap();
 
             thaw(
                 mint_info,
@@ -222,14 +211,14 @@ enum TransferAccounts<'a> {
         token_account_info: &'a AccountInfo<'a>,
         metadata_info: &'a AccountInfo<'a>,
         mint_info: &'a AccountInfo<'a>,
-        edition_info_opt: Option<&'a AccountInfo<'a>>,
+        edition_opt_info: Option<&'a AccountInfo<'a>>,
         destination_owner_info: &'a AccountInfo<'a>,
         destination_token_account_info: &'a AccountInfo<'a>,
         spl_token_program_info: &'a AccountInfo<'a>,
         spl_associated_token_program_info: &'a AccountInfo<'a>,
         system_program_info: &'a AccountInfo<'a>,
         sysvar_instructions_info: &'a AccountInfo<'a>,
-        authorization_rules_info_opt: Option<&'a AccountInfo<'a>>,
+        authorization_rules_opt_info: Option<&'a AccountInfo<'a>>,
     },
 }
 
@@ -238,53 +227,40 @@ impl TransferArgs {
         &self,
         accounts: &'a [AccountInfo<'a>],
     ) -> Result<TransferAccounts<'a>, ProgramError> {
-        let account_info_iter = &mut accounts.iter().peekable();
+        // validates that we got the correct number of accounts
+        if accounts.len() < EXPECTED_ACCOUNTS_LEN {
+            return Err(ProgramError::NotEnoughAccountKeys);
+        }
 
         match self {
             TransferArgs::V1 { .. } => {
-                let owner_info = next_account_info(account_info_iter)?;
-                let token_account_info = next_account_info(account_info_iter)?;
-                let metadata_info = next_account_info(account_info_iter)?;
-                let mint_info = next_account_info(account_info_iter)?;
-
-                let (edition_pda, _) = find_master_edition_account(mint_info.key);
-                let edition_info_opt =
-                    account_info_iter.next_if(|a| cmp_pubkeys(a.key, &edition_pda));
-
-                let destination_owner_info = next_account_info(account_info_iter)?;
-                let destination_token_account_info = next_account_info(account_info_iter)?;
-
-                let spl_token_program_info = next_account_info(account_info_iter)?;
-                let spl_associated_token_program_info = next_account_info(account_info_iter)?;
-
-                let system_program_info = next_account_info(account_info_iter)?;
-                let sysvar_instructions_info = next_account_info(account_info_iter)?;
-
-                // If the next account is the mpl_token_auth_rules ID, then we consume it
-                // and read the next account which will be the authorization rules account.
-                let authorization_rules_info_opt = if account_info_iter
-                    .next_if(|a| cmp_pubkeys(a.key, &mpl_token_auth_rules::ID))
-                    .is_some()
-                {
-                    // Auth rules account
-                    Some(next_account_info(account_info_iter)?)
-                } else {
-                    None
-                };
+                let owner_info = try_get_account_info(accounts, 0)?;
+                let token_account_info = try_get_account_info(accounts, 1)?;
+                let metadata_info = try_get_account_info(accounts, 2)?;
+                let mint_info = try_get_account_info(accounts, 3)?;
+                let edition_opt_info = try_get_optional_account_info(accounts, 4)?;
+                let destination_owner_info = try_get_account_info(accounts, 5)?;
+                let destination_token_account_info = try_get_account_info(accounts, 6)?;
+                let spl_token_program_info = try_get_account_info(accounts, 7)?;
+                let spl_associated_token_program_info = try_get_account_info(accounts, 8)?;
+                let system_program_info = try_get_account_info(accounts, 9)?;
+                let sysvar_instructions_info = try_get_account_info(accounts, 10)?;
+                let _mpl_token_auth_rules_info = try_get_optional_account_info(accounts, 11)?;
+                let authorization_rules_opt_info = try_get_optional_account_info(accounts, 12)?;
 
                 Ok(TransferAccounts::V1 {
                     owner_info,
                     token_account_info,
                     metadata_info,
                     mint_info,
-                    edition_info_opt,
+                    edition_opt_info,
                     destination_owner_info,
                     destination_token_account_info,
                     spl_token_program_info,
                     spl_associated_token_program_info,
                     system_program_info,
                     sysvar_instructions_info,
-                    authorization_rules_info_opt,
+                    authorization_rules_opt_info,
                 })
             }
         }

@@ -12,8 +12,8 @@ use crate::{
         uses::assert_valid_use,
     },
     state::{
-        Collection, CollectionDetails, Data, DataV2, Key, Metadata, ProgrammableConfig,
-        TokenStandard, Uses, EDITION, MAX_METADATA_LEN, PREFIX,
+        Collection, CollectionDetails, Data, DataV2, DelegateState, Key, Metadata,
+        ProgrammableConfig, TokenStandard, Uses, EDITION, MAX_METADATA_LEN, PREFIX,
     },
 };
 
@@ -215,7 +215,8 @@ pub fn meta_deser_unchecked(buf: &mut &[u8]) -> Result<Metadata, BorshError> {
         BorshDeserialize::deserialize(buf);
 
     // Delegate
-    let delegate_res: Result<Option<Pubkey>, BorshError> = BorshDeserialize::deserialize(buf);
+    let delegate_res: Result<Option<DelegateState>, BorshError> =
+        BorshDeserialize::deserialize(buf);
 
     // We can have accidentally valid, but corrupted data, particularly on the Collection struct,
     // so to increase probability of catching errors. If any of these deserializations fail, set
@@ -258,7 +259,7 @@ pub fn meta_deser_unchecked(buf: &mut &[u8]) -> Result<Metadata, BorshError> {
         uses,
         collection_details,
         programmable_config,
-        delegate,
+        delegate_state: delegate,
     };
 
     Ok(metadata)
@@ -361,7 +362,7 @@ pub mod tests {
             uses: None,
             collection_details: None,
             programmable_config: None,
-            delegate: None,
+            delegate_state: None,
         };
 
         puff_out_data_fields(&mut metadata);
