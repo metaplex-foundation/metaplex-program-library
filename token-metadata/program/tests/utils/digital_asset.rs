@@ -2,7 +2,7 @@ use mpl_token_metadata::{
     id,
     instruction::{
         self,
-        builders::{CreateBuilder, TransferBuilder},
+        builders::{CreateBuilder, MintBuilder, TransferBuilder},
         CreateArgs, DelegateArgs, DelegateRole, InstructionBuilder, MintArgs, TransferArgs,
     },
     pda::find_delegate_account,
@@ -156,20 +156,29 @@ impl DigitalAsset {
             &spl_associated_token_account::id(),
         );
 
-        let mint_ix = instruction::mint(
-            /* token account       */ token,
-            /* metadata account    */ self.metadata,
-            /* mint account        */ self.mint.pubkey(),
-            /* payer               */ payer_pubkey,
-            /* authority           */ payer_pubkey,
-            /* master edition      */ self.master_edition,
-            /* authorization rules */ authorization_rules,
-            /* amount              */
-            MintArgs::V1 {
+        let mut builder = MintBuilder::new();
+        builder
+            .token(token)
+            .metadata(self.metadata)
+            .mint(self.mint.pubkey())
+            .payer(payer_pubkey)
+            .authority(payer_pubkey);
+
+        if let Some(edition) = self.master_edition {
+            builder.master_edition(edition);
+        }
+
+        if let Some(authorization_rules) = authorization_rules {
+            builder.authorization_rules(authorization_rules);
+        }
+
+        let mint_ix = builder
+            .build(MintArgs::V1 {
                 amount,
                 authorization_data,
-            },
-        );
+            })
+            .unwrap()
+            .instruction();
 
         let tx = Transaction::new_signed_with_payer(
             &[mint_ix],
