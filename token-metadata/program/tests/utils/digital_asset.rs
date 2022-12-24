@@ -254,8 +254,8 @@ impl DigitalAsset {
         context.banks_client.process_transaction(tx).await
     }
 
-    pub async fn transfer(&self, params: OwnerTransferParams<'_>) -> Result<(), BanksClientError> {
-        let OwnerTransferParams {
+    pub async fn transfer(&self, params: TransferParams<'_>) -> Result<(), BanksClientError> {
+        let TransferParams {
             context,
             authority,
             source_owner,
@@ -342,7 +342,7 @@ impl DigitalAsset {
     }
 }
 
-pub struct OwnerTransferParams<'a> {
+pub struct TransferParams<'a> {
     pub context: &'a mut ProgramTestContext,
     pub authority: &'a Keypair,
     pub source_owner: &'a Pubkey,

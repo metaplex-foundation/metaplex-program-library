@@ -2,7 +2,7 @@
 pub mod utils;
 
 use mpl_token_metadata::{
-    id, instruction,
+    instruction::{builders::UpdateBuilder, InstructionBuilder},
     state::{MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH},
     utils::puffed_out_string,
 };
@@ -25,13 +25,12 @@ mod update {
 
         let update_authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
 
-        let mut digital_asset = DigitalAsset::new();
-        digital_asset
-            .create(context, TokenStandard::NonFungible, None)
+        let mut da = DigitalAsset::new();
+        da.create(context, TokenStandard::NonFungible, None)
             .await
             .unwrap();
 
-        let metadata = digital_asset.get_metadata(context).await;
+        let metadata = da.get_metadata(context).await;
         assert_eq!(
             metadata.data.name,
             puffed_out_string(DEFAULT_NAME, MAX_NAME_LENGTH)
@@ -71,18 +70,17 @@ mod update {
         } = &mut update_args;
         *current_authority_type = AuthorityType::Metadata;
 
-        let update_ix = instruction::update(
-            id(),
-            digital_asset.metadata,
-            digital_asset.mint.pubkey(),
-            digital_asset.master_edition,
-            update_authority.pubkey(),
-            None,
-            None,
-            None,
-            None,
-            update_args,
-        );
+        let mut builder = UpdateBuilder::new();
+        builder
+            .authority(update_authority.pubkey())
+            .metadata(da.metadata)
+            .mint(da.mint.pubkey());
+
+        if let Some(edition) = da.master_edition {
+            builder.edition(edition);
+        }
+
+        let update_ix = builder.build(update_args).unwrap().instruction();
 
         let tx = Transaction::new_signed_with_payer(
             &[update_ix],
@@ -94,7 +92,7 @@ mod update {
         context.banks_client.process_transaction(tx).await.unwrap();
 
         // checks the created metadata values
-        let metadata = digital_asset.get_metadata(context).await;
+        let metadata = da.get_metadata(context).await;
 
         assert_eq!(metadata.data.name, new_name);
         assert_eq!(metadata.data.symbol, new_symbol);

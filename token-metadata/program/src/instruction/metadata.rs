@@ -88,6 +88,14 @@ pub enum UpdateArgs {
     },
 }
 
+impl UpdateArgs {
+    pub fn get_authority_type(&self) -> AuthorityType {
+        match self {
+            UpdateArgs::V1 { authority_type, .. } => authority_type.clone(),
+        }
+    }
+}
+
 impl Default for UpdateArgs {
     fn default() -> Self {
         Self::V1 {
@@ -407,6 +415,55 @@ impl InstructionBuilder for super::builders::Transfer {
             program_id: crate::ID,
             accounts,
             data: MetadataInstruction::Transfer(self.args.clone())
+                .try_to_vec()
+                .unwrap(),
+        }
+    }
+}
+
+impl InstructionBuilder for super::builders::Update {
+    fn instruction(&self) -> solana_program::instruction::Instruction {
+        let mut accounts = vec![
+            AccountMeta::new_readonly(self.authority, true),
+            AccountMeta::new(self.metadata, false),
+            AccountMeta::new_readonly(self.mint, false),
+            AccountMeta::new_readonly(self.system_program, false),
+            AccountMeta::new_readonly(self.sysvar_instructions, false),
+        ];
+
+        // Optional edition account
+        if let Some(edition) = self.edition {
+            accounts.push(AccountMeta::new(edition, false));
+        } else {
+            accounts.push(AccountMeta::new_readonly(crate::ID, false));
+        }
+
+        if let Some(token) = self.token {
+            accounts.push(AccountMeta::new(token, false));
+        } else {
+            accounts.push(AccountMeta::new_readonly(crate::ID, false));
+        }
+
+        // Optional delegate record account
+        if let Some(record) = self.delegate_record {
+            accounts.push(AccountMeta::new(record, false));
+        } else {
+            accounts.push(AccountMeta::new_readonly(crate::ID, false));
+        }
+
+        // Optional authorization rules accounts
+        if let Some(rules) = &self.authorization_rules {
+            accounts.push(AccountMeta::new_readonly(mpl_token_auth_rules::ID, false));
+            accounts.push(AccountMeta::new_readonly(*rules, false));
+        } else {
+            accounts.push(AccountMeta::new_readonly(crate::ID, false));
+            accounts.push(AccountMeta::new_readonly(crate::ID, false));
+        }
+
+        Instruction {
+            program_id: crate::ID,
+            accounts,
+            data: MetadataInstruction::Update(self.args.clone())
                 .try_to_vec()
                 .unwrap(),
         }

@@ -73,54 +73,21 @@ impl Metadata {
         Ok(())
     }
 
-    pub(crate) fn update<'a>(
+    pub(crate) fn update_v1<'a>(
         &mut self,
         args: UpdateArgs,
         update_authority: &AccountInfo<'a>,
         metadata: &AccountInfo<'a>,
     ) -> ProgramResult {
-        let (
+        let UpdateArgs::V1 {
             data,
             primary_sale_happened,
             is_mutable,
-            _token_standard,
             collection,
             uses,
-            _collection_details,
-            _programmable_config,
-            _delegate_state,
-            _authority_type,
-            _authorization_data,
             new_update_authority,
-        ) = match args {
-            UpdateArgs::V1 {
-                data,
-                primary_sale_happened,
-                is_mutable,
-                token_standard,
-                collection,
-                uses,
-                collection_details,
-                programmable_config,
-                delegate_state,
-                authority_type,
-                authorization_data,
-                new_update_authority,
-            } => (
-                data,
-                primary_sale_happened,
-                is_mutable,
-                token_standard,
-                collection,
-                uses,
-                collection_details,
-                programmable_config,
-                delegate_state,
-                authority_type,
-                authorization_data,
-                new_update_authority,
-            ),
-        };
+            ..
+        } = args;
 
         if let Some(data) = data {
             if !self.is_mutable {

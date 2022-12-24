@@ -47,7 +47,7 @@ mod transfer {
             amount: 1,
         };
 
-        let params = OwnerTransferParams {
+        let params = TransferParams {
             context: &mut context,
             authority,
             source_owner: &authority.pubkey(),
@@ -104,7 +104,7 @@ mod transfer {
             amount,
         };
 
-        let params = OwnerTransferParams {
+        let params = TransferParams {
             context: &mut context,
             authority,
             source_owner: &authority.pubkey(),
@@ -161,7 +161,7 @@ mod transfer {
             amount: transfer_amount,
         };
 
-        let params = OwnerTransferParams {
+        let params = TransferParams {
             context: &mut context,
             authority,
             source_owner: &authority.pubkey(),
@@ -237,7 +237,7 @@ mod transfer {
             amount: transfer_amount,
         };
 
-        let params = OwnerTransferParams {
+        let params = TransferParams {
             context: &mut context,
             authority,
             source_owner: &authority.pubkey(),
@@ -261,7 +261,7 @@ mod transfer {
 
         let authority = &Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
 
-        let params = OwnerTransferParams {
+        let params = TransferParams {
             context: &mut context,
             authority,
             source_owner: &authority.pubkey(),
@@ -337,7 +337,7 @@ mod transfer {
             amount: transfer_amount,
         };
 
-        let params = OwnerTransferParams {
+        let params = TransferParams {
             context: &mut context,
             authority,
             source_owner: &authority.pubkey(),
@@ -381,7 +381,7 @@ mod transfer {
 
         let authority = &Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
 
-        let params = OwnerTransferParams {
+        let params = TransferParams {
             context: &mut context,
             authority,
             source_owner: &authority.pubkey(),
@@ -457,7 +457,7 @@ mod transfer {
             amount: transfer_amount,
         };
 
-        let params = OwnerTransferParams {
+        let params = TransferParams {
             context: &mut context,
             authority: &delegate,
             source_owner,
@@ -491,7 +491,7 @@ mod transfer {
         // Associated token account already exists so we pass it in,
         // otherwise we will get an "IllegalOwner" errror.
 
-        let params = OwnerTransferParams {
+        let params = TransferParams {
             context: &mut context,
             authority: &fake_delegate,
             source_owner,
