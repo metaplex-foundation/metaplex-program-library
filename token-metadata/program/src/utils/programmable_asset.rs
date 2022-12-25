@@ -1,5 +1,11 @@
-use mpl_token_auth_rules::payload::{PayloadKey, PayloadType};
+use mpl_token_auth_rules::instruction::InstructionBuilder;
+use mpl_token_auth_rules::{
+    instruction::{builders::ValidateBuilder, ValidateArgs},
+    payload::{PayloadKey, PayloadType},
+};
 use mpl_utils::token::TokenTransferParams;
+use solana_program::instruction::AccountMeta;
+use solana_program::program_error::ProgramError;
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, msg, program::invoke_signed,
 };
@@ -10,7 +16,7 @@ use crate::{
     error::MetadataError,
     pda::{EDITION, PREFIX},
     processor::AuthorizationData,
-    state::{Operation, ProgrammableConfig, ToAccountMeta},
+    state::{Operation, ProgrammableConfig},
 };
 
 pub fn freeze<'a>(
@@ -72,25 +78,32 @@ pub fn thaw<'a>(
 pub fn validate<'a>(
     ruleset: &'a AccountInfo<'a>,
     operation: Operation,
+    mint_info: &'a AccountInfo<'a>,
     target: &'a AccountInfo<'a>,
     auth_data: &AuthorizationData,
-) -> ProgramResult {
-    let validate_ix = mpl_token_auth_rules::instruction::validate(
-        *ruleset.key,
-        operation.to_string(),
-        auth_data.payload.clone(),
-        false,
-        vec![target.to_account_meta()],
-    );
+) -> Result<(), ProgramError> {
+    let validate_ix = ValidateBuilder::new()
+        .rule_set_pda(*ruleset.key)
+        .mint(*mint_info.key)
+        .additional_rule_accounts(vec![AccountMeta::new_readonly(*target.key, false)])
+        .build(ValidateArgs::V1 {
+            operation: operation.to_string(),
+            payload: auth_data.payload.clone(),
+            update_rule_state: false,
+        })
+        .map_err(|_error| MetadataError::InvalidAuthorizationRules)?
+        .instruction();
 
-    msg!("Calling auth rules program to validate...");
-    invoke_signed(&validate_ix, &[ruleset.clone(), target.clone()], &[])?;
-    msg!("Auth rules validated successfully!");
-    Ok(())
+    invoke_signed(
+        &validate_ix,
+        &[ruleset.clone(), mint_info.clone(), target.clone()],
+        &[],
+    )
 }
 
 #[derive(Debug, Clone)]
 pub struct AuthRulesValidateParams<'a> {
+    pub mint_info: &'a AccountInfo<'a>,
     pub destination_owner_info: &'a AccountInfo<'a>,
     pub programmable_config: Option<ProgrammableConfig>,
     pub amount: u64,
@@ -99,8 +112,8 @@ pub struct AuthRulesValidateParams<'a> {
 }
 
 pub fn auth_rules_validate(params: AuthRulesValidateParams) -> ProgramResult {
-    msg!("Validating auth rules...");
     let AuthRulesValidateParams {
+        mint_info,
         destination_owner_info,
         programmable_config,
         amount,
@@ -134,9 +147,13 @@ pub fn auth_rules_validate(params: AuthRulesValidateParams) -> ProgramResult {
             PayloadType::Pubkey(*destination_owner_info.key),
         );
 
-        // This panics if the CPI into the auth rules program fails, so unwrapping is ok.
-        validate(auth_pda, operation, destination_owner_info, &auth_data)?;
-        msg!("mpl-token-auth-rules validate call finished successfully!");
+        validate(
+            auth_pda,
+            operation,
+            mint_info,
+            destination_owner_info,
+            &auth_data,
+        )?;
     }
 
     Ok(())

@@ -112,6 +112,7 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
     };
 
     let auth_rules_validate_params = AuthRulesValidateParams {
+        mint_info: ctx.accounts.mint_info,
         destination_owner_info: ctx.accounts.destination_owner_info,
         programmable_config: metadata.programmable_config.clone(),
         amount,

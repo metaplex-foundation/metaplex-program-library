@@ -1,4 +1,5 @@
 use mpl_token_auth_rules::{
+    instruction::{builders::CreateOrUpdateBuilder, CreateOrUpdateArgs, InstructionBuilder},
     payload::{Payload, PayloadKey},
     state::{Rule, RuleSet},
 };
@@ -66,12 +67,14 @@ pub async fn create_test_ruleset(
         .unwrap();
 
     // Create a `create` instruction.
-    let create_ix = mpl_token_auth_rules::instruction::create(
-        payer.pubkey(),
-        ruleset_addr,
-        serialized_data,
-        vec![],
-    );
+    let create_ix = CreateOrUpdateBuilder::new()
+        .rule_set_pda(ruleset_addr)
+        .payer(payer.pubkey())
+        .build(CreateOrUpdateArgs::V1 {
+            serialized_rule_set: serialized_data,
+        })
+        .unwrap()
+        .instruction();
 
     // Add it to a transaction.
     let create_tx = Transaction::new_signed_with_payer(
