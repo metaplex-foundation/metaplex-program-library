@@ -409,45 +409,50 @@ fn transfer_in(
 
     // If burn is not set, create an ATA for the incoming token and perform the transfer.
     if !transfer_effects.burn() {
-        // Allocate the escrow accounts new ATA.
-        let create_escrow_ata_ix =
-            spl_associated_token_account::instruction::create_associated_token_account(
+        // Only try to create the ATA if the account doesn't already exist.
+        if *attribute_dst_token_info.owner != spl_token::ID
+            && attribute_dst_token_info.lamports() == 0
+        {
+            // Allocate the escrow accounts new ATA.
+            let create_escrow_ata_ix =
+                spl_associated_token_account::instruction::create_associated_token_account(
+                    payer_info.key,
+                    escrow_info.key,
+                    attribute_mint_info.key,
+                );
+
+            invoke(
+                &create_escrow_ata_ix,
+                &[
+                    payer_info.clone(),
+                    attribute_dst_token_info.clone(),
+                    escrow_info.clone(),
+                    attribute_mint_info.clone(),
+                    system_program_info.clone(),
+                    token_program_info.clone(),
+                ],
+            )?;
+
+            // Transfer the token from the current owner into the escrow.
+            let transfer_ix = spl_token::instruction::transfer(
+                &spl_token::id(),
+                attribute_src_token_info.key,
+                attribute_dst_token_info.key,
                 payer_info.key,
-                escrow_info.key,
-                attribute_mint_info.key,
-            );
+                &[payer_info.key],
+                args.amount,
+            )?;
 
-        invoke(
-            &create_escrow_ata_ix,
-            &[
-                payer_info.clone(),
-                attribute_dst_token_info.clone(),
-                escrow_info.clone(),
-                attribute_mint_info.clone(),
-                system_program_info.clone(),
-                token_program_info.clone(),
-            ],
-        )?;
-
-        // Transfer the token from the current owner into the escrow.
-        let transfer_ix = spl_token::instruction::transfer(
-            &spl_token::id(),
-            attribute_src_token_info.key,
-            attribute_dst_token_info.key,
-            payer_info.key,
-            &[payer_info.key],
-            args.amount,
-        )?;
-
-        invoke(
-            &transfer_ix,
-            &[
-                attribute_src_token_info.clone(),
-                attribute_dst_token_info.clone(),
-                payer_info.clone(),
-                token_program_info.clone(),
-            ],
-        )?;
+            invoke(
+                &transfer_ix,
+                &[
+                    attribute_src_token_info.clone(),
+                    attribute_dst_token_info.clone(),
+                    payer_info.clone(),
+                    token_program_info.clone(),
+                ],
+            )?;
+        }
     } else {
         let attribute_mint = Mint::unpack(&attribute_mint_info.data.borrow())?;
         if is_print_edition(
