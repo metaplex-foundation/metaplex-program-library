@@ -192,3 +192,52 @@ test('Delegate: create transfer delegate', async (t) => {
     },
   });
 });
+
+test('Delegate: fail to create sale delegate on NFT', async (t) => {
+  const API = new InitTransactions();
+  const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
+
+  const manager = await createAndMintDefaultAsset(
+    t,
+    connection,
+    API,
+    handler,
+    payer,
+    TokenStandard.NonFungible,
+  );
+
+  // creates a delegate
+
+  const [delegate] = await API.getKeypair('Delegate');
+  // delegate PDA
+  const [delegateRecord] = PublicKey.findProgramAddressSync(
+    [
+      manager.mint.toBuffer(),
+      Buffer.from('sale_delegate'),
+      delegate.toBuffer(),
+      payer.publicKey.toBuffer(),
+    ],
+    PROGRAM_ID,
+  );
+  amman.addr.addLabel('Delegate Record', delegateRecord);
+
+  const args: DelegateArgs = {
+    __kind: 'SaleV1',
+    amount: 1,
+  };
+
+  const { tx: delegateTx } = await API.delegate(
+    delegateRecord,
+    delegate,
+    manager.mint,
+    manager.metadata,
+    manager.masterEdition,
+    payer.publicKey,
+    payer,
+    args,
+    handler,
+    manager.token,
+  );
+
+  await delegateTx.assertError(t, /Invalid token standard/);
+});

@@ -660,8 +660,8 @@ test('Transfer: NonFungible asset with invalid authority', async (t) => {
 
   // Try to transfer with fake delegate. This should fail.
   const { tx: fakeDelegateTransferTx } = await API.transfer(
-    payer,
-    invalidAuthority.publicKey,
+    invalidAuthority, // transfer authority: the invalid authority
+    payer.publicKey, // Owner of the asset
     token,
     mint,
     metadata,
@@ -676,14 +676,16 @@ test('Transfer: NonFungible asset with invalid authority', async (t) => {
   await fakeDelegateTransferTx.assertError(t, /Invalid transfer authority/);
 });
 
-test.only('Transfer: ProgrammableNonFungible asset with invalid authority', async (t) => {
+test('Transfer: ProgrammableNonFungible asset with invalid authority', async (t) => {
   const API = new InitTransactions();
   const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
 
   const owner = payer;
+
   // We add this authority to the rule_set as an "Authority"
   // type, which will allow it to transfer the asset.
   const validAuthority = Keypair.generate();
+
   // This is not a delegate, owner, or a public key in auth rules.
   const invalidAuthority = Keypair.generate();
 
@@ -731,7 +733,7 @@ test.only('Transfer: ProgrammableNonFungible asset with invalid authority', asyn
     API,
     handler,
     payer,
-    TokenStandard.NonFungible,
+    TokenStandard.ProgrammableNonFungible,
     programmableConfig,
     1,
   );
@@ -747,19 +749,24 @@ test.only('Transfer: ProgrammableNonFungible asset with invalid authority', asyn
   const amount = 1;
 
   // Try to transfer with fake delegate. This should fail.
-  const { tx: fakeDelegateTransferTx } = await API.transfer(
-    payer,
-    invalidAuthority.publicKey,
+  const { tx: invalidTransferTx } = await API.transfer(
+    invalidAuthority, // transfer authority: the invalid authority
+    payer.publicKey, // Owner of the asset
     token,
     mint,
     metadata,
     masterEdition,
     destination.publicKey,
     destinationToken.address,
-    null,
+    ruleSetPda,
     amount,
     handler,
   );
 
-  await fakeDelegateTransferTx.assertError(t, /Invalid transfer authority/);
+  await invalidTransferTx.assertLogs(t, [
+    /Instruction: Validate/,
+    /Failed to validate: Custom program error: 0x6/,
+    /Pubkey Match check failed/,
+    /Program auth9SigNpDKz4sJJ1DfCTuZrZNSAgh9sFD3rboVmgg/,
+  ]);
 });
