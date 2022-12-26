@@ -51,9 +51,9 @@ import { Test } from 'tape';
 import { amman } from '.';
 import { UpdateTestData } from '../utils/UpdateTestData';
 import {
-  CreateInstructionAccounts as CreateRuleSetInstructionAccounts,
-  CreateInstructionArgs as CreateRuleSetInstructionArgs,
-  createCreateInstruction as createCreateRuleSetInstruction,
+  CreateOrUpdateInstructionAccounts,
+  CreateOrUpdateInstructionArgs,
+  createCreateOrUpdateInstruction,
   PROGRAM_ID as TOKEN_AUTH_RULES_ID,
 } from '@metaplex-foundation/mpl-token-auth-rules';
 export class InitTransactions {
@@ -228,13 +228,13 @@ export class InitTransactions {
 
   async transfer(
     authority: Keypair,
-    sourceOwner: PublicKey,
-    sourceToken: PublicKey,
+    tokenOwner: PublicKey,
+    token: PublicKey,
     mint: PublicKey,
     metadata: PublicKey,
     masterEdition: PublicKey,
     destinationOwner: PublicKey,
-    destinationToken: PublicKey,
+    destination: PublicKey,
     authorizationRules: PublicKey,
     amount: number,
     handler: PayerTransactionHandler,
@@ -245,20 +245,20 @@ export class InitTransactions {
       amman.addr.addLabel('Master Edition Account', masterEdition);
     }
     amman.addr.addLabel('Authority', authority.publicKey);
-    amman.addr.addLabel('Owner', sourceOwner);
-    amman.addr.addLabel('Token Account', sourceToken);
+    amman.addr.addLabel('Token Owner', tokenOwner);
+    amman.addr.addLabel('Token Account', token);
     amman.addr.addLabel('Destination', destinationOwner);
-    amman.addr.addLabel('Destination Token Account', destinationToken);
+    amman.addr.addLabel('Destination Token Account', destination);
 
     const transferAcccounts: TransferInstructionAccounts = {
       authority: authority.publicKey,
-      sourceOwner,
-      sourceToken,
+      tokenOwner,
+      token,
       metadata,
       mint,
-      edition: masterEdition,
+      masterEdition,
       destinationOwner,
-      destinationToken,
+      destination,
       splTokenProgram: splToken.TOKEN_PROGRAM_ID,
       splAtaProgram: splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
       systemProgram: SystemProgram.programId,
@@ -409,18 +409,19 @@ export class InitTransactions {
   ): Promise<{ tx: ConfirmedTransactionAssertablePromise }> {
     amman.addr.addLabel('Payer', payer.publicKey);
 
-    const createRuleSetAccounts: CreateRuleSetInstructionAccounts = {
+    const createRuleSetAccounts: CreateOrUpdateInstructionAccounts = {
       ruleSetPda,
       payer: payer.publicKey,
     };
 
-    const createRuleSetArgs: CreateRuleSetInstructionArgs = {
-      createArgs: {
+    const createRuleSetArgs: CreateOrUpdateInstructionArgs = {
+      createOrUpdateArgs: {
+        __kind: "V1",
         serializedRuleSet,
       },
     };
 
-    const createRuleSetInstruction = createCreateRuleSetInstruction(
+    const createRuleSetInstruction = createCreateOrUpdateInstruction(
       createRuleSetAccounts,
       createRuleSetArgs,
     );

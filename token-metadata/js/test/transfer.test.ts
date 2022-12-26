@@ -1,319 +1,386 @@
-// import test from 'tape';
-// import { amman, InitTransactions, killStuckProcess } from './setup';
-// import { Keypair, PublicKey } from '@solana/web3.js';
-// import { createAndMintDefaultAsset } from './utils/DigitalAssetManager';
-// import { createAssociatedTokenAccount, getAccount, TOKEN_PROGRAM_ID } from '@solana/spl-token';
-// import { Metadata, ProgrammableConfig, TokenStandard } from 'src/generated';
-// import { PROGRAM_ID as TOKEN_AUTH_RULES_ID } from '@metaplex-foundation/mpl-token-auth-rules';
-// import { encode } from '@msgpack/msgpack';
+import test from 'tape';
+import { amman, InitTransactions, killStuckProcess } from './setup';
+import { Keypair, PublicKey } from '@solana/web3.js';
+import { createAndMintDefaultAsset } from './utils/DigitalAssetManager';
+import {
+  createAssociatedTokenAccount,
+  getAccount,
+  getOrCreateAssociatedTokenAccount,
+  TOKEN_PROGRAM_ID,
+} from '@solana/spl-token';
+import { Metadata, ProgrammableConfig, TokenStandard } from 'src/generated';
+import {
+  PREFIX,
+  PROGRAM_ID as TOKEN_AUTH_RULES_ID,
+} from '@metaplex-foundation/mpl-token-auth-rules';
+import { encode } from '@msgpack/msgpack';
 
-// killStuckProcess();
+killStuckProcess();
 
-// test('Transfer: NonFungible', async (t) => {
-//   const API = new InitTransactions();
-//   const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
+test('Transfer: NonFungible', async (t) => {
+  const API = new InitTransactions();
+  const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
 
-//   const { mint, metadata, masterEdition, token } = await createAndMintDefaultAsset(
-//     t,
-//     API,
-//     handler,
-//     payer,
-//   );
+  const { mint, metadata, masterEdition, token } = await createAndMintDefaultAsset(
+    t,
+    connection,
+    API,
+    handler,
+    payer,
+  );
 
-//   const owner = payer;
-//   const destination = Keypair.generate();
-//   const destinationToken = await createAssociatedTokenAccount(
-//     connection,
-//     payer,
-//     mint,
-//     destination.publicKey,
-//   );
-//   const amount = 1;
+  const owner = payer;
+  const destination = Keypair.generate();
+  const destinationToken = await getOrCreateAssociatedTokenAccount(
+    connection,
+    payer,
+    mint,
+    destination.publicKey,
+  );
 
-//   const { tx: transferTx } = await API.transfer(
-//     owner,
-//     token,
-//     mint,
-//     metadata,
-//     masterEdition,
-//     destination.publicKey,
-//     destinationToken,
-//     amount,
-//     handler,
-//   );
+  const amountBeforeTransfer = destinationToken.amount;
 
-//   await transferTx.assertSuccess(t);
-// });
+  // transfer
 
-// test('Transfer: ProgrammableNonFungible', async (t) => {
-//   const API = new InitTransactions();
-//   const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
+  const amount = 1;
 
-//   const owner = payer;
-//   const authority = payer;
-//   const destination = Keypair.generate();
-//   const invalidDestination = Keypair.generate();
-//   amman.airdrop(connection, destination.publicKey, 1);
-//   amman.airdrop(connection, invalidDestination.publicKey, 1);
+  const { tx: transferTx } = await API.transfer(
+    payer,
+    owner.publicKey,
+    token,
+    mint,
+    metadata,
+    masterEdition,
+    destination.publicKey,
+    destinationToken.address,
+    null,
+    amount,
+    handler,
+  );
 
-//   // Set up our rule set with one pubkey match rule for transfer.
-//   const ruleSetName = 'transfer_test';
-//   const ruleSet = {
-//     ruleSetName,
-//     owner: Array.from(owner.publicKey.toBytes()),
-//     operations: {
-//       0: {
-//         PubkeyMatch: {
-//           pubkey: Array.from(destination.publicKey.toBytes()),
-//           field: 'Target',
-//         },
-//       },
-//     },
-//   };
-//   const serializedRuleSet = encode(ruleSet);
+  await transferTx.assertSuccess(t);
 
-//   // Find the ruleset PDA
-//   const [ruleSetPda] = PublicKey.findProgramAddressSync(
-//     [Buffer.from('rule_set'), payer.publicKey.toBuffer(), Buffer.from(ruleSetName)],
-//     TOKEN_AUTH_RULES_ID,
-//   );
+  // asserts
 
-//   // Create the ruleset at the PDA address with the serialized ruleset values.
-//   const { tx: createRuleSetTx } = await API.createRuleSet(
-//     t,
-//     payer,
-//     ruleSetPda,
-//     serializedRuleSet,
-//     handler,
-//   );
-//   await createRuleSetTx.assertSuccess(t);
+  const amountAfterTransfer = (await getAccount(connection, destinationToken.address)).amount;
+  const remainingAmount = (await getAccount(connection, token)).amount;
 
-//   // Set up our programmable config with the ruleset PDA.
-//   const programmableConfig: ProgrammableConfig = {
-//     ruleSet: ruleSetPda,
-//   };
+  t.true(
+    amountAfterTransfer > amountBeforeTransfer,
+    'amount after transfer is greater than before',
+  );
+  t.true(amountAfterTransfer.toString() === '1', 'destination amount equal to 1');
+  t.true(remainingAmount.toString() === '0', 'source amount equal to 0');
+});
+/*
+test.only('Transfer: ProgrammableNonFungible', async (t) => {
+  const API = new InitTransactions();
+  const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
 
-//   // Create an NFT with the programmable config stored on the metadata.
-//   const { mint, metadata, masterEdition, token } = await createAndMintDefaultAsset(
-//     t,
-//     connection,
-//     API,
-//     handler,
-//     payer,
-//     TokenStandard.ProgrammableNonFungible,
-//     programmableConfig,
-//   );
+  const owner = payer;
+  const authority = payer;
+  const destination = Keypair.generate();
+  const invalidDestination = Keypair.generate();
 
-//   const metadataAccount = await Metadata.fromAccountAddress(connection, metadata);
-//   t.equals(metadataAccount.programmableConfig, programmableConfig);
+  amman.airdrop(connection, destination.publicKey, 1);
+  amman.airdrop(connection, invalidDestination.publicKey, 1);
 
-//   const tokenAccount = await getAccount(connection, token, 'confirmed', TOKEN_PROGRAM_ID);
+  // Set up our rule set with one pubkey match rule for transfer.
 
-//   console.log(tokenAccount.amount);
+  const ruleSetName = "transfer_test";
+  const ruleSet = [
+    {
+      Transfer: {
+        ProgramOwned: [Array.from(owner.publicKey.toBytes())],
+      },
+    },
+  ];
+  const serializedRuleSet = encode(ruleSet);
 
-//   // Create the destination token account.
-//   const destinationToken = await createAssociatedTokenAccount(
-//     connection,
-//     payer,
-//     mint,
-//     destination.publicKey,
-//   );
-//   const invalidDestinationToken = await createAssociatedTokenAccount(
-//     connection,
-//     payer,
-//     mint,
-//     invalidDestination.publicKey,
-//   );
-//   const amount = 1;
+  // Find the ruleset PDA
+  const [ruleSetPda] = PublicKey.findProgramAddressSync(
+    [Buffer.from(PREFIX), payer.publicKey.toBuffer(), Buffer.from(ruleSetName)],
+    TOKEN_AUTH_RULES_ID,
+  );
 
-//   // Transfer the NFT to the destination account, this should work since
-//   // the destination account is in the ruleset.
-//   const { tx: invalidTransferTx } = await API.transfer(
-//     authority,
-//     owner.publicKey,
-//     token,
-//     mint,
-//     metadata,
-//     masterEdition,
-//     invalidDestination.publicKey,
-//     invalidDestinationToken,
-//     ruleSetPda,
-//     amount,
-//     handler,
-//   );
-//   await invalidTransferTx.assertError(t, /Pubkey Match check failed/);
-//   // await invalidTransferTx.assertSuccess(t);
+  // Create the ruleset at the PDA address with the serialized ruleset values.
+  const { tx: createRuleSetTx } = await API.createRuleSet(
+    t,
+    payer,
+    ruleSetPda,
+    serializedRuleSet,
+    handler,
+  );
+  await createRuleSetTx.assertSuccess(t);
 
-//   // Transfer the NFT to the destination account, this should work since
-//   // the destination account is in the ruleset.
-//   const { tx: transferTx } = await API.transfer(
-//     authority,
-//     owner.publicKey,
-//     token,
-//     mint,
-//     metadata,
-//     masterEdition,
-//     destination.publicKey,
-//     destinationToken,
-//     ruleSetPda,
-//     amount,
-//     handler,
-//   );
+  // Set up our programmable config with the ruleset PDA.
+  const programmableConfig: ProgrammableConfig = {
+    ruleSet: ruleSetPda,
+  };
 
-//   await transferTx.assertSuccess(t);
-// });
+  // Create an NFT with the programmable config stored on the metadata.
+  const { mint, metadata, masterEdition, token } = await createAndMintDefaultAsset(
+    t,
+    connection,
+    API,
+    handler,
+    payer,
+    TokenStandard.ProgrammableNonFungible,
+    programmableConfig,
+  );
 
-// test('Transfer: NonFungibleEdition', async (t) => {
-//   const API = new InitTransactions();
-//   const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
+  const metadataAccount = await Metadata.fromAccountAddress(connection, metadata);
+  t.equals(metadataAccount.programmableConfig, programmableConfig);
 
-// Need to call print instead of mint
-//   const { mint, metadata, masterEdition, token } = await createAndMintDefaultAsset(
-//     t,
-//     API,
-//     handler,
-//     payer,
-//     TokenStandard.NonFungibleEdition,
-//   );
+  const tokenAccount = await getAccount(connection, token, 'confirmed', TOKEN_PROGRAM_ID);
 
-//   const owner = payer;
-//   const destination = Keypair.generate();
-//   const destinationToken = await createAssociatedTokenAccount(
-//     connection,
-//     payer,
-//     mint,
-//     destination.publicKey,
-//   );
-//   const amount = 1;
+  console.log(tokenAccount.amount);
 
-//   const { tx: transferTx } = await API.transfer(
-//     owner,
-//     token,
-//     mint,
-//     metadata,
-//     masterEdition,
-//     destination.publicKey,
-//     destinationToken,
-//     amount,
-//     handler,
-//   );
+  // Create the destination token account.
+  const destinationToken = await createAssociatedTokenAccount(
+    connection,
+    payer,
+    mint,
+    destination.publicKey,
+  );
+  const invalidDestinationToken = await createAssociatedTokenAccount(
+    connection,
+    payer,
+    mint,
+    invalidDestination.publicKey,
+  );
+  const amount = 1;
 
-//   await transferTx.assertSuccess(t);
-// });
+  // Transfer the NFT to the destination account, this should work since
+  // the destination account is in the ruleset.
+  const { tx: invalidTransferTx } = await API.transfer(
+    authority,
+    owner.publicKey,
+    token,
+    mint,
+    metadata,
+    masterEdition,
+    invalidDestination.publicKey,
+    invalidDestinationToken,
+    ruleSetPda,
+    amount,
+    handler,
+  );
+  await invalidTransferTx.assertError(t, /Pubkey Match check failed/);
+  // await invalidTransferTx.assertSuccess(t);
 
-// test('Transfer: Fungible', async (t) => {
-//   const API = new InitTransactions();
-//   const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
+  // Transfer the NFT to the destination account, this should work since
+  // the destination account is in the ruleset.
+  const { tx: transferTx } = await API.transfer(
+    authority,
+    owner.publicKey,
+    token,
+    mint,
+    metadata,
+    masterEdition,
+    destination.publicKey,
+    destinationToken,
+    ruleSetPda,
+    amount,
+    handler,
+  );
 
-//   const { mint, metadata, masterEdition, token } = await createAndMintDefaultAsset(
-//     t,
-//     API,
-//     handler,
-//     payer,
-//     TokenStandard.Fungible,
-//     null,
-//     10,
-//   );
+  await transferTx.assertSuccess(t);
+});
+*/
+/*
+test('Transfer: NonFungibleEdition', async (t) => {
+  const API = new InitTransactions();
+  const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
 
-//   const owner = payer;
-//   const destination = Keypair.generate();
-//   const destinationToken = await createAssociatedTokenAccount(
-//     connection,
-//     payer,
-//     mint,
-//     destination.publicKey,
-//   );
-//   const amount = 5;
+Need to call print instead of mint
+  const { mint, metadata, masterEdition, token } = await createAndMintDefaultAsset(
+    t,
+    API,
+    handler,
+    payer,
+    TokenStandard.NonFungibleEdition,
+  );
 
-//   const { tx: transferTx } = await API.transfer(
-//     owner,
-//     token,
-//     mint,
-//     metadata,
-//     masterEdition,
-//     destination.publicKey,
-//     destinationToken,
-//     amount,
-//     handler,
-//   );
+  const owner = payer;
+  const destination = Keypair.generate();
+  const destinationToken = await createAssociatedTokenAccount(
+    connection,
+    payer,
+    mint,
+    destination.publicKey,
+  );
+  const amount = 1;
 
-//   await transferTx.assertSuccess(t);
-// });
+  const { tx: transferTx } = await API.transfer(
+    owner,
+    token,
+    mint,
+    metadata,
+    masterEdition,
+    destination.publicKey,
+    destinationToken,
+    amount,
+    handler,
+  );
 
-// test('Transfer: FungibleAsset', async (t) => {
-//   const API = new InitTransactions();
-//   const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
+  await transferTx.assertSuccess(t);
+});
+*/
+test('Transfer: Fungible', async (t) => {
+  const API = new InitTransactions();
+  const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
 
-//   const { mint, metadata, masterEdition, token } = await createAndMintDefaultAsset(
-//     t,
-//     API,
-//     handler,
-//     payer,
-//     TokenStandard.FungibleAsset,
-//     null,
-//     10,
-//   );
+  const { mint, metadata, masterEdition, token } = await createAndMintDefaultAsset(
+    t,
+    connection,
+    API,
+    handler,
+    payer,
+    TokenStandard.Fungible,
+    null,
+    100,
+  );
 
-//   const owner = payer;
-//   const destination = Keypair.generate();
-//   const destinationToken = await createAssociatedTokenAccount(
-//     connection,
-//     payer,
-//     mint,
-//     destination.publicKey,
-//   );
-//   const amount = 5;
+  const owner = payer;
+  const destination = Keypair.generate();
+  const destinationToken = await getOrCreateAssociatedTokenAccount(
+    connection,
+    payer,
+    mint,
+    destination.publicKey,
+  );
 
-//   const { tx: transferTx } = await API.transfer(
-//     owner,
-//     token,
-//     mint,
-//     metadata,
-//     masterEdition,
-//     destination.publicKey,
-//     destinationToken,
-//     amount,
-//     handler,
-//   );
+  const amountBeforeTransfer = destinationToken.amount;
 
-//   await transferTx.assertSuccess(t);
-// });
+  // transfer
 
-// test('Transfer: NonFungible asset with delegate', async (t) => {
-//   const API = new InitTransactions();
-//   const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
+  const amount = 5;
 
-//   const { mint, metadata, masterEdition, token } = await createAndMintDefaultAsset(
-//     t,
-//     API,
-//     handler,
-//     payer,
-//   );
+  const { tx: transferTx } = await API.transfer(
+    payer,
+    owner.publicKey,
+    token,
+    mint,
+    metadata,
+    masterEdition,
+    destination.publicKey,
+    destinationToken.address,
+    null,
+    amount,
+    handler,
+  );
 
-//   const owner = payer;
-//   const destination = Keypair.generate();
-//   const destinationToken = await createAssociatedTokenAccount(
-//     connection,
-//     payer,
-//     mint,
-//     destination.publicKey,
-//   );
-//   const amount = 1;
+  await transferTx.assertSuccess(t);
 
-//   // Approve delegate
-//   panic('Not implemented');
+  // asserts
 
-//   const { tx: transferTx } = await API.transfer(
-//     owner,
-//     token,
-//     mint,
-//     metadata,
-//     masterEdition,
-//     destination.publicKey,
-//     destinationToken,
-//     amount,
-//     handler,
-//   );
+  const amountAfterTransfer = (await getAccount(connection, destinationToken.address)).amount;
+  const remainingAmount = (await getAccount(connection, token)).amount;
 
-//   await transferTx.assertSuccess(t);
-// });
+  t.true(
+    amountAfterTransfer > amountBeforeTransfer,
+    'amount after transfer is greater than before',
+  );
+  t.true(amountAfterTransfer.toString() === '5', 'destination amount equal to 5');
+  t.equal(remainingAmount.toString(), '95', 'remaining amount after transfer is 95');
+});
+
+test('Transfer: FungibleAsset', async (t) => {
+  const API = new InitTransactions();
+  const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
+
+  const { mint, metadata, masterEdition, token } = await createAndMintDefaultAsset(
+    t,
+    connection,
+    API,
+    handler,
+    payer,
+    TokenStandard.FungibleAsset,
+    null,
+    10,
+  );
+
+  const owner = payer;
+  const destination = Keypair.generate();
+  const destinationToken = await getOrCreateAssociatedTokenAccount(
+    connection,
+    payer,
+    mint,
+    destination.publicKey,
+  );
+
+  const amountBeforeTransfer = destinationToken.amount;
+
+  // transfer
+
+  const amount = 5;
+
+  const { tx: transferTx } = await API.transfer(
+    payer,
+    owner.publicKey,
+    token,
+    mint,
+    metadata,
+    masterEdition,
+    destination.publicKey,
+    destinationToken.address,
+    null,
+    amount,
+    handler,
+  );
+
+  await transferTx.assertSuccess(t);
+
+  // asserts
+
+  const amountAfterTransfer = (await getAccount(connection, destinationToken.address)).amount;
+  const remainingAmount = (await getAccount(connection, token)).amount;
+
+  t.true(
+    amountAfterTransfer > amountBeforeTransfer,
+    'amount after transfer is greater than before',
+  );
+  t.true(amountAfterTransfer.toString() === '5', 'destination amount equal to 5');
+  t.equal(remainingAmount.toString(), '5', 'remaining amount after transfer is 5');
+});
+/*
+test('Transfer: NonFungible asset with delegate', async (t) => {
+  const API = new InitTransactions();
+  const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
+
+  const { mint, metadata, masterEdition, token } = await createAndMintDefaultAsset(
+    t,
+    API,
+    handler,
+    payer,
+  );
+
+  const owner = payer;
+  const destination = Keypair.generate();
+  const destinationToken = await createAssociatedTokenAccount(
+    connection,
+    payer,
+    mint,
+    destination.publicKey,
+  );
+  const amount = 1;
+
+  // Approve delegate
+  panic('Not implemented');
+
+  const { tx: transferTx } = await API.transfer(
+    owner,
+    token,
+    mint,
+    metadata,
+    masterEdition,
+    destination.publicKey,
+    destinationToken,
+    amount,
+    handler,
+  );
+
+  await transferTx.assertSuccess(t);
+});
+*/
