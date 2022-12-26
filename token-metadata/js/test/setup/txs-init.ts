@@ -232,7 +232,7 @@ export class InitTransactions {
     token: PublicKey,
     mint: PublicKey,
     metadata: PublicKey,
-    masterEdition: PublicKey,
+    edition: PublicKey,
     destinationOwner: PublicKey,
     destination: PublicKey,
     authorizationRules: PublicKey,
@@ -241,8 +241,8 @@ export class InitTransactions {
   ): Promise<{ tx: ConfirmedTransactionAssertablePromise }> {
     amman.addr.addLabel('Mint Account', mint);
     amman.addr.addLabel('Metadata Account', metadata);
-    if (masterEdition != null) {
-      amman.addr.addLabel('Master Edition Account', masterEdition);
+    if (edition != null) {
+      amman.addr.addLabel('Master Edition Account', edition);
     }
     amman.addr.addLabel('Authority', authority.publicKey);
     amman.addr.addLabel('Token Owner', tokenOwner);
@@ -256,7 +256,7 @@ export class InitTransactions {
       token,
       metadata,
       mint,
-      masterEdition,
+      edition,
       destinationOwner,
       destination,
       splTokenProgram: splToken.TOKEN_PROGRAM_ID,
@@ -289,7 +289,7 @@ export class InitTransactions {
     handler: PayerTransactionHandler,
     mint: PublicKey,
     metadata: PublicKey,
-    masterEdition: PublicKey,
+    edition: PublicKey,
     authority: Keypair,
     authorityType: AuthorityType = AuthorityType.Metadata,
     updateTestData: UpdateTestData,
@@ -300,13 +300,13 @@ export class InitTransactions {
   ): Promise<{ tx: ConfirmedTransactionAssertablePromise }> {
     amman.addr.addLabel('Mint Account', mint);
     amman.addr.addLabel('Metadata Account', metadata);
-    if (masterEdition != null) {
-      amman.addr.addLabel('Master Edition Account', masterEdition);
+    if (edition != null) {
+      amman.addr.addLabel('Edition Account', edition);
     }
 
     const updateAcccounts: UpdateInstructionAccounts = {
       metadata,
-      masterEdition,
+      edition,
       mint,
       systemProgram: SystemProgram.programId,
       sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
@@ -416,7 +416,7 @@ export class InitTransactions {
 
     const createRuleSetArgs: CreateOrUpdateInstructionArgs = {
       createOrUpdateArgs: {
-        __kind: "V1",
+        __kind: 'V1',
         serializedRuleSet,
       },
     };

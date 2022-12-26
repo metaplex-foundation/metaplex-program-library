@@ -44,7 +44,7 @@ export const TransferStruct = new beet.FixableBeetArgsStruct<
  * @property [] destinationOwner Destination token account owner
  * @property [] mint Mint of token asset
  * @property [_writable_] metadata Metadata (pda of ['metadata', program id, mint id])
- * @property [] masterEdition (optional) Master Edition of token asset
+ * @property [] edition (optional) Edition of token asset
  * @property [] splTokenProgram SPL Token Program
  * @property [] splAtaProgram SPL Associated Token Account program
  * @property [] sysvarInstructions Instructions sysvar account
@@ -63,7 +63,7 @@ export type TransferInstructionAccounts = {
   destinationOwner: web3.PublicKey;
   mint: web3.PublicKey;
   metadata: web3.PublicKey;
-  masterEdition?: web3.PublicKey;
+  edition?: web3.PublicKey;
   splTokenProgram: web3.PublicKey;
   splAtaProgram: web3.PublicKey;
   systemProgram?: web3.PublicKey;
@@ -138,7 +138,7 @@ export function createTransferInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.masterEdition ?? programId,
+      pubkey: accounts.edition ?? programId,
       isWritable: false,
       isSigner: false,
     },

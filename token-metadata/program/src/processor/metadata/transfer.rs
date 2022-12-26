@@ -64,7 +64,7 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
     if let Some(delegate_record_info) = ctx.accounts.delegate_record_info {
         assert_owned_by(delegate_record_info, program_id)?;
     }
-    if let Some(master_edition) = ctx.accounts.master_edition_info {
+    if let Some(master_edition) = ctx.accounts.edition_info {
         assert_owned_by(master_edition, program_id)?;
     }
     if let Some(authorization_rules) = ctx.accounts.authorization_rules_info {
@@ -117,9 +117,11 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
         auth_rules_info: ctx.accounts.authorization_rules_info,
     };
 
-    let token_standard = metadata
-        .token_standard
-        .ok_or::<ProgramError>(MetadataError::InvalidTokenStandard.into())?;
+    let token_standard = metadata.token_standard.ok_or_else(|| {
+        <MetadataError as std::convert::Into<ProgramError>>::into(
+            MetadataError::InvalidTokenStandard,
+        )
+    })?;
 
     // Sale delegates prevent any other kind of transfer.
     let is_sale_delegate_set = if let Some(ref delegate_state) = metadata.delegate_state {
@@ -242,7 +244,7 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
     match token_standard {
         TokenStandard::ProgrammableNonFungible => {
             msg!("Transferring pNFT");
-            frozen_transfer(token_transfer_params, ctx.accounts.master_edition_info)?
+            frozen_transfer(token_transfer_params, ctx.accounts.edition_info)?
         }
         _ => {
             msg!("Transferring NFT normally");

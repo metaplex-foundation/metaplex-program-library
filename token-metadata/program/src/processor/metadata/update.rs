@@ -36,7 +36,7 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
     assert_owned_by(ctx.accounts.metadata_info, program_id)?;
     assert_owned_by(ctx.accounts.mint_info, &spl_token::ID)?;
 
-    if let Some(edition) = ctx.accounts.master_edition_info {
+    if let Some(edition) = ctx.accounts.edition_info {
         assert_owned_by(edition, program_id)?;
         // checks that we got the correct master account
         assert_derivation(

@@ -422,7 +422,7 @@ impl InstructionBuilder for super::builders::Mint {
 ///   5. `[]` Destination token account owner
 ///   6. `[]` Mint of token asset
 ///   8. `[writable]` Metadata (pda of ['metadata', program id, mint id])
-///   9. `[optional]` Master Edition of token asset
+///   9. `[optional]` Edition of token asset
 ///   10. `[]` SPL Token Program
 ///   11. `[]` SPL Associated Token Account program
 ///   12. `[]` System Program
@@ -444,7 +444,7 @@ impl InstructionBuilder for super::builders::Transfer {
             AccountMeta::new_readonly(self.destination_owner, false),
             AccountMeta::new_readonly(self.mint, false),
             AccountMeta::new(self.metadata, false),
-            AccountMeta::new_readonly(self.master_edition.unwrap_or(crate::ID), false),
+            AccountMeta::new_readonly(self.edition.unwrap_or(crate::ID), false),
             AccountMeta::new_readonly(self.spl_token_program, false),
             AccountMeta::new_readonly(self.spl_ata_program, false),
             AccountMeta::new_readonly(self.system_program, false),
@@ -477,7 +477,7 @@ impl InstructionBuilder for super::builders::Update {
         let mut accounts = vec![
             AccountMeta::new_readonly(self.authority, true),
             AccountMeta::new(self.metadata, false),
-            if let Some(edition) = self.master_edition {
+            if let Some(edition) = self.edition {
                 AccountMeta::new(edition, false)
             } else {
                 AccountMeta::new_readonly(crate::ID, false)

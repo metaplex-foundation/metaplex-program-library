@@ -2524,10 +2524,10 @@
           "desc": "Metadata account"
         },
         {
-          "name": "masterEdition",
+          "name": "edition",
           "isMut": true,
           "isSigner": false,
-          "desc": "Master Edition account",
+          "desc": "Edition account",
           "optional": true
         },
         {
@@ -2806,10 +2806,10 @@
           "desc": "Metadata (pda of ['metadata', program id, mint id])"
         },
         {
-          "name": "masterEdition",
+          "name": "edition",
           "isMut": false,
           "isSigner": false,
-          "desc": "Master Edition of token asset",
+          "desc": "Edition of token asset",
           "optional": true
         },
         {

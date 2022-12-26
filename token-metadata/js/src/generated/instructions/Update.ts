@@ -38,7 +38,7 @@ export const UpdateStruct = new beet.FixableBeetArgsStruct<
  *
  * @property [**signer**] authority Update authority or delegate
  * @property [_writable_] metadata Metadata account
- * @property [_writable_] masterEdition (optional) Master Edition account
+ * @property [_writable_] edition (optional) Edition account
  * @property [] mint Mint account
  * @property [] sysvarInstructions System program
  * @property [] token (optional) Token account
@@ -52,7 +52,7 @@ export const UpdateStruct = new beet.FixableBeetArgsStruct<
 export type UpdateInstructionAccounts = {
   authority: web3.PublicKey;
   metadata: web3.PublicKey;
-  masterEdition?: web3.PublicKey;
+  edition?: web3.PublicKey;
   mint: web3.PublicKey;
   systemProgram?: web3.PublicKey;
   sysvarInstructions: web3.PublicKey;
@@ -98,8 +98,8 @@ export function createUpdateInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.masterEdition ?? programId,
-      isWritable: accounts.masterEdition != null,
+      pubkey: accounts.edition ?? programId,
+      isWritable: accounts.edition != null,
       isSigner: false,
     },
     {

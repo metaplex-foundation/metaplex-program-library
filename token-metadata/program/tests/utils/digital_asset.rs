@@ -357,7 +357,7 @@ impl DigitalAsset {
             .mint(self.mint.pubkey());
 
         if let Some(master_edition) = self.master_edition {
-            builder.master_edition(master_edition);
+            builder.edition(master_edition);
         }
 
         if let Some(authorization_rules) = authorization_rules {

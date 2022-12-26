@@ -544,7 +544,7 @@ pub enum MetadataInstruction {
     /// it may require additional accounts to validate the rules.
     #[account(0, signer, name="authority", desc="Update authority or delegate")]
     #[account(1, writable, name="metadata", desc="Metadata account")]
-    #[account(2, optional, writable, name="master_edition", desc="Master Edition account")]
+    #[account(2, optional, writable, name="edition", desc="Edition account")]
     #[account(3, name="mint", desc="Mint account")]
     #[account(4, name="system_program", desc="System program")]
     #[account(5, name="sysvar_instructions", desc="System program")]
@@ -603,7 +603,7 @@ pub enum MetadataInstruction {
     #[account(5, name="destination_owner", desc="Destination token account owner")]
     #[account(6, name="mint", desc="Mint of token asset")]
     #[account(7, writable, name="metadata", desc="Metadata (pda of ['metadata', program id, mint id])")]
-    #[account(8, optional, name="master_edition", desc="Master Edition of token asset")]
+    #[account(8, optional, name="edition", desc="Edition of token asset")]
     #[account(9, name="spl_token_program", desc="SPL Token Program")]
     #[account(10, name="spl_ata_program", desc="SPL Associated Token Account program")]
     #[account(11, name="system_program", desc="System Program")]

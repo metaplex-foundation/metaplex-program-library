@@ -77,7 +77,7 @@ mod update {
             .mint(da.mint.pubkey());
 
         if let Some(edition) = da.master_edition {
-            builder.master_edition(edition);
+            builder.edition(edition);
         }
 
         let update_ix = builder.build(update_args).unwrap().instruction();

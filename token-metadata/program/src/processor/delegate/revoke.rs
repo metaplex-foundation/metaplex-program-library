@@ -51,7 +51,7 @@ pub fn revoke<'a>(
     }
 }
 
-fn revoke_collection_v1<'a>(
+fn revoke_collection_v1(
     program_id: &Pubkey,
     ctx: Context<Revoke>,
     _args: RevokeArgs,
@@ -89,7 +89,7 @@ fn revoke_collection_v1<'a>(
     )
 }
 
-fn revoke_transfer_v1<'a>(
+fn revoke_transfer_v1(
     program_id: &Pubkey,
     ctx: Context<Revoke>,
     _args: RevokeArgs,
