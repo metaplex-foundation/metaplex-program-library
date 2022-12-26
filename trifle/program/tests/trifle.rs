@@ -2,18 +2,7 @@
 
 pub mod utils;
 
-use mpl_token_metadata::state::{Collection, EscrowAuthority};
-use mpl_trifle::{
-    instruction::{
-        add_collection_constraint_to_escrow_constraint_model,
-        add_none_constraint_to_escrow_constraint_model,
-        add_tokens_constraint_to_escrow_constraint_model, create_escrow_constraint_model_account,
-        create_trifle_account, remove_constraint_from_escrow_constraint_model,
-    },
-    pda::{find_escrow_constraint_model_address, find_trifle_address},
-    state::transfer_effects::TransferEffects,
-};
-use solana_program::pubkey::Pubkey;
+use mpl_trifle::instruction::remove_constraint_from_escrow_constraint_model;
 use solana_program_test::*;
 use solana_sdk::{signer::Signer, transaction::Transaction};
 use utils::*;
@@ -51,6 +40,7 @@ mod trifle {
             &metadata,
             &master_edition,
             escrow_constraint_model_addr,
+            None,
         )
         .await;
 
@@ -243,6 +233,7 @@ mod trifle {
             &metadata,
             &master_edition,
             escrow_constraint_model_addr,
+            None,
         )
         .await;
 
@@ -311,6 +302,7 @@ mod trifle {
             &metadata,
             &master_edition,
             escrow_constraint_model_addr,
+            None,
         )
         .await;
 
@@ -441,213 +433,4 @@ mod trifle {
             "escrow token should not be frozen"
         );
     }
-}
-
-async fn create_nft(
-    context: &mut ProgramTestContext,
-    create_collection: bool,
-    _freeze_authority: Option<Pubkey>,
-) -> (Metadata, MasterEditionV2, Option<Metadata>) {
-    if create_collection {
-        let _payer_pubkey = context.payer.pubkey().to_owned();
-        let collection = Metadata::new();
-        let collection_master_edition = MasterEditionV2::new(&collection);
-        collection
-            .create_v2(
-                context,
-                "Collection".to_string(),
-                "C".to_string(),
-                "".to_string(),
-                None,
-                0,
-                true,
-                None,
-                None,
-            )
-            .await
-            .unwrap();
-
-        collection_master_edition
-            .create_v3(context, Some(0))
-            .await
-            .unwrap();
-
-        let metadata = Metadata::new();
-        let master_edition = MasterEditionV2::new(&metadata);
-
-        metadata
-            .create_v2(
-                context,
-                "Test".to_string(),
-                "TST".to_string(),
-                "uri".to_string(),
-                None,
-                10,
-                true,
-                Some(Collection {
-                    key: collection.mint.pubkey(),
-                    verified: false,
-                }),
-                None,
-            )
-            .await
-            .unwrap();
-
-        master_edition.create(context, Some(1)).await.unwrap();
-
-        let verify_collection_ix = mpl_token_metadata::instruction::verify_collection(
-            mpl_token_metadata::id(),
-            metadata.pubkey,
-            context.payer.pubkey(),
-            context.payer.pubkey(),
-            collection.mint.pubkey(),
-            collection.pubkey,
-            collection_master_edition.pubkey,
-            None,
-        );
-        let verify_collection_tx = Transaction::new_signed_with_payer(
-            &[verify_collection_ix],
-            Some(&context.payer.pubkey()),
-            &[&context.payer],
-            context.last_blockhash,
-        );
-        context
-            .banks_client
-            .process_transaction(verify_collection_tx)
-            .await
-            .unwrap();
-        (metadata, master_edition, Some(collection))
-    } else {
-        let metadata = Metadata::new();
-        let master_edition = MasterEditionV2::new(&metadata);
-
-        metadata
-            .create_v2(
-                context,
-                "Test".to_string(),
-                "TST".to_string(),
-                "uri".to_string(),
-                None,
-                10,
-                true,
-                None,
-                None,
-            )
-            .await
-            .unwrap();
-
-        master_edition.create(context, Some(1)).await.unwrap();
-
-        (metadata, master_edition, None)
-    }
-}
-
-/// collection to be used as a constraint
-/// tokens will be added as tokens constraint
-async fn create_escrow_constraint_model(
-    context: &mut ProgramTestContext,
-    transfer_effects: TransferEffects,
-    collection: Metadata,
-    tokens: Vec<Pubkey>,
-) -> Pubkey {
-    let (escrow_constraint_model_addr, _) =
-        find_escrow_constraint_model_address(&context.payer.pubkey(), "Test");
-
-    let create_constraint_model_ix = create_escrow_constraint_model_account(
-        &mpl_trifle::id(),
-        &escrow_constraint_model_addr,
-        &context.payer.pubkey(),
-        &context.payer.pubkey(),
-        "Test".to_string(),
-        None,
-    );
-
-    let add_none_constraint_ix = add_none_constraint_to_escrow_constraint_model(
-        &mpl_trifle::id(),
-        &escrow_constraint_model_addr,
-        &context.payer.pubkey(),
-        &context.payer.pubkey(),
-        "test".to_string(),
-        0,
-        transfer_effects.clone().into(),
-    );
-
-    let add_collection_constraint_ix = add_collection_constraint_to_escrow_constraint_model(
-        &mpl_trifle::id(),
-        &escrow_constraint_model_addr,
-        &context.payer.pubkey(),
-        &context.payer.pubkey(),
-        &collection.mint.pubkey(),
-        &collection.pubkey,
-        "collection".to_string(),
-        0,
-        transfer_effects.clone().into(),
-    );
-
-    let add_tokens_constraint_ix = add_tokens_constraint_to_escrow_constraint_model(
-        &mpl_trifle::id(),
-        &escrow_constraint_model_addr,
-        &context.payer.pubkey(),
-        &context.payer.pubkey(),
-        "tokens".to_string(),
-        0,
-        tokens,
-        transfer_effects.into(),
-    );
-
-    let tx = Transaction::new_signed_with_payer(
-        &[
-            create_constraint_model_ix,
-            add_none_constraint_ix,
-            add_tokens_constraint_ix,
-            add_collection_constraint_ix,
-        ],
-        Some(&context.payer.pubkey()),
-        &[&context.payer],
-        context.last_blockhash,
-    );
-
-    context.banks_client.process_transaction(tx).await.unwrap();
-
-    escrow_constraint_model_addr
-}
-
-/// metadata is used as the Base NFT for the Trifle's Escrow account.
-/// master_edition is the edition of the Base NFT
-async fn create_trifle(
-    context: &mut ProgramTestContext,
-    metadata: &Metadata,
-    master_edition: &MasterEditionV2,
-    escrow_constraint_model_addr: Pubkey,
-) -> (Pubkey, Pubkey) {
-    let (trifle_addr, _) = find_trifle_address(&metadata.mint.pubkey(), &context.payer.pubkey());
-
-    let (escrow_addr, _) = mpl_token_metadata::processor::find_escrow_account(
-        &metadata.mint.pubkey(),
-        &EscrowAuthority::Creator(trifle_addr.to_owned()),
-    );
-
-    let create_trifle_account_ix = create_trifle_account(
-        &mpl_trifle::id(),
-        &escrow_addr,
-        &metadata.pubkey,
-        &metadata.mint.pubkey(),
-        &metadata.token.pubkey(),
-        &master_edition.pubkey,
-        &trifle_addr,
-        &context.payer.pubkey(),
-        &escrow_constraint_model_addr,
-        &context.payer.pubkey(),
-    );
-
-    let tx = Transaction::new_signed_with_payer(
-        &[create_trifle_account_ix],
-        Some(&context.payer.pubkey()),
-        &[&context.payer],
-        context.last_blockhash,
-    );
-
-    context.banks_client.process_transaction(tx).await.unwrap();
-
-    (trifle_addr, escrow_addr)
 }
