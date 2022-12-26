@@ -1,6 +1,6 @@
 [package]
 name = "mpl-trifle"
-version = "0.3.2"
+version = "0.3.3"
 description = "Metaplex Composability Program"
 authors = ["Metaplex Developers <dev@metaplex.com>"]
 repository = "https://github.com/metaplex-foundation/metaplex-program-library"
