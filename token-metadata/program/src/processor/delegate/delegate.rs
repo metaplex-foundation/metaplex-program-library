@@ -38,7 +38,7 @@ pub fn delegate<'a>(
     accounts: &'a [AccountInfo<'a>],
     args: DelegateArgs,
 ) -> ProgramResult {
-    let context = Delegate::as_context(accounts)?;
+    let context = Delegate::to_context(accounts)?;
 
     match args {
         DelegateArgs::CollectionV1 { .. } => delegate_collection_v1(program_id, context, args),

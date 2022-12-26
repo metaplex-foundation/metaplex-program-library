@@ -201,7 +201,7 @@ pub fn account_context_derive(input: TokenStream) -> TokenStream {
 ///     ..
 /// }
 /// impl<'a> MyAccount<'a> {
-///     pub fn as_context(
+///     pub fn to_context(
 ///         accounts: &'a [solana_program::account_info::AccountInfo<'a>]
 ///     ) -> Result<Context<'a, Self>, solana_program::sysvar::slot_history::ProgramError> {
 ///         let account_info_iter = &mut accounts.iter();
@@ -254,7 +254,7 @@ fn generate_accounts(variants: &[Variant]) -> TokenStream {
                 #(#struct_fields,)*
             }
             impl<'a> #name<'a> {
-                pub fn as_context(accounts: &'a [solana_program::account_info::AccountInfo<'a>]) -> Result<Context<'a, Self>, solana_program::sysvar::slot_history::ProgramError> {
+                pub fn to_context(accounts: &'a [solana_program::account_info::AccountInfo<'a>]) -> Result<Context<'a, Self>, solana_program::sysvar::slot_history::ProgramError> {
                     let account_info_iter = &mut accounts.iter();
 
                     #(#impl_fields)*

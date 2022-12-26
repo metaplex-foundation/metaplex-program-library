@@ -35,7 +35,7 @@ pub fn transfer<'a>(
     accounts: &'a [AccountInfo<'a>],
     args: TransferArgs,
 ) -> ProgramResult {
-    let context = Transfer::as_context(accounts)?;
+    let context = Transfer::to_context(accounts)?;
 
     match args {
         TransferArgs::V1 { .. } => transfer_v1(program_id, context, args),

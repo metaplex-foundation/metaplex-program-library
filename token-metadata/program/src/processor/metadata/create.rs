@@ -38,7 +38,7 @@ pub fn create<'a>(
     accounts: &'a [AccountInfo<'a>],
     args: CreateArgs,
 ) -> ProgramResult {
-    let context = Create::as_context(accounts)?;
+    let context = Create::to_context(accounts)?;
 
     match args {
         CreateArgs::V1 { .. } => create_v1(program_id, context, args),

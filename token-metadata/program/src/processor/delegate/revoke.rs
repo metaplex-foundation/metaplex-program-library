@@ -37,7 +37,7 @@ pub fn revoke<'a>(
     accounts: &'a [AccountInfo<'a>],
     args: RevokeArgs,
 ) -> ProgramResult {
-    let context = Revoke::as_context(accounts)?;
+    let context = Revoke::to_context(accounts)?;
 
     match args {
         RevokeArgs::CollectionV1 => revoke_collection_v1(program_id, context, args),

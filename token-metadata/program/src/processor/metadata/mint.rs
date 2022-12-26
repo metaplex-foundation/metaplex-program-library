@@ -43,7 +43,7 @@ pub fn mint<'a>(
     accounts: &'a [AccountInfo<'a>],
     args: MintArgs,
 ) -> ProgramResult {
-    let context = Mint::as_context(accounts)?;
+    let context = Mint::to_context(accounts)?;
     match args {
         MintArgs::V1 { .. } => mint_v1(program_id, context, args),
     }

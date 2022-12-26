@@ -18,7 +18,7 @@ pub fn update<'a>(
     accounts: &'a [AccountInfo<'a>],
     args: UpdateArgs,
 ) -> ProgramResult {
-    let context = Update::as_context(accounts)?;
+    let context = Update::to_context(accounts)?;
 
     match args {
         UpdateArgs::V1 { .. } => update_v1(program_id, context, args),
