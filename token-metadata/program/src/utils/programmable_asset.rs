@@ -4,13 +4,13 @@ use mpl_token_auth_rules::{
     payload::{PayloadKey, PayloadType},
 };
 use mpl_utils::token::TokenTransferParams;
-use solana_program::instruction::AccountMeta;
 use solana_program::program_error::ProgramError;
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, msg, program::invoke_signed,
 };
 use spl_token::instruction::{freeze_account, thaw_account};
 
+use crate::state::ToAccountMeta;
 use crate::{
     assertions::{assert_derivation, programmable::assert_valid_authorization},
     error::MetadataError,
@@ -79,13 +79,18 @@ pub fn validate<'a>(
     ruleset: &'a AccountInfo<'a>,
     operation: Operation,
     mint_info: &'a AccountInfo<'a>,
-    target: &'a AccountInfo<'a>,
+    additional_rule_accounts: Vec<&'a AccountInfo<'a>>,
     auth_data: &AuthorizationData,
 ) -> Result<(), ProgramError> {
+    let account_metas = additional_rule_accounts
+        .iter()
+        .map(|account| account.to_account_meta())
+        .collect();
+
     let validate_ix = ValidateBuilder::new()
         .rule_set_pda(*ruleset.key)
         .mint(*mint_info.key)
-        .additional_rule_accounts(vec![AccountMeta::new_readonly(*target.key, false)])
+        .additional_rule_accounts(account_metas)
         .build(ValidateArgs::V1 {
             operation: operation.to_string(),
             payload: auth_data.payload.clone(),
@@ -94,36 +99,39 @@ pub fn validate<'a>(
         .map_err(|_error| MetadataError::InvalidAuthorizationRules)?
         .instruction();
 
-    invoke_signed(
-        &validate_ix,
-        &[ruleset.clone(), mint_info.clone(), target.clone()],
-        &[],
-    )
+    let mut account_infos = vec![ruleset.clone(), mint_info.clone()];
+    account_infos.extend(additional_rule_accounts.into_iter().cloned());
+    invoke_signed(&validate_ix, account_infos.as_slice(), &[])
 }
 
 #[derive(Debug, Clone)]
 pub struct AuthRulesValidateParams<'a> {
     pub mint_info: &'a AccountInfo<'a>,
-    pub destination_owner_info: &'a AccountInfo<'a>,
+    pub target_info: Option<&'a AccountInfo<'a>>,
+    pub authority_info: Option<&'a AccountInfo<'a>>,
+    pub owner_info: Option<&'a AccountInfo<'a>>,
     pub programmable_config: Option<ProgrammableConfig>,
     pub amount: u64,
     pub auth_data: Option<AuthorizationData>,
     pub auth_rules_info: Option<&'a AccountInfo<'a>>,
+    pub operation: Operation,
 }
 
 pub fn auth_rules_validate(params: AuthRulesValidateParams) -> ProgramResult {
     let AuthRulesValidateParams {
         mint_info,
-        destination_owner_info,
+        target_info,
+        authority_info,
+        owner_info,
         programmable_config,
         amount,
         auth_data,
         auth_rules_info,
+        operation,
     } = params;
 
     if let Some(ref config) = programmable_config {
         msg!("Programmable config exists");
-        let operation = Operation::Transfer;
 
         assert_valid_authorization(auth_rules_info, config)?;
 
@@ -138,20 +146,48 @@ pub fn auth_rules_validate(params: AuthRulesValidateParams) -> ProgramResult {
             AuthorizationData::new_empty()
         };
 
-        // Insert auth rules for Transfer
-        auth_data
-            .payload
-            .insert(PayloadKey::Amount, PayloadType::Number(amount));
-        auth_data.payload.insert(
-            PayloadKey::Target,
-            PayloadType::Pubkey(*destination_owner_info.key),
-        );
+        let mut additional_rule_accounts = vec![];
+        if let Some(target_info) = target_info {
+            additional_rule_accounts.push(target_info);
+        }
+        if let Some(authority_info) = authority_info {
+            additional_rule_accounts.push(authority_info);
+        }
+        if let Some(owner_info) = owner_info {
+            additional_rule_accounts.push(owner_info);
+        }
+
+        // Insert auth rules for the operation type.
+        match operation {
+            Operation::Transfer => {
+                // Get account infos
+                let target_info = target_info.ok_or(MetadataError::InvalidOperation)?;
+                let authority_info = authority_info.ok_or(MetadataError::InvalidOperation)?;
+
+                // Transfer Amount
+                auth_data
+                    .payload
+                    .insert(PayloadKey::Amount, PayloadType::Number(amount));
+                // Transfer Destination
+                auth_data
+                    .payload
+                    .insert(PayloadKey::Target, PayloadType::Pubkey(*target_info.key));
+                // Transfer Authority
+                auth_data.payload.insert(
+                    PayloadKey::Authority,
+                    PayloadType::Pubkey(*authority_info.key),
+                );
+            }
+            _ => {
+                return Err(MetadataError::InvalidOperation.into());
+            }
+        }
 
         validate(
             auth_pda,
             operation,
             mint_info,
-            destination_owner_info,
+            additional_rule_accounts,
             &auth_data,
         )?;
     }

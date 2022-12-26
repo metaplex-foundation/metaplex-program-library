@@ -1,7 +1,7 @@
 use num_derive::ToPrimitive;
 use solana_program::{account_info::AccountInfo, instruction::AccountMeta};
 
-#[derive(ToPrimitive)]
+#[derive(Debug, Clone, ToPrimitive)]
 pub enum Operation {
     Delegate,
     Transfer,

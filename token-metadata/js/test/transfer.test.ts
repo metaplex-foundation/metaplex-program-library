@@ -675,3 +675,91 @@ test('Transfer: NonFungible asset with invalid authority', async (t) => {
 
   await fakeDelegateTransferTx.assertError(t, /Invalid transfer authority/);
 });
+
+test.only('Transfer: ProgrammableNonFungible asset with invalid authority', async (t) => {
+  const API = new InitTransactions();
+  const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
+
+  const owner = payer;
+  // We add this authority to the rule_set as an "Authority"
+  // type, which will allow it to transfer the asset.
+  const validAuthority = Keypair.generate();
+  // This is not a delegate, owner, or a public key in auth rules.
+  const invalidAuthority = Keypair.generate();
+
+  // Set up our rule set
+  const ruleSetName = 'transfer_test';
+  const ruleSet = {
+    version: 1,
+    ruleSetName: ruleSetName,
+    owner: Array.from(owner.publicKey.toBytes()),
+    operations: {
+      Transfer: {
+        PubkeyMatch: {
+          pubkey: Array.from(validAuthority.publicKey.toBytes()),
+          field: 'Authority',
+        },
+      },
+    },
+  };
+  const serializedRuleSet = encode(ruleSet);
+
+  // Find the ruleset PDA
+  const [ruleSetPda] = PublicKey.findProgramAddressSync(
+    [Buffer.from('rule_set'), payer.publicKey.toBuffer(), Buffer.from(ruleSetName)],
+    TOKEN_AUTH_RULES_ID,
+  );
+
+  // Create the ruleset at the PDA address with the serialized ruleset values.
+  const { tx: createRuleSetTx } = await API.createRuleSet(
+    t,
+    payer,
+    ruleSetPda,
+    serializedRuleSet,
+    handler,
+  );
+  await createRuleSetTx.assertSuccess(t);
+
+  // // Set up our programmable config with the ruleset PDA.
+  const programmableConfig: ProgrammableConfig = {
+    ruleSet: ruleSetPda,
+  };
+
+  const { mint, metadata, masterEdition, token } = await createAndMintDefaultAsset(
+    t,
+    connection,
+    API,
+    handler,
+    payer,
+    TokenStandard.NonFungible,
+    programmableConfig,
+    1,
+  );
+
+  const destination = Keypair.generate();
+  const destinationToken = await getOrCreateAssociatedTokenAccount(
+    connection,
+    payer,
+    mint,
+    destination.publicKey,
+  );
+
+  const amount = 1;
+
+  // Try to transfer with fake delegate. This should fail.
+  const { tx: fakeDelegateTransferTx } = await API.transfer(
+    payer,
+    invalidAuthority.publicKey,
+    token,
+    mint,
+    metadata,
+    masterEdition,
+    destination.publicKey,
+    destinationToken.address,
+    null,
+    amount,
+    handler,
+  );
+
+  await fakeDelegateTransferTx.assertError(t, /Invalid transfer authority/);
+});

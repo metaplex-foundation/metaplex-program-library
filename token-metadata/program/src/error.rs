@@ -596,6 +596,10 @@ pub enum MetadataError {
     /// 148
     #[error("Invalid delegate role for transfer")]
     InvalidDelegateRoleForTransfer,
+
+    /// 149
+    #[error("Invalid transfer authority")]
+    InvalidTransferAuthority,
 }
 
 impl PrintProgramError for MetadataError {

@@ -8,7 +8,7 @@ use crate::{
     assertions::{assert_delegate, assert_owned_by, metadata::assert_currently_holding},
     error::MetadataError,
     instruction::{Context, DelegateRole, Transfer, TransferArgs},
-    state::{Metadata, TokenMetadataAccount, TokenStandard},
+    state::{Metadata, Operation, TokenMetadataAccount, TokenStandard},
     utils::{auth_rules_validate, frozen_transfer, AuthRulesValidateParams},
 };
 
@@ -110,11 +110,14 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
 
     let auth_rules_validate_params = AuthRulesValidateParams {
         mint_info: ctx.accounts.mint_info,
-        destination_owner_info: ctx.accounts.destination_owner_info,
+        target_info: Some(ctx.accounts.destination_owner_info),
+        authority_info: Some(ctx.accounts.authority_info),
+        owner_info: None,
         programmable_config: metadata.programmable_config.clone(),
         amount,
         auth_data,
         auth_rules_info: ctx.accounts.authorization_rules_info,
+        operation: Operation::Transfer,
     };
 
     let token_standard = metadata.token_standard.ok_or_else(|| {
@@ -234,7 +237,7 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
             if matches!(token_standard, TokenStandard::ProgrammableNonFungible) {
                 auth_rules_validate(auth_rules_validate_params)?;
             } else {
-                panic!("Only programmable NFTs can have a sale delegate");
+                return Err(MetadataError::InvalidTransferAuthority.into());
             }
         }
     }
