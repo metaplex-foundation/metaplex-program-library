@@ -3242,6 +3242,29 @@ createErrorFromNameLookup.set(
 );
 
 /**
+ * InvalidTransferAuthority: 'Invalid transfer authority'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidTransferAuthorityError extends Error {
+  readonly code: number = 0x97;
+  readonly name: string = 'InvalidTransferAuthority';
+  constructor() {
+    super('Invalid transfer authority');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidTransferAuthorityError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x97, () => new InvalidTransferAuthorityError());
+createErrorFromNameLookup.set(
+  'InvalidTransferAuthority',
+  () => new InvalidTransferAuthorityError(),
+);
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

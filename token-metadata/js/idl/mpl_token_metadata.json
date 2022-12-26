@@ -5449,6 +5449,11 @@
       "code": 150,
       "name": "InvalidDelegateRoleForTransfer",
       "msg": "Invalid delegate role for transfer"
+    },
+    {
+      "code": 151,
+      "name": "InvalidTransferAuthority",
+      "msg": "Invalid transfer authority"
     }
   ],
   "metadata": {

@@ -84,4 +84,4 @@ export const updateArgsBeet = beet.dataEnum<UpdateArgsRecord>([
       'UpdateArgsRecord["V1"]',
     ),
   ],
-]) as beet.FixableBeet<UpdateArgs>;
+]) as beet.FixableBeet<UpdateArgs, UpdateArgs>;

@@ -11,7 +11,7 @@ import {
   TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
 import * as splToken from '@solana/spl-token';
-import { Metadata, ProgrammableConfig, TokenStandard } from 'src/generated';
+import { Metadata, ProgrammableConfig, DelegateArgs, TokenStandard } from 'src/generated';
 import { PROGRAM_ID as TOKEN_AUTH_RULES_ID } from '@metaplex-foundation/mpl-token-auth-rules';
 import { PROGRAM_ID as TOKEN_METADATA_ID } from '../src/generated';
 import { encode } from '@msgpack/msgpack';
@@ -176,7 +176,7 @@ test('Transfer: ProgrammableNonFungible (wallet-to-wallet)', async (t) => {
   );
 });
 
-test.only('Transfer: ProgrammableNonFungible (program-owned)', async (t) => {
+test('Transfer: ProgrammableNonFungible (program-owned)', async (t) => {
   const API = new InitTransactions();
   const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
 
@@ -525,43 +525,153 @@ test('Transfer: FungibleAsset', async (t) => {
   t.true(amountAfterTransfer.toString() === '5', 'destination amount equal to 5');
   t.equal(remainingAmount.toString(), '5', 'remaining amount after transfer is 5');
 });
-/*
+
 test('Transfer: NonFungible asset with delegate', async (t) => {
   const API = new InitTransactions();
   const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
 
+  const owner = payer;
+
   const { mint, metadata, masterEdition, token } = await createAndMintDefaultAsset(
     t,
+    connection,
     API,
     handler,
     payer,
+    TokenStandard.NonFungible,
+    null,
+    1,
   );
 
-  const owner = payer;
+  // Generate the delegate keypair
+  const delegate = Keypair.generate();
+
+  // Find delegate record Pda
+  const [delegateRecord] = PublicKey.findProgramAddressSync(
+    [
+      mint.toBuffer(),
+      Buffer.from('collection_delegate'),
+      delegate.publicKey.toBuffer(),
+      payer.publicKey.toBuffer(),
+    ],
+    TOKEN_METADATA_ID,
+  );
+
+  const delegateArgs: DelegateArgs = {
+    __kind: 'TransferV1',
+    amount: 1,
+  };
+
+  // Approve delegate
+  const { tx: delegateTx } = await API.delegate(
+    delegateRecord,
+    delegate.publicKey,
+    mint,
+    metadata,
+    masterEdition,
+    payer.publicKey,
+    payer,
+    delegateArgs,
+    handler,
+    token,
+  );
+  await delegateTx.assertSuccess(t);
+
   const destination = Keypair.generate();
-  const destinationToken = await createAssociatedTokenAccount(
+  const destinationToken = await getOrCreateAssociatedTokenAccount(
     connection,
     payer,
     mint,
     destination.publicKey,
   );
+
+  const fakeDelegate = Keypair.generate();
+
   const amount = 1;
 
-  // Approve delegate
-  panic('Not implemented');
-
-  const { tx: transferTx } = await API.transfer(
-    owner,
+  // Try to transfer with fake delegate. This should fail.
+  const { tx: fakeDelegateTransferTx } = await API.transfer(
+    fakeDelegate, // Transfer authority: the fake delegate
+    payer.publicKey, // Owner of the asset
     token,
     mint,
     metadata,
     masterEdition,
     destination.publicKey,
-    destinationToken,
+    destinationToken.address,
+    null,
+    amount,
+    handler,
+  );
+
+  await fakeDelegateTransferTx.assertError(
+    t,
+    /All tokens in this account have not been delegated to this user/,
+  );
+
+  // Transfer using the legitimate delegate
+  // Try to transfer with fake delegate. This should fail.
+  const { tx: transferTx } = await API.transfer(
+    delegate, // Transfer authority: the real delegate
+    owner.publicKey, // Owner of the asset
+    token,
+    mint,
+    metadata,
+    masterEdition,
+    destination.publicKey,
+    destinationToken.address,
+    null,
     amount,
     handler,
   );
 
   await transferTx.assertSuccess(t);
 });
-*/
+
+test('Transfer: NonFungible asset with invalid authority', async (t) => {
+  const API = new InitTransactions();
+  const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
+
+  const { mint, metadata, masterEdition, token } = await createAndMintDefaultAsset(
+    t,
+    connection,
+    API,
+    handler,
+    payer,
+    TokenStandard.NonFungible,
+    null,
+    1,
+  );
+
+  // This is not a delegate, owner, or a public key in auth rules.
+  // Because this is a NFT not a PNFT, it will fail as an
+  // invalid authority, not as a failed auth rules check.
+  const invalidAuthority = Keypair.generate();
+
+  const destination = Keypair.generate();
+  const destinationToken = await getOrCreateAssociatedTokenAccount(
+    connection,
+    payer,
+    mint,
+    destination.publicKey,
+  );
+
+  const amount = 1;
+
+  // Try to transfer with fake delegate. This should fail.
+  const { tx: fakeDelegateTransferTx } = await API.transfer(
+    payer,
+    invalidAuthority.publicKey,
+    token,
+    mint,
+    metadata,
+    masterEdition,
+    destination.publicKey,
+    destinationToken.address,
+    null,
+    amount,
+    handler,
+  );
+
+  await fakeDelegateTransferTx.assertError(t, /Invalid transfer authority/);
+});
