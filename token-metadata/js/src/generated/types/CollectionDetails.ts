@@ -48,4 +48,4 @@ export const collectionDetailsBeet = beet.dataEnum<CollectionDetailsRecord>([
       'CollectionDetailsRecord["V1"]',
     ),
   ],
-]) as beet.FixableBeet<CollectionDetails, CollectionDetails>;
+]) as beet.FixableBeet<CollectionDetails>;

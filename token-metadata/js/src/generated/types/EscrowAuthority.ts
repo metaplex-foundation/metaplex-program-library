@@ -55,4 +55,4 @@ export const escrowAuthorityBeet = beet.dataEnum<EscrowAuthorityRecord>([
       'EscrowAuthorityRecord["Creator"]',
     ),
   ],
-]) as beet.FixableBeet<EscrowAuthority, EscrowAuthority>;
+]) as beet.FixableBeet<EscrowAuthority>;

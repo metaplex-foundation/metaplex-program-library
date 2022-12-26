@@ -1,15 +1,19 @@
 import test from 'tape';
 import { amman, InitTransactions, killStuckProcess } from './setup';
-import { Keypair, PublicKey } from '@solana/web3.js';
+import { Keypair, PublicKey, sendAndConfirmTransaction, Transaction } from '@solana/web3.js';
 import { createAndMintDefaultAsset } from './utils/DigitalAssetManager';
 import {
   createAssociatedTokenAccount,
+  createAssociatedTokenAccountInstruction,
   getAccount,
+  getAssociatedTokenAddress,
   getOrCreateAssociatedTokenAccount,
   TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
+import * as splToken from '@solana/spl-token';
 import { Metadata, ProgrammableConfig, TokenStandard } from 'src/generated';
 import { PROGRAM_ID as TOKEN_AUTH_RULES_ID } from '@metaplex-foundation/mpl-token-auth-rules';
+import { PROGRAM_ID as TOKEN_METADATA_ID } from '../src/generated';
 import { encode } from '@msgpack/msgpack';
 import spok from 'spok';
 import { spokSamePubkey } from './utils';
@@ -169,6 +173,199 @@ test('Transfer: ProgrammableNonFungible (wallet-to-wallet)', async (t) => {
   t.true(
     (await getAccount(connection, token)).amount.toString() === '0',
     'token amount after transfer equal to 0',
+  );
+});
+
+test.only('Transfer: ProgrammableNonFungible (program-owned)', async (t) => {
+  const API = new InitTransactions();
+  const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
+
+  const owner = payer;
+  const authority = payer;
+
+  // Set up our rule set with one pubkey match rule for transfer
+  // where the target is a program-owned account of the Token Metadata
+  // program.
+  const ruleSetName = 'transfer_test';
+  const ruleSet = {
+    version: 1,
+    ruleSetName: ruleSetName,
+    owner: Array.from(owner.publicKey.toBytes()),
+    operations: {
+      Transfer: {
+        ProgramOwned: {
+          program: Array.from(TOKEN_METADATA_ID.toBytes()),
+          field: 'Target',
+        },
+      },
+    },
+  };
+  const serializedRuleSet = encode(ruleSet);
+
+  // Find the ruleset PDA
+  const [ruleSetPda] = PublicKey.findProgramAddressSync(
+    [Buffer.from('rule_set'), payer.publicKey.toBuffer(), Buffer.from(ruleSetName)],
+    TOKEN_AUTH_RULES_ID,
+  );
+
+  // Create the ruleset at the PDA address with the serialized ruleset values.
+  const { tx: createRuleSetTx } = await API.createRuleSet(
+    t,
+    payer,
+    ruleSetPda,
+    serializedRuleSet,
+    handler,
+  );
+  await createRuleSetTx.assertSuccess(t);
+
+  // Set up our programmable config with the ruleset PDA.
+  const programmableConfig: ProgrammableConfig = {
+    ruleSet: ruleSetPda,
+  };
+
+  // Create an NFT with the programmable config stored on the metadata.
+  const { mint, metadata, masterEdition, token } = await createAndMintDefaultAsset(
+    t,
+    connection,
+    API,
+    handler,
+    payer,
+    TokenStandard.ProgrammableNonFungible,
+    programmableConfig,
+  );
+
+  const metadataAccount = await Metadata.fromAccountAddress(connection, metadata);
+  spok(t, metadataAccount.programmableConfig, {
+    ruleSet: spokSamePubkey(programmableConfig.ruleSet),
+  });
+
+  const tokenAccount = await getAccount(connection, token, 'confirmed', TOKEN_PROGRAM_ID);
+  t.true(tokenAccount.amount.toString() === '1', 'token account amount equal to 1');
+
+  // Our first destination is going to be an account owned by the
+  // mpl-token-auth-rules program as a convenient program-owned account
+  // that is not owned by token-metadata.
+  const invalidDestination = ruleSetPda;
+
+  // We have to manually run the create ATA transaction since the helper
+  // function from SPL token does not allow creating one for an off-curve
+  // address.
+  const invalidDestinationToken = await getAssociatedTokenAddress(
+    mint,
+    invalidDestination,
+    true, // Allow off-curve addresses
+    splToken.TOKEN_PROGRAM_ID,
+    splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
+  );
+
+  const invalidAtaTx = new Transaction().add(
+    createAssociatedTokenAccountInstruction(
+      payer.publicKey,
+      invalidDestinationToken,
+      invalidDestination,
+      mint,
+      splToken.TOKEN_PROGRAM_ID,
+      splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
+    ),
+  );
+
+  await sendAndConfirmTransaction(connection, invalidAtaTx, [payer]);
+
+  // Transfer the NFT to the invalid destination account, this should fail.
+  const { tx: invalidTransferTx } = await API.transfer(
+    authority,
+    owner.publicKey,
+    token,
+    mint,
+    metadata,
+    masterEdition,
+    invalidDestination,
+    invalidDestinationToken,
+    ruleSetPda,
+    1,
+    handler,
+  );
+
+  // Cusper matches the error code from mpl-token-auth-rules
+  // to a mpl-token-metadata error which gives us the wrong message
+  // so we match on the actual log values here instead.
+  await invalidTransferTx.assertLogs(t, [
+    /Instruction: Validate/,
+    /Failed to validate: Custom program error: 0xa/,
+    /Program Owned check failed/,
+    /Program auth9SigNpDKz4sJJ1DfCTuZrZNSAgh9sFD3rboVmgg/,
+  ]);
+
+  // Transfer failed so token should still be present on the original
+  // account.
+  t.true(
+    (await getAccount(connection, token)).amount.toString() === '1',
+    'token amount after transfer equal to 1',
+  );
+  t.true(
+    (await getAccount(connection, invalidDestinationToken)).amount.toString() === '0',
+    'token amount after transfer equal to 0',
+  );
+
+  // Our valid destination is going to be an account owned by the
+  // mpl-token-metadata program. Any one will do so for convenience
+  // we just use the existing metadata account.
+  const destination = metadata;
+
+  // We have to manually run the create ATA transaction since the helper
+  // function from SPL token does not allow creating one for an off-curve
+  // address.
+  const destinationToken = await getAssociatedTokenAddress(
+    mint,
+    destination,
+    true, // Allow off-curve addresses
+    splToken.TOKEN_PROGRAM_ID,
+    splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
+  );
+
+  const ataTx = new Transaction().add(
+    createAssociatedTokenAccountInstruction(
+      payer.publicKey,
+      destinationToken,
+      destination,
+      mint,
+      splToken.TOKEN_PROGRAM_ID,
+      splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
+    ),
+  );
+
+  await sendAndConfirmTransaction(connection, ataTx, [payer]);
+
+  // Transfer the NFT to the destination account, this should work since
+  // the destination account is in the ruleset.
+  const { tx: transferTx } = await API.transfer(
+    authority,
+    owner.publicKey,
+    token,
+    mint,
+    metadata,
+    masterEdition,
+    destination,
+    destinationToken,
+    ruleSetPda,
+    1,
+    handler,
+  );
+
+  // Cusper matches the error code from mpl-token-auth-rules
+  // to a mpl-token-metadata error which gives us the wrong message
+  // so we match on the actual log values here instead.
+  await transferTx.assertSuccess(t);
+
+  // Transfer succeed so token should have moved to the destination
+  // account.
+  t.true(
+    (await getAccount(connection, token)).amount.toString() === '0',
+    'token amount after transfer equal to 0',
+  );
+  t.true(
+    (await getAccount(connection, destinationToken)).amount.toString() === '1',
+    'token amount after transfer equal to 1',
   );
 });
 
