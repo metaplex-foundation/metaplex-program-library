@@ -8,7 +8,7 @@ import { dataBeet } from '../generated/types/Data';
 import { keyBeet } from '../generated/types/Key';
 import { tokenStandardBeet } from '../generated/types/TokenStandard';
 import { usesBeet } from '../generated/types/Uses';
-import { delegateStateBeet } from 'src/generated';
+import { delegateStateBeet } from '../generated';
 
 const NONE_BYTE_SIZE = beet.coptionNone('').byteSize;
 
