@@ -410,39 +410,52 @@ impl InstructionBuilder for super::builders::Mint {
     }
 }
 
+/// Transfer tokens from a token account.
+///
+/// # Accounts:
+///
+///   0. `[signer, writable]` Transfer authority (token or delegate owner)
+///   1. `[optional, writable]` Delegate record PDA
+///   2. `[writable]` Token account
+///   3. `[]` Token account owner")]
+///   4. `[writable]` Destination token account
+///   5. `[]` Destination token account owner
+///   6. `[]` Mint of token asset
+///   8. `[writable]` Metadata (pda of ['metadata', program id, mint id])
+///   9. `[optional]` Master Edition of token asset
+///   10. `[]` SPL Token Program
+///   11. `[]` SPL Associated Token Account program
+///   12. `[]` System Program
+///   13. `[]` Instructions sysvar account
+///   14. `[optional]` Token Authorization Rules Program
+///   15. `[optional]` Token Authorization Rules account
 impl InstructionBuilder for super::builders::Transfer {
     fn instruction(&self) -> solana_program::instruction::Instruction {
         let mut accounts = vec![
             AccountMeta::new(self.authority, true),
-            AccountMeta::new_readonly(self.source_owner, false),
-            AccountMeta::new(self.source_token, false),
-            AccountMeta::new(self.destination_owner, false),
-            AccountMeta::new(self.destination_token, false),
+            if let Some(delegate_record) = self.delegate_record {
+                AccountMeta::new(delegate_record, false)
+            } else {
+                AccountMeta::new_readonly(crate::ID, false)
+            },
+            AccountMeta::new(self.token, false),
+            AccountMeta::new_readonly(self.token_owner, false),
+            AccountMeta::new(self.destination, false),
+            AccountMeta::new_readonly(self.destination_owner, false),
             AccountMeta::new_readonly(self.mint, false),
             AccountMeta::new(self.metadata, false),
+            AccountMeta::new_readonly(self.master_edition.unwrap_or(crate::ID), false),
             AccountMeta::new_readonly(self.spl_token_program, false),
             AccountMeta::new_readonly(self.spl_ata_program, false),
             AccountMeta::new_readonly(self.system_program, false),
             AccountMeta::new_readonly(self.sysvar_instructions, false),
         ];
-
-        // Optional edition account
-        if let Some(edition) = self.edition {
-            accounts.push(AccountMeta::new(edition, false));
-        } else {
-            accounts.push(AccountMeta::new_readonly(crate::ID, false));
-        }
-
-        // Optional delegate record account
-        if let Some(record) = self.delegate_record {
-            accounts.push(AccountMeta::new(record, false));
-        } else {
-            accounts.push(AccountMeta::new_readonly(crate::ID, false));
-        }
-
         // Optional authorization rules accounts
         if let Some(rules) = &self.authorization_rules {
-            accounts.push(AccountMeta::new_readonly(mpl_token_auth_rules::ID, false));
+            accounts.push(AccountMeta::new_readonly(
+                self.authorization_rules_program.unwrap_or(crate::ID),
+                false,
+            ));
             accounts.push(AccountMeta::new_readonly(*rules, false));
         } else {
             accounts.push(AccountMeta::new_readonly(crate::ID, false));

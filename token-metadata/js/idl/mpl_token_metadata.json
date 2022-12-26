@@ -2760,31 +2760,38 @@
           "name": "authority",
           "isMut": true,
           "isSigner": true,
-          "desc": "Transfer authority"
+          "desc": "Transfer authority (token or delegate owner)"
         },
         {
-          "name": "sourceOwner",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "Source token account owner"
-        },
-        {
-          "name": "sourceToken",
+          "name": "delegateRecord",
           "isMut": true,
           "isSigner": false,
-          "desc": "Source token account"
+          "desc": "Delegate record PDA",
+          "optional": true
+        },
+        {
+          "name": "token",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Token account"
+        },
+        {
+          "name": "tokenOwner",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Token account owner"
+        },
+        {
+          "name": "destination",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Destination token account"
         },
         {
           "name": "destinationOwner",
           "isMut": false,
           "isSigner": false,
           "desc": "Destination token account owner"
-        },
-        {
-          "name": "destinationToken",
-          "isMut": true,
-          "isSigner": false,
-          "desc": "Destination token account address"
         },
         {
           "name": "mint",
@@ -2797,6 +2804,13 @@
           "isMut": true,
           "isSigner": false,
           "desc": "Metadata (pda of ['metadata', program id, mint id])"
+        },
+        {
+          "name": "masterEdition",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Master Edition of token asset",
+          "optional": true
         },
         {
           "name": "splTokenProgram",
@@ -2823,20 +2837,6 @@
           "desc": "Instructions sysvar account"
         },
         {
-          "name": "edition",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "Edition of token asset",
-          "optional": true
-        },
-        {
-          "name": "delegateRecord",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "Delegate record PDA",
-          "optional": true
-        },
-        {
           "name": "authorizationRulesProgram",
           "isMut": false,
           "isSigner": false,
@@ -2845,7 +2845,7 @@
         },
         {
           "name": "authorizationRules",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false,
           "desc": "Token Authorization Rules account",
           "optional": true
@@ -5444,6 +5444,11 @@
       "code": 149,
       "name": "MissingAuthorizationRulesProgram",
       "msg": "Missing SPL token program"
+    },
+    {
+      "code": 150,
+      "name": "InvalidDelegateRoleForTransfer",
+      "msg": "Invalid delegate role for transfer"
     }
   ],
   "metadata": {

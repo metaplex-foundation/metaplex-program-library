@@ -48,9 +48,6 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
         amount,
     } = args;
 
-    //** Account Validation **/
-    msg!("Account Validation");
-
     // Check signers
 
     // This authority must always be a signer, regardless of if it's the
@@ -61,14 +58,14 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
     // Assert program ownership
     assert_owned_by(ctx.accounts.metadata_info, program_id)?;
     assert_owned_by(ctx.accounts.mint_info, &spl_token::ID)?;
-    assert_owned_by(ctx.accounts.source_token_info, &spl_token::ID)?;
-    assert_owned_by(ctx.accounts.destination_token_info, &spl_token::ID)?;
+    assert_owned_by(ctx.accounts.token_info, &spl_token::ID)?;
+    assert_owned_by(ctx.accounts.destination_info, &spl_token::ID)?;
 
     if let Some(delegate_record_info) = ctx.accounts.delegate_record_info {
         assert_owned_by(delegate_record_info, program_id)?;
     }
-    if let Some(edition) = ctx.accounts.edition_info {
-        assert_owned_by(edition, program_id)?;
+    if let Some(master_edition) = ctx.accounts.master_edition_info {
+        assert_owned_by(master_edition, program_id)?;
     }
     if let Some(authorization_rules) = ctx.accounts.authorization_rules_info {
         assert_owned_by(authorization_rules, &mpl_token_auth_rules::ID)?;
@@ -103,8 +100,8 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
 
     let token_transfer_params: TokenTransferParams = TokenTransferParams {
         mint: ctx.accounts.mint_info.clone(),
-        source: ctx.accounts.source_token_info.clone(),
-        destination: ctx.accounts.destination_token_info.clone(),
+        source: ctx.accounts.token_info.clone(),
+        destination: ctx.accounts.destination_info.clone(),
         amount,
         authority: ctx.accounts.authority_info.clone(),
         authority_signer_seeds: None,
@@ -120,10 +117,9 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
         auth_rules_info: ctx.accounts.authorization_rules_info,
     };
 
-    if metadata.token_standard.is_none() {
-        return Err(MetadataError::InvalidTokenStandard.into());
-    }
-    let token_standard = metadata.token_standard.unwrap();
+    let token_standard = metadata
+        .token_standard
+        .ok_or::<ProgramError>(MetadataError::InvalidTokenStandard.into())?;
 
     // Sale delegates prevent any other kind of transfer.
     let is_sale_delegate_set = if let Some(ref delegate_state) = metadata.delegate_state {
@@ -134,7 +130,7 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
 
     // Wallet-to-wallet transfer are always allowed except if a sale
     // delegate is set.
-    let is_wallet_to_wallet = ctx.accounts.source_owner_info.owner == &system_program::ID
+    let is_wallet_to_wallet = ctx.accounts.token_owner_info.owner == &system_program::ID
         && ctx.accounts.destination_owner_info.owner == &system_program::ID;
 
     // Determine transfer type.
@@ -145,7 +141,7 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
         // those are the only valid delegate roles that can be set on
         // the metadata.
         delegate_state.role.clone().into()
-    } else if ctx.accounts.source_owner_info.key == ctx.accounts.authority_info.key {
+    } else if ctx.accounts.token_owner_info.key == ctx.accounts.authority_info.key {
         // Owner and authority are the same so this is a normal owner transfer.
         TransferAuthority::Owner
     } else {
@@ -160,6 +156,8 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
         return Err(MetadataError::OnlySaleDelegateCanTransfer.into());
     }
 
+    // validates the transfer authority
+
     match transfer_authority {
         // Owner transfers are just a wrapper around SPL token transfer
         // for non-programmable assets.
@@ -171,22 +169,20 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
             // mint, token, owner and metadata accounts all match up.
             assert_currently_holding(
                 &crate::ID,
-                ctx.accounts.source_owner_info,
+                ctx.accounts.token_owner_info,
                 ctx.accounts.metadata_info,
                 &metadata,
                 ctx.accounts.mint_info,
-                ctx.accounts.source_token_info,
+                ctx.accounts.token_info,
             )?;
 
-            // If it's not a wallet-to-wallet transfer and is a PNFT then
+            // If it's not a wallet-to-wallet transfer and is a pNFT then
             // we follow authorization rules for the transfer.
             if !is_wallet_to_wallet
                 && matches!(token_standard, TokenStandard::ProgrammableNonFungible)
             {
-                msg!("Program transfer for PNFT");
+                msg!("Program transfer for pNFT");
                 auth_rules_validate(auth_rules_validate_params)?;
-                frozen_transfer(token_transfer_params, ctx.accounts.edition_info)?;
-                return Ok(());
             }
             // Otherwise, proceed to transfer normally.
         }
@@ -203,8 +199,6 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
 
             if matches!(token_standard, TokenStandard::ProgrammableNonFungible) {
                 auth_rules_validate(auth_rules_validate_params)?;
-                frozen_transfer(token_transfer_params, ctx.accounts.edition_info)?;
-                return Ok(());
             } else {
                 panic!("Only programmable NFTs can have a sale delegate");
             }
@@ -227,8 +221,6 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
                 && matches!(token_standard, TokenStandard::ProgrammableNonFungible)
             {
                 auth_rules_validate(auth_rules_validate_params)?;
-                frozen_transfer(token_transfer_params, ctx.accounts.edition_info)?;
-                return Ok(());
             }
             // Otherwise, proceed to transfer normally.
         }
@@ -239,18 +231,18 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
             msg!("Auth rules transfer");
             if matches!(token_standard, TokenStandard::ProgrammableNonFungible) {
                 auth_rules_validate(auth_rules_validate_params)?;
-                frozen_transfer(token_transfer_params, ctx.accounts.edition_info)?;
-                return Ok(());
             } else {
                 panic!("Only programmable NFTs can have a sale delegate");
             }
         }
     }
 
+    // performs the transfer
+
     match token_standard {
         TokenStandard::ProgrammableNonFungible => {
-            msg!("Transferring PNFT");
-            frozen_transfer(token_transfer_params, ctx.accounts.edition_info)?
+            msg!("Transferring pNFT");
+            frozen_transfer(token_transfer_params, ctx.accounts.master_edition_info)?
         }
         _ => {
             msg!("Transferring NFT normally");

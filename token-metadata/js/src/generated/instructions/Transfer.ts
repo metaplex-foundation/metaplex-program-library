@@ -36,38 +36,38 @@ export const TransferStruct = new beet.FixableBeetArgsStruct<
 /**
  * Accounts required by the _Transfer_ instruction
  *
- * @property [_writable_, **signer**] authority Transfer authority
- * @property [] sourceOwner Source token account owner
- * @property [_writable_] sourceToken Source token account
+ * @property [_writable_, **signer**] authority Transfer authority (token or delegate owner)
+ * @property [_writable_] delegateRecord (optional) Delegate record PDA
+ * @property [_writable_] token Token account
+ * @property [] tokenOwner Token account owner
+ * @property [_writable_] destination Destination token account
  * @property [] destinationOwner Destination token account owner
- * @property [_writable_] destinationToken Destination token account address
  * @property [] mint Mint of token asset
  * @property [_writable_] metadata Metadata (pda of ['metadata', program id, mint id])
+ * @property [] masterEdition (optional) Master Edition of token asset
  * @property [] splTokenProgram SPL Token Program
  * @property [] splAtaProgram SPL Associated Token Account program
  * @property [] sysvarInstructions Instructions sysvar account
- * @property [] edition (optional) Edition of token asset
- * @property [] delegateRecord (optional) Delegate record PDA
  * @property [] authorizationRulesProgram (optional) Token Authorization Rules Program
- * @property [_writable_] authorizationRules (optional) Token Authorization Rules account
+ * @property [] authorizationRules (optional) Token Authorization Rules account
  * @category Instructions
  * @category Transfer
  * @category generated
  */
 export type TransferInstructionAccounts = {
   authority: web3.PublicKey;
-  sourceOwner: web3.PublicKey;
-  sourceToken: web3.PublicKey;
+  delegateRecord?: web3.PublicKey;
+  token: web3.PublicKey;
+  tokenOwner: web3.PublicKey;
+  destination: web3.PublicKey;
   destinationOwner: web3.PublicKey;
-  destinationToken: web3.PublicKey;
   mint: web3.PublicKey;
   metadata: web3.PublicKey;
+  masterEdition?: web3.PublicKey;
   splTokenProgram: web3.PublicKey;
   splAtaProgram: web3.PublicKey;
   systemProgram?: web3.PublicKey;
   sysvarInstructions: web3.PublicKey;
-  edition?: web3.PublicKey;
-  delegateRecord?: web3.PublicKey;
   authorizationRulesProgram?: web3.PublicKey;
   authorizationRules?: web3.PublicKey;
 };
@@ -103,23 +103,28 @@ export function createTransferInstruction(
       isSigner: true,
     },
     {
-      pubkey: accounts.sourceOwner,
+      pubkey: accounts.delegateRecord ?? programId,
+      isWritable: accounts.delegateRecord != null,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.token,
+      isWritable: true,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.tokenOwner,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: accounts.sourceToken,
+      pubkey: accounts.destination,
       isWritable: true,
       isSigner: false,
     },
     {
       pubkey: accounts.destinationOwner,
       isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.destinationToken,
-      isWritable: true,
       isSigner: false,
     },
     {
@@ -130,6 +135,11 @@ export function createTransferInstruction(
     {
       pubkey: accounts.metadata,
       isWritable: true,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.masterEdition ?? programId,
+      isWritable: false,
       isSigner: false,
     },
     {
@@ -153,23 +163,13 @@ export function createTransferInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.edition ?? programId,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.delegateRecord ?? programId,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
       pubkey: accounts.authorizationRulesProgram ?? programId,
       isWritable: false,
       isSigner: false,
     },
     {
       pubkey: accounts.authorizationRules ?? programId,
-      isWritable: accounts.authorizationRules != null,
+      isWritable: false,
       isSigner: false,
     },
   ];

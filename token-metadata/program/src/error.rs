@@ -592,6 +592,10 @@ pub enum MetadataError {
     /// 147
     #[error("Missing SPL token program")]
     MissingAuthorizationRulesProgram,
+
+    /// 148
+    #[error("Invalid delegate role for transfer")]
+    InvalidDelegateRoleForTransfer,
 }
 
 impl PrintProgramError for MetadataError {

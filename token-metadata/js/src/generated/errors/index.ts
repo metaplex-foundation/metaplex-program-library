@@ -3219,6 +3219,29 @@ createErrorFromNameLookup.set(
 );
 
 /**
+ * InvalidDelegateRoleForTransfer: 'Invalid delegate role for transfer'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidDelegateRoleForTransferError extends Error {
+  readonly code: number = 0x96;
+  readonly name: string = 'InvalidDelegateRoleForTransfer';
+  constructor() {
+    super('Invalid delegate role for transfer');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidDelegateRoleForTransferError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x96, () => new InvalidDelegateRoleForTransferError());
+createErrorFromNameLookup.set(
+  'InvalidDelegateRoleForTransfer',
+  () => new InvalidDelegateRoleForTransferError(),
+);
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

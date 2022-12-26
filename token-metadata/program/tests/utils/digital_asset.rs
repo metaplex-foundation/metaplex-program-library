@@ -349,15 +349,15 @@ impl DigitalAsset {
         let mut builder = TransferBuilder::new();
         builder
             .authority(authority.pubkey())
-            .source_owner(*source_owner)
-            .source_token(self.token.unwrap())
+            .token_owner(*source_owner)
+            .token(self.token.unwrap())
             .destination_owner(destination_owner)
-            .destination_token(destination_token)
+            .destination(destination_token)
             .metadata(self.metadata)
             .mint(self.mint.pubkey());
 
         if let Some(master_edition) = self.master_edition {
-            builder.edition(master_edition);
+            builder.master_edition(master_edition);
         }
 
         if let Some(authorization_rules) = authorization_rules {
