@@ -9,11 +9,10 @@ import {
   TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
 import { Metadata, ProgrammableConfig, TokenStandard } from 'src/generated';
-import {
-  PREFIX,
-  PROGRAM_ID as TOKEN_AUTH_RULES_ID,
-} from '@metaplex-foundation/mpl-token-auth-rules';
+import { PROGRAM_ID as TOKEN_AUTH_RULES_ID } from '@metaplex-foundation/mpl-token-auth-rules';
 import { encode } from '@msgpack/msgpack';
+import spok from 'spok';
+import { spokSamePubkey } from './utils';
 
 killStuckProcess();
 
@@ -72,8 +71,8 @@ test('Transfer: NonFungible', async (t) => {
   t.true(amountAfterTransfer.toString() === '1', 'destination amount equal to 1');
   t.true(remainingAmount.toString() === '0', 'source amount equal to 0');
 });
-/*
-test.only('Transfer: ProgrammableNonFungible', async (t) => {
+
+test('Transfer: ProgrammableNonFungible (wallet-to-wallet)', async (t) => {
   const API = new InitTransactions();
   const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
 
@@ -87,19 +86,25 @@ test.only('Transfer: ProgrammableNonFungible', async (t) => {
 
   // Set up our rule set with one pubkey match rule for transfer.
 
-  const ruleSetName = "transfer_test";
-  const ruleSet = [
-    {
+  const ruleSetName = 'transfer_test';
+  const ruleSet = {
+    version: 1,
+    ruleSetName: ruleSetName,
+    owner: Array.from(owner.publicKey.toBytes()),
+    operations: {
       Transfer: {
-        ProgramOwned: [Array.from(owner.publicKey.toBytes())],
+        ProgramOwned: {
+          program: Array.from(owner.publicKey.toBytes()),
+          field: 'Target',
+        },
       },
     },
-  ];
+  };
   const serializedRuleSet = encode(ruleSet);
 
   // Find the ruleset PDA
   const [ruleSetPda] = PublicKey.findProgramAddressSync(
-    [Buffer.from(PREFIX), payer.publicKey.toBuffer(), Buffer.from(ruleSetName)],
+    [Buffer.from('rule_set'), payer.publicKey.toBuffer(), Buffer.from(ruleSetName)],
     TOKEN_AUTH_RULES_ID,
   );
 
@@ -130,45 +135,19 @@ test.only('Transfer: ProgrammableNonFungible', async (t) => {
   );
 
   const metadataAccount = await Metadata.fromAccountAddress(connection, metadata);
-  t.equals(metadataAccount.programmableConfig, programmableConfig);
+  spok(t, metadataAccount.programmableConfig, {
+    ruleSet: spokSamePubkey(programmableConfig.ruleSet),
+  });
 
   const tokenAccount = await getAccount(connection, token, 'confirmed', TOKEN_PROGRAM_ID);
+  t.true(tokenAccount.amount.toString() === '1', 'token account amount equal to 1');
 
-  console.log(tokenAccount.amount);
-
-  // Create the destination token account.
   const destinationToken = await createAssociatedTokenAccount(
     connection,
     payer,
     mint,
     destination.publicKey,
   );
-  const invalidDestinationToken = await createAssociatedTokenAccount(
-    connection,
-    payer,
-    mint,
-    invalidDestination.publicKey,
-  );
-  const amount = 1;
-
-  // Transfer the NFT to the destination account, this should work since
-  // the destination account is in the ruleset.
-  const { tx: invalidTransferTx } = await API.transfer(
-    authority,
-    owner.publicKey,
-    token,
-    mint,
-    metadata,
-    masterEdition,
-    invalidDestination.publicKey,
-    invalidDestinationToken,
-    ruleSetPda,
-    amount,
-    handler,
-  );
-  await invalidTransferTx.assertError(t, /Pubkey Match check failed/);
-  // await invalidTransferTx.assertSuccess(t);
-
   // Transfer the NFT to the destination account, this should work since
   // the destination account is in the ruleset.
   const { tx: transferTx } = await API.transfer(
@@ -181,13 +160,18 @@ test.only('Transfer: ProgrammableNonFungible', async (t) => {
     destination.publicKey,
     destinationToken,
     ruleSetPda,
-    amount,
+    1,
     handler,
   );
 
   await transferTx.assertSuccess(t);
+
+  t.true(
+    (await getAccount(connection, token)).amount.toString() === '0',
+    'token amount after transfer equal to 0',
+  );
 });
-*/
+
 /*
 test('Transfer: NonFungibleEdition', async (t) => {
   const API = new InitTransactions();
