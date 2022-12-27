@@ -44,17 +44,17 @@ When a `ProgrammableNonFungible` asset is created, it can have a `RuleSet` assoc
 
 ## Unified instructions
 
-To interact with the new asset class, a new set of instruction will be added to Token Metadata. It is important to note that current instructions will continue to work using the existing token standard – they will be required for interacting with `ProgrammableNonFungible` assets. At the same time, the **new instructions will support all asset classes** so all interaction can happen via an unified interface regardless of the asset class.
+To interact with the new asset class, a new set of instructions will be added to Token Metadata. It is important to note that current instructions will continue to work using the existing token standards – the new instructions will be required for interacting with `ProgrammableNonFungible` assets. At the same time, the **new instructions will support all asset classes** so all interaction can happen via an unified interface regardless of the asset class.
 
 Token Metadata instruction will be expanded to include:
 
 ```rust
 pub enum MetadataInstruction {
     ..,
-    // Create the metadata and associated accounts
-    Create(CreateArgs),
     // Closes the accounts of an asset
     Burn(BurnArgs),
+    // Create the metadata and associated accounts
+    Create(CreateArgs),
     // Create a delegate
     Delegate(DelegateArgs),
     // Change the asset type of an asset
@@ -76,7 +76,7 @@ pub enum MetadataInstruction {
 }
 ```
 
-Each of these instruction will use versioned `*Args` structs to facilitate future updates, and in turn, not require additional instructions.
+Each of these instructions will use versioned `*Args` structs to facilitate future updates, and in turn, not require additional instructions.
 
 ## Instruction Builders (Rust)
 
