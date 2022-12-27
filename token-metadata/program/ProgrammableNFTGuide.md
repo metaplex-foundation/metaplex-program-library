@@ -26,17 +26,17 @@ A new asset class on the Token Metadata will be added to the `TokenStandard` str
 
 ```rust
 pub enum TokenStandard {
-	/// This is a master edition.
-	NonFungible,
-	/// A token with metadata that can also have attrributes.
-	FungibleAsset,
-	/// A token with simple metadata.
-	Fungible,
-	/// This is a limited edition.
-	NonFungibleEdition,
-	/// [NEW] An NFT with customizale behaviour for lifecycle events
-	/// (e.g. transfers, updates, etc.).
-	ProgrammableNonFungible,
+    /// This is a master edition.
+    NonFungible,
+    /// A token with metadata that can also have attrributes.
+    FungibleAsset,
+    /// A token with simple metadata.
+    Fungible,
+    /// This is a limited edition.
+    NonFungibleEdition,
+    /// [NEW] An NFT with customizale behaviour for lifecycle events
+    /// (e.g. transfers, updates, etc.).
+    ProgrammableNonFungible,
 }
 ```
 
@@ -51,28 +51,28 @@ Token Metadata instruction will be expanded to include:
 ```rust
 pub enum MetadataInstruction {
     ..,
-	// Create the metadata and associated accounts
+    // Create the metadata and associated accounts
     Create(CreateArgs),
-	// Closes the accounts of an asset
-	Burn(BurnArgs),
-	// Create a delegate
-	Delegate(DelegateArgs),
+    // Closes the accounts of an asset
+    Burn(BurnArgs),
+    // Create a delegate
+    Delegate(DelegateArgs),
     // Change the asset type of an asset
-	Migrate(MigrateArgs),
-	// Mint a token
+    Migrate(MigrateArgs),
+    // Mint a token
     Mint(MintArgs),
     // Mint copies of a fungible asset
-	Print(PrintArgs),
+    Print(PrintArgs),
     // Revokes a delegate
-	Revoke(RevokeArgs),
-	// Transfer an asset
-	Transfer(TransferArgs),
-	// Updates the metadata of an asset
-	Update(UpdateArgs),
-	// Authorizes the use of a token
-	UseAsset(UseAssetArgs),
-	// Verifies creator/collection for an asset
-	Verify(VerifyArgs),
+    Revoke(RevokeArgs),
+    // Transfer an asset
+    Transfer(TransferArgs),
+    // Updates the metadata of an asset
+    Update(UpdateArgs),
+    // Authorizes the use of a token
+    UseAsset(UseAssetArgs),
+    // Verifies creator/collection for an asset
+    Verify(VerifyArgs),
 }
 ```
 
