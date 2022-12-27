@@ -6,19 +6,46 @@
  */
 
 import * as beet from '@metaplex-foundation/beet';
+import { MigrationType, migrationTypeBeet } from './MigrationType';
 /**
+ * This type is used to derive the {@link MigrateArgs} type as well as the de/serializer.
+ * However don't refer to it in your code but use the {@link MigrateArgs} type instead.
+ *
+ * @category userTypes
+ * @category enums
+ * @category generated
+ * @private
+ */
+export type MigrateArgsRecord = {
+  V1: { migrationType: MigrationType };
+};
+
+/**
+ * Union type respresenting the MigrateArgs data enum defined in Rust.
+ *
+ * NOTE: that it includes a `__kind` property which allows to narrow types in
+ * switch/if statements.
+ * Additionally `isMigrateArgs*` type guards are exposed below to narrow to a specific variant.
+ *
+ * @category userTypes
  * @category enums
  * @category generated
  */
-export enum MigrateArgs {
-  V1,
-}
+export type MigrateArgs = beet.DataEnumKeyAsKind<MigrateArgsRecord>;
+
+export const isMigrateArgsV1 = (x: MigrateArgs): x is MigrateArgs & { __kind: 'V1' } =>
+  x.__kind === 'V1';
 
 /**
  * @category userTypes
  * @category generated
  */
-export const migrateArgsBeet = beet.fixedScalarEnum(MigrateArgs) as beet.FixedSizeBeet<
-  MigrateArgs,
-  MigrateArgs
->;
+export const migrateArgsBeet = beet.dataEnum<MigrateArgsRecord>([
+  [
+    'V1',
+    new beet.BeetArgsStruct<MigrateArgsRecord['V1']>(
+      [['migrationType', migrationTypeBeet]],
+      'MigrateArgsRecord["V1"]',
+    ),
+  ],
+]) as beet.FixableBeet<MigrateArgs, MigrateArgs>;

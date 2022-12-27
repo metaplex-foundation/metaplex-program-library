@@ -2422,7 +2422,7 @@
           "name": "token",
           "isMut": true,
           "isSigner": false,
-          "desc": "Token account"
+          "desc": "Token or Associated Token account"
         },
         {
           "name": "metadata",
@@ -3127,13 +3127,13 @@
           "desc": "Metadata account"
         },
         {
-          "name": "masterEdition",
+          "name": "edition",
           "isMut": false,
           "isSigner": false,
-          "desc": "Master edition account"
+          "desc": "Edition account"
         },
         {
-          "name": "tokenAccount",
+          "name": "token",
           "isMut": true,
           "isSigner": false,
           "desc": "Token account"
@@ -3145,7 +3145,13 @@
           "desc": "Mint account"
         },
         {
-          "name": "updateAuthority",
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "desc": "Update authority"
+        },
+        {
+          "name": "authority",
           "isMut": false,
           "isSigner": true,
           "desc": "Update authority"
@@ -3155,12 +3161,6 @@
           "isMut": false,
           "isSigner": false,
           "desc": "Collection metadata account"
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "Token Program"
         },
         {
           "name": "systemProgram",
@@ -3173,6 +3173,19 @@
           "isMut": false,
           "isSigner": false,
           "desc": "Instruction sysvar account"
+        },
+        {
+          "name": "splTokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Token Program"
+        },
+        {
+          "name": "authorizationRulesProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Token Authorization Rules Program",
+          "optional": true
         },
         {
           "name": "authorizationRules",
@@ -4477,7 +4490,15 @@
         "kind": "enum",
         "variants": [
           {
-            "name": "V1"
+            "name": "V1",
+            "fields": [
+              {
+                "name": "migration_type",
+                "type": {
+                  "defined": "MigrationType"
+                }
+              }
+            ]
           }
         ]
       }
@@ -4616,6 +4637,20 @@
             "fields": [
               "publicKey"
             ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "MigrationType",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "CollectionV1"
+          },
+          {
+            "name": "ProgrammableV1"
           }
         ]
       }

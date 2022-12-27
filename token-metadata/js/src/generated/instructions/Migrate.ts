@@ -5,7 +5,6 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as splToken from '@solana/spl-token';
 import * as beet from '@metaplex-foundation/beet';
 import * as web3 from '@solana/web3.js';
 import { MigrateArgs, migrateArgsBeet } from '../types/MigrateArgs';
@@ -23,7 +22,7 @@ export type MigrateInstructionArgs = {
  * @category Migrate
  * @category generated
  */
-export const MigrateStruct = new beet.BeetArgsStruct<
+export const MigrateStruct = new beet.FixableBeetArgsStruct<
   MigrateInstructionArgs & {
     instructionDiscriminator: number;
   }
@@ -38,12 +37,15 @@ export const MigrateStruct = new beet.BeetArgsStruct<
  * Accounts required by the _Migrate_ instruction
  *
  * @property [_writable_] metadata Metadata account
- * @property [] masterEdition Master edition account
- * @property [_writable_] tokenAccount Token account
+ * @property [] edition Edition account
+ * @property [_writable_] token Token account
  * @property [] mint Mint account
- * @property [**signer**] updateAuthority Update authority
+ * @property [_writable_, **signer**] payer Update authority
+ * @property [**signer**] authority Update authority
  * @property [] collectionMetadata Collection metadata account
  * @property [] sysvarInstructions Instruction sysvar account
+ * @property [] splTokenProgram Token Program
+ * @property [] authorizationRulesProgram (optional) Token Authorization Rules Program
  * @property [] authorizationRules (optional) Token Authorization Rules account
  * @category Instructions
  * @category Migrate
@@ -51,14 +53,16 @@ export const MigrateStruct = new beet.BeetArgsStruct<
  */
 export type MigrateInstructionAccounts = {
   metadata: web3.PublicKey;
-  masterEdition: web3.PublicKey;
-  tokenAccount: web3.PublicKey;
+  edition: web3.PublicKey;
+  token: web3.PublicKey;
   mint: web3.PublicKey;
-  updateAuthority: web3.PublicKey;
+  payer: web3.PublicKey;
+  authority: web3.PublicKey;
   collectionMetadata: web3.PublicKey;
-  tokenProgram?: web3.PublicKey;
   systemProgram?: web3.PublicKey;
   sysvarInstructions: web3.PublicKey;
+  splTokenProgram: web3.PublicKey;
+  authorizationRulesProgram?: web3.PublicKey;
   authorizationRules?: web3.PublicKey;
 };
 
@@ -93,12 +97,12 @@ export function createMigrateInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.masterEdition,
+      pubkey: accounts.edition,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: accounts.tokenAccount,
+      pubkey: accounts.token,
       isWritable: true,
       isSigner: false,
     },
@@ -108,17 +112,17 @@ export function createMigrateInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.updateAuthority,
+      pubkey: accounts.payer,
+      isWritable: true,
+      isSigner: true,
+    },
+    {
+      pubkey: accounts.authority,
       isWritable: false,
       isSigner: true,
     },
     {
       pubkey: accounts.collectionMetadata,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.tokenProgram ?? splToken.TOKEN_PROGRAM_ID,
       isWritable: false,
       isSigner: false,
     },
@@ -129,6 +133,16 @@ export function createMigrateInstruction(
     },
     {
       pubkey: accounts.sysvarInstructions,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.splTokenProgram,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.authorizationRulesProgram ?? programId,
       isWritable: false,
       isSigner: false,
     },

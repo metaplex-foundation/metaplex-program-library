@@ -13,6 +13,7 @@ import {
   SystemProgram,
   SYSVAR_INSTRUCTIONS_PUBKEY,
   Transaction,
+  TransactionInstruction,
 } from '@solana/web3.js';
 import {
   AssetData,
@@ -56,6 +57,13 @@ import {
   createCreateOrUpdateInstruction,
   PROGRAM_ID as TOKEN_AUTH_RULES_ID,
 } from '@metaplex-foundation/mpl-token-auth-rules';
+import {
+  ACCOUNT_SIZE,
+  createInitializeAccountInstruction,
+  createInitializeMintInstruction,
+  MintLayout,
+  TOKEN_PROGRAM_ID,
+} from '@solana/spl-token';
 export class InitTransactions {
   readonly getKeypair: LoadOrGenKeypair | GenLabeledKeypair;
 
@@ -86,17 +94,28 @@ export class InitTransactions {
     decimals: number,
     maxSupply: number,
     handler: PayerTransactionHandler,
+    mint: PublicKey | null = null,
   ): Promise<{
     tx: ConfirmedTransactionAssertablePromise;
     mint: PublicKey;
     metadata: PublicKey;
     masterEdition?: PublicKey;
   }> {
-    // mint account
-    const [, mint] = await this.getKeypair('Mint Account');
+    let mintPair = null;
+    // create a keypair for the mint account (if needed)
+    if (!mint) {
+      const [, keypair] = await this.getKeypair('Mint Account');
+      amman.addr.addLabel('Mint Account', keypair.publicKey);
+      mintPair = keypair;
+    }
+
     // metadata account
     const [metadata] = PublicKey.findProgramAddressSync(
-      [Buffer.from('metadata'), PROGRAM_ID.toBuffer(), mint.publicKey.toBuffer()],
+      [
+        Buffer.from('metadata'),
+        PROGRAM_ID.toBuffer(),
+        mint ? mint.toBuffer() : mintPair.publicKey.toBuffer(),
+      ],
       PROGRAM_ID,
     );
     amman.addr.addLabel('Metadata Account', metadata);
@@ -112,7 +131,7 @@ export class InitTransactions {
         [
           Buffer.from('metadata'),
           PROGRAM_ID.toBuffer(),
-          mint.publicKey.toBuffer(),
+          mint ? mint.toBuffer() : mintPair.publicKey.toBuffer(),
           Buffer.from('edition'),
         ],
         PROGRAM_ID,
@@ -123,7 +142,7 @@ export class InitTransactions {
     const accounts: CreateInstructionAccounts = {
       metadata,
       masterEdition,
-      mint: mint.publicKey,
+      mint: mint ? mint : mintPair.publicKey,
       mintAuthority: payer.publicKey,
       payer: payer.publicKey,
       splTokenProgram: splToken.TOKEN_PROGRAM_ID,
@@ -142,20 +161,26 @@ export class InitTransactions {
 
     const createIx = createCreateInstruction(accounts, args);
 
-    // this test always initializes the mint, we we need to set the
-    // account to be writable and a signer
-    for (let i = 0; i < createIx.keys.length; i++) {
-      if (createIx.keys[i].pubkey.toBase58() === mint.publicKey.toBase58()) {
-        createIx.keys[i].isSigner = true;
-        createIx.keys[i].isWritable = true;
+    if (!mint) {
+      // this test always initializes the mint, we we need to set the
+      // account to be writable and a signer
+      for (let i = 0; i < createIx.keys.length; i++) {
+        if (createIx.keys[i].pubkey.toBase58() === mintPair.publicKey.toBase58()) {
+          createIx.keys[i].isSigner = true;
+          createIx.keys[i].isWritable = true;
+        }
       }
     }
 
     const tx = new Transaction().add(createIx);
+    const signers = [payer];
+    if (!mint) {
+      signers.push(mintPair);
+    }
 
     return {
-      tx: handler.sendAndConfirmTransaction(tx, [payer, mint], 'tx: Create'),
-      mint: mint.publicKey,
+      tx: handler.sendAndConfirmTransaction(tx, signers, 'tx: Create'),
+      mint: mint ? mint : mintPair.publicKey,
       metadata,
       masterEdition,
     };
@@ -171,12 +196,16 @@ export class InitTransactions {
     authorizationData: AuthorizationData,
     amount: number,
     handler: PayerTransactionHandler,
+    token: PublicKey | null = null,
   ): Promise<{ tx: ConfirmedTransactionAssertablePromise; token: PublicKey }> {
-    // token account
-    const [token] = PublicKey.findProgramAddressSync(
-      [payer.publicKey.toBuffer(), splToken.TOKEN_PROGRAM_ID.toBuffer(), mint.toBuffer()],
-      splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
-    );
+    if (!token) {
+      // mint instrution will initialize a ATA account
+      const [tokenPda] = PublicKey.findProgramAddressSync(
+        [payer.publicKey.toBuffer(), splToken.TOKEN_PROGRAM_ID.toBuffer(), mint.toBuffer()],
+        splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
+      );
+      token = tokenPda;
+    }
     amman.addr.addLabel('Token Account', token);
 
     const metadataAccount = await Metadata.fromAccountAddress(connection, metadata);
@@ -516,6 +545,63 @@ export class InitTransactions {
     return {
       tx: handler.sendAndConfirmTransaction(tx, [payer], 'tx: Revoke'),
       delegate,
+    };
+  }
+
+  async createMintAccount(
+    payer: Keypair,
+    connection: Connection,
+    handler: PayerTransactionHandler,
+  ): Promise<{ tx: ConfirmedTransactionAssertablePromise; mint: PublicKey }> {
+    const mint = Keypair.generate();
+    amman.addr.addLabel('Mint Account', mint.publicKey);
+
+    const ixs: TransactionInstruction[] = [];
+    ixs.push(
+      SystemProgram.createAccount({
+        fromPubkey: payer.publicKey,
+        newAccountPubkey: mint.publicKey,
+        lamports: await connection.getMinimumBalanceForRentExemption(MintLayout.span),
+        space: MintLayout.span,
+        programId: TOKEN_PROGRAM_ID,
+      }),
+    );
+    ixs.push(createInitializeMintInstruction(mint.publicKey, 0, payer.publicKey, payer.publicKey));
+
+    const tx = new Transaction().add(...ixs);
+
+    return {
+      tx: handler.sendAndConfirmTransaction(tx, [payer, mint], 'tx: Create Mint Account'),
+      mint: mint.publicKey,
+    };
+  }
+
+  async createTokenAccount(
+    mint: PublicKey,
+    payer: Keypair,
+    connection: Connection,
+    handler: PayerTransactionHandler,
+  ): Promise<{ tx: ConfirmedTransactionAssertablePromise; token: PublicKey }> {
+    const token = Keypair.generate();
+    amman.addr.addLabel('Token Account', token.publicKey);
+
+    const tx = new Transaction();
+    tx.add(
+      // create account
+      SystemProgram.createAccount({
+        fromPubkey: payer.publicKey,
+        newAccountPubkey: token.publicKey,
+        space: ACCOUNT_SIZE,
+        lamports: await connection.getMinimumBalanceForRentExemption(ACCOUNT_SIZE),
+        programId: TOKEN_PROGRAM_ID,
+      }),
+      // initialize token account
+      createInitializeAccountInstruction(token.publicKey, mint, payer.publicKey),
+    );
+
+    return {
+      tx: handler.sendAndConfirmTransaction(tx, [payer, token], 'tx: Create Token Account'),
+      token: token.publicKey,
     };
   }
 }

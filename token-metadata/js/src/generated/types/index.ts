@@ -20,6 +20,7 @@ export * from './EscrowAuthority';
 export * from './Key';
 export * from './LeafInfo';
 export * from './MigrateArgs';
+export * from './MigrationType';
 export * from './MintArgs';
 export * from './MintNewEditionFromMasterEditionViaTokenArgs';
 export * from './MintPrintingTokensViaTokenArgs';
