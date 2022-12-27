@@ -517,13 +517,13 @@ pub enum MetadataInstruction {
     #[default_optional_accounts]
     Create(CreateArgs),
 
-    /// Mints tokens from a mint account.
+    /// Mints tokens from a mint account into the specified token account.
     ///
     /// This instruction will also initialized the associated token account if it does not exist. When
     /// minting `*NonFungible` assets, the `mint_authority` must the the master edition PDA of
     /// ['metadata', program id, mint, 'edition']. For the other cases, it must be the `mint_authority`
     /// from the mint account.
-    #[account(0, writable, name="token", desc="Token account")]
+    #[account(0, writable, name="token", desc="Token or Associated Token account")]
     #[account(1, name="metadata", desc="Metadata account key (pda of ['metadata', program id, mint id])")]
     #[account(2, optional, name="master_edition", desc="Master Edition account")]
     #[account(3, writable, name="mint", desc="Mint of token asset")]

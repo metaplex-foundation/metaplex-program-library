@@ -1,4 +1,3 @@
-use mpl_token_auth_rules::payload::{PayloadKey, PayloadType};
 use mpl_utils::{assert_signer, cmp_pubkeys};
 use solana_program::{
     account_info::AccountInfo,
@@ -51,10 +50,7 @@ pub fn mint<'a>(
 
 pub fn mint_v1(program_id: &Pubkey, ctx: Context<Mint>, args: MintArgs) -> ProgramResult {
     // get the args for the instruction
-    let MintArgs::V1 {
-        amount,
-        authorization_data,
-    } = args;
+    let MintArgs::V1 { amount, .. } = args;
 
     // checks that we have the required signers
     assert_signer(ctx.accounts.authority_info)?;
@@ -93,8 +89,7 @@ pub fn mint_v1(program_id: &Pubkey, ctx: Context<Mint>, args: MintArgs) -> Progr
         };
 
         assert_valid_authorization(ctx.accounts.authorization_rules_info, programmable_config)?;
-        // safe to unwrap since the assert was valid
-        // let auth_pda = authorization_rules_info.unwrap();
+        /*
         let mut auth_data = authorization_data.unwrap();
 
         // add the required input for the operation; since we are minting
@@ -107,7 +102,7 @@ pub fn mint_v1(program_id: &Pubkey, ctx: Context<Mint>, args: MintArgs) -> Progr
             PayloadKey::Target,
             PayloadType::Pubkey(*ctx.accounts.token_info.key),
         );
-        /*
+
         validate(
             ctx.accounts.payer_info,
             auth_pda,
@@ -154,19 +149,23 @@ pub fn mint_v1(program_id: &Pubkey, ctx: Context<Mint>, args: MintArgs) -> Progr
         }
     }
 
-    // validates the ATA account
-
-    assert_derivation(
-        &spl_associated_token_account::id(),
-        ctx.accounts.token_info,
-        &[
-            ctx.accounts.payer_info.key.as_ref(),
-            spl_token::id().as_ref(),
-            ctx.accounts.mint_info.key.as_ref(),
-        ],
-    )?;
+    // validates the token account
 
     if ctx.accounts.token_info.data_is_empty() {
+        // if the token account is empty, we will initialize a new one but it must
+        // be a ATA account
+        assert_derivation(
+            &spl_associated_token_account::id(),
+            ctx.accounts.token_info,
+            &[
+                ctx.accounts.payer_info.key.as_ref(),
+                spl_token::id().as_ref(),
+                ctx.accounts.mint_info.key.as_ref(),
+            ],
+        )?;
+
+        msg!("Initializing associate token account");
+
         // creating the associated token account
         invoke(
             &spl_associated_token_account::instruction::create_associated_token_account(
