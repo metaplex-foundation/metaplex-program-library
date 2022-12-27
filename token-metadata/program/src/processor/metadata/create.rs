@@ -1,6 +1,6 @@
 use mpl_utils::assert_initialized;
 use solana_program::{
-    account_info::AccountInfo, entrypoint::ProgramResult, program::invoke, program_pack::Pack,
+    account_info::AccountInfo, entrypoint::ProgramResult, msg, program::invoke, program_pack::Pack,
     pubkey::Pubkey, rent::Rent, system_instruction, sysvar::Sysvar,
 };
 use spl_token::{native_mint::DECIMALS, state::Mint};
@@ -61,6 +61,8 @@ fn create_v1(program_id: &Pubkey, ctx: Context<Create>, args: CreateArgs) -> Pro
         if !ctx.accounts.mint_info.is_signer {
             return Err(MetadataError::MintIsNotSigner.into());
         }
+
+        msg!("Initializing mint account");
 
         invoke(
             &system_instruction::create_account(
