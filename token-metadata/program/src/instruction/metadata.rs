@@ -16,7 +16,7 @@ use crate::{
     processor::AuthorizationData,
     state::{
         AssetData, Collection, CollectionDetails, Creator, Data, DataV2, DelegateState,
-        ProgrammableConfig, TokenStandard, Uses,
+        MigrationType, ProgrammableConfig, TokenStandard, Uses,
     },
 };
 
@@ -119,7 +119,7 @@ impl Default for UpdateArgs {
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub enum MigrateArgs {
-    V1,
+    V1 { migration_type: MigrationType },
 }
 
 #[repr(C)]
@@ -355,6 +355,40 @@ impl InstructionBuilder for super::builders::Create {
             program_id: crate::ID,
             accounts,
             data: MetadataInstruction::Create(self.args.clone())
+                .try_to_vec()
+                .unwrap(),
+        }
+    }
+}
+
+impl InstructionBuilder for super::builders::Migrate {
+    fn instruction(&self) -> solana_program::instruction::Instruction {
+        let mut accounts = vec![
+            AccountMeta::new(self.metadata, false),
+            AccountMeta::new_readonly(self.edition, false),
+            AccountMeta::new(self.token, false),
+            AccountMeta::new_readonly(self.mint, false),
+            AccountMeta::new(self.payer, true),
+            AccountMeta::new_readonly(self.authority, true),
+            AccountMeta::new_readonly(self.collection_metadata, false),
+            AccountMeta::new_readonly(self.system_program, false),
+            AccountMeta::new_readonly(self.sysvar_instructions, false),
+            AccountMeta::new_readonly(self.spl_token_program, false),
+        ];
+
+        // Optional authorization rules accounts
+        if let Some(rules) = &self.authorization_rules {
+            accounts.push(AccountMeta::new_readonly(mpl_token_auth_rules::ID, false));
+            accounts.push(AccountMeta::new_readonly(*rules, false));
+        } else {
+            accounts.push(AccountMeta::new_readonly(crate::ID, false));
+            accounts.push(AccountMeta::new_readonly(crate::ID, false));
+        }
+
+        Instruction {
+            program_id: crate::ID,
+            accounts,
+            data: MetadataInstruction::Migrate(self.args.clone())
                 .try_to_vec()
                 .unwrap(),
         }
@@ -731,6 +765,7 @@ pub fn migrate(
     collection_metadata: Pubkey,
     authorization_rules: Option<Pubkey>,
     additional_accounts: Option<Vec<AccountMeta>>,
+    migration_type: MigrationType,
 ) -> Instruction {
     let mut accounts = vec![
         AccountMeta::new(metadata_account, false),
@@ -754,7 +789,7 @@ pub fn migrate(
     Instruction {
         program_id,
         accounts,
-        data: MetadataInstruction::Migrate(MigrateArgs::V1)
+        data: MetadataInstruction::Migrate(MigrateArgs::V1 { migration_type })
             .try_to_vec()
             .unwrap(),
     }

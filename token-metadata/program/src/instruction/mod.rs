@@ -666,15 +666,17 @@ pub enum MetadataInstruction {
 
     /// Migrates an asset to a ProgrammableAsset type.
     #[account(0, writable, name="metadata", desc="Metadata account")]
-    #[account(1, name="master_edition", desc="Master edition account")]
-    #[account(2, writable, name="token_account", desc="Token account")]
+    #[account(1, name="edition", desc="Edition account")]
+    #[account(2, writable, name="token", desc="Token account")]
     #[account(3, name="mint", desc="Mint account")]
-    #[account(4, signer, name="update_authority", desc="Update authority")]
-    #[account(5, name="collection_metadata", desc="Collection metadata account")]
-    #[account(6, name="token_program", desc="Token Program")]
+    #[account(4, writable, signer, name="payer", desc="Update authority")]
+    #[account(5, signer, name="authority", desc="Update authority")]
+    #[account(6, name="collection_metadata", desc="Collection metadata account")]
     #[account(7, name="system_program", desc="System program")]
     #[account(8, name="sysvar_instructions", desc="Instruction sysvar account")]
-    #[account(9, optional, name="authorization_rules", desc="Token Authorization Rules account")]
+    #[account(9, name="spl_token_program", desc="Token Program")]
+    #[account(10, optional, name="authorization_rules_program", desc="Token Authorization Rules Program")]
+    #[account(11, optional, name="authorization_rules", desc="Token Authorization Rules account")]
     #[default_optional_accounts]
     Migrate(MigrateArgs),
 }

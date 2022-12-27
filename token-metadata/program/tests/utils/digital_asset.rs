@@ -1,9 +1,12 @@
 use mpl_token_metadata::{
     id,
     instruction::{
-        builders::{CreateBuilder, DelegateBuilder, MintBuilder, RevokeBuilder, TransferBuilder},
-        CreateArgs, DelegateArgs, DelegateRole, InstructionBuilder, MintArgs, RevokeArgs,
-        TransferArgs,
+        builders::{
+            CreateBuilder, DelegateBuilder, MigrateBuilder, MintBuilder, RevokeBuilder,
+            TransferBuilder,
+        },
+        CreateArgs, DelegateArgs, DelegateRole, InstructionBuilder, MigrateArgs, MintArgs,
+        RevokeArgs, TransferArgs,
     },
     pda::find_delegate_account,
     processor::AuthorizationData,
@@ -261,6 +264,35 @@ impl DigitalAsset {
 
         let tx = Transaction::new_signed_with_payer(
             &[delegate_ix],
+            Some(&authority.pubkey()),
+            &[&authority],
+            context.last_blockhash,
+        );
+
+        context.banks_client.process_transaction(tx).await
+    }
+
+    pub async fn migrate(
+        &mut self,
+        context: &mut ProgramTestContext,
+        authority: Keypair,
+        collection_metadata: Pubkey,
+        args: MigrateArgs,
+    ) -> Result<(), BanksClientError> {
+        let mut builder = MigrateBuilder::new();
+        builder
+            .mint(self.mint.pubkey())
+            .metadata(self.metadata)
+            .edition(self.master_edition.unwrap())
+            .token(self.token.unwrap())
+            .payer(authority.pubkey())
+            .collection_metadata(collection_metadata)
+            .authority(authority.pubkey());
+
+        let migrate_ix = builder.build(args.clone()).unwrap().instruction();
+
+        let tx = Transaction::new_signed_with_payer(
+            &[migrate_ix],
             Some(&authority.pubkey()),
             &[&authority],
             context.last_blockhash,

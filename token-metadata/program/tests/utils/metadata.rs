@@ -32,6 +32,15 @@ impl Metadata {
         }
     }
 
+    pub fn into_digital_asset(self) -> DigitalAsset {
+        DigitalAsset {
+            metadata: self.pubkey,
+            mint: self.mint,
+            token: Some(self.token.pubkey()),
+            master_edition: None,
+        }
+    }
+
     pub async fn get_data(
         &self,
         context: &mut ProgramTestContext,

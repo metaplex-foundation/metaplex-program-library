@@ -6,6 +6,7 @@ use spl_token::state::Account;
 use crate::{
     assertions::{assert_initialized, assert_owned_by},
     error::MetadataError,
+    pda::PREFIX,
     state::{
         Creator, Data, Metadata, MAX_CREATOR_LIMIT, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH,
         MAX_URI_LENGTH,
@@ -209,6 +210,20 @@ pub fn assert_metadata_authority(
 
     if !authority_info.is_signer {
         return Err(MetadataError::UpdateAuthorityIsNotSigner.into());
+    }
+
+    Ok(())
+}
+
+pub fn assert_metadata_valid(
+    program_id: &Pubkey,
+    mint_pubkey: &Pubkey,
+    metadata_account_info: &AccountInfo,
+) -> ProgramResult {
+    let seeds = &[PREFIX.as_bytes(), program_id.as_ref(), mint_pubkey.as_ref()];
+    let (metadata_pubkey, _) = Pubkey::find_program_address(seeds, program_id);
+    if metadata_pubkey != *metadata_account_info.key {
+        return Err(MetadataError::InvalidMetadataKey.into());
     }
 
     Ok(())

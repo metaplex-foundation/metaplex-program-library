@@ -1,88 +1,65 @@
-// #![cfg(feature = "test-bpf")]
-// pub mod utils;
+#![cfg(feature = "test-bpf")]
+pub mod utils;
+use utils::*;
 
-// use mpl_token_metadata::{id, instruction};
-// use solana_program_test::*;
-// use solana_sdk::{signature::Signer, transaction::Transaction};
-// use utils::{MasterEditionV2 as MasterEditionV2Manager, Metadata as MetadataManager, *};
+use solana_program_test::*;
 
-// mod migrate {
-//     use mpl_token_metadata::state::{Metadata, TokenStandard};
-//     use solana_program::borsh::try_from_slice_unchecked;
-//     use solana_sdk::signature::Keypair;
+mod migrate {
+    use super::*;
+    use mpl_token_metadata::{
+        instruction::MigrateArgs,
+        state::{MigrationType, TokenStandard},
+    };
+    use solana_sdk::{signature::Keypair, signer::Signer};
 
-//     use super::*;
-//     #[tokio::test]
-//     async fn success_migrate() {
-//         let mut context = &mut program_test().start_with_context().await;
+    #[tokio::test]
+    async fn success_migrate() {
+        let mut context = &mut program_test().start_with_context().await;
 
-//         // asset details
+        let authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
 
-//         /*
-//         asset.programmable_config = Some(ProgrammableConfig {
-//             rule_set: <PUBKEY>,
-//         });
-//         */
-//         // mint a default NFT and set collection
+        // Unsized collection
+        let (collection_nft, collection_me) =
+            Metadata::create_default_nft(&mut context).await.unwrap();
 
-//         let update_authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+        let (nft, me) = Metadata::create_default_nft(&mut context).await.unwrap();
 
-//         let metadata_manager = MetadataManager::new();
-//         let master_edition_manager = MasterEditionV2Manager::new(&metadata_manager);
-//         metadata_manager.create_v3_default(context).await.unwrap();
-//         let collection_nft = MetadataManager::create_default_sized_parent(context)
-//             .await
-//             .unwrap();
+        let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
 
-//         master_edition_manager
-//             .create_v3(context, Some(0))
-//             .await
-//             .unwrap();
+        nft.set_and_verify_collection(
+            &mut context,
+            collection_nft.pubkey,
+            &payer,
+            payer.pubkey(),
+            collection_nft.mint.pubkey(),
+            collection_me.pubkey,
+            None,
+        )
+        .await
+        .unwrap();
 
-//         metadata_manager
-//             .set_and_verify_sized_collection_item(
-//                 context,
-//                 collection_nft.0.pubkey,
-//                 &update_authority,
-//                 update_authority.pubkey(),
-//                 collection_nft.0.mint.pubkey(),
-//                 collection_nft.1.pubkey,
-//                 None,
-//             )
-//             .await
-//             .unwrap();
+        let md = nft.get_data(context).await;
 
-//         // migrate ix
+        // set up our digital asset struct
+        let mut asset = nft.into_digital_asset();
+        asset.master_edition = Some(me.pubkey);
 
-//         let migrate_ix = instruction::migrate(
-//             /* program id       */ id(),
-//             /* metadata account */ metadata_manager.pubkey,
-//             /* master edition   */ master_edition_manager.pubkey,
-//             /* mint             */ metadata_manager.mint.pubkey(),
-//             /* token account    */ metadata_manager.token.pubkey(),
-//             /* update authority */ update_authority.pubkey(),
-//             /* collection       */ collection_nft.0.pubkey,
-//             /* authority signer */ None,
-//             /* additional       */ None,
-//         );
+        let args = MigrateArgs::V1 {
+            migration_type: MigrationType::ProgrammableV1,
+        };
 
-//         let tx = Transaction::new_signed_with_payer(
-//             &[migrate_ix],
-//             Some(&context.payer.pubkey()),
-//             &[&context.payer],
-//             context.last_blockhash,
-//         );
+        assert_eq!(md.token_standard, Some(TokenStandard::NonFungible));
 
-//         context.banks_client.process_transaction(tx).await.unwrap();
+        asset
+            .migrate(&mut context, authority, collection_nft.pubkey, args)
+            .await
+            .unwrap();
 
-//         // checks the created metadata values
+        let new_md = asset.get_metadata(context).await;
 
-//         let metadata_account = get_account(&mut context, &metadata_manager.pubkey).await;
-//         let metadata: Metadata = try_from_slice_unchecked(&metadata_account.data).unwrap();
-
-//         assert_eq!(
-//             metadata.token_standard,
-//             Some(TokenStandard::ProgrammableNonFungible)
-//         );
-//     }
-// }
+        assert_eq!(
+            new_md.token_standard,
+            Some(TokenStandard::ProgrammableNonFungible)
+        );
+    }
+}
