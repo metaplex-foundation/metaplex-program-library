@@ -2450,9 +2450,9 @@ dependencies = [
 
 [[package]]
 name = "mpl-candy-guard"
-version = "0.2.0"
+version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cf911a47bf4731d49e5748ddcf9ebf669ac0d16034632e4ab47a6b82504175ce"
+checksum = "a3eb1df699510d7a57d22e95c4f0843ac8b146e9f2bb2a52896761cb496266c5"
 dependencies = [
  "anchor-lang",
  "arrayref",

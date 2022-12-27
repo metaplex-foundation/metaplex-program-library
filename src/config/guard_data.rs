@@ -220,6 +220,7 @@ impl GuardSet {
             freeze_sol_payment,
             freeze_token_payment,
             program_gate: None,
+            allocation: None,
         })
     }
 }
