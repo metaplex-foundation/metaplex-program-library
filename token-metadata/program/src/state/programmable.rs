@@ -23,6 +23,28 @@ impl ToString for Operation {
     }
 }
 
+#[derive(Debug, Clone, ToPrimitive)]
+pub enum PayloadKey {
+    Amount,
+    Authority,
+    Holder,
+    Delegate,
+    Target,
+}
+
+impl ToString for PayloadKey {
+    fn to_string(&self) -> String {
+        match self {
+            PayloadKey::Amount => "Amount",
+            PayloadKey::Authority => "Authority",
+            PayloadKey::Holder => "Holder",
+            PayloadKey::Delegate => "Delegate",
+            PayloadKey::Target => "Target",
+        }
+        .to_string()
+    }
+}
+
 pub trait ToAccountMeta {
     fn to_account_meta(&self) -> AccountMeta;
 }

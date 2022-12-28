@@ -1,9 +1,12 @@
 use mpl_token_auth_rules::{
     instruction::{builders::CreateOrUpdateBuilder, CreateOrUpdateArgs, InstructionBuilder},
-    payload::{Payload, PayloadKey},
+    payload::Payload,
     state::{Rule, RuleSet},
 };
-use mpl_token_metadata::{processor::AuthorizationData, state::Operation};
+use mpl_token_metadata::{
+    processor::AuthorizationData,
+    state::{Operation, PayloadKey},
+};
 use rmp_serde::Serializer;
 use serde::Serialize;
 use solana_sdk::{
@@ -29,7 +32,7 @@ pub async fn create_test_ruleset(
     // Rule for Transfers: Allow transfers to a Token Owned Escrow account.
     let owned_by_token_metadata = Rule::ProgramOwned {
         program: mpl_token_metadata::ID,
-        field: PayloadKey::Target,
+        field: PayloadKey::Target.to_string(),
     };
 
     // Merkle tree root generated in a different test program.
@@ -42,7 +45,7 @@ pub async fn create_test_ruleset(
     // member of the marketplace Merkle tree.
     let leaf_in_marketplace_tree = Rule::PubkeyTreeMatch {
         root: marketplace_tree_root,
-        field: PayloadKey::Target,
+        field: PayloadKey::Target.to_string(),
     };
 
     // Create Basic Royalty Enforcement Ruleset.

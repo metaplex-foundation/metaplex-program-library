@@ -1,7 +1,7 @@
 use mpl_token_auth_rules::instruction::InstructionBuilder;
 use mpl_token_auth_rules::{
     instruction::{builders::ValidateBuilder, ValidateArgs},
-    payload::{PayloadKey, PayloadType},
+    payload::PayloadType,
 };
 use mpl_utils::token::TokenTransferParams;
 use solana_program::program_error::ProgramError;
@@ -16,7 +16,7 @@ use crate::{
     error::MetadataError,
     pda::{EDITION, PREFIX},
     processor::AuthorizationData,
-    state::{Operation, ProgrammableConfig},
+    state::{Operation, PayloadKey, ProgrammableConfig},
 };
 
 pub fn freeze<'a>(
@@ -167,14 +167,15 @@ pub fn auth_rules_validate(params: AuthRulesValidateParams) -> ProgramResult {
                 // Transfer Amount
                 auth_data
                     .payload
-                    .insert(PayloadKey::Amount, PayloadType::Number(amount));
+                    .insert(PayloadKey::Amount.to_string(), PayloadType::Number(amount));
                 // Transfer Destination
-                auth_data
-                    .payload
-                    .insert(PayloadKey::Target, PayloadType::Pubkey(*target_info.key));
+                auth_data.payload.insert(
+                    PayloadKey::Target.to_string(),
+                    PayloadType::Pubkey(*target_info.key),
+                );
                 // Transfer Authority
                 auth_data.payload.insert(
-                    PayloadKey::Authority,
+                    PayloadKey::Authority.to_string(),
                     PayloadType::Pubkey(*authority_info.key),
                 );
             }

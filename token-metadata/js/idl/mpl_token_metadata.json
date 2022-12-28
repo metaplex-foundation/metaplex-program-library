@@ -4497,6 +4497,12 @@
                 "type": {
                   "defined": "MigrationType"
                 }
+              },
+              {
+                "name": "rule_set",
+                "type": {
+                  "option": "publicKey"
+                }
               }
             ]
           }
