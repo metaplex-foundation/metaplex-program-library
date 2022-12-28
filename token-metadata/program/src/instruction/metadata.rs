@@ -119,7 +119,10 @@ impl Default for UpdateArgs {
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub enum MigrateArgs {
-    V1 { migration_type: MigrationType },
+    V1 {
+        migration_type: MigrationType,
+        rule_set: Option<Pubkey>,
+    },
 }
 
 #[repr(C)]
@@ -766,6 +769,7 @@ pub fn migrate(
     authorization_rules: Option<Pubkey>,
     additional_accounts: Option<Vec<AccountMeta>>,
     migration_type: MigrationType,
+    rule_set: Option<Pubkey>,
 ) -> Instruction {
     let mut accounts = vec![
         AccountMeta::new(metadata_account, false),
@@ -789,8 +793,11 @@ pub fn migrate(
     Instruction {
         program_id,
         accounts,
-        data: MetadataInstruction::Migrate(MigrateArgs::V1 { migration_type })
-            .try_to_vec()
-            .unwrap(),
+        data: MetadataInstruction::Migrate(MigrateArgs::V1 {
+            migration_type,
+            rule_set,
+        })
+        .try_to_vec()
+        .unwrap(),
     }
 }

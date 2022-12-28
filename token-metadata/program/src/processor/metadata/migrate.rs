@@ -10,7 +10,7 @@ use crate::{
     assertions::metadata::assert_metadata_valid,
     error::MetadataError,
     instruction::{Context, Migrate, MigrateArgs},
-    state::{Metadata, MigrationType, TokenMetadataAccount, TokenStandard},
+    state::{Metadata, MigrationType, ProgrammableConfig, TokenMetadataAccount, TokenStandard},
     utils::{assert_edition_valid, assert_initialized, clean_write_metadata, thaw},
 };
 
@@ -27,7 +27,10 @@ pub fn migrate<'a>(
 }
 
 pub fn migrate_v1(program_id: &Pubkey, ctx: Context<Migrate>, args: MigrateArgs) -> ProgramResult {
-    let MigrateArgs::V1 { migration_type } = args;
+    let MigrateArgs::V1 {
+        migration_type,
+        rule_set,
+    } = args;
 
     let payer_info = ctx.accounts.payer_info;
     let authority_info = ctx.accounts.authority_info;
@@ -132,6 +135,7 @@ pub fn migrate_v1(program_id: &Pubkey, ctx: Context<Migrate>, args: MigrateArgs)
 
             // Collection checks
             let collection_metadata = Metadata::from_account_info(collection_metadata_info)?;
+
             // Is it a verified member of the collection?
             if metadata.collection.is_none() {
                 return Err(MetadataError::NotAMemberOfCollection.into());
@@ -143,6 +147,9 @@ pub fn migrate_v1(program_id: &Pubkey, ctx: Context<Migrate>, args: MigrateArgs)
 
             // Migrate the token.
             metadata.token_standard = Some(TokenStandard::ProgrammableNonFungible);
+            if let Some(rule_set) = rule_set {
+                metadata.programmable_config = Some(ProgrammableConfig { rule_set });
+            }
 
             clean_write_metadata(&mut metadata, metadata_info)?;
         }

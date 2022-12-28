@@ -11,21 +11,29 @@ mod migrate {
     use mpl_token_metadata::{
         error::MetadataError,
         instruction::MigrateArgs,
-        state::{MigrationType, TokenStandard},
+        state::{MigrationType, ProgrammableConfig, TokenStandard},
     };
     use solana_program::pubkey::Pubkey;
     use solana_sdk::{signature::Keypair, signer::Signer};
 
     #[tokio::test]
     async fn success_migrate() {
-        let mut context = &mut program_test().start_with_context().await;
+        let mut program_test = ProgramTest::new("mpl_token_metadata", mpl_token_metadata::ID, None);
+        program_test.add_program("mpl_token_auth_rules", mpl_token_auth_rules::ID, None);
+        let mut context = program_test.start_with_context().await;
 
         let authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
 
-        // Unsized collection
+        // Create a rule set for the pNFTs.
+        let (rule_set, _auth_data) =
+            create_test_ruleset(&mut context, authority, "royalty".to_string()).await;
+
+        // Create an unsized collection for the pNFT to belong to, since
+        // migration requires the item being a verified member of a collection.
         let (collection_nft, collection_me) =
             Metadata::create_default_nft(&mut context).await.unwrap();
 
+        // Create the NFT item to migrate.
         let (nft, me) = Metadata::create_default_nft(&mut context).await.unwrap();
 
         let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
@@ -42,7 +50,7 @@ mod migrate {
         .await
         .unwrap();
 
-        let md = nft.get_data(context).await;
+        let md = nft.get_data(&mut context).await;
 
         // set up our digital asset struct
         let mut asset = nft.into_digital_asset();
@@ -50,20 +58,28 @@ mod migrate {
 
         let args = MigrateArgs::V1 {
             migration_type: MigrationType::ProgrammableV1,
+            rule_set: Some(rule_set),
         };
 
         assert_eq!(md.token_standard, Some(TokenStandard::NonFungible));
+        assert_eq!(md.programmable_config, None);
+
+        let authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
 
         asset
             .migrate(&mut context, authority, collection_nft.pubkey, args)
             .await
             .unwrap();
 
-        let new_md = asset.get_metadata(context).await;
+        let new_md = asset.get_metadata(&mut context).await;
 
         assert_eq!(
             new_md.token_standard,
             Some(TokenStandard::ProgrammableNonFungible)
+        );
+        assert_eq!(
+            new_md.programmable_config,
+            Some(ProgrammableConfig { rule_set })
         );
     }
 
@@ -82,6 +98,7 @@ mod migrate {
 
         let args = MigrateArgs::V1 {
             migration_type: MigrationType::ProgrammableV1,
+            rule_set: None,
         };
 
         let md = asset.get_metadata(context).await;
@@ -114,6 +131,7 @@ mod migrate {
 
         let args = MigrateArgs::V1 {
             migration_type: MigrationType::ProgrammableV1,
+            rule_set: None,
         };
 
         let md = asset.get_metadata(context).await;
