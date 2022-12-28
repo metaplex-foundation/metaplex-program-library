@@ -82,7 +82,7 @@ pub enum UpdateArgs {
         collection: Option<Collection>,
         uses: Option<Uses>,
         collection_details: Option<CollectionDetails>,
-        programmable_config: Option<ProgrammableConfig>,
+        programmable_config: ProgrammableConfigOpt,
         delegate_state: Option<DelegateState>,
         authority_type: AuthorityType,
     },
@@ -108,9 +108,46 @@ impl Default for UpdateArgs {
             collection: None,
             uses: None,
             collection_details: None,
-            programmable_config: None,
+            programmable_config: ProgrammableConfigOpt::Unchanged,
             delegate_state: None,
             authority_type: AuthorityType::Metadata,
+        }
+    }
+}
+
+#[repr(C)]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+pub enum ProgrammableConfigOpt {
+    Some(ProgrammableConfig),
+    None,
+    Unchanged,
+}
+
+impl ProgrammableConfigOpt {
+    pub fn is_unchanged(&self) -> bool {
+        match self {
+            ProgrammableConfigOpt::Unchanged => true,
+            _ => false,
+        }
+    }
+    pub fn is_none(&self) -> bool {
+        match self {
+            ProgrammableConfigOpt::None => true,
+            _ => false,
+        }
+    }
+    pub fn is_some(&self) -> bool {
+        match self {
+            ProgrammableConfigOpt::Some(_) => true,
+            _ => false,
+        }
+    }
+    pub fn unwrap(self) -> ProgrammableConfig {
+        match self {
+            ProgrammableConfigOpt::Some(t) => t,
+            ProgrammableConfigOpt::None => panic!("Tried to unwrap None"),
+            ProgrammableConfigOpt::Unchanged => panic!("Tried to unwrap Unchanged"),
         }
     }
 }

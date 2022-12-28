@@ -2,9 +2,11 @@ import spok from 'spok';
 import { AssetData, AuthorityType, Data, Metadata, TokenStandard } from '../src/generated';
 import test from 'tape';
 import { amman, InitTransactions, killStuckProcess } from './setup';
-import { Keypair } from '@solana/web3.js';
+import { Keypair, PublicKey } from '@solana/web3.js';
 import { createAndMintDefaultAsset, createDefaultAsset } from './utils/DigitalAssetManager';
 import { UpdateTestData } from './utils/UpdateTestData';
+import { encode } from '@msgpack/msgpack';
+import { PROGRAM_ID as TOKEN_AUTH_RULES_ID } from '@metaplex-foundation/mpl-token-auth-rules';
 
 killStuckProcess();
 
@@ -30,19 +32,9 @@ test('Update: NonFungible asset', async (t) => {
 
   const authorizationData = daManager.emptyAuthorizationData();
 
-  const updateData = {
-    newUpdateAuthority: null,
-    data: data,
-    primarySaleHappened: null,
-    isMutable: null,
-    tokenStandard: null,
-    collection: null,
-    uses: null,
-    collectionDetails: null,
-    programmableConfig: null,
-    delegateState: null,
-    authorizationData,
-  };
+  const updateData = new UpdateTestData();
+  updateData.data = data;
+  updateData.authorizationData = authorizationData;
 
   const { tx: updateTx } = await API.update(
     t,
@@ -89,19 +81,9 @@ test('Update: Fungible Token', async (t) => {
 
   const authorizationData = daManager.emptyAuthorizationData();
 
-  const updateData = {
-    newUpdateAuthority: null,
-    data: data,
-    primarySaleHappened: null,
-    isMutable: null,
-    tokenStandard: null,
-    collection: null,
-    uses: null,
-    collectionDetails: null,
-    programmableConfig: null,
-    delegateState: null,
-    authorizationData,
-  };
+  const updateData = new UpdateTestData();
+  updateData.data = data;
+  updateData.authorizationData = authorizationData;
 
   const { tx: updateTx } = await API.update(
     t,
@@ -148,19 +130,9 @@ test('Update: Fungible Asset', async (t) => {
 
   const authorizationData = daManager.emptyAuthorizationData();
 
-  const updateData = {
-    newUpdateAuthority: null,
-    data: data,
-    primarySaleHappened: null,
-    isMutable: null,
-    tokenStandard: null,
-    collection: null,
-    uses: null,
-    collectionDetails: null,
-    programmableConfig: null,
-    delegateState: null,
-    authorizationData,
-  };
+  const updateData = new UpdateTestData();
+  updateData.data = data;
+  updateData.authorizationData = authorizationData;
 
   const { tx: updateTx } = await API.update(
     t,
@@ -1009,6 +981,160 @@ test('Update: Fail to Update a Verified Collection', async (t) => {
   await updateTx.assertError(t, /Collection cannot be verified in this instruction/);
 });
 
+test('Update: Update pNFT Config', async (t) => {
+  const API = new InitTransactions();
+  const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
+
+  const authority = payer;
+  const authorityType = AuthorityType.Metadata;
+  const dummyRuleSet = Keypair.generate().publicKey;
+
+  const { mint, metadata, masterEdition } = await createAndMintDefaultAsset(
+    t,
+    connection,
+    API,
+    handler,
+    payer,
+    TokenStandard.ProgrammableNonFungible,
+    null,
+    1,
+  );
+
+  const programmableConfig = { ruleSet: dummyRuleSet };
+
+  const updateData = new UpdateTestData();
+  updateData.programmableConfigOpt = { __kind: 'Some', fields: [programmableConfig] };
+
+  const { tx: updateTx } = await API.update(
+    t,
+    handler,
+    mint,
+    metadata,
+    masterEdition,
+    authority,
+    authorityType,
+    updateData,
+  );
+  await updateTx.assertSuccess(t);
+
+  const updatedMetadata = await Metadata.fromAccountAddress(connection, metadata);
+
+  spok(t, updatedMetadata.programmableConfig, {
+    ruleSet: dummyRuleSet,
+  });
+});
+
+test('Update: Fail to update ProgrammableConfig on NFT', async (t) => {
+  const API = new InitTransactions();
+  const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
+
+  const authority = payer;
+  const authorityType = AuthorityType.Metadata;
+  const dummyRuleSet = Keypair.generate().publicKey;
+
+  const { mint, metadata, masterEdition } = await createAndMintDefaultAsset(
+    t,
+    connection,
+    API,
+    handler,
+    payer,
+    TokenStandard.NonFungible,
+    null,
+    1,
+  );
+
+  const programmableConfig = { ruleSet: dummyRuleSet };
+  const updateData = new UpdateTestData();
+  updateData.programmableConfigOpt = { __kind: 'Some', fields: [programmableConfig] };
+
+  const { tx: updateTx } = await API.update(
+    t,
+    handler,
+    mint,
+    metadata,
+    masterEdition,
+    authority,
+    authorityType,
+    updateData,
+  );
+  await updateTx.assertError(t, /Invalid token standard/);
+});
+
+test('Update: Update existing pNFT config to None', async (t) => {
+  const API = new InitTransactions();
+  const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
+
+  const authority = payer;
+  const authorityType = AuthorityType.Metadata;
+
+  // We need a real ruleset here to pass the mint checks.
+  // Set up our rule set
+  const ruleSetName = 'update_test';
+  const ruleSet = {
+    version: 1,
+    ruleSetName: ruleSetName,
+    owner: Array.from(authority.publicKey.toBytes()),
+    operations: {
+      Transfer: {
+        PubkeyMatch: {
+          pubkey: Array.from(authority.publicKey.toBytes()),
+          field: 'Target',
+        },
+      },
+    },
+  };
+  const serializedRuleSet = encode(ruleSet);
+
+  // Find the ruleset PDA
+  const [ruleSetPda] = PublicKey.findProgramAddressSync(
+    [Buffer.from('rule_set'), payer.publicKey.toBuffer(), Buffer.from(ruleSetName)],
+    TOKEN_AUTH_RULES_ID,
+  );
+
+  const { tx: createRuleSetTx } = await API.createRuleSet(
+    t,
+    payer,
+    ruleSetPda,
+    serializedRuleSet,
+    handler,
+  );
+  await createRuleSetTx.assertSuccess(t);
+
+  const programmableConfig = {
+    ruleSet: ruleSetPda,
+  };
+
+  const { mint, metadata, masterEdition } = await createAndMintDefaultAsset(
+    t,
+    connection,
+    API,
+    handler,
+    payer,
+    TokenStandard.ProgrammableNonFungible,
+    programmableConfig,
+    1,
+  );
+
+  const updateData = new UpdateTestData();
+  updateData.programmableConfigOpt = { __kind: 'None' };
+
+  const { tx: updateTx } = await API.update(
+    t,
+    handler,
+    mint,
+    metadata,
+    masterEdition,
+    authority,
+    authorityType,
+    updateData,
+  );
+  await updateTx.assertSuccess(t);
+
+  const updatedMetadata = await Metadata.fromAccountAddress(connection, metadata);
+
+  t.equal(updatedMetadata.programmableConfig, null);
+});
+
 test('Update: Invalid Update Authority Fails', async (t) => {
   const API = new InitTransactions();
   const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
@@ -1062,22 +1188,11 @@ test('Update: Delegate Authority Type Not Supported', async (t) => {
     sellerFeeBasisPoints: 0,
     creators: assetData.creators,
   };
-
   const authorizationData = daManager.emptyAuthorizationData();
 
-  const updateData = {
-    newUpdateAuthority: null,
-    data: data,
-    primarySaleHappened: null,
-    isMutable: null,
-    tokenStandard: null,
-    collection: null,
-    uses: null,
-    collectionDetails: null,
-    programmableConfig: null,
-    delegateState: null,
-    authorizationData,
-  };
+  const updateData = new UpdateTestData();
+  updateData.data = data;
+  updateData.authorizationData = authorizationData;
 
   const { tx: updateTx } = await API.update(
     t,
@@ -1114,19 +1229,9 @@ test('Update: Holder Authority Type Not Supported', async (t) => {
 
   const authorizationData = daManager.emptyAuthorizationData();
 
-  const updateData = {
-    newUpdateAuthority: null,
-    data: data,
-    primarySaleHappened: null,
-    isMutable: null,
-    tokenStandard: null,
-    collection: null,
-    uses: null,
-    collectionDetails: null,
-    programmableConfig: null,
-    delegateState: null,
-    authorizationData,
-  };
+  const updateData = new UpdateTestData();
+  updateData.data = data;
+  updateData.authorizationData = authorizationData;
 
   const { tx: updateTx } = await API.update(
     t,
@@ -1163,19 +1268,9 @@ test('Update: Other Authority Type Not Supported', async (t) => {
 
   const authorizationData = daManager.emptyAuthorizationData();
 
-  const updateData = {
-    newUpdateAuthority: null,
-    data: data,
-    primarySaleHappened: null,
-    isMutable: null,
-    tokenStandard: null,
-    collection: null,
-    uses: null,
-    collectionDetails: null,
-    programmableConfig: null,
-    delegateState: null,
-    authorizationData,
-  };
+  const updateData = new UpdateTestData();
+  updateData.data = data;
+  updateData.authorizationData = authorizationData;
 
   const { tx: updateTx } = await API.update(
     t,

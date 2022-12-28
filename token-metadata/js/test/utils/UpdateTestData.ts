@@ -5,8 +5,9 @@ import {
   Collection,
   Uses,
   CollectionDetails,
-  ProgrammableConfig,
   DelegateState,
+  ProgrammableConfigOpt,
+  AuthorizationData,
 } from '../../src/generated';
 
 export class UpdateTestData {
@@ -18,8 +19,10 @@ export class UpdateTestData {
   collection: Collection;
   uses: Uses;
   collectionDetails: CollectionDetails;
-  programmableConfig: ProgrammableConfig;
+  programmableConfigOpt: ProgrammableConfigOpt;
   delegateState: DelegateState;
+  authorizationData: AuthorizationData;
+  config: ProgrammableConfigOpt = { __kind: 'Unchanged' };
 
   constructor() {
     this.newUpdateAuthority = null;
@@ -30,7 +33,8 @@ export class UpdateTestData {
     this.collection = null;
     this.uses = null;
     this.collectionDetails = null;
-    this.programmableConfig = null;
     this.delegateState = null;
+    this.authorizationData = null;
+    this.programmableConfigOpt = this.config;
   }
 }

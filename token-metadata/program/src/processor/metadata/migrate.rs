@@ -76,8 +76,8 @@ pub fn migrate_v1(program_id: &Pubkey, ctx: Context<Migrate>, args: MigrateArgs)
     }
 
     // Check derivations.
-    assert_edition_valid(program_id, &mint_info.key, edition_info)?;
-    assert_metadata_valid(program_id, &mint_info.key, metadata_info)?;
+    assert_edition_valid(program_id, mint_info.key, edition_info)?;
+    assert_metadata_valid(program_id, mint_info.key, metadata_info)?;
 
     // Deserialize metadata.
     let mut metadata = Metadata::from_account_info(ctx.accounts.metadata_info)?;

@@ -4,7 +4,7 @@ use crate::{
         collection::assert_collection_update_is_valid, metadata::assert_data_valid,
         uses::assert_valid_use,
     },
-    instruction::UpdateArgs,
+    instruction::{ProgrammableConfigOpt, UpdateArgs},
     utils::{clean_write_metadata, puff_out_data_fields},
 };
 
@@ -86,6 +86,7 @@ impl Metadata {
             collection,
             uses,
             new_update_authority,
+            programmable_config,
             ..
         } = args;
 
@@ -142,6 +143,29 @@ impl Metadata {
                 self.is_mutable = mutable
             } else {
                 return Err(MetadataError::IsMutableCanOnlyBeFlippedToFalse.into());
+            }
+        }
+
+        let token_standard = self
+            .token_standard
+            .ok_or(MetadataError::InvalidTokenStandard)?;
+
+        // If the user is trying to set the programmable config
+        if !programmable_config.is_unchanged() {
+            // ...it can only be set for programmable tokens
+            if token_standard == TokenStandard::ProgrammableNonFungible {
+                match programmable_config {
+                    // Extract from our custom enum and set the Option
+                    ProgrammableConfigOpt::Some(config) => {
+                        self.programmable_config = Some(config);
+                    }
+                    ProgrammableConfigOpt::None => {
+                        self.programmable_config = None;
+                    }
+                    ProgrammableConfigOpt::Unchanged => unreachable!(),
+                }
+            } else {
+                return Err(MetadataError::InvalidTokenStandard.into());
             }
         }
 

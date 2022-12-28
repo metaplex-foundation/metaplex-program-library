@@ -28,6 +28,7 @@ export * from './Payload';
 export * from './PayloadKey';
 export * from './PayloadType';
 export * from './ProgrammableConfig';
+export * from './ProgrammableConfigOpt';
 export * from './Reservation';
 export * from './ReservationV1';
 export * from './RevokeArgs';

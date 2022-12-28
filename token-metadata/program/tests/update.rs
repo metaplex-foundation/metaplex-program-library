@@ -13,8 +13,8 @@ use utils::{DigitalAsset, *};
 mod update {
 
     use mpl_token_metadata::{
-        instruction::{AuthorityType, UpdateArgs},
-        state::{Data, TokenStandard},
+        instruction::{AuthorityType, ProgrammableConfigOpt, UpdateArgs},
+        state::{Data, ProgrammableConfig, TokenStandard},
     };
     use solana_sdk::signature::Keypair;
 
@@ -97,5 +97,75 @@ mod update {
         assert_eq!(metadata.data.name, new_name);
         assert_eq!(metadata.data.symbol, new_symbol);
         assert_eq!(metadata.data.uri, new_uri);
+    }
+
+    #[tokio::test]
+    async fn update_pfnt_config() {
+        let mut program_test = ProgramTest::new("mpl_token_metadata", mpl_token_metadata::ID, None);
+        program_test.add_program("mpl_token_auth_rules", mpl_token_auth_rules::ID, None);
+        let context = &mut program_test.start_with_context().await;
+
+        let authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+
+        // Create rule-set for the transfer
+        let (rule_set, _auth_data) =
+            create_test_ruleset(context, authority, "royalty".to_string()).await;
+
+        let update_authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+
+        let mut da = DigitalAsset::new();
+        da.create(
+            context,
+            TokenStandard::ProgrammableNonFungible,
+            Some(rule_set),
+        )
+        .await
+        .unwrap();
+
+        let metadata = da.get_metadata(context).await;
+
+        assert_eq!(
+            metadata.programmable_config,
+            Some(ProgrammableConfig { rule_set })
+        );
+
+        let mut update_args = UpdateArgs::default();
+        let UpdateArgs::V1 {
+            programmable_config,
+            ..
+        } = &mut update_args;
+        *programmable_config = ProgrammableConfigOpt::None; // remove the rule set
+
+        let UpdateArgs::V1 {
+            authority_type: current_authority_type,
+            ..
+        } = &mut update_args;
+        *current_authority_type = AuthorityType::Metadata;
+
+        let mut builder = UpdateBuilder::new();
+        builder
+            .authority(update_authority.pubkey())
+            .metadata(da.metadata)
+            .mint(da.mint.pubkey());
+
+        if let Some(edition) = da.master_edition {
+            builder.edition(edition);
+        }
+
+        let update_ix = builder.build(update_args).unwrap().instruction();
+
+        let tx = Transaction::new_signed_with_payer(
+            &[update_ix],
+            Some(&update_authority.pubkey()),
+            &[&update_authority],
+            context.last_blockhash,
+        );
+
+        context.banks_client.process_transaction(tx).await.unwrap();
+
+        // checks the created metadata values
+        let metadata = da.get_metadata(context).await;
+
+        assert_eq!(metadata.programmable_config, None);
     }
 }

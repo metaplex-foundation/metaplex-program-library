@@ -4460,9 +4460,7 @@
               {
                 "name": "programmable_config",
                 "type": {
-                  "option": {
-                    "defined": "ProgrammableConfig"
-                  }
+                  "defined": "ProgrammableConfigOpt"
                 }
               },
               {
@@ -4480,6 +4478,28 @@
                 }
               }
             ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "ProgrammableConfigOpt",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Some",
+            "fields": [
+              {
+                "defined": "ProgrammableConfig"
+              }
+            ]
+          },
+          {
+            "name": "None"
+          },
+          {
+            "name": "Unchanged"
           }
         ]
       }

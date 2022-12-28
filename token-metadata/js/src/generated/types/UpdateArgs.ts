@@ -14,7 +14,7 @@ import { TokenStandard, tokenStandardBeet } from './TokenStandard';
 import { Collection, collectionBeet } from './Collection';
 import { Uses, usesBeet } from './Uses';
 import { CollectionDetails, collectionDetailsBeet } from './CollectionDetails';
-import { ProgrammableConfig, programmableConfigBeet } from './ProgrammableConfig';
+import { ProgrammableConfigOpt, programmableConfigOptBeet } from './ProgrammableConfigOpt';
 import { DelegateState, delegateStateBeet } from './DelegateState';
 import { AuthorityType, authorityTypeBeet } from './AuthorityType';
 /**
@@ -37,7 +37,7 @@ export type UpdateArgsRecord = {
     collection: beet.COption<Collection>;
     uses: beet.COption<Uses>;
     collectionDetails: beet.COption<CollectionDetails>;
-    programmableConfig: beet.COption<ProgrammableConfig>;
+    programmableConfig: ProgrammableConfigOpt;
     delegateState: beet.COption<DelegateState>;
     authorityType: AuthorityType;
   };
@@ -77,7 +77,7 @@ export const updateArgsBeet = beet.dataEnum<UpdateArgsRecord>([
         ['collection', beet.coption(collectionBeet)],
         ['uses', beet.coption(usesBeet)],
         ['collectionDetails', beet.coption(collectionDetailsBeet)],
-        ['programmableConfig', beet.coption(programmableConfigBeet)],
+        ['programmableConfig', programmableConfigOptBeet],
         ['delegateState', beet.coption(delegateStateBeet)],
         ['authorityType', authorityTypeBeet],
       ],

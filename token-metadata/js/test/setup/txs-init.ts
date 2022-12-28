@@ -64,6 +64,7 @@ import {
   MintLayout,
   TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
+
 export class InitTransactions {
   readonly getKeypair: LoadOrGenKeypair | GenLabeledKeypair;
 
@@ -357,7 +358,7 @@ export class InitTransactions {
         collection: updateTestData.collection,
         uses: updateTestData.uses,
         collectionDetails: updateTestData.collectionDetails,
-        programmableConfig: updateTestData.programmableConfig,
+        programmableConfig: updateTestData.programmableConfigOpt,
         delegateState: updateTestData.delegateState,
         authorizationData,
         authorityType,
