@@ -27,6 +27,7 @@ impl ToString for Operation {
 pub enum PayloadKey {
     Amount,
     Authority,
+    Destination,
     Holder,
     Delegate,
     Target,
@@ -39,6 +40,7 @@ impl ToString for PayloadKey {
             PayloadKey::Authority => "Authority",
             PayloadKey::Holder => "Holder",
             PayloadKey::Delegate => "Delegate",
+            PayloadKey::Destination => "Destination",
             PayloadKey::Target => "Target",
         }
         .to_string()

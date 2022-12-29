@@ -105,8 +105,8 @@ pub fn migrate_v1(program_id: &Pubkey, ctx: Context<Migrate>, args: MigrateArgs)
             let token: Account = assert_initialized(token_info)?;
             let mint: Mint = assert_initialized(mint_info)?;
 
-            if token.owner != *authority_info.key {
-                return Err(MetadataError::InvalidOwner.into());
+            if metadata.update_authority != *authority_info.key {
+                return Err(MetadataError::UpdateAuthorityIncorrect.into());
             }
 
             if token.mint != *mint_info.key {

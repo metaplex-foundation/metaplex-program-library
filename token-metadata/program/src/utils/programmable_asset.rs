@@ -170,7 +170,7 @@ pub fn auth_rules_validate(params: AuthRulesValidateParams) -> ProgramResult {
                     .insert(PayloadKey::Amount.to_string(), PayloadType::Number(amount));
                 // Transfer Destination
                 auth_data.payload.insert(
-                    PayloadKey::Target.to_string(),
+                    PayloadKey::Destination.to_string(),
                     PayloadType::Pubkey(*target_info.key),
                 );
                 // Transfer Authority
