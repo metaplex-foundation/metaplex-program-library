@@ -54,4 +54,6 @@ pub enum BubblegumError {
     UpdateAuthorityIncorrect,
     #[msg("This transaction must be signed by either the leaf owner or leaf delegate")]
     LeafAuthorityMustSign,
+    #[msg("Collection Not Compatable with Compression, Must be Sized")]
+    CollectionMustBeSized,
 }

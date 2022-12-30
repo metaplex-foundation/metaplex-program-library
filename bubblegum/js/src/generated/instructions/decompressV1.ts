@@ -41,7 +41,7 @@ export const decompressV1Struct = new beet.FixableBeetArgsStruct<
  * @property [_writable_, **signer**] leafOwner
  * @property [_writable_] tokenAccount
  * @property [_writable_] mint
- * @property [] mintAuthority
+ * @property [_writable_] mintAuthority
  * @property [_writable_] metadata
  * @property [_writable_] masterEdition
  * @property [] sysvarRent
@@ -113,7 +113,7 @@ export function createDecompressV1Instruction(
     },
     {
       pubkey: accounts.mintAuthority,
-      isWritable: false,
+      isWritable: true,
       isSigner: false,
     },
     {

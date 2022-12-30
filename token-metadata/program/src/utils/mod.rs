@@ -1,11 +1,32 @@
 pub(crate) mod collection;
+pub(crate) mod compression;
 pub(crate) mod master_edition;
 pub(crate) mod metadata;
 
+pub use crate::assertions::{
+    assert_delegated_tokens, assert_derivation, assert_freeze_authority_matches_mint,
+    assert_initialized, assert_mint_authority_matches_mint, assert_owned_by, assert_rent_exempt,
+    assert_token_program_matches_package,
+    edition::{
+        assert_edition_is_not_mint_authority, assert_edition_valid, assert_supply_invariance,
+    },
+    metadata::{
+        assert_currently_holding, assert_data_valid, assert_update_authority_is_correct,
+        assert_verified_member_of_collection,
+    },
+};
 pub use collection::*;
+pub use compression::*;
 pub use master_edition::*;
 pub use metadata::*;
-use mpl_utils::token::{get_mint_decimals, get_mint_freeze_authority, get_mint_supply};
+pub use mpl_utils::{
+    assert_signer, close_account_raw, create_or_allocate_account_raw,
+    resize_or_reallocate_account_raw,
+    token::{
+        get_mint_authority, get_mint_decimals, get_mint_freeze_authority, get_mint_supply,
+        get_owner_from_token_account, spl_token_burn, spl_token_close, spl_token_mint_to,
+    },
+};
 use solana_program::{
     account_info::AccountInfo, borsh::try_from_slice_unchecked, entrypoint::ProgramResult, msg,
     program::invoke_signed, program_error::ProgramError, pubkey::Pubkey,
@@ -13,7 +34,6 @@ use solana_program::{
 use spl_token::instruction::{set_authority, AuthorityType};
 
 use crate::{
-    assertions::edition::assert_edition_is_not_mint_authority,
     error::MetadataError,
     state::{
         Edition, Key, MasterEditionV2, Metadata, TokenMetadataAccount, TokenStandard,

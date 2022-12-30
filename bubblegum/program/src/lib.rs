@@ -347,6 +347,7 @@ pub struct DecompressV1<'info> {
     pub mint: UncheckedAccount<'info>,
     /// CHECK:
     #[account(
+        mut,
         seeds = [mint.key().as_ref()],
         bump,
     )]
@@ -785,6 +786,8 @@ fn process_collection_verification_mpl_only<'info>(
             bubblegum_set_collection_size_infos.as_slice(),
             &[&[COLLECTION_CPI_PREFIX.as_bytes(), &[bubblegum_bump]]],
         )?;
+    } else {
+        return Err(BubblegumError::CollectionMustBeSized.into());
     }
 
     Ok(())
@@ -1500,6 +1503,15 @@ pub mod bubblegum {
             TokenProgramVersion::Token2022 => return Err(ProgramError::InvalidArgument.into()),
         }
 
+        invoke_signed(
+            &system_instruction::assign(&ctx.accounts.mint_authority.key(), &crate::id()),
+            &[ctx.accounts.mint_authority.to_account_info()],
+            &[&[
+                ctx.accounts.mint.key().as_ref(),
+                &[*ctx.bumps.get("mint_authority").unwrap()],
+            ]],
+        )?;
+
         let metadata_infos = vec![
             ctx.accounts.metadata.to_account_info(),
             ctx.accounts.mint.to_account_info(),
@@ -1525,7 +1537,7 @@ pub mod bubblegum {
 
         msg!("Creating metadata!");
         invoke_signed(
-            &mpl_token_metadata::instruction::create_metadata_accounts_v2(
+            &mpl_token_metadata::instruction::create_metadata_accounts_v3(
                 ctx.accounts.token_metadata_program.key(),
                 ctx.accounts.metadata.key(),
                 ctx.accounts.mint.key(),
@@ -1545,6 +1557,7 @@ pub mod bubblegum {
                 metadata.is_mutable,
                 metadata.collection.map(|c| c.adapt()),
                 metadata.uses.map(|u| u.adapt()),
+                None,
             ),
             metadata_infos.as_slice(),
             &[&[
@@ -1572,6 +1585,10 @@ pub mod bubblegum {
             ]],
         )?;
 
+        ctx.accounts
+            .mint_authority
+            .to_account_info()
+            .assign(&System::id());
         Ok(())
     }
 

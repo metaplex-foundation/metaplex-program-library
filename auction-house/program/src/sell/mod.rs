@@ -371,6 +371,9 @@ fn sell_logic<'info>(
     {
         return Err(AuctionHouseError::SaleRequiresSigner.into());
     }
+    if wallet.to_account_info().is_signer && authority.to_account_info().is_signer {
+        return Err(AuctionHouseError::SaleRequiresExactlyOneSigner.into());
+    }
 
     let auction_house_key = auction_house.key();
 

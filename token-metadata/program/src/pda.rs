@@ -25,6 +25,7 @@ pub fn find_edition_account(mint: &Pubkey, edition_number: String) -> (Pubkey, u
         &crate::id(),
     )
 }
+
 pub fn find_master_edition_account(mint: &Pubkey) -> (Pubkey, u8) {
     Pubkey::find_program_address(
         &[

@@ -1,7 +1,7 @@
 {
   "name": "@metaplex-foundation/mpl-auction-house",
-  "version": "2.3.1",
-  "contractVersion": "1.3.4",
+  "version": "2.3.2",
+  "contractVersion": "1.3.5",
   "description": "MPL Auction House JavaScript API.",
   "main": "dist/src/mpl-auction-house.js",
   "types": "dist/src/mpl-auction-house.d.ts",

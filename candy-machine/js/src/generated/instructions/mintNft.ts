@@ -70,7 +70,6 @@ export type MintNftInstructionAccounts = {
   clock: web3.PublicKey;
   recentBlockhashes: web3.PublicKey;
   instructionSysvarAccount: web3.PublicKey;
-  anchorRemainingAccounts?: web3.AccountMeta[];
 };
 
 export const mintNftInstructionDiscriminator = [211, 57, 6, 167, 15, 219, 35, 251];
@@ -176,12 +175,6 @@ export function createMintNftInstruction(
       isSigner: false,
     },
   ];
-
-  if (accounts.anchorRemainingAccounts != null) {
-    for (const acc of accounts.anchorRemainingAccounts) {
-      keys.push(acc);
-    }
-  }
 
   const ix = new web3.TransactionInstruction({
     programId,

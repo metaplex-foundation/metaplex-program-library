@@ -40,6 +40,14 @@ pub struct SetCollectionDuringMint<'info> {
 
 pub fn handle_set_collection_during_mint(ctx: Context<SetCollectionDuringMint>) -> Result<()> {
     let ixs = &ctx.accounts.instructions;
+    let current_instruction = get_instruction_relative(0, ixs)?;
+    if !cmp_pubkeys(&current_instruction.program_id, &crate::id()) {
+        msg!(
+            "Transaction had ix with program id {}",
+            &current_instruction.program_id
+        );
+        return Ok(());
+    }
     let previous_instruction = get_instruction_relative(-1, ixs)?;
     if !cmp_pubkeys(&previous_instruction.program_id, &crate::id()) {
         msg!(
