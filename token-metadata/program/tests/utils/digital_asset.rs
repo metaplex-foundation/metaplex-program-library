@@ -160,6 +160,7 @@ impl DigitalAsset {
         let mut builder = MintBuilder::new();
         builder
             .token(token)
+            .token_owner(payer_pubkey)
             .metadata(self.metadata)
             .mint(self.mint.pubkey())
             .payer(payer_pubkey)

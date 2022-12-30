@@ -2425,6 +2425,19 @@
           "desc": "Token or Associated Token account"
         },
         {
+          "name": "tokenOwner",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Owner of the token account",
+          "optional": true
+        },
+        {
+          "name": "mint",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Mint of token asset"
+        },
+        {
           "name": "metadata",
           "isMut": false,
           "isSigner": false,
@@ -2436,12 +2449,6 @@
           "isSigner": false,
           "desc": "Master Edition account",
           "optional": true
-        },
-        {
-          "name": "mint",
-          "isMut": true,
-          "isSigner": false,
-          "desc": "Mint of token asset"
         },
         {
           "name": "payer",

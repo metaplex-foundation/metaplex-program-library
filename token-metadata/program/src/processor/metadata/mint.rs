@@ -152,13 +152,20 @@ pub fn mint_v1(program_id: &Pubkey, ctx: Context<Mint>, args: MintArgs) -> Progr
     // validates the token account
 
     if ctx.accounts.token_info.data_is_empty() {
+        // if we are initializing a new account, we need the token_owner
+        let token_owner_info = if let Some(token_owner_info) = ctx.accounts.token_owner_info {
+            token_owner_info
+        } else {
+            return Err(ProgramError::NotEnoughAccountKeys);
+        };
+
         // if the token account is empty, we will initialize a new one but it must
         // be a ATA account
         assert_derivation(
             &spl_associated_token_account::id(),
             ctx.accounts.token_info,
             &[
-                ctx.accounts.payer_info.key.as_ref(),
+                token_owner_info.key.as_ref(),
                 spl_token::id().as_ref(),
                 ctx.accounts.mint_info.key.as_ref(),
             ],
@@ -170,12 +177,13 @@ pub fn mint_v1(program_id: &Pubkey, ctx: Context<Mint>, args: MintArgs) -> Progr
         invoke(
             &spl_associated_token_account::instruction::create_associated_token_account(
                 ctx.accounts.payer_info.key,
-                ctx.accounts.payer_info.key,
+                token_owner_info.key,
                 ctx.accounts.mint_info.key,
                 &spl_token::id(),
             ),
             &[
                 ctx.accounts.payer_info.clone(),
+                token_owner_info.clone(),
                 ctx.accounts.mint_info.clone(),
                 ctx.accounts.token_info.clone(),
             ],

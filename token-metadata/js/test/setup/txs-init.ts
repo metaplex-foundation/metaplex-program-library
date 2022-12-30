@@ -197,6 +197,7 @@ export class InitTransactions {
     amount: number,
     handler: PayerTransactionHandler,
     token: PublicKey | null = null,
+    tokenOwner: PublicKey | null = null,
   ): Promise<{ tx: ConfirmedTransactionAssertablePromise; token: PublicKey }> {
     if (!token) {
       // mint instrution will initialize a ATA account
@@ -206,6 +207,11 @@ export class InitTransactions {
       );
       token = tokenPda;
     }
+
+    if (!tokenOwner) {
+      tokenOwner = payer.publicKey;
+    }
+
     amman.addr.addLabel('Token Account', token);
 
     const metadataAccount = await Metadata.fromAccountAddress(connection, metadata);
@@ -213,6 +219,7 @@ export class InitTransactions {
 
     const mintAcccounts: MintInstructionAccounts = {
       token,
+      tokenOwner,
       metadata,
       masterEdition,
       mint,
