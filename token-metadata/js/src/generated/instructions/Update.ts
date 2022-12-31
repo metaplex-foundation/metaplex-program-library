@@ -37,12 +37,12 @@ export const UpdateStruct = new beet.FixableBeetArgsStruct<
  * Accounts required by the _Update_ instruction
  *
  * @property [**signer**] authority Update authority or delegate
+ * @property [] delegateRecord (optional) Delegate record PDA
+ * @property [] token (optional) Token account
+ * @property [] mint Mint account
  * @property [_writable_] metadata Metadata account
  * @property [_writable_] edition (optional) Edition account
- * @property [] mint Mint account
  * @property [] sysvarInstructions System program
- * @property [] token (optional) Token account
- * @property [] delegateRecord (optional) Delegate record PDA
  * @property [] authorizationRulesProgram (optional) Token Authorization Rules Program
  * @property [] authorizationRules (optional) Token Authorization Rules account
  * @category Instructions
@@ -51,13 +51,13 @@ export const UpdateStruct = new beet.FixableBeetArgsStruct<
  */
 export type UpdateInstructionAccounts = {
   authority: web3.PublicKey;
+  delegateRecord?: web3.PublicKey;
+  token?: web3.PublicKey;
+  mint: web3.PublicKey;
   metadata: web3.PublicKey;
   edition?: web3.PublicKey;
-  mint: web3.PublicKey;
   systemProgram?: web3.PublicKey;
   sysvarInstructions: web3.PublicKey;
-  token?: web3.PublicKey;
-  delegateRecord?: web3.PublicKey;
   authorizationRulesProgram?: web3.PublicKey;
   authorizationRules?: web3.PublicKey;
 };
@@ -93,6 +93,21 @@ export function createUpdateInstruction(
       isSigner: true,
     },
     {
+      pubkey: accounts.delegateRecord ?? programId,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.token ?? programId,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.mint,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
       pubkey: accounts.metadata,
       isWritable: true,
       isSigner: false,
@@ -103,27 +118,12 @@ export function createUpdateInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.mint,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
       pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
       isWritable: false,
       isSigner: false,
     },
     {
       pubkey: accounts.sysvarInstructions,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.token ?? programId,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.delegateRecord ?? programId,
       isWritable: false,
       isSigner: false,
     },

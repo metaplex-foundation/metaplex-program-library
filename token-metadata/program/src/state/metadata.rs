@@ -4,7 +4,7 @@ use crate::{
         collection::assert_collection_update_is_valid, metadata::assert_data_valid,
         uses::assert_valid_use,
     },
-    instruction::{ProgrammableConfigOpt, UpdateArgs},
+    instruction::{CollectionToggle, ProgrammableConfigToggle, UpdateArgs, CollectionDetailsToggle},
     utils::{clean_write_metadata, puff_out_data_fields},
 };
 
@@ -87,6 +87,7 @@ impl Metadata {
             uses,
             new_update_authority,
             programmable_config,
+            collection_details,
             ..
         } = args;
 
@@ -105,24 +106,34 @@ impl Metadata {
             self.data = data;
         }
 
-        // If the user passes in Collection data, only allow updating if it's unverified
-        // or if it exactly matches the existing collection info.
-        // If the user passes in None for the Collection data then only set it if it's unverified.
-        if collection.is_some() {
-            assert_collection_update_is_valid(false, &self.collection, &collection)?;
-            self.collection = collection;
-        } else if let Some(current_collection) = self.collection.as_ref() {
-            // Can't change a verified collection in this command.
-            if current_collection.verified {
-                return Err(MetadataError::CannotUpdateVerifiedCollection.into());
+        // if the Collection data is 'Set', only allow updating if it's unverified
+        // or if it exactly matches the existing collection info; if the Collection data
+        // is 'Clear', then only set to 'None' it if it's unverified.
+        match collection {
+            CollectionToggle::Set(_) => {
+                let collection_option = collection.to_option();
+                assert_collection_update_is_valid(false, &self.collection, &collection_option)?;
+                self.collection = collection_option;
             }
-            // If it's unverified, it's ok to set to None.
-            self.collection = collection;
+            CollectionToggle::Clear => {
+                if let Some(current_collection) = self.collection.as_ref() {
+                    // Can't change a verified collection in this command.
+                    if current_collection.verified {
+                        return Err(MetadataError::CannotUpdateVerifiedCollection.into());
+                    }
+                    // If it's unverified, it's ok to set to None.
+                    self.collection = None;
+                }
+            }
+            CollectionToggle::None => { /* nothing to do */ }
         }
 
-        // If already None leave it as None.
-        assert_valid_use(&uses, &self.uses)?;
-        self.uses = uses;
+        if uses.is_some() {
+            let uses_option = uses.to_option();
+            // If already None leave it as None.
+            assert_valid_use(&uses_option, &self.uses)?;
+            self.uses = uses_option;
+        }
 
         if let Some(authority) = new_update_authority {
             self.update_authority = authority;
@@ -150,23 +161,26 @@ impl Metadata {
             .token_standard
             .ok_or(MetadataError::InvalidTokenStandard)?;
 
-        // If the user is trying to set the programmable config
-        if !programmable_config.is_unchanged() {
-            // ...it can only be set for programmable tokens
-            if token_standard == TokenStandard::ProgrammableNonFungible {
-                match programmable_config {
-                    // Extract from our custom enum and set the Option
-                    ProgrammableConfigOpt::Some(config) => {
-                        self.programmable_config = Some(config);
-                    }
-                    ProgrammableConfigOpt::None => {
-                        self.programmable_config = None;
-                    }
-                    ProgrammableConfigOpt::Unchanged => unreachable!(),
-                }
-            } else {
+        // if the ProgrammableConfig data is either 'Set' or 'Clear', only allow updating if the
+        // token standard is equal to `ProgrammableNonFungible`
+        if matches!(
+            programmable_config,
+            ProgrammableConfigToggle::Clear | ProgrammableConfigToggle::Set(_)
+        ) {
+            if token_standard != TokenStandard::ProgrammableNonFungible {
                 return Err(MetadataError::InvalidTokenStandard.into());
             }
+
+            self.programmable_config = programmable_config.to_option();
+        }
+
+        if let CollectionDetailsToggle::Set(collection_details) = collection_details {
+            // only unsized collections can have the size set, and only once.
+            if self.collection_details.is_some() {
+                return Err(MetadataError::SizedCollection.into());
+            }
+
+            self.collection_details = Some(collection_details);
         }
 
         puff_out_data_fields(self);

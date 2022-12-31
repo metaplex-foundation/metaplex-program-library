@@ -2518,6 +2518,26 @@
           "desc": "Update authority or delegate"
         },
         {
+          "name": "delegateRecord",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Delegate record PDA",
+          "optional": true
+        },
+        {
+          "name": "token",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Token account",
+          "optional": true
+        },
+        {
+          "name": "mint",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Mint account"
+        },
+        {
           "name": "metadata",
           "isMut": true,
           "isSigner": false,
@@ -2531,12 +2551,6 @@
           "optional": true
         },
         {
-          "name": "mint",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "Mint account"
-        },
-        {
           "name": "systemProgram",
           "isMut": false,
           "isSigner": false,
@@ -2547,20 +2561,6 @@
           "isMut": false,
           "isSigner": false,
           "desc": "System program"
-        },
-        {
-          "name": "token",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "Token account",
-          "optional": true
-        },
-        {
-          "name": "delegateRecord",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "Delegate record PDA",
-          "optional": true
         },
         {
           "name": "authorizationRulesProgram",
@@ -4392,6 +4392,12 @@
             "name": "V1",
             "fields": [
               {
+                "name": "authority_type",
+                "type": {
+                  "defined": "AuthorityType"
+                }
+              },
+              {
                 "name": "authorization_data",
                 "type": {
                   "option": {
@@ -4426,55 +4432,27 @@
                 }
               },
               {
-                "name": "token_standard",
-                "type": {
-                  "option": {
-                    "defined": "TokenStandard"
-                  }
-                }
-              },
-              {
                 "name": "collection",
                 "type": {
-                  "option": {
-                    "defined": "Collection"
-                  }
-                }
-              },
-              {
-                "name": "uses",
-                "type": {
-                  "option": {
-                    "defined": "Uses"
-                  }
+                  "defined": "CollectionToggle"
                 }
               },
               {
                 "name": "collection_details",
                 "type": {
-                  "option": {
-                    "defined": "CollectionDetails"
-                  }
+                  "defined": "CollectionDetailsToggle"
+                }
+              },
+              {
+                "name": "uses",
+                "type": {
+                  "defined": "UsesToggle"
                 }
               },
               {
                 "name": "programmable_config",
                 "type": {
-                  "defined": "ProgrammableConfigOpt"
-                }
-              },
-              {
-                "name": "delegate_state",
-                "type": {
-                  "option": {
-                    "defined": "DelegateState"
-                  }
-                }
-              },
-              {
-                "name": "authority_type",
-                "type": {
-                  "defined": "AuthorityType"
+                  "defined": "ProgrammableConfigToggle"
                 }
               }
             ]
@@ -4483,23 +4461,89 @@
       }
     },
     {
-      "name": "ProgrammableConfigOpt",
+      "name": "CollectionToggle",
       "type": {
         "kind": "enum",
         "variants": [
           {
-            "name": "Some",
+            "name": "None"
+          },
+          {
+            "name": "Clear"
+          },
+          {
+            "name": "Set",
+            "fields": [
+              {
+                "defined": "Collection"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "UsesToggle",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "None"
+          },
+          {
+            "name": "Clear"
+          },
+          {
+            "name": "Set",
+            "fields": [
+              {
+                "defined": "Uses"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "CollectionDetailsToggle",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "None"
+          },
+          {
+            "name": "Clear"
+          },
+          {
+            "name": "Set",
+            "fields": [
+              {
+                "defined": "CollectionDetails"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "ProgrammableConfigToggle",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "None"
+          },
+          {
+            "name": "Clear"
+          },
+          {
+            "name": "Set",
             "fields": [
               {
                 "defined": "ProgrammableConfig"
               }
             ]
-          },
-          {
-            "name": "None"
-          },
-          {
-            "name": "Unchanged"
           }
         ]
       }

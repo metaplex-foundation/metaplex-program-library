@@ -13,7 +13,7 @@ use utils::{DigitalAsset, *};
 mod update {
 
     use mpl_token_metadata::{
-        instruction::{AuthorityType, ProgrammableConfigOpt, UpdateArgs},
+        instruction::{AuthorityType, ProgrammableConfigToggle, UpdateArgs},
         state::{Data, ProgrammableConfig, TokenStandard},
     };
     use solana_sdk::signature::Keypair;
@@ -134,7 +134,8 @@ mod update {
             programmable_config,
             ..
         } = &mut update_args;
-        *programmable_config = ProgrammableConfigOpt::None; // remove the rule set
+        // remove the rule set
+        *programmable_config = ProgrammableConfigToggle::Clear;
 
         let UpdateArgs::V1 {
             authority_type: current_authority_type,

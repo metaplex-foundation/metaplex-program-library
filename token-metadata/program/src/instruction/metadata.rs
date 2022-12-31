@@ -15,8 +15,8 @@ use crate::{
     instruction::MetadataInstruction,
     processor::AuthorizationData,
     state::{
-        AssetData, Collection, CollectionDetails, Creator, Data, DataV2, DelegateState,
-        MigrationType, ProgrammableConfig, TokenStandard, Uses,
+        AssetData, Collection, CollectionDetails, Creator, Data, DataV2, MigrationType,
+        ProgrammableConfig, Uses,
     },
 };
 
@@ -68,23 +68,38 @@ pub enum TransferArgs {
     },
 }
 
+/// Struct representing the values to be updated for an `update` instructions.
+///
+/// Values that are set to 'None' are not changed; any value set to `Some(_)` will
+/// have its value updated. There are properties that have three valid states, which
+/// allow the value to remaing the same, to be cleared or to set a new value.
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub enum UpdateArgs {
     V1 {
-        authorization_data: Option<AuthorizationData>,
-        new_update_authority: Option<Pubkey>,
-        data: Option<Data>,
-        primary_sale_happened: Option<bool>,
-        is_mutable: Option<bool>,
-        token_standard: Option<TokenStandard>,
-        collection: Option<Collection>,
-        uses: Option<Uses>,
-        collection_details: Option<CollectionDetails>,
-        programmable_config: ProgrammableConfigOpt,
-        delegate_state: Option<DelegateState>,
+        /// The type of authority requesting the update.
         authority_type: AuthorityType,
+        /// Required authorization data to validate the request.
+        authorization_data: Option<AuthorizationData>,
+        /// The new update authority.
+        new_update_authority: Option<Pubkey>,
+        /// The metadata details.
+        data: Option<Data>,
+        /// Indicates whether the primary sale has happened or not (once set to `true`, it cannot be
+        /// changed back).
+        primary_sale_happened: Option<bool>,
+        // Indicates Whether the data struct is mutable or not (once set to `true`, it cannot be
+        /// changed back).
+        is_mutable: Option<bool>,
+        /// Collection information.
+        collection: CollectionToggle,
+        /// Additional details of the collection.
+        collection_details: CollectionDetailsToggle,
+        /// Uses information.
+        uses: UsesToggle,
+        // Programmable configuration (only applicable to `Programmable` asset types).
+        programmable_config: ProgrammableConfigToggle,
     },
 }
 
@@ -99,18 +114,53 @@ impl UpdateArgs {
 impl Default for UpdateArgs {
     fn default() -> Self {
         Self::V1 {
+            authority_type: AuthorityType::Metadata,
             authorization_data: None,
             new_update_authority: None,
             data: None,
             primary_sale_happened: None,
             is_mutable: None,
-            token_standard: None,
-            collection: None,
-            uses: None,
-            collection_details: None,
-            programmable_config: ProgrammableConfigOpt::Unchanged,
-            delegate_state: None,
-            authority_type: AuthorityType::Metadata,
+            collection: CollectionToggle::None,
+            uses: UsesToggle::None,
+            collection_details: CollectionDetailsToggle::None,
+            programmable_config: ProgrammableConfigToggle::None,
+        }
+    }
+}
+
+//-- Toggle implementations
+
+#[repr(C)]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+pub enum CollectionToggle {
+    None,
+    Clear,
+    Set(Collection),
+}
+
+impl CollectionToggle {
+    pub fn is_some(&self) -> bool {
+        matches!(self, CollectionToggle::Clear | CollectionToggle::Set(_))
+    }
+
+    pub fn is_none(&self) -> bool {
+        matches!(self, CollectionToggle::None)
+    }
+
+    pub fn is_clear(&self) -> bool {
+        matches!(self, CollectionToggle::Clear)
+    }
+
+    pub fn is_set(&self) -> bool {
+        matches!(self, CollectionToggle::Set(_))
+    }
+
+    pub fn to_option(self) -> Option<Collection> {
+        match self {
+            CollectionToggle::Set(value) => Some(value),
+            CollectionToggle::Clear => None,
+            CollectionToggle::None => panic!("Tried to convert 'None' value"),
         }
     }
 }
@@ -118,39 +168,115 @@ impl Default for UpdateArgs {
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
-pub enum ProgrammableConfigOpt {
-    Some(ProgrammableConfig),
+pub enum UsesToggle {
     None,
-    Unchanged,
+    Clear,
+    Set(Uses),
 }
 
-impl ProgrammableConfigOpt {
-    pub fn is_unchanged(&self) -> bool {
-        match self {
-            ProgrammableConfigOpt::Unchanged => true,
-            _ => false,
-        }
-    }
-    pub fn is_none(&self) -> bool {
-        match self {
-            ProgrammableConfigOpt::None => true,
-            _ => false,
-        }
-    }
+impl UsesToggle {
     pub fn is_some(&self) -> bool {
-        match self {
-            ProgrammableConfigOpt::Some(_) => true,
-            _ => false,
-        }
+        matches!(self, UsesToggle::Clear | UsesToggle::Set(_))
     }
-    pub fn unwrap(self) -> ProgrammableConfig {
+
+    pub fn is_none(&self) -> bool {
+        matches!(self, UsesToggle::None)
+    }
+
+    pub fn is_clear(&self) -> bool {
+        matches!(self, UsesToggle::Clear)
+    }
+
+    pub fn is_set(&self) -> bool {
+        matches!(self, UsesToggle::Set(_))
+    }
+
+    pub fn to_option(self) -> Option<Uses> {
         match self {
-            ProgrammableConfigOpt::Some(t) => t,
-            ProgrammableConfigOpt::None => panic!("Tried to unwrap None"),
-            ProgrammableConfigOpt::Unchanged => panic!("Tried to unwrap Unchanged"),
+            UsesToggle::Set(value) => Some(value),
+            UsesToggle::Clear => None,
+            UsesToggle::None => panic!("Tried to convert 'None' value"),
         }
     }
 }
+
+#[repr(C)]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+pub enum CollectionDetailsToggle {
+    None,
+    Clear,
+    Set(CollectionDetails),
+}
+
+impl CollectionDetailsToggle {
+    pub fn is_some(&self) -> bool {
+        matches!(
+            self,
+            CollectionDetailsToggle::Clear | CollectionDetailsToggle::Set(_)
+        )
+    }
+
+    pub fn is_none(&self) -> bool {
+        matches!(self, CollectionDetailsToggle::None)
+    }
+
+    pub fn is_clear(&self) -> bool {
+        matches!(self, CollectionDetailsToggle::Clear)
+    }
+
+    pub fn is_set(&self) -> bool {
+        matches!(self, CollectionDetailsToggle::Set(_))
+    }
+
+    pub fn to_option(self) -> Option<CollectionDetails> {
+        match self {
+            CollectionDetailsToggle::Set(value) => Some(value),
+            CollectionDetailsToggle::Clear => None,
+            CollectionDetailsToggle::None => panic!("Tried to convert 'None' value"),
+        }
+    }
+}
+
+#[repr(C)]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+pub enum ProgrammableConfigToggle {
+    None,
+    Clear,
+    Set(ProgrammableConfig),
+}
+
+impl ProgrammableConfigToggle {
+    pub fn is_some(&self) -> bool {
+        matches!(
+            self,
+            ProgrammableConfigToggle::Clear | ProgrammableConfigToggle::Set(_)
+        )
+    }
+
+    pub fn is_none(&self) -> bool {
+        matches!(self, ProgrammableConfigToggle::None)
+    }
+
+    pub fn is_clear(&self) -> bool {
+        matches!(self, ProgrammableConfigToggle::Clear)
+    }
+
+    pub fn is_set(&self) -> bool {
+        matches!(self, ProgrammableConfigToggle::Set(_))
+    }
+
+    pub fn to_option(self) -> Option<ProgrammableConfig> {
+        match self {
+            ProgrammableConfigToggle::Set(t) => Some(t),
+            ProgrammableConfigToggle::Clear => None,
+            ProgrammableConfigToggle::None => panic!("Tried to convert 'None' value"),
+        }
+    }
+}
+
+//-- End Toggle implementation
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
@@ -550,29 +676,26 @@ impl InstructionBuilder for super::builders::Update {
     fn instruction(&self) -> solana_program::instruction::Instruction {
         let mut accounts = vec![
             AccountMeta::new_readonly(self.authority, true),
+            if let Some(record) = self.delegate_record {
+                AccountMeta::new(record, false)
+            } else {
+                AccountMeta::new_readonly(crate::ID, false)
+            },
+            if let Some(token) = self.token {
+                AccountMeta::new(token, false)
+            } else {
+                AccountMeta::new_readonly(crate::ID, false)
+            },
+            AccountMeta::new_readonly(self.mint, false),
             AccountMeta::new(self.metadata, false),
             if let Some(edition) = self.edition {
                 AccountMeta::new(edition, false)
             } else {
                 AccountMeta::new_readonly(crate::ID, false)
             },
-            AccountMeta::new_readonly(self.mint, false),
             AccountMeta::new_readonly(self.system_program, false),
             AccountMeta::new_readonly(self.sysvar_instructions, false),
         ];
-
-        if let Some(token) = self.token {
-            accounts.push(AccountMeta::new(token, false));
-        } else {
-            accounts.push(AccountMeta::new_readonly(crate::ID, false));
-        }
-
-        // Optional delegate record account
-        if let Some(record) = self.delegate_record {
-            accounts.push(AccountMeta::new(record, false));
-        } else {
-            accounts.push(AccountMeta::new_readonly(crate::ID, false));
-        }
 
         // Optional authorization rules accounts
         if let Some(rules) = &self.authorization_rules {

@@ -7,6 +7,7 @@ import { createAndMintDefaultAsset, createDefaultAsset } from './utils/DigitalAs
 import { UpdateTestData } from './utils/UpdateTestData';
 import { encode } from '@msgpack/msgpack';
 import { PROGRAM_ID as TOKEN_AUTH_RULES_ID } from '@metaplex-foundation/mpl-token-auth-rules';
+import { spokSamePubkey } from './utils';
 
 killStuckProcess();
 
@@ -799,7 +800,15 @@ test('Update: Update Unverified Collection Key', async (t) => {
   });
 
   const updateData = new UpdateTestData();
-  updateData.collection = { key: newCollectionParent.publicKey, verified: false };
+  updateData.collection = {
+    __kind: 'Set',
+    fields: [
+      {
+        key: newCollectionParent.publicKey,
+        verified: false,
+      },
+    ],
+  };
 
   const { tx: updateTx } = await API.update(
     t,
@@ -816,8 +825,8 @@ test('Update: Update Unverified Collection Key', async (t) => {
   const updatedMetadata = await Metadata.fromAccountAddress(connection, metadata);
 
   spok(t, updatedMetadata.collection, {
-    verified: updateData.collection.verified,
-    key: updateData.collection.key,
+    verified: false,
+    key: spokSamePubkey(newCollectionParent.publicKey),
   });
 });
 
@@ -876,7 +885,15 @@ test('Update: Fail to Verify an Unverified Collection', async (t) => {
   });
 
   const updateData = new UpdateTestData();
-  updateData.collection = { key: collectionParent.publicKey, verified: true };
+  updateData.collection = {
+    __kind: 'Set',
+    fields: [
+      {
+        key: collectionParent.publicKey,
+        verified: true,
+      },
+    ],
+  };
 
   const { tx: updateTx } = await API.update(
     t,
@@ -966,7 +983,15 @@ test('Update: Fail to Update a Verified Collection', async (t) => {
   await verifyCollectionTx.assertSuccess(t);
 
   const updateData = new UpdateTestData();
-  updateData.collection = { key: newCollectionParent.publicKey, verified: true };
+  updateData.collection = {
+    __kind: 'Set',
+    fields: [
+      {
+        key: newCollectionParent.publicKey,
+        verified: true,
+      },
+    ],
+  };
 
   const { tx: updateTx } = await API.update(
     t,
@@ -1000,10 +1025,15 @@ test('Update: Update pNFT Config', async (t) => {
     1,
   );
 
-  const programmableConfig = { ruleSet: dummyRuleSet };
-
   const updateData = new UpdateTestData();
-  updateData.programmableConfigOpt = { __kind: 'Some', fields: [programmableConfig] };
+  updateData.programmableConfig = {
+    __kind: 'Set',
+    fields: [
+      {
+        ruleSet: dummyRuleSet,
+      },
+    ],
+  };
 
   const { tx: updateTx } = await API.update(
     t,
@@ -1043,9 +1073,15 @@ test('Update: Fail to update ProgrammableConfig on NFT', async (t) => {
     1,
   );
 
-  const programmableConfig = { ruleSet: dummyRuleSet };
   const updateData = new UpdateTestData();
-  updateData.programmableConfigOpt = { __kind: 'Some', fields: [programmableConfig] };
+  updateData.programmableConfig = {
+    __kind: 'Set',
+    fields: [
+      {
+        ruleSet: dummyRuleSet,
+      },
+    ],
+  };
 
   const { tx: updateTx } = await API.update(
     t,
@@ -1116,7 +1152,9 @@ test('Update: Update existing pNFT config to None', async (t) => {
   );
 
   const updateData = new UpdateTestData();
-  updateData.programmableConfigOpt = { __kind: 'None' };
+  updateData.programmableConfig = {
+    __kind: 'Clear',
+  };
 
   const { tx: updateTx } = await API.update(
     t,

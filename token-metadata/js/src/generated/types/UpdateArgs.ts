@@ -8,15 +8,13 @@
 import * as beet from '@metaplex-foundation/beet';
 import * as web3 from '@solana/web3.js';
 import * as beetSolana from '@metaplex-foundation/beet-solana';
+import { AuthorityType, authorityTypeBeet } from './AuthorityType';
 import { AuthorizationData, authorizationDataBeet } from './AuthorizationData';
 import { Data, dataBeet } from './Data';
-import { TokenStandard, tokenStandardBeet } from './TokenStandard';
-import { Collection, collectionBeet } from './Collection';
-import { Uses, usesBeet } from './Uses';
-import { CollectionDetails, collectionDetailsBeet } from './CollectionDetails';
-import { ProgrammableConfigOpt, programmableConfigOptBeet } from './ProgrammableConfigOpt';
-import { DelegateState, delegateStateBeet } from './DelegateState';
-import { AuthorityType, authorityTypeBeet } from './AuthorityType';
+import { CollectionToggle, collectionToggleBeet } from './CollectionToggle';
+import { CollectionDetailsToggle, collectionDetailsToggleBeet } from './CollectionDetailsToggle';
+import { UsesToggle, usesToggleBeet } from './UsesToggle';
+import { ProgrammableConfigToggle, programmableConfigToggleBeet } from './ProgrammableConfigToggle';
 /**
  * This type is used to derive the {@link UpdateArgs} type as well as the de/serializer.
  * However don't refer to it in your code but use the {@link UpdateArgs} type instead.
@@ -28,18 +26,16 @@ import { AuthorityType, authorityTypeBeet } from './AuthorityType';
  */
 export type UpdateArgsRecord = {
   V1: {
+    authorityType: AuthorityType;
     authorizationData: beet.COption<AuthorizationData>;
     newUpdateAuthority: beet.COption<web3.PublicKey>;
     data: beet.COption<Data>;
     primarySaleHappened: beet.COption<boolean>;
     isMutable: beet.COption<boolean>;
-    tokenStandard: beet.COption<TokenStandard>;
-    collection: beet.COption<Collection>;
-    uses: beet.COption<Uses>;
-    collectionDetails: beet.COption<CollectionDetails>;
-    programmableConfig: ProgrammableConfigOpt;
-    delegateState: beet.COption<DelegateState>;
-    authorityType: AuthorityType;
+    collection: CollectionToggle;
+    collectionDetails: CollectionDetailsToggle;
+    uses: UsesToggle;
+    programmableConfig: ProgrammableConfigToggle;
   };
 };
 
@@ -68,18 +64,16 @@ export const updateArgsBeet = beet.dataEnum<UpdateArgsRecord>([
     'V1',
     new beet.FixableBeetArgsStruct<UpdateArgsRecord['V1']>(
       [
+        ['authorityType', authorityTypeBeet],
         ['authorizationData', beet.coption(authorizationDataBeet)],
         ['newUpdateAuthority', beet.coption(beetSolana.publicKey)],
         ['data', beet.coption(dataBeet)],
         ['primarySaleHappened', beet.coption(beet.bool)],
         ['isMutable', beet.coption(beet.bool)],
-        ['tokenStandard', beet.coption(tokenStandardBeet)],
-        ['collection', beet.coption(collectionBeet)],
-        ['uses', beet.coption(usesBeet)],
-        ['collectionDetails', beet.coption(collectionDetailsBeet)],
-        ['programmableConfig', programmableConfigOptBeet],
-        ['delegateState', beet.coption(delegateStateBeet)],
-        ['authorityType', authorityTypeBeet],
+        ['collection', collectionToggleBeet],
+        ['collectionDetails', collectionDetailsToggleBeet],
+        ['uses', usesToggleBeet],
+        ['programmableConfig', programmableConfigToggleBeet],
       ],
       'UpdateArgsRecord["V1"]',
     ),
