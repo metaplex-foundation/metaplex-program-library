@@ -5,7 +5,7 @@ use solana_program::{
 };
 
 use crate::{
-    assertions::{assert_owned_by, collection::assert_has_collection_authority},
+    assertions::{assert_owned_by, assert_owner_in, collection::assert_has_collection_authority},
     error::MetadataError,
     instruction::SetCollectionSizeArgs,
     state::{CollectionDetails, Metadata, TokenMetadataAccount},
@@ -31,7 +31,10 @@ pub fn set_collection_size(
     assert_owned_by(parent_nft_metadata_account_info, program_id)?;
 
     // Mint owned by spl token program.
-    assert_owned_by(collection_mint_account_info, &spl_token::id())?;
+    assert_owner_in(
+        collection_mint_account_info,
+        &mpl_utils::token::TOKEN_PROGRAM_IDS,
+    )?;
 
     let mut metadata = Metadata::from_account_info(parent_nft_metadata_account_info)?;
 

@@ -8,13 +8,13 @@ use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
     pubkey::Pubkey,
 };
-use spl_token::state::Account;
+use spl_token_2022::state::Account;
 
 use super::*;
 use crate::{
     assertions::{
-        assert_derivation, assert_initialized, assert_mint_authority_matches_mint, assert_owned_by,
-        assert_token_program_matches_package, edition::assert_edition_valid,
+        assert_derivation, assert_mint_authority_matches_mint, assert_owned_by, assert_owner_in,
+        assert_token_program_matches_package, edition::assert_edition_valid, token_unpack,
     },
     error::MetadataError,
     state::{
@@ -63,13 +63,13 @@ pub fn process_mint_new_edition_from_master_edition_via_token_logic<'a>(
     } = accounts;
 
     assert_token_program_matches_package(token_program_account_info)?;
-    assert_owned_by(mint_info, &spl_token::id())?;
-    assert_owned_by(token_account_info, &spl_token::id())?;
+    assert_owner_in(mint_info, &mpl_utils::token::TOKEN_PROGRAM_IDS)?;
+    assert_owner_in(token_account_info, &mpl_utils::token::TOKEN_PROGRAM_IDS)?;
     assert_owned_by(master_edition_account_info, program_id)?;
     assert_owned_by(master_metadata_account_info, program_id)?;
 
     let master_metadata = Metadata::from_account_info(master_metadata_account_info)?;
-    let token_account: Account = assert_initialized(token_account_info)?;
+    let token_account = token_unpack::<Account>(&token_account_info.try_borrow_data()?)?.base;
 
     if !ignore_owner_signer {
         assert_signer(owner_account_info)?;

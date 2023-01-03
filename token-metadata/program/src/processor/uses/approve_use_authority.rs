@@ -1,12 +1,14 @@
 use borsh::BorshSerialize;
-use mpl_utils::{assert_signer, create_or_allocate_account_raw};
+use mpl_utils::{
+    assert_signer, create_or_allocate_account_raw, token::assert_token_program_matches_package,
+};
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
     program::invoke,
     pubkey::Pubkey,
 };
-use spl_token::instruction::approve;
+use spl_token_2022::instruction::approve;
 
 use crate::{
     assertions::{
@@ -41,9 +43,10 @@ pub fn process_approve_use_authority(
     if metadata.uses.is_none() {
         return Err(MetadataError::Unusable.into());
     }
-    if *token_program_account_info.key != spl_token::id() {
-        return Err(MetadataError::InvalidTokenProgram.into());
-    }
+    assert_token_program_matches_package(
+        token_program_account_info,
+        MetadataError::InvalidTokenProgram,
+    )?;
     assert_signer(owner_info)?;
     assert_signer(payer)?;
     assert_currently_holding(

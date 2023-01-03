@@ -1,4 +1,4 @@
-use mpl_utils::assert_signer;
+use mpl_utils::{assert_signer, token::assert_token_program_matches_package};
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
@@ -6,7 +6,7 @@ use solana_program::{
     program_memory::sol_memset,
     pubkey::Pubkey,
 };
-use spl_token::instruction::revoke;
+use spl_token_2022::instruction::revoke;
 
 use crate::{
     assertions::{
@@ -38,9 +38,10 @@ pub fn process_revoke_use_authority(
     if metadata.uses.is_none() {
         return Err(MetadataError::Unusable.into());
     }
-    if *token_program_account_info.key != spl_token::id() {
-        return Err(MetadataError::InvalidTokenProgram.into());
-    }
+    assert_token_program_matches_package(
+        token_program_account_info,
+        MetadataError::InvalidTokenProgram,
+    )?;
     assert_signer(owner_info)?;
     assert_currently_holding(
         program_id,

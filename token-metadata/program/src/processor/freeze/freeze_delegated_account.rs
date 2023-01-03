@@ -1,16 +1,16 @@
-use mpl_utils::assert_signer;
+use mpl_utils::{assert_signer, token::assert_token_program_matches_package};
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
     program::invoke_signed,
     pubkey::Pubkey,
 };
-use spl_token::{instruction::freeze_account, state::Mint};
+use spl_token_2022::{instruction::freeze_account, state::Mint};
 
 use crate::{
     assertions::{
         assert_delegated_tokens, assert_derivation, assert_freeze_authority_matches_mint,
-        assert_initialized, assert_owned_by,
+        assert_owned_by, token_unpack,
     },
     error::MetadataError,
     state::{EDITION, PREFIX},
@@ -27,12 +27,13 @@ pub fn process_freeze_delegated_account(
     let mint_info = next_account_info(account_info_iter)?;
     let token_program_account_info = next_account_info(account_info_iter)?;
 
-    if *token_program_account_info.key != spl_token::id() {
-        return Err(MetadataError::InvalidTokenProgram.into());
-    }
+    assert_token_program_matches_package(
+        token_program_account_info,
+        MetadataError::InvalidTokenProgram,
+    )?;
 
     // assert that edition pda is the freeze authority of this mint
-    let mint: Mint = assert_initialized(mint_info)?;
+    let mint = token_unpack::<Mint>(&mint_info.try_borrow_data()?)?.base;
     assert_owned_by(edition_info, program_id)?;
     assert_freeze_authority_matches_mint(&mint.freeze_authority, edition_info)?;
 

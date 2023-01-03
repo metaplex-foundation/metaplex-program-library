@@ -52,6 +52,32 @@ pub fn create_master_edition_v3(
     payer: Pubkey,
     max_supply: Option<u64>,
 ) -> Instruction {
+    create_master_edition_v3_with_token_program(
+        program_id,
+        edition,
+        mint,
+        update_authority,
+        mint_authority,
+        metadata,
+        payer,
+        spl_token::id(),
+        max_supply,
+    )
+}
+
+/// creates a create_master_edition instruction
+#[allow(clippy::too_many_arguments)]
+pub fn create_master_edition_v3_with_token_program(
+    program_id: Pubkey,
+    edition: Pubkey,
+    mint: Pubkey,
+    update_authority: Pubkey,
+    mint_authority: Pubkey,
+    metadata: Pubkey,
+    payer: Pubkey,
+    token_program_id: Pubkey,
+    max_supply: Option<u64>,
+) -> Instruction {
     let accounts = vec![
         AccountMeta::new(edition, false),
         AccountMeta::new(mint, false),
@@ -59,7 +85,7 @@ pub fn create_master_edition_v3(
         AccountMeta::new_readonly(mint_authority, true),
         AccountMeta::new(payer, true),
         AccountMeta::new(metadata, false),
-        AccountMeta::new_readonly(spl_token::id(), false),
+        AccountMeta::new_readonly(token_program_id, false),
         AccountMeta::new_readonly(solana_program::system_program::id(), false),
     ];
 
@@ -96,6 +122,42 @@ pub fn mint_new_edition_from_master_edition_via_token(
     metadata_mint: Pubkey,
     edition: u64,
 ) -> Instruction {
+    mint_new_edition_from_master_edition_via_token_with_token_program(
+        program_id,
+        new_metadata,
+        new_edition,
+        master_edition,
+        new_mint,
+        new_mint_authority,
+        payer,
+        token_account_owner,
+        token_account,
+        new_metadata_update_authority,
+        metadata,
+        metadata_mint,
+        spl_token::id(),
+        edition,
+    )
+}
+
+/// creates a mint_new_edition_from_master_edition instruction
+#[allow(clippy::too_many_arguments)]
+pub fn mint_new_edition_from_master_edition_via_token_with_token_program(
+    program_id: Pubkey,
+    new_metadata: Pubkey,
+    new_edition: Pubkey,
+    master_edition: Pubkey,
+    new_mint: Pubkey,
+    new_mint_authority: Pubkey,
+    payer: Pubkey,
+    token_account_owner: Pubkey,
+    token_account: Pubkey,
+    new_metadata_update_authority: Pubkey,
+    metadata: Pubkey,
+    metadata_mint: Pubkey,
+    token_program_id: Pubkey,
+    edition: u64,
+) -> Instruction {
     let edition_number = edition.checked_div(EDITION_MARKER_BIT_SIZE).unwrap();
     let as_string = edition_number.to_string();
     let (edition_mark_pda, _) = Pubkey::find_program_address(
@@ -121,7 +183,7 @@ pub fn mint_new_edition_from_master_edition_via_token(
         AccountMeta::new_readonly(token_account, false),
         AccountMeta::new_readonly(new_metadata_update_authority, false),
         AccountMeta::new_readonly(metadata, false),
-        AccountMeta::new_readonly(spl_token::id(), false),
+        AccountMeta::new_readonly(token_program_id, false),
         AccountMeta::new_readonly(solana_program::system_program::id(), false),
     ];
 

@@ -7,7 +7,7 @@ use solana_program::{
 };
 
 use crate::{
-    assertions::{assert_derivation, assert_owned_by},
+    assertions::{assert_derivation, assert_owned_by, assert_owner_in},
     error::MetadataError,
     state::{
         CollectionAuthorityRecord, Key, Metadata, TokenMetadataAccount, COLLECTION_AUTHORITY,
@@ -30,7 +30,7 @@ pub fn process_approve_collection_authority(
 
     let metadata = Metadata::from_account_info(metadata_info)?;
     assert_owned_by(metadata_info, program_id)?;
-    assert_owned_by(mint_info, &spl_token::id())?;
+    assert_owner_in(mint_info, &mpl_utils::token::TOKEN_PROGRAM_IDS)?;
     assert_signer(update_authority)?;
     assert_signer(payer)?;
     if metadata.update_authority != *update_authority.key {

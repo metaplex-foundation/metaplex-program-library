@@ -7,7 +7,7 @@ use solana_program::{
 use super::{compression::is_decompression, *};
 use crate::{
     assertions::{
-        assert_mint_authority_matches_mint, assert_owned_by,
+        assert_mint_authority_matches_mint, assert_owner_in,
         collection::assert_collection_update_is_valid, metadata::assert_data_valid,
         uses::assert_valid_use,
     },
@@ -81,7 +81,7 @@ pub fn process_create_metadata_accounts_logic(
             }
         },
     )?;
-    assert_owned_by(mint_info, &spl_token::id())?;
+    assert_owner_in(mint_info, &mpl_utils::token::TOKEN_PROGRAM_IDS)?;
 
     let metadata_seeds = &[
         PREFIX.as_bytes(),

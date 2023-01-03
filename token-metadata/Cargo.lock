@@ -1857,6 +1857,7 @@ dependencies = [
  "solana-sdk",
  "spl-associated-token-account",
  "spl-token",
+ "spl-token-2022",
  "thiserror",
 ]
 
@@ -1877,13 +1878,12 @@ dependencies = [
 [[package]]
 name = "mpl-utils"
 version = "0.0.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "330468b3ea93d306ed5ae5e389b0b64cfbc43fcd29a4eeae74e20f13c979e7a5"
 dependencies = [
  "arrayref",
  "borsh",
  "solana-program",
  "spl-token",
+ "spl-token-2022",
 ]
 
 [[package]]

@@ -5,9 +5,10 @@ use solana_program::{
     pubkey::Pubkey,
     system_program,
 };
+use spl_token_2022::state::Account;
 
 use crate::{
-    assertions::{assert_derivation, assert_initialized, assert_owned_by},
+    assertions::{assert_derivation, assert_owned_by, assert_owner_in, token_unpack},
     error::MetadataError,
     state::{
         EscrowAuthority, Metadata, TokenMetadataAccount, TokenOwnedEscrow, TokenStandard,
@@ -35,8 +36,8 @@ pub fn process_close_escrow_account(
     }
 
     assert_owned_by(metadata_account_info, program_id)?;
-    assert_owned_by(mint_account_info, &spl_token::id())?;
-    assert_owned_by(token_account_info, &spl_token::id())?;
+    assert_owner_in(mint_account_info, &mpl_utils::token::TOKEN_PROGRAM_IDS)?;
+    assert_owner_in(token_account_info, &mpl_utils::token::TOKEN_PROGRAM_IDS)?;
     assert_signer(payer_account_info)?;
 
     let metadata: Metadata = Metadata::from_account_info(metadata_account_info)?;
@@ -64,7 +65,7 @@ pub fn process_close_escrow_account(
     )?;
 
     assert_owned_by(escrow_account_info, program_id)?;
-    let token_account: spl_token::state::Account = assert_initialized(token_account_info)?;
+    let token_account = token_unpack::<Account>(&token_account_info.try_borrow_data()?)?.base;
     let toe = TokenOwnedEscrow::from_account_info(escrow_account_info)?;
 
     if bump_seed != toe.bump {

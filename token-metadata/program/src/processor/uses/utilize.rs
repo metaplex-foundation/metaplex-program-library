@@ -1,7 +1,7 @@
 use borsh::BorshSerialize;
 use mpl_utils::{
     assert_signer,
-    token::{spl_token_burn, TokenBurnParams},
+    token::{assert_token_program_matches_package, spl_token_burn, TokenBurnParams},
 };
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
@@ -54,9 +54,10 @@ pub fn process_utilize(
     if metadata.uses.is_none() {
         return Err(MetadataError::Unusable.into());
     }
-    if *token_program_account_info.key != spl_token::id() {
-        return Err(MetadataError::InvalidTokenProgram.into());
-    }
+    assert_token_program_matches_package(
+        token_program_account_info,
+        MetadataError::InvalidTokenProgram,
+    )?;
     assert_signer(user_info)?;
     assert_currently_holding(
         program_id,

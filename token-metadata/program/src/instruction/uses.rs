@@ -22,6 +22,34 @@ pub struct UtilizeArgs {
     pub number_of_uses: u64,
 }
 
+#[allow(clippy::too_many_arguments)]
+pub fn approve_use_authority(
+    program_id: Pubkey,
+    use_authority_record: Pubkey,
+    user: Pubkey,
+    owner: Pubkey,
+    payer: Pubkey,
+    owner_token_account: Pubkey,
+    metadata: Pubkey,
+    mint: Pubkey,
+    burner: Pubkey,
+    number_of_uses: u64,
+) -> Instruction {
+    approve_use_authority_with_token_program(
+        program_id,
+        use_authority_record,
+        user,
+        owner,
+        payer,
+        owner_token_account,
+        metadata,
+        mint,
+        burner,
+        spl_token::id(),
+        number_of_uses,
+    )
+}
+
 ///# Approve Use Authority
 ///
 ///Approve another account to call [utilize] on this NFT
@@ -44,7 +72,7 @@ pub struct UtilizeArgs {
 ///   9. `[]` System program
 ///   10. Optional `[]` Rent info
 #[allow(clippy::too_many_arguments)]
-pub fn approve_use_authority(
+pub fn approve_use_authority_with_token_program(
     program_id: Pubkey,
     use_authority_record: Pubkey,
     user: Pubkey,
@@ -54,6 +82,7 @@ pub fn approve_use_authority(
     metadata: Pubkey,
     mint: Pubkey,
     burner: Pubkey,
+    token_program_id: Pubkey,
     number_of_uses: u64,
 ) -> Instruction {
     Instruction {
@@ -67,7 +96,7 @@ pub fn approve_use_authority(
             AccountMeta::new_readonly(metadata, false),
             AccountMeta::new_readonly(mint, false),
             AccountMeta::new_readonly(burner, false),
-            AccountMeta::new_readonly(spl_token::id(), false),
+            AccountMeta::new_readonly(token_program_id, false),
             AccountMeta::new_readonly(solana_program::system_program::id(), false),
         ],
         data: MetadataInstruction::ApproveUseAuthority(ApproveUseAuthorityArgs { number_of_uses })
@@ -76,7 +105,29 @@ pub fn approve_use_authority(
     }
 }
 
-//# Revoke Use Authority
+#[allow(clippy::too_many_arguments)]
+pub fn revoke_use_authority(
+    program_id: Pubkey,
+    use_authority_record: Pubkey,
+    user: Pubkey,
+    owner: Pubkey,
+    owner_token_account: Pubkey,
+    metadata: Pubkey,
+    mint: Pubkey,
+) -> Instruction {
+    revoke_use_authority_with_token_program(
+        program_id,
+        use_authority_record,
+        user,
+        owner,
+        owner_token_account,
+        metadata,
+        mint,
+        spl_token::id(),
+    )
+}
+
+///# Revoke Use Authority
 ///
 ///Revoke account to call [utilize] on this NFT
 ///
@@ -93,7 +144,7 @@ pub fn approve_use_authority(
 ///   8. `[]` System program
 ///   9. Optional `[]` Rent info
 #[allow(clippy::too_many_arguments)]
-pub fn revoke_use_authority(
+pub fn revoke_use_authority_with_token_program(
     program_id: Pubkey,
     use_authority_record: Pubkey,
     user: Pubkey,
@@ -101,6 +152,7 @@ pub fn revoke_use_authority(
     owner_token_account: Pubkey,
     metadata: Pubkey,
     mint: Pubkey,
+    token_program_id: Pubkey,
 ) -> Instruction {
     Instruction {
         program_id,
@@ -111,13 +163,39 @@ pub fn revoke_use_authority(
             AccountMeta::new(owner_token_account, false),
             AccountMeta::new_readonly(mint, false),
             AccountMeta::new_readonly(metadata, false),
-            AccountMeta::new_readonly(spl_token::id(), false),
+            AccountMeta::new_readonly(token_program_id, false),
             AccountMeta::new_readonly(solana_program::system_program::id(), false),
         ],
         data: MetadataInstruction::RevokeUseAuthority
             .try_to_vec()
             .unwrap(),
     }
+}
+
+#[allow(clippy::too_many_arguments)]
+pub fn utilize(
+    program_id: Pubkey,
+    metadata: Pubkey,
+    token_account: Pubkey,
+    mint: Pubkey,
+    use_authority_record_pda: Option<Pubkey>,
+    use_authority: Pubkey,
+    owner: Pubkey,
+    burner: Option<Pubkey>,
+    number_of_uses: u64,
+) -> Instruction {
+    utilize_with_token_program(
+        program_id,
+        metadata,
+        token_account,
+        mint,
+        use_authority_record_pda,
+        use_authority,
+        owner,
+        spl_token::id(),
+        burner,
+        number_of_uses,
+    )
 }
 
 ///# Utilize
@@ -139,7 +217,7 @@ pub fn revoke_use_authority(
 ///   8. Optional `[]` Rent info
 ///   9. Optional `[writable]` Use Authority Record PDA If present the program Assumes a delegated use authority
 #[allow(clippy::too_many_arguments)]
-pub fn utilize(
+pub fn utilize_with_token_program(
     program_id: Pubkey,
     metadata: Pubkey,
     token_account: Pubkey,
@@ -147,6 +225,7 @@ pub fn utilize(
     use_authority_record_pda: Option<Pubkey>,
     use_authority: Pubkey,
     owner: Pubkey,
+    token_program_id: Pubkey,
     burner: Option<Pubkey>,
     number_of_uses: u64,
 ) -> Instruction {
@@ -156,7 +235,7 @@ pub fn utilize(
         AccountMeta::new(mint, false),
         AccountMeta::new(use_authority, true),
         AccountMeta::new_readonly(owner, false),
-        AccountMeta::new_readonly(spl_token::id(), false),
+        AccountMeta::new_readonly(token_program_id, false),
         AccountMeta::new_readonly(spl_associated_token_account::id(), false),
         AccountMeta::new_readonly(solana_program::system_program::id(), false),
     ];

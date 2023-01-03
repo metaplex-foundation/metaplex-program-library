@@ -12,11 +12,12 @@ use solana_program::{
     program_memory::sol_memset,
     pubkey::Pubkey,
 };
-use spl_token::state::Account;
+use spl_token_2022::state::Account;
 
 use crate::{
     assertions::{
-        assert_derivation, assert_initialized, assert_owned_by, metadata::assert_currently_holding,
+        assert_derivation, assert_owned_by, assert_owner_in, metadata::assert_currently_holding,
+        token_unpack,
     },
     error::MetadataError,
     state::{
@@ -92,11 +93,18 @@ pub fn process_burn_edition_nft(program_id: &Pubkey, accounts: &[AccountInfo]) -
     assert_owned_by(edition_marker_info, program_id)?;
 
     // Owned by spl-token program.
-    assert_owned_by(master_edition_mint_info, &spl_token::id())?;
-    assert_owned_by(master_edition_token_info, &spl_token::id())?;
+    assert_owner_in(
+        master_edition_mint_info,
+        &mpl_utils::token::TOKEN_PROGRAM_IDS,
+    )?;
+    assert_owner_in(
+        master_edition_token_info,
+        &mpl_utils::token::TOKEN_PROGRAM_IDS,
+    )?;
 
     // Master Edition token account checks.
-    let master_edition_token_account: Account = assert_initialized(master_edition_token_info)?;
+    let master_edition_token_account =
+        token_unpack::<Account>(&master_edition_token_info.try_borrow_data()?)?.base;
 
     if master_edition_token_account.mint != *master_edition_mint_info.key {
         return Err(MetadataError::MintMismatch.into());

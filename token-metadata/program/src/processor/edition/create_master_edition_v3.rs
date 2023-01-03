@@ -5,12 +5,13 @@ use solana_program::{
     entrypoint::ProgramResult,
     pubkey::Pubkey,
 };
-use spl_token::state::Mint;
+use spl_token_2022::state::Mint;
 
 use crate::{
     assertions::{
-        assert_derivation, assert_initialized, assert_mint_authority_matches_mint, assert_owned_by,
+        assert_derivation, assert_mint_authority_matches_mint, assert_owned_by, assert_owner_in,
         assert_token_program_matches_package, metadata::assert_update_authority_is_correct,
+        token_unpack,
     },
     error::MetadataError,
     state::{
@@ -38,7 +39,7 @@ pub fn process_create_master_edition(
     let system_account_info = next_account_info(account_info_iter)?;
 
     let metadata = Metadata::from_account_info(metadata_account_info)?;
-    let mint: Mint = assert_initialized(mint_info)?;
+    let mint = token_unpack::<Mint>(&mint_info.try_borrow_data()?)?.base;
 
     let bump_seed = assert_derivation(
         program_id,
@@ -54,7 +55,7 @@ pub fn process_create_master_edition(
     assert_token_program_matches_package(token_program_info)?;
     assert_mint_authority_matches_mint(&mint.mint_authority, mint_authority_info)?;
     assert_owned_by(metadata_account_info, program_id)?;
-    assert_owned_by(mint_info, &spl_token::id())?;
+    assert_owner_in(mint_info, &mpl_utils::token::TOKEN_PROGRAM_IDS)?;
 
     if metadata.mint != *mint_info.key {
         return Err(MetadataError::MintMismatch.into());

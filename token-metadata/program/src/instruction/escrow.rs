@@ -95,6 +95,36 @@ pub fn transfer_out_of_escrow(
     authority: Option<Pubkey>,
     amount: u64,
 ) -> Instruction {
+    transfer_out_of_escrow_with_token_program(
+        program_id,
+        escrow,
+        metadata,
+        payer,
+        attribute_mint,
+        attribute_src,
+        attribute_dst,
+        escrow_mint,
+        escrow_account,
+        spl_token::id(),
+        authority,
+        amount,
+    )
+}
+
+pub fn transfer_out_of_escrow_with_token_program(
+    program_id: Pubkey,
+    escrow: Pubkey,
+    metadata: Pubkey,
+    payer: Pubkey,
+    attribute_mint: Pubkey,
+    attribute_src: Pubkey,
+    attribute_dst: Pubkey,
+    escrow_mint: Pubkey,
+    escrow_account: Pubkey,
+    token_program_id: Pubkey,
+    authority: Option<Pubkey>,
+    amount: u64,
+) -> Instruction {
     let mut accounts = vec![
         AccountMeta::new_readonly(escrow, false),
         AccountMeta::new(metadata, false),
@@ -106,7 +136,7 @@ pub fn transfer_out_of_escrow(
         AccountMeta::new_readonly(escrow_account, false),
         AccountMeta::new_readonly(solana_program::system_program::id(), false),
         AccountMeta::new_readonly(spl_associated_token_account::id(), false),
-        AccountMeta::new_readonly(spl_token::id(), false),
+        AccountMeta::new_readonly(token_program_id, false),
         AccountMeta::new_readonly(sysvar::instructions::id(), false),
     ];
 

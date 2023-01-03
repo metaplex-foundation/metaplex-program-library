@@ -8,7 +8,7 @@ use solana_program::{
 
 use crate::{
     assertions::{
-        assert_owned_by,
+        assert_owned_by, assert_owner_in,
         collection::{assert_collection_verify_is_valid, assert_has_collection_authority},
     },
     error::MetadataError,
@@ -34,7 +34,7 @@ pub fn verify_sized_collection_item(
 
     assert_owned_by(metadata_info, program_id)?;
     assert_owned_by(collection_info, program_id)?;
-    assert_owned_by(collection_mint, &spl_token::id())?;
+    assert_owner_in(collection_mint, &mpl_utils::token::TOKEN_PROGRAM_IDS)?;
     assert_owned_by(edition_account_info, program_id)?;
 
     let mut metadata = Metadata::from_account_info(metadata_info)?;

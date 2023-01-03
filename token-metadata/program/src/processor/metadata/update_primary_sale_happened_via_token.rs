@@ -5,10 +5,10 @@ use solana_program::{
     program_error::ProgramError,
     pubkey::Pubkey,
 };
-use spl_token::state::Account;
+use spl_token_2022::state::Account;
 
 use crate::{
-    assertions::{assert_initialized, assert_owned_by},
+    assertions::{assert_owned_by, assert_owner_in, token_unpack},
     error::MetadataError,
     state::{Metadata, TokenMetadataAccount},
 };
@@ -23,11 +23,11 @@ pub fn process_update_primary_sale_happened_via_token(
     let owner_info = next_account_info(account_info_iter)?;
     let token_account_info = next_account_info(account_info_iter)?;
 
-    let token_account: Account = assert_initialized(token_account_info)?;
+    let token_account = token_unpack::<Account>(&token_account_info.try_borrow_data()?)?.base;
     let mut metadata = Metadata::from_account_info(metadata_account_info)?;
 
     assert_owned_by(metadata_account_info, program_id)?;
-    assert_owned_by(token_account_info, &spl_token::id())?;
+    assert_owner_in(token_account_info, &mpl_utils::token::TOKEN_PROGRAM_IDS)?;
 
     if !owner_info.is_signer {
         return Err(ProgramError::MissingRequiredSignature);
