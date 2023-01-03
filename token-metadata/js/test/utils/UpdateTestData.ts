@@ -1,12 +1,11 @@
 import { PublicKey } from '@solana/web3.js';
 import {
-  TokenStandard,
   Data,
-  Collection,
-  Uses,
-  CollectionDetails,
-  ProgrammableConfig,
-  DelegateState,
+  ProgrammableConfigToggle,
+  AuthorizationData,
+  CollectionToggle,
+  UsesToggle,
+  CollectionDetailsToggle,
 } from '../../src/generated';
 
 export class UpdateTestData {
@@ -14,23 +13,21 @@ export class UpdateTestData {
   data: Data;
   primarySaleHappened: boolean;
   isMutable: boolean;
-  tokenStandard: TokenStandard;
-  collection: Collection;
-  uses: Uses;
-  collectionDetails: CollectionDetails;
-  programmableConfig: ProgrammableConfig;
-  delegateState: DelegateState;
+  collection: CollectionToggle;
+  uses: UsesToggle;
+  collectionDetails: CollectionDetailsToggle;
+  programmableConfig: ProgrammableConfigToggle;
+  authorizationData: AuthorizationData;
 
   constructor() {
     this.newUpdateAuthority = null;
     this.data = null;
     this.primarySaleHappened = null;
     this.isMutable = null;
-    this.tokenStandard = null;
-    this.collection = null;
-    this.uses = null;
-    this.collectionDetails = null;
-    this.programmableConfig = null;
-    this.delegateState = null;
+    this.collection = { __kind: "None" };
+    this.uses = { __kind: "None" };
+    this.collectionDetails = { __kind: "None" };
+    this.authorizationData = null;
+    this.programmableConfig = { __kind: "None" };
   }
 }

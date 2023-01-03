@@ -64,6 +64,7 @@ import {
   MintLayout,
   TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
+
 export class InitTransactions {
   readonly getKeypair: LoadOrGenKeypair | GenLabeledKeypair;
 
@@ -360,12 +361,10 @@ export class InitTransactions {
         data: updateTestData.data,
         primarySaleHappened: updateTestData.primarySaleHappened,
         isMutable: updateTestData.isMutable,
-        tokenStandard: updateTestData.tokenStandard,
         collection: updateTestData.collection,
         uses: updateTestData.uses,
         collectionDetails: updateTestData.collectionDetails,
         programmableConfig: updateTestData.programmableConfig,
-        delegateState: updateTestData.delegateState,
         authorizationData,
         authorityType,
       },
@@ -377,94 +376,6 @@ export class InitTransactions {
 
     return {
       tx: handler.sendAndConfirmTransaction(tx, [authority], 'tx: Update'),
-    };
-  }
-
-  async verifyCollection(
-    t: Test,
-    payer: Keypair,
-    metadata: PublicKey,
-    collectionMint: PublicKey,
-    collectionMetadata: PublicKey,
-    collectionMasterEdition: PublicKey,
-    collectionAuthority: Keypair,
-    handler: PayerTransactionHandler,
-  ): Promise<{ tx: ConfirmedTransactionAssertablePromise }> {
-    amman.addr.addLabel('Metadata Account', metadata);
-    amman.addr.addLabel('Collection Mint Account', collectionMint);
-    amman.addr.addLabel('Collection Metadata Account', collectionMetadata);
-    amman.addr.addLabel('Collection Master Edition Account', collectionMasterEdition);
-
-    const verifyCollectionAcccounts: VerifyCollectionInstructionAccounts = {
-      metadata,
-      collectionAuthority: collectionAuthority.publicKey,
-      collectionMint,
-      collection: collectionMetadata,
-      collectionMasterEditionAccount: collectionMasterEdition,
-      payer: payer.publicKey,
-    };
-
-    const verifyInstruction = createVerifyCollectionInstruction(verifyCollectionAcccounts);
-    const tx = new Transaction().add(verifyInstruction);
-
-    return {
-      tx: handler.sendAndConfirmTransaction(
-        tx,
-        [payer, collectionAuthority],
-        'tx: Verify Collection',
-      ),
-    };
-  }
-  async signMetadata(
-    t: Test,
-    creator: Keypair,
-    metadata: PublicKey,
-    handler: PayerTransactionHandler,
-  ): Promise<{ tx: ConfirmedTransactionAssertablePromise }> {
-    amman.addr.addLabel('Metadata Account', metadata);
-
-    const signMetadataAcccounts: SignMetadataInstructionAccounts = {
-      metadata,
-      creator: creator.publicKey,
-    };
-
-    const signMetadataInstruction = createSignMetadataInstruction(signMetadataAcccounts);
-    const tx = new Transaction().add(signMetadataInstruction);
-
-    return {
-      tx: handler.sendAndConfirmTransaction(tx, [creator], 'tx: Sign Metadata'),
-    };
-  }
-
-  async createRuleSet(
-    t: Test,
-    payer: Keypair,
-    ruleSetPda: PublicKey,
-    serializedRuleSet: Uint8Array,
-    handler: PayerTransactionHandler,
-  ): Promise<{ tx: ConfirmedTransactionAssertablePromise }> {
-    amman.addr.addLabel('Payer', payer.publicKey);
-
-    const createRuleSetAccounts: CreateOrUpdateInstructionAccounts = {
-      ruleSetPda,
-      payer: payer.publicKey,
-    };
-
-    const createRuleSetArgs: CreateOrUpdateInstructionArgs = {
-      createOrUpdateArgs: {
-        __kind: 'V1',
-        serializedRuleSet,
-      },
-    };
-
-    const createRuleSetInstruction = createCreateOrUpdateInstruction(
-      createRuleSetAccounts,
-      createRuleSetArgs,
-    );
-    const tx = new Transaction().add(createRuleSetInstruction);
-
-    return {
-      tx: handler.sendAndConfirmTransaction(tx, [payer], 'tx: Create Rule Set'),
     };
   }
 
@@ -552,6 +463,96 @@ export class InitTransactions {
     return {
       tx: handler.sendAndConfirmTransaction(tx, [payer], 'tx: Revoke'),
       delegate,
+    };
+  }
+
+  //-- Helpers
+
+  async verifyCollection(
+    t: Test,
+    payer: Keypair,
+    metadata: PublicKey,
+    collectionMint: PublicKey,
+    collectionMetadata: PublicKey,
+    collectionMasterEdition: PublicKey,
+    collectionAuthority: Keypair,
+    handler: PayerTransactionHandler,
+  ): Promise<{ tx: ConfirmedTransactionAssertablePromise }> {
+    amman.addr.addLabel('Metadata Account', metadata);
+    amman.addr.addLabel('Collection Mint Account', collectionMint);
+    amman.addr.addLabel('Collection Metadata Account', collectionMetadata);
+    amman.addr.addLabel('Collection Master Edition Account', collectionMasterEdition);
+
+    const verifyCollectionAcccounts: VerifyCollectionInstructionAccounts = {
+      metadata,
+      collectionAuthority: collectionAuthority.publicKey,
+      collectionMint,
+      collection: collectionMetadata,
+      collectionMasterEditionAccount: collectionMasterEdition,
+      payer: payer.publicKey,
+    };
+
+    const verifyInstruction = createVerifyCollectionInstruction(verifyCollectionAcccounts);
+    const tx = new Transaction().add(verifyInstruction);
+
+    return {
+      tx: handler.sendAndConfirmTransaction(
+        tx,
+        [payer, collectionAuthority],
+        'tx: Verify Collection',
+      ),
+    };
+  }
+  async signMetadata(
+    t: Test,
+    creator: Keypair,
+    metadata: PublicKey,
+    handler: PayerTransactionHandler,
+  ): Promise<{ tx: ConfirmedTransactionAssertablePromise }> {
+    amman.addr.addLabel('Metadata Account', metadata);
+
+    const signMetadataAcccounts: SignMetadataInstructionAccounts = {
+      metadata,
+      creator: creator.publicKey,
+    };
+
+    const signMetadataInstruction = createSignMetadataInstruction(signMetadataAcccounts);
+    const tx = new Transaction().add(signMetadataInstruction);
+
+    return {
+      tx: handler.sendAndConfirmTransaction(tx, [creator], 'tx: Sign Metadata'),
+    };
+  }
+
+  async createRuleSet(
+    t: Test,
+    payer: Keypair,
+    ruleSetPda: PublicKey,
+    serializedRuleSet: Uint8Array,
+    handler: PayerTransactionHandler,
+  ): Promise<{ tx: ConfirmedTransactionAssertablePromise }> {
+    amman.addr.addLabel('Payer', payer.publicKey);
+
+    const createRuleSetAccounts: CreateOrUpdateInstructionAccounts = {
+      ruleSetPda,
+      payer: payer.publicKey,
+    };
+
+    const createRuleSetArgs: CreateOrUpdateInstructionArgs = {
+      createOrUpdateArgs: {
+        __kind: 'V1',
+        serializedRuleSet,
+      },
+    };
+
+    const createRuleSetInstruction = createCreateOrUpdateInstruction(
+      createRuleSetAccounts,
+      createRuleSetArgs,
+    );
+    const tx = new Transaction().add(createRuleSetInstruction);
+
+    return {
+      tx: handler.sendAndConfirmTransaction(tx, [payer], 'tx: Create Rule Set'),
     };
   }
 
