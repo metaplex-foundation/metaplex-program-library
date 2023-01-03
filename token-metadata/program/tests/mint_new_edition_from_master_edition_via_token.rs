@@ -5,9 +5,9 @@ use borsh::BorshSerialize;
 use mpl_token_metadata::{
     error::MetadataError,
     id, instruction,
-    state::{Creator, Key, MAX_MASTER_EDITION_LEN},
+    instruction::sign_metadata,
+    state::{Collection, Creator, Key, MAX_MASTER_EDITION_LEN},
 };
-use mpl_token_metadata::{instruction::sign_metadata, state::Collection};
 use num_traits::FromPrimitive;
 use solana_program_test::*;
 use solana_sdk::{

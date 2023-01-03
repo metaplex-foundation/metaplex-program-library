@@ -3,18 +3,6 @@ pub(crate) mod compression;
 pub(crate) mod master_edition;
 pub(crate) mod metadata;
 
-pub use crate::assertions::{
-    assert_delegated_tokens, assert_derivation, assert_freeze_authority_matches_mint,
-    assert_initialized, assert_mint_authority_matches_mint, assert_owned_by, assert_rent_exempt,
-    assert_token_program_matches_package,
-    edition::{
-        assert_edition_is_not_mint_authority, assert_edition_valid, assert_supply_invariance,
-    },
-    metadata::{
-        assert_currently_holding, assert_data_valid, assert_update_authority_is_correct,
-        assert_verified_member_of_collection,
-    },
-};
 pub use collection::*;
 pub use compression::*;
 pub use master_edition::*;
@@ -33,6 +21,18 @@ use solana_program::{
 };
 use spl_token::instruction::{set_authority, AuthorityType};
 
+pub use crate::assertions::{
+    assert_delegated_tokens, assert_derivation, assert_freeze_authority_matches_mint,
+    assert_initialized, assert_mint_authority_matches_mint, assert_owned_by, assert_rent_exempt,
+    assert_token_program_matches_package,
+    edition::{
+        assert_edition_is_not_mint_authority, assert_edition_valid, assert_supply_invariance,
+    },
+    metadata::{
+        assert_currently_holding, assert_data_valid, assert_update_authority_is_correct,
+        assert_verified_member_of_collection,
+    },
+};
 use crate::{
     error::MetadataError,
     state::{
