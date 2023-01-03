@@ -14,13 +14,14 @@ crate-type = ["lib", "cdylib"]
 path = "src/lib.rs"
 
 [dependencies]
-solana-program = "1.10"
+solana-program = "1.14.10"
 borsh = "0.9.3"
 arrayref = "0.3.6"
-spl-token = { version = "3.2.0", features = ["no-entrypoint"], optional = true }
+spl-token = { version = "3.5.0", features = ["no-entrypoint"], optional = true }
+spl-token-2022 = { version = "0.5.0", features = ["no-entrypoint"], optional = true }
 
 [features]
-token = ["spl-token"]
+token = ["spl-token", "spl-token-2022"]
 default = ["token"]
 
 [profile.release]

@@ -16,7 +16,7 @@ pub fn spl_token_burn(params: TokenBurnParams<'_, '_>) -> ProgramResult {
         seeds.push(seed);
     }
     invoke_signed(
-        &spl_token::instruction::burn(
+        &spl_token_2022::instruction::burn(
             token_program.key,
             source.key,
             mint.key,
@@ -58,7 +58,7 @@ pub fn spl_token_close(params: TokenCloseParams<'_, '_>) -> ProgramResult {
         seeds.push(seed);
     }
     invoke_signed(
-        &spl_token::instruction::close_account(
+        &spl_token_2022::instruction::close_account(
             token_program.key,
             account.key,
             destination.key,
@@ -98,7 +98,7 @@ pub fn spl_token_mint_to(params: TokenMintToParams<'_, '_>) -> ProgramResult {
         seeds.push(seed);
     }
     invoke_signed(
-        &spl_token::instruction::mint_to(
+        &spl_token_2022::instruction::mint_to(
             token_program.key,
             mint.key,
             destination.key,

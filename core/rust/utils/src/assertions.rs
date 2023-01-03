@@ -39,6 +39,18 @@ pub fn assert_owned_by(
     }
 }
 
+pub fn assert_owner_in(
+    account: &AccountInfo,
+    possible_owners: &[&Pubkey],
+    error: impl Into<ProgramError>,
+) -> ProgramResult {
+    if !possible_owners.contains(&account.owner) {
+        Err(error.into())
+    } else {
+        Ok(())
+    }
+}
+
 pub fn assert_derivation(
     program_id: &Pubkey,
     account: &AccountInfo,
