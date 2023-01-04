@@ -1773,6 +1773,7 @@ dependencies = [
  "solana-sdk",
  "spl-associated-token-account",
  "spl-token",
+ "spl-token-2022",
 ]
 
 [[package]]
