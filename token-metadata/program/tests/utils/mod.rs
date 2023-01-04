@@ -17,7 +17,10 @@ use solana_sdk::{
     account::Account, program_pack::Pack, pubkey::Pubkey, signature::Signer,
     signer::keypair::Keypair, system_instruction, transaction::Transaction,
 };
-use spl_token_2022::{extension::{ExtensionType, StateWithExtensions}, state::Mint};
+use spl_token_2022::{
+    extension::{ExtensionType, StateWithExtensions},
+    state::Mint,
+};
 pub use vault::Vault;
 
 pub const DEFAULT_COLLECTION_DETAILS: Option<CollectionDetails> =
@@ -26,7 +29,11 @@ pub const DEFAULT_COLLECTION_DETAILS: Option<CollectionDetails> =
 pub fn program_test() -> ProgramTest {
     let mut program_test = ProgramTest::new("mpl_token_metadata", mpl_token_metadata::id(), None);
     program_test.prefer_bpf(false);
-    program_test.add_program("spl_token_2022", spl_token_2022::id(), processor!(spl_token_2022::processor::Processor::process));
+    program_test.add_program(
+        "spl_token_2022",
+        spl_token_2022::id(),
+        processor!(spl_token_2022::processor::Processor::process),
+    );
     program_test
 }
 
@@ -41,7 +48,9 @@ pub async fn get_account(context: &mut ProgramTestContext, pubkey: &Pubkey) -> A
 
 pub async fn get_mint(context: &mut ProgramTestContext, pubkey: &Pubkey) -> Mint {
     let account = get_account(context, pubkey).await;
-    StateWithExtensions::<Mint>::unpack(&account.data).unwrap().base
+    StateWithExtensions::<Mint>::unpack(&account.data)
+        .unwrap()
+        .base
 }
 
 pub async fn airdrop(
@@ -73,7 +82,7 @@ pub async fn burn(
     edition: Pubkey,
     collection_metadata: Option<Pubkey>,
 ) -> Result<(), BanksClientError> {
-    let token_program_id =  get_account(context, &mint).await.owner;
+    let token_program_id = get_account(context, &mint).await.owner;
     let tx = Transaction::new_signed_with_payer(
         &[instruction::burn_nft(
             mpl_token_metadata::ID,
@@ -107,7 +116,7 @@ pub async fn burn_edition(
     print_edition: Pubkey,
     edition_marker: Pubkey,
 ) -> Result<(), BanksClientError> {
-    let token_program_id =  get_account(context, &print_edition_mint).await.owner;
+    let token_program_id = get_account(context, &print_edition_mint).await.owner;
     let tx = Transaction::new_signed_with_payer(
         &[instruction::burn_edition_nft(
             mpl_token_metadata::ID,
@@ -140,17 +149,22 @@ pub async fn mint_tokens(
     owner: &Pubkey,
     additional_signer: Option<&Keypair>,
 ) -> Result<(), BanksClientError> {
-    let token_program_id =  get_account(context, mint).await.owner;
+    let token_program_id = get_account(context, mint).await.owner;
     let mut signing_keypairs = vec![&context.payer];
     if let Some(signer) = additional_signer {
         signing_keypairs.push(signer);
     }
 
     let tx = Transaction::new_signed_with_payer(
-        &[
-            spl_token_2022::instruction::mint_to(&token_program_id, mint, account, owner, &[], amount)
-                .unwrap(),
-        ],
+        &[spl_token_2022::instruction::mint_to(
+            &token_program_id,
+            mint,
+            account,
+            owner,
+            &[],
+            amount,
+        )
+        .unwrap()],
         Some(&context.payer.pubkey()),
         &signing_keypairs,
         context.last_blockhash,
@@ -166,7 +180,7 @@ pub async fn create_token_account(
     manager: &Pubkey,
 ) -> Result<(), BanksClientError> {
     let rent = context.banks_client.get_rent().await.unwrap();
-    let token_program_id =  get_account(context, &mint).await.owner;
+    let token_program_id = get_account(context, mint).await.owner;
 
     let space = if token_program_id == spl_token_2022::id() {
         ExtensionType::get_account_len::<spl_token_2022::state::Account>(&[
@@ -186,7 +200,11 @@ pub async fn create_token_account(
                 &token_program_id,
             ),
             // no-ops in `Tokenkeg...`, so safe to do either way
-            spl_token_2022::instruction::initialize_immutable_owner(&token_program_id, &account.pubkey()).unwrap(),
+            spl_token_2022::instruction::initialize_immutable_owner(
+                &token_program_id,
+                &account.pubkey(),
+            )
+            .unwrap(),
             spl_token_2022::instruction::initialize_account(
                 &token_program_id,
                 &account.pubkey(),
@@ -215,27 +233,27 @@ pub async fn create_mint(
 
     // add mint close authority to token-2022 mints
     let space = if *token_program_id == spl_token_2022::id() {
-        ExtensionType::get_account_len::<Mint>(&[
-            ExtensionType::MintCloseAuthority,
-        ])
+        ExtensionType::get_account_len::<Mint>(&[ExtensionType::MintCloseAuthority])
     } else {
         Mint::get_packed_len()
     };
 
-    let mut instructions = vec![
-        system_instruction::create_account(
-            &context.payer.pubkey(),
-            &mint.pubkey(),
-            rent.minimum_balance(space),
-            space as u64,
-            token_program_id,
-        )
-    ];
+    let mut instructions = vec![system_instruction::create_account(
+        &context.payer.pubkey(),
+        &mint.pubkey(),
+        rent.minimum_balance(space),
+        space as u64,
+        token_program_id,
+    )];
     if *token_program_id == spl_token_2022::id() {
         instructions.push(
             spl_token_2022::instruction::initialize_mint_close_authority(
-                token_program_id, &mint.pubkey(), freeze_authority,
-            ).unwrap());
+                token_program_id,
+                &mint.pubkey(),
+                freeze_authority,
+            )
+            .unwrap(),
+        );
     }
     instructions.push(
         spl_token_2022::instruction::initialize_mint(

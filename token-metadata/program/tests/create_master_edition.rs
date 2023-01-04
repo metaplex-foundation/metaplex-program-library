@@ -13,8 +13,9 @@ use solana_sdk::{
 use utils::*;
 
 mod create_master_edition {
-    use super::*;
     use test_case::test_case;
+
+    use super::*;
 
     #[test_case(spl_token::id(); "token")]
     #[test_case(spl_token_2022::id(); "token-2022")]
@@ -53,7 +54,6 @@ mod create_master_edition {
         let mint = get_mint(&mut context, &test_master_edition.mint_pubkey).await;
         let new_authority = mint.mint_authority.unwrap();
 
-        assert_eq!(new_authority, new_authority);
         assert_ne!(old_authority, new_authority);
         assert_eq!(master_edition.supply, 0);
         assert_eq!(master_edition.max_supply.unwrap(), 10);
@@ -97,7 +97,6 @@ mod create_master_edition {
         let mint = get_mint(&mut context, &test_master_edition.mint_pubkey).await;
         let new_authority = mint.mint_authority.unwrap();
 
-        assert_eq!(new_authority, new_authority);
         assert_ne!(old_authority, new_authority);
         assert_eq!(master_edition.supply, 0);
         assert_eq!(master_edition.max_supply.unwrap(), 10);
@@ -201,9 +200,16 @@ mod create_master_edition {
             .await
             .unwrap();
 
-        create_mint(&mut context, &fake_mint, &payer_pubkey, None, 0, &spl_token::id())
-            .await
-            .unwrap();
+        create_mint(
+            &mut context,
+            &fake_mint,
+            &payer_pubkey,
+            None,
+            0,
+            &spl_token::id(),
+        )
+        .await
+        .unwrap();
         create_token_account(
             &mut context,
             &fake_account,
@@ -356,9 +362,16 @@ mod create_master_edition {
             .await
             .unwrap();
 
-        create_mint(&mut context, &fake_mint, &payer_pubkey, None, 0, &spl_token::id())
-            .await
-            .unwrap();
+        create_mint(
+            &mut context,
+            &fake_mint,
+            &payer_pubkey,
+            None,
+            0,
+            &spl_token::id(),
+        )
+        .await
+        .unwrap();
         create_token_account(
             &mut context,
             &fake_account,

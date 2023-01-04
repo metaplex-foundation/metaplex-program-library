@@ -10,9 +10,9 @@ use utils::*;
 mod escrow {
     use mpl_token_metadata::{escrow::find_escrow_account, state::EscrowAuthority};
     use solana_program::program_pack::Pack;
+    use test_case::test_case;
 
     use super::*;
-    use test_case::test_case;
 
     #[test_case(spl_token::id(); "token")]
     #[test_case(spl_token_2022::id(); "token-2022")]
@@ -136,7 +136,9 @@ mod escrow {
 
         let attribute_src_account =
             get_account(&mut context, &attribute_test_metadata.token.pubkey()).await;
-        let attribute_src = StateWithExtensions::<Account>::unpack(&attribute_src_account.data).unwrap().base;
+        let attribute_src = StateWithExtensions::<Account>::unpack(&attribute_src_account.data)
+            .unwrap()
+            .base;
         assert!(attribute_src.amount == 1);
         println!("{:#?}", attribute_src);
 
@@ -150,12 +152,16 @@ mod escrow {
         print!("\n{:#?}\n", escrow);
         let attribute_src_account =
             get_account(&mut context, &attribute_test_metadata.token.pubkey()).await;
-        let attribute_src = StateWithExtensions::<Account>::unpack(&attribute_src_account.data).unwrap().base;
+        let attribute_src = StateWithExtensions::<Account>::unpack(&attribute_src_account.data)
+            .unwrap()
+            .base;
         assert!(attribute_src.amount == 0);
         println!("{:#?}", attribute_src);
         let attribute_dst_account =
             get_account(&mut context, &escrow_attribute_token_account).await;
-        let attribute_dst = StateWithExtensions::<Account>::unpack(&attribute_dst_account.data).unwrap().base;
+        let attribute_dst = StateWithExtensions::<Account>::unpack(&attribute_dst_account.data)
+            .unwrap()
+            .base;
         assert!(attribute_dst.amount == 1);
         assert!(attribute_dst.mint == attribute_src.mint);
         assert!(attribute_dst.owner == escrow_address.0);
@@ -195,7 +201,9 @@ mod escrow {
 
         let attribute_src_account =
             get_account(&mut context, &escrow_attribute_token_account).await;
-        let attribute_src = StateWithExtensions::<Account>::unpack(&attribute_src_account.data).unwrap().base;
+        let attribute_src = StateWithExtensions::<Account>::unpack(&attribute_src_account.data)
+            .unwrap()
+            .base;
         assert!(attribute_src.amount == 1);
         println!("{:#?}", attribute_src);
 
@@ -209,7 +217,9 @@ mod escrow {
         print!("\n{:#?}\n", escrow);
         println!("attribute_src:{:#?}", attribute_src);
         let attribute_dst_account = get_account(&mut context, &payer_attribute_token_account).await;
-        let attribute_dst = StateWithExtensions::<Account>::unpack(&attribute_dst_account.data).unwrap().base;
+        let attribute_dst = StateWithExtensions::<Account>::unpack(&attribute_dst_account.data)
+            .unwrap()
+            .base;
         assert!(attribute_dst.amount == 1);
         assert!(attribute_dst.mint == attribute_src.mint);
         assert!(attribute_dst.owner == context.payer.pubkey());

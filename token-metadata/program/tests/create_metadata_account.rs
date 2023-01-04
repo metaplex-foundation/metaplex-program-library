@@ -18,8 +18,9 @@ use solana_sdk::{
 use utils::*;
 
 mod create_meta_accounts {
-    use super::*;
     use test_case::test_case;
+
+    use super::*;
 
     #[test_case(spl_token::id(); "token")]
     #[test_case(spl_token_2022::id(); "token-2022")]
@@ -119,9 +120,16 @@ mod create_meta_accounts {
         let fake_mint_authority = Keypair::new();
         let payer_pubkey = context.payer.pubkey();
 
-        create_mint(&mut context, &test_metadata.mint, &payer_pubkey, None, 0, &spl_token::id())
-            .await
-            .unwrap();
+        create_mint(
+            &mut context,
+            &test_metadata.mint,
+            &payer_pubkey,
+            None,
+            0,
+            &spl_token::id(),
+        )
+        .await
+        .unwrap();
         create_token_account(
             &mut context,
             &test_metadata.token,

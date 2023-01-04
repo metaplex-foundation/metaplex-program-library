@@ -12,8 +12,9 @@ use solana_sdk::{
 };
 use utils::*;
 mod freeze_delegated {
-    use super::*;
     use test_case::test_case;
+
+    use super::*;
 
     #[test_case(spl_token::id(); "token")]
     #[test_case(spl_token_2022::id(); "token-2022")]
@@ -70,14 +71,16 @@ mod freeze_delegated {
 
         // delegate freezes token
         let freeze_tx = Transaction::new_signed_with_payer(
-            &[mpl_token_metadata::instruction::freeze_delegated_account_with_token_program(
-                mpl_token_metadata::id(),
-                delegate.pubkey(),
-                test_metadata.token.pubkey(),
-                test_master_edition.pubkey,
-                test_master_edition.mint_pubkey,
-                token_program_id,
-            )],
+            &[
+                mpl_token_metadata::instruction::freeze_delegated_account_with_token_program(
+                    mpl_token_metadata::id(),
+                    delegate.pubkey(),
+                    test_metadata.token.pubkey(),
+                    test_master_edition.pubkey,
+                    test_master_edition.mint_pubkey,
+                    token_program_id,
+                ),
+            ],
             Some(&context.payer.pubkey()),
             &[&context.payer, &delegate],
             context.last_blockhash,

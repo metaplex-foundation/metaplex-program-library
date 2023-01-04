@@ -15,9 +15,9 @@ use utils::*;
 mod revoke_use_authority {
     use mpl_token_metadata::pda::find_program_as_burner_account;
     use solana_program::borsh::try_from_slice_unchecked;
+    use test_case::test_case;
 
     use super::*;
-    use test_case::test_case;
 
     #[test_case(spl_token::id(); "token")]
     #[test_case(spl_token_2022::id(); "token-2022")]

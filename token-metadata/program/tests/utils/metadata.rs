@@ -334,7 +334,15 @@ impl Metadata {
         let is_mutable = true;
 
         // Mint created with no freeze authority set.
-        create_mint(context, &self.mint, &context.payer.pubkey(), None, 0, &self.token_program_id).await?;
+        create_mint(
+            context,
+            &self.mint,
+            &context.payer.pubkey(),
+            None,
+            0,
+            &self.token_program_id,
+        )
+        .await?;
         create_token_account(
             context,
             &self.token,

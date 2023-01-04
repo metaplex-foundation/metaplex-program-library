@@ -64,9 +64,16 @@ mod update_primary_sale_happened_via_token {
         let fake_mint = Keypair::new();
         let fake_token_account = Keypair::new();
         let payer_pubkey = context.payer.pubkey();
-        create_mint(&mut context, &fake_mint, &payer_pubkey, None, 0, &spl_token::id())
-            .await
-            .unwrap();
+        create_mint(
+            &mut context,
+            &fake_mint,
+            &payer_pubkey,
+            None,
+            0,
+            &spl_token::id(),
+        )
+        .await
+        .unwrap();
         create_token_account(
             &mut context,
             &fake_token_account,

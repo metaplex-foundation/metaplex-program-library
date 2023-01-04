@@ -21,9 +21,9 @@ mod uses {
     use solana_program::{borsh::try_from_slice_unchecked, program_pack::Pack};
     use solana_sdk::signature::Keypair;
     use spl_token::state::Account;
+    use test_case::test_case;
 
     use super::*;
-    use test_case::test_case;
 
     #[tokio::test]
     async fn single_use_wrong_user_fail() {
@@ -233,19 +233,20 @@ mod uses {
             find_use_authority_account(&test_metadata.mint.pubkey(), &use_authority.pubkey());
         let (burner, _) = find_program_as_burner_account();
 
-        let add_use_authority = mpl_token_metadata::instruction::approve_use_authority_with_token_program(
-            mpl_token_metadata::id(),
-            record,
-            use_authority.pubkey(),
-            context.payer.pubkey(),
-            context.payer.pubkey(),
-            test_metadata.token.pubkey(),
-            test_metadata.pubkey,
-            test_metadata.mint.pubkey(),
-            burner,
-            token_program_id,
-            1,
-        );
+        let add_use_authority =
+            mpl_token_metadata::instruction::approve_use_authority_with_token_program(
+                mpl_token_metadata::id(),
+                record,
+                use_authority.pubkey(),
+                context.payer.pubkey(),
+                context.payer.pubkey(),
+                test_metadata.token.pubkey(),
+                test_metadata.pubkey,
+                test_metadata.mint.pubkey(),
+                burner,
+                token_program_id,
+                1,
+            );
 
         let tx_add_authority = Transaction::new_signed_with_payer(
             &[add_use_authority],
@@ -260,18 +261,19 @@ mod uses {
             .await
             .unwrap();
 
-        let utilize_with_use_authority = mpl_token_metadata::instruction::utilize_with_token_program(
-            mpl_token_metadata::id(),
-            test_metadata.pubkey,
-            test_metadata.token.pubkey(),
-            test_metadata.mint.pubkey(),
-            Some(record),
-            use_authority.pubkey(),
-            context.payer.pubkey(),
-            token_program_id,
-            Some(burner),
-            1,
-        );
+        let utilize_with_use_authority =
+            mpl_token_metadata::instruction::utilize_with_token_program(
+                mpl_token_metadata::id(),
+                test_metadata.pubkey,
+                test_metadata.token.pubkey(),
+                test_metadata.mint.pubkey(),
+                Some(record),
+                use_authority.pubkey(),
+                context.payer.pubkey(),
+                token_program_id,
+                Some(burner),
+                1,
+            );
 
         let tx = Transaction::new_signed_with_payer(
             &[utilize_with_use_authority],
