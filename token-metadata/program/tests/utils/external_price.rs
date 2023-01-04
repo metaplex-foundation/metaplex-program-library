@@ -10,6 +10,7 @@ use crate::*;
 pub struct ExternalPrice {
     pub keypair: Keypair,
     pub price_mint: Keypair,
+    pub token_program_id: Pubkey,
 }
 
 impl ExternalPrice {
@@ -17,6 +18,7 @@ impl ExternalPrice {
         ExternalPrice {
             keypair: Keypair::new(),
             price_mint: Keypair::new(),
+            token_program_id: spl_token::id(),
         }
     }
 
@@ -60,6 +62,7 @@ impl ExternalPrice {
             &context.payer.pubkey(),
             Some(&context.payer.pubkey()),
             0,
+            &self.token_program_id,
         )
         .await?;
 

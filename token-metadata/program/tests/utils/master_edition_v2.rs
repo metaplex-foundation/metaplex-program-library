@@ -22,6 +22,7 @@ pub struct MasterEditionV2 {
     pub pubkey: Pubkey,
     pub metadata_pubkey: Pubkey,
     pub mint_pubkey: Pubkey,
+    pub token_program_id: Pubkey,
 }
 
 impl MasterEditionV2 {
@@ -41,6 +42,7 @@ impl MasterEditionV2 {
             pubkey,
             metadata_pubkey: metadata.pubkey,
             mint_pubkey,
+            token_program_id: metadata.token_program_id,
         }
     }
 
@@ -102,7 +104,7 @@ impl MasterEditionV2 {
         max_supply: Option<u64>,
     ) -> Result<(), BanksClientError> {
         let tx = Transaction::new_signed_with_payer(
-            &[instruction::create_master_edition(
+            &[instruction::create_master_edition_with_token_program(
                 id(),
                 self.pubkey,
                 self.mint_pubkey,
@@ -110,6 +112,7 @@ impl MasterEditionV2 {
                 context.payer.pubkey(),
                 self.metadata_pubkey,
                 context.payer.pubkey(),
+                self.token_program_id,
                 max_supply,
             )],
             Some(&context.payer.pubkey()),
@@ -126,7 +129,7 @@ impl MasterEditionV2 {
         max_supply: Option<u64>,
     ) -> Result<(), BanksClientError> {
         let tx = Transaction::new_signed_with_payer(
-            &[instruction::create_master_edition_v3(
+            &[instruction::create_master_edition_v3_with_token_program(
                 id(),
                 self.pubkey,
                 self.mint_pubkey,
@@ -134,6 +137,7 @@ impl MasterEditionV2 {
                 context.payer.pubkey(),
                 self.metadata_pubkey,
                 context.payer.pubkey(),
+                self.token_program_id,
                 max_supply,
             )],
             Some(&context.payer.pubkey()),
@@ -153,7 +157,8 @@ impl MasterEditionV2 {
         let mut editions = Vec::new();
 
         for i in 1..=number {
-            let print_edition = EditionMarker::new(nft, self, i);
+            let mut print_edition = EditionMarker::new(nft, self, i);
+            print_edition.token_program_id = self.token_program_id;
             print_edition.create(context).await?;
             editions.push(print_edition);
         }

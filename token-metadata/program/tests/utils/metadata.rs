@@ -14,6 +14,7 @@ pub struct Metadata {
     pub mint: Keypair,
     pub pubkey: Pubkey,
     pub token: Keypair,
+    pub token_program_id: Pubkey,
 }
 
 impl Metadata {
@@ -29,6 +30,7 @@ impl Metadata {
             mint,
             pubkey,
             token: Keypair::new(),
+            token_program_id: spl_token::id(),
         }
     }
 
@@ -58,6 +60,7 @@ impl Metadata {
             &context.payer.pubkey(),
             Some(&context.payer.pubkey()),
             decimals,
+            &self.token_program_id,
         )
         .await?;
         create_token_account(
@@ -120,6 +123,7 @@ impl Metadata {
             &context.payer.pubkey(),
             Some(&context.payer.pubkey()),
             0,
+            &self.token_program_id,
         )
         .await?;
         create_token_account(
@@ -183,6 +187,7 @@ impl Metadata {
             &context.payer.pubkey(),
             Some(&context.payer.pubkey()),
             0,
+            &self.token_program_id,
         )
         .await?;
         create_token_account(
@@ -266,6 +271,7 @@ impl Metadata {
             &context.payer.pubkey(),
             Some(&context.payer.pubkey()),
             0,
+            &self.token_program_id,
         )
         .await?;
         create_token_account(
@@ -328,7 +334,7 @@ impl Metadata {
         let is_mutable = true;
 
         // Mint created with no freeze authority set.
-        create_mint(context, &self.mint, &context.payer.pubkey(), None, 0).await?;
+        create_mint(context, &self.mint, &context.payer.pubkey(), None, 0, &self.token_program_id).await?;
         create_token_account(
             context,
             &self.token,

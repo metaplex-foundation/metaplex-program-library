@@ -447,15 +447,19 @@ mod sized_collection_handlers {
 mod size_tracking {
     use borsh::BorshDeserialize;
     use mpl_token_metadata::state::{Collection, CollectionDetails};
-    use solana_sdk::{signature::Keypair, signer::Signer};
+    use solana_sdk::{pubkey::Pubkey, signature::Keypair, signer::Signer};
+    use test_case::test_case;
 
     use super::*;
+    #[test_case(spl_token::id(); "token")]
+    #[test_case(spl_token_2022::id(); "token-2022")]
     #[tokio::test]
-    async fn increment_and_decrement_successfully() {
+    async fn increment_and_decrement_successfully(token_program_id: Pubkey) {
         let mut context = program_test().start_with_context().await;
 
         // Create a Collection Parent NFT without the CollectionDetails struct populated
-        let collection_parent_nft = Metadata::new();
+        let mut collection_parent_nft = Metadata::new();
+        collection_parent_nft.token_program_id = token_program_id;
         collection_parent_nft
             .create_v3(
                 &mut context,
@@ -482,7 +486,8 @@ mod size_tracking {
             verified: false,
         };
 
-        let collection_item_nft = Metadata::new();
+        let mut collection_item_nft = Metadata::new();
+        collection_item_nft.token_program_id = token_program_id;
         collection_item_nft
             .create_v3(
                 &mut context,

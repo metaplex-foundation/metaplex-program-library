@@ -32,6 +32,7 @@ mpl-utils = { version = "0.0.5", path = "../../core/rust/utils" }
 [dev-dependencies]
 solana-sdk = "1.14.10"
 solana-program-test = "1.14.10"
+test-case = "2.2"
 
 [lib]
 crate-type = ["cdylib", "lib"]

@@ -13,6 +13,7 @@ use solana_program_test::*;
 use solana_sdk::{
     account::AccountSharedData,
     instruction::InstructionError,
+    pubkey::Pubkey,
     signature::{Keypair, Signer},
     transaction::{Transaction, TransactionError},
 };
@@ -23,13 +24,18 @@ use utils::*;
 mod mint_new_edition_from_master_edition_via_token {
 
     use solana_program::native_token::LAMPORTS_PER_SOL;
+    use test_case::test_case;
 
     use super::*;
+
+    #[test_case(spl_token::id(); "token")]
+    #[test_case(spl_token_2022::id(); "token-2022")]
     #[tokio::test]
-    async fn success() {
+    async fn success(token_program_id: Pubkey) {
         let mut context = program_test().start_with_context().await;
         let payer_key = context.payer.pubkey().clone();
-        let test_metadata = Metadata::new();
+        let mut test_metadata = Metadata::new();
+        test_metadata.token_program_id = token_program_id;
         let test_master_edition = MasterEditionV2::new(&test_metadata);
         let test_edition_marker = EditionMarker::new(&test_metadata, &test_master_edition, 1);
 
@@ -64,10 +70,13 @@ mod mint_new_edition_from_master_edition_via_token {
         assert_eq!(edition_marker.key, Key::EditionMarker);
     }
 
+    #[test_case(spl_token::id(); "token")]
+    #[test_case(spl_token_2022::id(); "token-2022")]
     #[tokio::test]
-    async fn success_v2() {
+    async fn success_v2(token_program_id: Pubkey) {
         let mut context = program_test().start_with_context().await;
-        let test_metadata = Metadata::new();
+        let mut test_metadata = Metadata::new();
+        test_metadata.token_program_id = token_program_id;
         let payer_key = context.payer.pubkey().clone();
         let creator = Keypair::new();
 
@@ -210,7 +219,7 @@ mod mint_new_edition_from_master_edition_via_token {
             .await
             .unwrap();
 
-        create_mint(&mut context, &fake_mint, &payer_pubkey, None, 0)
+        create_mint(&mut context, &fake_mint, &payer_pubkey, None, 0, &spl_token::id())
             .await
             .unwrap();
 

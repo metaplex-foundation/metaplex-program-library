@@ -13,6 +13,7 @@ pub struct Vault {
     pub mint: Keypair,
     pub redeem_treasury: Keypair,
     pub fraction_treasury: Keypair,
+    pub token_program_id: Pubkey,
 }
 
 impl Vault {
@@ -22,6 +23,7 @@ impl Vault {
             mint: Keypair::new(),
             redeem_treasury: Keypair::new(),
             fraction_treasury: Keypair::new(),
+            token_program_id: spl_token::id(),
         }
     }
 
@@ -176,7 +178,7 @@ impl Vault {
         ];
         let (authority, _) = Pubkey::find_program_address(seeds, &metaplex_token_vault_id);
 
-        create_mint(context, &self.mint, &authority, Some(&authority), 0).await?;
+        create_mint(context, &self.mint, &authority, Some(&authority), 0, &self.token_program_id).await?;
         create_token_account(
             context,
             &self.redeem_treasury,

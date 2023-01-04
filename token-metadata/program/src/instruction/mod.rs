@@ -23,7 +23,7 @@ pub use uses::*;
 
 #[allow(deprecated)]
 pub use crate::deprecated_instruction::{
-    create_master_edition, create_metadata_accounts, create_metadata_accounts_v2,
+    create_master_edition, create_master_edition_with_token_program, create_metadata_accounts, create_metadata_accounts_v2,
     mint_edition_from_master_edition_via_vault_proxy, update_metadata_accounts,
     CreateMetadataAccountArgs, CreateMetadataAccountArgsV2, UpdateMetadataAccountArgs,
 };
@@ -266,7 +266,7 @@ pub enum MetadataInstruction {
     #[account(5, name="token_program", desc="Token program")]
     #[account(6, name="ata_program", desc="Associated Token program")]
     #[account(7, name="system_program", desc="System program")]
-    // Rent is technically not needed but there isn't a way to "ignore" an account without 
+    // Rent is technically not needed but there isn't a way to "ignore" an account without
     // preventing latter accounts from being passed in.
     #[account(8, name="rent", desc="Rent info")]
     #[account(9, optional, writable, name="use_authority_record", desc="Use Authority Record PDA If present the program Assumes a delegated use authority")]
@@ -327,7 +327,7 @@ pub enum MetadataInstruction {
     #[account(4, name="mint", desc="Mint of Metadata")]
     RevokeCollectionAuthority,
 
-    /// Allows the same Update Authority (Or Delegated Authority) on an NFT and Collection to perform [update_metadata_accounts_v2] 
+    /// Allows the same Update Authority (Or Delegated Authority) on an NFT and Collection to perform [update_metadata_accounts_v2]
     /// with collection and [verify_collection] on the NFT/Collection in one instruction.
     #[account(0, writable, name="metadata", desc="Metadata account")]
     #[account(1, signer, writable, name="collection_authority", desc="Collection Update authority")]
@@ -393,7 +393,7 @@ pub enum MetadataInstruction {
     UnverifySizedCollectionItem,
 
     // Set And Verify V2, new in v1.3--supports Collection Details.
-    /// Allows the same Update Authority (Or Delegated Authority) on an NFT and Collection to perform [update_metadata_accounts_v2] 
+    /// Allows the same Update Authority (Or Delegated Authority) on an NFT and Collection to perform [update_metadata_accounts_v2]
     /// with collection and [verify_collection] on the NFT/Collection in one instruction.
     #[account(0, writable, name="metadata", desc="Metadata account")]
     #[account(1, signer, name="collection_authority", desc="Collection Update authority")]

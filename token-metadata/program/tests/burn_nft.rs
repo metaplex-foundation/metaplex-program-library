@@ -15,13 +15,18 @@ mod burn_nft {
     };
     use solana_program::pubkey::Pubkey;
     use solana_sdk::signature::Keypair;
+    use test_case::test_case;
 
     use super::*;
+
+    #[test_case(spl_token::id(); "token")]
+    #[test_case(spl_token_2022::id(); "token-2022")]
     #[tokio::test]
-    async fn successfully_burn_master_edition_nft() {
+    async fn successfully_burn_master_edition_nft(token_program_id: Pubkey) {
         let mut context = program_test().start_with_context().await;
 
-        let test_metadata = Metadata::new();
+        let mut test_metadata = Metadata::new();
+        test_metadata.token_program_id = token_program_id;
         test_metadata.create_v2_default(&mut context).await.unwrap();
 
         let master_edition = MasterEditionV2::new(&test_metadata);

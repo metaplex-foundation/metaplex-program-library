@@ -14,14 +14,18 @@ mod burn_edition_nft {
     use solana_program::pubkey::Pubkey;
     use solana_sdk::signature::Keypair;
     use spl_associated_token_account::get_associated_token_address;
+    use test_case::test_case;
 
     use super::*;
 
+    #[test_case(spl_token::id(); "token")]
+    #[test_case(spl_token_2022::id(); "token-2022")]
     #[tokio::test]
-    async fn successfully_burn_edition_nft() {
+    async fn successfully_burn_edition_nft(token_program_id: Pubkey) {
         let mut context = program_test().start_with_context().await;
 
-        let original_nft = Metadata::new();
+        let mut original_nft = Metadata::new();
+        original_nft.token_program_id = token_program_id;
         original_nft.create_v2_default(&mut context).await.unwrap();
 
         let master_edition = MasterEditionV2::new(&original_nft);
@@ -29,7 +33,8 @@ mod burn_edition_nft {
             .create_v3(&mut context, Some(10))
             .await
             .unwrap();
-        let print_edition = EditionMarker::new(&original_nft, &master_edition, 1);
+        let mut print_edition = EditionMarker::new(&original_nft, &master_edition, 1);
+        print_edition.token_program_id = token_program_id;
         print_edition.create(&mut context).await.unwrap();
 
         // Metadata, Print Edition and token account exist.

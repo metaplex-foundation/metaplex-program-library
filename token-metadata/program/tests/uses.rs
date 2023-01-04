@@ -6,6 +6,7 @@ use num_traits::FromPrimitive;
 use solana_program_test::*;
 use solana_sdk::{
     instruction::InstructionError,
+    pubkey::Pubkey,
     signature::Signer,
     transaction::{Transaction, TransactionError},
 };
@@ -22,6 +23,7 @@ mod uses {
     use spl_token::state::Account;
 
     use super::*;
+    use test_case::test_case;
 
     #[tokio::test]
     async fn single_use_wrong_user_fail() {
@@ -86,10 +88,13 @@ mod uses {
         assert_eq!(total_uses, 1);
     }
 
+    #[test_case(spl_token::id(); "token")]
+    #[test_case(spl_token_2022::id(); "token-2022")]
     #[tokio::test]
-    async fn single_use_success() {
+    async fn single_use_success(token_program_id: Pubkey) {
         let mut context = program_test().start_with_context().await;
-        let test_metadata = Metadata::new();
+        let mut test_metadata = Metadata::new();
+        test_metadata.token_program_id = token_program_id;
         test_metadata
             .create_v2(
                 &mut context,
@@ -109,7 +114,7 @@ mod uses {
             .await
             .unwrap();
 
-        let ix = mpl_token_metadata::instruction::utilize(
+        let ix = mpl_token_metadata::instruction::utilize_with_token_program(
             mpl_token_metadata::id(),
             test_metadata.pubkey,
             test_metadata.token.pubkey(),
@@ -117,6 +122,7 @@ mod uses {
             None,
             context.payer.pubkey(),
             context.payer.pubkey(),
+            token_program_id,
             None,
             1,
         );
@@ -192,15 +198,18 @@ mod uses {
         assert_custom_error!(err, MetadataError::NotEnoughUses);
     }
 
+    #[test_case(spl_token::id(); "token")]
+    #[test_case(spl_token_2022::id(); "token-2022")]
     #[tokio::test]
-    async fn multi_use_delegated_success() {
+    async fn multi_use_delegated_success(token_program_id: Pubkey) {
         let mut context = program_test().start_with_context().await;
         let use_authority = Keypair::new();
         airdrop(&mut context, &use_authority.pubkey(), 10000000)
             .await
             .unwrap();
 
-        let test_metadata = Metadata::new();
+        let mut test_metadata = Metadata::new();
+        test_metadata.token_program_id = token_program_id;
         test_metadata
             .create_v2(
                 &mut context,
@@ -224,7 +233,7 @@ mod uses {
             find_use_authority_account(&test_metadata.mint.pubkey(), &use_authority.pubkey());
         let (burner, _) = find_program_as_burner_account();
 
-        let add_use_authority = mpl_token_metadata::instruction::approve_use_authority(
+        let add_use_authority = mpl_token_metadata::instruction::approve_use_authority_with_token_program(
             mpl_token_metadata::id(),
             record,
             use_authority.pubkey(),
@@ -234,6 +243,7 @@ mod uses {
             test_metadata.pubkey,
             test_metadata.mint.pubkey(),
             burner,
+            token_program_id,
             1,
         );
 
@@ -250,7 +260,7 @@ mod uses {
             .await
             .unwrap();
 
-        let utilize_with_use_authority = mpl_token_metadata::instruction::utilize(
+        let utilize_with_use_authority = mpl_token_metadata::instruction::utilize_with_token_program(
             mpl_token_metadata::id(),
             test_metadata.pubkey,
             test_metadata.token.pubkey(),
@@ -258,6 +268,7 @@ mod uses {
             Some(record),
             use_authority.pubkey(),
             context.payer.pubkey(),
+            token_program_id,
             Some(burner),
             1,
         );
@@ -412,12 +423,15 @@ mod uses {
         assert_custom_error!(err, MetadataError::UseAuthorityRecordAlreadyRevoked);
     }
 
+    #[test_case(spl_token::id(); "token")]
+    #[test_case(spl_token_2022::id(); "token-2022")]
     #[tokio::test]
-    async fn success_delegated_and_burn() {
+    async fn success_delegated_and_burn(token_program_id: Pubkey) {
         let mut context = program_test().start_with_context().await;
         let use_authority = Keypair::new();
 
-        let test_meta = Metadata::new();
+        let mut test_meta = Metadata::new();
+        test_meta.token_program_id = token_program_id;
         test_meta
             .create_v2(
                 &mut context,
@@ -446,7 +460,7 @@ mod uses {
         let (record, _) =
             find_use_authority_account(&test_meta.mint.pubkey(), &use_authority.pubkey());
         let (burner, _) = find_program_as_burner_account();
-        let approveix = mpl_token_metadata::instruction::approve_use_authority(
+        let approveix = mpl_token_metadata::instruction::approve_use_authority_with_token_program(
             mpl_token_metadata::id(),
             record,
             use_authority.pubkey(),
@@ -456,6 +470,7 @@ mod uses {
             test_meta.pubkey,
             test_meta.mint.pubkey(),
             burner,
+            token_program_id,
             1,
         );
         let approvetx = Transaction::new_signed_with_payer(
@@ -474,7 +489,7 @@ mod uses {
         assert_eq!(record_acct.key, Key::UseAuthorityRecord);
         assert_eq!(record_acct.allowed_uses, 1);
 
-        let utilize_ix = mpl_token_metadata::instruction::utilize(
+        let utilize_ix = mpl_token_metadata::instruction::utilize_with_token_program(
             mpl_token_metadata::id(),
             test_meta.pubkey,
             test_meta.token.pubkey(),
@@ -482,6 +497,7 @@ mod uses {
             Some(record),
             use_authority.pubkey(),
             context.payer.pubkey(),
+            token_program_id,
             Some(burner),
             1,
         );

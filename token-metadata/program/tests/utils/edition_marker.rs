@@ -31,6 +31,7 @@ pub struct EditionMarker {
     pub edition: u64,
     pub token: Keypair,
     pub metadata_token_pubkey: Pubkey,
+    pub token_program_id: Pubkey,
 }
 
 impl EditionMarker {
@@ -75,6 +76,7 @@ impl EditionMarker {
             new_edition_pubkey,
             metadata_token_pubkey: metadata.token.pubkey(),
             token: Keypair::new(),
+            token_program_id: metadata.token_program_id,
         }
     }
 
@@ -93,6 +95,7 @@ impl EditionMarker {
             &context.payer.pubkey(),
             Some(&context.payer.pubkey()),
             0,
+            &self.token_program_id,
         )
         .await?;
         create_token_account(
@@ -113,7 +116,7 @@ impl EditionMarker {
         .await?;
 
         let tx = Transaction::new_signed_with_payer(
-            &[instruction::mint_new_edition_from_master_edition_via_token(
+            &[instruction::mint_new_edition_from_master_edition_via_token_with_token_program(
                 id(),
                 self.new_metadata_pubkey,
                 self.new_edition_pubkey,
@@ -126,6 +129,7 @@ impl EditionMarker {
                 context.payer.pubkey(),
                 self.metadata_pubkey,
                 self.metadata_mint_pubkey,
+                self.token_program_id,
                 self.edition,
             )],
             Some(&context.payer.pubkey()),

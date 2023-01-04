@@ -10,6 +10,7 @@ use num_traits::FromPrimitive;
 use solana_program_test::*;
 use solana_sdk::{
     instruction::InstructionError,
+    pubkey::Pubkey,
     signature::{Keypair, Signer},
     transaction::{Transaction, TransactionError},
 };
@@ -19,14 +20,19 @@ mod approve_use_authority {
     use mpl_token_metadata::{pda::find_program_as_burner_account, state::Key};
     use solana_program::{borsh::try_from_slice_unchecked, program_pack::Pack};
     use spl_token::state::Account;
+    use test_case::test_case;
 
     use super::*;
+
+    #[test_case(spl_token::id(); "token")]
+    #[test_case(spl_token_2022::id(); "token-2022")]
     #[tokio::test]
-    async fn success() {
+    async fn success(token_program_id: Pubkey) {
         let mut context = program_test().start_with_context().await;
         let use_authority = Keypair::new();
 
-        let test_meta = Metadata::new();
+        let mut test_meta = Metadata::new();
+        test_meta.token_program_id = token_program_id;
         test_meta
             .create_v2(
                 &mut context,
@@ -50,7 +56,7 @@ mod approve_use_authority {
             find_use_authority_account(&test_meta.mint.pubkey(), &use_authority.pubkey());
         let (burner, _) = find_program_as_burner_account();
 
-        let ix = mpl_token_metadata::instruction::approve_use_authority(
+        let ix = mpl_token_metadata::instruction::approve_use_authority_with_token_program(
             mpl_token_metadata::id(),
             record,
             use_authority.pubkey(),
@@ -60,6 +66,7 @@ mod approve_use_authority {
             test_meta.pubkey,
             test_meta.mint.pubkey(),
             burner,
+            token_program_id,
             1,
         );
 
@@ -79,12 +86,15 @@ mod approve_use_authority {
         assert_eq!(record_acct.allowed_uses, 1);
     }
 
+    #[test_case(spl_token::id(); "token")]
+    #[test_case(spl_token_2022::id(); "token-2022")]
     #[tokio::test]
-    async fn success_burn() {
+    async fn success_burn(token_program_id: Pubkey) {
         let mut context = program_test().start_with_context().await;
         let use_authority = Keypair::new();
 
-        let test_meta = Metadata::new();
+        let mut test_meta = Metadata::new();
+        test_meta.token_program_id = token_program_id;
         test_meta
             .create_v2(
                 &mut context,
@@ -108,7 +118,7 @@ mod approve_use_authority {
             find_use_authority_account(&test_meta.mint.pubkey(), &use_authority.pubkey());
         let (burner, _) = find_program_as_burner_account();
 
-        let ix = mpl_token_metadata::instruction::approve_use_authority(
+        let ix = mpl_token_metadata::instruction::approve_use_authority_with_token_program(
             mpl_token_metadata::id(),
             record,
             use_authority.pubkey(),
@@ -118,6 +128,7 @@ mod approve_use_authority {
             test_meta.pubkey,
             test_meta.mint.pubkey(),
             burner,
+            token_program_id,
             1,
         );
 

@@ -18,12 +18,16 @@ use solana_sdk::{
 use utils::*;
 
 mod create_meta_accounts {
-
     use super::*;
+    use test_case::test_case;
+
+    #[test_case(spl_token::id(); "token")]
+    #[test_case(spl_token_2022::id(); "token-2022")]
     #[tokio::test]
-    async fn success() {
+    async fn success(token_program_id: Pubkey) {
         let mut context = program_test().start_with_context().await;
-        let test_metadata = Metadata::new();
+        let mut test_metadata = Metadata::new();
+        test_metadata.token_program_id = token_program_id;
         let name = "Test".to_string();
         let symbol = "TST".to_string();
         let uri = "uri".to_string();
@@ -56,10 +60,13 @@ mod create_meta_accounts {
         assert_eq!(metadata.uses, None);
     }
 
+    #[test_case(spl_token::id(); "token")]
+    #[test_case(spl_token_2022::id(); "token-2022")]
     #[tokio::test]
-    async fn success_v2() {
+    async fn success_v2(token_program_id: Pubkey) {
         let mut context = program_test().start_with_context().await;
-        let test_metadata = Metadata::new();
+        let mut test_metadata = Metadata::new();
+        test_metadata.token_program_id = token_program_id;
         let name = "Test".to_string();
         let symbol = "TST".to_string();
         let uri = "uri".to_string();
@@ -112,7 +119,7 @@ mod create_meta_accounts {
         let fake_mint_authority = Keypair::new();
         let payer_pubkey = context.payer.pubkey();
 
-        create_mint(&mut context, &test_metadata.mint, &payer_pubkey, None, 0)
+        create_mint(&mut context, &test_metadata.mint, &payer_pubkey, None, 0, &spl_token::id())
             .await
             .unwrap();
         create_token_account(
@@ -599,6 +606,7 @@ mod create_meta_accounts {
             &mint_authority.pubkey(),
             Some(&context.payer.pubkey()),
             0,
+            &spl_token::id(),
         )
         .await
         .unwrap();

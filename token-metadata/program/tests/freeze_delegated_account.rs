@@ -6,20 +6,25 @@ use num_traits::FromPrimitive;
 use solana_program_test::*;
 use solana_sdk::{
     instruction::InstructionError,
+    pubkey::Pubkey,
     signature::{Keypair, Signer},
     transaction::{Transaction, TransactionError},
 };
 use utils::*;
 mod freeze_delegated {
-
     use super::*;
+    use test_case::test_case;
+
+    #[test_case(spl_token::id(); "token")]
+    #[test_case(spl_token_2022::id(); "token-2022")]
     #[tokio::test]
-    async fn freeze_delegated_token_success() {
+    async fn freeze_delegated_token_success(token_program_id: Pubkey) {
         let mut context = program_test().start_with_context().await;
         let delegate = Keypair::new();
 
         // create metadata
-        let test_metadata = Metadata::new();
+        let mut test_metadata = Metadata::new();
+        test_metadata.token_program_id = token_program_id;
         test_metadata
             .create_v2(
                 &mut context,
@@ -42,8 +47,8 @@ mod freeze_delegated {
             .await
             .unwrap();
 
-        let approve_ix = spl_token::instruction::approve(
-            &spl_token::id(),
+        let approve_ix = spl_token_2022::instruction::approve(
+            &token_program_id,
             &test_metadata.token.pubkey(),
             &delegate.pubkey(),
             &context.payer.pubkey(),
@@ -65,12 +70,13 @@ mod freeze_delegated {
 
         // delegate freezes token
         let freeze_tx = Transaction::new_signed_with_payer(
-            &[mpl_token_metadata::instruction::freeze_delegated_account(
+            &[mpl_token_metadata::instruction::freeze_delegated_account_with_token_program(
                 mpl_token_metadata::id(),
                 delegate.pubkey(),
                 test_metadata.token.pubkey(),
                 test_master_edition.pubkey,
                 test_master_edition.mint_pubkey,
+                token_program_id,
             )],
             Some(&context.payer.pubkey()),
             &[&context.payer, &delegate],
@@ -83,8 +89,9 @@ mod freeze_delegated {
             .unwrap();
 
         // transfer fails because frozen
-        let transfer_ix = spl_token::instruction::transfer(
-            &spl_token::id(),
+        #[allow(deprecated)]
+        let transfer_ix = spl_token_2022::instruction::transfer(
+            &token_program_id,
             &test_metadata.token.pubkey(),
             &test_metadata.token.pubkey(),
             &context.payer.pubkey(),

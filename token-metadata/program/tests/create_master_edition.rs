@@ -6,6 +6,7 @@ use num_traits::FromPrimitive;
 use solana_program_test::*;
 use solana_sdk::{
     instruction::InstructionError,
+    pubkey::Pubkey,
     signature::{Keypair, Signer},
     transaction::{Transaction, TransactionError},
 };
@@ -13,12 +14,16 @@ use utils::*;
 
 mod create_master_edition {
     use super::*;
+    use test_case::test_case;
 
+    #[test_case(spl_token::id(); "token")]
+    #[test_case(spl_token_2022::id(); "token-2022")]
     #[tokio::test]
     #[allow(deprecated)]
-    async fn success() {
+    async fn success(token_program_id: Pubkey) {
         let mut context = program_test().start_with_context().await;
-        let test_metadata = Metadata::new();
+        let mut test_metadata = Metadata::new();
+        test_metadata.token_program_id = token_program_id;
         let test_master_edition = MasterEditionV2::new(&test_metadata);
 
         test_metadata
@@ -55,10 +60,13 @@ mod create_master_edition {
         assert_eq!(master_edition.key, Key::MasterEditionV2);
     }
 
+    #[test_case(spl_token::id(); "token")]
+    #[test_case(spl_token_2022::id(); "token-2022")]
     #[tokio::test]
-    async fn success_v3() {
+    async fn success_v3(token_program_id: Pubkey) {
         let mut context = program_test().start_with_context().await;
-        let test_metadata = Metadata::new();
+        let mut test_metadata = Metadata::new();
+        test_metadata.token_program_id = token_program_id;
         let test_master_edition = MasterEditionV2::new(&test_metadata);
 
         test_metadata
@@ -193,7 +201,7 @@ mod create_master_edition {
             .await
             .unwrap();
 
-        create_mint(&mut context, &fake_mint, &payer_pubkey, None, 0)
+        create_mint(&mut context, &fake_mint, &payer_pubkey, None, 0, &spl_token::id())
             .await
             .unwrap();
         create_token_account(
@@ -219,6 +227,7 @@ mod create_master_edition {
             mint: fake_mint,
             pubkey: test_metadata.pubkey,
             token: fake_account,
+            token_program_id: spl_token::id(),
         });
 
         let result = test_master_edition
@@ -347,7 +356,7 @@ mod create_master_edition {
             .await
             .unwrap();
 
-        create_mint(&mut context, &fake_mint, &payer_pubkey, None, 0)
+        create_mint(&mut context, &fake_mint, &payer_pubkey, None, 0, &spl_token::id())
             .await
             .unwrap();
         create_token_account(
@@ -373,6 +382,7 @@ mod create_master_edition {
             mint: fake_mint,
             pubkey: test_metadata.pubkey,
             token: fake_account,
+            token_program_id: spl_token::id(),
         });
 
         let result = test_master_edition

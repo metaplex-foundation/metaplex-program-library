@@ -4,14 +4,18 @@ pub mod utils;
 use mpl_token_metadata::error::MetadataError;
 use num_traits::FromPrimitive;
 use solana_program_test::*;
-use solana_sdk::{instruction::InstructionError, transaction::TransactionError};
+use solana_sdk::{instruction::InstructionError, pubkey::Pubkey, transaction::TransactionError};
+use test_case::test_case;
 use utils::*;
 
+#[test_case(spl_token::id(); "token")]
+#[test_case(spl_token_2022::id(); "token-2022")]
 #[tokio::test]
-async fn create_master_edition_without_freeze_auth_fails() {
+async fn create_master_edition_without_freeze_auth_fails(token_program_id: Pubkey) {
     let mut context = program_test().start_with_context().await;
 
-    let nft = Metadata::new();
+    let mut nft = Metadata::new();
+    nft.token_program_id = token_program_id;
     // Create a NFT mint with Freeze Authority set to None.
     nft.create_v3_no_freeze_auth(&mut context).await.unwrap();
 
