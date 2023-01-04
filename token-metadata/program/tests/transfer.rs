@@ -54,6 +54,7 @@ mod transfer {
             destination_owner,
             destination_token: None,
             authorization_rules: None,
+            payer: &authority.pubkey(),
             args,
         };
 
@@ -111,6 +112,7 @@ mod transfer {
             destination_owner,
             destination_token: None,
             authorization_rules: None,
+            payer: &authority.pubkey(),
             args,
         };
 
@@ -168,6 +170,7 @@ mod transfer {
             destination_owner,
             destination_token: None,
             authorization_rules: None,
+            payer: &authority.pubkey(),
             args,
         };
 
@@ -244,6 +247,7 @@ mod transfer {
             destination_owner,
             destination_token: None,
             authorization_rules: Some(rule_set),
+            payer: &authority.pubkey(),
             args: args.clone(),
         };
 
@@ -268,6 +272,7 @@ mod transfer {
             destination_owner,
             destination_token: None,
             authorization_rules: Some(rule_set),
+            payer: &authority.pubkey(),
             args,
         };
 
@@ -344,6 +349,7 @@ mod transfer {
             destination_owner,
             destination_token: None,
             authorization_rules: Some(rule_set),
+            payer: &authority.pubkey(),
             args: args.clone(),
         };
 
@@ -388,6 +394,7 @@ mod transfer {
             destination_owner: escrow_account,
             destination_token: None,
             authorization_rules: Some(rule_set),
+            payer: &authority.pubkey(),
             args,
         };
 
@@ -464,6 +471,7 @@ mod transfer {
             destination_owner,
             destination_token: None,
             authorization_rules: None,
+            payer: &delegate.pubkey(),
             args: args.clone(),
         };
 
@@ -498,6 +506,7 @@ mod transfer {
             destination_owner,
             destination_token: Some(destination_token),
             authorization_rules: None,
+            payer: &fake_delegate.pubkey(),
             args,
         };
 

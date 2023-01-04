@@ -32,7 +32,7 @@ pub async fn create_test_ruleset(
     // Rule for Transfers: Allow transfers to a Token Owned Escrow account.
     let owned_by_token_metadata = Rule::ProgramOwned {
         program: mpl_token_metadata::ID,
-        field: PayloadKey::Target.to_string(),
+        field: PayloadKey::Destination.to_string(),
     };
 
     // Merkle tree root generated in a different test program.
@@ -45,7 +45,7 @@ pub async fn create_test_ruleset(
     // member of the marketplace Merkle tree.
     let leaf_in_marketplace_tree = Rule::PubkeyTreeMatch {
         root: marketplace_tree_root,
-        field: PayloadKey::Target.to_string(),
+        field: PayloadKey::Destination.to_string(),
     };
 
     // Create Basic Royalty Enforcement Ruleset.

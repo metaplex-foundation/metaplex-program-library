@@ -296,6 +296,7 @@ export class InitTransactions {
       edition,
       destinationOwner,
       destination,
+      payer: authority.publicKey,
       splTokenProgram: splToken.TOKEN_PROGRAM_ID,
       splAtaProgram: splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
       systemProgram: SystemProgram.programId,

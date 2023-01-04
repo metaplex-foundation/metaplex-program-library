@@ -99,7 +99,7 @@ test('Transfer: ProgrammableNonFungible (wallet-to-wallet)', async (t) => {
       Transfer: {
         ProgramOwned: {
           program: Array.from(owner.publicKey.toBytes()),
-          field: 'Target',
+          field: 'Destination',
         },
       },
     },
@@ -195,7 +195,7 @@ test('Transfer: ProgrammableNonFungible (program-owned)', async (t) => {
       Transfer: {
         ProgramOwned: {
           program: Array.from(TOKEN_METADATA_ID.toBytes()),
-          field: 'Target',
+          field: 'Destination',
         },
       },
     },
@@ -769,4 +769,103 @@ test('Transfer: ProgrammableNonFungible asset with invalid authority', async (t)
     /Pubkey Match check failed/,
     /Program auth9SigNpDKz4sJJ1DfCTuZrZNSAgh9sFD3rboVmgg/,
   ]);
+});
+
+test('Transfer: ProgrammableNonFungible (uninitialized wallet-to-wallet)', async (t) => {
+  const API = new InitTransactions();
+  const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
+
+  const owner = payer;
+  const authority = payer;
+  const destination = Keypair.generate();
+  const invalidDestination = Keypair.generate();
+
+  amman.airdrop(connection, destination.publicKey, 1);
+  amman.airdrop(connection, invalidDestination.publicKey, 1);
+
+  // Set up our rule set with one pubkey match rule for transfer.
+
+  const ruleSetName = 'transfer_test';
+  const ruleSet = {
+    version: 1,
+    ruleSetName: ruleSetName,
+    owner: Array.from(owner.publicKey.toBytes()),
+    operations: {
+      Transfer: {
+        ProgramOwned: {
+          program: Array.from(owner.publicKey.toBytes()),
+          field: 'Destination',
+        },
+      },
+    },
+  };
+  const serializedRuleSet = encode(ruleSet);
+
+  // Find the ruleset PDA
+  const [ruleSetPda] = PublicKey.findProgramAddressSync(
+    [Buffer.from('rule_set'), payer.publicKey.toBuffer(), Buffer.from(ruleSetName)],
+    TOKEN_AUTH_RULES_ID,
+  );
+
+  // Create the ruleset at the PDA address with the serialized ruleset values.
+  const { tx: createRuleSetTx } = await API.createRuleSet(
+    t,
+    payer,
+    ruleSetPda,
+    serializedRuleSet,
+    handler,
+  );
+  await createRuleSetTx.assertSuccess(t);
+
+  // Set up our programmable config with the ruleset PDA.
+  const programmableConfig: ProgrammableConfig = {
+    ruleSet: ruleSetPda,
+  };
+
+  // Create an NFT with the programmable config stored on the metadata.
+  const { mint, metadata, masterEdition, token } = await createAndMintDefaultAsset(
+    t,
+    connection,
+    API,
+    handler,
+    payer,
+    TokenStandard.ProgrammableNonFungible,
+    programmableConfig,
+  );
+
+  const metadataAccount = await Metadata.fromAccountAddress(connection, metadata);
+  spok(t, metadataAccount.programmableConfig, {
+    ruleSet: spokSamePubkey(programmableConfig.ruleSet),
+  });
+
+  const tokenAccount = await getAccount(connection, token, 'confirmed', TOKEN_PROGRAM_ID);
+  t.true(tokenAccount.amount.toString() === '1', 'token account amount equal to 1');
+
+  const [destinationToken] = PublicKey.findProgramAddressSync(
+    [destination.publicKey.toBuffer(), splToken.TOKEN_PROGRAM_ID.toBuffer(), mint.toBuffer()],
+    splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
+  );
+
+  // Transfer the NFT to the destination account, this should work since
+  // the destination account is in the ruleset.
+  const { tx: transferTx } = await API.transfer(
+    authority,
+    owner.publicKey,
+    token,
+    mint,
+    metadata,
+    masterEdition,
+    destination.publicKey,
+    destinationToken,
+    ruleSetPda,
+    1,
+    handler,
+  );
+
+  await transferTx.assertSuccess(t);
+
+  t.true(
+    (await getAccount(connection, token)).amount.toString() === '0',
+    'token amount after transfer equal to 0',
+  );
 });

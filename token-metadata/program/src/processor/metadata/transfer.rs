@@ -1,7 +1,7 @@
 use mpl_utils::{assert_signer, token::TokenTransferParams};
 use solana_program::{
-    account_info::AccountInfo, entrypoint::ProgramResult, msg, program_error::ProgramError,
-    pubkey::Pubkey, system_program, sysvar,
+    account_info::AccountInfo, entrypoint::ProgramResult, msg, program::invoke,
+    program_error::ProgramError, pubkey::Pubkey, system_program, sysvar,
 };
 
 use crate::{
@@ -9,7 +9,7 @@ use crate::{
     error::MetadataError,
     instruction::{Context, DelegateRole, Transfer, TransferArgs},
     state::{Metadata, Operation, TokenMetadataAccount, TokenStandard},
-    utils::{auth_rules_validate, frozen_transfer, AuthRulesValidateParams},
+    utils::{assert_derivation, auth_rules_validate, frozen_transfer, AuthRulesValidateParams},
 };
 
 #[derive(Debug, PartialEq, Eq)]
@@ -55,11 +55,11 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
     // by a rule set.
     assert_signer(ctx.accounts.authority_info)?;
 
-    // Assert program ownership
+    // Assert program ownership.
+
     assert_owned_by(ctx.accounts.metadata_info, program_id)?;
     assert_owned_by(ctx.accounts.mint_info, &spl_token::ID)?;
     assert_owned_by(ctx.accounts.token_info, &spl_token::ID)?;
-    assert_owned_by(ctx.accounts.destination_info, &spl_token::ID)?;
 
     if let Some(delegate_record_info) = ctx.accounts.delegate_record_info {
         assert_owned_by(delegate_record_info, program_id)?;
@@ -71,8 +71,43 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
         assert_owned_by(authorization_rules, &mpl_token_auth_rules::ID)?;
     }
 
+    // Check if the destination exists.
+    if ctx.accounts.destination_info.data_is_empty() {
+        // if the token account is empty, we will initialize a new one but it must
+        // be a ATA account
+        assert_derivation(
+            &spl_associated_token_account::id(),
+            ctx.accounts.destination_info,
+            &[
+                ctx.accounts.destination_owner_info.key.as_ref(),
+                spl_token::id().as_ref(),
+                ctx.accounts.mint_info.key.as_ref(),
+            ],
+        )?;
+
+        msg!("Initializing associate token account");
+
+        // creating the associated token account
+        invoke(
+            &spl_associated_token_account::instruction::create_associated_token_account(
+                ctx.accounts.payer_info.key,
+                ctx.accounts.destination_owner_info.key,
+                ctx.accounts.mint_info.key,
+                &spl_token::id(),
+            ),
+            &[
+                ctx.accounts.payer_info.clone(),
+                ctx.accounts.destination_owner_info.clone(),
+                ctx.accounts.mint_info.clone(),
+                ctx.accounts.destination_info.clone(),
+            ],
+        )?;
+    } else {
+        assert_owned_by(ctx.accounts.destination_info, &spl_token::id())?;
+    }
+
     // Check program IDs.
-    msg!("Check program IDs");
+
     if ctx.accounts.spl_token_program_info.key != &spl_token::ID {
         return Err(ProgramError::IncorrectProgramId);
     }
@@ -88,7 +123,7 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
     if ctx.accounts.sysvar_instructions_info.key != &sysvar::instructions::ID {
         return Err(ProgramError::IncorrectProgramId);
     }
-    msg!("Check auth rules program ID");
+
     if let Some(auth_rules_program) = ctx.accounts.authorization_rules_program_info {
         if auth_rules_program.key != &mpl_token_auth_rules::ID {
             return Err(ProgramError::IncorrectProgramId);
@@ -96,6 +131,7 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
     }
 
     // Deserialize metadata.
+
     let metadata = Metadata::from_account_info(ctx.accounts.metadata_info)?;
 
     let token_transfer_params: TokenTransferParams = TokenTransferParams {
@@ -120,11 +156,9 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
         operation: Operation::Transfer,
     };
 
-    let token_standard = metadata.token_standard.ok_or_else(|| {
-        <MetadataError as std::convert::Into<ProgramError>>::into(
-            MetadataError::InvalidTokenStandard,
-        )
-    })?;
+    let token_standard = metadata
+        .token_standard
+        .ok_or(MetadataError::InvalidTokenStandard)?;
 
     // Sale delegates prevent any other kind of transfer.
     let is_sale_delegate_set = if let Some(ref delegate_state) = metadata.delegate_state {
@@ -161,12 +195,12 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
         return Err(MetadataError::OnlySaleDelegateCanTransfer.into());
     }
 
-    // validates the transfer authority
+    // Validates the transfer authority.
 
+    // Owner transfers are just a wrapper around SPL token transfer
+    // for non-programmable assets.
+    // Programmable assets have to follow auth rules.
     match transfer_authority {
-        // Owner transfers are just a wrapper around SPL token transfer
-        // for non-programmable assets.
-        // Programmable assets have to follow auth rules.
         TransferAuthority::Owner => {
             msg!("Owner transfer");
 
@@ -194,7 +228,7 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
         // A SaleDelegate means no one except that delegate can transfer
         // and the transfer must follow auth rules.
         TransferAuthority::SaleDelegate => {
-            msg!("Sale delegate");
+            msg!("Sale delegate transfer authoritry for pNFT");
             // Validate the delegate
             assert_delegate(
                 ctx.accounts.authority_info.key,
@@ -212,7 +246,7 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
         // but non-programmable NFTs are transferred normally by either
         // the owner or the delegate.
         TransferAuthority::TransferDelegate => {
-            msg!("Transfer delegate");
+            msg!("Transfer delegate transfer authoritry for pNFT");
             // Validate the delegate
             assert_delegate(
                 ctx.accounts.authority_info.key,
@@ -233,7 +267,7 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
         // allowed by auth rules, so must follow the rules and can only
         // be used for PNFTs.
         TransferAuthority::AuthRules => {
-            msg!("Auth rules transfer");
+            msg!("Auth rules transfer authoritry for pNFT");
             if matches!(token_standard, TokenStandard::ProgrammableNonFungible) {
                 auth_rules_validate(auth_rules_validate_params)?;
             } else {
@@ -242,15 +276,15 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
         }
     }
 
-    // performs the transfer
+    // Performs the transfer.
 
     match token_standard {
         TokenStandard::ProgrammableNonFungible => {
-            msg!("Transferring pNFT");
+            msg!("Transferring programmable asset");
             frozen_transfer(token_transfer_params, ctx.accounts.edition_info)?
         }
         _ => {
-            msg!("Transferring NFT normally");
+            msg!("Transferring asset");
             mpl_utils::token::spl_token_transfer(token_transfer_params).unwrap()
         }
     }

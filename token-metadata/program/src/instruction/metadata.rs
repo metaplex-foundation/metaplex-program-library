@@ -2,7 +2,6 @@ use borsh::{BorshDeserialize, BorshSerialize};
 use solana_program::{
     instruction::{AccountMeta, Instruction},
     pubkey::Pubkey,
-    system_program, sysvar,
 };
 #[cfg(feature = "serde-feature")]
 use {
@@ -19,6 +18,16 @@ use crate::{
         ProgrammableConfig, Uses,
     },
 };
+
+#[repr(C)]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+pub enum AuthorityType {
+    Metadata,
+    Delegate,
+    Holder,
+    Other,
+}
 
 //----------------------+
 // Instruction args     |
@@ -483,7 +492,7 @@ pub fn update_primary_sale_happened_via_token(
     }
 }
 
-//- Instruction Builders
+//- Instruction Builders trait implementation
 
 /// Builds the instruction to create metadata and associated accounts.
 ///
@@ -565,18 +574,19 @@ impl InstructionBuilder for super::builders::Migrate {
 ///
 /// # Accounts:
 ///
-///   0. `[writable`] Token account key
-///   1. `[]` Metadata account key (pda of ['metadata', program id, mint id])")]
-///   2. `[optional]` Master Edition account
-///   3. `[]` Mint of token asset
-///   4. `[signer, writable]` Payer
-///   5. `[signer]` Authority (mint authority or metadata's update authority for NonFungible asests)
-///   6. `[]` System program
-///   7. `[]` Instructions sysvar account
-///   8. `[]` SPL Token program
-///   9. `[]` SPL Associated Token Account program
-///   10. `[optional]` Token Authorization Rules program
-///   11. `[optional]` Token Authorization Rules account
+///   0. `[writable]` Token account key
+///   1. `[optional]` Owner of the token account
+///   2. `[]` Mint of token asset
+///   3. `[]` Metadata account key (pda of ['metadata', program id, mint id])")]
+///   4. `[optional]` Master Edition account
+///   5. `[signer, writable]` Payer
+///   6. `[signer]` Authority (mint authority or metadata's update authority for NonFungible asests)
+///   7. `[]` System program
+///   8. `[]` Instructions sysvar account
+///   9. `[]` SPL Token program
+///   10. `[]` SPL Associated Token Account program
+///   11. `[optional]` Token Authorization Rules program
+///   12. `[optional]` Token Authorization Rules account
 impl InstructionBuilder for super::builders::Mint {
     fn instruction(&self) -> solana_program::instruction::Instruction {
         let mut accounts = vec![
@@ -624,12 +634,13 @@ impl InstructionBuilder for super::builders::Mint {
 ///   6. `[]` Mint of token asset
 ///   8. `[writable]` Metadata (pda of ['metadata', program id, mint id])
 ///   9. `[optional]` Edition of token asset
-///   10. `[]` SPL Token Program
-///   11. `[]` SPL Associated Token Account program
-///   12. `[]` System Program
-///   13. `[]` Instructions sysvar account
-///   14. `[optional]` Token Authorization Rules Program
-///   15. `[optional]` Token Authorization Rules account
+///   10. `[signer, writable]` Payer
+///   11. `[]` SPL Token Program
+///   12. `[]` SPL Associated Token Account program
+///   13. `[]` System Program
+///   14. `[]` Instructions sysvar account
+///   15. `[optional]` Token Authorization Rules Program
+///   16. `[optional]` Token Authorization Rules account
 impl InstructionBuilder for super::builders::Transfer {
     fn instruction(&self) -> solana_program::instruction::Instruction {
         let mut accounts = vec![
@@ -646,6 +657,7 @@ impl InstructionBuilder for super::builders::Transfer {
             AccountMeta::new_readonly(self.mint, false),
             AccountMeta::new(self.metadata, false),
             AccountMeta::new_readonly(self.edition.unwrap_or(crate::ID), false),
+            AccountMeta::new(self.payer, true),
             AccountMeta::new_readonly(self.spl_token_program, false),
             AccountMeta::new_readonly(self.spl_ata_program, false),
             AccountMeta::new_readonly(self.system_program, false),
@@ -714,251 +726,5 @@ impl InstructionBuilder for super::builders::Update {
                 .try_to_vec()
                 .unwrap(),
         }
-    }
-}
-
-/// Mints tokens from a mint account.
-///
-/// # Accounts:
-///
-///   0. `[writable`] Token account key
-///   1. `[]` Metadata account key (pda of ['metadata', program id, mint id])")]
-///   2. `[writable]` Mint of token asset
-///   3. `[signer, writable]` Payer
-///   4. `[signer]` Authority (mint authority or metadata's update authority for NonFungible asests)
-///   5. `[]` System program
-///   6. `[]` Instructions sysvar account
-///   7. `[]` SPL Token program
-///   8. `[]` SPL Associated Token Account program
-///   9. `[optional]` Master Edition account
-///   10. `[optional]` Token Authorization Rules program
-///   11. `[optional]` Token Authorization Rules account
-pub fn mint(
-    token: Pubkey,
-    metadata: Pubkey,
-    mint: Pubkey,
-    payer: Pubkey,
-    authority: Pubkey,
-    master_edition: Option<Pubkey>,
-    authorization_rules: Option<Pubkey>,
-    args: MintArgs,
-) -> Instruction {
-    let mut accounts = vec![
-        AccountMeta::new(token, false),
-        AccountMeta::new_readonly(metadata, false),
-        AccountMeta::new(mint, false),
-        AccountMeta::new(payer, true),
-        AccountMeta::new(authority, true),
-        AccountMeta::new_readonly(solana_program::system_program::id(), false),
-        AccountMeta::new_readonly(sysvar::instructions::id(), false),
-        AccountMeta::new_readonly(spl_token::id(), false),
-        AccountMeta::new_readonly(spl_associated_token_account::id(), false),
-    ];
-    // checks whether we have a master edition
-    if let Some(master_edition) = master_edition {
-        accounts.push(AccountMeta::new(master_edition, false));
-    } else {
-        accounts.push(AccountMeta::new_readonly(crate::id(), false));
-    }
-    // checks whether we have authorization rules
-    if let Some(authorization_rules) = authorization_rules {
-        accounts.push(AccountMeta::new(authorization_rules, false));
-        accounts.push(AccountMeta::new_readonly(mpl_token_auth_rules::id(), false));
-    } else {
-        accounts.push(AccountMeta::new_readonly(crate::id(), false));
-        accounts.push(AccountMeta::new_readonly(crate::id(), false));
-    }
-
-    Instruction {
-        program_id: crate::id(),
-        accounts,
-        data: MetadataInstruction::Mint(args).try_to_vec().unwrap(),
-    }
-}
-
-/// Creates an instruction to mint a new asset and associated metadata accounts.
-///
-/// # Accounts:
-///   0. `[writable]` Token account
-///   1. `[writable]` Metadata account
-///   2. `[]` Mint account
-///   5. `[signer]` Owner
-///   4. `[writable]` Destination associate token account
-///   3. `[]` Destination owner
-///   6. `[]` SPL Token program
-///   7. `[]` SPL Associate Token program
-///   8. `[]` System programe
-///   9. `[]` Instructions sysvar account
-///   10. `[optional]` Asset authorization rules account
-///   11. `[optional]` Token Authorization Rules program
-#[allow(clippy::too_many_arguments)]
-pub fn transfer(
-    program_id: Pubkey,
-    owner: Pubkey,
-    authority: Pubkey,
-    token: Pubkey,
-    metadata_account: Pubkey,
-    mint_account: Pubkey,
-    edition: Option<Pubkey>,
-    destination_owner: Pubkey,
-    destination_token: Pubkey,
-    delegate_record: Option<Pubkey>,
-    args: TransferArgs,
-    authorization_rules: Option<Pubkey>,
-    additional_accounts: Option<Vec<AccountMeta>>,
-) -> Instruction {
-    let mut accounts = vec![
-        AccountMeta::new(owner, false),
-        AccountMeta::new(authority, true),
-        AccountMeta::new(token, false),
-        AccountMeta::new(metadata_account, false),
-        AccountMeta::new_readonly(mint_account, false),
-        AccountMeta::new(edition.unwrap_or(crate::ID), false),
-        AccountMeta::new(destination_owner, false),
-        AccountMeta::new(destination_token, false),
-        AccountMeta::new_readonly(delegate_record.unwrap_or(crate::ID), false),
-        AccountMeta::new_readonly(spl_token::ID, false),
-        AccountMeta::new_readonly(spl_associated_token_account::ID, false),
-        AccountMeta::new_readonly(solana_program::system_program::ID, false),
-        AccountMeta::new_readonly(sysvar::instructions::ID, false),
-        AccountMeta::new_readonly(mpl_token_auth_rules::ID, false),
-        AccountMeta::new_readonly(authorization_rules.unwrap_or(crate::ID), false),
-    ];
-
-    if let Some(additional_accounts) = additional_accounts {
-        accounts.extend(additional_accounts);
-    }
-
-    Instruction {
-        program_id,
-        accounts,
-        data: MetadataInstruction::Transfer(args).try_to_vec().unwrap(),
-    }
-}
-
-#[repr(C)]
-#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
-pub enum AuthorityType {
-    Metadata,
-    Delegate,
-    Holder,
-    Other,
-}
-
-/// Creates an instruction to update an existing asset.
-///
-/// # Accounts:
-///
-///   0. `[writable]` Metadata account
-///   1. `[]` Mint account
-///   2. `[]` System program
-///   3. `[]` Instructions sysvar account
-///   4. `[optional]` Master edition account
-///   5. `[optional]` New update authority
-///   6. `[signer, optional]` Update authority
-///   7. `[signer, optional]` Token holder
-///   8. `[optional]` Token account
-///   9. `[optional]` Asset authorization rules account
-///   10. `[optional]` Authorization rules program
-#[allow(clippy::too_many_arguments)]
-pub fn update(
-    program_id: Pubkey,
-    metadata_account: Pubkey,
-    mint_account: Pubkey,
-    master_edition_account: Option<Pubkey>,
-    authority: Pubkey,
-    token_account: Option<Pubkey>,
-    delegate_record: Option<Pubkey>,
-    authorization_rules: Option<Pubkey>,
-    additional_accounts: Option<Vec<AccountMeta>>,
-    args: UpdateArgs,
-) -> Instruction {
-    let mut accounts: Vec<AccountMeta> = vec![
-        AccountMeta::new(metadata_account, false),
-        AccountMeta::new_readonly(mint_account, false),
-        AccountMeta::new_readonly(solana_program::system_program::id(), false),
-        AccountMeta::new_readonly(sysvar::instructions::id(), false),
-        AccountMeta::new(master_edition_account.unwrap_or(crate::ID), false),
-        AccountMeta::new_readonly(authority, true),
-        AccountMeta::new_readonly(token_account.unwrap_or(crate::ID), false),
-        AccountMeta::new_readonly(delegate_record.unwrap_or(crate::ID), false),
-    ];
-
-    if let Some(authorization_rules) = authorization_rules {
-        accounts.push(AccountMeta::new_readonly(mpl_token_auth_rules::ID, false));
-        accounts.push(AccountMeta::new_readonly(authorization_rules, false));
-    } else {
-        accounts.push(AccountMeta::new_readonly(crate::ID, false));
-        accounts.push(AccountMeta::new_readonly(crate::ID, false));
-    }
-
-    if let Some(additional_accounts) = additional_accounts {
-        accounts.extend(additional_accounts);
-    }
-
-    Instruction {
-        program_id,
-        accounts,
-        data: MetadataInstruction::Update(args).try_to_vec().unwrap(),
-    }
-}
-
-/// Creates an instruction to migrate an asset to a ProgrammableAsset.
-///
-/// # Accounts:
-///
-///   0. `[writable]` Metadata account
-///   1. `[]` Master edition account
-///   2. `[writable]` Token account
-///   3. `[]` Mint account
-///   4. `[signer]` Update authority
-///   6. `[]` Collection metadata account
-///   8. `[]` Token Program
-///   7. `[]` System program
-///   9. `[]` Instruction sysvar account
-//   10. optional, name="authorization_rules", desc="Token Authorization Rules account"
-#[allow(clippy::too_many_arguments)]
-pub fn migrate(
-    program_id: Pubkey,
-    metadata_account: Pubkey,
-    master_edition_account: Pubkey,
-    mint: Pubkey,
-    token_account: Pubkey,
-    update_authority: Pubkey,
-    collection_metadata: Pubkey,
-    authorization_rules: Option<Pubkey>,
-    additional_accounts: Option<Vec<AccountMeta>>,
-    migration_type: MigrationType,
-    rule_set: Option<Pubkey>,
-) -> Instruction {
-    let mut accounts = vec![
-        AccountMeta::new(metadata_account, false),
-        AccountMeta::new_readonly(master_edition_account, false),
-        AccountMeta::new(token_account, false),
-        AccountMeta::new_readonly(mint, false),
-        AccountMeta::new_readonly(update_authority, true),
-        AccountMeta::new_readonly(collection_metadata, false),
-        AccountMeta::new_readonly(spl_token::id(), false),
-        AccountMeta::new_readonly(system_program::id(), false),
-        AccountMeta::new_readonly(sysvar::instructions::id(), false),
-    ];
-
-    if let Some(authorization_rules) = authorization_rules {
-        accounts.push(AccountMeta::new_readonly(authorization_rules, false));
-        //accounts.push(AccountMeta::new_readonly(token_authorization::id(), false));
-    }
-
-    accounts.extend(additional_accounts.unwrap_or_default());
-
-    Instruction {
-        program_id,
-        accounts,
-        data: MetadataInstruction::Migrate(MigrateArgs::V1 {
-            migration_type,
-            rule_set,
-        })
-        .try_to_vec()
-        .unwrap(),
     }
 }

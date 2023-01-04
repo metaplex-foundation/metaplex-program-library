@@ -2820,6 +2820,12 @@
           "optional": true
         },
         {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "desc": "Payer"
+        },
+        {
           "name": "splTokenProgram",
           "isMut": false,
           "isSigner": false,
@@ -4310,6 +4316,26 @@
       }
     },
     {
+      "name": "AuthorityType",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Metadata"
+          },
+          {
+            "name": "Delegate"
+          },
+          {
+            "name": "Holder"
+          },
+          {
+            "name": "Other"
+          }
+        ]
+      }
+    },
+    {
       "name": "CreateArgs",
       "type": {
         "kind": "enum",
@@ -4576,26 +4602,6 @@
                 }
               }
             ]
-          }
-        ]
-      }
-    },
-    {
-      "name": "AuthorityType",
-      "type": {
-        "kind": "enum",
-        "variants": [
-          {
-            "name": "Metadata"
-          },
-          {
-            "name": "Delegate"
-          },
-          {
-            "name": "Holder"
-          },
-          {
-            "name": "Other"
           }
         ]
       }

@@ -361,6 +361,7 @@ impl DigitalAsset {
             destination_owner,
             destination_token,
             authorization_rules,
+            payer,
             args,
         } = params;
 
@@ -387,6 +388,7 @@ impl DigitalAsset {
             .destination_owner(destination_owner)
             .destination(destination_token)
             .metadata(self.metadata)
+            .payer(*payer)
             .mint(self.mint.pubkey());
 
         if let Some(master_edition) = self.master_edition {
@@ -447,6 +449,7 @@ pub struct TransferParams<'a> {
     pub source_owner: &'a Pubkey,
     pub destination_owner: Pubkey,
     pub destination_token: Option<Pubkey>,
+    pub payer: &'a Pubkey,
     pub authorization_rules: Option<Pubkey>,
     pub args: TransferArgs,
 }
