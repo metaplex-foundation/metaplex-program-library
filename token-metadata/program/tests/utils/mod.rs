@@ -17,7 +17,7 @@ use solana_sdk::{
     account::Account, program_pack::Pack, pubkey::Pubkey, signature::Signer,
     signer::keypair::Keypair, system_instruction, transaction::Transaction,
 };
-use spl_token_2022::{extension::StateWithExtensions, state::Mint};
+use spl_token_2022::{extension::{ExtensionType, StateWithExtensions}, state::Mint};
 pub use vault::Vault;
 
 pub const DEFAULT_COLLECTION_DETAILS: Option<CollectionDetails> =
@@ -168,15 +168,25 @@ pub async fn create_token_account(
     let rent = context.banks_client.get_rent().await.unwrap();
     let token_program_id =  get_account(context, &mint).await.owner;
 
+    let space = if token_program_id == spl_token_2022::id() {
+        ExtensionType::get_account_len::<spl_token_2022::state::Account>(&[
+            ExtensionType::ImmutableOwner,
+        ])
+    } else {
+        spl_token_2022::state::Account::get_packed_len()
+    };
+
     let tx = Transaction::new_signed_with_payer(
         &[
             system_instruction::create_account(
                 &context.payer.pubkey(),
                 &account.pubkey(),
-                rent.minimum_balance(spl_token_2022::state::Account::LEN),
-                spl_token_2022::state::Account::LEN as u64,
+                rent.minimum_balance(space),
+                space as u64,
                 &token_program_id,
             ),
+            // no-ops in `Tokenkeg...`, so safe to do either way
+            spl_token_2022::instruction::initialize_immutable_owner(&token_program_id, &account.pubkey()).unwrap(),
             spl_token_2022::instruction::initialize_account(
                 &token_program_id,
                 &account.pubkey(),
@@ -203,24 +213,43 @@ pub async fn create_mint(
 ) -> Result<(), BanksClientError> {
     let rent = context.banks_client.get_rent().await.unwrap();
 
+    // add mint close authority to token-2022 mints
+    let space = if *token_program_id == spl_token_2022::id() {
+        ExtensionType::get_account_len::<Mint>(&[
+            ExtensionType::MintCloseAuthority,
+        ])
+    } else {
+        Mint::get_packed_len()
+    };
+
+    let mut instructions = vec![
+        system_instruction::create_account(
+            &context.payer.pubkey(),
+            &mint.pubkey(),
+            rent.minimum_balance(space),
+            space as u64,
+            token_program_id,
+        )
+    ];
+    if *token_program_id == spl_token_2022::id() {
+        instructions.push(
+            spl_token_2022::instruction::initialize_mint_close_authority(
+                token_program_id, &mint.pubkey(), freeze_authority,
+            ).unwrap());
+    }
+    instructions.push(
+        spl_token_2022::instruction::initialize_mint(
+            token_program_id,
+            &mint.pubkey(),
+            manager,
+            freeze_authority,
+            decimals,
+        )
+        .unwrap(),
+    );
+
     let tx = Transaction::new_signed_with_payer(
-        &[
-            system_instruction::create_account(
-                &context.payer.pubkey(),
-                &mint.pubkey(),
-                rent.minimum_balance(spl_token_2022::state::Mint::LEN),
-                spl_token_2022::state::Mint::LEN as u64,
-                token_program_id,
-            ),
-            spl_token_2022::instruction::initialize_mint(
-                token_program_id,
-                &mint.pubkey(),
-                manager,
-                freeze_authority,
-                decimals,
-            )
-            .unwrap(),
-        ],
+        &instructions,
         Some(&context.payer.pubkey()),
         &[&context.payer, mint],
         context.last_blockhash,

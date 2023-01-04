@@ -5,7 +5,6 @@ use borsh::BorshSerialize;
 use mpl_token_metadata::{
     error::MetadataError,
     id, instruction,
-    instruction::sign_metadata,
     state::{Collection, Creator, Key, MAX_MASTER_EDITION_LEN},
 };
 use num_traits::FromPrimitive;
@@ -77,7 +76,6 @@ mod mint_new_edition_from_master_edition_via_token {
         let mut context = program_test().start_with_context().await;
         let mut test_metadata = Metadata::new();
         test_metadata.token_program_id = token_program_id;
-        let payer_key = context.payer.pubkey().clone();
         let creator = Keypair::new();
 
         let creator_pub = creator.pubkey().clone();
@@ -133,7 +131,7 @@ mod mint_new_edition_from_master_edition_via_token {
             &[&creator],
             context.last_blockhash,
         );
-        let result = context.banks_client.process_transaction(tx).await;
+        let _result = context.banks_client.process_transaction(tx).await;
 
         let kpbytes = &context.payer;
         let kp = Keypair::from_bytes(&kpbytes.to_bytes()).unwrap();

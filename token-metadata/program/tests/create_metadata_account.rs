@@ -172,6 +172,7 @@ mod create_meta_accounts {
 
         assert_custom_error!(result, MetadataError::InvalidMintAuthority);
 
+        #[allow(deprecated)]
         let ix2 = instruction::create_metadata_accounts_v2(
             id(),
             test_metadata.pubkey,
@@ -584,14 +585,15 @@ mod create_meta_accounts {
 
     #[tokio::test]
     async fn fail_bubblegum_owner() {
-        let mut context = &mut program_test().start_with_context().await;
+        let mut context = program_test().start_with_context().await;
         let test_metadata = Metadata::new();
         let name = "Test".to_string();
         let symbol = "TST".to_string();
         let uri = "uri".to_string();
         let mint_authority = Keypair::new();
+        let payer = context.payer.pubkey();
 
-        airdrop(context, &mint_authority.pubkey(), 1_000_000)
+        airdrop(&mut context, &mint_authority.pubkey(), 1_000_000)
             .await
             .unwrap();
         let uses = Some(Uses {
@@ -601,10 +603,10 @@ mod create_meta_accounts {
         });
 
         create_mint(
-            context,
+            &mut context,
             &test_metadata.mint,
             &mint_authority.pubkey(),
-            Some(&context.payer.pubkey()),
+            Some(&payer),
             0,
             &spl_token::id(),
         )
@@ -612,16 +614,16 @@ mod create_meta_accounts {
         .unwrap();
 
         create_token_account(
-            context,
+            &mut context,
             &test_metadata.token,
             &test_metadata.mint.pubkey(),
-            &context.payer.pubkey(),
+            &payer,
         )
         .await
         .unwrap();
 
         mint_tokens(
-            context,
+            &mut context,
             &test_metadata.mint.pubkey(),
             &test_metadata.token.pubkey(),
             1,
@@ -647,9 +649,9 @@ mod create_meta_accounts {
             .await
             .unwrap();
 
-        let mint_authority_account = get_account(context, &mint_authority.pubkey()).await;
+        let mint_authority_account = get_account(&mut context, &mint_authority.pubkey()).await;
         assert_eq!(mint_authority_account.owner, BUBBLEGUM_PROGRAM_ADDRESS);
-        let mint_account = get_mint(context, &test_metadata.mint.pubkey()).await;
+        let mint_account = get_mint(&mut context, &test_metadata.mint.pubkey()).await;
         assert_eq!(
             mint_account.mint_authority.unwrap(),
             mint_authority.pubkey()
@@ -661,6 +663,7 @@ mod create_meta_accounts {
             verified: true,
         };
 
+        #[allow(deprecated)]
         let create_tx = Transaction::new_signed_with_payer(
             &[instruction::create_metadata_accounts_v2(
                 id(),
