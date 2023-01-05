@@ -220,7 +220,7 @@ impl DigitalAsset {
     pub async fn delegate(
         &mut self,
         context: &mut ProgramTestContext,
-        authority: Keypair,
+        payer: Keypair,
         delegate: Pubkey,
         delegate_role: DelegateRole,
         amount_opt: Option<u64>,
@@ -229,8 +229,8 @@ impl DigitalAsset {
         let (delegate_record, _) = find_delegate_account(
             &self.mint.pubkey(),
             delegate_role.clone(),
+            &payer.pubkey(),
             &delegate,
-            &authority.pubkey(),
         );
 
         let args = match delegate_role {
@@ -250,8 +250,8 @@ impl DigitalAsset {
             .delegate_record(delegate_record)
             .mint(self.mint.pubkey())
             .metadata(self.metadata)
-            .payer(authority.pubkey())
-            .authority(authority.pubkey());
+            .payer(payer.pubkey())
+            .namespace(payer.pubkey());
 
         if let Some(edition) = self.master_edition {
             builder.master_edition(edition);
@@ -265,8 +265,8 @@ impl DigitalAsset {
 
         let tx = Transaction::new_signed_with_payer(
             &[delegate_ix],
-            Some(&authority.pubkey()),
-            &[&authority],
+            Some(&payer.pubkey()),
+            &[&payer],
             context.last_blockhash,
         );
 

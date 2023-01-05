@@ -15,24 +15,10 @@ use crate::{
     },
 };
 
-/// Create the associated metadata accounts for mint.
+/// Create the associated metadata accounts for a mint.
 ///
 /// The instruction will also initialize the mint if the account does not
-/// exist. For `Programmable*` assets, if authorization rules are specified,
-/// the instruction will check if the account exists.
-///
-/// # Accounts:
-///
-///   0. `[writable]` Metadata account
-///   1. `[]` Mint account (signer when account is empty)
-///   2. `[signer]` Mint authority
-///   3. `[signer]` Payer
-///   4. `[signer]` Update authority
-///   5. `[]` System program
-///   6. `[]` Instructions sysvar account
-///   7. `[]` SPL Token program
-///   8. `[optional]` Master edition account
-///   9. `[optional]` Asset authorization rules account
+/// exist. For `NonFungible` assets, a `master_edition` account is required.
 pub fn create<'a>(
     program_id: &Pubkey,
     accounts: &'a [AccountInfo<'a>],

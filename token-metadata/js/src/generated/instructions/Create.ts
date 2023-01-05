@@ -36,12 +36,12 @@ export const CreateStruct = new beet.FixableBeetArgsStruct<
 /**
  * Accounts required by the _Create_ instruction
  *
- * @property [_writable_] metadata Metadata account key (pda of ['metadata', program id, mint id])
+ * @property [_writable_] metadata Unallocated metadata account with address as pda of ['metadata', program id, mint id]
  * @property [_writable_] masterEdition (optional) Unallocated edition account with address as pda of ['metadata', program id, mint, 'edition']
  * @property [_writable_] mint Mint of token asset
  * @property [**signer**] mintAuthority Mint authority
  * @property [_writable_, **signer**] payer Payer
- * @property [] updateAuthority update authority info
+ * @property [] updateAuthority Update authority for the metadata account
  * @property [] sysvarInstructions Instructions sysvar account
  * @property [] splTokenProgram SPL Token program
  * @category Instructions

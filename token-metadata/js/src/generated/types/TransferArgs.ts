@@ -51,4 +51,4 @@ export const transferArgsBeet = beet.dataEnum<TransferArgsRecord>([
       'TransferArgsRecord["V1"]',
     ),
   ],
-]) as beet.FixableBeet<TransferArgs, TransferArgs>;
+]) as beet.FixableBeet<TransferArgs>;

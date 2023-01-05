@@ -36,8 +36,6 @@ export const TransferStruct = new beet.FixableBeetArgsStruct<
 /**
  * Accounts required by the _Transfer_ instruction
  *
- * @property [_writable_, **signer**] authority Transfer authority (token or delegate owner)
- * @property [_writable_] delegateRecord (optional) Delegate record PDA
  * @property [_writable_] token Token account
  * @property [] tokenOwner Token account owner
  * @property [_writable_] destination Destination token account
@@ -45,10 +43,12 @@ export const TransferStruct = new beet.FixableBeetArgsStruct<
  * @property [] mint Mint of token asset
  * @property [_writable_] metadata Metadata (pda of ['metadata', program id, mint id])
  * @property [] edition (optional) Edition of token asset
+ * @property [**signer**] authority Transfer authority (token or delegate owner)
+ * @property [_writable_] delegateRecord (optional) Delegate record PDA
  * @property [_writable_, **signer**] payer Payer
+ * @property [] sysvarInstructions Instructions sysvar account
  * @property [] splTokenProgram SPL Token Program
  * @property [] splAtaProgram SPL Associated Token Account program
- * @property [] sysvarInstructions Instructions sysvar account
  * @property [] authorizationRulesProgram (optional) Token Authorization Rules Program
  * @property [] authorizationRules (optional) Token Authorization Rules account
  * @category Instructions
@@ -56,8 +56,6 @@ export const TransferStruct = new beet.FixableBeetArgsStruct<
  * @category generated
  */
 export type TransferInstructionAccounts = {
-  authority: web3.PublicKey;
-  delegateRecord?: web3.PublicKey;
   token: web3.PublicKey;
   tokenOwner: web3.PublicKey;
   destination: web3.PublicKey;
@@ -65,11 +63,13 @@ export type TransferInstructionAccounts = {
   mint: web3.PublicKey;
   metadata: web3.PublicKey;
   edition?: web3.PublicKey;
+  authority: web3.PublicKey;
+  delegateRecord?: web3.PublicKey;
   payer: web3.PublicKey;
-  splTokenProgram: web3.PublicKey;
-  splAtaProgram: web3.PublicKey;
   systemProgram?: web3.PublicKey;
   sysvarInstructions: web3.PublicKey;
+  splTokenProgram: web3.PublicKey;
+  splAtaProgram: web3.PublicKey;
   authorizationRulesProgram?: web3.PublicKey;
   authorizationRules?: web3.PublicKey;
 };
@@ -99,16 +99,6 @@ export function createTransferInstruction(
     ...args,
   });
   const keys: web3.AccountMeta[] = [
-    {
-      pubkey: accounts.authority,
-      isWritable: true,
-      isSigner: true,
-    },
-    {
-      pubkey: accounts.delegateRecord ?? programId,
-      isWritable: accounts.delegateRecord != null,
-      isSigner: false,
-    },
     {
       pubkey: accounts.token,
       isWritable: true,
@@ -145,19 +135,19 @@ export function createTransferInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.payer,
-      isWritable: true,
+      pubkey: accounts.authority,
+      isWritable: false,
       isSigner: true,
     },
     {
-      pubkey: accounts.splTokenProgram,
-      isWritable: false,
+      pubkey: accounts.delegateRecord ?? programId,
+      isWritable: accounts.delegateRecord != null,
       isSigner: false,
     },
     {
-      pubkey: accounts.splAtaProgram,
-      isWritable: false,
-      isSigner: false,
+      pubkey: accounts.payer,
+      isWritable: true,
+      isSigner: true,
     },
     {
       pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
@@ -166,6 +156,16 @@ export function createTransferInstruction(
     },
     {
       pubkey: accounts.sysvarInstructions,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.splTokenProgram,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.splAtaProgram,
       isWritable: false,
       isSigner: false,
     },

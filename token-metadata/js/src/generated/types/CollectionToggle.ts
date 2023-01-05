@@ -59,4 +59,4 @@ export const collectionToggleBeet = beet.dataEnum<CollectionToggleRecord>([
       'CollectionToggleRecord["Set"]',
     ),
   ],
-]) as beet.FixableBeet<CollectionToggle, CollectionToggle>;
+]) as beet.FixableBeet<CollectionToggle>;

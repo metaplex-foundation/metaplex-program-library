@@ -1,6 +1,6 @@
 use solana_program::pubkey::Pubkey;
 
-use crate::instruction::DelegateRole;
+use crate::{instruction::DelegateRole, state::PERSISTENT_DELEGATE};
 
 /// prefix used for PDAs to avoid certain collision attacks:
 /// https://en.wikipedia.org/wiki/Collision_attack#Chosen-prefix_collision_attack
@@ -83,16 +83,34 @@ pub fn find_program_as_burner_account() -> (Pubkey, u8) {
 pub fn find_delegate_account(
     mint: &Pubkey,
     role: DelegateRole,
-    user: &Pubkey,
-    authority: &Pubkey,
+    namespace: &Pubkey,
+    delegate: &Pubkey,
 ) -> (Pubkey, u8) {
-    Pubkey::find_program_address(
-        &[
-            mint.as_ref(),
-            role.to_string().as_bytes(),
-            user.as_ref(),
-            authority.as_ref(),
-        ],
-        &crate::id(),
-    )
+    if matches!(
+        role,
+        DelegateRole::Transfer | DelegateRole::Sale | DelegateRole::Utility
+    ) {
+        Pubkey::find_program_address(
+            &[
+                PREFIX.as_bytes(),
+                crate::id().as_ref(),
+                mint.as_ref(),
+                PERSISTENT_DELEGATE.as_bytes(),
+                namespace.as_ref(),
+            ],
+            &crate::id(),
+        )
+    } else {
+        Pubkey::find_program_address(
+            &[
+                PREFIX.as_bytes(),
+                crate::id().as_ref(),
+                mint.as_ref(),
+                role.to_string().as_bytes(),
+                namespace.as_ref(),
+                delegate.as_ref(),
+            ],
+            &crate::id(),
+        )
+    }
 }

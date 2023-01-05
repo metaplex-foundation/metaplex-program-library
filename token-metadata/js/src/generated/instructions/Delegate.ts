@@ -36,13 +36,13 @@ export const DelegateStruct = new beet.FixableBeetArgsStruct<
 /**
  * Accounts required by the _Delegate_ instruction
  *
- * @property [_writable_] delegateRecord Delegate account key (pda of [mint id, delegate role, user id, authority id])
+ * @property [_writable_] delegateRecord Delegate Record account
  * @property [] delegate Owner of the delegated account
- * @property [_writable_] metadata Metadata account
+ * @property [] metadata Metadata account
  * @property [] masterEdition (optional) Master Edition account
  * @property [] mint Mint of metadata
- * @property [_writable_] token (optional) Owned Token Account of mint
- * @property [**signer**] authority Authority to approve the delegation
+ * @property [_writable_] token (optional) Token account of mint
+ * @property [**signer**] namespace Namespace (update authority or token owner) to approve the delegation
  * @property [_writable_, **signer**] payer Payer
  * @property [] sysvarInstructions Instructions sysvar account
  * @property [] splTokenProgram (optional) SPL Token Program
@@ -59,7 +59,7 @@ export type DelegateInstructionAccounts = {
   masterEdition?: web3.PublicKey;
   mint: web3.PublicKey;
   token?: web3.PublicKey;
-  authority: web3.PublicKey;
+  namespace: web3.PublicKey;
   payer: web3.PublicKey;
   systemProgram?: web3.PublicKey;
   sysvarInstructions: web3.PublicKey;
@@ -105,7 +105,7 @@ export function createDelegateInstruction(
     },
     {
       pubkey: accounts.metadata,
-      isWritable: true,
+      isWritable: false,
       isSigner: false,
     },
     {
@@ -124,7 +124,7 @@ export function createDelegateInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.authority,
+      pubkey: accounts.namespace,
       isWritable: false,
       isSigner: true,
     },

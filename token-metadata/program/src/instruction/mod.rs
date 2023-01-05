@@ -503,12 +503,12 @@ pub enum MetadataInstruction {
     /// the mint key is a signer on the transaction.
     ///
     /// When creating a non-fungible assert, the `master_edition` needs to be specified.
-    #[account(0, writable, name="metadata", desc="Metadata account key (pda of ['metadata', program id, mint id])")]
+    #[account(0, writable, name="metadata", desc="Unallocated metadata account with address as pda of ['metadata', program id, mint id]")]
     #[account(1, optional, writable, name="master_edition", desc="Unallocated edition account with address as pda of ['metadata', program id, mint, 'edition']")]
     #[account(2, writable, name="mint", desc="Mint of token asset")]
     #[account(3, signer, name="mint_authority", desc="Mint authority")]
     #[account(4, signer, writable, name="payer", desc="Payer")]
-    #[account(5, name="update_authority", desc="update authority info")]
+    #[account(5, name="update_authority", desc="Update authority for the metadata account")]
     #[account(6, name="system_program", desc="System program")]
     #[account(7, name="sysvar_instructions", desc="Instructions sysvar account")]
     #[account(8, name="spl_token_program", desc="SPL Token program")]
@@ -519,17 +519,17 @@ pub enum MetadataInstruction {
 
     /// Mints tokens from a mint account into the specified token account.
     ///
-    /// This instruction will also initialized the associated token account if it does not exist. When
-    /// minting `*NonFungible` assets, the `mint_authority` must the the master edition PDA of
-    /// ['metadata', program id, mint, 'edition']. For the other cases, it must be the `mint_authority`
-    /// from the mint account.
+    /// This instruction will also initialized the associated token account if it does not exist – in
+    /// this case the `token_owner` will be required. When minting `*NonFungible` assets, the `authority`
+    /// must be the update authority; in all other cases, it must be the mint authority from the mint
+    /// account.
     #[account(0, writable, name="token", desc="Token or Associated Token account")]
     #[account(1, optional, name="token_owner", desc="Owner of the token account")]
-    #[account(2, writable, name="mint", desc="Mint of token asset")]
-    #[account(3, name="metadata", desc="Metadata account key (pda of ['metadata', program id, mint id])")]
-    #[account(4, optional, name="master_edition", desc="Master Edition account")]
-    #[account(5, signer, writable, name="payer", desc="Payer")]
-    #[account(6, signer, name="authority", desc="(Mint or Update) authority")]
+    #[account(2, name="metadata", desc="Metadata account (pda of ['metadata', program id, mint id])")]
+    #[account(3, optional, name="master_edition", desc="Master Edition account")]
+    #[account(4, writable, name="mint", desc="Mint of token asset")]
+    #[account(5, signer, name="authority", desc="(Mint or Update) authority")]
+    #[account(6, signer, writable, name="payer", desc="Payer")]
     #[account(7, name="system_program", desc="System program")]
     #[account(8, name="sysvar_instructions", desc="Instructions sysvar account")]
     #[account(9, name="spl_token_program", desc="SPL Token program")]
@@ -596,20 +596,20 @@ pub enum MetadataInstruction {
     /// 
     /// The configurable `authorization_rules` only apply to `ProgrammableNonFungible` assets and
     /// it may require additional accounts to validate the rules.
-    #[account(0, signer, writable, name="authority", desc="Transfer authority (token or delegate owner)")]
-    #[account(1, optional, writable, name="delegate_record", desc="Delegate record PDA")]
-    #[account(2, writable, name="token", desc="Token account")]
-    #[account(3, name="token_owner", desc="Token account owner")]
-    #[account(4, writable, name="destination", desc="Destination token account")]
-    #[account(5, name="destination_owner", desc="Destination token account owner")]
-    #[account(6, name="mint", desc="Mint of token asset")]
-    #[account(7, writable, name="metadata", desc="Metadata (pda of ['metadata', program id, mint id])")]
-    #[account(8, optional, name="edition", desc="Edition of token asset")]
+    #[account(0, writable, name="token", desc="Token account")]
+    #[account(1, name="token_owner", desc="Token account owner")]
+    #[account(2, writable, name="destination", desc="Destination token account")]
+    #[account(3, name="destination_owner", desc="Destination token account owner")]
+    #[account(4, name="mint", desc="Mint of token asset")]
+    #[account(5, writable, name="metadata", desc="Metadata (pda of ['metadata', program id, mint id])")]
+    #[account(6, optional, name="edition", desc="Edition of token asset")]
+    #[account(7, signer, name="authority", desc="Transfer authority (token or delegate owner)")]
+    #[account(8, optional, writable, name="delegate_record", desc="Delegate record PDA")]
     #[account(9, signer, writable, name="payer", desc="Payer")]
-    #[account(10, name="spl_token_program", desc="SPL Token Program")]
-    #[account(11, name="spl_ata_program", desc="SPL Associated Token Account program")]
-    #[account(12, name="system_program", desc="System Program")]
-    #[account(13, name="sysvar_instructions", desc="Instructions sysvar account")]
+    #[account(10, name="system_program", desc="System Program")]
+    #[account(11, name="sysvar_instructions", desc="Instructions sysvar account")]
+    #[account(12, name="spl_token_program", desc="SPL Token Program")]
+    #[account(13, name="spl_ata_program", desc="SPL Associated Token Account program")]
     #[account(14, optional, name="authorization_rules_program", desc="Token Authorization Rules Program")]
     #[account(15, optional, name="authorization_rules", desc="Token Authorization Rules account")]
     #[default_optional_accounts]
@@ -632,14 +632,19 @@ pub enum MetadataInstruction {
 
     /// Creates a delegate for an asset.
     /// 
-    /// A delegate has a role associated, which determines what actions the delegate can perform.
-    #[account(0, writable, name="delegate_record", desc="Delegate account key (pda of [mint id, delegate role, user id, authority id])")]
+    /// A delegate has a role associated, which determines what actions the delegate can perform. There are
+    /// two types of delegate:
+    ///   1. Persistent delegate: only one delegate can exist at the same time for `Transfer`, `Sale` and
+    ///      `Utility` actions (pda of ["metadata", program id, mint id, "persistent_delegate", token owner id])
+    ///   2. Multiple delegates: for `Authority`, `Collection`, `Update` and `Uses` actions (pda of ["metadata",
+    ///      program id, mint id, role, update authority id, delegate owner id])
+    #[account(0, writable, name="delegate_record", desc="Delegate Record account")]
     #[account(1, name="delegate", desc="Owner of the delegated account")]
-    #[account(2, writable, name="metadata", desc="Metadata account")]
+    #[account(2, name="metadata", desc="Metadata account")]
     #[account(3, optional, name="master_edition", desc="Master Edition account")]
     #[account(4, name="mint", desc="Mint of metadata")]
-    #[account(5, optional, writable, name="token", desc="Owned Token Account of mint")]
-    #[account(6, signer, name="authority", desc="Authority to approve the delegation")]
+    #[account(5, optional, writable, name="token", desc="Token account of mint")]
+    #[account(6, signer, name="namespace", desc="Namespace (update authority or token owner) to approve the delegation")]
     #[account(7, signer, writable, name="payer", desc="Payer")]
     #[account(8, name="system_program", desc="System Program")]
     #[account(9, name="sysvar_instructions", desc="Instructions sysvar account")]

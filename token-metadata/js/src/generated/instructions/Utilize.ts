@@ -143,6 +143,7 @@ export function createUtilizeInstruction(
       isSigner: false,
     });
   }
+
   if (accounts.burner != null) {
     if (accounts.useAuthorityRecord == null) {
       throw new Error(

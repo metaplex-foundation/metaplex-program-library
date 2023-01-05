@@ -117,7 +117,6 @@ pub fn process_create_metadata_accounts_logic(
 
     // This allows the Bubblegum program to create metadata with verified creators since they were
     // verified already by the Bubblegum program.
-    //
     let allow_direct_creator_writes =
         allow_direct_creator_writes || is_decompression(mint_info, mint_authority_info);
 

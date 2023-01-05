@@ -1,4 +1,10 @@
-import { DelegateArgs, DelegateRole, Metadata, PROGRAM_ID, TokenStandard } from '../src/generated';
+import {
+  DelegateArgs,
+  DelegateRecord,
+  DelegateRole,
+  PROGRAM_ID,
+  TokenStandard,
+} from '../src/generated';
 import test from 'tape';
 import { amman, InitTransactions, killStuckProcess } from './setup';
 import { createAndMintDefaultAsset } from './utils/DigitalAssetManager';
@@ -29,10 +35,12 @@ test('Delegate: create collection delegate', async (t) => {
   // delegate PDA
   const [delegateRecord] = PublicKey.findProgramAddressSync(
     [
+      Buffer.from('metadata'),
+      PROGRAM_ID.toBuffer(),
       manager.mint.toBuffer(),
       Buffer.from('collection_delegate'),
-      delegate.toBuffer(),
       payer.publicKey.toBuffer(),
+      delegate.toBuffer(),
     ],
     PROGRAM_ID,
   );
@@ -76,9 +84,10 @@ test('Delegate: create sale delegate', async (t) => {
   // delegate PDA
   const [delegateRecord] = PublicKey.findProgramAddressSync(
     [
+      Buffer.from('metadata'),
+      PROGRAM_ID.toBuffer(),
       manager.mint.toBuffer(),
-      Buffer.from('sale_delegate'),
-      delegate.toBuffer(),
+      Buffer.from('persistent_delegate'),
       payer.publicKey.toBuffer(),
     ],
     PROGRAM_ID,
@@ -114,14 +123,11 @@ test('Delegate: create sale delegate', async (t) => {
     delegate: spokSamePubkey(delegate),
   });
 
-  const metadata = await Metadata.fromAccountAddress(connection, manager.metadata);
+  const pda = await DelegateRecord.fromAccountAddress(connection, delegateRecord);
 
-  spok(t, metadata, {
-    delegateState: {
-      delegate: spokSamePubkey(delegate),
-      role: DelegateRole.Sale,
-      hasData: false,
-    },
+  spok(t, pda, {
+    delegate: spokSamePubkey(delegate),
+    role: DelegateRole.Sale,
   });
 });
 
@@ -144,9 +150,10 @@ test('Delegate: create transfer delegate', async (t) => {
   // delegate PDA
   const [delegateRecord] = PublicKey.findProgramAddressSync(
     [
+      Buffer.from('metadata'),
+      PROGRAM_ID.toBuffer(),
       manager.mint.toBuffer(),
-      Buffer.from('transfer_delegate'),
-      delegate.toBuffer(),
+      Buffer.from('persistent_delegate'),
       payer.publicKey.toBuffer(),
     ],
     PROGRAM_ID,
@@ -182,14 +189,11 @@ test('Delegate: create transfer delegate', async (t) => {
     delegate: spokSamePubkey(delegate),
   });
 
-  const metadata = await Metadata.fromAccountAddress(connection, manager.metadata);
+  const pda = await DelegateRecord.fromAccountAddress(connection, delegateRecord);
 
-  spok(t, metadata, {
-    delegateState: {
-      delegate: spokSamePubkey(delegate),
-      role: DelegateRole.Transfer,
-      hasData: false,
-    },
+  spok(t, pda, {
+    delegate: spokSamePubkey(delegate),
+    role: DelegateRole.Transfer,
   });
 });
 
@@ -212,9 +216,10 @@ test('Delegate: fail to create sale delegate on NFT', async (t) => {
   // delegate PDA
   const [delegateRecord] = PublicKey.findProgramAddressSync(
     [
+      Buffer.from('metadata'),
+      PROGRAM_ID.toBuffer(),
       manager.mint.toBuffer(),
-      Buffer.from('sale_delegate'),
-      delegate.toBuffer(),
+      Buffer.from('persistent_delegate'),
       payer.publicKey.toBuffer(),
     ],
     PROGRAM_ID,

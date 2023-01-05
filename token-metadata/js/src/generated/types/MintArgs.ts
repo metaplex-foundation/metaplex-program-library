@@ -50,4 +50,4 @@ export const mintArgsBeet = beet.dataEnum<MintArgsRecord>([
       'MintArgsRecord["V1"]',
     ),
   ],
-]) as beet.FixableBeet<MintArgs, MintArgs>;
+]) as beet.FixableBeet<MintArgs>;

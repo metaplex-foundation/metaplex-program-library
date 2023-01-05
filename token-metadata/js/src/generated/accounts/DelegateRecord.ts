@@ -5,8 +5,8 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet';
 import * as web3 from '@solana/web3.js';
+import * as beet from '@metaplex-foundation/beet';
 import * as beetSolana from '@metaplex-foundation/beet-solana';
 import { Key, keyBeet } from '../types/Key';
 import { DelegateRole, delegateRoleBeet } from '../types/DelegateRole';
@@ -18,8 +18,9 @@ import { DelegateRole, delegateRoleBeet } from '../types/DelegateRole';
  */
 export type DelegateRecordArgs = {
   key: Key;
-  role: DelegateRole;
   bump: number;
+  role: DelegateRole;
+  delegate: web3.PublicKey;
 };
 /**
  * Holds the data for the {@link DelegateRecord} Account and provides de/serialization
@@ -29,13 +30,18 @@ export type DelegateRecordArgs = {
  * @category generated
  */
 export class DelegateRecord implements DelegateRecordArgs {
-  private constructor(readonly key: Key, readonly role: DelegateRole, readonly bump: number) {}
+  private constructor(
+    readonly key: Key,
+    readonly bump: number,
+    readonly role: DelegateRole,
+    readonly delegate: web3.PublicKey,
+  ) {}
 
   /**
    * Creates a {@link DelegateRecord} instance from the provided args.
    */
   static fromArgs(args: DelegateRecordArgs) {
-    return new DelegateRecord(args.key, args.role, args.bump);
+    return new DelegateRecord(args.key, args.bump, args.role, args.delegate);
   }
 
   /**
@@ -131,8 +137,9 @@ export class DelegateRecord implements DelegateRecordArgs {
   pretty() {
     return {
       key: 'Key.' + Key[this.key],
-      role: 'DelegateRole.' + DelegateRole[this.role],
       bump: this.bump,
+      role: 'DelegateRole.' + DelegateRole[this.role],
+      delegate: this.delegate.toBase58(),
     };
   }
 }
@@ -144,8 +151,9 @@ export class DelegateRecord implements DelegateRecordArgs {
 export const delegateRecordBeet = new beet.BeetStruct<DelegateRecord, DelegateRecordArgs>(
   [
     ['key', keyBeet],
-    ['role', delegateRoleBeet],
     ['bump', beet.u8],
+    ['role', delegateRoleBeet],
+    ['delegate', beetSolana.publicKey],
   ],
   DelegateRecord.fromArgs,
   'DelegateRecord',

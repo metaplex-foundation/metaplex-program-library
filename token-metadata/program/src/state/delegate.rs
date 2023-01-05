@@ -1,13 +1,16 @@
 use super::*;
 use crate::instruction::DelegateRole;
 
+pub const PERSISTENT_DELEGATE: &str = "persistent_delegate";
+
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, ShankAccount)]
 pub struct DelegateRecord {
     pub key: Key,           // 1
-    pub role: DelegateRole, // 1
     pub bump: u8,           // 1
+    pub role: DelegateRole, // 1
+    pub delegate: Pubkey,   // 32
 }
 
 impl Default for DelegateRecord {
@@ -16,6 +19,7 @@ impl Default for DelegateRecord {
             key: Key::Delegate,
             role: DelegateRole::Authority,
             bump: 255,
+            delegate: Pubkey::default(),
         }
     }
 }

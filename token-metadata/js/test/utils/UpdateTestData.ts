@@ -24,10 +24,10 @@ export class UpdateTestData {
     this.data = null;
     this.primarySaleHappened = null;
     this.isMutable = null;
-    this.collection = { __kind: "None" };
-    this.uses = { __kind: "None" };
-    this.collectionDetails = { __kind: "None" };
+    this.collection = { __kind: 'None' };
+    this.uses = { __kind: 'None' };
+    this.collectionDetails = { __kind: 'None' };
     this.authorizationData = null;
-    this.programmableConfig = { __kind: "None" };
+    this.programmableConfig = { __kind: 'None' };
   }
 }

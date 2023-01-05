@@ -50,6 +50,7 @@ mod delegate {
         let user = Keypair::new();
         let user_pubkey = user.pubkey();
         let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+        let payer_pubkey = payer.pubkey();
 
         asset
             .delegate(
@@ -62,15 +63,19 @@ mod delegate {
             .await
             .unwrap();
 
-        let metadata_account = get_account(&mut context, &asset.metadata).await;
-        let metadata: Metadata = try_from_slice_unchecked(&metadata_account.data).unwrap();
-        let delegate_state = metadata.delegate_state.unwrap();
-
-        assert_eq!(delegate_state.delegate, user_pubkey /* delegate */);
-        assert_eq!(
-            delegate_state.role,
-            DelegateRole::Transfer /* transfer delegate */
+        let (pda_key, _) = find_delegate_account(
+            &asset.mint.pubkey(),
+            DelegateRole::Transfer,
+            &payer_pubkey,
+            &user_pubkey,
         );
+
+        let pda = get_account(&mut context, &pda_key).await;
+        let delegate_record: DelegateRecord = try_from_slice_unchecked(&pda.data).unwrap();
+
+        assert_eq!(delegate_record.key, Key::Delegate);
+        assert_eq!(delegate_record.delegate, user_pubkey);
+        assert_eq!(delegate_record.role, DelegateRole::Transfer);
 
         if let Some(token) = asset.token {
             let account = get_account(&mut context, &token).await;
@@ -108,19 +113,12 @@ mod delegate {
         let metadata: Metadata = try_from_slice_unchecked(&metadata_account.data).unwrap();
         assert_eq!(metadata.update_authority, context.payer.pubkey());
 
-        // delegates the asset for transfer
+        // creates a collection delegate
 
         let user = Keypair::new();
         let user_pubkey = user.pubkey();
         let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
-
-        // delegate PDA
-        let (delegate_record, _) = find_delegate_account(
-            &asset.mint.pubkey(),
-            DelegateRole::Collection,
-            &user_pubkey,
-            &payer.pubkey(),
-        );
+        let payer_pubkey = payer.pubkey();
 
         asset
             .delegate(
@@ -135,10 +133,18 @@ mod delegate {
 
         // asserts
 
-        let delegate_account = get_account(&mut context, &delegate_record).await;
-        let delegate: DelegateRecord = DelegateRecord::from_bytes(&delegate_account.data).unwrap();
-        assert_eq!(delegate.key, Key::Delegate);
-        assert_eq!(delegate.role, DelegateRole::Collection);
+        // delegate PDA
+        let (pda_key, _) = find_delegate_account(
+            &asset.mint.pubkey(),
+            DelegateRole::Collection,
+            &payer_pubkey,
+            &user_pubkey,
+        );
+
+        let pda = get_account(&mut context, &pda_key).await;
+        let delegate_record: DelegateRecord = DelegateRecord::from_bytes(&pda.data).unwrap();
+        assert_eq!(delegate_record.key, Key::Delegate);
+        assert_eq!(delegate_record.role, DelegateRole::Collection);
     }
 
     #[tokio::test]
@@ -168,20 +174,20 @@ mod delegate {
         let payer_pubkey = context.payer.pubkey();
 
         // delegate PDA
-        let (delegate, _) = find_delegate_account(
+        let (pda_key, _) = find_delegate_account(
             &asset.mint.pubkey(),
             DelegateRole::Sale,
-            &user_pubkey,
             &payer_pubkey,
+            &user_pubkey,
         );
 
         let delegate_ix = DelegateBuilder::new()
-            .delegate_record(delegate)
+            .delegate_record(pda_key)
             .delegate(user_pubkey)
             .mint(asset.mint.pubkey())
             .metadata(asset.metadata)
             .master_edition(asset.master_edition.unwrap())
-            .authority(payer_pubkey)
+            .namespace(payer_pubkey)
             .payer(payer_pubkey)
             .token(asset.token.unwrap())
             .build(DelegateArgs::SaleV1 { amount: 1 })
@@ -199,15 +205,12 @@ mod delegate {
 
         // asserts
 
-        let metadata_account = get_account(&mut context, &asset.metadata).await;
-        let metadata: Metadata = try_from_slice_unchecked(&metadata_account.data).unwrap();
-        let delegate_state = metadata.delegate_state.unwrap();
+        let pda = get_account(&mut context, &pda_key).await;
+        let delegate_record: DelegateRecord = try_from_slice_unchecked(&pda.data).unwrap();
 
-        assert_eq!(delegate_state.delegate, user_pubkey /* delegate */);
-        assert_eq!(
-            delegate_state.role,
-            DelegateRole::Sale
-        );
+        assert_eq!(delegate_record.key, Key::Delegate);
+        assert_eq!(delegate_record.delegate, user_pubkey);
+        assert_eq!(delegate_record.role, DelegateRole::Sale);
 
         if let Some(token) = asset.token {
             let account = get_account(&mut context, &token).await;
@@ -242,20 +245,20 @@ mod delegate {
         let payer_pubkey = context.payer.pubkey();
 
         // delegate PDA
-        let (delegate, _) = find_delegate_account(
+        let (pda_key, _) = find_delegate_account(
             &asset.mint.pubkey(),
             DelegateRole::Sale,
-            &user_pubkey,
             &payer_pubkey,
+            &user_pubkey,
         );
 
         let delegate_ix = DelegateBuilder::new()
-            .delegate_record(delegate)
+            .delegate_record(pda_key)
             .delegate(user_pubkey)
             .mint(asset.mint.pubkey())
             .metadata(asset.metadata)
             .master_edition(asset.master_edition.unwrap())
-            .authority(payer_pubkey)
+            .namespace(payer_pubkey)
             .payer(payer_pubkey)
             .token(asset.token.unwrap())
             .build(DelegateArgs::SaleV1 { amount: 1 })

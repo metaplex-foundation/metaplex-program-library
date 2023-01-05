@@ -2349,7 +2349,7 @@
           "name": "metadata",
           "isMut": true,
           "isSigner": false,
-          "desc": "Metadata account key (pda of ['metadata', program id, mint id])"
+          "desc": "Unallocated metadata account with address as pda of ['metadata', program id, mint id]"
         },
         {
           "name": "masterEdition",
@@ -2380,7 +2380,7 @@
           "name": "updateAuthority",
           "isMut": false,
           "isSigner": false,
-          "desc": "update authority info"
+          "desc": "Update authority for the metadata account"
         },
         {
           "name": "systemProgram",
@@ -2432,16 +2432,10 @@
           "optional": true
         },
         {
-          "name": "mint",
-          "isMut": true,
-          "isSigner": false,
-          "desc": "Mint of token asset"
-        },
-        {
           "name": "metadata",
           "isMut": false,
           "isSigner": false,
-          "desc": "Metadata account key (pda of ['metadata', program id, mint id])"
+          "desc": "Metadata account (pda of ['metadata', program id, mint id])"
         },
         {
           "name": "masterEdition",
@@ -2451,16 +2445,22 @@
           "optional": true
         },
         {
-          "name": "payer",
+          "name": "mint",
           "isMut": true,
-          "isSigner": true,
-          "desc": "Payer"
+          "isSigner": false,
+          "desc": "Mint of token asset"
         },
         {
           "name": "authority",
           "isMut": false,
           "isSigner": true,
           "desc": "(Mint or Update) authority"
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "desc": "Payer"
         },
         {
           "name": "systemProgram",
@@ -2764,19 +2764,6 @@
       "name": "Transfer",
       "accounts": [
         {
-          "name": "authority",
-          "isMut": true,
-          "isSigner": true,
-          "desc": "Transfer authority (token or delegate owner)"
-        },
-        {
-          "name": "delegateRecord",
-          "isMut": true,
-          "isSigner": false,
-          "desc": "Delegate record PDA",
-          "optional": true
-        },
-        {
           "name": "token",
           "isMut": true,
           "isSigner": false,
@@ -2820,22 +2807,23 @@
           "optional": true
         },
         {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "Transfer authority (token or delegate owner)"
+        },
+        {
+          "name": "delegateRecord",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Delegate record PDA",
+          "optional": true
+        },
+        {
           "name": "payer",
           "isMut": true,
           "isSigner": true,
           "desc": "Payer"
-        },
-        {
-          "name": "splTokenProgram",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "SPL Token Program"
-        },
-        {
-          "name": "splAtaProgram",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "SPL Associated Token Account program"
         },
         {
           "name": "systemProgram",
@@ -2848,6 +2836,18 @@
           "isMut": false,
           "isSigner": false,
           "desc": "Instructions sysvar account"
+        },
+        {
+          "name": "splTokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "SPL Token Program"
+        },
+        {
+          "name": "splAtaProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "SPL Associated Token Account program"
         },
         {
           "name": "authorizationRulesProgram",
@@ -2935,7 +2935,7 @@
           "name": "delegateRecord",
           "isMut": true,
           "isSigner": false,
-          "desc": "Delegate account key (pda of [mint id, delegate role, user id, authority id])"
+          "desc": "Delegate Record account"
         },
         {
           "name": "delegate",
@@ -2945,7 +2945,7 @@
         },
         {
           "name": "metadata",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false,
           "desc": "Metadata account"
         },
@@ -2966,14 +2966,14 @@
           "name": "token",
           "isMut": true,
           "isSigner": false,
-          "desc": "Owned Token Account of mint",
+          "desc": "Token account of mint",
           "optional": true
         },
         {
-          "name": "authority",
+          "name": "namespace",
           "isMut": false,
           "isSigner": true,
-          "desc": "Authority to approve the delegation"
+          "desc": "Namespace (update authority or token owner) to approve the delegation"
         },
         {
           "name": "payer",
@@ -3260,14 +3260,18 @@
             }
           },
           {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
             "name": "role",
             "type": {
               "defined": "DelegateRole"
             }
           },
           {
-            "name": "bump",
-            "type": "u8"
+            "name": "delegate",
+            "type": "publicKey"
           }
         ]
       }

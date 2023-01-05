@@ -492,7 +492,7 @@ pub fn update_primary_sale_happened_via_token(
     }
 }
 
-//- Instruction Builders trait implementation
+//-- Instruction Builders trait implementation
 
 /// Builds the instruction to create metadata and associated accounts.
 ///
@@ -570,17 +570,17 @@ impl InstructionBuilder for super::builders::Migrate {
     }
 }
 
-/// Mints tokens from a mint account.
+/// Builds the instruction to mint a token.
 ///
 /// # Accounts:
 ///
 ///   0. `[writable]` Token account key
 ///   1. `[optional]` Owner of the token account
-///   2. `[]` Mint of token asset
-///   3. `[]` Metadata account key (pda of ['metadata', program id, mint id])")]
-///   4. `[optional]` Master Edition account
-///   5. `[signer, writable]` Payer
-///   6. `[signer]` Authority (mint authority or metadata's update authority for NonFungible asests)
+///   2. `[]` Metadata account key (pda of ['metadata', program id, mint id])")]
+///   3. `[optional]` Master Edition account
+///   4. `[writable]` Mint of token asset
+///   5. `[signer]` Authority (mint authority or metadata's update authority for NonFungible asests)
+///   6. `[signer, writable]` Payer
 ///   7. `[]` System program
 ///   8. `[]` Instructions sysvar account
 ///   9. `[]` SPL Token program
@@ -592,11 +592,11 @@ impl InstructionBuilder for super::builders::Mint {
         let mut accounts = vec![
             AccountMeta::new(self.token, false),
             AccountMeta::new_readonly(self.token_owner.unwrap_or(crate::ID), false),
-            AccountMeta::new(self.mint, false),
             AccountMeta::new_readonly(self.metadata, false),
             AccountMeta::new_readonly(self.master_edition.unwrap_or(crate::ID), false),
-            AccountMeta::new(self.payer, true),
+            AccountMeta::new(self.mint, false),
             AccountMeta::new_readonly(self.authority, true),
+            AccountMeta::new(self.payer, true),
             AccountMeta::new_readonly(self.system_program, false),
             AccountMeta::new_readonly(self.sysvar_instructions, false),
             AccountMeta::new_readonly(self.spl_token_program, false),

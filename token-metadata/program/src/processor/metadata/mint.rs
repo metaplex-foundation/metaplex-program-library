@@ -23,20 +23,10 @@ use crate::{
 
 /// Mints tokens from a mint account.
 ///
-/// # Accounts:
-///
-///   0. `[writable`] Token account key
-///   1. `[]` Metadata account key (pda of ['metadata', program id, mint id])")]
-///   2. `[optional]` Master Edition account
-///   3. `[]` Mint of token asset
-///   4. `[signer, writable]` Payer
-///   5. `[signer]` Authority (mint authority or metadata's update authority for NonFungible asests)
-///   6. `[]` System program
-///   7. `[]` Instructions sysvar account
-///   8. `[]` SPL Token program
-///   9. `[]` SPL Associated Token Account program
-///   10. `[optional]` Token Authorization Rules program
-///   11. `[optional]` Token Authorization Rules account
+/// This instruction will also initialized the associated token account if it does not exist – in
+/// this case the `token_owner` will be required. When minting `*NonFungible` assets, the `authority`
+/// must be the update authority; in all other cases, it must be the mint authority from the mint
+/// account.
 pub fn mint<'a>(
     program_id: &Pubkey,
     accounts: &'a [AccountInfo<'a>],
@@ -113,7 +103,7 @@ pub fn mint_v1(program_id: &Pubkey, ctx: Context<Mint>, args: MintArgs) -> Progr
         */
     }
 
-    // validates the authority
+    // validates the authority:
     // - NonFungible must have a "valid" master edition
     // - Fungible must have the authority as the mint_authority
 
@@ -209,7 +199,7 @@ pub fn mint_v1(program_id: &Pubkey, ctx: Context<Mint>, args: MintArgs) -> Progr
             ];
 
             let (master_edition_key, bump) =
-                Pubkey::find_program_address(&signer_seeds, &crate::id());
+                Pubkey::find_program_address(&signer_seeds, program_id);
             let bump_seed = [bump];
             signer_seeds.push(&bump_seed);
 
@@ -225,13 +215,13 @@ pub fn mint_v1(program_id: &Pubkey, ctx: Context<Mint>, args: MintArgs) -> Progr
                 return Err(MetadataError::InvalidMasterEdition.into());
             }
 
+            // thaw the token account for programmable assets; the account
+            // is not frozen if we just initialized it
             if matches!(
                 metadata.token_standard,
                 Some(TokenStandard::ProgrammableNonFungible)
             ) && token_account.is_frozen()
             {
-                // thaw the token account for programmable assets; the account
-                // is not frozen if we just initialized it
                 thaw(
                     ctx.accounts.mint_info.clone(),
                     ctx.accounts.token_info.clone(),
@@ -257,11 +247,11 @@ pub fn mint_v1(program_id: &Pubkey, ctx: Context<Mint>, args: MintArgs) -> Progr
                 &[&signer_seeds],
             )?;
 
+            // programmable assets are always in a frozen state
             if matches!(
                 metadata.token_standard,
                 Some(TokenStandard::ProgrammableNonFungible)
             ) {
-                // programmable assets are always in a frozen state
                 freeze(
                     ctx.accounts.mint_info.clone(),
                     ctx.accounts.token_info.clone(),

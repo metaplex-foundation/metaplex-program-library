@@ -96,7 +96,7 @@ export function deserialize(buf: Buffer, offset = 0): [Metadata, number] {
       : tryReadOption(beet.coption(programmableConfigBeet), buf, cursor);
   cursor += programmableConfigDelta;
 
-  // programmable_config
+  // delegate_state
   const [delegateState, delegateStateDelta, delegateStateCorrupted] =
     tokenCorrupted || collectionCorrupted || usesCorrupted
       ? [null, NONE_BYTE_SIZE, true]
