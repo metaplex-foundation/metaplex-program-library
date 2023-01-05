@@ -56,4 +56,4 @@ export const createArgsBeet = beet.dataEnum<CreateArgsRecord>([
       'CreateArgsRecord["V1"]',
     ),
   ],
-]) as beet.FixableBeet<CreateArgs>;
+]) as beet.FixableBeet<CreateArgs, CreateArgs>;

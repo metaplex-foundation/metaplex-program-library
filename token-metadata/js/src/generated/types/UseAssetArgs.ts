@@ -47,4 +47,4 @@ export const useAssetArgsBeet = beet.dataEnum<UseAssetArgsRecord>([
       'UseAssetArgsRecord["V1"]',
     ),
   ],
-]) as beet.FixableBeet<UseAssetArgs>;
+]) as beet.FixableBeet<UseAssetArgs, UseAssetArgs>;

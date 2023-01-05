@@ -59,4 +59,4 @@ export const programmableConfigToggleBeet = beet.dataEnum<ProgrammableConfigTogg
       'ProgrammableConfigToggleRecord["Set"]',
     ),
   ],
-]) as beet.FixableBeet<ProgrammableConfigToggle>;
+]) as beet.FixableBeet<ProgrammableConfigToggle, ProgrammableConfigToggle>;
