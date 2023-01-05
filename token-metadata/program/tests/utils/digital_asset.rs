@@ -81,6 +81,7 @@ impl DigitalAsset {
             verified: true,
         }];
         asset.creators = Some(creators);
+        asset.rule_set = authorization_rules;
 
         let payer_pubkey = context.payer.pubkey();
         let mint_pubkey = self.mint.pubkey();
@@ -95,12 +96,6 @@ impl DigitalAsset {
             .update_authority(payer_pubkey)
             .initialize_mint(true)
             .update_authority_as_signer(true);
-
-        if let Some(authorization_rules) = authorization_rules {
-            asset.programmable_config = Some(ProgrammableConfig {
-                rule_set: authorization_rules,
-            });
-        }
 
         let master_edition = match token_standard {
             TokenStandard::NonFungible | TokenStandard::ProgrammableNonFungible => {

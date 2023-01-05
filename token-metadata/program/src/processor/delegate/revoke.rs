@@ -43,10 +43,10 @@ pub fn revoke<'a>(
         RevokeArgs::CollectionV1 => revoke_collection_v1(program_id, context, args),
         RevokeArgs::SaleV1 => {
             // the sale delegate is a special type of transfer
-            revoke_transfer_v1(program_id, context, args, DelegateRole::Sale)
+            revoke_transfer_delegate_v1(program_id, context, args, DelegateRole::Sale)
         }
         RevokeArgs::TransferV1 => {
-            revoke_transfer_v1(program_id, context, args, DelegateRole::Transfer)
+            revoke_transfer_delegate_v1(program_id, context, args, DelegateRole::Transfer)
         }
     }
 }
@@ -89,7 +89,7 @@ fn revoke_collection_v1(
     )
 }
 
-fn revoke_transfer_v1(
+fn revoke_transfer_delegate_v1(
     program_id: &Pubkey,
     ctx: Context<Revoke>,
     _args: RevokeArgs,

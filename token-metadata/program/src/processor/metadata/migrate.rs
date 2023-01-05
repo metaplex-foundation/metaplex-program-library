@@ -10,7 +10,10 @@ use crate::{
     assertions::metadata::assert_metadata_valid,
     error::MetadataError,
     instruction::{Context, Migrate, MigrateArgs},
-    state::{Metadata, MigrationType, ProgrammableConfig, TokenMetadataAccount, TokenStandard},
+    state::{
+        Metadata, MigrationType, ProgrammableConfig, ProgrammableState, TokenMetadataAccount,
+        TokenStandard,
+    },
     utils::{assert_edition_valid, assert_initialized, clean_write_metadata, thaw},
 };
 
@@ -147,9 +150,10 @@ pub fn migrate_v1(program_id: &Pubkey, ctx: Context<Migrate>, args: MigrateArgs)
 
             // Migrate the token.
             metadata.token_standard = Some(TokenStandard::ProgrammableNonFungible);
-            if let Some(rule_set) = rule_set {
-                metadata.programmable_config = Some(ProgrammableConfig { rule_set });
-            }
+            metadata.programmable_config = Some(ProgrammableConfig {
+                state: ProgrammableState::Initialized,
+                rule_set,
+            });
 
             clean_write_metadata(&mut metadata, metadata_info)?;
         }

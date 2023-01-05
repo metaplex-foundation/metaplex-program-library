@@ -4,7 +4,10 @@ use crate::{
         collection::assert_collection_update_is_valid, metadata::assert_data_valid,
         uses::assert_valid_use,
     },
-    instruction::{CollectionToggle, ProgrammableConfigToggle, UpdateArgs, CollectionDetailsToggle},
+    instruction::{
+        CollectionDetailsToggle, CollectionToggle, DelegateRole, ProgrammableConfigToggle,
+        UpdateArgs,
+    },
     utils::{clean_write_metadata, puff_out_data_fields},
 };
 
@@ -61,8 +64,9 @@ pub struct Metadata {
     pub collection_details: Option<CollectionDetails>,
     /// Programmable Config
     pub programmable_config: Option<ProgrammableConfig>,
-    /// Active delegate state (for now, only the sale and transfer delegates are persisted)
-    pub delegate_state: Option<DelegateState>,
+    /// If `persistent_delegate` is `Some` then there is a persistent
+    /// delegate set for this metadata account.
+    pub persistent_delegate: Option<DelegateRole>,
 }
 
 impl Metadata {
@@ -201,12 +205,14 @@ impl Metadata {
         asset_data.creators = self.data.creators;
         asset_data.primary_sale_happened = self.primary_sale_happened;
         asset_data.is_mutable = self.is_mutable;
-        asset_data.edition_nonce = self.edition_nonce;
         asset_data.collection = self.collection;
         asset_data.uses = self.uses;
         asset_data.collection_details = self.collection_details;
-        asset_data.programmable_config = self.programmable_config;
-        asset_data.delegate_state = self.delegate_state;
+        asset_data.rule_set = if let Some(programmable_config) = self.programmable_config {
+            programmable_config.rule_set
+        } else {
+            None
+        };
 
         asset_data
     }
@@ -227,7 +233,7 @@ impl Default for Metadata {
             uses: None,
             collection_details: None,
             programmable_config: None,
-            delegate_state: None,
+            persistent_delegate: None,
         }
     }
 }
@@ -250,6 +256,26 @@ impl borsh::de::BorshDeserialize for Metadata {
         let md = meta_deser_unchecked(buf)?;
         Ok(md)
     }
+}
+
+/// Configuration of the programmable rules.
+#[repr(C)]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+pub struct ProgrammableConfig {
+    pub state: ProgrammableState,
+    pub rule_set: Option<Pubkey>,
+}
+
+/// Programmable account state.
+#[repr(C)]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+pub enum ProgrammableState {
+    /// Account is initialized; operations are allowed on this account
+    Initialized,
+    /// Account has been frozen. No operations are allowed on this account.
+    Frozen,
 }
 
 #[cfg(test)]
