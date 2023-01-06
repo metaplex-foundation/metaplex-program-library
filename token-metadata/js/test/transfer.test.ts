@@ -134,7 +134,9 @@ test('Transfer: ProgrammableNonFungible (wallet-to-wallet)', async (t) => {
   );
 
   const metadataAccount = await Metadata.fromAccountAddress(connection, metadata);
-  spok(t, metadataAccount.programmableConfig!.ruleSet!, spokSamePubkey(ruleSetPda));
+  spok(t, metadataAccount.programmableConfig, {
+    ruleSet: spokSamePubkey(ruleSetPda),
+  });
 
   const tokenAccount = await getAccount(connection, token, 'confirmed', TOKEN_PROGRAM_ID);
   t.true(tokenAccount.amount.toString() === '1', 'token account amount equal to 1');
@@ -223,7 +225,9 @@ test('Transfer: ProgrammableNonFungible (program-owned)', async (t) => {
   );
 
   const metadataAccount = await Metadata.fromAccountAddress(connection, metadata);
-  spok(t, metadataAccount.programmableConfig!.ruleSet!, spokSamePubkey(ruleSetPda));
+  spok(t, metadataAccount.programmableConfig, {
+    ruleSet: spokSamePubkey(ruleSetPda),
+  });
 
   const tokenAccount = await getAccount(connection, token, 'confirmed', TOKEN_PROGRAM_ID);
   t.true(tokenAccount.amount.toString() === '1', 'token account amount equal to 1');
@@ -813,7 +817,9 @@ test('Transfer: ProgrammableNonFungible (uninitialized wallet-to-wallet)', async
   );
 
   const metadataAccount = await Metadata.fromAccountAddress(connection, metadata);
-  spok(t, metadataAccount.programmableConfig!.ruleSet!, spokSamePubkey(ruleSetPda));
+  spok(t, metadataAccount.programmableConfig, {
+    ruleSet: spokSamePubkey(ruleSetPda),
+  });
 
   const tokenAccount = await getAccount(connection, token, 'confirmed', TOKEN_PROGRAM_ID);
   t.true(tokenAccount.amount.toString() === '1', 'token account amount equal to 1');

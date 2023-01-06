@@ -1044,7 +1044,7 @@ test('Update: Update pNFT Config', async (t) => {
   });
 });
 
-test('Update: Fail to update ProgrammableConfig on NFT', async (t) => {
+test('Update: Fail to update rule set on NFT', async (t) => {
   const API = new InitTransactions();
   const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
 
@@ -1082,7 +1082,7 @@ test('Update: Fail to update ProgrammableConfig on NFT', async (t) => {
   await updateTx.assertError(t, /Invalid token standard/);
 });
 
-test('Update: Update existing pNFT config to None', async (t) => {
+test('Update: Update existing pNFT rule set config to None', async (t) => {
   const API = new InitTransactions();
   const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
 
@@ -1152,7 +1152,9 @@ test('Update: Update existing pNFT config to None', async (t) => {
 
   const updatedMetadata = await Metadata.fromAccountAddress(connection, metadata);
 
-  t.equal(updatedMetadata.programmableConfig!.ruleSet, null);
+  spok(t, updatedMetadata.programmableConfig, {
+    ruleSet: null,
+  });
 });
 
 test('Update: Invalid Update Authority Fails', async (t) => {
