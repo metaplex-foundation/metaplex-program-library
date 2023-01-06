@@ -168,7 +168,7 @@ mod update {
         assert_eq!(
             metadata.programmable_config,
             Some(ProgrammableConfig {
-                state: ProgrammableState::Initialized,
+                state: ProgrammableState::Unlocked,
                 rule_set: None,
             })
         );

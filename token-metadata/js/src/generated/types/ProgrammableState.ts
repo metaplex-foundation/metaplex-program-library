@@ -11,8 +11,8 @@ import * as beet from '@metaplex-foundation/beet';
  * @category generated
  */
 export enum ProgrammableState {
-  Initialized,
-  Frozen,
+  Unlocked,
+  Locked,
 }
 
 /**

@@ -4702,10 +4702,10 @@
         "kind": "enum",
         "variants": [
           {
-            "name": "Initialized"
+            "name": "Unlocked"
           },
           {
-            "name": "Frozen"
+            "name": "Locked"
           }
         ]
       }

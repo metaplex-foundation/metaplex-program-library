@@ -151,7 +151,7 @@ pub fn migrate_v1(program_id: &Pubkey, ctx: Context<Migrate>, args: MigrateArgs)
             // Migrate the token.
             metadata.token_standard = Some(TokenStandard::ProgrammableNonFungible);
             metadata.programmable_config = Some(ProgrammableConfig {
-                state: ProgrammableState::Initialized,
+                state: ProgrammableState::Unlocked,
                 rule_set,
             });
 

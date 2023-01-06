@@ -171,11 +171,12 @@ impl Metadata {
                 return Err(MetadataError::InvalidTokenStandard.into());
             }
 
-            let programmable_config = if let Some(programmable_config) = &mut self.programmable_config {
-                programmable_config
-            } else {
-                return Err(MetadataError::MissingProgrammableConfig.into());
-            };
+            let programmable_config =
+                if let Some(programmable_config) = &mut self.programmable_config {
+                    programmable_config
+                } else {
+                    return Err(MetadataError::MissingProgrammableConfig.into());
+                };
 
             programmable_config.rule_set = rule_set.to_option();
         }
@@ -274,10 +275,10 @@ pub struct ProgrammableConfig {
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub enum ProgrammableState {
-    /// Account is initialized; operations are allowed on this account
-    Initialized,
-    /// Account has been frozen. No operations are allowed on this account.
-    Frozen,
+    /// Account is unlocked; operations are allowed on this account.
+    Unlocked,
+    /// Account has been locked; no operations are allowed on this account.
+    Locked,
 }
 
 #[cfg(test)]

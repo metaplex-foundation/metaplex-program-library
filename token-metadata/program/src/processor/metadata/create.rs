@@ -160,7 +160,7 @@ fn create_v1(program_id: &Pubkey, ctx: Context<Create>, args: CreateArgs) -> Pro
         TokenStandard::ProgrammableNonFungible
     ) {
         metadata.programmable_config = Some(ProgrammableConfig {
-            state: ProgrammableState::Initialized,
+            state: ProgrammableState::Unlocked,
             rule_set: asset_data.rule_set,
         });
     }
