@@ -23,7 +23,7 @@ mod create {
     use mpl_token_metadata::{
         error::MetadataError,
         instruction::{builders::CreateBuilder, CreateArgs, InstructionBuilder},
-        state::{AssetData, Metadata, ProgrammableConfig, TokenStandard, EDITION, PREFIX},
+        state::{AssetData, Metadata, ProgrammableState, TokenStandard, EDITION, PREFIX, ProgrammableConfig},
     };
     use solana_program::borsh::try_from_slice_unchecked;
 
@@ -47,9 +47,8 @@ mod create {
             context.payer.pubkey(),
         );
         asset.seller_fee_basis_points = 500;
-        asset.programmable_config = Some(ProgrammableConfig {
-            rule_set: Pubkey::from_str("Cex6GAMtCwD9E17VsEK4rQTbmcVtSdHxWcxhwdwXkuAN").unwrap(),
-        });
+        asset.rule_set =
+            Some(Pubkey::from_str("Cex6GAMtCwD9E17VsEK4rQTbmcVtSdHxWcxhwdwXkuAN").unwrap());
 
         // build the mint transaction
 
@@ -119,12 +118,14 @@ mod create {
         );
         assert_eq!(metadata.uses, None);
         assert_eq!(metadata.collection, None);
-        assert_eq!(
-            metadata.programmable_config,
-            Some(ProgrammableConfig {
-                rule_set: Pubkey::from_str("Cex6GAMtCwD9E17VsEK4rQTbmcVtSdHxWcxhwdwXkuAN").unwrap(),
-            })
-        );
+        if let Some(config) = metadata.programmable_config {
+            assert_eq!(
+                config.rule_set,
+                Some(Pubkey::from_str("Cex6GAMtCwD9E17VsEK4rQTbmcVtSdHxWcxhwdwXkuAN").unwrap())
+            );
+        } else {
+            panic!("Missing programmable config");
+        }
     }
 
     #[tokio::test]
@@ -225,7 +226,13 @@ mod create {
         );
         assert_eq!(metadata.uses, None);
         assert_eq!(metadata.collection, None);
-        assert_eq!(metadata.programmable_config, None);
+        assert_eq!(
+            metadata.programmable_config,
+            Some(ProgrammableConfig {
+                state: ProgrammableState::Initialized,
+                rule_set: None
+            })
+        );
     }
 
     #[tokio::test]

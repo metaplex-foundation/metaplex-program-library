@@ -13,10 +13,7 @@ use super::InstructionBuilder;
 use crate::{
     instruction::MetadataInstruction,
     processor::AuthorizationData,
-    state::{
-        AssetData, Collection, CollectionDetails, Creator, Data, DataV2, MigrationType,
-        ProgrammableConfig, Uses,
-    },
+    state::{AssetData, Collection, CollectionDetails, Creator, Data, DataV2, MigrationType, Uses},
 };
 
 #[repr(C)]
@@ -107,8 +104,8 @@ pub enum UpdateArgs {
         collection_details: CollectionDetailsToggle,
         /// Uses information.
         uses: UsesToggle,
-        // Programmable configuration (only applicable to `Programmable` asset types).
-        programmable_config: ProgrammableConfigToggle,
+        // Programmable rule set configuration (only applicable to `Programmable` asset types).
+        rule_set: RuleSetToggle,
     },
 }
 
@@ -132,7 +129,7 @@ impl Default for UpdateArgs {
             collection: CollectionToggle::None,
             uses: UsesToggle::None,
             collection_details: CollectionDetailsToggle::None,
-            programmable_config: ProgrammableConfigToggle::None,
+            rule_set: RuleSetToggle::None,
         }
     }
 }
@@ -250,37 +247,34 @@ impl CollectionDetailsToggle {
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
-pub enum ProgrammableConfigToggle {
+pub enum RuleSetToggle {
     None,
     Clear,
-    Set(ProgrammableConfig),
+    Set(Pubkey),
 }
 
-impl ProgrammableConfigToggle {
+impl RuleSetToggle {
     pub fn is_some(&self) -> bool {
-        matches!(
-            self,
-            ProgrammableConfigToggle::Clear | ProgrammableConfigToggle::Set(_)
-        )
+        matches!(self, RuleSetToggle::Clear | RuleSetToggle::Set(_))
     }
 
     pub fn is_none(&self) -> bool {
-        matches!(self, ProgrammableConfigToggle::None)
+        matches!(self, RuleSetToggle::None)
     }
 
     pub fn is_clear(&self) -> bool {
-        matches!(self, ProgrammableConfigToggle::Clear)
+        matches!(self, RuleSetToggle::Clear)
     }
 
     pub fn is_set(&self) -> bool {
-        matches!(self, ProgrammableConfigToggle::Set(_))
+        matches!(self, RuleSetToggle::Set(_))
     }
 
-    pub fn to_option(self) -> Option<ProgrammableConfig> {
+    pub fn to_option(self) -> Option<Pubkey> {
         match self {
-            ProgrammableConfigToggle::Set(t) => Some(t),
-            ProgrammableConfigToggle::Clear => None,
-            ProgrammableConfigToggle::None => panic!("Tried to convert 'None' value"),
+            RuleSetToggle::Set(t) => Some(t),
+            RuleSetToggle::Clear => None,
+            RuleSetToggle::None => panic!("Tried to convert 'None' value"),
         }
     }
 }
@@ -625,31 +619,25 @@ impl InstructionBuilder for super::builders::Mint {
 ///
 /// # Accounts:
 ///
-///   0. `[signer, writable]` Transfer authority (token or delegate owner)
-///   1. `[optional, writable]` Delegate record PDA
-///   2. `[writable]` Token account
-///   3. `[]` Token account owner")]
-///   4. `[writable]` Destination token account
-///   5. `[]` Destination token account owner
-///   6. `[]` Mint of token asset
-///   8. `[writable]` Metadata (pda of ['metadata', program id, mint id])
-///   9. `[optional]` Edition of token asset
-///   10. `[signer, writable]` Payer
-///   11. `[]` SPL Token Program
-///   12. `[]` SPL Associated Token Account program
-///   13. `[]` System Program
-///   14. `[]` Instructions sysvar account
-///   15. `[optional]` Token Authorization Rules Program
-///   16. `[optional]` Token Authorization Rules account
+///   0. `[writable]` Token account
+///   1. `[]` Token account owner
+///   2. `[writable]` Destination token account
+///   3. `[]` Destination token account owner
+///   4. `[]` Mint of token asset
+///   5. `[writable]` Metadata account
+///   6. `[optional]` Edition of token asset
+///   7. `[signer] Transfer authority (token or delegate owner)
+///   8. `[optional, writable]` Delegate record PDA
+///   9. `[signer, writable]` Payer
+///   10. `[]` System Program
+///   11. `[]` Instructions sysvar account
+///   12. `[]` SPL Token Program
+///   13. `[]` SPL Associated Token Account program
+///   14. `[optional]` Token Authorization Rules Program
+///   15. `[optional]` Token Authorization Rules account
 impl InstructionBuilder for super::builders::Transfer {
     fn instruction(&self) -> solana_program::instruction::Instruction {
         let mut accounts = vec![
-            AccountMeta::new(self.authority, true),
-            if let Some(delegate_record) = self.delegate_record {
-                AccountMeta::new(delegate_record, false)
-            } else {
-                AccountMeta::new_readonly(crate::ID, false)
-            },
             AccountMeta::new(self.token, false),
             AccountMeta::new_readonly(self.token_owner, false),
             AccountMeta::new(self.destination, false),
@@ -657,11 +645,17 @@ impl InstructionBuilder for super::builders::Transfer {
             AccountMeta::new_readonly(self.mint, false),
             AccountMeta::new(self.metadata, false),
             AccountMeta::new_readonly(self.edition.unwrap_or(crate::ID), false),
+            AccountMeta::new_readonly(self.authority, true),
+            if let Some(delegate_record) = self.delegate_record {
+                AccountMeta::new(delegate_record, false)
+            } else {
+                AccountMeta::new_readonly(crate::ID, false)
+            },
             AccountMeta::new(self.payer, true),
-            AccountMeta::new_readonly(self.spl_token_program, false),
-            AccountMeta::new_readonly(self.spl_ata_program, false),
             AccountMeta::new_readonly(self.system_program, false),
             AccountMeta::new_readonly(self.sysvar_instructions, false),
+            AccountMeta::new_readonly(self.spl_token_program, false),
+            AccountMeta::new_readonly(self.spl_ata_program, false),
         ];
         // Optional authorization rules accounts
         if let Some(rules) = &self.authorization_rules {

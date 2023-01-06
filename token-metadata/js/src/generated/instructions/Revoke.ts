@@ -36,13 +36,13 @@ export const RevokeStruct = new beet.BeetArgsStruct<
 /**
  * Accounts required by the _Revoke_ instruction
  *
- * @property [_writable_] delegateRecord Delegate account key (pda of [mint id, delegate role, user id, authority id])
+ * @property [_writable_] delegateRecord Delegate account
  * @property [] delegate Owner of the delegated account
  * @property [_writable_] metadata Metadata account
  * @property [] masterEdition (optional) Master Edition account
  * @property [] mint Mint of metadata
- * @property [_writable_] token (optional) Owned Token Account of mint
- * @property [**signer**] authority Authority to approve the delegation
+ * @property [_writable_] token (optional) Token account of mint
+ * @property [**signer**] approver Approver (update authority or token owner) for the delegation
  * @property [_writable_, **signer**] payer Payer
  * @property [] sysvarInstructions Instructions sysvar account
  * @property [] splTokenProgram (optional) SPL Token Program
@@ -59,7 +59,7 @@ export type RevokeInstructionAccounts = {
   masterEdition?: web3.PublicKey;
   mint: web3.PublicKey;
   token?: web3.PublicKey;
-  authority: web3.PublicKey;
+  approver: web3.PublicKey;
   payer: web3.PublicKey;
   systemProgram?: web3.PublicKey;
   sysvarInstructions: web3.PublicKey;
@@ -124,7 +124,7 @@ export function createRevokeInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.authority,
+      pubkey: accounts.approver,
       isWritable: false,
       isSigner: true,
     },

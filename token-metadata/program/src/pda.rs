@@ -83,7 +83,7 @@ pub fn find_program_as_burner_account() -> (Pubkey, u8) {
 pub fn find_delegate_account(
     mint: &Pubkey,
     role: DelegateRole,
-    namespace: &Pubkey,
+    approver: &Pubkey,
     delegate: &Pubkey,
 ) -> (Pubkey, u8) {
     if matches!(
@@ -96,7 +96,7 @@ pub fn find_delegate_account(
                 crate::id().as_ref(),
                 mint.as_ref(),
                 PERSISTENT_DELEGATE.as_bytes(),
-                namespace.as_ref(),
+                approver.as_ref(),
             ],
             &crate::id(),
         )
@@ -107,7 +107,7 @@ pub fn find_delegate_account(
                 crate::id().as_ref(),
                 mint.as_ref(),
                 role.to_string().as_bytes(),
-                namespace.as_ref(),
+                approver.as_ref(),
                 delegate.as_ref(),
             ],
             &crate::id(),

@@ -275,6 +275,7 @@ export class InitTransactions {
     authorizationRules: PublicKey,
     amount: number,
     handler: PayerTransactionHandler,
+    delegateRecord: PublicKey | null = null,
   ): Promise<{ tx: ConfirmedTransactionAssertablePromise }> {
     amman.addr.addLabel('Mint Account', mint);
     amman.addr.addLabel('Metadata Account', metadata);
@@ -303,6 +304,7 @@ export class InitTransactions {
       sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
       authorizationRules,
       authorizationRulesProgram: TOKEN_AUTH_RULES_ID,
+      delegateRecord,
     };
 
     const transferArgs: TransferInstructionArgs = {
@@ -365,7 +367,7 @@ export class InitTransactions {
         collection: updateTestData.collection,
         uses: updateTestData.uses,
         collectionDetails: updateTestData.collectionDetails,
-        programmableConfig: updateTestData.programmableConfig,
+        ruleSet: updateTestData.ruleSet,
         authorizationData,
         authorityType,
       },
@@ -386,7 +388,7 @@ export class InitTransactions {
     mint: PublicKey,
     metadata: PublicKey,
     masterEdition: PublicKey,
-    namespace: PublicKey,
+    approver: PublicKey,
     payer: Keypair,
     args: DelegateArgs,
     handler: PayerTransactionHandler,
@@ -400,7 +402,7 @@ export class InitTransactions {
       masterEdition,
       mint,
       token,
-      namespace,
+      approver,
       payer: payer.publicKey,
       sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
       splTokenProgram: splToken.TOKEN_PROGRAM_ID,
@@ -443,7 +445,7 @@ export class InitTransactions {
       masterEdition,
       mint,
       token,
-      authority,
+      approver: authority,
       payer: payer.publicKey,
       sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
       splTokenProgram: splToken.TOKEN_PROGRAM_ID,

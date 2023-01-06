@@ -11,7 +11,7 @@ import {
   TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
 import * as splToken from '@solana/spl-token';
-import { Metadata, ProgrammableConfig, DelegateArgs, TokenStandard } from 'src/generated';
+import { Metadata, DelegateArgs, TokenStandard, PROGRAM_ID } from '../src/generated';
 import { PROGRAM_ID as TOKEN_AUTH_RULES_ID } from '@metaplex-foundation/mpl-token-auth-rules';
 import { PROGRAM_ID as TOKEN_METADATA_ID } from '../src/generated';
 import { encode } from '@msgpack/msgpack';
@@ -122,11 +122,6 @@ test('Transfer: ProgrammableNonFungible (wallet-to-wallet)', async (t) => {
   );
   await createRuleSetTx.assertSuccess(t);
 
-  // Set up our programmable config with the ruleset PDA.
-  const programmableConfig: ProgrammableConfig = {
-    ruleSet: ruleSetPda,
-  };
-
   // Create an NFT with the programmable config stored on the metadata.
   const { mint, metadata, masterEdition, token } = await createAndMintDefaultAsset(
     t,
@@ -135,13 +130,11 @@ test('Transfer: ProgrammableNonFungible (wallet-to-wallet)', async (t) => {
     handler,
     payer,
     TokenStandard.ProgrammableNonFungible,
-    programmableConfig,
+    ruleSetPda,
   );
 
   const metadataAccount = await Metadata.fromAccountAddress(connection, metadata);
-  spok(t, metadataAccount.programmableConfig, {
-    ruleSet: spokSamePubkey(programmableConfig.ruleSet),
-  });
+  spok(t, metadataAccount.programmableConfig!.ruleSet!, spokSamePubkey(ruleSetPda));
 
   const tokenAccount = await getAccount(connection, token, 'confirmed', TOKEN_PROGRAM_ID);
   t.true(tokenAccount.amount.toString() === '1', 'token account amount equal to 1');
@@ -218,11 +211,6 @@ test('Transfer: ProgrammableNonFungible (program-owned)', async (t) => {
   );
   await createRuleSetTx.assertSuccess(t);
 
-  // Set up our programmable config with the ruleset PDA.
-  const programmableConfig: ProgrammableConfig = {
-    ruleSet: ruleSetPda,
-  };
-
   // Create an NFT with the programmable config stored on the metadata.
   const { mint, metadata, masterEdition, token } = await createAndMintDefaultAsset(
     t,
@@ -231,13 +219,11 @@ test('Transfer: ProgrammableNonFungible (program-owned)', async (t) => {
     handler,
     payer,
     TokenStandard.ProgrammableNonFungible,
-    programmableConfig,
+    ruleSetPda,
   );
 
   const metadataAccount = await Metadata.fromAccountAddress(connection, metadata);
-  spok(t, metadataAccount.programmableConfig, {
-    ruleSet: spokSamePubkey(programmableConfig.ruleSet),
-  });
+  spok(t, metadataAccount.programmableConfig!.ruleSet!, spokSamePubkey(ruleSetPda));
 
   const tokenAccount = await getAccount(connection, token, 'confirmed', TOKEN_PROGRAM_ID);
   t.true(tokenAccount.amount.toString() === '1', 'token account amount equal to 1');
@@ -549,12 +535,13 @@ test('Transfer: NonFungible asset with delegate', async (t) => {
   // Find delegate record Pda
   const [delegateRecord] = PublicKey.findProgramAddressSync(
     [
+      Buffer.from('metadata'),
+      PROGRAM_ID.toBuffer(),
       mint.toBuffer(),
-      Buffer.from('collection_delegate'),
-      delegate.publicKey.toBuffer(),
+      Buffer.from('persistent_delegate'),
       payer.publicKey.toBuffer(),
     ],
-    TOKEN_METADATA_ID,
+    PROGRAM_ID,
   );
 
   const delegateArgs: DelegateArgs = {
@@ -602,6 +589,7 @@ test('Transfer: NonFungible asset with delegate', async (t) => {
     null,
     amount,
     handler,
+    delegateRecord,
   );
 
   await fakeDelegateTransferTx.assertError(
@@ -623,6 +611,7 @@ test('Transfer: NonFungible asset with delegate', async (t) => {
     null,
     amount,
     handler,
+    delegateRecord,
   );
 
   await transferTx.assertSuccess(t);
@@ -722,11 +711,6 @@ test('Transfer: ProgrammableNonFungible asset with invalid authority', async (t)
   );
   await createRuleSetTx.assertSuccess(t);
 
-  // // Set up our programmable config with the ruleset PDA.
-  const programmableConfig: ProgrammableConfig = {
-    ruleSet: ruleSetPda,
-  };
-
   const { mint, metadata, masterEdition, token } = await createAndMintDefaultAsset(
     t,
     connection,
@@ -734,7 +718,7 @@ test('Transfer: ProgrammableNonFungible asset with invalid authority', async (t)
     handler,
     payer,
     TokenStandard.ProgrammableNonFungible,
-    programmableConfig,
+    ruleSetPda,
     1,
   );
 
@@ -817,11 +801,6 @@ test('Transfer: ProgrammableNonFungible (uninitialized wallet-to-wallet)', async
   );
   await createRuleSetTx.assertSuccess(t);
 
-  // Set up our programmable config with the ruleset PDA.
-  const programmableConfig: ProgrammableConfig = {
-    ruleSet: ruleSetPda,
-  };
-
   // Create an NFT with the programmable config stored on the metadata.
   const { mint, metadata, masterEdition, token } = await createAndMintDefaultAsset(
     t,
@@ -830,13 +809,11 @@ test('Transfer: ProgrammableNonFungible (uninitialized wallet-to-wallet)', async
     handler,
     payer,
     TokenStandard.ProgrammableNonFungible,
-    programmableConfig,
+    ruleSetPda,
   );
 
   const metadataAccount = await Metadata.fromAccountAddress(connection, metadata);
-  spok(t, metadataAccount.programmableConfig, {
-    ruleSet: spokSamePubkey(programmableConfig.ruleSet),
-  });
+  spok(t, metadataAccount.programmableConfig!.ruleSet!, spokSamePubkey(ruleSetPda));
 
   const tokenAccount = await getAccount(connection, token, 'confirmed', TOKEN_PROGRAM_ID);
   t.true(tokenAccount.amount.toString() === '1', 'token account amount equal to 1');

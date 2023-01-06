@@ -14,7 +14,7 @@ import { Data, dataBeet } from './Data';
 import { CollectionToggle, collectionToggleBeet } from './CollectionToggle';
 import { CollectionDetailsToggle, collectionDetailsToggleBeet } from './CollectionDetailsToggle';
 import { UsesToggle, usesToggleBeet } from './UsesToggle';
-import { ProgrammableConfigToggle, programmableConfigToggleBeet } from './ProgrammableConfigToggle';
+import { RuleSetToggle, ruleSetToggleBeet } from './RuleSetToggle';
 /**
  * This type is used to derive the {@link UpdateArgs} type as well as the de/serializer.
  * However don't refer to it in your code but use the {@link UpdateArgs} type instead.
@@ -35,7 +35,7 @@ export type UpdateArgsRecord = {
     collection: CollectionToggle;
     collectionDetails: CollectionDetailsToggle;
     uses: UsesToggle;
-    programmableConfig: ProgrammableConfigToggle;
+    ruleSet: RuleSetToggle;
   };
 };
 
@@ -73,9 +73,9 @@ export const updateArgsBeet = beet.dataEnum<UpdateArgsRecord>([
         ['collection', collectionToggleBeet],
         ['collectionDetails', collectionDetailsToggleBeet],
         ['uses', usesToggleBeet],
-        ['programmableConfig', programmableConfigToggleBeet],
+        ['ruleSet', ruleSetToggleBeet],
       ],
       'UpdateArgsRecord["V1"]',
     ),
   ],
-]) as beet.FixableBeet<UpdateArgs>;
+]) as beet.FixableBeet<UpdateArgs, UpdateArgs>;

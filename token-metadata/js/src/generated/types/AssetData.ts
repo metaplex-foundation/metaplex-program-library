@@ -13,8 +13,6 @@ import { TokenStandard, tokenStandardBeet } from './TokenStandard';
 import { Collection, collectionBeet } from './Collection';
 import { Uses, usesBeet } from './Uses';
 import { CollectionDetails, collectionDetailsBeet } from './CollectionDetails';
-import { ProgrammableConfig, programmableConfigBeet } from './ProgrammableConfig';
-import { DelegateState, delegateStateBeet } from './DelegateState';
 export type AssetData = {
   updateAuthority: web3.PublicKey;
   name: string;
@@ -24,13 +22,11 @@ export type AssetData = {
   creators: beet.COption<Creator[]>;
   primarySaleHappened: boolean;
   isMutable: boolean;
-  editionNonce: beet.COption<number>;
   tokenStandard: TokenStandard;
   collection: beet.COption<Collection>;
   uses: beet.COption<Uses>;
   collectionDetails: beet.COption<CollectionDetails>;
-  programmableConfig: beet.COption<ProgrammableConfig>;
-  delegateState: beet.COption<DelegateState>;
+  ruleSet: beet.COption<web3.PublicKey>;
 };
 
 /**
@@ -47,13 +43,11 @@ export const assetDataBeet = new beet.FixableBeetArgsStruct<AssetData>(
     ['creators', beet.coption(beet.array(creatorBeet))],
     ['primarySaleHappened', beet.bool],
     ['isMutable', beet.bool],
-    ['editionNonce', beet.coption(beet.u8)],
     ['tokenStandard', tokenStandardBeet],
     ['collection', beet.coption(collectionBeet)],
     ['uses', beet.coption(usesBeet)],
     ['collectionDetails', beet.coption(collectionDetailsBeet)],
-    ['programmableConfig', beet.coption(programmableConfigBeet)],
-    ['delegateState', beet.coption(delegateStateBeet)],
+    ['ruleSet', beet.coption(beetSolana.publicKey)],
   ],
   'AssetData',
 );

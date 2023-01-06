@@ -5,8 +5,7 @@ use crate::{
         uses::assert_valid_use,
     },
     instruction::{
-        CollectionDetailsToggle, CollectionToggle, DelegateRole, ProgrammableConfigToggle,
-        UpdateArgs,
+        CollectionDetailsToggle, CollectionToggle, DelegateRole, RuleSetToggle, UpdateArgs,
     },
     utils::{clean_write_metadata, puff_out_data_fields},
 };
@@ -90,7 +89,7 @@ impl Metadata {
             collection,
             uses,
             new_update_authority,
-            programmable_config,
+            rule_set,
             collection_details,
             ..
         } = args;
@@ -165,17 +164,20 @@ impl Metadata {
             .token_standard
             .ok_or(MetadataError::InvalidTokenStandard)?;
 
-        // if the ProgrammableConfig data is either 'Set' or 'Clear', only allow updating if the
+        // if the rule_set data is either 'Set' or 'Clear', only allow updating if the
         // token standard is equal to `ProgrammableNonFungible`
-        if matches!(
-            programmable_config,
-            ProgrammableConfigToggle::Clear | ProgrammableConfigToggle::Set(_)
-        ) {
+        if matches!(rule_set, RuleSetToggle::Clear | RuleSetToggle::Set(_)) {
             if token_standard != TokenStandard::ProgrammableNonFungible {
                 return Err(MetadataError::InvalidTokenStandard.into());
             }
 
-            self.programmable_config = programmable_config.to_option();
+            let programmable_config = if let Some(programmable_config) = &mut self.programmable_config {
+                programmable_config
+            } else {
+                return Err(MetadataError::MissingProgrammableConfig.into());
+            };
+
+            programmable_config.rule_set = rule_set.to_option();
         }
 
         if let CollectionDetailsToggle::Set(collection_details) = collection_details {

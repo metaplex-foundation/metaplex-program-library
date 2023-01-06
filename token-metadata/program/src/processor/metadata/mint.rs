@@ -12,7 +12,6 @@ use spl_token::state::{Account, Mint as MintAccount};
 use crate::{
     assertions::{
         assert_derivation, assert_initialized, assert_mint_authority_matches_mint, assert_owned_by,
-        programmable::assert_valid_authorization,
     },
     error::MetadataError,
     instruction::{Context, Mint, MintArgs},
@@ -63,7 +62,7 @@ pub fn mint_v1(program_id: &Pubkey, ctx: Context<Mint>, args: MintArgs) -> Progr
     }
 
     // validate authorization rules
-
+    /*
     if let Some(programmable_config) = &metadata.programmable_config {
         if let Some(auth_rules_program_info) = ctx.accounts.authorization_rules_program_info {
             if !cmp_pubkeys(auth_rules_program_info.key, &mpl_token_auth_rules::id()) {
@@ -79,7 +78,7 @@ pub fn mint_v1(program_id: &Pubkey, ctx: Context<Mint>, args: MintArgs) -> Progr
         };
 
         assert_valid_authorization(ctx.accounts.authorization_rules_info, programmable_config)?;
-        /*
+
         let mut auth_data = authorization_data.unwrap();
 
         // add the required input for the operation; since we are minting
@@ -100,8 +99,8 @@ pub fn mint_v1(program_id: &Pubkey, ctx: Context<Mint>, args: MintArgs) -> Progr
             ctx.accounts.token_info,
             &auth_data,
         )?;
-        */
     }
+    */
 
     // validates the authority:
     // - NonFungible must have a "valid" master edition

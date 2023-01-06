@@ -15,7 +15,7 @@ import { Collection, collectionBeet } from '../types/Collection';
 import { Uses, usesBeet } from '../types/Uses';
 import { CollectionDetails, collectionDetailsBeet } from '../types/CollectionDetails';
 import { ProgrammableConfig, programmableConfigBeet } from '../types/ProgrammableConfig';
-import { DelegateState, delegateStateBeet } from '../types/DelegateState';
+import { DelegateRole, delegateRoleBeet } from '../types/DelegateRole';
 import * as customSerializer from '../../custom/metadata-deserializer';
 
 /**
@@ -36,7 +36,7 @@ export type MetadataArgs = {
   uses: beet.COption<Uses>;
   collectionDetails: beet.COption<CollectionDetails>;
   programmableConfig: beet.COption<ProgrammableConfig>;
-  delegateState: beet.COption<DelegateState>;
+  persistentDelegate: beet.COption<DelegateRole>;
 };
 /**
  * Holds the data for the {@link Metadata} Account and provides de/serialization
@@ -59,7 +59,7 @@ export class Metadata implements MetadataArgs {
     readonly uses: beet.COption<Uses>,
     readonly collectionDetails: beet.COption<CollectionDetails>,
     readonly programmableConfig: beet.COption<ProgrammableConfig>,
-    readonly delegateState: beet.COption<DelegateState>,
+    readonly persistentDelegate: beet.COption<DelegateRole>,
   ) {}
 
   /**
@@ -79,7 +79,7 @@ export class Metadata implements MetadataArgs {
       args.uses,
       args.collectionDetails,
       args.programmableConfig,
-      args.delegateState,
+      args.persistentDelegate,
     );
   }
 
@@ -183,7 +183,7 @@ export class Metadata implements MetadataArgs {
       uses: this.uses,
       collectionDetails: this.collectionDetails,
       programmableConfig: this.programmableConfig,
-      delegateState: this.delegateState,
+      persistentDelegate: this.persistentDelegate,
     };
   }
 }
@@ -206,7 +206,7 @@ export const metadataBeet = new beet.FixableBeetStruct<Metadata, MetadataArgs>(
     ['uses', beet.coption(usesBeet)],
     ['collectionDetails', beet.coption(collectionDetailsBeet)],
     ['programmableConfig', beet.coption(programmableConfigBeet)],
-    ['delegateState', beet.coption(delegateStateBeet)],
+    ['persistentDelegate', beet.coption(delegateRoleBeet)],
   ],
   Metadata.fromArgs,
   'Metadata',

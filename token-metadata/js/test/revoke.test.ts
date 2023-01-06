@@ -36,9 +36,10 @@ test('Revoke: revoke transfer delegate', async (t) => {
   // delegate PDA
   const [delegateRecord] = PublicKey.findProgramAddressSync(
     [
+      Buffer.from('metadata'),
+      PROGRAM_ID.toBuffer(),
       manager.mint.toBuffer(),
-      Buffer.from('transfer_delegate'),
-      delegate.toBuffer(),
+      Buffer.from('persistent_delegate'),
       payer.publicKey.toBuffer(),
     ],
     PROGRAM_ID,
@@ -77,11 +78,7 @@ test('Revoke: revoke transfer delegate', async (t) => {
   let metadata = await Metadata.fromAccountAddress(connection, manager.metadata);
 
   spok(t, metadata, {
-    delegateState: {
-      delegate: spokSamePubkey(delegate),
-      role: DelegateRole.Transfer,
-      hasData: false,
-    },
+    persistentDelegate: DelegateRole.Transfer,
   });
 
   // revoke
@@ -104,6 +101,6 @@ test('Revoke: revoke transfer delegate', async (t) => {
   metadata = await Metadata.fromAccountAddress(connection, manager.metadata);
 
   spok(t, metadata, {
-    delegateState: null,
+    persistentDelegate: null,
   });
 });

@@ -24,13 +24,11 @@ test('Create: ProgrammableNonFungible asset', async (t) => {
     ],
     primarySaleHappened: false,
     isMutable: true,
-    editionNonce: null,
     tokenStandard: TokenStandard.ProgrammableNonFungible,
     collection: null,
     uses: null,
     collectionDetails: null,
-    programmableConfig: null,
-    delegateState: null,
+    ruleSet: null,
   };
 
   const { tx: transaction, metadata: address } = await API.create(t, payer, data, 0, 0, handler);
@@ -79,13 +77,11 @@ test('Create: ProgrammableNonFungible with existing mint account', async (t) => 
     ],
     primarySaleHappened: false,
     isMutable: true,
-    editionNonce: null,
     tokenStandard: TokenStandard.ProgrammableNonFungible,
     collection: null,
     uses: null,
     collectionDetails: null,
-    programmableConfig: null,
-    delegateState: null,
+    ruleSet: null,
   };
 
   const { tx: transaction, metadata: address } = await API.create(

@@ -1,9 +1,8 @@
 use borsh::BorshSerialize;
 use mpl_utils::{assert_signer, create_or_allocate_account_raw};
 use solana_program::{
-    account_info::AccountInfo, entrypoint::ProgramResult, program::invoke, program_pack::Pack,
+    account_info::AccountInfo, entrypoint::ProgramResult, msg, program::invoke, program_pack::Pack,
     pubkey::Pubkey,
-    msg,
 };
 use spl_token::state::Account;
 
@@ -54,14 +53,14 @@ fn collection_delegate_v1(
     assert_owned_by(ctx.accounts.mint_info, &spl_token::id())?;
 
     let asset_metadata = Metadata::from_account_info(ctx.accounts.metadata_info)?;
-    assert_update_authority_is_correct(&asset_metadata, ctx.accounts.namespace_info)?;
+    assert_update_authority_is_correct(&asset_metadata, ctx.accounts.approver_info)?;
 
     if asset_metadata.mint != *ctx.accounts.mint_info.key {
         return Err(MetadataError::MintMismatch.into());
     }
 
     assert_signer(ctx.accounts.payer_info)?;
-    assert_signer(ctx.accounts.namespace_info)?;
+    assert_signer(ctx.accounts.approver_info)?;
 
     if !ctx.accounts.delegate_record_info.data_is_empty() {
         return Err(MetadataError::DelegateAlreadyExists.into());
@@ -83,7 +82,7 @@ fn collection_delegate_v1(
             program_id.as_ref(),
             ctx.accounts.mint_info.key.as_ref(),
             role.as_bytes(),
-            ctx.accounts.namespace_info.key.as_ref(),
+            ctx.accounts.approver_info.key.as_ref(),
             ctx.accounts.delegate_info.key.as_ref(),
         ],
         ctx.accounts.payer_info,
@@ -106,7 +105,7 @@ fn sale_or_transfer_delegate_v1(
     assert_owned_by(ctx.accounts.metadata_info, program_id)?;
     assert_owned_by(ctx.accounts.mint_info, &spl_token::id())?;
     assert_signer(ctx.accounts.payer_info)?;
-    assert_signer(ctx.accounts.namespace_info)?;
+    assert_signer(ctx.accounts.approver_info)?;
 
     // sale or transfer delegates are always authorised by the token owner
     let token_info = if let Some(token_info) = ctx.accounts.token_info {
@@ -123,14 +122,14 @@ fn sale_or_transfer_delegate_v1(
             return Err(MetadataError::MissingSplTokenProgram.into());
         };
 
-    let metadata = Metadata::from_account_info(ctx.accounts.metadata_info)?;
+    let mut metadata = Metadata::from_account_info(ctx.accounts.metadata_info)?;
     if metadata.mint != *ctx.accounts.mint_info.key {
         return Err(MetadataError::MintMismatch.into());
     }
 
     // authority must be the owner of the token account
     let token_account = Account::unpack(&token_info.try_borrow_data()?).unwrap();
-    if token_account.owner != *ctx.accounts.namespace_info.key {
+    if token_account.owner != *ctx.accounts.approver_info.key {
         return Err(MetadataError::IncorrectOwner.into());
     }
 
@@ -160,14 +159,14 @@ fn sale_or_transfer_delegate_v1(
             spl_token_program_info.key,
             token_info.key,
             ctx.accounts.delegate_info.key,
-            ctx.accounts.namespace_info.key,
+            ctx.accounts.approver_info.key,
             &[],
             amount,
         )?,
         &[
             token_info.clone(),
             ctx.accounts.delegate_info.clone(),
-            ctx.accounts.namespace_info.clone(),
+            ctx.accounts.approver_info.clone(),
         ],
     )?;
 
@@ -192,7 +191,7 @@ fn sale_or_transfer_delegate_v1(
         program_id.as_ref(),
         ctx.accounts.mint_info.key.as_ref(),
         PERSISTENT_DELEGATE.as_bytes(),
-        ctx.accounts.namespace_info.key.as_ref(),
+        ctx.accounts.approver_info.key.as_ref(),
     ];
 
     // we create or replace the existing delegate (if there is one)
@@ -210,7 +209,11 @@ fn sale_or_transfer_delegate_v1(
     } else {
         msg!("Updating delegate pda");
         // validates the delegate derivation
-        assert_derivation(program_id, ctx.accounts.delegate_record_info, &delegate_seeds)?;
+        assert_derivation(
+            program_id,
+            ctx.accounts.delegate_record_info,
+            &delegate_seeds,
+        )?;
 
         // updates the pda information
         let mut pda = DelegateRecord::from_account_info(ctx.accounts.delegate_record_info)?;
@@ -218,6 +221,9 @@ fn sale_or_transfer_delegate_v1(
         pda.delegate = *ctx.accounts.delegate_info.key;
         pda.serialize(&mut *ctx.accounts.delegate_record_info.try_borrow_mut_data()?)?;
     }
+
+    metadata.persistent_delegate = Some(role);
+    metadata.save(&mut ctx.accounts.metadata_info.try_borrow_mut_data()?)?;
 
     Ok(())
 }
@@ -234,7 +240,11 @@ fn create_delegate_pda<'a>(
     // validates the delegate derivation
 
     let mut signer_seeds = seeds;
-    let bump = &[assert_derivation(program_id, delegate_record, &signer_seeds)?];
+    let bump = &[assert_derivation(
+        program_id,
+        delegate_record,
+        &signer_seeds,
+    )?];
     signer_seeds.push(bump);
 
     // allocate the delegate account

@@ -1,11 +1,11 @@
 import { PublicKey } from '@solana/web3.js';
 import {
   Data,
-  ProgrammableConfigToggle,
   AuthorizationData,
   CollectionToggle,
   UsesToggle,
   CollectionDetailsToggle,
+  RuleSetToggle,
 } from '../../src/generated';
 
 export class UpdateTestData {
@@ -16,7 +16,7 @@ export class UpdateTestData {
   collection: CollectionToggle;
   uses: UsesToggle;
   collectionDetails: CollectionDetailsToggle;
-  programmableConfig: ProgrammableConfigToggle;
+  ruleSet: RuleSetToggle;
   authorizationData: AuthorizationData;
 
   constructor() {
@@ -28,6 +28,6 @@ export class UpdateTestData {
     this.uses = { __kind: 'None' };
     this.collectionDetails = { __kind: 'None' };
     this.authorizationData = null;
-    this.programmableConfig = { __kind: 'None' };
+    this.ruleSet = { __kind: 'None' };
   }
 }
