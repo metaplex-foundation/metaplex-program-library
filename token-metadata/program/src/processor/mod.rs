@@ -45,6 +45,7 @@ use crate::{
         },
         escrow::process_transfer_out_of_escrow,
     },
+    state::{Key, Metadata, TokenMetadataAccount, TokenStandard},
 };
 
 #[repr(C)]
@@ -71,6 +72,67 @@ pub fn process_instruction<'a>(
     input: &[u8],
 ) -> ProgramResult {
     let instruction = MetadataInstruction::try_from_slice(input)?;
+
+    match instruction {
+        MetadataInstruction::Create(args) => {
+            msg!("Instruction: Token Metadata Create");
+            metadata::create(program_id, accounts, args)
+        }
+        MetadataInstruction::Mint(args) => {
+            msg!("Instruction: Token Metadata Mint");
+            metadata::mint(program_id, accounts, args)
+        }
+        MetadataInstruction::Update(args) => {
+            msg!("Instruction: Token Metadata Update");
+            metadata::update(program_id, accounts, args)
+        }
+        MetadataInstruction::Burn(args) => {
+            msg!("Instruction: Token Metadata Burn");
+            burn::burn(program_id, accounts, args)
+        }
+        MetadataInstruction::UseAsset(args) => {
+            msg!("Instruction: Token Metadata UseAsset");
+            uses::use_asset(program_id, accounts, args)
+        }
+        MetadataInstruction::Transfer(args) => {
+            msg!("Instruction: Token Metadata Transfer");
+            metadata::transfer(program_id, accounts, args)
+        }
+        MetadataInstruction::Verify(args) => {
+            msg!("Instruction: Token Metadata Verify");
+            collection::verify(program_id, accounts, args)
+        }
+        MetadataInstruction::Delegate(args) => {
+            msg!("Instruction: Token Metadata Delegate");
+            delegate::delegate(program_id, accounts, args)
+        }
+        MetadataInstruction::Migrate(args) => {
+            msg!("Instruction: Token Metadata Migrate");
+            metadata::migrate(program_id, accounts, args)
+        }
+        MetadataInstruction::Revoke(args) => {
+            msg!("Instruction: Token Metadata Revoke");
+            delegate::revoke(program_id, accounts, args)
+        }
+        _ => {
+            // pNFT accounts can only be used by the "new" API; before forwarding
+            // the transaction to the "legacy" processor we determine whether we are
+            // dealing with a pNFT or not
+            if !has_programmable_metadata(program_id, accounts)? {
+                process_legacy_instruction(program_id, accounts, instruction)
+            } else {
+                Err(MetadataError::InstructionNotSupported.into())
+            }
+        }
+    }
+}
+
+/// Matches "legacy" (pre-pNFT) instructions.
+fn process_legacy_instruction<'a>(
+    program_id: &'a Pubkey,
+    accounts: &'a [AccountInfo<'a>],
+    instruction: MetadataInstruction,
+) -> ProgramResult {
     match instruction {
         MetadataInstruction::CreateMetadataAccount(args) => {
             msg!("(Deprecated as of 1.1.0) Instruction: Create Metadata Accounts");
@@ -269,48 +331,7 @@ pub fn process_instruction<'a>(
             msg!("Instruction: Transfer Out Of Escrow");
             process_transfer_out_of_escrow(program_id, accounts, args)
         }
-
-        //--- new instructions
-        MetadataInstruction::Create(args) => {
-            msg!("Instruction: Token Metadata Create");
-            metadata::create(program_id, accounts, args)
-        }
-        MetadataInstruction::Mint(args) => {
-            msg!("Instruction: Token Metadata Mint");
-            metadata::mint(program_id, accounts, args)
-        }
-        MetadataInstruction::Update(args) => {
-            msg!("Instruction: Token Metadata Update");
-            metadata::update(program_id, accounts, args)
-        }
-        MetadataInstruction::Burn(args) => {
-            msg!("Instruction: Token Metadata Burn");
-            burn::burn(program_id, accounts, args)
-        }
-        MetadataInstruction::UseAsset(args) => {
-            msg!("Instruction: Token Metadata UseAsset");
-            uses::use_asset(program_id, accounts, args)
-        }
-        MetadataInstruction::Transfer(args) => {
-            msg!("Instruction: Token Metadata Transfer");
-            metadata::transfer(program_id, accounts, args)
-        }
-        MetadataInstruction::Verify(args) => {
-            msg!("Instruction: Token Metadata Verify");
-            collection::verify(program_id, accounts, args)
-        }
-        MetadataInstruction::Delegate(args) => {
-            msg!("Instruction: Token Metadata Delegate");
-            delegate::delegate(program_id, accounts, args)
-        }
-        MetadataInstruction::Migrate(args) => {
-            msg!("Instruction: Token Metadata Migrate");
-            metadata::migrate(program_id, accounts, args)
-        }
-        MetadataInstruction::Revoke(args) => {
-            msg!("Instruction: Token Metadata Revoke");
-            delegate::revoke(program_id, accounts, args)
-        }
+        _ => Err(ProgramError::InvalidInstructionData),
     }
 }
 
@@ -370,4 +391,32 @@ pub fn try_get_optional_account_info<'a>(
     } else {
         Err(ProgramError::NotEnoughAccountKeys)
     }
+}
+
+/// Checks if the instruction's accounts contain a pNFT metadata.
+///
+/// We need to determine if we are dealing with a pNFT metadata or not
+/// so we can restrict the available instructions.
+fn has_programmable_metadata<'a>(
+    program_id: &Pubkey,
+    accounts: &'a [AccountInfo],
+) -> Result<bool, ProgramError> {
+    for account_info in accounts {
+        if account_info.owner == program_id && !account_info.data_is_empty() {
+            let discriminator = account_info.data.borrow()[0];
+            // checks if the account is a Metadata account
+            if discriminator == Key::MetadataV1 as u8 {
+                let metadata = Metadata::from_account_info(account_info)?;
+
+                if matches!(
+                    metadata.token_standard,
+                    Some(TokenStandard::ProgrammableNonFungible)
+                ) {
+                    return Ok(true);
+                }
+            }
+        }
+    }
+
+    Ok(false)
 }

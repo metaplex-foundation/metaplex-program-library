@@ -600,6 +600,10 @@ pub enum MetadataError {
     /// 149
     #[error("Invalid transfer authority")]
     InvalidTransferAuthority,
+
+    /// 150
+    #[error("Instruction not supported for ProgrammableNonFungible assets")]
+    InstructionNotSupported,
 }
 
 impl PrintProgramError for MetadataError {
