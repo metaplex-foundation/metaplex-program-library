@@ -10,10 +10,7 @@ use mpl_token_metadata::{
     },
     pda::find_delegate_account,
     processor::AuthorizationData,
-    state::{
-        AssetData, Creator, Metadata, ProgrammableConfig, TokenMetadataAccount, TokenStandard,
-        EDITION, PREFIX,
-    },
+    state::{AssetData, Creator, Metadata, TokenMetadataAccount, TokenStandard, EDITION, PREFIX},
 };
 use solana_program::pubkey::Pubkey;
 use solana_program_test::{BanksClientError, ProgramTestContext};
@@ -81,6 +78,7 @@ impl DigitalAsset {
             verified: true,
         }];
         asset.creators = Some(creators);
+        asset.rule_set = authorization_rules;
 
         let payer_pubkey = context.payer.pubkey();
         let mint_pubkey = self.mint.pubkey();
@@ -95,12 +93,6 @@ impl DigitalAsset {
             .update_authority(payer_pubkey)
             .initialize_mint(true)
             .update_authority_as_signer(true);
-
-        if let Some(authorization_rules) = authorization_rules {
-            asset.programmable_config = Some(ProgrammableConfig {
-                rule_set: authorization_rules,
-            });
-        }
 
         let master_edition = match token_standard {
             TokenStandard::NonFungible | TokenStandard::ProgrammableNonFungible => {
@@ -228,7 +220,7 @@ impl DigitalAsset {
         // delegate PDA
         let (delegate_record, _) = find_delegate_account(
             &self.mint.pubkey(),
-            delegate_role.clone(),
+            delegate_role,
             &payer.pubkey(),
             &delegate,
         );
@@ -251,7 +243,7 @@ impl DigitalAsset {
             .mint(self.mint.pubkey())
             .metadata(self.metadata)
             .payer(payer.pubkey())
-            .namespace(payer.pubkey());
+            .approver(payer.pubkey());
 
         if let Some(edition) = self.master_edition {
             builder.master_edition(edition);
@@ -312,9 +304,9 @@ impl DigitalAsset {
         // delegate PDA
         let (delegate_record, _) = find_delegate_account(
             &self.mint.pubkey(),
-            delegate_role.clone(),
-            &delegate,
+            delegate_role,
             &authority.pubkey(),
+            &delegate,
         );
 
         let args = match delegate_role {
@@ -331,7 +323,7 @@ impl DigitalAsset {
             .mint(self.mint.pubkey())
             .metadata(self.metadata)
             .payer(authority.pubkey())
-            .authority(authority.pubkey());
+            .approver(authority.pubkey());
 
         if let Some(edition) = self.master_edition {
             builder.master_edition(edition);
@@ -357,6 +349,7 @@ impl DigitalAsset {
         let TransferParams {
             context,
             authority,
+            delegate_record,
             source_owner,
             destination_owner,
             destination_token,
@@ -388,8 +381,12 @@ impl DigitalAsset {
             .destination_owner(destination_owner)
             .destination(destination_token)
             .metadata(self.metadata)
-            .payer(*payer)
+            .payer(payer.pubkey())
             .mint(self.mint.pubkey());
+
+        if let Some(delegate_record) = delegate_record {
+            builder.delegate_record(delegate_record);
+        }
 
         if let Some(master_edition) = self.master_edition {
             builder.edition(master_edition);
@@ -406,7 +403,7 @@ impl DigitalAsset {
         let tx = Transaction::new_signed_with_payer(
             &instructions,
             Some(&authority.pubkey()),
-            &[authority],
+            &[authority, payer],
             context.last_blockhash,
         );
 
@@ -421,9 +418,7 @@ impl DigitalAsset {
             .unwrap()
             .unwrap();
 
-        let metadata = Metadata::safe_deserialize(&metadata_account.data).unwrap();
-
-        metadata
+        Metadata::safe_deserialize(&metadata_account.data).unwrap()
     }
 
     pub async fn get_asset_data(&self, context: &mut ProgramTestContext) -> AssetData {
@@ -449,7 +444,8 @@ pub struct TransferParams<'a> {
     pub source_owner: &'a Pubkey,
     pub destination_owner: Pubkey,
     pub destination_token: Option<Pubkey>,
-    pub payer: &'a Pubkey,
+    pub delegate_record: Option<Pubkey>,
+    pub payer: &'a Keypair,
     pub authorization_rules: Option<Pubkey>,
     pub args: TransferArgs,
 }

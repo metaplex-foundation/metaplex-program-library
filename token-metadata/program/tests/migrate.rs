@@ -11,7 +11,7 @@ mod migrate {
     use mpl_token_metadata::{
         error::MetadataError,
         instruction::MigrateArgs,
-        state::{MigrationType, ProgrammableConfig, TokenStandard},
+        state::{MigrationType, TokenStandard},
     };
     use solana_program::pubkey::Pubkey;
     use solana_sdk::{signature::Keypair, signer::Signer};
@@ -77,15 +77,17 @@ mod migrate {
             new_md.token_standard,
             Some(TokenStandard::ProgrammableNonFungible)
         );
-        assert_eq!(
-            new_md.programmable_config,
-            Some(ProgrammableConfig { rule_set })
-        );
+
+        if let Some(config) = new_md.programmable_config {
+            assert_eq!(config.rule_set, Some(rule_set));
+        } else {
+            panic!("Missing programmable config");
+        }
     }
 
     #[tokio::test]
     async fn migrate_invalid_collection_metadata() {
-        let mut context = &mut program_test().start_with_context().await;
+        let context = &mut program_test().start_with_context().await;
 
         let authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
         let amount = 1;
@@ -105,7 +107,7 @@ mod migrate {
         assert_eq!(md.token_standard, Some(TokenStandard::NonFungible));
 
         let err = asset
-            .migrate(&mut context, authority, Pubkey::new_unique(), args)
+            .migrate(context, authority, Pubkey::new_unique(), args)
             .await
             .unwrap_err();
 
@@ -114,14 +116,14 @@ mod migrate {
 
     #[tokio::test]
     async fn migrate_no_collection() {
-        let mut context = &mut program_test().start_with_context().await;
+        let context = &mut program_test().start_with_context().await;
 
         let authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
         let amount = 1;
 
         // Unsized collection
         let (collection_nft, _collection_me) =
-            Metadata::create_default_nft(&mut context).await.unwrap();
+            Metadata::create_default_nft(context).await.unwrap();
 
         let mut asset = DigitalAsset::new();
         asset
@@ -138,7 +140,7 @@ mod migrate {
         assert_eq!(md.token_standard, Some(TokenStandard::NonFungible));
 
         let err = asset
-            .migrate(&mut context, authority, collection_nft.pubkey, args)
+            .migrate(context, authority, collection_nft.pubkey, args)
             .await
             .unwrap_err();
 

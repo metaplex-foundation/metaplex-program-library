@@ -2,11 +2,10 @@ use solana_program::{account_info::AccountInfo, entrypoint::ProgramResult};
 
 use crate::{error::MetadataError, state::ProgrammableConfig};
 
-// If a programmable rule set is present,
-// then we need:
-// authorization rules and data
-// edition account
-// rule_set passed in by the user to match that stored in the metadata
+/// If a programmable rule set is present, then we need:
+///   1. authorization rules and data
+///   2. edition account
+///   3. rule_set passed in by the user to match that stored in the metadata
 pub(crate) fn assert_valid_authorization<'info>(
     authorization_rules: Option<&AccountInfo<'info>>,
     config: &ProgrammableConfig,
@@ -17,8 +16,10 @@ pub(crate) fn assert_valid_authorization<'info>(
     }
     let rules = authorization_rules.unwrap();
 
-    if &config.rule_set != rules.key {
-        return Err(MetadataError::InvalidAuthorizationRules.into());
+    if let Some(rule_set) = config.rule_set {
+        if rule_set != *rules.key {
+            return Err(MetadataError::InvalidAuthorizationRules.into());
+        }
     }
 
     Ok(())

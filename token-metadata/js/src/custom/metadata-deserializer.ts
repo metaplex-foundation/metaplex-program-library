@@ -8,7 +8,7 @@ import { dataBeet } from '../generated/types/Data';
 import { keyBeet } from '../generated/types/Key';
 import { tokenStandardBeet } from '../generated/types/TokenStandard';
 import { usesBeet } from '../generated/types/Uses';
-import { delegateStateBeet } from '../generated';
+import { delegateRoleBeet } from '../generated';
 
 const NONE_BYTE_SIZE = beet.coptionNone('').byteSize;
 
@@ -96,12 +96,12 @@ export function deserialize(buf: Buffer, offset = 0): [Metadata, number] {
       : tryReadOption(beet.coption(programmableConfigBeet), buf, cursor);
   cursor += programmableConfigDelta;
 
-  // delegate_state
-  const [delegateState, delegateStateDelta, delegateStateCorrupted] =
+  // persistent_delegate
+  const [persistentDelegate, persistentDelegateDelta, persistentDelegateCorrupted] =
     tokenCorrupted || collectionCorrupted || usesCorrupted
       ? [null, NONE_BYTE_SIZE, true]
-      : tryReadOption(beet.coption(delegateStateBeet), buf, cursor);
-  cursor += delegateStateDelta;
+      : tryReadOption(beet.coption(delegateRoleBeet), buf, cursor);
+  cursor += persistentDelegateDelta;
 
   const anyCorrupted =
     tokenCorrupted ||
@@ -109,7 +109,7 @@ export function deserialize(buf: Buffer, offset = 0): [Metadata, number] {
     usesCorrupted ||
     collectionDetailsCorrupted ||
     programmableConfigCorrupted ||
-    delegateStateCorrupted;
+    persistentDelegateCorrupted;
 
   const args = {
     key,
@@ -124,7 +124,7 @@ export function deserialize(buf: Buffer, offset = 0): [Metadata, number] {
     uses: anyCorrupted ? null : uses,
     collectionDetails: anyCorrupted ? null : collectionDetails,
     programmableConfig: anyCorrupted ? null : programmableConfig,
-    delegateState: anyCorrupted ? null : delegateState,
+    persistentDelegate: anyCorrupted ? null : persistentDelegate,
   };
 
   return [Metadata.fromArgs(args), cursor];

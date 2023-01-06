@@ -640,11 +640,11 @@ pub enum MetadataInstruction {
     ///      program id, mint id, role, update authority id, delegate owner id])
     #[account(0, writable, name="delegate_record", desc="Delegate Record account")]
     #[account(1, name="delegate", desc="Owner of the delegated account")]
-    #[account(2, name="metadata", desc="Metadata account")]
+    #[account(2, writable, name="metadata", desc="Metadata account")]
     #[account(3, optional, name="master_edition", desc="Master Edition account")]
     #[account(4, name="mint", desc="Mint of metadata")]
     #[account(5, optional, writable, name="token", desc="Token account of mint")]
-    #[account(6, signer, name="namespace", desc="Namespace (update authority or token owner) to approve the delegation")]
+    #[account(6, signer, name="approver", desc="Approver (update authority or token owner) for the delegation")]
     #[account(7, signer, writable, name="payer", desc="Payer")]
     #[account(8, name="system_program", desc="System Program")]
     #[account(9, name="sysvar_instructions", desc="Instructions sysvar account")]
@@ -655,13 +655,13 @@ pub enum MetadataInstruction {
     Delegate(DelegateArgs),
 
     /// Revokes a delegate.
-    #[account(0, writable, name="delegate_record", desc="Delegate account key (pda of [mint id, delegate role, user id, authority id])")]
+    #[account(0, writable, name="delegate_record", desc="Delegate account")]
     #[account(1, name="delegate", desc="Owner of the delegated account")]
     #[account(2, writable, name="metadata", desc="Metadata account")]
     #[account(3, optional, name="master_edition", desc="Master Edition account")]
     #[account(4, name="mint", desc="Mint of metadata")]
-    #[account(5, optional, writable, name="token", desc="Owned Token Account of mint")]
-    #[account(6, signer, name="authority", desc="Authority to approve the delegation")]
+    #[account(5, optional, writable, name="token", desc="Token account of mint")]
+    #[account(6, signer, name="approver", desc="Approver (update authority or token owner) for the delegation")]
     #[account(7, signer, writable, name="payer", desc="Payer")]
     #[account(8, name="system_program", desc="System Program")]
     #[account(9, name="sysvar_instructions", desc="Instructions sysvar account")]

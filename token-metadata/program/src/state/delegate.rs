@@ -3,6 +3,8 @@ use crate::instruction::DelegateRole;
 
 pub const PERSISTENT_DELEGATE: &str = "persistent_delegate";
 
+const SIZE: usize = 35;
+
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, ShankAccount)]
@@ -26,11 +28,11 @@ impl Default for DelegateRecord {
 
 impl TokenMetadataAccount for DelegateRecord {
     fn key() -> Key {
-        Key::CollectionAuthorityRecord
+        Key::Delegate
     }
 
     fn size() -> usize {
-        std::mem::size_of::<DelegateRecord>()
+        SIZE
     }
 }
 

@@ -28,7 +28,7 @@ pub enum RevokeArgs {
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, Copy)]
 pub enum DelegateRole {
     Authority,
     Collection,
@@ -61,7 +61,7 @@ impl fmt::Display for DelegateRole {
 ///
 ///   0. `[writable]` Delegate account key
 ///   1. `[]` Delegated owner
-///   2. `[]` Metadata account
+///   2. `[writable]` Metadata account
 ///   3. `[optional]` Master Edition account
 ///   4. `[]` Mint account
 ///   5. `[optional, writable]` Token account
@@ -77,7 +77,7 @@ impl InstructionBuilder for super::builders::Delegate {
         let accounts = vec![
             AccountMeta::new(self.delegate_record, false),
             AccountMeta::new_readonly(self.delegate, false),
-            AccountMeta::new_readonly(self.metadata, false),
+            AccountMeta::new(self.metadata, false),
             AccountMeta::new_readonly(self.master_edition.unwrap_or(crate::ID), false),
             AccountMeta::new_readonly(self.mint, false),
             if let Some(token) = self.token {
@@ -85,7 +85,7 @@ impl InstructionBuilder for super::builders::Delegate {
             } else {
                 AccountMeta::new_readonly(crate::ID, false)
             },
-            AccountMeta::new_readonly(self.namespace, true),
+            AccountMeta::new_readonly(self.approver, true),
             AccountMeta::new(self.payer, true),
             AccountMeta::new_readonly(self.system_program, false),
             AccountMeta::new_readonly(self.sysvar_instructions, false),
@@ -108,13 +108,13 @@ impl InstructionBuilder for super::builders::Delegate {
 ///
 /// # Accounts:
 ///
-///   0. `[writable]` Delegate account key
+///   0. `[writable]` Delegate record account
 ///   1. `[]` Delegated owner
 ///   2. `[writable]` Metadata account
 ///   3. `[optional]` Master Edition account
 ///   4. `[]` Mint account
 ///   5. `[optional, writable]` Token account
-///   6. `[signer]` Authority to approve the delegation
+///   6. `[signer]` Approver for the delegation
 ///   7. `[signer, writable]` Payer
 ///   8. `[]` System Program
 ///   9. `[]` Instructions sysvar account
@@ -134,7 +134,7 @@ impl InstructionBuilder for super::builders::Revoke {
             } else {
                 AccountMeta::new_readonly(crate::ID, false)
             },
-            AccountMeta::new_readonly(self.authority, true),
+            AccountMeta::new_readonly(self.approver, true),
             AccountMeta::new(self.payer, true),
             AccountMeta::new_readonly(self.system_program, false),
             AccountMeta::new_readonly(self.sysvar_instructions, false),

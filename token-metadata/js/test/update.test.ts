@@ -774,13 +774,11 @@ test('Update: Update Unverified Collection Key', async (t) => {
     ],
     primarySaleHappened: false,
     isMutable: true,
-    editionNonce: null,
     tokenStandard: TokenStandard.NonFungible,
     collection: { key: collectionParent.publicKey, verified: false },
     uses: null,
     collectionDetails: null,
-    programmableConfig: null,
-    delegateState: null,
+    ruleSet: null,
   };
 
   const {
@@ -859,13 +857,11 @@ test('Update: Fail to Verify an Unverified Collection', async (t) => {
     ],
     primarySaleHappened: false,
     isMutable: true,
-    editionNonce: null,
     tokenStandard: TokenStandard.NonFungible,
     collection: { key: collectionParent.publicKey, verified: false },
     uses: null,
     collectionDetails: null,
-    programmableConfig: null,
-    delegateState: null,
+    ruleSet: null,
   };
 
   const {
@@ -945,13 +941,11 @@ test('Update: Fail to Update a Verified Collection', async (t) => {
     ],
     primarySaleHappened: false,
     isMutable: true,
-    editionNonce: null,
     tokenStandard: TokenStandard.NonFungible,
     collection: { key: collectionMint, verified: false },
     uses: null,
     collectionDetails: null,
-    programmableConfig: null,
-    delegateState: null,
+    ruleSet: null,
   };
 
   const {
@@ -1026,13 +1020,9 @@ test('Update: Update pNFT Config', async (t) => {
   );
 
   const updateData = new UpdateTestData();
-  updateData.programmableConfig = {
+  updateData.ruleSet = {
     __kind: 'Set',
-    fields: [
-      {
-        ruleSet: dummyRuleSet,
-      },
-    ],
+    fields: [dummyRuleSet],
   };
 
   const { tx: updateTx } = await API.update(
@@ -1054,7 +1044,7 @@ test('Update: Update pNFT Config', async (t) => {
   });
 });
 
-test('Update: Fail to update ProgrammableConfig on NFT', async (t) => {
+test('Update: Fail to update rule set on NFT', async (t) => {
   const API = new InitTransactions();
   const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
 
@@ -1074,13 +1064,9 @@ test('Update: Fail to update ProgrammableConfig on NFT', async (t) => {
   );
 
   const updateData = new UpdateTestData();
-  updateData.programmableConfig = {
+  updateData.ruleSet = {
     __kind: 'Set',
-    fields: [
-      {
-        ruleSet: dummyRuleSet,
-      },
-    ],
+    fields: [dummyRuleSet],
   };
 
   const { tx: updateTx } = await API.update(
@@ -1096,7 +1082,7 @@ test('Update: Fail to update ProgrammableConfig on NFT', async (t) => {
   await updateTx.assertError(t, /Invalid token standard/);
 });
 
-test('Update: Update existing pNFT config to None', async (t) => {
+test('Update: Update existing pNFT rule set config to None', async (t) => {
   const API = new InitTransactions();
   const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
 
@@ -1136,10 +1122,6 @@ test('Update: Update existing pNFT config to None', async (t) => {
   );
   await createRuleSetTx.assertSuccess(t);
 
-  const programmableConfig = {
-    ruleSet: ruleSetPda,
-  };
-
   const { mint, metadata, masterEdition } = await createAndMintDefaultAsset(
     t,
     connection,
@@ -1147,12 +1129,12 @@ test('Update: Update existing pNFT config to None', async (t) => {
     handler,
     payer,
     TokenStandard.ProgrammableNonFungible,
-    programmableConfig,
+    ruleSetPda,
     1,
   );
 
   const updateData = new UpdateTestData();
-  updateData.programmableConfig = {
+  updateData.ruleSet = {
     __kind: 'Clear',
   };
 
@@ -1170,7 +1152,9 @@ test('Update: Update existing pNFT config to None', async (t) => {
 
   const updatedMetadata = await Metadata.fromAccountAddress(connection, metadata);
 
-  t.equal(updatedMetadata.programmableConfig, null);
+  spok(t, updatedMetadata.programmableConfig, {
+    ruleSet: null,
+  });
 });
 
 test('Update: Invalid Update Authority Fails', async (t) => {

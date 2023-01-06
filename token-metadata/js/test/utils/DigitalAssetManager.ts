@@ -1,11 +1,5 @@
 import { Connection, PublicKey } from '@solana/web3.js';
-import {
-  AssetData,
-  Metadata,
-  ProgrammableConfig,
-  TokenStandard,
-  AuthorizationData,
-} from 'src/generated';
+import { AssetData, Metadata, TokenStandard, AuthorizationData } from 'src/generated';
 import { InitTransactions } from '../setup';
 import test from 'tape';
 import { PayerTransactionHandler } from '@metaplex-foundation/amman-client';
@@ -43,13 +37,11 @@ export class DigitalAssetManager {
       creators: md.data.creators,
       primarySaleHappened: md.primarySaleHappened,
       isMutable: md.isMutable,
-      editionNonce: md.editionNonce,
       tokenStandard: md.tokenStandard,
       collection: md.collection,
       uses: md.uses,
       collectionDetails: md.collectionDetails,
-      programmableConfig: md.programmableConfig,
-      delegateState: md.delegateState,
+      ruleSet: md.programmableConfig ? md.programmableConfig.ruleSet : null,
     };
   }
 }
@@ -61,7 +53,7 @@ export async function createDefaultAsset(
   handler: PayerTransactionHandler,
   payer: Keypair,
   tokenStandard: TokenStandard = TokenStandard.NonFungible,
-  programmableConfig: ProgrammableConfig | null = null,
+  ruleSet: PublicKey | null = null,
 ): Promise<DigitalAssetManager> {
   const name = 'DigitalAsset';
   const symbol = 'DA';
@@ -83,13 +75,11 @@ export async function createDefaultAsset(
     ],
     primarySaleHappened: false,
     isMutable: true,
-    editionNonce: null,
     tokenStandard,
     collection: null,
     uses: null,
     collectionDetails: null,
-    programmableConfig,
-    delegateState: null,
+    ruleSet,
   };
 
   const {
@@ -112,7 +102,7 @@ export async function createAndMintDefaultAsset(
   handler: PayerTransactionHandler,
   payer: Keypair,
   tokenStandard: TokenStandard = TokenStandard.NonFungible,
-  programmableConfig: ProgrammableConfig | null = null,
+  ruleSet: PublicKey | null = null,
   amount = 1,
 ): Promise<DigitalAssetManager> {
   const daManager = await createDefaultAsset(
@@ -122,7 +112,7 @@ export async function createAndMintDefaultAsset(
     handler,
     payer,
     tokenStandard,
-    programmableConfig,
+    ruleSet,
   );
   const { mint, metadata, masterEdition } = daManager;
 

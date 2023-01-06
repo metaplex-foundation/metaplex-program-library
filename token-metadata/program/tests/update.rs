@@ -13,8 +13,8 @@ use utils::{DigitalAsset, *};
 mod update {
 
     use mpl_token_metadata::{
-        instruction::{AuthorityType, ProgrammableConfigToggle, UpdateArgs},
-        state::{Data, ProgrammableConfig, TokenStandard},
+        instruction::{AuthorityType, RuleSetToggle, UpdateArgs},
+        state::{Data, ProgrammableState, TokenStandard, ProgrammableConfig},
     };
     use solana_sdk::signature::Keypair;
 
@@ -124,18 +124,16 @@ mod update {
 
         let metadata = da.get_metadata(context).await;
 
-        assert_eq!(
-            metadata.programmable_config,
-            Some(ProgrammableConfig { rule_set })
-        );
+        if let Some(config) = metadata.programmable_config {
+            assert_eq!(config.rule_set, Some(rule_set));
+        } else {
+            panic!("Missing rule set programmable config");
+        }
 
         let mut update_args = UpdateArgs::default();
-        let UpdateArgs::V1 {
-            programmable_config,
-            ..
-        } = &mut update_args;
+        let UpdateArgs::V1 { rule_set, .. } = &mut update_args;
         // remove the rule set
-        *programmable_config = ProgrammableConfigToggle::Clear;
+        *rule_set = RuleSetToggle::Clear;
 
         let UpdateArgs::V1 {
             authority_type: current_authority_type,
@@ -167,6 +165,12 @@ mod update {
         // checks the created metadata values
         let metadata = da.get_metadata(context).await;
 
-        assert_eq!(metadata.programmable_config, None);
+        assert_eq!(
+            metadata.programmable_config,
+            Some(ProgrammableConfig {
+                state: ProgrammableState::Unlocked,
+                rule_set: None,
+            })
+        );
     }
 }

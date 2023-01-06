@@ -8,7 +8,7 @@ use crate::{
     assertions::{assert_delegate, assert_owned_by, metadata::assert_currently_holding},
     error::MetadataError,
     instruction::{Context, DelegateRole, Transfer, TransferArgs},
-    state::{Metadata, Operation, TokenMetadataAccount, TokenStandard},
+    state::{DelegateRecord, Metadata, Operation, TokenMetadataAccount, TokenStandard},
     utils::{assert_derivation, auth_rules_validate, frozen_transfer, AuthRulesValidateParams},
 };
 
@@ -56,11 +56,9 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
     assert_signer(ctx.accounts.authority_info)?;
 
     // Assert program ownership.
-
     assert_owned_by(ctx.accounts.metadata_info, program_id)?;
     assert_owned_by(ctx.accounts.mint_info, &spl_token::ID)?;
     assert_owned_by(ctx.accounts.token_info, &spl_token::ID)?;
-
     if let Some(delegate_record_info) = ctx.accounts.delegate_record_info {
         assert_owned_by(delegate_record_info, program_id)?;
     }
@@ -161,8 +159,8 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
         .ok_or(MetadataError::InvalidTokenStandard)?;
 
     // Sale delegates prevent any other kind of transfer.
-    let is_sale_delegate_set = if let Some(ref delegate_state) = metadata.delegate_state {
-        delegate_state.role == DelegateRole::Sale
+    let is_sale_delegate_set = if let Some(delegate_role) = metadata.persistent_delegate {
+        delegate_role == DelegateRole::Sale
     } else {
         false
     };
@@ -173,13 +171,13 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
         && ctx.accounts.destination_owner_info.owner == &system_program::ID;
 
     // Determine transfer type.
-    let transfer_authority = if let Some(ref delegate_state) = metadata.delegate_state {
+    let transfer_authority = if let Some(delegate_role) = metadata.persistent_delegate {
         // We have a delegate set on the metadata so we convert it
         // into our TransferAuthority enum.
         // This will panic for anything other than Transfer or Sale as
         // those are the only valid delegate roles that can be set on
         // the metadata.
-        delegate_state.role.clone().into()
+        delegate_role.into()
     } else if ctx.accounts.token_owner_info.key == ctx.accounts.authority_info.key {
         // Owner and authority are the same so this is a normal owner transfer.
         TransferAuthority::Owner
@@ -230,10 +228,18 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
         TransferAuthority::SaleDelegate => {
             msg!("Sale delegate transfer authoritry for pNFT");
             // Validate the delegate
+            let delegate_record = DelegateRecord::from_account_info(
+                if let Some(delegate_record) = ctx.accounts.delegate_record_info {
+                    delegate_record
+                } else {
+                    return Err(ProgramError::NotEnoughAccountKeys);
+                },
+            )?;
+
             assert_delegate(
                 ctx.accounts.authority_info.key,
                 DelegateRole::Sale,
-                &metadata.delegate_state.unwrap(),
+                &delegate_record,
             )?;
 
             if matches!(token_standard, TokenStandard::ProgrammableNonFungible) {
@@ -248,10 +254,18 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
         TransferAuthority::TransferDelegate => {
             msg!("Transfer delegate transfer authoritry for pNFT");
             // Validate the delegate
+            let delegate_record = DelegateRecord::from_account_info(
+                if let Some(delegate_record) = ctx.accounts.delegate_record_info {
+                    delegate_record
+                } else {
+                    return Err(ProgramError::NotEnoughAccountKeys);
+                },
+            )?;
+
             assert_delegate(
                 ctx.accounts.authority_info.key,
                 DelegateRole::Transfer,
-                &metadata.delegate_state.unwrap(),
+                &delegate_record,
             )?;
 
             // If it's not a wallet-to-wallet transfer and is a PNFT then

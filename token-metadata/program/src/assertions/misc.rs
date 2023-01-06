@@ -10,7 +10,7 @@ use solana_program::{
 };
 use spl_token::state::Account;
 
-use crate::{error::MetadataError, instruction::DelegateRole, state::DelegateState};
+use crate::{error::MetadataError, instruction::DelegateRole, state::DelegateRecord};
 
 /// assert initialized account
 pub fn assert_initialized<T: Pack + IsInitialized>(
@@ -126,9 +126,9 @@ pub fn assert_system_wallet(wallet: &AccountInfo) -> ProgramResult {
 pub fn assert_delegate(
     delegate: &Pubkey,
     role: DelegateRole,
-    delegate_state: &DelegateState,
+    delegate_record: &DelegateRecord,
 ) -> ProgramResult {
-    if delegate != &delegate_state.delegate || role != delegate_state.role {
+    if delegate != &delegate_record.delegate || role != delegate_record.role {
         return Err(MetadataError::InvalidDelegate.into());
     }
 

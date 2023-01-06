@@ -17,7 +17,7 @@ mod transfer {
         error::MetadataError,
         instruction::{create_escrow_account, DelegateRole, TransferArgs},
         processor::find_escrow_account,
-        state::{EscrowAuthority, ProgrammableConfig, TokenStandard},
+        state::{EscrowAuthority, TokenStandard, DelegateRecord, Key}, pda::find_delegate_account,
     };
     use solana_program::{native_token::LAMPORTS_PER_SOL, program_pack::Pack, pubkey::Pubkey};
     use solana_sdk::transaction::Transaction;
@@ -50,11 +50,12 @@ mod transfer {
         let params = TransferParams {
             context: &mut context,
             authority,
+            delegate_record: None,
             source_owner: &authority.pubkey(),
             destination_owner,
             destination_token: None,
             authorization_rules: None,
-            payer: &authority.pubkey(),
+            payer: authority,
             args,
         };
 
@@ -108,11 +109,12 @@ mod transfer {
         let params = TransferParams {
             context: &mut context,
             authority,
+            delegate_record: None,
             source_owner: &authority.pubkey(),
             destination_owner,
             destination_token: None,
             authorization_rules: None,
-            payer: &authority.pubkey(),
+            payer: authority,
             args,
         };
 
@@ -166,11 +168,12 @@ mod transfer {
         let params = TransferParams {
             context: &mut context,
             authority,
+            delegate_record: None,
             source_owner: &authority.pubkey(),
             destination_owner,
             destination_token: None,
             authorization_rules: None,
-            payer: &authority.pubkey(),
+            payer: authority,
             args,
         };
 
@@ -220,10 +223,12 @@ mod transfer {
             metadata.token_standard,
             Some(TokenStandard::ProgrammableNonFungible)
         );
-        assert_eq!(
-            metadata.programmable_config,
-            Some(ProgrammableConfig { rule_set })
-        );
+
+        if let Some(config) = metadata.programmable_config {
+            assert_eq!(config.rule_set, Some(rule_set));
+        } else {
+            panic!("Missing programmable config");
+        }
 
         let transfer_amount = 1;
 
@@ -243,11 +248,12 @@ mod transfer {
         let params = TransferParams {
             context: &mut context,
             authority,
+            delegate_record: None,
             source_owner: &authority.pubkey(),
             destination_owner,
             destination_token: None,
             authorization_rules: Some(rule_set),
-            payer: &authority.pubkey(),
+            payer: authority,
             args: args.clone(),
         };
 
@@ -268,11 +274,12 @@ mod transfer {
         let params = TransferParams {
             context: &mut context,
             authority,
+            delegate_record: None,
             source_owner: &authority.pubkey(),
             destination_owner,
             destination_token: None,
             authorization_rules: Some(rule_set),
-            payer: &authority.pubkey(),
+            payer: authority,
             args,
         };
 
@@ -345,11 +352,12 @@ mod transfer {
         let params = TransferParams {
             context: &mut context,
             authority,
+            delegate_record: None,
             source_owner: &authority.pubkey(),
             destination_owner,
             destination_token: None,
             authorization_rules: Some(rule_set),
-            payer: &authority.pubkey(),
+            payer: authority,
             args: args.clone(),
         };
 
@@ -390,11 +398,12 @@ mod transfer {
         let params = TransferParams {
             context: &mut context,
             authority,
+            delegate_record: None,
             source_owner: &authority.pubkey(),
             destination_owner: escrow_account,
             destination_token: None,
             authorization_rules: Some(rule_set),
-            payer: &authority.pubkey(),
+            payer: authority,
             args,
         };
 
@@ -433,6 +442,7 @@ mod transfer {
             .unwrap();
 
         let authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+        let authority_pubkey = authority.pubkey();
         let source_owner = &Keypair::from_bytes(&context.payer.to_bytes())
             .unwrap()
             .pubkey();
@@ -449,9 +459,22 @@ mod transfer {
 
         let metadata = da.get_metadata(&mut context).await;
         assert_eq!(
-            metadata.delegate_state.unwrap().role,
+            metadata.persistent_delegate.unwrap(),
             DelegateRole::Transfer
         );
+
+        // delegate PDA
+        let (delegate_record, _) = find_delegate_account(
+            &da.mint.pubkey(),
+            DelegateRole::Transfer,
+            &authority_pubkey,
+            &delegate.pubkey(),
+        );
+
+        let pda = get_account(&mut context, &delegate_record).await;
+        let delegate_record_data: DelegateRecord = DelegateRecord::from_bytes(&pda.data).unwrap();
+        assert_eq!(delegate_record_data.key, Key::Delegate);
+        assert_eq!(delegate_record_data.role, DelegateRole::Transfer);
 
         let destination_owner = Pubkey::new_unique();
         let destination_token = get_associated_token_address(&destination_owner, &da.mint.pubkey());
@@ -464,14 +487,17 @@ mod transfer {
             amount: transfer_amount,
         };
 
+        let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+
         let params = TransferParams {
             context: &mut context,
             authority: &delegate,
             source_owner,
+            delegate_record: Some(delegate_record),
             destination_owner,
             destination_token: None,
             authorization_rules: None,
-            payer: &delegate.pubkey(),
+            payer: &payer,
             args: args.clone(),
         };
 
@@ -502,11 +528,12 @@ mod transfer {
         let params = TransferParams {
             context: &mut context,
             authority: &fake_delegate,
+            delegate_record: Some(delegate_record),
             source_owner,
             destination_owner,
             destination_token: Some(destination_token),
             authorization_rules: None,
-            payer: &fake_delegate.pubkey(),
+            payer: &fake_delegate,
             args,
         };
 

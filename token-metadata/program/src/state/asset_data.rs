@@ -4,7 +4,6 @@ use serde::{Deserialize, Serialize};
 use solana_program::pubkey::Pubkey;
 
 use super::{Collection, CollectionDetails, Creator, Data, DataV2, TokenStandard, Uses};
-use crate::instruction::DelegateRole;
 
 /// Data representation of an asset.
 #[repr(C)]
@@ -27,8 +26,6 @@ pub struct AssetData {
     pub primary_sale_happened: bool,
     // Whether or not the data struct is mutable (default is not).
     pub is_mutable: bool,
-    /// nonce for easy calculation of editions (if present).
-    pub edition_nonce: Option<u8>,
     /// Type of the token.
     pub token_standard: TokenStandard,
     /// Collection information.
@@ -37,10 +34,8 @@ pub struct AssetData {
     pub uses: Option<Uses>,
     /// Collection item details.
     pub collection_details: Option<CollectionDetails>,
-    // Programmable configuration for the asset.
-    pub programmable_config: Option<ProgrammableConfig>,
-    // Persistent delegate state.
-    pub delegate_state: Option<DelegateState>,
+    /// Programmable rule set for the asset.
+    pub rule_set: Option<Pubkey>,
 }
 
 impl AssetData {
@@ -60,13 +55,11 @@ impl AssetData {
             creators: None,
             primary_sale_happened: false,
             is_mutable: true,
-            edition_nonce: None,
             token_standard,
             collection: None,
             uses: None,
             collection_details: None,
-            programmable_config: None,
-            delegate_state: None,
+            rule_set: None,
         }
     }
 
@@ -91,27 +84,4 @@ impl AssetData {
             creators: self.creators.clone(),
         }
     }
-}
-
-/// Configuration of the programmable rules.
-#[repr(C)]
-#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
-pub struct ProgrammableConfig {
-    pub rule_set: Pubkey,
-}
-
-/// Different delegate states for a token. Some actions are
-/// not allowed depending of the degate state set.
-#[repr(C)]
-#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
-pub struct DelegateState {
-    /// The role of the delegate.
-    pub role: DelegateRole,
-    /// Address delegated.
-    pub delegate: Pubkey,
-    /// Indicates whether the delegate has a 'DelegateData' PDA
-    /// or not.
-    pub has_data: bool,
 }
