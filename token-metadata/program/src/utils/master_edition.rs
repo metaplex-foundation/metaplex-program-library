@@ -21,7 +21,7 @@ use crate::{
     state::{
         get_reservation_list, DataV2, EditionMarker, Key, Metadata, TokenMetadataAccount, Uses,
         EDITION, EDITION_MARKER_BIT_SIZE, MAX_EDITION_LEN, MAX_EDITION_MARKER_SIZE,
-        MAX_MASTER_EDITION_LEN, PREFIX,
+        MAX_MASTER_EDITION_LEN, PREFIX, MasterEdition,
     },
 };
 
@@ -534,7 +534,7 @@ pub fn create_master_edition<'a>(
     edition.key = Key::MasterEditionV2;
     edition.supply = 0;
     edition.max_supply = max_supply;
-    edition.serialize(&mut *edition_account_info.try_borrow_mut_data()?)?;
+    edition.save(edition_account_info)?;
 
     if metadata_account_info.is_writable {
         let mut metadata_mut = Metadata::from_account_info(metadata_account_info)?;

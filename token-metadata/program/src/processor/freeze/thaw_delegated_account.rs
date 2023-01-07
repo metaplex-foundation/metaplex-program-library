@@ -13,7 +13,7 @@ use crate::{
         assert_initialized, assert_owned_by,
     },
     error::MetadataError,
-    state::{EDITION, PREFIX},
+    state::{TokenStandard, EDITION, PREFIX, TOKEN_STANDARD_INDEX},
 };
 
 pub fn process_thaw_delegated_account(
@@ -50,6 +50,14 @@ pub fn process_thaw_delegated_account(
         edition_info,
         &edition_info_path,
     )?];
+
+    // check if we are dealing with a pNFT master edition
+    let edition_data = edition_info.data.borrow();
+
+    if edition_data[TOKEN_STANDARD_INDEX] == TokenStandard::ProgrammableNonFungible as u8 {
+        return Err(MetadataError::InvalidTokenStandard.into());
+    }
+
     let mut edition_info_seeds = edition_info_path.clone();
     edition_info_seeds.push(edition_info_path_bump_seed);
     invoke_signed(
