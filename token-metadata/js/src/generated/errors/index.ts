@@ -3265,6 +3265,26 @@ createErrorFromNameLookup.set(
 );
 
 /**
+ * InstructionNotSupported: 'Instruction not supported for ProgrammableNonFungible assets'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InstructionNotSupportedError extends Error {
+  readonly code: number = 0x98;
+  readonly name: string = 'InstructionNotSupported';
+  constructor() {
+    super('Instruction not supported for ProgrammableNonFungible assets');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InstructionNotSupportedError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x98, () => new InstructionNotSupportedError());
+createErrorFromNameLookup.set('InstructionNotSupported', () => new InstructionNotSupportedError());
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

@@ -4198,7 +4198,17 @@
         "kind": "enum",
         "variants": [
           {
-            "name": "V1"
+            "name": "V1",
+            "fields": [
+              {
+                "name": "authorization_data",
+                "type": {
+                  "option": {
+                    "defined": "AuthorizationData"
+                  }
+                }
+              }
+            ]
           }
         ]
       }
@@ -4209,7 +4219,17 @@
         "kind": "enum",
         "variants": [
           {
-            "name": "V1"
+            "name": "V1",
+            "fields": [
+              {
+                "name": "authorization_data",
+                "type": {
+                  "option": {
+                    "defined": "AuthorizationData"
+                  }
+                }
+              }
+            ]
           }
         ]
       }
@@ -4220,7 +4240,17 @@
         "kind": "enum",
         "variants": [
           {
-            "name": "CollectionV1"
+            "name": "CollectionV1",
+            "fields": [
+              {
+                "name": "authorization_data",
+                "type": {
+                  "option": {
+                    "defined": "AuthorizationData"
+                  }
+                }
+              }
+            ]
           },
           {
             "name": "SaleV1",
@@ -4228,6 +4258,14 @@
               {
                 "name": "amount",
                 "type": "u64"
+              },
+              {
+                "name": "authorization_data",
+                "type": {
+                  "option": {
+                    "defined": "AuthorizationData"
+                  }
+                }
               }
             ]
           },
@@ -4237,6 +4275,14 @@
               {
                 "name": "amount",
                 "type": "u64"
+              },
+              {
+                "name": "authorization_data",
+                "type": {
+                  "option": {
+                    "defined": "AuthorizationData"
+                  }
+                }
               }
             ]
           }
@@ -4374,16 +4420,16 @@
             "name": "V1",
             "fields": [
               {
+                "name": "amount",
+                "type": "u64"
+              },
+              {
                 "name": "authorization_data",
                 "type": {
                   "option": {
                     "defined": "AuthorizationData"
                   }
                 }
-              },
-              {
-                "name": "amount",
-                "type": "u64"
               }
             ]
           }
@@ -4589,6 +4635,14 @@
               {
                 "name": "use_count",
                 "type": "u64"
+              },
+              {
+                "name": "authorization_data",
+                "type": {
+                  "option": {
+                    "defined": "AuthorizationData"
+                  }
+                }
               }
             ]
           }
@@ -5558,6 +5612,11 @@
       "code": 151,
       "name": "InvalidTransferAuthority",
       "msg": "Invalid transfer authority"
+    },
+    {
+      "code": 152,
+      "name": "InstructionNotSupported",
+      "msg": "Instruction not supported for ProgrammableNonFungible assets"
     }
   ],
   "metadata": {

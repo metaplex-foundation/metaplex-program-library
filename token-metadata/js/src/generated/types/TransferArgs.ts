@@ -17,7 +17,7 @@ import { AuthorizationData, authorizationDataBeet } from './AuthorizationData';
  * @private
  */
 export type TransferArgsRecord = {
-  V1: { authorizationData: beet.COption<AuthorizationData>; amount: beet.bignum };
+  V1: { amount: beet.bignum; authorizationData: beet.COption<AuthorizationData> };
 };
 
 /**
@@ -45,8 +45,8 @@ export const transferArgsBeet = beet.dataEnum<TransferArgsRecord>([
     'V1',
     new beet.FixableBeetArgsStruct<TransferArgsRecord['V1']>(
       [
-        ['authorizationData', beet.coption(authorizationDataBeet)],
         ['amount', beet.u64],
+        ['authorizationData', beet.coption(authorizationDataBeet)],
       ],
       'TransferArgsRecord["V1"]',
     ),

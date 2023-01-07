@@ -60,6 +60,7 @@ pub enum CreateArgs {
 pub enum MintArgs {
     V1 {
         amount: u64,
+        /// Required authorization data to validate the request.
         authorization_data: Option<AuthorizationData>,
     },
 }
@@ -69,8 +70,9 @@ pub enum MintArgs {
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub enum TransferArgs {
     V1 {
-        authorization_data: Option<AuthorizationData>,
         amount: u64,
+        /// Required authorization data to validate the request.
+        authorization_data: Option<AuthorizationData>,
     },
 }
 

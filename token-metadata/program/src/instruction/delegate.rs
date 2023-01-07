@@ -6,15 +6,26 @@ use serde::{Deserialize, Serialize};
 use solana_program::instruction::{AccountMeta, Instruction};
 
 use super::InstructionBuilder;
-use crate::instruction::MetadataInstruction;
+use crate::{instruction::MetadataInstruction, processor::AuthorizationData};
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub enum DelegateArgs {
-    CollectionV1,
-    SaleV1 { amount: u64 },
-    TransferV1 { amount: u64 },
+    CollectionV1 {
+        /// Required authorization data to validate the request.
+        authorization_data: Option<AuthorizationData>,
+    },
+    SaleV1 {
+        amount: u64,
+        /// Required authorization data to validate the request.
+        authorization_data: Option<AuthorizationData>,
+    },
+    TransferV1 {
+        amount: u64,
+        /// Required authorization data to validate the request.
+        authorization_data: Option<AuthorizationData>,
+    },
 }
 
 #[repr(C)]

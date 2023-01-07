@@ -551,6 +551,7 @@ test('Transfer: NonFungible asset with delegate', async (t) => {
   const delegateArgs: DelegateArgs = {
     __kind: 'TransferV1',
     amount: 1,
+    authorizationData: null,
   };
 
   // Approve delegate

@@ -6,6 +6,7 @@
  */
 
 import * as beet from '@metaplex-foundation/beet';
+import { AuthorizationData, authorizationDataBeet } from './AuthorizationData';
 /**
  * This type is used to derive the {@link DelegateArgs} type as well as the de/serializer.
  * However don't refer to it in your code but use the {@link DelegateArgs} type instead.
@@ -16,9 +17,9 @@ import * as beet from '@metaplex-foundation/beet';
  * @private
  */
 export type DelegateArgsRecord = {
-  CollectionV1: void /* scalar variant */;
-  SaleV1: { amount: beet.bignum };
-  TransferV1: { amount: beet.bignum };
+  CollectionV1: { authorizationData: beet.COption<AuthorizationData> };
+  SaleV1: { amount: beet.bignum; authorizationData: beet.COption<AuthorizationData> };
+  TransferV1: { amount: beet.bignum; authorizationData: beet.COption<AuthorizationData> };
 };
 
 /**
@@ -48,20 +49,32 @@ export const isDelegateArgsTransferV1 = (
  * @category generated
  */
 export const delegateArgsBeet = beet.dataEnum<DelegateArgsRecord>([
-  ['CollectionV1', beet.unit],
+  [
+    'CollectionV1',
+    new beet.FixableBeetArgsStruct<DelegateArgsRecord['CollectionV1']>(
+      [['authorizationData', beet.coption(authorizationDataBeet)]],
+      'DelegateArgsRecord["CollectionV1"]',
+    ),
+  ],
 
   [
     'SaleV1',
-    new beet.BeetArgsStruct<DelegateArgsRecord['SaleV1']>(
-      [['amount', beet.u64]],
+    new beet.FixableBeetArgsStruct<DelegateArgsRecord['SaleV1']>(
+      [
+        ['amount', beet.u64],
+        ['authorizationData', beet.coption(authorizationDataBeet)],
+      ],
       'DelegateArgsRecord["SaleV1"]',
     ),
   ],
 
   [
     'TransferV1',
-    new beet.BeetArgsStruct<DelegateArgsRecord['TransferV1']>(
-      [['amount', beet.u64]],
+    new beet.FixableBeetArgsStruct<DelegateArgsRecord['TransferV1']>(
+      [
+        ['amount', beet.u64],
+        ['authorizationData', beet.coption(authorizationDataBeet)],
+      ],
       'DelegateArgsRecord["TransferV1"]',
     ),
   ],

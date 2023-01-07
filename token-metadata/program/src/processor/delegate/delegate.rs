@@ -29,11 +29,11 @@ pub fn delegate<'a>(
 
     match args {
         DelegateArgs::CollectionV1 { .. } => collection_delegate_v1(program_id, context, args),
-        DelegateArgs::SaleV1 { amount } => {
+        DelegateArgs::SaleV1 { amount, .. } => {
             // the sale delegate is a special type of transfer
             sale_or_transfer_delegate_v1(program_id, context, args, DelegateRole::Sale, amount)
         }
-        DelegateArgs::TransferV1 { amount } => {
+        DelegateArgs::TransferV1 { amount, .. } => {
             sale_or_transfer_delegate_v1(program_id, context, args, DelegateRole::Transfer, amount)
         }
     }

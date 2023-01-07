@@ -190,7 +190,10 @@ mod delegate {
             .approver(payer_pubkey)
             .payer(payer_pubkey)
             .token(asset.token.unwrap())
-            .build(DelegateArgs::SaleV1 { amount: 1 })
+            .build(DelegateArgs::SaleV1 {
+                amount: 1,
+                authorization_data: None,
+            })
             .unwrap()
             .instruction();
 
@@ -261,7 +264,10 @@ mod delegate {
             .approver(payer_pubkey)
             .payer(payer_pubkey)
             .token(asset.token.unwrap())
-            .build(DelegateArgs::SaleV1 { amount: 1 })
+            .build(DelegateArgs::SaleV1 {
+                amount: 1,
+                authorization_data: None,
+            })
             .unwrap()
             .instruction();
 

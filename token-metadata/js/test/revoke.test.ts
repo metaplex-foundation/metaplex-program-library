@@ -49,6 +49,7 @@ test('Revoke: revoke transfer delegate', async (t) => {
   const delegateArgs: DelegateArgs = {
     __kind: 'TransferV1',
     amount: 1,
+    authorizationData: null,
   };
 
   const { tx: delegateTx } = await API.delegate(

@@ -48,6 +48,7 @@ test('Delegate: create collection delegate', async (t) => {
 
   const args: DelegateArgs = {
     __kind: 'CollectionV1',
+    authorizationData: null,
   };
 
   const { tx: delegateTx } = await API.delegate(
@@ -97,6 +98,7 @@ test('Delegate: create sale delegate', async (t) => {
   const args: DelegateArgs = {
     __kind: 'SaleV1',
     amount: 1,
+    authorizationData: null,
   };
 
   const { tx: delegateTx } = await API.delegate(
@@ -163,6 +165,7 @@ test('Delegate: create transfer delegate', async (t) => {
   const args: DelegateArgs = {
     __kind: 'TransferV1',
     amount: 1,
+    authorizationData: null,
   };
 
   const { tx: delegateTx } = await API.delegate(
@@ -229,6 +232,7 @@ test('Delegate: fail to create sale delegate on NFT', async (t) => {
   const args: DelegateArgs = {
     __kind: 'SaleV1',
     amount: 1,
+    authorizationData: null,
   };
 
   const { tx: delegateTx } = await API.delegate(
