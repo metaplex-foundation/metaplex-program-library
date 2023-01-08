@@ -1,11 +1,15 @@
 use std::collections::HashMap;
 
-use solana_program::{account_info::AccountInfo, entrypoint::ProgramResult, pubkey::Pubkey};
+use solana_program::{
+    account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
+    pubkey::Pubkey,
+};
 use spl_token::state::Account;
 
 use crate::{
     assertions::{assert_initialized, assert_owned_by},
     error::MetadataError,
+    pda::PREFIX,
     state::{
         Creator, Data, Metadata, MAX_CREATOR_LIMIT, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH,
         MAX_URI_LENGTH,
@@ -197,4 +201,21 @@ pub fn assert_currently_holding(
         return Err(MetadataError::MintMismatch.into());
     }
     Ok(())
+}
+
+pub fn assert_metadata_derivation(
+    program_id: &Pubkey,
+    metadata_info: &AccountInfo,
+    mint_info: &AccountInfo,
+) -> Result<u8, ProgramError> {
+    let path = &[
+        PREFIX.as_bytes(),
+        program_id.as_ref(),
+        mint_info.key.as_ref(),
+    ];
+    let (pubkey, bump) = Pubkey::find_program_address(path, program_id);
+    if pubkey != *metadata_info.key {
+        return Err(MetadataError::MintMismatch.into());
+    }
+    Ok(bump)
 }

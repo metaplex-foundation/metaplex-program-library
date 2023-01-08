@@ -16,7 +16,12 @@ use utils::*;
 // * Unsized -> Sized
 // * Unsized -> Unsized
 mod collection_migrations {
-    use mpl_token_metadata::error::MetadataError;
+    use mpl_token_metadata::{
+        error::MetadataError,
+        pda::find_collection_authority_account,
+        state::{Metadata as TmMetadata, TokenMetadataAccount},
+    };
+    use solana_sdk::transaction::Transaction;
 
     use super::*;
 
@@ -773,5 +778,268 @@ mod collection_migrations {
             )
             .await
             .unwrap();
+    }
+
+    #[tokio::test]
+    pub async fn burned_collection_parent() {
+        let mut context = program_test().start_with_context().await;
+
+        // Unsized collection
+        let (collection_a_nft, collection_a_me) =
+            Metadata::create_default_nft(&mut context).await.unwrap();
+
+        // Unsized collection
+        let (collection_b_nft, collection_b_me) =
+            Metadata::create_default_nft(&mut context).await.unwrap();
+
+        let (nft_item_one, _me_item_one) =
+            Metadata::create_default_nft(&mut context).await.unwrap();
+        let (nft_item_two, _me_item_two) =
+            Metadata::create_default_nft(&mut context).await.unwrap();
+
+        let kpbytes = &context.payer;
+        let kp = Keypair::from_bytes(&kpbytes.to_bytes()).unwrap();
+
+        // Add the items to Collection A
+        nft_item_one
+            .set_and_verify_collection(
+                &mut context,
+                collection_a_nft.pubkey,
+                &kp,
+                kp.pubkey(),
+                collection_a_nft.mint.pubkey(),
+                collection_a_me.pubkey,
+                None,
+            )
+            .await
+            .unwrap();
+
+        nft_item_two
+            .set_and_verify_collection(
+                &mut context,
+                collection_a_nft.pubkey,
+                &kp,
+                kp.pubkey(),
+                collection_a_nft.mint.pubkey(),
+                collection_a_me.pubkey,
+                None,
+            )
+            .await
+            .unwrap();
+
+        // Burn the collection A parent.
+        burn(
+            &mut context,
+            collection_a_nft.pubkey,
+            &kp,
+            collection_a_nft.mint.pubkey(),
+            collection_a_nft.token.pubkey(),
+            collection_a_me.pubkey,
+            None,
+        )
+        .await
+        .unwrap();
+
+        // This needs to succeed because if the collection parent is burned
+        // we don't have to worry about sized collection math and items
+        // should be able to be unverified so they can be migrated to a new
+        // collection.
+        nft_item_one
+            .unverify_collection(
+                &mut context,
+                collection_a_nft.pubkey,
+                &kp,
+                collection_a_nft.mint.pubkey(),
+                collection_a_me.pubkey,
+                None,
+            )
+            .await
+            .unwrap();
+
+        // Now we can migrate it over to collection b.
+        nft_item_one
+            .set_and_verify_collection(
+                &mut context,
+                collection_b_nft.pubkey,
+                &kp,
+                kp.pubkey(),
+                collection_b_nft.mint.pubkey(),
+                collection_b_me.pubkey,
+                None,
+            )
+            .await
+            .unwrap();
+
+        let account = get_account(&mut context, &nft_item_one.pubkey).await;
+        let md = TmMetadata::safe_deserialize(&account.data).unwrap();
+
+        let collection = md.collection.unwrap();
+
+        assert_eq!(collection.key, collection_b_nft.mint.pubkey());
+        assert!(collection.verified);
+    }
+
+    #[tokio::test]
+    pub async fn burned_collection_parent_wrong_authority_fails() {
+        let mut context = program_test().start_with_context().await;
+
+        let incorrect_authority = Keypair::new();
+
+        // Unsized collection
+        let (collection_a_nft, collection_a_me) =
+            Metadata::create_default_nft(&mut context).await.unwrap();
+
+        let (nft_item_one, _me_item_one) =
+            Metadata::create_default_nft(&mut context).await.unwrap();
+        let (nft_item_two, _me_item_two) =
+            Metadata::create_default_nft(&mut context).await.unwrap();
+
+        let kpbytes = &context.payer;
+        let kp = Keypair::from_bytes(&kpbytes.to_bytes()).unwrap();
+
+        // Add the items to Collection A
+        nft_item_one
+            .set_and_verify_collection(
+                &mut context,
+                collection_a_nft.pubkey,
+                &kp,
+                kp.pubkey(),
+                collection_a_nft.mint.pubkey(),
+                collection_a_me.pubkey,
+                None,
+            )
+            .await
+            .unwrap();
+
+        nft_item_two
+            .set_and_verify_collection(
+                &mut context,
+                collection_a_nft.pubkey,
+                &kp,
+                kp.pubkey(),
+                collection_a_nft.mint.pubkey(),
+                collection_a_me.pubkey,
+                None,
+            )
+            .await
+            .unwrap();
+
+        // Burn the collection A parent.
+        burn(
+            &mut context,
+            collection_a_nft.pubkey,
+            &kp,
+            collection_a_nft.mint.pubkey(),
+            collection_a_nft.token.pubkey(),
+            collection_a_me.pubkey,
+            None,
+        )
+        .await
+        .unwrap();
+
+        // This needs to succeed because if the collection parent is burned
+        // we don't have to worry about sized collection math and items
+        // should be able to be unverified so they can be migrated to a new
+        // collection.
+        let err = nft_item_one
+            .unverify_collection(
+                &mut context,
+                collection_a_nft.pubkey,
+                &incorrect_authority,
+                collection_a_nft.mint.pubkey(),
+                collection_a_me.pubkey,
+                None,
+            )
+            .await
+            .unwrap_err();
+
+        assert_custom_error!(err, MetadataError::UpdateAuthorityIncorrect);
+    }
+
+    #[tokio::test]
+    pub async fn burned_collection_parent_delegate_fails() {
+        let mut context = program_test().start_with_context().await;
+
+        // Unsized collection
+        let (collection_nft, collection_me) =
+            Metadata::create_default_nft(&mut context).await.unwrap();
+
+        let (nft_item_one, _me_item_one) =
+            Metadata::create_default_nft(&mut context).await.unwrap();
+
+        let kpbytes = &context.payer;
+        let kp = Keypair::from_bytes(&kpbytes.to_bytes()).unwrap();
+
+        // Add the item to Collection
+        nft_item_one
+            .set_and_verify_collection(
+                &mut context,
+                collection_nft.pubkey,
+                &kp,
+                kp.pubkey(),
+                collection_nft.mint.pubkey(),
+                collection_me.pubkey,
+                None,
+            )
+            .await
+            .unwrap();
+
+        let delegate_keypair = Keypair::new();
+        let update_authority = context.payer.pubkey();
+
+        let (record, _) = find_collection_authority_account(
+            &collection_nft.mint.pubkey(),
+            &delegate_keypair.pubkey(),
+        );
+
+        let ix1 = mpl_token_metadata::instruction::approve_collection_authority(
+            mpl_token_metadata::id(),
+            record,
+            delegate_keypair.pubkey(),
+            update_authority,
+            context.payer.pubkey(),
+            collection_nft.pubkey,
+            collection_nft.mint.pubkey(),
+        );
+
+        let tx1 = Transaction::new_signed_with_payer(
+            &[ix1],
+            Some(&context.payer.pubkey()),
+            &[&context.payer],
+            context.last_blockhash,
+        );
+        context.banks_client.process_transaction(tx1).await.unwrap();
+
+        let kpbytes = &context.payer;
+        let kp = Keypair::from_bytes(&kpbytes.to_bytes()).unwrap();
+
+        // Burn the collection A parent.
+        burn(
+            &mut context,
+            collection_nft.pubkey,
+            &kp,
+            collection_nft.mint.pubkey(),
+            collection_nft.token.pubkey(),
+            collection_me.pubkey,
+            None,
+        )
+        .await
+        .unwrap();
+
+        // Collection delegate is valid but this should fail because
+        // the collection parent is burned.
+        let err = nft_item_one
+            .unverify_collection(
+                &mut context,
+                collection_nft.pubkey,
+                &delegate_keypair,
+                collection_nft.mint.pubkey(),
+                collection_me.pubkey,
+                None,
+            )
+            .await
+            .unwrap_err();
+
+        assert_custom_error!(err, MetadataError::UpdateAuthorityIncorrect);
     }
 }
