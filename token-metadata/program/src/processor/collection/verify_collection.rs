@@ -10,9 +10,10 @@ use crate::{
     assertions::{
         assert_owned_by,
         collection::{assert_collection_verify_is_valid, assert_has_collection_authority},
+        metadata::assert_token_standard,
     },
     error::MetadataError,
-    state::{Metadata, TokenMetadataAccount},
+    state::{Metadata, TokenMetadataAccount, TokenStandard},
 };
 
 pub fn verify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
@@ -34,6 +35,16 @@ pub fn verify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progr
 
     let mut metadata = Metadata::from_account_info(metadata_info)?;
     let collection_metadata = Metadata::from_account_info(collection_info)?;
+
+    // Only NonFungible or NonFungibleEdition types can be part of a collection.
+    assert_token_standard(
+        &metadata,
+        vec![
+            TokenStandard::NonFungible,
+            TokenStandard::NonFungibleEdition,
+        ],
+        MetadataError::MustBeNonFungible,
+    )?;
 
     assert_collection_verify_is_valid(
         &metadata.collection,

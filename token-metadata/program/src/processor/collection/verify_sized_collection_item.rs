@@ -10,9 +10,10 @@ use crate::{
     assertions::{
         assert_owned_by,
         collection::{assert_collection_verify_is_valid, assert_has_collection_authority},
+        metadata::assert_token_standard,
     },
     error::MetadataError,
-    state::{Metadata, TokenMetadataAccount},
+    state::{Metadata, TokenMetadataAccount, TokenStandard},
     utils::{clean_write_metadata, increment_collection_size},
 };
 
@@ -39,6 +40,16 @@ pub fn verify_sized_collection_item(
 
     let mut metadata = Metadata::from_account_info(metadata_info)?;
     let mut collection_metadata = Metadata::from_account_info(collection_info)?;
+
+    // Only NonFungible or NonFungibleEdition types can be part of a collection.
+    assert_token_standard(
+        &metadata,
+        vec![
+            TokenStandard::NonFungible,
+            TokenStandard::NonFungibleEdition,
+        ],
+        MetadataError::MustBeNonFungible,
+    )?;
 
     // Don't verify already verified items, otherwise we end up with invalid size data.
     if let Some(collection) = &metadata.collection {

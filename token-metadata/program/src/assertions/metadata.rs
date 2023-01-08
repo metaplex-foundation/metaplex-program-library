@@ -1,14 +1,17 @@
 use std::collections::HashMap;
 
-use solana_program::{account_info::AccountInfo, entrypoint::ProgramResult, pubkey::Pubkey};
+use solana_program::{
+    account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
+    pubkey::Pubkey,
+};
 use spl_token::state::Account;
 
 use crate::{
     assertions::{assert_initialized, assert_owned_by},
     error::MetadataError,
     state::{
-        Creator, Data, Metadata, MAX_CREATOR_LIMIT, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH,
-        MAX_URI_LENGTH,
+        Creator, Data, Metadata, TokenStandard, MAX_CREATOR_LIMIT, MAX_NAME_LENGTH,
+        MAX_SYMBOL_LENGTH, MAX_URI_LENGTH,
     },
 };
 
@@ -197,4 +200,22 @@ pub fn assert_currently_holding(
         return Err(MetadataError::MintMismatch.into());
     }
     Ok(())
+}
+
+pub fn assert_token_standard(
+    metadata: &Metadata,
+    token_standards: Vec<TokenStandard>,
+    error: impl Into<ProgramError>,
+) -> ProgramResult {
+    if let Some(standard) = &metadata.token_standard {
+        // Only NonFungible and NonFungibleEdition types can be part of a collection.
+        for token_standard in token_standards {
+            if standard == &token_standard {
+                return Ok(());
+            }
+        }
+        return Err(error.into());
+    } else {
+        return Err(MetadataError::CouldNotDetermineTokenStandard.into());
+    }
 }
