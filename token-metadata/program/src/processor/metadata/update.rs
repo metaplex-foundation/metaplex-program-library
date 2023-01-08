@@ -103,7 +103,7 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
         mint: ctx.accounts.mint_info.key,
         token_info: ctx.accounts.token_info,
         delegate_record_info: ctx.accounts.delegate_record_info,
-        delegate_role: Some(DelegateRole::Collection),
+        delegate_role: Some(DelegateRole::Update),
     })?;
 
     let token_standard = metadata

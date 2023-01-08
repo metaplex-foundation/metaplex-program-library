@@ -3285,6 +3285,26 @@ createErrorFromCodeLookup.set(0x98, () => new InstructionNotSupportedError());
 createErrorFromNameLookup.set('InstructionNotSupported', () => new InstructionNotSupportedError());
 
 /**
+ * KeyMismatch: 'Public key does not match expected value'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class KeyMismatchError extends Error {
+  readonly code: number = 0x99;
+  readonly name: string = 'KeyMismatch';
+  constructor() {
+    super('Public key does not match expected value');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, KeyMismatchError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x99, () => new KeyMismatchError());
+createErrorFromNameLookup.set('KeyMismatch', () => new KeyMismatchError());
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

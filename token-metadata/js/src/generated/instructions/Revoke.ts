@@ -36,7 +36,7 @@ export const RevokeStruct = new beet.BeetArgsStruct<
 /**
  * Accounts required by the _Revoke_ instruction
  *
- * @property [_writable_] delegateRecord Delegate account
+ * @property [_writable_] delegateRecord Delegate record account
  * @property [] delegate Owner of the delegated account
  * @property [_writable_] metadata Metadata account
  * @property [] masterEdition (optional) Master Edition account

@@ -604,6 +604,10 @@ pub enum MetadataError {
     /// 150
     #[error("Instruction not supported for ProgrammableNonFungible assets")]
     InstructionNotSupported,
+
+    /// 151
+    #[error("Public key does not match expected value")]
+    KeyMismatch,
 }
 
 impl PrintProgramError for MetadataError {

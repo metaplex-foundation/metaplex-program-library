@@ -2935,7 +2935,7 @@
           "name": "delegateRecord",
           "isMut": true,
           "isSigner": false,
-          "desc": "Delegate Record account"
+          "desc": "Delegate record account"
         },
         {
           "name": "delegate",
@@ -3036,7 +3036,7 @@
           "name": "delegateRecord",
           "isMut": true,
           "isSigner": false,
-          "desc": "Delegate account"
+          "desc": "Delegate record account"
         },
         {
           "name": "delegate",
@@ -4285,6 +4285,36 @@
                 }
               }
             ]
+          },
+          {
+            "name": "UpdateV1",
+            "fields": [
+              {
+                "name": "authorization_data",
+                "type": {
+                  "option": {
+                    "defined": "AuthorizationData"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "name": "UtilityV1",
+            "fields": [
+              {
+                "name": "amount",
+                "type": "u64"
+              },
+              {
+                "name": "authorization_data",
+                "type": {
+                  "option": {
+                    "defined": "AuthorizationData"
+                  }
+                }
+              }
+            ]
           }
         ]
       }
@@ -4298,10 +4328,16 @@
             "name": "CollectionV1"
           },
           {
+            "name": "SaleV1"
+          },
+          {
             "name": "TransferV1"
           },
           {
-            "name": "SaleV1"
+            "name": "UpdateV1"
+          },
+          {
+            "name": "UtilityV1"
           }
         ]
       }
@@ -5611,6 +5647,11 @@
       "code": 152,
       "name": "InstructionNotSupported",
       "msg": "Instruction not supported for ProgrammableNonFungible assets"
+    },
+    {
+      "code": 153,
+      "name": "KeyMismatch",
+      "msg": "Public key does not match expected value"
     }
   ],
   "metadata": {

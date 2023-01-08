@@ -1165,7 +1165,7 @@ test('Update: Delegate Authority Type Not Supported', async (t) => {
       Buffer.from('metadata'),
       PROGRAM_ID.toBuffer(),
       daManager.mint.toBuffer(),
-      Buffer.from('collection_delegate'),
+      Buffer.from('update_delegate'),
       payer.publicKey.toBuffer(),
       delegate.publicKey.toBuffer(),
     ],
@@ -1174,7 +1174,7 @@ test('Update: Delegate Authority Type Not Supported', async (t) => {
   amman.addr.addLabel('Delegate Record', delegateRecord);
 
   const args: DelegateArgs = {
-    __kind: 'CollectionV1',
+    __kind: 'UpdateV1',
     authorizationData: null,
   };
 
