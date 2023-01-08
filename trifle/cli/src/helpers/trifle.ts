@@ -238,14 +238,19 @@ export const transferIn = async (
   keypair: Keypair,
   slot: string,
 ) => {
-  const escrowConstraintModel = await findEscrowConstraintModelPda(
-    keypair.publicKey,
-    slot,
-  );
   const trifleAddress = await findTriflePda(
     escrowNft.mint.address,
     keypair.publicKey,
   );
+
+  const accountInfo = await connection.getAccountInfo(trifleAddress[0]);
+  let escrowConstraintModel: PublicKey = new PublicKey("11111111111111111111111111111111");
+  if (accountInfo) {
+    const account: Trifle = Trifle.fromAccountInfo(accountInfo)[0];
+    escrowConstraintModel = account.escrowConstraintModel;
+  } else {
+    console.log("Unable to fetch Trifle account");
+  }
 
   const dst: PublicKey = await getAssociatedTokenAddress(
     nft.mint.address,
@@ -270,7 +275,7 @@ export const transferIn = async (
   const transferIX = createTransferInInstruction(
     {
       trifle: trifleAddress[0],
-      constraintModel: escrowConstraintModel[0],
+      constraintModel: escrowConstraintModel,
       escrow: escrowAccountAddress,
       payer: keypair.publicKey,
       trifleAuthority: keypair.publicKey,
@@ -311,14 +316,19 @@ export const transferOut = async (
   keypair: Keypair,
   slot: string,
 ) => {
-  const escrowConstraintModel = await findEscrowConstraintModelPda(
-    keypair.publicKey,
-    slot,
-  );
   const trifleAddress = await findTriflePda(
     escrowNft.mint.address,
     keypair.publicKey,
   );
+
+  const accountInfo = await connection.getAccountInfo(trifleAddress[0]);
+  let escrowConstraintModel: PublicKey = new PublicKey("11111111111111111111111111111111");
+  if (accountInfo) {
+    const account: Trifle = Trifle.fromAccountInfo(accountInfo)[0];
+    escrowConstraintModel = account.escrowConstraintModel;
+  } else {
+    console.log("Unable to fetch Trifle account");
+  }
 
   const dst: PublicKey = await getAssociatedTokenAddress(
     nft.mint.address,
@@ -328,7 +338,7 @@ export const transferOut = async (
   const transferIX = createTransferOutInstruction(
     {
       trifleAccount: trifleAddress[0],
-      constraintModel: escrowConstraintModel[0],
+      constraintModel: escrowConstraintModel,
       escrowAccount: escrowAccountAddress,
       escrowTokenAccount: escrowNft.token.address,
       escrowMint: escrowNft.mint.address,
