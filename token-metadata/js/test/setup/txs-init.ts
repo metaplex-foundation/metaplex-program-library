@@ -42,7 +42,6 @@ import {
   DelegateInstructionArgs,
   DelegateArgs,
   createDelegateInstruction,
-  AuthorityType,
   RevokeInstructionAccounts,
   RevokeInstructionArgs,
   createRevokeInstruction,
@@ -331,7 +330,6 @@ export class InitTransactions {
     metadata: PublicKey,
     edition: PublicKey,
     authority: Keypair,
-    authorityType: AuthorityType = AuthorityType.Metadata,
     updateTestData: UpdateTestData,
     delegateRecord?: PublicKey | null,
     token?: PublicKey | null,
@@ -369,7 +367,6 @@ export class InitTransactions {
         collectionDetails: updateTestData.collectionDetails,
         ruleSet: updateTestData.ruleSet,
         authorizationData,
-        authorityType,
       },
     };
 
@@ -592,6 +589,7 @@ export class InitTransactions {
     payer: Keypair,
     connection: Connection,
     handler: PayerTransactionHandler,
+    owner: PublicKey | null = null,
   ): Promise<{ tx: ConfirmedTransactionAssertablePromise; token: PublicKey }> {
     const token = Keypair.generate();
     amman.addr.addLabel('Token Account', token.publicKey);
@@ -607,7 +605,7 @@ export class InitTransactions {
         programId: TOKEN_PROGRAM_ID,
       }),
       // initialize token account
-      createInitializeAccountInstruction(token.publicKey, mint, payer.publicKey),
+      createInitializeAccountInstruction(token.publicKey, mint, owner),
     );
 
     return {

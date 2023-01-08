@@ -1,5 +1,74 @@
+use borsh::{BorshDeserialize, BorshSerialize};
+use mpl_utils::cmp_pubkeys;
 use num_derive::ToPrimitive;
-use solana_program::{account_info::AccountInfo, instruction::AccountMeta};
+#[cfg(feature = "serde-feature")]
+use serde::{Deserialize, Serialize};
+use solana_program::program_pack::Pack;
+use solana_program::{
+    account_info::AccountInfo, instruction::AccountMeta, program_error::ProgramError,
+    pubkey::Pubkey,
+};
+use spl_token::state::Account;
+
+use crate::{error::MetadataError, instruction::DelegateRole, pda::find_delegate_account};
+
+#[repr(C)]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+pub enum AuthorityType {
+    None,
+    Metadata,
+    Delegate,
+    Holder,
+}
+
+pub struct AuthorityRequest<'a, 'b> {
+    /// Pubkey of the authority.
+    pub authority: &'a Pubkey,
+    /// Metadata's update authority pubkey of the asset.
+    pub update_authority: &'b Pubkey,
+    /// Mint address.
+    pub mint: &'a Pubkey,
+    /// Holder's token account.
+    pub token_info: Option<&'a AccountInfo<'a>>,
+    /// `DelegateRecord` account of the authority (when the authority is a delegate).
+    pub delegate_record_info: Option<&'a AccountInfo<'a>>,
+    /// Expected `DelegateRole` for the request.
+    pub delegate_role: Option<DelegateRole>,
+}
+
+impl AuthorityType {
+    /// Determines the `AuthorityType`.
+    pub fn get_authority_type(request: AuthorityRequest) -> Result<Self, ProgramError> {
+        if cmp_pubkeys(request.update_authority, request.authority) {
+            return Ok(AuthorityType::Metadata);
+        }
+
+        if let Some(delegate_record_info) = request.delegate_record_info {
+            let (pda_key, _) = find_delegate_account(
+                request.mint,
+                request
+                    .delegate_role
+                    .ok_or(MetadataError::InvalidDelegateRoleForTransfer)?,
+                request.update_authority,
+                request.authority,
+            );
+
+            if cmp_pubkeys(&pda_key, delegate_record_info.key) {
+                return Ok(AuthorityType::Delegate);
+            }
+        }
+
+        if let Some(token_info) = request.token_info {
+            let token = Account::unpack(&token_info.try_borrow_data()?)?;
+            if cmp_pubkeys(&token.owner, request.authority) {
+                return Ok(AuthorityType::Holder);
+            }
+        }
+
+        Ok(AuthorityType::None)
+    }
+}
 
 #[derive(Debug, Clone, ToPrimitive)]
 pub enum Operation {

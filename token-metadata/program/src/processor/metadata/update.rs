@@ -1,15 +1,18 @@
-use mpl_utils::assert_signer;
+use mpl_utils::{assert_signer, cmp_pubkeys};
 use solana_program::{
-    account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
+    account_info::AccountInfo, entrypoint::ProgramResult, msg, program_error::ProgramError,
     pubkey::Pubkey, sysvar,
 };
 
 use crate::{
-    assertions::{assert_owned_by, metadata::assert_metadata_authority},
+    assertions::assert_owned_by,
     error::MetadataError,
-    instruction::{AuthorityType, Context, Update, UpdateArgs},
+    instruction::{Context, DelegateRole, Update, UpdateArgs},
     pda::{EDITION, PREFIX},
-    state::{Metadata, TokenMetadataAccount, TokenStandard},
+    state::{
+        AuthorityRequest, AuthorityType, Metadata, ProgrammableConfig, TokenMetadataAccount,
+        TokenStandard,
+    },
     utils::assert_derivation,
 };
 
@@ -28,11 +31,13 @@ pub fn update<'a>(
 fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> ProgramResult {
     //** Account Validation **/
     // Assert signers
+
     // This account should always be a signer regardless of the authority type,
     // because at least one signer is required to update the metadata.
     assert_signer(ctx.accounts.authority_info)?;
 
     // Assert program ownership
+
     assert_owned_by(ctx.accounts.metadata_info, program_id)?;
     assert_owned_by(ctx.accounts.mint_info, &spl_token::ID)?;
 
@@ -50,14 +55,21 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
             ],
         )?;
     }
+    // authorization rules
     if let Some(authorization_rules) = ctx.accounts.authorization_rules_info {
         assert_owned_by(authorization_rules, &mpl_token_auth_rules::ID)?;
     }
+    // token owner
     if let Some(holder_token_account) = ctx.accounts.token_info {
         assert_owned_by(holder_token_account, &spl_token::ID)?;
     }
+    // delegate
+    if let Some(delegate_record_info) = ctx.accounts.delegate_record_info {
+        assert_owned_by(delegate_record_info, &crate::ID)?;
+    }
 
-    // Check program IDs.
+    // Check program IDs
+
     if ctx.accounts.system_program_info.key != &solana_program::system_program::ID {
         return Err(ProgramError::IncorrectProgramId);
     }
@@ -74,65 +86,72 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
         }
     }
 
-    // Deserialize metadata to determine its type
-    let mut metadata = Metadata::from_account_info(ctx.accounts.metadata_info)?;
-
     // Validate relationships
 
+    let mut metadata = Metadata::from_account_info(ctx.accounts.metadata_info)?;
     // Mint must match metadata mint
     if metadata.mint != *ctx.accounts.mint_info.key {
         return Err(MetadataError::MintMismatch.into());
     }
 
+    // Determines if we have a valid authority to perform the update. This must
+    // be either the update authority, a delegate or the holder. This call fails
+    // if no valid authority is present.
+    let authority_type = AuthorityType::get_authority_type(AuthorityRequest {
+        authority: ctx.accounts.authority_info.key,
+        update_authority: &metadata.update_authority,
+        mint: ctx.accounts.mint_info.key,
+        token_info: ctx.accounts.token_info,
+        delegate_record_info: ctx.accounts.delegate_record_info,
+        delegate_role: Some(DelegateRole::Collection),
+    })?;
+
     let token_standard = metadata
         .token_standard
         .ok_or(MetadataError::InvalidTokenStandard)?;
 
-    // We have to validate authorization rules if the token standard is a Programmable type
-    // and the metadata has a programmable config set.
-    let _auth_rules_apply = matches!(token_standard, TokenStandard::ProgrammableNonFungible)
-        && metadata.programmable_config.is_some();
+    // for pNFTs, we need to validate the authorization rules
+    if matches!(token_standard, TokenStandard::ProgrammableNonFungible) {
+        let rule_set =
+            if let Some(ProgrammableConfig { rule_set, .. }) = metadata.programmable_config {
+                rule_set
+            } else {
+                None
+            };
 
-    match args.get_authority_type() {
+        if let Some(rule_set) = rule_set {
+            let authorization_rules_info = ctx
+                .accounts
+                .authorization_rules_info
+                .ok_or(MetadataError::MissingAuthorizationRules)?;
+
+            if !cmp_pubkeys(&rule_set, authorization_rules_info.key) {
+                return Err(MetadataError::InvalidAuthorizationRules.into());
+            }
+        }
+    }
+
+    match authority_type {
         AuthorityType::Metadata => {
-            // Check is signer and matches update authority on metadata.
-            assert_metadata_authority(&metadata, ctx.accounts.authority_info)?;
-
-            // Metadata authority is the paramount authority so is not subject to auth rules.
-            // Exit the branch with no error and proceed to update.
+            // Metadata authority is the paramount authority so is not subject to
+            // auth rules. At this point we already checked that the authority is a
+            // signer and that it matches the metadata's update authority.
+            msg!("Authority type: Metadata");
         }
         AuthorityType::Delegate => {
-            // If delegate_record_opt_info is None, then return an error.
-            // Otherwise, validate delegate_record PDA derivation
-            // seeds: mint, "update", authority as delegate, metadata.update_authority
-            //
-            // if auth_rules_apply:
-            // we can unwrap programmable config
-            // call the auth rules function to perform all auth rules checks
-            //     - get authorization data
-            //     - assert_valid_authorization
-            //     - add required payload values
-            //     - call validate function
-            // if the auth rules function returns with no error, then we
-            // exit this branch with no error
-            //
-            // else: it's a valid update delegate so we exit this branch with no error
-
+            // Support for delegate update (for pNFTs this involves validating the
+            // authoritzation rules)
+            msg!("Authority type: Delegate");
             return Err(MetadataError::FeatureNotSupported.into());
         }
         AuthorityType::Holder => {
-            // Rules TBD
-            // Ensure that the holder token account is passed in
-            // Ensure owner is currently holding the token and is the proper owner
-            // Ensure mint matches metadata
+            // Support for holder update (for pNFTs this involves validating the
+            // authoritzation rules)
+            msg!("Authority type: Holder");
             return Err(MetadataError::FeatureNotSupported.into());
         }
-        AuthorityType::Other => {
-            // Rules TBD, additional authority type for supporting PayloadKey::Target
-            // and support flexible authorization rules.
-            // This one should fail without authorization rules set as there is no valid
-            // update without it.
-            return Err(MetadataError::FeatureNotSupported.into());
+        AuthorityType::None => {
+            return Err(MetadataError::UpdateAuthorityIncorrect.into());
         }
     }
 

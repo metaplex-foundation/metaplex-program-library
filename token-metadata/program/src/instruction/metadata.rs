@@ -16,16 +16,6 @@ use crate::{
     state::{AssetData, Collection, CollectionDetails, Creator, Data, DataV2, MigrationType, Uses},
 };
 
-#[repr(C)]
-#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
-pub enum AuthorityType {
-    Metadata,
-    Delegate,
-    Holder,
-    Other,
-}
-
 //----------------------+
 // Instruction args     |
 //----------------------+
@@ -86,10 +76,6 @@ pub enum TransferArgs {
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub enum UpdateArgs {
     V1 {
-        /// The type of authority requesting the update.
-        authority_type: AuthorityType,
-        /// Required authorization data to validate the request.
-        authorization_data: Option<AuthorizationData>,
         /// The new update authority.
         new_update_authority: Option<Pubkey>,
         /// The metadata details.
@@ -108,21 +94,14 @@ pub enum UpdateArgs {
         uses: UsesToggle,
         // Programmable rule set configuration (only applicable to `Programmable` asset types).
         rule_set: RuleSetToggle,
+        /// Required authorization data to validate the request.
+        authorization_data: Option<AuthorizationData>,
     },
-}
-
-impl UpdateArgs {
-    pub fn get_authority_type(&self) -> AuthorityType {
-        match self {
-            UpdateArgs::V1 { authority_type, .. } => authority_type.clone(),
-        }
-    }
 }
 
 impl Default for UpdateArgs {
     fn default() -> Self {
         Self::V1 {
-            authority_type: AuthorityType::Metadata,
             authorization_data: None,
             new_update_authority: None,
             data: None,

@@ -4336,26 +4336,6 @@
       }
     },
     {
-      "name": "AuthorityType",
-      "type": {
-        "kind": "enum",
-        "variants": [
-          {
-            "name": "Metadata"
-          },
-          {
-            "name": "Delegate"
-          },
-          {
-            "name": "Holder"
-          },
-          {
-            "name": "Other"
-          }
-        ]
-      }
-    },
-    {
       "name": "CreateArgs",
       "type": {
         "kind": "enum",
@@ -4445,20 +4425,6 @@
             "name": "V1",
             "fields": [
               {
-                "name": "authority_type",
-                "type": {
-                  "defined": "AuthorityType"
-                }
-              },
-              {
-                "name": "authorization_data",
-                "type": {
-                  "option": {
-                    "defined": "AuthorizationData"
-                  }
-                }
-              },
-              {
                 "name": "new_update_authority",
                 "type": {
                   "option": "publicKey"
@@ -4506,6 +4472,14 @@
                 "name": "rule_set",
                 "type": {
                   "defined": "RuleSetToggle"
+                }
+              },
+              {
+                "name": "authorization_data",
+                "type": {
+                  "option": {
+                    "defined": "AuthorizationData"
+                  }
                 }
               }
             ]
@@ -4774,6 +4748,26 @@
           },
           {
             "name": "ProgrammableV1"
+          }
+        ]
+      }
+    },
+    {
+      "name": "AuthorityType",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "None"
+          },
+          {
+            "name": "Metadata"
+          },
+          {
+            "name": "Delegate"
+          },
+          {
+            "name": "Holder"
           }
         ]
       }

@@ -11,10 +11,10 @@ import * as beet from '@metaplex-foundation/beet';
  * @category generated
  */
 export enum AuthorityType {
+  None,
   Metadata,
   Delegate,
   Holder,
-  Other,
 }
 
 /**

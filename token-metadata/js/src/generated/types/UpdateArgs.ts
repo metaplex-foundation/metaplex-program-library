@@ -5,16 +5,15 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet';
 import * as web3 from '@solana/web3.js';
+import * as beet from '@metaplex-foundation/beet';
 import * as beetSolana from '@metaplex-foundation/beet-solana';
-import { AuthorityType, authorityTypeBeet } from './AuthorityType';
-import { AuthorizationData, authorizationDataBeet } from './AuthorizationData';
 import { Data, dataBeet } from './Data';
 import { CollectionToggle, collectionToggleBeet } from './CollectionToggle';
 import { CollectionDetailsToggle, collectionDetailsToggleBeet } from './CollectionDetailsToggle';
 import { UsesToggle, usesToggleBeet } from './UsesToggle';
 import { RuleSetToggle, ruleSetToggleBeet } from './RuleSetToggle';
+import { AuthorizationData, authorizationDataBeet } from './AuthorizationData';
 /**
  * This type is used to derive the {@link UpdateArgs} type as well as the de/serializer.
  * However don't refer to it in your code but use the {@link UpdateArgs} type instead.
@@ -26,8 +25,6 @@ import { RuleSetToggle, ruleSetToggleBeet } from './RuleSetToggle';
  */
 export type UpdateArgsRecord = {
   V1: {
-    authorityType: AuthorityType;
-    authorizationData: beet.COption<AuthorizationData>;
     newUpdateAuthority: beet.COption<web3.PublicKey>;
     data: beet.COption<Data>;
     primarySaleHappened: beet.COption<boolean>;
@@ -36,6 +33,7 @@ export type UpdateArgsRecord = {
     collectionDetails: CollectionDetailsToggle;
     uses: UsesToggle;
     ruleSet: RuleSetToggle;
+    authorizationData: beet.COption<AuthorizationData>;
   };
 };
 
@@ -64,8 +62,6 @@ export const updateArgsBeet = beet.dataEnum<UpdateArgsRecord>([
     'V1',
     new beet.FixableBeetArgsStruct<UpdateArgsRecord['V1']>(
       [
-        ['authorityType', authorityTypeBeet],
-        ['authorizationData', beet.coption(authorizationDataBeet)],
         ['newUpdateAuthority', beet.coption(beetSolana.publicKey)],
         ['data', beet.coption(dataBeet)],
         ['primarySaleHappened', beet.coption(beet.bool)],
@@ -74,6 +70,7 @@ export const updateArgsBeet = beet.dataEnum<UpdateArgsRecord>([
         ['collectionDetails', collectionDetailsToggleBeet],
         ['uses', usesToggleBeet],
         ['ruleSet', ruleSetToggleBeet],
+        ['authorizationData', beet.coption(authorizationDataBeet)],
       ],
       'UpdateArgsRecord["V1"]',
     ),
