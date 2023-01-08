@@ -240,7 +240,7 @@ export const transferIn = async (
 ) => {
   const escrowConstraintModel = await findEscrowConstraintModelPda(
     keypair.publicKey,
-    "test",
+    slot,
   );
   const trifleAddress = await findTriflePda(
     escrowNft.mint.address,
@@ -313,7 +313,7 @@ export const transferOut = async (
 ) => {
   const escrowConstraintModel = await findEscrowConstraintModelPda(
     keypair.publicKey,
-    "test",
+    slot,
   );
   const trifleAddress = await findTriflePda(
     escrowNft.mint.address,
