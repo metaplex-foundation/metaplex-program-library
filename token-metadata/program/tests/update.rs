@@ -14,7 +14,7 @@ mod update {
 
     use mpl_token_metadata::{
         instruction::{RuleSetToggle, UpdateArgs},
-        state::{Data, ProgrammableConfig, ProgrammableState, TokenStandard},
+        state::{Data, TokenStandard},
     };
     use solana_sdk::signature::Keypair;
 
@@ -119,7 +119,7 @@ mod update {
         let metadata = da.get_metadata(context).await;
 
         if let Some(config) = metadata.programmable_config {
-            assert_eq!(config.rule_set, Some(authorization_rules));
+            assert_eq!(config.rule_set, authorization_rules);
         } else {
             panic!("Missing rule set programmable config");
         }
@@ -154,12 +154,6 @@ mod update {
         // checks the created metadata values
         let metadata = da.get_metadata(context).await;
 
-        assert_eq!(
-            metadata.programmable_config,
-            Some(ProgrammableConfig {
-                state: ProgrammableState::Unlocked,
-                rule_set: None,
-            })
-        );
+        assert_eq!(metadata.programmable_config, None);
     }
 }

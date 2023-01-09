@@ -79,7 +79,7 @@ mod migrate {
         );
 
         if let Some(config) = new_md.programmable_config {
-            assert_eq!(config.rule_set, Some(rule_set));
+            assert_eq!(config.rule_set, rule_set);
         } else {
             panic!("Missing programmable config");
         }

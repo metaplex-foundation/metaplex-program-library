@@ -16,8 +16,9 @@ mod transfer {
     use mpl_token_metadata::{
         error::MetadataError,
         instruction::{create_escrow_account, DelegateRole, TransferArgs},
+        pda::find_delegate_account,
         processor::find_escrow_account,
-        state::{EscrowAuthority, TokenStandard, DelegateRecord, Key}, pda::find_delegate_account,
+        state::{DelegateRecord, EscrowAuthority, Key, TokenStandard},
     };
     use solana_program::{native_token::LAMPORTS_PER_SOL, program_pack::Pack, pubkey::Pubkey};
     use solana_sdk::transaction::Transaction;
@@ -225,7 +226,7 @@ mod transfer {
         );
 
         if let Some(config) = metadata.programmable_config {
-            assert_eq!(config.rule_set, Some(rule_set));
+            assert_eq!(config.rule_set, rule_set);
         } else {
             panic!("Missing programmable config");
         }

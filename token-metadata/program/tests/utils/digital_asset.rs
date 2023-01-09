@@ -3,10 +3,10 @@ use mpl_token_metadata::{
     instruction::{
         builders::{
             CreateBuilder, DelegateBuilder, MigrateBuilder, MintBuilder, RevokeBuilder,
-            TransferBuilder,
+            TransferBuilder, UtilityBuilder,
         },
         CreateArgs, DelegateArgs, DelegateRole, InstructionBuilder, MigrateArgs, MintArgs,
-        RevokeArgs, TransferArgs,
+        RevokeArgs, TransferArgs, UtilityArgs,
     },
     pda::find_delegate_account,
     processor::AuthorizationData,
@@ -408,6 +408,45 @@ impl DigitalAsset {
             &instructions,
             Some(&authority.pubkey()),
             &[authority, payer],
+            context.last_blockhash,
+        );
+
+        context.banks_client.process_transaction(tx).await
+    }
+
+    pub async fn utility(
+        &mut self,
+        context: &mut ProgramTestContext,
+        approver: Keypair,
+        delegate_record: Option<Pubkey>,
+        payer: Keypair,
+        args: UtilityArgs,
+    ) -> Result<(), BanksClientError> {
+        let mut builder = UtilityBuilder::new();
+        builder
+            .approver(approver.pubkey())
+            .mint(self.mint.pubkey())
+            .metadata(self.metadata)
+            .payer(payer.pubkey());
+
+        if let Some(delegate_record) = delegate_record {
+            builder.delegate_record(delegate_record);
+        }
+
+        if let Some(edition) = self.master_edition {
+            builder.edition(edition);
+        }
+
+        if let Some(token) = self.token {
+            builder.token(token);
+        }
+
+        let utility_ix = builder.build(args).unwrap().instruction();
+
+        let tx = Transaction::new_signed_with_payer(
+            &[utility_ix],
+            Some(&payer.pubkey()),
+            &[&approver],
             context.last_blockhash,
         );
 
