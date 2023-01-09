@@ -8,7 +8,7 @@ use spl_token::{native_mint::DECIMALS, state::Mint};
 use crate::{
     error::MetadataError,
     instruction::{Context, Create, CreateArgs},
-    state::{Metadata, ProgrammableConfig, ProgrammableState, TokenMetadataAccount, TokenStandard},
+    state::{AssetState, Metadata, ProgrammableConfig, TokenMetadataAccount, TokenStandard},
     utils::{
         create_master_edition, process_create_metadata_accounts_logic,
         CreateMetadataAccountsLogicArgs,
@@ -152,6 +152,7 @@ fn create_v1(program_id: &Pubkey, ctx: Context<Create>, args: CreateArgs) -> Pro
 
     let mut metadata = Metadata::from_account_info(ctx.accounts.metadata_info)?;
     metadata.token_standard = Some(asset_data.token_standard);
+    metadata.asset_state = Some(AssetState::Unlocked);
 
     // sets the programmable config for programmable assets
 
@@ -159,10 +160,9 @@ fn create_v1(program_id: &Pubkey, ctx: Context<Create>, args: CreateArgs) -> Pro
         asset_data.token_standard,
         TokenStandard::ProgrammableNonFungible
     ) {
-        metadata.programmable_config = Some(ProgrammableConfig {
-            state: ProgrammableState::Unlocked,
-            rule_set: asset_data.rule_set,
-        });
+        if let Some(rule_set) = asset_data.rule_set {
+            metadata.programmable_config = Some(ProgrammableConfig { rule_set });
+        }
     }
 
     // saves the state

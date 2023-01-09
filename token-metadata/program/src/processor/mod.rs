@@ -98,9 +98,9 @@ pub fn process_instruction<'a>(
             msg!("Instruction: Token Metadata Burn");
             burn::burn(program_id, accounts, args)
         }
-        MetadataInstruction::UseAsset(args) => {
-            msg!("Instruction: Token Metadata UseAsset");
-            uses::use_asset(program_id, accounts, args)
+        MetadataInstruction::Utility(args) => {
+            msg!("Instruction: Token Metadata Utility");
+            uses::utility(program_id, accounts, args)
         }
         MetadataInstruction::Transfer(args) => {
             msg!("Instruction: Token Metadata Transfer");

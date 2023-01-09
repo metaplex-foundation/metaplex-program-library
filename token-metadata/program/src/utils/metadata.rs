@@ -11,10 +11,11 @@ use crate::{
         collection::assert_collection_update_is_valid, metadata::assert_data_valid,
         uses::assert_valid_use,
     },
+    instruction::DelegateRole,
     state::{
-        Collection, CollectionDetails, Data, DataV2, Key, Metadata,
-        ProgrammableConfig, TokenStandard, Uses, EDITION, MAX_METADATA_LEN, PREFIX,
-    }, instruction::DelegateRole,
+        AssetState, Collection, CollectionDetails, Data, DataV2, Key, Metadata, ProgrammableConfig,
+        TokenStandard, Uses, EDITION, MAX_METADATA_LEN, PREFIX,
+    },
 };
 
 // This equals the program address of the metadata program:
@@ -209,12 +210,18 @@ pub fn meta_deser_unchecked(buf: &mut &[u8]) -> Result<Metadata, BorshError> {
     let collection_details_res: Result<Option<CollectionDetails>, BorshError> =
         BorshDeserialize::deserialize(buf);
 
-    // Programmable Config
-    let programmable_config_res: Result<Option<ProgrammableConfig>, BorshError> =
+    // pNFT
+
+    // Asset State
+    let asset_state_res: Result<Option<AssetState>, BorshError> =
         BorshDeserialize::deserialize(buf);
 
     // Persistent Delegate
     let persistent_delegate_res: Result<Option<DelegateRole>, BorshError> =
+        BorshDeserialize::deserialize(buf);
+
+    // Programmable Config
+    let programmable_config_res: Result<Option<ProgrammableConfig>, BorshError> =
         BorshDeserialize::deserialize(buf);
 
     // We can have accidentally valid, but corrupted data, particularly on the Collection struct,
@@ -233,17 +240,12 @@ pub fn meta_deser_unchecked(buf: &mut &[u8]) -> Result<Metadata, BorshError> {
         Err(_) => None,
     };
 
-    // Programmable Config
-    let programmable_config = match programmable_config_res {
-        Ok(config) => config,
-        Err(_) => None,
-    };
-
+    // Asset State
+    let asset_state = asset_state_res.unwrap_or(None);
     // Persistent Delegate
-    let delegate = match persistent_delegate_res {
-        Ok(delegate) => delegate,
-        Err(_) => None,
-    };
+    let delegate = persistent_delegate_res.unwrap_or(None);
+    // Programmable Config
+    let programmable_config = programmable_config_res.unwrap_or(None);
 
     let metadata = Metadata {
         key,
@@ -257,8 +259,9 @@ pub fn meta_deser_unchecked(buf: &mut &[u8]) -> Result<Metadata, BorshError> {
         collection,
         uses,
         collection_details,
-        programmable_config,
+        asset_state,
         persistent_delegate: delegate,
+        programmable_config,
     };
 
     Ok(metadata)
@@ -360,8 +363,9 @@ pub mod tests {
             collection: None,
             uses: None,
             collection_details: None,
-            programmable_config: None,
+            asset_state: Some(AssetState::Unlocked),
             persistent_delegate: None,
+            programmable_config: None,
         };
 
         puff_out_data_fields(&mut metadata);

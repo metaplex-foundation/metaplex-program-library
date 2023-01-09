@@ -7,7 +7,7 @@ mod edition;
 pub(crate) mod escrow;
 mod freeze;
 mod metadata;
-mod uses;
+mod utility;
 
 use borsh::{BorshDeserialize, BorshSerialize};
 pub use bubblegum::*;
@@ -23,7 +23,7 @@ use mpl_token_metadata_context_derive::AccountContext;
 use serde::{Deserialize, Serialize};
 use shank::ShankInstruction;
 use solana_program::account_info::AccountInfo;
-pub use uses::*;
+pub use utility::*;
 
 #[allow(deprecated)]
 pub use crate::deprecated_instruction::{
@@ -578,19 +578,20 @@ pub enum MetadataInstruction {
     /// 
     /// The configurable `authorization_rules` only apply to `ProgrammableNonFungible` assets and
     /// it may require additional accounts to validate the rules.
-    #[account(0, writable, name="metadata", desc="Metadata account")]
-    #[account(1, writable, name="token_account", desc="Token Account Of NFT")]
-    #[account(2, writable, name="mint", desc="Mint of the Metadata")]
-    #[account(3, signer, writable, name="use_authority", desc="Use authority or current owner of the asset")]
-    #[account(4, name="owner", desc="Owner")]
-    #[account(5, name="spl_token_program", desc="SPL Token program")]
-    #[account(6, name="ata_program", desc="Associated Token program")]
+    #[account(0, signer, name="approver", desc="Token owner or delegate")]
+    #[account(1, writable, optional, name="delegate_record", desc="Delegate record PDA")]
+    #[account(2, writable, optional, name="token", desc="Token account")]
+    #[account(3, name="mint", desc="Mint account")]
+    #[account(4, writable, name="metadata", desc="Metadata account")]
+    #[account(5, optional, writable, name="edition", desc="Edition account")]
+    #[account(6, signer, name="payer", desc="Payer")]
     #[account(7, name="system_program", desc="System program")]
-    #[account(8, optional, writable, name="use_authority_record", desc="Use Authority Record PDA (if present the program assumes a delegated use authority)")]
-    #[account(9, optional, name="authorization_rules", desc="Token Authorization Rules account")]
+    #[account(8, name="sysvar_instructions", desc="System program")]
+    #[account(9, optional, name="spl_token_program", desc="SPL Token Program")]
     #[account(10, optional, name="authorization_rules_program", desc="Token Authorization Rules Program")]
+    #[account(11, optional, name="authorization_rules", desc="Token Authorization Rules account")]
     #[default_optional_accounts]
-    UseAsset(UseAssetArgs),
+    Utility(UtilityArgs),
 
     /// Transfer an asset.
     /// 

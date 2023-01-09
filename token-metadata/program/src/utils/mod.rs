@@ -192,7 +192,7 @@ mod tests {
     pub use solana_program::pubkey::Pubkey;
 
     use crate::{
-        state::MAX_METADATA_LEN,
+        state::{AssetState, MAX_METADATA_LEN},
         utils::{
             metadata::tests::{expected_pesky_metadata, pesky_data},
             try_from_slice_checked,
@@ -241,8 +241,9 @@ mod tests {
             uses: None,
             token_standard: None,
             collection_details: None,
-            programmable_config: None,
+            asset_state: Some(AssetState::Unlocked),
             persistent_delegate: None,
+            programmable_config: None,
         };
 
         puff_out_data_fields(&mut metadata);

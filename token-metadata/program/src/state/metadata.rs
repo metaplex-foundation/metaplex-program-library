@@ -26,7 +26,11 @@ pub const MAX_METADATA_LEN: usize = 1 // key
 + 2              // token standard
 + 34             // collection
 + 18             // uses
-+ 118; // Padding
++ 10             // collection details
++ 2              // asset state
++ 2              // persistent delegate
++ 33             // programmable config
++ 71; // Padding
 
 pub const MAX_DATA_SIZE: usize = 4
     + MAX_NAME_LENGTH
@@ -43,9 +47,13 @@ pub const MAX_DATA_SIZE: usize = 4
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(Clone, BorshSerialize, Debug, PartialEq, Eq, ShankAccount)]
 pub struct Metadata {
+    /// Account discriminator.
     pub key: Key,
+    /// Address of the update authority.
     pub update_authority: Pubkey,
+    /// Address of the mint.
     pub mint: Pubkey,
+    /// Asset data.
     pub data: Data,
     // Immutable, once flipped, all sales of this metadata are considered secondary.
     pub primary_sale_happened: bool,
@@ -61,11 +69,13 @@ pub struct Metadata {
     pub uses: Option<Uses>,
     /// Collection Details
     pub collection_details: Option<CollectionDetails>,
-    /// Programmable Config
-    pub programmable_config: Option<ProgrammableConfig>,
+    /// Indicates whether the asset is locked/unlocked.
+    pub asset_state: Option<AssetState>,
     /// If `persistent_delegate` is `Some` then there is a persistent
     /// delegate set for this metadata account.
     pub persistent_delegate: Option<DelegateRole>,
+    /// Programmable Config
+    pub programmable_config: Option<ProgrammableConfig>,
 }
 
 impl Metadata {
@@ -74,6 +84,14 @@ impl Metadata {
         BorshSerialize::serialize(&self, &mut bytes)?;
         data[..bytes.len()].copy_from_slice(&bytes);
         Ok(())
+    }
+
+    pub fn is_locked(&self) -> bool {
+        if let Some(state) = &self.asset_state {
+            *state == AssetState::Locked
+        } else {
+            false
+        }
     }
 
     pub(crate) fn update_v1<'a>(
@@ -171,14 +189,15 @@ impl Metadata {
                 return Err(MetadataError::InvalidTokenStandard.into());
             }
 
-            let programmable_config =
+            if let Some(rule_set) = rule_set.to_option() {
                 if let Some(programmable_config) = &mut self.programmable_config {
-                    programmable_config
+                    programmable_config.rule_set = rule_set;
                 } else {
-                    return Err(MetadataError::MissingProgrammableConfig.into());
-                };
-
-            programmable_config.rule_set = rule_set.to_option();
+                    self.programmable_config = Some(ProgrammableConfig { rule_set });
+                }
+            } else {
+                self.programmable_config = None;
+            }
         }
 
         if let CollectionDetailsToggle::Set(collection_details) = collection_details {
@@ -211,11 +230,9 @@ impl Metadata {
         asset_data.collection = self.collection;
         asset_data.uses = self.uses;
         asset_data.collection_details = self.collection_details;
-        asset_data.rule_set = if let Some(programmable_config) = self.programmable_config {
-            programmable_config.rule_set
-        } else {
-            None
-        };
+        asset_data.rule_set = self
+            .programmable_config
+            .map(|programmable_config| programmable_config.rule_set);
 
         asset_data
     }
@@ -235,8 +252,9 @@ impl Default for Metadata {
             collection: None,
             uses: None,
             collection_details: None,
-            programmable_config: None,
+            asset_state: Some(AssetState::Unlocked),
             persistent_delegate: None,
+            programmable_config: None,
         }
     }
 }
@@ -261,20 +279,19 @@ impl borsh::de::BorshDeserialize for Metadata {
     }
 }
 
-/// Configuration of the programmable rules.
+/// Configuration for programmable assets.
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct ProgrammableConfig {
-    pub state: ProgrammableState,
-    pub rule_set: Option<Pubkey>,
+    pub rule_set: Pubkey,
 }
 
 /// Programmable account state.
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
-pub enum ProgrammableState {
+pub enum AssetState {
     /// Account is unlocked; operations are allowed on this account.
     Unlocked,
     /// Account has been locked; no operations are allowed on this account.

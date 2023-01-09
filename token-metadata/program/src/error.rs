@@ -608,6 +608,18 @@ pub enum MetadataError {
     /// 151
     #[error("Public key does not match expected value")]
     KeyMismatch,
+
+    /// 152
+    #[error("Token is locked")]
+    LockedToken,
+
+    /// 153
+    #[error("Missing delegate role")]
+    MissingDelegateRole,
+
+    /// 154
+    #[error("Invalid authority type")]
+    InvalidAuthorityType,
 }
 
 impl PrintProgramError for MetadataError {

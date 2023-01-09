@@ -8,6 +8,8 @@ use solana_program::{
 
 use crate::{instruction::MetadataInstruction, processor::AuthorizationData};
 
+use super::InstructionBuilder;
+
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
@@ -180,10 +182,71 @@ pub fn utilize(
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
-pub enum UseAssetArgs {
-    V1 {
-        use_count: u64,
+pub enum UtilityArgs {
+    LockV1 {
         /// Required authorization data to validate the request.
         authorization_data: Option<AuthorizationData>,
     },
+    UnlockV1 {
+        /// Required authorization data to validate the request.
+        authorization_data: Option<AuthorizationData>,
+    },
+}
+
+/// Utility operations builder.
+///
+/// # Accounts:
+///
+///   0. `[signer]` Token owner or delegate
+///   1. `[writable, optional]` Delegate record account
+///   2. `[writable, optional]` Token account
+///   3. `[]` Mint account
+///   4. `[writable]` Metadata account
+///   5. `[optional]` Edition account
+///   6. `[signer, writable]` Payer
+///   7. `[]` System Program
+///   8. `[]` Instructions sysvar account
+///   9. `[optional]` SPL Token Program
+///   10. `[optional]` Token Authorization Rules program
+///   11. `[optional]` Token Authorization Rules account
+impl InstructionBuilder for super::builders::Utility {
+    fn instruction(&self) -> solana_program::instruction::Instruction {
+        let mut accounts = vec![
+            AccountMeta::new_readonly(self.approver, true),
+            if let Some(delegate_record) = self.delegate_record {
+                AccountMeta::new(delegate_record, false)
+            } else {
+                AccountMeta::new_readonly(crate::ID, false)
+            },
+            if let Some(token) = self.token {
+                AccountMeta::new(token, false)
+            } else {
+                AccountMeta::new_readonly(crate::ID, false)
+            },
+            AccountMeta::new_readonly(self.mint, false),
+            AccountMeta::new(self.metadata, false),
+            AccountMeta::new_readonly(self.edition.unwrap_or(crate::ID), false),
+            AccountMeta::new(self.payer, true),
+            AccountMeta::new_readonly(self.system_program, false),
+            AccountMeta::new_readonly(self.sysvar_instructions, false),
+            AccountMeta::new_readonly(self.spl_token_program.unwrap_or(crate::ID), false),
+        ];
+
+        // Optional authorization rules accounts
+        if let Some(rules) = &self.authorization_rules {
+            accounts.push(AccountMeta::new_readonly(mpl_token_auth_rules::ID, false));
+            accounts.push(AccountMeta::new_readonly(*rules, false));
+        } else {
+            accounts.push(AccountMeta::new_readonly(crate::ID, false));
+            accounts.push(AccountMeta::new_readonly(crate::ID, false));
+        }
+
+        Instruction {
+            program_id: crate::ID,
+            accounts,
+            data: MetadataInstruction::Utility(self.args.clone())
+                .try_to_vec()
+                .unwrap(),
+        }
+    }
 }

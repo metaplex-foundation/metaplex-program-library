@@ -10,16 +10,15 @@ pub(crate) fn assert_valid_authorization<'info>(
     authorization_rules: Option<&AccountInfo<'info>>,
     config: &ProgrammableConfig,
 ) -> ProgramResult {
-    // Only check if the metadata has a programmable config set.
-    if authorization_rules.is_none() {
-        return Err(MetadataError::MissingAuthorizationRules.into());
-    }
-    let rules = authorization_rules.unwrap();
-
-    if let Some(rule_set) = config.rule_set {
-        if rule_set != *rules.key {
-            return Err(MetadataError::InvalidAuthorizationRules.into());
+    let rules = match authorization_rules {
+        Some(rules) => rules,
+        None => {
+            return Err(MetadataError::MissingAuthorizationRules.into());
         }
+    };
+
+    if config.rule_set != *rules.key {
+        return Err(MetadataError::InvalidAuthorizationRules.into());
     }
 
     Ok(())

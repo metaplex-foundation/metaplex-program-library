@@ -40,8 +40,11 @@ pub struct AuthorityRequest<'a, 'b> {
 impl AuthorityType {
     /// Determines the `AuthorityType`.
     pub fn get_authority_type(request: AuthorityRequest) -> Result<Self, ProgramError> {
-        if cmp_pubkeys(request.update_authority, request.authority) {
-            return Ok(AuthorityType::Metadata);
+        if let Some(token_info) = request.token_info {
+            let token = Account::unpack(&token_info.try_borrow_data()?)?;
+            if cmp_pubkeys(&token.owner, request.authority) {
+                return Ok(AuthorityType::Holder);
+            }
         }
 
         if let Some(delegate_record_info) = request.delegate_record_info {
@@ -49,7 +52,7 @@ impl AuthorityType {
                 request.mint,
                 request
                     .delegate_role
-                    .ok_or(MetadataError::InvalidDelegateRoleForTransfer)?,
+                    .ok_or(MetadataError::MissingDelegateRole)?,
                 request.update_authority,
                 request.authority,
             );
@@ -59,11 +62,8 @@ impl AuthorityType {
             }
         }
 
-        if let Some(token_info) = request.token_info {
-            let token = Account::unpack(&token_info.try_borrow_data()?)?;
-            if cmp_pubkeys(&token.owner, request.authority) {
-                return Ok(AuthorityType::Holder);
-            }
+        if cmp_pubkeys(request.update_authority, request.authority) {
+            return Ok(AuthorityType::Metadata);
         }
 
         Ok(AuthorityType::None)
