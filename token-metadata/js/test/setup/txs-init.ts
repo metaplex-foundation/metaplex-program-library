@@ -428,7 +428,7 @@ export class InitTransactions {
     mint: PublicKey,
     metadata: PublicKey,
     masterEdition: PublicKey,
-    authority: PublicKey,
+    authority: Keypair,
     payer: Keypair,
     args: RevokeArgs,
     handler: PayerTransactionHandler,
@@ -442,7 +442,7 @@ export class InitTransactions {
       masterEdition,
       mint,
       token,
-      approver: authority,
+      approver: authority.publicKey,
       payer: payer.publicKey,
       sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
       splTokenProgram: splToken.TOKEN_PROGRAM_ID,
@@ -461,7 +461,7 @@ export class InitTransactions {
     const tx = new Transaction().add(mintIx);
 
     return {
-      tx: handler.sendAndConfirmTransaction(tx, [payer], 'tx: Revoke'),
+      tx: handler.sendAndConfirmTransaction(tx, [payer, authority], 'tx: Revoke'),
       delegate,
     };
   }
