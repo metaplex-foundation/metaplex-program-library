@@ -8,7 +8,7 @@ use crate::{
     error::MetadataError,
     pda::PREFIX,
     state::{
-        Creator, Data, Metadata, MAX_CREATOR_LIMIT, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH,
+        AssetState, Creator, Data, Metadata, MAX_CREATOR_LIMIT, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH,
         MAX_URI_LENGTH,
     },
 };
@@ -227,4 +227,11 @@ pub fn assert_metadata_valid(
     }
 
     Ok(())
+}
+
+pub fn assert_not_locked(metadata: &Metadata) -> ProgramResult {
+    match metadata.asset_state {
+        Some(AssetState::Locked) => Err(MetadataError::LockedToken.into()),
+        _ => Ok(()),
+    }
 }
