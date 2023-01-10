@@ -190,7 +190,10 @@ mod delegate {
             .approver(payer_pubkey)
             .payer(payer_pubkey)
             .token(asset.token.unwrap())
-            .build(DelegateArgs::SaleV1 { amount: 1 })
+            .build(DelegateArgs::SaleV1 {
+                amount: 1,
+                authorization_data: None,
+            })
             .unwrap()
             .instruction();
 
@@ -261,7 +264,10 @@ mod delegate {
             .approver(payer_pubkey)
             .payer(payer_pubkey)
             .token(asset.token.unwrap())
-            .build(DelegateArgs::SaleV1 { amount: 1 })
+            .build(DelegateArgs::SaleV1 {
+                amount: 1,
+                authorization_data: None,
+            })
             .unwrap()
             .instruction();
 
@@ -281,5 +287,111 @@ mod delegate {
         // asserts
 
         assert_custom_error!(error, MetadataError::InvalidTokenStandard);
+    }
+
+    #[tokio::test]
+    async fn set_transfer_delegate_nonfungible() {
+        let mut context = program_test().start_with_context().await;
+
+        // asset
+
+        let mut asset = DigitalAsset::default();
+        asset
+            .create_and_mint(&mut context, TokenStandard::NonFungible, None, None, 1)
+            .await
+            .unwrap();
+
+        assert!(asset.token.is_some());
+
+        // delegates the asset for transfer
+
+        let user = Keypair::new();
+        let user_pubkey = user.pubkey();
+        let payer_pubkey = context.payer.pubkey();
+
+        // delegate PDA
+        let (pda_key, _) = find_delegate_account(
+            &asset.mint.pubkey(),
+            DelegateRole::Transfer,
+            &payer_pubkey,
+            &user_pubkey,
+        );
+
+        let delegate_ix = DelegateBuilder::new()
+            .delegate_record(pda_key)
+            .delegate(user_pubkey)
+            .mint(asset.mint.pubkey())
+            .metadata(asset.metadata)
+            .approver(payer_pubkey)
+            .payer(payer_pubkey)
+            .token(asset.token.unwrap())
+            .build(DelegateArgs::TransferV1 {
+                amount: 1,
+                authorization_data: None,
+            })
+            .unwrap()
+            .instruction();
+
+        let tx = Transaction::new_signed_with_payer(
+            &[delegate_ix],
+            Some(&context.payer.pubkey()),
+            &[&context.payer],
+            context.last_blockhash,
+        );
+
+        context.banks_client.process_transaction(tx).await.unwrap();
+    }
+
+    #[tokio::test]
+    async fn set_utility_delegate_nonfungible() {
+        let mut context = program_test().start_with_context().await;
+
+        // asset
+
+        let mut asset = DigitalAsset::default();
+        asset
+            .create_and_mint(&mut context, TokenStandard::NonFungible, None, None, 1)
+            .await
+            .unwrap();
+
+        assert!(asset.token.is_some());
+
+        // delegates the asset for transfer
+
+        let user = Keypair::new();
+        let user_pubkey = user.pubkey();
+        let payer_pubkey = context.payer.pubkey();
+
+        // delegate PDA
+        let (pda_key, _) = find_delegate_account(
+            &asset.mint.pubkey(),
+            DelegateRole::Utility,
+            &payer_pubkey,
+            &user_pubkey,
+        );
+
+        let delegate_ix = DelegateBuilder::new()
+            .delegate_record(pda_key)
+            .delegate(user_pubkey)
+            .mint(asset.mint.pubkey())
+            .metadata(asset.metadata)
+            .approver(payer_pubkey)
+            .payer(payer_pubkey)
+            .token(asset.token.unwrap())
+            .build(DelegateArgs::UtilityV1 {
+                amount: 1,
+                authorization_data: None,
+            })
+            .unwrap()
+            .instruction();
+
+        let tx = Transaction::new_signed_with_payer(
+            &[delegate_ix],
+            Some(&context.payer.pubkey()),
+            &[&context.payer],
+            context.last_blockhash,
+        );
+
+        context.banks_client.process_transaction(tx).await.unwrap();
     }
 }

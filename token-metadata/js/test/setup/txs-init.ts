@@ -42,7 +42,6 @@ import {
   DelegateInstructionArgs,
   DelegateArgs,
   createDelegateInstruction,
-  AuthorityType,
   RevokeInstructionAccounts,
   RevokeInstructionArgs,
   createRevokeInstruction,
@@ -331,7 +330,6 @@ export class InitTransactions {
     metadata: PublicKey,
     edition: PublicKey,
     authority: Keypair,
-    authorityType: AuthorityType = AuthorityType.Metadata,
     updateTestData: UpdateTestData,
     delegateRecord?: PublicKey | null,
     token?: PublicKey | null,
@@ -369,7 +367,6 @@ export class InitTransactions {
         collectionDetails: updateTestData.collectionDetails,
         ruleSet: updateTestData.ruleSet,
         authorizationData,
-        authorityType,
       },
     };
 
@@ -431,7 +428,7 @@ export class InitTransactions {
     mint: PublicKey,
     metadata: PublicKey,
     masterEdition: PublicKey,
-    authority: PublicKey,
+    authority: Keypair,
     payer: Keypair,
     args: RevokeArgs,
     handler: PayerTransactionHandler,
@@ -445,7 +442,7 @@ export class InitTransactions {
       masterEdition,
       mint,
       token,
-      approver: authority,
+      approver: authority.publicKey,
       payer: payer.publicKey,
       sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
       splTokenProgram: splToken.TOKEN_PROGRAM_ID,
@@ -464,7 +461,7 @@ export class InitTransactions {
     const tx = new Transaction().add(mintIx);
 
     return {
-      tx: handler.sendAndConfirmTransaction(tx, [payer], 'tx: Revoke'),
+      tx: handler.sendAndConfirmTransaction(tx, [payer, authority], 'tx: Revoke'),
       delegate,
     };
   }
@@ -592,6 +589,7 @@ export class InitTransactions {
     payer: Keypair,
     connection: Connection,
     handler: PayerTransactionHandler,
+    owner: PublicKey | null = null,
   ): Promise<{ tx: ConfirmedTransactionAssertablePromise; token: PublicKey }> {
     const token = Keypair.generate();
     amman.addr.addLabel('Token Account', token.publicKey);
@@ -607,7 +605,7 @@ export class InitTransactions {
         programId: TOKEN_PROGRAM_ID,
       }),
       // initialize token account
-      createInitializeAccountInstruction(token.publicKey, mint, payer.publicKey),
+      createInitializeAccountInstruction(token.publicKey, mint, owner),
     );
 
     return {

@@ -6,15 +6,35 @@ use serde::{Deserialize, Serialize};
 use solana_program::instruction::{AccountMeta, Instruction};
 
 use super::InstructionBuilder;
-use crate::instruction::MetadataInstruction;
+use crate::{instruction::MetadataInstruction, processor::AuthorizationData};
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub enum DelegateArgs {
-    CollectionV1,
-    SaleV1 { amount: u64 },
-    TransferV1 { amount: u64 },
+    CollectionV1 {
+        /// Required authorization data to validate the request.
+        authorization_data: Option<AuthorizationData>,
+    },
+    SaleV1 {
+        amount: u64,
+        /// Required authorization data to validate the request.
+        authorization_data: Option<AuthorizationData>,
+    },
+    TransferV1 {
+        amount: u64,
+        /// Required authorization data to validate the request.
+        authorization_data: Option<AuthorizationData>,
+    },
+    UpdateV1 {
+        /// Required authorization data to validate the request.
+        authorization_data: Option<AuthorizationData>,
+    },
+    UtilityV1 {
+        amount: u64,
+        /// Required authorization data to validate the request.
+        authorization_data: Option<AuthorizationData>,
+    },
 }
 
 #[repr(C)]
@@ -22,8 +42,10 @@ pub enum DelegateArgs {
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub enum RevokeArgs {
     CollectionV1,
-    TransferV1,
     SaleV1,
+    TransferV1,
+    UpdateV1,
+    UtilityV1,
 }
 
 #[repr(C)]
@@ -59,13 +81,13 @@ impl fmt::Display for DelegateRole {
 ///
 /// # Accounts:
 ///
-///   0. `[writable]` Delegate account key
+///   0. `[writable]` Delegate record account
 ///   1. `[]` Delegated owner
 ///   2. `[writable]` Metadata account
 ///   3. `[optional]` Master Edition account
 ///   4. `[]` Mint account
 ///   5. `[optional, writable]` Token account
-///   6. `[signer]` Namespace (update authority or token owner) to approve the delegation
+///   6. `[signer]` Approver (update authority or token owner) to approve the delegation
 ///   7. `[signer, writable]` Payer
 ///   8. `[]` System Program
 ///   9. `[]` Instructions sysvar account
@@ -114,7 +136,7 @@ impl InstructionBuilder for super::builders::Delegate {
 ///   3. `[optional]` Master Edition account
 ///   4. `[]` Mint account
 ///   5. `[optional, writable]` Token account
-///   6. `[signer]` Approver for the delegation
+///   6. `[signer]` Approver (update authority, token owner or delegate) of the revoke
 ///   7. `[signer, writable]` Payer
 ///   8. `[]` System Program
 ///   9. `[]` Instructions sysvar account

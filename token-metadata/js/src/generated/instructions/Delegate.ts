@@ -36,7 +36,7 @@ export const DelegateStruct = new beet.FixableBeetArgsStruct<
 /**
  * Accounts required by the _Delegate_ instruction
  *
- * @property [_writable_] delegateRecord Delegate Record account
+ * @property [_writable_] delegateRecord Delegate record account
  * @property [] delegate Owner of the delegated account
  * @property [_writable_] metadata Metadata account
  * @property [] masterEdition (optional) Master Edition account

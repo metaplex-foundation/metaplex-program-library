@@ -22,7 +22,7 @@ export type BurnInstructionArgs = {
  * @category Burn
  * @category generated
  */
-export const BurnStruct = new beet.BeetArgsStruct<
+export const BurnStruct = new beet.FixableBeetArgsStruct<
   BurnInstructionArgs & {
     instructionDiscriminator: number;
   }

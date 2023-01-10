@@ -22,7 +22,7 @@ export type VerifyInstructionArgs = {
  * @category Verify
  * @category generated
  */
-export const VerifyStruct = new beet.BeetArgsStruct<
+export const VerifyStruct = new beet.FixableBeetArgsStruct<
   VerifyInstructionArgs & {
     instructionDiscriminator: number;
   }

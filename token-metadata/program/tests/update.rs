@@ -13,7 +13,7 @@ use utils::{DigitalAsset, *};
 mod update {
 
     use mpl_token_metadata::{
-        instruction::{AuthorityType, RuleSetToggle, UpdateArgs},
+        instruction::{RuleSetToggle, UpdateArgs},
         state::{Data, ProgrammableConfig, ProgrammableState, TokenStandard},
     };
     use solana_sdk::signature::Keypair;
@@ -64,12 +64,6 @@ mod update {
         } = &mut update_args;
         *current_data = Some(data);
 
-        let UpdateArgs::V1 {
-            authority_type: current_authority_type,
-            ..
-        } = &mut update_args;
-        *current_authority_type = AuthorityType::Metadata;
-
         let mut builder = UpdateBuilder::new();
         builder
             .authority(update_authority.pubkey())
@@ -108,7 +102,8 @@ mod update {
         let authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
 
         // Create rule-set for the transfer
-        let (rule_set, _auth_data) = create_default_metaplex_rule_set(context, authority).await;
+        let (authorization_rules, _auth_data) =
+            create_default_metaplex_rule_set(context, authority).await;
 
         let update_authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
 
@@ -116,7 +111,7 @@ mod update {
         da.create(
             context,
             TokenStandard::ProgrammableNonFungible,
-            Some(rule_set),
+            Some(authorization_rules),
         )
         .await
         .unwrap();
@@ -124,7 +119,7 @@ mod update {
         let metadata = da.get_metadata(context).await;
 
         if let Some(config) = metadata.programmable_config {
-            assert_eq!(config.rule_set, Some(rule_set));
+            assert_eq!(config.rule_set, Some(authorization_rules));
         } else {
             panic!("Missing rule set programmable config");
         }
@@ -134,16 +129,11 @@ mod update {
         // remove the rule set
         *rule_set = RuleSetToggle::Clear;
 
-        let UpdateArgs::V1 {
-            authority_type: current_authority_type,
-            ..
-        } = &mut update_args;
-        *current_authority_type = AuthorityType::Metadata;
-
         let mut builder = UpdateBuilder::new();
         builder
             .authority(update_authority.pubkey())
             .metadata(da.metadata)
+            .authorization_rules(authorization_rules)
             .mint(da.mint.pubkey());
 
         if let Some(edition) = da.master_edition {

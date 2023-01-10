@@ -1,3 +1,4 @@
+use mpl_utils::cmp_pubkeys;
 use solana_program::{
     account_info::AccountInfo,
     entrypoint::ProgramResult,
@@ -11,6 +12,14 @@ use solana_program::{
 use spl_token::state::Account;
 
 use crate::{error::MetadataError, instruction::DelegateRole, state::DelegateRecord};
+
+pub fn assert_keys_equal(key1: &Pubkey, key2: &Pubkey) -> Result<(), ProgramError> {
+    if !cmp_pubkeys(key1, key2) {
+        Err(MetadataError::KeyMismatch.into())
+    } else {
+        Ok(())
+    }
+}
 
 /// assert initialized account
 pub fn assert_initialized<T: Pack + IsInitialized>(

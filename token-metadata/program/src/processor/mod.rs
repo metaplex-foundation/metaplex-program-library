@@ -66,6 +66,13 @@ impl AuthorizationData {
     }
 }
 
+/// Process Token Metadata instructions.
+/// 
+/// The processor is divided into two parts:
+/// * It first tries to match the instruction into the new API;
+/// * If it is not one of the new instructions, it checks that any metadata
+///   account is not a pNFT before forwarding the transaction processing to
+///   the "legacy" processor.
 pub fn process_instruction<'a>(
     program_id: &'a Pubkey,
     accounts: &'a [AccountInfo<'a>],
@@ -73,6 +80,7 @@ pub fn process_instruction<'a>(
 ) -> ProgramResult {
     let instruction = MetadataInstruction::try_from_slice(input)?;
 
+    // match on the new instruction set
     match instruction {
         MetadataInstruction::Create(args) => {
             msg!("Instruction: Token Metadata Create");
@@ -402,6 +410,7 @@ fn has_programmable_metadata<'a>(
     accounts: &'a [AccountInfo],
 ) -> Result<bool, ProgramError> {
     for account_info in accounts {
+        // checks the account is owned by Token Metadata and it has data
         if account_info.owner == program_id && !account_info.data_is_empty() {
             let discriminator = account_info.data.borrow()[0];
             // checks if the account is a Metadata account

@@ -1,5 +1,12 @@
 import spok from 'spok';
-import { AssetData, AuthorityType, Data, Metadata, TokenStandard } from '../src/generated';
+import {
+  AssetData,
+  Data,
+  DelegateArgs,
+  Metadata,
+  PROGRAM_ID,
+  TokenStandard,
+} from '../src/generated';
 import test from 'tape';
 import { amman, InitTransactions, killStuckProcess } from './setup';
 import { Keypair, PublicKey } from '@solana/web3.js';
@@ -20,7 +27,6 @@ test('Update: NonFungible asset', async (t) => {
   const assetData = await daManager.getAssetData(connection);
 
   const authority = payer;
-  const authorityType = AuthorityType.Metadata;
 
   // Change some values and run update.
   const data: Data = {
@@ -44,7 +50,6 @@ test('Update: NonFungible asset', async (t) => {
     metadata,
     masterEdition,
     authority,
-    authorityType,
     updateData,
   );
   await updateTx.assertSuccess(t);
@@ -69,7 +74,6 @@ test('Update: Fungible Token', async (t) => {
   const assetData = await daManager.getAssetData(connection);
 
   const authority = payer;
-  const authorityType = AuthorityType.Metadata;
 
   // Change some values and run update.
   const data: Data = {
@@ -93,7 +97,6 @@ test('Update: Fungible Token', async (t) => {
     metadata,
     masterEdition,
     authority,
-    authorityType,
     updateData,
   );
   await updateTx.assertSuccess(t);
@@ -118,7 +121,6 @@ test('Update: Fungible Asset', async (t) => {
   const assetData = await daManager.getAssetData(connection);
 
   const authority = payer;
-  const authorityType = AuthorityType.Metadata;
 
   // Change some values and run update.
   const data: Data = {
@@ -142,7 +144,6 @@ test('Update: Fungible Asset', async (t) => {
     metadata,
     masterEdition,
     authority,
-    authorityType,
     updateData,
   );
   await updateTx.assertSuccess(t);
@@ -156,7 +157,6 @@ test('Update: Cannot Flip IsMutable to True', async (t) => {
   const { mint, metadata, masterEdition } = daManager;
 
   const authority = payer;
-  const authorityType = AuthorityType.Metadata;
 
   // Flip isMutable to false
   const updateData = new UpdateTestData();
@@ -169,7 +169,6 @@ test('Update: Cannot Flip IsMutable to True', async (t) => {
     metadata,
     masterEdition,
     authority,
-    authorityType,
     updateData,
   );
   await updateTx.assertSuccess(t);
@@ -190,7 +189,6 @@ test('Update: Cannot Flip IsMutable to True', async (t) => {
     metadata,
     masterEdition,
     authority,
-    authorityType,
     updateData,
   );
   await updateTx2.assertError(t, /Is Mutable can only be flipped to false/i);
@@ -204,7 +202,6 @@ test('Update: Cannot Flip PrimarySaleHappened to False', async (t) => {
   const { mint, metadata, masterEdition } = daManager;
 
   const authority = payer;
-  const authorityType = AuthorityType.Metadata;
 
   // Flip to true
   const updateData = new UpdateTestData();
@@ -217,7 +214,6 @@ test('Update: Cannot Flip PrimarySaleHappened to False', async (t) => {
     metadata,
     masterEdition,
     authority,
-    authorityType,
     updateData,
   );
   await updateTx.assertSuccess(t);
@@ -238,7 +234,6 @@ test('Update: Cannot Flip PrimarySaleHappened to False', async (t) => {
     metadata,
     masterEdition,
     authority,
-    authorityType,
     updateData,
   );
   await updateTx2.assertError(t, /Primary sale can only be flipped to true/i);
@@ -252,7 +247,6 @@ test('Update: Set New Update Authority', async (t) => {
   const { mint, metadata, masterEdition } = daManager;
 
   const authority = payer;
-  const authorityType = AuthorityType.Metadata;
   const newUpdateAuthority = new Keypair().publicKey;
 
   // Flip to true
@@ -266,7 +260,6 @@ test('Update: Set New Update Authority', async (t) => {
     metadata,
     masterEdition,
     authority,
-    authorityType,
     updateData,
   );
   await updateTx.assertSuccess(t);
@@ -286,7 +279,6 @@ test('Update: Cannot Update Immutable Data', async (t) => {
   const { mint, metadata, masterEdition } = daManager;
 
   const authority = payer;
-  const authorityType = AuthorityType.Metadata;
 
   // Flip isMutable to false
   const updateData = new UpdateTestData();
@@ -299,7 +291,6 @@ test('Update: Cannot Update Immutable Data', async (t) => {
     metadata,
     masterEdition,
     authority,
-    authorityType,
     updateData,
   );
   await updateTx.assertSuccess(t);
@@ -320,7 +311,6 @@ test('Update: Cannot Update Immutable Data', async (t) => {
     metadata,
     masterEdition,
     authority,
-    authorityType,
     updateData,
   );
   await updateTx2.assertError(t, /Data is immutable/i);
@@ -334,7 +324,6 @@ test('Update: Name Cannot Exceed 32 Bytes', async (t) => {
   const { mint, metadata, masterEdition } = daManager;
 
   const authority = payer;
-  const authorityType = AuthorityType.Metadata;
 
   const updateData = new UpdateTestData();
   updateData.data = {
@@ -352,7 +341,6 @@ test('Update: Name Cannot Exceed 32 Bytes', async (t) => {
     metadata,
     masterEdition,
     authority,
-    authorityType,
     updateData,
   );
   await updateTx.assertError(t, /Name too long/i);
@@ -366,7 +354,6 @@ test('Update: Symbol Cannot Exceed 10 Bytes', async (t) => {
   const { mint, metadata, masterEdition } = daManager;
 
   const authority = payer;
-  const authorityType = AuthorityType.Metadata;
 
   const updateData = new UpdateTestData();
   updateData.data = {
@@ -384,7 +371,6 @@ test('Update: Symbol Cannot Exceed 10 Bytes', async (t) => {
     metadata,
     masterEdition,
     authority,
-    authorityType,
     updateData,
   );
   await updateTx.assertError(t, /Symbol too long/i);
@@ -398,7 +384,6 @@ test('Update: URI Cannot Exceed 200 Bytes', async (t) => {
   const { mint, metadata, masterEdition } = daManager;
 
   const authority = payer;
-  const authorityType = AuthorityType.Metadata;
 
   const updateData = new UpdateTestData();
   updateData.data = {
@@ -416,7 +401,6 @@ test('Update: URI Cannot Exceed 200 Bytes', async (t) => {
     metadata,
     masterEdition,
     authority,
-    authorityType,
     updateData,
   );
   await updateTx.assertError(t, /Uri too long/i);
@@ -430,7 +414,6 @@ test('Update: SellerFeeBasisPoints Cannot Exceed 10_000', async (t) => {
   const { mint, metadata, masterEdition } = daManager;
 
   const authority = payer;
-  const authorityType = AuthorityType.Metadata;
 
   const updateData = new UpdateTestData();
   updateData.data = {
@@ -448,7 +431,6 @@ test('Update: SellerFeeBasisPoints Cannot Exceed 10_000', async (t) => {
     metadata,
     masterEdition,
     authority,
-    authorityType,
     updateData,
   );
   await updateTx.assertError(t, /Basis points cannot be more than 10000/i);
@@ -462,7 +444,6 @@ test('Update: Creators Array Cannot Exceed Five Items', async (t) => {
   const { mint, metadata, masterEdition } = daManager;
 
   const authority = payer;
-  const authorityType = AuthorityType.Metadata;
 
   const creators = [];
 
@@ -490,7 +471,6 @@ test('Update: Creators Array Cannot Exceed Five Items', async (t) => {
     metadata,
     masterEdition,
     authority,
-    authorityType,
     updateData,
   );
   await updateTx.assertError(t, /Creators list too long/i);
@@ -504,7 +484,6 @@ test('Update: No Duplicate Creator Addresses', async (t) => {
   const { mint, metadata, masterEdition } = daManager;
 
   const authority = payer;
-  const authorityType = AuthorityType.Metadata;
 
   const creators = [];
 
@@ -532,7 +511,6 @@ test('Update: No Duplicate Creator Addresses', async (t) => {
     metadata,
     masterEdition,
     authority,
-    authorityType,
     updateData,
   );
   await updateTx.assertError(t, /No duplicate creator addresses/i);
@@ -546,7 +524,6 @@ test('Update: Creator Shares Must Equal 100', async (t) => {
   const { mint, metadata, masterEdition } = daManager;
 
   const authority = payer;
-  const authorityType = AuthorityType.Metadata;
 
   const creators = [];
 
@@ -572,7 +549,6 @@ test('Update: Creator Shares Must Equal 100', async (t) => {
     metadata,
     masterEdition,
     authority,
-    authorityType,
     updateData,
   );
   await updateTx.assertError(t, /Share total must equal 100 for creator array/i);
@@ -586,7 +562,6 @@ test('Update: Cannot Unverify Another Creator', async (t) => {
   const { mint, metadata, masterEdition } = daManager;
 
   const authority = payer;
-  const authorityType = AuthorityType.Metadata;
 
   // Create a new creator with a different keypair.
   const creatorKey = new Keypair();
@@ -621,7 +596,6 @@ test('Update: Cannot Unverify Another Creator', async (t) => {
     metadata,
     masterEdition,
     authority,
-    authorityType,
     updateData,
   );
   await updateTx.assertSuccess(t);
@@ -658,7 +632,6 @@ test('Update: Cannot Unverify Another Creator', async (t) => {
     metadata,
     masterEdition,
     authority,
-    authorityType,
     updateData2,
   );
 
@@ -673,7 +646,6 @@ test('Update: Cannot Verify Another Creator', async (t) => {
   const { mint, metadata, masterEdition } = daManager;
 
   const authority = payer;
-  const authorityType = AuthorityType.Metadata;
 
   const creatorKey = new Keypair();
   await amman.airdrop(connection, creatorKey.publicKey, 1);
@@ -702,7 +674,6 @@ test('Update: Cannot Verify Another Creator', async (t) => {
     metadata,
     masterEdition,
     authority,
-    authorityType,
     updateData,
   );
   await updateTx.assertSuccess(t);
@@ -737,7 +708,6 @@ test('Update: Cannot Verify Another Creator', async (t) => {
     metadata,
     masterEdition,
     authority,
-    authorityType,
     updateData2,
   );
 
@@ -753,7 +723,6 @@ test('Update: Update Unverified Collection Key', async (t) => {
   const uri = 'uri';
 
   const authority = payer;
-  const authorityType = AuthorityType.Metadata;
 
   const collectionParent = new Keypair();
   const newCollectionParent = new Keypair();
@@ -815,7 +784,6 @@ test('Update: Update Unverified Collection Key', async (t) => {
     metadata,
     masterEdition,
     authority,
-    authorityType,
     updateData,
   );
   await updateTx.assertSuccess(t);
@@ -837,7 +805,6 @@ test('Update: Fail to Verify an Unverified Collection', async (t) => {
   const uri = 'uri';
 
   const authority = payer;
-  const authorityType = AuthorityType.Metadata;
 
   const collectionParent = new Keypair();
 
@@ -898,7 +865,6 @@ test('Update: Fail to Verify an Unverified Collection', async (t) => {
     metadata,
     masterEdition,
     authority,
-    authorityType,
     updateData,
   );
   await updateTx.assertError(t, /Collection cannot be verified in this instruction/);
@@ -921,7 +887,6 @@ test('Update: Fail to Update a Verified Collection', async (t) => {
   } = daManager;
 
   const authority = payer;
-  const authorityType = AuthorityType.Metadata;
 
   const newCollectionParent = new Keypair();
 
@@ -994,7 +959,6 @@ test('Update: Fail to Update a Verified Collection', async (t) => {
     metadata,
     masterEdition,
     authority,
-    authorityType,
     updateData,
   );
   await updateTx.assertError(t, /Collection cannot be verified in this instruction/);
@@ -1005,7 +969,6 @@ test('Update: Update pNFT Config', async (t) => {
   const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
 
   const authority = payer;
-  const authorityType = AuthorityType.Metadata;
   const dummyRuleSet = Keypair.generate().publicKey;
 
   const { mint, metadata, masterEdition } = await createAndMintDefaultAsset(
@@ -1032,7 +995,6 @@ test('Update: Update pNFT Config', async (t) => {
     metadata,
     masterEdition,
     authority,
-    authorityType,
     updateData,
   );
   await updateTx.assertSuccess(t);
@@ -1049,7 +1011,6 @@ test('Update: Fail to update rule set on NFT', async (t) => {
   const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
 
   const authority = payer;
-  const authorityType = AuthorityType.Metadata;
   const dummyRuleSet = Keypair.generate().publicKey;
 
   const { mint, metadata, masterEdition } = await createAndMintDefaultAsset(
@@ -1076,7 +1037,6 @@ test('Update: Fail to update rule set on NFT', async (t) => {
     metadata,
     masterEdition,
     authority,
-    authorityType,
     updateData,
   );
   await updateTx.assertError(t, /Invalid token standard/);
@@ -1087,7 +1047,6 @@ test('Update: Update existing pNFT rule set config to None', async (t) => {
   const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
 
   const authority = payer;
-  const authorityType = AuthorityType.Metadata;
 
   // We need a real ruleset here to pass the mint checks.
   // Set up our rule set
@@ -1145,8 +1104,10 @@ test('Update: Update existing pNFT rule set config to None', async (t) => {
     metadata,
     masterEdition,
     authority,
-    authorityType,
     updateData,
+    null,
+    null,
+    ruleSetPda,
   );
   await updateTx.assertSuccess(t);
 
@@ -1163,8 +1124,6 @@ test('Update: Invalid Update Authority Fails', async (t) => {
 
   const daManager = await createDefaultAsset(t, connection, API, handler, payer);
   const { mint, metadata, masterEdition } = daManager;
-
-  const authorityType = AuthorityType.Metadata;
 
   const invalidUpdateAuthority = new Keypair();
 
@@ -1185,7 +1144,6 @@ test('Update: Invalid Update Authority Fails', async (t) => {
     metadata,
     masterEdition,
     invalidUpdateAuthority,
-    authorityType,
     updateData,
   );
   await updateTx.assertError(t, /Update Authority given does not match/);
@@ -1197,10 +1155,44 @@ test('Update: Delegate Authority Type Not Supported', async (t) => {
 
   const daManager = await createDefaultAsset(t, connection, API, handler, payer);
   const { mint, metadata, masterEdition } = daManager;
-  const assetData = await daManager.getAssetData(connection);
 
-  const authority = payer;
-  const authorityType = AuthorityType.Delegate;
+  // creates a delegate
+
+  const [, delegate] = await API.getKeypair('Delegate');
+  // delegate PDA
+  const [delegateRecord] = PublicKey.findProgramAddressSync(
+    [
+      Buffer.from('metadata'),
+      PROGRAM_ID.toBuffer(),
+      daManager.mint.toBuffer(),
+      Buffer.from('update_delegate'),
+      payer.publicKey.toBuffer(),
+      delegate.publicKey.toBuffer(),
+    ],
+    PROGRAM_ID,
+  );
+  amman.addr.addLabel('Delegate Record', delegateRecord);
+
+  const args: DelegateArgs = {
+    __kind: 'UpdateV1',
+    authorizationData: null,
+  };
+
+  const { tx: delegateTx } = await API.delegate(
+    delegateRecord,
+    delegate.publicKey,
+    daManager.mint,
+    daManager.metadata,
+    daManager.masterEdition,
+    payer.publicKey,
+    payer,
+    args,
+    handler,
+  );
+  await delegateTx.assertSuccess(t);
+
+  const assetData = await daManager.getAssetData(connection);
+  const authority = delegate;
 
   // Change some values and run update.
   const data: Data = {
@@ -1223,10 +1215,16 @@ test('Update: Delegate Authority Type Not Supported', async (t) => {
     metadata,
     masterEdition,
     authority,
-    authorityType,
     updateData,
+    delegateRecord,
   );
-  await updateTx.assertError(t, /Feature not supported/);
+
+  updateTx.then((x) =>
+    x.assertLogs(t, [/Authority type: Delegate/i, /Feature not supported currently/i], {
+      txLabel: 'tx: Update',
+    }),
+  );
+  await updateTx.assertError(t);
 });
 
 test('Update: Holder Authority Type Not Supported', async (t) => {
@@ -1235,10 +1233,39 @@ test('Update: Holder Authority Type Not Supported', async (t) => {
 
   const daManager = await createDefaultAsset(t, connection, API, handler, payer);
   const { mint, metadata, masterEdition } = daManager;
-  const assetData = await daManager.getAssetData(connection);
 
-  const authority = payer;
-  const authorityType = AuthorityType.Holder;
+  // initialize a token account
+
+  const [, holder] = await amman.genLabeledKeypair('Holder');
+
+  const { tx: tokenTx, token } = await API.createTokenAccount(
+    mint,
+    payer,
+    connection,
+    handler,
+    holder.publicKey,
+  );
+  await tokenTx.assertSuccess(t);
+
+  // mint 1 asset
+
+  const amount = 1;
+
+  const { tx: mintTx } = await API.mint(
+    t,
+    connection,
+    payer,
+    mint,
+    metadata,
+    masterEdition,
+    daManager.emptyAuthorizationData(),
+    amount,
+    handler,
+    token,
+  );
+  await mintTx.assertSuccess(t);
+
+  const assetData = await daManager.getAssetData(connection);
 
   // Change some values and run update.
   const data: Data = {
@@ -1261,48 +1288,16 @@ test('Update: Holder Authority Type Not Supported', async (t) => {
     mint,
     metadata,
     masterEdition,
-    authority,
-    authorityType,
+    holder,
     updateData,
+    null,
+    token,
   );
-  await updateTx.assertError(t, /Feature not supported/);
-});
 
-test('Update: Other Authority Type Not Supported', async (t) => {
-  const API = new InitTransactions();
-  const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
-
-  const daManager = await createDefaultAsset(t, connection, API, handler, payer);
-  const { mint, metadata, masterEdition } = daManager;
-  const assetData = await daManager.getAssetData(connection);
-
-  const authority = payer;
-  const authorityType = AuthorityType.Other;
-
-  // Change some values and run update.
-  const data: Data = {
-    name: 'DigitalAsset2',
-    symbol: 'DA2',
-    uri: 'uri2',
-    sellerFeeBasisPoints: 0,
-    creators: assetData.creators,
-  };
-
-  const authorizationData = daManager.emptyAuthorizationData();
-
-  const updateData = new UpdateTestData();
-  updateData.data = data;
-  updateData.authorizationData = authorizationData;
-
-  const { tx: updateTx } = await API.update(
-    t,
-    handler,
-    mint,
-    metadata,
-    masterEdition,
-    authority,
-    authorityType,
-    updateData,
+  updateTx.then((x) =>
+    x.assertLogs(t, [/Authority type: Holder/i, /Feature not supported currently/i], {
+      txLabel: 'tx: Update',
+    }),
   );
-  await updateTx.assertError(t, /Feature not supported/);
+  await updateTx.assertError(t);
 });

@@ -228,10 +228,14 @@ impl DigitalAsset {
         let args = match delegate_role {
             DelegateRole::Transfer => DelegateArgs::TransferV1 {
                 amount: amount_opt.unwrap(),
+                authorization_data: None,
             },
-            DelegateRole::Collection => DelegateArgs::CollectionV1,
+            DelegateRole::Collection => DelegateArgs::CollectionV1 {
+                authorization_data: None,
+            },
             DelegateRole::Sale => DelegateArgs::SaleV1 {
                 amount: amount_opt.unwrap(),
+                authorization_data: None,
             },
             _ => panic!("currently unsupported delegate role"),
         };

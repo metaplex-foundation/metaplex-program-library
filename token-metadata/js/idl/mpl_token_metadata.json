@@ -2935,7 +2935,7 @@
           "name": "delegateRecord",
           "isMut": true,
           "isSigner": false,
-          "desc": "Delegate Record account"
+          "desc": "Delegate record account"
         },
         {
           "name": "delegate",
@@ -3036,7 +3036,7 @@
           "name": "delegateRecord",
           "isMut": true,
           "isSigner": false,
-          "desc": "Delegate account"
+          "desc": "Delegate record account"
         },
         {
           "name": "delegate",
@@ -4198,7 +4198,17 @@
         "kind": "enum",
         "variants": [
           {
-            "name": "V1"
+            "name": "V1",
+            "fields": [
+              {
+                "name": "authorization_data",
+                "type": {
+                  "option": {
+                    "defined": "AuthorizationData"
+                  }
+                }
+              }
+            ]
           }
         ]
       }
@@ -4209,7 +4219,17 @@
         "kind": "enum",
         "variants": [
           {
-            "name": "V1"
+            "name": "V1",
+            "fields": [
+              {
+                "name": "authorization_data",
+                "type": {
+                  "option": {
+                    "defined": "AuthorizationData"
+                  }
+                }
+              }
+            ]
           }
         ]
       }
@@ -4220,7 +4240,17 @@
         "kind": "enum",
         "variants": [
           {
-            "name": "CollectionV1"
+            "name": "CollectionV1",
+            "fields": [
+              {
+                "name": "authorization_data",
+                "type": {
+                  "option": {
+                    "defined": "AuthorizationData"
+                  }
+                }
+              }
+            ]
           },
           {
             "name": "SaleV1",
@@ -4228,6 +4258,14 @@
               {
                 "name": "amount",
                 "type": "u64"
+              },
+              {
+                "name": "authorization_data",
+                "type": {
+                  "option": {
+                    "defined": "AuthorizationData"
+                  }
+                }
               }
             ]
           },
@@ -4237,6 +4275,44 @@
               {
                 "name": "amount",
                 "type": "u64"
+              },
+              {
+                "name": "authorization_data",
+                "type": {
+                  "option": {
+                    "defined": "AuthorizationData"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "name": "UpdateV1",
+            "fields": [
+              {
+                "name": "authorization_data",
+                "type": {
+                  "option": {
+                    "defined": "AuthorizationData"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "name": "UtilityV1",
+            "fields": [
+              {
+                "name": "amount",
+                "type": "u64"
+              },
+              {
+                "name": "authorization_data",
+                "type": {
+                  "option": {
+                    "defined": "AuthorizationData"
+                  }
+                }
               }
             ]
           }
@@ -4252,10 +4328,16 @@
             "name": "CollectionV1"
           },
           {
+            "name": "SaleV1"
+          },
+          {
             "name": "TransferV1"
           },
           {
-            "name": "SaleV1"
+            "name": "UpdateV1"
+          },
+          {
+            "name": "UtilityV1"
           }
         ]
       }
@@ -4285,26 +4367,6 @@
           },
           {
             "name": "Update"
-          }
-        ]
-      }
-    },
-    {
-      "name": "AuthorityType",
-      "type": {
-        "kind": "enum",
-        "variants": [
-          {
-            "name": "Metadata"
-          },
-          {
-            "name": "Delegate"
-          },
-          {
-            "name": "Holder"
-          },
-          {
-            "name": "Other"
           }
         ]
       }
@@ -4374,16 +4436,16 @@
             "name": "V1",
             "fields": [
               {
+                "name": "amount",
+                "type": "u64"
+              },
+              {
                 "name": "authorization_data",
                 "type": {
                   "option": {
                     "defined": "AuthorizationData"
                   }
                 }
-              },
-              {
-                "name": "amount",
-                "type": "u64"
               }
             ]
           }
@@ -4398,20 +4460,6 @@
           {
             "name": "V1",
             "fields": [
-              {
-                "name": "authority_type",
-                "type": {
-                  "defined": "AuthorityType"
-                }
-              },
-              {
-                "name": "authorization_data",
-                "type": {
-                  "option": {
-                    "defined": "AuthorizationData"
-                  }
-                }
-              },
               {
                 "name": "new_update_authority",
                 "type": {
@@ -4460,6 +4508,14 @@
                 "name": "rule_set",
                 "type": {
                   "defined": "RuleSetToggle"
+                }
+              },
+              {
+                "name": "authorization_data",
+                "type": {
+                  "option": {
+                    "defined": "AuthorizationData"
+                  }
                 }
               }
             ]
@@ -4589,6 +4645,14 @@
               {
                 "name": "use_count",
                 "type": "u64"
+              },
+              {
+                "name": "authorization_data",
+                "type": {
+                  "option": {
+                    "defined": "AuthorizationData"
+                  }
+                }
               }
             ]
           }
@@ -4720,6 +4784,26 @@
           },
           {
             "name": "ProgrammableV1"
+          }
+        ]
+      }
+    },
+    {
+      "name": "AuthorityType",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "None"
+          },
+          {
+            "name": "Metadata"
+          },
+          {
+            "name": "Delegate"
+          },
+          {
+            "name": "Holder"
           }
         ]
       }
@@ -5558,6 +5642,16 @@
       "code": 151,
       "name": "InvalidTransferAuthority",
       "msg": "Invalid transfer authority"
+    },
+    {
+      "code": 152,
+      "name": "InstructionNotSupported",
+      "msg": "Instruction not supported for ProgrammableNonFungible assets"
+    },
+    {
+      "code": 153,
+      "name": "KeyMismatch",
+      "msg": "Public key does not match expected value"
     }
   ],
   "metadata": {

@@ -638,7 +638,7 @@ pub enum MetadataInstruction {
     ///      `Utility` actions (pda of ["metadata", program id, mint id, "persistent_delegate", token owner id])
     ///   2. Multiple delegates: for `Authority`, `Collection`, `Update` and `Uses` actions (pda of ["metadata",
     ///      program id, mint id, role, update authority id, delegate owner id])
-    #[account(0, writable, name="delegate_record", desc="Delegate Record account")]
+    #[account(0, writable, name="delegate_record", desc="Delegate record account")]
     #[account(1, name="delegate", desc="Owner of the delegated account")]
     #[account(2, writable, name="metadata", desc="Metadata account")]
     #[account(3, optional, name="master_edition", desc="Master Edition account")]
@@ -655,7 +655,9 @@ pub enum MetadataInstruction {
     Delegate(DelegateArgs),
 
     /// Revokes a delegate.
-    #[account(0, writable, name="delegate_record", desc="Delegate account")]
+    /// 
+    /// A delegate can revoke itself by signing the transaction as the 'approver'.
+    #[account(0, writable, name="delegate_record", desc="Delegate record account")]
     #[account(1, name="delegate", desc="Owner of the delegated account")]
     #[account(2, writable, name="metadata", desc="Metadata account")]
     #[account(3, optional, name="master_edition", desc="Master Edition account")]
