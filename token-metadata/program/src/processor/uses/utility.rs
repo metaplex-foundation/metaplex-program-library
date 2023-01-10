@@ -1,8 +1,12 @@
 use mpl_utils::assert_signer;
 use solana_program::{
-    account_info::AccountInfo, entrypoint::ProgramResult, pubkey::Pubkey, system_program, sysvar,
+    account_info::AccountInfo, entrypoint::ProgramResult, program::invoke, pubkey::Pubkey,
+    system_program, sysvar,
 };
-use spl_token::state::Mint;
+use spl_token::{
+    instruction::{freeze_account, thaw_account},
+    state::Mint,
+};
 
 use crate::{
     assertions::assert_keys_equal,
@@ -99,74 +103,103 @@ fn toggle_lock_v1(
         return Err(MetadataError::InvalidAuthorityType.into());
     }
 
-    if matches!(
+    if !matches!(
         metadata.token_standard,
-        Some(TokenStandard::NonFungible) | Some(TokenStandard::ProgrammableNonFungible)
+        Some(TokenStandard::ProgrammableNonFungible)
     ) {
-        if matches!(metadata.token_standard, Some(TokenStandard::NonFungible)) {
-            // for non-programmable NFTs, we need to freeze the token account,
-            // which requires the master_edition, token and spl-token progran accounts
-            // to be on the transaction
+        // for non-programmable assets, we need to freeze the token account,
+        // which requires the freeze_authority/master_edition, token and spl-token progran accounts
+        // to be on the transaction
 
-            let master_edition_info = match ctx.accounts.edition_info {
-                Some(master_edition_info) => {
-                    let mint: Mint = assert_initialized(ctx.accounts.mint_info)?;
-                    assert_freeze_authority_matches_mint(
-                        &mint.freeze_authority,
-                        master_edition_info,
-                    )?;
-                    assert_owned_by(master_edition_info, &crate::ID)?;
+        let (freeze_authority, is_master_edition) = match ctx.accounts.edition_info {
+            Some(master_edition_info) => {
+                assert_owned_by(master_edition_info, &crate::ID)?;
+                (master_edition_info, true)
+            }
+            None => (ctx.accounts.approver_info, false),
+        };
 
-                    master_edition_info
-                }
-                None => {
-                    return Err(MetadataError::InvalidMasterEdition.into());
-                }
-            };
+        // make sure we got the freeze authority
+        let mint: Mint = assert_initialized(ctx.accounts.mint_info)?;
+        assert_freeze_authority_matches_mint(&mint.freeze_authority, freeze_authority)?;
 
-            let token_info = match ctx.accounts.token_info {
-                Some(token_info) => token_info,
-                None => {
-                    return Err(MetadataError::MissingTokenAccount.into());
-                }
-            };
+        let token_info = match ctx.accounts.token_info {
+            Some(token_info) => token_info,
+            None => {
+                return Err(MetadataError::MissingTokenAccount.into());
+            }
+        };
 
-            let spl_token_program_info = match ctx.accounts.spl_token_program_info {
-                Some(spl_token_program_info) => {
-                    assert_keys_equal(spl_token_program_info.key, &spl_token::ID)?;
-                    spl_token_program_info
-                }
-                None => {
-                    return Err(MetadataError::MissingSplTokenProgram.into());
-                }
-            };
+        let spl_token_program_info = match ctx.accounts.spl_token_program_info {
+            Some(spl_token_program_info) => {
+                assert_keys_equal(spl_token_program_info.key, &spl_token::ID)?;
+                spl_token_program_info
+            }
+            None => {
+                return Err(MetadataError::MissingSplTokenProgram.into());
+            }
+        };
 
-            if lock {
+        if lock {
+            if is_master_edition {
+                // this will validate the master_edition derivation
                 freeze(
                     ctx.accounts.mint_info.clone(),
                     token_info.clone(),
-                    master_edition_info.clone(),
+                    freeze_authority.clone(),
                     spl_token_program_info.clone(),
                 )?;
             } else {
-                thaw(
-                    ctx.accounts.mint_info.clone(),
-                    token_info.clone(),
-                    master_edition_info.clone(),
-                    spl_token_program_info.clone(),
+                // for fungible assets, we invoke spl-token directly
+                // since we have the freeze authority
+                invoke(
+                    &freeze_account(
+                        spl_token_program_info.key,
+                        token_info.key,
+                        ctx.accounts.mint_info.key,
+                        freeze_authority.key,
+                        &[],
+                    )?,
+                    &[
+                        token_info.clone(),
+                        ctx.accounts.mint_info.clone(),
+                        freeze_authority.clone(),
+                    ],
                 )?;
             }
-        }
-
-        metadata.asset_state = Some(if lock {
-            AssetState::Locked
+        } else if is_master_edition {
+            // this will validate the master_edition derivation
+            thaw(
+                ctx.accounts.mint_info.clone(),
+                token_info.clone(),
+                freeze_authority.clone(),
+                spl_token_program_info.clone(),
+            )?;
         } else {
-            AssetState::Unlocked
-        });
-    } else {
-        // invalid asset type
-        return Err(MetadataError::InvalidTokenStandard.into());
+            // for fungible assets, we invoke spl-token directly
+            // since we have the freeze authority
+            invoke(
+                &thaw_account(
+                    spl_token_program_info.key,
+                    token_info.key,
+                    ctx.accounts.mint_info.key,
+                    freeze_authority.key,
+                    &[],
+                )?,
+                &[
+                    token_info.clone(),
+                    ctx.accounts.mint_info.clone(),
+                    freeze_authority.clone(),
+                ],
+            )?;
+        }
     }
+
+    metadata.asset_state = Some(if lock {
+        AssetState::Locked
+    } else {
+        AssetState::Unlocked
+    });
 
     // save the state
     metadata.save(&mut ctx.accounts.metadata_info.try_borrow_mut_data()?)?;
