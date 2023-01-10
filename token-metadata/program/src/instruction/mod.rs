@@ -6,6 +6,7 @@ pub(crate) mod deprecated;
 mod edition;
 pub(crate) mod escrow;
 mod freeze;
+mod state;
 mod metadata;
 mod uses;
 
@@ -17,6 +18,7 @@ pub use delegate::*;
 pub use edition::*;
 pub use escrow::*;
 pub use freeze::*;
+pub use state::*;
 pub use metadata::*;
 use mpl_token_metadata_context_derive::AccountContext;
 #[cfg(feature = "serde-feature")]
@@ -591,7 +593,7 @@ pub enum MetadataInstruction {
     #[account(10, optional, name="authorization_rules_program", desc="Token Authorization Rules Program")]
     #[account(11, optional, name="authorization_rules", desc="Token Authorization Rules account")]
     #[default_optional_accounts]
-    Utility(UtilityArgs),
+    Use(UseArgs),
 
     /// Transfer an asset.
     /// 
@@ -689,6 +691,44 @@ pub enum MetadataInstruction {
     #[account(11, optional, name="authorization_rules", desc="Token Authorization Rules account")]
     #[default_optional_accounts]
     Migrate(MigrateArgs),
+
+    /// Locks an asset. For non-programmable assets, this will also freeze the token account.
+    /// 
+    /// The configurable `authorization_rules` only apply to `ProgrammableNonFungible` assets and
+    /// it may require additional accounts to validate the rules.
+    #[account(0, signer, name="approver", desc="Token owner or delegate")]
+    #[account(1, writable, optional, name="delegate_record", desc="Delegate record PDA")]
+    #[account(2, writable, optional, name="token", desc="Token account")]
+    #[account(3, name="mint", desc="Mint account")]
+    #[account(4, writable, name="metadata", desc="Metadata account")]
+    #[account(5, optional, writable, name="edition", desc="Edition account")]
+    #[account(6, signer, name="payer", desc="Payer")]
+    #[account(7, name="system_program", desc="System program")]
+    #[account(8, name="sysvar_instructions", desc="System program")]
+    #[account(9, optional, name="spl_token_program", desc="SPL Token Program")]
+    #[account(10, optional, name="authorization_rules_program", desc="Token Authorization Rules Program")]
+    #[account(11, optional, name="authorization_rules", desc="Token Authorization Rules account")]
+    #[default_optional_accounts]
+    Lock(LockArgs),
+
+    /// Unlocks an asset. For non-programmable assets, this will also thaw the token account.
+    /// 
+    /// The configurable `authorization_rules` only apply to `ProgrammableNonFungible` assets and
+    /// it may require additional accounts to validate the rules.
+    #[account(0, signer, name="approver", desc="Token owner or delegate")]
+    #[account(1, writable, optional, name="delegate_record", desc="Delegate record PDA")]
+    #[account(2, writable, optional, name="token", desc="Token account")]
+    #[account(3, name="mint", desc="Mint account")]
+    #[account(4, writable, name="metadata", desc="Metadata account")]
+    #[account(5, optional, writable, name="edition", desc="Edition account")]
+    #[account(6, signer, name="payer", desc="Payer")]
+    #[account(7, name="system_program", desc="System program")]
+    #[account(8, name="sysvar_instructions", desc="System program")]
+    #[account(9, optional, name="spl_token_program", desc="SPL Token Program")]
+    #[account(10, optional, name="authorization_rules_program", desc="Token Authorization Rules Program")]
+    #[account(11, optional, name="authorization_rules", desc="Token Authorization Rules account")]
+    #[default_optional_accounts]
+    Unlock(UnlockArgs),
 }
 
 pub struct Context<'a, T> {

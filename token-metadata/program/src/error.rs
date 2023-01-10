@@ -614,10 +614,14 @@ pub enum MetadataError {
     LockedToken,
 
     /// 153
+    #[error("Token is unlocked")]
+    UnlockedToken,
+
+    /// 154
     #[error("Missing delegate role")]
     MissingDelegateRole,
 
-    /// 154
+    /// 155
     #[error("Invalid authority type")]
     InvalidAuthorityType,
 }

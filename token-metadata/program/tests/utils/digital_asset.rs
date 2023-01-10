@@ -3,10 +3,10 @@ use mpl_token_metadata::{
     instruction::{
         builders::{
             CreateBuilder, DelegateBuilder, MigrateBuilder, MintBuilder, RevokeBuilder,
-            TransferBuilder, UtilityBuilder,
+            TransferBuilder, UnlockBuilder, LockBuilder,
         },
-        CreateArgs, DelegateArgs, DelegateRole, InstructionBuilder, MigrateArgs, MintArgs,
-        RevokeArgs, TransferArgs, UtilityArgs,
+        CreateArgs, DelegateArgs, DelegateRole, InstructionBuilder, LockArgs, MigrateArgs,
+        MintArgs, RevokeArgs, TransferArgs, UnlockArgs,
     },
     pda::find_delegate_account,
     processor::AuthorizationData,
@@ -414,15 +414,14 @@ impl DigitalAsset {
         context.banks_client.process_transaction(tx).await
     }
 
-    pub async fn utility(
+    pub async fn lock(
         &mut self,
         context: &mut ProgramTestContext,
         approver: Keypair,
         delegate_record: Option<Pubkey>,
         payer: Keypair,
-        args: UtilityArgs,
     ) -> Result<(), BanksClientError> {
-        let mut builder = UtilityBuilder::new();
+        let mut builder = LockBuilder::new();
         builder
             .approver(approver.pubkey())
             .mint(self.mint.pubkey())
@@ -441,7 +440,55 @@ impl DigitalAsset {
             builder.token(token);
         }
 
-        let utility_ix = builder.build(args).unwrap().instruction();
+        let utility_ix = builder
+            .build(LockArgs::V1 {
+                authorization_data: None,
+            })
+            .unwrap()
+            .instruction();
+
+        let tx = Transaction::new_signed_with_payer(
+            &[utility_ix],
+            Some(&payer.pubkey()),
+            &[&approver],
+            context.last_blockhash,
+        );
+
+        context.banks_client.process_transaction(tx).await
+    }
+
+    pub async fn unlock(
+        &mut self,
+        context: &mut ProgramTestContext,
+        approver: Keypair,
+        delegate_record: Option<Pubkey>,
+        payer: Keypair,
+    ) -> Result<(), BanksClientError> {
+        let mut builder = UnlockBuilder::new();
+        builder
+            .approver(approver.pubkey())
+            .mint(self.mint.pubkey())
+            .metadata(self.metadata)
+            .payer(payer.pubkey());
+
+        if let Some(delegate_record) = delegate_record {
+            builder.delegate_record(delegate_record);
+        }
+
+        if let Some(edition) = self.master_edition {
+            builder.edition(edition);
+        }
+
+        if let Some(token) = self.token {
+            builder.token(token);
+        }
+
+        let utility_ix = builder
+            .build(UnlockArgs::V1 {
+                authorization_data: None,
+            })
+            .unwrap()
+            .instruction();
 
         let tx = Transaction::new_signed_with_payer(
             &[utility_ix],

@@ -229,9 +229,27 @@ pub fn assert_metadata_valid(
     Ok(())
 }
 
-pub fn assert_not_locked(metadata: &Metadata) -> ProgramResult {
+pub fn assert_asset_state(metadata: &Metadata, asset_state: AssetState) -> ProgramResult {
     match metadata.asset_state {
-        Some(AssetState::Locked) => Err(MetadataError::LockedToken.into()),
-        _ => Ok(()),
+        Some(ref state) => {
+            // if the token has an asset state, then it needs to match the
+            // one given as parameter
+            if *state == asset_state {
+                return Ok(());
+            }
+        }
+        None => {
+            // if the token does not have an asset state, then the given needs
+            // to match AssetState::Unlocked
+            if matches!(asset_state, AssetState::Unlocked) {
+                return Ok(());
+            }
+        }
     }
+
+    // any other case generates an error
+    Err(match asset_state {
+        AssetState::Locked => MetadataError::UnlockedToken.into(),
+        AssetState::Unlocked => MetadataError::LockedToken.into(),
+    })
 }
