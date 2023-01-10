@@ -7,7 +7,7 @@ mod edition;
 pub(crate) mod escrow;
 mod freeze;
 mod metadata;
-mod utility;
+mod uses;
 
 use borsh::{BorshDeserialize, BorshSerialize};
 pub use bubblegum::*;
@@ -23,7 +23,7 @@ use mpl_token_metadata_context_derive::AccountContext;
 use serde::{Deserialize, Serialize};
 use shank::ShankInstruction;
 use solana_program::account_info::AccountInfo;
-pub use utility::*;
+pub use uses::*;
 
 #[allow(deprecated)]
 pub use crate::deprecated_instruction::{
