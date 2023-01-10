@@ -10,13 +10,12 @@ use solana_program::{
 };
 use spl_token::instruction::{freeze_account, thaw_account};
 
-use crate::state::ToAccountMeta;
 use crate::{
     assertions::{assert_derivation, programmable::assert_valid_authorization},
     error::MetadataError,
     pda::{EDITION, PREFIX},
     processor::AuthorizationData,
-    state::{Operation, PayloadKey, ProgrammableConfig},
+    state::{Operation, PayloadKey, ProgrammableConfig, ToAccountMeta},
 };
 
 pub fn freeze<'a>(
@@ -107,7 +106,8 @@ pub fn validate<'a>(
 #[derive(Debug, Clone)]
 pub struct AuthRulesValidateParams<'a> {
     pub mint_info: &'a AccountInfo<'a>,
-    pub target_info: Option<&'a AccountInfo<'a>>,
+    pub source_info: Option<&'a AccountInfo<'a>>,
+    pub destination_info: Option<&'a AccountInfo<'a>>,
     pub authority_info: Option<&'a AccountInfo<'a>>,
     pub owner_info: Option<&'a AccountInfo<'a>>,
     pub programmable_config: Option<ProgrammableConfig>,
@@ -115,20 +115,28 @@ pub struct AuthRulesValidateParams<'a> {
     pub auth_data: Option<AuthorizationData>,
     pub auth_rules_info: Option<&'a AccountInfo<'a>>,
     pub operation: Operation,
+    pub is_wallet_to_wallet: bool,
 }
 
 pub fn auth_rules_validate(params: AuthRulesValidateParams) -> ProgramResult {
     let AuthRulesValidateParams {
         mint_info,
-        target_info,
-        authority_info,
         owner_info,
+        source_info,
+        destination_info,
+        authority_info,
         programmable_config,
         amount,
         auth_data,
         auth_rules_info,
         operation,
+        is_wallet_to_wallet,
     } = params;
+
+    if is_wallet_to_wallet {
+        msg!("Wallet to wallet transfer. Skipping auth rules validation");
+        return Ok(());
+    }
 
     if let Some(ref config) = programmable_config {
         msg!("Programmable config exists");
@@ -147,7 +155,10 @@ pub fn auth_rules_validate(params: AuthRulesValidateParams) -> ProgramResult {
         };
 
         let mut additional_rule_accounts = vec![];
-        if let Some(target_info) = target_info {
+        if let Some(target_info) = source_info {
+            additional_rule_accounts.push(target_info);
+        }
+        if let Some(target_info) = destination_info {
             additional_rule_accounts.push(target_info);
         }
         if let Some(authority_info) = authority_info {
@@ -159,24 +170,33 @@ pub fn auth_rules_validate(params: AuthRulesValidateParams) -> ProgramResult {
 
         // Insert auth rules for the operation type.
         match operation {
-            Operation::Transfer => {
+            Operation::Transfer { scenario: _ } => {
                 // Get account infos
-                let target_info = target_info.ok_or(MetadataError::InvalidOperation)?;
                 let authority_info = authority_info.ok_or(MetadataError::InvalidOperation)?;
+                let source_info = source_info.ok_or(MetadataError::InvalidOperation)?;
+                let destination_info = destination_info.ok_or(MetadataError::InvalidOperation)?;
 
                 // Transfer Amount
                 auth_data
                     .payload
                     .insert(PayloadKey::Amount.to_string(), PayloadType::Number(amount));
-                // Transfer Destination
-                auth_data.payload.insert(
-                    PayloadKey::Destination.to_string(),
-                    PayloadType::Pubkey(*target_info.key),
-                );
+
                 // Transfer Authority
                 auth_data.payload.insert(
                     PayloadKey::Authority.to_string(),
                     PayloadType::Pubkey(*authority_info.key),
+                );
+
+                // Transfer Source
+                auth_data.payload.insert(
+                    PayloadKey::Source.to_string(),
+                    PayloadType::Pubkey(*source_info.key),
+                );
+
+                // Transfer Destination
+                auth_data.payload.insert(
+                    PayloadKey::Destination.to_string(),
+                    PayloadType::Pubkey(*destination_info.key),
                 );
             }
             _ => {

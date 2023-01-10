@@ -26,7 +26,7 @@ mod migrate {
 
         // Create a rule set for the pNFTs.
         let (rule_set, _auth_data) =
-            create_test_ruleset(&mut context, authority, "royalty".to_string()).await;
+            create_default_metaplex_rule_set(&mut context, authority).await;
 
         // Create an unsized collection for the pNFT to belong to, since
         // migration requires the item being a verified member of a collection.
@@ -122,8 +122,7 @@ mod migrate {
         let amount = 1;
 
         // Unsized collection
-        let (collection_nft, _collection_me) =
-            Metadata::create_default_nft(context).await.unwrap();
+        let (collection_nft, _collection_me) = Metadata::create_default_nft(context).await.unwrap();
 
         let mut asset = DigitalAsset::new();
         asset

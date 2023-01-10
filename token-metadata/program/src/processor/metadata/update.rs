@@ -1,3 +1,5 @@
+use std::fmt::{Display, Formatter};
+
 use mpl_utils::assert_signer;
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
@@ -12,6 +14,23 @@ use crate::{
     state::{Metadata, TokenMetadataAccount, TokenStandard},
     utils::assert_derivation,
 };
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum UpdateAuthority {
+    Metadata,
+    Delegate,
+    Proxy,
+}
+
+impl Display for UpdateAuthority {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            UpdateAuthority::Metadata => write!(f, "Metadata"),
+            UpdateAuthority::Delegate => write!(f, "Delegate"),
+            UpdateAuthority::Proxy => write!(f, "Proxy"),
+        }
+    }
+}
 
 pub fn update<'a>(
     program_id: &Pubkey,

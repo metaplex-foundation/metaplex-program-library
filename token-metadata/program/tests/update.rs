@@ -14,7 +14,7 @@ mod update {
 
     use mpl_token_metadata::{
         instruction::{AuthorityType, RuleSetToggle, UpdateArgs},
-        state::{Data, ProgrammableState, TokenStandard, ProgrammableConfig},
+        state::{Data, ProgrammableConfig, ProgrammableState, TokenStandard},
     };
     use solana_sdk::signature::Keypair;
 
@@ -108,8 +108,7 @@ mod update {
         let authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
 
         // Create rule-set for the transfer
-        let (rule_set, _auth_data) =
-            create_test_ruleset(context, authority, "royalty".to_string()).await;
+        let (rule_set, _auth_data) = create_default_metaplex_rule_set(context, authority).await;
 
         let update_authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
 

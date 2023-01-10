@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use mpl_utils::{assert_signer, token::TokenTransferParams};
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, msg, program::invoke,
@@ -12,19 +14,42 @@ use crate::{
     utils::{assert_derivation, auth_rules_validate, frozen_transfer, AuthRulesValidateParams},
 };
 
-#[derive(Debug, PartialEq, Eq)]
-enum TransferAuthority {
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum TransferAuthority {
     Owner,
     TransferDelegate,
     SaleDelegate,
-    AuthRules,
+    UtilityDelegate,
+}
+
+impl Display for TransferAuthority {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Owner => write!(f, "Owner"),
+            Self::TransferDelegate => write!(f, "TransferDelegate"),
+            Self::SaleDelegate => write!(f, "SaleDelegate"),
+            Self::UtilityDelegate => write!(f, "UtilityDelegate"),
+        }
+    }
+}
+
+impl From<TransferAuthority> for DelegateRole {
+    fn from(delegate: TransferAuthority) -> Self {
+        match delegate {
+            TransferAuthority::TransferDelegate => DelegateRole::Transfer,
+            TransferAuthority::SaleDelegate => DelegateRole::Sale,
+            TransferAuthority::UtilityDelegate => DelegateRole::Utility,
+            _ => panic!("Invalid delegate role"),
+        }
+    }
 }
 
 impl From<DelegateRole> for TransferAuthority {
-    fn from(role: DelegateRole) -> Self {
-        match role {
-            DelegateRole::Transfer => Self::TransferDelegate,
-            DelegateRole::Sale => Self::SaleDelegate,
+    fn from(delegate: DelegateRole) -> Self {
+        match delegate {
+            DelegateRole::Transfer => TransferAuthority::TransferDelegate,
+            DelegateRole::Sale => TransferAuthority::SaleDelegate,
+            DelegateRole::Utility => TransferAuthority::UtilityDelegate,
             _ => panic!("Invalid delegate role"),
         }
     }
@@ -142,21 +167,14 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
         token_program: ctx.accounts.spl_token_program_info.clone(),
     };
 
-    let auth_rules_validate_params = AuthRulesValidateParams {
-        mint_info: ctx.accounts.mint_info,
-        target_info: Some(ctx.accounts.destination_owner_info),
-        authority_info: Some(ctx.accounts.authority_info),
-        owner_info: None,
-        programmable_config: metadata.programmable_config.clone(),
-        amount,
-        auth_data,
-        auth_rules_info: ctx.accounts.authorization_rules_info,
-        operation: Operation::Transfer,
-    };
-
     let token_standard = metadata
         .token_standard
         .ok_or(MetadataError::InvalidTokenStandard)?;
+
+    // Wallet-to-wallet transfer are always allowed except if a sale
+    // delegate is set.
+    let is_wallet_to_wallet = ctx.accounts.token_owner_info.owner == &system_program::ID
+        && ctx.accounts.destination_owner_info.owner == &system_program::ID;
 
     // Sale delegates prevent any other kind of transfer.
     let is_sale_delegate_set = if let Some(delegate_role) = metadata.persistent_delegate {
@@ -165,26 +183,20 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
         false
     };
 
-    // Wallet-to-wallet transfer are always allowed except if a sale
-    // delegate is set.
-    let is_wallet_to_wallet = ctx.accounts.token_owner_info.owner == &system_program::ID
-        && ctx.accounts.destination_owner_info.owner == &system_program::ID;
-
     // Determine transfer type.
     let transfer_authority = if let Some(delegate_role) = metadata.persistent_delegate {
         // We have a delegate set on the metadata so we convert it
         // into our TransferAuthority enum.
-        // This will panic for anything other than Transfer or Sale as
-        // those are the only valid delegate roles that can be set on
+        // This will panic for anything other than Sale, Transfer and Utility delegates
+        // as those are the only valid delegate roles that can be set on
         // the metadata.
         delegate_role.into()
     } else if ctx.accounts.token_owner_info.key == ctx.accounts.authority_info.key {
         // Owner and authority are the same so this is a normal owner transfer.
         TransferAuthority::Owner
     } else {
-        // The caller is using some other authority to transfer the token that
-        // is not an owner or delegate.
-        TransferAuthority::AuthRules
+        // Invalid transfer authority.
+        return Err(MetadataError::InvalidTransferAuthority.into());
     };
 
     // Short circuit here if sale delegate is set and it's not a SaleDelegate
@@ -192,6 +204,23 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
     if transfer_authority != TransferAuthority::SaleDelegate && is_sale_delegate_set {
         return Err(MetadataError::OnlySaleDelegateCanTransfer.into());
     }
+
+    // Build our auth rules params.
+    let auth_rules_validate_params = AuthRulesValidateParams {
+        mint_info: ctx.accounts.mint_info,
+        owner_info: None,
+        authority_info: Some(ctx.accounts.authority_info),
+        source_info: Some(ctx.accounts.token_owner_info),
+        destination_info: Some(ctx.accounts.destination_owner_info),
+        programmable_config: metadata.programmable_config.clone(),
+        amount,
+        auth_data,
+        auth_rules_info: ctx.accounts.authorization_rules_info,
+        operation: Operation::Transfer {
+            scenario: transfer_authority.clone(),
+        },
+        is_wallet_to_wallet,
+    };
 
     // Validates the transfer authority.
 
@@ -213,18 +242,15 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
                 ctx.accounts.token_info,
             )?;
 
-            // If it's not a wallet-to-wallet transfer and is a pNFT then
-            // we follow authorization rules for the transfer.
-            if !is_wallet_to_wallet
-                && matches!(token_standard, TokenStandard::ProgrammableNonFungible)
-            {
+            // If it's a pNFT then we follow authorization rules for
+            // the transfer.
+            if matches!(token_standard, TokenStandard::ProgrammableNonFungible) {
                 msg!("Program transfer for pNFT");
                 auth_rules_validate(auth_rules_validate_params)?;
             }
             // Otherwise, proceed to transfer normally.
         }
-        // A SaleDelegate means no one except that delegate can transfer
-        // and the transfer must follow auth rules.
+        // This delegate is only valid for pNFTs and submits to auth rules.
         TransferAuthority::SaleDelegate => {
             msg!("Sale delegate transfer authoritry for pNFT");
             // Validate the delegate
@@ -238,7 +264,7 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
 
             assert_delegate(
                 ctx.accounts.authority_info.key,
-                DelegateRole::Sale,
+                transfer_authority.into(),
                 &delegate_record,
             )?;
 
@@ -264,23 +290,19 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
 
             assert_delegate(
                 ctx.accounts.authority_info.key,
-                DelegateRole::Transfer,
+                transfer_authority.into(),
                 &delegate_record,
             )?;
 
-            // If it's not a wallet-to-wallet transfer and is a PNFT then
-            // we follow authorization rules for the transfer.
-            if !is_wallet_to_wallet
-                && matches!(token_standard, TokenStandard::ProgrammableNonFungible)
-            {
+            // If it's a pNFT then we follow authorization rules for
+            // the transfer.
+            if matches!(token_standard, TokenStandard::ProgrammableNonFungible) {
                 auth_rules_validate(auth_rules_validate_params)?;
             }
             // Otherwise, proceed to transfer normally.
         }
-        // This is not an owner or a delegate but some other authority
-        // allowed by auth rules, so must follow the rules and can only
-        // be used for PNFTs.
-        TransferAuthority::AuthRules => {
+        TransferAuthority::UtilityDelegate => {
+            // Need to check lock state
             msg!("Auth rules transfer authoritry for pNFT");
             if matches!(token_standard, TokenStandard::ProgrammableNonFungible) {
                 auth_rules_validate(auth_rules_validate_params)?;
