@@ -46,10 +46,14 @@ import {
   RevokeInstructionArgs,
   createRevokeInstruction,
   RevokeArgs,
+  UtilityInstructionAccounts,
+  UtilityArgs,
+  UtilityInstructionArgs,
+  createUtilityInstruction,
 } from '../../src/generated';
 import { Test } from 'tape';
 import { amman } from '.';
-import { UpdateTestData } from '../utils/UpdateTestData';
+import { UpdateTestData } from '../utils/update-test-data';
 import {
   CreateOrUpdateInstructionAccounts,
   CreateOrUpdateInstructionArgs,
@@ -466,7 +470,50 @@ export class InitTransactions {
     };
   }
 
-  //-- Helpers
+  async utility(
+    approver: Keypair,
+    mint: PublicKey,
+    metadata: PublicKey,
+    payer: Keypair,
+    args: UtilityArgs,
+    handler: PayerTransactionHandler,
+    delegateRecord: PublicKey | null = null,
+    token: PublicKey | null = null,
+    masterEdition: PublicKey | null = null,
+    ruleSetPda: PublicKey | null = null,
+  ): Promise<{ tx: ConfirmedTransactionAssertablePromise }> {
+    const utilityAcccounts: UtilityInstructionAccounts = {
+      approver: approver.publicKey,
+      delegateRecord,
+      token,
+      mint,
+      metadata,
+      edition: masterEdition,
+      payer: payer.publicKey,
+      sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
+      splTokenProgram: splToken.TOKEN_PROGRAM_ID,
+      authorizationRulesProgram: TOKEN_AUTH_RULES_ID,
+      authorizationRules: ruleSetPda,
+    };
+
+    const utilityArgs: UtilityInstructionArgs = {
+      utilityArgs: args,
+    };
+
+    const mintIx = createUtilityInstruction(utilityAcccounts, utilityArgs);
+
+    // creates the transaction
+
+    const tx = new Transaction().add(mintIx);
+
+    return {
+      tx: handler.sendAndConfirmTransaction(tx, [payer, approver], 'tx: Utility'),
+    };
+  }
+
+  //--------------------+
+  // Helpers            |
+  //--------------------+
 
   async verifyCollection(
     t: Test,
