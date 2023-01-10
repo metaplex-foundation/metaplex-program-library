@@ -103,7 +103,13 @@ test('Mint: ProgrammableNonFungible asset with existing token account', async (t
 
   // initialize a token account
 
-  const { tx: tokenTx, token } = await API.createTokenAccount(mint, payer, connection, handler);
+  const { tx: tokenTx, token } = await API.createTokenAccount(
+    mint,
+    payer,
+    connection,
+    handler,
+    payer.publicKey,
+  );
   await tokenTx.assertSuccess(t);
 
   // mint 1 asset

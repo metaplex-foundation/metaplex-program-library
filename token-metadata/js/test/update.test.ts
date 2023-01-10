@@ -1113,9 +1113,7 @@ test('Update: Update existing pNFT rule set config to None', async (t) => {
 
   const updatedMetadata = await Metadata.fromAccountAddress(connection, metadata);
 
-  spok(t, updatedMetadata.programmableConfig, {
-    ruleSet: null,
-  });
+  t.equal(updatedMetadata.programmableConfig, null);
 });
 
 test('Update: Invalid Update Authority Fails', async (t) => {
