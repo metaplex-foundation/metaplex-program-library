@@ -6,7 +6,7 @@ import { AssetData, PROGRAM_ID, TokenStandard } from '../src/generated';
 import test from 'tape';
 import { amman, InitTransactions, killStuckProcess } from './setup';
 import { spokSameBigint } from './utils';
-import { DigitalAssetManager } from './utils/DigitalAssetManager';
+import { DigitalAssetManager } from './utils/digital-asset-manager';
 
 killStuckProcess();
 

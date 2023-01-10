@@ -9,7 +9,7 @@ import {
 } from '../src/generated';
 import test from 'tape';
 import { amman, InitTransactions, killStuckProcess } from './setup';
-import { createAndMintDefaultAsset } from './utils/DigitalAssetManager';
+import { createAndMintDefaultAsset } from './utils/digital-asset-manager';
 import spok from 'spok';
 import { spokSameBigint, spokSamePubkey } from './utils';
 import { BN } from 'bn.js';
