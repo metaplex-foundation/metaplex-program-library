@@ -2674,8 +2674,34 @@
       }
     },
     {
-      "name": "UseAsset",
+      "name": "Utility",
       "accounts": [
+        {
+          "name": "approver",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "Token owner or delegate"
+        },
+        {
+          "name": "delegateRecord",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Delegate record PDA",
+          "optional": true
+        },
+        {
+          "name": "token",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Token account",
+          "optional": true
+        },
+        {
+          "name": "mint",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Mint account"
+        },
         {
           "name": "metadata",
           "isMut": true,
@@ -2683,40 +2709,17 @@
           "desc": "Metadata account"
         },
         {
-          "name": "tokenAccount",
+          "name": "edition",
           "isMut": true,
           "isSigner": false,
-          "desc": "Token Account Of NFT"
+          "desc": "Edition account",
+          "optional": true
         },
         {
-          "name": "mint",
-          "isMut": true,
-          "isSigner": false,
-          "desc": "Mint of the Metadata"
-        },
-        {
-          "name": "useAuthority",
-          "isMut": true,
+          "name": "payer",
+          "isMut": false,
           "isSigner": true,
-          "desc": "Use authority or current owner of the asset"
-        },
-        {
-          "name": "owner",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "Owner"
-        },
-        {
-          "name": "splTokenProgram",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "SPL Token program"
-        },
-        {
-          "name": "ataProgram",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "Associated Token program"
+          "desc": "Payer"
         },
         {
           "name": "systemProgram",
@@ -2725,17 +2728,16 @@
           "desc": "System program"
         },
         {
-          "name": "useAuthorityRecord",
-          "isMut": true,
-          "isSigner": false,
-          "desc": "Use Authority Record PDA (if present the program assumes a delegated use authority)",
-          "optional": true
-        },
-        {
-          "name": "authorizationRules",
+          "name": "sysvarInstructions",
           "isMut": false,
           "isSigner": false,
-          "desc": "Token Authorization Rules account",
+          "desc": "System program"
+        },
+        {
+          "name": "splTokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "SPL Token Program",
           "optional": true
         },
         {
@@ -2744,13 +2746,20 @@
           "isSigner": false,
           "desc": "Token Authorization Rules Program",
           "optional": true
+        },
+        {
+          "name": "authorizationRules",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Token Authorization Rules account",
+          "optional": true
         }
       ],
       "args": [
         {
-          "name": "useAssetArgs",
+          "name": "utilityArgs",
           "type": {
-            "defined": "UseAssetArgs"
+            "defined": "UtilityArgs"
           }
         }
       ],
@@ -3477,10 +3486,10 @@
             }
           },
           {
-            "name": "programmableConfig",
+            "name": "assetState",
             "type": {
               "option": {
-                "defined": "ProgrammableConfig"
+                "defined": "AssetState"
               }
             }
           },
@@ -3489,6 +3498,14 @@
             "type": {
               "option": {
                 "defined": "DelegateRole"
+              }
+            }
+          },
+          {
+            "name": "programmableConfig",
+            "type": {
+              "option": {
+                "defined": "ProgrammableConfig"
               }
             }
           }
@@ -4053,16 +4070,8 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "state",
-            "type": {
-              "defined": "ProgrammableState"
-            }
-          },
-          {
             "name": "ruleSet",
-            "type": {
-              "option": "publicKey"
-            }
+            "type": "publicKey"
           }
         ]
       }
@@ -4635,17 +4644,26 @@
       }
     },
     {
-      "name": "UseAssetArgs",
+      "name": "UtilityArgs",
       "type": {
         "kind": "enum",
         "variants": [
           {
-            "name": "V1",
+            "name": "LockV1",
             "fields": [
               {
-                "name": "use_count",
-                "type": "u64"
-              },
+                "name": "authorization_data",
+                "type": {
+                  "option": {
+                    "defined": "AuthorizationData"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "name": "UnlockV1",
+            "fields": [
               {
                 "name": "authorization_data",
                 "type": {
@@ -4761,7 +4779,7 @@
       }
     },
     {
-      "name": "ProgrammableState",
+      "name": "AssetState",
       "type": {
         "kind": "enum",
         "variants": [
@@ -5652,6 +5670,21 @@
       "code": 153,
       "name": "KeyMismatch",
       "msg": "Public key does not match expected value"
+    },
+    {
+      "code": 154,
+      "name": "LockedToken",
+      "msg": "Token is locked"
+    },
+    {
+      "code": 155,
+      "name": "MissingDelegateRole",
+      "msg": "Missing delegate role"
+    },
+    {
+      "code": 156,
+      "name": "InvalidAuthorityType",
+      "msg": "Invalid authority type"
     }
   ],
   "metadata": {

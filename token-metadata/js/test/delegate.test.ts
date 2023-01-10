@@ -479,14 +479,14 @@ test('Delegate: try replace sale delegate', async (t) => {
 
   // asserts
 
-  let tokenAccount = await getAccount(connection, manager.token);
+  const tokenAccount = await getAccount(connection, manager.token);
 
   spok(t, tokenAccount, {
     delegatedAmount: spokSameBigint(new BN(1)),
     delegate: spokSamePubkey(delegate),
   });
 
-  let pda = await DelegateRecord.fromAccountAddress(connection, delegateRecord);
+  const pda = await DelegateRecord.fromAccountAddress(connection, delegateRecord);
 
   spok(t, pda, {
     delegate: spokSamePubkey(delegate),

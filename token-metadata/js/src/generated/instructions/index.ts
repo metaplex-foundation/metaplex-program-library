@@ -44,7 +44,7 @@ export * from './Update';
 export * from './UpdateMetadataAccount';
 export * from './UpdateMetadataAccountV2';
 export * from './UpdatePrimarySaleHappenedViaToken';
-export * from './UseAsset';
+export * from './Utility';
 export * from './Utilize';
 export * from './Verify';
 export * from './VerifyCollection';

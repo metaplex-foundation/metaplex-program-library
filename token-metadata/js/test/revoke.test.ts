@@ -122,7 +122,7 @@ test('Revoke: revoke collection delegate', async (t) => {
 
   // creates a delegate
 
-  const [,delegate] = await API.getKeypair('Delegate');
+  const [, delegate] = await API.getKeypair('Delegate');
   // delegate PDA
   const [delegateRecord] = PublicKey.findProgramAddressSync(
     [
@@ -163,7 +163,7 @@ test('Revoke: revoke collection delegate', async (t) => {
 
   spok(t, account, {
     delegate: spokSamePubkey(delegate.publicKey),
-    role: DelegateRole.Collection
+    role: DelegateRole.Collection,
   });
 
   // revoke
@@ -206,7 +206,7 @@ test('Revoke: self-revoke collection delegate', async (t) => {
 
   // creates a delegate
 
-  const [,delegate] = await API.getKeypair('Delegate');
+  const [, delegate] = await API.getKeypair('Delegate');
   // delegate PDA
   const [delegateRecord] = PublicKey.findProgramAddressSync(
     [
@@ -247,7 +247,7 @@ test('Revoke: self-revoke collection delegate', async (t) => {
 
   spok(t, account, {
     delegate: spokSamePubkey(delegate.publicKey),
-    role: DelegateRole.Collection
+    role: DelegateRole.Collection,
   });
 
   // revoke
