@@ -5,24 +5,28 @@
 In order to support assets that can have customizable behavior, a new asset class will be introduced into Token Metadata’s `Token Standard` struct. This new token standard will allow for flexible configuration of various lifecycle rules, which will be triggered at specific actions:
 
 - Burn
+- Create
 - Delegate
+- Migrate
 - Mint
+- Print
 - Revoke
 - Transfer
 - Update
-- Use
+- Utility
+- Verify
 
 These lifecycle rules will be configured by creators – e.g., creators may choose to include rules for transfer restrictions (e.g., for royalties enforcement) or only allow updates with an additional signer present in the transaction.
 
 Interaction with assets will be provided by Token Metadata:
 
 1. Transfer instructions (and other spl-token instructions) are now sent to Token Metadata instead.
-2. Token Metadata will expose new versioned instructions under an unified and simplified API. Spl-token proxy instructions are close to the existing instruction interface with the addition of a new required `authorization_rules` account argument. E.g., `CreateMetadataAccount` and `UpdateMetadata` are replaced with `mint` and `update`.
+2. Token Metadata will expose new versioned instructions under an unified and simplified API. Spl-token proxy instructions are close to the existing instruction interface with the addition of a new required `authorization_rules` account argument. E.g., `CreateMetadataAccount` and `UpdateMetadata` are replaced with `Create` and `Update`.
 3. The `authorization_rules` account can be easily discovered on-chain using account derivation or via the Metaplex Read API, an RPC indexing extension run by many existing RPC providers.
 
 ## Extending the `TokenStandard`
 
-A new asset class on the Token Metadata will be added to the `TokenStandard` struct:
+Programmable Non-Fungibles (`pNFT`) are represented as a new asset class on the Token Metadata's `TokenStandard` struct:
 
 ```rust
 pub enum TokenStandard {
@@ -44,7 +48,7 @@ When a `ProgrammableNonFungible` asset is created, it can have a `RuleSet` assoc
 
 ## Unified instructions
 
-To interact with the new asset class, a new set of instructions will be added to Token Metadata. It is important to note that current instructions will continue to work using the existing token standards – the new instructions will be required for interacting with `ProgrammableNonFungible` assets. At the same time, the **new instructions will support all asset classes** so all interaction can happen via an unified interface regardless of the asset class.
+To interact with the new asset class, a new set of instructions will be added to Token Metadata. Note that current instructions will continue to work using the existing token standards – the new instructions are required for interacting with `ProgrammableNonFungible` assets. At the same time, the **new instructions will support all asset classes** so all interaction can happen via an unified interface regardless of the asset class.
 
 Token Metadata instruction will be expanded to include:
 
@@ -69,22 +73,112 @@ pub enum MetadataInstruction {
     Transfer(TransferArgs),
     // Updates the metadata of an asset
     Update(UpdateArgs),
-    // Authorizes the use of a token
-    UseAsset(UseAssetArgs),
+    // Provide utility operations on a token
+    Utility(UtilityArgs),
     // Verifies creator/collection for an asset
     Verify(VerifyArgs),
 }
 ```
 
-Each of these instructions will use versioned `*Args` structs to facilitate future updates, and in turn, not require additional instructions.
+Each of these instructions will use versioned `*Args` structs to facilitate future updates, and in turn, not require additional instructions. Operations supported under each instruction are as follows:
+
+- [ ] `Burn`
+- [X] `Create`
+    * [X] Creation of Programmable Non-Fungibles tokens (pNFT)
+    * [X] Creation of Non-Fungibles tokens (NFT)
+    * [X] Creation of Fungible Assets (*semi-fungible tokens*)
+    * [X] Creation of Fungible Tokens (*fungible tokens*)
+- [ ] `Delegate`
+    * [ ] Creation of `Authority` delegates
+    * [X] Creation of `Collection` delegates
+    * [X] Creation of `Sale` delegates
+    * [X] Creation of `Transfer` delegates
+    * [X] Creation of `Update` delegates
+    * [ ] Creation of `Use` delegates
+    * [X] Creation of `Utility` delegates
+- [ ] `Migrate`
+- [X] `Mint`
+    * [X] Mint Programmable Non-Fungibles tokens (pNFT)
+    * [X] Mint of Non-Fungibles tokens (NFT)
+    * [X] Mint Fungible Assets (*semi-fungible tokens*)
+    * [X] Mint Fungible Tokens (*fungible tokens*)
+- [ ] `Print`
+    * [ ] Print of editions
+- [ ] `Revoke`
+    * [ ] Revoke of `Authority` delegates
+    * [X] Revoke of `Collection` delegates
+    * [X] Revoke of `Sale` delegates
+    * [X] Revoke of `Transfer` delegates
+    * [X] Revoke of `Update` delegates
+    * [ ] Revoke of `Use` delegates
+    * [X] Revoke of `Utility` delegates
+- [ ] `Transfer`
+    * [X] wallet-to-wallet transfers
+    * [X] wallet-to-program transfers
+    * [X] program-to-wallet transfers
+- [X] `Update`
+    * [X] Update metadata details for Programmable Non-Fungibles
+    * [X] Update metadata details for Non-Fungibles
+- [ ] `Utility`
+    * [X] Lock/Unlock Programmable Non-Fungibles
+    * [X] Lock/Unlock Non-Fungibles
+- [ ] `Verify`
+    * [ ] Verify collection items
+    * [ ] Verify creators
+
+## Positional Optional Accounts
+
+The new instruction handlers support positional optional accounts, where an account can be present or not in a transaction. When a instruction is created, it is necessary to provide a list of `PublicKeys` for the instruction accounts – e.g.:
+```javascript
+const mintAcccounts: MintInstructionAccounts = {
+    token,
+    tokenOwner,
+    metadata,
+    masterEdition,
+    mint,
+    payer,
+    ...
+};
+```
+In general, the accounts will be added to the transaction following a pre-defined position:
+```javascript
+// Accounts relative position:
+0. token
+1. tokenOwner
+2. metadata
+3. masterEdition
+4. mint
+5. payer
+...
+```
+When you are minting from a semi-fungible token, there is no need to pass a `masterEdition` account (semi-fungibles do not have a master edition account associated). If we simple ommit the `masterEdition` account, the relative position of the remaining accounts (the accounts after the master edition) would change, resulting in the program logic to be inconsistent. One way to address this is to set another `PublicKey` value to represent a "not-set-value" to maintain the position but at the same time indicate that the master edition account was not set. This is accomplished by setting the Token Metadata program key as the `PublicKey` for any account that should be ommited. This is an efficient approach since:
+1. The (Token Metadata) program id is already included in the transaction by default so adding another reference to it does not take the full 32 bytes of `PublicKey` – only a single byte is used in this case;
+2. The relative position of accounts is maintained since there is a public key value for the account;
+3. The program can easily determine if the account key represent a "valid" public key or a "not-set-value".
+
+Using this approach, the same handler support positional optinal account by just ommiting the `masterEdition`:
+```javascript
+const mintAcccounts: MintInstructionAccounts = {
+    token,
+    tokenOwner,
+    metadata,
+    masterEdition,
+    mint,
+    payer,
+    ...
+};
+```
+Under the hood, you the Token Metadata's `PROGRAM_ID` is set as the master edition account `PublicKey`. This will inform the program that the master edition account was not set and still maintain the relative position of the remaining accounts. Token Metadata includes a rust crate wand an NPM package with instruction builders that support positional optional accounts – you only need to set the "required" accounts using these builders.
+
+> **Note**
+> This is a similar approach used by Anchor v0.26 to support positional optional accounts
 
 ## Instruction Builders (Rust)
 
 Each instruction will include an instruction builder to facilitate its creation.
 
-<aside>
-🚧 The instruction builders examples below are a draft specification.
-</aside>
+> **Warning**
+> The instruction builders examples below are a draft specification.
 
 ### `Create` ([instruction](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/program/src/instruction/mod.rs#L506-L518) | [test source code](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/program/tests/create.rs))
 
@@ -148,7 +242,7 @@ let mint_ix = MintBuilder::new();
     .payer(payer_pubkey)
     .authorization_rules(authorization_rules)
     .build(MintArgs::V1 {
-        amount,
+        amount: 1,
         authorization_data,
     })?
     .instruction();
@@ -195,8 +289,8 @@ let mut transfer_ix = TransferBuilder::new();
     .edition(master_edition);
     .authorization_rules(authorization_rules);
     .build(TransferArgs::V1 {
-        authorization_data: None,
         amount: 1,
+        authorization_data,
     })?
     .instruction();
 ```
@@ -222,6 +316,7 @@ let delegate_ix = DelegateBuilder::new();
     .token(token)
     .build(DelegateArgs::TransferV1 {
         amount: 1,
+        authorization_data,
     })?
     .instruction();
 ```
