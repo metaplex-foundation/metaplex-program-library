@@ -112,16 +112,19 @@ Each of these instructions will use versioned `*Args` structs to facilitate futu
     * [X] Revoke of `Update` delegates
     * [ ] Revoke of `Use` delegates
     * [X] Revoke of `Utility` delegates
-- [ ] `Transfer`
+- [X] `Transfer`
     * [X] wallet-to-wallet transfers
     * [X] wallet-to-program transfers
     * [X] program-to-wallet transfers
 - [X] `Update`
     * [X] Update metadata details for Programmable Non-Fungibles
     * [X] Update metadata details for Non-Fungibles
+    * [X] Update metadata details for Fungibles Assets
+    * [X] Update metadata details for Fungibles
 - [ ] `Utility`
     * [X] Lock/Unlock Programmable Non-Fungibles
     * [X] Lock/Unlock Non-Fungibles
+    * [ ] Authorize use of an asset
 - [ ] `Verify`
     * [ ] Verify collection items
     * [ ] Verify creators
