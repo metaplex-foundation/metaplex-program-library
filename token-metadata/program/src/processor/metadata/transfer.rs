@@ -236,7 +236,7 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
         authority_info: Some(ctx.accounts.authority_info),
         source_info: Some(ctx.accounts.token_owner_info),
         destination_info: Some(ctx.accounts.destination_owner_info),
-        programmable_config: metadata.programmable_config.clone(),
+        programmable_config: metadata.programmable_config,
         amount,
         auth_data,
         auth_rules_info: ctx.accounts.authorization_rules_info,
