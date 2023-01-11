@@ -2674,7 +2674,7 @@
       }
     },
     {
-      "name": "Utility",
+      "name": "Use",
       "accounts": [
         {
           "name": "approver",
@@ -2757,9 +2757,9 @@
       ],
       "args": [
         {
-          "name": "utilityArgs",
+          "name": "useArgs",
           "type": {
-            "defined": "UtilityArgs"
+            "defined": "UseArgs"
           }
         }
       ],
@@ -3229,6 +3229,198 @@
       "discriminant": {
         "type": "u8",
         "value": 50
+      }
+    },
+    {
+      "name": "Lock",
+      "accounts": [
+        {
+          "name": "approver",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "Token owner or delegate"
+        },
+        {
+          "name": "delegateRecord",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Delegate record PDA",
+          "optional": true
+        },
+        {
+          "name": "token",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Token account",
+          "optional": true
+        },
+        {
+          "name": "mint",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Mint account"
+        },
+        {
+          "name": "metadata",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Metadata account"
+        },
+        {
+          "name": "edition",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Edition account",
+          "optional": true
+        },
+        {
+          "name": "payer",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "Payer"
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "System program"
+        },
+        {
+          "name": "sysvarInstructions",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "System program"
+        },
+        {
+          "name": "splTokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "SPL Token Program",
+          "optional": true
+        },
+        {
+          "name": "authorizationRulesProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Token Authorization Rules Program",
+          "optional": true
+        },
+        {
+          "name": "authorizationRules",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Token Authorization Rules account",
+          "optional": true
+        }
+      ],
+      "args": [
+        {
+          "name": "lockArgs",
+          "type": {
+            "defined": "LockArgs"
+          }
+        }
+      ],
+      "defaultOptionalAccounts": true,
+      "discriminant": {
+        "type": "u8",
+        "value": 51
+      }
+    },
+    {
+      "name": "Unlock",
+      "accounts": [
+        {
+          "name": "approver",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "Token owner or delegate"
+        },
+        {
+          "name": "delegateRecord",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Delegate record PDA",
+          "optional": true
+        },
+        {
+          "name": "token",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Token account",
+          "optional": true
+        },
+        {
+          "name": "mint",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Mint account"
+        },
+        {
+          "name": "metadata",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Metadata account"
+        },
+        {
+          "name": "edition",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Edition account",
+          "optional": true
+        },
+        {
+          "name": "payer",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "Payer"
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "System program"
+        },
+        {
+          "name": "sysvarInstructions",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "System program"
+        },
+        {
+          "name": "splTokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "SPL Token Program",
+          "optional": true
+        },
+        {
+          "name": "authorizationRulesProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Token Authorization Rules Program",
+          "optional": true
+        },
+        {
+          "name": "authorizationRules",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Token Authorization Rules account",
+          "optional": true
+        }
+      ],
+      "args": [
+        {
+          "name": "unlockArgs",
+          "type": {
+            "defined": "UnlockArgs"
+          }
+        }
+      ],
+      "defaultOptionalAccounts": true,
+      "discriminant": {
+        "type": "u8",
+        "value": 52
       }
     }
   ],
@@ -4644,12 +4836,12 @@
       }
     },
     {
-      "name": "UtilityArgs",
+      "name": "LockArgs",
       "type": {
         "kind": "enum",
         "variants": [
           {
-            "name": "LockV1",
+            "name": "V1",
             "fields": [
               {
                 "name": "authorization_data",
@@ -4660,9 +4852,38 @@
                 }
               }
             ]
-          },
+          }
+        ]
+      }
+    },
+    {
+      "name": "UnlockArgs",
+      "type": {
+        "kind": "enum",
+        "variants": [
           {
-            "name": "UnlockV1",
+            "name": "V1",
+            "fields": [
+              {
+                "name": "authorization_data",
+                "type": {
+                  "option": {
+                    "defined": "AuthorizationData"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "UseArgs",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "V1",
             "fields": [
               {
                 "name": "authorization_data",
@@ -5678,11 +5899,16 @@
     },
     {
       "code": 155,
+      "name": "UnlockedToken",
+      "msg": "Token is unlocked"
+    },
+    {
+      "code": 156,
       "name": "MissingDelegateRole",
       "msg": "Missing delegate role"
     },
     {
-      "code": 156,
+      "code": 157,
       "name": "InvalidAuthorityType",
       "msg": "Invalid authority type"
     }

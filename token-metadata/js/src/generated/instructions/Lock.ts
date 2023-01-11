@@ -7,34 +7,34 @@
 
 import * as beet from '@metaplex-foundation/beet';
 import * as web3 from '@solana/web3.js';
-import { UtilityArgs, utilityArgsBeet } from '../types/UtilityArgs';
+import { LockArgs, lockArgsBeet } from '../types/LockArgs';
 
 /**
  * @category Instructions
- * @category Utility
+ * @category Lock
  * @category generated
  */
-export type UtilityInstructionArgs = {
-  utilityArgs: UtilityArgs;
+export type LockInstructionArgs = {
+  lockArgs: LockArgs;
 };
 /**
  * @category Instructions
- * @category Utility
+ * @category Lock
  * @category generated
  */
-export const UtilityStruct = new beet.FixableBeetArgsStruct<
-  UtilityInstructionArgs & {
+export const LockStruct = new beet.FixableBeetArgsStruct<
+  LockInstructionArgs & {
     instructionDiscriminator: number;
   }
 >(
   [
     ['instructionDiscriminator', beet.u8],
-    ['utilityArgs', utilityArgsBeet],
+    ['lockArgs', lockArgsBeet],
   ],
-  'UtilityInstructionArgs',
+  'LockInstructionArgs',
 );
 /**
- * Accounts required by the _Utility_ instruction
+ * Accounts required by the _Lock_ instruction
  *
  * @property [**signer**] approver Token owner or delegate
  * @property [_writable_] delegateRecord (optional) Delegate record PDA
@@ -48,10 +48,10 @@ export const UtilityStruct = new beet.FixableBeetArgsStruct<
  * @property [] authorizationRulesProgram (optional) Token Authorization Rules Program
  * @property [] authorizationRules (optional) Token Authorization Rules account
  * @category Instructions
- * @category Utility
+ * @category Lock
  * @category generated
  */
-export type UtilityInstructionAccounts = {
+export type LockInstructionAccounts = {
   approver: web3.PublicKey;
   delegateRecord?: web3.PublicKey;
   token?: web3.PublicKey;
@@ -66,10 +66,10 @@ export type UtilityInstructionAccounts = {
   authorizationRules?: web3.PublicKey;
 };
 
-export const utilityInstructionDiscriminator = 45;
+export const lockInstructionDiscriminator = 51;
 
 /**
- * Creates a _Utility_ instruction.
+ * Creates a _Lock_ instruction.
  *
  * Optional accounts that are not provided default to the program ID since
  * this was indicated in the IDL from which this instruction was generated.
@@ -78,16 +78,16 @@ export const utilityInstructionDiscriminator = 45;
  * @param args to provide as instruction data to the program
  *
  * @category Instructions
- * @category Utility
+ * @category Lock
  * @category generated
  */
-export function createUtilityInstruction(
-  accounts: UtilityInstructionAccounts,
-  args: UtilityInstructionArgs,
+export function createLockInstruction(
+  accounts: LockInstructionAccounts,
+  args: LockInstructionArgs,
   programId = new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
 ) {
-  const [data] = UtilityStruct.serialize({
-    instructionDiscriminator: utilityInstructionDiscriminator,
+  const [data] = LockStruct.serialize({
+    instructionDiscriminator: lockInstructionDiscriminator,
     ...args,
   });
   const keys: web3.AccountMeta[] = [

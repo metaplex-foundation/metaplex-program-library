@@ -46,10 +46,12 @@ import {
   RevokeInstructionArgs,
   createRevokeInstruction,
   RevokeArgs,
-  UtilityInstructionAccounts,
-  UtilityArgs,
-  UtilityInstructionArgs,
-  createUtilityInstruction,
+  LockInstructionAccounts,
+  LockInstructionArgs,
+  createLockInstruction,
+  UnlockInstructionAccounts,
+  UnlockInstructionArgs,
+  createUnlockInstruction,
 } from '../../src/generated';
 import { Test } from 'tape';
 import { amman } from '.';
@@ -470,19 +472,18 @@ export class InitTransactions {
     };
   }
 
-  async utility(
+  async lock(
     approver: Keypair,
     mint: PublicKey,
     metadata: PublicKey,
     payer: Keypair,
-    args: UtilityArgs,
     handler: PayerTransactionHandler,
     delegateRecord: PublicKey | null = null,
     token: PublicKey | null = null,
     masterEdition: PublicKey | null = null,
     ruleSetPda: PublicKey | null = null,
   ): Promise<{ tx: ConfirmedTransactionAssertablePromise }> {
-    const utilityAcccounts: UtilityInstructionAccounts = {
+    const lockAcccounts: LockInstructionAccounts = {
       approver: approver.publicKey,
       delegateRecord,
       token,
@@ -496,18 +497,64 @@ export class InitTransactions {
       authorizationRules: ruleSetPda,
     };
 
-    const utilityArgs: UtilityInstructionArgs = {
-      utilityArgs: args,
+    const lockArgs: LockInstructionArgs = {
+      lockArgs: {
+        __kind: "V1",
+        authorizationData: null,
+      },
     };
 
-    const mintIx = createUtilityInstruction(utilityAcccounts, utilityArgs);
+    const mintIx = createLockInstruction(lockAcccounts, lockArgs);
 
     // creates the transaction
 
     const tx = new Transaction().add(mintIx);
 
     return {
-      tx: handler.sendAndConfirmTransaction(tx, [payer, approver], 'tx: Utility'),
+      tx: handler.sendAndConfirmTransaction(tx, [payer, approver], 'tx: Lock'),
+    };
+  }
+
+  async unlock(
+    approver: Keypair,
+    mint: PublicKey,
+    metadata: PublicKey,
+    payer: Keypair,
+    handler: PayerTransactionHandler,
+    delegateRecord: PublicKey | null = null,
+    token: PublicKey | null = null,
+    masterEdition: PublicKey | null = null,
+    ruleSetPda: PublicKey | null = null,
+  ): Promise<{ tx: ConfirmedTransactionAssertablePromise }> {
+    const unlockAcccounts: UnlockInstructionAccounts = {
+      approver: approver.publicKey,
+      delegateRecord,
+      token,
+      mint,
+      metadata,
+      edition: masterEdition,
+      payer: payer.publicKey,
+      sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
+      splTokenProgram: splToken.TOKEN_PROGRAM_ID,
+      authorizationRulesProgram: TOKEN_AUTH_RULES_ID,
+      authorizationRules: ruleSetPda,
+    };
+
+    const unlockArgs: UnlockInstructionArgs = {
+      unlockArgs: {
+        __kind: "V1",
+        authorizationData: null,
+      },
+    };
+
+    const mintIx = createUnlockInstruction(unlockAcccounts, unlockArgs);
+
+    // creates the transaction
+
+    const tx = new Transaction().add(mintIx);
+
+    return {
+      tx: handler.sendAndConfirmTransaction(tx, [payer, approver], 'tx: Unlock'),
     };
   }
 
