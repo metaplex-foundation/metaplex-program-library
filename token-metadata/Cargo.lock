@@ -1765,7 +1765,7 @@ dependencies = [
  "bincode",
  "borsh",
  "clap 2.34.0",
- "mpl-token-metadata",
+ "mpl-token-metadata 1.6.4",
  "solana-clap-utils",
  "solana-cli-config",
  "solana-client",
@@ -1852,7 +1852,7 @@ dependencies = [
  "rmp-serde",
  "serde",
  "serde_with",
- "shank",
+ "shank 0.0.11",
  "solana-program",
  "thiserror",
 ]
@@ -1866,16 +1866,37 @@ dependencies = [
  "mpl-token-auth-rules",
  "mpl-token-metadata-context-derive 0.0.1",
  "mpl-token-vault",
- "mpl-utils",
+ "mpl-utils 0.0.5",
  "num-derive",
  "num-traits",
  "rmp-serde",
+ "rooster",
  "serde",
  "serde_with",
- "shank",
+ "shank 0.0.11",
  "solana-program",
  "solana-program-test",
  "solana-sdk",
+ "spl-associated-token-account",
+ "spl-token",
+ "thiserror",
+]
+
+[[package]]
+name = "mpl-token-metadata"
+version = "1.6.4"
+source = "git+https://github.com/metaplex-foundation/metaplex-program-library?branch=vanderwaal/transfer-refactor#56278dedcb2d186a2d99c2571a4a1b034af5ec0d"
+dependencies = [
+ "arrayref",
+ "borsh",
+ "mpl-token-auth-rules",
+ "mpl-token-metadata-context-derive 0.0.1 (git+https://github.com/metaplex-foundation/metaplex-program-library?branch=vanderwaal/transfer-refactor)",
+ "mpl-token-vault",
+ "mpl-utils 0.0.5 (git+https://github.com/metaplex-foundation/metaplex-program-library?branch=vanderwaal/transfer-refactor)",
+ "num-derive",
+ "num-traits",
+ "shank 0.0.11",
+ "solana-program",
  "spl-associated-token-account",
  "spl-token",
  "thiserror",
@@ -1900,6 +1921,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "mpl-token-metadata-context-derive"
+version = "0.0.1"
+source = "git+https://github.com/metaplex-foundation/metaplex-program-library?branch=vanderwaal/transfer-refactor#56278dedcb2d186a2d99c2571a4a1b034af5ec0d"
+dependencies = [
+ "quote 1.0.21",
+ "syn 1.0.105",
+]
+
+[[package]]
 name = "mpl-token-vault"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1916,6 +1946,29 @@ dependencies = [
 [[package]]
 name = "mpl-utils"
 version = "0.0.5"
+dependencies = [
+ "arrayref",
+ "borsh",
+ "solana-program",
+ "spl-token",
+]
+
+[[package]]
+name = "mpl-utils"
+version = "0.0.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "330468b3ea93d306ed5ae5e389b0b64cfbc43fcd29a4eeae74e20f13c979e7a5"
+dependencies = [
+ "arrayref",
+ "borsh",
+ "solana-program",
+ "spl-token",
+]
+
+[[package]]
+name = "mpl-utils"
+version = "0.0.5"
+source = "git+https://github.com/metaplex-foundation/metaplex-program-library?branch=vanderwaal/transfer-refactor#56278dedcb2d186a2d99c2571a4a1b034af5ec0d"
 dependencies = [
  "arrayref",
  "borsh",
@@ -2726,6 +2779,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "rooster"
+version = "0.1.0"
+source = "git+https://github.com/metaplex-foundation/rooster#fe86527c571f9934c8ef5e5f82380da60516cff1"
+dependencies = [
+ "borsh",
+ "mpl-token-metadata 1.6.4 (git+https://github.com/metaplex-foundation/metaplex-program-library?branch=vanderwaal/transfer-refactor)",
+ "mpl-utils 0.0.5 (registry+https://github.com/rust-lang/crates.io-index)",
+ "num-derive",
+ "num-traits",
+ "shank 0.0.10",
+ "solana-program",
+ "thiserror",
+]
+
+[[package]]
 name = "rpassword"
 version = "6.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3050,11 +3118,32 @@ dependencies = [
 
 [[package]]
 name = "shank"
+version = "0.0.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "90b0d7b8998cc311310854451e7f5903cf3a151ca93ef6aa2b8b6c369a037b21"
+dependencies = [
+ "shank_macro 0.0.10",
+]
+
+[[package]]
+name = "shank"
 version = "0.0.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b63e565b5e95ad88ab38f312e89444c749360641c509ef2de0093b49f55974a5"
 dependencies = [
- "shank_macro",
+ "shank_macro 0.0.11",
+]
+
+[[package]]
+name = "shank_macro"
+version = "0.0.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b3a37d6cf5df84eb622cb6fc74071d5d773c6a23b9ec55691db7b6a8c2286926"
+dependencies = [
+ "proc-macro2 1.0.47",
+ "quote 1.0.21",
+ "shank_macro_impl 0.0.10",
+ "syn 1.0.105",
 ]
 
 [[package]]
@@ -3065,7 +3154,20 @@ checksum = "63927d22a1e8b74bda98cc6e151fcdf178b7abb0dc6c4f81e0bbf5ffe2fc4ec8"
 dependencies = [
  "proc-macro2 1.0.47",
  "quote 1.0.21",
- "shank_macro_impl",
+ "shank_macro_impl 0.0.11",
+ "syn 1.0.105",
+]
+
+[[package]]
+name = "shank_macro_impl"
+version = "0.0.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1314ff5d5a3dffd9b93de1463e2b6afc2350f17596d7d9b3fe0924c9edd250df"
+dependencies = [
+ "anyhow",
+ "proc-macro2 1.0.47",
+ "quote 1.0.21",
+ "serde",
  "syn 1.0.105",
 ]
 
