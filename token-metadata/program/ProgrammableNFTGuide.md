@@ -96,6 +96,11 @@ Each of these instructions will use versioned `*Args` structs to facilitate futu
     * [X] Creation of `Update` delegates
     * [ ] Creation of `Use` delegates
     * [X] Creation of `Utility` delegates
+- [X] `Lock`
+    * [X] Lock Programmable Non-Fungibles
+    * [X] Lock Non-Fungibles
+    * [X] Lock Fungible Assets
+    * [X] Lock Fungibles
 - [ ] `Migrate`
 - [X] `Mint`
     * [X] Mint Programmable Non-Fungibles tokens (pNFT)
@@ -121,10 +126,11 @@ Each of these instructions will use versioned `*Args` structs to facilitate futu
     * [X] Update metadata details for Non-Fungibles
     * [X] Update metadata details for Fungibles Assets
     * [X] Update metadata details for Fungibles
-- [ ] `Utility`
-    * [X] Lock/Unlock Programmable Non-Fungibles
-    * [X] Lock/Unlock Non-Fungibles
-    * [ ] Authorize use of an asset
+- [X] `Unlock`
+    * [X] Unlock Programmable Non-Fungibles
+    * [X] Unlock Non-Fungibles
+    * [X] Unlock Fungible Assets
+    * [X] Unlock Fungibles
 - [ ] `Verify`
     * [ ] Verify collection items
     * [ ] Verify creators
@@ -154,7 +160,7 @@ In general, the accounts will be added to the transaction following a pre-define
 5. payer
 ...
 ```
-When you are minting from a semi-fungible token, there is no need to pass a `masterEdition` account (semi-fungibles do not have a master edition account associated). If we simple ommit the `masterEdition` account, the relative position of the remaining accounts (the accounts after the master edition) would change, resulting in the program logic to be inconsistent. One way to address this is to set another `PublicKey` value to represent a "not-set-value" to maintain the position but at the same time indicate that the master edition account was not set. This is accomplished by setting the Token Metadata program key as the `PublicKey` for any account that should be ommited. This is an efficient approach since:
+When you are minting from a semi-fungible token, there is no need to pass a `masterEdition` account (semi-fungibles do not have a master edition account associated). If we simply omit the `masterEdition` account, the relative position of the remaining accounts (the accounts after the master edition) would change, resulting in the program logic to be inconsistent. One way to address this is to set another `PublicKey` value to represent a "not-set-value" to maintain the position but at the same time indicate that the master edition account was not set. This is accomplished by setting the Token Metadata program key as the `PublicKey` for any account that should be ommited. This is an efficient approach since:
 1. The (Token Metadata) program id is already included in the transaction by default so adding another reference to it does not take the full 32 bytes of `PublicKey` – only a single byte is used in this case;
 2. The relative position of accounts is maintained since there is a public key value for the account;
 3. The program can easily determine if the account key represent a "valid" public key or a "not-set-value".
@@ -165,7 +171,6 @@ const mintAcccounts: MintInstructionAccounts = {
     token,
     tokenOwner,
     metadata,
-    masterEdition,
     mint,
     payer,
     ...
