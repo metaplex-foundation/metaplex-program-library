@@ -99,7 +99,9 @@ impl ToString for Operation {
 pub enum PayloadKey {
     Amount,
     Authority,
+    AuthoritySeeds,
     Delegate,
+    DelegateSeeds,
     Destination,
     DestinationSeeds,
     Holder,
@@ -112,7 +114,9 @@ impl ToString for PayloadKey {
         match self {
             PayloadKey::Amount => "Amount",
             PayloadKey::Authority => "Authority",
+            PayloadKey::AuthoritySeeds => "AuthoritySeeds",
             PayloadKey::Delegate => "Delegate",
+            PayloadKey::DelegateSeeds => "DelegateSeeds",
             PayloadKey::Destination => "Destination",
             PayloadKey::DestinationSeeds => "DestinationSeeds",
             PayloadKey::Holder => "Holder",
