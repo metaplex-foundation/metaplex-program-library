@@ -4,7 +4,7 @@ use mpl_token_auth_rules::{
     state::{CompareOp, Rule, RuleSet},
 };
 use mpl_token_metadata::{
-    processor::{AuthorizationData, TransferAuthority},
+    processor::{AuthorizationData, TransferScenario},
     state::{Operation, PayloadKey},
 };
 use rmp_serde::Serializer;
@@ -111,11 +111,11 @@ pub async fn create_default_metaplex_rule_set(
     };
 
     let owner_operation = Operation::Transfer {
-        scenario: TransferAuthority::Owner,
+        scenario: TransferScenario::Holder,
     };
 
     let transfer_delegate_operation = Operation::Transfer {
-        scenario: TransferAuthority::TransferDelegate,
+        scenario: TransferScenario::TransferDelegate,
     };
 
     let mut royalty_rule_set = RuleSet::new(name, creator.pubkey());

@@ -10,7 +10,10 @@ use solana_program::{
 };
 use spl_token::state::Account;
 
+use crate::processor::{TransferScenario, UpdateScenario};
 use crate::{error::MetadataError, instruction::DelegateRole, pda::find_delegate_account};
+
+use super::{DelegateRecord, TokenMetadataAccount};
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
@@ -40,10 +43,6 @@ pub struct AuthorityRequest<'a, 'b> {
 impl AuthorityType {
     /// Determines the `AuthorityType`.
     pub fn get_authority_type(request: AuthorityRequest) -> Result<Self, ProgramError> {
-        if cmp_pubkeys(request.update_authority, request.authority) {
-            return Ok(AuthorityType::Metadata);
-        }
-
         if let Some(delegate_record_info) = request.delegate_record_info {
             let (pda_key, _) = find_delegate_account(
                 request.mint,
@@ -53,6 +52,14 @@ impl AuthorityType {
                 request.update_authority,
                 request.authority,
             );
+
+            // Invalid delegates will be rejected by SPL token, but it's
+            // better to fail early here with a clear error.
+            let delegate_record = DelegateRecord::from_account_info(delegate_record_info)?;
+
+            if &delegate_record.delegate != request.authority {
+                return Err(MetadataError::InvalidDelegate.into());
+            }
 
             if cmp_pubkeys(&pda_key, delegate_record_info.key) {
                 return Ok(AuthorityType::Delegate);
@@ -66,23 +73,24 @@ impl AuthorityType {
             }
         }
 
+        if cmp_pubkeys(request.update_authority, request.authority) {
+            return Ok(AuthorityType::Metadata);
+        }
         Ok(AuthorityType::None)
     }
 }
 
-use crate::processor::{TransferAuthority, UpdateAuthority};
-
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Operation {
-    Transfer { scenario: TransferAuthority },
-    Update { scenario: UpdateAuthority },
+    Transfer { scenario: TransferScenario },
+    Update { scenario: UpdateScenario },
 }
 
 impl ToString for Operation {
     fn to_string(&self) -> String {
         match self {
-            Self::Transfer { scenario } => format!("TRA:{}", scenario),
-            Self::Update { scenario } => format!("UPD:{}", scenario),
+            Self::Transfer { scenario } => format!("Transfer:{}", scenario),
+            Self::Update { scenario } => format!("Update:{}", scenario),
         }
     }
 }
@@ -97,7 +105,6 @@ pub enum PayloadKey {
     Holder,
     Source,
     SourceSeeds,
-    Target,
 }
 
 impl ToString for PayloadKey {
@@ -111,7 +118,6 @@ impl ToString for PayloadKey {
             PayloadKey::Holder => "Holder",
             PayloadKey::Source => "Source",
             PayloadKey::SourceSeeds => "SourceSeeds",
-            PayloadKey::Target => "Target",
         }
         .to_string()
     }

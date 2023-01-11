@@ -19,18 +19,18 @@ use crate::{
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub enum UpdateAuthority {
-    Metadata,
+pub enum UpdateScenario {
+    MetadataAuth,
     Delegate,
     Proxy,
 }
 
-impl Display for UpdateAuthority {
+impl Display for UpdateScenario {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            UpdateAuthority::Metadata => write!(f, "Metadata"),
-            UpdateAuthority::Delegate => write!(f, "Delegate"),
-            UpdateAuthority::Proxy => write!(f, "Proxy"),
+            UpdateScenario::MetadataAuth => write!(f, "MetadataAuth"),
+            UpdateScenario::Delegate => write!(f, "Delegate"),
+            UpdateScenario::Proxy => write!(f, "Proxy"),
         }
     }
 }

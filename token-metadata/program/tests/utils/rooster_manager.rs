@@ -5,6 +5,7 @@ use rooster::{
     pda::find_rooster_pda,
     AuthorizationData, DelegateRole,
 };
+use solana_sdk::compute_budget::ComputeBudgetInstruction;
 use spl_associated_token_account::get_associated_token_address;
 
 pub struct RoosterManager {
@@ -56,6 +57,8 @@ impl RoosterManager {
         let token = get_associated_token_address(&self.pda(), &mint);
         let destination = get_associated_token_address(&destination_owner, &mint);
 
+        let compute_ix = ComputeBudgetInstruction::set_compute_unit_limit(800_000);
+
         let ix = withdraw(
             authority.pubkey(),
             self.pda,
@@ -70,7 +73,7 @@ impl RoosterManager {
         );
 
         let tx = Transaction::new_signed_with_payer(
-            &[ix],
+            &[compute_ix, ix],
             Some(&authority.pubkey()),
             &[authority],
             context.last_blockhash,

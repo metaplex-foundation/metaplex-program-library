@@ -4,7 +4,6 @@ pub mod utils;
 
 use mpl_token_auth_rules::payload::{PayloadType, SeedsVec};
 use mpl_token_metadata::{
-    error::MetadataError,
     instruction::{DelegateRole, TransferArgs},
     pda::find_delegate_account,
     state::{DelegateRecord, Key, PayloadKey, TokenStandard},
@@ -25,6 +24,8 @@ use spl_associated_token_account::get_associated_token_address;
 use utils::*;
 
 mod standard_transfer {
+
+    use mpl_token_metadata::error::MetadataError;
 
     use super::*;
 
@@ -286,8 +287,70 @@ mod standard_transfer {
         .unwrap();
 
         assert_eq!(token_account.amount, transfer_amount);
+    }
 
-        // Sanity check.
+    #[tokio::test]
+    async fn fake_delegate_fails() {
+        let mut context = program_test().start_with_context().await;
+
+        let transfer_amount = 1;
+
+        let mut da = DigitalAsset::new();
+        da.create_and_mint(&mut context, TokenStandard::NonFungible, None, None, 1)
+            .await
+            .unwrap();
+
+        let delegate = Keypair::new();
+        airdrop(&mut context, &delegate.pubkey(), LAMPORTS_PER_SOL)
+            .await
+            .unwrap();
+
+        let authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+        let authority_pubkey = authority.pubkey();
+        let source_owner = &Keypair::from_bytes(&context.payer.to_bytes())
+            .unwrap()
+            .pubkey();
+
+        da.delegate(
+            &mut context,
+            authority,
+            delegate.pubkey(),
+            DelegateRole::Transfer,
+            Some(1),
+        )
+        .await
+        .unwrap();
+
+        let metadata = da.get_metadata(&mut context).await;
+        assert_eq!(
+            metadata.persistent_delegate.unwrap(),
+            DelegateRole::Transfer
+        );
+
+        // delegate PDA
+        let (delegate_record, _) = find_delegate_account(
+            &da.mint.pubkey(),
+            DelegateRole::Transfer,
+            &authority_pubkey,
+            &delegate.pubkey(),
+        );
+
+        let pda = get_account(&mut context, &delegate_record).await;
+        let delegate_record_data: DelegateRecord = DelegateRecord::from_bytes(&pda.data).unwrap();
+        assert_eq!(delegate_record_data.key, Key::Delegate);
+        assert_eq!(delegate_record_data.role, DelegateRole::Transfer);
+
+        let destination_owner = Pubkey::new_unique();
+        let destination_token = get_associated_token_address(&destination_owner, &da.mint.pubkey());
+        airdrop(&mut context, &destination_owner, LAMPORTS_PER_SOL)
+            .await
+            .unwrap();
+
+        let args = TransferArgs::V1 {
+            authorization_data: None,
+            amount: transfer_amount,
+        };
+
         let fake_delegate = Keypair::new();
         airdrop(&mut context, &fake_delegate.pubkey(), LAMPORTS_PER_SOL)
             .await
@@ -360,7 +423,7 @@ mod auth_rules_transfer {
         let transfer_amount = 1;
 
         // Our first destination will be an account owned by
-        // the mpl-token-METADATA. This should fail because it's not
+        // the mpl-token-metadata. This should fail because it's not
         // in the program allowlist and also not a wallet-to-wallet
         // transfer.
         let destination_owner = nft.metadata;
