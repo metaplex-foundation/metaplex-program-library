@@ -6,6 +6,7 @@ pub(crate) mod deprecated;
 mod edition;
 pub(crate) mod escrow;
 mod freeze;
+mod state;
 mod metadata;
 mod uses;
 
@@ -21,6 +22,7 @@ pub use deprecated::{
 pub use edition::*;
 pub use escrow::*;
 pub use freeze::*;
+pub use state::*;
 pub use metadata::*;
 use mpl_token_auth_rules::payload::Payload;
 use mpl_utils::cmp_pubkeys;
@@ -67,7 +69,7 @@ impl AuthorizationData {
 }
 
 /// Process Token Metadata instructions.
-/// 
+///
 /// The processor is divided into two parts:
 /// * It first tries to match the instruction into the new API;
 /// * If it is not one of the new instructions, it checks that any metadata
@@ -98,9 +100,13 @@ pub fn process_instruction<'a>(
             msg!("Instruction: Token Metadata Burn");
             burn::burn(program_id, accounts, args)
         }
-        MetadataInstruction::UseAsset(args) => {
-            msg!("Instruction: Token Metadata UseAsset");
-            uses::use_asset(program_id, accounts, args)
+        MetadataInstruction::Lock(args) => {
+            msg!("Instruction: Token Metadata Lock");
+            state::lock(program_id, accounts, args)
+        }
+        MetadataInstruction::Unlock(args) => {
+            msg!("Instruction: Token Metadata Unlock");
+            state::unlock(program_id, accounts, args)
         }
         MetadataInstruction::Transfer(args) => {
             msg!("Instruction: Token Metadata Transfer");

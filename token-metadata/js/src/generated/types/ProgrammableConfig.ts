@@ -6,22 +6,17 @@
  */
 
 import * as web3 from '@solana/web3.js';
-import * as beet from '@metaplex-foundation/beet';
 import * as beetSolana from '@metaplex-foundation/beet-solana';
-import { ProgrammableState, programmableStateBeet } from './ProgrammableState';
+import * as beet from '@metaplex-foundation/beet';
 export type ProgrammableConfig = {
-  state: ProgrammableState;
-  ruleSet: beet.COption<web3.PublicKey>;
+  ruleSet: web3.PublicKey;
 };
 
 /**
  * @category userTypes
  * @category generated
  */
-export const programmableConfigBeet = new beet.FixableBeetArgsStruct<ProgrammableConfig>(
-  [
-    ['state', programmableStateBeet],
-    ['ruleSet', beet.coption(beetSolana.publicKey)],
-  ],
+export const programmableConfigBeet = new beet.BeetArgsStruct<ProgrammableConfig>(
+  [['ruleSet', beetSolana.publicKey]],
   'ProgrammableConfig',
 );

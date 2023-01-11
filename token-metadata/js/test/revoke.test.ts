@@ -9,7 +9,7 @@ import {
 } from '../src/generated';
 import test from 'tape';
 import { amman, InitTransactions, killStuckProcess } from './setup';
-import { createAndMintDefaultAsset } from './utils/DigitalAssetManager';
+import { createAndMintDefaultAsset } from './utils/digital-asset-manager';
 import spok from 'spok';
 import { spokSameBigint, spokSamePubkey } from './utils';
 import { BN } from 'bn.js';
@@ -122,7 +122,7 @@ test('Revoke: revoke collection delegate', async (t) => {
 
   // creates a delegate
 
-  const [,delegate] = await API.getKeypair('Delegate');
+  const [, delegate] = await API.getKeypair('Delegate');
   // delegate PDA
   const [delegateRecord] = PublicKey.findProgramAddressSync(
     [
@@ -163,7 +163,7 @@ test('Revoke: revoke collection delegate', async (t) => {
 
   spok(t, account, {
     delegate: spokSamePubkey(delegate.publicKey),
-    role: DelegateRole.Collection
+    role: DelegateRole.Collection,
   });
 
   // revoke
@@ -206,7 +206,7 @@ test('Revoke: self-revoke collection delegate', async (t) => {
 
   // creates a delegate
 
-  const [,delegate] = await API.getKeypair('Delegate');
+  const [, delegate] = await API.getKeypair('Delegate');
   // delegate PDA
   const [delegateRecord] = PublicKey.findProgramAddressSync(
     [
@@ -247,7 +247,7 @@ test('Revoke: self-revoke collection delegate', async (t) => {
 
   spok(t, account, {
     delegate: spokSamePubkey(delegate.publicKey),
-    role: DelegateRole.Collection
+    role: DelegateRole.Collection,
   });
 
   // revoke

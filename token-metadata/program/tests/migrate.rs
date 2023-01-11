@@ -11,7 +11,7 @@ mod migrate {
     use mpl_token_metadata::{
         error::MetadataError,
         instruction::MigrateArgs,
-        state::{MigrationType, TokenStandard},
+        state::{MigrationType, ProgrammableConfig, TokenStandard},
     };
     use solana_program::pubkey::Pubkey;
     use solana_sdk::{signature::Keypair, signer::Signer};
@@ -78,8 +78,11 @@ mod migrate {
             Some(TokenStandard::ProgrammableNonFungible)
         );
 
-        if let Some(config) = new_md.programmable_config {
-            assert_eq!(config.rule_set, Some(rule_set));
+        if let Some(ProgrammableConfig::V1 {
+            rule_set: Some(rule_set),
+        }) = new_md.programmable_config
+        {
+            assert_eq!(rule_set, rule_set);
         } else {
             panic!("Missing programmable config");
         }
@@ -122,8 +125,7 @@ mod migrate {
         let amount = 1;
 
         // Unsized collection
-        let (collection_nft, _collection_me) =
-            Metadata::create_default_nft(context).await.unwrap();
+        let (collection_nft, _collection_me) = Metadata::create_default_nft(context).await.unwrap();
 
         let mut asset = DigitalAsset::new();
         asset

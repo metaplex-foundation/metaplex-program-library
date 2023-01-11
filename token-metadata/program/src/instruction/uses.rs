@@ -22,6 +22,16 @@ pub struct UtilizeArgs {
     pub number_of_uses: u64,
 }
 
+#[repr(C)]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+pub enum UseArgs {
+    V1 {
+        /// Required authorization data to validate the request.
+        authorization_data: Option<AuthorizationData>,
+    },
+}
+
 ///# Approve Use Authority
 ///
 ///Approve another account to call [utilize] on this NFT
@@ -175,15 +185,4 @@ pub fn utilize(
             .try_to_vec()
             .unwrap(),
     }
-}
-
-#[repr(C)]
-#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
-pub enum UseAssetArgs {
-    V1 {
-        use_count: u64,
-        /// Required authorization data to validate the request.
-        authorization_data: Option<AuthorizationData>,
-    },
 }

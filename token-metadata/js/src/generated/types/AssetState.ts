@@ -10,7 +10,7 @@ import * as beet from '@metaplex-foundation/beet';
  * @category enums
  * @category generated
  */
-export enum ProgrammableState {
+export enum AssetState {
   Unlocked,
   Locked,
 }
@@ -19,7 +19,7 @@ export enum ProgrammableState {
  * @category userTypes
  * @category generated
  */
-export const programmableStateBeet = beet.fixedScalarEnum(ProgrammableState) as beet.FixedSizeBeet<
-  ProgrammableState,
-  ProgrammableState
+export const assetStateBeet = beet.fixedScalarEnum(AssetState) as beet.FixedSizeBeet<
+  AssetState,
+  AssetState
 >;

@@ -8,8 +8,8 @@ use crate::{
     error::MetadataError,
     pda::PREFIX,
     state::{
-        Creator, Data, Metadata, MAX_CREATOR_LIMIT, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH,
-        MAX_URI_LENGTH,
+        Creator, Data, Metadata, TokenRecord, TokenState, MAX_CREATOR_LIMIT, MAX_NAME_LENGTH,
+        MAX_SYMBOL_LENGTH, MAX_URI_LENGTH,
     },
 };
 
@@ -227,4 +227,25 @@ pub fn assert_metadata_valid(
     }
 
     Ok(())
+}
+
+pub fn assert_state(token_record: &TokenRecord, state: TokenState) -> ProgramResult {
+    match state {
+        TokenState::Locked => {
+            if !token_record.is_locked() {
+                return Err(MetadataError::UnlockedToken.into());
+            }
+        }
+        TokenState::Unlocked => {
+            if token_record.is_locked() {
+                return Err(MetadataError::LockedToken.into());
+            }
+        }
+    }
+
+    Ok(())
+}
+
+pub fn assert_not_locked(token_record: &TokenRecord) -> ProgramResult {
+    assert_state(token_record, TokenState::Unlocked)
 }

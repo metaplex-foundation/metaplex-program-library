@@ -6,7 +6,7 @@ import { AssetData, PROGRAM_ID, TokenStandard } from '../src/generated';
 import test from 'tape';
 import { amman, InitTransactions, killStuckProcess } from './setup';
 import { spokSameBigint } from './utils';
-import { DigitalAssetManager } from './utils/DigitalAssetManager';
+import { DigitalAssetManager } from './utils/digital-asset-manager';
 
 killStuckProcess();
 
@@ -103,7 +103,13 @@ test('Mint: ProgrammableNonFungible asset with existing token account', async (t
 
   // initialize a token account
 
-  const { tx: tokenTx, token } = await API.createTokenAccount(mint, payer, connection, handler);
+  const { tx: tokenTx, token } = await API.createTokenAccount(
+    mint,
+    payer,
+    connection,
+    handler,
+    payer.publicKey,
+  );
   await tokenTx.assertSuccess(t);
 
   // mint 1 asset

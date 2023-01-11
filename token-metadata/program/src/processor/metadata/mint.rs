@@ -11,13 +11,14 @@ use spl_token::state::{Account, Mint as MintAccount};
 
 use crate::{
     assertions::{
-        assert_derivation, assert_initialized, assert_mint_authority_matches_mint, assert_owned_by,
+        assert_derivation, assert_initialized, assert_keys_equal,
+        assert_mint_authority_matches_mint, assert_owned_by,
     },
     error::MetadataError,
     instruction::{Context, Mint, MintArgs},
-    pda::{EDITION, PREFIX},
+    pda::{find_token_record_account, EDITION, PREFIX},
     state::{Metadata, TokenMetadataAccount, TokenStandard},
-    utils::{freeze, thaw},
+    utils::{create_token_record_account, freeze, thaw},
 };
 
 /// Mints tokens from a mint account.
@@ -60,47 +61,6 @@ pub fn mint_v1(program_id: &Pubkey, ctx: Context<Mint>, args: MintArgs) -> Progr
     if !cmp_pubkeys(ctx.accounts.spl_token_program_info.key, &spl_token::id()) {
         return Err(ProgramError::IncorrectProgramId);
     }
-
-    // validate authorization rules
-    /*
-    if let Some(programmable_config) = &metadata.programmable_config {
-        if let Some(auth_rules_program_info) = ctx.accounts.authorization_rules_program_info {
-            if !cmp_pubkeys(auth_rules_program_info.key, &mpl_token_auth_rules::id()) {
-                return Err(ProgramError::IncorrectProgramId);
-            }
-        } else {
-            msg!("Missing authorization rules program account");
-            return Err(ProgramError::NotEnoughAccountKeys);
-        }
-
-        if let Some(authorization_rules) = ctx.accounts.authorization_rules_info {
-            assert_owned_by(authorization_rules, &mpl_token_auth_rules::id())?;
-        };
-
-        assert_valid_authorization(ctx.accounts.authorization_rules_info, programmable_config)?;
-
-        let mut auth_data = authorization_data.unwrap();
-
-        // add the required input for the operation; since we are minting
-        // new tokens to a specific address, we validate the operation as
-        // a transfer operetion
-        auth_data
-            .payload
-            .insert(PayloadKey::Amount, PayloadType::Number(amount));
-        auth_data.payload.insert(
-            PayloadKey::Target,
-            PayloadType::Pubkey(*ctx.accounts.token_info.key),
-        );
-
-        validate(
-            ctx.accounts.payer_info,
-            auth_pda,
-            Operation::MigrateClass,
-            ctx.accounts.token_info,
-            &auth_data,
-        )?;
-    }
-    */
 
     // validates the authority:
     // - NonFungible must have a "valid" master edition
@@ -190,6 +150,48 @@ pub fn mint_v1(program_id: &Pubkey, ctx: Context<Mint>, args: MintArgs) -> Progr
 
     match metadata.token_standard {
         Some(TokenStandard::NonFungible) | Some(TokenStandard::ProgrammableNonFungible) => {
+            // for pNFTs, we require the token record account
+            if matches!(
+                metadata.token_standard,
+                Some(TokenStandard::ProgrammableNonFungible)
+            ) {
+                // if we are initializing a new account, we need the token_owner
+                let token_owner_info = if let Some(token_owner_info) = ctx.accounts.token_owner_info
+                {
+                    token_owner_info
+                } else {
+                    return Err(ProgramError::NotEnoughAccountKeys);
+                };
+
+                // we always need the token_record_info
+                let token_record_info =
+                    if let Some(token_record_info) = ctx.accounts.token_record_info {
+                        token_record_info
+                    } else {
+                        return Err(ProgramError::NotEnoughAccountKeys);
+                    };
+
+                let (pda_key, _) =
+                    find_token_record_account(ctx.accounts.mint_info.key, token_owner_info.key);
+                // validates the derivation
+                assert_keys_equal(&pda_key, token_record_info.key)?;
+
+                if token_record_info.data_is_empty() {
+                    msg!("Initializing token record account");
+
+                    create_token_record_account(
+                        program_id,
+                        token_record_info,
+                        ctx.accounts.mint_info,
+                        token_owner_info,
+                        ctx.accounts.payer_info,
+                        ctx.accounts.system_program_info,
+                    )?;
+                } else {
+                    assert_owned_by(token_record_info, &crate::ID)?;
+                }
+            }
+
             let mut signer_seeds = vec![
                 PREFIX.as_bytes(),
                 program_id.as_ref(),

@@ -1,16 +1,19 @@
+use borsh::BorshSerialize;
 use mpl_token_auth_rules::instruction::InstructionBuilder;
 use mpl_token_auth_rules::{
     instruction::{builders::ValidateBuilder, ValidateArgs},
     payload::PayloadType,
 };
+use mpl_utils::create_or_allocate_account_raw;
 use mpl_utils::token::TokenTransferParams;
 use solana_program::program_error::ProgramError;
+use solana_program::pubkey::Pubkey;
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, msg, program::invoke_signed,
 };
 use spl_token::instruction::{freeze_account, thaw_account};
 
-use crate::state::ToAccountMeta;
+use crate::state::{ToAccountMeta, TokenMetadataAccount, TokenRecord, TOKEN_RECORD_SEED};
 use crate::{
     assertions::{assert_derivation, programmable::assert_valid_authorization},
     error::MetadataError,
@@ -18,6 +21,53 @@ use crate::{
     processor::AuthorizationData,
     state::{Operation, PayloadKey, ProgrammableConfig},
 };
+
+pub fn create_token_record_account<'a>(
+    program_id: &Pubkey,
+    token_record_info: &'a AccountInfo<'a>,
+    mint_info: &'a AccountInfo<'a>,
+    token_owner_info: &'a AccountInfo<'a>,
+    payer_info: &'a AccountInfo<'a>,
+    system_program_info: &'a AccountInfo<'a>,
+) -> ProgramResult {
+    if !token_record_info.data_is_empty() {
+        return Err(MetadataError::DelegateAlreadyExists.into());
+    }
+
+    let mut signer_seeds = Vec::from([
+        PREFIX.as_bytes(),
+        crate::ID.as_ref(),
+        mint_info.key.as_ref(),
+        TOKEN_RECORD_SEED.as_bytes(),
+        token_owner_info.key.as_ref(),
+    ]);
+
+    let bump = &[assert_derivation(
+        program_id,
+        token_record_info,
+        &signer_seeds,
+    )?];
+    signer_seeds.push(bump);
+
+    // allocate the delegate account
+
+    create_or_allocate_account_raw(
+        *program_id,
+        token_record_info,
+        system_program_info,
+        payer_info,
+        TokenRecord::size(),
+        &signer_seeds,
+    )?;
+
+    let token_record = TokenRecord {
+        bump: bump[0],
+        ..Default::default()
+    };
+    token_record.serialize(&mut *token_record_info.try_borrow_mut_data()?)?;
+
+    Ok(())
+}
 
 pub fn freeze<'a>(
     mint: AccountInfo<'a>,

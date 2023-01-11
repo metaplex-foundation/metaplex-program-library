@@ -5,7 +5,7 @@ use solana_program_test::*;
 use solana_sdk::{
     instruction::InstructionError,
     signature::{Keypair, Signer},
-    transaction::{Transaction, TransactionError},
+    transaction::TransactionError,
 };
 use utils::*;
 
@@ -13,9 +13,11 @@ mod delegate {
 
     use mpl_token_metadata::{
         error::MetadataError,
-        instruction::{builders::DelegateBuilder, DelegateArgs, DelegateRole, InstructionBuilder},
-        pda::find_delegate_account,
-        state::{DelegateRecord, Key, Metadata, TokenStandard},
+        instruction::{DelegateArgs, MetadataDelegateRole},
+        pda::{find_metadata_delegate_record_account, find_token_record_account},
+        state::{
+            Key, Metadata, MetadataDelegateRecord, TokenDelegateRole, TokenRecord, TokenStandard,
+        },
     };
     use num_traits::FromPrimitive;
     use solana_program::{
@@ -57,25 +59,27 @@ mod delegate {
                 &mut context,
                 payer,
                 user_pubkey,
-                DelegateRole::Transfer,
-                Some(1),
+                DelegateArgs::TransferV1 {
+                    amount: 1,
+                    authorization_data: None,
+                },
             )
             .await
             .unwrap();
 
-        let (pda_key, _) = find_delegate_account(
-            &asset.mint.pubkey(),
-            DelegateRole::Transfer,
-            &payer_pubkey,
-            &user_pubkey,
-        );
+        // asserts
+
+        let (pda_key, _) = find_token_record_account(&asset.mint.pubkey(), &payer_pubkey);
 
         let pda = get_account(&mut context, &pda_key).await;
-        let delegate_record: DelegateRecord = try_from_slice_unchecked(&pda.data).unwrap();
+        let token_record: TokenRecord = try_from_slice_unchecked(&pda.data).unwrap();
 
-        assert_eq!(delegate_record.key, Key::Delegate);
-        assert_eq!(delegate_record.delegate, user_pubkey);
-        assert_eq!(delegate_record.role, DelegateRole::Transfer);
+        assert_eq!(token_record.key, Key::TokenRecord);
+        assert_eq!(token_record.delegate, Some(user_pubkey));
+        assert_eq!(
+            token_record.delegate_role,
+            Some(TokenDelegateRole::Transfer)
+        );
 
         if let Some(token) = asset.token {
             let account = get_account(&mut context, &token).await;
@@ -125,26 +129,25 @@ mod delegate {
                 &mut context,
                 payer,
                 user_pubkey,
-                DelegateRole::Collection,
-                Some(1),
+                DelegateArgs::CollectionV1 {
+                    authorization_data: None,
+                },
             )
             .await
             .unwrap();
 
         // asserts
 
-        // delegate PDA
-        let (pda_key, _) = find_delegate_account(
+        let (pda_key, _) = find_metadata_delegate_record_account(
             &asset.mint.pubkey(),
-            DelegateRole::Collection,
+            MetadataDelegateRole::Collection,
             &payer_pubkey,
             &user_pubkey,
         );
 
         let pda = get_account(&mut context, &pda_key).await;
-        let delegate_record: DelegateRecord = DelegateRecord::from_bytes(&pda.data).unwrap();
-        assert_eq!(delegate_record.key, Key::Delegate);
-        assert_eq!(delegate_record.role, DelegateRole::Collection);
+        let delegate_record = MetadataDelegateRecord::from_bytes(&pda.data).unwrap();
+        assert_eq!(delegate_record.key, Key::MetadataDelegate);
     }
 
     #[tokio::test]
@@ -171,49 +174,32 @@ mod delegate {
 
         let user = Keypair::new();
         let user_pubkey = user.pubkey();
-        let payer_pubkey = context.payer.pubkey();
+        let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+        let payer_pubkey = payer.pubkey();
 
-        // delegate PDA
-        let (pda_key, _) = find_delegate_account(
-            &asset.mint.pubkey(),
-            DelegateRole::Sale,
-            &payer_pubkey,
-            &user_pubkey,
-        );
-
-        let delegate_ix = DelegateBuilder::new()
-            .delegate_record(pda_key)
-            .delegate(user_pubkey)
-            .mint(asset.mint.pubkey())
-            .metadata(asset.metadata)
-            .master_edition(asset.master_edition.unwrap())
-            .approver(payer_pubkey)
-            .payer(payer_pubkey)
-            .token(asset.token.unwrap())
-            .build(DelegateArgs::SaleV1 {
-                amount: 1,
-                authorization_data: None,
-            })
-            .unwrap()
-            .instruction();
-
-        let tx = Transaction::new_signed_with_payer(
-            &[delegate_ix],
-            Some(&context.payer.pubkey()),
-            &[&context.payer],
-            context.last_blockhash,
-        );
-
-        context.banks_client.process_transaction(tx).await.unwrap();
+        asset
+            .delegate(
+                &mut context,
+                payer,
+                user_pubkey,
+                DelegateArgs::SaleV1 {
+                    amount: 1,
+                    authorization_data: None,
+                },
+            )
+            .await
+            .unwrap();
 
         // asserts
 
-        let pda = get_account(&mut context, &pda_key).await;
-        let delegate_record: DelegateRecord = try_from_slice_unchecked(&pda.data).unwrap();
+        let (pda_key, _) = find_token_record_account(&asset.mint.pubkey(), &payer_pubkey);
 
-        assert_eq!(delegate_record.key, Key::Delegate);
-        assert_eq!(delegate_record.delegate, user_pubkey);
-        assert_eq!(delegate_record.role, DelegateRole::Sale);
+        let pda = get_account(&mut context, &pda_key).await;
+        let token_record: TokenRecord = try_from_slice_unchecked(&pda.data).unwrap();
+
+        assert_eq!(token_record.key, Key::TokenRecord);
+        assert_eq!(token_record.delegate, Some(user_pubkey));
+        assert_eq!(token_record.delegate_role, Some(TokenDelegateRole::Sale));
 
         if let Some(token) = asset.token {
             let account = get_account(&mut context, &token).await;
@@ -245,42 +231,18 @@ mod delegate {
 
         let user = Keypair::new();
         let user_pubkey = user.pubkey();
-        let payer_pubkey = context.payer.pubkey();
+        let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
 
-        // delegate PDA
-        let (pda_key, _) = find_delegate_account(
-            &asset.mint.pubkey(),
-            DelegateRole::Sale,
-            &payer_pubkey,
-            &user_pubkey,
-        );
-
-        let delegate_ix = DelegateBuilder::new()
-            .delegate_record(pda_key)
-            .delegate(user_pubkey)
-            .mint(asset.mint.pubkey())
-            .metadata(asset.metadata)
-            .master_edition(asset.master_edition.unwrap())
-            .approver(payer_pubkey)
-            .payer(payer_pubkey)
-            .token(asset.token.unwrap())
-            .build(DelegateArgs::SaleV1 {
-                amount: 1,
-                authorization_data: None,
-            })
-            .unwrap()
-            .instruction();
-
-        let tx = Transaction::new_signed_with_payer(
-            &[delegate_ix],
-            Some(&context.payer.pubkey()),
-            &[&context.payer],
-            context.last_blockhash,
-        );
-
-        let error = context
-            .banks_client
-            .process_transaction(tx)
+        let error = asset
+            .delegate(
+                &mut context,
+                payer,
+                user_pubkey,
+                DelegateArgs::SaleV1 {
+                    amount: 1,
+                    authorization_data: None,
+                },
+            )
             .await
             .unwrap_err();
 
@@ -307,39 +269,20 @@ mod delegate {
 
         let user = Keypair::new();
         let user_pubkey = user.pubkey();
-        let payer_pubkey = context.payer.pubkey();
+        let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
 
-        // delegate PDA
-        let (pda_key, _) = find_delegate_account(
-            &asset.mint.pubkey(),
-            DelegateRole::Transfer,
-            &payer_pubkey,
-            &user_pubkey,
-        );
-
-        let delegate_ix = DelegateBuilder::new()
-            .delegate_record(pda_key)
-            .delegate(user_pubkey)
-            .mint(asset.mint.pubkey())
-            .metadata(asset.metadata)
-            .approver(payer_pubkey)
-            .payer(payer_pubkey)
-            .token(asset.token.unwrap())
-            .build(DelegateArgs::TransferV1 {
-                amount: 1,
-                authorization_data: None,
-            })
-            .unwrap()
-            .instruction();
-
-        let tx = Transaction::new_signed_with_payer(
-            &[delegate_ix],
-            Some(&context.payer.pubkey()),
-            &[&context.payer],
-            context.last_blockhash,
-        );
-
-        context.banks_client.process_transaction(tx).await.unwrap();
+        asset
+            .delegate(
+                &mut context,
+                payer,
+                user_pubkey,
+                DelegateArgs::TransferV1 {
+                    amount: 1,
+                    authorization_data: None,
+                },
+            )
+            .await
+            .unwrap();
     }
 
     #[tokio::test]
@@ -360,38 +303,19 @@ mod delegate {
 
         let user = Keypair::new();
         let user_pubkey = user.pubkey();
-        let payer_pubkey = context.payer.pubkey();
+        let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
 
-        // delegate PDA
-        let (pda_key, _) = find_delegate_account(
-            &asset.mint.pubkey(),
-            DelegateRole::Utility,
-            &payer_pubkey,
-            &user_pubkey,
-        );
-
-        let delegate_ix = DelegateBuilder::new()
-            .delegate_record(pda_key)
-            .delegate(user_pubkey)
-            .mint(asset.mint.pubkey())
-            .metadata(asset.metadata)
-            .approver(payer_pubkey)
-            .payer(payer_pubkey)
-            .token(asset.token.unwrap())
-            .build(DelegateArgs::UtilityV1 {
-                amount: 1,
-                authorization_data: None,
-            })
-            .unwrap()
-            .instruction();
-
-        let tx = Transaction::new_signed_with_payer(
-            &[delegate_ix],
-            Some(&context.payer.pubkey()),
-            &[&context.payer],
-            context.last_blockhash,
-        );
-
-        context.banks_client.process_transaction(tx).await.unwrap();
+        asset
+            .delegate(
+                &mut context,
+                payer,
+                user_pubkey,
+                DelegateArgs::UtilityV1 {
+                    amount: 1,
+                    authorization_data: None,
+                },
+            )
+            .await
+            .unwrap();
     }
 }

@@ -1,7 +1,7 @@
 import test from 'tape';
 import { amman, InitTransactions, killStuckProcess } from './setup';
 import { Keypair, PublicKey, sendAndConfirmTransaction, Transaction } from '@solana/web3.js';
-import { createAndMintDefaultAsset } from './utils/DigitalAssetManager';
+import { createAndMintDefaultAsset } from './utils/digital-asset-manager';
 import {
   createAssociatedTokenAccount,
   createAssociatedTokenAccountInstruction,

@@ -9,8 +9,7 @@ use crate::{
     error::MetadataError,
     instruction::{Context, Create, CreateArgs},
     state::{
-        Metadata, ProgrammableConfig, ProgrammableState, TokenMetadataAccount, TokenStandard,
-        TOKEN_STANDARD_INDEX,
+        Metadata, ProgrammableConfig, TokenMetadataAccount, TokenStandard, TOKEN_STANDARD_INDEX,
     },
     utils::{
         create_master_edition, process_create_metadata_accounts_logic,
@@ -172,8 +171,7 @@ fn create_v1(program_id: &Pubkey, ctx: Context<Create>, args: CreateArgs) -> Pro
         asset_data.token_standard,
         TokenStandard::ProgrammableNonFungible
     ) {
-        metadata.programmable_config = Some(ProgrammableConfig {
-            state: ProgrammableState::Unlocked,
+        metadata.programmable_config = Some(ProgrammableConfig::V1 {
             rule_set: asset_data.rule_set,
         });
     }
