@@ -115,17 +115,12 @@ fn create_delegate_v1(
     create_pda_account(
         program_id,
         delegate_record_info,
-        // delegate seeds
-        vec![
-            PREFIX.as_bytes(),
-            program_id.as_ref(),
-            ctx.accounts.mint_info.key.as_ref(),
-            delegate_role.as_bytes(),
-            ctx.accounts.approver_info.key.as_ref(),
-            ctx.accounts.delegate_info.key.as_ref(),
-        ],
+        ctx.accounts.delegate_info,
+        ctx.accounts.mint_info,
+        ctx.accounts.approver_info,
         ctx.accounts.payer_info,
         ctx.accounts.system_program_info,
+        &delegate_role,
     )
 }
 
@@ -287,13 +282,23 @@ fn create_persistent_delegate_v1(
 fn create_pda_account<'a>(
     program_id: &Pubkey,
     delegate_record_info: &'a AccountInfo<'a>,
-    seeds: Vec<&[u8]>,
+    delegate_info: &'a AccountInfo<'a>,
+    mint_info: &'a AccountInfo<'a>,
+    approver_info: &'a AccountInfo<'a>,
     payer_info: &'a AccountInfo<'a>,
     system_program_info: &'a AccountInfo<'a>,
+    delegate_role: &str,
 ) -> ProgramResult {
     // validates the delegate derivation
 
-    let mut signer_seeds = seeds;
+    let mut signer_seeds = vec![
+        PREFIX.as_bytes(),
+        program_id.as_ref(),
+        mint_info.key.as_ref(),
+        delegate_role.as_bytes(),
+        approver_info.key.as_ref(),
+        delegate_info.key.as_ref(),
+    ];
     let bump = &[assert_derivation(
         program_id,
         delegate_record_info,
@@ -318,6 +323,8 @@ fn create_pda_account<'a>(
 
     let pda = MetadataDelegateRecord {
         bump: bump[0],
+        mint: *mint_info.key,
+        delegate: *delegate_info.key,
         ..Default::default()
     };
     pda.serialize(&mut *delegate_record_info.try_borrow_mut_data()?)?;

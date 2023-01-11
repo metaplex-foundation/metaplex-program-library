@@ -26,6 +26,13 @@ pub const TOKEN_RECORD_SIZE: usize = 1 // Key
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+/// SEEDS = [
+///     "metadata",
+///     program id,
+///     mint id,
+///     "token_record",
+///     token owner id
+/// ]
 pub struct TokenRecord {
     pub key: Key,
     pub bump: u8,
