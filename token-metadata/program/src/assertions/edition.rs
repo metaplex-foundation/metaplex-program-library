@@ -7,7 +7,7 @@ use spl_token::state::Mint;
 use crate::{
     error::MetadataError,
     pda::find_master_edition_account,
-    state::{MasterEditionV1, EDITION, PREFIX},
+    state::{MasterEditionV1, TokenStandard, EDITION, PREFIX, TOKEN_STANDARD_INDEX},
 };
 
 pub fn assert_edition_is_not_mint_authority(mint_account_info: &AccountInfo) -> ProgramResult {
@@ -17,6 +17,17 @@ pub fn assert_edition_is_not_mint_authority(mint_account_info: &AccountInfo) -> 
 
     if mint.mint_authority == COption::Some(edition_pda) {
         return Err(MetadataError::MissingEditionAccount.into());
+    }
+
+    Ok(())
+}
+
+/// Checks that the `master_edition` is not a pNFT master edition.
+pub fn assert_edition_is_not_programmable(master_edition_info: &AccountInfo) -> ProgramResult {
+    let edition_data = master_edition_info.data.borrow();
+
+    if edition_data[TOKEN_STANDARD_INDEX] == TokenStandard::ProgrammableNonFungible as u8 {
+        return Err(MetadataError::InvalidTokenStandard.into());
     }
 
     Ok(())

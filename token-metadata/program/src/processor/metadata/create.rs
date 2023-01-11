@@ -8,7 +8,9 @@ use spl_token::{native_mint::DECIMALS, state::Mint};
 use crate::{
     error::MetadataError,
     instruction::{Context, Create, CreateArgs},
-    state::{Metadata, ProgrammableConfig, TokenMetadataAccount, TokenStandard},
+    state::{
+        Metadata, ProgrammableConfig, TokenMetadataAccount, TokenStandard, TOKEN_STANDARD_INDEX,
+    },
     utils::{
         create_master_edition, process_create_metadata_accounts_logic,
         CreateMetadataAccountsLogicArgs,
@@ -145,6 +147,16 @@ fn create_v1(program_id: &Pubkey, ctx: Context<Create>, args: CreateArgs) -> Pro
                 ctx.accounts.system_program_info,
                 max_supply,
             )?;
+
+            // for pNFTs, we store the token standard value at the end of the
+            // master edition account
+            if matches!(
+                asset_data.token_standard,
+                TokenStandard::ProgrammableNonFungible
+            ) {
+                master_edition.data.borrow_mut()[TOKEN_STANDARD_INDEX] =
+                    TokenStandard::ProgrammableNonFungible as u8;
+            }
         } else {
             return Err(MetadataError::InvalidMasterEdition.into());
         }
