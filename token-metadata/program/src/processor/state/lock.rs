@@ -2,7 +2,7 @@ use solana_program::{account_info::AccountInfo, entrypoint::ProgramResult, pubke
 
 use crate::{
     instruction::{Lock, LockArgs},
-    state::AssetState,
+    state::TokenState,
 };
 
 use super::toggle_asset_state;
@@ -20,17 +20,17 @@ pub fn lock<'a>(
             super::ToggleAccounts {
                 payer_info: context.accounts.payer_info,
                 approver_info: context.accounts.approver_info,
-                metadata_info: context.accounts.metadata_info,
                 mint_info: context.accounts.mint_info,
                 token_info: context.accounts.token_info,
-                delegate_record_info: context.accounts.delegate_record_info,
                 master_edition_info: context.accounts.edition_info,
+                metadata_info: context.accounts.metadata_info,
+                token_record_info: context.accounts.token_record_info,
                 system_program_info: context.accounts.system_program_info,
                 sysvar_instructions_info: context.accounts.sysvar_instructions_info,
                 spl_token_program_info: context.accounts.spl_token_program_info,
             },
-            AssetState::Unlocked,
-            AssetState::Locked,
+            TokenState::Unlocked,
+            TokenState::Locked,
         ),
     }
 }

@@ -11,9 +11,8 @@ use crate::{
         collection::assert_collection_update_is_valid, metadata::assert_data_valid,
         uses::assert_valid_use,
     },
-    instruction::DelegateRole,
     state::{
-        AssetState, Collection, CollectionDetails, Data, DataV2, Key, Metadata, ProgrammableConfig,
+        Collection, CollectionDetails, Data, DataV2, Key, Metadata, ProgrammableConfig,
         TokenStandard, Uses, EDITION, MAX_METADATA_LEN, PREFIX,
     },
 };
@@ -210,17 +209,7 @@ pub fn meta_deser_unchecked(buf: &mut &[u8]) -> Result<Metadata, BorshError> {
     let collection_details_res: Result<Option<CollectionDetails>, BorshError> =
         BorshDeserialize::deserialize(buf);
 
-    // pNFT
-
-    // Asset State
-    let asset_state_res: Result<Option<AssetState>, BorshError> =
-        BorshDeserialize::deserialize(buf);
-
-    // Persistent Delegate
-    let persistent_delegate_res: Result<Option<DelegateRole>, BorshError> =
-        BorshDeserialize::deserialize(buf);
-
-    // Programmable Config
+    // pNFT - Programmable Config
     let programmable_config_res: Result<Option<ProgrammableConfig>, BorshError> =
         BorshDeserialize::deserialize(buf);
 
@@ -240,10 +229,6 @@ pub fn meta_deser_unchecked(buf: &mut &[u8]) -> Result<Metadata, BorshError> {
         Err(_) => None,
     };
 
-    // Asset State
-    let asset_state = asset_state_res.unwrap_or(None);
-    // Persistent Delegate
-    let delegate = persistent_delegate_res.unwrap_or(None);
     // Programmable Config
     let programmable_config = programmable_config_res.unwrap_or(None);
 
@@ -259,8 +244,6 @@ pub fn meta_deser_unchecked(buf: &mut &[u8]) -> Result<Metadata, BorshError> {
         collection,
         uses,
         collection_details,
-        asset_state,
-        persistent_delegate: delegate,
         programmable_config,
     };
 
@@ -363,8 +346,6 @@ pub mod tests {
             collection: None,
             uses: None,
             collection_details: None,
-            asset_state: Some(AssetState::Unlocked),
-            persistent_delegate: None,
             programmable_config: None,
         };
 

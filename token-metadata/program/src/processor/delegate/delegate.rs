@@ -1,7 +1,7 @@
 use borsh::BorshSerialize;
 use mpl_utils::{assert_signer, create_or_allocate_account_raw};
 use solana_program::{
-    account_info::AccountInfo, entrypoint::ProgramResult, msg, program::invoke, program_pack::Pack,
+    account_info::AccountInfo, entrypoint::ProgramResult, program::invoke, program_pack::Pack,
     pubkey::Pubkey, system_program, sysvar,
 };
 use spl_token::state::Account;
@@ -12,10 +12,11 @@ use crate::{
         metadata::assert_update_authority_is_correct,
     },
     error::MetadataError,
-    instruction::{Context, Delegate, DelegateArgs, DelegateRole},
-    pda::PREFIX,
+    instruction::{Context, Delegate, DelegateArgs, MetadataDelegateRole},
+    pda::{find_token_record_account, PREFIX},
     state::{
-        DelegateRecord, Key, Metadata, TokenMetadataAccount, TokenStandard, PERSISTENT_DELEGATE,
+        Metadata, MetadataDelegateRecord, TokenDelegateRole, TokenMetadataAccount, TokenRecord,
+        TokenStandard,
     },
     utils::{freeze, thaw},
 };
@@ -30,21 +31,35 @@ pub fn delegate<'a>(
 
     match args {
         DelegateArgs::CollectionV1 { .. } => {
-            create_delegate_v1(program_id, context, args, DelegateRole::Collection)
+            create_delegate_v1(program_id, context, args, MetadataDelegateRole::Collection)
         }
         DelegateArgs::SaleV1 { amount, .. } => {
             // the sale delegate is a special type of transfer
-            create_persistent_delegate_v1(program_id, context, args, DelegateRole::Sale, amount)
+            create_persistent_delegate_v1(
+                program_id,
+                context,
+                args,
+                TokenDelegateRole::Sale,
+                amount,
+            )
         }
-        DelegateArgs::TransferV1 { amount, .. } => {
-            create_persistent_delegate_v1(program_id, context, args, DelegateRole::Transfer, amount)
-        }
+        DelegateArgs::TransferV1 { amount, .. } => create_persistent_delegate_v1(
+            program_id,
+            context,
+            args,
+            TokenDelegateRole::Transfer,
+            amount,
+        ),
         DelegateArgs::UpdateV1 { .. } => {
-            create_delegate_v1(program_id, context, args, DelegateRole::Update)
+            create_delegate_v1(program_id, context, args, MetadataDelegateRole::Update)
         }
-        DelegateArgs::UtilityV1 { amount, .. } => {
-            create_persistent_delegate_v1(program_id, context, args, DelegateRole::Utility, amount)
-        }
+        DelegateArgs::UtilityV1 { amount, .. } => create_persistent_delegate_v1(
+            program_id,
+            context,
+            args,
+            TokenDelegateRole::Utility,
+            amount,
+        ),
     }
 }
 
@@ -55,7 +70,7 @@ fn create_delegate_v1(
     program_id: &Pubkey,
     ctx: Context<Delegate>,
     _args: DelegateArgs,
-    role: DelegateRole,
+    role: MetadataDelegateRole,
 ) -> ProgramResult {
     // signers
 
@@ -70,7 +85,10 @@ fn create_delegate_v1(
     // key match
 
     assert_keys_equal(ctx.accounts.system_program_info.key, &system_program::ID)?;
-    assert_keys_equal(ctx.accounts.sysvar_instructions_info.key, &sysvar::instructions::ID)?;
+    assert_keys_equal(
+        ctx.accounts.sysvar_instructions_info.key,
+        &sysvar::instructions::ID,
+    )?;
 
     // account relationships
 
@@ -82,6 +100,13 @@ fn create_delegate_v1(
         return Err(MetadataError::MintMismatch.into());
     }
 
+    let delegate_record_info = match ctx.accounts.delegate_record_info {
+        Some(delegate_record_info) => delegate_record_info,
+        None => {
+            return Err(MetadataError::MissingTokenAccount.into());
+        }
+    };
+
     // process the delegation creation (the derivation is checked
     // by the create helper)
 
@@ -89,9 +114,7 @@ fn create_delegate_v1(
 
     create_pda_account(
         program_id,
-        DelegateRole::Collection,
-        ctx.accounts.delegate_record_info,
-        ctx.accounts.delegate_info,
+        delegate_record_info,
         // delegate seeds
         vec![
             PREFIX.as_bytes(),
@@ -106,14 +129,15 @@ fn create_delegate_v1(
     )
 }
 
-/// Creates a presistent delegate.
+/// Creates a presistent delegate. For non-programmable assets, this is just a wrapper over
+/// spl-token 'approve' delegate.
 ///
 /// Note that `DelegateRole::Sale` is only available for programmable assets.
 fn create_persistent_delegate_v1(
     program_id: &Pubkey,
     ctx: Context<Delegate>,
     _args: DelegateArgs,
-    role: DelegateRole,
+    role: TokenDelegateRole,
     amount: u64,
 ) -> ProgramResult {
     // retrieving required optional accounts
@@ -146,25 +170,21 @@ fn create_persistent_delegate_v1(
     // key match
 
     assert_keys_equal(ctx.accounts.system_program_info.key, &system_program::ID)?;
-    assert_keys_equal(ctx.accounts.sysvar_instructions_info.key, &sysvar::instructions::ID)?;
+    assert_keys_equal(
+        ctx.accounts.sysvar_instructions_info.key,
+        &sysvar::instructions::ID,
+    )?;
     assert_keys_equal(spl_token_program_info.key, &spl_token::ID)?;
 
     // account relationships
 
-    let mut metadata = Metadata::from_account_info(ctx.accounts.metadata_info)?;
+    let metadata = Metadata::from_account_info(ctx.accounts.metadata_info)?;
     if metadata.mint != *ctx.accounts.mint_info.key {
         return Err(MetadataError::MintMismatch.into());
     }
 
-    if let Some(current_role) = metadata.persistent_delegate {
-        // we only allow replacing a delegate if a sale delegate is not set, otherwise
-        // the current delegate needs to be revoked first
-        if matches!(current_role, DelegateRole::Sale) {
-            return Err(MetadataError::DelegateAlreadyExists.into());
-        }
-    }
-
-    // authority must be the owner of the token account
+    // authority must be the owner of the token account: spl-token required the
+    // token owner to set a delegate
     let token_account = Account::unpack(&token_info.try_borrow_data()?).unwrap();
     if token_account.owner != *ctx.accounts.approver_info.key {
         return Err(MetadataError::IncorrectOwner.into());
@@ -176,6 +196,39 @@ fn create_persistent_delegate_v1(
         metadata.token_standard,
         Some(TokenStandard::ProgrammableNonFungible)
     ) {
+        let (mut token_record, token_record_info) = match ctx.accounts.token_record_info {
+            Some(token_record_info) => {
+                let (pda_key, _) = find_token_record_account(
+                    ctx.accounts.mint_info.key,
+                    ctx.accounts.approver_info.key,
+                );
+
+                assert_keys_equal(&pda_key, token_record_info.key)?;
+                assert_owned_by(token_record_info, &crate::ID)?;
+
+                (
+                    TokenRecord::from_account_info(token_record_info)?,
+                    token_record_info,
+                )
+            }
+            None => {
+                // token record is required for programmable assets
+                return Err(MetadataError::MissingTokenRecord.into());
+            }
+        };
+
+        if let Some(current_role) = token_record.delegate_role {
+            // we only allow replacing a delegate if a sale delegate is not set,
+            // otherwise the current delegate needs to be revoked first
+            if matches!(current_role, TokenDelegateRole::Sale) {
+                return Err(MetadataError::DelegateAlreadyExists.into());
+            }
+        }
+
+        token_record.delegate = Some(*ctx.accounts.delegate_info.key);
+        token_record.delegate_role = Some(role);
+        token_record.serialize(&mut *token_record_info.try_borrow_mut_data()?)?;
+
         if let Some(master_edition_info) = ctx.accounts.master_edition_info {
             assert_owned_by(master_edition_info, &crate::ID)?;
             // derivation is checked on the thaw function
@@ -188,11 +241,12 @@ fn create_persistent_delegate_v1(
         } else {
             return Err(MetadataError::MissingEditionAccount.into());
         }
-    } else if matches!(role, DelegateRole::Sale) {
+    } else if matches!(role, TokenDelegateRole::Sale) {
         // Sale delegate only available for programmable assets
         return Err(MetadataError::InvalidTokenStandard.into());
     }
 
+    // creates the spl-token delegate
     invoke(
         &spl_token::instruction::approve(
             spl_token_program_info.key,
@@ -227,54 +281,12 @@ fn create_persistent_delegate_v1(
         }
     }
 
-    let delegate_seeds = vec![
-        PREFIX.as_bytes(),
-        program_id.as_ref(),
-        ctx.accounts.mint_info.key.as_ref(),
-        PERSISTENT_DELEGATE.as_bytes(),
-        ctx.accounts.approver_info.key.as_ref(),
-    ];
-
-    // we create or replace the existing delegate (if there is one)
-    if ctx.accounts.delegate_record_info.data_is_empty() {
-        msg!("Creating delegate pda");
-        create_pda_account(
-            program_id,
-            role,
-            ctx.accounts.delegate_record_info,
-            ctx.accounts.delegate_info,
-            delegate_seeds,
-            ctx.accounts.payer_info,
-            ctx.accounts.system_program_info,
-        )?;
-    } else {
-        assert_owned_by(ctx.accounts.delegate_record_info, &crate::ID)?;
-        msg!("Updating delegate pda");
-        // validates the delegate derivation
-        assert_derivation(
-            program_id,
-            ctx.accounts.delegate_record_info,
-            &delegate_seeds,
-        )?;
-
-        // updates the pda information
-        let mut pda = DelegateRecord::from_account_info(ctx.accounts.delegate_record_info)?;
-        pda.role = role;
-        pda.delegate = *ctx.accounts.delegate_info.key;
-        pda.serialize(&mut *ctx.accounts.delegate_record_info.try_borrow_mut_data()?)?;
-    }
-
-    metadata.persistent_delegate = Some(role);
-    metadata.save(&mut ctx.accounts.metadata_info.try_borrow_mut_data()?)?;
-
     Ok(())
 }
 
 fn create_pda_account<'a>(
     program_id: &Pubkey,
-    delegate_role: DelegateRole,
     delegate_record_info: &'a AccountInfo<'a>,
-    delegate_info: &'a AccountInfo<'a>,
     seeds: Vec<&[u8]>,
     payer_info: &'a AccountInfo<'a>,
     system_program_info: &'a AccountInfo<'a>,
@@ -300,15 +312,14 @@ fn create_pda_account<'a>(
         delegate_record_info,
         system_program_info,
         payer_info,
-        DelegateRecord::size(),
+        MetadataDelegateRecord::size(),
         &signer_seeds,
     )?;
 
-    let mut pda = DelegateRecord::from_account_info(delegate_record_info)?;
-    pda.key = Key::Delegate;
-    pda.bump = bump[0];
-    pda.role = delegate_role;
-    pda.delegate = *delegate_info.key;
+    let pda = MetadataDelegateRecord {
+        bump: bump[0],
+        ..Default::default()
+    };
     pda.serialize(&mut *delegate_record_info.try_borrow_mut_data()?)?;
 
     Ok(())

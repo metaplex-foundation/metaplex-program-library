@@ -2,6 +2,8 @@ mod lock;
 mod unlock;
 
 pub use lock::*;
+
+use borsh::BorshSerialize;
 use mpl_utils::assert_signer;
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program::invoke, pubkey::Pubkey,
@@ -14,11 +16,12 @@ use spl_token::{
 pub use unlock::*;
 
 use crate::{
-    assertions::{assert_keys_equal, metadata::assert_asset_state},
+    assertions::{assert_keys_equal, metadata::assert_state},
     error::MetadataError,
-    instruction::DelegateRole,
+    pda::find_token_record_account,
     state::{
-        AssetState, AuthorityRequest, AuthorityType, Metadata, TokenMetadataAccount, TokenStandard,
+        AuthorityRequest, AuthorityType, Metadata, TokenDelegateRole, TokenMetadataAccount,
+        TokenRecord, TokenStandard, TokenState,
     },
     utils::{
         assert_delegated_tokens, assert_freeze_authority_matches_mint, assert_initialized,
@@ -29,11 +32,11 @@ use crate::{
 pub(crate) struct ToggleAccounts<'a> {
     payer_info: &'a AccountInfo<'a>,
     approver_info: &'a AccountInfo<'a>,
-    metadata_info: &'a AccountInfo<'a>,
     mint_info: &'a AccountInfo<'a>,
     token_info: Option<&'a AccountInfo<'a>>,
-    delegate_record_info: Option<&'a AccountInfo<'a>>,
+    metadata_info: &'a AccountInfo<'a>,
     master_edition_info: Option<&'a AccountInfo<'a>>,
+    token_record_info: Option<&'a AccountInfo<'a>>,
     system_program_info: &'a AccountInfo<'a>,
     sysvar_instructions_info: &'a AccountInfo<'a>,
     spl_token_program_info: Option<&'a AccountInfo<'a>>,
@@ -42,8 +45,8 @@ pub(crate) struct ToggleAccounts<'a> {
 pub(crate) fn toggle_asset_state(
     program_id: &Pubkey,
     accounts: ToggleAccounts,
-    from: AssetState,
-    to: AssetState,
+    from: TokenState,
+    to: TokenState,
 ) -> ProgramResult {
     // signers
 
@@ -65,36 +68,43 @@ pub(crate) fn toggle_asset_state(
 
     // account relationships
 
-    let mut metadata = Metadata::from_account_info(accounts.metadata_info)?;
+    let metadata = Metadata::from_account_info(accounts.metadata_info)?;
     // mint must match mint account key
     if metadata.mint != *accounts.mint_info.key {
         return Err(MetadataError::MintMismatch.into());
     }
-    // token must be on the 'from' state
-    assert_asset_state(&metadata, from)?;
 
     // approver authority – this can be either:
     //  1. token owner: approver == token.owner
     //  2. spl-delegate: for non-programmable assets, approver == token.delegate
-    //  3. delegate: valid delegate_record
+    //  3. token delegate: valid token_record.delegate
 
     let authority_type = AuthorityType::get_authority_type(AuthorityRequest {
         authority: accounts.approver_info.key,
         update_authority: &metadata.update_authority,
         mint: accounts.mint_info.key,
         token_info: accounts.token_info,
-        delegate_record_info: accounts.delegate_record_info,
-        delegate_role: Some(DelegateRole::Utility),
+        metadata_delegate_record_info: None,
+        metadata_delegate_role: None,
+        token_record_info: accounts.token_record_info,
+        token_delegate_role: Some(TokenDelegateRole::Utility),
     })?;
 
     let has_authority = match authority_type {
         AuthorityType::Holder | AuthorityType::Delegate => true,
         _ => {
-            if metadata.persistent_delegate.is_none() {
-                // check if the approver has a spl-token delegate (we can only do this if
+            if !matches!(
+                metadata.token_standard,
+                Some(TokenStandard::ProgrammableNonFungible),
+            ) {
+                // check if the approver has an spl-token delegate (we can only do this if
                 // we have the token account)
                 if let Some(token_info) = accounts.token_info {
-                    assert_delegated_tokens(accounts.approver_info, accounts.mint_info, token_info)?;
+                    assert_delegated_tokens(
+                        accounts.approver_info,
+                        accounts.mint_info,
+                        token_info,
+                    )?;
                     true
                 } else {
                     false
@@ -110,10 +120,35 @@ pub(crate) fn toggle_asset_state(
         return Err(MetadataError::InvalidAuthorityType.into());
     }
 
-    if !matches!(
+    if matches!(
         metadata.token_standard,
         Some(TokenStandard::ProgrammableNonFungible)
     ) {
+        let (mut token_record, token_record_info) = match accounts.token_record_info {
+            Some(token_record_info) => {
+                let (pda_key, _) =
+                    find_token_record_account(accounts.mint_info.key, accounts.approver_info.key);
+
+                assert_keys_equal(&pda_key, token_record_info.key)?;
+                assert_owned_by(token_record_info, &crate::ID)?;
+
+                (
+                    TokenRecord::from_account_info(token_record_info)?,
+                    token_record_info,
+                )
+            }
+            None => {
+                // token record is required for programmable assets
+                return Err(MetadataError::MissingTokenRecord.into());
+            }
+        };
+
+        assert_state(&token_record, from)?;
+        // for pNFTs, we only need to flip the programmable state
+        token_record.state = to;
+        // save the state
+        token_record.serialize(&mut *token_record_info.try_borrow_mut_data()?)?;
+    } else {
         // for non-programmable assets, we need to freeze the token account,
         // which requires the freeze_authority/master_edition, token and spl-token progran accounts
         // to be on the transaction
@@ -148,7 +183,7 @@ pub(crate) fn toggle_asset_state(
         };
 
         match to {
-            AssetState::Locked => {
+            TokenState::Locked => {
                 if is_master_edition {
                     // this will validate the master_edition derivation
                     freeze(
@@ -176,7 +211,7 @@ pub(crate) fn toggle_asset_state(
                     )?;
                 }
             }
-            AssetState::Unlocked => {
+            TokenState::Unlocked => {
                 if is_master_edition {
                     // this will validate the master_edition derivation
                     thaw(
@@ -206,10 +241,6 @@ pub(crate) fn toggle_asset_state(
             }
         }
     }
-
-    metadata.asset_state = Some(to);
-    // save the state
-    metadata.save(&mut accounts.metadata_info.try_borrow_mut_data()?)?;
 
     Ok(())
 }

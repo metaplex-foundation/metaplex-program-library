@@ -6,9 +6,12 @@ use utils::*;
 
 mod lock {
 
-    use mpl_token_metadata::state::{AssetState, Metadata, TokenStandard};
+    use mpl_token_metadata::{
+        pda::find_token_record_account,
+        state::{TokenRecord, TokenStandard, TokenState},
+    };
     use solana_program::{borsh::try_from_slice_unchecked, program_pack::Pack};
-    use solana_sdk::signature::Keypair;
+    use solana_sdk::signature::{Keypair, Signer};
     use spl_token::state::Account;
 
     use super::*;
@@ -33,10 +36,12 @@ mod lock {
 
         // asserts
 
-        let metadata_account = get_account(&mut context, &asset.metadata).await;
-        let metadata: Metadata = try_from_slice_unchecked(&metadata_account.data).unwrap();
+        let (pda_key, _) = find_token_record_account(&asset.mint.pubkey(), &context.payer.pubkey());
 
-        assert_eq!(metadata.asset_state, Some(AssetState::Unlocked));
+        let pda = get_account(&mut context, &pda_key).await;
+        let token_record: TokenRecord = try_from_slice_unchecked(&pda.data).unwrap();
+
+        assert_eq!(token_record.state, TokenState::Unlocked);
 
         // locks
 
@@ -44,15 +49,16 @@ mod lock {
         let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
 
         asset
-            .lock(&mut context, approver, None, payer)
+            .lock(&mut context, approver, Some(pda_key), payer)
             .await
             .unwrap();
 
         // asserts
 
-        let metadata_account = get_account(&mut context, &asset.metadata).await;
-        let metadata: Metadata = try_from_slice_unchecked(&metadata_account.data).unwrap();
-        assert_eq!(metadata.asset_state, Some(AssetState::Locked));
+        let pda = get_account(&mut context, &pda_key).await;
+        let token_record: TokenRecord = try_from_slice_unchecked(&pda.data).unwrap();
+
+        assert_eq!(token_record.state, TokenState::Locked);
     }
 
     #[tokio::test]
@@ -69,11 +75,6 @@ mod lock {
 
         // asserts
 
-        let metadata_account = get_account(&mut context, &asset.metadata).await;
-        let metadata: Metadata = try_from_slice_unchecked(&metadata_account.data).unwrap();
-
-        assert_eq!(metadata.asset_state, Some(AssetState::Unlocked));
-
         let token_account = get_account(&mut context, &asset.token.unwrap()).await;
         let token = Account::unpack(&token_account.data).unwrap();
         // should not be frozen
@@ -88,11 +89,6 @@ mod lock {
             .lock(&mut context, approver, None, payer)
             .await
             .unwrap();
-
-        let metadata_account = get_account(&mut context, &asset.metadata).await;
-        let metadata: Metadata = try_from_slice_unchecked(&metadata_account.data).unwrap();
-
-        assert_eq!(metadata.asset_state, Some(AssetState::Locked));
 
         let token_account = get_account(&mut context, &asset.token.unwrap()).await;
         let token = Account::unpack(&token_account.data).unwrap();

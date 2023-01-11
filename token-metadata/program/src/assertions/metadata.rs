@@ -8,8 +8,8 @@ use crate::{
     error::MetadataError,
     pda::PREFIX,
     state::{
-        AssetState, Creator, Data, Metadata, MAX_CREATOR_LIMIT, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH,
-        MAX_URI_LENGTH,
+        Creator, Data, Metadata, TokenRecord, TokenState, MAX_CREATOR_LIMIT, MAX_NAME_LENGTH,
+        MAX_SYMBOL_LENGTH, MAX_URI_LENGTH,
     },
 };
 
@@ -229,27 +229,23 @@ pub fn assert_metadata_valid(
     Ok(())
 }
 
-pub fn assert_asset_state(metadata: &Metadata, asset_state: AssetState) -> ProgramResult {
-    match metadata.asset_state {
-        Some(ref state) => {
-            // if the token has an asset state, then it needs to match the
-            // one given as parameter
-            if *state == asset_state {
-                return Ok(());
+pub fn assert_state(token_record: &TokenRecord, state: TokenState) -> ProgramResult {
+    match state {
+        TokenState::Locked => {
+            if !token_record.is_locked() {
+                return Err(MetadataError::UnlockedToken.into());
             }
         }
-        None => {
-            // if the token does not have an asset state, then the given needs
-            // to match AssetState::Unlocked
-            if matches!(asset_state, AssetState::Unlocked) {
-                return Ok(());
+        TokenState::Unlocked => {
+            if token_record.is_locked() {
+                return Err(MetadataError::LockedToken.into());
             }
         }
     }
 
-    // any other case generates an error
-    Err(match asset_state {
-        AssetState::Locked => MetadataError::UnlockedToken.into(),
-        AssetState::Unlocked => MetadataError::LockedToken.into(),
-    })
+    Ok(())
+}
+
+pub fn assert_not_locked(token_record: &TokenRecord) -> ProgramResult {
+    assert_state(token_record, TokenState::Unlocked)
 }

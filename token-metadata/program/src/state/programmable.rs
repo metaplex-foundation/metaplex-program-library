@@ -9,10 +9,96 @@ use solana_program::{
     pubkey::Pubkey,
 };
 use spl_token::state::Account;
+use std::fmt;
 
-use crate::{error::MetadataError, instruction::DelegateRole, pda::find_delegate_account};
+use super::{Key, TokenMetadataAccount};
+use crate::instruction::MetadataDelegateRole;
+use crate::utils::try_from_slice_checked;
 
-use super::{DelegateRecord, TokenMetadataAccount};
+pub const TOKEN_RECORD_SEED: &str = "token_record";
+
+pub const TOKEN_RECORD_SIZE: usize = 1 // Key
++ 1  // bump
++ 33 // delegate
++ 2  // delegate role
++ 1; // state
+
+#[repr(C)]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+pub struct TokenRecord {
+    pub key: Key,
+    pub bump: u8,
+    pub delegate: Option<Pubkey>,
+    pub delegate_role: Option<TokenDelegateRole>,
+    pub state: TokenState,
+}
+
+impl Default for TokenRecord {
+    fn default() -> Self {
+        Self {
+            key: Key::TokenRecord,
+            bump: 255,
+            delegate: None,
+            delegate_role: None,
+            state: TokenState::Unlocked,
+        }
+    }
+}
+
+impl TokenMetadataAccount for TokenRecord {
+    fn key() -> Key {
+        Key::TokenRecord
+    }
+
+    fn size() -> usize {
+        TOKEN_RECORD_SIZE
+    }
+}
+
+impl TokenRecord {
+    pub fn from_bytes(data: &[u8]) -> Result<TokenRecord, ProgramError> {
+        let record: TokenRecord =
+            try_from_slice_checked(data, Key::TokenRecord, TokenRecord::size())?;
+        Ok(record)
+    }
+
+    pub fn is_locked(&self) -> bool {
+        matches!(self.state, TokenState::Locked)
+    }
+}
+
+/// Programmable account state.
+#[repr(C)]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+pub enum TokenState {
+    /// Token account is unlocked; operations are allowed on this account.
+    Unlocked,
+    /// Token account has been locked; no operations are allowed on this account.
+    Locked,
+}
+
+#[repr(C)]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, Copy)]
+pub enum TokenDelegateRole {
+    Sale,
+    Transfer,
+    Utility,
+}
+
+impl fmt::Display for TokenDelegateRole {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let message = match self {
+            Self::Sale => "sale_delegate".to_string(),
+            Self::Transfer => "transfer_delegate".to_string(),
+            Self::Utility => "use_delegate".to_string(),
+        };
+
+        write!(f, "{}", message)
+    }
+}
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
@@ -33,41 +119,74 @@ pub struct AuthorityRequest<'a, 'b> {
     pub mint: &'a Pubkey,
     /// Holder's token account.
     pub token_info: Option<&'a AccountInfo<'a>>,
-    /// `DelegateRecord` account of the authority (when the authority is a delegate).
-    pub delegate_record_info: Option<&'a AccountInfo<'a>>,
-    /// Expected `DelegateRole` for the request.
-    pub delegate_role: Option<DelegateRole>,
+    /// `MetadataDelegateRecord` account of the authority (when the authority is a delegate).
+    pub metadata_delegate_record_info: Option<&'a AccountInfo<'a>>,
+    /// Expected `MetadataDelegateRole` for the request.
+    pub metadata_delegate_role: Option<MetadataDelegateRole>,
+    /// `TokenRecord` account.
+    pub token_record_info: Option<&'a AccountInfo<'a>>,
+    /// Expected `TokenDelegateRole` for the request.
+    pub token_delegate_role: Option<TokenDelegateRole>,
 }
 
 impl AuthorityType {
     /// Determines the `AuthorityType`.
     pub fn get_authority_type(request: AuthorityRequest) -> Result<Self, ProgramError> {
-        if let Some(token_info) = request.token_info {
-            let token = Account::unpack(&token_info.try_borrow_data()?)?;
+        let token = if let Some(token_info) = request.token_info {
+            Some(Account::unpack(&token_info.try_borrow_data()?)?)
+        } else {
+            None
+        };
+
+        // checks if the authority is the token owner
+        if let Some(token) = token {
             if cmp_pubkeys(&token.owner, request.authority) {
                 return Ok(AuthorityType::Holder);
             }
         }
+        /*
+                // checks if we have a valid delegate; for persistent delegates,
+                // the delegate needs to match spl-token delegate
+                if let Some(delegate_record_info) = request.delegate_record_info {
+                    let (pda_key, _) = find_delegate_account(
+                        request.mint,
+                        request
+                            .delegate_role
+                            .ok_or(MetadataError::MissingDelegateRole)?,
+                        request.update_authority,
+                        request.authority,
+                    );
 
-        if let Some(delegate_record_info) = request.delegate_record_info {
-            let (pda_key, _) = find_delegate_account(
-                request.mint,
-                request
-                    .delegate_role
-                    .ok_or(MetadataError::MissingDelegateRole)?,
-                request.update_authority,
-                request.authority,
-            );
+                    if cmp_pubkeys(&pda_key, delegate_record_info.key) {
+                        let delegate_record = DelegateRecord::from_account_info(delegate_record_info)?;
 
-            if cmp_pubkeys(&pda_key, delegate_record_info.key) {
-                let delegate_record = DelegateRecord::from_account_info(delegate_record_info)?;
+                        let spl_matches = if matches!(
+                            request.delegate_role,
+                            Some(DelegateRole::Sale)
+                                | Some(DelegateRole::Transfer)
+                                | Some(DelegateRole::Utility)
+                        ) {
+                            // a persitent delegate should match the spl-token delegate
+                            if let Some(token) = token {
+                                token.delegate == COption::Some(*request.authority)
+                                    && token.delegated_amount == token.amount
+                            } else {
+                                false
+                            }
+                        } else {
+                            // other types of delegate are not spl-token delegates
+                            true
+                        };
 
-                if Some(delegate_record.role) == request.delegate_role {
-                    return Ok(AuthorityType::Delegate);
+                        if Some(delegate_record.role) == request.delegate_role
+                            && cmp_pubkeys(request.authority, &delegate_record.delegate)
+                            && spl_matches
+                        {
+                            return Ok(AuthorityType::Delegate);
+                        }
+                    }
                 }
-            }
-        }
-
+        */
         if cmp_pubkeys(request.update_authority, request.authority) {
             return Ok(AuthorityType::Metadata);
         }

@@ -2,13 +2,13 @@ use mpl_token_metadata::{
     id,
     instruction::{
         builders::{
-            CreateBuilder, DelegateBuilder, MigrateBuilder, MintBuilder, RevokeBuilder,
-            TransferBuilder, UnlockBuilder, LockBuilder,
+            CreateBuilder, DelegateBuilder, LockBuilder, MigrateBuilder, MintBuilder,
+            RevokeBuilder, TransferBuilder, UnlockBuilder,
         },
-        CreateArgs, DelegateArgs, DelegateRole, InstructionBuilder, LockArgs, MigrateArgs,
+        CreateArgs, DelegateArgs, InstructionBuilder, LockArgs, MetadataDelegateRole, MigrateArgs,
         MintArgs, RevokeArgs, TransferArgs, UnlockArgs,
     },
-    pda::find_delegate_account,
+    pda::{find_metadata_delegate_record_account, find_token_record_account},
     processor::AuthorizationData,
     state::{AssetData, Creator, Metadata, TokenMetadataAccount, TokenStandard, EDITION, PREFIX},
 };
@@ -149,9 +149,12 @@ impl DigitalAsset {
             &spl_associated_token_account::id(),
         );
 
+        let (token_record, _) = find_token_record_account(&self.mint.pubkey(), &payer_pubkey);
+
         let mut builder = MintBuilder::new();
         builder
             .token(token)
+            .token_record(token_record)
             .token_owner(payer_pubkey)
             .metadata(self.metadata)
             .mint(self.mint.pubkey())
@@ -214,40 +217,43 @@ impl DigitalAsset {
         context: &mut ProgramTestContext,
         payer: Keypair,
         delegate: Pubkey,
-        delegate_role: DelegateRole,
-        amount_opt: Option<u64>,
+        args: DelegateArgs,
     ) -> Result<(), BanksClientError> {
-        // delegate PDA
-        let (delegate_record, _) = find_delegate_account(
-            &self.mint.pubkey(),
-            delegate_role,
-            &payer.pubkey(),
-            &delegate,
-        );
-
-        let args = match delegate_role {
-            DelegateRole::Transfer => DelegateArgs::TransferV1 {
-                amount: amount_opt.unwrap(),
-                authorization_data: None,
-            },
-            DelegateRole::Collection => DelegateArgs::CollectionV1 {
-                authorization_data: None,
-            },
-            DelegateRole::Sale => DelegateArgs::SaleV1 {
-                amount: amount_opt.unwrap(),
-                authorization_data: None,
-            },
-            _ => panic!("currently unsupported delegate role"),
-        };
-
         let mut builder = DelegateBuilder::new();
         builder
             .delegate(delegate)
-            .delegate_record(delegate_record)
             .mint(self.mint.pubkey())
             .metadata(self.metadata)
             .payer(payer.pubkey())
             .approver(payer.pubkey());
+
+        match args {
+            DelegateArgs::CollectionV1 { .. } => {
+                let (delegate_record, _) = find_metadata_delegate_record_account(
+                    &self.mint.pubkey(),
+                    MetadataDelegateRole::Collection,
+                    &payer.pubkey(),
+                    &delegate,
+                );
+                builder.delegate_record(delegate_record);
+            }
+            DelegateArgs::SaleV1 { .. }
+            | DelegateArgs::TransferV1 { .. }
+            | DelegateArgs::UtilityV1 { .. } => {
+                let (token_record, _) =
+                    find_token_record_account(&self.mint.pubkey(), &payer.pubkey());
+                builder.token_record(token_record);
+            }
+            DelegateArgs::UpdateV1 { .. } => {
+                let (delegate_record, _) = find_metadata_delegate_record_account(
+                    &self.mint.pubkey(),
+                    MetadataDelegateRole::Update,
+                    &payer.pubkey(),
+                    &delegate,
+                );
+                builder.delegate_record(delegate_record);
+            }
+        }
 
         if let Some(edition) = self.master_edition {
             builder.master_edition(edition);
@@ -301,33 +307,44 @@ impl DigitalAsset {
     pub async fn revoke(
         &mut self,
         context: &mut ProgramTestContext,
-        authority: Keypair,
+        payer: Keypair,
+        approver: Keypair,
         delegate: Pubkey,
-        delegate_role: DelegateRole,
+        args: RevokeArgs,
     ) -> Result<(), BanksClientError> {
-        // delegate PDA
-        let (delegate_record, _) = find_delegate_account(
-            &self.mint.pubkey(),
-            delegate_role,
-            &authority.pubkey(),
-            &delegate,
-        );
-
-        let args = match delegate_role {
-            DelegateRole::Transfer => RevokeArgs::TransferV1,
-            DelegateRole::Collection => RevokeArgs::CollectionV1,
-            DelegateRole::Sale => RevokeArgs::SaleV1,
-            _ => panic!("currently unsupported delegate role"),
-        };
-
         let mut builder = RevokeBuilder::new();
         builder
             .delegate(delegate)
-            .delegate_record(delegate_record)
             .mint(self.mint.pubkey())
             .metadata(self.metadata)
-            .payer(authority.pubkey())
-            .approver(authority.pubkey());
+            .payer(approver.pubkey())
+            .approver(approver.pubkey());
+
+        match args {
+            RevokeArgs::CollectionV1 => {
+                let (delegate_record, _) = find_metadata_delegate_record_account(
+                    &self.mint.pubkey(),
+                    MetadataDelegateRole::Collection,
+                    &payer.pubkey(),
+                    &delegate,
+                );
+                builder.delegate_record(delegate_record);
+            }
+            RevokeArgs::SaleV1 | RevokeArgs::TransferV1 | RevokeArgs::UtilityV1 => {
+                let (token_record, _) =
+                    find_token_record_account(&self.mint.pubkey(), &payer.pubkey());
+                builder.token_record(token_record);
+            }
+            RevokeArgs::UpdateV1 => {
+                let (delegate_record, _) = find_metadata_delegate_record_account(
+                    &self.mint.pubkey(),
+                    MetadataDelegateRole::Update,
+                    &payer.pubkey(),
+                    &delegate,
+                );
+                builder.delegate_record(delegate_record);
+            }
+        }
 
         if let Some(edition) = self.master_edition {
             builder.master_edition(edition);
@@ -341,8 +358,8 @@ impl DigitalAsset {
 
         let tx = Transaction::new_signed_with_payer(
             &[revoke_ix],
-            Some(&authority.pubkey()),
-            &[&authority],
+            Some(&payer.pubkey()),
+            &[&approver, &payer],
             context.last_blockhash,
         );
 
@@ -418,7 +435,7 @@ impl DigitalAsset {
         &mut self,
         context: &mut ProgramTestContext,
         approver: Keypair,
-        delegate_record: Option<Pubkey>,
+        token_record: Option<Pubkey>,
         payer: Keypair,
     ) -> Result<(), BanksClientError> {
         let mut builder = LockBuilder::new();
@@ -428,8 +445,8 @@ impl DigitalAsset {
             .metadata(self.metadata)
             .payer(payer.pubkey());
 
-        if let Some(delegate_record) = delegate_record {
-            builder.delegate_record(delegate_record);
+        if let Some(token_record) = token_record {
+            builder.token_record(token_record);
         }
 
         if let Some(edition) = self.master_edition {
@@ -461,7 +478,7 @@ impl DigitalAsset {
         &mut self,
         context: &mut ProgramTestContext,
         approver: Keypair,
-        delegate_record: Option<Pubkey>,
+        token_record: Option<Pubkey>,
         payer: Keypair,
     ) -> Result<(), BanksClientError> {
         let mut builder = UnlockBuilder::new();
@@ -471,8 +488,8 @@ impl DigitalAsset {
             .metadata(self.metadata)
             .payer(payer.pubkey());
 
-        if let Some(delegate_record) = delegate_record {
-            builder.delegate_record(delegate_record);
+        if let Some(token_record) = token_record {
+            builder.token_record(token_record);
         }
 
         if let Some(edition) = self.master_edition {

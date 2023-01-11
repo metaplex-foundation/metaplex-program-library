@@ -11,7 +11,10 @@ use solana_program::{
 };
 use spl_token::state::Account;
 
-use crate::{error::MetadataError, instruction::DelegateRole, state::DelegateRecord};
+use crate::{
+    error::MetadataError,
+    state::{TokenDelegateRole, TokenRecord},
+};
 
 pub fn assert_keys_equal(key1: &Pubkey, key2: &Pubkey) -> Result<(), ProgramError> {
     if !cmp_pubkeys(key1, key2) {
@@ -134,12 +137,19 @@ pub fn assert_system_wallet(wallet: &AccountInfo) -> ProgramResult {
 
 pub fn assert_delegate(
     delegate: &Pubkey,
-    role: DelegateRole,
-    delegate_record: &DelegateRecord,
+    role: TokenDelegateRole,
+    token_record: &TokenRecord,
 ) -> ProgramResult {
-    if delegate != &delegate_record.delegate || role != delegate_record.role {
-        return Err(MetadataError::InvalidDelegate.into());
+    if let TokenRecord {
+        delegate: Some(token_delegate),
+        delegate_role: Some(delegate_role),
+        ..
+    } = token_record
+    {
+        if cmp_pubkeys(delegate, token_delegate) && role == *delegate_role {
+            return Ok(());
+        }
     }
 
-    Ok(())
+    Err(MetadataError::InvalidDelegate.into())
 }

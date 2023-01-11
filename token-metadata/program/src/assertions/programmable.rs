@@ -1,3 +1,4 @@
+use mpl_utils::cmp_pubkeys;
 use solana_program::{account_info::AccountInfo, entrypoint::ProgramResult};
 
 use crate::{error::MetadataError, state::ProgrammableConfig};
@@ -17,9 +18,14 @@ pub(crate) fn assert_valid_authorization<'info>(
         }
     };
 
-    if config.rule_set != *rules.key {
-        return Err(MetadataError::InvalidAuthorizationRules.into());
+    if let ProgrammableConfig::V1 {
+        rule_set: Some(rule_set),
+    } = config
+    {
+        if cmp_pubkeys(rule_set, rules.key) {
+            return Ok(());
+        }
     }
 
-    Ok(())
+    Err(MetadataError::InvalidAuthorizationRules.into())
 }

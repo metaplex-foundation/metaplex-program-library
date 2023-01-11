@@ -14,7 +14,8 @@ mod update {
 
     use mpl_token_metadata::{
         instruction::{RuleSetToggle, UpdateArgs},
-        state::{Data, TokenStandard},
+        pda::find_token_record_account,
+        state::{Data, ProgrammableConfig, TokenStandard},
     };
     use solana_sdk::signature::Keypair;
 
@@ -64,11 +65,16 @@ mod update {
         } = &mut update_args;
         *current_data = Some(data);
 
+        let (token_record, _) =
+            find_token_record_account(&da.mint.pubkey(), &update_authority.pubkey());
+
         let mut builder = UpdateBuilder::new();
         builder
             .authority(update_authority.pubkey())
             .metadata(da.metadata)
-            .mint(da.mint.pubkey());
+            .mint(da.mint.pubkey())
+            .token_record(token_record)
+            .payer(update_authority.pubkey());
 
         if let Some(edition) = da.master_edition {
             builder.edition(edition);
@@ -118,8 +124,11 @@ mod update {
 
         let metadata = da.get_metadata(context).await;
 
-        if let Some(config) = metadata.programmable_config {
-            assert_eq!(config.rule_set, authorization_rules);
+        if let Some(ProgrammableConfig::V1 {
+            rule_set: Some(rule_set),
+        }) = metadata.programmable_config
+        {
+            assert_eq!(rule_set, authorization_rules);
         } else {
             panic!("Missing rule set programmable config");
         }
@@ -129,12 +138,17 @@ mod update {
         // remove the rule set
         *rule_set = RuleSetToggle::Clear;
 
+        let (token_record, _) =
+            find_token_record_account(&da.mint.pubkey(), &update_authority.pubkey());
+
         let mut builder = UpdateBuilder::new();
         builder
             .authority(update_authority.pubkey())
             .metadata(da.metadata)
+            .mint(da.mint.pubkey())
+            .token_record(token_record)
             .authorization_rules(authorization_rules)
-            .mint(da.mint.pubkey());
+            .payer(update_authority.pubkey());
 
         if let Some(edition) = da.master_edition {
             builder.edition(edition);

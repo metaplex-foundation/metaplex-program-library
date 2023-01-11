@@ -13,9 +13,11 @@ mod revoke {
 
     use mpl_token_metadata::{
         error::MetadataError,
-        instruction::DelegateRole,
-        pda::find_delegate_account,
-        state::{DelegateRecord, Key, Metadata, TokenStandard},
+        instruction::{DelegateArgs, MetadataDelegateRole, RevokeArgs},
+        pda::{find_metadata_delegate_record_account, find_token_record_account},
+        state::{
+            Key, Metadata, MetadataDelegateRecord, TokenDelegateRole, TokenRecord, TokenStandard,
+        },
     };
     use num_traits::FromPrimitive;
     use solana_program::{
@@ -57,46 +59,44 @@ mod revoke {
                 &mut context,
                 payer,
                 user_pubkey,
-                DelegateRole::Transfer,
-                Some(1),
+                DelegateArgs::TransferV1 {
+                    amount: 1,
+                    authorization_data: None,
+                },
             )
             .await
             .unwrap();
 
-        let metadata_account = get_account(&mut context, &asset.metadata).await;
-        let metadata: Metadata = try_from_slice_unchecked(&metadata_account.data).unwrap();
-        assert_eq!(metadata.persistent_delegate, Some(DelegateRole::Transfer));
-
-        let (pda_key, _) = find_delegate_account(
-            &asset.mint.pubkey(),
-            DelegateRole::Transfer,
-            &payer_pubkey,
-            &user_pubkey,
-        );
+        let (pda_key, _) = find_token_record_account(&asset.mint.pubkey(), &payer_pubkey);
 
         let pda = get_account(&mut context, &pda_key).await;
-        let delegate_record: DelegateRecord = try_from_slice_unchecked(&pda.data).unwrap();
-        assert_eq!(delegate_record.delegate, user_pubkey);
-        assert_eq!(delegate_record.role, DelegateRole::Transfer);
+        let token_record: TokenRecord = try_from_slice_unchecked(&pda.data).unwrap();
+
+        assert_eq!(token_record.delegate, Some(user_pubkey));
+        assert_eq!(
+            token_record.delegate_role,
+            Some(TokenDelegateRole::Transfer)
+        );
 
         // revokes the delegate
         let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+        let approver = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
 
         asset
-            .revoke(&mut context, payer, user_pubkey, DelegateRole::Transfer)
+            .revoke(
+                &mut context,
+                payer,
+                approver,
+                user_pubkey,
+                RevokeArgs::TransferV1,
+            )
             .await
             .unwrap();
 
-        let metadata_account = get_account(&mut context, &asset.metadata).await;
-        let metadata: Metadata = try_from_slice_unchecked(&metadata_account.data).unwrap();
-        assert_eq!(metadata.persistent_delegate, None);
+        let pda = get_account(&mut context, &pda_key).await;
+        let token_record: TokenRecord = try_from_slice_unchecked(&pda.data).unwrap();
 
-        assert!(context
-            .banks_client
-            .get_account(pda_key)
-            .await
-            .unwrap()
-            .is_none());
+        assert_eq!(token_record.delegate, None);
 
         if let Some(token) = asset.token {
             let account = get_account(&mut context, &token).await;
@@ -133,42 +133,49 @@ mod revoke {
         let metadata: Metadata = try_from_slice_unchecked(&metadata_account.data).unwrap();
         assert_eq!(metadata.update_authority, context.payer.pubkey());
 
-        // // delegates the asset for transfer
+        // creates a collection delegate
+
         let user = Keypair::new();
         let user_pubkey = user.pubkey();
         let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
-
-        // // delegate PDA
-        let (pda_key, _) = find_delegate_account(
-            &asset.mint.pubkey(),
-            DelegateRole::Collection,
-            &payer.pubkey(),
-            &user_pubkey,
-        );
+        let payer_pubkey = payer.pubkey();
 
         asset
             .delegate(
                 &mut context,
                 payer,
                 user_pubkey,
-                DelegateRole::Collection,
-                Some(1),
+                DelegateArgs::CollectionV1 {
+                    authorization_data: None,
+                },
             )
             .await
             .unwrap();
 
-        // // checks that the delegate exists
+        // checks that the delegate exists
+        let (pda_key, _) = find_metadata_delegate_record_account(
+            &asset.mint.pubkey(),
+            MetadataDelegateRole::Collection,
+            &payer_pubkey,
+            &user_pubkey,
+        );
+
         let pda = get_account(&mut context, &pda_key).await;
-        let delegate_record: DelegateRecord = DelegateRecord::from_bytes(&pda.data).unwrap();
-        assert_eq!(delegate_record.key, Key::Delegate);
-        assert_eq!(delegate_record.role, DelegateRole::Collection);
-        assert_eq!(delegate_record.delegate, user_pubkey);
+        let delegate_record = MetadataDelegateRecord::from_bytes(&pda.data).unwrap();
+        assert_eq!(delegate_record.key, Key::MetadataDelegate);
 
         // revokes the delegate
         let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+        let approver = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
 
         asset
-            .revoke(&mut context, payer, user_pubkey, DelegateRole::Collection)
+            .revoke(
+                &mut context,
+                payer,
+                approver,
+                user_pubkey,
+                RevokeArgs::CollectionV1,
+            )
             .await
             .unwrap();
 
@@ -213,45 +220,44 @@ mod revoke {
                 &mut context,
                 payer,
                 user_pubkey,
-                DelegateRole::Sale,
-                Some(1),
+                DelegateArgs::SaleV1 {
+                    amount: 1,
+                    authorization_data: None,
+                },
             )
             .await
             .unwrap();
 
         // checks that the delagate exists
 
-        let (pda_key, _) = find_delegate_account(
-            &asset.mint.pubkey(),
-            DelegateRole::Transfer,
-            &payer_pubkey,
-            &user_pubkey,
-        );
+        let (pda_key, _) = find_token_record_account(&asset.mint.pubkey(), &payer_pubkey);
 
         let pda = get_account(&mut context, &pda_key).await;
-        let delegate_record: DelegateRecord = try_from_slice_unchecked(&pda.data).unwrap();
-        assert_eq!(delegate_record.delegate, user_pubkey);
+        let token_record: TokenRecord = try_from_slice_unchecked(&pda.data).unwrap();
+
+        assert_eq!(token_record.delegate, Some(user_pubkey));
 
         let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
-
-        // // delegate PDA
-        // let (delegate_pda, _) = find_delegate_account(
-        //     &asset.mint.pubkey(),
-        //     DelegateRole::Sale,
-        //     &user_pubkey,
-        //     &payer.pubkey(),
-        // );
+        let approver = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
 
         // revokes the delegate
         asset
-            .revoke(&mut context, payer, user_pubkey, DelegateRole::Sale)
+            .revoke(
+                &mut context,
+                payer,
+                approver,
+                user_pubkey,
+                RevokeArgs::SaleV1,
+            )
             .await
             .unwrap();
 
-        // assert
-        let metadata_account = get_account(&mut context, &asset.metadata).await;
-        let metadata: Metadata = try_from_slice_unchecked(&metadata_account.data).unwrap();
-        assert_eq!(metadata.persistent_delegate, None);
+        // asserts
+
+        let pda = get_account(&mut context, &pda_key).await;
+        let token_record: TokenRecord = try_from_slice_unchecked(&pda.data).unwrap();
+
+        assert_eq!(token_record.delegate, None);
 
         if let Some(token) = asset.token {
             let account = get_account(&mut context, &token).await;
@@ -294,30 +300,35 @@ mod revoke {
                 &mut context,
                 payer,
                 user_pubkey,
-                DelegateRole::Sale,
-                Some(1),
+                DelegateArgs::SaleV1 {
+                    amount: 1,
+                    authorization_data: None,
+                },
             )
             .await
             .unwrap();
 
         // checks that the delagate exists
 
-        let (pda_key, _) = find_delegate_account(
-            &asset.mint.pubkey(),
-            DelegateRole::Transfer,
-            &payer_pubkey,
-            &user_pubkey,
-        );
+        let (pda_key, _) = find_token_record_account(&asset.mint.pubkey(), &payer_pubkey);
 
         let pda = get_account(&mut context, &pda_key).await;
-        let delegate_record: DelegateRecord = try_from_slice_unchecked(&pda.data).unwrap();
-        assert_eq!(delegate_record.delegate, user_pubkey);
+        let token_record: TokenRecord = try_from_slice_unchecked(&pda.data).unwrap();
+
+        assert_eq!(token_record.delegate, Some(user_pubkey));
 
         let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+        let approver = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
 
         // revokes the delegate
         let error = asset
-            .revoke(&mut context, payer, user_pubkey, DelegateRole::Transfer)
+            .revoke(
+                &mut context,
+                payer,
+                approver,
+                user_pubkey,
+                RevokeArgs::TransferV1,
+            )
             .await
             .unwrap_err();
 

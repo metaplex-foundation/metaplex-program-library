@@ -624,6 +624,10 @@ pub enum MetadataError {
     /// 155
     #[error("Invalid authority type")]
     InvalidAuthorityType,
+
+    /// 156
+    #[error("Missing token record account")]
+    MissingTokenRecord,
 }
 
 impl PrintProgramError for MetadataError {
