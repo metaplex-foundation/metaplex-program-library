@@ -47,28 +47,35 @@ pub fn freeze<'a>(
 }
 
 pub fn thaw<'a>(
-    mint: AccountInfo<'a>,
-    token: AccountInfo<'a>,
-    edition: AccountInfo<'a>,
+    mint_info: AccountInfo<'a>,
+    token_info: AccountInfo<'a>,
+    edition_info: AccountInfo<'a>,
     spl_token_program: AccountInfo<'a>,
 ) -> ProgramResult {
     let edition_info_path = Vec::from([
         PREFIX.as_bytes(),
         crate::ID.as_ref(),
-        mint.key.as_ref(),
+        mint_info.key.as_ref(),
         EDITION.as_bytes(),
     ]);
     let edition_info_path_bump_seed = &[assert_derivation(
         &crate::id(),
-        &edition,
+        &edition_info,
         &edition_info_path,
     )?];
     let mut edition_info_seeds = edition_info_path.clone();
     edition_info_seeds.push(edition_info_path_bump_seed);
 
     invoke_signed(
-        &thaw_account(spl_token_program.key, token.key, mint.key, edition.key, &[]).unwrap(),
-        &[token, mint, edition],
+        &thaw_account(
+            spl_token_program.key,
+            token_info.key,
+            mint_info.key,
+            edition_info.key,
+            &[],
+        )
+        .unwrap(),
+        &[token_info, mint_info, edition_info],
         &[&edition_info_seeds],
     )?;
     Ok(())
@@ -233,14 +240,14 @@ pub fn frozen_transfer<'a, 'b>(
     )?;
 
     let mint_info = params.mint.clone();
-    let source_info = params.source.clone();
+    let dest_info = params.destination.clone();
     let token_program_info = params.token_program.clone();
 
     mpl_utils::token::spl_token_transfer(params).unwrap();
 
     freeze(
         mint_info,
-        source_info.clone(),
+        dest_info.clone(),
         master_edition_info.clone(),
         token_program_info.clone(),
     )?;

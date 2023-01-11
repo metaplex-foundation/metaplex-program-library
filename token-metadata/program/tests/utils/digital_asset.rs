@@ -349,8 +349,11 @@ impl DigitalAsset {
         context.banks_client.process_transaction(tx).await
     }
 
-    pub async fn transfer(&self, params: TransferParams<'_>) -> Result<(), BanksClientError> {
-        let TransferParams {
+    pub async fn transfer_from(
+        &self,
+        params: TransferFromParams<'_>,
+    ) -> Result<(), BanksClientError> {
+        let TransferFromParams {
             context,
             authority,
             delegate_record,
@@ -414,6 +417,72 @@ impl DigitalAsset {
         context.banks_client.process_transaction(tx).await
     }
 
+    pub async fn transfer_to(&self, params: TransferToParams<'_>) -> Result<(), BanksClientError> {
+        let TransferToParams {
+            context,
+            authority,
+            delegate_record,
+            source_owner,
+            source_token,
+            destination_owner,
+            destination_token,
+            authorization_rules,
+            payer,
+            args,
+        } = params;
+
+        let mut instructions = vec![];
+
+        let destination_token = if let Some(destination_token) = destination_token {
+            destination_token
+        } else {
+            instructions.push(create_associated_token_account(
+                &authority.pubkey(),
+                &destination_owner,
+                &self.mint.pubkey(),
+                &spl_token::id(),
+            ));
+
+            get_associated_token_address(&destination_owner, &self.mint.pubkey())
+        };
+
+        let mut builder = TransferBuilder::new();
+        builder
+            .authority(authority.pubkey())
+            .token_owner(*source_owner)
+            .token(*source_token)
+            .destination_owner(destination_owner)
+            .destination(destination_token)
+            .metadata(self.metadata)
+            .payer(payer.pubkey())
+            .mint(self.mint.pubkey());
+
+        if let Some(delegate_record) = delegate_record {
+            builder.delegate_record(delegate_record);
+        }
+
+        if let Some(master_edition) = self.master_edition {
+            builder.edition(master_edition);
+        }
+
+        if let Some(authorization_rules) = authorization_rules {
+            builder.authorization_rules(authorization_rules);
+        }
+
+        let transfer_ix = builder.build(args).unwrap().instruction();
+
+        instructions.push(transfer_ix);
+
+        let tx = Transaction::new_signed_with_payer(
+            &instructions,
+            Some(&authority.pubkey()),
+            &[authority, payer],
+            context.last_blockhash,
+        );
+
+        context.banks_client.process_transaction(tx).await
+    }
+
     pub async fn get_metadata(&self, context: &mut ProgramTestContext) -> Metadata {
         let metadata_account = context
             .banks_client
@@ -442,10 +511,23 @@ impl DigitalAsset {
     }
 }
 
-pub struct TransferParams<'a> {
+pub struct TransferFromParams<'a> {
     pub context: &'a mut ProgramTestContext,
     pub authority: &'a Keypair,
     pub source_owner: &'a Pubkey,
+    pub destination_owner: Pubkey,
+    pub destination_token: Option<Pubkey>,
+    pub delegate_record: Option<Pubkey>,
+    pub payer: &'a Keypair,
+    pub authorization_rules: Option<Pubkey>,
+    pub args: TransferArgs,
+}
+
+pub struct TransferToParams<'a> {
+    pub context: &'a mut ProgramTestContext,
+    pub authority: &'a Keypair,
+    pub source_owner: &'a Pubkey,
+    pub source_token: &'a Pubkey,
     pub destination_owner: Pubkey,
     pub destination_token: Option<Pubkey>,
     pub delegate_record: Option<Pubkey>,

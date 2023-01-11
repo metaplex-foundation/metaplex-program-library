@@ -18,7 +18,7 @@ use solana_sdk::{
 
 use crate::*;
 
-static PROGRAM_ALLOW_LIST: [Pubkey; 1] = [mpl_token_auth_rules::ID];
+static PROGRAM_ALLOW_LIST: [Pubkey; 2] = [mpl_token_auth_rules::ID, rooster::ID];
 
 macro_rules! get_primitive_rules {
     (
@@ -110,13 +110,20 @@ pub async fn create_default_metaplex_rule_set(
         ],
     };
 
-    let operation = Operation::Transfer {
+    let owner_operation = Operation::Transfer {
         scenario: TransferAuthority::Owner,
+    };
+
+    let transfer_delegate_operation = Operation::Transfer {
+        scenario: TransferAuthority::TransferDelegate,
     };
 
     let mut royalty_rule_set = RuleSet::new(name, creator.pubkey());
     royalty_rule_set
-        .add(operation.to_string(), transfer_rule)
+        .add(owner_operation.to_string(), transfer_rule.clone())
+        .unwrap();
+    royalty_rule_set
+        .add(transfer_delegate_operation.to_string(), transfer_rule)
         .unwrap();
 
     // Serialize the RuleSet using RMP serde.

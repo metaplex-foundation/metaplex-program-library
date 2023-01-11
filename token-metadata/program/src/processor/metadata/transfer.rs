@@ -185,6 +185,7 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
 
     // Determine transfer type.
     let transfer_authority = if let Some(delegate_role) = metadata.persistent_delegate {
+        msg!("Found delegate role");
         // We have a delegate set on the metadata so we convert it
         // into our TransferAuthority enum.
         // This will panic for anything other than Sale, Transfer and Utility delegates
@@ -195,6 +196,7 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
         // Owner and authority are the same so this is a normal owner transfer.
         TransferAuthority::Owner
     } else {
+        msg!("Invalid transfer authority");
         // Invalid transfer authority.
         return Err(MetadataError::InvalidTransferAuthority.into());
     };
@@ -221,6 +223,7 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
         },
         is_wallet_to_wallet,
     };
+    msg!("Transfer Authority: {transfer_authority:?}");
 
     // Validates the transfer authority.
 
@@ -245,14 +248,14 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
             // If it's a pNFT then we follow authorization rules for
             // the transfer.
             if matches!(token_standard, TokenStandard::ProgrammableNonFungible) {
-                msg!("Program transfer for pNFT");
+                msg!("Owner transfer for pNFT");
                 auth_rules_validate(auth_rules_validate_params)?;
             }
             // Otherwise, proceed to transfer normally.
         }
         // This delegate is only valid for pNFTs and submits to auth rules.
         TransferAuthority::SaleDelegate => {
-            msg!("Sale delegate transfer authoritry for pNFT");
+            msg!("SaleDelegate transfer for pNFT");
             // Validate the delegate
             let delegate_record = DelegateRecord::from_account_info(
                 if let Some(delegate_record) = ctx.accounts.delegate_record_info {
@@ -278,7 +281,7 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
         // but non-programmable NFTs are transferred normally by either
         // the owner or the delegate.
         TransferAuthority::TransferDelegate => {
-            msg!("Transfer delegate transfer authoritry for pNFT");
+            msg!("TransferDelegate transfer for pNFT");
             // Validate the delegate
             let delegate_record = DelegateRecord::from_account_info(
                 if let Some(delegate_record) = ctx.accounts.delegate_record_info {
@@ -303,7 +306,7 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
         }
         TransferAuthority::UtilityDelegate => {
             // Need to check lock state
-            msg!("Auth rules transfer authoritry for pNFT");
+            msg!("UtilityDelegate transfer for pNFT");
             if matches!(token_standard, TokenStandard::ProgrammableNonFungible) {
                 auth_rules_validate(auth_rules_validate_params)?;
             } else {
