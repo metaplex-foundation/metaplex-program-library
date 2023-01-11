@@ -12,6 +12,8 @@ use spl_token::state::Account;
 
 use crate::{error::MetadataError, instruction::DelegateRole, pda::find_delegate_account};
 
+use super::{DelegateRecord, TokenMetadataAccount};
+
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
@@ -58,7 +60,11 @@ impl AuthorityType {
             );
 
             if cmp_pubkeys(&pda_key, delegate_record_info.key) {
-                return Ok(AuthorityType::Delegate);
+                let delegate_record = DelegateRecord::from_account_info(delegate_record_info)?;
+
+                if Some(delegate_record.role) == request.delegate_role {
+                    return Ok(AuthorityType::Delegate);
+                }
             }
         }
 

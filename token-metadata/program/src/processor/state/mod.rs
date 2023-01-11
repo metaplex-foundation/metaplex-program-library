@@ -70,7 +70,7 @@ pub(crate) fn toggle_asset_state(
     if metadata.mint != *accounts.mint_info.key {
         return Err(MetadataError::MintMismatch.into());
     }
-    // token must be unlocked
+    // token must be on the 'from' state
     assert_asset_state(&metadata, from)?;
 
     // approver authority – this can be either:
@@ -90,11 +90,15 @@ pub(crate) fn toggle_asset_state(
     let has_authority = match authority_type {
         AuthorityType::Holder | AuthorityType::Delegate => true,
         _ => {
-            // check if the approver has a spl-token delegate (we can only do this if
-            // we have the token account)
-            if let Some(token_info) = accounts.token_info {
-                assert_delegated_tokens(accounts.approver_info, accounts.mint_info, token_info)?;
-                true
+            if metadata.persistent_delegate.is_none() {
+                // check if the approver has a spl-token delegate (we can only do this if
+                // we have the token account)
+                if let Some(token_info) = accounts.token_info {
+                    assert_delegated_tokens(accounts.approver_info, accounts.mint_info, token_info)?;
+                    true
+                } else {
+                    false
+                }
             } else {
                 false
             }
