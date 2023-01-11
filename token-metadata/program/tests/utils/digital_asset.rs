@@ -15,6 +15,7 @@ use mpl_token_metadata::{
 use solana_program::pubkey::Pubkey;
 use solana_program_test::{BanksClientError, ProgramTestContext};
 use solana_sdk::{
+    compute_budget::ComputeBudgetInstruction,
     signature::{Keypair, Signer},
     transaction::Transaction,
 };
@@ -431,7 +432,9 @@ impl DigitalAsset {
             args,
         } = params;
 
-        let mut instructions = vec![];
+        // Increase compute budget to handle larger test transactions.
+        let compute_ix = ComputeBudgetInstruction::set_compute_unit_limit(400_000);
+        let mut instructions = vec![compute_ix];
 
         let destination_token = if let Some(destination_token) = destination_token {
             destination_token

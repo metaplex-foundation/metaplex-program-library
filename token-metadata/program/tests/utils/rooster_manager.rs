@@ -114,6 +114,7 @@ impl RoosterManager {
 
         context.banks_client.process_transaction(tx).await
     }
+
     pub fn authority(&self) -> Pubkey {
         self.authority.pubkey()
     }

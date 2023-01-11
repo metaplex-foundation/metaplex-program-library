@@ -118,12 +118,22 @@ pub async fn create_default_metaplex_rule_set(
         scenario: TransferScenario::TransferDelegate,
     };
 
+    let sale_delegate_operation = Operation::Transfer {
+        scenario: TransferScenario::SaleDelegate,
+    };
+
     let mut royalty_rule_set = RuleSet::new(name, creator.pubkey());
     royalty_rule_set
         .add(owner_operation.to_string(), transfer_rule.clone())
         .unwrap();
     royalty_rule_set
-        .add(transfer_delegate_operation.to_string(), transfer_rule)
+        .add(
+            transfer_delegate_operation.to_string(),
+            transfer_rule.clone(),
+        )
+        .unwrap();
+    royalty_rule_set
+        .add(sale_delegate_operation.to_string(), transfer_rule)
         .unwrap();
 
     // Serialize the RuleSet using RMP serde.
