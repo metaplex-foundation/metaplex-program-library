@@ -1765,7 +1765,7 @@ dependencies = [
  "bincode",
  "borsh",
  "clap 2.34.0",
- "mpl-token-metadata 1.6.4",
+ "mpl-token-metadata 1.6.5",
  "solana-clap-utils",
  "solana-cli-config",
  "solana-client",
@@ -1859,6 +1859,26 @@ dependencies = [
 
 [[package]]
 name = "mpl-token-metadata"
+version = "1.6.4"
+source = "git+https://github.com/metaplex-foundation/metaplex-program-library?branch=feat/programmable-asset#033d080aafc5fa08e0728c3562deb5e632b3b9ab"
+dependencies = [
+ "arrayref",
+ "borsh",
+ "mpl-token-auth-rules",
+ "mpl-token-metadata-context-derive 0.0.1 (git+https://github.com/metaplex-foundation/metaplex-program-library?branch=feat/programmable-asset)",
+ "mpl-token-vault",
+ "mpl-utils 0.0.5 (git+https://github.com/metaplex-foundation/metaplex-program-library?branch=feat/programmable-asset)",
+ "num-derive",
+ "num-traits",
+ "shank 0.0.11",
+ "solana-program",
+ "spl-associated-token-account",
+ "spl-token",
+ "thiserror",
+]
+
+[[package]]
+name = "mpl-token-metadata"
 version = "1.6.5"
 dependencies = [
  "arrayref",
@@ -1877,26 +1897,6 @@ dependencies = [
  "solana-program",
  "solana-program-test",
  "solana-sdk",
- "spl-associated-token-account",
- "spl-token",
- "thiserror",
-]
-
-[[package]]
-name = "mpl-token-metadata"
-version = "1.6.4"
-source = "git+https://github.com/metaplex-foundation/metaplex-program-library?branch=feat/programmable-asset#033d080aafc5fa08e0728c3562deb5e632b3b9ab"
-dependencies = [
- "arrayref",
- "borsh",
- "mpl-token-auth-rules",
- "mpl-token-metadata-context-derive 0.0.1 (git+https://github.com/metaplex-foundation/metaplex-program-library?branch=feat/programmable-asset)",
- "mpl-token-vault",
- "mpl-utils 0.0.5 (git+https://github.com/metaplex-foundation/metaplex-program-library?branch=feat/programmable-asset)",
- "num-derive",
- "num-traits",
- "shank 0.0.11",
- "solana-program",
  "spl-associated-token-account",
  "spl-token",
  "thiserror",
@@ -2784,7 +2784,7 @@ version = "0.1.0"
 source = "git+https://github.com/metaplex-foundation/rooster#ead71b1a97d8c3b7577d75ef96f27147be7f7dc9"
 dependencies = [
  "borsh",
- "mpl-token-metadata 1.6.4 (git+https://github.com/metaplex-foundation/metaplex-program-library?branch=feat/programmable-asset)",
+ "mpl-token-metadata 1.6.4",
  "mpl-utils 0.0.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "num-derive",
  "num-traits",

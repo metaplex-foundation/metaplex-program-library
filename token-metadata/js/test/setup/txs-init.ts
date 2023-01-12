@@ -69,7 +69,7 @@ import {
   MintLayout,
   TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
-import { findTokenRecordPda } from 'test/utils/programmable';
+import { findTokenRecordPda } from '../utils/programmable';
 
 export class InitTransactions {
   readonly getKeypair: LoadOrGenKeypair | GenLabeledKeypair;
