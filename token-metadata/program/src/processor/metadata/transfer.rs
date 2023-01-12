@@ -16,8 +16,8 @@ use crate::{
         TokenMetadataAccount, TokenRecord, TokenStandard,
     },
     utils::{
-        assert_derivation, auth_rules_validate, close_program_account, create_token_record_account,
-        frozen_transfer, AuthRulesValidateParams,
+        assert_derivation, auth_rules_validate, create_token_record_account, frozen_transfer,
+        AuthRulesValidateParams,
     },
 };
 
@@ -295,8 +295,6 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
             token_record.delegate_role = None;
             token_record.delegate = None;
             token_record.save(&mut token_record_info.data.borrow_mut())?;
-            // Close the account instead?
-            // close_program_account(token_record_info, ctx.accounts.authority_info)?;
 
             // If the token record account for the destination owner doesn't exist,
             // we create it.
