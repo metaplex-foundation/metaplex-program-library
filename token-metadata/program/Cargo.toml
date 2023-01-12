@@ -28,6 +28,7 @@ serde_with = { version = "1.12.0", optional = true }
 mpl-utils = "0.0.5"
 
 [dev-dependencies]
+mpl-token-vault = { version = "0.1.0", features = ["no-entrypoint"] }
 solana-sdk = "1.14"
 solana-program-test = "1.14"
 

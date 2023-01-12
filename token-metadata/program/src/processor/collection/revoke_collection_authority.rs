@@ -54,7 +54,7 @@ pub fn process_revoke_collection_authority(
         .checked_add(lamports)
         .ok_or(MetadataError::NumericalOverflowError)?;
     sol_memset(
-        *collection_authority_record.try_borrow_mut_data()?,
+        &mut collection_authority_record.try_borrow_mut_data()?,
         0,
         USE_AUTHORITY_RECORD_SIZE,
     );

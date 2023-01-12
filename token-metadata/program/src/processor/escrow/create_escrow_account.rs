@@ -115,7 +115,7 @@ pub fn process_create_escrow_account(
     )?;
 
     sol_memcpy(
-        &mut **escrow_account_info.try_borrow_mut_data().unwrap(),
+        &mut escrow_account_info.try_borrow_mut_data().unwrap(),
         &serialized_data,
         serialized_data.len(),
     );

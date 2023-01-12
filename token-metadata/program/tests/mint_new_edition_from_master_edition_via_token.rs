@@ -7,7 +7,7 @@ use mpl_token_metadata::{
     id, instruction,
     state::{Creator, Key, MAX_MASTER_EDITION_LEN},
 };
-use mpl_token_metadata::{instruction::sign_metadata, state::Collection};
+use mpl_token_metadata::state::Collection;
 use num_traits::FromPrimitive;
 use solana_program_test::*;
 use solana_sdk::{
@@ -28,7 +28,7 @@ mod mint_new_edition_from_master_edition_via_token {
     #[tokio::test]
     async fn success() {
         let mut context = program_test().start_with_context().await;
-        let payer_key = context.payer.pubkey().clone();
+        let payer_key = context.payer.pubkey();
         let test_metadata = Metadata::new();
         let test_master_edition = MasterEditionV2::new(&test_metadata);
         let test_edition_marker = EditionMarker::new(&test_metadata, &test_master_edition, 1);
@@ -68,10 +68,10 @@ mod mint_new_edition_from_master_edition_via_token {
     async fn success_v2() {
         let mut context = program_test().start_with_context().await;
         let test_metadata = Metadata::new();
-        let payer_key = context.payer.pubkey().clone();
+        let _payer_key = context.payer.pubkey();
         let creator = Keypair::new();
 
-        let creator_pub = creator.pubkey().clone();
+        let creator_pub = creator.pubkey();
         airdrop(&mut context, &creator_pub.clone(), 3 * LAMPORTS_PER_SOL)
             .await
             .unwrap();
@@ -93,7 +93,7 @@ mod mint_new_edition_from_master_edition_via_token {
                 "TST".to_string(),
                 "uri".to_string(),
                 Some(vec![Creator {
-                    address: creator_pub.clone(),
+                    address: creator_pub,
                     verified: false,
                     share: 100,
                 }]),
@@ -114,7 +114,7 @@ mod mint_new_edition_from_master_edition_via_token {
             .unwrap();
 
         let tx = Transaction::new_signed_with_payer(
-            &[instruction::sign_metadata(
+            [instruction::sign_metadata(
                 mpl_token_metadata::id(),
                 test_metadata.pubkey,
                 creator_pub,
@@ -124,7 +124,7 @@ mod mint_new_edition_from_master_edition_via_token {
             &[&creator],
             context.last_blockhash,
         );
-        let result = context.banks_client.process_transaction(tx).await;
+        let _result = context.banks_client.process_transaction(tx).await;
 
         let kpbytes = &context.payer;
         let kp = Keypair::from_bytes(&kpbytes.to_bytes()).unwrap();

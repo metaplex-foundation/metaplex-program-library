@@ -102,7 +102,7 @@ pub fn process_approve_use_authority(
         )?;
     }
     let mutable_data = &mut *use_authority_record_info.try_borrow_mut_data()?;
-    let mut record = UseAuthorityRecord::from_bytes(*mutable_data)?;
+    let mut record = UseAuthorityRecord::from_bytes(mutable_data)?;
     record.key = Key::UseAuthorityRecord;
     record.allowed_uses = number_of_uses;
     record.bump = bump_seed;
