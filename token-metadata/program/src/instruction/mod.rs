@@ -29,8 +29,7 @@ pub use uses::*;
 
 #[allow(deprecated)]
 pub use crate::deprecated_instruction::{
-    create_master_edition, create_metadata_accounts, create_metadata_accounts_v2,
-    mint_edition_from_master_edition_via_vault_proxy, update_metadata_accounts,
+    create_metadata_accounts_v2, mint_edition_from_master_edition_via_vault_proxy,
     CreateMetadataAccountArgs, CreateMetadataAccountArgsV2, UpdateMetadataAccountArgs,
 };
 use crate::deprecated_instruction::{MintPrintingTokensViaTokenArgs, SetReservationListArgs};

@@ -35,9 +35,6 @@ pub use state::*;
 pub use uses::*;
 
 use crate::{
-    deprecated_processor::{
-        process_deprecated_create_metadata_accounts, process_deprecated_update_metadata_accounts,
-    },
     error::MetadataError,
     instruction::MetadataInstruction,
     processor::{
@@ -148,24 +145,13 @@ fn process_legacy_instruction<'a>(
     instruction: MetadataInstruction,
 ) -> ProgramResult {
     match instruction {
-        MetadataInstruction::CreateMetadataAccount(args) => {
+        MetadataInstruction::CreateMetadataAccount(_args) => {
             msg!("(Deprecated as of 1.1.0) Instruction: Create Metadata Accounts");
-            process_deprecated_create_metadata_accounts(
-                program_id,
-                accounts,
-                args.data,
-                args.is_mutable,
-            )
+            Err(MetadataError::Removed.into())
         }
-        MetadataInstruction::UpdateMetadataAccount(args) => {
+        MetadataInstruction::UpdateMetadataAccount(_args) => {
             msg!("(Deprecated as of 1.1.0) Instruction: Update Metadata Accounts");
-            process_deprecated_update_metadata_accounts(
-                program_id,
-                accounts,
-                args.data,
-                args.update_authority,
-                args.primary_sale_happened,
-            )
+            Err(MetadataError::Removed.into())
         }
         MetadataInstruction::CreateMetadataAccountV2(args) => {
             msg!("Instruction: Create Metadata Accounts v2");
@@ -228,9 +214,9 @@ fn process_legacy_instruction<'a>(
             msg!("Instruction: Deprecated Mint Printing Tokens, Removed in 1.1.0");
             Err(MetadataError::Removed.into())
         }
-        MetadataInstruction::CreateMasterEdition(args) => {
+        MetadataInstruction::CreateMasterEdition(_args) => {
             msg!("(Deprecated as of 1.1.0, please use V3 Create Master Edition)\n V2 Create Master Edition");
-            process_create_master_edition(program_id, accounts, args.max_supply)
+            Err(MetadataError::Removed.into())
         }
         MetadataInstruction::CreateMasterEditionV3(args) => {
             msg!("V3 Create Master Edition");
