@@ -1884,7 +1884,7 @@ dependencies = [
  "arrayref",
  "borsh",
  "mpl-token-auth-rules",
- "mpl-token-metadata-context-derive 0.0.1",
+ "mpl-token-metadata-context-derive 0.1.0",
  "mpl-token-vault",
  "mpl-utils 0.0.5",
  "num-derive",
@@ -1905,14 +1905,6 @@ dependencies = [
 [[package]]
 name = "mpl-token-metadata-context-derive"
 version = "0.0.1"
-dependencies = [
- "quote 1.0.21",
- "syn 1.0.105",
-]
-
-[[package]]
-name = "mpl-token-metadata-context-derive"
-version = "0.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f4d72db771ffb888fd22278b58cd91d50f2fc47c9705acb9f04c00b4ecaa80fc"
 dependencies = [
@@ -1924,6 +1916,14 @@ dependencies = [
 name = "mpl-token-metadata-context-derive"
 version = "0.0.1"
 source = "git+https://github.com/metaplex-foundation/metaplex-program-library?branch=feat/programmable-asset#033d080aafc5fa08e0728c3562deb5e632b3b9ab"
+dependencies = [
+ "quote 1.0.21",
+ "syn 1.0.105",
+]
+
+[[package]]
+name = "mpl-token-metadata-context-derive"
+version = "0.1.0"
 dependencies = [
  "quote 1.0.21",
  "syn 1.0.105",
