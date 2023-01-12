@@ -3,6 +3,7 @@ use mpl_utils::cmp_pubkeys;
 use num_derive::ToPrimitive;
 #[cfg(feature = "serde-feature")]
 use serde::{Deserialize, Serialize};
+use solana_program::program_option::COption;
 use solana_program::program_pack::Pack;
 use solana_program::{
     account_info::AccountInfo, instruction::AccountMeta, program_error::ProgramError,
@@ -11,9 +12,10 @@ use solana_program::{
 use spl_token::state::Account;
 use std::fmt;
 
-use super::{Key, TokenMetadataAccount};
+use super::{Key, MetadataDelegateRecord, TokenMetadataAccount};
 use crate::instruction::MetadataDelegateRole;
-use crate::utils::try_from_slice_checked;
+use crate::pda::{find_metadata_delegate_record_account, find_token_record_account};
+use crate::utils::{assert_owned_by, try_from_slice_checked};
 
 pub const TOKEN_RECORD_SEED: &str = "token_record";
 
@@ -146,54 +148,61 @@ impl AuthorityType {
         };
 
         // checks if the authority is the token owner
+
         if let Some(token) = token {
             if cmp_pubkeys(&token.owner, request.authority) {
                 return Ok(AuthorityType::Holder);
             }
         }
-        /*
-                // checks if we have a valid delegate; for persistent delegates,
-                // the delegate needs to match spl-token delegate
-                if let Some(delegate_record_info) = request.delegate_record_info {
-                    let (pda_key, _) = find_delegate_account(
-                        request.mint,
-                        request
-                            .delegate_role
-                            .ok_or(MetadataError::MissingDelegateRole)?,
-                        request.update_authority,
-                        request.authority,
-                    );
 
-                    if cmp_pubkeys(&pda_key, delegate_record_info.key) {
-                        let delegate_record = DelegateRecord::from_account_info(delegate_record_info)?;
+        // checks if the authority is a token delegate
 
-                        let spl_matches = if matches!(
-                            request.delegate_role,
-                            Some(DelegateRole::Sale)
-                                | Some(DelegateRole::Transfer)
-                                | Some(DelegateRole::Utility)
-                        ) {
-                            // a persitent delegate should match the spl-token delegate
-                            if let Some(token) = token {
-                                token.delegate == COption::Some(*request.authority)
-                                    && token.delegated_amount == token.amount
-                            } else {
-                                false
-                            }
-                        } else {
-                            // other types of delegate are not spl-token delegates
-                            true
-                        };
+        if let Some(token_record_info) = request.token_record_info {
+            // must be owned by token medatata
+            assert_owned_by(token_record_info, &crate::ID)?;
 
-                        if Some(delegate_record.role) == request.delegate_role
-                            && cmp_pubkeys(request.authority, &delegate_record.delegate)
-                            && spl_matches
-                        {
-                            return Ok(AuthorityType::Delegate);
-                        }
+            // we can only validate if it is a token delegate if we have the token account
+            if let Some(token) = token {
+                let (pda_key, _) = find_token_record_account(request.mint, &token.owner);
+                let token_record = TokenRecord::from_account_info(token_record_info)?;
+
+                if cmp_pubkeys(&pda_key, token_record_info.key)
+                    && token_record.delegate_role == request.token_delegate_role
+                    && (COption::from(token_record.delegate) == token.delegate)
+                    && token.delegated_amount == token.amount
+                {
+                    return Ok(AuthorityType::Delegate);
+                }
+            }
+        }
+
+        // checks if the authority is a metadata delegate
+
+        if let Some(metadata_delegate_record_info) = request.metadata_delegate_record_info {
+            // must be owned by token medatata
+            assert_owned_by(metadata_delegate_record_info, &crate::ID)?;
+
+            if let Some(delegate_role) = request.metadata_delegate_role {
+                let (pda_key, _) = find_metadata_delegate_record_account(
+                    request.mint,
+                    delegate_role,
+                    request.update_authority,
+                    request.authority,
+                );
+
+                if cmp_pubkeys(&pda_key, metadata_delegate_record_info.key) {
+                    let delegate_record =
+                        MetadataDelegateRecord::from_account_info(metadata_delegate_record_info)?;
+
+                    if delegate_record.delegate == *request.authority {
+                        return Ok(AuthorityType::Delegate);
                     }
                 }
-        */
+            }
+        }
+
+        // checks if the authority is the update authority
+
         if cmp_pubkeys(request.update_authority, request.authority) {
             return Ok(AuthorityType::Metadata);
         }
