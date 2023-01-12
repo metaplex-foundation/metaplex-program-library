@@ -1,7 +1,7 @@
 // @ts-ignore
 import { encode } from '@msgpack/msgpack';
 import { PublicKey } from '@solana/web3.js';
-import { PROGRAM_ID } from 'src/generated';
+import { PROGRAM_ID } from '../../src/generated';
 
 export function createPassRuleSet(
   ruleSetName: string,
