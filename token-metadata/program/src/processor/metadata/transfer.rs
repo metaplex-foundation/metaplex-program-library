@@ -74,6 +74,7 @@ pub fn transfer<'a>(
 }
 
 fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) -> ProgramResult {
+    msg!("Transfer V1");
     let TransferArgs::V1 {
         authorization_data: auth_data,
         amount,
@@ -90,8 +91,8 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
     assert_owned_by(ctx.accounts.metadata_info, program_id)?;
     assert_owned_by(ctx.accounts.mint_info, &spl_token::ID)?;
     assert_owned_by(ctx.accounts.token_info, &spl_token::ID)?;
-    if let Some(delegate_record_info) = ctx.accounts.delegate_record_info {
-        assert_owned_by(delegate_record_info, program_id)?;
+    if let Some(owner_token_record_info) = ctx.accounts.owner_token_record_info {
+        assert_owned_by(owner_token_record_info, program_id)?;
     }
     if let Some(master_edition) = ctx.accounts.edition_info {
         assert_owned_by(master_edition, program_id)?;
@@ -158,6 +159,7 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
     }
 
     // Deserialize metadata.
+    msg!("deserializing metadata");
     let metadata = Metadata::from_account_info(ctx.accounts.metadata_info)?;
 
     let token_transfer_params: TokenTransferParams = TokenTransferParams {
@@ -215,15 +217,15 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
             // All pNFTs should have a token record passed in and existing.
             // The token delegate role may not be populated, however.
             let owner_token_record_info =
-                if let Some(token_record_info) = ctx.accounts.owner_token_record_info {
-                    token_record_info
+                if let Some(record_info) = ctx.accounts.owner_token_record_info {
+                    record_info
                 } else {
                     return Err(MetadataError::MissingTokenRecord.into());
                 };
 
             let destination_token_record_info =
-                if let Some(new_token_record_info) = ctx.accounts.destination_token_record_info {
-                    new_token_record_info
+                if let Some(record_info) = ctx.accounts.destination_token_record_info {
+                    record_info
                 } else {
                     return Err(MetadataError::MissingTokenRecord.into());
                 };
@@ -242,11 +244,12 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
             // validates the derivation
             assert_keys_equal(&new_pda_key, destination_token_record_info.key)?;
 
-            let token_record_data = owner_token_record_info.try_borrow_data()?;
-            let mut token_record = TokenRecord::deserialize(&mut token_record_data.as_ref())?;
+            let owner_token_record_data = owner_token_record_info.try_borrow_data()?;
+            let mut owner_token_record =
+                TokenRecord::deserialize(&mut owner_token_record_data.as_ref())?;
 
             msg!("checking if sale delegate");
-            let is_sale_delegate = token_record
+            let is_sale_delegate = owner_token_record
                 .delegate_role
                 .map(|role| role == TokenDelegateRole::Sale)
                 .unwrap_or(false);
@@ -260,11 +263,11 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
                     TransferScenario::Holder
                 }
                 AuthorityType::Delegate => {
-                    if token_record.delegate_role.is_none() {
+                    if owner_token_record.delegate_role.is_none() {
                         return Err(MetadataError::MissingDelegateRole.into());
                     }
 
-                    token_record.delegate_role.unwrap().into()
+                    owner_token_record.delegate_role.unwrap().into()
                 }
                 _ => return Err(MetadataError::InvalidTransferAuthority.into()),
             };
@@ -288,10 +291,10 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
             frozen_transfer(token_transfer_params, ctx.accounts.edition_info)?;
 
             // Drop old immutable borrow.
-            drop(token_record_data);
-            token_record.delegate_role = None;
-            token_record.delegate = None;
-            token_record.save(&mut owner_token_record_info.data.borrow_mut())?;
+            drop(owner_token_record_data);
+            owner_token_record.delegate_role = None;
+            owner_token_record.delegate = None;
+            owner_token_record.save(&mut owner_token_record_info.data.borrow_mut())?;
 
             // If the token record account for the destination owner doesn't exist,
             // we create it.

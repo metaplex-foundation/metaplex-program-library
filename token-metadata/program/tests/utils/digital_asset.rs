@@ -426,13 +426,13 @@ impl DigitalAsset {
             .mint(self.mint.pubkey());
 
         if let Some(record) = self.token_record {
-            builder.token_record(record);
+            builder.owner_token_record(record);
         }
 
         // This can be optional for non pNFTs but always include it for now.
-        let (new_token_record, _bump) =
+        let (destination_token_record, _bump) =
             find_token_record_account(&self.mint.pubkey(), &destination_owner);
-        builder.new_token_record(new_token_record);
+        builder.destination_token_record(destination_token_record);
 
         if let Some(master_edition) = self.master_edition {
             builder.edition(master_edition);
@@ -584,13 +584,14 @@ impl DigitalAsset {
             .mint(self.mint.pubkey());
 
         // This can be optional for non pNFTs but always include it for now.
-        let (token_record, _bump) = find_token_record_account(&self.mint.pubkey(), &source_owner);
-        builder.token_record(token_record);
+        let (owner_token_record, _bump) =
+            find_token_record_account(&self.mint.pubkey(), &source_owner);
+        builder.owner_token_record(owner_token_record);
 
         // This can be optional for non pNFTs but always include it for now.
-        let (new_token_record, _bump) =
+        let (destination_token_record, _bump) =
             find_token_record_account(&self.mint.pubkey(), &destination_owner);
-        builder.new_token_record(new_token_record);
+        builder.destination_token_record(destination_token_record);
 
         if let Some(master_edition) = self.master_edition {
             builder.edition(master_edition);
