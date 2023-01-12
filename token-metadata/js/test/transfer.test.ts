@@ -556,15 +556,15 @@ test('Transfer: NonFungible asset with delegate', async (t) => {
 
   // Approve delegate
   const { tx: delegateTx } = await API.delegate(
-    delegateRecord,
     delegate.publicKey,
     mint,
     metadata,
-    masterEdition,
     payer.publicKey,
     payer,
     delegateArgs,
     handler,
+    delegateRecord,
+    masterEdition,
     token,
   );
   await delegateTx.assertSuccess(t);
@@ -594,7 +594,6 @@ test('Transfer: NonFungible asset with delegate', async (t) => {
     null,
     amount,
     handler,
-    delegateRecord,
   );
 
   await fakeDelegateTransferTx.assertError(
@@ -616,7 +615,6 @@ test('Transfer: NonFungible asset with delegate', async (t) => {
     null,
     amount,
     handler,
-    delegateRecord,
   );
 
   await transferTx.assertSuccess(t);

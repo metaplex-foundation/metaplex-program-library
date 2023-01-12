@@ -335,7 +335,7 @@ test('Lock: lock ProgrammableNonFungible asset with wrong authority', async (t) 
   const tokenRecord = findTokenRecordPda(manager.mint, payer.publicKey);
   amman.addr.addLabel('Token Record', tokenRecord);
 
-  let pda = await TokenRecord.fromAccountAddress(connection, tokenRecord);
+  const pda = await TokenRecord.fromAccountAddress(connection, tokenRecord);
 
   spok(t, pda, {
     state: TokenState.Unlocked /* asset should be unlocked */,

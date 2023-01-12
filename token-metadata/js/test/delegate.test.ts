@@ -1,6 +1,5 @@
 import {
   DelegateArgs,
-  Metadata,
   PROGRAM_ID,
   TokenStandard,
   TokenRecord,
