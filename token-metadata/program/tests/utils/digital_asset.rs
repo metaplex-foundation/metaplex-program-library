@@ -35,6 +35,7 @@ pub struct DigitalAsset {
     pub mint: Keypair,
     pub token: Option<Pubkey>,
     pub master_edition: Option<Pubkey>,
+    pub token_record: Option<Pubkey>,
 }
 
 impl Default for DigitalAsset {
@@ -57,6 +58,7 @@ impl DigitalAsset {
             mint,
             token: None,
             master_edition: None,
+            token_record: None,
         }
     }
 
@@ -124,8 +126,10 @@ impl DigitalAsset {
             .unwrap()
             .instruction();
 
+        let compute_ix = ComputeBudgetInstruction::set_compute_unit_limit(800_000);
+
         let tx = Transaction::new_signed_with_payer(
-            &[create_ix],
+            &[compute_ix, create_ix],
             Some(&context.payer.pubkey()),
             &[&context.payer, &self.mint],
             context.last_blockhash,
@@ -155,6 +159,12 @@ impl DigitalAsset {
 
         let (token_record, _) = find_token_record_account(&self.mint.pubkey(), &payer_pubkey);
 
+        let token_record_opt = if self.is_pnft(context).await {
+            Some(token_record)
+        } else {
+            None
+        };
+
         let mut builder = MintBuilder::new();
         builder
             .token(token)
@@ -181,8 +191,10 @@ impl DigitalAsset {
             .unwrap()
             .instruction();
 
+        let compute_ix = ComputeBudgetInstruction::set_compute_unit_limit(800_000);
+
         let tx = Transaction::new_signed_with_payer(
-            &[mint_ix],
+            &[compute_ix, mint_ix],
             Some(&context.payer.pubkey()),
             &[&context.payer],
             context.last_blockhash,
@@ -191,6 +203,7 @@ impl DigitalAsset {
         match context.banks_client.process_transaction(tx).await {
             Ok(_) => {
                 self.token = Some(token);
+                self.token_record = token_record_opt;
                 Ok(())
             }
             Err(error) => Err(error),
@@ -377,7 +390,6 @@ impl DigitalAsset {
         let TransferFromParams {
             context,
             authority,
-            token_record,
             source_owner,
             destination_owner,
             destination_token,
@@ -386,7 +398,8 @@ impl DigitalAsset {
             args,
         } = params;
 
-        let mut instructions = vec![];
+        let compute_ix = ComputeBudgetInstruction::set_compute_unit_limit(800_000);
+        let mut instructions = vec![compute_ix];
 
         let destination_token = if let Some(destination_token) = destination_token {
             destination_token
@@ -412,9 +425,14 @@ impl DigitalAsset {
             .payer(payer.pubkey())
             .mint(self.mint.pubkey());
 
-        if let Some(record) = token_record {
+        if let Some(record) = self.token_record {
             builder.token_record(record);
         }
+
+        // This can be optional for non pNFTs but always include it for now.
+        let (new_token_record, _bump) =
+            find_token_record_account(&self.mint.pubkey(), &destination_owner);
+        builder.new_token_record(new_token_record);
 
         if let Some(master_edition) = self.master_edition {
             builder.edition(master_edition);
@@ -528,7 +546,6 @@ impl DigitalAsset {
         let TransferToParams {
             context,
             authority,
-            token_record,
             source_owner,
             source_token,
             destination_owner,
@@ -566,7 +583,7 @@ impl DigitalAsset {
             .payer(payer.pubkey())
             .mint(self.mint.pubkey());
 
-        if let Some(token_record) = token_record {
+        if let Some(token_record) = self.token_record {
             builder.token_record(token_record);
         }
 
@@ -639,6 +656,17 @@ impl DigitalAsset {
             None
         }
     }
+
+    pub async fn is_pnft(&self, context: &mut ProgramTestContext) -> bool {
+        let md = self.get_metadata(context).await;
+        if let Some(standard) = md.token_standard {
+            if standard == TokenStandard::ProgrammableNonFungible {
+                return true;
+            }
+        }
+
+        false
+    }
 }
 
 pub struct TransferFromParams<'a> {
@@ -647,7 +675,6 @@ pub struct TransferFromParams<'a> {
     pub source_owner: &'a Pubkey,
     pub destination_owner: Pubkey,
     pub destination_token: Option<Pubkey>,
-    pub token_record: Option<Pubkey>,
     pub payer: &'a Keypair,
     pub authorization_rules: Option<Pubkey>,
     pub args: TransferArgs,
@@ -660,7 +687,6 @@ pub struct TransferToParams<'a> {
     pub source_token: &'a Pubkey,
     pub destination_owner: Pubkey,
     pub destination_token: Option<Pubkey>,
-    pub token_record: Option<Pubkey>,
     pub payer: &'a Keypair,
     pub authorization_rules: Option<Pubkey>,
     pub args: TransferArgs,

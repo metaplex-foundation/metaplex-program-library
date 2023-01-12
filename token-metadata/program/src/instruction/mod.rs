@@ -6,8 +6,8 @@ pub(crate) mod deprecated;
 mod edition;
 pub(crate) mod escrow;
 mod freeze;
-mod state;
 mod metadata;
+mod state;
 mod uses;
 
 use borsh::{BorshDeserialize, BorshSerialize};
@@ -18,13 +18,13 @@ pub use delegate::*;
 pub use edition::*;
 pub use escrow::*;
 pub use freeze::*;
-pub use state::*;
 pub use metadata::*;
 use mpl_token_metadata_context_derive::AccountContext;
 #[cfg(feature = "serde-feature")]
 use serde::{Deserialize, Serialize};
 use shank::ShankInstruction;
 use solana_program::account_info::AccountInfo;
+pub use state::*;
 pub use uses::*;
 
 #[allow(deprecated)]
@@ -611,15 +611,16 @@ pub enum MetadataInstruction {
     #[account(5, writable, name="metadata", desc="Metadata (pda of ['metadata', program id, mint id])")]
     #[account(6, optional, name="edition", desc="Edition of token asset")]
     #[account(7, optional, name="token_record", desc="Token record account")]
-    #[account(8, signer, name="authority", desc="Transfer authority (token or delegate owner)")]
-    #[account(9, optional, writable, name="delegate_record", desc="Delegate record PDA")]
-    #[account(10, signer, writable, name="payer", desc="Payer")]
-    #[account(11, name="system_program", desc="System Program")]
-    #[account(12, name="sysvar_instructions", desc="Instructions sysvar account")]
-    #[account(13, name="spl_token_program", desc="SPL Token Program")]
-    #[account(14, name="spl_ata_program", desc="SPL Associated Token Account program")]
-    #[account(15, optional, name="authorization_rules_program", desc="Token Authorization Rules Program")]
-    #[account(16, optional, name="authorization_rules", desc="Token Authorization Rules account")]
+    #[account(8, optional, name="new_token_record", desc="Token record account")]
+    #[account(9, signer, name="authority", desc="Transfer authority (token or delegate owner)")]
+    #[account(10, optional, writable, name="delegate_record", desc="Delegate record PDA")]
+    #[account(11, signer, writable, name="payer", desc="Payer")]
+    #[account(12, name="system_program", desc="System Program")]
+    #[account(13, name="sysvar_instructions", desc="Instructions sysvar account")]
+    #[account(14, name="spl_token_program", desc="SPL Token Program")]
+    #[account(15, name="spl_ata_program", desc="SPL Associated Token Account program")]
+    #[account(16, optional, name="authorization_rules_program", desc="Token Authorization Rules Program")]
+    #[account(17, optional, name="authorization_rules", desc="Token Authorization Rules account")]
     #[default_optional_accounts]
     Transfer(TransferArgs),
 

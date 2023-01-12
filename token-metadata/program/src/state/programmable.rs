@@ -16,6 +16,7 @@ use std::fmt;
 use super::{Key, MetadataDelegateRecord, TokenMetadataAccount};
 use crate::instruction::MetadataDelegateRole;
 use crate::pda::{find_metadata_delegate_record_account, find_token_record_account};
+use crate::state::BorshError;
 use crate::utils::{assert_owned_by, try_from_slice_checked};
 
 pub const TOKEN_RECORD_SEED: &str = "token_record";
@@ -75,6 +76,13 @@ impl TokenRecord {
 
     pub fn is_locked(&self) -> bool {
         matches!(self.state, TokenState::Locked)
+    }
+
+    pub fn save(&self, data: &mut [u8]) -> Result<(), BorshError> {
+        let mut bytes = Vec::with_capacity(Self::size());
+        BorshSerialize::serialize(&self, &mut bytes)?;
+        data[..bytes.len()].copy_from_slice(&bytes);
+        Ok(())
     }
 }
 

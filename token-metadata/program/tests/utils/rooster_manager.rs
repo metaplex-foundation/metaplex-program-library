@@ -3,7 +3,7 @@ use mpl_token_auth_rules::payload::Payload;
 use rooster::{
     instruction::{delegate as rooster_delegate, init, withdraw, WithdrawArgs},
     pda::find_rooster_pda,
-    AuthorizationData, DelegateRole,
+    AuthorizationData,
 };
 use solana_sdk::compute_budget::ComputeBudgetInstruction;
 use spl_associated_token_account::get_associated_token_address;
@@ -86,7 +86,6 @@ impl RoosterManager {
         &self,
         context: &mut ProgramTestContext,
         delegate: &Keypair,
-        delegate_role: DelegateRole,
         mint: Pubkey,
         metadata: Pubkey,
         edition: Pubkey,
@@ -101,7 +100,6 @@ impl RoosterManager {
             mint,
             metadata,
             edition,
-            delegate_role,
             args,
         );
 

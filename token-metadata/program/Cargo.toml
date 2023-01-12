@@ -32,7 +32,8 @@ mpl-token-metadata-context-derive = { path = "../macro" }
 
 [dev-dependencies]
 rmp-serde = "1.1.1"
-rooster = { git = "https://github.com/metaplex-foundation/rooster" }
+# rooster = { git = "https://github.com/metaplex-foundation/rooster" }
+rooster = { path = "../../../rooster/program" }
 solana-sdk = "1.14"
 solana-program-test = "1.14"
 serde = { version = "1.0.147", features = ["derive"]}

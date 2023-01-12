@@ -19,7 +19,7 @@ pub use mpl_utils::{
 pub use programmable_asset::*;
 use solana_program::{
     account_info::AccountInfo, borsh::try_from_slice_unchecked, entrypoint::ProgramResult, msg,
-    program::invoke_signed, program_error::ProgramError, pubkey::Pubkey,
+    program::invoke_signed, program_error::ProgramError, pubkey::Pubkey, system_program,
 };
 use spl_token::instruction::{set_authority, AuthorityType};
 
@@ -185,6 +185,25 @@ pub fn zero_account(s: &str, size: usize) -> String {
         array_of_zeroes.push(0u8);
     }
     s.to_owned() + std::str::from_utf8(&array_of_zeroes).unwrap()
+}
+
+pub fn close_program_account<'a>(
+    account_info: &AccountInfo<'a>,
+    funds_dest_account_info: &AccountInfo<'a>,
+) -> ProgramResult {
+    // Transfer lamports from the account to the destination account.
+    let dest_starting_lamports = funds_dest_account_info.lamports();
+    **funds_dest_account_info.lamports.borrow_mut() = dest_starting_lamports
+        .checked_add(account_info.lamports())
+        .unwrap();
+    **account_info.lamports.borrow_mut() = 0;
+
+    // Realloc the account data size to 0 bytes and teassign ownership of
+    // the account to the system program
+    account_info.realloc(0, false)?;
+    account_info.assign(&system_program::ID);
+
+    Ok(())
 }
 
 #[cfg(test)]

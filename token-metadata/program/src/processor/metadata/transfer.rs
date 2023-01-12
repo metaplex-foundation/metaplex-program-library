@@ -1,20 +1,24 @@
-use std::fmt::Display;
-
+use borsh::BorshDeserialize;
 use mpl_utils::{assert_signer, token::TokenTransferParams};
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, msg, program::invoke,
     program_error::ProgramError, pubkey::Pubkey, system_program, sysvar,
 };
+use std::fmt::Display;
 
 use crate::{
-    assertions::{assert_owned_by, metadata::assert_currently_holding},
+    assertions::{assert_keys_equal, assert_owned_by, metadata::assert_currently_holding},
     error::MetadataError,
     instruction::{Context, Transfer, TransferArgs},
+    pda::find_token_record_account,
     state::{
         AuthorityRequest, AuthorityType, Metadata, Operation, TokenDelegateRole,
         TokenMetadataAccount, TokenRecord, TokenStandard,
     },
-    utils::{assert_derivation, auth_rules_validate, frozen_transfer, AuthRulesValidateParams},
+    utils::{
+        assert_derivation, auth_rules_validate, close_program_account, create_token_record_account,
+        frozen_transfer, AuthRulesValidateParams,
+    },
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -154,7 +158,6 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
     }
 
     // Deserialize metadata.
-
     let metadata = Metadata::from_account_info(ctx.accounts.metadata_info)?;
 
     let token_transfer_params: TokenTransferParams = TokenTransferParams {
@@ -176,6 +179,7 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
     let is_wallet_to_wallet = ctx.accounts.token_owner_info.owner == &system_program::ID
         && ctx.accounts.destination_owner_info.owner == &system_program::ID;
 
+    msg!("getting authority type");
     let authority_type = AuthorityType::get_authority_type(AuthorityRequest {
         authority: ctx.accounts.authority_info.key,
         update_authority: &metadata.update_authority,
@@ -207,20 +211,47 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
 
     match token_standard {
         TokenStandard::ProgrammableNonFungible => {
+            msg!("pNFT");
             // All pNFTs should have a token record passed in and existing.
             // The token delegate role may not be populated, however.
-            if ctx.accounts.token_record_info.is_none() {
+            let token_record_info = if let Some(token_record_info) = ctx.accounts.token_record_info
+            {
+                token_record_info
+            } else {
                 return Err(MetadataError::MissingTokenRecord.into());
-            }
+            };
 
-            let token_record =
-                TokenRecord::from_account_info(ctx.accounts.token_record_info.unwrap())?;
+            let new_token_record_info =
+                if let Some(new_token_record_info) = ctx.accounts.new_token_record_info {
+                    new_token_record_info
+                } else {
+                    return Err(MetadataError::MissingTokenRecord.into());
+                };
 
+            let (pda_key, _) = find_token_record_account(
+                ctx.accounts.mint_info.key,
+                ctx.accounts.token_owner_info.key,
+            );
+            // validates the derivation
+            assert_keys_equal(&pda_key, token_record_info.key)?;
+
+            let (new_pda_key, _) = find_token_record_account(
+                ctx.accounts.mint_info.key,
+                ctx.accounts.destination_owner_info.key,
+            );
+            // validates the derivation
+            assert_keys_equal(&new_pda_key, new_token_record_info.key)?;
+
+            let token_record_data = token_record_info.try_borrow_data()?;
+            let mut token_record = TokenRecord::deserialize(&mut token_record_data.as_ref())?;
+
+            msg!("checking if sale delegate");
             let is_sale_delegate = token_record
                 .delegate_role
                 .map(|role| role == TokenDelegateRole::Sale)
                 .unwrap_or(false);
 
+            msg!("determining scenario");
             let scenario = match authority_type {
                 AuthorityType::Holder => {
                     if is_sale_delegate {
@@ -255,6 +286,29 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
 
             auth_rules_validate(auth_rules_validate_params)?;
             frozen_transfer(token_transfer_params, ctx.accounts.edition_info)?;
+
+            msg!("serializing token record");
+            // Drop old immutable borrow.
+            drop(token_record_data);
+            token_record.delegate_role = None;
+            token_record.save(&mut token_record_info.data.borrow_mut())?;
+            // Close the account instead?
+            // close_program_account(token_record_info, ctx.accounts.authority_info)?;
+
+            // If the token record account for the destination owner doesn't exist,
+            // we create it.
+            if new_token_record_info.data_is_empty() {
+                msg!("Initializing new token record account");
+
+                create_token_record_account(
+                    program_id,
+                    new_token_record_info,
+                    ctx.accounts.mint_info,
+                    ctx.accounts.destination_owner_info,
+                    ctx.accounts.payer_info,
+                    ctx.accounts.system_program_info,
+                )?;
+            }
         }
         _ => {
             msg!("Transferring standard asset");

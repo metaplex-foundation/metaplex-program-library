@@ -637,6 +637,11 @@ impl InstructionBuilder for super::builders::Transfer {
             } else {
                 AccountMeta::new_readonly(crate::ID, false)
             },
+            if let Some(new_token_record) = self.new_token_record {
+                AccountMeta::new(new_token_record, false)
+            } else {
+                AccountMeta::new_readonly(crate::ID, false)
+            },
             AccountMeta::new_readonly(self.authority, true),
             if let Some(delegate_record) = self.delegate_record {
                 AccountMeta::new(delegate_record, false)

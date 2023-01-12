@@ -53,7 +53,7 @@ mod migrate {
         let md = nft.get_data(&mut context).await;
 
         // set up our digital asset struct
-        let mut asset = nft.into_digital_asset();
+        let mut asset = nft.into_digital_asset(&mut context).await;
         asset.master_edition = Some(me.pubkey);
 
         let args = MigrateArgs::V1 {
