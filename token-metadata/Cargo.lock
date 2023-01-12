@@ -1886,7 +1886,7 @@ dependencies = [
  "mpl-token-auth-rules",
  "mpl-token-metadata-context-derive 0.1.0",
  "mpl-token-vault",
- "mpl-utils 0.0.5",
+ "mpl-utils 0.0.6",
  "num-derive",
  "num-traits",
  "rmp-serde",
@@ -1946,16 +1946,6 @@ dependencies = [
 [[package]]
 name = "mpl-utils"
 version = "0.0.5"
-dependencies = [
- "arrayref",
- "borsh",
- "solana-program",
- "spl-token",
-]
-
-[[package]]
-name = "mpl-utils"
-version = "0.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "330468b3ea93d306ed5ae5e389b0b64cfbc43fcd29a4eeae74e20f13c979e7a5"
 dependencies = [
@@ -1969,6 +1959,16 @@ dependencies = [
 name = "mpl-utils"
 version = "0.0.5"
 source = "git+https://github.com/metaplex-foundation/metaplex-program-library?branch=feat/programmable-asset#033d080aafc5fa08e0728c3562deb5e632b3b9ab"
+dependencies = [
+ "arrayref",
+ "borsh",
+ "solana-program",
+ "spl-token",
+]
+
+[[package]]
+name = "mpl-utils"
+version = "0.0.6"
 dependencies = [
  "arrayref",
  "borsh",
