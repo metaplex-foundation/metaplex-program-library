@@ -632,12 +632,12 @@ impl InstructionBuilder for super::builders::Transfer {
             AccountMeta::new_readonly(self.mint, false),
             AccountMeta::new(self.metadata, false),
             AccountMeta::new_readonly(self.edition.unwrap_or(crate::ID), false),
-            if let Some(token_record) = self.token_record {
+            if let Some(token_record) = self.owner_token_record {
                 AccountMeta::new(token_record, false)
             } else {
                 AccountMeta::new_readonly(crate::ID, false)
             },
-            if let Some(new_token_record) = self.new_token_record {
+            if let Some(new_token_record) = self.destination_token_record {
                 AccountMeta::new(new_token_record, false)
             } else {
                 AccountMeta::new_readonly(crate::ID, false)

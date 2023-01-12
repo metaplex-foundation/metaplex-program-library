@@ -177,7 +177,7 @@ impl AuthorityType {
 
                 let role_matches = match token_record.delegate_role {
                     Some(role) => request.token_delegate_roles.contains(&role),
-                    None => Vec::<TokenDelegateRole>::new() == request.token_delegate_roles,
+                    None => request.token_delegate_roles.is_empty(),
                 };
 
                 if cmp_pubkeys(&pda_key, token_record_info.key)

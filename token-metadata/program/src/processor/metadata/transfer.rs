@@ -187,15 +187,13 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
         token_info: Some(ctx.accounts.token_info),
         metadata_delegate_record_info: None,
         metadata_delegate_role: None,
-        token_record_info: ctx.accounts.token_record_info,
+        token_record_info: ctx.accounts.owner_token_record_info,
         token_delegate_roles: vec![
             TokenDelegateRole::Sale,
             TokenDelegateRole::Transfer,
             TokenDelegateRole::Utility,
         ],
     })?;
-
-    msg!("authority type: {:?}", authority_type);
 
     if matches!(authority_type, AuthorityType::Holder) {
         msg!("Owner transfer");
@@ -216,15 +214,15 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
             msg!("pNFT");
             // All pNFTs should have a token record passed in and existing.
             // The token delegate role may not be populated, however.
-            let token_record_info = if let Some(token_record_info) = ctx.accounts.token_record_info
-            {
-                token_record_info
-            } else {
-                return Err(MetadataError::MissingTokenRecord.into());
-            };
+            let owner_token_record_info =
+                if let Some(token_record_info) = ctx.accounts.owner_token_record_info {
+                    token_record_info
+                } else {
+                    return Err(MetadataError::MissingTokenRecord.into());
+                };
 
-            let new_token_record_info =
-                if let Some(new_token_record_info) = ctx.accounts.new_token_record_info {
+            let destination_token_record_info =
+                if let Some(new_token_record_info) = ctx.accounts.destination_token_record_info {
                     new_token_record_info
                 } else {
                     return Err(MetadataError::MissingTokenRecord.into());
@@ -235,16 +233,16 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
                 ctx.accounts.token_owner_info.key,
             );
             // validates the derivation
-            assert_keys_equal(&pda_key, token_record_info.key)?;
+            assert_keys_equal(&pda_key, owner_token_record_info.key)?;
 
             let (new_pda_key, _) = find_token_record_account(
                 ctx.accounts.mint_info.key,
                 ctx.accounts.destination_owner_info.key,
             );
             // validates the derivation
-            assert_keys_equal(&new_pda_key, new_token_record_info.key)?;
+            assert_keys_equal(&new_pda_key, destination_token_record_info.key)?;
 
-            let token_record_data = token_record_info.try_borrow_data()?;
+            let token_record_data = owner_token_record_info.try_borrow_data()?;
             let mut token_record = TokenRecord::deserialize(&mut token_record_data.as_ref())?;
 
             msg!("checking if sale delegate");
@@ -289,21 +287,20 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
             auth_rules_validate(auth_rules_validate_params)?;
             frozen_transfer(token_transfer_params, ctx.accounts.edition_info)?;
 
-            msg!("serializing token record");
             // Drop old immutable borrow.
             drop(token_record_data);
             token_record.delegate_role = None;
             token_record.delegate = None;
-            token_record.save(&mut token_record_info.data.borrow_mut())?;
+            token_record.save(&mut owner_token_record_info.data.borrow_mut())?;
 
             // If the token record account for the destination owner doesn't exist,
             // we create it.
-            if new_token_record_info.data_is_empty() {
+            if destination_token_record_info.data_is_empty() {
                 msg!("Initializing new token record account");
 
                 create_token_record_account(
                     program_id,
-                    new_token_record_info,
+                    destination_token_record_info,
                     ctx.accounts.mint_info,
                     ctx.accounts.destination_owner_info,
                     ctx.accounts.payer_info,
