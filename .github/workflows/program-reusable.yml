@@ -106,4 +106,4 @@ jobs:
         working-directory: ./${{ inputs.name }}/program
         run: |
           cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --version
-          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --bpf-out-dir ../../test-programs/ -- --nocapture --test-threads 1
+          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --sbf-out-dir ../../test-programs/ -- --nocapture --test-threads 1

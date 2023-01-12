@@ -31,6 +31,6 @@ runs:
         mkdir -p ../../test-programs
         cargo +${{ env.RUST_STABLE }} build-bpf --version
         export BPF_OUT_DIR=../../test-programs/
-        cargo +${{ env.RUST_STABLE }} build-bpf --bpf-out-dir ../../test-programs/
+        cargo +${{ env.RUST_STABLE }} build-bpf --sbf-out-dir ../../test-programs/
       shell: bash
 
