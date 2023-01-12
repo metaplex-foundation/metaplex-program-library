@@ -17,11 +17,14 @@ use crate::{
     },
 };
 
+#[allow(unused)]
 pub fn migrate<'a>(
     program_id: &Pubkey,
     accounts: &'a [AccountInfo<'a>],
     args: MigrateArgs,
 ) -> ProgramResult {
+    return Err(MetadataError::FeatureNotSupported.into());
+
     let context = Migrate::to_context(accounts)?;
 
     match args {
