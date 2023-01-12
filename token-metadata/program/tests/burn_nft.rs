@@ -13,6 +13,7 @@ mod burn_nft {
         error::MetadataError,
         state::{Collection, CollectionDetails},
     };
+    use solana_program::pubkey::Pubkey;
     use solana_sdk::signature::Keypair;
 
     use super::*;
@@ -499,6 +500,108 @@ mod burn_nft {
             .create_v3(&mut context, Some(0))
             .await
             .unwrap();
+
+        // Burn the NFT
+        burn(
+            &mut context,
+            collection_item_nft.pubkey,
+            &payer,
+            collection_item_nft.mint.pubkey(),
+            collection_item_nft.token.pubkey(),
+            item_master_edition_account.pubkey,
+            Some(collection_parent_nft.pubkey),
+        )
+        .await
+        .unwrap();
+    }
+
+    #[tokio::test]
+    async fn burn_unsized_collection_item_with_burned_parent() {
+        let mut context = program_test().start_with_context().await;
+
+        // Create a Collection Parent NFT without the CollectionDetails struct
+        let collection_parent_nft = Metadata::new();
+        collection_parent_nft
+            .create_v2_default(&mut context)
+            .await
+            .unwrap();
+
+        let parent_master_edition_account = MasterEditionV2::new(&collection_parent_nft);
+        parent_master_edition_account
+            .create_v3(&mut context, Some(0))
+            .await
+            .unwrap();
+
+        let collection = Collection {
+            key: collection_parent_nft.mint.pubkey(),
+            verified: false,
+        };
+
+        let collection_item_nft = Metadata::new();
+        collection_item_nft
+            .create_v2(
+                &mut context,
+                "Test".to_string(),
+                "TST".to_string(),
+                "uri".to_string(),
+                None,
+                10,
+                false,
+                Some(collection),
+                None,
+            )
+            .await
+            .unwrap();
+
+        let kpbytes = &context.payer;
+        let payer = Keypair::from_bytes(&kpbytes.to_bytes()).unwrap();
+
+        // Verifying collection
+        collection_item_nft
+            .verify_collection(
+                &mut context,
+                collection_parent_nft.pubkey,
+                &payer,
+                collection_parent_nft.mint.pubkey(),
+                parent_master_edition_account.pubkey,
+                None,
+            )
+            .await
+            .unwrap();
+
+        let item_master_edition_account = MasterEditionV2::new(&collection_item_nft);
+        item_master_edition_account
+            .create_v3(&mut context, Some(0))
+            .await
+            .unwrap();
+
+        // Burn the collection NFT
+        burn(
+            &mut context,
+            collection_parent_nft.pubkey,
+            &payer,
+            collection_parent_nft.mint.pubkey(),
+            collection_parent_nft.token.pubkey(),
+            parent_master_edition_account.pubkey,
+            None,
+        )
+        .await
+        .unwrap();
+
+        // Fails to burn with invalid empty account as collection
+        let error = burn(
+            &mut context,
+            collection_item_nft.pubkey,
+            &payer,
+            collection_item_nft.mint.pubkey(),
+            collection_item_nft.token.pubkey(),
+            item_master_edition_account.pubkey,
+            Some(Pubkey::new_unique()),
+        )
+        .await
+        .unwrap_err();
+
+        assert_custom_error!(error, MetadataError::NotAMemberOfCollection);
 
         // Burn the NFT
         burn(

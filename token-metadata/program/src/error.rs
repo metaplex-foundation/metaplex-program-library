@@ -524,108 +524,111 @@ pub enum MetadataError {
     /// 132
     #[error("Invalid bubblegum signer")]
     InvalidBubblegumSigner,
-
     /// 133
+    #[error("Escrow parent cannot have a delegate")]
+    EscrowParentHasDelegate,
+
+    /// 134
     #[error("Mint needs to be signer to initialize the account")]
     MintIsNotSigner,
 
-    /// 134
+    /// 135
     #[error("Invalid token standard")]
     InvalidTokenStandard,
 
-    /// 135
+    /// 136
     #[error("Invalid mint account for specified token standard")]
     InvalidMintForTokenStandard,
 
-    /// 136
+    /// 137
     #[error("Invalid authorization rules account")]
     InvalidAuthorizationRules,
 
-    /// 137
+    /// 138
     #[error("Missing authorization rules account")]
     MissingAuthorizationRules,
 
-    /// 138
+    /// 139
     #[error("Missing programmable configuration")]
     MissingProgrammableConfig,
 
-    /// 139
+    /// 140
     #[error("Invalid programmable configuration")]
     InvalidProgrammableConfig,
 
-    /// 140
+    /// 141
     #[error("Delegate already exists")]
     DelegateAlreadyExists,
 
-    /// 141
+    /// 142
     #[error("Delegate not found")]
     DelegateNotFound,
 
-    /// 142
+    /// 143
     #[error("Required account not set in instruction builder")]
     MissingAccountInBuilder,
 
-    /// 143
+    /// 144
     #[error("Required argument not set in instruction builder")]
     MissingArgumentInBuilder,
 
-    /// 144
+    /// 145
     #[error("Feature not supported currently")]
     FeatureNotSupported,
 
-    /// 143
+    /// 146
     #[error("Invalid system wallet")]
     InvalidSystemWallet,
 
-    /// 144
+    /// 147
     #[error("Only the sale delegate can transfer while its set")]
     OnlySaleDelegateCanTransfer,
 
-    /// 145
+    /// 148
     #[error("Missing token account")]
     MissingTokenAccount,
 
-    /// 146
+    /// 149
     #[error("Missing SPL token program")]
     MissingSplTokenProgram,
 
-    /// 147
+    /// 150
     #[error("Missing authorization rules program")]
     MissingAuthorizationRulesProgram,
 
-    /// 148
+    /// 151
     #[error("Invalid delegate role for transfer")]
     InvalidDelegateRoleForTransfer,
 
-    /// 149
+    /// 152
     #[error("Invalid transfer authority")]
     InvalidTransferAuthority,
 
-    /// 150
+    /// 153
     #[error("Instruction not supported for ProgrammableNonFungible assets")]
     InstructionNotSupported,
 
-    /// 151
+    /// 154
     #[error("Public key does not match expected value")]
     KeyMismatch,
 
-    /// 152
+    /// 155
     #[error("Token is locked")]
     LockedToken,
 
-    /// 153
+    /// 156
     #[error("Token is unlocked")]
     UnlockedToken,
 
-    /// 154
+    /// 157
     #[error("Missing delegate role")]
     MissingDelegateRole,
 
-    /// 155
+    /// 158
     #[error("Invalid authority type")]
     InvalidAuthorityType,
 
-    /// 156
+    /// 159
     #[error("Missing token record account")]
     MissingTokenRecord,
 }
