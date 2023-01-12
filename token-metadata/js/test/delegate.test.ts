@@ -1,10 +1,11 @@
 import {
   DelegateArgs,
-  DelegateRecord,
-  DelegateRole,
   Metadata,
   PROGRAM_ID,
   TokenStandard,
+  TokenRecord,
+  TokenDelegateRole,
+  MetadataDelegateRecord,
 } from '../src/generated';
 import test from 'tape';
 import { amman, InitTransactions, killStuckProcess } from './setup';
@@ -14,6 +15,7 @@ import { spokSameBigint, spokSamePubkey } from './utils';
 import { BN } from 'bn.js';
 import { getAccount } from '@solana/spl-token';
 import { PublicKey } from '@solana/web3.js';
+import { findTokenRecordPda } from './utils/programmable';
 
 killStuckProcess();
 
@@ -45,7 +47,7 @@ test('Delegate: create collection delegate', async (t) => {
     ],
     PROGRAM_ID,
   );
-  amman.addr.addLabel('Delegate Record', delegateRecord);
+  amman.addr.addLabel('Metadata Delegate Record', delegateRecord);
 
   const args: DelegateArgs = {
     __kind: 'CollectionV1',
@@ -53,18 +55,25 @@ test('Delegate: create collection delegate', async (t) => {
   };
 
   const { tx: delegateTx } = await API.delegate(
-    delegateRecord,
     delegate,
     manager.mint,
     manager.metadata,
-    manager.masterEdition,
     payer.publicKey,
     payer,
     args,
     handler,
+    delegateRecord,
+    manager.masterEdition,
   );
 
   await delegateTx.assertSuccess(t);
+
+  const pda = await MetadataDelegateRecord.fromAccountAddress(connection, delegateRecord);
+
+  spok(t, pda, {
+    delegate: spokSamePubkey(delegate),
+    mint: spokSamePubkey(manager.mint),
+  });
 });
 
 test('Delegate: create sale delegate', async (t) => {
@@ -83,18 +92,9 @@ test('Delegate: create sale delegate', async (t) => {
   // creates a delegate
 
   const [delegate] = await API.getKeypair('Delegate');
-  // delegate PDA
-  const [delegateRecord] = PublicKey.findProgramAddressSync(
-    [
-      Buffer.from('metadata'),
-      PROGRAM_ID.toBuffer(),
-      manager.mint.toBuffer(),
-      Buffer.from('persistent_delegate'),
-      payer.publicKey.toBuffer(),
-    ],
-    PROGRAM_ID,
-  );
-  amman.addr.addLabel('Delegate Record', delegateRecord);
+  // token record PDA
+  const tokenRecord = findTokenRecordPda(manager.mint, payer.publicKey);
+  amman.addr.addLabel('Token Record', tokenRecord);
 
   const args: DelegateArgs = {
     __kind: 'SaleV1',
@@ -103,16 +103,17 @@ test('Delegate: create sale delegate', async (t) => {
   };
 
   const { tx: delegateTx } = await API.delegate(
-    delegateRecord,
     delegate,
     manager.mint,
     manager.metadata,
-    manager.masterEdition,
     payer.publicKey,
     payer,
     args,
     handler,
+    null,
+    manager.masterEdition,
     manager.token,
+    tokenRecord,
   );
 
   await delegateTx.assertSuccess(t);
@@ -126,11 +127,11 @@ test('Delegate: create sale delegate', async (t) => {
     delegate: spokSamePubkey(delegate),
   });
 
-  const pda = await DelegateRecord.fromAccountAddress(connection, delegateRecord);
+  const pda = await TokenRecord.fromAccountAddress(connection, tokenRecord);
 
   spok(t, pda, {
     delegate: spokSamePubkey(delegate),
-    role: DelegateRole.Sale,
+    delegateRole: TokenDelegateRole.Sale,
   });
 });
 
@@ -150,18 +151,9 @@ test('Delegate: create transfer delegate', async (t) => {
   // creates a delegate
 
   const [delegate] = await API.getKeypair('Delegate');
-  // delegate PDA
-  const [delegateRecord] = PublicKey.findProgramAddressSync(
-    [
-      Buffer.from('metadata'),
-      PROGRAM_ID.toBuffer(),
-      manager.mint.toBuffer(),
-      Buffer.from('persistent_delegate'),
-      payer.publicKey.toBuffer(),
-    ],
-    PROGRAM_ID,
-  );
-  amman.addr.addLabel('Delegate Record', delegateRecord);
+  // token record PDA
+  const tokenRecord = findTokenRecordPda(manager.mint, payer.publicKey);
+  amman.addr.addLabel('Token Record', tokenRecord);
 
   const args: DelegateArgs = {
     __kind: 'TransferV1',
@@ -170,16 +162,17 @@ test('Delegate: create transfer delegate', async (t) => {
   };
 
   const { tx: delegateTx } = await API.delegate(
-    delegateRecord,
     delegate,
     manager.mint,
     manager.metadata,
-    manager.masterEdition,
     payer.publicKey,
     payer,
     args,
     handler,
+    null,
+    manager.masterEdition,
     manager.token,
+    tokenRecord,
   );
 
   await delegateTx.assertSuccess(t);
@@ -193,11 +186,11 @@ test('Delegate: create transfer delegate', async (t) => {
     delegate: spokSamePubkey(delegate),
   });
 
-  const pda = await DelegateRecord.fromAccountAddress(connection, delegateRecord);
+  const pda = await TokenRecord.fromAccountAddress(connection, tokenRecord);
 
   spok(t, pda, {
     delegate: spokSamePubkey(delegate),
-    role: DelegateRole.Transfer,
+    delegateRole: TokenDelegateRole.Transfer,
   });
 });
 
@@ -217,18 +210,9 @@ test('Delegate: fail to create sale delegate on NFT', async (t) => {
   // creates a delegate
 
   const [delegate] = await API.getKeypair('Delegate');
-  // delegate PDA
-  const [delegateRecord] = PublicKey.findProgramAddressSync(
-    [
-      Buffer.from('metadata'),
-      PROGRAM_ID.toBuffer(),
-      manager.mint.toBuffer(),
-      Buffer.from('persistent_delegate'),
-      payer.publicKey.toBuffer(),
-    ],
-    PROGRAM_ID,
-  );
-  amman.addr.addLabel('Delegate Record', delegateRecord);
+  // token record PDA
+  const tokenRecord = findTokenRecordPda(manager.mint, payer.publicKey);
+  amman.addr.addLabel('Token Record', tokenRecord);
 
   const args: DelegateArgs = {
     __kind: 'SaleV1',
@@ -237,16 +221,17 @@ test('Delegate: fail to create sale delegate on NFT', async (t) => {
   };
 
   const { tx: delegateTx } = await API.delegate(
-    delegateRecord,
     delegate,
     manager.mint,
     manager.metadata,
-    manager.masterEdition,
     payer.publicKey,
     payer,
     args,
     handler,
+    null,
+    manager.masterEdition,
     manager.token,
+    tokenRecord,
   );
 
   await delegateTx.assertError(t, /Invalid token standard/);
@@ -268,18 +253,9 @@ test('Delegate: replace transfer delegate', async (t) => {
   // creates a delegate
 
   const [delegate] = await API.getKeypair('Delegate');
-  // delegate PDA
-  const [delegateRecord] = PublicKey.findProgramAddressSync(
-    [
-      Buffer.from('metadata'),
-      PROGRAM_ID.toBuffer(),
-      manager.mint.toBuffer(),
-      Buffer.from('persistent_delegate'),
-      payer.publicKey.toBuffer(),
-    ],
-    PROGRAM_ID,
-  );
-  amman.addr.addLabel('Delegate Record', delegateRecord);
+  // token record PDA
+  const tokenRecord = findTokenRecordPda(manager.mint, payer.publicKey);
+  amman.addr.addLabel('Token Record', tokenRecord);
 
   const args: DelegateArgs = {
     __kind: 'TransferV1',
@@ -288,16 +264,17 @@ test('Delegate: replace transfer delegate', async (t) => {
   };
 
   const { tx: delegateTx } = await API.delegate(
-    delegateRecord,
     delegate,
     manager.mint,
     manager.metadata,
-    manager.masterEdition,
     payer.publicKey,
     payer,
     args,
     handler,
+    null,
+    manager.masterEdition,
     manager.token,
+    tokenRecord,
   );
 
   await delegateTx.assertSuccess(t);
@@ -311,11 +288,11 @@ test('Delegate: replace transfer delegate', async (t) => {
     delegate: spokSamePubkey(delegate),
   });
 
-  let pda = await DelegateRecord.fromAccountAddress(connection, delegateRecord);
+  let pda = await TokenRecord.fromAccountAddress(connection, tokenRecord);
 
   spok(t, pda, {
     delegate: spokSamePubkey(delegate),
-    role: DelegateRole.Transfer,
+    delegateRole: TokenDelegateRole.Transfer,
   });
 
   // creates a new delegate
@@ -323,16 +300,17 @@ test('Delegate: replace transfer delegate', async (t) => {
   const [newDelegate] = await API.getKeypair('Delegate');
 
   const { tx: delegateTx2 } = await API.delegate(
-    delegateRecord,
     newDelegate,
     manager.mint,
     manager.metadata,
-    manager.masterEdition,
     payer.publicKey,
     payer,
     args,
     handler,
+    null,
+    manager.masterEdition,
     manager.token,
+    tokenRecord,
   );
 
   await delegateTx2.assertSuccess(t);
@@ -346,11 +324,11 @@ test('Delegate: replace transfer delegate', async (t) => {
     delegate: spokSamePubkey(newDelegate),
   });
 
-  pda = await DelegateRecord.fromAccountAddress(connection, delegateRecord);
+  pda = await TokenRecord.fromAccountAddress(connection, tokenRecord);
 
   spok(t, pda, {
     delegate: spokSamePubkey(newDelegate),
-    role: DelegateRole.Transfer,
+    delegateRole: TokenDelegateRole.Transfer,
   });
 });
 
@@ -370,18 +348,9 @@ test('Delegate: create utility delegate', async (t) => {
   // creates a delegate
 
   const [delegate] = await API.getKeypair('Delegate');
-  // delegate PDA
-  const [delegateRecord] = PublicKey.findProgramAddressSync(
-    [
-      Buffer.from('metadata'),
-      PROGRAM_ID.toBuffer(),
-      manager.mint.toBuffer(),
-      Buffer.from('persistent_delegate'),
-      payer.publicKey.toBuffer(),
-    ],
-    PROGRAM_ID,
-  );
-  amman.addr.addLabel('Delegate Record', delegateRecord);
+  // token record PDA
+  const tokenRecord = findTokenRecordPda(manager.mint, payer.publicKey);
+  amman.addr.addLabel('Token Record', tokenRecord);
 
   const args: DelegateArgs = {
     __kind: 'UtilityV1',
@@ -390,16 +359,17 @@ test('Delegate: create utility delegate', async (t) => {
   };
 
   const { tx: delegateTx } = await API.delegate(
-    delegateRecord,
     delegate,
     manager.mint,
     manager.metadata,
-    manager.masterEdition,
     payer.publicKey,
     payer,
     args,
     handler,
+    null,
+    manager.masterEdition,
     manager.token,
+    tokenRecord,
   );
 
   await delegateTx.assertSuccess(t);
@@ -413,17 +383,11 @@ test('Delegate: create utility delegate', async (t) => {
     delegate: spokSamePubkey(delegate),
   });
 
-  const pda = await DelegateRecord.fromAccountAddress(connection, delegateRecord);
+  const pda = await TokenRecord.fromAccountAddress(connection, tokenRecord);
 
   spok(t, pda, {
     delegate: spokSamePubkey(delegate),
-    role: DelegateRole.Utility,
-  });
-
-  const metadata = await Metadata.fromAccountAddress(connection, manager.metadata);
-
-  spok(t, metadata, {
-    persistentDelegate: DelegateRole.Utility,
+    delegateRole: TokenDelegateRole.Utility,
   });
 });
 
@@ -443,18 +407,9 @@ test('Delegate: try replace sale delegate', async (t) => {
   // creates a delegate
 
   const [delegate] = await API.getKeypair('Delegate');
-  // delegate PDA
-  const [delegateRecord] = PublicKey.findProgramAddressSync(
-    [
-      Buffer.from('metadata'),
-      PROGRAM_ID.toBuffer(),
-      manager.mint.toBuffer(),
-      Buffer.from('persistent_delegate'),
-      payer.publicKey.toBuffer(),
-    ],
-    PROGRAM_ID,
-  );
-  amman.addr.addLabel('Delegate Record', delegateRecord);
+  // token record PDA
+  const tokenRecord = findTokenRecordPda(manager.mint, payer.publicKey);
+  amman.addr.addLabel('Token Record', tokenRecord);
 
   const args: DelegateArgs = {
     __kind: 'SaleV1',
@@ -463,16 +418,17 @@ test('Delegate: try replace sale delegate', async (t) => {
   };
 
   const { tx: delegateTx } = await API.delegate(
-    delegateRecord,
     delegate,
     manager.mint,
     manager.metadata,
-    manager.masterEdition,
     payer.publicKey,
     payer,
     args,
     handler,
+    null,
+    manager.masterEdition,
     manager.token,
+    tokenRecord,
   );
 
   await delegateTx.assertSuccess(t);
@@ -486,11 +442,11 @@ test('Delegate: try replace sale delegate', async (t) => {
     delegate: spokSamePubkey(delegate),
   });
 
-  const pda = await DelegateRecord.fromAccountAddress(connection, delegateRecord);
+  const pda = await TokenRecord.fromAccountAddress(connection, tokenRecord);
 
   spok(t, pda, {
     delegate: spokSamePubkey(delegate),
-    role: DelegateRole.Sale,
+    delegateRole: TokenDelegateRole.Sale,
   });
 
   // creates a transfer delegate
@@ -504,16 +460,17 @@ test('Delegate: try replace sale delegate', async (t) => {
   };
 
   const { tx: delegateTx2 } = await API.delegate(
-    delegateRecord,
     newDelegate,
     manager.mint,
     manager.metadata,
-    manager.masterEdition,
     payer.publicKey,
     payer,
     args2,
     handler,
+    null,
+    manager.masterEdition,
     manager.token,
+    tokenRecord,
   );
 
   await delegateTx2.assertError(t, /Delegate already exists/);

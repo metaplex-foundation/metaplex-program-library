@@ -1,10 +1,10 @@
 import {
   DelegateArgs,
-  DelegateRecord,
-  DelegateRole,
-  Metadata,
+  MetadataDelegateRecord,
   PROGRAM_ID,
   RevokeArgs,
+  TokenDelegateRole,
+  TokenRecord,
   TokenStandard,
 } from '../src/generated';
 import test from 'tape';
@@ -15,6 +15,7 @@ import { spokSameBigint, spokSamePubkey } from './utils';
 import { BN } from 'bn.js';
 import { getAccount } from '@solana/spl-token';
 import { PublicKey } from '@solana/web3.js';
+import { findTokenRecordPda } from './utils/programmable';
 
 killStuckProcess();
 
@@ -34,18 +35,9 @@ test('Revoke: revoke transfer delegate', async (t) => {
   // creates a delegate
 
   const [delegate] = await API.getKeypair('Delegate');
-  // delegate PDA
-  const [delegateRecord] = PublicKey.findProgramAddressSync(
-    [
-      Buffer.from('metadata'),
-      PROGRAM_ID.toBuffer(),
-      manager.mint.toBuffer(),
-      Buffer.from('persistent_delegate'),
-      payer.publicKey.toBuffer(),
-    ],
-    PROGRAM_ID,
-  );
-  amman.addr.addLabel('Delegate Record', delegateRecord);
+  // token record PDA
+  const tokenRecord = findTokenRecordPda(manager.mint, payer.publicKey);
+  amman.addr.addLabel('Token Record', tokenRecord);
 
   const delegateArgs: DelegateArgs = {
     __kind: 'TransferV1',
@@ -54,16 +46,17 @@ test('Revoke: revoke transfer delegate', async (t) => {
   };
 
   const { tx: delegateTx } = await API.delegate(
-    delegateRecord,
     delegate,
     manager.mint,
     manager.metadata,
-    manager.masterEdition,
     payer.publicKey,
     payer,
     delegateArgs,
     handler,
+    null,
+    manager.masterEdition,
     manager.token,
+    tokenRecord,
   );
 
   await delegateTx.assertSuccess(t);
@@ -77,33 +70,36 @@ test('Revoke: revoke transfer delegate', async (t) => {
     delegate: spokSamePubkey(delegate),
   });
 
-  let metadata = await Metadata.fromAccountAddress(connection, manager.metadata);
+  let pda = await TokenRecord.fromAccountAddress(connection, tokenRecord);
 
-  spok(t, metadata, {
-    persistentDelegate: DelegateRole.Transfer,
+  spok(t, pda, {
+    delegate: spokSamePubkey(delegate),
+    delegateRole: TokenDelegateRole.Transfer,
   });
 
   // revoke
 
   const { tx: revoketeTx } = await API.revoke(
-    delegateRecord,
     delegate,
     manager.mint,
     manager.metadata,
-    manager.masterEdition,
     payer,
     payer,
     RevokeArgs.TransferV1,
     handler,
+    null,
+    manager.masterEdition,
     manager.token,
+    tokenRecord,
   );
 
   await revoketeTx.assertSuccess(t);
 
-  metadata = await Metadata.fromAccountAddress(connection, manager.metadata);
+  pda = await TokenRecord.fromAccountAddress(connection, tokenRecord);
 
-  spok(t, metadata, {
-    persistentDelegate: null,
+  spok(t, pda, {
+    delegate: null,
+    delegateRole: null,
   });
 });
 
@@ -143,15 +139,15 @@ test('Revoke: revoke collection delegate', async (t) => {
   };
 
   const { tx: delegateTx } = await API.delegate(
-    delegateRecord,
     delegate.publicKey,
     manager.mint,
     manager.metadata,
-    manager.masterEdition,
     payer.publicKey,
     payer,
     delegateArgs,
     handler,
+    delegateRecord,
+    manager.masterEdition,
     manager.token,
   );
 
@@ -159,33 +155,33 @@ test('Revoke: revoke collection delegate', async (t) => {
 
   // asserts
 
-  const account = await DelegateRecord.fromAccountAddress(connection, delegateRecord);
+  const account = await MetadataDelegateRecord.fromAccountAddress(connection, delegateRecord);
 
   spok(t, account, {
     delegate: spokSamePubkey(delegate.publicKey),
-    role: DelegateRole.Collection,
+    mint: spokSamePubkey(manager.mint),
   });
 
   // revoke
 
   const { tx: revoketeTx } = await API.revoke(
-    delegateRecord,
     delegate.publicKey,
     manager.mint,
     manager.metadata,
-    manager.masterEdition,
     payer,
     payer,
     RevokeArgs.CollectionV1,
     handler,
+    delegateRecord,
+    manager.masterEdition,
     manager.token,
   );
 
   await revoketeTx.assertSuccess(t);
 
   try {
-    await DelegateRecord.fromAccountAddress(connection, delegateRecord);
-    t.fail(`Delegate account ${delegateRecord} was found`);
+    await MetadataDelegateRecord.fromAccountAddress(connection, delegateRecord);
+    t.fail(`Metadata delegate account ${delegateRecord} was found`);
   } catch (err) {
     // we are expecting an error, since the account must be deleted
   }
@@ -227,15 +223,15 @@ test('Revoke: self-revoke collection delegate', async (t) => {
   };
 
   const { tx: delegateTx } = await API.delegate(
-    delegateRecord,
     delegate.publicKey,
     manager.mint,
     manager.metadata,
-    manager.masterEdition,
     payer.publicKey,
     payer,
     delegateArgs,
     handler,
+    delegateRecord,
+    manager.masterEdition,
     manager.token,
   );
 
@@ -243,32 +239,32 @@ test('Revoke: self-revoke collection delegate', async (t) => {
 
   // asserts
 
-  const account = await DelegateRecord.fromAccountAddress(connection, delegateRecord);
+  const account = await MetadataDelegateRecord.fromAccountAddress(connection, delegateRecord);
 
   spok(t, account, {
     delegate: spokSamePubkey(delegate.publicKey),
-    role: DelegateRole.Collection,
+    mint: spokSamePubkey(manager.mint),
   });
 
   // revoke
 
   const { tx: revoketeTx } = await API.revoke(
-    delegateRecord,
     delegate.publicKey,
     manager.mint,
     manager.metadata,
-    manager.masterEdition,
     delegate,
     payer,
     RevokeArgs.CollectionV1,
     handler,
+    delegateRecord,
+    manager.masterEdition,
     manager.token,
   );
 
   await revoketeTx.assertSuccess(t);
 
   try {
-    await DelegateRecord.fromAccountAddress(connection, delegateRecord);
+    await MetadataDelegateRecord.fromAccountAddress(connection, delegateRecord);
     t.fail(`Delegate account ${delegateRecord} was found`);
   } catch (err) {
     // we are expecting an error, since the account must be deleted
@@ -277,16 +273,16 @@ test('Revoke: self-revoke collection delegate', async (t) => {
   // try to revoke again
 
   const { tx: revoketeTx2 } = await API.revoke(
-    delegateRecord,
     delegate.publicKey,
     manager.mint,
     manager.metadata,
-    manager.masterEdition,
     delegate,
     payer,
     RevokeArgs.CollectionV1,
     handler,
+    delegateRecord,
     manager.token,
+    manager.masterEdition,
   );
 
   await revoketeTx2.assertError(t, /Uninitialized/);

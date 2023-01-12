@@ -8,7 +8,6 @@ import { dataBeet } from '../generated/types/Data';
 import { keyBeet } from '../generated/types/Key';
 import { tokenStandardBeet } from '../generated/types/TokenStandard';
 import { usesBeet } from '../generated/types/Uses';
-import { assetStateBeet, delegateRoleBeet } from '../generated';
 
 const NONE_BYTE_SIZE = beet.coptionNone('').byteSize;
 
@@ -89,20 +88,6 @@ export function deserialize(buf: Buffer, offset = 0): [Metadata, number] {
       : tryReadOption(beet.coption(collectionDetailsBeet), buf, cursor);
   cursor += collectionDetailsDelta;
 
-  // asset_state
-  const [assetState, assetStateDelta, assetStateCorrupted] =
-    tokenCorrupted || collectionCorrupted || usesCorrupted
-      ? [null, NONE_BYTE_SIZE, true]
-      : tryReadOption(beet.coption(assetStateBeet), buf, cursor);
-  cursor += assetStateDelta;
-
-  // persistent_delegate
-  const [persistentDelegate, persistentDelegateDelta, persistentDelegateCorrupted] =
-    tokenCorrupted || collectionCorrupted || usesCorrupted
-      ? [null, NONE_BYTE_SIZE, true]
-      : tryReadOption(beet.coption(delegateRoleBeet), buf, cursor);
-  cursor += persistentDelegateDelta;
-
   // programmable_config
   const [programmableConfig, programmableConfigDelta, programmableConfigCorrupted] =
     tokenCorrupted || collectionCorrupted || usesCorrupted
@@ -115,8 +100,6 @@ export function deserialize(buf: Buffer, offset = 0): [Metadata, number] {
     collectionCorrupted ||
     usesCorrupted ||
     collectionDetailsCorrupted ||
-    assetStateCorrupted ||
-    persistentDelegateCorrupted ||
     programmableConfigCorrupted;
 
   const args = {
@@ -131,8 +114,6 @@ export function deserialize(buf: Buffer, offset = 0): [Metadata, number] {
     collection: anyCorrupted ? null : collection,
     uses: anyCorrupted ? null : uses,
     collectionDetails: anyCorrupted ? null : collectionDetails,
-    assetState: anyCorrupted ? null : assetState,
-    persistentDelegate: anyCorrupted ? null : persistentDelegate,
     programmableConfig: anyCorrupted ? null : programmableConfig,
   };
 

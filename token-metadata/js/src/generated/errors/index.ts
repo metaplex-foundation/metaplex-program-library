@@ -3385,6 +3385,26 @@ createErrorFromCodeLookup.set(0x9d, () => new InvalidAuthorityTypeError());
 createErrorFromNameLookup.set('InvalidAuthorityType', () => new InvalidAuthorityTypeError());
 
 /**
+ * MissingTokenRecord: 'Missing token record account'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MissingTokenRecordError extends Error {
+  readonly code: number = 0x9e;
+  readonly name: string = 'MissingTokenRecord';
+  constructor() {
+    super('Missing token record account');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MissingTokenRecordError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x9e, () => new MissingTokenRecordError());
+createErrorFromNameLookup.set('MissingTokenRecord', () => new MissingTokenRecordError());
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

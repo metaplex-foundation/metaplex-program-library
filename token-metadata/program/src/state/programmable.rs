@@ -3,6 +3,7 @@ use mpl_utils::cmp_pubkeys;
 use num_derive::ToPrimitive;
 #[cfg(feature = "serde-feature")]
 use serde::{Deserialize, Serialize};
+use shank::ShankAccount;
 use solana_program::program_option::COption;
 use solana_program::program_pack::Pack;
 use solana_program::{
@@ -27,7 +28,7 @@ pub const TOKEN_RECORD_SIZE: usize = 1 // Key
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, ShankAccount)]
 /// SEEDS = [
 ///     "metadata",
 ///     program id,

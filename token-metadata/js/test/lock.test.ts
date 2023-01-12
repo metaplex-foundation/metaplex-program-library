@@ -1,12 +1,12 @@
 import { getAccount } from '@solana/spl-token';
 import { BN } from 'bn.js';
 import spok from 'spok';
-import { AssetState, DelegateArgs, Metadata, PROGRAM_ID, TokenStandard } from '../src/generated';
+import { DelegateArgs, TokenRecord, TokenStandard, TokenState } from '../src/generated';
 import test from 'tape';
 import { amman, InitTransactions, killStuckProcess } from './setup';
 import { spokSameBigint } from './utils';
 import { createAndMintDefaultAsset } from './utils/digital-asset-manager';
-import { PublicKey } from '@solana/web3.js';
+import { findTokenRecordPda } from './utils/programmable';
 
 killStuckProcess();
 
@@ -33,12 +33,6 @@ test('Lock: lock NonFungible asset', async (t) => {
     });
   }
 
-  let metadata = await Metadata.fromAccountAddress(connection, manager.metadata);
-
-  spok(t, metadata, {
-    assetState: AssetState.Unlocked /* asset should be unlocked */,
-  });
-
   // lock asset
 
   const { tx: lockTx } = await API.lock(
@@ -52,12 +46,6 @@ test('Lock: lock NonFungible asset', async (t) => {
     manager.masterEdition,
   );
   await lockTx.assertSuccess(t);
-
-  metadata = await Metadata.fromAccountAddress(connection, manager.metadata);
-
-  spok(t, metadata, {
-    assetState: AssetState.Locked /* asset should be locked */,
-  });
 
   if (manager.token) {
     const tokenAccount = await getAccount(connection, manager.token);
@@ -91,10 +79,14 @@ test('Lock: lock ProgrammableNonFungible asset', async (t) => {
     });
   }
 
-  let metadata = await Metadata.fromAccountAddress(connection, manager.metadata);
+  // token record PDA
+  const tokenRecord = findTokenRecordPda(manager.mint, payer.publicKey);
+  amman.addr.addLabel('Token Record', tokenRecord);
 
-  spok(t, metadata, {
-    assetState: AssetState.Unlocked /* asset should be unlocked */,
+  let pda = await TokenRecord.fromAccountAddress(connection, tokenRecord);
+
+  spok(t, pda, {
+    state: TokenState.Unlocked /* asset should be unlocked */,
   });
 
   // lock asset
@@ -105,15 +97,15 @@ test('Lock: lock ProgrammableNonFungible asset', async (t) => {
     manager.metadata,
     payer,
     handler,
-    null,
+    tokenRecord,
     manager.token,
   );
   await lockTx.assertSuccess(t);
 
-  metadata = await Metadata.fromAccountAddress(connection, manager.metadata);
+  pda = await TokenRecord.fromAccountAddress(connection, tokenRecord);
 
-  spok(t, metadata, {
-    assetState: AssetState.Locked /* asset should be locked */,
+  spok(t, pda, {
+    state: TokenState.Locked /* asset should be locked */,
   });
 });
 
@@ -140,27 +132,19 @@ test('Lock: delegate lock ProgrammableNonFungible asset', async (t) => {
     });
   }
 
-  let metadata = await Metadata.fromAccountAddress(connection, manager.metadata);
+  // token record PDA
+  const tokenRecord = findTokenRecordPda(manager.mint, payer.publicKey);
+  amman.addr.addLabel('Token Record', tokenRecord);
 
-  spok(t, metadata, {
-    assetState: AssetState.Unlocked /* asset should be unlocked */,
+  let pda = await TokenRecord.fromAccountAddress(connection, tokenRecord);
+
+  spok(t, pda, {
+    state: TokenState.Unlocked /* asset should be unlocked */,
   });
 
   // creates a delegate
 
   const [, delegate] = await API.getKeypair('Delegate');
-  // delegate PDA
-  const [delegateRecord] = PublicKey.findProgramAddressSync(
-    [
-      Buffer.from('metadata'),
-      PROGRAM_ID.toBuffer(),
-      manager.mint.toBuffer(),
-      Buffer.from('persistent_delegate'),
-      payer.publicKey.toBuffer(),
-    ],
-    PROGRAM_ID,
-  );
-  amman.addr.addLabel('Delegate Record', delegateRecord);
 
   const args: DelegateArgs = {
     __kind: 'UtilityV1',
@@ -169,16 +153,17 @@ test('Lock: delegate lock ProgrammableNonFungible asset', async (t) => {
   };
 
   const { tx: delegateTx } = await API.delegate(
-    delegateRecord,
     delegate.publicKey,
     manager.mint,
     manager.metadata,
-    manager.masterEdition,
     payer.publicKey,
     payer,
     args,
     handler,
+    null,
+    manager.masterEdition,
     manager.token,
+    tokenRecord,
   );
 
   await delegateTx.assertSuccess(t);
@@ -191,15 +176,16 @@ test('Lock: delegate lock ProgrammableNonFungible asset', async (t) => {
     manager.metadata,
     payer,
     handler,
-    delegateRecord,
-    null,
+    tokenRecord,
+    manager.token,
+    manager.masterEdition,
   );
   await lockTx.assertSuccess(t);
 
-  metadata = await Metadata.fromAccountAddress(connection, manager.metadata);
+  pda = await TokenRecord.fromAccountAddress(connection, tokenRecord);
 
-  spok(t, metadata, {
-    assetState: AssetState.Locked /* asset should be locked */,
+  spok(t, pda, {
+    state: TokenState.Locked /* asset should be locked */,
   });
 });
 
@@ -226,27 +212,9 @@ test('Lock: delegate lock NonFungible asset', async (t) => {
     });
   }
 
-  let metadata = await Metadata.fromAccountAddress(connection, manager.metadata);
-
-  spok(t, metadata, {
-    assetState: AssetState.Unlocked /* asset should be unlocked */,
-  });
-
   // creates a delegate
 
   const [, delegate] = await API.getKeypair('Delegate');
-  // delegate PDA
-  const [delegateRecord] = PublicKey.findProgramAddressSync(
-    [
-      Buffer.from('metadata'),
-      PROGRAM_ID.toBuffer(),
-      manager.mint.toBuffer(),
-      Buffer.from('persistent_delegate'),
-      payer.publicKey.toBuffer(),
-    ],
-    PROGRAM_ID,
-  );
-  amman.addr.addLabel('Delegate Record', delegateRecord);
 
   const args: DelegateArgs = {
     __kind: 'UtilityV1',
@@ -255,15 +223,15 @@ test('Lock: delegate lock NonFungible asset', async (t) => {
   };
 
   const { tx: delegateTx } = await API.delegate(
-    delegateRecord,
     delegate.publicKey,
     manager.mint,
     manager.metadata,
-    manager.masterEdition,
     payer.publicKey,
     payer,
     args,
     handler,
+    null,
+    manager.masterEdition,
     manager.token,
   );
 
@@ -277,17 +245,11 @@ test('Lock: delegate lock NonFungible asset', async (t) => {
     manager.metadata,
     payer,
     handler,
-    delegateRecord,
+    null,
     manager.token,
     manager.masterEdition,
   );
   await lockTx.assertSuccess(t);
-
-  metadata = await Metadata.fromAccountAddress(connection, manager.metadata);
-
-  spok(t, metadata, {
-    assetState: AssetState.Locked /* asset should be locked */,
-  });
 
   if (manager.token) {
     const tokenAccount = await getAccount(connection, manager.token);
@@ -323,12 +285,6 @@ test('Lock: lock Fungible asset', async (t) => {
     });
   }
 
-  let metadata = await Metadata.fromAccountAddress(connection, manager.metadata);
-
-  spok(t, metadata, {
-    assetState: AssetState.Unlocked /* asset should be unlocked */,
-  });
-
   // lock asset
 
   const { tx: lockTx } = await API.lock(
@@ -342,12 +298,6 @@ test('Lock: lock Fungible asset', async (t) => {
     manager.masterEdition,
   );
   await lockTx.assertSuccess(t);
-
-  metadata = await Metadata.fromAccountAddress(connection, manager.metadata);
-
-  spok(t, metadata, {
-    assetState: AssetState.Locked /* asset should be locked */,
-  });
 
   if (manager.token) {
     const tokenAccount = await getAccount(connection, manager.token);
@@ -381,10 +331,14 @@ test('Lock: lock ProgrammableNonFungible asset with wrong authority', async (t) 
     });
   }
 
-  let metadata = await Metadata.fromAccountAddress(connection, manager.metadata);
+  // token record PDA
+  const tokenRecord = findTokenRecordPda(manager.mint, payer.publicKey);
+  amman.addr.addLabel('Token Record', tokenRecord);
 
-  spok(t, metadata, {
-    assetState: AssetState.Unlocked /* asset should be unlocked */,
+  let pda = await TokenRecord.fromAccountAddress(connection, tokenRecord);
+
+  spok(t, pda, {
+    state: TokenState.Unlocked /* asset should be unlocked */,
   });
 
   // lock asset
@@ -426,27 +380,9 @@ test('Lock: wrong delegate lock NonFungible asset', async (t) => {
     });
   }
 
-  let metadata = await Metadata.fromAccountAddress(connection, manager.metadata);
-
-  spok(t, metadata, {
-    assetState: AssetState.Unlocked /* asset should be unlocked */,
-  });
-
   // creates a delegate
 
   const [, delegate] = await API.getKeypair('Delegate');
-  // delegate PDA
-  const [delegateRecord] = PublicKey.findProgramAddressSync(
-    [
-      Buffer.from('metadata'),
-      PROGRAM_ID.toBuffer(),
-      manager.mint.toBuffer(),
-      Buffer.from('persistent_delegate'),
-      payer.publicKey.toBuffer(),
-    ],
-    PROGRAM_ID,
-  );
-  amman.addr.addLabel('Delegate Record', delegateRecord);
 
   const args: DelegateArgs = {
     __kind: 'TransferV1',
@@ -455,31 +391,33 @@ test('Lock: wrong delegate lock NonFungible asset', async (t) => {
   };
 
   const { tx: delegateTx } = await API.delegate(
-    delegateRecord,
     delegate.publicKey,
     manager.mint,
     manager.metadata,
-    manager.masterEdition,
     payer.publicKey,
     payer,
     args,
     handler,
+    null,
+    manager.masterEdition,
     manager.token,
   );
 
   await delegateTx.assertSuccess(t);
 
-  // lock asset with delegate
+  // lock asset with wrong delegate
+
+  const [, wrongDelegate] = await API.getKeypair('Wrong Delegate');
 
   const { tx: lockTx } = await API.lock(
-    delegate,
+    wrongDelegate,
     manager.mint,
     manager.metadata,
     payer,
     handler,
-    delegateRecord,
+    null,
     manager.token,
     manager.masterEdition,
   );
-  await lockTx.assertError(t, /Invalid authority type/);
+  await lockTx.assertError(t, /not been delegated to this user/);
 });

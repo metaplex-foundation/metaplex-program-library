@@ -7,9 +7,12 @@ use solana_program::{
 use crate::{
     assertions::{assert_owned_by, programmable::assert_valid_authorization},
     error::MetadataError,
-    instruction::{Context, Update, UpdateArgs, MetadataDelegateRole},
+    instruction::{Context, MetadataDelegateRole, Update, UpdateArgs},
     pda::{EDITION, PREFIX},
-    state::{AuthorityRequest, AuthorityType, Metadata, TokenMetadataAccount, TokenStandard},
+    state::{
+        AuthorityRequest, AuthorityType, Metadata, ProgrammableConfig, TokenMetadataAccount,
+        TokenStandard,
+    },
     utils::assert_derivation,
 };
 
@@ -111,8 +114,11 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
 
     // for pNFTs, we need to validate the authorization rules
     if matches!(token_standard, TokenStandard::ProgrammableNonFungible) {
-        if let Some(programmable_config) = &metadata.programmable_config {
-            assert_valid_authorization(ctx.accounts.authorization_rules_info, programmable_config)?;
+        if let Some(config) = &metadata.programmable_config {
+            // if we have a programmable rule set
+            if let ProgrammableConfig::V1 { rule_set: Some(_) } = config {
+                assert_valid_authorization(ctx.accounts.authorization_rules_info, config)?;
+            }
         }
     }
 

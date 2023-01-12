@@ -590,7 +590,7 @@ pub enum MetadataError {
     MissingSplTokenProgram,
 
     /// 147
-    #[error("Missing SPL token program")]
+    #[error("Missing authorization rules program")]
     MissingAuthorizationRulesProgram,
 
     /// 148

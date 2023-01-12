@@ -48,9 +48,10 @@ test('Update: NonFungible asset', async (t) => {
     handler,
     mint,
     metadata,
-    masterEdition,
     authority,
     updateData,
+    null,
+    masterEdition,
   );
   await updateTx.assertSuccess(t);
 });
@@ -95,9 +96,10 @@ test('Update: Fungible Token', async (t) => {
     handler,
     mint,
     metadata,
-    masterEdition,
     authority,
     updateData,
+    null,
+    masterEdition,
   );
   await updateTx.assertSuccess(t);
 });
@@ -142,9 +144,10 @@ test('Update: Fungible Asset', async (t) => {
     handler,
     mint,
     metadata,
-    masterEdition,
     authority,
     updateData,
+    null,
+    masterEdition,
   );
   await updateTx.assertSuccess(t);
 });
@@ -167,9 +170,10 @@ test('Update: Cannot Flip IsMutable to True', async (t) => {
     handler,
     mint,
     metadata,
-    masterEdition,
     authority,
     updateData,
+    null,
+    masterEdition,
   );
   await updateTx.assertSuccess(t);
 
@@ -187,9 +191,10 @@ test('Update: Cannot Flip IsMutable to True', async (t) => {
     handler,
     mint,
     metadata,
-    masterEdition,
     authority,
     updateData,
+    null,
+    masterEdition,
   );
   await updateTx2.assertError(t, /Is Mutable can only be flipped to false/i);
 });
@@ -212,9 +217,10 @@ test('Update: Cannot Flip PrimarySaleHappened to False', async (t) => {
     handler,
     mint,
     metadata,
-    masterEdition,
     authority,
     updateData,
+    null,
+    masterEdition,
   );
   await updateTx.assertSuccess(t);
 
@@ -232,9 +238,10 @@ test('Update: Cannot Flip PrimarySaleHappened to False', async (t) => {
     handler,
     mint,
     metadata,
-    masterEdition,
     authority,
     updateData,
+    null,
+    masterEdition,
   );
   await updateTx2.assertError(t, /Primary sale can only be flipped to true/i);
 });
@@ -258,9 +265,10 @@ test('Update: Set New Update Authority', async (t) => {
     handler,
     mint,
     metadata,
-    masterEdition,
     authority,
     updateData,
+    null,
+    masterEdition,
   );
   await updateTx.assertSuccess(t);
 
@@ -289,9 +297,10 @@ test('Update: Cannot Update Immutable Data', async (t) => {
     handler,
     mint,
     metadata,
-    masterEdition,
     authority,
     updateData,
+    null,
+    masterEdition,
   );
   await updateTx.assertSuccess(t);
 
@@ -309,9 +318,10 @@ test('Update: Cannot Update Immutable Data', async (t) => {
     handler,
     mint,
     metadata,
-    masterEdition,
     authority,
     updateData,
+    null,
+    masterEdition,
   );
   await updateTx2.assertError(t, /Data is immutable/i);
 });
@@ -339,9 +349,10 @@ test('Update: Name Cannot Exceed 32 Bytes', async (t) => {
     handler,
     mint,
     metadata,
-    masterEdition,
     authority,
     updateData,
+    null,
+    masterEdition,
   );
   await updateTx.assertError(t, /Name too long/i);
 });
@@ -369,9 +380,10 @@ test('Update: Symbol Cannot Exceed 10 Bytes', async (t) => {
     handler,
     mint,
     metadata,
-    masterEdition,
     authority,
     updateData,
+    null,
+    masterEdition,
   );
   await updateTx.assertError(t, /Symbol too long/i);
 });
@@ -399,9 +411,10 @@ test('Update: URI Cannot Exceed 200 Bytes', async (t) => {
     handler,
     mint,
     metadata,
-    masterEdition,
     authority,
     updateData,
+    null,
+    masterEdition,
   );
   await updateTx.assertError(t, /Uri too long/i);
 });
@@ -429,9 +442,10 @@ test('Update: SellerFeeBasisPoints Cannot Exceed 10_000', async (t) => {
     handler,
     mint,
     metadata,
-    masterEdition,
     authority,
     updateData,
+    null,
+    masterEdition,
   );
   await updateTx.assertError(t, /Basis points cannot be more than 10000/i);
 });
@@ -469,9 +483,10 @@ test('Update: Creators Array Cannot Exceed Five Items', async (t) => {
     handler,
     mint,
     metadata,
-    masterEdition,
     authority,
     updateData,
+    null,
+    masterEdition,
   );
   await updateTx.assertError(t, /Creators list too long/i);
 });
@@ -509,9 +524,10 @@ test('Update: No Duplicate Creator Addresses', async (t) => {
     handler,
     mint,
     metadata,
-    masterEdition,
     authority,
     updateData,
+    null,
+    masterEdition,
   );
   await updateTx.assertError(t, /No duplicate creator addresses/i);
 });
@@ -547,9 +563,10 @@ test('Update: Creator Shares Must Equal 100', async (t) => {
     handler,
     mint,
     metadata,
-    masterEdition,
     authority,
     updateData,
+    null,
+    masterEdition,
   );
   await updateTx.assertError(t, /Share total must equal 100 for creator array/i);
 });
@@ -594,9 +611,10 @@ test('Update: Cannot Unverify Another Creator', async (t) => {
     handler,
     mint,
     metadata,
-    masterEdition,
     authority,
     updateData,
+    null,
+    masterEdition,
   );
   await updateTx.assertSuccess(t);
 
@@ -630,9 +648,10 @@ test('Update: Cannot Unverify Another Creator', async (t) => {
     handler,
     mint,
     metadata,
-    masterEdition,
     authority,
-    updateData2,
+    updateData,
+    null,
+    masterEdition,
   );
 
   await updateTx2.assertError(t, /cannot unilaterally unverify another creator/i);
@@ -672,9 +691,10 @@ test('Update: Cannot Verify Another Creator', async (t) => {
     handler,
     mint,
     metadata,
-    masterEdition,
     authority,
     updateData,
+    null,
+    masterEdition,
   );
   await updateTx.assertSuccess(t);
 
@@ -706,9 +726,10 @@ test('Update: Cannot Verify Another Creator', async (t) => {
     handler,
     mint,
     metadata,
-    masterEdition,
     authority,
     updateData2,
+    null,
+    masterEdition,
   );
 
   await updateTx2.assertError(t, /cannot unilaterally verify another creator, they must sign/i);
@@ -782,9 +803,10 @@ test('Update: Update Unverified Collection Key', async (t) => {
     handler,
     mint,
     metadata,
-    masterEdition,
     authority,
     updateData,
+    null,
+    masterEdition,
   );
   await updateTx.assertSuccess(t);
 
@@ -863,9 +885,10 @@ test('Update: Fail to Verify an Unverified Collection', async (t) => {
     handler,
     mint,
     metadata,
-    masterEdition,
     authority,
     updateData,
+    null,
+    masterEdition,
   );
   await updateTx.assertError(t, /Collection cannot be verified in this instruction/);
 });
@@ -957,9 +980,10 @@ test('Update: Fail to Update a Verified Collection', async (t) => {
     handler,
     mint,
     metadata,
-    masterEdition,
     authority,
     updateData,
+    null,
+    masterEdition,
   );
   await updateTx.assertError(t, /Collection cannot be verified in this instruction/);
 });
@@ -967,9 +991,6 @@ test('Update: Fail to Update a Verified Collection', async (t) => {
 test('Update: Update pNFT Config', async (t) => {
   const API = new InitTransactions();
   const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
-
-  const authority = payer;
-  const dummyRuleSet = Keypair.generate().publicKey;
 
   const { mint, metadata, masterEdition } = await createAndMintDefaultAsset(
     t,
@@ -982,6 +1003,9 @@ test('Update: Update pNFT Config', async (t) => {
     1,
   );
 
+  const authority = payer;
+  const dummyRuleSet = Keypair.generate().publicKey;
+
   const updateData = new UpdateTestData();
   updateData.ruleSet = {
     __kind: 'Set',
@@ -993,9 +1017,10 @@ test('Update: Update pNFT Config', async (t) => {
     handler,
     mint,
     metadata,
-    masterEdition,
     authority,
     updateData,
+    null,
+    masterEdition,
   );
   await updateTx.assertSuccess(t);
 
@@ -1035,9 +1060,10 @@ test('Update: Fail to update rule set on NFT', async (t) => {
     handler,
     mint,
     metadata,
-    masterEdition,
     authority,
     updateData,
+    null,
+    masterEdition,
   );
   await updateTx.assertError(t, /Invalid token standard/);
 });
@@ -1102,9 +1128,10 @@ test('Update: Update existing pNFT rule set config to None', async (t) => {
     handler,
     mint,
     metadata,
-    masterEdition,
     authority,
     updateData,
+    null,
+    masterEdition,
     null,
     null,
     ruleSetPda,
@@ -1140,9 +1167,10 @@ test('Update: Invalid Update Authority Fails', async (t) => {
     handler,
     mint,
     metadata,
-    masterEdition,
     invalidUpdateAuthority,
     updateData,
+    null,
+    masterEdition,
   );
   await updateTx.assertError(t, /Update Authority given does not match/);
 });
@@ -1177,15 +1205,15 @@ test('Update: Delegate Authority Type Not Supported', async (t) => {
   };
 
   const { tx: delegateTx } = await API.delegate(
-    delegateRecord,
     delegate.publicKey,
     daManager.mint,
     daManager.metadata,
-    daManager.masterEdition,
     payer.publicKey,
     payer,
     args,
     handler,
+    delegateRecord,
+    daManager.masterEdition,
   );
   await delegateTx.assertSuccess(t);
 
@@ -1211,10 +1239,10 @@ test('Update: Delegate Authority Type Not Supported', async (t) => {
     handler,
     mint,
     metadata,
-    masterEdition,
     authority,
     updateData,
     delegateRecord,
+    masterEdition,
   );
 
   updateTx.then((x) =>
@@ -1285,10 +1313,10 @@ test('Update: Holder Authority Type Not Supported', async (t) => {
     handler,
     mint,
     metadata,
-    masterEdition,
     holder,
     updateData,
     null,
+    masterEdition,
     token,
   );
 
