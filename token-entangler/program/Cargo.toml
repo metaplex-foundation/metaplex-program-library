@@ -22,7 +22,7 @@ anchor-lang = "~0.24.2"
 anchor-spl = "~0.24.2"
 spl-token = { version = "~3.2",  features = ["no-entrypoint"] }
 spl-associated-token-account = {version = "~1.0.3", features = ["no-entrypoint"]}
-mpl-token-metadata = { version="~1.2.10", features = [ "no-entrypoint" ] }
+mpl-token-metadata = { version="~1.4", features = [ "no-entrypoint" ] }
 thiserror = "~1.0"
 arrayref = "~0.3.6"
 

@@ -3,7 +3,7 @@ use anchor_lang::{
     prelude::{Pubkey, Rent},
     InstructionData, ToAccountMetas,
 };
-use mpl_token_metadata::{instruction::create_metadata_accounts, pda::find_metadata_account};
+use mpl_token_metadata::{instruction::create_metadata_accounts_v3, pda::find_metadata_account};
 use solana_program_test::{tokio, ProgramTest};
 use solana_sdk::{
     instruction::Instruction, program_pack::Pack, signature::Keypair, signer::Signer,
@@ -275,7 +275,7 @@ mod test_utils {
             ),
             initialize_mint(&spl_token::id(), &mint, &payer, Some(&payer), 0).unwrap(),
             create_associated_token_account(&payer, &payer, &mint),
-            create_metadata_accounts(
+            create_metadata_accounts_v3(
                 mpl_token_metadata::id(),
                 find_metadata_account(&mint).0,
                 mint,
@@ -289,6 +289,9 @@ mod test_utils {
                 500,
                 true,
                 true,
+                None,
+                None,
+                None,
             ),
             mint_to(
                 &spl_token::id(),

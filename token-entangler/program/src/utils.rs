@@ -11,7 +11,7 @@ use anchor_lang::{
 };
 use anchor_spl::token::Token;
 use arrayref::array_ref;
-use mpl_token_metadata::state::Metadata;
+use mpl_token_metadata::state::{Metadata, TokenMetadataAccount};
 use spl_associated_token_account::get_associated_token_address;
 use spl_token::{instruction::initialize_account2, state::Account};
 use std::{convert::TryInto, slice::Iter};
