@@ -1845,6 +1845,7 @@ version = "1.7.0"
 dependencies = [
  "arrayref",
  "borsh",
+ "mpl-token-vault",
  "mpl-utils",
  "num-derive",
  "num-traits",
@@ -1855,6 +1856,20 @@ dependencies = [
  "solana-program-test",
  "solana-sdk",
  "spl-associated-token-account",
+ "spl-token",
+ "thiserror",
+]
+
+[[package]]
+name = "mpl-token-vault"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7ade4ef15bc06a6033076c4ff28cba9b42521df5ec61211d6f419415ace2746a"
+dependencies = [
+ "borsh",
+ "num-derive",
+ "num-traits",
+ "solana-program",
  "spl-token",
  "thiserror",
 ]

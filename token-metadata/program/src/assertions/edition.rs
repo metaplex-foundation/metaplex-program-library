@@ -11,7 +11,7 @@ use crate::{
 };
 
 pub fn assert_edition_is_not_mint_authority(mint_account_info: &AccountInfo) -> ProgramResult {
-    let mint = Mint::unpack_from_slice(*mint_account_info.try_borrow_mut_data()?)?;
+    let mint = Mint::unpack_from_slice(&mint_account_info.try_borrow_mut_data()?)?;
 
     let (edition_pda, _) = find_master_edition_account(mint_account_info.key);
 
