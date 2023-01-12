@@ -1,5 +1,5 @@
 import { Connection, PublicKey } from '@solana/web3.js';
-import { AssetData, Metadata, TokenStandard, AuthorizationData } from 'src/generated';
+import { AssetData, Metadata, TokenStandard, AuthorizationData } from '../../src/generated';
 import { InitTransactions } from '../setup';
 import test from 'tape';
 import { PayerTransactionHandler } from '@metaplex-foundation/amman-client';
