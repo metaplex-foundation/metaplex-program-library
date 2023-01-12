@@ -153,7 +153,7 @@ mod mint {
             .await
             .unwrap_err();
 
-        assert_custom_error!(error, MetadataError::EditionsMustHaveExactlyOneToken);
+        assert_custom_error_ix!(1, error, MetadataError::EditionsMustHaveExactlyOneToken);
     }
 
     #[tokio::test]
@@ -166,6 +166,6 @@ mod mint {
             .await
             .unwrap_err();
 
-        assert_custom_error!(error, MetadataError::EditionsMustHaveExactlyOneToken);
+        assert_custom_error_ix!(1, error, MetadataError::EditionsMustHaveExactlyOneToken);
     }
 }
