@@ -109,7 +109,7 @@ mod update {
 
         // Create rule-set for the transfer
         let (authorization_rules, _auth_data) =
-            create_test_ruleset(context, authority, "royalty".to_string()).await;
+            create_default_metaplex_rule_set(context, authority).await;
 
         let update_authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
 

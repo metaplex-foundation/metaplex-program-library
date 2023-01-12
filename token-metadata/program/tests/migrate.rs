@@ -26,7 +26,7 @@ mod migrate {
 
         // Create a rule set for the pNFTs.
         let (rule_set, _auth_data) =
-            create_test_ruleset(&mut context, authority, "royalty".to_string()).await;
+            create_default_metaplex_rule_set(&mut context, authority).await;
 
         // Create an unsized collection for the pNFT to belong to, since
         // migration requires the item being a verified member of a collection.
@@ -53,7 +53,7 @@ mod migrate {
         let md = nft.get_data(&mut context).await;
 
         // set up our digital asset struct
-        let mut asset = nft.into_digital_asset();
+        let mut asset = nft.into_digital_asset(&mut context).await;
         asset.master_edition = Some(me.pubkey);
 
         let args = MigrateArgs::V1 {

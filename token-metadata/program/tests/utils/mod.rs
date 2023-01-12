@@ -5,6 +5,7 @@ mod external_price;
 mod master_edition_v2;
 mod metadata;
 mod programmable;
+mod rooster_manager;
 mod vault;
 
 pub use assert::*;
@@ -15,7 +16,9 @@ pub use master_edition_v2::MasterEditionV2;
 pub use metadata::{assert_collection_size, Metadata};
 pub use mpl_token_metadata::instruction;
 use mpl_token_metadata::state::CollectionDetails;
-pub use programmable::create_test_ruleset;
+pub use programmable::create_default_metaplex_rule_set;
+pub use rooster_manager::*;
+
 use solana_program_test::*;
 use solana_sdk::{
     account::Account, program_pack::Pack, pubkey::Pubkey, signature::Signer,
@@ -223,4 +226,14 @@ pub async fn create_mint(
     );
 
     context.banks_client.process_transaction(tx).await
+}
+
+pub trait DirtyClone {
+    fn dirty_clone(&self) -> Self;
+}
+
+impl DirtyClone for Keypair {
+    fn dirty_clone(&self) -> Self {
+        Keypair::from_bytes(&self.to_bytes()).unwrap()
+    }
 }

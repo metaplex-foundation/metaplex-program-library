@@ -1,3 +1,4 @@
+use crate::processor::{TransferScenario, UpdateScenario};
 use borsh::{BorshDeserialize, BorshSerialize};
 use mpl_utils::cmp_pubkeys;
 use num_derive::ToPrimitive;
@@ -16,6 +17,7 @@ use std::fmt;
 use super::{Key, MetadataDelegateRecord, TokenMetadataAccount};
 use crate::instruction::MetadataDelegateRole;
 use crate::pda::{find_metadata_delegate_record_account, find_token_record_account};
+use crate::state::BorshError;
 use crate::utils::{assert_owned_by, try_from_slice_checked};
 
 pub const TOKEN_RECORD_SEED: &str = "token_record";
@@ -75,6 +77,13 @@ impl TokenRecord {
 
     pub fn is_locked(&self) -> bool {
         matches!(self.state, TokenState::Locked)
+    }
+
+    pub fn save(&self, data: &mut [u8]) -> Result<(), BorshError> {
+        let mut bytes = Vec::with_capacity(Self::size());
+        BorshSerialize::serialize(&self, &mut bytes)?;
+        data[..bytes.len()].copy_from_slice(&bytes);
+        Ok(())
     }
 }
 
@@ -136,7 +145,7 @@ pub struct AuthorityRequest<'a, 'b> {
     /// `TokenRecord` account.
     pub token_record_info: Option<&'a AccountInfo<'a>>,
     /// Expected `TokenDelegateRole` for the request.
-    pub token_delegate_role: Option<TokenDelegateRole>,
+    pub token_delegate_roles: Vec<TokenDelegateRole>,
 }
 
 impl AuthorityType {
@@ -167,8 +176,13 @@ impl AuthorityType {
                 let (pda_key, _) = find_token_record_account(request.mint, &token.owner);
                 let token_record = TokenRecord::from_account_info(token_record_info)?;
 
+                let role_matches = match token_record.delegate_role {
+                    Some(role) => request.token_delegate_roles.contains(&role),
+                    None => request.token_delegate_roles.is_empty(),
+                };
+
                 if cmp_pubkeys(&pda_key, token_record_info.key)
-                    && token_record.delegate_role == request.token_delegate_role
+                    && role_matches
                     && (COption::from(token_record.delegate) == token.delegate)
                     && token.delegated_amount == token.amount
                 {
@@ -207,30 +221,22 @@ impl AuthorityType {
         if cmp_pubkeys(request.update_authority, request.authority) {
             return Ok(AuthorityType::Metadata);
         }
-
         Ok(AuthorityType::None)
     }
 }
 
-#[derive(Debug, Clone, ToPrimitive)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Operation {
-    Delegate,
-    Transfer,
-    Sale,
-    MigrateClass,
-    Update,
+    Transfer { scenario: TransferScenario },
+    Update { scenario: UpdateScenario },
 }
 
 impl ToString for Operation {
     fn to_string(&self) -> String {
         match self {
-            Operation::Delegate => "Delegate",
-            Operation::Transfer => "Transfer",
-            Operation::Sale => "Sale",
-            Operation::MigrateClass => "MigrateClass",
-            Operation::Update => "Update",
+            Self::Transfer { scenario } => format!("Transfer:{}", scenario),
+            Self::Update { scenario } => format!("Update:{}", scenario),
         }
-        .to_string()
     }
 }
 
@@ -238,10 +244,14 @@ impl ToString for Operation {
 pub enum PayloadKey {
     Amount,
     Authority,
-    Destination,
-    Holder,
+    AuthoritySeeds,
     Delegate,
-    Target,
+    DelegateSeeds,
+    Destination,
+    DestinationSeeds,
+    Holder,
+    Source,
+    SourceSeeds,
 }
 
 impl ToString for PayloadKey {
@@ -249,10 +259,14 @@ impl ToString for PayloadKey {
         match self {
             PayloadKey::Amount => "Amount",
             PayloadKey::Authority => "Authority",
-            PayloadKey::Holder => "Holder",
+            PayloadKey::AuthoritySeeds => "AuthoritySeeds",
             PayloadKey::Delegate => "Delegate",
+            PayloadKey::DelegateSeeds => "DelegateSeeds",
             PayloadKey::Destination => "Destination",
-            PayloadKey::Target => "Target",
+            PayloadKey::DestinationSeeds => "DestinationSeeds",
+            PayloadKey::Holder => "Holder",
+            PayloadKey::Source => "Source",
+            PayloadKey::SourceSeeds => "SourceSeeds",
         }
         .to_string()
     }

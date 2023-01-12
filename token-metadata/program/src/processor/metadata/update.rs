@@ -1,3 +1,5 @@
+use std::fmt::{Display, Formatter};
+
 use mpl_utils::assert_signer;
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, msg, program_error::ProgramError,
@@ -15,6 +17,23 @@ use crate::{
     },
     utils::assert_derivation,
 };
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum UpdateScenario {
+    MetadataAuth,
+    Delegate,
+    Proxy,
+}
+
+impl Display for UpdateScenario {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            UpdateScenario::MetadataAuth => write!(f, "MetadataAuth"),
+            UpdateScenario::Delegate => write!(f, "Delegate"),
+            UpdateScenario::Proxy => write!(f, "Proxy"),
+        }
+    }
+}
 
 pub fn update<'a>(
     program_id: &Pubkey,
@@ -105,7 +124,7 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
         metadata_delegate_record_info: ctx.accounts.delegate_record_info,
         metadata_delegate_role: Some(MetadataDelegateRole::Update),
         token_record_info: None,
-        token_delegate_role: None,
+        token_delegate_roles: vec![],
     })?;
 
     let token_standard = metadata

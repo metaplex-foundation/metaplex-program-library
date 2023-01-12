@@ -10,11 +10,15 @@ use mpl_token_metadata::{
     },
     pda::{find_metadata_delegate_record_account, find_token_record_account},
     processor::AuthorizationData,
-    state::{AssetData, Creator, Metadata, TokenMetadataAccount, TokenStandard, EDITION, PREFIX},
+    state::{
+        AssetData, Creator, Metadata, TokenDelegateRole, TokenMetadataAccount, TokenRecord,
+        TokenStandard, EDITION, PREFIX,
+    },
 };
 use solana_program::pubkey::Pubkey;
 use solana_program_test::{BanksClientError, ProgramTestContext};
 use solana_sdk::{
+    compute_budget::ComputeBudgetInstruction,
     signature::{Keypair, Signer},
     transaction::Transaction,
 };
@@ -31,6 +35,7 @@ pub struct DigitalAsset {
     pub mint: Keypair,
     pub token: Option<Pubkey>,
     pub master_edition: Option<Pubkey>,
+    pub token_record: Option<Pubkey>,
 }
 
 impl Default for DigitalAsset {
@@ -53,6 +58,7 @@ impl DigitalAsset {
             mint,
             token: None,
             master_edition: None,
+            token_record: None,
         }
     }
 
@@ -120,8 +126,10 @@ impl DigitalAsset {
             .unwrap()
             .instruction();
 
+        let compute_ix = ComputeBudgetInstruction::set_compute_unit_limit(800_000);
+
         let tx = Transaction::new_signed_with_payer(
-            &[create_ix],
+            &[compute_ix, create_ix],
             Some(&context.payer.pubkey()),
             &[&context.payer, &self.mint],
             context.last_blockhash,
@@ -151,6 +159,12 @@ impl DigitalAsset {
 
         let (token_record, _) = find_token_record_account(&self.mint.pubkey(), &payer_pubkey);
 
+        let token_record_opt = if self.is_pnft(context).await {
+            Some(token_record)
+        } else {
+            None
+        };
+
         let mut builder = MintBuilder::new();
         builder
             .token(token)
@@ -177,8 +191,10 @@ impl DigitalAsset {
             .unwrap()
             .instruction();
 
+        let compute_ix = ComputeBudgetInstruction::set_compute_unit_limit(800_000);
+
         let tx = Transaction::new_signed_with_payer(
-            &[mint_ix],
+            &[compute_ix, mint_ix],
             Some(&context.payer.pubkey()),
             &[&context.payer],
             context.last_blockhash,
@@ -187,6 +203,7 @@ impl DigitalAsset {
         match context.banks_client.process_transaction(tx).await {
             Ok(_) => {
                 self.token = Some(token);
+                self.token_record = token_record_opt;
                 Ok(())
             }
             Err(error) => Err(error),
@@ -366,11 +383,13 @@ impl DigitalAsset {
         context.banks_client.process_transaction(tx).await
     }
 
-    pub async fn transfer(&self, params: TransferParams<'_>) -> Result<(), BanksClientError> {
-        let TransferParams {
+    pub async fn transfer_from(
+        &self,
+        params: TransferFromParams<'_>,
+    ) -> Result<(), BanksClientError> {
+        let TransferFromParams {
             context,
             authority,
-            delegate_record,
             source_owner,
             destination_owner,
             destination_token,
@@ -379,7 +398,8 @@ impl DigitalAsset {
             args,
         } = params;
 
-        let mut instructions = vec![];
+        let compute_ix = ComputeBudgetInstruction::set_compute_unit_limit(800_000);
+        let mut instructions = vec![compute_ix];
 
         let destination_token = if let Some(destination_token) = destination_token {
             destination_token
@@ -405,9 +425,14 @@ impl DigitalAsset {
             .payer(payer.pubkey())
             .mint(self.mint.pubkey());
 
-        if let Some(delegate_record) = delegate_record {
-            builder.delegate_record(delegate_record);
+        if let Some(record) = self.token_record {
+            builder.token_record(record);
         }
+
+        // This can be optional for non pNFTs but always include it for now.
+        let (new_token_record, _bump) =
+            find_token_record_account(&self.mint.pubkey(), &destination_owner);
+        builder.new_token_record(new_token_record);
 
         if let Some(master_edition) = self.master_edition {
             builder.edition(master_edition);
@@ -517,6 +542,78 @@ impl DigitalAsset {
         context.banks_client.process_transaction(tx).await
     }
 
+    pub async fn transfer_to(&self, params: TransferToParams<'_>) -> Result<(), BanksClientError> {
+        let TransferToParams {
+            context,
+            authority,
+            source_owner,
+            source_token,
+            destination_owner,
+            destination_token,
+            authorization_rules,
+            payer,
+            args,
+        } = params;
+
+        // Increase compute budget to handle larger test transactions.
+        let compute_ix = ComputeBudgetInstruction::set_compute_unit_limit(400_000);
+        let mut instructions = vec![compute_ix];
+
+        let destination_token = if let Some(destination_token) = destination_token {
+            destination_token
+        } else {
+            instructions.push(create_associated_token_account(
+                &authority.pubkey(),
+                &destination_owner,
+                &self.mint.pubkey(),
+                &spl_token::id(),
+            ));
+
+            get_associated_token_address(&destination_owner, &self.mint.pubkey())
+        };
+
+        let mut builder = TransferBuilder::new();
+        builder
+            .authority(authority.pubkey())
+            .token_owner(*source_owner)
+            .token(*source_token)
+            .destination_owner(destination_owner)
+            .destination(destination_token)
+            .metadata(self.metadata)
+            .payer(payer.pubkey())
+            .mint(self.mint.pubkey());
+
+        // This can be optional for non pNFTs but always include it for now.
+        let (token_record, _bump) = find_token_record_account(&self.mint.pubkey(), &source_owner);
+        builder.token_record(token_record);
+
+        // This can be optional for non pNFTs but always include it for now.
+        let (new_token_record, _bump) =
+            find_token_record_account(&self.mint.pubkey(), &destination_owner);
+        builder.new_token_record(new_token_record);
+
+        if let Some(master_edition) = self.master_edition {
+            builder.edition(master_edition);
+        }
+
+        if let Some(authorization_rules) = authorization_rules {
+            builder.authorization_rules(authorization_rules);
+        }
+
+        let transfer_ix = builder.build(args).unwrap().instruction();
+
+        instructions.push(transfer_ix);
+
+        let tx = Transaction::new_signed_with_payer(
+            &instructions,
+            Some(&authority.pubkey()),
+            &[authority, payer],
+            context.last_blockhash,
+        );
+
+        context.banks_client.process_transaction(tx).await
+    }
+
     pub async fn get_metadata(&self, context: &mut ProgramTestContext) -> Metadata {
         let metadata_account = context
             .banks_client
@@ -543,15 +640,58 @@ impl DigitalAsset {
 
         assert_eq!(on_chain_asset_data, *asset_data);
     }
+
+    pub async fn get_token_delegate_role(
+        &self,
+        context: &mut ProgramTestContext,
+        token_owner: &Pubkey,
+    ) -> Option<TokenDelegateRole> {
+        let (delegate_record_pubkey, _) =
+            find_token_record_account(&self.mint.pubkey(), &token_owner);
+        let delegate_record_account = context
+            .banks_client
+            .get_account(delegate_record_pubkey)
+            .await
+            .unwrap();
+
+        if let Some(account) = delegate_record_account {
+            let delegate_record = TokenRecord::safe_deserialize(&account.data).unwrap();
+            delegate_record.delegate_role
+        } else {
+            None
+        }
+    }
+
+    pub async fn is_pnft(&self, context: &mut ProgramTestContext) -> bool {
+        let md = self.get_metadata(context).await;
+        if let Some(standard) = md.token_standard {
+            if standard == TokenStandard::ProgrammableNonFungible {
+                return true;
+            }
+        }
+
+        false
+    }
 }
 
-pub struct TransferParams<'a> {
+pub struct TransferFromParams<'a> {
     pub context: &'a mut ProgramTestContext,
     pub authority: &'a Keypair,
     pub source_owner: &'a Pubkey,
     pub destination_owner: Pubkey,
     pub destination_token: Option<Pubkey>,
-    pub delegate_record: Option<Pubkey>,
+    pub payer: &'a Keypair,
+    pub authorization_rules: Option<Pubkey>,
+    pub args: TransferArgs,
+}
+
+pub struct TransferToParams<'a> {
+    pub context: &'a mut ProgramTestContext,
+    pub authority: &'a Keypair,
+    pub source_owner: &'a Pubkey,
+    pub source_token: &'a Pubkey,
+    pub destination_owner: Pubkey,
+    pub destination_token: Option<Pubkey>,
     pub payer: &'a Keypair,
     pub authorization_rules: Option<Pubkey>,
     pub args: TransferArgs,

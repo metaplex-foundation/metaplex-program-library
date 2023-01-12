@@ -1,6 +1,9 @@
 use mpl_token_metadata::{
     id, instruction,
-    state::{Collection, CollectionDetails, Creator, Data, DataV2, Uses, PREFIX},
+    state::{
+        Collection, CollectionDetails, Creator, Data, DataV2, Metadata as TmMetadata,
+        TokenMetadataAccount, TokenStandard, Uses, PREFIX,
+    },
 };
 use solana_program::borsh::try_from_slice_unchecked;
 use solana_sdk::{
@@ -32,12 +35,19 @@ impl Metadata {
         }
     }
 
-    pub fn into_digital_asset(self) -> DigitalAsset {
+    pub async fn into_digital_asset(self, context: &mut ProgramTestContext) -> DigitalAsset {
+        let token_record = if self.is_pnft(context).await {
+            Some(self.token.pubkey())
+        } else {
+            None
+        };
+
         DigitalAsset {
             metadata: self.pubkey,
             mint: self.mint,
             token: Some(self.token.pubkey()),
             master_edition: None,
+            token_record: token_record,
         }
     }
 
@@ -47,6 +57,28 @@ impl Metadata {
     ) -> mpl_token_metadata::state::Metadata {
         let account = get_account(context, &self.pubkey).await;
         try_from_slice_unchecked(&account.data).unwrap()
+    }
+
+    pub async fn is_pnft(&self, context: &mut ProgramTestContext) -> bool {
+        let md = self.get_metadata(context).await;
+        if let Some(standard) = md.token_standard {
+            if standard == TokenStandard::ProgrammableNonFungible {
+                return true;
+            }
+        }
+
+        false
+    }
+
+    pub async fn get_metadata(&self, context: &mut ProgramTestContext) -> TmMetadata {
+        let metadata_account = context
+            .banks_client
+            .get_account(self.pubkey)
+            .await
+            .unwrap()
+            .unwrap();
+
+        TmMetadata::safe_deserialize(&metadata_account.data).unwrap()
     }
 
     #[allow(deprecated)]
