@@ -10,7 +10,10 @@ use mpl_token_metadata::{
     },
     pda::{find_metadata_delegate_record_account, find_token_record_account},
     processor::AuthorizationData,
-    state::{AssetData, Creator, Metadata, TokenMetadataAccount, TokenStandard, EDITION, PREFIX},
+    state::{
+        AssetData, Creator, Metadata, TokenDelegateRole, TokenMetadataAccount, TokenRecord,
+        TokenStandard, EDITION, PREFIX,
+    },
 };
 use solana_program::pubkey::Pubkey;
 use solana_program_test::{BanksClientError, ProgramTestContext};
@@ -374,7 +377,7 @@ impl DigitalAsset {
         let TransferFromParams {
             context,
             authority,
-            delegate_record,
+            token_record,
             source_owner,
             destination_owner,
             destination_token,
@@ -409,8 +412,8 @@ impl DigitalAsset {
             .payer(payer.pubkey())
             .mint(self.mint.pubkey());
 
-        if let Some(delegate_record) = delegate_record {
-            builder.delegate_record(delegate_record);
+        if let Some(record) = token_record {
+            builder.token_record(record);
         }
 
         if let Some(master_edition) = self.master_edition {
@@ -525,7 +528,7 @@ impl DigitalAsset {
         let TransferToParams {
             context,
             authority,
-            delegate_record,
+            token_record,
             source_owner,
             source_token,
             destination_owner,
@@ -563,8 +566,8 @@ impl DigitalAsset {
             .payer(payer.pubkey())
             .mint(self.mint.pubkey());
 
-        if let Some(delegate_record) = delegate_record {
-            builder.delegate_record(delegate_record);
+        if let Some(token_record) = token_record {
+            builder.token_record(token_record);
         }
 
         if let Some(master_edition) = self.master_edition {
@@ -615,6 +618,27 @@ impl DigitalAsset {
 
         assert_eq!(on_chain_asset_data, *asset_data);
     }
+
+    pub async fn get_token_delegate_role(
+        &self,
+        context: &mut ProgramTestContext,
+        token_owner: &Pubkey,
+    ) -> Option<TokenDelegateRole> {
+        let (delegate_record_pubkey, _) =
+            find_token_record_account(&self.mint.pubkey(), &token_owner);
+        let delegate_record_account = context
+            .banks_client
+            .get_account(delegate_record_pubkey)
+            .await
+            .unwrap();
+
+        if let Some(account) = delegate_record_account {
+            let delegate_record = TokenRecord::safe_deserialize(&account.data).unwrap();
+            delegate_record.delegate_role
+        } else {
+            None
+        }
+    }
 }
 
 pub struct TransferFromParams<'a> {
@@ -623,7 +647,7 @@ pub struct TransferFromParams<'a> {
     pub source_owner: &'a Pubkey,
     pub destination_owner: Pubkey,
     pub destination_token: Option<Pubkey>,
-    pub delegate_record: Option<Pubkey>,
+    pub token_record: Option<Pubkey>,
     pub payer: &'a Keypair,
     pub authorization_rules: Option<Pubkey>,
     pub args: TransferArgs,
@@ -636,7 +660,7 @@ pub struct TransferToParams<'a> {
     pub source_token: &'a Pubkey,
     pub destination_owner: Pubkey,
     pub destination_token: Option<Pubkey>,
-    pub delegate_record: Option<Pubkey>,
+    pub token_record: Option<Pubkey>,
     pub payer: &'a Keypair,
     pub authorization_rules: Option<Pubkey>,
     pub args: TransferArgs,

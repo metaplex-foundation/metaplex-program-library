@@ -6,8 +6,8 @@ pub(crate) mod deprecated;
 mod edition;
 pub(crate) mod escrow;
 mod freeze;
-mod state;
 mod metadata;
+mod state;
 mod uses;
 
 use borsh::{BorshDeserialize, BorshSerialize};
@@ -22,7 +22,6 @@ pub use deprecated::{
 pub use edition::*;
 pub use escrow::*;
 pub use freeze::*;
-pub use state::*;
 pub use metadata::*;
 use mpl_token_auth_rules::payload::Payload;
 use mpl_utils::cmp_pubkeys;
@@ -32,6 +31,7 @@ use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, msg, program_error::ProgramError,
     pubkey::Pubkey,
 };
+pub use state::*;
 pub use uses::*;
 
 use crate::{

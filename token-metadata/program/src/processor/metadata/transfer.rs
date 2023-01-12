@@ -207,16 +207,16 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
 
     match token_standard {
         TokenStandard::ProgrammableNonFungible => {
-            // All pNFTs should have a delegate record passed in and existing.
-            // The delegate role may not be populated, however.
-            if ctx.accounts.delegate_record_info.is_none() {
+            // All pNFTs should have a token record passed in and existing.
+            // The token delegate role may not be populated, however.
+            if ctx.accounts.token_record_info.is_none() {
                 return Err(MetadataError::MissingTokenRecord.into());
             }
 
-            let delegate_record =
-                TokenRecord::from_account_info(ctx.accounts.delegate_record_info.unwrap())?;
+            let token_record =
+                TokenRecord::from_account_info(ctx.accounts.token_record_info.unwrap())?;
 
-            let is_sale_delegate = delegate_record
+            let is_sale_delegate = token_record
                 .delegate_role
                 .map(|role| role == TokenDelegateRole::Sale)
                 .unwrap_or(false);
@@ -229,11 +229,11 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
                     TransferScenario::Holder
                 }
                 AuthorityType::Delegate => {
-                    if delegate_record.delegate_role.is_none() {
+                    if token_record.delegate_role.is_none() {
                         return Err(MetadataError::MissingDelegateRole.into());
                     }
 
-                    delegate_record.delegate_role.unwrap().into()
+                    token_record.delegate_role.unwrap().into()
                 }
                 _ => return Err(MetadataError::InvalidTransferAuthority.into()),
             };
