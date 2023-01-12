@@ -36,10 +36,11 @@ export const RevokeStruct = new beet.BeetArgsStruct<
 /**
  * Accounts required by the _Revoke_ instruction
  *
- * @property [_writable_] delegateRecord Delegate record account
+ * @property [_writable_] delegateRecord (optional) Delegate record account
  * @property [] delegate Owner of the delegated account
  * @property [_writable_] metadata Metadata account
  * @property [] masterEdition (optional) Master Edition account
+ * @property [_writable_] tokenRecord (optional) Token record account
  * @property [] mint Mint of metadata
  * @property [_writable_] token (optional) Token account of mint
  * @property [**signer**] approver Approver (update authority or token owner) for the delegation
@@ -53,10 +54,11 @@ export const RevokeStruct = new beet.BeetArgsStruct<
  * @category generated
  */
 export type RevokeInstructionAccounts = {
-  delegateRecord: web3.PublicKey;
+  delegateRecord?: web3.PublicKey;
   delegate: web3.PublicKey;
   metadata: web3.PublicKey;
   masterEdition?: web3.PublicKey;
+  tokenRecord?: web3.PublicKey;
   mint: web3.PublicKey;
   token?: web3.PublicKey;
   approver: web3.PublicKey;
@@ -94,8 +96,8 @@ export function createRevokeInstruction(
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: accounts.delegateRecord,
-      isWritable: true,
+      pubkey: accounts.delegateRecord ?? programId,
+      isWritable: accounts.delegateRecord != null,
       isSigner: false,
     },
     {
@@ -111,6 +113,11 @@ export function createRevokeInstruction(
     {
       pubkey: accounts.masterEdition ?? programId,
       isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.tokenRecord ?? programId,
+      isWritable: accounts.tokenRecord != null,
       isSigner: false,
     },
     {

@@ -69,6 +69,7 @@ import {
   MintLayout,
   TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
+import { findTokenRecordPda } from 'test/utils/programmable';
 
 export class InitTransactions {
   readonly getKeypair: LoadOrGenKeypair | GenLabeledKeypair;
@@ -203,6 +204,7 @@ export class InitTransactions {
     amount: number,
     handler: PayerTransactionHandler,
     token: PublicKey | null = null,
+    tokenRecord: PublicKey | null = null,
     tokenOwner: PublicKey | null = null,
   ): Promise<{ tx: ConfirmedTransactionAssertablePromise; token: PublicKey }> {
     if (!token) {
@@ -218,6 +220,10 @@ export class InitTransactions {
       tokenOwner = payer.publicKey;
     }
 
+    if (!tokenRecord) {
+      tokenRecord = findTokenRecordPda(mint, tokenOwner);
+    }
+
     amman.addr.addLabel('Token Account', token);
 
     const metadataAccount = await Metadata.fromAccountAddress(connection, metadata);
@@ -228,6 +234,7 @@ export class InitTransactions {
       tokenOwner,
       metadata,
       masterEdition,
+      tokenRecord,
       mint,
       payer: payer.publicKey,
       authority: payer.publicKey,
@@ -334,27 +341,30 @@ export class InitTransactions {
     handler: PayerTransactionHandler,
     mint: PublicKey,
     metadata: PublicKey,
-    edition: PublicKey,
     authority: Keypair,
     updateTestData: UpdateTestData,
-    delegateRecord?: PublicKey | null,
-    token?: PublicKey | null,
+    delegateRecord: PublicKey | null = null,
+    masterEdition: PublicKey | null = null,
+    token: PublicKey | null = null,
+    tokenRecord: PublicKey | null = null,
     ruleSetPda?: PublicKey | null,
     authorizationData?: AuthorizationData | null,
   ): Promise<{ tx: ConfirmedTransactionAssertablePromise }> {
     amman.addr.addLabel('Mint Account', mint);
     amman.addr.addLabel('Metadata Account', metadata);
-    if (edition != null) {
-      amman.addr.addLabel('Edition Account', edition);
+    if (masterEdition != null) {
+      amman.addr.addLabel('Edition Account', masterEdition);
     }
 
     const updateAcccounts: UpdateInstructionAccounts = {
       metadata,
-      edition,
+      edition: masterEdition,
       mint,
+      tokenRecord,
       systemProgram: SystemProgram.programId,
       sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
       authority: authority.publicKey,
+      payer: authority.publicKey,
       token,
       delegateRecord,
       authorizationRulesProgram: ruleSetPda ? TOKEN_AUTH_RULES_ID : PROGRAM_ID,
@@ -386,16 +396,17 @@ export class InitTransactions {
   }
 
   async delegate(
-    delegateRecord: PublicKey,
     delegate: PublicKey,
     mint: PublicKey,
     metadata: PublicKey,
-    masterEdition: PublicKey,
     approver: PublicKey,
     payer: Keypair,
     args: DelegateArgs,
     handler: PayerTransactionHandler,
+    delegateRecord: PublicKey | null = null,
+    masterEdition: PublicKey | null = null,
     token: PublicKey | null = null,
+    tokenRecord: PublicKey | null = null,
     ruleSetPda: PublicKey | null = null,
   ): Promise<{ tx: ConfirmedTransactionAssertablePromise }> {
     const delegateAcccounts: DelegateInstructionAccounts = {
@@ -403,6 +414,7 @@ export class InitTransactions {
       delegate,
       metadata,
       masterEdition,
+      tokenRecord,
       mint,
       token,
       approver,
@@ -429,16 +441,17 @@ export class InitTransactions {
   }
 
   async revoke(
-    delegateRecord: PublicKey,
     delegate: PublicKey,
     mint: PublicKey,
     metadata: PublicKey,
-    masterEdition: PublicKey,
     authority: Keypair,
     payer: Keypair,
     args: RevokeArgs,
     handler: PayerTransactionHandler,
+    delegateRecord: PublicKey | null = null,
+    masterEdition: PublicKey | null = null,
     token: PublicKey | null = null,
+    tokenRecord: PublicKey | null = null,
     ruleSetPda: PublicKey | null = null,
   ): Promise<{ tx: ConfirmedTransactionAssertablePromise; delegate: PublicKey }> {
     const revokeAcccounts: RevokeInstructionAccounts = {
@@ -446,6 +459,7 @@ export class InitTransactions {
       delegate,
       metadata,
       masterEdition,
+      tokenRecord,
       mint,
       token,
       approver: authority.publicKey,
@@ -478,14 +492,14 @@ export class InitTransactions {
     metadata: PublicKey,
     payer: Keypair,
     handler: PayerTransactionHandler,
-    delegateRecord: PublicKey | null = null,
+    tokenRecord: PublicKey | null = null,
     token: PublicKey | null = null,
     masterEdition: PublicKey | null = null,
     ruleSetPda: PublicKey | null = null,
   ): Promise<{ tx: ConfirmedTransactionAssertablePromise }> {
     const lockAcccounts: LockInstructionAccounts = {
       approver: approver.publicKey,
-      delegateRecord,
+      tokenRecord,
       token,
       mint,
       metadata,
@@ -499,7 +513,7 @@ export class InitTransactions {
 
     const lockArgs: LockInstructionArgs = {
       lockArgs: {
-        __kind: "V1",
+        __kind: 'V1',
         authorizationData: null,
       },
     };
@@ -521,14 +535,14 @@ export class InitTransactions {
     metadata: PublicKey,
     payer: Keypair,
     handler: PayerTransactionHandler,
-    delegateRecord: PublicKey | null = null,
+    tokenRecord: PublicKey | null = null,
     token: PublicKey | null = null,
     masterEdition: PublicKey | null = null,
     ruleSetPda: PublicKey | null = null,
   ): Promise<{ tx: ConfirmedTransactionAssertablePromise }> {
     const unlockAcccounts: UnlockInstructionAccounts = {
       approver: approver.publicKey,
-      delegateRecord,
+      tokenRecord,
       token,
       mint,
       metadata,
@@ -542,7 +556,7 @@ export class InitTransactions {
 
     const unlockArgs: UnlockInstructionArgs = {
       unlockArgs: {
-        __kind: "V1",
+        __kind: 'V1',
         authorizationData: null,
       },
     };

@@ -40,8 +40,10 @@ export const MintStruct = new beet.FixableBeetArgsStruct<
  * @property [] tokenOwner (optional) Owner of the token account
  * @property [] metadata Metadata account (pda of ['metadata', program id, mint id])
  * @property [] masterEdition (optional) Master Edition account
+ * @property [_writable_] tokenRecord (optional) Token record account
  * @property [_writable_] mint Mint of token asset
  * @property [**signer**] authority (Mint or Update) authority
+ * @property [] delegateRecord (optional) Metadata delegate record
  * @property [_writable_, **signer**] payer Payer
  * @property [] sysvarInstructions Instructions sysvar account
  * @property [] splTokenProgram SPL Token program
@@ -57,8 +59,10 @@ export type MintInstructionAccounts = {
   tokenOwner?: web3.PublicKey;
   metadata: web3.PublicKey;
   masterEdition?: web3.PublicKey;
+  tokenRecord?: web3.PublicKey;
   mint: web3.PublicKey;
   authority: web3.PublicKey;
+  delegateRecord?: web3.PublicKey;
   payer: web3.PublicKey;
   systemProgram?: web3.PublicKey;
   sysvarInstructions: web3.PublicKey;
@@ -114,6 +118,11 @@ export function createMintInstruction(
       isSigner: false,
     },
     {
+      pubkey: accounts.tokenRecord ?? programId,
+      isWritable: accounts.tokenRecord != null,
+      isSigner: false,
+    },
+    {
       pubkey: accounts.mint,
       isWritable: true,
       isSigner: false,
@@ -122,6 +131,11 @@ export function createMintInstruction(
       pubkey: accounts.authority,
       isWritable: false,
       isSigner: true,
+    },
+    {
+      pubkey: accounts.delegateRecord ?? programId,
+      isWritable: false,
+      isSigner: false,
     },
     {
       pubkey: accounts.payer,

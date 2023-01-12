@@ -42,6 +42,8 @@ export const UpdateStruct = new beet.FixableBeetArgsStruct<
  * @property [] mint Mint account
  * @property [_writable_] metadata Metadata account
  * @property [_writable_] edition (optional) Edition account
+ * @property [] tokenRecord (optional) Token record account
+ * @property [_writable_, **signer**] payer Payer
  * @property [] sysvarInstructions System program
  * @property [] authorizationRulesProgram (optional) Token Authorization Rules Program
  * @property [] authorizationRules (optional) Token Authorization Rules account
@@ -56,6 +58,8 @@ export type UpdateInstructionAccounts = {
   mint: web3.PublicKey;
   metadata: web3.PublicKey;
   edition?: web3.PublicKey;
+  tokenRecord?: web3.PublicKey;
+  payer: web3.PublicKey;
   systemProgram?: web3.PublicKey;
   sysvarInstructions: web3.PublicKey;
   authorizationRulesProgram?: web3.PublicKey;
@@ -116,6 +120,16 @@ export function createUpdateInstruction(
       pubkey: accounts.edition ?? programId,
       isWritable: accounts.edition != null,
       isSigner: false,
+    },
+    {
+      pubkey: accounts.tokenRecord ?? programId,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.payer,
+      isWritable: true,
+      isSigner: true,
     },
     {
       pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,

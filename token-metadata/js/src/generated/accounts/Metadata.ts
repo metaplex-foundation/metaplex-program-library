@@ -14,8 +14,6 @@ import { TokenStandard, tokenStandardBeet } from '../types/TokenStandard';
 import { Collection, collectionBeet } from '../types/Collection';
 import { Uses, usesBeet } from '../types/Uses';
 import { CollectionDetails, collectionDetailsBeet } from '../types/CollectionDetails';
-import { AssetState, assetStateBeet } from '../types/AssetState';
-import { DelegateRole, delegateRoleBeet } from '../types/DelegateRole';
 import { ProgrammableConfig, programmableConfigBeet } from '../types/ProgrammableConfig';
 import * as customSerializer from '../../custom/metadata-deserializer';
 
@@ -36,8 +34,6 @@ export type MetadataArgs = {
   collection: beet.COption<Collection>;
   uses: beet.COption<Uses>;
   collectionDetails: beet.COption<CollectionDetails>;
-  assetState: beet.COption<AssetState>;
-  persistentDelegate: beet.COption<DelegateRole>;
   programmableConfig: beet.COption<ProgrammableConfig>;
 };
 /**
@@ -60,8 +56,6 @@ export class Metadata implements MetadataArgs {
     readonly collection: beet.COption<Collection>,
     readonly uses: beet.COption<Uses>,
     readonly collectionDetails: beet.COption<CollectionDetails>,
-    readonly assetState: beet.COption<AssetState>,
-    readonly persistentDelegate: beet.COption<DelegateRole>,
     readonly programmableConfig: beet.COption<ProgrammableConfig>,
   ) {}
 
@@ -81,8 +75,6 @@ export class Metadata implements MetadataArgs {
       args.collection,
       args.uses,
       args.collectionDetails,
-      args.assetState,
-      args.persistentDelegate,
       args.programmableConfig,
     );
   }
@@ -186,8 +178,6 @@ export class Metadata implements MetadataArgs {
       collection: this.collection,
       uses: this.uses,
       collectionDetails: this.collectionDetails,
-      assetState: this.assetState,
-      persistentDelegate: this.persistentDelegate,
       programmableConfig: this.programmableConfig,
     };
   }
@@ -210,8 +200,6 @@ export const metadataBeet = new beet.FixableBeetStruct<Metadata, MetadataArgs>(
     ['collection', beet.coption(collectionBeet)],
     ['uses', beet.coption(usesBeet)],
     ['collectionDetails', beet.coption(collectionDetailsBeet)],
-    ['assetState', beet.coption(assetStateBeet)],
-    ['persistentDelegate', beet.coption(delegateRoleBeet)],
     ['programmableConfig', beet.coption(programmableConfigBeet)],
   ],
   Metadata.fromArgs,

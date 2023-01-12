@@ -10,21 +10,17 @@ import * as beet from '@metaplex-foundation/beet';
  * @category enums
  * @category generated
  */
-export enum DelegateRole {
-  Authority,
-  Collection,
-  Transfer,
-  Use,
-  Utility,
+export enum TokenDelegateRole {
   Sale,
-  Update,
+  Transfer,
+  Utility,
 }
 
 /**
  * @category userTypes
  * @category generated
  */
-export const delegateRoleBeet = beet.fixedScalarEnum(DelegateRole) as beet.FixedSizeBeet<
-  DelegateRole,
-  DelegateRole
+export const tokenDelegateRoleBeet = beet.fixedScalarEnum(TokenDelegateRole) as beet.FixedSizeBeet<
+  TokenDelegateRole,
+  TokenDelegateRole
 >;

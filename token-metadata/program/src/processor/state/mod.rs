@@ -6,12 +6,12 @@ pub use lock::*;
 use borsh::BorshSerialize;
 use mpl_utils::assert_signer;
 use solana_program::{
-    account_info::AccountInfo, entrypoint::ProgramResult, program::invoke, pubkey::Pubkey,
-    system_program, sysvar,
+    account_info::AccountInfo, entrypoint::ProgramResult, program::invoke, program_pack::Pack,
+    pubkey::Pubkey, system_program, sysvar,
 };
 use spl_token::{
     instruction::{freeze_account, thaw_account},
-    state::Mint,
+    state::{Account, Mint},
 };
 pub use unlock::*;
 
@@ -126,8 +126,16 @@ pub(crate) fn toggle_asset_state(
     ) {
         let (mut token_record, token_record_info) = match accounts.token_record_info {
             Some(token_record_info) => {
-                let (pda_key, _) =
-                    find_token_record_account(accounts.mint_info.key, accounts.approver_info.key);
+                let token_info = match accounts.token_info {
+                    Some(token_info) => token_info,
+                    None => {
+                        return Err(MetadataError::MissingTokenAccount.into());
+                    }
+                };
+
+                let token = Account::unpack(&token_info.try_borrow_data()?)?;
+
+                let (pda_key, _) = find_token_record_account(accounts.mint_info.key, &token.owner);
 
                 assert_keys_equal(&pda_key, token_record_info.key)?;
                 assert_owned_by(token_record_info, &crate::ID)?;

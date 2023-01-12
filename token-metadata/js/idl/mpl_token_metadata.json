@@ -2445,6 +2445,13 @@
           "optional": true
         },
         {
+          "name": "tokenRecord",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Token record account",
+          "optional": true
+        },
+        {
           "name": "mint",
           "isMut": true,
           "isSigner": false,
@@ -2455,6 +2462,13 @@
           "isMut": false,
           "isSigner": true,
           "desc": "(Mint or Update) authority"
+        },
+        {
+          "name": "delegateRecord",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Metadata delegate record",
+          "optional": true
         },
         {
           "name": "payer",
@@ -2556,6 +2570,19 @@
           "isSigner": false,
           "desc": "Edition account",
           "optional": true
+        },
+        {
+          "name": "tokenRecord",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Token record account",
+          "optional": true
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "desc": "Payer"
         },
         {
           "name": "systemProgram",
@@ -2816,6 +2843,13 @@
           "optional": true
         },
         {
+          "name": "tokenRecord",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Token record account",
+          "optional": true
+        },
+        {
           "name": "authority",
           "isMut": false,
           "isSigner": true,
@@ -2944,7 +2978,8 @@
           "name": "delegateRecord",
           "isMut": true,
           "isSigner": false,
-          "desc": "Delegate record account"
+          "desc": "Delegate record account",
+          "optional": true
         },
         {
           "name": "delegate",
@@ -2963,6 +2998,13 @@
           "isMut": false,
           "isSigner": false,
           "desc": "Master Edition account",
+          "optional": true
+        },
+        {
+          "name": "tokenRecord",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Token record account",
           "optional": true
         },
         {
@@ -3045,7 +3087,8 @@
           "name": "delegateRecord",
           "isMut": true,
           "isSigner": false,
-          "desc": "Delegate record account"
+          "desc": "Delegate record account",
+          "optional": true
         },
         {
           "name": "delegate",
@@ -3064,6 +3107,13 @@
           "isMut": false,
           "isSigner": false,
           "desc": "Master Edition account",
+          "optional": true
+        },
+        {
+          "name": "tokenRecord",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Token record account",
           "optional": true
         },
         {
@@ -3241,13 +3291,6 @@
           "desc": "Token owner or delegate"
         },
         {
-          "name": "delegateRecord",
-          "isMut": true,
-          "isSigner": false,
-          "desc": "Delegate record PDA",
-          "optional": true
-        },
-        {
           "name": "token",
           "isMut": true,
           "isSigner": false,
@@ -3268,9 +3311,16 @@
         },
         {
           "name": "edition",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false,
           "desc": "Edition account",
+          "optional": true
+        },
+        {
+          "name": "tokenRecord",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Token record account",
           "optional": true
         },
         {
@@ -3337,13 +3387,6 @@
           "desc": "Token owner or delegate"
         },
         {
-          "name": "delegateRecord",
-          "isMut": true,
-          "isSigner": false,
-          "desc": "Delegate record PDA",
-          "optional": true
-        },
-        {
           "name": "token",
           "isMut": true,
           "isSigner": false,
@@ -3364,9 +3407,16 @@
         },
         {
           "name": "edition",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false,
           "desc": "Edition account",
+          "optional": true
+        },
+        {
+          "name": "tokenRecord",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Token record account",
           "optional": true
         },
         {
@@ -3450,7 +3500,7 @@
       }
     },
     {
-      "name": "DelegateRecord",
+      "name": "MetadataDelegateRecord",
       "type": {
         "kind": "struct",
         "fields": [
@@ -3465,10 +3515,8 @@
             "type": "u8"
           },
           {
-            "name": "role",
-            "type": {
-              "defined": "DelegateRole"
-            }
+            "name": "mint",
+            "type": "publicKey"
           },
           {
             "name": "delegate",
@@ -3678,27 +3726,49 @@
             }
           },
           {
-            "name": "assetState",
-            "type": {
-              "option": {
-                "defined": "AssetState"
-              }
-            }
-          },
-          {
-            "name": "persistentDelegate",
-            "type": {
-              "option": {
-                "defined": "DelegateRole"
-              }
-            }
-          },
-          {
             "name": "programmableConfig",
             "type": {
               "option": {
                 "defined": "ProgrammableConfig"
               }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "TokenRecord",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "key",
+            "type": {
+              "defined": "Key"
+            }
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "delegate",
+            "type": {
+              "option": "publicKey"
+            }
+          },
+          {
+            "name": "delegateRole",
+            "type": {
+              "option": {
+                "defined": "TokenDelegateRole"
+              }
+            }
+          },
+          {
+            "name": "state",
+            "type": {
+              "defined": "TokenState"
             }
           }
         ]
@@ -4257,18 +4327,6 @@
       }
     },
     {
-      "name": "ProgrammableConfig",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "ruleSet",
-            "type": "publicKey"
-          }
-        ]
-      }
-    },
-    {
       "name": "Reservation",
       "type": {
         "kind": "struct",
@@ -4544,7 +4602,7 @@
       }
     },
     {
-      "name": "DelegateRole",
+      "name": "MetadataDelegateRole",
       "type": {
         "kind": "enum",
         "variants": [
@@ -4555,16 +4613,7 @@
             "name": "Collection"
           },
           {
-            "name": "Transfer"
-          },
-          {
             "name": "Use"
-          },
-          {
-            "name": "Utility"
-          },
-          {
-            "name": "Sale"
           },
           {
             "name": "Update"
@@ -4960,7 +5009,10 @@
             "name": "TokenOwnedEscrow"
           },
           {
-            "name": "Delegate"
+            "name": "TokenRecord"
+          },
+          {
+            "name": "MetadataDelegate"
           }
         ]
       }
@@ -5000,15 +5052,20 @@
       }
     },
     {
-      "name": "AssetState",
+      "name": "ProgrammableConfig",
       "type": {
         "kind": "enum",
         "variants": [
           {
-            "name": "Unlocked"
-          },
-          {
-            "name": "Locked"
+            "name": "V1",
+            "fields": [
+              {
+                "name": "rule_set",
+                "type": {
+                  "option": "publicKey"
+                }
+              }
+            ]
           }
         ]
       }
@@ -5023,6 +5080,37 @@
           },
           {
             "name": "ProgrammableV1"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TokenState",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Unlocked"
+          },
+          {
+            "name": "Locked"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TokenDelegateRole",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Sale"
+          },
+          {
+            "name": "Transfer"
+          },
+          {
+            "name": "Utility"
           }
         ]
       }
@@ -5911,6 +5999,11 @@
       "code": 157,
       "name": "InvalidAuthorityType",
       "msg": "Invalid authority type"
+    },
+    {
+      "code": 158,
+      "name": "MissingTokenRecord",
+      "msg": "Missing token record account"
     }
   ],
   "metadata": {

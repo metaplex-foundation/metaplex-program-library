@@ -1,12 +1,12 @@
 import { getAccount } from '@solana/spl-token';
 import { BN } from 'bn.js';
 import spok from 'spok';
-import { AssetState, DelegateArgs, Metadata, PROGRAM_ID, TokenStandard } from '../src/generated';
+import { DelegateArgs, TokenRecord, TokenStandard, TokenState } from '../src/generated';
 import test from 'tape';
 import { amman, InitTransactions, killStuckProcess } from './setup';
 import { spokSameBigint } from './utils';
 import { createAndMintDefaultAsset } from './utils/digital-asset-manager';
-import { PublicKey } from '@solana/web3.js';
+import { findTokenRecordPda } from './utils/programmable';
 
 killStuckProcess();
 
@@ -33,20 +33,6 @@ test('Unlock: unlock NonFungible asset', async (t) => {
     });
   }
 
-  let metadata = await Metadata.fromAccountAddress(connection, manager.metadata);
-
-  spok(t, metadata, {
-    assetState: AssetState.Unlocked /* asset should be unlocked */,
-  });
-
-  if (manager.token) {
-    const tokenAccount = await getAccount(connection, manager.token);
-
-    spok(t, tokenAccount, {
-      isFrozen: false,
-    });
-  }
-
   // lock asset
 
   const { tx: lockTx } = await API.lock(
@@ -60,12 +46,6 @@ test('Unlock: unlock NonFungible asset', async (t) => {
     manager.masterEdition,
   );
   await lockTx.assertSuccess(t);
-
-  metadata = await Metadata.fromAccountAddress(connection, manager.metadata);
-
-  spok(t, metadata, {
-    assetState: AssetState.Locked /* asset should be locked */,
-  });
 
   if (manager.token) {
     const tokenAccount = await getAccount(connection, manager.token);
@@ -88,12 +68,6 @@ test('Unlock: unlock NonFungible asset', async (t) => {
     manager.masterEdition,
   );
   await unlockTx.assertSuccess(t);
-
-  metadata = await Metadata.fromAccountAddress(connection, manager.metadata);
-
-  spok(t, metadata, {
-    assetState: AssetState.Unlocked /* asset should be unlocked */,
-  });
 
   if (manager.token) {
     const tokenAccount = await getAccount(connection, manager.token);
@@ -127,10 +101,13 @@ test('Unlock: unlock ProgrammableNonFungible asset', async (t) => {
     });
   }
 
-  let metadata = await Metadata.fromAccountAddress(connection, manager.metadata);
+  const tokenRecord = findTokenRecordPda(manager.mint, payer.publicKey);
+  amman.addr.addLabel('Token Record', tokenRecord);
 
-  spok(t, metadata, {
-    assetState: AssetState.Unlocked /* asset should be unlocked */,
+  let pda = await TokenRecord.fromAccountAddress(connection, tokenRecord);
+
+  spok(t, pda, {
+    state: TokenState.Unlocked /* asset should be unlocked */,
   });
 
   // lock asset
@@ -141,16 +118,16 @@ test('Unlock: unlock ProgrammableNonFungible asset', async (t) => {
     manager.metadata,
     payer,
     handler,
-    null,
+    tokenRecord,
     manager.token,
     manager.masterEdition,
   );
   await lockTx.assertSuccess(t);
 
-  metadata = await Metadata.fromAccountAddress(connection, manager.metadata);
+  pda = await TokenRecord.fromAccountAddress(connection, tokenRecord);
 
-  spok(t, metadata, {
-    assetState: AssetState.Locked /* asset should be locked */,
+  spok(t, pda, {
+    state: TokenState.Locked /* asset should be locked */,
   });
 
   // unlock asset
@@ -161,16 +138,16 @@ test('Unlock: unlock ProgrammableNonFungible asset', async (t) => {
     manager.metadata,
     payer,
     handler,
-    null,
+    tokenRecord,
     manager.token,
     manager.masterEdition,
   );
   await unlockTx.assertSuccess(t);
 
-  metadata = await Metadata.fromAccountAddress(connection, manager.metadata);
+  pda = await TokenRecord.fromAccountAddress(connection, tokenRecord);
 
-  spok(t, metadata, {
-    assetState: AssetState.Unlocked /* asset should be unlocked */,
+  spok(t, pda, {
+    state: TokenState.Unlocked /* asset should be unlocked */,
   });
 
   if (manager.token) {
@@ -207,12 +184,6 @@ test('Unlock: unlock Fungible asset', async (t) => {
     });
   }
 
-  let metadata = await Metadata.fromAccountAddress(connection, manager.metadata);
-
-  spok(t, metadata, {
-    assetState: AssetState.Unlocked /* asset should be unlocked */,
-  });
-
   // lock asset
 
   const { tx: lockTx } = await API.lock(
@@ -226,12 +197,6 @@ test('Unlock: unlock Fungible asset', async (t) => {
     manager.masterEdition,
   );
   await lockTx.assertSuccess(t);
-
-  metadata = await Metadata.fromAccountAddress(connection, manager.metadata);
-
-  spok(t, metadata, {
-    assetState: AssetState.Locked /* asset should be locked */,
-  });
 
   if (manager.token) {
     const tokenAccount = await getAccount(connection, manager.token);
@@ -254,12 +219,6 @@ test('Unlock: unlock Fungible asset', async (t) => {
     manager.masterEdition,
   );
   await unlockTx.assertSuccess(t);
-
-  metadata = await Metadata.fromAccountAddress(connection, manager.metadata);
-
-  spok(t, metadata, {
-    assetState: AssetState.Unlocked /* asset should be unlocked */,
-  });
 
   if (manager.token) {
     const tokenAccount = await getAccount(connection, manager.token);
@@ -293,27 +252,9 @@ test('Unlock: delegate unlock NonFungible asset', async (t) => {
     });
   }
 
-  let metadata = await Metadata.fromAccountAddress(connection, manager.metadata);
-
-  spok(t, metadata, {
-    assetState: AssetState.Unlocked /* asset should be unlocked */,
-  });
-
   // creates a delegate
 
   const [, delegate] = await API.getKeypair('Delegate');
-  // delegate PDA
-  const [delegateRecord] = PublicKey.findProgramAddressSync(
-    [
-      Buffer.from('metadata'),
-      PROGRAM_ID.toBuffer(),
-      manager.mint.toBuffer(),
-      Buffer.from('persistent_delegate'),
-      payer.publicKey.toBuffer(),
-    ],
-    PROGRAM_ID,
-  );
-  amman.addr.addLabel('Delegate Record', delegateRecord);
 
   const args: DelegateArgs = {
     __kind: 'UtilityV1',
@@ -322,15 +263,15 @@ test('Unlock: delegate unlock NonFungible asset', async (t) => {
   };
 
   const { tx: delegateTx } = await API.delegate(
-    delegateRecord,
     delegate.publicKey,
     manager.mint,
     manager.metadata,
-    manager.masterEdition,
     payer.publicKey,
     payer,
     args,
     handler,
+    null,
+    manager.masterEdition,
     manager.token,
   );
 
@@ -344,17 +285,11 @@ test('Unlock: delegate unlock NonFungible asset', async (t) => {
     manager.metadata,
     payer,
     handler,
-    delegateRecord,
+    null,
     manager.token,
     manager.masterEdition,
   );
   await utilityTx.assertSuccess(t);
-
-  metadata = await Metadata.fromAccountAddress(connection, manager.metadata);
-
-  spok(t, metadata, {
-    assetState: AssetState.Locked /* asset should be locked */,
-  });
 
   if (manager.token) {
     const tokenAccount = await getAccount(connection, manager.token);
@@ -372,17 +307,11 @@ test('Unlock: delegate unlock NonFungible asset', async (t) => {
     manager.metadata,
     payer,
     handler,
-    delegateRecord,
+    null,
     manager.token,
     manager.masterEdition,
   );
   await unlockTx.assertSuccess(t);
-
-  metadata = await Metadata.fromAccountAddress(connection, manager.metadata);
-
-  spok(t, metadata, {
-    assetState: AssetState.Unlocked /* asset should be unlocked */,
-  });
 
   if (manager.token) {
     const tokenAccount = await getAccount(connection, manager.token);
@@ -393,7 +322,7 @@ test('Unlock: delegate unlock NonFungible asset', async (t) => {
   }
 });
 
-test.only('Unlock: wrong delegate unlock NonFungible asset', async (t) => {
+test('Unlock: wrong delegate unlock NonFungible asset', async (t) => {
   const API = new InitTransactions();
   const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
 
@@ -406,6 +335,15 @@ test.only('Unlock: wrong delegate unlock NonFungible asset', async (t) => {
     TokenStandard.ProgrammableNonFungible,
   );
 
+  const tokenRecord = findTokenRecordPda(manager.mint, payer.publicKey);
+  amman.addr.addLabel('Token Record', tokenRecord);
+
+  let pda = await TokenRecord.fromAccountAddress(connection, tokenRecord);
+
+  spok(t, pda, {
+    state: TokenState.Unlocked /* asset should be unlocked */,
+  });
+
   if (manager.token) {
     const tokenAccount = await getAccount(connection, manager.token);
 
@@ -416,27 +354,9 @@ test.only('Unlock: wrong delegate unlock NonFungible asset', async (t) => {
     });
   }
 
-  let metadata = await Metadata.fromAccountAddress(connection, manager.metadata);
-
-  spok(t, metadata, {
-    assetState: AssetState.Unlocked /* asset should be unlocked */,
-  });
-
   // creates a delegate
 
   const [, delegate] = await API.getKeypair('Delegate');
-  // delegate PDA
-  const [delegateRecord] = PublicKey.findProgramAddressSync(
-    [
-      Buffer.from('metadata'),
-      PROGRAM_ID.toBuffer(),
-      manager.mint.toBuffer(),
-      Buffer.from('persistent_delegate'),
-      payer.publicKey.toBuffer(),
-    ],
-    PROGRAM_ID,
-  );
-  amman.addr.addLabel('Delegate Record', delegateRecord);
 
   const args: DelegateArgs = {
     __kind: 'UtilityV1',
@@ -445,16 +365,17 @@ test.only('Unlock: wrong delegate unlock NonFungible asset', async (t) => {
   };
 
   const { tx: delegateTx } = await API.delegate(
-    delegateRecord,
     delegate.publicKey,
     manager.mint,
     manager.metadata,
-    manager.masterEdition,
     payer.publicKey,
     payer,
     args,
     handler,
+    null,
+    manager.masterEdition,
     manager.token,
+    tokenRecord,
   );
 
   await delegateTx.assertSuccess(t);
@@ -467,17 +388,11 @@ test.only('Unlock: wrong delegate unlock NonFungible asset', async (t) => {
     manager.metadata,
     payer,
     handler,
-    delegateRecord,
+    tokenRecord,
     manager.token,
     manager.masterEdition,
   );
   await utilityTx.assertSuccess(t);
-
-  metadata = await Metadata.fromAccountAddress(connection, manager.metadata);
-
-  spok(t, metadata, {
-    assetState: AssetState.Locked /* asset should be locked */,
-  });
 
   // creates a transfer delegate
 
@@ -490,16 +405,17 @@ test.only('Unlock: wrong delegate unlock NonFungible asset', async (t) => {
   };
 
   const { tx: transferDelegateTx } = await API.delegate(
-    delegateRecord,
     transferDelegate.publicKey,
     manager.mint,
     manager.metadata,
-    manager.masterEdition,
     payer.publicKey,
     payer,
     argsTransfer,
     handler,
+    null,
+    manager.masterEdition,
     manager.token,
+    tokenRecord,
   );
 
   await transferDelegateTx.assertSuccess(t);
@@ -512,7 +428,7 @@ test.only('Unlock: wrong delegate unlock NonFungible asset', async (t) => {
     manager.metadata,
     payer,
     handler,
-    delegateRecord,
+    tokenRecord,
     manager.token,
     manager.masterEdition,
   );

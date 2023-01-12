@@ -43,6 +43,7 @@ export const TransferStruct = new beet.FixableBeetArgsStruct<
  * @property [] mint Mint of token asset
  * @property [_writable_] metadata Metadata (pda of ['metadata', program id, mint id])
  * @property [] edition (optional) Edition of token asset
+ * @property [] tokenRecord (optional) Token record account
  * @property [**signer**] authority Transfer authority (token or delegate owner)
  * @property [_writable_] delegateRecord (optional) Delegate record PDA
  * @property [_writable_, **signer**] payer Payer
@@ -63,6 +64,7 @@ export type TransferInstructionAccounts = {
   mint: web3.PublicKey;
   metadata: web3.PublicKey;
   edition?: web3.PublicKey;
+  tokenRecord?: web3.PublicKey;
   authority: web3.PublicKey;
   delegateRecord?: web3.PublicKey;
   payer: web3.PublicKey;
@@ -131,6 +133,11 @@ export function createTransferInstruction(
     },
     {
       pubkey: accounts.edition ?? programId,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.tokenRecord ?? programId,
       isWritable: false,
       isSigner: false,
     },
