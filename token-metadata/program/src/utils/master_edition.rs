@@ -19,9 +19,9 @@ use crate::{
     },
     error::MetadataError,
     state::{
-        get_reservation_list, DataV2, EditionMarker, Key, Metadata, TokenMetadataAccount, Uses,
-        EDITION, EDITION_MARKER_BIT_SIZE, MAX_EDITION_LEN, MAX_EDITION_MARKER_SIZE,
-        MAX_MASTER_EDITION_LEN, PREFIX, MasterEdition,
+        get_reservation_list, DataV2, EditionMarker, Key, MasterEdition, Metadata,
+        TokenMetadataAccount, Uses, EDITION, EDITION_MARKER_BIT_SIZE, MAX_EDITION_LEN,
+        MAX_EDITION_MARKER_SIZE, MAX_MASTER_EDITION_LEN, PREFIX,
     },
 };
 

@@ -1,6 +1,9 @@
 use solana_program::{account_info::AccountInfo, entrypoint::ProgramResult, pubkey::Pubkey};
 
-use crate::{instruction::{Unlock, UnlockArgs}, state::TokenState};
+use crate::{
+    instruction::{Unlock, UnlockArgs},
+    state::TokenState,
+};
 
 use super::toggle_asset_state;
 
