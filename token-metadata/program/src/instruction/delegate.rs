@@ -51,25 +51,19 @@ pub enum RevokeArgs {
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, Copy)]
-pub enum DelegateRole {
+pub enum MetadataDelegateRole {
     Authority,
     Collection,
-    Transfer,
     Use,
-    Utility,
-    Sale,
     Update,
 }
 
-impl fmt::Display for DelegateRole {
+impl fmt::Display for MetadataDelegateRole {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let message = match self {
             Self::Authority => "authority_delegate".to_string(),
             Self::Collection => "collection_delegate".to_string(),
-            Self::Transfer => "sale_delegate".to_string(),
             Self::Use => "use_delegate".to_string(),
-            Self::Utility => "utility_delegate".to_string(),
-            Self::Sale => "sale_delegate".to_string(),
             Self::Update => "update_delegate".to_string(),
         };
 
@@ -97,10 +91,19 @@ impl fmt::Display for DelegateRole {
 impl InstructionBuilder for super::builders::Delegate {
     fn instruction(&self) -> solana_program::instruction::Instruction {
         let accounts = vec![
-            AccountMeta::new(self.delegate_record, false),
+            if let Some(delegate_record) = self.delegate_record {
+                AccountMeta::new(delegate_record, false)
+            } else {
+                AccountMeta::new_readonly(crate::ID, false)
+            },
             AccountMeta::new_readonly(self.delegate, false),
             AccountMeta::new(self.metadata, false),
             AccountMeta::new_readonly(self.master_edition.unwrap_or(crate::ID), false),
+            if let Some(token_record) = self.token_record {
+                AccountMeta::new(token_record, false)
+            } else {
+                AccountMeta::new_readonly(crate::ID, false)
+            },
             AccountMeta::new_readonly(self.mint, false),
             if let Some(token) = self.token {
                 AccountMeta::new(token, false)
@@ -146,10 +149,19 @@ impl InstructionBuilder for super::builders::Delegate {
 impl InstructionBuilder for super::builders::Revoke {
     fn instruction(&self) -> solana_program::instruction::Instruction {
         let accounts = vec![
-            AccountMeta::new(self.delegate_record, false),
+            if let Some(delegate_record) = self.delegate_record {
+                AccountMeta::new(delegate_record, false)
+            } else {
+                AccountMeta::new_readonly(crate::ID, false)
+            },
             AccountMeta::new_readonly(self.delegate, false),
             AccountMeta::new(self.metadata, false),
             AccountMeta::new_readonly(self.master_edition.unwrap_or(crate::ID), false),
+            if let Some(token_record) = self.token_record {
+                AccountMeta::new(token_record, false)
+            } else {
+                AccountMeta::new_readonly(crate::ID, false)
+            },
             AccountMeta::new_readonly(self.mint, false),
             if let Some(token) = self.token {
                 AccountMeta::new(token, false)

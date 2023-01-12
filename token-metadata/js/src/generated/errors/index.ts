@@ -3305,6 +3305,86 @@ createErrorFromCodeLookup.set(0x99, () => new KeyMismatchError());
 createErrorFromNameLookup.set('KeyMismatch', () => new KeyMismatchError());
 
 /**
+ * LockedToken: 'Token is locked'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class LockedTokenError extends Error {
+  readonly code: number = 0x9a;
+  readonly name: string = 'LockedToken';
+  constructor() {
+    super('Token is locked');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, LockedTokenError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x9a, () => new LockedTokenError());
+createErrorFromNameLookup.set('LockedToken', () => new LockedTokenError());
+
+/**
+ * UnlockedToken: 'Token is unlocked'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class UnlockedTokenError extends Error {
+  readonly code: number = 0x9b;
+  readonly name: string = 'UnlockedToken';
+  constructor() {
+    super('Token is unlocked');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, UnlockedTokenError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x9b, () => new UnlockedTokenError());
+createErrorFromNameLookup.set('UnlockedToken', () => new UnlockedTokenError());
+
+/**
+ * MissingDelegateRole: 'Missing delegate role'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MissingDelegateRoleError extends Error {
+  readonly code: number = 0x9c;
+  readonly name: string = 'MissingDelegateRole';
+  constructor() {
+    super('Missing delegate role');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MissingDelegateRoleError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x9c, () => new MissingDelegateRoleError());
+createErrorFromNameLookup.set('MissingDelegateRole', () => new MissingDelegateRoleError());
+
+/**
+ * InvalidAuthorityType: 'Invalid authority type'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidAuthorityTypeError extends Error {
+  readonly code: number = 0x9d;
+  readonly name: string = 'InvalidAuthorityType';
+  constructor() {
+    super('Invalid authority type');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidAuthorityTypeError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x9d, () => new InvalidAuthorityTypeError());
+createErrorFromNameLookup.set('InvalidAuthorityType', () => new InvalidAuthorityTypeError());
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

@@ -6,6 +6,7 @@ pub(crate) mod deprecated;
 mod edition;
 pub(crate) mod escrow;
 mod freeze;
+mod state;
 mod metadata;
 mod uses;
 
@@ -17,6 +18,7 @@ pub use delegate::*;
 pub use edition::*;
 pub use escrow::*;
 pub use freeze::*;
+pub use state::*;
 pub use metadata::*;
 use mpl_token_metadata_context_derive::AccountContext;
 #[cfg(feature = "serde-feature")]
@@ -527,15 +529,17 @@ pub enum MetadataInstruction {
     #[account(1, optional, name="token_owner", desc="Owner of the token account")]
     #[account(2, name="metadata", desc="Metadata account (pda of ['metadata', program id, mint id])")]
     #[account(3, optional, name="master_edition", desc="Master Edition account")]
-    #[account(4, writable, name="mint", desc="Mint of token asset")]
-    #[account(5, signer, name="authority", desc="(Mint or Update) authority")]
-    #[account(6, signer, writable, name="payer", desc="Payer")]
-    #[account(7, name="system_program", desc="System program")]
-    #[account(8, name="sysvar_instructions", desc="Instructions sysvar account")]
-    #[account(9, name="spl_token_program", desc="SPL Token program")]
-    #[account(10, name="spl_ata_program", desc="SPL Associated Token Account program")]
-    #[account(11, optional, name="authorization_rules_program", desc="Token Authorization Rules program")]
-    #[account(12, optional, name="authorization_rules", desc="Token Authorization Rules account")]
+    #[account(4, optional, writable, name="token_record", desc="Token record account")]
+    #[account(5, writable, name="mint", desc="Mint of token asset")]
+    #[account(6, signer, name="authority", desc="(Mint or Update) authority")]
+    #[account(7, optional, name="delegate_record", desc="Metadata delegate record")]
+    #[account(8, signer, writable, name="payer", desc="Payer")]
+    #[account(9, name="system_program", desc="System program")]
+    #[account(10, name="sysvar_instructions", desc="Instructions sysvar account")]
+    #[account(11, name="spl_token_program", desc="SPL Token program")]
+    #[account(12, name="spl_ata_program", desc="SPL Associated Token Account program")]
+    #[account(13, optional, name="authorization_rules_program", desc="Token Authorization Rules program")]
+    #[account(14, optional, name="authorization_rules", desc="Token Authorization Rules account")]
     #[default_optional_accounts]
     Mint(MintArgs),
 
@@ -549,10 +553,12 @@ pub enum MetadataInstruction {
     #[account(3, name="mint", desc="Mint account")]
     #[account(4, writable, name="metadata", desc="Metadata account")]
     #[account(5, optional, writable, name="edition", desc="Edition account")]
-    #[account(6, name="system_program", desc="System program")]
-    #[account(7, name="sysvar_instructions", desc="System program")]
-    #[account(8, optional, name="authorization_rules_program", desc="Token Authorization Rules Program")]
-    #[account(9, optional, name="authorization_rules", desc="Token Authorization Rules account")]
+    #[account(6, optional, name="token_record", desc="Token record account")]
+    #[account(7, signer, writable, name="payer", desc="Payer")]
+    #[account(8, name="system_program", desc="System program")]
+    #[account(9, name="sysvar_instructions", desc="System program")]
+    #[account(10, optional, name="authorization_rules_program", desc="Token Authorization Rules Program")]
+    #[account(11, optional, name="authorization_rules", desc="Token Authorization Rules account")]
     #[default_optional_accounts]
     Update(UpdateArgs),
 
@@ -578,19 +584,20 @@ pub enum MetadataInstruction {
     /// 
     /// The configurable `authorization_rules` only apply to `ProgrammableNonFungible` assets and
     /// it may require additional accounts to validate the rules.
-    #[account(0, writable, name="metadata", desc="Metadata account")]
-    #[account(1, writable, name="token_account", desc="Token Account Of NFT")]
-    #[account(2, writable, name="mint", desc="Mint of the Metadata")]
-    #[account(3, signer, writable, name="use_authority", desc="Use authority or current owner of the asset")]
-    #[account(4, name="owner", desc="Owner")]
-    #[account(5, name="spl_token_program", desc="SPL Token program")]
-    #[account(6, name="ata_program", desc="Associated Token program")]
+    #[account(0, signer, name="approver", desc="Token owner or delegate")]
+    #[account(1, writable, optional, name="delegate_record", desc="Delegate record PDA")]
+    #[account(2, writable, optional, name="token", desc="Token account")]
+    #[account(3, name="mint", desc="Mint account")]
+    #[account(4, writable, name="metadata", desc="Metadata account")]
+    #[account(5, optional, writable, name="edition", desc="Edition account")]
+    #[account(6, signer, name="payer", desc="Payer")]
     #[account(7, name="system_program", desc="System program")]
-    #[account(8, optional, writable, name="use_authority_record", desc="Use Authority Record PDA (if present the program assumes a delegated use authority)")]
-    #[account(9, optional, name="authorization_rules", desc="Token Authorization Rules account")]
+    #[account(8, name="sysvar_instructions", desc="System program")]
+    #[account(9, optional, name="spl_token_program", desc="SPL Token Program")]
     #[account(10, optional, name="authorization_rules_program", desc="Token Authorization Rules Program")]
+    #[account(11, optional, name="authorization_rules", desc="Token Authorization Rules account")]
     #[default_optional_accounts]
-    UseAsset(UseAssetArgs),
+    Use(UseArgs),
 
     /// Transfer an asset.
     /// 
@@ -603,15 +610,16 @@ pub enum MetadataInstruction {
     #[account(4, name="mint", desc="Mint of token asset")]
     #[account(5, writable, name="metadata", desc="Metadata (pda of ['metadata', program id, mint id])")]
     #[account(6, optional, name="edition", desc="Edition of token asset")]
-    #[account(7, signer, name="authority", desc="Transfer authority (token or delegate owner)")]
-    #[account(8, optional, writable, name="delegate_record", desc="Delegate record PDA")]
-    #[account(9, signer, writable, name="payer", desc="Payer")]
-    #[account(10, name="system_program", desc="System Program")]
-    #[account(11, name="sysvar_instructions", desc="Instructions sysvar account")]
-    #[account(12, name="spl_token_program", desc="SPL Token Program")]
-    #[account(13, name="spl_ata_program", desc="SPL Associated Token Account program")]
-    #[account(14, optional, name="authorization_rules_program", desc="Token Authorization Rules Program")]
-    #[account(15, optional, name="authorization_rules", desc="Token Authorization Rules account")]
+    #[account(7, optional, name="token_record", desc="Token record account")]
+    #[account(8, signer, name="authority", desc="Transfer authority (token or delegate owner)")]
+    #[account(9, optional, writable, name="delegate_record", desc="Delegate record PDA")]
+    #[account(10, signer, writable, name="payer", desc="Payer")]
+    #[account(11, name="system_program", desc="System Program")]
+    #[account(12, name="sysvar_instructions", desc="Instructions sysvar account")]
+    #[account(13, name="spl_token_program", desc="SPL Token Program")]
+    #[account(14, name="spl_ata_program", desc="SPL Associated Token Account program")]
+    #[account(15, optional, name="authorization_rules_program", desc="Token Authorization Rules Program")]
+    #[account(16, optional, name="authorization_rules", desc="Token Authorization Rules account")]
     #[default_optional_accounts]
     Transfer(TransferArgs),
 
@@ -638,38 +646,40 @@ pub enum MetadataInstruction {
     ///      `Utility` actions (pda of ["metadata", program id, mint id, "persistent_delegate", token owner id])
     ///   2. Multiple delegates: for `Authority`, `Collection`, `Update` and `Uses` actions (pda of ["metadata",
     ///      program id, mint id, role, update authority id, delegate owner id])
-    #[account(0, writable, name="delegate_record", desc="Delegate record account")]
+    #[account(0, optional, writable, name="delegate_record", desc="Delegate record account")]
     #[account(1, name="delegate", desc="Owner of the delegated account")]
     #[account(2, writable, name="metadata", desc="Metadata account")]
     #[account(3, optional, name="master_edition", desc="Master Edition account")]
-    #[account(4, name="mint", desc="Mint of metadata")]
-    #[account(5, optional, writable, name="token", desc="Token account of mint")]
-    #[account(6, signer, name="approver", desc="Approver (update authority or token owner) for the delegation")]
-    #[account(7, signer, writable, name="payer", desc="Payer")]
-    #[account(8, name="system_program", desc="System Program")]
-    #[account(9, name="sysvar_instructions", desc="Instructions sysvar account")]
-    #[account(10, optional, name="spl_token_program", desc="SPL Token Program")]
-    #[account(11, optional, name="authorization_rules_program", desc="Token Authorization Rules Program")]
-    #[account(12, optional, name="authorization_rules", desc="Token Authorization Rules account")]
+    #[account(4, optional, writable, name="token_record", desc="Token record account")]
+    #[account(5, name="mint", desc="Mint of metadata")]
+    #[account(6, optional, writable, name="token", desc="Token account of mint")]
+    #[account(7, signer, name="approver", desc="Approver (update authority or token owner) for the delegation")]
+    #[account(8, signer, writable, name="payer", desc="Payer")]
+    #[account(9, name="system_program", desc="System Program")]
+    #[account(10, name="sysvar_instructions", desc="Instructions sysvar account")]
+    #[account(11, optional, name="spl_token_program", desc="SPL Token Program")]
+    #[account(12, optional, name="authorization_rules_program", desc="Token Authorization Rules Program")]
+    #[account(13, optional, name="authorization_rules", desc="Token Authorization Rules account")]
     #[default_optional_accounts]
     Delegate(DelegateArgs),
 
     /// Revokes a delegate.
     /// 
     /// A delegate can revoke itself by signing the transaction as the 'approver'.
-    #[account(0, writable, name="delegate_record", desc="Delegate record account")]
+    #[account(0, optional, writable, name="delegate_record", desc="Delegate record account")]
     #[account(1, name="delegate", desc="Owner of the delegated account")]
     #[account(2, writable, name="metadata", desc="Metadata account")]
     #[account(3, optional, name="master_edition", desc="Master Edition account")]
-    #[account(4, name="mint", desc="Mint of metadata")]
-    #[account(5, optional, writable, name="token", desc="Token account of mint")]
-    #[account(6, signer, name="approver", desc="Approver (update authority or token owner) for the delegation")]
-    #[account(7, signer, writable, name="payer", desc="Payer")]
-    #[account(8, name="system_program", desc="System Program")]
-    #[account(9, name="sysvar_instructions", desc="Instructions sysvar account")]
-    #[account(10, optional, name="spl_token_program", desc="SPL Token Program")]
-    #[account(11, optional, name="authorization_rules_program", desc="Token Authorization Rules Program")]
-    #[account(12, optional, name="authorization_rules", desc="Token Authorization Rules account")]
+    #[account(4, optional, writable, name="token_record", desc="Token record account")]
+    #[account(5, name="mint", desc="Mint of metadata")]
+    #[account(6, optional, writable, name="token", desc="Token account of mint")]
+    #[account(7, signer, name="approver", desc="Approver (update authority or token owner) for the delegation")]
+    #[account(8, signer, writable, name="payer", desc="Payer")]
+    #[account(9, name="system_program", desc="System Program")]
+    #[account(10, name="sysvar_instructions", desc="Instructions sysvar account")]
+    #[account(11, optional, name="spl_token_program", desc="SPL Token Program")]
+    #[account(12, optional, name="authorization_rules_program", desc="Token Authorization Rules Program")]
+    #[account(13, optional, name="authorization_rules", desc="Token Authorization Rules account")]
     #[default_optional_accounts]
     Revoke(RevokeArgs),
 
@@ -688,6 +698,44 @@ pub enum MetadataInstruction {
     #[account(11, optional, name="authorization_rules", desc="Token Authorization Rules account")]
     #[default_optional_accounts]
     Migrate(MigrateArgs),
+
+    /// Locks an asset. For non-programmable assets, this will also freeze the token account.
+    /// 
+    /// The configurable `authorization_rules` only apply to `ProgrammableNonFungible` assets and
+    /// it may require additional accounts to validate the rules.
+    #[account(0, signer, name="approver", desc="Token owner or delegate")]
+    #[account(1, writable, optional, name="token", desc="Token account")]
+    #[account(2, name="mint", desc="Mint account")]
+    #[account(3, writable, name="metadata", desc="Metadata account")]
+    #[account(4, optional, name="edition", desc="Edition account")]
+    #[account(5, optional, writable, name="token_record", desc="Token record account")]
+    #[account(6, signer, name="payer", desc="Payer")]
+    #[account(7, name="system_program", desc="System program")]
+    #[account(8, name="sysvar_instructions", desc="System program")]
+    #[account(9, optional, name="spl_token_program", desc="SPL Token Program")]
+    #[account(10, optional, name="authorization_rules_program", desc="Token Authorization Rules Program")]
+    #[account(11, optional, name="authorization_rules", desc="Token Authorization Rules account")]
+    #[default_optional_accounts]
+    Lock(LockArgs),
+
+    /// Unlocks an asset. For non-programmable assets, this will also thaw the token account.
+    /// 
+    /// The configurable `authorization_rules` only apply to `ProgrammableNonFungible` assets and
+    /// it may require additional accounts to validate the rules.
+    #[account(0, signer, name="approver", desc="Token owner or delegate")]
+    #[account(1, writable, optional, name="token", desc="Token account")]
+    #[account(2, name="mint", desc="Mint account")]
+    #[account(3, writable, name="metadata", desc="Metadata account")]
+    #[account(4, optional, name="edition", desc="Edition account")]
+    #[account(5, optional, writable, name="token_record", desc="Token record account")]
+    #[account(6, signer, name="payer", desc="Payer")]
+    #[account(7, name="system_program", desc="System program")]
+    #[account(8, name="sysvar_instructions", desc="System program")]
+    #[account(9, optional, name="spl_token_program", desc="SPL Token Program")]
+    #[account(10, optional, name="authorization_rules_program", desc="Token Authorization Rules Program")]
+    #[account(11, optional, name="authorization_rules", desc="Token Authorization Rules account")]
+    #[default_optional_accounts]
+    Unlock(UnlockArgs),
 }
 
 pub struct Context<'a, T> {

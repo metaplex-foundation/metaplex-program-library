@@ -23,7 +23,7 @@ mod create {
     use mpl_token_metadata::{
         error::MetadataError,
         instruction::{builders::CreateBuilder, CreateArgs, InstructionBuilder},
-        state::{AssetData, Metadata, ProgrammableState, TokenStandard, EDITION, PREFIX, ProgrammableConfig},
+        state::{AssetData, Metadata, ProgrammableConfig, TokenStandard, EDITION, PREFIX},
     };
     use solana_program::borsh::try_from_slice_unchecked;
 
@@ -118,10 +118,13 @@ mod create {
         );
         assert_eq!(metadata.uses, None);
         assert_eq!(metadata.collection, None);
-        if let Some(config) = metadata.programmable_config {
+        if let Some(ProgrammableConfig::V1 {
+            rule_set: Some(rule_set),
+        }) = metadata.programmable_config
+        {
             assert_eq!(
-                config.rule_set,
-                Some(Pubkey::from_str("Cex6GAMtCwD9E17VsEK4rQTbmcVtSdHxWcxhwdwXkuAN").unwrap())
+                rule_set,
+                Pubkey::from_str("Cex6GAMtCwD9E17VsEK4rQTbmcVtSdHxWcxhwdwXkuAN").unwrap()
             );
         } else {
             panic!("Missing programmable config");
@@ -228,10 +231,7 @@ mod create {
         assert_eq!(metadata.collection, None);
         assert_eq!(
             metadata.programmable_config,
-            Some(ProgrammableConfig {
-                state: ProgrammableState::Unlocked,
-                rule_set: None
-            })
+            Some(ProgrammableConfig::V1 { rule_set: None })
         );
     }
 

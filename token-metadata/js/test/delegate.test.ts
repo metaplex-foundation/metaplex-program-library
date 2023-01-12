@@ -8,7 +8,7 @@ import {
 } from '../src/generated';
 import test from 'tape';
 import { amman, InitTransactions, killStuckProcess } from './setup';
-import { createAndMintDefaultAsset } from './utils/DigitalAssetManager';
+import { createAndMintDefaultAsset } from './utils/digital-asset-manager';
 import spok from 'spok';
 import { spokSameBigint, spokSamePubkey } from './utils';
 import { BN } from 'bn.js';
@@ -479,14 +479,14 @@ test('Delegate: try replace sale delegate', async (t) => {
 
   // asserts
 
-  let tokenAccount = await getAccount(connection, manager.token);
+  const tokenAccount = await getAccount(connection, manager.token);
 
   spok(t, tokenAccount, {
     delegatedAmount: spokSameBigint(new BN(1)),
     delegate: spokSamePubkey(delegate),
   });
 
-  let pda = await DelegateRecord.fromAccountAddress(connection, delegateRecord);
+  const pda = await DelegateRecord.fromAccountAddress(connection, delegateRecord);
 
   spok(t, pda, {
     delegate: spokSamePubkey(delegate),

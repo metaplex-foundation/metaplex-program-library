@@ -12,9 +12,9 @@ use crate::{
         uses::assert_valid_use,
     },
     state::{
-        Collection, CollectionDetails, Data, DataV2, Key, Metadata,
-        ProgrammableConfig, TokenStandard, Uses, EDITION, MAX_METADATA_LEN, PREFIX,
-    }, instruction::DelegateRole,
+        Collection, CollectionDetails, Data, DataV2, Key, Metadata, ProgrammableConfig,
+        TokenStandard, Uses, EDITION, MAX_METADATA_LEN, PREFIX,
+    },
 };
 
 // This equals the program address of the metadata program:
@@ -209,12 +209,8 @@ pub fn meta_deser_unchecked(buf: &mut &[u8]) -> Result<Metadata, BorshError> {
     let collection_details_res: Result<Option<CollectionDetails>, BorshError> =
         BorshDeserialize::deserialize(buf);
 
-    // Programmable Config
+    // pNFT - Programmable Config
     let programmable_config_res: Result<Option<ProgrammableConfig>, BorshError> =
-        BorshDeserialize::deserialize(buf);
-
-    // Persistent Delegate
-    let persistent_delegate_res: Result<Option<DelegateRole>, BorshError> =
         BorshDeserialize::deserialize(buf);
 
     // We can have accidentally valid, but corrupted data, particularly on the Collection struct,
@@ -234,16 +230,7 @@ pub fn meta_deser_unchecked(buf: &mut &[u8]) -> Result<Metadata, BorshError> {
     };
 
     // Programmable Config
-    let programmable_config = match programmable_config_res {
-        Ok(config) => config,
-        Err(_) => None,
-    };
-
-    // Persistent Delegate
-    let delegate = match persistent_delegate_res {
-        Ok(delegate) => delegate,
-        Err(_) => None,
-    };
+    let programmable_config = programmable_config_res.unwrap_or(None);
 
     let metadata = Metadata {
         key,
@@ -258,7 +245,6 @@ pub fn meta_deser_unchecked(buf: &mut &[u8]) -> Result<Metadata, BorshError> {
         uses,
         collection_details,
         programmable_config,
-        persistent_delegate: delegate,
     };
 
     Ok(metadata)
@@ -361,7 +347,6 @@ pub mod tests {
             uses: None,
             collection_details: None,
             programmable_config: None,
-            persistent_delegate: None,
         };
 
         puff_out_data_fields(&mut metadata);

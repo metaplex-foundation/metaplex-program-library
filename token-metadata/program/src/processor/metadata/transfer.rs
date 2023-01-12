@@ -9,9 +9,10 @@ use solana_program::{
 use crate::{
     assertions::{assert_owned_by, metadata::assert_currently_holding},
     error::MetadataError,
-    instruction::{Context, DelegateRole, Transfer, TransferArgs},
+    instruction::{Context, Transfer, TransferArgs},
     state::{
-        AuthorityRequest, AuthorityType, Metadata, Operation, TokenMetadataAccount, TokenStandard,
+        AuthorityRequest, AuthorityType, Metadata, Operation, TokenDelegateRole,
+        TokenMetadataAccount, TokenRecord, TokenStandard,
     },
     utils::{assert_derivation, auth_rules_validate, frozen_transfer, AuthRulesValidateParams},
 };
@@ -35,23 +36,23 @@ impl Display for TransferScenario {
     }
 }
 
-impl From<TransferScenario> for DelegateRole {
+impl From<TransferScenario> for TokenDelegateRole {
     fn from(delegate: TransferScenario) -> Self {
         match delegate {
-            TransferScenario::TransferDelegate => DelegateRole::Transfer,
-            TransferScenario::SaleDelegate => DelegateRole::Sale,
-            TransferScenario::UtilityDelegate => DelegateRole::Utility,
+            TransferScenario::TransferDelegate => TokenDelegateRole::Transfer,
+            TransferScenario::SaleDelegate => TokenDelegateRole::Sale,
+            TransferScenario::UtilityDelegate => TokenDelegateRole::Utility,
             _ => panic!("Invalid delegate role"),
         }
     }
 }
 
-impl From<DelegateRole> for TransferScenario {
-    fn from(delegate: DelegateRole) -> Self {
+impl From<TokenDelegateRole> for TransferScenario {
+    fn from(delegate: TokenDelegateRole) -> Self {
         match delegate {
-            DelegateRole::Transfer => TransferScenario::TransferDelegate,
-            DelegateRole::Sale => TransferScenario::SaleDelegate,
-            DelegateRole::Utility => TransferScenario::UtilityDelegate,
+            TokenDelegateRole::Transfer => TransferScenario::TransferDelegate,
+            TokenDelegateRole::Sale => TransferScenario::SaleDelegate,
+            TokenDelegateRole::Utility => TransferScenario::UtilityDelegate,
             _ => panic!("Invalid delegate role"),
         }
     }
@@ -178,7 +179,7 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
 
     // Sale delegates prevent any other kind of transfer.
     let is_sale_delegate_set = if let Some(delegate_role) = metadata.persistent_delegate {
-        delegate_role == DelegateRole::Sale
+        delegate_role == TokenDelegateRole::Sale
     } else {
         false
     };
@@ -188,8 +189,8 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
         update_authority: &metadata.update_authority,
         mint: ctx.accounts.mint_info.key,
         token_info: Some(ctx.accounts.token_info),
-        delegate_record_info: ctx.accounts.delegate_record_info,
-        delegate_role: metadata.persistent_delegate,
+        token_record_info: ctx.accounts.delegate_record_info,
+        token_delegate_role: metadata.persistent_delegate,
     })?;
 
     let scenario = match authority_type {
@@ -205,8 +206,13 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
             msg!("Owner transfer");
 
             // If sale delegate is set, even owner cannot transfer.
-            if is_sale_delegate_set {
-                return Err(MetadataError::InvalidTransferAuthority.into());
+            if let Some(record) = ctx.accounts.delegate_record_info {
+                let delegate_record =
+                    TokenRecord::from_account_info(ctx.accounts.delegate_record_info.unwrap())?;
+
+                if delegate_record.delegate_role == Some(TokenDelegateRole::Sale) {
+                    return Err(MetadataError::OnlySaleDelegateCanTransfer.into());
+                }
             }
 
             // Must be the actual current owner of the token where
@@ -250,6 +256,12 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
     match token_standard {
         TokenStandard::ProgrammableNonFungible => {
             msg!("Transferring programmable asset");
+
+            // pNFTs require a TokenDelegateRecord set
+            if ctx.accounts.delegate_record_info.is_none() {
+                return Err(MetadataError::MissingTokenRecord.into());
+            }
+
             auth_rules_validate(auth_rules_validate_params)?;
             frozen_transfer(token_transfer_params, ctx.accounts.edition_info)?
         }

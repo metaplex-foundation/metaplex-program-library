@@ -569,8 +569,14 @@ impl InstructionBuilder for super::builders::Mint {
             AccountMeta::new_readonly(self.token_owner.unwrap_or(crate::ID), false),
             AccountMeta::new_readonly(self.metadata, false),
             AccountMeta::new_readonly(self.master_edition.unwrap_or(crate::ID), false),
+            if let Some(token_record) = self.token_record {
+                AccountMeta::new(token_record, false)
+            } else {
+                AccountMeta::new_readonly(crate::ID, false)
+            },
             AccountMeta::new(self.mint, false),
             AccountMeta::new_readonly(self.authority, true),
+            AccountMeta::new_readonly(self.delegate_record.unwrap_or(crate::ID), false),
             AccountMeta::new(self.payer, true),
             AccountMeta::new_readonly(self.system_program, false),
             AccountMeta::new_readonly(self.sysvar_instructions, false),
@@ -681,6 +687,12 @@ impl InstructionBuilder for super::builders::Update {
             } else {
                 AccountMeta::new_readonly(crate::ID, false)
             },
+            if let Some(token_record) = self.token_record {
+                AccountMeta::new(token_record, false)
+            } else {
+                AccountMeta::new_readonly(crate::ID, false)
+            },
+            AccountMeta::new(self.payer, true),
             AccountMeta::new_readonly(self.system_program, false),
             AccountMeta::new_readonly(self.sysvar_instructions, false),
         ];

@@ -10,11 +10,11 @@ use crate::{
     assertions::metadata::assert_metadata_valid,
     error::MetadataError,
     instruction::{Context, Migrate, MigrateArgs},
-    state::{
-        Metadata, MigrationType, ProgrammableConfig, ProgrammableState, TokenMetadataAccount,
-        TokenStandard,
+    state::{Metadata, MigrationType, ProgrammableConfig, TokenMetadataAccount, TokenStandard},
+    utils::{
+        assert_edition_valid, assert_initialized, clean_write_metadata,
+        create_token_record_account, thaw,
     },
-    utils::{assert_edition_valid, assert_initialized, clean_write_metadata, thaw},
 };
 
 pub fn migrate<'a>(
@@ -150,10 +150,16 @@ pub fn migrate_v1(program_id: &Pubkey, ctx: Context<Migrate>, args: MigrateArgs)
 
             // Migrate the token.
             metadata.token_standard = Some(TokenStandard::ProgrammableNonFungible);
-            metadata.programmable_config = Some(ProgrammableConfig {
-                state: ProgrammableState::Unlocked,
-                rule_set,
-            });
+            metadata.programmable_config = Some(ProgrammableConfig::V1 { rule_set });
+
+            create_token_record_account(
+                program_id,
+                mint_info, /* token_record_info */
+                mint_info,
+                mint_info, /* token_owner_info */
+                payer_info,
+                system_program_info,
+            )?;
 
             clean_write_metadata(&mut metadata, metadata_info)?;
         }

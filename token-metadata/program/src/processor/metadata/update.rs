@@ -7,14 +7,11 @@ use solana_program::{
 };
 
 use crate::{
-    assertions::assert_owned_by,
+    assertions::{assert_owned_by, programmable::assert_valid_authorization},
     error::MetadataError,
-    instruction::{Context, DelegateRole, Update, UpdateArgs},
+    instruction::{Context, MetadataDelegateRole, Update, UpdateArgs},
     pda::{EDITION, PREFIX},
-    state::{
-        AuthorityRequest, AuthorityType, Metadata, ProgrammableConfig, TokenMetadataAccount,
-        TokenStandard,
-    },
+    state::{AuthorityRequest, AuthorityType, Metadata, TokenMetadataAccount, TokenStandard},
     utils::assert_derivation,
 };
 
@@ -121,8 +118,10 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
         update_authority: &metadata.update_authority,
         mint: ctx.accounts.mint_info.key,
         token_info: ctx.accounts.token_info,
-        delegate_record_info: ctx.accounts.delegate_record_info,
-        delegate_role: Some(DelegateRole::Update),
+        metadata_delegate_record_info: ctx.accounts.delegate_record_info,
+        metadata_delegate_role: Some(MetadataDelegateRole::Update),
+        token_record_info: None,
+        token_delegate_role: None,
     })?;
 
     let token_standard = metadata
@@ -131,22 +130,8 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
 
     // for pNFTs, we need to validate the authorization rules
     if matches!(token_standard, TokenStandard::ProgrammableNonFungible) {
-        let rule_set =
-            if let Some(ProgrammableConfig { rule_set, .. }) = metadata.programmable_config {
-                rule_set
-            } else {
-                None
-            };
-
-        if let Some(rule_set) = rule_set {
-            let authorization_rules_info = ctx
-                .accounts
-                .authorization_rules_info
-                .ok_or(MetadataError::MissingAuthorizationRules)?;
-
-            if !cmp_pubkeys(&rule_set, authorization_rules_info.key) {
-                return Err(MetadataError::InvalidAuthorizationRules.into());
-            }
+        if let Some(programmable_config) = &metadata.programmable_config {
+            assert_valid_authorization(ctx.accounts.authorization_rules_info, programmable_config)?;
         }
     }
 

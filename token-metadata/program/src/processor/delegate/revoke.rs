@@ -1,3 +1,4 @@
+use borsh::BorshSerialize;
 use mpl_utils::{assert_signer, close_account_raw, cmp_pubkeys};
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program::invoke, program_option::COption,
@@ -10,9 +11,9 @@ use crate::{
         assert_keys_equal, assert_owned_by, metadata::assert_update_authority_is_correct,
     },
     error::MetadataError,
-    instruction::{Context, DelegateRole, Revoke, RevokeArgs},
-    pda::find_delegate_account,
-    state::{DelegateRecord, Metadata, TokenMetadataAccount, TokenStandard},
+    instruction::{Context, MetadataDelegateRole, Revoke, RevokeArgs},
+    pda::{find_metadata_delegate_record_account, find_token_record_account},
+    state::{Metadata, TokenDelegateRole, TokenMetadataAccount, TokenRecord, TokenStandard},
     utils::{freeze, thaw},
 };
 
@@ -25,22 +26,28 @@ pub fn revoke<'a>(
     let context = Revoke::to_context(accounts)?;
 
     match args {
-        RevokeArgs::CollectionV1 => revoke_delegate(program_id, context, DelegateRole::Collection),
+        RevokeArgs::CollectionV1 => {
+            revoke_delegate(program_id, context, MetadataDelegateRole::Collection)
+        }
         RevokeArgs::SaleV1 => {
             // sale delegate is a special type of transfer
-            revoke_persistent_delegate(program_id, context, DelegateRole::Sale)
+            revoke_persistent_delegate(program_id, context, TokenDelegateRole::Sale)
         }
         RevokeArgs::TransferV1 => {
-            revoke_persistent_delegate(program_id, context, DelegateRole::Transfer)
+            revoke_persistent_delegate(program_id, context, TokenDelegateRole::Transfer)
         }
-        RevokeArgs::UpdateV1 => revoke_delegate(program_id, context, DelegateRole::Update),
+        RevokeArgs::UpdateV1 => revoke_delegate(program_id, context, MetadataDelegateRole::Update),
         RevokeArgs::UtilityV1 => {
-            revoke_persistent_delegate(program_id, context, DelegateRole::Utility)
+            revoke_persistent_delegate(program_id, context, TokenDelegateRole::Utility)
         }
     }
 }
 
-fn revoke_delegate(program_id: &Pubkey, ctx: Context<Revoke>, role: DelegateRole) -> ProgramResult {
+fn revoke_delegate(
+    program_id: &Pubkey,
+    ctx: Context<Revoke>,
+    role: MetadataDelegateRole,
+) -> ProgramResult {
     // signers
 
     assert_signer(ctx.accounts.payer_info)?;
@@ -81,11 +88,18 @@ fn revoke_delegate(program_id: &Pubkey, ctx: Context<Revoke>, role: DelegateRole
         return Err(MetadataError::MintMismatch.into());
     }
 
+    let delegate_record_info = match ctx.accounts.delegate_record_info {
+        Some(delegate_record_info) => delegate_record_info,
+        None => {
+            return Err(MetadataError::MissingTokenAccount.into());
+        }
+    };
+
     // closes the delegate record
 
     close_delegate_record(
         role,
-        ctx.accounts.delegate_record_info,
+        delegate_record_info,
         ctx.accounts.delegate_info.key,
         ctx.accounts.mint_info.key,
         &approver,
@@ -96,11 +110,11 @@ fn revoke_delegate(program_id: &Pubkey, ctx: Context<Revoke>, role: DelegateRole
 fn revoke_persistent_delegate(
     program_id: &Pubkey,
     ctx: Context<Revoke>,
-    role: DelegateRole,
+    role: TokenDelegateRole,
 ) -> ProgramResult {
-     // retrieving required optional accounts
+    // retrieving required optional accounts
 
-     let token_info = match ctx.accounts.token_info {
+    let token_info = match ctx.accounts.token_info {
         Some(token_info) => token_info,
         None => {
             return Err(MetadataError::MissingTokenAccount.into());
@@ -128,32 +142,21 @@ fn revoke_persistent_delegate(
     // key match
 
     assert_keys_equal(ctx.accounts.system_program_info.key, &system_program::ID)?;
-    assert_keys_equal(ctx.accounts.sysvar_instructions_info.key, &sysvar::instructions::ID)?;
+    assert_keys_equal(
+        ctx.accounts.sysvar_instructions_info.key,
+        &sysvar::instructions::ID,
+    )?;
     assert_keys_equal(spl_token_program_info.key, &spl_token::ID)?;
 
     // account relationships
 
-    let mut metadata = Metadata::from_account_info(ctx.accounts.metadata_info)?;
+    let metadata = Metadata::from_account_info(ctx.accounts.metadata_info)?;
     if metadata.mint != *ctx.accounts.mint_info.key {
         return Err(MetadataError::MintMismatch.into());
     }
 
-    // validates the persistent delegate information
-
-    if let Some(delegate_role) = metadata.persistent_delegate {
-        let delegate_record = DelegateRecord::from_account_info(ctx.accounts.delegate_record_info)?;
-
-        if !(delegate_role == role
-            && delegate_role == delegate_record.role
-            && delegate_record.delegate == *ctx.accounts.delegate_info.key)
-        {
-            return Err(MetadataError::InvalidDelegate.into());
-        }
-    } else {
-        return Err(MetadataError::DelegateNotFound.into());
-    }
-
-    // approver must be the owner of the token account
+    // authority must be the owner of the token account: spl-token required the
+    // token owner to revoke a delegate
     let token_account = Account::unpack(&token_info.try_borrow_data()?).unwrap();
     if token_account.owner != *ctx.accounts.approver_info.key {
         return Err(MetadataError::IncorrectOwner.into());
@@ -167,12 +170,45 @@ fn revoke_persistent_delegate(
         return Err(MetadataError::DelegateNotFound.into());
     }
 
-    // process revoke
+    // process the revoke
 
     if matches!(
         metadata.token_standard,
         Some(TokenStandard::ProgrammableNonFungible)
     ) {
+        let (mut token_record, token_record_info) = match ctx.accounts.token_record_info {
+            Some(token_record_info) => {
+                let (pda_key, _) = find_token_record_account(
+                    ctx.accounts.mint_info.key,
+                    ctx.accounts.approver_info.key,
+                );
+
+                assert_keys_equal(&pda_key, token_record_info.key)?;
+                assert_owned_by(token_record_info, &crate::ID)?;
+
+                (
+                    TokenRecord::from_account_info(token_record_info)?,
+                    token_record_info,
+                )
+            }
+            None => {
+                // token record is required for programmable assets
+                return Err(MetadataError::MissingTokenRecord.into());
+            }
+        };
+
+        if let Some(delegate) = token_record.delegate {
+            assert_keys_equal(&delegate, ctx.accounts.delegate_info.key)?;
+
+            if token_record.delegate_role == Some(role) {
+                token_record.delegate = None;
+                token_record.delegate_role = None;
+                token_record.serialize(&mut *token_record_info.try_borrow_mut_data()?)?;
+            } else {
+                return Err(MetadataError::InvalidDelegate.into());
+            }
+        }
+
         if let Some(master_edition_info) = ctx.accounts.master_edition_info {
             assert_owned_by(master_edition_info, &crate::ID)?;
             // derivation is checked on the thaw function
@@ -185,8 +221,12 @@ fn revoke_persistent_delegate(
         } else {
             return Err(MetadataError::MissingEditionAccount.into());
         }
+    } else if matches!(role, TokenDelegateRole::Sale) {
+        // Sale delegate only available for programmable assets
+        return Err(MetadataError::InvalidTokenStandard.into());
     }
 
+    // revokes the spl-token delegate
     invoke(
         &spl_token::instruction::revoke(
             spl_token_program_info.key,
@@ -219,19 +259,6 @@ fn revoke_persistent_delegate(
         }
     }
 
-    close_delegate_record(
-        role,
-        ctx.accounts.delegate_record_info,
-        ctx.accounts.delegate_info.key,
-        ctx.accounts.mint_info.key,
-        ctx.accounts.approver_info.key,
-        ctx.accounts.payer_info,
-    )?;
-
-    // clear the delegate information from metadata
-    metadata.persistent_delegate = None;
-    metadata.save(&mut ctx.accounts.metadata_info.try_borrow_mut_data()?)?;
-
     Ok(())
 }
 
@@ -240,7 +267,7 @@ fn revoke_persistent_delegate(
 /// It checks that the derivation is correct before closing
 /// the delegate record account.
 fn close_delegate_record<'a>(
-    role: DelegateRole,
+    role: MetadataDelegateRole,
     delegate_record_info: &'a AccountInfo<'a>,
     delegate: &Pubkey,
     mint: &Pubkey,
@@ -251,7 +278,7 @@ fn close_delegate_record<'a>(
         return Err(MetadataError::Uninitialized.into());
     }
 
-    let (pda_key, _) = find_delegate_account(mint, role, approver, delegate);
+    let (pda_key, _) = find_metadata_delegate_record_account(mint, role, approver, delegate);
 
     if pda_key != *delegate_record_info.key {
         Err(MetadataError::DerivedKeyInvalid.into())

@@ -128,5 +128,6 @@ pub enum Key {
     UseAuthorityRecord,
     CollectionAuthorityRecord,
     TokenOwnedEscrow,
-    Delegate,
+    TokenRecord,
+    MetadataDelegate,
 }

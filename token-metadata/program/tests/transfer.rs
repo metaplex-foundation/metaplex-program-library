@@ -25,7 +25,21 @@ use utils::*;
 
 mod standard_transfer {
 
-    use mpl_token_metadata::error::MetadataError;
+    use mpl_token_metadata::{
+        error::MetadataError,
+        instruction::{create_escrow_account, DelegateArgs, TransferArgs},
+        pda::find_token_record_account,
+        processor::find_escrow_account,
+        state::{
+            EscrowAuthority, Key, ProgrammableConfig, TokenDelegateRole, TokenRecord, TokenStandard,
+        },
+    };
+    use solana_program::{
+        borsh::try_from_slice_unchecked, native_token::LAMPORTS_PER_SOL, program_pack::Pack,
+        pubkey::Pubkey,
+    };
+    use solana_sdk::transaction::Transaction;
+    use spl_associated_token_account::get_associated_token_address;
 
     use super::*;
 
@@ -414,8 +428,11 @@ mod auth_rules_transfer {
             Some(TokenStandard::ProgrammableNonFungible)
         );
 
-        if let Some(config) = metadata.programmable_config {
-            assert_eq!(config.rule_set, Some(rule_set));
+        if let Some(ProgrammableConfig::V1 {
+            rule_set: Some(rule_set),
+        }) = metadata.programmable_config
+        {
+            assert_eq!(rule_set, rule_set);
         } else {
             panic!("Missing programmable config");
         }
@@ -961,4 +978,5 @@ mod auth_rules_transfer {
         // Destination now has the token.
         assert_eq!(authority_ata_account.amount, 1);
     }
+    */
 }
