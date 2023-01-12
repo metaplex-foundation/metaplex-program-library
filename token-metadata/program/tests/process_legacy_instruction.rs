@@ -15,7 +15,7 @@ mod process_legacy_instruction {
 
     use mpl_token_metadata::{
         error::MetadataError,
-        instruction::{sign_metadata, DelegateRole},
+        instruction::{sign_metadata, DelegateArgs},
         state::{Metadata, TokenStandard},
     };
     use solana_program::borsh::try_from_slice_unchecked;
@@ -127,8 +127,10 @@ mod process_legacy_instruction {
                 &mut context,
                 payer,
                 delegate_pubkey,
-                DelegateRole::Transfer,
-                Some(1),
+                DelegateArgs::TransferV1 {
+                    amount: 1,
+                    authorization_data: None,
+                },
             )
             .await
             .unwrap();

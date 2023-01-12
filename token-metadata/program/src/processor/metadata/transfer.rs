@@ -53,7 +53,6 @@ impl From<TokenDelegateRole> for TransferScenario {
             TokenDelegateRole::Transfer => TransferScenario::TransferDelegate,
             TokenDelegateRole::Sale => TransferScenario::SaleDelegate,
             TokenDelegateRole::Utility => TransferScenario::UtilityDelegate,
-            _ => panic!("Invalid delegate role"),
         }
     }
 }
@@ -177,93 +176,85 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
     let is_wallet_to_wallet = ctx.accounts.token_owner_info.owner == &system_program::ID
         && ctx.accounts.destination_owner_info.owner == &system_program::ID;
 
-    // Sale delegates prevent any other kind of transfer.
-    let is_sale_delegate_set = if let Some(delegate_role) = metadata.persistent_delegate {
-        delegate_role == TokenDelegateRole::Sale
-    } else {
-        false
-    };
-
     let authority_type = AuthorityType::get_authority_type(AuthorityRequest {
         authority: ctx.accounts.authority_info.key,
         update_authority: &metadata.update_authority,
         mint: ctx.accounts.mint_info.key,
         token_info: Some(ctx.accounts.token_info),
+        metadata_delegate_record_info: None,
+        metadata_delegate_role: None,
         token_record_info: ctx.accounts.delegate_record_info,
-        token_delegate_role: metadata.persistent_delegate,
+        token_delegate_roles: vec![
+            TokenDelegateRole::Sale,
+            TokenDelegateRole::Transfer,
+            TokenDelegateRole::Utility,
+        ],
     })?;
 
-    let scenario = match authority_type {
-        AuthorityType::Delegate => {
-            msg!("Delegate transfer");
-            // Nothing to do here?
-            metadata
-                .persistent_delegate
-                .ok_or(MetadataError::InvalidTransferAuthority)?
-                .into()
-        }
-        AuthorityType::Holder => {
-            msg!("Owner transfer");
+    if matches!(authority_type, AuthorityType::Holder) {
+        msg!("Owner transfer");
+        // Must be the actual current owner of the token where
+        // mint, token, owner and metadata accounts all match up.
+        assert_currently_holding(
+            &crate::ID,
+            ctx.accounts.token_owner_info,
+            ctx.accounts.metadata_info,
+            &metadata,
+            ctx.accounts.mint_info,
+            ctx.accounts.token_info,
+        )?;
+    }
 
-            // If sale delegate is set, even owner cannot transfer.
-            if let Some(record) = ctx.accounts.delegate_record_info {
-                let delegate_record =
-                    TokenRecord::from_account_info(ctx.accounts.delegate_record_info.unwrap())?;
-
-                if delegate_record.delegate_role == Some(TokenDelegateRole::Sale) {
-                    return Err(MetadataError::OnlySaleDelegateCanTransfer.into());
-                }
-            }
-
-            // Must be the actual current owner of the token where
-            // mint, token, owner and metadata accounts all match up.
-            assert_currently_holding(
-                &crate::ID,
-                ctx.accounts.token_owner_info,
-                ctx.accounts.metadata_info,
-                &metadata,
-                ctx.accounts.mint_info,
-                ctx.accounts.token_info,
-            )?;
-            TransferScenario::Holder
-        }
-        AuthorityType::Metadata => {
-            return Err(MetadataError::InvalidTransferAuthority.into());
-        }
-        AuthorityType::None => {
-            return Err(MetadataError::InvalidTransferAuthority.into());
-        }
-    };
-
-    // Build our auth rules params.
-    let auth_rules_validate_params = AuthRulesValidateParams {
-        mint_info: ctx.accounts.mint_info,
-        owner_info: None,
-        authority_info: Some(ctx.accounts.authority_info),
-        source_info: Some(ctx.accounts.token_owner_info),
-        destination_info: Some(ctx.accounts.destination_owner_info),
-        programmable_config: metadata.programmable_config,
-        amount,
-        auth_data,
-        auth_rules_info: ctx.accounts.authorization_rules_info,
-        operation: Operation::Transfer { scenario },
-        is_wallet_to_wallet,
-    };
-
-    // Owner transfers are just a wrapper around SPL token transfer
-    // for non-programmable assets.
-    // Programmable assets have to follow auth rules.
     match token_standard {
         TokenStandard::ProgrammableNonFungible => {
-            msg!("Transferring programmable asset");
-
-            // pNFTs require a TokenDelegateRecord set
+            // All pNFTs should have a delegate record passed in and existing.
+            // The delegate role may not be populated, however.
             if ctx.accounts.delegate_record_info.is_none() {
                 return Err(MetadataError::MissingTokenRecord.into());
             }
 
+            let delegate_record =
+                TokenRecord::from_account_info(ctx.accounts.delegate_record_info.unwrap())?;
+
+            let is_sale_delegate = delegate_record
+                .delegate_role
+                .map(|role| role == TokenDelegateRole::Sale)
+                .unwrap_or(false);
+
+            let scenario = match authority_type {
+                AuthorityType::Holder => {
+                    if is_sale_delegate {
+                        return Err(MetadataError::OnlySaleDelegateCanTransfer.into());
+                    }
+                    TransferScenario::Holder
+                }
+                AuthorityType::Delegate => {
+                    if delegate_record.delegate_role.is_none() {
+                        return Err(MetadataError::MissingDelegateRole.into());
+                    }
+
+                    delegate_record.delegate_role.unwrap().into()
+                }
+                _ => return Err(MetadataError::InvalidTransferAuthority.into()),
+            };
+
+            // Build our auth rules params.
+            let auth_rules_validate_params = AuthRulesValidateParams {
+                mint_info: ctx.accounts.mint_info,
+                owner_info: None,
+                authority_info: Some(ctx.accounts.authority_info),
+                source_info: Some(ctx.accounts.token_owner_info),
+                destination_info: Some(ctx.accounts.destination_owner_info),
+                programmable_config: metadata.programmable_config,
+                amount,
+                auth_data,
+                auth_rules_info: ctx.accounts.authorization_rules_info,
+                operation: Operation::Transfer { scenario },
+                is_wallet_to_wallet,
+            };
+
             auth_rules_validate(auth_rules_validate_params)?;
-            frozen_transfer(token_transfer_params, ctx.accounts.edition_info)?
+            frozen_transfer(token_transfer_params, ctx.accounts.edition_info)?;
         }
         _ => {
             msg!("Transferring standard asset");

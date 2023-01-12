@@ -1,6 +1,6 @@
 use std::fmt::{Display, Formatter};
 
-use mpl_utils::{assert_signer, cmp_pubkeys};
+use mpl_utils::assert_signer;
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, msg, program_error::ProgramError,
     pubkey::Pubkey, sysvar,
@@ -121,7 +121,7 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
         metadata_delegate_record_info: ctx.accounts.delegate_record_info,
         metadata_delegate_role: Some(MetadataDelegateRole::Update),
         token_record_info: None,
-        token_delegate_role: None,
+        token_delegate_roles: vec![],
     })?;
 
     let token_standard = metadata

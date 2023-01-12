@@ -87,7 +87,7 @@ pub(crate) fn toggle_asset_state(
         metadata_delegate_record_info: None,
         metadata_delegate_role: None,
         token_record_info: accounts.token_record_info,
-        token_delegate_role: Some(TokenDelegateRole::Utility),
+        token_delegate_roles: vec![TokenDelegateRole::Utility],
     })?;
 
     let has_authority = match authority_type {

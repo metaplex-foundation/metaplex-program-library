@@ -13,13 +13,15 @@ use solana_program::{
 };
 use spl_token::instruction::{freeze_account, thaw_account};
 
-use crate::state::{ToAccountMeta, TokenMetadataAccount, TokenRecord, TOKEN_RECORD_SEED};
 use crate::{
     assertions::{assert_derivation, programmable::assert_valid_authorization},
     error::MetadataError,
     pda::{EDITION, PREFIX},
     processor::AuthorizationData,
-    state::{Operation, PayloadKey, ProgrammableConfig, ToAccountMeta},
+    state::{
+        Operation, PayloadKey, ProgrammableConfig, ToAccountMeta, TokenMetadataAccount,
+        TokenRecord, TOKEN_RECORD_SEED,
+    },
 };
 
 pub fn create_token_record_account<'a>(
