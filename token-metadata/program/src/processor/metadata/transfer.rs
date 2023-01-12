@@ -187,13 +187,15 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
         token_info: Some(ctx.accounts.token_info),
         metadata_delegate_record_info: None,
         metadata_delegate_role: None,
-        token_record_info: ctx.accounts.delegate_record_info,
+        token_record_info: ctx.accounts.token_record_info,
         token_delegate_roles: vec![
             TokenDelegateRole::Sale,
             TokenDelegateRole::Transfer,
             TokenDelegateRole::Utility,
         ],
     })?;
+
+    msg!("authority type: {:?}", authority_type);
 
     if matches!(authority_type, AuthorityType::Holder) {
         msg!("Owner transfer");
@@ -291,6 +293,7 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
             // Drop old immutable borrow.
             drop(token_record_data);
             token_record.delegate_role = None;
+            token_record.delegate = None;
             token_record.save(&mut token_record_info.data.borrow_mut())?;
             // Close the account instead?
             // close_program_account(token_record_info, ctx.accounts.authority_info)?;
