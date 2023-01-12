@@ -66,7 +66,7 @@ export type UpdateInstructionAccounts = {
   authorizationRules?: web3.PublicKey;
 };
 
-export const updateInstructionDiscriminator = 43;
+export const updateInstructionDiscriminator = 50;
 
 /**
  * Creates a _Update_ instruction.

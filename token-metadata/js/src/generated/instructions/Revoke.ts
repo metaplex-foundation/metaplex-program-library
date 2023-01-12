@@ -70,7 +70,7 @@ export type RevokeInstructionAccounts = {
   authorizationRules?: web3.PublicKey;
 };
 
-export const revokeInstructionDiscriminator = 49;
+export const revokeInstructionDiscriminator = 45;
 
 /**
  * Creates a _Revoke_ instruction.

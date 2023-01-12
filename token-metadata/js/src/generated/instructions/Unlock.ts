@@ -66,7 +66,7 @@ export type UnlockInstructionAccounts = {
   authorizationRules?: web3.PublicKey;
 };
 
-export const unlockInstructionDiscriminator = 52;
+export const unlockInstructionDiscriminator = 47;
 
 /**
  * Creates a _Unlock_ instruction.

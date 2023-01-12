@@ -60,7 +60,7 @@ export type CreateInstructionAccounts = {
   splTokenProgram: web3.PublicKey;
 };
 
-export const createInstructionDiscriminator = 41;
+export const createInstructionDiscriminator = 42;
 
 /**
  * Creates a _Create_ instruction.

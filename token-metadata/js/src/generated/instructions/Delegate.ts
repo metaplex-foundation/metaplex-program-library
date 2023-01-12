@@ -70,7 +70,7 @@ export type DelegateInstructionAccounts = {
   authorizationRules?: web3.PublicKey;
 };
 
-export const delegateInstructionDiscriminator = 48;
+export const delegateInstructionDiscriminator = 44;
 
 /**
  * Creates a _Delegate_ instruction.

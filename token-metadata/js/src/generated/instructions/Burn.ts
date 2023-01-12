@@ -61,7 +61,7 @@ export type BurnInstructionAccounts = {
   authorizationRulesProgram?: web3.PublicKey;
 };
 
-export const burnInstructionDiscriminator = 44;
+export const burnInstructionDiscriminator = 41;
 
 /**
  * Creates a _Burn_ instruction.

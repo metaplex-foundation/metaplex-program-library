@@ -2855,13 +2855,33 @@ createErrorFromCodeLookup.set(0x84, () => new InvalidBubblegumSignerError());
 createErrorFromNameLookup.set('InvalidBubblegumSigner', () => new InvalidBubblegumSignerError());
 
 /**
+ * EscrowParentHasDelegate: 'Escrow parent cannot have a delegate'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class EscrowParentHasDelegateError extends Error {
+  readonly code: number = 0x85;
+  readonly name: string = 'EscrowParentHasDelegate';
+  constructor() {
+    super('Escrow parent cannot have a delegate');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, EscrowParentHasDelegateError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x85, () => new EscrowParentHasDelegateError());
+createErrorFromNameLookup.set('EscrowParentHasDelegate', () => new EscrowParentHasDelegateError());
+
+/**
  * MintIsNotSigner: 'Mint needs to be signer to initialize the account'
  *
  * @category Errors
  * @category generated
  */
 export class MintIsNotSignerError extends Error {
-  readonly code: number = 0x85;
+  readonly code: number = 0x86;
   readonly name: string = 'MintIsNotSigner';
   constructor() {
     super('Mint needs to be signer to initialize the account');
@@ -2871,7 +2891,7 @@ export class MintIsNotSignerError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x85, () => new MintIsNotSignerError());
+createErrorFromCodeLookup.set(0x86, () => new MintIsNotSignerError());
 createErrorFromNameLookup.set('MintIsNotSigner', () => new MintIsNotSignerError());
 
 /**
@@ -2881,7 +2901,7 @@ createErrorFromNameLookup.set('MintIsNotSigner', () => new MintIsNotSignerError(
  * @category generated
  */
 export class InvalidTokenStandardError extends Error {
-  readonly code: number = 0x86;
+  readonly code: number = 0x87;
   readonly name: string = 'InvalidTokenStandard';
   constructor() {
     super('Invalid token standard');
@@ -2891,7 +2911,7 @@ export class InvalidTokenStandardError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x86, () => new InvalidTokenStandardError());
+createErrorFromCodeLookup.set(0x87, () => new InvalidTokenStandardError());
 createErrorFromNameLookup.set('InvalidTokenStandard', () => new InvalidTokenStandardError());
 
 /**
@@ -2901,7 +2921,7 @@ createErrorFromNameLookup.set('InvalidTokenStandard', () => new InvalidTokenStan
  * @category generated
  */
 export class InvalidMintForTokenStandardError extends Error {
-  readonly code: number = 0x87;
+  readonly code: number = 0x88;
   readonly name: string = 'InvalidMintForTokenStandard';
   constructor() {
     super('Invalid mint account for specified token standard');
@@ -2911,7 +2931,7 @@ export class InvalidMintForTokenStandardError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x87, () => new InvalidMintForTokenStandardError());
+createErrorFromCodeLookup.set(0x88, () => new InvalidMintForTokenStandardError());
 createErrorFromNameLookup.set(
   'InvalidMintForTokenStandard',
   () => new InvalidMintForTokenStandardError(),
@@ -2924,7 +2944,7 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class InvalidAuthorizationRulesError extends Error {
-  readonly code: number = 0x88;
+  readonly code: number = 0x89;
   readonly name: string = 'InvalidAuthorizationRules';
   constructor() {
     super('Invalid authorization rules account');
@@ -2934,7 +2954,7 @@ export class InvalidAuthorizationRulesError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x88, () => new InvalidAuthorizationRulesError());
+createErrorFromCodeLookup.set(0x89, () => new InvalidAuthorizationRulesError());
 createErrorFromNameLookup.set(
   'InvalidAuthorizationRules',
   () => new InvalidAuthorizationRulesError(),
@@ -2947,7 +2967,7 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class MissingAuthorizationRulesError extends Error {
-  readonly code: number = 0x89;
+  readonly code: number = 0x8a;
   readonly name: string = 'MissingAuthorizationRules';
   constructor() {
     super('Missing authorization rules account');
@@ -2957,7 +2977,7 @@ export class MissingAuthorizationRulesError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x89, () => new MissingAuthorizationRulesError());
+createErrorFromCodeLookup.set(0x8a, () => new MissingAuthorizationRulesError());
 createErrorFromNameLookup.set(
   'MissingAuthorizationRules',
   () => new MissingAuthorizationRulesError(),
@@ -2970,7 +2990,7 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class MissingProgrammableConfigError extends Error {
-  readonly code: number = 0x8a;
+  readonly code: number = 0x8b;
   readonly name: string = 'MissingProgrammableConfig';
   constructor() {
     super('Missing programmable configuration');
@@ -2980,7 +3000,7 @@ export class MissingProgrammableConfigError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x8a, () => new MissingProgrammableConfigError());
+createErrorFromCodeLookup.set(0x8b, () => new MissingProgrammableConfigError());
 createErrorFromNameLookup.set(
   'MissingProgrammableConfig',
   () => new MissingProgrammableConfigError(),
@@ -2993,7 +3013,7 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class InvalidProgrammableConfigError extends Error {
-  readonly code: number = 0x8b;
+  readonly code: number = 0x8c;
   readonly name: string = 'InvalidProgrammableConfig';
   constructor() {
     super('Invalid programmable configuration');
@@ -3003,7 +3023,7 @@ export class InvalidProgrammableConfigError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x8b, () => new InvalidProgrammableConfigError());
+createErrorFromCodeLookup.set(0x8c, () => new InvalidProgrammableConfigError());
 createErrorFromNameLookup.set(
   'InvalidProgrammableConfig',
   () => new InvalidProgrammableConfigError(),
@@ -3016,7 +3036,7 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class DelegateAlreadyExistsError extends Error {
-  readonly code: number = 0x8c;
+  readonly code: number = 0x8d;
   readonly name: string = 'DelegateAlreadyExists';
   constructor() {
     super('Delegate already exists');
@@ -3026,7 +3046,7 @@ export class DelegateAlreadyExistsError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x8c, () => new DelegateAlreadyExistsError());
+createErrorFromCodeLookup.set(0x8d, () => new DelegateAlreadyExistsError());
 createErrorFromNameLookup.set('DelegateAlreadyExists', () => new DelegateAlreadyExistsError());
 
 /**
@@ -3036,7 +3056,7 @@ createErrorFromNameLookup.set('DelegateAlreadyExists', () => new DelegateAlready
  * @category generated
  */
 export class DelegateNotFoundError extends Error {
-  readonly code: number = 0x8d;
+  readonly code: number = 0x8e;
   readonly name: string = 'DelegateNotFound';
   constructor() {
     super('Delegate not found');
@@ -3046,7 +3066,7 @@ export class DelegateNotFoundError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x8d, () => new DelegateNotFoundError());
+createErrorFromCodeLookup.set(0x8e, () => new DelegateNotFoundError());
 createErrorFromNameLookup.set('DelegateNotFound', () => new DelegateNotFoundError());
 
 /**
@@ -3056,7 +3076,7 @@ createErrorFromNameLookup.set('DelegateNotFound', () => new DelegateNotFoundErro
  * @category generated
  */
 export class MissingAccountInBuilderError extends Error {
-  readonly code: number = 0x8e;
+  readonly code: number = 0x8f;
   readonly name: string = 'MissingAccountInBuilder';
   constructor() {
     super('Required account not set in instruction builder');
@@ -3066,7 +3086,7 @@ export class MissingAccountInBuilderError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x8e, () => new MissingAccountInBuilderError());
+createErrorFromCodeLookup.set(0x8f, () => new MissingAccountInBuilderError());
 createErrorFromNameLookup.set('MissingAccountInBuilder', () => new MissingAccountInBuilderError());
 
 /**
@@ -3076,7 +3096,7 @@ createErrorFromNameLookup.set('MissingAccountInBuilder', () => new MissingAccoun
  * @category generated
  */
 export class MissingArgumentInBuilderError extends Error {
-  readonly code: number = 0x8f;
+  readonly code: number = 0x90;
   readonly name: string = 'MissingArgumentInBuilder';
   constructor() {
     super('Required argument not set in instruction builder');
@@ -3086,7 +3106,7 @@ export class MissingArgumentInBuilderError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x8f, () => new MissingArgumentInBuilderError());
+createErrorFromCodeLookup.set(0x90, () => new MissingArgumentInBuilderError());
 createErrorFromNameLookup.set(
   'MissingArgumentInBuilder',
   () => new MissingArgumentInBuilderError(),
@@ -3099,7 +3119,7 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class FeatureNotSupportedError extends Error {
-  readonly code: number = 0x90;
+  readonly code: number = 0x91;
   readonly name: string = 'FeatureNotSupported';
   constructor() {
     super('Feature not supported currently');
@@ -3109,7 +3129,7 @@ export class FeatureNotSupportedError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x90, () => new FeatureNotSupportedError());
+createErrorFromCodeLookup.set(0x91, () => new FeatureNotSupportedError());
 createErrorFromNameLookup.set('FeatureNotSupported', () => new FeatureNotSupportedError());
 
 /**
@@ -3119,7 +3139,7 @@ createErrorFromNameLookup.set('FeatureNotSupported', () => new FeatureNotSupport
  * @category generated
  */
 export class InvalidSystemWalletError extends Error {
-  readonly code: number = 0x91;
+  readonly code: number = 0x92;
   readonly name: string = 'InvalidSystemWallet';
   constructor() {
     super('Invalid system wallet');
@@ -3129,7 +3149,7 @@ export class InvalidSystemWalletError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x91, () => new InvalidSystemWalletError());
+createErrorFromCodeLookup.set(0x92, () => new InvalidSystemWalletError());
 createErrorFromNameLookup.set('InvalidSystemWallet', () => new InvalidSystemWalletError());
 
 /**
@@ -3139,7 +3159,7 @@ createErrorFromNameLookup.set('InvalidSystemWallet', () => new InvalidSystemWall
  * @category generated
  */
 export class OnlySaleDelegateCanTransferError extends Error {
-  readonly code: number = 0x92;
+  readonly code: number = 0x93;
   readonly name: string = 'OnlySaleDelegateCanTransfer';
   constructor() {
     super('Only the sale delegate can transfer while its set');
@@ -3149,7 +3169,7 @@ export class OnlySaleDelegateCanTransferError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x92, () => new OnlySaleDelegateCanTransferError());
+createErrorFromCodeLookup.set(0x93, () => new OnlySaleDelegateCanTransferError());
 createErrorFromNameLookup.set(
   'OnlySaleDelegateCanTransfer',
   () => new OnlySaleDelegateCanTransferError(),
@@ -3162,7 +3182,7 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class MissingTokenAccountError extends Error {
-  readonly code: number = 0x93;
+  readonly code: number = 0x94;
   readonly name: string = 'MissingTokenAccount';
   constructor() {
     super('Missing token account');
@@ -3172,7 +3192,7 @@ export class MissingTokenAccountError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x93, () => new MissingTokenAccountError());
+createErrorFromCodeLookup.set(0x94, () => new MissingTokenAccountError());
 createErrorFromNameLookup.set('MissingTokenAccount', () => new MissingTokenAccountError());
 
 /**
@@ -3182,7 +3202,7 @@ createErrorFromNameLookup.set('MissingTokenAccount', () => new MissingTokenAccou
  * @category generated
  */
 export class MissingSplTokenProgramError extends Error {
-  readonly code: number = 0x94;
+  readonly code: number = 0x95;
   readonly name: string = 'MissingSplTokenProgram';
   constructor() {
     super('Missing SPL token program');
@@ -3192,27 +3212,27 @@ export class MissingSplTokenProgramError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x94, () => new MissingSplTokenProgramError());
+createErrorFromCodeLookup.set(0x95, () => new MissingSplTokenProgramError());
 createErrorFromNameLookup.set('MissingSplTokenProgram', () => new MissingSplTokenProgramError());
 
 /**
- * MissingAuthorizationRulesProgram: 'Missing SPL token program'
+ * MissingAuthorizationRulesProgram: 'Missing authorization rules program'
  *
  * @category Errors
  * @category generated
  */
 export class MissingAuthorizationRulesProgramError extends Error {
-  readonly code: number = 0x95;
+  readonly code: number = 0x96;
   readonly name: string = 'MissingAuthorizationRulesProgram';
   constructor() {
-    super('Missing SPL token program');
+    super('Missing authorization rules program');
     if (typeof Error.captureStackTrace === 'function') {
       Error.captureStackTrace(this, MissingAuthorizationRulesProgramError);
     }
   }
 }
 
-createErrorFromCodeLookup.set(0x95, () => new MissingAuthorizationRulesProgramError());
+createErrorFromCodeLookup.set(0x96, () => new MissingAuthorizationRulesProgramError());
 createErrorFromNameLookup.set(
   'MissingAuthorizationRulesProgram',
   () => new MissingAuthorizationRulesProgramError(),
@@ -3225,7 +3245,7 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class InvalidDelegateRoleForTransferError extends Error {
-  readonly code: number = 0x96;
+  readonly code: number = 0x97;
   readonly name: string = 'InvalidDelegateRoleForTransfer';
   constructor() {
     super('Invalid delegate role for transfer');
@@ -3235,7 +3255,7 @@ export class InvalidDelegateRoleForTransferError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x96, () => new InvalidDelegateRoleForTransferError());
+createErrorFromCodeLookup.set(0x97, () => new InvalidDelegateRoleForTransferError());
 createErrorFromNameLookup.set(
   'InvalidDelegateRoleForTransfer',
   () => new InvalidDelegateRoleForTransferError(),
@@ -3248,7 +3268,7 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class InvalidTransferAuthorityError extends Error {
-  readonly code: number = 0x97;
+  readonly code: number = 0x98;
   readonly name: string = 'InvalidTransferAuthority';
   constructor() {
     super('Invalid transfer authority');
@@ -3258,7 +3278,7 @@ export class InvalidTransferAuthorityError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x97, () => new InvalidTransferAuthorityError());
+createErrorFromCodeLookup.set(0x98, () => new InvalidTransferAuthorityError());
 createErrorFromNameLookup.set(
   'InvalidTransferAuthority',
   () => new InvalidTransferAuthorityError(),
@@ -3271,7 +3291,7 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class InstructionNotSupportedError extends Error {
-  readonly code: number = 0x98;
+  readonly code: number = 0x99;
   readonly name: string = 'InstructionNotSupported';
   constructor() {
     super('Instruction not supported for ProgrammableNonFungible assets');
@@ -3281,7 +3301,7 @@ export class InstructionNotSupportedError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x98, () => new InstructionNotSupportedError());
+createErrorFromCodeLookup.set(0x99, () => new InstructionNotSupportedError());
 createErrorFromNameLookup.set('InstructionNotSupported', () => new InstructionNotSupportedError());
 
 /**
@@ -3291,7 +3311,7 @@ createErrorFromNameLookup.set('InstructionNotSupported', () => new InstructionNo
  * @category generated
  */
 export class KeyMismatchError extends Error {
-  readonly code: number = 0x99;
+  readonly code: number = 0x9a;
   readonly name: string = 'KeyMismatch';
   constructor() {
     super('Public key does not match expected value');
@@ -3301,7 +3321,7 @@ export class KeyMismatchError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x99, () => new KeyMismatchError());
+createErrorFromCodeLookup.set(0x9a, () => new KeyMismatchError());
 createErrorFromNameLookup.set('KeyMismatch', () => new KeyMismatchError());
 
 /**
@@ -3311,7 +3331,7 @@ createErrorFromNameLookup.set('KeyMismatch', () => new KeyMismatchError());
  * @category generated
  */
 export class LockedTokenError extends Error {
-  readonly code: number = 0x9a;
+  readonly code: number = 0x9b;
   readonly name: string = 'LockedToken';
   constructor() {
     super('Token is locked');
@@ -3321,7 +3341,7 @@ export class LockedTokenError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x9a, () => new LockedTokenError());
+createErrorFromCodeLookup.set(0x9b, () => new LockedTokenError());
 createErrorFromNameLookup.set('LockedToken', () => new LockedTokenError());
 
 /**
@@ -3331,7 +3351,7 @@ createErrorFromNameLookup.set('LockedToken', () => new LockedTokenError());
  * @category generated
  */
 export class UnlockedTokenError extends Error {
-  readonly code: number = 0x9b;
+  readonly code: number = 0x9c;
   readonly name: string = 'UnlockedToken';
   constructor() {
     super('Token is unlocked');
@@ -3341,7 +3361,7 @@ export class UnlockedTokenError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x9b, () => new UnlockedTokenError());
+createErrorFromCodeLookup.set(0x9c, () => new UnlockedTokenError());
 createErrorFromNameLookup.set('UnlockedToken', () => new UnlockedTokenError());
 
 /**
@@ -3351,7 +3371,7 @@ createErrorFromNameLookup.set('UnlockedToken', () => new UnlockedTokenError());
  * @category generated
  */
 export class MissingDelegateRoleError extends Error {
-  readonly code: number = 0x9c;
+  readonly code: number = 0x9d;
   readonly name: string = 'MissingDelegateRole';
   constructor() {
     super('Missing delegate role');
@@ -3361,7 +3381,7 @@ export class MissingDelegateRoleError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x9c, () => new MissingDelegateRoleError());
+createErrorFromCodeLookup.set(0x9d, () => new MissingDelegateRoleError());
 createErrorFromNameLookup.set('MissingDelegateRole', () => new MissingDelegateRoleError());
 
 /**
@@ -3371,7 +3391,7 @@ createErrorFromNameLookup.set('MissingDelegateRole', () => new MissingDelegateRo
  * @category generated
  */
 export class InvalidAuthorityTypeError extends Error {
-  readonly code: number = 0x9d;
+  readonly code: number = 0x9e;
   readonly name: string = 'InvalidAuthorityType';
   constructor() {
     super('Invalid authority type');
@@ -3381,7 +3401,7 @@ export class InvalidAuthorityTypeError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x9d, () => new InvalidAuthorityTypeError());
+createErrorFromCodeLookup.set(0x9e, () => new InvalidAuthorityTypeError());
 createErrorFromNameLookup.set('InvalidAuthorityType', () => new InvalidAuthorityTypeError());
 
 /**
@@ -3391,7 +3411,7 @@ createErrorFromNameLookup.set('InvalidAuthorityType', () => new InvalidAuthority
  * @category generated
  */
 export class MissingTokenRecordError extends Error {
-  readonly code: number = 0x9e;
+  readonly code: number = 0x9f;
   readonly name: string = 'MissingTokenRecord';
   constructor() {
     super('Missing token record account');
@@ -3401,7 +3421,7 @@ export class MissingTokenRecordError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x9e, () => new MissingTokenRecordError());
+createErrorFromCodeLookup.set(0x9f, () => new MissingTokenRecordError());
 createErrorFromNameLookup.set('MissingTokenRecord', () => new MissingTokenRecordError());
 
 /**

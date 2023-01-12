@@ -66,7 +66,7 @@ export type UseInstructionAccounts = {
   authorizationRules?: web3.PublicKey;
 };
 
-export const useInstructionDiscriminator = 45;
+export const useInstructionDiscriminator = 51;
 
 /**
  * Creates a _Use_ instruction.

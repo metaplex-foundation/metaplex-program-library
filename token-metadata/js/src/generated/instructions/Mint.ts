@@ -72,7 +72,7 @@ export type MintInstructionAccounts = {
   authorizationRules?: web3.PublicKey;
 };
 
-export const mintInstructionDiscriminator = 42;
+export const mintInstructionDiscriminator = 43;
 
 /**
  * Creates a _Mint_ instruction.

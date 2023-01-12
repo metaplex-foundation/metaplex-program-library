@@ -66,7 +66,7 @@ export type MigrateInstructionAccounts = {
   authorizationRules?: web3.PublicKey;
 };
 
-export const migrateInstructionDiscriminator = 50;
+export const migrateInstructionDiscriminator = 48;
 
 /**
  * Creates a _Migrate_ instruction.

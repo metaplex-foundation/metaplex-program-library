@@ -43,9 +43,9 @@ export const TransferStruct = new beet.FixableBeetArgsStruct<
  * @property [] mint Mint of token asset
  * @property [_writable_] metadata Metadata (pda of ['metadata', program id, mint id])
  * @property [] edition (optional) Edition of token asset
- * @property [] tokenRecord (optional) Token record account
+ * @property [_writable_] ownerTokenRecord (optional) Token record account
+ * @property [_writable_] destinationTokenRecord (optional) Token record account
  * @property [**signer**] authority Transfer authority (token or delegate owner)
- * @property [_writable_] delegateRecord (optional) Delegate record PDA
  * @property [_writable_, **signer**] payer Payer
  * @property [] sysvarInstructions Instructions sysvar account
  * @property [] splTokenProgram SPL Token Program
@@ -64,9 +64,9 @@ export type TransferInstructionAccounts = {
   mint: web3.PublicKey;
   metadata: web3.PublicKey;
   edition?: web3.PublicKey;
-  tokenRecord?: web3.PublicKey;
+  ownerTokenRecord?: web3.PublicKey;
+  destinationTokenRecord?: web3.PublicKey;
   authority: web3.PublicKey;
-  delegateRecord?: web3.PublicKey;
   payer: web3.PublicKey;
   systemProgram?: web3.PublicKey;
   sysvarInstructions: web3.PublicKey;
@@ -76,7 +76,7 @@ export type TransferInstructionAccounts = {
   authorizationRules?: web3.PublicKey;
 };
 
-export const transferInstructionDiscriminator = 46;
+export const transferInstructionDiscriminator = 49;
 
 /**
  * Creates a _Transfer_ instruction.
@@ -137,19 +137,19 @@ export function createTransferInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.tokenRecord ?? programId,
-      isWritable: false,
+      pubkey: accounts.ownerTokenRecord ?? programId,
+      isWritable: accounts.ownerTokenRecord != null,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.destinationTokenRecord ?? programId,
+      isWritable: accounts.destinationTokenRecord != null,
       isSigner: false,
     },
     {
       pubkey: accounts.authority,
       isWritable: false,
       isSigner: true,
-    },
-    {
-      pubkey: accounts.delegateRecord ?? programId,
-      isWritable: accounts.delegateRecord != null,
-      isSigner: false,
     },
     {
       pubkey: accounts.payer,

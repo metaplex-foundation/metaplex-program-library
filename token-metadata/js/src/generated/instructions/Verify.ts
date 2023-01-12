@@ -53,7 +53,7 @@ export type VerifyInstructionAccounts = {
   authorizationRulesProgram?: web3.PublicKey;
 };
 
-export const verifyInstructionDiscriminator = 47;
+export const verifyInstructionDiscriminator = 52;
 
 /**
  * Creates a _Verify_ instruction.
