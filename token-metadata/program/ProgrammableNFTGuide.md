@@ -1,28 +1,42 @@
 # Programmable NFT Guide
 
+> **Warning**
+> This is an alpha release, currently only available on devnet. 
+>
+> * :crab: Rust crate: [v1.7.0-alpha.1](https://crates.io/crates/mpl-token-metadata/1.7.0-alpha.1)
+> * :package: NPM package: [v2.6.0-alpha.1](https://www.npmjs.com/package/@metaplex-foundation/mpl-token-metadata/v/2.6.0-alpha.1)
+>
+> **Note:** The instructions are subject to changes.
+
 ## Technical Summary
 
 In order to support assets that can have customizable behavior, a new asset class will be introduced into Token Metadata’s `Token Standard` struct. This new token standard will allow for flexible configuration of various lifecycle rules, which will be triggered at specific actions:
 
-- Burn
-- Delegate
-- Mint
-- Revoke
-- Transfer
-- Update
-- Use
+* [ ] `Burn`
+* [x] [`Create`](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/program/src/instruction/mod.rs#L518-L536) <span style="font-family:'Lucida Console', monospace; font-size: 6pt">([TypeScript](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/js/test/create.test.ts) | [Rust](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/program/tests/create.rs))</span>
+* [x] [`Delegate`](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/program/src/instruction/mod.rs#L562-L585) <span style="font-family:'Lucida Console', monospace; font-size: 6pt">([TypeScript](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/js/test/delegate.test.ts) | [Rust](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/program/tests/delegate.rs))</span>
+* [x] [`Lock`](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/program/src/instruction/mod.rs#L607-L624) <span style="font-family:'Lucida Console', monospace; font-size: 6pt">([TypeScript](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/js/test/lock.test.ts) | [Rust](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/program/tests/lock.rs))</span>
+* [ ] `Migrate`
+* [ ] `Print`
+* [x] [`Mint`](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/program/src/instruction/mod.rs#L538-L560) <span style="font-family:'Lucida Console', monospace; font-size: 6pt">([TypeScript](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/js/test/mint.test.ts) | [Rust](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/program/tests/mint.rs))</span>
+* [x] [`Revoke`](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/program/src/instruction/mod.rs#L587-L605) <span style="font-family:'Lucida Console', monospace; font-size: 6pt">([TypeScript](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/js/test/revoke.test.ts) | [Rust](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/program/tests/revoke.rs))</span>
+* [x] [`Transfer`](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/program/src/instruction/mod.rs#L661-L683) <span style="font-family:'Lucida Console', monospace; font-size: 6pt">([TypeScript](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/js/test/transfer.test.ts) | [Rust](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/program/tests/transfer.rs))</span>
+* [x] [`Unlock`](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/program/src/instruction/mod.rs#L626-L643) <span style="font-family:'Lucida Console', monospace; font-size: 6pt">([TypeScript](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/js/test/unlock.test.ts) | [Rust](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/program/tests/unlock.rs))</span>
+* [x] [`Update`](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/program/src/instruction/mod.rs#L685-L702) <span style="font-family:'Lucida Console', monospace; font-size: 6pt">([TypeScript](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/js/test/update.test.ts) | [Rust](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/program/tests/update.rs))</span>
+* [ ] `Use`
+* [ ] `Verify`
 
 These lifecycle rules will be configured by creators – e.g., creators may choose to include rules for transfer restrictions (e.g., for royalties enforcement) or only allow updates with an additional signer present in the transaction.
 
 Interaction with assets will be provided by Token Metadata:
 
 1. Transfer instructions (and other spl-token instructions) are now sent to Token Metadata instead.
-2. Token Metadata will expose new versioned instructions under an unified and simplified API. Spl-token proxy instructions are close to the existing instruction interface with the addition of a new required `authorization_rules` account argument. E.g., `CreateMetadataAccount` and `UpdateMetadata` are replaced with `mint` and `update`.
+2. Token Metadata will expose new versioned instructions under an unified and simplified API. Spl-token proxy instructions are close to the existing instruction interface with the addition of a new required `authorization_rules` account argument. E.g., `CreateMetadataAccount` and `UpdateMetadata` are replaced with `Create` and `Update`.
 3. The `authorization_rules` account can be easily discovered on-chain using account derivation or via the Metaplex Read API, an RPC indexing extension run by many existing RPC providers.
 
 ## Extending the `TokenStandard`
 
-A new asset class on the Token Metadata will be added to the `TokenStandard` struct:
+Programmable Non-Fungibles (`pNFT`) are represented as a new asset class on the Token Metadata's `TokenStandard` struct:
 
 ```rust
 pub enum TokenStandard {
@@ -44,7 +58,7 @@ When a `ProgrammableNonFungible` asset is created, it can have a `RuleSet` assoc
 
 ## Unified instructions
 
-To interact with the new asset class, a new set of instructions will be added to Token Metadata. It is important to note that current instructions will continue to work using the existing token standards – the new instructions will be required for interacting with `ProgrammableNonFungible` assets. At the same time, the **new instructions will support all asset classes** so all interaction can happen via an unified interface regardless of the asset class.
+To interact with the new asset class, a new set of instructions will be added to Token Metadata. Note that current instructions will continue to work using the existing token standards – the new instructions are required for interacting with `ProgrammableNonFungible` assets. At the same time, the **new instructions will support all asset classes** so all interaction can happen via an unified interface regardless of the asset class.
 
 Token Metadata instruction will be expanded to include:
 
@@ -59,6 +73,8 @@ pub enum MetadataInstruction {
     Delegate(DelegateArgs),
     // Change the asset type of an asset
     Migrate(MigrateArgs),
+    // Locks a token
+    Lock(LockArgs),
     // Mint a token
     Mint(MintArgs),
     // Mint copies of a fungible asset
@@ -67,26 +83,128 @@ pub enum MetadataInstruction {
     Revoke(RevokeArgs),
     // Transfer an asset
     Transfer(TransferArgs),
+    // Unlocks a token
+    Unlock(LockArgs),
     // Updates the metadata of an asset
     Update(UpdateArgs),
     // Authorizes the use of a token
-    UseAsset(UseAssetArgs),
+    Use(UseArgs),
     // Verifies creator/collection for an asset
     Verify(VerifyArgs),
 }
 ```
 
-Each of these instructions will use versioned `*Args` structs to facilitate future updates, and in turn, not require additional instructions.
+Each of these instructions will use versioned `*Args` structs to facilitate future updates, and in turn, not require additional instructions. Operations supported under each instruction are as follows:
+
+- `Burn`
+- `Create`
+    * [x] Creation of Programmable Non-Fungibles tokens (pNFT)
+    * [x] Creation of Non-Fungibles tokens (NFT)
+    * [x] Creation of Fungible Assets (*semi-fungible tokens*)
+    * [x] Creation of Fungible Tokens (*fungible tokens*)
+- `Delegate`
+    * [ ] Creation of `Authority` delegates
+    * [x] Creation of `Collection` delegates
+    * [x] Creation of `Sale` delegates
+    * [x] Creation of `Transfer` delegates
+    * [x] Creation of `Update` delegates
+    * [ ] Creation of `Use` delegates
+    * [x] Creation of `Utility` delegates
+- `Lock`
+    * [x] Lock Programmable Non-Fungibles
+    * [x] Lock Non-Fungibles
+    * [x] Lock Fungible Assets
+    * [x] Lock Fungibles
+- `Migrate`
+- `Mint`
+    * [x] Mint Programmable Non-Fungibles tokens (pNFT)
+    * [x] Mint of Non-Fungibles tokens (NFT)
+    * [x] Mint Fungible Assets (*semi-fungible tokens*)
+    * [x] Mint Fungible Tokens (*fungible tokens*)
+- `Print`
+    * [ ] Print of editions
+- `Revoke`
+    * [ ] Revoke of `Authority` delegates
+    * [x] Revoke of `Collection` delegates
+    * [x] Revoke of `Sale` delegates
+    * [x] Revoke of `Transfer` delegates
+    * [x] Revoke of `Update` delegates
+    * [ ] Revoke of `Use` delegates
+    * [x] Revoke of `Utility` delegates
+- `Transfer`
+    * [x] wallet-to-wallet transfers
+    * [x] wallet-to-program transfers
+    * [x] program-to-wallet transfers
+    * [x] program-to-program transfers
+- `Update`
+    * [x] Update metadata details for Programmable Non-Fungibles
+    * [x] Update metadata details for Non-Fungibles
+    * [x] Update metadata details for Fungibles Assets
+    * [x] Update metadata details for Fungibles
+- `Unlock`
+    * [x] Unlock Programmable Non-Fungibles
+    * [x] Unlock Non-Fungibles
+    * [x] Unlock Fungible Assets
+    * [x] Unlock Fungibles
+- `Use`
+- `Verify`
+    * [ ] Verify collection items
+    * [ ] Verify creators
+
+## Positional Optional Accounts
+
+The new instruction handlers support positional optional accounts, where an account can be present or not in a transaction. When a instruction is created, it is necessary to provide a list of `PublicKeys` for the instruction accounts – e.g.:
+```javascript
+const mintAcccounts: MintInstructionAccounts = {
+    token,
+    tokenOwner,
+    metadata,
+    masterEdition,
+    mint,
+    payer,
+    ...
+};
+```
+In general, the accounts will be added to the transaction following a pre-defined position:
+```javascript
+// Accounts relative position:
+0. token
+1. tokenOwner
+2. metadata
+3. masterEdition
+4. mint
+5. payer
+...
+```
+When you are minting from a semi-fungible token, there is no need to pass a `masterEdition` account (semi-fungibles do not have a master edition account associated). If we simply omit the `masterEdition` account, the relative position of the remaining accounts (the accounts after the master edition) would change, resulting in the program logic to be inconsistent. One way to address this is to set another `PublicKey` value to represent a "not-set-value" to maintain the position but at the same time indicate that the master edition account was not set. This is accomplished by setting the Token Metadata program key as the `PublicKey` for any account that should be ommited. This is an efficient approach since:
+1. The (Token Metadata) program id is already included in the transaction by default so adding another reference to it does not take the full 32 bytes of `PublicKey` – only a single byte is used in this case;
+2. The relative position of accounts is maintained since there is a public key value for the account;
+3. The program can easily determine if the account key represent a "valid" public key or a "not-set-value".
+
+Using this approach, the same handler support positional optinal account by just ommiting the `masterEdition`:
+```javascript
+const mintAcccounts: MintInstructionAccounts = {
+    token,
+    tokenOwner,
+    metadata,
+    mint,
+    payer,
+    ...
+};
+```
+Under the hood, you the Token Metadata's `PROGRAM_ID` is set as the master edition account `PublicKey`. This will inform the program that the master edition account was not set and still maintain the relative position of the remaining accounts. Token Metadata includes a rust crate wand an NPM package with instruction builders that support positional optional accounts – you only need to set the "required" accounts using these builders.
+
+> **Note**
+> This is a similar approach used by Anchor v0.26 to support positional optional accounts
 
 ## Instruction Builders (Rust)
 
-Each instruction will include an instruction builder to facilitate its creation.
+> **Warning**
+> The instruction builders examples below are a draft specification.
 
-<aside>
-🚧 The instruction builders examples below are a draft specification.
-</aside>
+Each instruction will include an instruction builder to facilitate its creation. Each instruction has an associated builder, which will validate that all required accounts are provided and set the default values for any of the optional accounts that are not set.
 
-### `Create` ([instruction](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/program/src/instruction/mod.rs#L506-L518) | [test source code](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/program/tests/create.rs))
+### Example: `Create` instruction builder
 
 Creates the metadata account for a `ProgrammableNonFungible` asset, initializing the mint account if needed.
 
@@ -97,7 +215,7 @@ use mpl_token_metadata::instruction::builders::CreateBuilder;
 
 let name = puffed_out_string("Programmable NFT", MAX_NAME_LENGTH);
 let symbol = puffed_out_string("PRG", MAX_SYMBOL_LENGTH);
-let uri = puffed_out_string("uri", MAX_URI_LENGTH);
+let uri = puffed_out_string("http://first.programmable.nft/", MAX_URI_LENGTH);
 
 let mut asset = AssetData::new(
     TokenStandard::ProgrammableNonFungible,
@@ -130,135 +248,9 @@ let create_ix = CreateBuilder::new()
     .instruction();
 ```
 
-### `Mint` ([instruction](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/program/src/instruction/mod.rs#L526-L539) | [test source code](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/program/tests/mint.rs))
-
-Creates an instruction to mint a new asset and create associated metadata accounts.
-
-```rust
-use mpl_token_metadata::instruction::builders::MintBuilder;
-
-...
-
-let mint_ix = MintBuilder::new();
-    .token(token)
-    .metadata(metadata)
-    .master_edition(master_edition)
-    .mint(mint)
-    .authority(payer_pubkey)
-    .payer(payer_pubkey)
-    .authorization_rules(authorization_rules)
-    .build(MintArgs::V1 {
-        amount,
-        authorization_data,
-    })?
-    .instruction();
-```
-
-### `Update` ([instruction](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/program/src/instruction/mod.rs#L545-L556) | [test source code](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/program/tests/update.rs))
-
-Creates an instruction to update an existing asset.
-
-```rust
-use mpl_token_metadata::instruction::builders::UpdateBuilder;
-
-...
-
-let mut update_args = UpdateArgs::default();
-update_args.seller_fee_basis_points = Some(500);
-
-let update_ix = UpdateBuilder::new();
-    .authority(update_authority)
-    .metadata(metadata)
-    .mint(mint),
-    .edition(master_edition),
-    .build(update_args)?
-    .instruction();
-```
-
-### `Transfer` ([instruction](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/program/src/instruction/mod.rs#L598-L614) | [test source code](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/program/tests/transfer.rs))
-
-Transfer an asset. When transferring a `ProgrammableNonFungible` asset, it is required to send the `authorization_rules` account to allow the validation of the transfer.
-
-```rust
-use mpl_token_metadata::instruction::builders::TransferBuilder;
-
-...
-
-let mut transfer_ix = TransferBuilder::new();
-    .authority(authority)
-    .token_owner(source_owner)
-    .token(token)
-    .destination_owner(destination_owner)
-    .destination(destination_token)
-    .metadata(metadata)
-    .mint(mint);
-    .edition(master_edition);
-    .authorization_rules(authorization_rules);
-    .build(TransferArgs::V1 {
-        authorization_data: None,
-        amount: 1,
-    })?
-    .instruction();
-```
-
-### `Delegate` ([instruction](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/program/src/instruction/mod.rs#L634-L648) | [test source code](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/program/tests/delegate.rs))
-
-Creates a delegate for a token to perform specific actions.
-
-```rust
-use mpl_token_metadata::instruction::builders::DelegateBuilder;
-
-...
-
-// creates a transfer delegate
-let delegate_ix = DelegateBuilder::new();
-    .delegate(delegate)
-    .delegate_record(delegate_record)
-    .mint(mint)
-    .metadata(metadata)
-    .payer(payer_pubkey)
-    .authority(payer_pubkey)
-    .master_edition(master_edition)
-    .token(token)
-    .build(DelegateArgs::TransferV1 {
-        amount: 1,
-    })?
-    .instruction();
-```
-
-### `Revoke` ([instruction](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/program/src/instruction/mod.rs#L651-L665) | [test source code](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/program/tests/revoke.rs))
-
-Revokes an existing delegate.
-
-```rust
-use mpl_token_metadata::instruction::builders::RevokeBuilder;
-
-...
-
-// revokes a transfer delegate
-let revoke_ix = RevokeBuilder::new();
-    .delegate(delegate)
-    .delegate_record(delegate_record)
-    .mint(mint)
-    .metadata(metadata)
-    .payer(payer_pubkey)
-    .authority(payer_pubkey);
-    .master_edition(master_edition);
-    .token(token);
-    .build(RevokeArgs::TransferV1)?
-    .instruction();
-```
-
 ## JS SDK
 
-Token Metadata includes a low-leve Solita-based SDK, which can be used to interact with the new API. Below are a list of test examples to perform the operations:
-
-* [Create](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/js/test/create.test.ts)
-* [Delegate](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/js/test/delegate.test.ts)
-* [Mint](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/js/test/mint.test.ts)
-* [Revoke](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/js/test/revoke.test.ts)
-* [Transfer](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/js/test/transfer.test.ts)
-* [Update](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/js/test/update.test.ts)
+Token Metadata includes a low-leve Solita-based SDK, which can be used to interact with the new API. The NPM package can be found [here](https://www.npmjs.com/package/@metaplex-foundation/mpl-token-metadata/v/2.6.0-alpha.1).
 
 ## Token Authorization Rules
 
