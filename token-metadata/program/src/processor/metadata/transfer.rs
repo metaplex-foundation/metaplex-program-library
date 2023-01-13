@@ -1,8 +1,15 @@
 use borsh::BorshDeserialize;
+use mpl_token_auth_rules::processor::cmp_pubkeys;
 use mpl_utils::{assert_signer, token::TokenTransferParams};
 use solana_program::{
-    account_info::AccountInfo, entrypoint::ProgramResult, msg, program::invoke,
-    program_error::ProgramError, pubkey::Pubkey, system_program, sysvar,
+    account_info::AccountInfo,
+    entrypoint::ProgramResult,
+    msg,
+    program::invoke,
+    program_error::ProgramError,
+    pubkey::Pubkey,
+    system_program,
+    sysvar::{self, instructions::get_instruction_relative},
 };
 use std::fmt::Display;
 
@@ -158,6 +165,8 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
         }
     }
 
+    let mut is_wallet_to_wallet = false;
+
     // Deserialize metadata.
     msg!("deserializing metadata");
     let metadata = Metadata::from_account_info(ctx.accounts.metadata_info)?;
@@ -175,11 +184,6 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
     let token_standard = metadata
         .token_standard
         .ok_or(MetadataError::InvalidTokenStandard)?;
-
-    // Wallet-to-wallet are currently exempt from auth rules so we detect this early
-    // and pass it into the auth validation function.
-    let is_wallet_to_wallet = ctx.accounts.token_owner_info.owner == &system_program::ID
-        && ctx.accounts.destination_owner_info.owner == &system_program::ID;
 
     msg!("getting authority type");
     let authority_type = AuthorityType::get_authority_type(AuthorityRequest {
@@ -199,6 +203,37 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
 
     if matches!(authority_type, AuthorityType::Holder) {
         msg!("Owner transfer");
+
+        // Wallet-to-wallet are currently exempt from auth rules so we need to check this and pass it into
+        // the auth rules validator function.
+        //
+        // This only applies to Holder transfers as we cannot prove a delegate transfer is
+        // from a proper system wallet.
+
+        // If the program id of the current instruction is anything other than our program id
+        // we know this is a CPI call from another program.
+        let current_ix =
+            get_instruction_relative(0, ctx.accounts.sysvar_instructions_info).unwrap();
+
+        let is_cpi = !cmp_pubkeys(&current_ix.program_id, &crate::ID);
+
+        // This can be replaced with a sys call to curve25519 once that feature activates.
+        let wallets_are_system_program_owned =
+            cmp_pubkeys(ctx.accounts.token_owner_info.owner, &system_program::ID)
+                && cmp_pubkeys(
+                    ctx.accounts.destination_owner_info.owner,
+                    &system_program::ID,
+                );
+
+        // The only case where a transfer is wallet-to-wallet is if the wallets are both owned by
+        // the system program and it's not a CPI call. Holders have to be signers so we can reject
+        // malicious PDA signers owned by the system program by rejecting CPI calls here.
+        //
+        // Legitimate programs can use initialized PDAs or multiple instructions with a temp program-owned
+        // PDA to go around this restriction for cases where they are passing through a proper system wallet
+        // signer via an invoke call.
+        is_wallet_to_wallet = !is_cpi && wallets_are_system_program_owned;
+
         // Must be the actual current owner of the token where
         // mint, token, owner and metadata accounts all match up.
         assert_currently_holding(
