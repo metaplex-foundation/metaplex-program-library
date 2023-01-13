@@ -47,7 +47,7 @@ impl Metadata {
             mint: self.mint,
             token: Some(self.token.pubkey()),
             master_edition: None,
-            token_record: token_record,
+            token_record,
         }
     }
 

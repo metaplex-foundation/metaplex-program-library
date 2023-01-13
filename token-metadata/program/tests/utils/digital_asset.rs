@@ -585,7 +585,7 @@ impl DigitalAsset {
 
         // This can be optional for non pNFTs but always include it for now.
         let (owner_token_record, _bump) =
-            find_token_record_account(&self.mint.pubkey(), &source_owner);
+            find_token_record_account(&self.mint.pubkey(), source_owner);
         builder.owner_token_record(owner_token_record);
 
         // This can be optional for non pNFTs but always include it for now.
@@ -648,7 +648,7 @@ impl DigitalAsset {
         token_owner: &Pubkey,
     ) -> Option<TokenDelegateRole> {
         let (delegate_record_pubkey, _) =
-            find_token_record_account(&self.mint.pubkey(), &token_owner);
+            find_token_record_account(&self.mint.pubkey(), token_owner);
         let delegate_record_account = context
             .banks_client
             .get_account(delegate_record_pubkey)

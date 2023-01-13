@@ -230,7 +230,7 @@ mod standard_transfer {
             .unwrap();
 
         let delegate_role = da
-            .get_token_delegate_role(&mut context, &source_owner)
+            .get_token_delegate_role(&mut context, source_owner)
             .await;
         // Because this is a pass-through SPL token delegate there will be no role
         // set but the record will still exist.
@@ -316,7 +316,7 @@ mod standard_transfer {
             .unwrap();
 
         let delegate_role = da
-            .get_token_delegate_role(&mut context, &source_owner)
+            .get_token_delegate_role(&mut context, source_owner)
             .await;
         // Because this is a pass-through SPL token delegate there will be no role
         // set but the record will still exist.
