@@ -41,9 +41,9 @@ pub const TOKEN_RECORD_SIZE: usize = 1 // Key
 pub struct TokenRecord {
     pub key: Key,
     pub bump: u8,
+    pub state: TokenState,
     pub delegate: Option<Pubkey>,
     pub delegate_role: Option<TokenDelegateRole>,
-    pub state: TokenState,
 }
 
 impl Default for TokenRecord {
@@ -51,9 +51,9 @@ impl Default for TokenRecord {
         Self {
             key: Key::TokenRecord,
             bump: 255,
+            state: TokenState::Unlocked,
             delegate: None,
             delegate_role: None,
-            state: TokenState::Unlocked,
         }
     }
 }

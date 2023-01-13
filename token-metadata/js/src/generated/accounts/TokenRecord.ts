@@ -9,8 +9,8 @@ import * as web3 from '@solana/web3.js';
 import * as beet from '@metaplex-foundation/beet';
 import * as beetSolana from '@metaplex-foundation/beet-solana';
 import { Key, keyBeet } from '../types/Key';
-import { TokenDelegateRole, tokenDelegateRoleBeet } from '../types/TokenDelegateRole';
 import { TokenState, tokenStateBeet } from '../types/TokenState';
+import { TokenDelegateRole, tokenDelegateRoleBeet } from '../types/TokenDelegateRole';
 
 /**
  * Arguments used to create {@link TokenRecord}
@@ -20,9 +20,9 @@ import { TokenState, tokenStateBeet } from '../types/TokenState';
 export type TokenRecordArgs = {
   key: Key;
   bump: number;
+  state: TokenState;
   delegate: beet.COption<web3.PublicKey>;
   delegateRole: beet.COption<TokenDelegateRole>;
-  state: TokenState;
 };
 /**
  * Holds the data for the {@link TokenRecord} Account and provides de/serialization
@@ -35,16 +35,16 @@ export class TokenRecord implements TokenRecordArgs {
   private constructor(
     readonly key: Key,
     readonly bump: number,
+    readonly state: TokenState,
     readonly delegate: beet.COption<web3.PublicKey>,
     readonly delegateRole: beet.COption<TokenDelegateRole>,
-    readonly state: TokenState,
   ) {}
 
   /**
    * Creates a {@link TokenRecord} instance from the provided args.
    */
   static fromArgs(args: TokenRecordArgs) {
-    return new TokenRecord(args.key, args.bump, args.delegate, args.delegateRole, args.state);
+    return new TokenRecord(args.key, args.bump, args.state, args.delegate, args.delegateRole);
   }
 
   /**
@@ -137,9 +137,9 @@ export class TokenRecord implements TokenRecordArgs {
     return {
       key: 'Key.' + Key[this.key],
       bump: this.bump,
+      state: 'TokenState.' + TokenState[this.state],
       delegate: this.delegate,
       delegateRole: this.delegateRole,
-      state: 'TokenState.' + TokenState[this.state],
     };
   }
 }
@@ -152,9 +152,9 @@ export const tokenRecordBeet = new beet.FixableBeetStruct<TokenRecord, TokenReco
   [
     ['key', keyBeet],
     ['bump', beet.u8],
+    ['state', tokenStateBeet],
     ['delegate', beet.coption(beetSolana.publicKey)],
     ['delegateRole', beet.coption(tokenDelegateRoleBeet)],
-    ['state', tokenStateBeet],
   ],
   TokenRecord.fromArgs,
   'TokenRecord',

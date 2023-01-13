@@ -1,5 +1,5 @@
 {
-  "version": "1.6.5",
+  "version": "1.7.0-alpha.1",
   "name": "mpl_token_metadata",
   "instructions": [
     {
@@ -3752,6 +3752,12 @@
             "type": "u8"
           },
           {
+            "name": "state",
+            "type": {
+              "defined": "TokenState"
+            }
+          },
+          {
             "name": "delegate",
             "type": {
               "option": "publicKey"
@@ -3763,12 +3769,6 @@
               "option": {
                 "defined": "TokenDelegateRole"
               }
-            }
-          },
-          {
-            "name": "state",
-            "type": {
-              "defined": "TokenState"
             }
           }
         ]
