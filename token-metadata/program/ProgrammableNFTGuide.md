@@ -3,8 +3,8 @@
 > **Warning**
 > This is an alpha release, currently only available on devnet. 
 >
-> * :crab: Rust crate: [v1.7.0-alpha.1](https://crates.io/crates/mpl-token-metadata/1.7.0-alpha.1)
-> * :package: NPM package: [v2.6.0-alpha.1](https://www.npmjs.com/package/@metaplex-foundation/mpl-token-metadata/v/2.6.0-alpha.1)
+> * :crab: Rust crate: [v1.7.0-alpha.2](https://crates.io/crates/mpl-token-metadata/1.7.0-alpha.2)
+> * :package: NPM package: [v2.6.0-alpha.2](https://www.npmjs.com/package/@metaplex-foundation/mpl-token-metadata/v/2.6.0-alpha.2)
 >
 > **Note:** The instructions are subject to changes.
 
