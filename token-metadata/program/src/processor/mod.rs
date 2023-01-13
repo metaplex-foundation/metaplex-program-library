@@ -84,6 +84,10 @@ pub fn process_instruction<'a>(
 
     // match on the new instruction set
     match instruction {
+        MetadataInstruction::Burn(args) => {
+            msg!("Instruction: Token Metadata Burn");
+            burn::burn(program_id, accounts, args)
+        }
         MetadataInstruction::Create(args) => {
             msg!("Instruction: Token Metadata Create");
             metadata::create(program_id, accounts, args)
@@ -92,13 +96,13 @@ pub fn process_instruction<'a>(
             msg!("Instruction: Token Metadata Mint");
             metadata::mint(program_id, accounts, args)
         }
-        MetadataInstruction::Update(args) => {
-            msg!("Instruction: Token Metadata Update");
-            metadata::update(program_id, accounts, args)
+        MetadataInstruction::Delegate(args) => {
+            msg!("Instruction: Token Metadata Delegate");
+            delegate::delegate(program_id, accounts, args)
         }
-        MetadataInstruction::Burn(args) => {
-            msg!("Instruction: Token Metadata Burn");
-            burn::burn(program_id, accounts, args)
+        MetadataInstruction::Revoke(args) => {
+            msg!("Instruction: Token Metadata Revoke");
+            delegate::revoke(program_id, accounts, args)
         }
         MetadataInstruction::Lock(args) => {
             msg!("Instruction: Token Metadata Lock");
@@ -108,25 +112,21 @@ pub fn process_instruction<'a>(
             msg!("Instruction: Token Metadata Unlock");
             state::unlock(program_id, accounts, args)
         }
-        MetadataInstruction::Transfer(args) => {
-            msg!("Instruction: Token Metadata Transfer");
-            metadata::transfer(program_id, accounts, args)
-        }
-        MetadataInstruction::Verify(args) => {
-            msg!("Instruction: Token Metadata Verify");
-            collection::verify(program_id, accounts, args)
-        }
-        MetadataInstruction::Delegate(args) => {
-            msg!("Instruction: Token Metadata Delegate");
-            delegate::delegate(program_id, accounts, args)
-        }
         MetadataInstruction::Migrate(args) => {
             msg!("Instruction: Token Metadata Migrate");
             metadata::migrate(program_id, accounts, args)
         }
-        MetadataInstruction::Revoke(args) => {
-            msg!("Instruction: Token Metadata Revoke");
-            delegate::revoke(program_id, accounts, args)
+        MetadataInstruction::Transfer(args) => {
+            msg!("Instruction: Token Metadata Transfer");
+            metadata::transfer(program_id, accounts, args)
+        }
+        MetadataInstruction::Update(args) => {
+            msg!("Instruction: Token Metadata Update");
+            metadata::update(program_id, accounts, args)
+        }
+        MetadataInstruction::Verify(args) => {
+            msg!("Instruction: Token Metadata Verify");
+            collection::verify(program_id, accounts, args)
         }
         _ => {
             // pNFT accounts can only be used by the "new" API; before forwarding
