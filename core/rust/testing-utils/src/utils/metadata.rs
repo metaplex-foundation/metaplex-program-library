@@ -73,7 +73,7 @@ impl Metadata {
         .await?;
 
         let tx = Transaction::new_signed_with_payer(
-            &[instruction::create_metadata_accounts(
+            &[instruction::create_metadata_accounts_v3(
                 id(),
                 self.pubkey,
                 self.mint.pubkey(),
@@ -87,6 +87,9 @@ impl Metadata {
                 seller_fee_basis_points,
                 false,
                 is_mutable,
+                None,
+                None,
+                None,
             )],
             Some(&context.payer.pubkey()),
             &[&context.payer],
@@ -127,7 +130,7 @@ impl Metadata {
         .await?;
 
         let tx = Transaction::new_signed_with_payer(
-            &[instruction::create_metadata_accounts_v2(
+            &[instruction::create_metadata_accounts_v3(
                 id(),
                 self.pubkey,
                 self.mint.pubkey(),
@@ -143,6 +146,7 @@ impl Metadata {
                 is_mutable,
                 collection,
                 uses,
+                None,
             )],
             Some(&context.payer.pubkey()),
             &[&context.payer],
