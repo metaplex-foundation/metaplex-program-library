@@ -15,7 +15,7 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  SOLANA_VERSION: 1.14.10
+  SOLANA_VERSION: 1.14.12
   RUST_TOOLCHAIN: stable
   CACHE: ${{ inputs.cache }}
 

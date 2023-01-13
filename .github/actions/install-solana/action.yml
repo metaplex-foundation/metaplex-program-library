@@ -4,7 +4,7 @@ inputs:
   solana_version:
     description: Version of Solana to install
     required: true
-    default: 1.14.10
+    default: 1.14.12
 
 runs:
   using: "composite"
