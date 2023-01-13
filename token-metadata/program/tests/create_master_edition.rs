@@ -22,7 +22,7 @@ mod create_master_edition {
         let test_master_edition = MasterEditionV2::new(&test_metadata);
 
         test_metadata
-            .create(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -30,7 +30,9 @@ mod create_master_edition {
                 None,
                 10,
                 false,
-                0,
+                None,
+                None,
+                None,
             )
             .await
             .unwrap();
@@ -62,7 +64,7 @@ mod create_master_edition {
         let test_master_edition = MasterEditionV2::new(&test_metadata);
 
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -70,6 +72,7 @@ mod create_master_edition {
                 None,
                 10,
                 false,
+                None,
                 None,
                 None,
             )
@@ -105,7 +108,7 @@ mod create_master_edition {
         let fake_mint_authority = Keypair::new();
 
         test_metadata
-            .create(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -113,7 +116,9 @@ mod create_master_edition {
                 None,
                 10,
                 false,
-                0,
+                None,
+                None,
+                None,
             )
             .await
             .unwrap();
@@ -150,7 +155,7 @@ mod create_master_edition {
         let test_master_edition = MasterEditionV2::new(&test_metadata);
 
         test_metadata
-            .create(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -158,7 +163,9 @@ mod create_master_edition {
                 None,
                 10,
                 false,
-                0,
+                None,
+                None,
+                None,
             )
             .await
             .unwrap();
@@ -180,7 +187,7 @@ mod create_master_edition {
         let payer_pubkey = context.payer.pubkey();
 
         test_metadata
-            .create(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -188,7 +195,9 @@ mod create_master_edition {
                 None,
                 10,
                 false,
-                0,
+                None,
+                None,
+                None,
             )
             .await
             .unwrap();
@@ -238,7 +247,7 @@ mod create_master_edition {
         let fake_update_authority = Keypair::new();
 
         test_metadata
-            .create(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -246,7 +255,9 @@ mod create_master_edition {
                 None,
                 10,
                 false,
-                0,
+                None,
+                None,
+                None,
             )
             .await
             .unwrap();
@@ -284,7 +295,7 @@ mod create_master_edition {
         let fake_update_authority = Keypair::new();
 
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -292,6 +303,7 @@ mod create_master_edition {
                 None,
                 10,
                 false,
+                None,
                 None,
                 None,
             )
@@ -333,7 +345,7 @@ mod create_master_edition {
         let payer_pubkey = context.payer.pubkey();
 
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -341,6 +353,7 @@ mod create_master_edition {
                 None,
                 10,
                 false,
+                None,
                 None,
                 None,
             )

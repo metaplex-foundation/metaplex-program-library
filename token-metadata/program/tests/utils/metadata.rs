@@ -165,7 +165,7 @@ impl Metadata {
         context.banks_client.process_transaction(tx).await
     }
 
-    pub async fn create_fungible_v2(
+    pub async fn create_fungible_v3(
         &self,
         context: &mut ProgramTestContext,
         name: String,
@@ -176,6 +176,7 @@ impl Metadata {
         is_mutable: bool,
         collection: Option<Collection>,
         uses: Option<Uses>,
+        collection_details: Option<CollectionDetails>,
     ) -> Result<(), BanksClientError> {
         create_mint(
             context,
@@ -202,9 +203,8 @@ impl Metadata {
         )
         .await?;
 
-        #[allow(deprecated)]
         let tx = Transaction::new_signed_with_payer(
-            &[instruction::create_metadata_accounts_v2(
+            &[instruction::create_metadata_accounts_v3(
                 id(),
                 self.pubkey,
                 self.mint.pubkey(),
@@ -220,6 +220,7 @@ impl Metadata {
                 is_mutable,
                 collection,
                 uses,
+                collection_details,
             )],
             Some(&context.payer.pubkey()),
             &[&context.payer],

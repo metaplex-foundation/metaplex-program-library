@@ -32,7 +32,18 @@ mod update_primary_sale_happened_via_token {
         let puffed_uri = puffed_out_string(&uri, MAX_URI_LENGTH);
 
         test_metadata
-            .create(&mut context, name, symbol, uri, None, 10, false, 0)
+            .create_v3(
+                &mut context,
+                name,
+                symbol,
+                uri,
+                None,
+                10,
+                false,
+                None,
+                None,
+                None,
+            )
             .await
             .unwrap();
 
@@ -87,7 +98,7 @@ mod update_primary_sale_happened_via_token {
         .unwrap();
 
         test_metadata
-            .create(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -95,7 +106,9 @@ mod update_primary_sale_happened_via_token {
                 None,
                 10,
                 true,
-                0,
+                None,
+                None,
+                None,
             )
             .await
             .unwrap();

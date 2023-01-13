@@ -36,7 +36,7 @@ mod update_metadata_account_v2 {
         let puffed_uri = puffed_out_string(&uri, MAX_URI_LENGTH);
 
         test_metadata
-            .create(
+            .create_v3(
                 &mut context,
                 name,
                 symbol.clone(),
@@ -44,7 +44,9 @@ mod update_metadata_account_v2 {
                 None,
                 10,
                 true,
-                0,
+                None,
+                None,
+                None,
             )
             .await
             .unwrap();
@@ -103,7 +105,7 @@ mod update_metadata_account_v2 {
         let puffed_uri = puffed_out_string(&uri, MAX_URI_LENGTH);
 
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 name,
                 symbol.clone(),
@@ -111,6 +113,7 @@ mod update_metadata_account_v2 {
                 None,
                 10,
                 true,
+                None,
                 None,
                 None,
             )
@@ -170,7 +173,7 @@ mod update_metadata_account_v2 {
         let uri = "uri".to_string();
 
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 name,
                 symbol.clone(),
@@ -180,6 +183,7 @@ mod update_metadata_account_v2 {
                 true,
                 None,
                 None,
+                None,
             )
             .await
             .unwrap();
@@ -187,7 +191,7 @@ mod update_metadata_account_v2 {
         let new_collection_authority = Keypair::new();
         let test_collection = Metadata::new();
         test_collection
-            .create_v2_default(&mut context)
+            .create_v3_default(&mut context)
             .await
             .unwrap();
         let collection_master_edition_account = MasterEditionV2::new(&test_collection);
@@ -281,7 +285,7 @@ mod update_metadata_account_v2 {
         let fake_update_authority = Keypair::new();
 
         test_metadata
-            .create(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -289,7 +293,9 @@ mod update_metadata_account_v2 {
                 None,
                 10,
                 true,
-                0,
+                None,
+                None,
+                None,
             )
             .await
             .unwrap();
@@ -328,7 +334,7 @@ mod update_metadata_account_v2 {
 
         // Primary sale happened created as false by default.
         test_metadata
-            .create(
+            .create_v3(
                 &mut context,
                 name,
                 symbol.clone(),
@@ -336,7 +342,9 @@ mod update_metadata_account_v2 {
                 None,
                 10,
                 true,
-                0,
+                None,
+                None,
+                None,
             )
             .await
             .unwrap();
@@ -395,7 +403,7 @@ mod update_metadata_account_v2 {
         let is_mutable = false;
 
         test_metadata
-            .create(
+            .create_v3(
                 &mut context,
                 name,
                 symbol.clone(),
@@ -403,7 +411,9 @@ mod update_metadata_account_v2 {
                 None,
                 10,
                 is_mutable,
-                0,
+                None,
+                None,
+                None,
             )
             .await
             .unwrap();
@@ -440,7 +450,7 @@ mod update_metadata_account_v2 {
         let test_metadata = Metadata::new();
 
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -450,12 +460,13 @@ mod update_metadata_account_v2 {
                 true,
                 None,
                 None,
+                None,
             )
             .await
             .unwrap();
         let test_collection = Metadata::new();
         test_collection
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test Col".to_string(),
                 "TSTCOL".to_string(),
@@ -463,6 +474,7 @@ mod update_metadata_account_v2 {
                 None,
                 10,
                 false,
+                None,
                 None,
                 None,
             )
@@ -517,7 +529,7 @@ mod update_metadata_account_v2 {
         let mut context = program_test().start_with_context().await;
         let test_metadata = Metadata::new();
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -527,6 +539,7 @@ mod update_metadata_account_v2 {
                 true,
                 None,
                 None,
+                None,
             )
             .await
             .unwrap();
@@ -534,7 +547,7 @@ mod update_metadata_account_v2 {
         let new_collection_authority = Keypair::new();
         let test_collection = Metadata::new();
         test_collection
-            .create_v2_default(&mut context)
+            .create_v3_default(&mut context)
             .await
             .unwrap();
         let collection_master_edition_account = MasterEditionV2::new(&test_collection);
@@ -624,7 +637,7 @@ mod update_metadata_account_v2 {
 
         let test_collection = Metadata::new();
         test_collection
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test Col".to_string(),
                 "TSTCOL".to_string(),
@@ -632,6 +645,7 @@ mod update_metadata_account_v2 {
                 None,
                 10,
                 false,
+                None,
                 None,
                 None,
             )
@@ -646,7 +660,7 @@ mod update_metadata_account_v2 {
 
         let test_metadata = Metadata::new();
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -658,6 +672,7 @@ mod update_metadata_account_v2 {
                     key: test_collection.pubkey,
                     verified: false,
                 }),
+                None,
                 None,
             )
             .await
@@ -765,7 +780,7 @@ mod update_metadata_account_v2 {
 
         let test_metadata = Metadata::new();
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -773,6 +788,7 @@ mod update_metadata_account_v2 {
                 Some(creators),
                 10,
                 true,
+                None,
                 None,
                 None,
             )
@@ -812,7 +828,7 @@ mod update_metadata_account_v2 {
         let test_metadata = Metadata::new();
 
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -826,6 +842,7 @@ mod update_metadata_account_v2 {
                     remaining: 1,
                     total: 1,
                 }),
+                None,
             )
             .await
             .unwrap();
@@ -878,7 +895,7 @@ mod update_metadata_account_v2 {
         // Create metadata with one verified creator.
         let test_metadata = Metadata::new();
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -886,6 +903,7 @@ mod update_metadata_account_v2 {
                 Some(creators),
                 10,
                 true,
+                None,
                 None,
                 None,
             )
@@ -969,7 +987,7 @@ async fn fail_cannot_unverify_another_creator_by_removing_from_array() {
     // Create metadata with one verified creator.
     let test_metadata = Metadata::new();
     test_metadata
-        .create_v2(
+        .create_v3(
             &mut context,
             "Test".to_string(),
             "TST".to_string(),
@@ -977,6 +995,7 @@ async fn fail_cannot_unverify_another_creator_by_removing_from_array() {
             Some(creators),
             10,
             true,
+            None,
             None,
             None,
         )

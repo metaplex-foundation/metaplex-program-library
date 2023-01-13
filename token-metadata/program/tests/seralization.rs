@@ -17,7 +17,7 @@ mod serialization {
         let test_master_edition = MasterEditionV2::new(&test_metadata);
 
         test_metadata
-            .create(
+            .create_v3(
                 context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -25,7 +25,9 @@ mod serialization {
                 None,
                 10,
                 false,
-                0,
+                None,
+                None,
+                None,
             )
             .await
             .unwrap();

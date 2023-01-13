@@ -32,7 +32,7 @@ mod update_metadata_account {
         let puffed_uri = puffed_out_string(&uri, MAX_URI_LENGTH);
 
         test_metadata
-            .create(
+            .create_v3(
                 &mut context,
                 name,
                 symbol.clone(),
@@ -40,7 +40,9 @@ mod update_metadata_account {
                 None,
                 10,
                 true,
-                0,
+                None,
+                None,
+                None,
             )
             .await
             .unwrap();
@@ -48,7 +50,17 @@ mod update_metadata_account {
         let updated_name = "Cool".to_string();
         let puffed_updated_name = puffed_out_string(&updated_name, MAX_NAME_LENGTH);
         test_metadata
-            .update(&mut context, updated_name, symbol, uri, None, 10)
+            .update_v2(
+                &mut context,
+                updated_name,
+                symbol,
+                uri,
+                None,
+                10,
+                true,
+                None,
+                None,
+            )
             .await
             .unwrap();
 
@@ -75,7 +87,7 @@ mod update_metadata_account {
         let fake_update_authority = Keypair::new();
 
         test_metadata
-            .create(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -83,16 +95,19 @@ mod update_metadata_account {
                 None,
                 10,
                 true,
-                0,
+                None,
+                None,
+                None,
             )
             .await
             .unwrap();
 
         let tx = Transaction::new_signed_with_payer(
-            &[instruction::update_metadata_accounts(
+            &[instruction::update_metadata_accounts_v2(
                 id(),
                 test_metadata.pubkey,
                 fake_update_authority.pubkey(),
+                None,
                 None,
                 None,
                 None,

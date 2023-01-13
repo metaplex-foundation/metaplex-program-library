@@ -23,7 +23,7 @@ mod sign_metadata {
         let ua_creator = context.payer.pubkey();
         let test_meta = Metadata::new();
         test_meta
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -42,6 +42,7 @@ mod sign_metadata {
                 ]),
                 10,
                 false,
+                None,
                 None,
                 None,
             )

@@ -34,7 +34,7 @@ mod mint_new_edition_from_master_edition_via_token {
         let test_edition_marker = EditionMarker::new(&test_metadata, &test_master_edition, 1);
 
         test_metadata
-            .create(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -46,7 +46,9 @@ mod mint_new_edition_from_master_edition_via_token {
                 }]),
                 10,
                 false,
-                0,
+                None,
+                None,
+                None,
             )
             .await
             .unwrap();
@@ -78,7 +80,7 @@ mod mint_new_edition_from_master_edition_via_token {
         let test_master_edition = MasterEditionV2::new(&test_metadata);
         let test_collection = Metadata::new();
         test_collection
-            .create_v2_default(&mut context)
+            .create_v3_default(&mut context)
             .await
             .unwrap();
         let collection_master_edition_account = MasterEditionV2::new(&test_collection);
@@ -87,7 +89,7 @@ mod mint_new_edition_from_master_edition_via_token {
             .await
             .unwrap();
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -103,6 +105,7 @@ mod mint_new_edition_from_master_edition_via_token {
                     key: test_collection.mint.pubkey(),
                     verified: false,
                 }),
+                None,
                 None,
             )
             .await
@@ -156,7 +159,7 @@ mod mint_new_edition_from_master_edition_via_token {
         let test_edition_marker = EditionMarker::new(&test_metadata, &test_master_edition, 1);
 
         test_metadata
-            .create(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -164,7 +167,9 @@ mod mint_new_edition_from_master_edition_via_token {
                 None,
                 10,
                 false,
-                0,
+                None,
+                None,
+                None,
             )
             .await
             .unwrap();
@@ -192,7 +197,7 @@ mod mint_new_edition_from_master_edition_via_token {
         let payer_pubkey = context.payer.pubkey();
 
         test_metadata
-            .create(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -200,7 +205,9 @@ mod mint_new_edition_from_master_edition_via_token {
                 None,
                 10,
                 false,
-                0,
+                None,
+                None,
+                None,
             )
             .await
             .unwrap();
@@ -273,7 +280,7 @@ mod mint_new_edition_from_master_edition_via_token {
         let test_edition_marker1 = EditionMarker::new(&test_metadata, &test_master_edition, 1);
 
         test_metadata
-            .create(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -281,7 +288,9 @@ mod mint_new_edition_from_master_edition_via_token {
                 None,
                 10,
                 false,
-                0,
+                None,
+                None,
+                None,
             )
             .await
             .unwrap();
@@ -304,7 +313,7 @@ mod mint_new_edition_from_master_edition_via_token {
         let test_edition_marker = EditionMarker::new(&test_metadata, &test_master_edition, 0);
 
         test_metadata
-            .create(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -312,7 +321,9 @@ mod mint_new_edition_from_master_edition_via_token {
                 None,
                 10,
                 false,
-                0,
+                None,
+                None,
+                None,
             )
             .await
             .unwrap();
@@ -335,7 +346,7 @@ mod mint_new_edition_from_master_edition_via_token {
         let test_edition_marker = EditionMarker::new(&test_metadata, &test_master_edition, 0);
 
         test_metadata
-            .create(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -343,7 +354,9 @@ mod mint_new_edition_from_master_edition_via_token {
                 None,
                 10,
                 false,
-                0,
+                None,
+                None,
+                None,
             )
             .await
             .unwrap();
@@ -362,7 +375,7 @@ mod mint_new_edition_from_master_edition_via_token {
         let mut context = program_test().start_with_context().await;
 
         let original_nft = Metadata::new();
-        original_nft.create_v2_default(&mut context).await.unwrap();
+        original_nft.create_v3_default(&mut context).await.unwrap();
 
         let master_edition = MasterEditionV2::new(&original_nft);
         master_edition
@@ -449,7 +462,7 @@ mod mint_new_edition_from_master_edition_via_token {
         let mut context = program_test().start_with_context().await;
 
         let original_nft = Metadata::new();
-        original_nft.create_v2_default(&mut context).await.unwrap();
+        original_nft.create_v3_default(&mut context).await.unwrap();
 
         let master_edition = MasterEditionV2::new(&original_nft);
         master_edition
@@ -483,7 +496,7 @@ mod mint_new_edition_from_master_edition_via_token {
         let mut context = program_test().start_with_context().await;
 
         let original_nft = Metadata::new();
-        original_nft.create_v2_default(&mut context).await.unwrap();
+        original_nft.create_v3_default(&mut context).await.unwrap();
 
         let master_edition = MasterEditionV2::new(&original_nft);
         master_edition
@@ -520,7 +533,7 @@ mod mint_new_edition_from_master_edition_via_token {
         let mut context = program_test().start_with_context().await;
 
         let original_nft = Metadata::new();
-        original_nft.create_v2_default(&mut context).await.unwrap();
+        original_nft.create_v3_default(&mut context).await.unwrap();
 
         let master_edition = MasterEditionV2::new(&original_nft);
         master_edition

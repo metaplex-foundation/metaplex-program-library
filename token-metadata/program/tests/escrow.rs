@@ -21,7 +21,7 @@ mod escrow {
         let parent_test_metadata = Metadata::new();
         let parent_test_master_edition = MasterEditionV2::new(&parent_test_metadata);
         parent_test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -29,6 +29,7 @@ mod escrow {
                 None,
                 10,
                 true,
+                None,
                 None,
                 None,
             )
@@ -78,7 +79,7 @@ mod escrow {
         let attribute_test_metadata = Metadata::new();
         let attribute_test_master_edition = MasterEditionV2::new(&attribute_test_metadata);
         attribute_test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -86,6 +87,7 @@ mod escrow {
                 None,
                 10,
                 true,
+                None,
                 None,
                 None,
             )
@@ -220,7 +222,7 @@ mod escrow {
         let parent_test_metadata = Metadata::new();
         let parent_test_master_edition = MasterEditionV2::new(&parent_test_metadata);
         parent_test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -228,6 +230,7 @@ mod escrow {
                 None,
                 10,
                 true,
+                None,
                 None,
                 None,
             )
@@ -276,7 +279,7 @@ mod escrow {
         print!("\n=====Transfer In=====\n");
         let attribute_test_metadata = Metadata::new();
         attribute_test_metadata
-            .create_fungible_v2(
+            .create_fungible_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -284,6 +287,7 @@ mod escrow {
                 None,
                 10,
                 true,
+                None,
                 None,
                 None,
             )

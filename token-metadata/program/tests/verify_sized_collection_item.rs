@@ -134,7 +134,7 @@ mod verify_sized_collection_item {
 
         let test_collection = Metadata::new();
         test_collection
-            .create_v2_default(&mut context)
+            .create_v3_default(&mut context)
             .await
             .unwrap();
 
@@ -146,7 +146,7 @@ mod verify_sized_collection_item {
 
         let test_collection2 = Metadata::new();
         test_collection2
-            .create_v2_default(&mut context)
+            .create_v3_default(&mut context)
             .await
             .unwrap();
 
@@ -171,7 +171,7 @@ mod verify_sized_collection_item {
             use_method: UseMethod::Single,
         });
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 name,
                 symbol,
@@ -184,6 +184,7 @@ mod verify_sized_collection_item {
                     verified: false,
                 }),
                 uses.to_owned(),
+                None,
             )
             .await
             .unwrap();
@@ -230,7 +231,7 @@ mod verify_sized_collection_item {
 
         let test_collection = Metadata::new();
         test_collection
-            .create_v2_default(&mut context)
+            .create_v3_default(&mut context)
             .await
             .unwrap();
 
@@ -250,7 +251,7 @@ mod verify_sized_collection_item {
             use_method: UseMethod::Single,
         });
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 name,
                 symbol,
@@ -263,6 +264,7 @@ mod verify_sized_collection_item {
                     verified: false,
                 }),
                 uses.to_owned(),
+                None,
             )
             .await
             .unwrap();
@@ -295,7 +297,7 @@ mod verify_sized_collection_item {
 
         let test_collection = Metadata::new();
         test_collection
-            .create_v2_default(&mut context)
+            .create_v3_default(&mut context)
             .await
             .unwrap();
 
@@ -315,7 +317,7 @@ mod verify_sized_collection_item {
             use_method: UseMethod::Single,
         });
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 name,
                 symbol,
@@ -328,6 +330,7 @@ mod verify_sized_collection_item {
                     verified: false,
                 }),
                 uses.to_owned(),
+                None,
             )
             .await
             .unwrap();
@@ -360,7 +363,7 @@ mod verify_sized_collection_item {
 
         let test_collection = Metadata::new();
         test_collection
-            .create_v2_default(&mut context)
+            .create_v3_default(&mut context)
             .await
             .unwrap();
 
@@ -375,7 +378,7 @@ mod verify_sized_collection_item {
             use_method: UseMethod::Single,
         });
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 name,
                 symbol,
@@ -388,6 +391,7 @@ mod verify_sized_collection_item {
                     verified: false,
                 }),
                 uses.to_owned(),
+                None,
             )
             .await
             .unwrap();
@@ -421,7 +425,7 @@ mod verify_sized_collection_item {
 
         let test_collection = Metadata::new();
         test_collection
-            .create_v2_default(&mut context)
+            .create_v3_default(&mut context)
             .await
             .unwrap();
 
@@ -442,7 +446,7 @@ mod verify_sized_collection_item {
             use_method: UseMethod::Single,
         });
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 name,
                 symbol,
@@ -455,6 +459,7 @@ mod verify_sized_collection_item {
                     verified: false,
                 }),
                 uses.to_owned(),
+                None,
             )
             .await
             .unwrap();
@@ -520,7 +525,7 @@ mod verify_sized_collection_item {
             use_method: UseMethod::Single,
         });
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 name,
                 symbol,
@@ -533,6 +538,7 @@ mod verify_sized_collection_item {
                     verified: false,
                 }),
                 uses.to_owned(),
+                None,
             )
             .await
             .unwrap();
@@ -611,7 +617,7 @@ mod verify_sized_collection_item {
         let uri = "uri".to_string();
         let test_metadata = Metadata::new();
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 name,
                 symbol,
@@ -623,6 +629,7 @@ mod verify_sized_collection_item {
                     key: test_collection.mint.pubkey(),
                     verified: false,
                 }),
+                None,
                 None,
             )
             .await
@@ -724,7 +731,7 @@ mod verify_sized_collection_item {
             .unwrap();
 
         let test_metadata = Metadata::new();
-        test_metadata.create_v2_default(&mut context).await.unwrap();
+        test_metadata.create_v3_default(&mut context).await.unwrap();
 
         let metadata = test_metadata.get_data(&mut context).await;
         assert!(metadata.collection.is_none());
@@ -823,7 +830,7 @@ mod verify_sized_collection_item {
             .unwrap();
 
         let test_metadata = Metadata::new();
-        test_metadata.create_v2_default(&mut context).await.unwrap();
+        test_metadata.create_v3_default(&mut context).await.unwrap();
 
         let metadata = test_metadata.get_data(&mut context).await;
         assert!(metadata.collection.is_none());
@@ -905,7 +912,7 @@ mod verify_sized_collection_item {
         let new_collection_authority = Keypair::new();
         let test_collection = Metadata::new();
         test_collection
-            .create_v2_default(&mut context)
+            .create_v3_default(&mut context)
             .await
             .unwrap();
 
@@ -925,7 +932,7 @@ mod verify_sized_collection_item {
             use_method: UseMethod::Single,
         });
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 name,
                 symbol,
@@ -938,6 +945,7 @@ mod verify_sized_collection_item {
                     verified: false,
                 }),
                 uses.to_owned(),
+                None,
             )
             .await
             .unwrap();
@@ -1058,7 +1066,7 @@ mod verify_sized_collection_item {
             .unwrap();
 
         let test_metadata = Metadata::new();
-        test_metadata.create_v2_default(&mut context).await.unwrap();
+        test_metadata.create_v3_default(&mut context).await.unwrap();
 
         let metadata = test_metadata.get_data(&mut context).await;
         assert!(metadata.collection.is_none());
@@ -1184,7 +1192,7 @@ async fn fail_verify_already_verified() {
     let uri = "uri".to_string();
     let test_metadata = Metadata::new();
     test_metadata
-        .create_v2(
+        .create_v3(
             &mut context,
             name,
             symbol,
@@ -1196,6 +1204,7 @@ async fn fail_verify_already_verified() {
                 key: test_collection.mint.pubkey(),
                 verified: false,
             }),
+            None,
             None,
         )
         .await
@@ -1297,7 +1306,7 @@ async fn fail_unverify_already_unverified() {
     let uri = "uri".to_string();
     let test_metadata = Metadata::new();
     test_metadata
-        .create_v2(
+        .create_v3(
             &mut context,
             name,
             symbol,
@@ -1309,6 +1318,7 @@ async fn fail_unverify_already_unverified() {
                 key: test_collection.mint.pubkey(),
                 verified: false,
             }),
+            None,
             None,
         )
         .await
@@ -1428,7 +1438,7 @@ async fn fail_set_and_verify_already_verified() {
     let uri = "uri".to_string();
     let test_metadata = Metadata::new();
     test_metadata
-        .create_v2(
+        .create_v3(
             &mut context,
             name,
             symbol,
@@ -1440,6 +1450,7 @@ async fn fail_set_and_verify_already_verified() {
                 key: test_collection.mint.pubkey(),
                 verified: false,
             }),
+            None,
             None,
         )
         .await
