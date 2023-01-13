@@ -3274,13 +3274,6 @@
           "optional": true
         },
         {
-          "name": "tokenRecord",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "Token record account",
-          "optional": true
-        },
-        {
           "name": "payer",
           "isMut": true,
           "isSigner": true,

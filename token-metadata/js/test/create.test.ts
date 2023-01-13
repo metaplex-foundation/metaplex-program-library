@@ -121,7 +121,7 @@ test('Create: ProgrammableNonFungible with existing mint account', async (t) => 
   t.equal(metadata.data.uri.replace(/\0+/, ''), 'uri');
 });
 
-test.only('Create: ProgrammableNonFungible with minted mint account', async (t) => {
+test('Create: ProgrammableNonFungible with minted mint account', async (t) => {
   const API = new InitTransactions();
   const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
 

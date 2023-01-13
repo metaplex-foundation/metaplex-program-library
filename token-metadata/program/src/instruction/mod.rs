@@ -692,12 +692,11 @@ pub enum MetadataInstruction {
     #[account(3, name="mint", desc="Mint account")]
     #[account(4, writable, name="metadata", desc="Metadata account")]
     #[account(5, optional, writable, name="edition", desc="Edition account")]
-    #[account(6, optional, name="token_record", desc="Token record account")]
-    #[account(7, signer, writable, name="payer", desc="Payer")]
-    #[account(8, name="system_program", desc="System program")]
-    #[account(9, name="sysvar_instructions", desc="System program")]
-    #[account(10, optional, name="authorization_rules_program", desc="Token Authorization Rules Program")]
-    #[account(11, optional, name="authorization_rules", desc="Token Authorization Rules account")]
+    #[account(6, signer, writable, name="payer", desc="Payer")]
+    #[account(7, name="system_program", desc="System program")]
+    #[account(8, name="sysvar_instructions", desc="System program")]
+    #[account(9, optional, name="authorization_rules_program", desc="Token Authorization Rules Program")]
+    #[account(10, optional, name="authorization_rules", desc="Token Authorization Rules account")]
     #[default_optional_accounts]
     Update(UpdateArgs),
 

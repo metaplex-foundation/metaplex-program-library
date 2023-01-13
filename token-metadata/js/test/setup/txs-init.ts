@@ -287,6 +287,8 @@ export class InitTransactions {
     authorizationRules: PublicKey,
     amount: number,
     handler: PayerTransactionHandler,
+    tokenRecord: PublicKey | null = null,
+    destinationTokenRecord: PublicKey | null = null,
   ): Promise<{ tx: ConfirmedTransactionAssertablePromise }> {
     amman.addr.addLabel('Mint Account', mint);
     amman.addr.addLabel('Metadata Account', metadata);
@@ -298,13 +300,6 @@ export class InitTransactions {
     amman.addr.addLabel('Token Account', token);
     amman.addr.addLabel('Destination', destinationOwner);
     amman.addr.addLabel('Destination Token Account', destination);
-
-    // owner token record
-    const ownerTokenRecord = findTokenRecordPda(mint, tokenOwner);
-    amman.addr.addLabel('Owner Token Record', ownerTokenRecord);
-    // destination token record
-    const destinationTokenRecord = findTokenRecordPda(mint, destinationOwner);
-    amman.addr.addLabel('Destination Token Record', destinationTokenRecord);
 
     const transferAcccounts: TransferInstructionAccounts = {
       authority: authority.publicKey,
@@ -322,7 +317,7 @@ export class InitTransactions {
       sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
       authorizationRules,
       authorizationRulesProgram: TOKEN_AUTH_RULES_ID,
-      ownerTokenRecord,
+      ownerTokenRecord: tokenRecord,
       destinationTokenRecord,
     };
 
@@ -353,7 +348,6 @@ export class InitTransactions {
     delegateRecord: PublicKey | null = null,
     masterEdition: PublicKey | null = null,
     token: PublicKey | null = null,
-    tokenRecord: PublicKey | null = null,
     ruleSetPda?: PublicKey | null,
     authorizationData?: AuthorizationData | null,
   ): Promise<{ tx: ConfirmedTransactionAssertablePromise }> {
@@ -367,7 +361,6 @@ export class InitTransactions {
       metadata,
       edition: masterEdition,
       mint,
-      tokenRecord,
       systemProgram: SystemProgram.programId,
       sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
       authority: authority.publicKey,

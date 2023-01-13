@@ -1133,7 +1133,6 @@ test('Update: Update existing pNFT rule set config to None', async (t) => {
     null,
     masterEdition,
     null,
-    null,
     ruleSetPda,
   );
   await updateTx.assertSuccess(t);

@@ -17,6 +17,7 @@ import { PROGRAM_ID as TOKEN_METADATA_ID } from '../src/generated';
 import { encode } from '@msgpack/msgpack';
 import spok from 'spok';
 import { spokSamePubkey } from './utils';
+import { findTokenRecordPda } from './utils/programmable';
 
 killStuckProcess();
 
@@ -147,6 +148,14 @@ test('Transfer: ProgrammableNonFungible (wallet-to-wallet)', async (t) => {
     mint,
     destination.publicKey,
   );
+
+  // owner token record
+  const ownerTokenRecord = findTokenRecordPda(mint, owner.publicKey);
+  amman.addr.addLabel('Owner Token Record', ownerTokenRecord);
+  // destination token record
+  const destinationTokenRecord = findTokenRecordPda(mint, destination.publicKey);
+  amman.addr.addLabel('Destination Token Record', destinationTokenRecord);
+
   // Transfer the NFT to the destination account, this should work since
   // the destination account is in the ruleset.
   const { tx: transferTx } = await API.transfer(
@@ -161,6 +170,8 @@ test('Transfer: ProgrammableNonFungible (wallet-to-wallet)', async (t) => {
     ruleSetPda,
     1,
     handler,
+    ownerTokenRecord,
+    destinationTokenRecord,
   );
 
   await transferTx.assertSuccess(t);
@@ -261,6 +272,13 @@ test('Transfer: ProgrammableNonFungible (program-owned)', async (t) => {
 
   await sendAndConfirmTransaction(connection, invalidAtaTx, [payer]);
 
+  // owner token record
+  const ownerTokenRecord = findTokenRecordPda(mint, owner.publicKey);
+  amman.addr.addLabel('Owner Token Record', ownerTokenRecord);
+  // destination token record
+  let destinationTokenRecord = findTokenRecordPda(mint, invalidDestination);
+  amman.addr.addLabel('Destination Token Record', destinationTokenRecord);
+
   // Transfer the NFT to the invalid destination account, this should fail.
   const { tx: invalidTransferTx } = await API.transfer(
     authority,
@@ -274,17 +292,19 @@ test('Transfer: ProgrammableNonFungible (program-owned)', async (t) => {
     ruleSetPda,
     1,
     handler,
+    ownerTokenRecord,
+    destinationTokenRecord,
   );
 
   // Cusper matches the error code from mpl-token-auth-rules
   // to a mpl-token-metadata error which gives us the wrong message
   // so we match on the actual log values here instead.
-  await invalidTransferTx.assertLogs(t, [
-    /Instruction: Validate/,
-    /Failed to validate: Custom program error: 0xa/,
-    /Program Owned check failed/,
-    /Program auth9SigNpDKz4sJJ1DfCTuZrZNSAgh9sFD3rboVmgg/,
-  ]);
+  invalidTransferTx.then((x) =>
+    x.assertLogs(t, [/The operation retrieved is not in the selected RuleSet/i], {
+      txLabel: 'tx: Transfer',
+    }),
+  );
+  await invalidTransferTx.assertError(t);
 
   // Transfer failed so token should still be present on the original
   // account.
@@ -326,6 +346,10 @@ test('Transfer: ProgrammableNonFungible (program-owned)', async (t) => {
 
   await sendAndConfirmTransaction(connection, ataTx, [payer]);
 
+  // destination token record
+  destinationTokenRecord = findTokenRecordPda(mint, metadata);
+  amman.addr.addLabel('Destination Token Record', destinationTokenRecord);
+
   // Transfer the NFT to the destination account, this should work since
   // the destination account is in the ruleset.
   const { tx: transferTx } = await API.transfer(
@@ -340,6 +364,8 @@ test('Transfer: ProgrammableNonFungible (program-owned)', async (t) => {
     ruleSetPda,
     1,
     handler,
+    ownerTokenRecord,
+    destinationTokenRecord,
   );
 
   // Cusper matches the error code from mpl-token-auth-rules
@@ -398,6 +424,7 @@ Need to call print instead of mint
   await transferTx.assertSuccess(t);
 });
 */
+
 test('Transfer: Fungible', async (t) => {
   const API = new InitTransactions();
   const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
