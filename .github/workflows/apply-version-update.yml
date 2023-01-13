@@ -14,7 +14,7 @@ permissions:
 env:
   NODE_VERSION: 17.0.1
   ANCHOR_VERSION: 0.25.0
-  SOLANA_VERSION_STABLE: 1.10.40
+  SOLANA_VERSION_STABLE: 1.14.10
   RUST_TOOLCHAIN: stable
 
 jobs:
@@ -31,7 +31,7 @@ jobs:
   get-changes-scope:
     if: |
       github.event.pull_request.head.repo.full_name == github.event.pull_request.base.repo.full_name &&
-      contains(fromJson('["OWNER", "MEMBER", "CONTRIBUTOR"]'), github.event.review.author_association) == true && 
+      contains(fromJson('["OWNER", "MEMBER", "CONTRIBUTOR"]'), github.event.review.author_association) == true &&
       contains(fromJson('["approved", "commented"]'), github.event.review.state) == true
     runs-on: ubuntu-latest
     outputs:
@@ -82,7 +82,7 @@ jobs:
   get-version-scope:
     if: |
       github.event.pull_request.head.repo.full_name == github.event.pull_request.base.repo.full_name &&
-      contains(fromJson('["OWNER", "MEMBER", "CONTRIBUTOR"]'), github.event.review.author_association) == true && 
+      contains(fromJson('["OWNER", "MEMBER", "CONTRIBUTOR"]'), github.event.review.author_association) == true &&
       contains(fromJson('["approved", "commented"]'), github.event.review.state) == true
     runs-on: ubuntu-latest
     outputs:
