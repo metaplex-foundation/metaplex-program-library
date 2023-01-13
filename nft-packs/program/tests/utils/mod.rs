@@ -120,6 +120,7 @@ pub async fn mint_tokens(
             solana_sdk::commitment_config::CommitmentLevel::Confirmed,
         )
         .await
+        .map_err(|e| e.into())
 }
 
 pub async fn create_token_account(
@@ -159,6 +160,7 @@ pub async fn create_token_account(
             solana_sdk::commitment_config::CommitmentLevel::Confirmed,
         )
         .await
+        .map_err(|e| e.into())
 }
 
 pub async fn transfer_token(
@@ -190,6 +192,7 @@ pub async fn transfer_token(
             solana_sdk::commitment_config::CommitmentLevel::Confirmed,
         )
         .await
+        .map_err(|e| e.into())
 }
 
 pub async fn create_account<S: Pack>(
@@ -219,6 +222,7 @@ pub async fn create_account<S: Pack>(
             solana_sdk::commitment_config::CommitmentLevel::Confirmed,
         )
         .await
+        .map_err(|e| e.into())
 }
 
 pub async fn create_mint(
@@ -259,6 +263,7 @@ pub async fn create_mint(
             solana_sdk::commitment_config::CommitmentLevel::Confirmed,
         )
         .await
+        .map_err(|e| e.into())
 }
 
 pub async fn create_store(
@@ -296,7 +301,8 @@ pub async fn create_store(
                 tx,
                 solana_sdk::commitment_config::CommitmentLevel::Confirmed,
             )
-            .await,
+            .await
+            .map_err(|e| e.into()),
     );
 
     Ok(store_key)

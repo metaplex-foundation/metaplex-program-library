@@ -10,7 +10,7 @@ use crate::{
 use mpl_metaplex::state::Store;
 use mpl_token_metadata::{
     error::MetadataError,
-    state::{MasterEdition, MasterEditionV2, Metadata, EDITION, PREFIX},
+    state::{MasterEditionV2, Metadata, TokenMetadataAccount, EDITION, PREFIX},
     utils::{assert_derivation, assert_initialized},
 };
 use solana_program::{
@@ -87,7 +87,7 @@ pub fn add_voucher_to_pack(program_id: &Pubkey, accounts: &[AccountInfo]) -> Pro
     // Check for v2
     let master_edition = MasterEditionV2::from_account_info(master_edition_info)?;
 
-    if master_edition.supply() == 0 {
+    if master_edition.supply == 0 {
         return Err(NFTPacksError::WrongVoucherSupply.into());
     }
 

@@ -204,7 +204,13 @@ async fn fail_invalid_state() {
         context.last_blockhash,
     );
 
-    unwrap_ignoring_io_error_in_ci(context.banks_client.process_transaction(tx).await);
+    unwrap_ignoring_io_error_in_ci(
+        context
+            .banks_client
+            .process_transaction(tx)
+            .await
+            .map_err(|e| e.into()),
+    );
 
     voucher_edition
         .create(

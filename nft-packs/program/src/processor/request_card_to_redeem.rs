@@ -14,7 +14,7 @@ use crate::{
 use arrayref::array_ref;
 use mpl_metaplex::state::Store;
 use mpl_token_metadata::{
-    state::{Edition, EDITION, PREFIX as EDITION_PREFIX},
+    state::{Edition, TokenMetadataAccount, EDITION, PREFIX as EDITION_PREFIX},
     utils::assert_derivation,
 };
 use solana_program::{

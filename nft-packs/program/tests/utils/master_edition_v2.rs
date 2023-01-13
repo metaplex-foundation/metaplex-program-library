@@ -89,7 +89,11 @@ impl TestMasterEditionV2 {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await
+        context
+            .banks_client
+            .process_transaction(tx)
+            .await
+            .map_err(|e| e.into())
     }
 
     pub async fn create(
@@ -113,6 +117,10 @@ impl TestMasterEditionV2 {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await
+        context
+            .banks_client
+            .process_transaction(tx)
+            .await
+            .map_err(|e| e.into())
     }
 }

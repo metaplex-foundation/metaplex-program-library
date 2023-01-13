@@ -74,7 +74,7 @@ impl TestMetadata {
         .await?;
 
         let tx = Transaction::new_signed_with_payer(
-            &[instruction::create_metadata_accounts(
+            &[instruction::create_metadata_accounts_v3(
                 id(),
                 self.pubkey,
                 self.mint.pubkey(),
@@ -88,6 +88,9 @@ impl TestMetadata {
                 seller_fee_basis_points,
                 false,
                 is_mutable,
+                None,
+                None,
+                None,
             )],
             Some(&context.payer.pubkey()),
             &[&context.payer],
@@ -101,6 +104,7 @@ impl TestMetadata {
                 solana_sdk::commitment_config::CommitmentLevel::Confirmed,
             )
             .await
+            .map_err(|e| e.into())
     }
 
     pub async fn update_primary_sale_happened_via_token(
@@ -126,6 +130,7 @@ impl TestMetadata {
                 solana_sdk::commitment_config::CommitmentLevel::Confirmed,
             )
             .await
+            .map_err(|e| e.into())
     }
 
     pub async fn update(
@@ -164,5 +169,6 @@ impl TestMetadata {
                 solana_sdk::commitment_config::CommitmentLevel::Confirmed,
             )
             .await
+            .map_err(|e| e.into())
     }
 }

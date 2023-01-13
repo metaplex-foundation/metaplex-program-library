@@ -72,6 +72,7 @@ impl TestPackSet {
                 solana_sdk::commitment_config::CommitmentLevel::Confirmed,
             )
             .await
+            .map_err(|e| e.into())
     }
 
     pub async fn clean_up(&self, context: &mut ProgramTestContext) -> transport::Result<()> {
@@ -91,6 +92,7 @@ impl TestPackSet {
                 solana_sdk::commitment_config::CommitmentLevel::Confirmed,
             )
             .await
+            .map_err(|e| e.into())
     }
 
     pub async fn add_card(
@@ -141,6 +143,7 @@ impl TestPackSet {
                 solana_sdk::commitment_config::CommitmentLevel::Confirmed,
             )
             .await
+            .map_err(|e| e.into())
     }
 
     pub async fn activate(&self, context: &mut ProgramTestContext) -> transport::Result<()> {
@@ -162,6 +165,7 @@ impl TestPackSet {
                 solana_sdk::commitment_config::CommitmentLevel::Confirmed,
             )
             .await
+            .map_err(|e| e.into())
     }
 
     pub async fn deactivate(&self, context: &mut ProgramTestContext) -> transport::Result<()> {
@@ -183,6 +187,7 @@ impl TestPackSet {
                 solana_sdk::commitment_config::CommitmentLevel::Confirmed,
             )
             .await
+            .map_err(|e| e.into())
     }
 
     pub async fn close(&self, context: &mut ProgramTestContext) -> transport::Result<()> {
@@ -204,6 +209,7 @@ impl TestPackSet {
                 solana_sdk::commitment_config::CommitmentLevel::Confirmed,
             )
             .await
+            .map_err(|e| e.into())
     }
 
     pub async fn transfer_pack_authority(
@@ -230,6 +236,7 @@ impl TestPackSet {
                 solana_sdk::commitment_config::CommitmentLevel::Confirmed,
             )
             .await
+            .map_err(|e| e.into())
     }
 
     pub async fn edit(
@@ -264,6 +271,7 @@ impl TestPackSet {
                 solana_sdk::commitment_config::CommitmentLevel::Confirmed,
             )
             .await
+            .map_err(|e| e.into())
     }
 
     pub async fn delete_card(
@@ -295,6 +303,7 @@ impl TestPackSet {
                 solana_sdk::commitment_config::CommitmentLevel::Confirmed,
             )
             .await
+            .map_err(|e| e.into())
     }
 
     pub async fn delete(
@@ -321,6 +330,7 @@ impl TestPackSet {
                 solana_sdk::commitment_config::CommitmentLevel::Confirmed,
             )
             .await
+            .map_err(|e| e.into())
     }
 
     pub async fn delete_voucher(
@@ -349,6 +359,7 @@ impl TestPackSet {
                 solana_sdk::commitment_config::CommitmentLevel::Confirmed,
             )
             .await
+            .map_err(|e| e.into())
     }
 
     pub async fn add_voucher(
@@ -399,6 +410,7 @@ impl TestPackSet {
                 solana_sdk::commitment_config::CommitmentLevel::Confirmed,
             )
             .await
+            .map_err(|e| e.into())
     }
 
     pub async fn request_card_for_redeem(
@@ -434,6 +446,7 @@ impl TestPackSet {
                 solana_sdk::commitment_config::CommitmentLevel::Confirmed,
             )
             .await
+            .map_err(|e| e.into())
     }
 
     pub async fn request_card_for_redeem_fake_voucher(
@@ -474,6 +487,7 @@ impl TestPackSet {
                 solana_sdk::commitment_config::CommitmentLevel::Confirmed,
             )
             .await
+            .map_err(|e| e.into())
     }
 
     pub async fn claim_pack(
@@ -565,5 +579,6 @@ impl TestPackSet {
                 solana_sdk::commitment_config::CommitmentLevel::Confirmed,
             )
             .await
+            .map_err(|e| e.into())
     }
 }

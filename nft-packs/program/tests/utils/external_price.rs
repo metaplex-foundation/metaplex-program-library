@@ -52,7 +52,11 @@ impl TestExternalPrice {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await
+        context
+            .banks_client
+            .process_transaction(tx)
+            .await
+            .map_err(|e| e.into())
     }
 
     pub async fn create(&self, context: &mut ProgramTestContext) -> transport::Result<()> {
@@ -78,6 +82,10 @@ impl TestExternalPrice {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await
+        context
+            .banks_client
+            .process_transaction(tx)
+            .await
+            .map_err(|e| e.into())
     }
 }

@@ -112,6 +112,7 @@ impl TestEditionMarker {
         )
         .await?;
 
+        #[allow(deprecated)]
         let tx = Transaction::new_signed_with_payer(
             &[
                 instruction::mint_edition_from_master_edition_via_vault_proxy(
@@ -146,6 +147,7 @@ impl TestEditionMarker {
                 solana_sdk::commitment_config::CommitmentLevel::Confirmed,
             )
             .await
+            .map_err(|e| e.into())
     }
 
     pub async fn create(
@@ -207,6 +209,7 @@ impl TestEditionMarker {
                 solana_sdk::commitment_config::CommitmentLevel::Confirmed,
             )
             .await
+            .map_err(|e| e.into())
     }
 
     pub async fn create_with_invalid_token_program(
@@ -272,5 +275,6 @@ impl TestEditionMarker {
                 solana_sdk::commitment_config::CommitmentLevel::Confirmed,
             )
             .await
+            .map_err(|e| e.into())
     }
 }

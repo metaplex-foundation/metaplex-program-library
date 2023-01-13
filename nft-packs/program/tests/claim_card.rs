@@ -1347,7 +1347,11 @@ async fn fail_wrong_user_wallet() {
         context.last_blockhash,
     );
 
-    let tx_result = context.banks_client.process_transaction(tx).await;
+    let tx_result = context
+        .banks_client
+        .process_transaction(tx)
+        .await
+        .map_err(|e| e.into());
 
     assert_transport_error!(
         tx_result.unwrap_err(),
@@ -1541,7 +1545,11 @@ async fn fail_claim_twice() {
         context.last_blockhash,
     );
 
-    let result = context.banks_client.process_transaction(tx).await;
+    let result = context
+        .banks_client
+        .process_transaction(tx)
+        .await
+        .map_err(|e| e.into());
 
     assert_custom_error!(result.unwrap_err(), NFTPacksError::Underflow, 0);
 }

@@ -68,7 +68,11 @@ impl TestVault {
             &[&context.payer, &context.payer, &context.payer],
             context.last_blockhash,
         );
-        context.banks_client.process_transaction(tx).await?;
+        context
+            .banks_client
+            .process_transaction(tx)
+            .await
+            .map_err(transport::TransportError::from)?;
 
         Ok((safety_deposit_box, store.pubkey()))
     }
@@ -103,7 +107,11 @@ impl TestVault {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await
+        context
+            .banks_client
+            .process_transaction(tx)
+            .await
+            .map_err(|e| e.into())
     }
 
     pub async fn combine(
@@ -159,7 +167,11 @@ impl TestVault {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await
+        context
+            .banks_client
+            .process_transaction(tx)
+            .await
+            .map_err(|e| e.into())
     }
 
     pub async fn create(
@@ -219,6 +231,10 @@ impl TestVault {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await
+        context
+            .banks_client
+            .process_transaction(tx)
+            .await
+            .map_err(|e| e.into())
     }
 }
