@@ -657,7 +657,6 @@ export class InitTransactions {
       createOrUpdateArgs: {
         __kind: 'V1',
         serializedRuleSet,
-        ruleSetComplete: true,
       },
     };
 
