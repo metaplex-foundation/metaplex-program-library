@@ -49,6 +49,7 @@ export type SetCollectionDuringMintInstructionAccounts = {
   collectionMasterEdition: web3.PublicKey;
   authority: web3.PublicKey;
   collectionAuthorityRecord: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
 };
 
 export const setCollectionDuringMintInstructionDiscriminator = [103, 17, 200, 25, 118, 95, 125, 61];
@@ -125,6 +126,12 @@ export function createSetCollectionDuringMintInstruction(
       isSigner: false,
     },
   ];
+
+  if (accounts.anchorRemainingAccounts != null) {
+    for (const acc of accounts.anchorRemainingAccounts) {
+      keys.push(acc);
+    }
+  }
 
   const ix = new web3.TransactionInstruction({
     programId,
