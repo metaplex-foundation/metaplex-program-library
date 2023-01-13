@@ -6,6 +6,10 @@ import { Test } from 'tape';
 
 export * from './errors';
 
+export const SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID: PublicKey = new PublicKey(
+  'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL',
+);
+
 export function spokSameBignum(a?: BN | bignum): Specification<bignum> {
   const same = (b?: BN | bignum) => {
     if (a == null && b == null) {

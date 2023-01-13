@@ -3425,6 +3425,26 @@ createErrorFromCodeLookup.set(0x9f, () => new MissingTokenRecordError());
 createErrorFromNameLookup.set('MissingTokenRecord', () => new MissingTokenRecordError());
 
 /**
+ * MintSupplyMustBeZero: 'Mint supply must be zero for programmable assets'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MintSupplyMustBeZeroError extends Error {
+  readonly code: number = 0xa0;
+  readonly name: string = 'MintSupplyMustBeZero';
+  constructor() {
+    super('Mint supply must be zero for programmable assets');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MintSupplyMustBeZeroError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xa0, () => new MintSupplyMustBeZeroError());
+createErrorFromNameLookup.set('MintSupplyMustBeZero', () => new MintSupplyMustBeZeroError());
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

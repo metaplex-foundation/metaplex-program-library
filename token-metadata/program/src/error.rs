@@ -631,6 +631,10 @@ pub enum MetadataError {
     /// 159
     #[error("Missing token record account")]
     MissingTokenRecord,
+
+    /// 160
+    #[error("Mint supply must be zero for programmable assets")]
+    MintSupplyMustBeZero,
 }
 
 impl PrintProgramError for MetadataError {

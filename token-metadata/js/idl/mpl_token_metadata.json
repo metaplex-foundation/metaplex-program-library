@@ -6009,6 +6009,11 @@
       "code": 159,
       "name": "MissingTokenRecord",
       "msg": "Missing token record account"
+    },
+    {
+      "code": 160,
+      "name": "MintSupplyMustBeZero",
+      "msg": "Mint supply must be zero for programmable assets"
     }
   ],
   "metadata": {

@@ -98,13 +98,21 @@ fn create_v1(program_id: &Pubkey, ctx: Context<Create>, args: CreateArgs) -> Pro
         )?;
     } else {
         let mint: Mint = assert_initialized(ctx.accounts.mint_info, MetadataError::Uninitialized)?;
-        // NonFungible asset must have decimals = 0 and supply no greater than 1
+        // NonFungible assets must have decimals == 0 and supply no greater than 1
         if matches!(
             asset_data.token_standard,
             TokenStandard::NonFungible | TokenStandard::ProgrammableNonFungible
         ) && (mint.decimals > 0 || mint.supply > 1)
         {
             return Err(MetadataError::InvalidMintForTokenStandard.into());
+        }
+        // Programmable assets must have supply == 0
+        if matches!(
+            asset_data.token_standard,
+            TokenStandard::ProgrammableNonFungible
+        ) && (mint.supply > 0)
+        {
+            return Err(MetadataError::MintSupplyMustBeZero.into());
         }
     }
 
