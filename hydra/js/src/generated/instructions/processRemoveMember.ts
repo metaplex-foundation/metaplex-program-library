@@ -37,6 +37,7 @@ export type ProcessRemoveMemberInstructionAccounts = {
   fanout: web3.PublicKey;
   membershipAccount: web3.PublicKey;
   destination: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
 };
 
 export const processRemoveMemberInstructionDiscriminator = [9, 45, 36, 163, 245, 40, 150, 85];
@@ -51,42 +52,47 @@ export const processRemoveMemberInstructionDiscriminator = [9, 45, 36, 163, 245,
  */
 export function createProcessRemoveMemberInstruction(
   accounts: ProcessRemoveMemberInstructionAccounts,
+  programId = new web3.PublicKey('hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg'),
 ) {
-  const { authority, member, fanout, membershipAccount, destination } = accounts;
-
   const [data] = processRemoveMemberStruct.serialize({
     instructionDiscriminator: processRemoveMemberInstructionDiscriminator,
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: authority,
+      pubkey: accounts.authority,
       isWritable: true,
       isSigner: true,
     },
     {
-      pubkey: member,
+      pubkey: accounts.member,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: fanout,
+      pubkey: accounts.fanout,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: membershipAccount,
+      pubkey: accounts.membershipAccount,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: destination,
+      pubkey: accounts.destination,
       isWritable: true,
       isSigner: false,
     },
   ];
 
+  if (accounts.anchorRemainingAccounts != null) {
+    for (const acc of accounts.anchorRemainingAccounts) {
+      keys.push(acc);
+    }
+  }
+
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey('hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg'),
+    programId,
     keys,
     data,
   });

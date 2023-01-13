@@ -1,11 +1,11 @@
-import { Account, Connection, Keypair, LAMPORTS_PER_SOL } from '@solana/web3.js';
-import { NodeWallet } from '@project-serum/common'; //TODO remove this
+import { Connection, Keypair, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { NATIVE_MINT, Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { expect, use } from 'chai';
 import ChaiAsPromised from 'chai-as-promised';
 import { Fanout, FanoutClient, FanoutMembershipVoucher, FanoutMint, MembershipModel } from '../src';
 import { LOCALHOST } from '@metaplex-foundation/amman';
 import { builtWalletFanout } from './utils/scenarios';
+import { Wallet } from '@project-serum/anchor';
 
 use(ChaiAsPromised);
 
@@ -17,10 +17,7 @@ describe('fanout', async () => {
   beforeEach(async () => {
     authorityWallet = Keypair.generate();
     await connection.requestAirdrop(authorityWallet.publicKey, LAMPORTS_PER_SOL * 10);
-    fanoutSdk = new FanoutClient(
-      connection,
-      new NodeWallet(new Account(authorityWallet.secretKey)),
-    );
+    fanoutSdk = new FanoutClient(connection, new Wallet(authorityWallet));
     await connection.requestAirdrop(authorityWallet.publicKey, LAMPORTS_PER_SOL * 10);
   });
 

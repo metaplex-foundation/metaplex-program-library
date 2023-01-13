@@ -41,7 +41,10 @@ export type ProcessUnstakeInstructionAccounts = {
   membershipMint: web3.PublicKey;
   membershipMintTokenAccount: web3.PublicKey;
   memberStakeAccount: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
+  tokenProgram?: web3.PublicKey;
   instructions: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
 };
 
 export const processUnstakeInstructionDiscriminator = [217, 160, 136, 174, 149, 62, 79, 133];
@@ -54,70 +57,69 @@ export const processUnstakeInstructionDiscriminator = [217, 160, 136, 174, 149, 
  * @category ProcessUnstake
  * @category generated
  */
-export function createProcessUnstakeInstruction(accounts: ProcessUnstakeInstructionAccounts) {
-  const {
-    member,
-    fanout,
-    membershipVoucher,
-    membershipMint,
-    membershipMintTokenAccount,
-    memberStakeAccount,
-    instructions,
-  } = accounts;
-
+export function createProcessUnstakeInstruction(
+  accounts: ProcessUnstakeInstructionAccounts,
+  programId = new web3.PublicKey('hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg'),
+) {
   const [data] = processUnstakeStruct.serialize({
     instructionDiscriminator: processUnstakeInstructionDiscriminator,
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: member,
+      pubkey: accounts.member,
       isWritable: true,
       isSigner: true,
     },
     {
-      pubkey: fanout,
+      pubkey: accounts.fanout,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: membershipVoucher,
+      pubkey: accounts.membershipVoucher,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: membershipMint,
+      pubkey: accounts.membershipMint,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: membershipMintTokenAccount,
+      pubkey: accounts.membershipMintTokenAccount,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: memberStakeAccount,
+      pubkey: accounts.memberStakeAccount,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: web3.SystemProgram.programId,
+      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: splToken.TOKEN_PROGRAM_ID,
+      pubkey: accounts.tokenProgram ?? splToken.TOKEN_PROGRAM_ID,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: instructions,
+      pubkey: accounts.instructions,
       isWritable: false,
       isSigner: false,
     },
   ];
 
+  if (accounts.anchorRemainingAccounts != null) {
+    for (const acc of accounts.anchorRemainingAccounts) {
+      keys.push(acc);
+    }
+  }
+
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey('hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg'),
+    programId,
     keys,
     data,
   });

@@ -50,6 +50,9 @@ export type ProcessInitForMintInstructionAccounts = {
   fanoutForMint: web3.PublicKey;
   mintHoldingAccount: web3.PublicKey;
   mint: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
+  rent?: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
 };
 
 export const processInitForMintInstructionDiscriminator = [140, 150, 232, 195, 93, 219, 35, 170];
@@ -67,53 +70,58 @@ export const processInitForMintInstructionDiscriminator = [140, 150, 232, 195, 9
 export function createProcessInitForMintInstruction(
   accounts: ProcessInitForMintInstructionAccounts,
   args: ProcessInitForMintInstructionArgs,
+  programId = new web3.PublicKey('hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg'),
 ) {
-  const { authority, fanout, fanoutForMint, mintHoldingAccount, mint } = accounts;
-
   const [data] = processInitForMintStruct.serialize({
     instructionDiscriminator: processInitForMintInstructionDiscriminator,
     ...args,
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: authority,
+      pubkey: accounts.authority,
       isWritable: true,
       isSigner: true,
     },
     {
-      pubkey: fanout,
+      pubkey: accounts.fanout,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: fanoutForMint,
+      pubkey: accounts.fanoutForMint,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: mintHoldingAccount,
+      pubkey: accounts.mintHoldingAccount,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: mint,
+      pubkey: accounts.mint,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: web3.SystemProgram.programId,
+      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: web3.SYSVAR_RENT_PUBKEY,
+      pubkey: accounts.rent ?? web3.SYSVAR_RENT_PUBKEY,
       isWritable: false,
       isSigner: false,
     },
   ];
 
+  if (accounts.anchorRemainingAccounts != null) {
+    for (const acc of accounts.anchorRemainingAccounts) {
+      keys.push(acc);
+    }
+  }
+
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey('hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg'),
+    programId,
     keys,
     data,
   });

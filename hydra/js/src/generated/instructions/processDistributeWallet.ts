@@ -59,6 +59,10 @@ export type ProcessDistributeWalletInstructionAccounts = {
   fanoutForMintMembershipVoucher: web3.PublicKey;
   fanoutMint: web3.PublicKey;
   fanoutMintMemberTokenAccount: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
+  rent?: web3.PublicKey;
+  tokenProgram?: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
 };
 
 export const processDistributeWalletInstructionDiscriminator = [
@@ -78,88 +82,83 @@ export const processDistributeWalletInstructionDiscriminator = [
 export function createProcessDistributeWalletInstruction(
   accounts: ProcessDistributeWalletInstructionAccounts,
   args: ProcessDistributeWalletInstructionArgs,
+  programId = new web3.PublicKey('hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg'),
 ) {
-  const {
-    payer,
-    member,
-    membershipVoucher,
-    fanout,
-    holdingAccount,
-    fanoutForMint,
-    fanoutForMintMembershipVoucher,
-    fanoutMint,
-    fanoutMintMemberTokenAccount,
-  } = accounts;
-
   const [data] = processDistributeWalletStruct.serialize({
     instructionDiscriminator: processDistributeWalletInstructionDiscriminator,
     ...args,
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: payer,
+      pubkey: accounts.payer,
       isWritable: false,
       isSigner: true,
     },
     {
-      pubkey: member,
+      pubkey: accounts.member,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: membershipVoucher,
+      pubkey: accounts.membershipVoucher,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: fanout,
+      pubkey: accounts.fanout,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: holdingAccount,
+      pubkey: accounts.holdingAccount,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: fanoutForMint,
+      pubkey: accounts.fanoutForMint,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: fanoutForMintMembershipVoucher,
+      pubkey: accounts.fanoutForMintMembershipVoucher,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: fanoutMint,
+      pubkey: accounts.fanoutMint,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: fanoutMintMemberTokenAccount,
+      pubkey: accounts.fanoutMintMemberTokenAccount,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: web3.SystemProgram.programId,
+      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: web3.SYSVAR_RENT_PUBKEY,
+      pubkey: accounts.rent ?? web3.SYSVAR_RENT_PUBKEY,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: splToken.TOKEN_PROGRAM_ID,
+      pubkey: accounts.tokenProgram ?? splToken.TOKEN_PROGRAM_ID,
       isWritable: false,
       isSigner: false,
     },
   ];
 
+  if (accounts.anchorRemainingAccounts != null) {
+    for (const acc of accounts.anchorRemainingAccounts) {
+      keys.push(acc);
+    }
+  }
+
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey('hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg'),
+    programId,
     keys,
     data,
   });

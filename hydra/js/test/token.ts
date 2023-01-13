@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Connection, Keypair, LAMPORTS_PER_SOL } from '@solana/web3.js';
-import * as splToken from '@solana/spl-token';
+import { TOKEN_PROGRAM_ID, Token } from '@solana/spl-token';
 import { expect, use } from 'chai';
 import ChaiAsPromised from 'chai-as-promised';
 import { Fanout, FanoutClient, FanoutMembershipVoucher, FanoutMint, MembershipModel } from '../src';
@@ -27,66 +27,61 @@ describe('fanout', async () => {
 
   describe('Token membership model', () => {
     it('Creates fanout w/ token, 2 members stake, has 5 random revenue events, and distributes', async () => {
-      const membershipMint = await splToken.createMint(
+      const membershipMint = await Token.createMint(
         connection,
         authorityWallet,
         authorityWallet.publicKey,
         null,
         6,
+        TOKEN_PROGRAM_ID,
       );
       const distBot = new Keypair();
       await connection.requestAirdrop(distBot.publicKey, lamportsNeeded);
       const supply = 1000000 * 10 ** 6;
-      const tokenAcct = await splToken.createAccount(connection, authorityWallet, membershipMint, authorityWallet.publicKey);
+      const tokenAcct = await membershipMint.createAccount(authorityWallet.publicKey);
       const { fanout } = await fanoutSdk.initializeFanout({
         totalShares: 0,
         name: `Test${Date.now()}`,
         membershipModel: MembershipModel.Token,
-        mint: membershipMint,
+        mint: membershipMint.publicKey,
       });
-      const mint = await splToken.createMint(
+      const mint = await Token.createMint(
         connection,
         authorityWallet,
         authorityWallet.publicKey,
         null,
         6,
+        TOKEN_PROGRAM_ID,
       );
-      const mintAcctAuthority = await splToken.createAssociatedTokenAccount(connection, authorityWallet, mint, authorityWallet.publicKey);
+      const mintAcctAuthority = await mint.createAssociatedTokenAccount(authorityWallet.publicKey);
       const { fanoutForMint, tokenAccount } = await fanoutSdk.initializeFanoutForMint({
         fanout,
-        mint: mint,
+        mint: mint.publicKey,
       });
 
       const fanoutMintAccount = await fanoutSdk.fetch<FanoutMint>(fanoutForMint, FanoutMint);
 
-      expect(fanoutMintAccount.mint.toBase58()).to.equal(mint.toBase58());
+      expect(fanoutMintAccount.mint.toBase58()).to.equal(mint.publicKey.toBase58());
       expect(fanoutMintAccount.fanout.toBase58()).to.equal(fanout.toBase58());
       expect(fanoutMintAccount.tokenAccount.toBase58()).to.equal(tokenAccount.toBase58());
       expect(fanoutMintAccount.totalInflow.toString()).to.equal('0');
       expect(fanoutMintAccount.lastSnapshotAmount.toString()).to.equal('0');
       let totalStaked = 0;
       const members = [];
-      await splToken.mintTo(connection, authorityWallet, membershipMint, tokenAcct, authorityWallet, supply);
+      await membershipMint.mintTo(tokenAcct, authorityWallet, [], supply);
       for (let index = 0; index <= 4; index++) {
         const member = new Keypair();
         const pseudoRng = Math.floor(supply * Math.random() * 0.138);
         await connection.requestAirdrop(member.publicKey, lamportsNeeded);
-        const tokenAcctMember = await splToken.createAssociatedTokenAccount(connection, authorityWallet,  membershipMint, member.publicKey);
-        const mintAcctMember = await splToken.createAssociatedTokenAccount(connection, authorityWallet, mint, member.publicKey);
-        await splToken.transfer(
-          connection,
-          authorityWallet,
-          tokenAcct,
-          tokenAcctMember,
-          authorityWallet.publicKey,
-          pseudoRng,
-        );
+        const tokenAcctMember = await membershipMint.createAssociatedTokenAccount(member.publicKey);
+        const mintAcctMember = await mint.createAssociatedTokenAccount(member.publicKey);
+        await membershipMint.transfer(tokenAcct, tokenAcctMember, authorityWallet, [], pseudoRng);
         totalStaked += pseudoRng;
         const ixs = await fanoutSdk.stakeTokenMemberInstructions({
           shares: pseudoRng,
           fanout: fanout,
           membershipMintTokenAccount: tokenAcctMember,
-          membershipMint: membershipMint,
+          membershipMint: membershipMint.publicKey,
           member: member.publicKey,
           payer: member.publicKey,
         });
@@ -103,7 +98,7 @@ describe('fanout', async () => {
         expect(voucher.shares?.toString()).to.equal(`${pseudoRng}`);
         expect(voucher.membershipKey?.toBase58()).to.equal(member.publicKey.toBase58());
         expect(voucher.fanout?.toBase58()).to.equal(fanout.toBase58());
-        const stake = await splToken.getAccount(connection, ixs.output.stakeAccount);
+        const stake = await membershipMint.getAccountInfo(ixs.output.stakeAccount);
         expect(stake.amount.toString()).to.equal(`${pseudoRng}`);
         members.push({
           member,
@@ -116,14 +111,14 @@ describe('fanout', async () => {
       let runningTotal = 0;
       for (let index = 0; index <= 4; index++) {
         const sent = Math.floor(Math.random() * 100 * 10 ** 6);
-        await splToken.mintTo(connection, authorityWallet, mint, mintAcctAuthority, authorityWallet, sent);
-        await splToken.transfer(connection, authorityWallet, mintAcctAuthority, tokenAccount, authorityWallet, sent);
+        await mint.mintTo(mintAcctAuthority, authorityWallet, [], sent);
+        await mint.transfer(mintAcctAuthority, tokenAccount, authorityWallet, [], sent);
         runningTotal += sent;
         const member = members[index];
         const ix = await fanoutSdk.distributeTokenMemberInstructions({
           distributeForMint: true,
-          fanoutMint: mint,
-          membershipMint: membershipMint,
+          fanoutMint: mint.publicKey,
+          membershipMint: membershipMint.publicKey,
           fanout: fanout,
           member: member.member.publicKey,
           payer: distBot.publicKey,
@@ -147,21 +142,22 @@ describe('fanout', async () => {
     });
 
     it('Init', async () => {
-      const membershipMint = await splToken.createMint(
+      const membershipMint = await Token.createMint(
         connection,
         authorityWallet,
         authorityWallet.publicKey,
         null,
         6,
+        TOKEN_PROGRAM_ID,
       );
       const supply = 1000000 * 10 ** 6;
-      const tokenAcct = await splToken.createAccount(connection, authorityWallet, membershipMint, authorityWallet.publicKey);
-      await splToken.mintTo(connection, authorityWallet, membershipMint, tokenAcct, authorityWallet, supply);
+      const tokenAcct = await membershipMint.createAccount(authorityWallet.publicKey);
+      await membershipMint.mintTo(tokenAcct, authorityWallet, [], supply);
       const { fanout } = await fanoutSdk.initializeFanout({
         totalShares: 0,
         name: `Test${Date.now()}`,
         membershipModel: MembershipModel.Token,
-        mint: membershipMint,
+        mint: membershipMint.publicKey,
       });
 
       const fanoutAccount = await fanoutSdk.fetch<Fanout>(fanout, Fanout);
@@ -172,43 +168,45 @@ describe('fanout', async () => {
       expect(fanoutAccount.totalAvailableShares.toString()).to.equal('0');
       expect(fanoutAccount.totalShares.toString()).to.equal(supply.toString());
       expect(fanoutAccount.membershipMint?.toBase58()).to.equal(
-        membershipMint.toBase58(),
+        membershipMint.publicKey.toBase58(),
       );
       expect(fanoutAccount.totalStakedShares?.toString()).to.equal('0');
     });
 
     it('Init For mint', async () => {
-      const membershipMint = await splToken.createMint(
+      const membershipMint = await Token.createMint(
         connection,
         authorityWallet,
         authorityWallet.publicKey,
         null,
         6,
+        TOKEN_PROGRAM_ID,
       );
       const supply = 1000000 * 10 ** 6;
-      const tokenAcct = await splToken.createAccount(connection, authorityWallet, membershipMint, authorityWallet.publicKey);
-      await splToken.mintTo(connection, authorityWallet, membershipMint, tokenAcct, authorityWallet, supply);
+      const tokenAcct = await membershipMint.createAccount(authorityWallet.publicKey);
+      await membershipMint.mintTo(tokenAcct, authorityWallet, [], supply);
       const { fanout } = await fanoutSdk.initializeFanout({
         totalShares: 0,
         name: `Test${Date.now()}`,
         membershipModel: MembershipModel.Token,
-        mint: membershipMint,
+        mint: membershipMint.publicKey,
       });
-      const mint = await splToken.createMint(
+      const mint = await Token.createMint(
         connection,
         authorityWallet,
         authorityWallet.publicKey,
         null,
         6,
+        TOKEN_PROGRAM_ID,
       );
       const { fanoutForMint, tokenAccount } = await fanoutSdk.initializeFanoutForMint({
         fanout,
-        mint: mint,
+        mint: mint.publicKey,
       });
 
       const fanoutMintAccount = await fanoutSdk.fetch<FanoutMint>(fanoutForMint, FanoutMint);
 
-      expect(fanoutMintAccount.mint.toBase58()).to.equal(mint.toBase58());
+      expect(fanoutMintAccount.mint.toBase58()).to.equal(mint.publicKey.toBase58());
       expect(fanoutMintAccount.fanout.toBase58()).to.equal(fanout.toBase58());
       expect(fanoutMintAccount.tokenAccount.toBase58()).to.equal(tokenAccount.toBase58());
       expect(fanoutMintAccount.totalInflow.toString()).to.equal('0');
@@ -216,39 +214,33 @@ describe('fanout', async () => {
     });
 
     it('Stakes Members', async () => {
-      const membershipMint = await splToken.createMint(
+      const membershipMint = await Token.createMint(
         connection,
         authorityWallet,
         authorityWallet.publicKey,
         null,
         6,
+        TOKEN_PROGRAM_ID,
       );
       const supply = 1000000 * 10 ** 6;
       const member = new Keypair();
       await connection.requestAirdrop(member.publicKey, lamportsNeeded);
-      const tokenAcct = await splToken.createAccount(connection, authorityWallet, membershipMint, authorityWallet.publicKey);
-      const tokenAcctMember = await splToken.createAssociatedTokenAccount(connection, authorityWallet, membershipMint, member.publicKey);
-      await splToken.mintTo(connection, authorityWallet, membershipMint, tokenAcct, authorityWallet, supply);
-      await splToken.transfer(
-        connection,
-        authorityWallet,
-        tokenAcct,
-        tokenAcctMember,
-        authorityWallet,
-        supply * 0.1,
-      );
+      const tokenAcct = await membershipMint.createAccount(authorityWallet.publicKey);
+      const tokenAcctMember = await membershipMint.createAssociatedTokenAccount(member.publicKey);
+      await membershipMint.mintTo(tokenAcct, authorityWallet, [], supply);
+      await membershipMint.transfer(tokenAcct, tokenAcctMember, authorityWallet, [], supply * 0.1);
 
       const { fanout } = await fanoutSdk.initializeFanout({
         totalShares: 0,
         name: `Test${Date.now()}`,
         membershipModel: MembershipModel.Token,
-        mint: membershipMint,
+        mint: membershipMint.publicKey,
       });
       const ixs = await fanoutSdk.stakeTokenMemberInstructions({
         shares: supply * 0.1,
         fanout: fanout,
         membershipMintTokenAccount: tokenAcctMember,
-        membershipMint: membershipMint,
+        membershipMint: membershipMint.publicKey,
         member: member.publicKey,
         payer: member.publicKey,
       });
@@ -265,7 +257,7 @@ describe('fanout', async () => {
       expect(voucher.shares?.toString()).to.equal(`${supply * 0.1}`);
       expect(voucher.membershipKey?.toBase58()).to.equal(member.publicKey.toBase58());
       expect(voucher.fanout?.toBase58()).to.equal(fanout.toBase58());
-      const stake = await splToken.getAccount(connection, ixs.output.stakeAccount);
+      const stake = await membershipMint.getAccountInfo(ixs.output.stakeAccount);
       expect(stake.amount.toString()).to.equal(`${supply * 0.1}`);
       const fanoutAccountData = await fanoutSdk.fetch<Fanout>(fanout, Fanout);
       expect(fanoutAccountData.totalShares?.toString()).to.equal(`${supply}`);
@@ -273,30 +265,31 @@ describe('fanout', async () => {
     });
 
     it('Allows Authority to Stake Members', async () => {
-      const membershipMint = await splToken.createMint(
+      const membershipMint = await Token.createMint(
         connection,
         authorityWallet,
         authorityWallet.publicKey,
         null,
         6,
+        TOKEN_PROGRAM_ID,
       );
       const supply = 1000000 * 10 ** 6;
       const member = new Keypair();
       await connection.requestAirdrop(member.publicKey, lamportsNeeded);
-      const tokenAcct = await splToken.createAccount(connection, authorityWallet, membershipMint, authorityWallet.publicKey);
-      await splToken.mintTo(connection, authorityWallet, membershipMint, tokenAcct, authorityWallet, supply);
+      const tokenAcct = await membershipMint.createAccount(authorityWallet.publicKey);
+      await membershipMint.mintTo(tokenAcct, authorityWallet, [], supply);
 
       const { fanout } = await fanoutSdk.initializeFanout({
         totalShares: 0,
         name: `Test${Date.now()}`,
         membershipModel: MembershipModel.Token,
-        mint: membershipMint,
+        mint: membershipMint.publicKey,
       });
       const ixs = await fanoutSdk.stakeForTokenMemberInstructions({
         shares: supply * 0.1,
         fanout: fanout,
         membershipMintTokenAccount: tokenAcct,
-        membershipMint: membershipMint,
+        membershipMint: membershipMint.publicKey,
         fanoutAuthority: authorityWallet.publicKey,
         member: member.publicKey,
         payer: authorityWallet.publicKey,
@@ -314,7 +307,7 @@ describe('fanout', async () => {
       expect(voucher.shares?.toString()).to.equal(`${supply * 0.1}`);
       expect(voucher.membershipKey?.toBase58()).to.equal(member.publicKey.toBase58());
       expect(voucher.fanout?.toBase58()).to.equal(fanout.toBase58());
-      const stake = await splToken.getAccount(connection, ixs.output.stakeAccount);
+      const stake = await membershipMint.getAccountInfo(ixs.output.stakeAccount);
       expect(stake.amount.toString()).to.equal(`${supply * 0.1}`);
       const fanoutAccountData = await fanoutSdk.fetch<Fanout>(fanout, Fanout);
       expect(fanoutAccountData.totalShares?.toString()).to.equal(`${supply}`);
@@ -322,12 +315,13 @@ describe('fanout', async () => {
     });
 
     it('Distribute a Native Fanout with Token Members', async () => {
-      const membershipMint = await splToken.createMint(
+      const membershipMint = await Token.createMint(
         connection,
         authorityWallet,
         authorityWallet.publicKey,
         null,
         6,
+        TOKEN_PROGRAM_ID,
       );
       const distBot = new Keypair();
       await connection.requestAirdrop(distBot.publicKey, lamportsNeeded);
@@ -349,7 +343,7 @@ describe('fanout', async () => {
       const member1 = builtFanout.members[0];
       const ix = await fanoutSdk.distributeTokenMemberInstructions({
         distributeForMint: false,
-        membershipMint: membershipMint,
+        membershipMint: membershipMint.publicKey,
         fanout: builtFanout.fanout,
         member: member1.wallet.publicKey,
         payer: distBot.publicKey,
@@ -373,12 +367,13 @@ describe('fanout', async () => {
     });
 
     it('Unstake a Native Fanout with Token Members', async () => {
-      const membershipMint = await splToken.createMint(
+      const membershipMint = await Token.createMint(
         connection,
         authorityWallet,
         authorityWallet.publicKey,
         null,
         6,
+        TOKEN_PROGRAM_ID,
       );
       const distBot = new Keypair();
       const signature = await connection.requestAirdrop(distBot.publicKey, 1);
@@ -401,7 +396,7 @@ describe('fanout', async () => {
       const memberFanoutSdk = new FanoutClient(connection, new Wallet(member1.wallet));
       const ix = await memberFanoutSdk.distributeTokenMemberInstructions({
         distributeForMint: false,
-        membershipMint: membershipMint,
+        membershipMint: membershipMint.publicKey,
         fanout: builtFanout.fanout,
         member: member1.wallet.publicKey,
         payer: member1.wallet.publicKey,

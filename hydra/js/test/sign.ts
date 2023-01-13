@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Account, Connection, Keypair, LAMPORTS_PER_SOL } from '@solana/web3.js';
-import { NodeWallet } from '@project-serum/common'; //TODO remove this
+import { Connection, Keypair, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { expect, use } from 'chai';
 import ChaiAsPromised from 'chai-as-promised';
 import { Fanout, FanoutClient, MembershipModel } from '../src';
 import { keypairIdentity, Metaplex } from '@metaplex-foundation/js';
 import { LOCALHOST } from '@metaplex-foundation/amman';
+import { Wallet } from '@project-serum/anchor';
 
 use(ChaiAsPromised);
 
@@ -18,10 +18,7 @@ describe('fanout', async () => {
   beforeEach(async () => {
     authorityWallet = Keypair.generate();
     await connection.requestAirdrop(authorityWallet.publicKey, LAMPORTS_PER_SOL * 10);
-    fanoutSdk = new FanoutClient(
-      connection,
-      new NodeWallet(new Account(authorityWallet.secretKey)),
-    );
+    fanoutSdk = new FanoutClient(connection, new Wallet(authorityWallet));
     await connection.requestAirdrop(authorityWallet.publicKey, LAMPORTS_PER_SOL * 10);
   });
 

@@ -37,6 +37,7 @@ export type ProcessSignMetadataInstructionAccounts = {
   holdingAccount: web3.PublicKey;
   metadata: web3.PublicKey;
   tokenMetadataProgram: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
 };
 
 export const processSignMetadataInstructionDiscriminator = [188, 67, 163, 49, 0, 150, 63, 89];
@@ -51,42 +52,47 @@ export const processSignMetadataInstructionDiscriminator = [188, 67, 163, 49, 0,
  */
 export function createProcessSignMetadataInstruction(
   accounts: ProcessSignMetadataInstructionAccounts,
+  programId = new web3.PublicKey('hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg'),
 ) {
-  const { authority, fanout, holdingAccount, metadata, tokenMetadataProgram } = accounts;
-
   const [data] = processSignMetadataStruct.serialize({
     instructionDiscriminator: processSignMetadataInstructionDiscriminator,
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: authority,
+      pubkey: accounts.authority,
       isWritable: true,
       isSigner: true,
     },
     {
-      pubkey: fanout,
+      pubkey: accounts.fanout,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: holdingAccount,
+      pubkey: accounts.holdingAccount,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: metadata,
+      pubkey: accounts.metadata,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: tokenMetadataProgram,
+      pubkey: accounts.tokenMetadataProgram,
       isWritable: false,
       isSigner: false,
     },
   ];
 
+  if (accounts.anchorRemainingAccounts != null) {
+    for (const acc of accounts.anchorRemainingAccounts) {
+      keys.push(acc);
+    }
+  }
+
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey('hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg'),
+    programId,
     keys,
     data,
   });

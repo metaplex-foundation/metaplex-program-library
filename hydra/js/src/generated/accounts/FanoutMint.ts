@@ -23,7 +23,7 @@ export type FanoutMintArgs = {
   bumpSeed: number;
 };
 
-const fanoutMintDiscriminator = [50, 164, 42, 108, 90, 201, 250, 216];
+export const fanoutMintDiscriminator = [50, 164, 42, 108, 90, 201, 250, 216];
 /**
  * Holds the data for the {@link FanoutMint} Account and provides de/serialization
  * functionality for that data
@@ -72,12 +72,25 @@ export class FanoutMint implements FanoutMintArgs {
   static async fromAccountAddress(
     connection: web3.Connection,
     address: web3.PublicKey,
+    commitmentOrConfig?: web3.Commitment | web3.GetAccountInfoConfig,
   ): Promise<FanoutMint> {
-    const accountInfo = await connection.getAccountInfo(address);
+    const accountInfo = await connection.getAccountInfo(address, commitmentOrConfig);
     if (accountInfo == null) {
       throw new Error(`Unable to find FanoutMint account at ${address}`);
     }
     return FanoutMint.fromAccountInfo(accountInfo, 0)[0];
+  }
+
+  /**
+   * Provides a {@link web3.Connection.getProgramAccounts} config builder,
+   * to fetch accounts matching filters that can be specified via that builder.
+   *
+   * @param programId - the program that owns the accounts we are filtering
+   */
+  static gpaBuilder(
+    programId: web3.PublicKey = new web3.PublicKey('hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg'),
+  ) {
+    return beetSolana.GpaBuilder.fromStruct(programId, fanoutMintBeet);
   }
 
   /**

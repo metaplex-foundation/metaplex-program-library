@@ -52,6 +52,7 @@ export type ProcessTransferSharesInstructionAccounts = {
   fanout: web3.PublicKey;
   fromMembershipAccount: web3.PublicKey;
   toMembershipAccount: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
 };
 
 export const processTransferSharesInstructionDiscriminator = [195, 175, 36, 50, 101, 22, 28, 87];
@@ -69,49 +70,53 @@ export const processTransferSharesInstructionDiscriminator = [195, 175, 36, 50, 
 export function createProcessTransferSharesInstruction(
   accounts: ProcessTransferSharesInstructionAccounts,
   args: ProcessTransferSharesInstructionArgs,
+  programId = new web3.PublicKey('hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg'),
 ) {
-  const { authority, fromMember, toMember, fanout, fromMembershipAccount, toMembershipAccount } =
-    accounts;
-
   const [data] = processTransferSharesStruct.serialize({
     instructionDiscriminator: processTransferSharesInstructionDiscriminator,
     ...args,
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: authority,
+      pubkey: accounts.authority,
       isWritable: false,
       isSigner: true,
     },
     {
-      pubkey: fromMember,
+      pubkey: accounts.fromMember,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: toMember,
+      pubkey: accounts.toMember,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: fanout,
+      pubkey: accounts.fanout,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: fromMembershipAccount,
+      pubkey: accounts.fromMembershipAccount,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: toMembershipAccount,
+      pubkey: accounts.toMembershipAccount,
       isWritable: true,
       isSigner: false,
     },
   ];
 
+  if (accounts.anchorRemainingAccounts != null) {
+    for (const acc of accounts.anchorRemainingAccounts) {
+      keys.push(acc);
+    }
+  }
+
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey('hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg'),
+    programId,
     keys,
     data,
   });

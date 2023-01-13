@@ -5,6 +5,7 @@ import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   NATIVE_MINT,
   TOKEN_PROGRAM_ID,
+  Token,
 } from '@solana/spl-token';
 import {
   AccountInfo,
@@ -38,6 +39,11 @@ import {
 import { MembershipModel } from './generated/types';
 import { Fanout } from './generated/accounts';
 import { PROGRAM_ADDRESS as TM_PROGRAM_ADDRESS } from '@metaplex-foundation/mpl-token-metadata';
+import {
+  BigInstructionResult,
+  InstructionResult,
+  sendMultipleInstructions,
+} from '@strata-foundation/spl-utils';
 import bs58 from 'bs58';
 import { chunks } from './utils';
 
@@ -879,7 +885,8 @@ export class FanoutClient {
           case MembershipModel.NFT:
             const account = (await this.connection.getTokenLargestAccounts(member)).value[0]
               .address;
-            const wallet = (await getTokenAccount(this.provider, account)).owner;
+            const token = new Token(this.connection, member, TOKEN_PROGRAM_ID, null);
+            const wallet = (await token.getAccountInfo(account)).owner;
             return this.distributeNftMemberInstructions({
               distributeForMint: !mint.equals(NATIVE_MINT),
               fanout,

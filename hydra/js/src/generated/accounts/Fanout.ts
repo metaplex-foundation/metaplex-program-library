@@ -31,7 +31,7 @@ export type FanoutArgs = {
   totalStakedShares: beet.COption<beet.bignum>;
 };
 
-const fanoutDiscriminator = [164, 101, 210, 92, 222, 14, 75, 156];
+export const fanoutDiscriminator = [164, 101, 210, 92, 222, 14, 75, 156];
 /**
  * Holds the data for the {@link Fanout} Account and provides de/serialization
  * functionality for that data
@@ -94,12 +94,25 @@ export class Fanout implements FanoutArgs {
   static async fromAccountAddress(
     connection: web3.Connection,
     address: web3.PublicKey,
+    commitmentOrConfig?: web3.Commitment | web3.GetAccountInfoConfig,
   ): Promise<Fanout> {
-    const accountInfo = await connection.getAccountInfo(address);
+    const accountInfo = await connection.getAccountInfo(address, commitmentOrConfig);
     if (accountInfo == null) {
       throw new Error(`Unable to find Fanout account at ${address}`);
     }
     return Fanout.fromAccountInfo(accountInfo, 0)[0];
+  }
+
+  /**
+   * Provides a {@link web3.Connection.getProgramAccounts} config builder,
+   * to fetch accounts matching filters that can be specified via that builder.
+   *
+   * @param programId - the program that owns the accounts we are filtering
+   */
+  static gpaBuilder(
+    programId: web3.PublicKey = new web3.PublicKey('hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg'),
+  ) {
+    return beetSolana.GpaBuilder.fromStruct(programId, fanoutBeet);
   }
 
   /**
