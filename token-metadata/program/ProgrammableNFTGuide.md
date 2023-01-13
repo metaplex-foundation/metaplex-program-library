@@ -146,6 +146,7 @@ Each of these instructions will use versioned `*Args` structs to facilitate futu
     * [x] Unlock Non-Fungibles
     * [x] Unlock Fungible Assets
     * [x] Unlock Fungibles
+- `Use`
 - `Verify`
     * [ ] Verify collection items
     * [ ] Verify creators
