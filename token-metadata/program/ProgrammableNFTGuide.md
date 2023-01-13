@@ -3,8 +3,8 @@
 > **Warning**
 > This is an alpha release, currently only available on devnet. 
 >
-> 🦀 Rust crate: [v1.7.0-alpha.1](https://crates.io/crates/mpl-token-metadata/1.7.0-alpha.1)
-> 📦 NPM package: [v2.6.0-alpha.1](https://www.npmjs.com/package/@metaplex-foundation/mpl-token-metadata/v/2.6.0-alpha.1)
+> * 🦀 Rust crate: [v1.7.0-alpha.1](https://crates.io/crates/mpl-token-metadata/1.7.0-alpha.1)
+> * 📦 NPM package: [v2.6.0-alpha.1](https://www.npmjs.com/package/@metaplex-foundation/mpl-token-metadata/v/2.6.0-alpha.1)
 >
 > **Note:** The instructions are subject to changes.
 
@@ -97,55 +97,55 @@ pub enum MetadataInstruction {
 Each of these instructions will use versioned `*Args` structs to facilitate future updates, and in turn, not require additional instructions. Operations supported under each instruction are as follows:
 
 - [ ] `Burn`
-- [X] `Create`
-    * [X] Creation of Programmable Non-Fungibles tokens (pNFT)
-    * [X] Creation of Non-Fungibles tokens (NFT)
-    * [X] Creation of Fungible Assets (*semi-fungible tokens*)
-    * [X] Creation of Fungible Tokens (*fungible tokens*)
+- [x] `Create`
+    * [x] Creation of Programmable Non-Fungibles tokens (pNFT)
+    * [x] Creation of Non-Fungibles tokens (NFT)
+    * [x] Creation of Fungible Assets (*semi-fungible tokens*)
+    * [x] Creation of Fungible Tokens (*fungible tokens*)
 - [ ] `Delegate`
     * [ ] Creation of `Authority` delegates
-    * [X] Creation of `Collection` delegates
-    * [X] Creation of `Sale` delegates
-    * [X] Creation of `Transfer` delegates
-    * [X] Creation of `Update` delegates
+    * [x] Creation of `Collection` delegates
+    * [x] Creation of `Sale` delegates
+    * [x] Creation of `Transfer` delegates
+    * [x] Creation of `Update` delegates
     * [ ] Creation of `Use` delegates
-    * [X] Creation of `Utility` delegates
-- [X] `Lock`
-    * [X] Lock Programmable Non-Fungibles
-    * [X] Lock Non-Fungibles
-    * [X] Lock Fungible Assets
-    * [X] Lock Fungibles
+    * [x] Creation of `Utility` delegates
+- [x] `Lock`
+    * [x] Lock Programmable Non-Fungibles
+    * [x] Lock Non-Fungibles
+    * [x] Lock Fungible Assets
+    * [x] Lock Fungibles
 - [ ] `Migrate`
-- [X] `Mint`
-    * [X] Mint Programmable Non-Fungibles tokens (pNFT)
-    * [X] Mint of Non-Fungibles tokens (NFT)
-    * [X] Mint Fungible Assets (*semi-fungible tokens*)
-    * [X] Mint Fungible Tokens (*fungible tokens*)
+- [x] `Mint`
+    * [x] Mint Programmable Non-Fungibles tokens (pNFT)
+    * [x] Mint of Non-Fungibles tokens (NFT)
+    * [x] Mint Fungible Assets (*semi-fungible tokens*)
+    * [x] Mint Fungible Tokens (*fungible tokens*)
 - [ ] `Print`
     * [ ] Print of editions
 - [ ] `Revoke`
     * [ ] Revoke of `Authority` delegates
-    * [X] Revoke of `Collection` delegates
-    * [X] Revoke of `Sale` delegates
-    * [X] Revoke of `Transfer` delegates
-    * [X] Revoke of `Update` delegates
+    * [x] Revoke of `Collection` delegates
+    * [x] Revoke of `Sale` delegates
+    * [x] Revoke of `Transfer` delegates
+    * [x] Revoke of `Update` delegates
     * [ ] Revoke of `Use` delegates
-    * [X] Revoke of `Utility` delegates
-- [X] `Transfer`
-    * [X] wallet-to-wallet transfers
-    * [X] wallet-to-program transfers
-    * [X] program-to-wallet transfers
-    * [X] program-to-program transfers
-- [X] `Update`
-    * [X] Update metadata details for Programmable Non-Fungibles
-    * [X] Update metadata details for Non-Fungibles
-    * [X] Update metadata details for Fungibles Assets
-    * [X] Update metadata details for Fungibles
-- [X] `Unlock`
-    * [X] Unlock Programmable Non-Fungibles
-    * [X] Unlock Non-Fungibles
-    * [X] Unlock Fungible Assets
-    * [X] Unlock Fungibles
+    * [x] Revoke of `Utility` delegates
+- [x] `Transfer`
+    * [x] wallet-to-wallet transfers
+    * [x] wallet-to-program transfers
+    * [x] program-to-wallet transfers
+    * [x] program-to-program transfers
+- [x] `Update`
+    * [x] Update metadata details for Programmable Non-Fungibles
+    * [x] Update metadata details for Non-Fungibles
+    * [x] Update metadata details for Fungibles Assets
+    * [x] Update metadata details for Fungibles
+- [x] `Unlock`
+    * [x] Unlock Programmable Non-Fungibles
+    * [x] Unlock Non-Fungibles
+    * [x] Unlock Fungible Assets
+    * [x] Unlock Fungibles
 - [ ] `Verify`
     * [ ] Verify collection items
     * [ ] Verify creators
