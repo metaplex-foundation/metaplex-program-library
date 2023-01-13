@@ -181,7 +181,7 @@ When you are minting from a semi-fungible token, there is no need to pass a `mas
 2. The relative position of accounts is maintained since there is a public key value for the account;
 3. The program can easily determine if the account key represent a "valid" public key or a "not-set-value".
 
-Using this approach, the same handler support positional optinal account by just ommiting the `masterEdition`:
+Using this approach, the same handler supports a positional optinal account by just ommiting the `masterEdition`:
 ```javascript
 const mintAcccounts: MintInstructionAccounts = {
     token,
@@ -192,7 +192,7 @@ const mintAcccounts: MintInstructionAccounts = {
     ...
 };
 ```
-Under the hood, you the Token Metadata's `PROGRAM_ID` is set as the master edition account `PublicKey`. This will inform the program that the master edition account was not set and still maintain the relative position of the remaining accounts. Token Metadata includes a rust crate wand an NPM package with instruction builders that support positional optional accounts – you only need to set the "required" accounts using these builders.
+Under the hood, you set the Token Metadata's `PROGRAM_ID` is set as the master edition account `PublicKey`. This will inform the program that the `masterEdition` account was not set and still maintain the relative position of the remaining accounts. Token Metadata includes a Rust crate and an NPM package with instruction builders that support positional optional accounts – you only need to set the "required" accounts using these builders.
 
 > **Note**
 > This is a similar approach used by Anchor v0.26 to support positional optional accounts
