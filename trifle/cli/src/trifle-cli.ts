@@ -138,8 +138,9 @@ create
     "-mn, --model-name <string>",
     "The name of the constraint model (Assumes keypair is the same as the Model Authority).",
   )
+  .option("-o, --owner <string>", "The holder of the token to attach the Trifle to.")
   .action(async (directory, cmd) => {
-    const { keypair, env, rpc, mint, create, uri, name, modelName } = cmd
+    const { keypair, env, rpc, mint, create, uri, name, modelName, owner } = cmd
       .opts();
 
     const metaplex = await use_metaplex(keypair, env, rpc);
@@ -157,11 +158,18 @@ create
         .run();
       nft = newNFT;
     } else {
+      let tokenOwner: web3.PublicKey;
+      if (owner) {
+        tokenOwner = new web3.PublicKey(owner);
+      } else {
+        tokenOwner = metaplex.identity().publicKey;
+      }
+
       nft = await metaplex
         .nfts()
         .findByMint({
           mintAddress: new web3.PublicKey(mint),
-          tokenOwner: metaplex.identity().publicKey,
+          tokenOwner,
         })
         .run();
     }
