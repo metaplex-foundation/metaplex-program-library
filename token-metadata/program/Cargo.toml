@@ -20,7 +20,9 @@ num-traits = "0.2"
 solana-program = "1.10"
 mpl-token-vault = { version = "0.1.0", features = ["no-entrypoint"] }
 spl-token = { version = "3.2.0", features = ["no-entrypoint"] }
-spl-associated-token-account = { version = "~1.0.5", features = ["no-entrypoint"] }
+spl-associated-token-account = { version = "1.1.2", features = [
+  "no-entrypoint",
+] }
 thiserror = "1.0"
 borsh = "0.9.2"
 shank = { version = "0.0.11" }
@@ -36,4 +38,4 @@ solana-program-test = "1.11.5"
 crate-type = ["cdylib", "lib"]
 
 [profile.release]
-overflow-checks = true     # Enable integer overflow checks.
+overflow-checks = true # Enable integer overflow checks.
