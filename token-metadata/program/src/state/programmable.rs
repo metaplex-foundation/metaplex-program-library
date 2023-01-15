@@ -184,7 +184,6 @@ impl AuthorityType {
                 if cmp_pubkeys(&pda_key, token_record_info.key)
                     && role_matches
                     && (COption::from(token_record.delegate) == token.delegate)
-                    && token.delegated_amount == token.amount
                 {
                     return Ok(AuthorityType::Delegate);
                 }
