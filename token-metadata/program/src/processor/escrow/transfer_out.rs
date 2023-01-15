@@ -89,6 +89,9 @@ pub fn process_transfer_out_of_escrow(
     if attribute_src.amount < args.amount {
         return Err(MetadataError::InsufficientTokens.into());
     }
+    if attribute_src.delegated_amount != 0 {
+        return Err(MetadataError::EscrowParentHasDelegate.into());
+    }
 
     // Check that the authority matches based on the authority type.
     let escrow_account = spl_token::state::Account::unpack(&escrow_account_info.data.borrow())?;
@@ -131,25 +134,29 @@ pub fn process_transfer_out_of_escrow(
         &[&escrow_authority_seeds],
     )?;
 
-    // Close the source ATA and return funds to the user.
-    let close_ix = spl_token::instruction::close_account(
-        &spl_token::id(),
-        attribute_src_info.key,
-        payer_info.key,
-        escrow_info.key,
-        &[escrow_info.key],
-    )?;
+    let attribute_src = spl_token::state::Account::unpack(&attribute_src_info.data.borrow())?;
 
-    invoke_signed(
-        &close_ix,
-        &[
-            attribute_src_info.clone(),
-            payer_info.clone(),
-            escrow_info.clone(),
-            token_program_info.clone(),
-        ],
-        &[&escrow_authority_seeds],
-    )?;
+    // Close the source ATA and return funds to the user.
+    if attribute_src.amount == 0 {
+        let close_ix = spl_token::instruction::close_account(
+            &spl_token::id(),
+            attribute_src_info.key,
+            payer_info.key,
+            escrow_info.key,
+            &[escrow_info.key],
+        )?;
+
+        invoke_signed(
+            &close_ix,
+            &[
+                attribute_src_info.clone(),
+                payer_info.clone(),
+                escrow_info.clone(),
+                token_program_info.clone(),
+            ],
+            &[&escrow_authority_seeds],
+        )?;
+    }
 
     Ok(())
 }

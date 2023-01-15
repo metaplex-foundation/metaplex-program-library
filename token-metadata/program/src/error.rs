@@ -524,6 +524,10 @@ pub enum MetadataError {
     /// 132
     #[error("Invalid bubblegum signer")]
     InvalidBubblegumSigner,
+
+    /// 132
+    #[error("Escrow parent cannot have a delegate")]
+    EscrowParentHasDelegate,
 }
 
 impl PrintProgramError for MetadataError {
