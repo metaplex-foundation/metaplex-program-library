@@ -175,6 +175,26 @@ pub fn assert_currently_holding(
     mint_info: &AccountInfo,
     token_account_info: &AccountInfo,
 ) -> ProgramResult {
+    assert_holding_amount(
+        program_id,
+        owner_info,
+        metadata_info,
+        metadata,
+        mint_info,
+        token_account_info,
+        1,
+    )
+}
+
+pub fn assert_holding_amount(
+    program_id: &Pubkey,
+    owner_info: &AccountInfo,
+    metadata_info: &AccountInfo,
+    metadata: &Metadata,
+    mint_info: &AccountInfo,
+    token_account_info: &AccountInfo,
+    amount: u64,
+) -> ProgramResult {
     assert_owned_by(metadata_info, program_id)?;
     assert_owned_by(mint_info, &spl_token::id())?;
 
@@ -190,7 +210,7 @@ pub fn assert_currently_holding(
         return Err(MetadataError::MintMismatch.into());
     }
 
-    if token_account.amount < 1 {
+    if token_account.amount < amount {
         return Err(MetadataError::NotEnoughTokens.into());
     }
 
