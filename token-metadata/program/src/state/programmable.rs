@@ -22,11 +22,13 @@ use crate::utils::{assert_owned_by, try_from_slice_checked};
 
 pub const TOKEN_RECORD_SEED: &str = "token_record";
 
+pub const TOKEN_STATE_INDEX: usize = 2;
+
 pub const TOKEN_RECORD_SIZE: usize = 1 // Key
 + 1  // bump
++ 1  // state
 + 33 // delegate
-+ 2  // delegate role
-+ 1; // state
++ 2; // delegate role
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]

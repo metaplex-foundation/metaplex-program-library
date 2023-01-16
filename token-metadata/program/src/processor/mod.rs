@@ -47,7 +47,10 @@ use crate::{
         },
         escrow::process_transfer_out_of_escrow,
     },
-    state::{Key, Metadata, TokenMetadataAccount, TokenStandard},
+    state::{
+        Key, Metadata, TokenMetadataAccount, TokenStandard, TokenState, DISCRIMINATOR_INDEX,
+        TOKEN_STATE_INDEX,
+    },
 };
 
 #[repr(C)]
@@ -81,6 +84,18 @@ pub fn process_instruction<'a>(
     input: &[u8],
 ) -> ProgramResult {
     let instruction = MetadataInstruction::try_from_slice(input)?;
+
+    // checks if there is a locked token
+    match is_locked(program_id, accounts) {
+        Ok(value) => {
+            if value && !matches!(instruction, MetadataInstruction::Unlock(_)) {
+                return Err(MetadataError::LockedToken.into());
+            }
+        }
+        Err(error) => {
+            return Err(error);
+        }
+    }
 
     // match on the new instruction set
     match instruction {
@@ -418,7 +433,7 @@ fn has_programmable_metadata<'a>(
     for account_info in accounts {
         // checks the account is owned by Token Metadata and it has data
         if account_info.owner == program_id && !account_info.data_is_empty() {
-            let discriminator = account_info.data.borrow()[0];
+            let discriminator = account_info.data.borrow()[DISCRIMINATOR_INDEX];
             // checks if the account is a Metadata account
             if discriminator == Key::MetadataV1 as u8 {
                 let metadata = Metadata::from_account_info(account_info)?;
@@ -429,6 +444,27 @@ fn has_programmable_metadata<'a>(
                 ) {
                     return Ok(true);
                 }
+            }
+        }
+    }
+
+    Ok(false)
+}
+
+/// Checks if the instruction's accounts contain a pNFT metadata.
+///
+/// We need to determine if we are dealing with a pNFT metadata or not
+/// so we can restrict the available instructions.
+fn is_locked<'a>(program_id: &Pubkey, accounts: &'a [AccountInfo]) -> Result<bool, ProgramError> {
+    for account_info in accounts {
+        // checks the account is owned by Token Metadata and it has data
+        if account_info.owner == program_id && !account_info.data_is_empty() {
+            let data = account_info.data.borrow();
+            // checks if the account is a Metadata account
+            if (data[DISCRIMINATOR_INDEX] == Key::TokenRecord as u8)
+                && (data[TOKEN_STATE_INDEX] == TokenState::Locked as u8)
+            {
+                return Ok(true);
             }
         }
     }

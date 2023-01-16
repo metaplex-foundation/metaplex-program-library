@@ -53,6 +53,9 @@ use crate::{
     ID,
 };
 
+/// Index of the discriminator on the account data.
+pub const DISCRIMINATOR_INDEX: usize = 0;
+
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, Copy, FromPrimitive)]

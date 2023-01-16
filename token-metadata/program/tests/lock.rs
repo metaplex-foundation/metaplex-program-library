@@ -1,17 +1,21 @@
 #![cfg(feature = "test-bpf")]
 pub mod utils;
 
+use num_traits::FromPrimitive;
 use solana_program_test::*;
 use utils::*;
 
 mod lock {
 
     use mpl_token_metadata::{
+        error::MetadataError,
+        instruction::DelegateArgs,
         pda::find_token_record_account,
         state::{TokenRecord, TokenStandard, TokenState},
     };
     use solana_program::{borsh::try_from_slice_unchecked, program_pack::Pack};
     use solana_sdk::signature::{Keypair, Signer};
+    use solana_sdk::{instruction::InstructionError, transaction::TransactionError};
     use spl_token::state::Account;
 
     use super::*;
@@ -94,5 +98,71 @@ mod lock {
         let token = Account::unpack(&token_account.data).unwrap();
         // should be frozen
         assert!(token.is_frozen());
+    }
+
+    #[tokio::test]
+    async fn locked_programmable_nonfungible_delegate_fails() {
+        let mut context = program_test().start_with_context().await;
+
+        // asset
+
+        let mut asset = DigitalAsset::default();
+        asset
+            .create_and_mint(
+                &mut context,
+                TokenStandard::ProgrammableNonFungible,
+                None,
+                None,
+                1,
+            )
+            .await
+            .unwrap();
+
+        // asserts
+
+        let (pda_key, _) = find_token_record_account(&asset.mint.pubkey(), &context.payer.pubkey());
+
+        let pda = get_account(&mut context, &pda_key).await;
+        let token_record: TokenRecord = try_from_slice_unchecked(&pda.data).unwrap();
+
+        assert_eq!(token_record.state, TokenState::Unlocked);
+
+        // locks
+
+        let approver = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+        let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+
+        asset
+            .lock(&mut context, approver, Some(pda_key), payer)
+            .await
+            .unwrap();
+
+        // asserts
+
+        let pda = get_account(&mut context, &pda_key).await;
+        let token_record: TokenRecord = try_from_slice_unchecked(&pda.data).unwrap();
+
+        assert_eq!(token_record.state, TokenState::Locked);
+
+        // delegates the asset for transfer (this should fail since the token is locked)
+
+        let delegate = Keypair::new();
+        let delegate_pubkey = delegate.pubkey();
+        let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+
+        let error = asset
+            .delegate(
+                &mut context,
+                payer,
+                delegate_pubkey,
+                DelegateArgs::UtilityV1 {
+                    amount: 1,
+                    authorization_data: None,
+                },
+            )
+            .await
+            .unwrap_err();
+
+        assert_custom_error!(error, MetadataError::LockedToken);
     }
 }
