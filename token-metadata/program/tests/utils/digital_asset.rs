@@ -492,7 +492,7 @@ impl DigitalAsset {
         let tx = Transaction::new_signed_with_payer(
             &[utility_ix],
             Some(&payer.pubkey()),
-            &[&approver],
+            &[&approver, &payer],
             context.last_blockhash,
         );
 
@@ -535,7 +535,7 @@ impl DigitalAsset {
         let tx = Transaction::new_signed_with_payer(
             &[utility_ix],
             Some(&payer.pubkey()),
-            &[&approver],
+            &[&approver, &payer],
             context.last_blockhash,
         );
 
