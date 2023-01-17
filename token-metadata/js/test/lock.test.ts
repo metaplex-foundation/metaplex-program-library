@@ -39,10 +39,10 @@ test('Lock: owner lock NonFungible asset', async (t) => {
     payer,
     manager.mint,
     manager.metadata,
+    manager.token,
     payer,
     handler,
     null,
-    manager.token,
     null,
     manager.masterEdition,
   );
@@ -88,10 +88,10 @@ test('Lock: owner lock ProgrammableNonFungible asset', async (t) => {
     payer,
     manager.mint,
     manager.metadata,
+    manager.token,
     payer,
     handler,
     tokenRecord,
-    manager.token,
   );
   await lockTx.assertError(t, /Invalid authority type/);
 });
@@ -161,10 +161,10 @@ test('Lock: delegate lock ProgrammableNonFungible asset', async (t) => {
     delegate,
     manager.mint,
     manager.metadata,
+    manager.token,
     payer,
     handler,
     tokenRecord,
-    manager.token,
     null,
     manager.masterEdition,
   );
@@ -231,10 +231,10 @@ test('Lock: delegate lock NonFungible asset', async (t) => {
     delegate,
     manager.mint,
     manager.metadata,
+    manager.token,
     payer,
     handler,
     null,
-    manager.token,
     null,
     manager.masterEdition,
   );
@@ -305,10 +305,10 @@ test('Lock: lock Fungible asset', async (t) => {
     delegate,
     manager.mint,
     manager.metadata,
+    manager.token,
     payer,
     handler,
     null,
-    manager.token,
     payer.publicKey,
   );
   await lockTx.assertSuccess(t);
@@ -363,10 +363,9 @@ test('Lock: lock ProgrammableNonFungible asset with wrong authority', async (t) 
     wrongApprover,
     manager.mint,
     manager.metadata,
+    manager.token,
     payer,
     handler,
-    null,
-    null,
   );
   await lockTx.assertError(t, /Invalid authority type/);
 });
@@ -427,10 +426,10 @@ test('Lock: wrong delegate lock NonFungible asset', async (t) => {
     wrongDelegate,
     manager.mint,
     manager.metadata,
+    manager.token,
     payer,
     handler,
     null,
-    manager.token,
     manager.masterEdition,
   );
   await lockTx.assertError(t, /not been delegated to this user/);
@@ -500,10 +499,10 @@ test('Lock: wrong delegate lock ProgrammableNonFungible asset', async (t) => {
     delegate,
     manager.mint,
     manager.metadata,
+    manager.token,
     payer,
     handler,
     tokenRecord,
-    manager.token,
     null,
     manager.masterEdition,
   );
@@ -574,10 +573,10 @@ test('Lock: already locked ProgrammableNonFungible asset', async (t) => {
     delegate,
     manager.mint,
     manager.metadata,
+    manager.token,
     payer,
     handler,
     tokenRecord,
-    manager.token,
     null,
     manager.masterEdition,
   );

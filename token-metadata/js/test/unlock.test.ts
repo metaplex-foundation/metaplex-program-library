@@ -64,10 +64,10 @@ test('Unlock: owner unlock NonFungible asset', async (t) => {
     delegate,
     manager.mint,
     manager.metadata,
+    manager.token,
     payer,
     handler,
     null,
-    manager.token,
     null,
     manager.masterEdition,
   );
@@ -87,10 +87,10 @@ test('Unlock: owner unlock NonFungible asset', async (t) => {
     payer,
     manager.mint,
     manager.metadata,
+    manager.token,
     payer,
     handler,
     null,
-    manager.token,
     manager.masterEdition,
   );
   await unlockTx.assertError(t, /Invalid authority type/);
@@ -160,10 +160,10 @@ test('Unlock: owner unlock ProgrammableNonFungible asset', async (t) => {
     delegate,
     manager.mint,
     manager.metadata,
+    manager.token,
     payer,
     handler,
     tokenRecord,
-    manager.token,
     manager.masterEdition,
   );
   await lockTx.assertSuccess(t);
@@ -180,10 +180,10 @@ test('Unlock: owner unlock ProgrammableNonFungible asset', async (t) => {
     payer,
     manager.mint,
     manager.metadata,
+    manager.token,
     payer,
     handler,
     tokenRecord,
-    manager.token,
     manager.masterEdition,
   );
   await unlockTx.assertError(t, /Invalid authority type/);
@@ -259,10 +259,10 @@ test('Unlock: unlock Fungible asset', async (t) => {
     delegate,
     manager.mint,
     manager.metadata,
+    manager.token,
     payer,
     handler,
     null,
-    manager.token,
     payer.publicKey,
   );
   await lockTx.assertSuccess(t);
@@ -281,10 +281,10 @@ test('Unlock: unlock Fungible asset', async (t) => {
     delegate,
     manager.mint,
     manager.metadata,
+    manager.token,
     payer,
     handler,
     null,
-    manager.token,
     payer.publicKey,
   );
   await unlockTx.assertSuccess(t);
@@ -352,10 +352,10 @@ test('Unlock: delegate unlock NonFungible asset', async (t) => {
     delegate,
     manager.mint,
     manager.metadata,
+    manager.token,
     payer,
     handler,
     null,
-    manager.token,
     null,
     manager.masterEdition,
   );
@@ -375,10 +375,10 @@ test('Unlock: delegate unlock NonFungible asset', async (t) => {
     delegate,
     manager.mint,
     manager.metadata,
+    manager.token,
     payer,
     handler,
     null,
-    manager.token,
     null,
     manager.masterEdition,
   );

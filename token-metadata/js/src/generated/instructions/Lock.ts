@@ -38,7 +38,7 @@ export const LockStruct = new beet.FixableBeetArgsStruct<
  *
  * @property [**signer**] delegate Delegate account
  * @property [] tokenOwner (optional) Token owner account
- * @property [_writable_] token (optional) Token account
+ * @property [_writable_] token Token account
  * @property [] mint Mint account
  * @property [_writable_] metadata Metadata account
  * @property [] edition (optional) Edition account
@@ -55,7 +55,7 @@ export const LockStruct = new beet.FixableBeetArgsStruct<
 export type LockInstructionAccounts = {
   delegate: web3.PublicKey;
   tokenOwner?: web3.PublicKey;
-  token?: web3.PublicKey;
+  token: web3.PublicKey;
   mint: web3.PublicKey;
   metadata: web3.PublicKey;
   edition?: web3.PublicKey;
@@ -104,8 +104,8 @@ export function createLockInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.token ?? programId,
-      isWritable: accounts.token != null,
+      pubkey: accounts.token,
+      isWritable: true,
       isSigner: false,
     },
     {

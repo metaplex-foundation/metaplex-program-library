@@ -2842,8 +2842,7 @@
           "name": "token",
           "isMut": true,
           "isSigner": false,
-          "desc": "Token account",
-          "optional": true
+          "desc": "Token account"
         },
         {
           "name": "mint",
@@ -2945,8 +2944,7 @@
           "name": "token",
           "isMut": true,
           "isSigner": false,
-          "desc": "Token account",
-          "optional": true
+          "desc": "Token account"
         },
         {
           "name": "mint",
