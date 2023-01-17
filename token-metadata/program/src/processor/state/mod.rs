@@ -31,7 +31,8 @@ use crate::{
 
 pub(crate) struct ToggleAccounts<'a> {
     payer_info: &'a AccountInfo<'a>,
-    approver_info: &'a AccountInfo<'a>,
+    delegate_info: &'a AccountInfo<'a>,
+    token_owner_info: Option<&'a AccountInfo<'a>>,
     mint_info: &'a AccountInfo<'a>,
     token_info: Option<&'a AccountInfo<'a>>,
     metadata_info: &'a AccountInfo<'a>,
@@ -51,7 +52,7 @@ pub(crate) fn toggle_asset_state(
     // signers
 
     assert_signer(accounts.payer_info)?;
-    assert_signer(accounts.approver_info)?;
+    assert_signer(accounts.delegate_info)?;
 
     // ownership
 
@@ -80,7 +81,7 @@ pub(crate) fn toggle_asset_state(
     //  3. token delegate: valid token_record.delegate
 
     let authority_type = AuthorityType::get_authority_type(AuthorityRequest {
-        authority: accounts.approver_info.key,
+        authority: accounts.delegate_info.key,
         update_authority: &metadata.update_authority,
         mint: accounts.mint_info.key,
         token_info: accounts.token_info,
@@ -106,7 +107,7 @@ pub(crate) fn toggle_asset_state(
                 // we have the token account)
                 if let Some(token_info) = accounts.token_info {
                     assert_delegated_tokens(
-                        accounts.approver_info,
+                        accounts.delegate_info,
                         accounts.mint_info,
                         token_info,
                     )?;
@@ -163,20 +164,32 @@ pub(crate) fn toggle_asset_state(
         token_record.serialize(&mut *token_record_info.try_borrow_mut_data()?)?;
     } else {
         // for non-programmable assets, we need to freeze the token account,
-        // which requires the freeze_authority/master_edition, token and spl-token progran accounts
-        // to be on the transaction
+        // which requires the freeze_authority/master_edition, token and spl-token program
+        // accounts to be on the transaction
+
+        let mint: Mint = assert_initialized(accounts.mint_info)?;
 
         let (freeze_authority, is_master_edition) = match accounts.master_edition_info {
             Some(master_edition_info) => {
                 assert_owned_by(master_edition_info, &crate::ID)?;
+                assert_freeze_authority_matches_mint(&mint.freeze_authority, master_edition_info)?;
                 (master_edition_info, true)
             }
-            None => (accounts.approver_info, false),
-        };
+            None => {
+                // in this case, the approver must be a spl-token delegate (which
+                // has been already validated), so we need to validate that we have
+                // the token owner
 
-        // make sure we got the freeze authority
-        let mint: Mint = assert_initialized(accounts.mint_info)?;
-        assert_freeze_authority_matches_mint(&mint.freeze_authority, freeze_authority)?;
+                let token_owner_info = match accounts.token_owner_info {
+                    Some(token_owner_info) => token_owner_info,
+                    None => {
+                        return Err(MetadataError::MissingTokenOwnerAccount.into());
+                    }
+                };
+
+                (token_owner_info, false)
+            }
+        };
 
         let token_info = match accounts.token_info {
             Some(token_info) => token_info,

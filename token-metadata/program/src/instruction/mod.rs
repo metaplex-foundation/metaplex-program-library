@@ -608,18 +608,19 @@ pub enum MetadataInstruction {
     /// 
     /// The configurable `authorization_rules` only apply to `ProgrammableNonFungible` assets and
     /// it may require additional accounts to validate the rules.
-    #[account(0, signer, name="approver", desc="Token owner or delegate")]
-    #[account(1, writable, optional, name="token", desc="Token account")]
-    #[account(2, name="mint", desc="Mint account")]
-    #[account(3, writable, name="metadata", desc="Metadata account")]
-    #[account(4, optional, name="edition", desc="Edition account")]
-    #[account(5, optional, writable, name="token_record", desc="Token record account")]
-    #[account(6, signer, name="payer", desc="Payer")]
-    #[account(7, name="system_program", desc="System program")]
-    #[account(8, name="sysvar_instructions", desc="System program")]
-    #[account(9, optional, name="spl_token_program", desc="SPL Token Program")]
-    #[account(10, optional, name="authorization_rules_program", desc="Token Authorization Rules Program")]
-    #[account(11, optional, name="authorization_rules", desc="Token Authorization Rules account")]
+    #[account(0, signer, name="delegate", desc="Delegate account")]
+    #[account(1, optional, name="token_owner", desc="Token owner account")]
+    #[account(2, writable, optional, name="token", desc="Token account")]
+    #[account(3, name="mint", desc="Mint account")]
+    #[account(4, writable, name="metadata", desc="Metadata account")]
+    #[account(5, optional, name="edition", desc="Edition account")]
+    #[account(6, optional, writable, name="token_record", desc="Token record account")]
+    #[account(7, signer, writable, name="payer", desc="Payer")]
+    #[account(8, name="system_program", desc="System program")]
+    #[account(9, name="sysvar_instructions", desc="System program")]
+    #[account(10, optional, name="spl_token_program", desc="SPL Token Program")]
+    #[account(11, optional, name="authorization_rules_program", desc="Token Authorization Rules Program")]
+    #[account(12, optional, name="authorization_rules", desc="Token Authorization Rules account")]
     #[default_optional_accounts]
     Lock(LockArgs),
 
@@ -627,18 +628,19 @@ pub enum MetadataInstruction {
     /// 
     /// The configurable `authorization_rules` only apply to `ProgrammableNonFungible` assets and
     /// it may require additional accounts to validate the rules.
-    #[account(0, signer, name="approver", desc="Token owner or delegate")]
-    #[account(1, writable, optional, name="token", desc="Token account")]
-    #[account(2, name="mint", desc="Mint account")]
-    #[account(3, writable, name="metadata", desc="Metadata account")]
-    #[account(4, optional, name="edition", desc="Edition account")]
-    #[account(5, optional, writable, name="token_record", desc="Token record account")]
-    #[account(6, signer, name="payer", desc="Payer")]
-    #[account(7, name="system_program", desc="System program")]
-    #[account(8, name="sysvar_instructions", desc="System program")]
-    #[account(9, optional, name="spl_token_program", desc="SPL Token Program")]
-    #[account(10, optional, name="authorization_rules_program", desc="Token Authorization Rules Program")]
-    #[account(11, optional, name="authorization_rules", desc="Token Authorization Rules account")]
+    #[account(0, signer, name="delegate", desc="Delegate account")]
+    #[account(1, optional, name="token_owner", desc="Token owner account")]
+    #[account(2, writable, optional, name="token", desc="Token account")]
+    #[account(3, name="mint", desc="Mint account")]
+    #[account(4, writable, name="metadata", desc="Metadata account")]
+    #[account(5, optional, name="edition", desc="Edition account")]
+    #[account(6, optional, writable, name="token_record", desc="Token record account")]
+    #[account(7, signer, writable, name="payer", desc="Payer")]
+    #[account(8, name="system_program", desc="System program")]
+    #[account(9, name="sysvar_instructions", desc="System program")]
+    #[account(10, optional, name="spl_token_program", desc="SPL Token Program")]
+    #[account(11, optional, name="authorization_rules_program", desc="Token Authorization Rules Program")]
+    #[account(12, optional, name="authorization_rules", desc="Token Authorization Rules account")]
     #[default_optional_accounts]
     Unlock(UnlockArgs),
 
