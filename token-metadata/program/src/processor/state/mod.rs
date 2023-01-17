@@ -2,6 +2,7 @@ mod lock;
 mod unlock;
 
 pub use lock::*;
+pub use unlock::*;
 
 use borsh::BorshSerialize;
 use mpl_utils::assert_signer;
@@ -13,7 +14,6 @@ use spl_token::{
     instruction::{freeze_account, thaw_account},
     state::{Account, Mint},
 };
-pub use unlock::*;
 
 use crate::{
     assertions::{assert_keys_equal, metadata::assert_state},
@@ -75,20 +75,25 @@ pub(crate) fn toggle_asset_state(
         return Err(MetadataError::MintMismatch.into());
     }
 
+    let token = if let Some(token_info) = accounts.token_info {
+        Some(Account::unpack(&token_info.try_borrow_data()?)?)
+    } else {
+        None
+    };
+
     // approver authority – this can be either:
     //  1. token owner: approver == token.owner
-    //  2. spl-delegate: for non-programmable assets, approver == token.delegate
-    //  3. token delegate: valid token_record.delegate
+    //  2. token delegate: valid token_record.delegate
+    //  3. spl-delegate: for non-programmable assets, approver == token.delegate
 
     let authority_type = AuthorityType::get_authority_type(AuthorityRequest {
         authority: accounts.delegate_info.key,
         update_authority: &metadata.update_authority,
         mint: accounts.mint_info.key,
-        token_info: accounts.token_info,
-        metadata_delegate_record_info: None,
-        metadata_delegate_role: None,
+        token: token.as_ref(),
         token_record_info: accounts.token_record_info,
         token_delegate_roles: vec![TokenDelegateRole::Utility],
+        ..Default::default()
     })?;
 
     let has_authority = match authority_type {
