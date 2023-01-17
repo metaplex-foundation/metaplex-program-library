@@ -36,13 +36,14 @@ export const UnlockStruct = new beet.FixableBeetArgsStruct<
 /**
  * Accounts required by the _Unlock_ instruction
  *
- * @property [**signer**] approver Token owner or delegate
+ * @property [**signer**] delegate Delegate account
+ * @property [] tokenOwner (optional) Token owner account
  * @property [_writable_] token (optional) Token account
  * @property [] mint Mint account
  * @property [_writable_] metadata Metadata account
  * @property [] edition (optional) Edition account
  * @property [_writable_] tokenRecord (optional) Token record account
- * @property [**signer**] payer Payer
+ * @property [_writable_, **signer**] payer Payer
  * @property [] sysvarInstructions System program
  * @property [] splTokenProgram (optional) SPL Token Program
  * @property [] authorizationRulesProgram (optional) Token Authorization Rules Program
@@ -52,7 +53,8 @@ export const UnlockStruct = new beet.FixableBeetArgsStruct<
  * @category generated
  */
 export type UnlockInstructionAccounts = {
-  approver: web3.PublicKey;
+  delegate: web3.PublicKey;
+  tokenOwner?: web3.PublicKey;
   token?: web3.PublicKey;
   mint: web3.PublicKey;
   metadata: web3.PublicKey;
@@ -92,9 +94,14 @@ export function createUnlockInstruction(
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: accounts.approver,
+      pubkey: accounts.delegate,
       isWritable: false,
       isSigner: true,
+    },
+    {
+      pubkey: accounts.tokenOwner ?? programId,
+      isWritable: false,
+      isSigner: false,
     },
     {
       pubkey: accounts.token ?? programId,
@@ -123,7 +130,7 @@ export function createUnlockInstruction(
     },
     {
       pubkey: accounts.payer,
-      isWritable: false,
+      isWritable: true,
       isSigner: true,
     },
     {

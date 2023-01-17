@@ -2826,10 +2826,17 @@
       "name": "Lock",
       "accounts": [
         {
-          "name": "approver",
+          "name": "delegate",
           "isMut": false,
           "isSigner": true,
-          "desc": "Token owner or delegate"
+          "desc": "Delegate account"
+        },
+        {
+          "name": "tokenOwner",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Token owner account",
+          "optional": true
         },
         {
           "name": "token",
@@ -2866,7 +2873,7 @@
         },
         {
           "name": "payer",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true,
           "desc": "Payer"
         },
@@ -2922,10 +2929,17 @@
       "name": "Unlock",
       "accounts": [
         {
-          "name": "approver",
+          "name": "delegate",
           "isMut": false,
           "isSigner": true,
-          "desc": "Token owner or delegate"
+          "desc": "Delegate account"
+        },
+        {
+          "name": "tokenOwner",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Token owner account",
+          "optional": true
         },
         {
           "name": "token",
@@ -2962,7 +2976,7 @@
         },
         {
           "name": "payer",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true,
           "desc": "Payer"
         },
@@ -6007,6 +6021,11 @@
       "code": 160,
       "name": "MintSupplyMustBeZero",
       "msg": "Mint supply must be zero for programmable assets"
+    },
+    {
+      "code": 161,
+      "name": "MissingTokenOwnerAccount",
+      "msg": "Missing token owner"
     }
   ],
   "metadata": {
