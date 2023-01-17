@@ -257,11 +257,46 @@ The new unified api of token metadata exposes a system of delegations where othe
 
 #### Note: For programmable NFTS, auth rules manages which actors can become any of these types of delegates.
 
-* Collection - Allows an actor to verify and un-verify items in a asset grouping(collection)
-* Uses - Allows an Actor to "use" the asset and decrement the uses counter on chain which is how applications can implement specific limited or tracking behaviors.
+
+
+
+
+There are two types of delegates on Token Metadata: `TokenDelegate` and `MetadataDelegate`. 
+
+`TokenDelegate`s are delegates that operate at the token level – i.e., they are spl-token delegates. This allows the delegate to perform operations on the token account (burn, transfer, freeze). There can only be one token delegate at a time and they do not have an individual delegate account associated – their information is stored on the `TokenRecord` account. The `TokenDelegate`s are as follows.
+
 * Transfer - The same thing as an spl token delegate. This delegate can transfer the token, while delegate the owner can also transfer. Token Metadata will manage the delegate and provide the correct functionality regardless of Token Standard. When the delegate has transfered the 'amount' delegated the delegate is cleared. 
 * Sale - This delegate can transfer the token, while delegated the owner cannot transfer the token. This is the preferred delegate type for marketplaces so they can ensure the user must revoke the delegate before they gain back full control of the asset.
 * Utility - This delegate cannot transfer the token, but it can freeze and thaw the token. (In programmable Nfts the token is always frozen, Thaw and Freeze correspond to Unlocked and Locked respectvely)
+* Migration - A one time use delegate to be used when a migration be tween TokenStandards requires upgrading the existing SPL token delegate into a abstracted `TokenDelegate` in Token Metadata.
+
+The following table makes it easier to understand.
+
+
+| Delegate Type | Can Transfer? | Can Lock/Unlock? | User Transfer when in place? | Replaceable (without revoke)? | Currently Only for pNFTs |
+| --- | --- | --- | --- | --- | --- |
+| Sale | ✅ | ❌ | ❌ | ❌ |  |
+| Transfer | ✅ | ❌ | ✅ | ✅ |  |
+| Utility | ❌ | ✅ | ✅ (unless locked) | ✅ (unless locked) |  |
+| Migration | ✅ | ✅ | ✅ (unless locked) | ✅ (unless locked) | ✅ |
+
+The fourth delegate type is a temporary delegate that is only created by the migration from NFT to pNFT and cannot be otherwise created through the `Delegate` handler. This special delegate has the same functionality as the Utility delegate except that it can also transfer. This allows us to assign all escrowless-style programs this delegate to preserve whatever current functionality they have. Once used, it is cleared and cannot replaced, and programs will then need to select one of the normal delegate types for future actions. The following table explains the types of `MetadataDelegate`s
+
+| Delegate Type | Verify Collection Items | Use | Update Metadata(creators, royalties, uri) 
+| --- | --- | --- | --- | --- | --- |
+| Collection | ✅ | ❌ | 
+| Use | ❌ | ✅ | ❌ |
+| Update | ❌ | ❌ | ✅ |
+
+
+`MetadataDelegate`s Operate on the NFT metadata , there can be multiple active metadata delegates. The types of `MetadataDelegate`s are as follows:
+
+* Collection - Allows an actor to verify and un-verify items in a asset grouping(collection)
+* Uses - Allows an Actor to "use" the asset and decrement the uses counter on chain which is how applications can implement specific limited or tracking behaviors.
+
+
+
+ 
 
 ## JS SDK
 
