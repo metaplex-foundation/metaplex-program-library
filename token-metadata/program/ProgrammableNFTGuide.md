@@ -110,6 +110,9 @@ Each of these instructions will use versioned `*Args` structs to facilitate futu
     * [x] Creation of `Update` delegates
     * [ ] Creation of `Use` delegates
     * [x] Creation of `Utility` delegates
+    
+    See Delegates Section below for more information on what the difference is between types of delegates.
+    
 - `Lock`
     * [x] Lock Programmable Non-Fungibles
     * [x] Lock Non-Fungibles
@@ -247,6 +250,18 @@ let create_ix = CreateBuilder::new()
     })?
     .instruction();
 ```
+
+## Delegates
+
+The new unified api of token metadata exposes a system of delegations where other actors can be 'delegated' powers to do specific actions on the assets or asset grouping (collection). The types of delegates and what they can do is as follows:
+
+#### Note: For programmable NFTS, auth rules manages which actors can become any of these types of delegates.
+
+* Collection - Allows an actor to verify and un-verify items in a asset grouping(collection)
+* Uses - Allows an Actor to "use" the asset and decrement the uses counter on chain which is how applications can implement specific limited or tracking behaviors.
+* Transfer - The same thing as an spl token delegate. This delegate can transfer the token, while delegate the owner can also transfer. Token Metadata will manage the delegate and provide the correct functionality regardless of Token Standard. When the delegate has transfered the 'amount' delegated the delegate is cleared. 
+* Sale - This delegate can transfer the token, while delegated the owner cannot transfer the token. This is the preferred delegate type for marketplaces so they can ensure the user must revoke the delegate before they gain back full control of the asset.
+* Utility - This delegate cannot transfer the token, but it can freeze and thaw the token. (In programmable Nfts the token is always frozen, Thaw and Freeze correspond to Unlocked and Locked respectvely)
 
 ## JS SDK
 
