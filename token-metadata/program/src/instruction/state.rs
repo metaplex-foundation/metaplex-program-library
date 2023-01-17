@@ -33,7 +33,7 @@ pub enum UnlockArgs {
 ///
 ///   0. `[signer]` Delegate
 ///   1. `[optional]` Token owner
-///   2. `[writable, optional]` Token account
+///   2. `[writable]` Token account
 ///   3. `[]` Mint account
 ///   4. `[writable]` Metadata account
 ///   5. `[optional]` Edition account
@@ -49,11 +49,7 @@ impl InstructionBuilder for super::builders::Lock {
         let mut accounts = vec![
             AccountMeta::new_readonly(self.delegate, true),
             AccountMeta::new_readonly(self.token_owner.unwrap_or(crate::ID), false),
-            if let Some(token) = self.token {
-                AccountMeta::new(token, false)
-            } else {
-                AccountMeta::new_readonly(crate::ID, false)
-            },
+            AccountMeta::new(self.token, false),
             AccountMeta::new_readonly(self.mint, false),
             AccountMeta::new(self.metadata, false),
             AccountMeta::new_readonly(self.edition.unwrap_or(crate::ID), false),
@@ -93,7 +89,7 @@ impl InstructionBuilder for super::builders::Lock {
 ///
 ///   0. `[signer]` Delegate
 ///   1. `[optional]` Token owner
-///   2. `[writable, optional]` Token account
+///   2. `[writable]` Token account
 ///   3. `[]` Mint account
 ///   4. `[writable]` Metadata account
 ///   5. `[optional]` Edition account
@@ -109,11 +105,7 @@ impl InstructionBuilder for super::builders::Unlock {
         let mut accounts = vec![
             AccountMeta::new_readonly(self.delegate, true),
             AccountMeta::new_readonly(self.token_owner.unwrap_or(crate::ID), false),
-            if let Some(token) = self.token {
-                AccountMeta::new(token, false)
-            } else {
-                AccountMeta::new_readonly(crate::ID, false)
-            },
+            AccountMeta::new(self.token, false),
             AccountMeta::new_readonly(self.mint, false),
             AccountMeta::new(self.metadata, false),
             AccountMeta::new_readonly(self.edition.unwrap_or(crate::ID), false),

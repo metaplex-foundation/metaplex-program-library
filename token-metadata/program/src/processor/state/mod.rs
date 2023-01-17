@@ -34,7 +34,7 @@ pub(crate) struct ToggleAccounts<'a> {
     delegate_info: &'a AccountInfo<'a>,
     token_owner_info: Option<&'a AccountInfo<'a>>,
     mint_info: &'a AccountInfo<'a>,
-    token_info: Option<&'a AccountInfo<'a>>,
+    token_info: &'a AccountInfo<'a>,
     metadata_info: &'a AccountInfo<'a>,
     master_edition_info: Option<&'a AccountInfo<'a>>,
     token_record_info: Option<&'a AccountInfo<'a>>,
@@ -75,22 +75,21 @@ pub(crate) fn toggle_asset_state(
         return Err(MetadataError::MintMismatch.into());
     }
 
-    let token = if let Some(token_info) = accounts.token_info {
-        Some(Account::unpack(&token_info.try_borrow_data()?)?)
-    } else {
-        None
-    };
+    let token = Account::unpack(&accounts.token_info.try_borrow_data()?)?;
+    // mint must match mint account key
+    if token.mint != *accounts.mint_info.key {
+        return Err(MetadataError::MintMismatch.into());
+    }
 
     // approver authority – this can be either:
-    //  1. token owner: approver == token.owner
-    //  2. token delegate: valid token_record.delegate
-    //  3. spl-delegate: for non-programmable assets, approver == token.delegate
+    //  1. token delegate: valid token_record.delegate
+    //  2. spl-delegate: for non-programmable assets, approver == token.delegate
 
     let authority_type = AuthorityType::get_authority_type(AuthorityRequest {
         authority: accounts.delegate_info.key,
         update_authority: &metadata.update_authority,
         mint: accounts.mint_info.key,
-        token: token.as_ref(),
+        token: Some(&token),
         token_record_info: accounts.token_record_info,
         token_delegate_roles: vec![TokenDelegateRole::Utility],
         ..Default::default()
@@ -108,18 +107,14 @@ pub(crate) fn toggle_asset_state(
                 metadata.token_standard,
                 Some(TokenStandard::ProgrammableNonFungible),
             ) {
-                // check if the approver has an spl-token delegate (we can only do this if
-                // we have the token account)
-                if let Some(token_info) = accounts.token_info {
-                    assert_delegated_tokens(
-                        accounts.delegate_info,
-                        accounts.mint_info,
-                        token_info,
-                    )?;
-                    true
-                } else {
-                    false
-                }
+                // check if the approver has an spl-token delegate
+                assert_delegated_tokens(
+                    accounts.delegate_info,
+                    accounts.mint_info,
+                    accounts.token_info,
+                )?;
+
+                true
             } else {
                 false
             }
@@ -137,15 +132,6 @@ pub(crate) fn toggle_asset_state(
     ) {
         let (mut token_record, token_record_info) = match accounts.token_record_info {
             Some(token_record_info) => {
-                let token_info = match accounts.token_info {
-                    Some(token_info) => token_info,
-                    None => {
-                        return Err(MetadataError::MissingTokenAccount.into());
-                    }
-                };
-
-                let token = Account::unpack(&token_info.try_borrow_data()?)?;
-
                 let (pda_key, _) = find_token_record_account(accounts.mint_info.key, &token.owner);
 
                 assert_keys_equal(&pda_key, token_record_info.key)?;
@@ -192,14 +178,9 @@ pub(crate) fn toggle_asset_state(
                     }
                 };
 
-                (token_owner_info, false)
-            }
-        };
+                assert_keys_equal(token_owner_info.key, &token.owner)?;
 
-        let token_info = match accounts.token_info {
-            Some(token_info) => token_info,
-            None => {
-                return Err(MetadataError::MissingTokenAccount.into());
+                (token_owner_info, false)
             }
         };
 
@@ -219,7 +200,7 @@ pub(crate) fn toggle_asset_state(
                     // this will validate the master_edition derivation
                     freeze(
                         accounts.mint_info.clone(),
-                        token_info.clone(),
+                        accounts.token_info.clone(),
                         freeze_authority.clone(),
                         spl_token_program_info.clone(),
                     )?;
@@ -229,13 +210,13 @@ pub(crate) fn toggle_asset_state(
                     invoke(
                         &freeze_account(
                             spl_token_program_info.key,
-                            token_info.key,
+                            accounts.token_info.key,
                             accounts.mint_info.key,
                             freeze_authority.key,
                             &[],
                         )?,
                         &[
-                            token_info.clone(),
+                            accounts.token_info.clone(),
                             accounts.mint_info.clone(),
                             freeze_authority.clone(),
                         ],
@@ -247,7 +228,7 @@ pub(crate) fn toggle_asset_state(
                     // this will validate the master_edition derivation
                     thaw(
                         accounts.mint_info.clone(),
-                        token_info.clone(),
+                        accounts.token_info.clone(),
                         freeze_authority.clone(),
                         spl_token_program_info.clone(),
                     )?;
@@ -257,13 +238,13 @@ pub(crate) fn toggle_asset_state(
                     invoke(
                         &thaw_account(
                             spl_token_program_info.key,
-                            token_info.key,
+                            accounts.token_info.key,
                             accounts.mint_info.key,
                             freeze_authority.key,
                             &[],
                         )?,
                         &[
-                            token_info.clone(),
+                            accounts.token_info.clone(),
                             accounts.mint_info.clone(),
                             freeze_authority.clone(),
                         ],

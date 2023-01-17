@@ -610,7 +610,7 @@ pub enum MetadataInstruction {
     /// it may require additional accounts to validate the rules.
     #[account(0, signer, name="delegate", desc="Delegate account")]
     #[account(1, optional, name="token_owner", desc="Token owner account")]
-    #[account(2, writable, optional, name="token", desc="Token account")]
+    #[account(2, writable, name="token", desc="Token account")]
     #[account(3, name="mint", desc="Mint account")]
     #[account(4, writable, name="metadata", desc="Metadata account")]
     #[account(5, optional, name="edition", desc="Edition account")]
@@ -630,7 +630,7 @@ pub enum MetadataInstruction {
     /// it may require additional accounts to validate the rules.
     #[account(0, signer, name="delegate", desc="Delegate account")]
     #[account(1, optional, name="token_owner", desc="Token owner account")]
-    #[account(2, writable, optional, name="token", desc="Token account")]
+    #[account(2, writable, name="token", desc="Token account")]
     #[account(3, name="mint", desc="Mint account")]
     #[account(4, writable, name="metadata", desc="Metadata account")]
     #[account(5, optional, name="edition", desc="Edition account")]
