@@ -85,16 +85,12 @@ pub fn process_instruction<'a>(
 ) -> ProgramResult {
     let instruction = MetadataInstruction::try_from_slice(input)?;
 
-    // checks if there is a locked token
-    match is_locked(program_id, accounts) {
-        Ok(value) => {
-            if value && !matches!(instruction, MetadataInstruction::Unlock(_)) {
-                return Err(MetadataError::LockedToken.into());
-            }
-        }
-        Err(error) => {
-            return Err(error);
-        }
+    // checks if there is a locked token; this will block any instruction that
+    // requires the token record account when the token is locked – 'Update' is
+    // an example of an instruction that does not require the token record, so
+    // it can be executed even when a token is locked
+    if is_locked(program_id, accounts) && !matches!(instruction, MetadataInstruction::Unlock(_)) {
+        return Err(MetadataError::LockedToken.into());
     }
 
     // match on the new instruction set
@@ -451,11 +447,8 @@ fn has_programmable_metadata<'a>(
     Ok(false)
 }
 
-/// Checks if the instruction's accounts contain a pNFT metadata.
-///
-/// We need to determine if we are dealing with a pNFT metadata or not
-/// so we can restrict the available instructions.
-fn is_locked<'a>(program_id: &Pubkey, accounts: &'a [AccountInfo]) -> Result<bool, ProgramError> {
+/// Checks if the instruction's accounts contain a locked pNFT.
+fn is_locked<'a>(program_id: &Pubkey, accounts: &'a [AccountInfo]) -> bool {
     for account_info in accounts {
         // checks the account is owned by Token Metadata and it has data
         if account_info.owner == program_id && !account_info.data_is_empty() {
@@ -464,10 +457,10 @@ fn is_locked<'a>(program_id: &Pubkey, accounts: &'a [AccountInfo]) -> Result<boo
             if (data[DISCRIMINATOR_INDEX] == Key::TokenRecord as u8)
                 && (data[TOKEN_STATE_INDEX] == TokenState::Locked as u8)
             {
-                return Ok(true);
+                return true;
             }
         }
     }
 
-    Ok(false)
+    false
 }
