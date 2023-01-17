@@ -283,8 +283,8 @@ The following table makes it easier to understand.
 The fourth delegate type is a temporary delegate that is only created by the migration from NFT to pNFT and cannot be otherwise created through the `Delegate` handler. This special delegate has the same functionality as the Utility delegate except that it can also transfer. This allows us to assign all escrowless-style programs this delegate to preserve whatever current functionality they have. Once used, it is cleared and cannot replaced, and programs will then need to select one of the normal delegate types for future actions. The following table explains the types of `MetadataDelegate`s
 
 | Delegate Type | Verify Collection Items | Use | Update Metadata(creators, royalties, uri) 
-| --- | --- | --- | --- | --- | --- |
-| Collection | ✅ | ❌ | 
+| --- | --- | --- | --- |
+| Collection | ✅ | ❌ | ❌ |
 | Use | ❌ | ✅ | ❌ |
 | Update | ❌ | ❌ | ✅ |
 
