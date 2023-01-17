@@ -635,6 +635,10 @@ pub enum MetadataError {
     /// 160
     #[error("Mint supply must be zero for programmable assets")]
     MintSupplyMustBeZero,
+
+    /// 161
+    #[error("Data is empty or zeroed")]
+    DataIsEmptyOrZeroed,
 }
 
 impl PrintProgramError for MetadataError {
