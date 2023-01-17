@@ -24,11 +24,13 @@ const DEFAULT_PUBKEY: Pubkey = Pubkey::new_from_array([0u8; 32]);
 
 pub const TOKEN_RECORD_SEED: &str = "token_record";
 
+pub const TOKEN_STATE_INDEX: usize = 2;
+
 pub const TOKEN_RECORD_SIZE: usize = 1 // Key
 + 1  // bump
++ 1  // state
 + 33 // delegate
-+ 2  // delegate role
-+ 1; // state
++ 2; // delegate role
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]

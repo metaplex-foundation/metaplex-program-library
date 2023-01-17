@@ -487,18 +487,20 @@ export class InitTransactions {
   }
 
   async lock(
-    approver: Keypair,
+    delegate: Keypair,
     mint: PublicKey,
     metadata: PublicKey,
+    token: PublicKey,
     payer: Keypair,
     handler: PayerTransactionHandler,
     tokenRecord: PublicKey | null = null,
-    token: PublicKey | null = null,
+    tokenOwner: PublicKey | null = null,
     masterEdition: PublicKey | null = null,
     ruleSetPda: PublicKey | null = null,
   ): Promise<{ tx: ConfirmedTransactionAssertablePromise }> {
     const lockAcccounts: LockInstructionAccounts = {
-      approver: approver.publicKey,
+      delegate: delegate.publicKey,
+      tokenOwner,
       tokenRecord,
       token,
       mint,
@@ -525,23 +527,25 @@ export class InitTransactions {
     const tx = new Transaction().add(mintIx);
 
     return {
-      tx: handler.sendAndConfirmTransaction(tx, [payer, approver], 'tx: Lock'),
+      tx: handler.sendAndConfirmTransaction(tx, [payer, delegate], 'tx: Lock'),
     };
   }
 
   async unlock(
-    approver: Keypair,
+    delegate: Keypair,
     mint: PublicKey,
     metadata: PublicKey,
+    token: PublicKey,
     payer: Keypair,
     handler: PayerTransactionHandler,
     tokenRecord: PublicKey | null = null,
-    token: PublicKey | null = null,
+    tokenOwner: PublicKey | null = null,
     masterEdition: PublicKey | null = null,
     ruleSetPda: PublicKey | null = null,
   ): Promise<{ tx: ConfirmedTransactionAssertablePromise }> {
     const unlockAcccounts: UnlockInstructionAccounts = {
-      approver: approver.publicKey,
+      delegate: delegate.publicKey,
+      tokenOwner,
       tokenRecord,
       token,
       mint,
@@ -568,7 +572,7 @@ export class InitTransactions {
     const tx = new Transaction().add(mintIx);
 
     return {
-      tx: handler.sendAndConfirmTransaction(tx, [payer, approver], 'tx: Unlock'),
+      tx: handler.sendAndConfirmTransaction(tx, [payer, delegate], 'tx: Unlock'),
     };
   }
 

@@ -19,7 +19,8 @@ pub fn lock<'a>(
             program_id,
             super::ToggleAccounts {
                 payer_info: context.accounts.payer_info,
-                approver_info: context.accounts.approver_info,
+                delegate_info: context.accounts.delegate_info,
+                token_owner_info: context.accounts.token_owner_info,
                 mint_info: context.accounts.mint_info,
                 token_info: context.accounts.token_info,
                 master_edition_info: context.accounts.edition_info,

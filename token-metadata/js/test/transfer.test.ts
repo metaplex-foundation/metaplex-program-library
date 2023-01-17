@@ -839,7 +839,7 @@ test('Transfer: ProgrammableNonFungible (uninitialized wallet-to-wallet)', async
   const ownerTokenRecord = findTokenRecordPda(mint, owner.publicKey);
   amman.addr.addLabel('Owner Token Record', ownerTokenRecord);
   // destination token record
-  let destinationTokenRecord = findTokenRecordPda(mint, destination.publicKey);
+  const destinationTokenRecord = findTokenRecordPda(mint, destination.publicKey);
   amman.addr.addLabel('Destination Token Record', destinationTokenRecord);
 
   // Transfer the NFT to the destination account, this should work since
