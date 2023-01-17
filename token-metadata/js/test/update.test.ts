@@ -5,7 +5,9 @@ import {
   DelegateArgs,
   Metadata,
   PROGRAM_ID,
+  TokenRecord,
   TokenStandard,
+  TokenState,
 } from '../src/generated';
 import test from 'tape';
 import { amman, InitTransactions, killStuckProcess } from './setup';
@@ -15,6 +17,7 @@ import { UpdateTestData } from './utils/update-test-data';
 import { encode } from '@msgpack/msgpack';
 import { PROGRAM_ID as TOKEN_AUTH_RULES_ID } from '@metaplex-foundation/mpl-token-auth-rules';
 import { spokSamePubkey } from './utils';
+import { findTokenRecordPda } from './utils/programmable';
 
 killStuckProcess();
 
@@ -1325,4 +1328,100 @@ test('Update: Holder Authority Type Not Supported', async (t) => {
     }),
   );
   await updateTx.assertError(t);
+});
+
+test('Update: Update pNFT Config with locked token', async (t) => {
+  const API = new InitTransactions();
+  const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
+
+  const { mint, metadata, masterEdition, token } = await createAndMintDefaultAsset(
+    t,
+    connection,
+    API,
+    handler,
+    payer,
+    TokenStandard.ProgrammableNonFungible,
+    null,
+    1,
+  );
+
+  // token record PDA
+  const tokenRecord = findTokenRecordPda(mint, payer.publicKey);
+  amman.addr.addLabel('Token Record', tokenRecord);
+
+  let pda = await TokenRecord.fromAccountAddress(connection, tokenRecord);
+
+  spok(t, pda, {
+    state: TokenState.Unlocked /* asset should be unlocked */,
+  });
+
+  // creates a delegate
+
+  const [, delegate] = await API.getKeypair('Delegate');
+
+  const args: DelegateArgs = {
+    __kind: 'UtilityV1',
+    amount: 1,
+    authorizationData: null,
+  };
+
+  const { tx: delegateTx } = await API.delegate(
+    delegate.publicKey,
+    mint,
+    metadata,
+    payer.publicKey,
+    payer,
+    args,
+    handler,
+    null,
+    masterEdition,
+    token,
+    tokenRecord,
+  );
+
+  await delegateTx.assertSuccess(t);
+
+  // lock asset with delegate
+
+  const { tx: lockTx } = await API.lock(
+    delegate,
+    mint,
+    metadata,
+    token,
+    payer,
+    handler,
+    tokenRecord,
+    null,
+    masterEdition,
+  );
+  await lockTx.assertSuccess(t);
+
+  // updates the metadata
+
+  const authority = payer;
+  const dummyRuleSet = Keypair.generate().publicKey;
+
+  const updateData = new UpdateTestData();
+  updateData.ruleSet = {
+    __kind: 'Set',
+    fields: [dummyRuleSet],
+  };
+
+  const { tx: updateTx } = await API.update(
+    t,
+    handler,
+    mint,
+    metadata,
+    authority,
+    updateData,
+    null,
+    masterEdition,
+  );
+  await updateTx.assertSuccess(t);
+
+  const updatedMetadata = await Metadata.fromAccountAddress(connection, metadata);
+
+  spok(t, updatedMetadata.programmableConfig, {
+    ruleSet: dummyRuleSet,
+  });
 });
