@@ -9,7 +9,8 @@ use crate::{
     error::MetadataError,
     instruction::{Context, Create, CreateArgs},
     state::{
-        Metadata, ProgrammableConfig, TokenMetadataAccount, TokenStandard, TOKEN_STANDARD_INDEX,
+        Metadata, ProgrammableConfig, TokenMetadataAccount, TokenStandard, MAX_MASTER_EDITION_LEN,
+        TOKEN_STANDARD_INDEX,
     },
     utils::{
         create_master_edition, process_create_metadata_accounts_logic,
@@ -162,8 +163,13 @@ fn create_v1(program_id: &Pubkey, ctx: Context<Create>, args: CreateArgs) -> Pro
                 asset_data.token_standard,
                 TokenStandard::ProgrammableNonFungible
             ) {
-                master_edition.data.borrow_mut()[TOKEN_STANDARD_INDEX] =
-                    TokenStandard::ProgrammableNonFungible as u8;
+                let mut data = master_edition.data.borrow_mut();
+
+                if data.len() < MAX_MASTER_EDITION_LEN {
+                    return Err(MetadataError::InvalidMasterEditionAccountLength.into());
+                }
+
+                data[TOKEN_STANDARD_INDEX] = TokenStandard::ProgrammableNonFungible as u8;
             }
         } else {
             return Err(MetadataError::InvalidMasterEdition.into());

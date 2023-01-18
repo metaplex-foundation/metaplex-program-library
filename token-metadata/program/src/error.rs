@@ -639,6 +639,10 @@ pub enum MetadataError {
     /// 161
     #[error("Missing token owner")]
     MissingTokenOwnerAccount,
+
+    /// 162
+    #[error("Master edition account has an invalid length")]
+    InvalidMasterEditionAccountLength,
 }
 
 impl PrintProgramError for MetadataError {
