@@ -3445,6 +3445,29 @@ createErrorFromCodeLookup.set(0xa0, () => new MintSupplyMustBeZeroError());
 createErrorFromNameLookup.set('MintSupplyMustBeZero', () => new MintSupplyMustBeZeroError());
 
 /**
+ * MissingTokenOwnerAccount: 'Missing token owner'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MissingTokenOwnerAccountError extends Error {
+  readonly code: number = 0xa1;
+  readonly name: string = 'MissingTokenOwnerAccount';
+  constructor() {
+    super('Missing token owner');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MissingTokenOwnerAccountError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xa1, () => new MissingTokenOwnerAccountError());
+createErrorFromNameLookup.set(
+  'MissingTokenOwnerAccount',
+  () => new MissingTokenOwnerAccountError(),
+);
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

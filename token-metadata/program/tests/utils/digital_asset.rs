@@ -459,13 +459,13 @@ impl DigitalAsset {
     pub async fn lock(
         &mut self,
         context: &mut ProgramTestContext,
-        approver: Keypair,
+        delegate: Keypair,
         token_record: Option<Pubkey>,
         payer: Keypair,
     ) -> Result<(), BanksClientError> {
         let mut builder = LockBuilder::new();
         builder
-            .approver(approver.pubkey())
+            .delegate(delegate.pubkey())
             .mint(self.mint.pubkey())
             .metadata(self.metadata)
             .payer(payer.pubkey());
@@ -492,7 +492,7 @@ impl DigitalAsset {
         let tx = Transaction::new_signed_with_payer(
             &[utility_ix],
             Some(&payer.pubkey()),
-            &[&approver],
+            &[&delegate, &payer],
             context.last_blockhash,
         );
 
@@ -502,13 +502,13 @@ impl DigitalAsset {
     pub async fn unlock(
         &mut self,
         context: &mut ProgramTestContext,
-        approver: Keypair,
+        delegate: Keypair,
         token_record: Option<Pubkey>,
         payer: Keypair,
     ) -> Result<(), BanksClientError> {
         let mut builder = UnlockBuilder::new();
         builder
-            .approver(approver.pubkey())
+            .delegate(delegate.pubkey())
             .mint(self.mint.pubkey())
             .metadata(self.metadata)
             .payer(payer.pubkey());
@@ -535,7 +535,7 @@ impl DigitalAsset {
         let tx = Transaction::new_signed_with_payer(
             &[utility_ix],
             Some(&payer.pubkey()),
-            &[&approver],
+            &[&delegate, &payer],
             context.last_blockhash,
         );
 

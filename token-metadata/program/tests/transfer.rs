@@ -24,7 +24,7 @@ mod standard_transfer {
 
     use mpl_token_metadata::{
         instruction::{DelegateArgs, TransferArgs},
-        state::TokenStandard,
+        state::TokenStandard, error::MetadataError,
     };
     use solana_program::{
         native_token::LAMPORTS_PER_SOL, program_option::COption, program_pack::Pack, pubkey::Pubkey,
@@ -363,7 +363,7 @@ mod standard_transfer {
         let err = da.transfer_from(params).await.unwrap_err();
 
         // Owner does not match.
-        assert_custom_error_ix!(1, err, 0x4);
+        assert_custom_error_ix!(1, err, MetadataError::InvalidAuthorityType);
     }
 }
 

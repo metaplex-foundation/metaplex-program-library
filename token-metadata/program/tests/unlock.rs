@@ -7,6 +7,7 @@ use utils::*;
 mod utility {
 
     use mpl_token_metadata::{
+        instruction::DelegateArgs,
         pda::find_token_record_account,
         state::{TokenRecord, TokenStandard, TokenState},
     };
@@ -17,7 +18,7 @@ mod utility {
     use super::*;
 
     #[tokio::test]
-    async fn unlock_programmable_nonfungible() {
+    async fn delegate_unlock_programmable_nonfungible() {
         let mut context = program_test().start_with_context().await;
 
         // asset
@@ -43,13 +44,32 @@ mod utility {
 
         assert_eq!(token_record.state, TokenState::Unlocked);
 
-        let approver = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+        // set a utility delegate
+
+        let delegate = Keypair::new();
+        let delegate_pubkey = delegate.pubkey();
         let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+
+        asset
+            .delegate(
+                &mut context,
+                payer,
+                delegate_pubkey,
+                DelegateArgs::UtilityV1 {
+                    amount: 1,
+                    authorization_data: None,
+                },
+            )
+            .await
+            .unwrap();
 
         // lock
 
+        let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+        let token_delegate = Keypair::from_bytes(&delegate.to_bytes()).unwrap();
+
         asset
-            .lock(&mut context, approver, Some(pda_key), payer)
+            .lock(&mut context, token_delegate, Some(pda_key), payer)
             .await
             .unwrap();
 
@@ -62,11 +82,11 @@ mod utility {
 
         // unlock
 
-        let approver = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
         let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+        let token_delegate = Keypair::from_bytes(&delegate.to_bytes()).unwrap();
 
         asset
-            .unlock(&mut context, approver, Some(pda_key), payer)
+            .unlock(&mut context, token_delegate, Some(pda_key), payer)
             .await
             .unwrap();
 
@@ -79,7 +99,7 @@ mod utility {
     }
 
     #[tokio::test]
-    async fn unlock_nonfungible() {
+    async fn delegate_unlock_nonfungible() {
         let mut context = program_test().start_with_context().await;
 
         // asset
@@ -97,13 +117,32 @@ mod utility {
         // should NOT be frozen
         assert!(!token.is_frozen());
 
-        // lock
+        // set a utility delegate
 
-        let approver = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+        let delegate = Keypair::new();
+        let delegate_pubkey = delegate.pubkey();
         let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
 
         asset
-            .lock(&mut context, approver, None, payer)
+            .delegate(
+                &mut context,
+                payer,
+                delegate_pubkey,
+                DelegateArgs::UtilityV1 {
+                    amount: 1,
+                    authorization_data: None,
+                },
+            )
+            .await
+            .unwrap();
+
+        // lock
+
+        let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+        let token_delegate = Keypair::from_bytes(&delegate.to_bytes()).unwrap();
+
+        asset
+            .lock(&mut context, token_delegate, None, payer)
             .await
             .unwrap();
 
@@ -114,11 +153,11 @@ mod utility {
 
         // unlock
 
-        let approver = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
         let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+        let token_delegate = Keypair::from_bytes(&delegate.to_bytes()).unwrap();
 
         asset
-            .unlock(&mut context, approver, None, payer)
+            .unlock(&mut context, token_delegate, None, payer)
             .await
             .unwrap();
 
