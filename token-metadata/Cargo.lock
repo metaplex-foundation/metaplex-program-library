@@ -2781,7 +2781,6 @@ dependencies = [
 [[package]]
 name = "rooster"
 version = "0.1.0"
-source = "git+https://github.com/metaplex-foundation/rooster#ead71b1a97d8c3b7577d75ef96f27147be7f7dc9"
 dependencies = [
  "borsh",
  "mpl-token-metadata 1.6.4",

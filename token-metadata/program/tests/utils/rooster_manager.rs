@@ -1,7 +1,9 @@
 use super::*;
 use mpl_token_auth_rules::payload::Payload;
 use rooster::{
-    instruction::{delegate as rooster_delegate, init, withdraw, WithdrawArgs},
+    instruction::{
+        delegate as rooster_delegate, init, legacy_lock, legacy_unlock, withdraw, WithdrawArgs,
+    },
     pda::find_rooster_pda,
     AuthorizationData,
 };
@@ -107,6 +109,67 @@ impl RoosterManager {
             &[ix],
             Some(&delegate.pubkey()),
             &[delegate],
+            context.last_blockhash,
+        );
+
+        context.banks_client.process_transaction(tx).await
+    }
+
+    pub async fn legacy_lock(
+        &self,
+        context: &mut ProgramTestContext,
+        token_owner: &Keypair,
+        token: Pubkey,
+        mint: Pubkey,
+        metadata: Pubkey,
+        edition: Pubkey,
+    ) -> Result<(), BanksClientError> {
+        let ix = legacy_lock(
+            self.pda,
+            token_owner.pubkey(),
+            token,
+            mint,
+            metadata,
+            edition,
+            rooster::instruction::LockArgs {
+                amount: 1,
+                bump: self.bump,
+            },
+        );
+
+        let tx = Transaction::new_signed_with_payer(
+            &[ix],
+            Some(&token_owner.pubkey()),
+            &[token_owner],
+            context.last_blockhash,
+        );
+
+        context.banks_client.process_transaction(tx).await
+    }
+
+    pub async fn legacy_unlock(
+        &self,
+        context: &mut ProgramTestContext,
+        token_owner: &Keypair,
+        token: Pubkey,
+        mint: Pubkey,
+        metadata: Pubkey,
+        edition: Pubkey,
+    ) -> Result<(), BanksClientError> {
+        let ix = legacy_unlock(
+            self.pda,
+            token_owner.pubkey(),
+            token,
+            mint,
+            metadata,
+            edition,
+            rooster::instruction::UnlockArgs { bump: self.bump },
+        );
+
+        let tx = Transaction::new_signed_with_payer(
+            &[ix],
+            Some(&token_owner.pubkey()),
+            &[token_owner],
             context.last_blockhash,
         );
 
