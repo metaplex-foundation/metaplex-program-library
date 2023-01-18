@@ -2,7 +2,8 @@ use super::*;
 use mpl_token_auth_rules::payload::Payload;
 use rooster::{
     instruction::{
-        delegate as rooster_delegate, init, legacy_lock, legacy_unlock, withdraw, WithdrawArgs,
+        delegate as rooster_delegate, init, lock as rooster_lock, programmable_lock,
+        programmable_unlock, unlock as rooster_unlock, withdraw, WithdrawArgs,
     },
     pda::find_rooster_pda,
     AuthorizationData,
@@ -115,7 +116,7 @@ impl RoosterManager {
         context.banks_client.process_transaction(tx).await
     }
 
-    pub async fn legacy_lock(
+    pub async fn lock(
         &self,
         context: &mut ProgramTestContext,
         token_owner: &Keypair,
@@ -124,7 +125,7 @@ impl RoosterManager {
         metadata: Pubkey,
         edition: Pubkey,
     ) -> Result<(), BanksClientError> {
-        let ix = legacy_lock(
+        let ix = rooster_lock(
             self.pda,
             token_owner.pubkey(),
             token,
@@ -147,7 +148,7 @@ impl RoosterManager {
         context.banks_client.process_transaction(tx).await
     }
 
-    pub async fn legacy_unlock(
+    pub async fn unlock(
         &self,
         context: &mut ProgramTestContext,
         token_owner: &Keypair,
@@ -156,7 +157,7 @@ impl RoosterManager {
         metadata: Pubkey,
         edition: Pubkey,
     ) -> Result<(), BanksClientError> {
-        let ix = legacy_unlock(
+        let ix = rooster_unlock(
             self.pda,
             token_owner.pubkey(),
             token,
@@ -164,6 +165,69 @@ impl RoosterManager {
             metadata,
             edition,
             rooster::instruction::UnlockArgs { bump: self.bump },
+        );
+
+        let tx = Transaction::new_signed_with_payer(
+            &[ix],
+            Some(&token_owner.pubkey()),
+            &[token_owner],
+            context.last_blockhash,
+        );
+
+        context.banks_client.process_transaction(tx).await
+    }
+
+    pub async fn programmable_lock(
+        &self,
+        context: &mut ProgramTestContext,
+        token_owner: &Keypair,
+        token: Pubkey,
+        mint: Pubkey,
+        metadata: Pubkey,
+        edition: Pubkey,
+    ) -> Result<(), BanksClientError> {
+        let ix = programmable_lock(
+            self.pda,
+            token_owner.pubkey(),
+            token,
+            mint,
+            metadata,
+            edition,
+            rooster::instruction::LockArgs {
+                amount: 1,
+                bump: self.bump,
+            },
+        );
+
+        let tx = Transaction::new_signed_with_payer(
+            &[ix],
+            Some(&token_owner.pubkey()),
+            &[token_owner],
+            context.last_blockhash,
+        );
+
+        context.banks_client.process_transaction(tx).await
+    }
+
+    pub async fn programmable_unlock(
+        &self,
+        context: &mut ProgramTestContext,
+        token_owner: &Keypair,
+        token: Pubkey,
+        mint: Pubkey,
+        metadata: Pubkey,
+        edition: Pubkey,
+    ) -> Result<(), BanksClientError> {
+        let ix = programmable_unlock(
+            self.pda,
+            token_owner.pubkey(),
+            token,
+            mint,
+            metadata,
+            edition,
+            rooster::instruction::UnlockArgs {
+                bump: self.bump,
+            },
         );
 
         let tx = Transaction::new_signed_with_payer(
