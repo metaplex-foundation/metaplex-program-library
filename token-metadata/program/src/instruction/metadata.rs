@@ -523,7 +523,7 @@ impl InstructionBuilder for super::builders::Migrate {
             AccountMeta::new_readonly(self.authority, true),
             AccountMeta::new_readonly(self.collection_metadata, false),
             AccountMeta::new_readonly(self.delegate_record, false),
-            AccountMeta::new_readonly(self.token_record, false),
+            AccountMeta::new(self.token_record, false),
             AccountMeta::new_readonly(self.system_program, false),
             AccountMeta::new_readonly(self.sysvar_instructions, false),
             AccountMeta::new_readonly(self.spl_token_program, false),

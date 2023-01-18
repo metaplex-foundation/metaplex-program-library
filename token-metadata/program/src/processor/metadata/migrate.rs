@@ -91,7 +91,8 @@ pub fn migrate_v1(program_id: &Pubkey, ctx: Context<Migrate>, args: MigrateArgs)
     assert_metadata_valid(program_id, mint_info.key, metadata_info)?;
 
     // Deserialize metadata.
-    let mut metadata = Metadata::from_account_info(ctx.accounts.metadata_info)?;
+    let mut metadata = Metadata::from_account_info(metadata_info)?;
+    let collection_metadata = Metadata::from_account_info(collection_metadata_info)?;
 
     let token_standard = metadata.token_standard.ok_or_else(|| {
         <MetadataError as std::convert::Into<ProgramError>>::into(
@@ -121,12 +122,10 @@ pub fn migrate_v1(program_id: &Pubkey, ctx: Context<Migrate>, args: MigrateArgs)
             assert_is_collection_delegated_authority(
                 ctx.accounts.delegate_record_info,
                 &migration_validator_signer,
-                ctx.accounts.mint_info.key,
+                &collection_metadata.mint,
             )?;
 
             // Collection checks
-            let collection_metadata = Metadata::from_account_info(collection_metadata_info)?;
-
             // Is it a verified member of the collection?
             if metadata.collection.is_none() {
                 return Err(MetadataError::NotAMemberOfCollection.into());
@@ -139,16 +138,12 @@ pub fn migrate_v1(program_id: &Pubkey, ctx: Context<Migrate>, args: MigrateArgs)
             let delegate_record =
                 CollectionAuthorityRecord::from_account_info(ctx.accounts.delegate_record_info)?;
 
-            if delegate_record.update_authority != Some(metadata.update_authority) {
+            if delegate_record.update_authority != Some(collection_metadata.update_authority) {
                 return Err(MetadataError::UpdateAuthorityIncorrect.into());
             }
 
             let token: Account = assert_initialized(token_info)?;
             let mint: Mint = assert_initialized(mint_info)?;
-
-            if metadata.update_authority != *authority_info.key {
-                return Err(MetadataError::UpdateAuthorityIncorrect.into());
-            }
 
             if token.mint != *mint_info.key {
                 return Err(MetadataError::MintMismatch.into());
