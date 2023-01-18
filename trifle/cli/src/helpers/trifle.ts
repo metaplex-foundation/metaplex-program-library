@@ -66,7 +66,7 @@ export const createConstraintModel = async (
   const { blockhash } = await connection.getLatestBlockhash();
   tx.recentBlockhash = blockhash;
   tx.feePayer = keypair.publicKey;
-  const sig = await connection.sendTransaction(tx, [keypair]);
+  const sig = await connection.sendTransaction(tx, [keypair], { skipPreflight: true });
   // await connection.sendTransaction(tx, [keypair]);
   await connection.confirmTransaction(sig, "finalized");
 
@@ -223,7 +223,7 @@ export const createTrifle = async (
   tx.recentBlockhash = blockhash;
   tx.feePayer = keypair.publicKey;
   const sig = await connection.sendTransaction(tx, [keypair], {
-    skipPreflight: false,
+    skipPreflight: true,
   });
   await connection.confirmTransaction(sig, "finalized");
 
@@ -235,12 +235,13 @@ export const transferIn = async (
   escrowNft: NftWithToken,
   escrowAccountAddress: PublicKey,
   nft: NftWithToken | SftWithToken,
+  creator: PublicKey,
   keypair: Keypair,
   slot: string,
 ) => {
   const trifleAddress = await findTriflePda(
     escrowNft.mint.address,
-    keypair.publicKey,
+    creator,
   );
 
   const accountInfo = await connection.getAccountInfo(trifleAddress[0]);
@@ -278,7 +279,7 @@ export const transferIn = async (
       constraintModel: escrowConstraintModel,
       escrow: escrowAccountAddress,
       payer: keypair.publicKey,
-      trifleAuthority: keypair.publicKey,
+      trifleAuthority: creator,
       attributeMint: nft.mint.address,
       attributeSrcToken: nft.token.address,
       attributeDstToken: dst,
@@ -313,12 +314,13 @@ export const transferOut = async (
   escrowNft: NftWithToken,
   escrowAccountAddress: PublicKey,
   nft: NftWithToken | SftWithToken,
+  creator: PublicKey,
   keypair: Keypair,
   slot: string,
 ) => {
   const trifleAddress = await findTriflePda(
     escrowNft.mint.address,
-    keypair.publicKey,
+    creator,
   );
 
   const accountInfo = await connection.getAccountInfo(trifleAddress[0]);
@@ -344,7 +346,7 @@ export const transferOut = async (
       escrowMint: escrowNft.mint.address,
       escrowMetadata: escrowNft.metadataAddress,
       payer: keypair.publicKey,
-      trifleAuthority: keypair.publicKey,
+      trifleAuthority: creator,
       attributeMint: nft.mint.address,
       attributeSrcTokenAccount: nft.token.address,
       attributeDstTokenAccount: dst,
