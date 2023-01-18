@@ -16,6 +16,7 @@ use crate::{
     state::{
         CollectionAuthorityRecord, Metadata, MigrationType, ProgrammableConfig, TokenDelegateRole,
         TokenMetadataAccount, TokenRecord, TokenStandard, TokenState, TOKEN_RECORD_SEED,
+        TOKEN_STANDARD_INDEX,
     },
     utils::{
         assert_derivation, assert_edition_valid, assert_initialized, clean_write_metadata, freeze,
@@ -229,6 +230,8 @@ pub fn migrate_v1(program_id: &Pubkey, ctx: Context<Migrate>, args: MigrateArgs)
             // Migrate the token.
             metadata.token_standard = Some(TokenStandard::ProgrammableNonFungible);
             metadata.programmable_config = Some(ProgrammableConfig::V1 { rule_set });
+            edition_info.data.borrow_mut()[TOKEN_STANDARD_INDEX] =
+                TokenStandard::ProgrammableNonFungible as u8;
 
             clean_write_metadata(&mut metadata, metadata_info)?;
         }

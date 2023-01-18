@@ -644,7 +644,7 @@ pub enum MetadataInstruction {
 
     /// Migrates an asset to a ProgrammableAsset type.
     #[account(0, writable, name="metadata", desc="Metadata account")]
-    #[account(1, name="edition", desc="Edition account")]
+    #[account(1, writable, name="edition", desc="Edition account")]
     #[account(2, writable, name="token", desc="Token account")]
     #[account(3, name="token_owner", desc="Token account owner")]
     #[account(4, name="mint", desc="Mint account")]
