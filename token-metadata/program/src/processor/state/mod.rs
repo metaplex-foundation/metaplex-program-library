@@ -31,7 +31,7 @@ use crate::{
 
 pub(crate) struct ToggleAccounts<'a> {
     payer_info: &'a AccountInfo<'a>,
-    delegate_info: &'a AccountInfo<'a>,
+    authority_info: &'a AccountInfo<'a>,
     token_owner_info: Option<&'a AccountInfo<'a>>,
     mint_info: &'a AccountInfo<'a>,
     token_info: &'a AccountInfo<'a>,
@@ -52,7 +52,7 @@ pub(crate) fn toggle_asset_state(
     // signers
 
     assert_signer(accounts.payer_info)?;
-    assert_signer(accounts.delegate_info)?;
+    assert_signer(accounts.authority_info)?;
 
     // ownership
 
@@ -86,7 +86,7 @@ pub(crate) fn toggle_asset_state(
     //  2. spl-delegate: for non-programmable assets, approver == token.delegate
 
     let authority_type = AuthorityType::get_authority_type(AuthorityRequest {
-        authority: accounts.delegate_info.key,
+        authority: accounts.authority_info.key,
         update_authority: &metadata.update_authority,
         mint: accounts.mint_info.key,
         token: Some(&token),
@@ -109,7 +109,7 @@ pub(crate) fn toggle_asset_state(
             ) {
                 // check if the approver has an spl-token delegate
                 assert_delegated_tokens(
-                    accounts.delegate_info,
+                    accounts.authority_info,
                     accounts.mint_info,
                     accounts.token_info,
                 )?;

@@ -68,7 +68,6 @@ impl DigitalAsset {
         token_standard: TokenStandard,
         authorization_rules: Option<Pubkey>,
     ) -> Result<(), BanksClientError> {
-        println!("create: authorization rules: {authorization_rules:?}");
         let mut asset = AssetData::new(
             token_standard,
             String::from(DEFAULT_NAME),
@@ -94,7 +93,7 @@ impl DigitalAsset {
         builder
             .metadata(self.metadata)
             .mint(self.mint.pubkey())
-            .mint_authority(payer_pubkey)
+            .authority(payer_pubkey)
             .payer(payer_pubkey)
             .update_authority(payer_pubkey)
             .initialize_mint(true)
@@ -218,8 +217,6 @@ impl DigitalAsset {
         authorization_data: Option<AuthorizationData>,
         amount: u64,
     ) -> Result<(), BanksClientError> {
-        println!("create and mint: authorization rules: {authorization_rules:?}");
-
         // creates the metadata
         self.create(context, token_standard, authorization_rules)
             .await
@@ -242,7 +239,7 @@ impl DigitalAsset {
             .mint(self.mint.pubkey())
             .metadata(self.metadata)
             .payer(payer.pubkey())
-            .approver(payer.pubkey());
+            .authority(payer.pubkey());
 
         match args {
             DelegateArgs::CollectionV1 { .. } => {
@@ -335,7 +332,7 @@ impl DigitalAsset {
             .mint(self.mint.pubkey())
             .metadata(self.metadata)
             .payer(approver.pubkey())
-            .approver(approver.pubkey());
+            .authority(approver.pubkey());
 
         match args {
             RevokeArgs::CollectionV1 => {
@@ -465,7 +462,7 @@ impl DigitalAsset {
     ) -> Result<(), BanksClientError> {
         let mut builder = LockBuilder::new();
         builder
-            .delegate(delegate.pubkey())
+            .authority(delegate.pubkey())
             .mint(self.mint.pubkey())
             .metadata(self.metadata)
             .payer(payer.pubkey());
@@ -508,7 +505,7 @@ impl DigitalAsset {
     ) -> Result<(), BanksClientError> {
         let mut builder = UnlockBuilder::new();
         builder
-            .delegate(delegate.pubkey())
+            .authority(delegate.pubkey())
             .mint(self.mint.pubkey())
             .metadata(self.metadata)
             .payer(payer.pubkey());

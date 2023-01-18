@@ -47,7 +47,7 @@ pub enum UnlockArgs {
 impl InstructionBuilder for super::builders::Lock {
     fn instruction(&self) -> solana_program::instruction::Instruction {
         let mut accounts = vec![
-            AccountMeta::new_readonly(self.delegate, true),
+            AccountMeta::new_readonly(self.authority, true),
             AccountMeta::new_readonly(self.token_owner.unwrap_or(crate::ID), false),
             AccountMeta::new(self.token, false),
             AccountMeta::new_readonly(self.mint, false),
@@ -103,7 +103,7 @@ impl InstructionBuilder for super::builders::Lock {
 impl InstructionBuilder for super::builders::Unlock {
     fn instruction(&self) -> solana_program::instruction::Instruction {
         let mut accounts = vec![
-            AccountMeta::new_readonly(self.delegate, true),
+            AccountMeta::new_readonly(self.authority, true),
             AccountMeta::new_readonly(self.token_owner.unwrap_or(crate::ID), false),
             AccountMeta::new(self.token, false),
             AccountMeta::new_readonly(self.mint, false),

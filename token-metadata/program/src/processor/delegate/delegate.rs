@@ -33,16 +33,13 @@ pub fn delegate<'a>(
         DelegateArgs::CollectionV1 { .. } => {
             create_delegate_v1(program_id, context, args, MetadataDelegateRole::Collection)
         }
-        DelegateArgs::SaleV1 { amount, .. } => {
-            // the sale delegate is a special type of transfer
-            create_persistent_delegate_v1(
-                program_id,
-                context,
-                args,
-                TokenDelegateRole::Sale,
-                amount,
-            )
-        }
+        DelegateArgs::SaleV1 { amount, .. } => create_persistent_delegate_v1(
+            program_id,
+            context,
+            args,
+            TokenDelegateRole::Sale,
+            amount,
+        ),
         DelegateArgs::TransferV1 { amount, .. } => create_persistent_delegate_v1(
             program_id,
             context,
@@ -75,7 +72,7 @@ fn create_delegate_v1(
     // signers
 
     assert_signer(ctx.accounts.payer_info)?;
-    assert_signer(ctx.accounts.approver_info)?;
+    assert_signer(ctx.accounts.authority_info)?;
 
     // ownership
 
@@ -94,7 +91,7 @@ fn create_delegate_v1(
 
     let metadata = Metadata::from_account_info(ctx.accounts.metadata_info)?;
     // authority must match update authority
-    assert_update_authority_is_correct(&metadata, ctx.accounts.approver_info)?;
+    assert_update_authority_is_correct(&metadata, ctx.accounts.authority_info)?;
 
     if metadata.mint != *ctx.accounts.mint_info.key {
         return Err(MetadataError::MintMismatch.into());
@@ -117,7 +114,7 @@ fn create_delegate_v1(
         delegate_record_info,
         ctx.accounts.delegate_info,
         ctx.accounts.mint_info,
-        ctx.accounts.approver_info,
+        ctx.accounts.authority_info,
         ctx.accounts.payer_info,
         ctx.accounts.system_program_info,
         &delegate_role,
@@ -154,7 +151,7 @@ fn create_persistent_delegate_v1(
     // signers
 
     assert_signer(ctx.accounts.payer_info)?;
-    assert_signer(ctx.accounts.approver_info)?;
+    assert_signer(ctx.accounts.authority_info)?;
 
     // ownership
 
@@ -181,7 +178,7 @@ fn create_persistent_delegate_v1(
     // authority must be the owner of the token account: spl-token required the
     // token owner to set a delegate
     let token_account = Account::unpack(&token_info.try_borrow_data()?).unwrap();
-    if token_account.owner != *ctx.accounts.approver_info.key {
+    if token_account.owner != *ctx.accounts.authority_info.key {
         return Err(MetadataError::IncorrectOwner.into());
     }
 
@@ -195,7 +192,7 @@ fn create_persistent_delegate_v1(
             Some(token_record_info) => {
                 let (pda_key, _) = find_token_record_account(
                     ctx.accounts.mint_info.key,
-                    ctx.accounts.approver_info.key,
+                    ctx.accounts.authority_info.key,
                 );
 
                 assert_keys_equal(&pda_key, token_record_info.key)?;
@@ -247,14 +244,14 @@ fn create_persistent_delegate_v1(
             spl_token_program_info.key,
             token_info.key,
             ctx.accounts.delegate_info.key,
-            ctx.accounts.approver_info.key,
+            ctx.accounts.authority_info.key,
             &[],
             amount,
         )?,
         &[
             token_info.clone(),
             ctx.accounts.delegate_info.clone(),
-            ctx.accounts.approver_info.clone(),
+            ctx.accounts.authority_info.clone(),
         ],
     )?;
 
@@ -284,7 +281,7 @@ fn create_pda_account<'a>(
     delegate_record_info: &'a AccountInfo<'a>,
     delegate_info: &'a AccountInfo<'a>,
     mint_info: &'a AccountInfo<'a>,
-    approver_info: &'a AccountInfo<'a>,
+    authority_info: &'a AccountInfo<'a>,
     payer_info: &'a AccountInfo<'a>,
     system_program_info: &'a AccountInfo<'a>,
     delegate_role: &str,
@@ -296,7 +293,7 @@ fn create_pda_account<'a>(
         program_id.as_ref(),
         mint_info.key.as_ref(),
         delegate_role.as_bytes(),
-        approver_info.key.as_ref(),
+        authority_info.key.as_ref(),
         delegate_info.key.as_ref(),
     ];
     let bump = &[assert_derivation(
@@ -325,6 +322,7 @@ fn create_pda_account<'a>(
         bump: bump[0],
         mint: *mint_info.key,
         delegate: *delegate_info.key,
+        update_authority: *authority_info.key,
         ..Default::default()
     };
     pda.serialize(&mut *delegate_record_info.try_borrow_mut_data()?)?;

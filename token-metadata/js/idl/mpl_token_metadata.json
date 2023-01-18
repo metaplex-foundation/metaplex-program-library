@@ -2440,7 +2440,7 @@
           "desc": "Mint of token asset"
         },
         {
-          "name": "mintAuthority",
+          "name": "authority",
           "isMut": false,
           "isSigner": true,
           "desc": "Mint authority"
@@ -2654,10 +2654,10 @@
           "optional": true
         },
         {
-          "name": "approver",
+          "name": "authority",
           "isMut": false,
           "isSigner": true,
-          "desc": "Approver (update authority or token owner) for the delegation"
+          "desc": "Update authority or token owner"
         },
         {
           "name": "payer",
@@ -2763,10 +2763,17 @@
           "optional": true
         },
         {
-          "name": "approver",
+          "name": "authority",
           "isMut": false,
           "isSigner": true,
-          "desc": "Approver (update authority or token owner) for the delegation"
+          "desc": "Update authority or token owner"
+        },
+        {
+          "name": "previousAuthority",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Previous authority (for self-revoking)",
+          "optional": true
         },
         {
           "name": "payer",
@@ -2826,7 +2833,7 @@
       "name": "Lock",
       "accounts": [
         {
-          "name": "delegate",
+          "name": "authority",
           "isMut": false,
           "isSigner": true,
           "desc": "Delegate account"
@@ -2928,7 +2935,7 @@
       "name": "Unlock",
       "accounts": [
         {
-          "name": "delegate",
+          "name": "authority",
           "isMut": false,
           "isSigner": true,
           "desc": "Delegate account"
@@ -3336,7 +3343,7 @@
       "name": "Use",
       "accounts": [
         {
-          "name": "approver",
+          "name": "authority",
           "isMut": false,
           "isSigner": true,
           "desc": "Token owner or delegate"
@@ -3525,6 +3532,10 @@
           },
           {
             "name": "delegate",
+            "type": "publicKey"
+          },
+          {
+            "name": "updateAuthority",
             "type": "publicKey"
           }
         ]

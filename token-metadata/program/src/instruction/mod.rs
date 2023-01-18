@@ -524,7 +524,7 @@ pub enum MetadataInstruction {
     #[account(0, writable, name="metadata", desc="Unallocated metadata account with address as pda of ['metadata', program id, mint id]")]
     #[account(1, optional, writable, name="master_edition", desc="Unallocated edition account with address as pda of ['metadata', program id, mint, 'edition']")]
     #[account(2, writable, name="mint", desc="Mint of token asset")]
-    #[account(3, signer, name="mint_authority", desc="Mint authority")]
+    #[account(3, signer, name="authority", desc="Mint authority")]
     #[account(4, signer, writable, name="payer", desc="Payer")]
     #[account(5, name="update_authority", desc="Update authority for the metadata account")]
     #[account(6, name="system_program", desc="System program")]
@@ -574,7 +574,7 @@ pub enum MetadataInstruction {
     #[account(4, optional, writable, name="token_record", desc="Token record account")]
     #[account(5, name="mint", desc="Mint of metadata")]
     #[account(6, optional, writable, name="token", desc="Token account of mint")]
-    #[account(7, signer, name="approver", desc="Approver (update authority or token owner) for the delegation")]
+    #[account(7, signer, name="authority", desc="Update authority or token owner")]
     #[account(8, signer, writable, name="payer", desc="Payer")]
     #[account(9, name="system_program", desc="System Program")]
     #[account(10, name="sysvar_instructions", desc="Instructions sysvar account")]
@@ -594,13 +594,14 @@ pub enum MetadataInstruction {
     #[account(4, optional, writable, name="token_record", desc="Token record account")]
     #[account(5, name="mint", desc="Mint of metadata")]
     #[account(6, optional, writable, name="token", desc="Token account of mint")]
-    #[account(7, signer, name="approver", desc="Approver (update authority or token owner) for the delegation")]
-    #[account(8, signer, writable, name="payer", desc="Payer")]
-    #[account(9, name="system_program", desc="System Program")]
-    #[account(10, name="sysvar_instructions", desc="Instructions sysvar account")]
-    #[account(11, optional, name="spl_token_program", desc="SPL Token Program")]
-    #[account(12, optional, name="authorization_rules_program", desc="Token Authorization Rules Program")]
-    #[account(13, optional, name="authorization_rules", desc="Token Authorization Rules account")]
+    #[account(7, signer, name="authority", desc="Update authority or token owner")]
+    #[account(8, optional, name="previous_authority", desc="Previous authority (for self-revoking)")]
+    #[account(9, signer, writable, name="payer", desc="Payer")]
+    #[account(10, name="system_program", desc="System Program")]
+    #[account(11, name="sysvar_instructions", desc="Instructions sysvar account")]
+    #[account(12, optional, name="spl_token_program", desc="SPL Token Program")]
+    #[account(13, optional, name="authorization_rules_program", desc="Token Authorization Rules Program")]
+    #[account(14, optional, name="authorization_rules", desc="Token Authorization Rules account")]
     #[default_optional_accounts]
     Revoke(RevokeArgs),
 
@@ -608,7 +609,7 @@ pub enum MetadataInstruction {
     /// 
     /// The configurable `authorization_rules` only apply to `ProgrammableNonFungible` assets and
     /// it may require additional accounts to validate the rules.
-    #[account(0, signer, name="delegate", desc="Delegate account")]
+    #[account(0, signer, name="authority", desc="Delegate account")]
     #[account(1, optional, name="token_owner", desc="Token owner account")]
     #[account(2, writable, name="token", desc="Token account")]
     #[account(3, name="mint", desc="Mint account")]
@@ -628,7 +629,7 @@ pub enum MetadataInstruction {
     /// 
     /// The configurable `authorization_rules` only apply to `ProgrammableNonFungible` assets and
     /// it may require additional accounts to validate the rules.
-    #[account(0, signer, name="delegate", desc="Delegate account")]
+    #[account(0, signer, name="authority", desc="Delegate account")]
     #[account(1, optional, name="token_owner", desc="Token owner account")]
     #[account(2, writable, name="token", desc="Token account")]
     #[account(3, name="mint", desc="Mint account")]
@@ -708,7 +709,7 @@ pub enum MetadataInstruction {
     /// 
     /// The configurable `authorization_rules` only apply to `ProgrammableNonFungible` assets and
     /// it may require additional accounts to validate the rules.
-    #[account(0, signer, name="approver", desc="Token owner or delegate")]
+    #[account(0, signer, name="authority", desc="Token owner or delegate")]
     #[account(1, writable, optional, name="delegate_record", desc="Delegate record PDA")]
     #[account(2, writable, optional, name="token", desc="Token account")]
     #[account(3, name="mint", desc="Mint account")]

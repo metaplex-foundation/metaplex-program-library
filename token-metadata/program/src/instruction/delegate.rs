@@ -110,7 +110,7 @@ impl InstructionBuilder for super::builders::Delegate {
             } else {
                 AccountMeta::new_readonly(crate::ID, false)
             },
-            AccountMeta::new_readonly(self.approver, true),
+            AccountMeta::new_readonly(self.authority, true),
             AccountMeta::new(self.payer, true),
             AccountMeta::new_readonly(self.system_program, false),
             AccountMeta::new_readonly(self.sysvar_instructions, false),
@@ -139,13 +139,14 @@ impl InstructionBuilder for super::builders::Delegate {
 ///   3. `[optional]` Master Edition account
 ///   4. `[]` Mint account
 ///   5. `[optional, writable]` Token account
-///   6. `[signer]` Approver (update authority, token owner or delegate) of the revoke
-///   7. `[signer, writable]` Payer
-///   8. `[]` System Program
-///   9. `[]` Instructions sysvar account
-///   10. `[optional]` SPL Token Program
-///   11. `[optional]` Token Authorization Rules program
-///   12. `[optional]` Token Authorization Rules account
+///   6. `[signer]` Authority (update authority, token owner or delegate) of the revoke
+///   7. `[]` Previous authority (for self revoke)
+///   8. `[signer, writable]` Payer
+///   9. `[]` System Program
+///   10. `[]` Instructions sysvar account
+///   11. `[optional]` SPL Token Program
+///   12. `[optional]` Token Authorization Rules program
+///   13. `[optional]` Token Authorization Rules account
 impl InstructionBuilder for super::builders::Revoke {
     fn instruction(&self) -> solana_program::instruction::Instruction {
         let accounts = vec![
@@ -168,7 +169,8 @@ impl InstructionBuilder for super::builders::Revoke {
             } else {
                 AccountMeta::new_readonly(crate::ID, false)
             },
-            AccountMeta::new_readonly(self.approver, true),
+            AccountMeta::new_readonly(self.authority, true),
+            AccountMeta::new_readonly(self.previous_authority.unwrap_or(crate::ID), false),
             AccountMeta::new(self.payer, true),
             AccountMeta::new_readonly(self.system_program, false),
             AccountMeta::new_readonly(self.sysvar_instructions, false),
