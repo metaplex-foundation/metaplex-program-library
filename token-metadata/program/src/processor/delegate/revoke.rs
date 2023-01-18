@@ -30,7 +30,6 @@ pub fn revoke<'a>(
             revoke_delegate(program_id, context, MetadataDelegateRole::Collection)
         }
         RevokeArgs::SaleV1 => {
-            // sale delegate is a special type of transfer
             revoke_persistent_delegate(program_id, context, TokenDelegateRole::Sale)
         }
         RevokeArgs::TransferV1 => {
@@ -51,7 +50,7 @@ fn revoke_delegate(
     // signers
 
     assert_signer(ctx.accounts.payer_info)?;
-    assert_signer(ctx.accounts.approver_info)?;
+    assert_signer(ctx.accounts.authority_info)?;
 
     // ownership
 
@@ -70,18 +69,22 @@ fn revoke_delegate(
 
     let metadata = Metadata::from_account_info(ctx.accounts.metadata_info)?;
     // there are two scenarios here:
-    //   1. approver is equal to delegate: delegate as a signer is self-revoking
+    //   1. authority is equal to delegate: delegate as a signer is self-revoking
     //   2. otherwise we need the update authority as a signer
     let approver = if cmp_pubkeys(
         ctx.accounts.delegate_info.key,
-        ctx.accounts.approver_info.key,
+        ctx.accounts.authority_info.key,
     ) {
-        // retrieve the update authority since it was the pubkey that
-        // approved the delegation
-        metadata.update_authority
+        if let Some(previous_authority) = ctx.accounts.previous_authority_info {
+            *previous_authority.key
+        } else {
+            // retrieve the update authority since it was the pubkey that
+            // approved the delegation
+            metadata.update_authority
+        }
     } else {
-        assert_update_authority_is_correct(&metadata, ctx.accounts.approver_info)?;
-        *ctx.accounts.approver_info.key
+        assert_update_authority_is_correct(&metadata, ctx.accounts.authority_info)?;
+        *ctx.accounts.authority_info.key
     };
 
     if metadata.mint != *ctx.accounts.mint_info.key {
@@ -131,7 +134,7 @@ fn revoke_persistent_delegate(
     // signers
 
     assert_signer(ctx.accounts.payer_info)?;
-    assert_signer(ctx.accounts.approver_info)?;
+    assert_signer(ctx.accounts.authority_info)?;
 
     // ownership
 
@@ -158,7 +161,7 @@ fn revoke_persistent_delegate(
     // authority must be the owner of the token account: spl-token required the
     // token owner to revoke a delegate
     let token_account = Account::unpack(&token_info.try_borrow_data()?).unwrap();
-    if token_account.owner != *ctx.accounts.approver_info.key {
+    if token_account.owner != *ctx.accounts.authority_info.key {
         return Err(MetadataError::IncorrectOwner.into());
     }
 
@@ -180,7 +183,7 @@ fn revoke_persistent_delegate(
             Some(token_record_info) => {
                 let (pda_key, _) = find_token_record_account(
                     ctx.accounts.mint_info.key,
-                    ctx.accounts.approver_info.key,
+                    ctx.accounts.authority_info.key,
                 );
 
                 assert_keys_equal(&pda_key, token_record_info.key)?;
@@ -231,13 +234,13 @@ fn revoke_persistent_delegate(
         &spl_token::instruction::revoke(
             spl_token_program_info.key,
             token_info.key,
-            ctx.accounts.approver_info.key,
+            ctx.accounts.authority_info.key,
             &[],
         )?,
         &[
             token_info.clone(),
             ctx.accounts.delegate_info.clone(),
-            ctx.accounts.approver_info.clone(),
+            ctx.accounts.authority_info.clone(),
         ],
     )?;
 
