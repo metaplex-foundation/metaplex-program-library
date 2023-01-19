@@ -3468,13 +3468,36 @@ createErrorFromNameLookup.set(
 );
 
 /**
+ * InvalidMasterEditionAccountLength: 'Master edition account has an invalid length'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidMasterEditionAccountLengthError extends Error {
+  readonly code: number = 0xa2;
+  readonly name: string = 'InvalidMasterEditionAccountLength';
+  constructor() {
+    super('Master edition account has an invalid length');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidMasterEditionAccountLengthError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xa2, () => new InvalidMasterEditionAccountLengthError());
+createErrorFromNameLookup.set(
+  'InvalidMasterEditionAccountLength',
+  () => new InvalidMasterEditionAccountLengthError(),
+);
+
+/**
  * IncorrectTokenState: 'Incorrect token state'
  *
  * @category Errors
  * @category generated
  */
 export class IncorrectTokenStateError extends Error {
-  readonly code: number = 0xa2;
+  readonly code: number = 0xa3;
   readonly name: string = 'IncorrectTokenState';
   constructor() {
     super('Incorrect token state');
@@ -3484,7 +3507,7 @@ export class IncorrectTokenStateError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0xa2, () => new IncorrectTokenStateError());
+createErrorFromCodeLookup.set(0xa3, () => new IncorrectTokenStateError());
 createErrorFromNameLookup.set('IncorrectTokenState', () => new IncorrectTokenStateError());
 
 /**
@@ -3494,7 +3517,7 @@ createErrorFromNameLookup.set('IncorrectTokenState', () => new IncorrectTokenSta
  * @category generated
  */
 export class InvalidDelegateRoleError extends Error {
-  readonly code: number = 0xa3;
+  readonly code: number = 0xa4;
   readonly name: string = 'InvalidDelegateRole';
   constructor() {
     super('Invalid delegate role');
@@ -3504,7 +3527,7 @@ export class InvalidDelegateRoleError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0xa3, () => new InvalidDelegateRoleError());
+createErrorFromCodeLookup.set(0xa4, () => new InvalidDelegateRoleError());
 createErrorFromNameLookup.set('InvalidDelegateRole', () => new InvalidDelegateRoleError());
 
 /**

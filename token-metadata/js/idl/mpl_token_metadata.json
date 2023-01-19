@@ -6075,11 +6075,16 @@
     },
     {
       "code": 162,
+      "name": "InvalidMasterEditionAccountLength",
+      "msg": "Master edition account has an invalid length"
+    },
+    {
+      "code": 163,
       "name": "IncorrectTokenState",
       "msg": "Incorrect token state"
     },
     {
-      "code": 163,
+      "code": 164,
       "name": "InvalidDelegateRole",
       "msg": "Invalid delegate role"
     }
