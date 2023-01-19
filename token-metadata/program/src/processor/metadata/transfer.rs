@@ -7,14 +7,17 @@ use solana_program::{
     msg,
     program::invoke,
     program_error::ProgramError,
+    program_option::COption,
+    program_pack::Pack,
     pubkey::Pubkey,
     system_program,
     sysvar::{self, instructions::get_instruction_relative},
 };
+use spl_token::state::Account;
 use std::fmt::Display;
 
 use crate::{
-    assertions::{assert_keys_equal, assert_owned_by, metadata::assert_currently_holding},
+    assertions::{assert_keys_equal, assert_owned_by, metadata::assert_holding_amount},
     error::MetadataError,
     instruction::{Context, Transfer, TransferArgs},
     pda::find_token_record_account,
@@ -33,7 +36,7 @@ pub enum TransferScenario {
     Holder,
     TransferDelegate,
     SaleDelegate,
-    UtilityDelegate,
+    MigrationDelegate,
 }
 
 impl Display for TransferScenario {
@@ -42,7 +45,7 @@ impl Display for TransferScenario {
             Self::Holder => write!(f, "Owner"),
             Self::TransferDelegate => write!(f, "TransferDelegate"),
             Self::SaleDelegate => write!(f, "SaleDelegate"),
-            Self::UtilityDelegate => write!(f, "UtilityDelegate"),
+            Self::MigrationDelegate => write!(f, "MigrationDelegate"),
         }
     }
 }
@@ -52,7 +55,7 @@ impl From<TransferScenario> for TokenDelegateRole {
         match delegate {
             TransferScenario::TransferDelegate => TokenDelegateRole::Transfer,
             TransferScenario::SaleDelegate => TokenDelegateRole::Sale,
-            TransferScenario::UtilityDelegate => TokenDelegateRole::Utility,
+            TransferScenario::MigrationDelegate => TokenDelegateRole::Migration,
             _ => panic!("Invalid delegate role"),
         }
     }
@@ -63,7 +66,8 @@ impl From<TokenDelegateRole> for TransferScenario {
         match delegate {
             TokenDelegateRole::Transfer => TransferScenario::TransferDelegate,
             TokenDelegateRole::Sale => TransferScenario::SaleDelegate,
-            TokenDelegateRole::Utility => TransferScenario::UtilityDelegate,
+            TokenDelegateRole::Migration => TransferScenario::MigrationDelegate,
+            _ => panic!("Invalid delegate role"),
         }
     }
 }
@@ -184,66 +188,95 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
     let token_standard = metadata
         .token_standard
         .ok_or(MetadataError::InvalidTokenStandard)?;
+    let token = Account::unpack(&ctx.accounts.token_info.try_borrow_data()?)?;
 
     msg!("getting authority type");
     let authority_type = AuthorityType::get_authority_type(AuthorityRequest {
         authority: ctx.accounts.authority_info.key,
         update_authority: &metadata.update_authority,
         mint: ctx.accounts.mint_info.key,
-        token_info: Some(ctx.accounts.token_info),
-        metadata_delegate_record_info: None,
-        metadata_delegate_role: None,
+        token: Some(&token),
         token_record_info: ctx.accounts.owner_token_record_info,
         token_delegate_roles: vec![
             TokenDelegateRole::Sale,
             TokenDelegateRole::Transfer,
-            TokenDelegateRole::Utility,
+            TokenDelegateRole::Migration,
         ],
+        ..Default::default()
     })?;
 
-    if matches!(authority_type, AuthorityType::Holder) {
-        msg!("Owner transfer");
+    match authority_type {
+        AuthorityType::Holder => {
+            msg!("Owner transfer");
 
-        // Wallet-to-wallet are currently exempt from auth rules so we need to check this and pass it into
-        // the auth rules validator function.
-        //
-        // This only applies to Holder transfers as we cannot prove a delegate transfer is
-        // from a proper system wallet.
+            // Wallet-to-wallet are currently exempt from auth rules so we need to check this and pass it into
+            // the auth rules validator function.
+            //
+            // This only applies to Holder transfers as we cannot prove a delegate transfer is
+            // from a proper system wallet.
 
-        // If the program id of the current instruction is anything other than our program id
-        // we know this is a CPI call from another program.
-        let current_ix =
-            get_instruction_relative(0, ctx.accounts.sysvar_instructions_info).unwrap();
+            // If the program id of the current instruction is anything other than our program id
+            // we know this is a CPI call from another program.
+            let current_ix =
+                get_instruction_relative(0, ctx.accounts.sysvar_instructions_info).unwrap();
 
-        let is_cpi = !cmp_pubkeys(&current_ix.program_id, &crate::ID);
+            let is_cpi = !cmp_pubkeys(&current_ix.program_id, &crate::ID);
 
-        // This can be replaced with a sys call to curve25519 once that feature activates.
-        let wallets_are_system_program_owned =
-            cmp_pubkeys(ctx.accounts.token_owner_info.owner, &system_program::ID)
-                && cmp_pubkeys(
-                    ctx.accounts.destination_owner_info.owner,
-                    &system_program::ID,
-                );
+            // This can be replaced with a sys call to curve25519 once that feature activates.
+            let wallets_are_system_program_owned =
+                cmp_pubkeys(ctx.accounts.token_owner_info.owner, &system_program::ID)
+                    && cmp_pubkeys(
+                        ctx.accounts.destination_owner_info.owner,
+                        &system_program::ID,
+                    );
 
-        // The only case where a transfer is wallet-to-wallet is if the wallets are both owned by
-        // the system program and it's not a CPI call. Holders have to be signers so we can reject
-        // malicious PDA signers owned by the system program by rejecting CPI calls here.
-        //
-        // Legitimate programs can use initialized PDAs or multiple instructions with a temp program-owned
-        // PDA to go around this restriction for cases where they are passing through a proper system wallet
-        // signer via an invoke call.
-        is_wallet_to_wallet = !is_cpi && wallets_are_system_program_owned;
+            // The only case where a transfer is wallet-to-wallet is if the wallets are both owned by
+            // the system program and it's not a CPI call. Holders have to be signers so we can reject
+            // malicious PDA signers owned by the system program by rejecting CPI calls here.
+            //
+            // Legitimate programs can use initialized PDAs or multiple instructions with a temp program-owned
+            // PDA to go around this restriction for cases where they are passing through a proper system wallet
+            // signer via an invoke call.
+            is_wallet_to_wallet = !is_cpi && wallets_are_system_program_owned;
 
-        // Must be the actual current owner of the token where
-        // mint, token, owner and metadata accounts all match up.
-        assert_currently_holding(
-            &crate::ID,
-            ctx.accounts.token_owner_info,
-            ctx.accounts.metadata_info,
-            &metadata,
-            ctx.accounts.mint_info,
-            ctx.accounts.token_info,
-        )?;
+            // Must be the actual current owner of the token where
+            // mint, token, owner and metadata accounts all match up.
+            assert_holding_amount(
+                &crate::ID,
+                ctx.accounts.token_owner_info,
+                ctx.accounts.metadata_info,
+                &metadata,
+                ctx.accounts.mint_info,
+                ctx.accounts.token_info,
+                amount,
+            )?;
+        }
+        AuthorityType::Delegate => {
+            // the delegate has already being validated, but we need to validate
+            // that it can transfer the required amount
+            if token.delegated_amount < amount || token.amount < amount {
+                return Err(MetadataError::NotEnoughTokens.into());
+            }
+        }
+        _ => {
+            if matches!(token_standard, TokenStandard::ProgrammableNonFungible) {
+                return Err(MetadataError::InvalidAuthorityType.into());
+            }
+
+            // the authority must be either the token owner or a delegate for the
+            // transfer to succeed
+            let available_amount = if cmp_pubkeys(&token.owner, ctx.accounts.authority_info.key) {
+                token.amount
+            } else if COption::from(*ctx.accounts.authority_info.key) == token.delegate {
+                token.delegated_amount
+            } else {
+                return Err(MetadataError::InvalidAuthorityType.into());
+            };
+
+            if available_amount < amount {
+                return Err(MetadataError::NotEnoughTokens.into());
+            }
+        }
     }
 
     match token_standard {

@@ -493,7 +493,7 @@ impl InstructionBuilder for super::builders::Create {
                 AccountMeta::new_readonly(crate::ID, false)
             },
             AccountMeta::new(self.mint, self.initialize_mint),
-            AccountMeta::new_readonly(self.mint_authority, true),
+            AccountMeta::new_readonly(self.authority, true),
             AccountMeta::new(self.payer, true),
             AccountMeta::new_readonly(self.update_authority, self.update_authority_as_signer),
             AccountMeta::new_readonly(self.system_program, false),

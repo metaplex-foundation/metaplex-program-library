@@ -16,6 +16,8 @@ export enum RevokeArgs {
   TransferV1,
   UpdateV1,
   UtilityV1,
+  StakingV1,
+  StandardV1,
 }
 
 /**

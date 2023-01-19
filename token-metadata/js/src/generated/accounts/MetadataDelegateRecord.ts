@@ -20,6 +20,7 @@ export type MetadataDelegateRecordArgs = {
   bump: number;
   mint: web3.PublicKey;
   delegate: web3.PublicKey;
+  updateAuthority: web3.PublicKey;
 };
 /**
  * Holds the data for the {@link MetadataDelegateRecord} Account and provides de/serialization
@@ -34,13 +35,20 @@ export class MetadataDelegateRecord implements MetadataDelegateRecordArgs {
     readonly bump: number,
     readonly mint: web3.PublicKey,
     readonly delegate: web3.PublicKey,
+    readonly updateAuthority: web3.PublicKey,
   ) {}
 
   /**
    * Creates a {@link MetadataDelegateRecord} instance from the provided args.
    */
   static fromArgs(args: MetadataDelegateRecordArgs) {
-    return new MetadataDelegateRecord(args.key, args.bump, args.mint, args.delegate);
+    return new MetadataDelegateRecord(
+      args.key,
+      args.bump,
+      args.mint,
+      args.delegate,
+      args.updateAuthority,
+    );
   }
 
   /**
@@ -142,6 +150,7 @@ export class MetadataDelegateRecord implements MetadataDelegateRecordArgs {
       bump: this.bump,
       mint: this.mint.toBase58(),
       delegate: this.delegate.toBase58(),
+      updateAuthority: this.updateAuthority.toBase58(),
     };
   }
 }
@@ -159,6 +168,7 @@ export const metadataDelegateRecordBeet = new beet.BeetStruct<
     ['bump', beet.u8],
     ['mint', beetSolana.publicKey],
     ['delegate', beetSolana.publicKey],
+    ['updateAuthority', beetSolana.publicKey],
   ],
   MetadataDelegateRecord.fromArgs,
   'MetadataDelegateRecord',

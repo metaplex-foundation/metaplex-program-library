@@ -11,7 +11,7 @@ import {
   TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
 import * as splToken from '@solana/spl-token';
-import { Metadata, DelegateArgs, TokenStandard, PROGRAM_ID } from '../src/generated';
+import { Metadata, DelegateArgs, TokenStandard } from '../src/generated';
 import { PROGRAM_ID as TOKEN_AUTH_RULES_ID } from '@metaplex-foundation/mpl-token-auth-rules';
 import { PROGRAM_ID as TOKEN_METADATA_ID } from '../src/generated';
 import { encode } from '@msgpack/msgpack';
@@ -198,7 +198,7 @@ test('Transfer: ProgrammableNonFungible (program-owned)', async (t) => {
     ruleSetName: ruleSetName,
     owner: Array.from(owner.publicKey.toBytes()),
     operations: {
-      Transfer: {
+      'Transfer:Owner': {
         ProgramOwned: {
           program: Array.from(TOKEN_METADATA_ID.toBytes()),
           field: 'Destination',
@@ -243,7 +243,7 @@ test('Transfer: ProgrammableNonFungible (program-owned)', async (t) => {
   const tokenAccount = await getAccount(connection, token, 'confirmed', TOKEN_PROGRAM_ID);
   t.true(tokenAccount.amount.toString() === '1', 'token account amount equal to 1');
 
-  // Our first destination is going to be an account owned by the
+  // [FAIL] Our first destination is going to be an account owned by the
   // mpl-token-auth-rules program as a convenient program-owned account
   // that is not owned by token-metadata.
   const invalidDestination = ruleSetPda;
@@ -300,7 +300,7 @@ test('Transfer: ProgrammableNonFungible (program-owned)', async (t) => {
   // to a mpl-token-metadata error which gives us the wrong message
   // so we match on the actual log values here instead.
   invalidTransferTx.then((x) =>
-    x.assertLogs(t, [/The operation retrieved is not in the selected RuleSet/i], {
+    x.assertLogs(t, [/Program Owned check failed/i], {
       txLabel: 'tx: Transfer',
     }),
   );
@@ -317,7 +317,7 @@ test('Transfer: ProgrammableNonFungible (program-owned)', async (t) => {
     'token amount after transfer equal to 0',
   );
 
-  // Our valid destination is going to be an account owned by the
+  // [SUCESS] Our valid destination is going to be an account owned by the
   // mpl-token-metadata program. Any one will do so for convenience
   // we just use the existing metadata account.
   const destination = metadata;
@@ -563,22 +563,9 @@ test('Transfer: NonFungible asset with delegate', async (t) => {
   // Generate the delegate keypair
   const delegate = Keypair.generate();
 
-  // Find delegate record Pda
-  const [delegateRecord] = PublicKey.findProgramAddressSync(
-    [
-      Buffer.from('metadata'),
-      PROGRAM_ID.toBuffer(),
-      mint.toBuffer(),
-      Buffer.from('persistent_delegate'),
-      payer.publicKey.toBuffer(),
-    ],
-    PROGRAM_ID,
-  );
-
   const delegateArgs: DelegateArgs = {
-    __kind: 'TransferV1',
+    __kind: 'StandardV1',
     amount: 1,
-    authorizationData: null,
   };
 
   // Approve delegate
@@ -590,7 +577,7 @@ test('Transfer: NonFungible asset with delegate', async (t) => {
     payer,
     delegateArgs,
     handler,
-    delegateRecord,
+    null,
     masterEdition,
     token,
   );
@@ -608,7 +595,7 @@ test('Transfer: NonFungible asset with delegate', async (t) => {
 
   const amount = 1;
 
-  // Try to transfer with fake delegate. This should fail.
+  // [FAIL] Try to transfer with fake delegate. This should fail.
   const { tx: fakeDelegateTransferTx } = await API.transfer(
     fakeDelegate, // Transfer authority: the fake delegate
     payer.publicKey, // Owner of the asset
@@ -623,10 +610,7 @@ test('Transfer: NonFungible asset with delegate', async (t) => {
     handler,
   );
 
-  await fakeDelegateTransferTx.assertError(
-    t,
-    /All tokens in this account have not been delegated to this user/,
-  );
+  await fakeDelegateTransferTx.assertError(t, /Invalid authority type/);
 
   // Transfer using the legitimate delegate
   // Try to transfer with fake delegate. This should fail.
@@ -692,7 +676,7 @@ test('Transfer: NonFungible asset with invalid authority', async (t) => {
     handler,
   );
 
-  await fakeDelegateTransferTx.assertError(t, /Invalid transfer authority/);
+  await fakeDelegateTransferTx.assertError(t, /Invalid authority type/);
 });
 
 test('Transfer: ProgrammableNonFungible asset with invalid authority', async (t) => {
@@ -777,12 +761,7 @@ test('Transfer: ProgrammableNonFungible asset with invalid authority', async (t)
     handler,
   );
 
-  await invalidTransferTx.assertLogs(t, [
-    /Instruction: Validate/,
-    /Failed to validate: Custom program error: 0x6/,
-    /Pubkey Match check failed/,
-    /Program auth9SigNpDKz4sJJ1DfCTuZrZNSAgh9sFD3rboVmgg/,
-  ]);
+  await invalidTransferTx.assertError(t, /Invalid authority type/);
 });
 
 test('Transfer: ProgrammableNonFungible (uninitialized wallet-to-wallet)', async (t) => {
@@ -855,6 +834,13 @@ test('Transfer: ProgrammableNonFungible (uninitialized wallet-to-wallet)', async
     splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
   );
 
+  // owner token record
+  const ownerTokenRecord = findTokenRecordPda(mint, owner.publicKey);
+  amman.addr.addLabel('Owner Token Record', ownerTokenRecord);
+  // destination token record
+  const destinationTokenRecord = findTokenRecordPda(mint, destination.publicKey);
+  amman.addr.addLabel('Destination Token Record', destinationTokenRecord);
+
   // Transfer the NFT to the destination account, this should work since
   // the destination account is in the ruleset.
   const { tx: transferTx } = await API.transfer(
@@ -869,6 +855,8 @@ test('Transfer: ProgrammableNonFungible (uninitialized wallet-to-wallet)', async
     ruleSetPda,
     1,
     handler,
+    ownerTokenRecord,
+    destinationTokenRecord,
   );
 
   await transferTx.assertSuccess(t);

@@ -3445,6 +3445,92 @@ createErrorFromCodeLookup.set(0xa0, () => new MintSupplyMustBeZeroError());
 createErrorFromNameLookup.set('MintSupplyMustBeZero', () => new MintSupplyMustBeZeroError());
 
 /**
+ * MissingTokenOwnerAccount: 'Missing token owner'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MissingTokenOwnerAccountError extends Error {
+  readonly code: number = 0xa1;
+  readonly name: string = 'MissingTokenOwnerAccount';
+  constructor() {
+    super('Missing token owner');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MissingTokenOwnerAccountError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xa1, () => new MissingTokenOwnerAccountError());
+createErrorFromNameLookup.set(
+  'MissingTokenOwnerAccount',
+  () => new MissingTokenOwnerAccountError(),
+);
+
+/**
+ * InvalidMasterEditionAccountLength: 'Master edition account has an invalid length'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidMasterEditionAccountLengthError extends Error {
+  readonly code: number = 0xa2;
+  readonly name: string = 'InvalidMasterEditionAccountLength';
+  constructor() {
+    super('Master edition account has an invalid length');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidMasterEditionAccountLengthError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xa2, () => new InvalidMasterEditionAccountLengthError());
+createErrorFromNameLookup.set(
+  'InvalidMasterEditionAccountLength',
+  () => new InvalidMasterEditionAccountLengthError(),
+);
+
+/**
+ * IncorrectTokenState: 'Incorrect token state'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class IncorrectTokenStateError extends Error {
+  readonly code: number = 0xa3;
+  readonly name: string = 'IncorrectTokenState';
+  constructor() {
+    super('Incorrect token state');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, IncorrectTokenStateError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xa3, () => new IncorrectTokenStateError());
+createErrorFromNameLookup.set('IncorrectTokenState', () => new IncorrectTokenStateError());
+
+/**
+ * InvalidDelegateRole: 'Invalid delegate role'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidDelegateRoleError extends Error {
+  readonly code: number = 0xa4;
+  readonly name: string = 'InvalidDelegateRole';
+  constructor() {
+    super('Invalid delegate role');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidDelegateRoleError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xa4, () => new InvalidDelegateRoleError());
+createErrorFromNameLookup.set('InvalidDelegateRole', () => new InvalidDelegateRoleError());
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

@@ -639,6 +639,22 @@ pub enum MetadataError {
     /// 161
     #[error("Data is empty or zeroed")]
     DataIsEmptyOrZeroed,
+
+    /// 162
+    #[error("Missing token owner")]
+    MissingTokenOwnerAccount,
+
+    /// 163
+    #[error("Master edition account has an invalid length")]
+    InvalidMasterEditionAccountLength,
+
+    /// 164
+    #[error("Incorrect token state")]
+    IncorrectTokenState,
+
+    /// 165
+    #[error("Invalid delegate role")]
+    InvalidDelegateRole,
 }
 
 impl PrintProgramError for MetadataError {

@@ -150,7 +150,7 @@ export class InitTransactions {
       metadata,
       masterEdition,
       mint: mint ? mint : mintPair.publicKey,
-      mintAuthority: payer.publicKey,
+      authority: payer.publicKey,
       payer: payer.publicKey,
       splTokenProgram: splToken.TOKEN_PROGRAM_ID,
       sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
@@ -399,7 +399,7 @@ export class InitTransactions {
     delegate: PublicKey,
     mint: PublicKey,
     metadata: PublicKey,
-    approver: PublicKey,
+    authority: PublicKey,
     payer: Keypair,
     args: DelegateArgs,
     handler: PayerTransactionHandler,
@@ -417,7 +417,7 @@ export class InitTransactions {
       tokenRecord,
       mint,
       token,
-      approver,
+      authority,
       payer: payer.publicKey,
       sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
       splTokenProgram: splToken.TOKEN_PROGRAM_ID,
@@ -462,7 +462,7 @@ export class InitTransactions {
       tokenRecord,
       mint,
       token,
-      approver: authority.publicKey,
+      authority: authority.publicKey,
       payer: payer.publicKey,
       sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
       splTokenProgram: splToken.TOKEN_PROGRAM_ID,
@@ -487,18 +487,20 @@ export class InitTransactions {
   }
 
   async lock(
-    approver: Keypair,
+    delegate: Keypair,
     mint: PublicKey,
     metadata: PublicKey,
+    token: PublicKey,
     payer: Keypair,
     handler: PayerTransactionHandler,
     tokenRecord: PublicKey | null = null,
-    token: PublicKey | null = null,
+    tokenOwner: PublicKey | null = null,
     masterEdition: PublicKey | null = null,
     ruleSetPda: PublicKey | null = null,
   ): Promise<{ tx: ConfirmedTransactionAssertablePromise }> {
     const lockAcccounts: LockInstructionAccounts = {
-      approver: approver.publicKey,
+      authority: delegate.publicKey,
+      tokenOwner,
       tokenRecord,
       token,
       mint,
@@ -525,23 +527,25 @@ export class InitTransactions {
     const tx = new Transaction().add(mintIx);
 
     return {
-      tx: handler.sendAndConfirmTransaction(tx, [payer, approver], 'tx: Lock'),
+      tx: handler.sendAndConfirmTransaction(tx, [payer, delegate], 'tx: Lock'),
     };
   }
 
   async unlock(
-    approver: Keypair,
+    delegate: Keypair,
     mint: PublicKey,
     metadata: PublicKey,
+    token: PublicKey,
     payer: Keypair,
     handler: PayerTransactionHandler,
     tokenRecord: PublicKey | null = null,
-    token: PublicKey | null = null,
+    tokenOwner: PublicKey | null = null,
     masterEdition: PublicKey | null = null,
     ruleSetPda: PublicKey | null = null,
   ): Promise<{ tx: ConfirmedTransactionAssertablePromise }> {
     const unlockAcccounts: UnlockInstructionAccounts = {
-      approver: approver.publicKey,
+      authority: delegate.publicKey,
+      tokenOwner,
       tokenRecord,
       token,
       mint,
@@ -568,7 +572,7 @@ export class InitTransactions {
     const tx = new Transaction().add(mintIx);
 
     return {
-      tx: handler.sendAndConfirmTransaction(tx, [payer, approver], 'tx: Unlock'),
+      tx: handler.sendAndConfirmTransaction(tx, [payer, delegate], 'tx: Unlock'),
     };
   }
 
@@ -644,6 +648,7 @@ export class InitTransactions {
     const createRuleSetAccounts: CreateOrUpdateInstructionAccounts = {
       ruleSetPda,
       payer: payer.publicKey,
+      bufferPda: TOKEN_AUTH_RULES_ID,
     };
 
     const createRuleSetArgs: CreateOrUpdateInstructionArgs = {

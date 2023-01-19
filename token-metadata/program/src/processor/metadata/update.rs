@@ -1,10 +1,10 @@
-use std::fmt::{Display, Formatter};
-
 use mpl_utils::assert_signer;
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, msg, program_error::ProgramError,
-    pubkey::Pubkey, sysvar,
+    program_pack::Pack, pubkey::Pubkey, sysvar,
 };
+use spl_token::state::Account;
+use std::fmt::{Display, Formatter};
 
 use crate::{
     assertions::{assert_owned_by, programmable::assert_valid_authorization},
@@ -113,6 +113,15 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
         return Err(MetadataError::MintMismatch.into());
     }
 
+    let token_standard = metadata
+        .token_standard
+        .ok_or(MetadataError::InvalidTokenStandard)?;
+    let token = if let Some(token_info) = ctx.accounts.token_info {
+        Some(Account::unpack(&token_info.try_borrow_data()?)?)
+    } else {
+        None
+    };
+
     // Determines if we have a valid authority to perform the update. This must
     // be either the update authority, a delegate or the holder. This call fails
     // if no valid authority is present.
@@ -120,16 +129,11 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
         authority: ctx.accounts.authority_info.key,
         update_authority: &metadata.update_authority,
         mint: ctx.accounts.mint_info.key,
-        token_info: ctx.accounts.token_info,
+        token: token.as_ref(),
         metadata_delegate_record_info: ctx.accounts.delegate_record_info,
         metadata_delegate_role: Some(MetadataDelegateRole::Update),
-        token_record_info: None,
-        token_delegate_roles: vec![],
+        ..Default::default()
     })?;
-
-    let token_standard = metadata
-        .token_standard
-        .ok_or(MetadataError::InvalidTokenStandard)?;
 
     // for pNFTs, we need to validate the authorization rules
     if matches!(token_standard, TokenStandard::ProgrammableNonFungible) {

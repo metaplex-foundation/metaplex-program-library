@@ -43,7 +43,7 @@ export const DelegateStruct = new beet.FixableBeetArgsStruct<
  * @property [_writable_] tokenRecord (optional) Token record account
  * @property [] mint Mint of metadata
  * @property [_writable_] token (optional) Token account of mint
- * @property [**signer**] approver Approver (update authority or token owner) for the delegation
+ * @property [**signer**] authority Update authority or token owner
  * @property [_writable_, **signer**] payer Payer
  * @property [] sysvarInstructions Instructions sysvar account
  * @property [] splTokenProgram (optional) SPL Token Program
@@ -61,7 +61,7 @@ export type DelegateInstructionAccounts = {
   tokenRecord?: web3.PublicKey;
   mint: web3.PublicKey;
   token?: web3.PublicKey;
-  approver: web3.PublicKey;
+  authority: web3.PublicKey;
   payer: web3.PublicKey;
   systemProgram?: web3.PublicKey;
   sysvarInstructions: web3.PublicKey;
@@ -131,7 +131,7 @@ export function createDelegateInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.approver,
+      pubkey: accounts.authority,
       isWritable: false,
       isSigner: true,
     },

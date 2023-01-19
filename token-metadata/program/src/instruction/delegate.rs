@@ -35,6 +35,14 @@ pub enum DelegateArgs {
         /// Required authorization data to validate the request.
         authorization_data: Option<AuthorizationData>,
     },
+    StakingV1 {
+        amount: u64,
+        /// Required authorization data to validate the request.
+        authorization_data: Option<AuthorizationData>,
+    },
+    StandardV1 {
+        amount: u64,
+    },
 }
 
 #[repr(C)]
@@ -46,6 +54,8 @@ pub enum RevokeArgs {
     TransferV1,
     UpdateV1,
     UtilityV1,
+    StakingV1,
+    StandardV1,
 }
 
 #[repr(C)]
@@ -110,7 +120,7 @@ impl InstructionBuilder for super::builders::Delegate {
             } else {
                 AccountMeta::new_readonly(crate::ID, false)
             },
-            AccountMeta::new_readonly(self.approver, true),
+            AccountMeta::new_readonly(self.authority, true),
             AccountMeta::new(self.payer, true),
             AccountMeta::new_readonly(self.system_program, false),
             AccountMeta::new_readonly(self.sysvar_instructions, false),
@@ -139,7 +149,7 @@ impl InstructionBuilder for super::builders::Delegate {
 ///   3. `[optional]` Master Edition account
 ///   4. `[]` Mint account
 ///   5. `[optional, writable]` Token account
-///   6. `[signer]` Approver (update authority, token owner or delegate) of the revoke
+///   6. `[signer]` Authority (update authority, token owner or delegate) of the revoke
 ///   7. `[signer, writable]` Payer
 ///   8. `[]` System Program
 ///   9. `[]` Instructions sysvar account
@@ -168,7 +178,7 @@ impl InstructionBuilder for super::builders::Revoke {
             } else {
                 AccountMeta::new_readonly(crate::ID, false)
             },
-            AccountMeta::new_readonly(self.approver, true),
+            AccountMeta::new_readonly(self.authority, true),
             AccountMeta::new(self.payer, true),
             AccountMeta::new_readonly(self.system_program, false),
             AccountMeta::new_readonly(self.sysvar_instructions, false),

@@ -13,6 +13,7 @@ use solana_program::{
 };
 use spl_token::instruction::{freeze_account, thaw_account};
 
+use crate::processor::TransferScenario;
 use crate::{
     assertions::{assert_derivation, programmable::assert_valid_authorization},
     error::MetadataError,
@@ -198,81 +199,91 @@ pub fn auth_rules_validate(params: AuthRulesValidateParams) -> ProgramResult {
         return Ok(());
     }
 
-    if let Some(ref config) = programmable_config {
-        msg!("Programmable config exists");
-
-        assert_valid_authorization(auth_rules_info, config)?;
-
-        msg!("valid auth data. Adding rules...");
-        // We can safely unwrap here because they were all checked for existence
-        // in the assertion above.
-        let auth_pda = auth_rules_info.unwrap();
-
-        let mut auth_data = if let Some(auth_data) = auth_data {
-            auth_data
-        } else {
-            AuthorizationData::new_empty()
-        };
-
-        let mut additional_rule_accounts = vec![];
-        if let Some(target_info) = source_info {
-            additional_rule_accounts.push(target_info);
+    if let Operation::Transfer { scenario } = &operation {
+        // Migration delegate is allowed to skip auth rules to guarantee that
+        // it can transfer the asset.
+        if matches!(scenario, TransferScenario::MigrationDelegate) {
+            return Ok(());
         }
-        if let Some(target_info) = destination_info {
-            additional_rule_accounts.push(target_info);
-        }
-        if let Some(authority_info) = authority_info {
-            additional_rule_accounts.push(authority_info);
-        }
-        if let Some(owner_info) = owner_info {
-            additional_rule_accounts.push(owner_info);
-        }
-
-        // Insert auth rules for the operation type.
-        match operation {
-            Operation::Transfer { scenario: _ } => {
-                // Get account infos
-                let authority_info = authority_info.ok_or(MetadataError::InvalidOperation)?;
-                let source_info = source_info.ok_or(MetadataError::InvalidOperation)?;
-                let destination_info = destination_info.ok_or(MetadataError::InvalidOperation)?;
-
-                // Transfer Amount
-                auth_data
-                    .payload
-                    .insert(PayloadKey::Amount.to_string(), PayloadType::Number(amount));
-
-                // Transfer Authority
-                auth_data.payload.insert(
-                    PayloadKey::Authority.to_string(),
-                    PayloadType::Pubkey(*authority_info.key),
-                );
-
-                // Transfer Source
-                auth_data.payload.insert(
-                    PayloadKey::Source.to_string(),
-                    PayloadType::Pubkey(*source_info.key),
-                );
-
-                // Transfer Destination
-                auth_data.payload.insert(
-                    PayloadKey::Destination.to_string(),
-                    PayloadType::Pubkey(*destination_info.key),
-                );
-            }
-            _ => {
-                return Err(MetadataError::InvalidOperation.into());
-            }
-        }
-
-        validate(
-            auth_pda,
-            operation,
-            mint_info,
-            additional_rule_accounts,
-            &auth_data,
-        )?;
     }
 
+    if let Some(ref config) = programmable_config {
+        if let ProgrammableConfig::V1 { rule_set: Some(_) } = config {
+            msg!("Programmable config exists");
+
+            assert_valid_authorization(auth_rules_info, config)?;
+
+            msg!("valid auth data. Adding rules...");
+            // We can safely unwrap here because they were all checked for existence
+            // in the assertion above.
+            let auth_pda = auth_rules_info.unwrap();
+
+            let mut auth_data = if let Some(auth_data) = auth_data {
+                auth_data
+            } else {
+                AuthorizationData::new_empty()
+            };
+
+            let mut additional_rule_accounts = vec![];
+            if let Some(target_info) = source_info {
+                additional_rule_accounts.push(target_info);
+            }
+            if let Some(target_info) = destination_info {
+                additional_rule_accounts.push(target_info);
+            }
+            if let Some(authority_info) = authority_info {
+                additional_rule_accounts.push(authority_info);
+            }
+            if let Some(owner_info) = owner_info {
+                additional_rule_accounts.push(owner_info);
+            }
+
+            // Insert auth rules for the operation type.
+            match operation {
+                Operation::Transfer { scenario: _ } => {
+                    // Get account infos
+                    let authority_info = authority_info.ok_or(MetadataError::InvalidOperation)?;
+                    let source_info = source_info.ok_or(MetadataError::InvalidOperation)?;
+                    let destination_info =
+                        destination_info.ok_or(MetadataError::InvalidOperation)?;
+
+                    // Transfer Amount
+                    auth_data
+                        .payload
+                        .insert(PayloadKey::Amount.to_string(), PayloadType::Number(amount));
+
+                    // Transfer Authority
+                    auth_data.payload.insert(
+                        PayloadKey::Authority.to_string(),
+                        PayloadType::Pubkey(*authority_info.key),
+                    );
+
+                    // Transfer Source
+                    auth_data.payload.insert(
+                        PayloadKey::Source.to_string(),
+                        PayloadType::Pubkey(*source_info.key),
+                    );
+
+                    // Transfer Destination
+                    auth_data.payload.insert(
+                        PayloadKey::Destination.to_string(),
+                        PayloadType::Pubkey(*destination_info.key),
+                    );
+                }
+                _ => {
+                    return Err(MetadataError::InvalidOperation.into());
+                }
+            }
+
+            validate(
+                auth_pda,
+                operation,
+                mint_info,
+                additional_rule_accounts,
+                &auth_data,
+            )?;
+        }
+    }
     Ok(())
 }
 

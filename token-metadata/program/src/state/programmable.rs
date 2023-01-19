@@ -6,13 +6,11 @@ use num_derive::ToPrimitive;
 use serde::{Deserialize, Serialize};
 use shank::ShankAccount;
 use solana_program::program_option::COption;
-use solana_program::program_pack::Pack;
 use solana_program::{
     account_info::AccountInfo, instruction::AccountMeta, program_error::ProgramError,
     pubkey::Pubkey,
 };
 use spl_token::state::Account;
-use std::fmt;
 
 use super::{Key, MetadataDelegateRecord, TokenMetadataAccount};
 use crate::instruction::MetadataDelegateRole;
@@ -20,13 +18,18 @@ use crate::pda::{find_metadata_delegate_record_account, find_token_record_accoun
 use crate::state::BorshError;
 use crate::utils::{assert_owned_by, try_from_slice_checked};
 
+/// Empty pubkey constant.
+const DEFAULT_PUBKEY: Pubkey = Pubkey::new_from_array([0u8; 32]);
+
 pub const TOKEN_RECORD_SEED: &str = "token_record";
+
+pub const TOKEN_STATE_INDEX: usize = 2;
 
 pub const TOKEN_RECORD_SIZE: usize = 1 // Key
 + 1  // bump
++ 1  // state
 + 33 // delegate
-+ 2  // delegate role
-+ 1; // state
++ 2; // delegate role
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
@@ -80,9 +83,8 @@ impl TokenRecord {
     }
 
     pub fn save(&self, data: &mut [u8]) -> Result<(), BorshError> {
-        let mut bytes = Vec::with_capacity(Self::size());
-        BorshSerialize::serialize(&self, &mut bytes)?;
-        data[..bytes.len()].copy_from_slice(&bytes);
+        let mut storage = &mut data[..Self::size()];
+        BorshSerialize::serialize(self, &mut storage)?;
         Ok(())
     }
 }
@@ -96,6 +98,8 @@ pub enum TokenState {
     Unlocked,
     /// Token account has been locked; no operations are allowed on this account.
     Locked,
+    /// Token account has a `Sale` delegate set; operations are restricted.
+    Listed,
 }
 
 #[repr(C)]
@@ -105,18 +109,9 @@ pub enum TokenDelegateRole {
     Sale,
     Transfer,
     Utility,
-}
-
-impl fmt::Display for TokenDelegateRole {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let message = match self {
-            Self::Sale => "sale_delegate".to_string(),
-            Self::Transfer => "transfer_delegate".to_string(),
-            Self::Utility => "use_delegate".to_string(),
-        };
-
-        write!(f, "{}", message)
-    }
+    Staking,
+    Standard,
+    Migration = 255,
 }
 
 #[repr(C)]
@@ -137,7 +132,7 @@ pub struct AuthorityRequest<'a, 'b> {
     /// Mint address.
     pub mint: &'a Pubkey,
     /// Holder's token account.
-    pub token_info: Option<&'a AccountInfo<'a>>,
+    pub token: Option<&'b Account>,
     /// `MetadataDelegateRecord` account of the authority (when the authority is a delegate).
     pub metadata_delegate_record_info: Option<&'a AccountInfo<'a>>,
     /// Expected `MetadataDelegateRole` for the request.
@@ -148,31 +143,32 @@ pub struct AuthorityRequest<'a, 'b> {
     pub token_delegate_roles: Vec<TokenDelegateRole>,
 }
 
+impl<'a, 'b> Default for AuthorityRequest<'a, 'b> {
+    fn default() -> Self {
+        Self {
+            authority: &DEFAULT_PUBKEY,
+            update_authority: &DEFAULT_PUBKEY,
+            mint: &DEFAULT_PUBKEY,
+            token: None,
+            metadata_delegate_record_info: None,
+            metadata_delegate_role: None,
+            token_record_info: None,
+            token_delegate_roles: Vec::with_capacity(0),
+        }
+    }
+}
+
 impl AuthorityType {
     /// Determines the `AuthorityType`.
     pub fn get_authority_type(request: AuthorityRequest) -> Result<Self, ProgramError> {
-        let token = if let Some(token_info) = request.token_info {
-            Some(Account::unpack(&token_info.try_borrow_data()?)?)
-        } else {
-            None
-        };
-
-        // checks if the authority is the token owner
-
-        if let Some(token) = token {
-            if cmp_pubkeys(&token.owner, request.authority) {
-                return Ok(AuthorityType::Holder);
-            }
-        }
-
         // checks if the authority is a token delegate
 
         if let Some(token_record_info) = request.token_record_info {
             // must be owned by token medatata
             assert_owned_by(token_record_info, &crate::ID)?;
 
-            // we can only validate if it is a token delegate if we have the token account
-            if let Some(token) = token {
+            // we can only validate if it is a token delegate when we have the token account
+            if let Some(token) = request.token {
                 let (pda_key, _) = find_token_record_account(request.mint, &token.owner);
                 let token_record = TokenRecord::from_account_info(token_record_info)?;
 
@@ -182,9 +178,9 @@ impl AuthorityType {
                 };
 
                 if cmp_pubkeys(&pda_key, token_record_info.key)
+                    && Some(*request.authority) == token_record.delegate
                     && role_matches
                     && (COption::from(token_record.delegate) == token.delegate)
-                    && token.delegated_amount == token.amount
                 {
                     return Ok(AuthorityType::Delegate);
                 }
@@ -216,11 +212,20 @@ impl AuthorityType {
             }
         }
 
+        // checks if the authority is the token owner
+
+        if let Some(token) = request.token {
+            if cmp_pubkeys(&token.owner, request.authority) {
+                return Ok(AuthorityType::Holder);
+            }
+        }
+
         // checks if the authority is the update authority
 
         if cmp_pubkeys(request.update_authority, request.authority) {
             return Ok(AuthorityType::Metadata);
         }
+
         Ok(AuthorityType::None)
     }
 }

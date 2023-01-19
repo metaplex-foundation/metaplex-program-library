@@ -1841,39 +1841,18 @@ dependencies = [
 
 [[package]]
 name = "mpl-token-auth-rules"
-version = "0.2.2"
+version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d61df5dbac96da732f4b8e39f373c674293c6d3ad2f17d16c4b2771245e40911"
+checksum = "eecef0c554b03173987657ee7f0084d58fa1166d8d6b2dc4ddc8a3d5e3affd1e"
 dependencies = [
  "borsh",
- "mpl-token-metadata-context-derive 0.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "mpl-token-metadata-context-derive 0.0.1",
  "num-derive",
  "num-traits",
  "rmp-serde",
  "serde",
- "serde_with",
  "shank 0.0.11",
  "solana-program",
- "thiserror",
-]
-
-[[package]]
-name = "mpl-token-metadata"
-version = "1.6.4"
-source = "git+https://github.com/metaplex-foundation/metaplex-program-library?branch=feat/programmable-asset#033d080aafc5fa08e0728c3562deb5e632b3b9ab"
-dependencies = [
- "arrayref",
- "borsh",
- "mpl-token-auth-rules",
- "mpl-token-metadata-context-derive 0.0.1 (git+https://github.com/metaplex-foundation/metaplex-program-library?branch=feat/programmable-asset)",
- "mpl-token-vault",
- "mpl-utils 0.0.5 (git+https://github.com/metaplex-foundation/metaplex-program-library?branch=feat/programmable-asset)",
- "num-derive",
- "num-traits",
- "shank 0.0.11",
- "solana-program",
- "spl-associated-token-account",
- "spl-token",
  "thiserror",
 ]
 
@@ -1903,6 +1882,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "mpl-token-metadata"
+version = "1.7.0-alpha.2"
+source = "git+https://github.com/metaplex-foundation/metaplex-program-library?branch=feat/programmable-asset#de1244848e6a0d3b50e64786a6c909b5d11f1144"
+dependencies = [
+ "arrayref",
+ "borsh",
+ "mpl-token-auth-rules",
+ "mpl-token-metadata-context-derive 0.1.0 (git+https://github.com/metaplex-foundation/metaplex-program-library?branch=feat/programmable-asset)",
+ "mpl-token-vault",
+ "mpl-utils 0.0.6 (git+https://github.com/metaplex-foundation/metaplex-program-library?branch=feat/programmable-asset)",
+ "num-derive",
+ "num-traits",
+ "shank 0.0.11",
+ "solana-program",
+ "spl-associated-token-account",
+ "spl-token",
+ "thiserror",
+]
+
+[[package]]
 name = "mpl-token-metadata-context-derive"
 version = "0.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1914,8 +1913,7 @@ dependencies = [
 
 [[package]]
 name = "mpl-token-metadata-context-derive"
-version = "0.0.1"
-source = "git+https://github.com/metaplex-foundation/metaplex-program-library?branch=feat/programmable-asset#033d080aafc5fa08e0728c3562deb5e632b3b9ab"
+version = "0.1.0"
 dependencies = [
  "quote 1.0.21",
  "syn 1.0.105",
@@ -1924,6 +1922,7 @@ dependencies = [
 [[package]]
 name = "mpl-token-metadata-context-derive"
 version = "0.1.0"
+source = "git+https://github.com/metaplex-foundation/metaplex-program-library?branch=feat/programmable-asset#de1244848e6a0d3b50e64786a6c909b5d11f1144"
 dependencies = [
  "quote 1.0.21",
  "syn 1.0.105",
@@ -1957,8 +1956,7 @@ dependencies = [
 
 [[package]]
 name = "mpl-utils"
-version = "0.0.5"
-source = "git+https://github.com/metaplex-foundation/metaplex-program-library?branch=feat/programmable-asset#033d080aafc5fa08e0728c3562deb5e632b3b9ab"
+version = "0.0.6"
 dependencies = [
  "arrayref",
  "borsh",
@@ -1969,6 +1967,7 @@ dependencies = [
 [[package]]
 name = "mpl-utils"
 version = "0.0.6"
+source = "git+https://github.com/metaplex-foundation/metaplex-program-library?branch=feat/programmable-asset#de1244848e6a0d3b50e64786a6c909b5d11f1144"
 dependencies = [
  "arrayref",
  "borsh",
@@ -2781,11 +2780,11 @@ dependencies = [
 [[package]]
 name = "rooster"
 version = "0.1.0"
-source = "git+https://github.com/metaplex-foundation/rooster#ead71b1a97d8c3b7577d75ef96f27147be7f7dc9"
+source = "git+https://github.com/metaplex-foundation/rooster#c0c56cda9a146a7d1aa960bb88dcb27df684516d"
 dependencies = [
  "borsh",
- "mpl-token-metadata 1.6.4",
- "mpl-utils 0.0.5 (registry+https://github.com/rust-lang/crates.io-index)",
+ "mpl-token-metadata 1.7.0-alpha.2 (git+https://github.com/metaplex-foundation/metaplex-program-library?branch=feat/programmable-asset)",
+ "mpl-utils 0.0.5",
  "num-derive",
  "num-traits",
  "shank 0.0.10",

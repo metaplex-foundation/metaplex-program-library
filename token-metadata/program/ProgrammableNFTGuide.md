@@ -110,6 +110,9 @@ Each of these instructions will use versioned `*Args` structs to facilitate futu
     * [x] Creation of `Update` delegates
     * [ ] Creation of `Use` delegates
     * [x] Creation of `Utility` delegates
+    
+    See Delegates Section below for more information on what the difference is between types of delegates.
+    
 - `Lock`
     * [x] Lock Programmable Non-Fungibles
     * [x] Lock Non-Fungibles
@@ -247,6 +250,102 @@ let create_ix = CreateBuilder::new()
     })?
     .instruction();
 ```
+
+## Delegates
+
+The new unified api of token metadata exposes a system of delegations where other actors can be 'delegated' powers to do specific actions on the assets or asset grouping (collection). The types of delegates and what they can do is as follows:
+
+#### Note: For programmable NFTS, auth rules manages which actors can become any of these types of delegates.
+
+### Delegate Types
+
+There are two types of delegates on Token Metadata: `TokenDelegate` and `MetadataDelegate`. 
+
+**Token Delegate**
+
+`TokenDelegate`s are delegates that operate at the token level – i.e., they are spl-token delegates. This allows the delegate to perform operations on the token account (burn, transfer, freeze). There can only be one token delegate at a time and they do not have an individual delegate account associated – their information is stored on the `TokenRecord` account.
+
+**Token States**
+
+| Token State | 🔓 Unlocked | 🔐 Locked | 🏠 Listed |
+| --- | --- | --- | --- |
+| Owner Transfer | ✅ | ❌ | ❌ |
+| Delegate Transfer | 🟠 only: Sale, Transfer | ❌ | 🟠 only: Sale |
+| Owner Burn | ✅ | ❌ | ❌ |
+| Delegate Burn | 🟠 only: Utility | ❌ | ❌ |
+| Owner Revoke | ✅ | ❌ | ✅ → 🔓 Unlocked |
+| Owner Approve | ✅ if Sale → 🏠 Listed | ❌ | ❌ |
+| Owner Unlock | ❌ | ❌ | ❌ |
+| Delegate Unlock | ❌ | ✅ → 🔓 Unlocked | ❌ |
+| Owner Lock | ❌ | ❌ | ❌ |
+| Delegate Lock | ✅ if Utility or Staking → 🔐 Locked | ❌ | ❌ |
+| Mint (destination) | ✅ | ❌ | ✅ |
+
+**Token Delegate Types**
+
+| Delegate Type | None | Sale | Transfer | Utility | Staking | Migration | SPL Token (Implicit for regular NFTs) |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Token State | 🔓 Unlocked | 🏠 Listed | 🔓 Unlocked | 🔐 Locked
+🔓 Unlocked | 🔐 Locked
+🔓 Unlocked | 🔐 Locked
+🔓 Unlocked | Analogous to:
+❄️ Frozen
+☀️ Thawn |
+| Owner Transfer | ✅ | ❌ | ✅ → None | 🔓 if Unlocked
+→ None | 🔓 if Unlocked
+→ None | 🔓 if Unlocked
+→ None | ☀️ if Thawn
+→ None |
+| Delegate Transfer | N/A | ✅ → None | ✅ → None | ❌ | ❌ | 🔓 if Unlocked
+→ None | ☀️ if Thawn
+→ None |
+| Owner Burn | ✅ | ❌ | ✅ | 🔓 if Unlocked | 🔓 if Unlocked | 🔓 if Unlocked | ☀️ if Thawn
+(full burn) |
+| Delegate Burn | N/A | ❌ | ❌ | 🔓 if Unlocked | ❌ | 🔓 if Unlocked | ☀️ if Thawn (only SPL token) |
+| Owner Revoke | ❌ | ✅ → None | ✅ → None | 🔓 if Unlocked
+→ None | 🔓 if Unlocked
+→ None | 🔓 if Unlocked
+→ None | ☀️ if Thawn |
+| Owner Approve | ✅ → Sale, Transfer, Staking or Utility | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ → SPL Token (Standard) |
+| Owner Unlock | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Delegate Unlock | N/A | ❌ | ❌ | 🔐 if Locked | 🔐 if Locked | 🔐 if Locked | ❄️ if Frozen |
+| Owner Lock | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Delegate Lock | N/A | ❌ | ❌ | 🔓 if Unlocked | 🔓 if Unlocked | 🔓 if Unlocked | ☀️ if Thawn |
+| Mint (destination) | ✅ | ✅ | ✅ | 🔓 if Unlocked | 🔓 if Unlocked | 🔓 if Unlocked | ☀️ if Thawn |
+| NFTs or PNFTs | PNFTs | PNFTs | PNFTs | PNFTs | PNFTs | PNFTs (only once) | NFTs |
+
+The `Migration` delegate type is a temporary delegate that is only created by the migration from `NFT` to `pNFT` and cannot be otherwise created through the `Delegate` handler. This special delegate has the same functionality as the Utility delegate except that it can also transfer. This allows us to assign all escrowless-style programs this delegate to preserve whatever current functionality they have. Once used, it is cleared and cannot replaced, and programs will then need to select one of the normal delegate types for future actions.
+
+**Queries:**
+
+- Is the token owner allowed to lock/unlock? If yes, this would allow an owner to unlock a token after a program delegate has locked it (e.g., non-custodial staking/marketplace).
+- Does it make sense to have coded restrictions? E.g., Lock/Unlock only available on `Utility` delegate, `Sale` delegate not allowing owner transfer or not able to be replaced.
+- For non-programmable assets, the type of the delegate is not stored on the account. Does it makes sense to allow the creation of different delegates? Maybe we should only allow one type. The reason that we don’t store the type is because the user can set a delegate without Token Metadata knowledge, so storing a type becomes irrelevant.
+- Once a token is locked, the only operation allowed is `Unlock`, which needs to be done by the delegate that locked the token. This is guaranteed since it is not possible to change the delegate of a token when the token account is frozen.
+
+** Metdata Delegates **
+
+`MetadataDelegate`s are delegates that operate at the metadata level. These delegates are represented by PDAs and do not have an associated spl-token delegate. There can be multiple instances of the same delegate. Currently, we have 2 types:
+
+- `CollectionMetadataDelegate`: can set and verify NFTs to a collection.
+- `UpdateMetadataDelegate`: can perform updates on the metadata account.
+- `UsesMetadataDelegate`: Allows an Actor to "use" the asset and decrement the uses counter on chain which is how applications can implement specific limited or tracking behaviors.
+
+The following table explains the types of `MetadataDelegate`s
+| Delegate Type | Verify Collection Items | Use | Update Metadata(creators, royalties, uri) 
+| --- | --- | --- | --- |
+| Collection | ✅ | ❌ | ❌ |
+| Use | ❌ | ✅ | ❌ |
+| Update | ❌ | ❌ | ✅ |
+
+
+### Handling Auth Rules Updates in Delegates
+
+**Problem:** When interacting with programs, `pNFT`s have a configurable rule set that indicates which programs are allowed to interact with the asset. Given that a rule set can be edited at any point, this can cause issues for programs when rules change after they have become a delegate. The end result of this is that a `pNFT` could end up “stuck” in a contract, since the auth rules may have changed and the program has not changed to accomplish the requirements d to interact with the asset.
+
+**Solution:** Rule sets are stored with a revision number associated – i.e., each time an edit is performed, a new revision of the rule set is created. When a delegate is set on a `pNFT`, the rule set revision on the `pNFT` will be “locked” at the current (latest) revision and it will remain locked until the `pNFT` is transferred or the delegate is revoked. This will guarantee that the delegated program will be able to interact with the `pNFT` – the revision at the delegate point will be used to validate the actions. The “lock” on the rule set revision will also be released when a `Transfer` happens, since the delegate information gets cleared, and any further interaction will then use the latest revision of the rule set.
+
+
 
 ## JS SDK
 

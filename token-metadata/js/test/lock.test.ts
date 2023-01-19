@@ -10,7 +10,7 @@ import { findTokenRecordPda } from './utils/programmable';
 
 killStuckProcess();
 
-test('Lock: lock NonFungible asset', async (t) => {
+test('Lock: owner lock NonFungible asset', async (t) => {
   const API = new InitTransactions();
   const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
 
@@ -39,24 +39,17 @@ test('Lock: lock NonFungible asset', async (t) => {
     payer,
     manager.mint,
     manager.metadata,
+    manager.token,
     payer,
     handler,
     null,
-    manager.token,
+    null,
     manager.masterEdition,
   );
-  await lockTx.assertSuccess(t);
-
-  if (manager.token) {
-    const tokenAccount = await getAccount(connection, manager.token);
-
-    spok(t, tokenAccount, {
-      isFrozen: true,
-    });
-  }
+  await lockTx.assertError(t, /Invalid authority type/);
 });
 
-test('Lock: lock ProgrammableNonFungible asset', async (t) => {
+test('Lock: owner lock ProgrammableNonFungible asset', async (t) => {
   const API = new InitTransactions();
   const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
 
@@ -83,7 +76,7 @@ test('Lock: lock ProgrammableNonFungible asset', async (t) => {
   const tokenRecord = findTokenRecordPda(manager.mint, payer.publicKey);
   amman.addr.addLabel('Token Record', tokenRecord);
 
-  let pda = await TokenRecord.fromAccountAddress(connection, tokenRecord);
+  const pda = await TokenRecord.fromAccountAddress(connection, tokenRecord);
 
   spok(t, pda, {
     state: TokenState.Unlocked /* asset should be unlocked */,
@@ -95,18 +88,12 @@ test('Lock: lock ProgrammableNonFungible asset', async (t) => {
     payer,
     manager.mint,
     manager.metadata,
+    manager.token,
     payer,
     handler,
     tokenRecord,
-    manager.token,
   );
-  await lockTx.assertSuccess(t);
-
-  pda = await TokenRecord.fromAccountAddress(connection, tokenRecord);
-
-  spok(t, pda, {
-    state: TokenState.Locked /* asset should be locked */,
-  });
+  await lockTx.assertError(t, /Invalid authority type/);
 });
 
 test('Lock: delegate lock ProgrammableNonFungible asset', async (t) => {
@@ -174,10 +161,11 @@ test('Lock: delegate lock ProgrammableNonFungible asset', async (t) => {
     delegate,
     manager.mint,
     manager.metadata,
+    manager.token,
     payer,
     handler,
     tokenRecord,
-    manager.token,
+    null,
     manager.masterEdition,
   );
   await lockTx.assertSuccess(t);
@@ -217,9 +205,8 @@ test('Lock: delegate lock NonFungible asset', async (t) => {
   const [, delegate] = await API.getKeypair('Delegate');
 
   const args: DelegateArgs = {
-    __kind: 'UtilityV1',
+    __kind: 'StandardV1',
     amount: 1,
-    authorizationData: null,
   };
 
   const { tx: delegateTx } = await API.delegate(
@@ -243,10 +230,11 @@ test('Lock: delegate lock NonFungible asset', async (t) => {
     delegate,
     manager.mint,
     manager.metadata,
+    manager.token,
     payer,
     handler,
     null,
-    manager.token,
+    null,
     manager.masterEdition,
   );
   await lockTx.assertSuccess(t);
@@ -285,17 +273,41 @@ test('Lock: lock Fungible asset', async (t) => {
     });
   }
 
+  // creates a delegate
+
+  const [, delegate] = await API.getKeypair('Delegate');
+
+  const args: DelegateArgs = {
+    __kind: 'StandardV1',
+    amount: 100,
+  };
+
+  const { tx: delegateTx } = await API.delegate(
+    delegate.publicKey,
+    manager.mint,
+    manager.metadata,
+    payer.publicKey,
+    payer,
+    args,
+    handler,
+    null,
+    null,
+    manager.token,
+  );
+
+  await delegateTx.assertSuccess(t);
+
   // lock asset
 
   const { tx: lockTx } = await API.lock(
-    payer,
+    delegate,
     manager.mint,
     manager.metadata,
+    manager.token,
     payer,
     handler,
     null,
-    manager.token,
-    manager.masterEdition,
+    payer.publicKey,
   );
   await lockTx.assertSuccess(t);
 
@@ -349,10 +361,9 @@ test('Lock: lock ProgrammableNonFungible asset with wrong authority', async (t) 
     wrongApprover,
     manager.mint,
     manager.metadata,
+    manager.token,
     payer,
     handler,
-    null,
-    null,
   );
   await lockTx.assertError(t, /Invalid authority type/);
 });
@@ -385,9 +396,8 @@ test('Lock: wrong delegate lock NonFungible asset', async (t) => {
   const [, delegate] = await API.getKeypair('Delegate');
 
   const args: DelegateArgs = {
-    __kind: 'TransferV1',
+    __kind: 'StandardV1',
     amount: 1,
-    authorizationData: null,
   };
 
   const { tx: delegateTx } = await API.delegate(
@@ -413,11 +423,195 @@ test('Lock: wrong delegate lock NonFungible asset', async (t) => {
     wrongDelegate,
     manager.mint,
     manager.metadata,
+    manager.token,
     payer,
     handler,
     null,
-    manager.token,
     manager.masterEdition,
   );
   await lockTx.assertError(t, /not been delegated to this user/);
+});
+
+test('Lock: wrong delegate lock ProgrammableNonFungible asset', async (t) => {
+  const API = new InitTransactions();
+  const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
+
+  const manager = await createAndMintDefaultAsset(
+    t,
+    connection,
+    API,
+    handler,
+    payer,
+    TokenStandard.ProgrammableNonFungible,
+  );
+
+  const tokenRecord = findTokenRecordPda(manager.mint, payer.publicKey);
+  amman.addr.addLabel('Token Record', tokenRecord);
+
+  const pda = await TokenRecord.fromAccountAddress(connection, tokenRecord);
+
+  spok(t, pda, {
+    state: TokenState.Unlocked /* asset should be unlocked */,
+  });
+
+  if (manager.token) {
+    const tokenAccount = await getAccount(connection, manager.token);
+
+    spok(t, tokenAccount, {
+      amount: spokSameBigint(new BN(1)),
+      isFrozen: true,
+      owner: payer.publicKey,
+    });
+  }
+
+  // creates a delegate
+
+  const [, delegate] = await API.getKeypair('Delegate');
+
+  const args: DelegateArgs = {
+    __kind: 'TransferV1',
+    amount: 1,
+    authorizationData: null,
+  };
+
+  const { tx: delegateTx } = await API.delegate(
+    delegate.publicKey,
+    manager.mint,
+    manager.metadata,
+    payer.publicKey,
+    payer,
+    args,
+    handler,
+    null,
+    manager.masterEdition,
+    manager.token,
+    tokenRecord,
+  );
+
+  await delegateTx.assertSuccess(t);
+
+  // lock asset with delegate
+
+  const { tx: utilityTx } = await API.lock(
+    delegate,
+    manager.mint,
+    manager.metadata,
+    manager.token,
+    payer,
+    handler,
+    tokenRecord,
+    null,
+    manager.masterEdition,
+  );
+  await utilityTx.assertError(t, /Invalid authority type/);
+});
+
+test('Lock: already locked ProgrammableNonFungible asset', async (t) => {
+  const API = new InitTransactions();
+  const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
+
+  const manager = await createAndMintDefaultAsset(
+    t,
+    connection,
+    API,
+    handler,
+    payer,
+    TokenStandard.ProgrammableNonFungible,
+  );
+
+  const tokenRecord = findTokenRecordPda(manager.mint, payer.publicKey);
+  amman.addr.addLabel('Token Record', tokenRecord);
+
+  let pda = await TokenRecord.fromAccountAddress(connection, tokenRecord);
+
+  spok(t, pda, {
+    state: TokenState.Unlocked /* asset should be unlocked */,
+  });
+
+  if (manager.token) {
+    const tokenAccount = await getAccount(connection, manager.token);
+
+    spok(t, tokenAccount, {
+      amount: spokSameBigint(new BN(1)),
+      isFrozen: true,
+      owner: payer.publicKey,
+    });
+  }
+
+  // creates a delegate
+
+  const [, delegate] = await API.getKeypair('Delegate');
+
+  const args: DelegateArgs = {
+    __kind: 'UtilityV1',
+    amount: 1,
+    authorizationData: null,
+  };
+
+  const { tx: delegateTx } = await API.delegate(
+    delegate.publicKey,
+    manager.mint,
+    manager.metadata,
+    payer.publicKey,
+    payer,
+    args,
+    handler,
+    null,
+    manager.masterEdition,
+    manager.token,
+    tokenRecord,
+  );
+
+  await delegateTx.assertSuccess(t);
+
+  // lock asset with delegate
+
+  const { tx: utilityTx } = await API.lock(
+    delegate,
+    manager.mint,
+    manager.metadata,
+    manager.token,
+    payer,
+    handler,
+    tokenRecord,
+    null,
+    manager.masterEdition,
+  );
+  await utilityTx.assertSuccess(t);
+
+  pda = await TokenRecord.fromAccountAddress(connection, tokenRecord);
+
+  spok(t, pda, {
+    state: TokenState.Locked /* asset should be unlocked */,
+  });
+
+  if (manager.token) {
+    const tokenAccount = await getAccount(connection, manager.token);
+
+    spok(t, tokenAccount, {
+      amount: spokSameBigint(new BN(1)),
+      isFrozen: true,
+      owner: payer.publicKey,
+    });
+  }
+
+  // tries to create a new delegate
+
+  const [, newDelegate] = await API.getKeypair('Delegate');
+
+  const { tx: newDelegateTx } = await API.delegate(
+    newDelegate.publicKey,
+    manager.mint,
+    manager.metadata,
+    payer.publicKey,
+    payer,
+    args,
+    handler,
+    null,
+    manager.masterEdition,
+    manager.token,
+    tokenRecord,
+  );
+
+  await newDelegateTx.assertError(t, /Token is locked/);
 });

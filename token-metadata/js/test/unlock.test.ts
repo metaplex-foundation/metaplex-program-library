@@ -10,7 +10,7 @@ import { findTokenRecordPda } from './utils/programmable';
 
 killStuckProcess();
 
-test('Unlock: unlock NonFungible asset', async (t) => {
+test('Unlock: owner unlock NonFungible asset', async (t) => {
   const API = new InitTransactions();
   const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
 
@@ -33,16 +33,41 @@ test('Unlock: unlock NonFungible asset', async (t) => {
     });
   }
 
+  // creates a delegate
+
+  const [, delegate] = await API.getKeypair('Delegate');
+
+  const args: DelegateArgs = {
+    __kind: 'StandardV1',
+    amount: 1,
+  };
+
+  const { tx: delegateTx } = await API.delegate(
+    delegate.publicKey,
+    manager.mint,
+    manager.metadata,
+    payer.publicKey,
+    payer,
+    args,
+    handler,
+    null,
+    manager.masterEdition,
+    manager.token,
+  );
+
+  await delegateTx.assertSuccess(t);
+
   // lock asset
 
   const { tx: lockTx } = await API.lock(
-    payer,
+    delegate,
     manager.mint,
     manager.metadata,
+    manager.token,
     payer,
     handler,
     null,
-    manager.token,
+    null,
     manager.masterEdition,
   );
   await lockTx.assertSuccess(t);
@@ -61,24 +86,24 @@ test('Unlock: unlock NonFungible asset', async (t) => {
     payer,
     manager.mint,
     manager.metadata,
+    manager.token,
     payer,
     handler,
     null,
-    manager.token,
     manager.masterEdition,
   );
-  await unlockTx.assertSuccess(t);
+  await unlockTx.assertError(t, /Invalid authority type/);
 
   if (manager.token) {
     const tokenAccount = await getAccount(connection, manager.token);
 
     spok(t, tokenAccount, {
-      isFrozen: false,
+      isFrozen: true,
     });
   }
 });
 
-test('Unlock: unlock ProgrammableNonFungible asset', async (t) => {
+test('Unlock: owner unlock ProgrammableNonFungible asset', async (t) => {
   const API = new InitTransactions();
   const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
 
@@ -110,16 +135,42 @@ test('Unlock: unlock ProgrammableNonFungible asset', async (t) => {
     state: TokenState.Unlocked /* asset should be unlocked */,
   });
 
+  // creates a delegate
+
+  const [, delegate] = await API.getKeypair('Delegate');
+
+  const args: DelegateArgs = {
+    __kind: 'UtilityV1',
+    amount: 1,
+    authorizationData: null,
+  };
+
+  const { tx: delegateTx } = await API.delegate(
+    delegate.publicKey,
+    manager.mint,
+    manager.metadata,
+    payer.publicKey,
+    payer,
+    args,
+    handler,
+    null,
+    manager.masterEdition,
+    manager.token,
+    tokenRecord,
+  );
+
+  await delegateTx.assertSuccess(t);
+
   // lock asset
 
   const { tx: lockTx } = await API.lock(
-    payer,
+    delegate,
     manager.mint,
     manager.metadata,
+    manager.token,
     payer,
     handler,
     tokenRecord,
-    manager.token,
     manager.masterEdition,
   );
   await lockTx.assertSuccess(t);
@@ -136,18 +187,18 @@ test('Unlock: unlock ProgrammableNonFungible asset', async (t) => {
     payer,
     manager.mint,
     manager.metadata,
+    manager.token,
     payer,
     handler,
     tokenRecord,
-    manager.token,
     manager.masterEdition,
   );
-  await unlockTx.assertSuccess(t);
+  await unlockTx.assertError(t, /Invalid authority type/);
 
   pda = await TokenRecord.fromAccountAddress(connection, tokenRecord);
 
   spok(t, pda, {
-    state: TokenState.Unlocked /* asset should be unlocked */,
+    state: TokenState.Locked /* should be unlocked still */,
   });
 
   if (manager.token) {
@@ -184,17 +235,41 @@ test('Unlock: unlock Fungible asset', async (t) => {
     });
   }
 
+  // creates a delegate
+
+  const [, delegate] = await API.getKeypair('Delegate');
+
+  const args: DelegateArgs = {
+    __kind: 'StandardV1',
+    amount: 100,
+  };
+
+  const { tx: delegateTx } = await API.delegate(
+    delegate.publicKey,
+    manager.mint,
+    manager.metadata,
+    payer.publicKey,
+    payer,
+    args,
+    handler,
+    null,
+    null,
+    manager.token,
+  );
+
+  await delegateTx.assertSuccess(t);
+
   // lock asset
 
   const { tx: lockTx } = await API.lock(
-    payer,
+    delegate,
     manager.mint,
     manager.metadata,
+    manager.token,
     payer,
     handler,
     null,
-    manager.token,
-    manager.masterEdition,
+    payer.publicKey,
   );
   await lockTx.assertSuccess(t);
 
@@ -209,14 +284,14 @@ test('Unlock: unlock Fungible asset', async (t) => {
   // lock asset
 
   const { tx: unlockTx } = await API.unlock(
-    payer,
+    delegate,
     manager.mint,
     manager.metadata,
+    manager.token,
     payer,
     handler,
     null,
-    manager.token,
-    manager.masterEdition,
+    payer.publicKey,
   );
   await unlockTx.assertSuccess(t);
 
@@ -257,9 +332,8 @@ test('Unlock: delegate unlock NonFungible asset', async (t) => {
   const [, delegate] = await API.getKeypair('Delegate');
 
   const args: DelegateArgs = {
-    __kind: 'UtilityV1',
+    __kind: 'StandardV1',
     amount: 1,
-    authorizationData: null,
   };
 
   const { tx: delegateTx } = await API.delegate(
@@ -283,10 +357,11 @@ test('Unlock: delegate unlock NonFungible asset', async (t) => {
     delegate,
     manager.mint,
     manager.metadata,
+    manager.token,
     payer,
     handler,
     null,
-    manager.token,
+    null,
     manager.masterEdition,
   );
   await utilityTx.assertSuccess(t);
@@ -305,10 +380,11 @@ test('Unlock: delegate unlock NonFungible asset', async (t) => {
     delegate,
     manager.mint,
     manager.metadata,
+    manager.token,
     payer,
     handler,
     null,
-    manager.token,
+    null,
     manager.masterEdition,
   );
   await unlockTx.assertSuccess(t);
@@ -320,117 +396,4 @@ test('Unlock: delegate unlock NonFungible asset', async (t) => {
       isFrozen: false,
     });
   }
-});
-
-test('Unlock: wrong delegate unlock NonFungible asset', async (t) => {
-  const API = new InitTransactions();
-  const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
-
-  const manager = await createAndMintDefaultAsset(
-    t,
-    connection,
-    API,
-    handler,
-    payer,
-    TokenStandard.ProgrammableNonFungible,
-  );
-
-  const tokenRecord = findTokenRecordPda(manager.mint, payer.publicKey);
-  amman.addr.addLabel('Token Record', tokenRecord);
-
-  const pda = await TokenRecord.fromAccountAddress(connection, tokenRecord);
-
-  spok(t, pda, {
-    state: TokenState.Unlocked /* asset should be unlocked */,
-  });
-
-  if (manager.token) {
-    const tokenAccount = await getAccount(connection, manager.token);
-
-    spok(t, tokenAccount, {
-      amount: spokSameBigint(new BN(1)),
-      isFrozen: true,
-      owner: payer.publicKey,
-    });
-  }
-
-  // creates a delegate
-
-  const [, delegate] = await API.getKeypair('Delegate');
-
-  const args: DelegateArgs = {
-    __kind: 'UtilityV1',
-    amount: 1,
-    authorizationData: null,
-  };
-
-  const { tx: delegateTx } = await API.delegate(
-    delegate.publicKey,
-    manager.mint,
-    manager.metadata,
-    payer.publicKey,
-    payer,
-    args,
-    handler,
-    null,
-    manager.masterEdition,
-    manager.token,
-    tokenRecord,
-  );
-
-  await delegateTx.assertSuccess(t);
-
-  // lock asset with delegate
-
-  const { tx: utilityTx } = await API.lock(
-    delegate,
-    manager.mint,
-    manager.metadata,
-    payer,
-    handler,
-    tokenRecord,
-    manager.token,
-    manager.masterEdition,
-  );
-  await utilityTx.assertSuccess(t);
-
-  // creates a transfer delegate
-
-  const [, transferDelegate] = await API.getKeypair('Delegate');
-
-  const argsTransfer: DelegateArgs = {
-    __kind: 'TransferV1',
-    amount: 1,
-    authorizationData: null,
-  };
-
-  const { tx: transferDelegateTx } = await API.delegate(
-    transferDelegate.publicKey,
-    manager.mint,
-    manager.metadata,
-    payer.publicKey,
-    payer,
-    argsTransfer,
-    handler,
-    null,
-    manager.masterEdition,
-    manager.token,
-    tokenRecord,
-  );
-
-  await transferDelegateTx.assertSuccess(t);
-
-  // unlock asset with delegate
-
-  const { tx: unlockTx } = await API.unlock(
-    transferDelegate,
-    manager.mint,
-    manager.metadata,
-    payer,
-    handler,
-    tokenRecord,
-    manager.token,
-    manager.masterEdition,
-  );
-  await unlockTx.assertError(t, /Invalid authority type/);
 });
