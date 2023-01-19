@@ -44,7 +44,6 @@ export const RevokeStruct = new beet.BeetArgsStruct<
  * @property [] mint Mint of metadata
  * @property [_writable_] token (optional) Token account of mint
  * @property [**signer**] authority Update authority or token owner
- * @property [] previousAuthority (optional) Previous authority (for self-revoking)
  * @property [_writable_, **signer**] payer Payer
  * @property [] sysvarInstructions Instructions sysvar account
  * @property [] splTokenProgram (optional) SPL Token Program
@@ -63,7 +62,6 @@ export type RevokeInstructionAccounts = {
   mint: web3.PublicKey;
   token?: web3.PublicKey;
   authority: web3.PublicKey;
-  previousAuthority?: web3.PublicKey;
   payer: web3.PublicKey;
   systemProgram?: web3.PublicKey;
   sysvarInstructions: web3.PublicKey;
@@ -136,11 +134,6 @@ export function createRevokeInstruction(
       pubkey: accounts.authority,
       isWritable: false,
       isSigner: true,
-    },
-    {
-      pubkey: accounts.previousAuthority ?? programId,
-      isWritable: false,
-      isSigner: false,
     },
     {
       pubkey: accounts.payer,

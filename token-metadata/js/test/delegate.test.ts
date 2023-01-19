@@ -282,14 +282,14 @@ test('Delegate: failt to replace pNFT transfer delegate', async (t) => {
 
   // asserts
 
-  let tokenAccount = await getAccount(connection, manager.token);
+  const tokenAccount = await getAccount(connection, manager.token);
 
   spok(t, tokenAccount, {
     delegatedAmount: spokSameBigint(new BN(1)),
     delegate: spokSamePubkey(delegate),
   });
 
-  let pda = await TokenRecord.fromAccountAddress(connection, tokenRecord);
+  const pda = await TokenRecord.fromAccountAddress(connection, tokenRecord);
 
   spok(t, pda, {
     delegate: spokSamePubkey(delegate),

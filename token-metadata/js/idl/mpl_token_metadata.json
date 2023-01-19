@@ -2769,13 +2769,6 @@
           "desc": "Update authority or token owner"
         },
         {
-          "name": "previousAuthority",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "Previous authority (for self-revoking)",
-          "optional": true
-        },
-        {
           "name": "payer",
           "isMut": true,
           "isSigner": true,

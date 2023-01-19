@@ -14,7 +14,8 @@ use crate::{
     instruction::{Context, MetadataDelegateRole, Revoke, RevokeArgs},
     pda::{find_metadata_delegate_record_account, find_token_record_account},
     state::{
-        Metadata, TokenDelegateRole, TokenMetadataAccount, TokenRecord, TokenStandard, TokenState,
+        Metadata, MetadataDelegateRecord, TokenDelegateRole, TokenMetadataAccount, TokenRecord,
+        TokenStandard, TokenState,
     },
     utils::{freeze, thaw},
 };
@@ -75,6 +76,13 @@ fn revoke_delegate(
 
     // account relationships
 
+    let delegate_record_info = match ctx.accounts.delegate_record_info {
+        Some(delegate_record_info) => delegate_record_info,
+        None => {
+            return Err(MetadataError::MissingTokenAccount.into());
+        }
+    };
+
     let metadata = Metadata::from_account_info(ctx.accounts.metadata_info)?;
     // there are two scenarios here:
     //   1. authority is equal to delegate: delegate as a signer is self-revoking
@@ -83,12 +91,17 @@ fn revoke_delegate(
         ctx.accounts.delegate_info.key,
         ctx.accounts.authority_info.key,
     ) {
-        if let Some(previous_authority) = ctx.accounts.previous_authority_info {
-            *previous_authority.key
-        } else {
-            // retrieve the update authority since it was the pubkey that
-            // approved the delegation
-            metadata.update_authority
+        match MetadataDelegateRecord::from_account_info(delegate_record_info) {
+            Ok(delegate_record) => {
+                if cmp_pubkeys(&delegate_record.delegate, ctx.accounts.authority_info.key) {
+                    delegate_record.update_authority
+                } else {
+                    return Err(MetadataError::InvalidDelegate.into());
+                }
+            }
+            Err(_) => {
+                return Err(MetadataError::DelegateNotFound.into());
+            }
         }
     } else {
         assert_update_authority_is_correct(&metadata, ctx.accounts.authority_info)?;
@@ -98,13 +111,6 @@ fn revoke_delegate(
     if metadata.mint != *ctx.accounts.mint_info.key {
         return Err(MetadataError::MintMismatch.into());
     }
-
-    let delegate_record_info = match ctx.accounts.delegate_record_info {
-        Some(delegate_record_info) => delegate_record_info,
-        None => {
-            return Err(MetadataError::MissingTokenAccount.into());
-        }
-    };
 
     // closes the delegate record
 
