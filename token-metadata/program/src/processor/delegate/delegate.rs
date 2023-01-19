@@ -199,69 +199,71 @@ fn create_persistent_delegate_v1(
     // process the delegation
 
     // programmables assets can have delegates from any role apart from `Standard`
-    if matches!(
-        metadata.token_standard,
-        Some(TokenStandard::ProgrammableNonFungible)
-    ) && !matches!(role, TokenDelegateRole::Standard)
-    {
-        let (mut token_record, token_record_info) = match ctx.accounts.token_record_info {
-            Some(token_record_info) => {
-                let (pda_key, _) = find_token_record_account(
-                    ctx.accounts.mint_info.key,
-                    ctx.accounts.authority_info.key,
-                );
-
-                assert_keys_equal(&pda_key, token_record_info.key)?;
-                assert_owned_by(token_record_info, &crate::ID)?;
-
-                (
-                    TokenRecord::from_account_info(token_record_info)?,
-                    token_record_info,
-                )
+    match metadata.token_standard {
+        Some(TokenStandard::ProgrammableNonFungible) => {
+            if matches!(role, TokenDelegateRole::Standard) {
+                return Err(MetadataError::InvalidDelegateRole.into());
             }
-            None => {
-                // token record is required for programmable assets
-                return Err(MetadataError::MissingTokenRecord.into());
+
+            let (mut token_record, token_record_info) = match ctx.accounts.token_record_info {
+                Some(token_record_info) => {
+                    let (pda_key, _) = find_token_record_account(
+                        ctx.accounts.mint_info.key,
+                        ctx.accounts.authority_info.key,
+                    );
+
+                    assert_keys_equal(&pda_key, token_record_info.key)?;
+                    assert_owned_by(token_record_info, &crate::ID)?;
+
+                    (
+                        TokenRecord::from_account_info(token_record_info)?,
+                        token_record_info,
+                    )
+                }
+                None => {
+                    // token record is required for programmable assets
+                    return Err(MetadataError::MissingTokenRecord.into());
+                }
+            };
+
+            // we cannot replace an existing delegate, it must be revoked first
+            if token_record.delegate.is_some() {
+                return Err(MetadataError::DelegateAlreadyExists.into());
             }
-        };
 
-        // we cannot replace an existing delegate, it must be revoked first
-        if token_record.delegate_role.is_some() {
-            return Err(MetadataError::DelegateAlreadyExists.into());
+            token_record.state = if matches!(role, TokenDelegateRole::Sale) {
+                // when a 'Sale' delegate is set, the token state is 'Listed'
+                // to restrict holder transfers
+                TokenState::Listed
+            } else {
+                TokenState::Unlocked
+            };
+
+            token_record.delegate = Some(*ctx.accounts.delegate_info.key);
+            token_record.delegate_role = Some(role);
+            token_record.save(&mut *token_record_info.try_borrow_mut_data()?)?;
+
+            if let Some(master_edition_info) = ctx.accounts.master_edition_info {
+                assert_owned_by(master_edition_info, &crate::ID)?;
+                // derivation is checked on the thaw function
+                thaw(
+                    ctx.accounts.mint_info.clone(),
+                    token_info.clone(),
+                    master_edition_info.clone(),
+                    spl_token_program_info.clone(),
+                )?;
+            } else {
+                return Err(MetadataError::MissingEditionAccount.into());
+            }
         }
-
-        token_record.state = if matches!(role, TokenDelegateRole::Sale) {
-            // when a 'Sale' delegate is set, the token state is 'Listed'
-            // to restrict holder transfers
-            TokenState::Listed
-        } else {
-            TokenState::Unlocked
-        };
-
-        token_record.delegate = Some(*ctx.accounts.delegate_info.key);
-        token_record.delegate_role = Some(role);
-        token_record.serialize(&mut *token_record_info.try_borrow_mut_data()?)?;
-
-        if let Some(master_edition_info) = ctx.accounts.master_edition_info {
-            assert_owned_by(master_edition_info, &crate::ID)?;
-            // derivation is checked on the thaw function
-            thaw(
-                ctx.accounts.mint_info.clone(),
-                token_info.clone(),
-                master_edition_info.clone(),
-                spl_token_program_info.clone(),
-            )?;
-        } else {
-            return Err(MetadataError::MissingEditionAccount.into());
+        Some(_) => {
+            if !matches!(role, TokenDelegateRole::Standard) {
+                return Err(MetadataError::InvalidDelegateRole.into());
+            }
         }
-    } else if matches!(
-        metadata.token_standard,
-        Some(TokenStandard::ProgrammableNonFungible)
-    ) || !matches!(role, TokenDelegateRole::Standard)
-    {
-        // if we are dealing with a programmable asset or the delegate role is not
-        // 'Standard', the role selected in invalid
-        return Err(MetadataError::InvalidDelegateRole.into());
+        None => {
+            return Err(MetadataError::CouldNotDetermineTokenStandard.into());
+        }
     }
 
     // creates the spl-token delegate
