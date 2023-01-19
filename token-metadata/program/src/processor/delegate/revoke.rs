@@ -1,4 +1,3 @@
-use borsh::BorshSerialize;
 use mpl_utils::{assert_signer, close_account_raw, cmp_pubkeys};
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program::invoke, program_option::COption,
@@ -13,7 +12,10 @@ use crate::{
     error::MetadataError,
     instruction::{Context, MetadataDelegateRole, Revoke, RevokeArgs},
     pda::{find_metadata_delegate_record_account, find_token_record_account},
-    state::{Metadata, TokenDelegateRole, TokenMetadataAccount, TokenRecord, TokenStandard},
+    state::{
+        Metadata, MetadataDelegateRecord, TokenDelegateRole, TokenMetadataAccount, TokenRecord,
+        TokenStandard, TokenState,
+    },
     utils::{freeze, thaw},
 };
 
@@ -30,7 +32,6 @@ pub fn revoke<'a>(
             revoke_delegate(program_id, context, MetadataDelegateRole::Collection)
         }
         RevokeArgs::SaleV1 => {
-            // sale delegate is a special type of transfer
             revoke_persistent_delegate(program_id, context, TokenDelegateRole::Sale)
         }
         RevokeArgs::TransferV1 => {
@@ -39,6 +40,12 @@ pub fn revoke<'a>(
         RevokeArgs::UpdateV1 => revoke_delegate(program_id, context, MetadataDelegateRole::Update),
         RevokeArgs::UtilityV1 => {
             revoke_persistent_delegate(program_id, context, TokenDelegateRole::Utility)
+        }
+        RevokeArgs::StakingV1 => {
+            revoke_persistent_delegate(program_id, context, TokenDelegateRole::Staking)
+        }
+        RevokeArgs::StandardV1 => {
+            revoke_persistent_delegate(program_id, context, TokenDelegateRole::Standard)
         }
     }
 }
@@ -51,7 +58,7 @@ fn revoke_delegate(
     // signers
 
     assert_signer(ctx.accounts.payer_info)?;
-    assert_signer(ctx.accounts.approver_info)?;
+    assert_signer(ctx.accounts.authority_info)?;
 
     // ownership
 
@@ -68,32 +75,41 @@ fn revoke_delegate(
 
     // account relationships
 
-    let metadata = Metadata::from_account_info(ctx.accounts.metadata_info)?;
-    // there are two scenarios here:
-    //   1. approver is equal to delegate: delegate as a signer is self-revoking
-    //   2. otherwise we need the update authority as a signer
-    let approver = if cmp_pubkeys(
-        ctx.accounts.delegate_info.key,
-        ctx.accounts.approver_info.key,
-    ) {
-        // retrieve the update authority since it was the pubkey that
-        // approved the delegation
-        metadata.update_authority
-    } else {
-        assert_update_authority_is_correct(&metadata, ctx.accounts.approver_info)?;
-        *ctx.accounts.approver_info.key
-    };
-
-    if metadata.mint != *ctx.accounts.mint_info.key {
-        return Err(MetadataError::MintMismatch.into());
-    }
-
     let delegate_record_info = match ctx.accounts.delegate_record_info {
         Some(delegate_record_info) => delegate_record_info,
         None => {
             return Err(MetadataError::MissingTokenAccount.into());
         }
     };
+
+    let metadata = Metadata::from_account_info(ctx.accounts.metadata_info)?;
+    // there are two scenarios here:
+    //   1. authority is equal to delegate: delegate as a signer is self-revoking
+    //   2. otherwise we need the update authority as a signer
+    let approver = if cmp_pubkeys(
+        ctx.accounts.delegate_info.key,
+        ctx.accounts.authority_info.key,
+    ) {
+        match MetadataDelegateRecord::from_account_info(delegate_record_info) {
+            Ok(delegate_record) => {
+                if cmp_pubkeys(&delegate_record.delegate, ctx.accounts.authority_info.key) {
+                    delegate_record.update_authority
+                } else {
+                    return Err(MetadataError::InvalidDelegate.into());
+                }
+            }
+            Err(_) => {
+                return Err(MetadataError::DelegateNotFound.into());
+            }
+        }
+    } else {
+        assert_update_authority_is_correct(&metadata, ctx.accounts.authority_info)?;
+        *ctx.accounts.authority_info.key
+    };
+
+    if metadata.mint != *ctx.accounts.mint_info.key {
+        return Err(MetadataError::MintMismatch.into());
+    }
 
     // closes the delegate record
 
@@ -131,7 +147,7 @@ fn revoke_persistent_delegate(
     // signers
 
     assert_signer(ctx.accounts.payer_info)?;
-    assert_signer(ctx.accounts.approver_info)?;
+    assert_signer(ctx.accounts.authority_info)?;
 
     // ownership
 
@@ -158,7 +174,7 @@ fn revoke_persistent_delegate(
     // authority must be the owner of the token account: spl-token required the
     // token owner to revoke a delegate
     let token_account = Account::unpack(&token_info.try_borrow_data()?).unwrap();
-    if token_account.owner != *ctx.accounts.approver_info.key {
+    if token_account.owner != *ctx.accounts.authority_info.key {
         return Err(MetadataError::IncorrectOwner.into());
     }
 
@@ -172,58 +188,70 @@ fn revoke_persistent_delegate(
 
     // process the revoke
 
-    if matches!(
-        metadata.token_standard,
-        Some(TokenStandard::ProgrammableNonFungible)
-    ) {
-        let (mut token_record, token_record_info) = match ctx.accounts.token_record_info {
-            Some(token_record_info) => {
-                let (pda_key, _) = find_token_record_account(
-                    ctx.accounts.mint_info.key,
-                    ctx.accounts.approver_info.key,
-                );
-
-                assert_keys_equal(&pda_key, token_record_info.key)?;
-                assert_owned_by(token_record_info, &crate::ID)?;
-
-                (
-                    TokenRecord::from_account_info(token_record_info)?,
-                    token_record_info,
-                )
+    // programmables assets can have delegates from any role apart from `Standard`
+    match metadata.token_standard {
+        Some(TokenStandard::ProgrammableNonFungible) => {
+            if matches!(role, TokenDelegateRole::Standard) {
+                return Err(MetadataError::InvalidDelegateRole.into());
             }
-            None => {
-                // token record is required for programmable assets
-                return Err(MetadataError::MissingTokenRecord.into());
+
+            let (mut token_record, token_record_info) = match ctx.accounts.token_record_info {
+                Some(token_record_info) => {
+                    let (pda_key, _) = find_token_record_account(
+                        ctx.accounts.mint_info.key,
+                        ctx.accounts.authority_info.key,
+                    );
+
+                    assert_keys_equal(&pda_key, token_record_info.key)?;
+                    assert_owned_by(token_record_info, &crate::ID)?;
+
+                    (
+                        TokenRecord::from_account_info(token_record_info)?,
+                        token_record_info,
+                    )
+                }
+                None => {
+                    // token record is required for programmable assets
+                    return Err(MetadataError::MissingTokenRecord.into());
+                }
+            };
+
+            if let Some(delegate) = token_record.delegate {
+                assert_keys_equal(&delegate, ctx.accounts.delegate_info.key)?;
+
+                if token_record.delegate_role == Some(role) {
+                    // when a delegate is revoked, the token state is always 'Unlocked'
+                    // (cannot revoke the delegate on a 'Locked' token)
+                    token_record.state = TokenState::Unlocked;
+                    token_record.delegate = None;
+                    token_record.delegate_role = None;
+                    token_record.save(&mut *token_record_info.try_borrow_mut_data()?)?;
+                } else {
+                    return Err(MetadataError::InvalidDelegate.into());
+                }
             }
-        };
 
-        if let Some(delegate) = token_record.delegate {
-            assert_keys_equal(&delegate, ctx.accounts.delegate_info.key)?;
-
-            if token_record.delegate_role == Some(role) {
-                token_record.delegate = None;
-                token_record.delegate_role = None;
-                token_record.serialize(&mut *token_record_info.try_borrow_mut_data()?)?;
+            if let Some(master_edition_info) = ctx.accounts.master_edition_info {
+                assert_owned_by(master_edition_info, &crate::ID)?;
+                // derivation is checked on the thaw function
+                thaw(
+                    ctx.accounts.mint_info.clone(),
+                    token_info.clone(),
+                    master_edition_info.clone(),
+                    spl_token_program_info.clone(),
+                )?;
             } else {
-                return Err(MetadataError::InvalidDelegate.into());
+                return Err(MetadataError::MissingEditionAccount.into());
             }
         }
-
-        if let Some(master_edition_info) = ctx.accounts.master_edition_info {
-            assert_owned_by(master_edition_info, &crate::ID)?;
-            // derivation is checked on the thaw function
-            thaw(
-                ctx.accounts.mint_info.clone(),
-                token_info.clone(),
-                master_edition_info.clone(),
-                spl_token_program_info.clone(),
-            )?;
-        } else {
-            return Err(MetadataError::MissingEditionAccount.into());
+        Some(_) => {
+            if !matches!(role, TokenDelegateRole::Standard) {
+                return Err(MetadataError::InvalidDelegateRole.into());
+            }
         }
-    } else if matches!(role, TokenDelegateRole::Sale) {
-        // Sale delegate only available for programmable assets
-        return Err(MetadataError::InvalidTokenStandard.into());
+        None => {
+            return Err(MetadataError::CouldNotDetermineTokenStandard.into());
+        }
     }
 
     // revokes the spl-token delegate
@@ -231,13 +259,13 @@ fn revoke_persistent_delegate(
         &spl_token::instruction::revoke(
             spl_token_program_info.key,
             token_info.key,
-            ctx.accounts.approver_info.key,
+            ctx.accounts.authority_info.key,
             &[],
         )?,
         &[
             token_info.clone(),
             ctx.accounts.delegate_info.clone(),
-            ctx.accounts.approver_info.clone(),
+            ctx.accounts.authority_info.clone(),
         ],
     )?;
 

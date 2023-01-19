@@ -5,6 +5,7 @@ import {
   TokenRecord,
   TokenDelegateRole,
   MetadataDelegateRecord,
+  TokenState,
 } from '../src/generated';
 import test from 'tape';
 import { amman, InitTransactions, killStuckProcess } from './setup';
@@ -131,6 +132,66 @@ test('Delegate: create sale delegate', async (t) => {
   spok(t, pda, {
     delegate: spokSamePubkey(delegate),
     delegateRole: TokenDelegateRole.Sale,
+    state: TokenState.Listed,
+  });
+});
+
+test('Delegate: owner as sale delegate', async (t) => {
+  const API = new InitTransactions();
+  const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
+
+  const manager = await createAndMintDefaultAsset(
+    t,
+    connection,
+    API,
+    handler,
+    payer,
+    TokenStandard.ProgrammableNonFungible,
+  );
+
+  // creates a delegate
+
+  // token record PDA
+  const tokenRecord = findTokenRecordPda(manager.mint, payer.publicKey);
+  amman.addr.addLabel('Token Record', tokenRecord);
+
+  const args: DelegateArgs = {
+    __kind: 'SaleV1',
+    amount: 1,
+    authorizationData: null,
+  };
+
+  const { tx: delegateTx } = await API.delegate(
+    payer.publicKey,
+    manager.mint,
+    manager.metadata,
+    payer.publicKey,
+    payer,
+    args,
+    handler,
+    null,
+    manager.masterEdition,
+    manager.token,
+    tokenRecord,
+  );
+
+  await delegateTx.assertSuccess(t);
+
+  // asserts
+
+  const tokenAccount = await getAccount(connection, manager.token);
+
+  spok(t, tokenAccount, {
+    delegatedAmount: spokSameBigint(new BN(1)),
+    delegate: spokSamePubkey(payer.publicKey),
+  });
+
+  const pda = await TokenRecord.fromAccountAddress(connection, tokenRecord);
+
+  spok(t, pda, {
+    delegate: spokSamePubkey(payer.publicKey),
+    delegateRole: TokenDelegateRole.Sale,
+    state: TokenState.Listed,
   });
 });
 
@@ -233,10 +294,10 @@ test('Delegate: fail to create sale delegate on NFT', async (t) => {
     tokenRecord,
   );
 
-  await delegateTx.assertError(t, /Invalid token standard/);
+  await delegateTx.assertError(t, /Invalid delegate role/);
 });
 
-test('Delegate: replace transfer delegate', async (t) => {
+test('Delegate: fail to replace pNFT transfer delegate', async (t) => {
   const API = new InitTransactions();
   const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
 
@@ -280,14 +341,14 @@ test('Delegate: replace transfer delegate', async (t) => {
 
   // asserts
 
-  let tokenAccount = await getAccount(connection, manager.token);
+  const tokenAccount = await getAccount(connection, manager.token);
 
   spok(t, tokenAccount, {
     delegatedAmount: spokSameBigint(new BN(1)),
     delegate: spokSamePubkey(delegate),
   });
 
-  let pda = await TokenRecord.fromAccountAddress(connection, tokenRecord);
+  const pda = await TokenRecord.fromAccountAddress(connection, tokenRecord);
 
   spok(t, pda, {
     delegate: spokSamePubkey(delegate),
@@ -312,23 +373,7 @@ test('Delegate: replace transfer delegate', async (t) => {
     tokenRecord,
   );
 
-  await delegateTx2.assertSuccess(t);
-
-  // asserts
-
-  tokenAccount = await getAccount(connection, manager.token);
-
-  spok(t, tokenAccount, {
-    delegatedAmount: spokSameBigint(new BN(1)),
-    delegate: spokSamePubkey(newDelegate),
-  });
-
-  pda = await TokenRecord.fromAccountAddress(connection, tokenRecord);
-
-  spok(t, pda, {
-    delegate: spokSamePubkey(newDelegate),
-    delegateRole: TokenDelegateRole.Transfer,
-  });
+  await delegateTx2.assertError(t, /Delegate already exists/);
 });
 
 test('Delegate: create utility delegate', async (t) => {

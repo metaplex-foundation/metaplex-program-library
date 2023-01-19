@@ -1,6 +1,6 @@
 use super::*;
 
-const SIZE: usize = 66;
+const SIZE: usize = 98;
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
@@ -14,10 +14,11 @@ const SIZE: usize = 66;
 ///     delegate id
 /// ]
 pub struct MetadataDelegateRecord {
-    pub key: Key,         // 1
-    pub bump: u8,         // 1
-    pub mint: Pubkey,     // 32
-    pub delegate: Pubkey, // 32
+    pub key: Key,                 // 1
+    pub bump: u8,                 // 1
+    pub mint: Pubkey,             // 32
+    pub delegate: Pubkey,         // 32
+    pub update_authority: Pubkey, // 32
 }
 
 impl Default for MetadataDelegateRecord {
@@ -27,6 +28,7 @@ impl Default for MetadataDelegateRecord {
             bump: 255,
             mint: Pubkey::default(),
             delegate: Pubkey::default(),
+            update_authority: Pubkey::default(),
         }
     }
 }

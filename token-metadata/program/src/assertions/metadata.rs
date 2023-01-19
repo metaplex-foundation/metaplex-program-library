@@ -261,6 +261,11 @@ pub fn assert_state(token_record: &TokenRecord, state: TokenState) -> ProgramRes
                 return Err(MetadataError::LockedToken.into());
             }
         }
+        TokenState::Listed => {
+            if !matches!(token_record.state, TokenState::Listed) {
+                return Err(MetadataError::IncorrectTokenState.into());
+            }
+        }
     }
 
     Ok(())

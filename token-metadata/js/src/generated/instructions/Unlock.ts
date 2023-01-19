@@ -36,7 +36,7 @@ export const UnlockStruct = new beet.FixableBeetArgsStruct<
 /**
  * Accounts required by the _Unlock_ instruction
  *
- * @property [**signer**] delegate Delegate account
+ * @property [**signer**] authority Delegate account
  * @property [] tokenOwner (optional) Token owner account
  * @property [_writable_] token Token account
  * @property [] mint Mint account
@@ -53,7 +53,7 @@ export const UnlockStruct = new beet.FixableBeetArgsStruct<
  * @category generated
  */
 export type UnlockInstructionAccounts = {
-  delegate: web3.PublicKey;
+  authority: web3.PublicKey;
   tokenOwner?: web3.PublicKey;
   token: web3.PublicKey;
   mint: web3.PublicKey;
@@ -94,7 +94,7 @@ export function createUnlockInstruction(
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: accounts.delegate,
+      pubkey: accounts.authority,
       isWritable: false,
       isSigner: true,
     },

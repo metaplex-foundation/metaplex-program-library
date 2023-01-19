@@ -13,6 +13,7 @@ import * as beet from '@metaplex-foundation/beet';
 export enum TokenState {
   Unlocked,
   Locked,
+  Listed,
 }
 
 /**

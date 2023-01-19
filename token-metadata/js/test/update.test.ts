@@ -1349,7 +1349,7 @@ test('Update: Update pNFT Config with locked token', async (t) => {
   const tokenRecord = findTokenRecordPda(mint, payer.publicKey);
   amman.addr.addLabel('Token Record', tokenRecord);
 
-  let pda = await TokenRecord.fromAccountAddress(connection, tokenRecord);
+  const pda = await TokenRecord.fromAccountAddress(connection, tokenRecord);
 
   spok(t, pda, {
     state: TokenState.Unlocked /* asset should be unlocked */,

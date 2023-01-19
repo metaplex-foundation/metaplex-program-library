@@ -39,7 +39,7 @@ export const CreateStruct = new beet.FixableBeetArgsStruct<
  * @property [_writable_] metadata Unallocated metadata account with address as pda of ['metadata', program id, mint id]
  * @property [_writable_] masterEdition (optional) Unallocated edition account with address as pda of ['metadata', program id, mint, 'edition']
  * @property [_writable_] mint Mint of token asset
- * @property [**signer**] mintAuthority Mint authority
+ * @property [**signer**] authority Mint authority
  * @property [_writable_, **signer**] payer Payer
  * @property [] updateAuthority Update authority for the metadata account
  * @property [] sysvarInstructions Instructions sysvar account
@@ -52,7 +52,7 @@ export type CreateInstructionAccounts = {
   metadata: web3.PublicKey;
   masterEdition?: web3.PublicKey;
   mint: web3.PublicKey;
-  mintAuthority: web3.PublicKey;
+  authority: web3.PublicKey;
   payer: web3.PublicKey;
   updateAuthority: web3.PublicKey;
   systemProgram?: web3.PublicKey;
@@ -101,7 +101,7 @@ export function createCreateInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.mintAuthority,
+      pubkey: accounts.authority,
       isWritable: false,
       isSigner: true,
     },

@@ -205,9 +205,8 @@ test('Lock: delegate lock NonFungible asset', async (t) => {
   const [, delegate] = await API.getKeypair('Delegate');
 
   const args: DelegateArgs = {
-    __kind: 'UtilityV1',
+    __kind: 'StandardV1',
     amount: 1,
-    authorizationData: null,
   };
 
   const { tx: delegateTx } = await API.delegate(
@@ -279,9 +278,8 @@ test('Lock: lock Fungible asset', async (t) => {
   const [, delegate] = await API.getKeypair('Delegate');
 
   const args: DelegateArgs = {
-    __kind: 'UtilityV1',
+    __kind: 'StandardV1',
     amount: 100,
-    authorizationData: null,
   };
 
   const { tx: delegateTx } = await API.delegate(
@@ -398,9 +396,8 @@ test('Lock: wrong delegate lock NonFungible asset', async (t) => {
   const [, delegate] = await API.getKeypair('Delegate');
 
   const args: DelegateArgs = {
-    __kind: 'TransferV1',
+    __kind: 'StandardV1',
     amount: 1,
-    authorizationData: null,
   };
 
   const { tx: delegateTx } = await API.delegate(

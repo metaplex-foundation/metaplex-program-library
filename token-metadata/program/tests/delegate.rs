@@ -214,7 +214,7 @@ mod delegate {
     }
 
     #[tokio::test]
-    async fn set_sale_delegate_nonfungible() {
+    async fn cannot_set_sale_delegate_nonfungible() {
         let mut context = program_test().start_with_context().await;
 
         // asset
@@ -248,11 +248,11 @@ mod delegate {
 
         // asserts
 
-        assert_custom_error!(error, MetadataError::InvalidTokenStandard);
+        assert_custom_error!(error, MetadataError::InvalidDelegateRole);
     }
 
     #[tokio::test]
-    async fn set_transfer_delegate_nonfungible() {
+    async fn set_standard_delegate_nonfungible() {
         let mut context = program_test().start_with_context().await;
 
         // asset
@@ -276,17 +276,14 @@ mod delegate {
                 &mut context,
                 payer,
                 user_pubkey,
-                DelegateArgs::TransferV1 {
-                    amount: 1,
-                    authorization_data: None,
-                },
+                DelegateArgs::StandardV1 { amount: 1 },
             )
             .await
             .unwrap();
     }
 
     #[tokio::test]
-    async fn set_utility_delegate_nonfungible() {
+    async fn cannot_set_utility_delegate_nonfungible() {
         let mut context = program_test().start_with_context().await;
 
         // asset
@@ -305,7 +302,7 @@ mod delegate {
         let user_pubkey = user.pubkey();
         let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
 
-        asset
+        let error = asset
             .delegate(
                 &mut context,
                 payer,
@@ -316,6 +313,8 @@ mod delegate {
                 },
             )
             .await
-            .unwrap();
+            .unwrap_err();
+
+        assert_custom_error!(error, MetadataError::InvalidDelegateRole);
     }
 }

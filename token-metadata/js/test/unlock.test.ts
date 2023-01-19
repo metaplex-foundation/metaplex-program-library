@@ -38,9 +38,8 @@ test('Unlock: owner unlock NonFungible asset', async (t) => {
   const [, delegate] = await API.getKeypair('Delegate');
 
   const args: DelegateArgs = {
-    __kind: 'UtilityV1',
+    __kind: 'StandardV1',
     amount: 1,
-    authorizationData: null,
   };
 
   const { tx: delegateTx } = await API.delegate(
@@ -94,6 +93,14 @@ test('Unlock: owner unlock NonFungible asset', async (t) => {
     manager.masterEdition,
   );
   await unlockTx.assertError(t, /Invalid authority type/);
+
+  if (manager.token) {
+    const tokenAccount = await getAccount(connection, manager.token);
+
+    spok(t, tokenAccount, {
+      isFrozen: true,
+    });
+  }
 });
 
 test('Unlock: owner unlock ProgrammableNonFungible asset', async (t) => {
@@ -233,9 +240,8 @@ test('Unlock: unlock Fungible asset', async (t) => {
   const [, delegate] = await API.getKeypair('Delegate');
 
   const args: DelegateArgs = {
-    __kind: 'UtilityV1',
+    __kind: 'StandardV1',
     amount: 100,
-    authorizationData: null,
   };
 
   const { tx: delegateTx } = await API.delegate(
@@ -326,9 +332,8 @@ test('Unlock: delegate unlock NonFungible asset', async (t) => {
   const [, delegate] = await API.getKeypair('Delegate');
 
   const args: DelegateArgs = {
-    __kind: 'UtilityV1',
+    __kind: 'StandardV1',
     amount: 1,
-    authorizationData: null,
   };
 
   const { tx: delegateTx } = await API.delegate(

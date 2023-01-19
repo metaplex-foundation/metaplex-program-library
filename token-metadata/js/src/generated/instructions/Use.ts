@@ -36,7 +36,7 @@ export const UseStruct = new beet.FixableBeetArgsStruct<
 /**
  * Accounts required by the _Use_ instruction
  *
- * @property [**signer**] approver Token owner or delegate
+ * @property [**signer**] authority Token owner or delegate
  * @property [_writable_] delegateRecord (optional) Delegate record PDA
  * @property [_writable_] token (optional) Token account
  * @property [] mint Mint account
@@ -52,7 +52,7 @@ export const UseStruct = new beet.FixableBeetArgsStruct<
  * @category generated
  */
 export type UseInstructionAccounts = {
-  approver: web3.PublicKey;
+  authority: web3.PublicKey;
   delegateRecord?: web3.PublicKey;
   token?: web3.PublicKey;
   mint: web3.PublicKey;
@@ -92,7 +92,7 @@ export function createUseInstruction(
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: accounts.approver,
+      pubkey: accounts.authority,
       isWritable: false,
       isSigner: true,
     },

@@ -564,9 +564,8 @@ test('Transfer: NonFungible asset with delegate', async (t) => {
   const delegate = Keypair.generate();
 
   const delegateArgs: DelegateArgs = {
-    __kind: 'TransferV1',
+    __kind: 'StandardV1',
     amount: 1,
-    authorizationData: null,
   };
 
   // Approve delegate

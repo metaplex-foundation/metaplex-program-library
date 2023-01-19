@@ -150,7 +150,7 @@ export class InitTransactions {
       metadata,
       masterEdition,
       mint: mint ? mint : mintPair.publicKey,
-      mintAuthority: payer.publicKey,
+      authority: payer.publicKey,
       payer: payer.publicKey,
       splTokenProgram: splToken.TOKEN_PROGRAM_ID,
       sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
@@ -399,7 +399,7 @@ export class InitTransactions {
     delegate: PublicKey,
     mint: PublicKey,
     metadata: PublicKey,
-    approver: PublicKey,
+    authority: PublicKey,
     payer: Keypair,
     args: DelegateArgs,
     handler: PayerTransactionHandler,
@@ -417,7 +417,7 @@ export class InitTransactions {
       tokenRecord,
       mint,
       token,
-      approver,
+      authority,
       payer: payer.publicKey,
       sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
       splTokenProgram: splToken.TOKEN_PROGRAM_ID,
@@ -462,7 +462,7 @@ export class InitTransactions {
       tokenRecord,
       mint,
       token,
-      approver: authority.publicKey,
+      authority: authority.publicKey,
       payer: payer.publicKey,
       sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
       splTokenProgram: splToken.TOKEN_PROGRAM_ID,
@@ -499,7 +499,7 @@ export class InitTransactions {
     ruleSetPda: PublicKey | null = null,
   ): Promise<{ tx: ConfirmedTransactionAssertablePromise }> {
     const lockAcccounts: LockInstructionAccounts = {
-      delegate: delegate.publicKey,
+      authority: delegate.publicKey,
       tokenOwner,
       tokenRecord,
       token,
@@ -544,7 +544,7 @@ export class InitTransactions {
     ruleSetPda: PublicKey | null = null,
   ): Promise<{ tx: ConfirmedTransactionAssertablePromise }> {
     const unlockAcccounts: UnlockInstructionAccounts = {
-      delegate: delegate.publicKey,
+      authority: delegate.publicKey,
       tokenOwner,
       tokenRecord,
       token,
@@ -648,6 +648,7 @@ export class InitTransactions {
     const createRuleSetAccounts: CreateOrUpdateInstructionAccounts = {
       ruleSetPda,
       payer: payer.publicKey,
+      bufferPda: TOKEN_AUTH_RULES_ID,
     };
 
     const createRuleSetArgs: CreateOrUpdateInstructionArgs = {

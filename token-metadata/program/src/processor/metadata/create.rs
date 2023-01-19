@@ -88,13 +88,13 @@ fn create_v1(program_id: &Pubkey, ctx: Context<Create>, args: CreateArgs) -> Pro
             &spl_token::instruction::initialize_mint2(
                 ctx.accounts.spl_token_program_info.key,
                 ctx.accounts.mint_info.key,
-                ctx.accounts.mint_authority_info.key,
-                Some(ctx.accounts.mint_authority_info.key),
+                ctx.accounts.authority_info.key,
+                Some(ctx.accounts.authority_info.key),
                 decimals,
             )?,
             &[
                 ctx.accounts.mint_info.clone(),
-                ctx.accounts.mint_authority_info.clone(),
+                ctx.accounts.authority_info.clone(),
             ],
         )?;
     } else {
@@ -124,7 +124,7 @@ fn create_v1(program_id: &Pubkey, ctx: Context<Create>, args: CreateArgs) -> Pro
         CreateMetadataAccountsLogicArgs {
             metadata_account_info: ctx.accounts.metadata_info,
             mint_info: ctx.accounts.mint_info,
-            mint_authority_info: ctx.accounts.mint_authority_info,
+            mint_authority_info: ctx.accounts.authority_info,
             payer_account_info: ctx.accounts.payer_info,
             update_authority_info: ctx.accounts.update_authority_info,
             system_account_info: ctx.accounts.system_program_info,
@@ -149,7 +149,7 @@ fn create_v1(program_id: &Pubkey, ctx: Context<Create>, args: CreateArgs) -> Pro
                 master_edition,
                 ctx.accounts.mint_info,
                 ctx.accounts.update_authority_info,
-                ctx.accounts.mint_authority_info,
+                ctx.accounts.authority_info,
                 ctx.accounts.payer_info,
                 ctx.accounts.metadata_info,
                 ctx.accounts.spl_token_program_info,

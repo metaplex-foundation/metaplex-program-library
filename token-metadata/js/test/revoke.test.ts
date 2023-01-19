@@ -285,5 +285,5 @@ test('Revoke: self-revoke collection delegate', async (t) => {
     manager.masterEdition,
   );
 
-  await revoketeTx2.assertError(t, /Uninitialized/);
+  await revoketeTx2.assertError(t, /Delegate not found/);
 });

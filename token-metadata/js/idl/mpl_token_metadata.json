@@ -2440,7 +2440,7 @@
           "desc": "Mint of token asset"
         },
         {
-          "name": "mintAuthority",
+          "name": "authority",
           "isMut": false,
           "isSigner": true,
           "desc": "Mint authority"
@@ -2654,10 +2654,10 @@
           "optional": true
         },
         {
-          "name": "approver",
+          "name": "authority",
           "isMut": false,
           "isSigner": true,
-          "desc": "Approver (update authority or token owner) for the delegation"
+          "desc": "Update authority or token owner"
         },
         {
           "name": "payer",
@@ -2763,10 +2763,10 @@
           "optional": true
         },
         {
-          "name": "approver",
+          "name": "authority",
           "isMut": false,
           "isSigner": true,
-          "desc": "Approver (update authority or token owner) for the delegation"
+          "desc": "Update authority or token owner"
         },
         {
           "name": "payer",
@@ -2826,7 +2826,7 @@
       "name": "Lock",
       "accounts": [
         {
-          "name": "delegate",
+          "name": "authority",
           "isMut": false,
           "isSigner": true,
           "desc": "Delegate account"
@@ -2928,7 +2928,7 @@
       "name": "Unlock",
       "accounts": [
         {
-          "name": "delegate",
+          "name": "authority",
           "isMut": false,
           "isSigner": true,
           "desc": "Delegate account"
@@ -3336,7 +3336,7 @@
       "name": "Use",
       "accounts": [
         {
-          "name": "approver",
+          "name": "authority",
           "isMut": false,
           "isSigner": true,
           "desc": "Token owner or delegate"
@@ -3525,6 +3525,10 @@
           },
           {
             "name": "delegate",
+            "type": "publicKey"
+          },
+          {
+            "name": "updateAuthority",
             "type": "publicKey"
           }
         ]
@@ -4579,6 +4583,32 @@
                 }
               }
             ]
+          },
+          {
+            "name": "StakingV1",
+            "fields": [
+              {
+                "name": "amount",
+                "type": "u64"
+              },
+              {
+                "name": "authorization_data",
+                "type": {
+                  "option": {
+                    "defined": "AuthorizationData"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "name": "StandardV1",
+            "fields": [
+              {
+                "name": "amount",
+                "type": "u64"
+              }
+            ]
           }
         ]
       }
@@ -4602,6 +4632,12 @@
           },
           {
             "name": "UtilityV1"
+          },
+          {
+            "name": "StakingV1"
+          },
+          {
+            "name": "StandardV1"
           }
         ]
       }
@@ -5099,6 +5135,9 @@
           },
           {
             "name": "Locked"
+          },
+          {
+            "name": "Listed"
           }
         ]
       }
@@ -5116,6 +5155,15 @@
           },
           {
             "name": "Utility"
+          },
+          {
+            "name": "Staking"
+          },
+          {
+            "name": "Standard"
+          },
+          {
+            "name": "Migration"
           }
         ]
       }
@@ -6024,6 +6072,21 @@
       "code": 161,
       "name": "MissingTokenOwnerAccount",
       "msg": "Missing token owner"
+    },
+    {
+      "code": 162,
+      "name": "InvalidMasterEditionAccountLength",
+      "msg": "Master edition account has an invalid length"
+    },
+    {
+      "code": 163,
+      "name": "IncorrectTokenState",
+      "msg": "Incorrect token state"
+    },
+    {
+      "code": 164,
+      "name": "InvalidDelegateRole",
+      "msg": "Invalid delegate role"
     }
   ],
   "metadata": {

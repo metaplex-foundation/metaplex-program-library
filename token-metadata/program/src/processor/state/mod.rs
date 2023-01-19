@@ -31,7 +31,7 @@ use crate::{
 
 pub(crate) struct ToggleAccounts<'a> {
     payer_info: &'a AccountInfo<'a>,
-    delegate_info: &'a AccountInfo<'a>,
+    authority_info: &'a AccountInfo<'a>,
     token_owner_info: Option<&'a AccountInfo<'a>>,
     mint_info: &'a AccountInfo<'a>,
     token_info: &'a AccountInfo<'a>,
@@ -52,7 +52,7 @@ pub(crate) fn toggle_asset_state(
     // signers
 
     assert_signer(accounts.payer_info)?;
-    assert_signer(accounts.delegate_info)?;
+    assert_signer(accounts.authority_info)?;
 
     // ownership
 
@@ -86,12 +86,16 @@ pub(crate) fn toggle_asset_state(
     //  2. spl-delegate: for non-programmable assets, approver == token.delegate
 
     let authority_type = AuthorityType::get_authority_type(AuthorityRequest {
-        authority: accounts.delegate_info.key,
+        authority: accounts.authority_info.key,
         update_authority: &metadata.update_authority,
         mint: accounts.mint_info.key,
         token: Some(&token),
         token_record_info: accounts.token_record_info,
-        token_delegate_roles: vec![TokenDelegateRole::Utility],
+        token_delegate_roles: vec![
+            TokenDelegateRole::Utility,
+            TokenDelegateRole::Staking,
+            TokenDelegateRole::Migration,
+        ],
         ..Default::default()
     })?;
 
@@ -109,7 +113,7 @@ pub(crate) fn toggle_asset_state(
             ) {
                 // check if the approver has an spl-token delegate
                 assert_delegated_tokens(
-                    accounts.delegate_info,
+                    accounts.authority_info,
                     accounts.mint_info,
                     accounts.token_info,
                 )?;
@@ -148,6 +152,7 @@ pub(crate) fn toggle_asset_state(
             }
         };
 
+        // make sure we are on the expected state
         assert_state(&token_record, from)?;
         // for pNFTs, we only need to flip the programmable state
         token_record.state = to;
@@ -250,6 +255,9 @@ pub(crate) fn toggle_asset_state(
                         ],
                     )?;
                 }
+            }
+            TokenState::Listed => {
+                return Err(MetadataError::IncorrectTokenState.into());
             }
         }
     }
