@@ -36,7 +36,7 @@ pub enum TransferScenario {
     Holder,
     TransferDelegate,
     SaleDelegate,
-    UtilityDelegate,
+    MigrationDelegate,
 }
 
 impl Display for TransferScenario {
@@ -45,7 +45,7 @@ impl Display for TransferScenario {
             Self::Holder => write!(f, "Owner"),
             Self::TransferDelegate => write!(f, "TransferDelegate"),
             Self::SaleDelegate => write!(f, "SaleDelegate"),
-            Self::UtilityDelegate => write!(f, "UtilityDelegate"),
+            Self::MigrationDelegate => write!(f, "MigrationDelegate"),
         }
     }
 }
@@ -55,7 +55,7 @@ impl From<TransferScenario> for TokenDelegateRole {
         match delegate {
             TransferScenario::TransferDelegate => TokenDelegateRole::Transfer,
             TransferScenario::SaleDelegate => TokenDelegateRole::Sale,
-            TransferScenario::UtilityDelegate => TokenDelegateRole::Utility,
+            TransferScenario::MigrationDelegate => TokenDelegateRole::Migration,
             _ => panic!("Invalid delegate role"),
         }
     }
@@ -66,7 +66,7 @@ impl From<TokenDelegateRole> for TransferScenario {
         match delegate {
             TokenDelegateRole::Transfer => TransferScenario::TransferDelegate,
             TokenDelegateRole::Sale => TransferScenario::SaleDelegate,
-            TokenDelegateRole::Utility => TransferScenario::UtilityDelegate,
+            TokenDelegateRole::Migration => TransferScenario::MigrationDelegate,
             _ => panic!("Invalid delegate role"),
         }
     }
@@ -200,7 +200,7 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
         token_delegate_roles: vec![
             TokenDelegateRole::Sale,
             TokenDelegateRole::Transfer,
-            TokenDelegateRole::Utility,
+            TokenDelegateRole::Migration,
         ],
         ..Default::default()
     })?;

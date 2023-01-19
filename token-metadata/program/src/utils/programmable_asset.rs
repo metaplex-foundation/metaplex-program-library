@@ -13,6 +13,7 @@ use solana_program::{
 };
 use spl_token::instruction::{freeze_account, thaw_account};
 
+use crate::processor::TransferScenario;
 use crate::{
     assertions::{assert_derivation, programmable::assert_valid_authorization},
     error::MetadataError,
@@ -196,6 +197,14 @@ pub fn auth_rules_validate(params: AuthRulesValidateParams) -> ProgramResult {
     if is_wallet_to_wallet {
         msg!("Wallet to wallet transfer. Skipping auth rules validation");
         return Ok(());
+    }
+
+    if let Operation::Transfer { scenario } = &operation {
+        // Migration delegate is allowed to skip auth rules to guarantee that
+        // it can transfer the asset.
+        if matches!(scenario, TransferScenario::MigrationDelegate) {
+            return Ok(());
+        }
     }
 
     if let Some(ref config) = programmable_config {

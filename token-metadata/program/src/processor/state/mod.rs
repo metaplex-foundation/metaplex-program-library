@@ -91,7 +91,11 @@ pub(crate) fn toggle_asset_state(
         mint: accounts.mint_info.key,
         token: Some(&token),
         token_record_info: accounts.token_record_info,
-        token_delegate_roles: vec![TokenDelegateRole::Utility, TokenDelegateRole::Staking],
+        token_delegate_roles: vec![
+            TokenDelegateRole::Utility,
+            TokenDelegateRole::Staking,
+            TokenDelegateRole::Migration,
+        ],
         ..Default::default()
     })?;
 
