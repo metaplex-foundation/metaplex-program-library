@@ -648,6 +648,7 @@ export class InitTransactions {
     const createRuleSetAccounts: CreateOrUpdateInstructionAccounts = {
       ruleSetPda,
       payer: payer.publicKey,
+      bufferPda: TOKEN_AUTH_RULES_ID,
     };
 
     const createRuleSetArgs: CreateOrUpdateInstructionArgs = {

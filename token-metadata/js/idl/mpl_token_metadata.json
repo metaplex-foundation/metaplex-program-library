@@ -4590,6 +4590,32 @@
                 }
               }
             ]
+          },
+          {
+            "name": "StakingV1",
+            "fields": [
+              {
+                "name": "amount",
+                "type": "u64"
+              },
+              {
+                "name": "authorization_data",
+                "type": {
+                  "option": {
+                    "defined": "AuthorizationData"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "name": "StandardV1",
+            "fields": [
+              {
+                "name": "amount",
+                "type": "u64"
+              }
+            ]
           }
         ]
       }
@@ -4613,6 +4639,12 @@
           },
           {
             "name": "UtilityV1"
+          },
+          {
+            "name": "StakingV1"
+          },
+          {
+            "name": "StandardV1"
           }
         ]
       }
@@ -5110,6 +5142,9 @@
           },
           {
             "name": "Locked"
+          },
+          {
+            "name": "Listed"
           }
         ]
       }
@@ -5127,6 +5162,15 @@
           },
           {
             "name": "Utility"
+          },
+          {
+            "name": "Staking"
+          },
+          {
+            "name": "Standard"
+          },
+          {
+            "name": "Migration"
           }
         ]
       }
@@ -6035,6 +6079,16 @@
       "code": 161,
       "name": "MissingTokenOwnerAccount",
       "msg": "Missing token owner"
+    },
+    {
+      "code": 162,
+      "name": "IncorrectTokenState",
+      "msg": "Incorrect token state"
+    },
+    {
+      "code": 163,
+      "name": "InvalidDelegateRole",
+      "msg": "Invalid delegate role"
     }
   ],
   "metadata": {

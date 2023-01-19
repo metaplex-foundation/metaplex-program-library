@@ -137,10 +137,10 @@
   resolved "https://registry.yarnpkg.com/@metaplex-foundation/cusper/-/cusper-0.0.2.tgz#dc2032a452d6c269e25f016aa4dd63600e2af975"
   integrity sha512-S9RulC2fFCFOQraz61bij+5YCHhSO9llJegK8c8Y6731fSi6snUSQJdCUqYS8AIgR0TKbQvdvgSyIIdbDFZbBA==
 
-"@metaplex-foundation/mpl-token-auth-rules@^0.2.3":
-  version "0.2.3"
-  resolved "https://registry.yarnpkg.com/@metaplex-foundation/mpl-token-auth-rules/-/mpl-token-auth-rules-0.2.3.tgz#705a73874384a5c9c3b7a15ce065432cb8f2201a"
-  integrity sha512-j/LFy6DIMamJtZzGTDa5JLDqf2oLX8IjiUavM5Yf8+/LY36FX+7sxEd3+GoXNXeTds7sY7Bu8S7MX/fmGKilMA==
+"@metaplex-foundation/mpl-token-auth-rules@^0.2.4":
+  version "0.2.4"
+  resolved "https://registry.yarnpkg.com/@metaplex-foundation/mpl-token-auth-rules/-/mpl-token-auth-rules-0.2.4.tgz#bed81d82fbd260827d11f404ee6092054bc45069"
+  integrity sha512-8kN+T/W7/RNenzPdsNaMKQLFI/i53av3nno5su+s/aHJ71qNrgCDG3moi29EqPES9iUnbHX7eaf8q4CdIC1GXg==
   dependencies:
     "@metaplex-foundation/beet" "^0.7.1"
     "@metaplex-foundation/beet-solana" "^0.4.0"

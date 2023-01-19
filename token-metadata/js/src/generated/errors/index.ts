@@ -3468,6 +3468,46 @@ createErrorFromNameLookup.set(
 );
 
 /**
+ * IncorrectTokenState: 'Incorrect token state'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class IncorrectTokenStateError extends Error {
+  readonly code: number = 0xa2;
+  readonly name: string = 'IncorrectTokenState';
+  constructor() {
+    super('Incorrect token state');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, IncorrectTokenStateError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xa2, () => new IncorrectTokenStateError());
+createErrorFromNameLookup.set('IncorrectTokenState', () => new IncorrectTokenStateError());
+
+/**
+ * InvalidDelegateRole: 'Invalid delegate role'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidDelegateRoleError extends Error {
+  readonly code: number = 0xa3;
+  readonly name: string = 'InvalidDelegateRole';
+  constructor() {
+    super('Invalid delegate role');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidDelegateRoleError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xa3, () => new InvalidDelegateRoleError());
+createErrorFromNameLookup.set('InvalidDelegateRole', () => new InvalidDelegateRoleError());
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated
