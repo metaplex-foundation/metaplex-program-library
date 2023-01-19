@@ -105,11 +105,11 @@ pub fn mint_v1(program_id: &Pubkey, ctx: Context<Mint>, args: MintArgs) -> Progr
         let token_owner_info = if let Some(token_owner_info) = ctx.accounts.token_owner_info {
             token_owner_info
         } else {
-            return Err(ProgramError::NotEnoughAccountKeys);
+            return Err(MetadataError::MissingTokenOwnerAccount.into());
         };
 
         // if the token account is empty, we will initialize a new one but it must
-        // be a ATA account
+        // be an ATA account
         assert_derivation(
             &spl_associated_token_account::id(),
             ctx.accounts.token_info,
@@ -156,20 +156,20 @@ pub fn mint_v1(program_id: &Pubkey, ctx: Context<Mint>, args: MintArgs) -> Progr
                 Some(TokenStandard::ProgrammableNonFungible)
             ) {
                 // if we are initializing a new account, we need the token_owner
-                let token_owner_info = if let Some(token_owner_info) = ctx.accounts.token_owner_info
-                {
-                    token_owner_info
-                } else {
-                    return Err(ProgramError::NotEnoughAccountKeys);
+                let token_owner_info = match ctx.accounts.token_owner_info {
+                    Some(token_owner_info) => token_owner_info,
+                    None => {
+                        return Err(MetadataError::MissingTokenOwnerAccount.into());
+                    }
                 };
 
                 // we always need the token_record_info
-                let token_record_info =
-                    if let Some(token_record_info) = ctx.accounts.token_record_info {
-                        token_record_info
-                    } else {
-                        return Err(ProgramError::NotEnoughAccountKeys);
-                    };
+                let token_record_info = match ctx.accounts.token_record_info {
+                    Some(token_record_info) => token_record_info,
+                    None => {
+                        return Err(MetadataError::MissingTokenRecord.into());
+                    }
+                };
 
                 let (pda_key, _) =
                     find_token_record_account(ctx.accounts.mint_info.key, token_owner_info.key);

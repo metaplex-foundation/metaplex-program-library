@@ -639,6 +639,14 @@ pub enum MetadataError {
     /// 161
     #[error("Missing token owner")]
     MissingTokenOwnerAccount,
+
+    /// 162
+    #[error("Incorrect token state")]
+    IncorrectTokenState,
+
+    /// 163
+    #[error("Invalid delegate role")]
+    InvalidDelegateRole,
 }
 
 impl PrintProgramError for MetadataError {

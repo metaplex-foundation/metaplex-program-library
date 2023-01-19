@@ -91,7 +91,7 @@ pub(crate) fn toggle_asset_state(
         mint: accounts.mint_info.key,
         token: Some(&token),
         token_record_info: accounts.token_record_info,
-        token_delegate_roles: vec![TokenDelegateRole::Utility],
+        token_delegate_roles: vec![TokenDelegateRole::Utility, TokenDelegateRole::Staking],
         ..Default::default()
     })?;
 
@@ -148,6 +148,7 @@ pub(crate) fn toggle_asset_state(
             }
         };
 
+        // make sure we are on the expected state
         assert_state(&token_record, from)?;
         // for pNFTs, we only need to flip the programmable state
         token_record.state = to;
@@ -250,6 +251,9 @@ pub(crate) fn toggle_asset_state(
                         ],
                     )?;
                 }
+            }
+            TokenState::Listed => {
+                return Err(MetadataError::IncorrectTokenState.into());
             }
         }
     }

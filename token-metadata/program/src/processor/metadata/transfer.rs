@@ -67,6 +67,7 @@ impl From<TokenDelegateRole> for TransferScenario {
             TokenDelegateRole::Transfer => TransferScenario::TransferDelegate,
             TokenDelegateRole::Sale => TransferScenario::SaleDelegate,
             TokenDelegateRole::Utility => TransferScenario::UtilityDelegate,
+            _ => panic!("Invalid delegate role"),
         }
     }
 }

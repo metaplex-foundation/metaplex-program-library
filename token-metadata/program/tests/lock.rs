@@ -187,10 +187,7 @@ mod lock {
                 &mut context,
                 payer,
                 delegate_pubkey,
-                DelegateArgs::UtilityV1 {
-                    amount: 1,
-                    authorization_data: None,
-                },
+                DelegateArgs::StandardV1 { amount: 1 },
             )
             .await
             .unwrap();

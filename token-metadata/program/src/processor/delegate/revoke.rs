@@ -13,7 +13,9 @@ use crate::{
     error::MetadataError,
     instruction::{Context, MetadataDelegateRole, Revoke, RevokeArgs},
     pda::{find_metadata_delegate_record_account, find_token_record_account},
-    state::{Metadata, TokenDelegateRole, TokenMetadataAccount, TokenRecord, TokenStandard},
+    state::{
+        Metadata, TokenDelegateRole, TokenMetadataAccount, TokenRecord, TokenStandard, TokenState,
+    },
     utils::{freeze, thaw},
 };
 
@@ -38,6 +40,12 @@ pub fn revoke<'a>(
         RevokeArgs::UpdateV1 => revoke_delegate(program_id, context, MetadataDelegateRole::Update),
         RevokeArgs::UtilityV1 => {
             revoke_persistent_delegate(program_id, context, TokenDelegateRole::Utility)
+        }
+        RevokeArgs::StakingV1 => {
+            revoke_persistent_delegate(program_id, context, TokenDelegateRole::Staking)
+        }
+        RevokeArgs::StandardV1 => {
+            revoke_persistent_delegate(program_id, context, TokenDelegateRole::Standard)
         }
     }
 }
@@ -175,10 +183,12 @@ fn revoke_persistent_delegate(
 
     // process the revoke
 
+    // programmables assets can have delegates from any role apart from `Standard`
     if matches!(
         metadata.token_standard,
         Some(TokenStandard::ProgrammableNonFungible)
-    ) {
+    ) && !matches!(role, TokenDelegateRole::Standard)
+    {
         let (mut token_record, token_record_info) = match ctx.accounts.token_record_info {
             Some(token_record_info) => {
                 let (pda_key, _) = find_token_record_account(
@@ -204,6 +214,9 @@ fn revoke_persistent_delegate(
             assert_keys_equal(&delegate, ctx.accounts.delegate_info.key)?;
 
             if token_record.delegate_role == Some(role) {
+                // when a delegate is revoked, the token state is always 'Unlocked'
+                // (cannot revoke the delegate on a 'Locked' token)
+                token_record.state = TokenState::Unlocked;
                 token_record.delegate = None;
                 token_record.delegate_role = None;
                 token_record.serialize(&mut *token_record_info.try_borrow_mut_data()?)?;
@@ -224,9 +237,14 @@ fn revoke_persistent_delegate(
         } else {
             return Err(MetadataError::MissingEditionAccount.into());
         }
-    } else if matches!(role, TokenDelegateRole::Sale) {
-        // Sale delegate only available for programmable assets
-        return Err(MetadataError::InvalidTokenStandard.into());
+    } else if matches!(
+        metadata.token_standard,
+        Some(TokenStandard::ProgrammableNonFungible)
+    ) || !matches!(role, TokenDelegateRole::Standard)
+    {
+        // if we are dealing with a programmable asset or the delegate role is not
+        // 'Standard', the role selected in invalid
+        return Err(MetadataError::InvalidDelegateRole.into());
     }
 
     // revokes the spl-token delegate

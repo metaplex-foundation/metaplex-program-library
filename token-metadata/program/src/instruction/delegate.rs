@@ -35,6 +35,14 @@ pub enum DelegateArgs {
         /// Required authorization data to validate the request.
         authorization_data: Option<AuthorizationData>,
     },
+    StakingV1 {
+        amount: u64,
+        /// Required authorization data to validate the request.
+        authorization_data: Option<AuthorizationData>,
+    },
+    StandardV1 {
+        amount: u64,
+    },
 }
 
 #[repr(C)]
@@ -46,6 +54,8 @@ pub enum RevokeArgs {
     TransferV1,
     UpdateV1,
     UtilityV1,
+    StakingV1,
+    StandardV1,
 }
 
 #[repr(C)]

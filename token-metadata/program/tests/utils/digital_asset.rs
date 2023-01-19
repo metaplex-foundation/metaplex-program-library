@@ -253,7 +253,8 @@ impl DigitalAsset {
             }
             DelegateArgs::SaleV1 { .. }
             | DelegateArgs::TransferV1 { .. }
-            | DelegateArgs::UtilityV1 { .. } => {
+            | DelegateArgs::UtilityV1 { .. }
+            | DelegateArgs::StakingV1 { .. } => {
                 let (token_record, _) =
                     find_token_record_account(&self.mint.pubkey(), &payer.pubkey());
                 builder.token_record(token_record);
@@ -267,6 +268,7 @@ impl DigitalAsset {
                 );
                 builder.delegate_record(delegate_record);
             }
+            DelegateArgs::StandardV1 { .. } => { /* nothing to add */ }
         }
 
         if let Some(edition) = self.master_edition {
@@ -344,7 +346,10 @@ impl DigitalAsset {
                 );
                 builder.delegate_record(delegate_record);
             }
-            RevokeArgs::SaleV1 | RevokeArgs::TransferV1 | RevokeArgs::UtilityV1 => {
+            RevokeArgs::SaleV1
+            | RevokeArgs::TransferV1
+            | RevokeArgs::UtilityV1
+            | RevokeArgs::StakingV1 => {
                 let (token_record, _) =
                     find_token_record_account(&self.mint.pubkey(), &payer.pubkey());
                 builder.token_record(token_record);
@@ -358,6 +363,7 @@ impl DigitalAsset {
                 );
                 builder.delegate_record(delegate_record);
             }
+            RevokeArgs::StandardV1 { .. } => { /* nothing to add */ }
         }
 
         if let Some(edition) = self.master_edition {

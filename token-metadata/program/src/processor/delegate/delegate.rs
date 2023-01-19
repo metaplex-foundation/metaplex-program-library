@@ -16,7 +16,7 @@ use crate::{
     pda::{find_token_record_account, PREFIX},
     state::{
         Metadata, MetadataDelegateRecord, TokenDelegateRole, TokenMetadataAccount, TokenRecord,
-        TokenStandard,
+        TokenStandard, TokenState,
     },
     utils::{freeze, thaw},
 };
@@ -55,6 +55,20 @@ pub fn delegate<'a>(
             context,
             args,
             TokenDelegateRole::Utility,
+            amount,
+        ),
+        DelegateArgs::StakingV1 { amount, .. } => create_persistent_delegate_v1(
+            program_id,
+            context,
+            args,
+            TokenDelegateRole::Staking,
+            amount,
+        ),
+        DelegateArgs::StandardV1 { amount } => create_persistent_delegate_v1(
+            program_id,
+            context,
+            args,
+            TokenDelegateRole::Standard,
             amount,
         ),
     }
@@ -184,10 +198,12 @@ fn create_persistent_delegate_v1(
 
     // process the delegation
 
+    // programmables assets can have delegates from any role apart from `Standard`
     if matches!(
         metadata.token_standard,
         Some(TokenStandard::ProgrammableNonFungible)
-    ) {
+    ) && !matches!(role, TokenDelegateRole::Standard)
+    {
         let (mut token_record, token_record_info) = match ctx.accounts.token_record_info {
             Some(token_record_info) => {
                 let (pda_key, _) = find_token_record_account(
@@ -209,13 +225,18 @@ fn create_persistent_delegate_v1(
             }
         };
 
-        if let Some(current_role) = token_record.delegate_role {
-            // we only allow replacing a delegate if a sale delegate is not set,
-            // otherwise the current delegate needs to be revoked first
-            if matches!(current_role, TokenDelegateRole::Sale) {
-                return Err(MetadataError::DelegateAlreadyExists.into());
-            }
+        // we cannot replace an existing delegate, it must be revoked first
+        if token_record.delegate_role.is_some() {
+            return Err(MetadataError::DelegateAlreadyExists.into());
         }
+
+        token_record.state = if matches!(role, TokenDelegateRole::Sale) {
+            // when a 'Sale' delegate is set, the token state is 'Listed'
+            // to restrict holder transfers
+            TokenState::Listed
+        } else {
+            TokenState::Unlocked
+        };
 
         token_record.delegate = Some(*ctx.accounts.delegate_info.key);
         token_record.delegate_role = Some(role);
@@ -233,9 +254,14 @@ fn create_persistent_delegate_v1(
         } else {
             return Err(MetadataError::MissingEditionAccount.into());
         }
-    } else if matches!(role, TokenDelegateRole::Sale) {
-        // Sale delegate only available for programmable assets
-        return Err(MetadataError::InvalidTokenStandard.into());
+    } else if matches!(
+        metadata.token_standard,
+        Some(TokenStandard::ProgrammableNonFungible)
+    ) || !matches!(role, TokenDelegateRole::Standard)
+    {
+        // if we are dealing with a programmable asset or the delegate role is not
+        // 'Standard', the role selected in invalid
+        return Err(MetadataError::InvalidDelegateRole.into());
     }
 
     // creates the spl-token delegate
