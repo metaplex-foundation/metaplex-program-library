@@ -639,12 +639,15 @@ pub enum MetadataError {
     /// 161
     #[error("Missing token owner")]
     MissingTokenOwnerAccount,
-
     /// 162
+    #[error("Master edition account has an invalid length")]
+    InvalidMasterEditionAccountLength,
+
+    /// 163
     #[error("Incorrect token state")]
     IncorrectTokenState,
 
-    /// 163
+    /// 164
     #[error("Invalid delegate role")]
     InvalidDelegateRole,
 }
