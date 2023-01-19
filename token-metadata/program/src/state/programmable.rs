@@ -111,7 +111,7 @@ pub enum TokenDelegateRole {
     Utility,
     Staking,
     Standard,
-    Migration,
+    Migration = 255,
 }
 
 #[repr(C)]
