@@ -202,16 +202,18 @@ pub fn migrate_v1(program_id: &Pubkey, ctx: Context<Migrate>, args: MigrateArgs)
                 token_record.bump = bump[0];
             }
 
-            // Set Lock flag if already frozen. Freeze it if not.
-            if token.is_frozen() {
-                token_record.state = TokenState::Locked;
-            } else {
+            // Only freeze if the token is not already frozen, otherwise the call will fail.
+            // If the token is frozen already AND it has a SPL delegate set, then we
+            // set the state to Locked.
+            if !token.is_frozen() {
                 freeze(
                     mint_info.clone(),
                     token_info.clone(),
                     edition_info.clone(),
                     spl_token_program_info.clone(),
                 )?;
+            } else if token.delegate.is_some() {
+                token_record.state = TokenState::Locked;
             }
 
             // Set Utility delegate if SPL delegate is set.
