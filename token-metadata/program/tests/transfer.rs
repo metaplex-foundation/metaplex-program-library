@@ -229,9 +229,7 @@ mod standard_transfer {
             .await
             .unwrap();
 
-        let delegate_role = da
-            .get_token_delegate_role(&mut context, source_owner)
-            .await;
+        let delegate_role = da.get_token_delegate_role(&mut context, source_owner).await;
         // Because this is a pass-through SPL token delegate there will be no role
         // set but the record will still exist.
         assert_eq!(delegate_role, None);
@@ -315,9 +313,7 @@ mod standard_transfer {
             .await
             .unwrap();
 
-        let delegate_role = da
-            .get_token_delegate_role(&mut context, source_owner)
-            .await;
+        let delegate_role = da.get_token_delegate_role(&mut context, source_owner).await;
         // Because this is a pass-through SPL token delegate there will be no role
         // set but the record will still exist.
         assert_eq!(delegate_role, None);
@@ -1096,5 +1092,56 @@ mod auth_rules_transfer {
 
         // Destination now has the token.
         assert_eq!(authority_ata_account.amount, 1);
+    }
+
+    #[tokio::test]
+    async fn no_auth_rules_skips_validation() {
+        // Tests a pNFT with a rule_set of None skipping validation and still being
+        // transferred correctly.
+        let mut program_test = ProgramTest::new("mpl_token_metadata", mpl_token_metadata::ID, None);
+        program_test.add_program("mpl_token_auth_rules", mpl_token_auth_rules::ID, None);
+        let mut context = program_test.start_with_context().await;
+
+        // Create NFT for transfer tests.
+        let mut nft = DigitalAsset::new();
+        nft.create_and_mint(
+            &mut context,
+            TokenStandard::ProgrammableNonFungible,
+            None,
+            None,
+            1,
+        )
+        .await
+        .unwrap();
+
+        let transfer_amount = 1;
+
+        // Our destination will be an account owned by the mpl-token-metadata
+        // program. This will fail normally because it's not
+        // in the program allowlist and also not a wallet-to-wallet
+        // transfer. However, with no rule set present it should succeed because
+        // there are no rules to validate.
+        let destination_owner = nft.metadata;
+
+        let authority = &Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+
+        let args = TransferArgs::V1 {
+            authorization_data: None,
+            amount: transfer_amount,
+        };
+
+        let params = TransferFromParams {
+            context: &mut context,
+            authority,
+            source_owner: &authority.pubkey(),
+            destination_owner,
+            destination_token: None,
+            authorization_rules: None,
+            payer: authority,
+            args: args.clone(),
+        };
+
+        // Transfer should succeed because no rule set is present on the NFT.
+        nft.transfer_from(params).await.unwrap();
     }
 }
