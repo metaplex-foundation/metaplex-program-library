@@ -1060,6 +1060,32 @@
       }
     },
     {
+      "name": "AccountType",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Uninitialized"
+          },
+          {
+            "name": "PackSet"
+          },
+          {
+            "name": "PackCard"
+          },
+          {
+            "name": "PackVoucher"
+          },
+          {
+            "name": "ProvingProcess"
+          },
+          {
+            "name": "PackConfig"
+          }
+        ]
+      }
+    },
+    {
       "name": "CleanUpActions",
       "type": {
         "kind": "enum",
@@ -1113,32 +1139,6 @@
           },
           {
             "name": "Unlimited"
-          }
-        ]
-      }
-    },
-    {
-      "name": "AccountType",
-      "type": {
-        "kind": "enum",
-        "variants": [
-          {
-            "name": "Uninitialized"
-          },
-          {
-            "name": "PackSet"
-          },
-          {
-            "name": "PackCard"
-          },
-          {
-            "name": "PackVoucher"
-          },
-          {
-            "name": "ProvingProcess"
-          },
-          {
-            "name": "PackConfig"
           }
         ]
       }
@@ -1349,7 +1349,7 @@
   "metadata": {
     "origin": "shank",
     "address": "packFeFNZzMfD9aVWL7QbGz1WcU7R9zpf6pvNsw2BLu",
-    "binaryVersion": "0.0.7",
+    "binaryVersion": "0.0.12",
     "libVersion": "~0.0.7"
   }
 }
