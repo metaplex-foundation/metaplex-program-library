@@ -283,29 +283,14 @@ There are two types of delegates on Token Metadata: `TokenDelegate` and `Metadat
 
 **Token Delegate Types**
 
-| Delegate Type | None | Sale | Transfer | Utility | Staking | Migration | SPL Token (Implicit for regular NFTs) |
+| Delegate | None | Sale | Transfer | Utility | Staking | Migration | SPL  |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Token State | 🔓 Unlocked | 🏠 Listed | 🔓 Unlocked | 🔐 Locked
-🔓 Unlocked | 🔐 Locked
-🔓 Unlocked | 🔐 Locked
-🔓 Unlocked | Analogous to:
-❄️ Frozen
-☀️ Thawn |
-| Owner Transfer | ✅ | ❌ | ✅ → None | 🔓 if Unlocked
-→ None | 🔓 if Unlocked
-→ None | 🔓 if Unlocked
-→ None | ☀️ if Thawn
-→ None |
-| Delegate Transfer | N/A | ✅ → None | ✅ → None | ❌ | ❌ | 🔓 if Unlocked
-→ None | ☀️ if Thawn
-→ None |
-| Owner Burn | ✅ | ❌ | ✅ | 🔓 if Unlocked | 🔓 if Unlocked | 🔓 if Unlocked | ☀️ if Thawn
-(full burn) |
+| Token State | 🔓 Unlocked | 🏠 Listed | 🔓 Unlocked | 🔐 Locked🔓 Unlocked |🔐 Locked🔓 Unlocked|🔐 Locked🔓 Unlocked|*Analogous to:* ❄️ Frozen ☀️ Thawn|
+| Owner Transfer | ✅ | ❌ | ✅ → None | 🔓 if Unlocked → `None` |🔓 if Unlocked → None|🔓 if Unlocked → None|☀️ if Thawn → None|
+| Delegate Transfer | N/A | ✅ → None | ✅ → None | ❌ | ❌ | 🔓 if Unlocked → None |☀️ if Thawn → None|
+| Owner Burn | ✅ | ❌ | ✅ | 🔓 if Unlocked | 🔓 if Unlocked | 🔓 if Unlocked | ☀️ if Thawn (full burn) |
 | Delegate Burn | N/A | ❌ | ❌ | 🔓 if Unlocked | ❌ | 🔓 if Unlocked | ☀️ if Thawn (only SPL token) |
-| Owner Revoke | ❌ | ✅ → None | ✅ → None | 🔓 if Unlocked
-→ None | 🔓 if Unlocked
-→ None | 🔓 if Unlocked
-→ None | ☀️ if Thawn |
+| Owner Revoke | ❌ | ✅ → None | ✅ → None | 🔓 if Unlocked → None |🔓 if Unlocked → None|🔓 if Unlocked → None|☀️ if Thawn|
 | Owner Approve | ✅ → Sale, Transfer, Staking or Utility | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ → SPL Token (Standard) |
 | Owner Unlock | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | Delegate Unlock | N/A | ❌ | ❌ | 🔐 if Locked | 🔐 if Locked | 🔐 if Locked | ❄️ if Frozen |
