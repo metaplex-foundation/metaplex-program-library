@@ -94,6 +94,12 @@ pub async fn create_mint(
     authority: &Pubkey,
     decimals: u8,
 ) {
+    let last_blockhash = context
+        .banks_client
+        .get_new_latest_blockhash(&context.last_blockhash)
+        .await
+        .unwrap();
+    context.last_blockhash = last_blockhash;
     let rent = context.banks_client.get_rent().await.unwrap();
 
     let tx = Transaction::new_signed_with_payer(
