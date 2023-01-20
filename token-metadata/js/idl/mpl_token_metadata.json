@@ -1,5 +1,5 @@
 {
-  "version": "1.6.4",
+  "version": "1.7.0",
   "name": "mpl_token_metadata",
   "instructions": [
     {
@@ -3867,6 +3867,11 @@
       "code": 132,
       "name": "InvalidBubblegumSigner",
       "msg": "Invalid bubblegum signer"
+    },
+    {
+      "code": 133,
+      "name": "EscrowParentHasDelegate",
+      "msg": "Escrow parent cannot have a delegate"
     }
   ],
   "metadata": {

@@ -2855,6 +2855,26 @@ createErrorFromCodeLookup.set(0x84, () => new InvalidBubblegumSignerError());
 createErrorFromNameLookup.set('InvalidBubblegumSigner', () => new InvalidBubblegumSignerError());
 
 /**
+ * EscrowParentHasDelegate: 'Escrow parent cannot have a delegate'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class EscrowParentHasDelegateError extends Error {
+  readonly code: number = 0x85;
+  readonly name: string = 'EscrowParentHasDelegate';
+  constructor() {
+    super('Escrow parent cannot have a delegate');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, EscrowParentHasDelegateError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x85, () => new EscrowParentHasDelegateError());
+createErrorFromNameLookup.set('EscrowParentHasDelegate', () => new EscrowParentHasDelegateError());
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated
