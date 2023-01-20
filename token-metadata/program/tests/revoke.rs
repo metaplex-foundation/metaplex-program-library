@@ -336,4 +336,95 @@ mod revoke {
 
         assert_custom_error!(error, MetadataError::InvalidDelegate);
     }
+
+    #[tokio::test]
+    async fn clear_rule_set_revision_on_delegate() {
+        let mut program_test = ProgramTest::new("mpl_token_metadata", mpl_token_metadata::ID, None);
+        program_test.add_program("mpl_token_auth_rules", mpl_token_auth_rules::ID, None);
+        let mut context = program_test.start_with_context().await;
+
+        // creates the auth rule set
+
+        let payer = context.payer.dirty_clone();
+        let (rule_set, auth_data) = create_default_metaplex_rule_set(&mut context, payer).await;
+
+        // asset
+
+        let mut asset = DigitalAsset::default();
+        asset
+            .create_and_mint(
+                &mut context,
+                TokenStandard::ProgrammableNonFungible,
+                Some(rule_set),
+                Some(auth_data),
+                1,
+            )
+            .await
+            .unwrap();
+
+        assert!(asset.token.is_some());
+
+        // asserts
+
+        let (pda_key, _) = find_token_record_account(&asset.mint.pubkey(), &context.payer.pubkey());
+        let pda = get_account(&mut context, &pda_key).await;
+        let token_record: TokenRecord = try_from_slice_unchecked(&pda.data).unwrap();
+
+        assert_eq!(token_record.rule_set_revision, None);
+
+        // delegates the asset for transfer
+
+        let user = Keypair::new();
+        let user_pubkey = user.pubkey();
+        let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+        let payer_pubkey = payer.pubkey();
+
+        asset
+            .delegate(
+                &mut context,
+                payer,
+                user_pubkey,
+                DelegateArgs::SaleV1 {
+                    amount: 1,
+                    authorization_data: None,
+                },
+            )
+            .await
+            .unwrap();
+
+        // asserts
+
+        let (pda_key, _) = find_token_record_account(&asset.mint.pubkey(), &payer_pubkey);
+
+        let pda = get_account(&mut context, &pda_key).await;
+        let token_record: TokenRecord = try_from_slice_unchecked(&pda.data).unwrap();
+
+        assert_eq!(token_record.key, Key::TokenRecord);
+        assert_eq!(token_record.delegate, Some(user_pubkey));
+        assert_eq!(token_record.delegate_role, Some(TokenDelegateRole::Sale));
+        assert_eq!(token_record.rule_set_revision, Some(0));
+
+        // revokes the delegate
+
+        let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+        let authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+
+        asset
+            .revoke(
+                &mut context,
+                payer,
+                authority,
+                user_pubkey,
+                RevokeArgs::SaleV1,
+            )
+            .await
+            .unwrap();
+
+        // asserts
+
+        let pda = get_account(&mut context, &pda_key).await;
+        let token_record: TokenRecord = try_from_slice_unchecked(&pda.data).unwrap();
+        // the revision must have been cleared
+        assert_eq!(token_record.rule_set_revision, None);
+    }
 }

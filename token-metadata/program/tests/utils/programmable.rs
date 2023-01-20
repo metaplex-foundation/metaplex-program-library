@@ -1,7 +1,7 @@
 use mpl_token_auth_rules::{
     instruction::{builders::CreateOrUpdateBuilder, CreateOrUpdateArgs, InstructionBuilder},
     payload::Payload,
-    state::{CompareOp, Rule, RuleSet},
+    state::{CompareOp, Rule, RuleSetV1},
 };
 use mpl_token_metadata::{
     processor::{AuthorizationData, TransferScenario},
@@ -122,7 +122,7 @@ pub async fn create_default_metaplex_rule_set(
         scenario: TransferScenario::SaleDelegate,
     };
 
-    let mut royalty_rule_set = RuleSet::new(name, creator.pubkey());
+    let mut royalty_rule_set = RuleSetV1::new(name, creator.pubkey());
     royalty_rule_set
         .add(owner_operation.to_string(), transfer_rule.clone())
         .unwrap();
