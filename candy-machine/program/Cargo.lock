@@ -1978,7 +1978,6 @@ dependencies = [
  "solana-sdk",
  "spl-associated-token-account",
  "spl-token",
- "tarpc 0.29.0",
 ]
 
 [[package]]
@@ -2226,25 +2225,6 @@ dependencies = [
  "async-trait",
  "crossbeam-channel",
  "futures",
- "js-sys",
- "lazy_static",
- "percent-encoding",
- "pin-project",
- "rand 0.8.5",
- "thiserror",
-]
-
-[[package]]
-name = "opentelemetry"
-version = "0.17.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6105e89802af13fdf48c49d7646d3b533a70e536d818aae7e78ba0433d01acb8"
-dependencies = [
- "async-trait",
- "crossbeam-channel",
- "futures-channel",
- "futures-executor",
- "futures-util",
  "js-sys",
  "lazy_static",
  "percent-encoding",
@@ -3289,7 +3269,7 @@ dependencies = [
  "solana-banks-interface",
  "solana-program",
  "solana-sdk",
- "tarpc 0.27.2",
+ "tarpc",
  "thiserror",
  "tokio",
  "tokio-serde",
@@ -3303,7 +3283,7 @@ checksum = "c382dcc2eefc480815493881e764650e02a618cb9793000a801092520ccdd766"
 dependencies = [
  "serde",
  "solana-sdk",
- "tarpc 0.27.2",
+ "tarpc",
 ]
 
 [[package]]
@@ -3320,7 +3300,7 @@ dependencies = [
  "solana-runtime",
  "solana-sdk",
  "solana-send-transaction-service",
- "tarpc 0.27.2",
+ "tarpc",
  "tokio",
  "tokio-serde",
  "tokio-stream",
@@ -4275,7 +4255,7 @@ dependencies = [
  "fnv",
  "futures",
  "humantime",
- "opentelemetry 0.16.0",
+ "opentelemetry",
  "pin-project",
  "rand 0.8.5",
  "serde",
@@ -4286,29 +4266,7 @@ dependencies = [
  "tokio-serde",
  "tokio-util 0.6.9",
  "tracing",
- "tracing-opentelemetry 0.15.0",
-]
-
-[[package]]
-name = "tarpc"
-version = "0.29.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1c38a012bed6fb9681d3bf71ffaa4f88f3b4b9ed3198cda6e4c8462d24d4bb80"
-dependencies = [
- "anyhow",
- "fnv",
- "futures",
- "humantime",
- "opentelemetry 0.17.0",
- "pin-project",
- "rand 0.8.5",
- "static_assertions",
- "tarpc-plugins",
- "thiserror",
- "tokio",
- "tokio-util 0.6.9",
- "tracing",
- "tracing-opentelemetry 0.17.4",
+ "tracing-opentelemetry",
 ]
 
 [[package]]
@@ -4624,23 +4582,10 @@ version = "0.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "599f388ecb26b28d9c1b2e4437ae019a7b336018b45ed911458cd9ebf91129f6"
 dependencies = [
- "opentelemetry 0.16.0",
+ "opentelemetry",
  "tracing",
  "tracing-core",
- "tracing-subscriber 0.2.25",
-]
-
-[[package]]
-name = "tracing-opentelemetry"
-version = "0.17.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fbbe89715c1dbbb790059e2565353978564924ee85017b5fff365c872ff6721f"
-dependencies = [
- "once_cell",
- "opentelemetry 0.17.0",
- "tracing",
- "tracing-core",
- "tracing-subscriber 0.3.11",
+ "tracing-subscriber",
 ]
 
 [[package]]
@@ -4648,17 +4593,6 @@ name = "tracing-subscriber"
 version = "0.2.25"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0e0d2eaa99c3c2e41547cfa109e910a68ea03823cccad4a0525dcbc9b01e8c71"
-dependencies = [
- "sharded-slab",
- "thread_local",
- "tracing-core",
-]
-
-[[package]]
-name = "tracing-subscriber"
-version = "0.3.11"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4bc28f93baff38037f64e6f43d34cfa1605f27a49c34e8a04c5e78b0babf2596"
 dependencies = [
  "sharded-slab",
  "thread_local",
