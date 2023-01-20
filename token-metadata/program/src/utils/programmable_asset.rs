@@ -141,6 +141,7 @@ pub fn validate<'a>(
     mint_info: &'a AccountInfo<'a>,
     additional_rule_accounts: Vec<&'a AccountInfo<'a>>,
     auth_data: &AuthorizationData,
+    rule_set_revision: Option<usize>,
 ) -> Result<(), ProgramError> {
     let account_metas = additional_rule_accounts
         .iter()
@@ -155,6 +156,7 @@ pub fn validate<'a>(
             operation: operation.to_string(),
             payload: auth_data.payload.clone(),
             update_rule_state: false,
+            rule_set_revision,
         })
         .map_err(|_error| MetadataError::InvalidAuthorizationRules)?
         .instruction();
@@ -177,6 +179,7 @@ pub struct AuthRulesValidateParams<'a> {
     pub auth_rules_info: Option<&'a AccountInfo<'a>>,
     pub operation: Operation,
     pub is_wallet_to_wallet: bool,
+    pub rule_set_revision: Option<usize>,
 }
 
 pub fn auth_rules_validate(params: AuthRulesValidateParams) -> ProgramResult {
@@ -192,6 +195,7 @@ pub fn auth_rules_validate(params: AuthRulesValidateParams) -> ProgramResult {
         auth_rules_info,
         operation,
         is_wallet_to_wallet,
+        rule_set_revision,
     } = params;
 
     if is_wallet_to_wallet {
@@ -281,6 +285,7 @@ pub fn auth_rules_validate(params: AuthRulesValidateParams) -> ProgramResult {
                 mint_info,
                 additional_rule_accounts,
                 &auth_data,
+                rule_set_revision,
             )?;
         }
     }

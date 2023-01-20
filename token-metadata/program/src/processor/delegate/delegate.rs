@@ -15,8 +15,8 @@ use crate::{
     instruction::{Context, Delegate, DelegateArgs, MetadataDelegateRole},
     pda::{find_token_record_account, PREFIX},
     state::{
-        Metadata, MetadataDelegateRecord, TokenDelegateRole, TokenMetadataAccount, TokenRecord,
-        TokenStandard, TokenState,
+        Metadata, MetadataDelegateRecord, ProgrammableConfig, TokenDelegateRole,
+        TokenMetadataAccount, TokenRecord, TokenStandard, TokenState,
     },
     utils::{freeze, thaw},
 };
@@ -229,6 +229,33 @@ fn create_persistent_delegate_v1(
             // we cannot replace an existing delegate, it must be revoked first
             if token_record.delegate.is_some() {
                 return Err(MetadataError::DelegateAlreadyExists.into());
+            }
+
+            // if we have a rule set, we need to store its revision; at this point,
+            // we will validate that we have the correct auth rules PDA
+            if let Some(ProgrammableConfig::V1 {
+                rule_set: Some(rule_set),
+            }) = metadata.programmable_config
+            {
+                // valudates that we got the correct rule set
+                let authorization_rules_info = ctx
+                    .accounts
+                    .authorization_rules_info
+                    .ok_or(MetadataError::MissingAuthorizationRules)?;
+                assert_keys_equal(authorization_rules_info.key, &rule_set)?;
+
+                // validates auth rules program
+                let authorization_rules_program_info = ctx
+                    .accounts
+                    .authorization_rules_program_info
+                    .ok_or(MetadataError::MissingAuthorizationRulesProgram)?;
+                assert_keys_equal(
+                    authorization_rules_program_info.key,
+                    &mpl_token_auth_rules::ID,
+                )?;
+
+                // TODO: retrive the version from the rule set
+                token_record.rule_set_revision = None;
             }
 
             token_record.state = if matches!(role, TokenDelegateRole::Sale) {
