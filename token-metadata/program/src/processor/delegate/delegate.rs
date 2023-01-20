@@ -1,4 +1,5 @@
 use borsh::BorshSerialize;
+use mpl_token_auth_rules::utils::get_latest_revision;
 use mpl_utils::{assert_signer, create_or_allocate_account_raw};
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program::invoke, program_pack::Pack,
@@ -243,6 +244,7 @@ fn create_persistent_delegate_v1(
                     .authorization_rules_info
                     .ok_or(MetadataError::MissingAuthorizationRules)?;
                 assert_keys_equal(authorization_rules_info.key, &rule_set)?;
+                assert_owned_by(authorization_rules_info, &mpl_token_auth_rules::ID)?;
 
                 // validates auth rules program
                 let authorization_rules_program_info = ctx
@@ -255,7 +257,7 @@ fn create_persistent_delegate_v1(
                 )?;
 
                 // TODO: retrive the version from the rule set
-                token_record.rule_set_revision = None;
+                token_record.rule_set_revision = get_latest_revision(authorization_rules_info)?;
             }
 
             token_record.state = if matches!(role, TokenDelegateRole::Sale) {

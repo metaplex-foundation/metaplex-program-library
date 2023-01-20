@@ -361,8 +361,7 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
 
             // Drop old immutable borrow.
             drop(owner_token_record_data);
-            owner_token_record.delegate_role = None;
-            owner_token_record.delegate = None;
+            owner_token_record.reset();
             owner_token_record.save(&mut owner_token_record_info.data.borrow_mut())?;
 
             // If the token record account for the destination owner doesn't exist,
