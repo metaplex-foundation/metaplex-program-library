@@ -11,11 +11,11 @@ use mpl_token_metadata::{
     pda::{find_metadata_delegate_record_account, find_token_record_account},
     processor::AuthorizationData,
     state::{
-        AssetData, Creator, Metadata, TokenDelegateRole, TokenMetadataAccount, TokenRecord,
-        TokenStandard, EDITION, PREFIX,
+        AssetData, Creator, Metadata, ProgrammableConfig, TokenDelegateRole, TokenMetadataAccount,
+        TokenRecord, TokenStandard, EDITION, PREFIX,
     },
 };
-use solana_program::pubkey::Pubkey;
+use solana_program::{borsh::try_from_slice_unchecked, pubkey::Pubkey};
 use solana_program_test::{BanksClientError, ProgramTestContext};
 use solana_sdk::{
     compute_budget::ComputeBudgetInstruction,
@@ -25,6 +25,8 @@ use solana_sdk::{
 use spl_associated_token_account::{
     get_associated_token_address, instruction::create_associated_token_account,
 };
+
+use super::get_account;
 
 pub const DEFAULT_NAME: &str = "Digital Asset";
 pub const DEFAULT_SYMBOL: &str = "DA";
@@ -277,6 +279,17 @@ impl DigitalAsset {
 
         if let Some(token) = self.token {
             builder.token(token);
+        }
+
+        // determines if we need to set the rule set
+        let metadata_account = get_account(context, &self.metadata).await;
+        let metadata: Metadata = try_from_slice_unchecked(&metadata_account.data).unwrap();
+
+        if let Some(ProgrammableConfig::V1 {
+            rule_set: Some(rule_set),
+        }) = metadata.programmable_config
+        {
+            builder.authorization_rules(rule_set);
         }
 
         let delegate_ix = builder.build(args.clone()).unwrap().instruction();

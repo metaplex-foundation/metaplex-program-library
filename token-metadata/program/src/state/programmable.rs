@@ -28,6 +28,7 @@ pub const TOKEN_STATE_INDEX: usize = 2;
 pub const TOKEN_RECORD_SIZE: usize = 1 // Key
 + 1  // bump
 + 1  // state
++ 9  // rule set revision
 + 33 // delegate
 + 2; // delegate role
 
@@ -45,6 +46,7 @@ pub struct TokenRecord {
     pub key: Key,
     pub bump: u8,
     pub state: TokenState,
+    pub rule_set_revision: Option<u64>,
     pub delegate: Option<Pubkey>,
     pub delegate_role: Option<TokenDelegateRole>,
 }
@@ -55,6 +57,7 @@ impl Default for TokenRecord {
             key: Key::TokenRecord,
             bump: 255,
             state: TokenState::Unlocked,
+            rule_set_revision: None,
             delegate: None,
             delegate_role: None,
         }
@@ -80,6 +83,14 @@ impl TokenRecord {
 
     pub fn is_locked(&self) -> bool {
         matches!(self.state, TokenState::Locked)
+    }
+
+    /// Resets the token state by clearing any state stored.
+    pub fn reset(&mut self) {
+        self.state = TokenState::Unlocked;
+        self.rule_set_revision = None;
+        self.delegate = None;
+        self.delegate_role = None;
     }
 
     pub fn save(&self, data: &mut [u8]) -> Result<(), BorshError> {

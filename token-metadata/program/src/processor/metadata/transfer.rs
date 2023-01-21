@@ -353,6 +353,9 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
                 auth_rules_info: ctx.accounts.authorization_rules_info,
                 operation: Operation::Transfer { scenario },
                 is_wallet_to_wallet,
+                rule_set_revision: owner_token_record
+                    .rule_set_revision
+                    .map(|revision| revision as usize),
             };
 
             auth_rules_validate(auth_rules_validate_params)?;
@@ -360,8 +363,7 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
 
             // Drop old immutable borrow.
             drop(owner_token_record_data);
-            owner_token_record.delegate_role = None;
-            owner_token_record.delegate = None;
+            owner_token_record.reset();
             owner_token_record.save(&mut owner_token_record_info.data.borrow_mut())?;
 
             // If the token record account for the destination owner doesn't exist,

@@ -14,7 +14,7 @@ use crate::{
     pda::{find_metadata_delegate_record_account, find_token_record_account},
     state::{
         Metadata, MetadataDelegateRecord, TokenDelegateRole, TokenMetadataAccount, TokenRecord,
-        TokenStandard, TokenState,
+        TokenStandard,
     },
     utils::{freeze, thaw},
 };
@@ -220,11 +220,8 @@ fn revoke_persistent_delegate(
                 assert_keys_equal(&delegate, ctx.accounts.delegate_info.key)?;
 
                 if token_record.delegate_role == Some(role) {
-                    // when a delegate is revoked, the token state is always 'Unlocked'
-                    // (cannot revoke the delegate on a 'Locked' token)
-                    token_record.state = TokenState::Unlocked;
-                    token_record.delegate = None;
-                    token_record.delegate_role = None;
+                    // resets the token record (state, rule_set_revision and delegate info)
+                    token_record.reset();
                     token_record.save(&mut *token_record_info.try_borrow_mut_data()?)?;
                 } else {
                     return Err(MetadataError::InvalidDelegate.into());

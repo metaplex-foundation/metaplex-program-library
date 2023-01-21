@@ -665,7 +665,7 @@ export class InitTransactions {
     const tx = new Transaction().add(createRuleSetInstruction);
 
     return {
-      tx: handler.sendAndConfirmTransaction(tx, [payer], 'tx: Create Rule Set'),
+      tx: handler.sendAndConfirmTransaction(tx, [payer], 'tx: CreateOrUpdateRuleSet'),
     };
   }
 

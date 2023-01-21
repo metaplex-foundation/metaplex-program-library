@@ -89,6 +89,7 @@ impl RoosterManager {
         mint: Pubkey,
         metadata: Pubkey,
         edition: Pubkey,
+        authorization_rules: Option<Pubkey>,
         args: rooster::instruction::DelegateArgs,
     ) -> Result<(), BanksClientError> {
         let token = get_associated_token_address(&self.pda(), &mint);
@@ -100,6 +101,7 @@ impl RoosterManager {
             mint,
             metadata,
             edition,
+            authorization_rules,
             args,
         );
 

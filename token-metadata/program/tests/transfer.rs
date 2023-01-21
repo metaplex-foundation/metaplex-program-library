@@ -23,8 +23,9 @@ use utils::*;
 mod standard_transfer {
 
     use mpl_token_metadata::{
+        error::MetadataError,
         instruction::{DelegateArgs, TransferArgs},
-        state::TokenStandard, error::MetadataError,
+        state::TokenStandard,
     };
     use solana_program::{
         native_token::LAMPORTS_PER_SOL, program_option::COption, program_pack::Pack, pubkey::Pubkey,
@@ -220,9 +221,8 @@ mod standard_transfer {
             .unwrap()
             .pubkey();
 
-        let delegate_args = DelegateArgs::TransferV1 {
+        let delegate_args = DelegateArgs::StandardV1 {
             amount: transfer_amount,
-            authorization_data: None,
         };
 
         da.delegate(&mut context, authority, delegate.pubkey(), delegate_args)
@@ -304,9 +304,8 @@ mod standard_transfer {
             .unwrap()
             .pubkey();
 
-        let delegate_args = DelegateArgs::TransferV1 {
+        let delegate_args = DelegateArgs::StandardV1 {
             amount: transfer_amount,
-            authorization_data: None,
         };
 
         da.delegate(&mut context, authority, delegate.pubkey(), delegate_args)
@@ -716,6 +715,7 @@ mod auth_rules_transfer {
                 nft.mint.pubkey(),
                 nft.metadata,
                 nft.master_edition.unwrap(),
+                Some(rule_set),
                 rooster_delegate_args,
             )
             .await
@@ -802,11 +802,16 @@ mod auth_rules_transfer {
 
         let delegate_args = DelegateArgs::SaleV1 {
             amount: transfer_amount,
-            authorization_data: None,
+            authorization_data: Some(auth_data.clone()),
         };
-        nft.delegate(&mut context, payer, delegate.pubkey(), delegate_args)
-            .await
-            .unwrap();
+        nft.delegate(
+            &mut context,
+            payer,
+            delegate.pubkey(),
+            delegate_args,
+        )
+        .await
+        .unwrap();
 
         let authority = context.payer.dirty_clone();
 
@@ -880,6 +885,7 @@ mod auth_rules_transfer {
                 nft.mint.pubkey(),
                 nft.metadata,
                 nft.master_edition.unwrap(),
+                Some(rule_set),
                 rooster_delegate_args,
             )
             .await

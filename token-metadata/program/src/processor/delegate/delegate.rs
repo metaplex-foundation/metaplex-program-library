@@ -1,4 +1,5 @@
 use borsh::BorshSerialize;
+use mpl_token_auth_rules::utils::get_latest_revision;
 use mpl_utils::{assert_signer, create_or_allocate_account_raw};
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program::invoke, program_pack::Pack,
@@ -15,8 +16,8 @@ use crate::{
     instruction::{Context, Delegate, DelegateArgs, MetadataDelegateRole},
     pda::{find_token_record_account, PREFIX},
     state::{
-        Metadata, MetadataDelegateRecord, TokenDelegateRole, TokenMetadataAccount, TokenRecord,
-        TokenStandard, TokenState,
+        Metadata, MetadataDelegateRecord, ProgrammableConfig, TokenDelegateRole,
+        TokenMetadataAccount, TokenRecord, TokenStandard, TokenState,
     },
     utils::{freeze, thaw},
 };
@@ -229,6 +230,34 @@ fn create_persistent_delegate_v1(
             // we cannot replace an existing delegate, it must be revoked first
             if token_record.delegate.is_some() {
                 return Err(MetadataError::DelegateAlreadyExists.into());
+            }
+
+            // if we have a rule set, we need to store its revision; at this point,
+            // we will validate that we have the correct auth rules PDA
+            if let Some(ProgrammableConfig::V1 {
+                rule_set: Some(rule_set),
+            }) = metadata.programmable_config
+            {
+                // valudates that we got the correct rule set
+                let authorization_rules_info = ctx
+                    .accounts
+                    .authorization_rules_info
+                    .ok_or(MetadataError::MissingAuthorizationRules)?;
+                assert_keys_equal(authorization_rules_info.key, &rule_set)?;
+                assert_owned_by(authorization_rules_info, &mpl_token_auth_rules::ID)?;
+
+                // validates auth rules program
+                let authorization_rules_program_info = ctx
+                    .accounts
+                    .authorization_rules_program_info
+                    .ok_or(MetadataError::MissingAuthorizationRulesProgram)?;
+                assert_keys_equal(
+                    authorization_rules_program_info.key,
+                    &mpl_token_auth_rules::ID,
+                )?;
+
+                token_record.rule_set_revision =
+                    get_latest_revision(authorization_rules_info)?.map(|revision| revision as u64);
             }
 
             token_record.state = if matches!(role, TokenDelegateRole::Sale) {
