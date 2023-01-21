@@ -1963,7 +1963,7 @@ dependencies = [
  "arrayref",
  "borsh",
  "mpl-token-auth-rules",
- "mpl-token-metadata-context-derive 0.1.0",
+ "mpl-token-metadata-context-derive 0.1.1",
  "mpl-token-vault",
  "mpl-utils 0.0.6",
  "num-derive",
@@ -1989,7 +1989,7 @@ dependencies = [
  "arrayref",
  "borsh",
  "mpl-token-auth-rules",
- "mpl-token-metadata-context-derive 0.1.0 (git+https://github.com/metaplex-foundation/metaplex-program-library?branch=feat/programmable-asset)",
+ "mpl-token-metadata-context-derive 0.1.0",
  "mpl-token-vault",
  "mpl-utils 0.0.6 (git+https://github.com/metaplex-foundation/metaplex-program-library?branch=feat/programmable-asset)",
  "num-derive",
@@ -2014,6 +2014,7 @@ dependencies = [
 [[package]]
 name = "mpl-token-metadata-context-derive"
 version = "0.1.0"
+source = "git+https://github.com/metaplex-foundation/metaplex-program-library?branch=feat/programmable-asset#c8c5c5bab79e8c720fb66509ffefc85aa787183d"
 dependencies = [
  "quote 1.0.23",
  "syn 1.0.107",
@@ -2021,8 +2022,7 @@ dependencies = [
 
 [[package]]
 name = "mpl-token-metadata-context-derive"
-version = "0.1.0"
-source = "git+https://github.com/metaplex-foundation/metaplex-program-library?branch=feat/programmable-asset#c8c5c5bab79e8c720fb66509ffefc85aa787183d"
+version = "0.1.1"
 dependencies = [
  "quote 1.0.23",
  "syn 1.0.107",
