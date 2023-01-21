@@ -37,7 +37,7 @@ mod utility {
 
         // asserts
 
-        let (pda_key, _) = find_token_record_account(&asset.mint.pubkey(), &context.payer.pubkey());
+        let (pda_key, _) = find_token_record_account(&asset.mint.pubkey(), &asset.token.unwrap());
 
         let pda = get_account(&mut context, &pda_key).await;
         let token_record: TokenRecord = try_from_slice_unchecked(&pda.data).unwrap();

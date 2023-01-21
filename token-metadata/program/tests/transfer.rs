@@ -229,7 +229,9 @@ mod standard_transfer {
             .await
             .unwrap();
 
-        let delegate_role = da.get_token_delegate_role(&mut context, source_owner).await;
+        let delegate_role = da
+            .get_token_delegate_role(&mut context, &da.token.unwrap())
+            .await;
         // Because this is a pass-through SPL token delegate there will be no role
         // set but the record will still exist.
         assert_eq!(delegate_role, None);
@@ -312,7 +314,9 @@ mod standard_transfer {
             .await
             .unwrap();
 
-        let delegate_role = da.get_token_delegate_role(&mut context, source_owner).await;
+        let delegate_role = da
+            .get_token_delegate_role(&mut context, &da.token.unwrap())
+            .await;
         // Because this is a pass-through SPL token delegate there will be no role
         // set but the record will still exist.
         assert_eq!(delegate_role, None);
@@ -643,10 +647,8 @@ mod auth_rules_transfer {
             .await
             .unwrap();
 
-        let authority = context.payer.dirty_clone();
-
         let delegate_role = nft
-            .get_token_delegate_role(&mut context, &authority.pubkey())
+            .get_token_delegate_role(&mut context, &nft.token.unwrap())
             .await;
 
         assert_eq!(delegate_role, Some(TokenDelegateRole::Transfer));
@@ -804,19 +806,12 @@ mod auth_rules_transfer {
             amount: transfer_amount,
             authorization_data: Some(auth_data.clone()),
         };
-        nft.delegate(
-            &mut context,
-            payer,
-            delegate.pubkey(),
-            delegate_args,
-        )
-        .await
-        .unwrap();
-
-        let authority = context.payer.dirty_clone();
+        nft.delegate(&mut context, payer, delegate.pubkey(), delegate_args)
+            .await
+            .unwrap();
 
         let delegate_role = nft
-            .get_token_delegate_role(&mut context, &authority.pubkey())
+            .get_token_delegate_role(&mut context, &nft.token.unwrap())
             .await;
 
         assert_eq!(delegate_role, Some(TokenDelegateRole::Sale));
