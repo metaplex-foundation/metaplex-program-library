@@ -1865,7 +1865,7 @@ dependencies = [
  "bincode",
  "borsh",
  "clap 2.34.0",
- "mpl-token-metadata 1.7.0-alpha.3",
+ "mpl-token-metadata 1.7.0-beta.1",
  "solana-clap-utils",
  "solana-cli-config",
  "solana-client",
@@ -1959,6 +1959,26 @@ dependencies = [
 [[package]]
 name = "mpl-token-metadata"
 version = "1.7.0-alpha.3"
+source = "git+https://github.com/metaplex-foundation/metaplex-program-library?branch=feat/programmable-asset#c8c5c5bab79e8c720fb66509ffefc85aa787183d"
+dependencies = [
+ "arrayref",
+ "borsh",
+ "mpl-token-auth-rules",
+ "mpl-token-metadata-context-derive 0.1.0",
+ "mpl-token-vault",
+ "mpl-utils 0.0.6 (git+https://github.com/metaplex-foundation/metaplex-program-library?branch=feat/programmable-asset)",
+ "num-derive",
+ "num-traits",
+ "shank 0.0.11",
+ "solana-program",
+ "spl-associated-token-account",
+ "spl-token",
+ "thiserror",
+]
+
+[[package]]
+name = "mpl-token-metadata"
+version = "1.7.0-beta.1"
 dependencies = [
  "arrayref",
  "borsh",
@@ -1976,26 +1996,6 @@ dependencies = [
  "solana-program",
  "solana-program-test",
  "solana-sdk",
- "spl-associated-token-account",
- "spl-token",
- "thiserror",
-]
-
-[[package]]
-name = "mpl-token-metadata"
-version = "1.7.0-alpha.3"
-source = "git+https://github.com/metaplex-foundation/metaplex-program-library?branch=feat/programmable-asset#c8c5c5bab79e8c720fb66509ffefc85aa787183d"
-dependencies = [
- "arrayref",
- "borsh",
- "mpl-token-auth-rules",
- "mpl-token-metadata-context-derive 0.1.0",
- "mpl-token-vault",
- "mpl-utils 0.0.6 (git+https://github.com/metaplex-foundation/metaplex-program-library?branch=feat/programmable-asset)",
- "num-derive",
- "num-traits",
- "shank 0.0.11",
- "solana-program",
  "spl-associated-token-account",
  "spl-token",
  "thiserror",
@@ -2881,7 +2881,7 @@ version = "0.1.0"
 source = "git+https://github.com/metaplex-foundation/rooster#10f048d7d639f641f9309e949b0272fabb191721"
 dependencies = [
  "borsh",
- "mpl-token-metadata 1.7.0-alpha.3 (git+https://github.com/metaplex-foundation/metaplex-program-library?branch=feat/programmable-asset)",
+ "mpl-token-metadata 1.7.0-alpha.3",
  "mpl-utils 0.0.5",
  "num-derive",
  "num-traits",
