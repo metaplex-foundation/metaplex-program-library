@@ -427,11 +427,11 @@ fn generate_builders(variants: &[Variant]) -> TokenStream {
             // if not a default pubkey, we will need to have it set
             else if account.optional {
                 quote! {
-                    #account_name: self.#account_name.clone()
+                    #account_name: self.#account_name
                 }
             } else {
                 quote! {
-                    #account_name: self.#account_name.clone().ok_or(concat!(stringify!(#account_name), " is not set"))?
+                    #account_name: self.#account_name.ok_or(concat!(stringify!(#account_name), " is not set"))?
                 }
             }
         });
@@ -440,7 +440,7 @@ fn generate_builders(variants: &[Variant]) -> TokenStream {
         let required_args = variant.args.iter().map(|(name, _ty, _generic_ty)| {
             let arg_name = syn::parse_str::<syn::Ident>(name).unwrap();
             quote! {
-                #arg_name: self.#arg_name.clone().ok_or(concat!(stringify!(#arg_name), " is not set"))?
+                #arg_name: self.#arg_name.ok_or(concat!(stringify!(#arg_name), " is not set"))?
             }
         });
 
@@ -483,22 +483,22 @@ fn generate_builders(variants: &[Variant]) -> TokenStream {
             }
 
             impl #builder_name {
-                pub fn new() -> #builder_name {
-                    #builder_name {
+                pub fn new() -> Box<#builder_name> {
+                    Box::new(#builder_name {
                         #(#builder_initialize_accounts,)*
                         #(#builder_initialize_args,)*
-                    }
+                    })
                 }
 
                 #(#builder_accounts_methods)*
                 #(#builder_args_methods)*
 
-                pub fn build(#args) -> Result<#name, Box<dyn std::error::Error>> {
-                    Ok(#name {
+                pub fn build(#args) -> Result<Box<#name>, Box<dyn std::error::Error>> {
+                    Ok(Box::new(#name {
                         #(#required_accounts,)*
                         #(#required_args,)*
                         #required_instruction_args
-                    })
+                    }))
                 }
             }
         }
