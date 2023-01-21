@@ -11,12 +11,18 @@ import {
   TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
 import * as splToken from '@solana/spl-token';
-import { Metadata, DelegateArgs, TokenStandard } from '../src/generated';
+import {
+  Metadata,
+  DelegateArgs,
+  TokenStandard,
+  TokenRecord,
+  TokenDelegateRole,
+} from '../src/generated';
 import { PROGRAM_ID as TOKEN_AUTH_RULES_ID } from '@metaplex-foundation/mpl-token-auth-rules';
 import { PROGRAM_ID as TOKEN_METADATA_ID } from '../src/generated';
 import { encode } from '@msgpack/msgpack';
 import spok from 'spok';
-import { spokSamePubkey } from './utils';
+import { spokSameBignum, spokSamePubkey } from './utils';
 import { findTokenRecordPda } from './utils/programmable';
 
 killStuckProcess();
@@ -93,7 +99,7 @@ test('Transfer: ProgrammableNonFungible (wallet-to-wallet)', async (t) => {
 
   const ruleSetName = 'transfer_test';
   const ruleSet = {
-    version: 1,
+    libVersion: 1,
     ruleSetName: ruleSetName,
     owner: Array.from(owner.publicKey.toBytes()),
     operations: {
@@ -194,7 +200,7 @@ test('Transfer: ProgrammableNonFungible (program-owned)', async (t) => {
   // program.
   const ruleSetName = 'transfer_test';
   const ruleSet = {
-    version: 1,
+    libVersion: 1,
     ruleSetName: ruleSetName,
     owner: Array.from(owner.publicKey.toBytes()),
     operations: {
@@ -695,7 +701,7 @@ test('Transfer: ProgrammableNonFungible asset with invalid authority', async (t)
   // Set up our rule set
   const ruleSetName = 'transfer_test';
   const ruleSet = {
-    version: 1,
+    libVersion: 1,
     ruleSetName: ruleSetName,
     owner: Array.from(owner.publicKey.toBytes()),
     operations: {
@@ -780,7 +786,7 @@ test('Transfer: ProgrammableNonFungible (uninitialized wallet-to-wallet)', async
 
   const ruleSetName = 'transfer_test';
   const ruleSet = {
-    version: 1,
+    libVersion: 1,
     ruleSetName: ruleSetName,
     owner: Array.from(owner.publicKey.toBytes()),
     operations: {
@@ -851,6 +857,172 @@ test('Transfer: ProgrammableNonFungible (uninitialized wallet-to-wallet)', async
     metadata,
     masterEdition,
     destination.publicKey,
+    destinationToken,
+    ruleSetPda,
+    1,
+    handler,
+    ownerTokenRecord,
+    destinationTokenRecord,
+  );
+
+  await transferTx.assertSuccess(t);
+
+  t.true(
+    (await getAccount(connection, token)).amount.toString() === '0',
+    'token amount after transfer equal to 0',
+  );
+});
+
+test('Transfer: ProgrammableNonFungible (rule set revision)', async (t) => {
+  const API = new InitTransactions();
+  const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
+  const owner = payer;
+
+  // create a rule set that allows transfers to token metadata
+
+  const ruleSetName = 'transfer_test';
+  const ruleSetTokenMetadata = {
+    libVersion: 1,
+    ruleSetName: ruleSetName,
+    owner: Array.from(owner.publicKey.toBytes()),
+    operations: {
+      'Transfer:TransferDelegate': {
+        ProgramOwned: {
+          program: Array.from(TOKEN_METADATA_ID.toBytes()),
+          field: 'Destination',
+        },
+      },
+      'Transfer:Owner': {
+        ProgramOwned: {
+          program: Array.from(TOKEN_METADATA_ID.toBytes()),
+          field: 'Destination',
+        },
+      },
+    },
+  };
+
+  const [ruleSetPda] = PublicKey.findProgramAddressSync(
+    [Buffer.from('rule_set'), payer.publicKey.toBuffer(), Buffer.from(ruleSetName)],
+    TOKEN_AUTH_RULES_ID,
+  );
+
+  const { tx: createRuleSetTx } = await API.createRuleSet(
+    t,
+    payer,
+    ruleSetPda,
+    encode(ruleSetTokenMetadata),
+    handler,
+  );
+  await createRuleSetTx.assertSuccess(t);
+
+  // creates a pNFT
+
+  const { mint, metadata, masterEdition, token } = await createAndMintDefaultAsset(
+    t,
+    connection,
+    API,
+    handler,
+    payer,
+    TokenStandard.ProgrammableNonFungible,
+    ruleSetPda,
+  );
+
+  // creates a delegate
+
+  const [, delegate] = await API.getKeypair('Delegate');
+  amman.airdrop(connection, delegate.publicKey, 1);
+  // token record PDA
+  const tokenRecord = findTokenRecordPda(mint, payer.publicKey);
+  amman.addr.addLabel('Token Record', tokenRecord);
+
+  const args: DelegateArgs = {
+    __kind: 'TransferV1',
+    amount: 1,
+    authorizationData: null,
+  };
+
+  const { tx: delegateTx } = await API.delegate(
+    delegate.publicKey,
+    mint,
+    metadata,
+    payer.publicKey,
+    payer,
+    args,
+    handler,
+    null,
+    masterEdition,
+    token,
+    tokenRecord,
+    ruleSetPda,
+  );
+
+  await delegateTx.assertSuccess(t);
+
+  // checks that the rule set revision has been saved
+
+  let pda = await TokenRecord.fromAccountAddress(connection, tokenRecord);
+
+  spok(t, pda, {
+    delegate: spokSamePubkey(delegate.publicKey),
+    delegateRole: TokenDelegateRole.Transfer,
+    ruleSetRevision: spokSameBignum(0),
+  });
+
+  // updates the rule set to allow transfers only to token auth rules
+
+  const ruleSetTokenAuthRules = {
+    libVersion: 1,
+    ruleSetName: ruleSetName,
+    owner: Array.from(owner.publicKey.toBytes()),
+    operations: {
+      'Transfer:TransferDelegate': {
+        ProgramOwned: {
+          program: Array.from(TOKEN_AUTH_RULES_ID.toBytes()),
+          field: 'Destination',
+        },
+      },
+      'Transfer:Owner': {
+        ProgramOwned: {
+          program: Array.from(TOKEN_AUTH_RULES_ID.toBytes()),
+          field: 'Destination',
+        },
+      },
+    },
+  };
+
+  const { tx: createRuleSetTx2 } = await API.createRuleSet(
+    t,
+    payer,
+    ruleSetPda,
+    encode(ruleSetTokenAuthRules),
+    handler,
+  );
+  await createRuleSetTx2.assertSuccess(t);
+
+  // performs a transfer using the delegate to the metadata account
+
+  const [destinationToken] = PublicKey.findProgramAddressSync(
+    [metadata.toBuffer(), splToken.TOKEN_PROGRAM_ID.toBuffer(), mint.toBuffer()],
+    splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
+  );
+
+  // owner token record
+  const ownerTokenRecord = findTokenRecordPda(mint, owner.publicKey);
+  amman.addr.addLabel('Owner Token Record', ownerTokenRecord);
+  // destination token record
+  const destinationTokenRecord = findTokenRecordPda(mint, metadata);
+  amman.addr.addLabel('Destination Token Record', destinationTokenRecord);
+
+  // Transfer the NFT to the destination account, this should work since
+  // the destination account is in the ruleset.
+  const { tx: transferTx } = await API.transfer(
+    owner,
+    owner.publicKey,
+    token,
+    mint,
+    metadata,
+    masterEdition,
+    metadata,
     destinationToken,
     ruleSetPda,
     1,

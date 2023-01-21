@@ -1,5 +1,5 @@
 {
-  "version": "1.7.0-alpha.2",
+  "version": "1.7.0-alpha.3",
   "name": "mpl_token_metadata",
   "instructions": [
     {
@@ -3764,6 +3764,12 @@
             "name": "state",
             "type": {
               "defined": "TokenState"
+            }
+          },
+          {
+            "name": "ruleSetRevision",
+            "type": {
+              "option": "u64"
             }
           },
           {

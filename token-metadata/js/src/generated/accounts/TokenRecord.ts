@@ -5,8 +5,8 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as web3 from '@solana/web3.js';
 import * as beet from '@metaplex-foundation/beet';
+import * as web3 from '@solana/web3.js';
 import * as beetSolana from '@metaplex-foundation/beet-solana';
 import { Key, keyBeet } from '../types/Key';
 import { TokenState, tokenStateBeet } from '../types/TokenState';
@@ -21,6 +21,7 @@ export type TokenRecordArgs = {
   key: Key;
   bump: number;
   state: TokenState;
+  ruleSetRevision: beet.COption<beet.bignum>;
   delegate: beet.COption<web3.PublicKey>;
   delegateRole: beet.COption<TokenDelegateRole>;
 };
@@ -36,6 +37,7 @@ export class TokenRecord implements TokenRecordArgs {
     readonly key: Key,
     readonly bump: number,
     readonly state: TokenState,
+    readonly ruleSetRevision: beet.COption<beet.bignum>,
     readonly delegate: beet.COption<web3.PublicKey>,
     readonly delegateRole: beet.COption<TokenDelegateRole>,
   ) {}
@@ -44,7 +46,14 @@ export class TokenRecord implements TokenRecordArgs {
    * Creates a {@link TokenRecord} instance from the provided args.
    */
   static fromArgs(args: TokenRecordArgs) {
-    return new TokenRecord(args.key, args.bump, args.state, args.delegate, args.delegateRole);
+    return new TokenRecord(
+      args.key,
+      args.bump,
+      args.state,
+      args.ruleSetRevision,
+      args.delegate,
+      args.delegateRole,
+    );
   }
 
   /**
@@ -138,6 +147,7 @@ export class TokenRecord implements TokenRecordArgs {
       key: 'Key.' + Key[this.key],
       bump: this.bump,
       state: 'TokenState.' + TokenState[this.state],
+      ruleSetRevision: this.ruleSetRevision,
       delegate: this.delegate,
       delegateRole: this.delegateRole,
     };
@@ -153,6 +163,7 @@ export const tokenRecordBeet = new beet.FixableBeetStruct<TokenRecord, TokenReco
     ['key', keyBeet],
     ['bump', beet.u8],
     ['state', tokenStateBeet],
+    ['ruleSetRevision', beet.coption(beet.u64)],
     ['delegate', beet.coption(beetSolana.publicKey)],
     ['delegateRole', beet.coption(tokenDelegateRoleBeet)],
   ],
