@@ -46,7 +46,7 @@ pub struct TokenRecord {
     pub key: Key,
     pub bump: u8,
     pub state: TokenState,
-    pub rule_set_revision: Option<usize>,
+    pub rule_set_revision: Option<u64>,
     pub delegate: Option<Pubkey>,
     pub delegate_role: Option<TokenDelegateRole>,
 }

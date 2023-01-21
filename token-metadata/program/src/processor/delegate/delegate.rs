@@ -256,7 +256,8 @@ fn create_persistent_delegate_v1(
                     &mpl_token_auth_rules::ID,
                 )?;
 
-                token_record.rule_set_revision = get_latest_revision(authorization_rules_info)?;
+                token_record.rule_set_revision =
+                    get_latest_revision(authorization_rules_info)?.map(|revision| revision as u64);
             }
 
             token_record.state = if matches!(role, TokenDelegateRole::Sale) {

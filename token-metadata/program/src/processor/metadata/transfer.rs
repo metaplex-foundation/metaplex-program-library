@@ -353,7 +353,9 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
                 auth_rules_info: ctx.accounts.authorization_rules_info,
                 operation: Operation::Transfer { scenario },
                 is_wallet_to_wallet,
-                rule_set_revision: owner_token_record.rule_set_revision,
+                rule_set_revision: owner_token_record
+                    .rule_set_revision
+                    .map(|revision| revision as usize),
             };
 
             auth_rules_validate(auth_rules_validate_params)?;
