@@ -515,12 +515,15 @@ impl InstructionBuilder for super::builders::Migrate {
     fn instruction(&self) -> solana_program::instruction::Instruction {
         let mut accounts = vec![
             AccountMeta::new(self.metadata, false),
-            AccountMeta::new_readonly(self.edition, false),
+            AccountMeta::new(self.edition, false),
             AccountMeta::new(self.token, false),
+            AccountMeta::new_readonly(self.token_owner, false),
             AccountMeta::new_readonly(self.mint, false),
             AccountMeta::new(self.payer, true),
             AccountMeta::new_readonly(self.authority, true),
             AccountMeta::new_readonly(self.collection_metadata, false),
+            AccountMeta::new_readonly(self.delegate_record, false),
+            AccountMeta::new(self.token_record, false),
             AccountMeta::new_readonly(self.system_program, false),
             AccountMeta::new_readonly(self.sysvar_instructions, false),
             AccountMeta::new_readonly(self.spl_token_program, false),

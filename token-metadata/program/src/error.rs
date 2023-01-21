@@ -637,17 +637,22 @@ pub enum MetadataError {
     MintSupplyMustBeZero,
 
     /// 161
+    #[error("Data is empty or zeroed")]
+    DataIsEmptyOrZeroed,
+
+    /// 162
     #[error("Missing token owner")]
     MissingTokenOwnerAccount,
-    /// 162
+
+    /// 163
     #[error("Master edition account has an invalid length")]
     InvalidMasterEditionAccountLength,
 
-    /// 163
+    /// 164
     #[error("Incorrect token state")]
     IncorrectTokenState,
 
-    /// 164
+    /// 165
     #[error("Invalid delegate role")]
     InvalidDelegateRole,
 }
