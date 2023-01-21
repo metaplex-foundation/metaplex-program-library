@@ -878,7 +878,7 @@ test('Transfer: ProgrammableNonFungible (rule set revision)', async (t) => {
   const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
   const owner = payer;
 
-  // create a rule set that allows transfers to token metadata
+  // create a rule set that allows transfers to token metadata (revision 0)
 
   const ruleSetName = 'transfer_test';
   const ruleSetTokenMetadata = {
@@ -968,7 +968,7 @@ test('Transfer: ProgrammableNonFungible (rule set revision)', async (t) => {
     ruleSetRevision: spokSameBignum(0),
   });
 
-  // updates the rule set to allow transfers only to token auth rules
+  // updates the rule set to allow transfers only to token auth rules (revision 1)
 
   const ruleSetTokenAuthRules = {
     libVersion: 1,
@@ -999,7 +999,9 @@ test('Transfer: ProgrammableNonFungible (rule set revision)', async (t) => {
   );
   await createRuleSetTx2.assertSuccess(t);
 
-  // performs a transfer using the delegate to the metadata account
+  // performs a transfer using the delegate to the metadata account, which is
+  // allowed by revision 0 (this will work because the revision was saved when
+  // we set the delegate)
 
   const [destinationToken] = PublicKey.findProgramAddressSync(
     [metadata.toBuffer(), splToken.TOKEN_PROGRAM_ID.toBuffer(), mint.toBuffer()],
