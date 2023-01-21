@@ -125,16 +125,6 @@ pub fn migrate_v1(program_id: &Pubkey, ctx: Context<Migrate>, args: MigrateArgs)
                 &collection_metadata.mint,
             )?;
 
-            // Collection checks
-            // Is it a verified member of the collection?
-            if metadata.collection.is_none() {
-                return Err(MetadataError::NotAMemberOfCollection.into());
-            }
-            let collection = metadata.collection.as_ref().unwrap();
-            if collection.key != collection_metadata.mint || !collection.verified {
-                return Err(MetadataError::NotVerifiedMemberOfCollection.into());
-            }
-
             let delegate_record =
                 CollectionAuthorityRecord::from_account_info(ctx.accounts.delegate_record_info)?;
 
@@ -159,7 +149,7 @@ pub fn migrate_v1(program_id: &Pubkey, ctx: Context<Migrate>, args: MigrateArgs)
 
             // NFT --> PNFT migration must maintain the current level of functionality
             // that the token has, but all pNFTs must be frozen. To accomplish this,
-            // we assign Utility delegate to any pNFTs that have a SPL token delegate
+            // we assign Migration delegate to any pNFTs that have a SPL token delegate
             // set. This allows the delegate to freeze the token via the Token Metadata
             // Lock abstraction, as well as to transfer it as a normal SPL delegate is
             // able to.
@@ -216,10 +206,10 @@ pub fn migrate_v1(program_id: &Pubkey, ctx: Context<Migrate>, args: MigrateArgs)
                 token_record.state = TokenState::Locked;
             }
 
-            // Set Utility delegate if SPL delegate is set.
+            // Set Migration delegate if SPL delegate is set.
             if let COption::Some(current_delegate) = token.delegate {
                 token_record.delegate = Some(current_delegate);
-                token_record.delegate_role = Some(TokenDelegateRole::Utility);
+                token_record.delegate_role = Some(TokenDelegateRole::Migration);
             }
 
             token_record.save(&mut *ctx.accounts.token_record_info.try_borrow_mut_data()?)?;
