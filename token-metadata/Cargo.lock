@@ -150,7 +150,7 @@ dependencies = [
  "num-traits",
  "rusticata-macros",
  "thiserror",
- "time 0.3.17",
+ "time 0.3.15",
 ]
 
 [[package]]
@@ -1984,7 +1984,7 @@ dependencies = [
 [[package]]
 name = "mpl-token-metadata"
 version = "1.7.0-alpha.3"
-source = "git+https://github.com/metaplex-foundation/metaplex-program-library?branch=feat/programmable-asset#8e4f0e31e678bfc37139bb47ccc2e179b74c67b4"
+source = "git+https://github.com/metaplex-foundation/metaplex-program-library?branch=feat/programmable-asset#c8c5c5bab79e8c720fb66509ffefc85aa787183d"
 dependencies = [
  "arrayref",
  "borsh",
@@ -2022,7 +2022,7 @@ dependencies = [
 [[package]]
 name = "mpl-token-metadata-context-derive"
 version = "0.1.0"
-source = "git+https://github.com/metaplex-foundation/metaplex-program-library?branch=feat/programmable-asset#8e4f0e31e678bfc37139bb47ccc2e179b74c67b4"
+source = "git+https://github.com/metaplex-foundation/metaplex-program-library?branch=feat/programmable-asset#c8c5c5bab79e8c720fb66509ffefc85aa787183d"
 dependencies = [
  "quote 1.0.23",
  "syn 1.0.107",
@@ -2067,7 +2067,7 @@ dependencies = [
 [[package]]
 name = "mpl-utils"
 version = "0.0.6"
-source = "git+https://github.com/metaplex-foundation/metaplex-program-library?branch=feat/programmable-asset#8e4f0e31e678bfc37139bb47ccc2e179b74c67b4"
+source = "git+https://github.com/metaplex-foundation/metaplex-program-library?branch=feat/programmable-asset#c8c5c5bab79e8c720fb66509ffefc85aa787183d"
 dependencies = [
  "arrayref",
  "borsh",
@@ -2234,6 +2234,15 @@ dependencies = [
  "proc-macro2 1.0.50",
  "quote 1.0.23",
  "syn 1.0.107",
+]
+
+[[package]]
+name = "num_threads"
+version = "0.1.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2819ce041d2ee131036f4fc9d6ae7ae125a3a40e97ba64d04fe799ad9dabbb44"
+dependencies = [
+ "libc",
 ]
 
 [[package]]
@@ -2738,7 +2747,7 @@ checksum = "6413f3de1edee53342e6138e75b56d32e7bc6e332b3bd62d497b1929d4cfbcdd"
 dependencies = [
  "pem",
  "ring",
- "time 0.3.17",
+ "time 0.3.15",
  "yasna",
 ]
 
@@ -4474,30 +4483,21 @@ dependencies = [
 
 [[package]]
 name = "time"
-version = "0.3.17"
+version = "0.3.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a561bf4617eebd33bca6434b988f39ed798e527f51a1e797d0ee4f61c0a38376"
+checksum = "d634a985c4d4238ec39cacaed2e7ae552fbd3c476b552c1deac3021b7d7eaf0c"
 dependencies = [
  "itoa",
- "serde",
- "time-core",
+ "libc",
+ "num_threads",
  "time-macros",
 ]
 
 [[package]]
-name = "time-core"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2e153e1f1acaef8acc537e68b44906d2db6436e2b35ac2c6b42640fff91f00fd"
-
-[[package]]
 name = "time-macros"
-version = "0.2.6"
+version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d967f99f534ca7e495c575c62638eebc2898a8c84c119b89e250477bc4ba16b2"
-dependencies = [
- "time-core",
-]
+checksum = "42657b1a6f4d817cda8e7a0ace261fe0cc946cf3a80314390b22cc61ae080792"
 
 [[package]]
 name = "tiny-bip39"
@@ -5115,7 +5115,7 @@ dependencies = [
  "oid-registry",
  "rusticata-macros",
  "thiserror",
- "time 0.3.17",
+ "time 0.3.15",
 ]
 
 [[package]]
@@ -5142,7 +5142,7 @@ version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "aed2e7a52e3744ab4d0c05c20aa065258e84c49fd4226f5191b2ed29712710b4"
 dependencies = [
- "time 0.3.17",
+ "time 0.3.15",
 ]
 
 [[package]]
@@ -5187,11 +5187,10 @@ dependencies = [
 
 [[package]]
 name = "zstd-sys"
-version = "2.0.5+zstd.1.5.2"
+version = "2.0.4+zstd.1.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "edc50ffce891ad571e9f9afe5039c4837bede781ac4bb13052ed7ae695518596"
+checksum = "4fa202f2ef00074143e219d15b62ffc317d17cc33909feac471c044087cad7b0"
 dependencies = [
  "cc",
  "libc",
- "pkg-config",
 ]
