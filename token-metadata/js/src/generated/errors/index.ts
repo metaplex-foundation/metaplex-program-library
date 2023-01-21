@@ -3445,13 +3445,33 @@ createErrorFromCodeLookup.set(0xa0, () => new MintSupplyMustBeZeroError());
 createErrorFromNameLookup.set('MintSupplyMustBeZero', () => new MintSupplyMustBeZeroError());
 
 /**
+ * DataIsEmptyOrZeroed: 'Data is empty or zeroed'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class DataIsEmptyOrZeroedError extends Error {
+  readonly code: number = 0xa1;
+  readonly name: string = 'DataIsEmptyOrZeroed';
+  constructor() {
+    super('Data is empty or zeroed');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, DataIsEmptyOrZeroedError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xa1, () => new DataIsEmptyOrZeroedError());
+createErrorFromNameLookup.set('DataIsEmptyOrZeroed', () => new DataIsEmptyOrZeroedError());
+
+/**
  * MissingTokenOwnerAccount: 'Missing token owner'
  *
  * @category Errors
  * @category generated
  */
 export class MissingTokenOwnerAccountError extends Error {
-  readonly code: number = 0xa1;
+  readonly code: number = 0xa2;
   readonly name: string = 'MissingTokenOwnerAccount';
   constructor() {
     super('Missing token owner');
@@ -3461,7 +3481,7 @@ export class MissingTokenOwnerAccountError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0xa1, () => new MissingTokenOwnerAccountError());
+createErrorFromCodeLookup.set(0xa2, () => new MissingTokenOwnerAccountError());
 createErrorFromNameLookup.set(
   'MissingTokenOwnerAccount',
   () => new MissingTokenOwnerAccountError(),
@@ -3474,7 +3494,7 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class InvalidMasterEditionAccountLengthError extends Error {
-  readonly code: number = 0xa2;
+  readonly code: number = 0xa3;
   readonly name: string = 'InvalidMasterEditionAccountLength';
   constructor() {
     super('Master edition account has an invalid length');
@@ -3484,7 +3504,7 @@ export class InvalidMasterEditionAccountLengthError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0xa2, () => new InvalidMasterEditionAccountLengthError());
+createErrorFromCodeLookup.set(0xa3, () => new InvalidMasterEditionAccountLengthError());
 createErrorFromNameLookup.set(
   'InvalidMasterEditionAccountLength',
   () => new InvalidMasterEditionAccountLengthError(),
@@ -3497,7 +3517,7 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class IncorrectTokenStateError extends Error {
-  readonly code: number = 0xa3;
+  readonly code: number = 0xa4;
   readonly name: string = 'IncorrectTokenState';
   constructor() {
     super('Incorrect token state');
@@ -3507,7 +3527,7 @@ export class IncorrectTokenStateError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0xa3, () => new IncorrectTokenStateError());
+createErrorFromCodeLookup.set(0xa4, () => new IncorrectTokenStateError());
 createErrorFromNameLookup.set('IncorrectTokenState', () => new IncorrectTokenStateError());
 
 /**
@@ -3517,7 +3537,7 @@ createErrorFromNameLookup.set('IncorrectTokenState', () => new IncorrectTokenSta
  * @category generated
  */
 export class InvalidDelegateRoleError extends Error {
-  readonly code: number = 0xa4;
+  readonly code: number = 0xa5;
   readonly name: string = 'InvalidDelegateRole';
   constructor() {
     super('Invalid delegate role');
@@ -3527,7 +3547,7 @@ export class InvalidDelegateRoleError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0xa4, () => new InvalidDelegateRoleError());
+createErrorFromCodeLookup.set(0xa5, () => new InvalidDelegateRoleError());
 createErrorFromNameLookup.set('InvalidDelegateRole', () => new InvalidDelegateRoleError());
 
 /**

@@ -1,5 +1,5 @@
 {
-  "version": "1.7.0-alpha.3",
+  "version": "1.7.0-beta.1",
   "name": "mpl_token_metadata",
   "instructions": [
     {
@@ -3037,7 +3037,7 @@
         },
         {
           "name": "edition",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false,
           "desc": "Edition account"
         },
@@ -3046,6 +3046,12 @@
           "isMut": true,
           "isSigner": false,
           "desc": "Token account"
+        },
+        {
+          "name": "tokenOwner",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Token account owner"
         },
         {
           "name": "mint",
@@ -3070,6 +3076,18 @@
           "isMut": false,
           "isSigner": false,
           "desc": "Collection metadata account"
+        },
+        {
+          "name": "delegateRecord",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Delegate record account"
+        },
+        {
+          "name": "tokenRecord",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Token record account"
         },
         {
           "name": "systemProgram",
@@ -6076,21 +6094,26 @@
     },
     {
       "code": 161,
+      "name": "DataIsEmptyOrZeroed",
+      "msg": "Data is empty or zeroed"
+    },
+    {
+      "code": 162,
       "name": "MissingTokenOwnerAccount",
       "msg": "Missing token owner"
     },
     {
-      "code": 162,
+      "code": 163,
       "name": "InvalidMasterEditionAccountLength",
       "msg": "Master edition account has an invalid length"
     },
     {
-      "code": 163,
+      "code": 164,
       "name": "IncorrectTokenState",
       "msg": "Incorrect token state"
     },
     {
-      "code": 164,
+      "code": 165,
       "name": "InvalidDelegateRole",
       "msg": "Invalid delegate role"
     }

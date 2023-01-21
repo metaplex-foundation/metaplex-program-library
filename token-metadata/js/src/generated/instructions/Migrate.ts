@@ -37,12 +37,15 @@ export const MigrateStruct = new beet.FixableBeetArgsStruct<
  * Accounts required by the _Migrate_ instruction
  *
  * @property [_writable_] metadata Metadata account
- * @property [] edition Edition account
+ * @property [_writable_] edition Edition account
  * @property [_writable_] token Token account
+ * @property [] tokenOwner Token account owner
  * @property [] mint Mint account
  * @property [_writable_, **signer**] payer Update authority
  * @property [**signer**] authority Update authority
  * @property [] collectionMetadata Collection metadata account
+ * @property [] delegateRecord Delegate record account
+ * @property [] tokenRecord Token record account
  * @property [] sysvarInstructions Instruction sysvar account
  * @property [] splTokenProgram Token Program
  * @property [] authorizationRulesProgram (optional) Token Authorization Rules Program
@@ -55,10 +58,13 @@ export type MigrateInstructionAccounts = {
   metadata: web3.PublicKey;
   edition: web3.PublicKey;
   token: web3.PublicKey;
+  tokenOwner: web3.PublicKey;
   mint: web3.PublicKey;
   payer: web3.PublicKey;
   authority: web3.PublicKey;
   collectionMetadata: web3.PublicKey;
+  delegateRecord: web3.PublicKey;
+  tokenRecord: web3.PublicKey;
   systemProgram?: web3.PublicKey;
   sysvarInstructions: web3.PublicKey;
   splTokenProgram: web3.PublicKey;
@@ -98,12 +104,17 @@ export function createMigrateInstruction(
     },
     {
       pubkey: accounts.edition,
-      isWritable: false,
+      isWritable: true,
       isSigner: false,
     },
     {
       pubkey: accounts.token,
       isWritable: true,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.tokenOwner,
+      isWritable: false,
       isSigner: false,
     },
     {
@@ -123,6 +134,16 @@ export function createMigrateInstruction(
     },
     {
       pubkey: accounts.collectionMetadata,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.delegateRecord,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.tokenRecord,
       isWritable: false,
       isSigner: false,
     },

@@ -960,7 +960,7 @@ test('Transfer: ProgrammableNonFungible (rule set revision)', async (t) => {
 
   // checks that the rule set revision has been saved
 
-  let pda = await TokenRecord.fromAccountAddress(connection, tokenRecord);
+  const pda = await TokenRecord.fromAccountAddress(connection, tokenRecord);
 
   spok(t, pda, {
     delegate: spokSamePubkey(delegate.publicKey),
