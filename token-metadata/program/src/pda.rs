@@ -99,14 +99,14 @@ pub fn find_metadata_delegate_record_account(
     )
 }
 
-pub fn find_token_record_account(mint: &Pubkey, token_owner: &Pubkey) -> (Pubkey, u8) {
+pub fn find_token_record_account(mint: &Pubkey, token: &Pubkey) -> (Pubkey, u8) {
     Pubkey::find_program_address(
         &[
             PREFIX.as_bytes(),
             crate::id().as_ref(),
             mint.as_ref(),
             TOKEN_RECORD_SEED.as_bytes(),
-            token_owner.as_ref(),
+            token.as_ref(),
         ],
         &crate::id(),
     )

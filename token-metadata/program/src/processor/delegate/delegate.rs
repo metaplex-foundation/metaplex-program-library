@@ -210,7 +210,7 @@ fn create_persistent_delegate_v1(
                 Some(token_record_info) => {
                     let (pda_key, _) = find_token_record_account(
                         ctx.accounts.mint_info.key,
-                        ctx.accounts.authority_info.key,
+                        token_info.key,
                     );
 
                     assert_keys_equal(&pda_key, token_record_info.key)?;

@@ -188,14 +188,15 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
     let token_standard = metadata
         .token_standard
         .ok_or(MetadataError::InvalidTokenStandard)?;
-    let token = Account::unpack(&ctx.accounts.token_info.try_borrow_data()?)?;
+    let token_account = Account::unpack(&ctx.accounts.token_info.try_borrow_data()?)?;
 
     msg!("getting authority type");
     let authority_type = AuthorityType::get_authority_type(AuthorityRequest {
         authority: ctx.accounts.authority_info.key,
         update_authority: &metadata.update_authority,
         mint: ctx.accounts.mint_info.key,
-        token: Some(&token),
+        token: Some(ctx.accounts.token_info.key),
+        token_account: Some(&token_account),
         token_record_info: ctx.accounts.owner_token_record_info,
         token_delegate_roles: vec![
             TokenDelegateRole::Sale,
@@ -254,7 +255,7 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
         AuthorityType::Delegate => {
             // the delegate has already being validated, but we need to validate
             // that it can transfer the required amount
-            if token.delegated_amount < amount || token.amount < amount {
+            if token_account.delegated_amount < amount || token_account.amount < amount {
                 return Err(MetadataError::NotEnoughTokens.into());
             }
         }
@@ -265,13 +266,15 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
 
             // the authority must be either the token owner or a delegate for the
             // transfer to succeed
-            let available_amount = if cmp_pubkeys(&token.owner, ctx.accounts.authority_info.key) {
-                token.amount
-            } else if COption::from(*ctx.accounts.authority_info.key) == token.delegate {
-                token.delegated_amount
-            } else {
-                return Err(MetadataError::InvalidAuthorityType.into());
-            };
+            let available_amount =
+                if cmp_pubkeys(&token_account.owner, ctx.accounts.authority_info.key) {
+                    token_account.amount
+                } else if COption::from(*ctx.accounts.authority_info.key) == token_account.delegate
+                {
+                    token_account.delegated_amount
+                } else {
+                    return Err(MetadataError::InvalidAuthorityType.into());
+                };
 
             if available_amount < amount {
                 return Err(MetadataError::NotEnoughTokens.into());
@@ -298,16 +301,14 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
                     return Err(MetadataError::MissingTokenRecord.into());
                 };
 
-            let (pda_key, _) = find_token_record_account(
-                ctx.accounts.mint_info.key,
-                ctx.accounts.token_owner_info.key,
-            );
+            let (pda_key, _) =
+                find_token_record_account(ctx.accounts.mint_info.key, ctx.accounts.token_info.key);
             // validates the derivation
             assert_keys_equal(&pda_key, owner_token_record_info.key)?;
 
             let (new_pda_key, _) = find_token_record_account(
                 ctx.accounts.mint_info.key,
-                ctx.accounts.destination_owner_info.key,
+                ctx.accounts.destination_info.key,
             );
             // validates the derivation
             assert_keys_equal(&new_pda_key, destination_token_record_info.key)?;
@@ -375,7 +376,7 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
                     program_id,
                     destination_token_record_info,
                     ctx.accounts.mint_info,
-                    ctx.accounts.destination_owner_info,
+                    ctx.accounts.destination_info,
                     ctx.accounts.payer_info,
                     ctx.accounts.system_program_info,
                 )?;

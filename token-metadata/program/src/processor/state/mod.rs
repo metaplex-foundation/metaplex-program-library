@@ -75,9 +75,9 @@ pub(crate) fn toggle_asset_state(
         return Err(MetadataError::MintMismatch.into());
     }
 
-    let token = Account::unpack(&accounts.token_info.try_borrow_data()?)?;
+    let token_account = Account::unpack(&accounts.token_info.try_borrow_data()?)?;
     // mint must match mint account key
-    if token.mint != *accounts.mint_info.key {
+    if token_account.mint != *accounts.mint_info.key {
         return Err(MetadataError::MintMismatch.into());
     }
 
@@ -89,7 +89,8 @@ pub(crate) fn toggle_asset_state(
         authority: accounts.authority_info.key,
         update_authority: &metadata.update_authority,
         mint: accounts.mint_info.key,
-        token: Some(&token),
+        token: Some(accounts.token_info.key),
+        token_account: Some(&token_account),
         token_record_info: accounts.token_record_info,
         token_delegate_roles: vec![
             TokenDelegateRole::Utility,
@@ -136,7 +137,8 @@ pub(crate) fn toggle_asset_state(
     ) {
         let (mut token_record, token_record_info) = match accounts.token_record_info {
             Some(token_record_info) => {
-                let (pda_key, _) = find_token_record_account(accounts.mint_info.key, &token.owner);
+                let (pda_key, _) =
+                    find_token_record_account(accounts.mint_info.key, accounts.token_info.key);
 
                 assert_keys_equal(&pda_key, token_record_info.key)?;
                 assert_owned_by(token_record_info, &crate::ID)?;
@@ -183,7 +185,7 @@ pub(crate) fn toggle_asset_state(
                     }
                 };
 
-                assert_keys_equal(token_owner_info.key, &token.owner)?;
+                assert_keys_equal(token_owner_info.key, &token_account.owner)?;
 
                 (token_owner_info, false)
             }
