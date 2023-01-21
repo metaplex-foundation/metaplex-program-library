@@ -155,6 +155,7 @@ pub fn validate<'a>(
             operation: operation.to_string(),
             payload: auth_data.payload.clone(),
             update_rule_state: false,
+            rule_set_revision: None,
         })
         .map_err(|_error| MetadataError::InvalidAuthorizationRules)?
         .instruction();
