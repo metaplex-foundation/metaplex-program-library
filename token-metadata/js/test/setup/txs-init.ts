@@ -221,7 +221,7 @@ export class InitTransactions {
     }
 
     if (!tokenRecord) {
-      tokenRecord = findTokenRecordPda(mint, tokenOwner);
+      tokenRecord = findTokenRecordPda(mint, token);
     }
 
     amman.addr.addLabel('Token Account', token);

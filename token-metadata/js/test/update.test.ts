@@ -1081,14 +1081,14 @@ test('Update: Update existing pNFT rule set config to None', async (t) => {
   // Set up our rule set
   const ruleSetName = 'update_test';
   const ruleSet = {
-    version: 1,
+    libVersion: 1,
     ruleSetName: ruleSetName,
     owner: Array.from(authority.publicKey.toBytes()),
     operations: {
-      Transfer: {
+      'Transfer:Owner': {
         PubkeyMatch: {
           pubkey: Array.from(authority.publicKey.toBytes()),
-          field: 'Target',
+          field: 'Destination',
         },
       },
     },
@@ -1346,7 +1346,7 @@ test('Update: Update pNFT Config with locked token', async (t) => {
   );
 
   // token record PDA
-  const tokenRecord = findTokenRecordPda(mint, payer.publicKey);
+  const tokenRecord = findTokenRecordPda(mint, token);
   amman.addr.addLabel('Token Record', tokenRecord);
 
   const pda = await TokenRecord.fromAccountAddress(connection, tokenRecord);

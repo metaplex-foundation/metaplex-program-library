@@ -36,7 +36,7 @@ test('Revoke: revoke transfer delegate', async (t) => {
 
   const [delegate] = await API.getKeypair('Delegate');
   // token record PDA
-  const tokenRecord = findTokenRecordPda(manager.mint, payer.publicKey);
+  const tokenRecord = findTokenRecordPda(manager.mint, manager.token);
   amman.addr.addLabel('Token Record', tokenRecord);
 
   const delegateArgs: DelegateArgs = {
