@@ -375,7 +375,7 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
                     program_id,
                     destination_token_record_info,
                     ctx.accounts.mint_info,
-                    ctx.accounts.destination_owner_info,
+                    ctx.accounts.destination_owner_info.key,
                     ctx.accounts.payer_info,
                     ctx.accounts.system_program_info,
                 )?;

@@ -102,6 +102,9 @@ export class InitTransactions {
     maxSupply: number,
     handler: PayerTransactionHandler,
     mint: PublicKey | null = null,
+    metadata: PublicKey | null = null,
+    masterEdition: PublicKey | null = null,
+    skipMasterEdition = false,
   ): Promise<{
     tx: ConfirmedTransactionAssertablePromise;
     mint: PublicKey;
@@ -117,24 +120,27 @@ export class InitTransactions {
     }
 
     // metadata account
-    const [metadata] = PublicKey.findProgramAddressSync(
-      [
-        Buffer.from('metadata'),
-        PROGRAM_ID.toBuffer(),
-        mint ? mint.toBuffer() : mintPair.publicKey.toBuffer(),
-      ],
-      PROGRAM_ID,
-    );
-    amman.addr.addLabel('Metadata Account', metadata);
-    // master edition account
-    let masterEdition = null;
+    if (!metadata) {
+      const [address] = PublicKey.findProgramAddressSync(
+        [
+          Buffer.from('metadata'),
+          PROGRAM_ID.toBuffer(),
+          mint ? mint.toBuffer() : mintPair.publicKey.toBuffer(),
+        ],
+        PROGRAM_ID,
+      );
+      amman.addr.addLabel('Metadata Account', address);
+      metadata = address;
+    }
 
     if (
-      assetData.tokenStandard == TokenStandard.NonFungible ||
-      assetData.tokenStandard == TokenStandard.ProgrammableNonFungible
+      !masterEdition &&
+      (assetData.tokenStandard == TokenStandard.NonFungible ||
+        assetData.tokenStandard == TokenStandard.ProgrammableNonFungible) &&
+      !skipMasterEdition
     ) {
       // master edition (optional)
-      [masterEdition] = PublicKey.findProgramAddressSync(
+      const [address] = PublicKey.findProgramAddressSync(
         [
           Buffer.from('metadata'),
           PROGRAM_ID.toBuffer(),
@@ -143,7 +149,8 @@ export class InitTransactions {
         ],
         PROGRAM_ID,
       );
-      amman.addr.addLabel('Master Edition Account', masterEdition);
+      amman.addr.addLabel('Master Edition Account', address);
+      masterEdition = address;
     }
 
     const accounts: CreateInstructionAccounts = {

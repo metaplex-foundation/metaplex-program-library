@@ -172,7 +172,7 @@ fn create_v1(program_id: &Pubkey, ctx: Context<Create>, args: CreateArgs) -> Pro
                 data[TOKEN_STANDARD_INDEX] = TokenStandard::ProgrammableNonFungible as u8;
             }
         } else {
-            return Err(MetadataError::InvalidMasterEdition.into());
+            return Err(MetadataError::MissingMasterEditionAccount.into());
         }
     }
 

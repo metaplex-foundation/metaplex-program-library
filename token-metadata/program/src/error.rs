@@ -655,6 +655,14 @@ pub enum MetadataError {
     /// 165
     #[error("Invalid delegate role")]
     InvalidDelegateRole,
+
+    /// 166
+    #[error("Missing master edition account")]
+    MissingMasterEditionAccount,
+
+    /// 167
+    #[error("Amount must be greater than zero")]
+    AmountMustBeGreaterThanZero,
 }
 
 impl PrintProgramError for MetadataError {

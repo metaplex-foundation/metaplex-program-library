@@ -6116,6 +6116,16 @@
       "code": 165,
       "name": "InvalidDelegateRole",
       "msg": "Invalid delegate role"
+    },
+    {
+      "code": 166,
+      "name": "MissingMasterEditionAccount",
+      "msg": "Missing master edition account"
+    },
+    {
+      "code": 167,
+      "name": "AmountMustBeGreaterThanZero",
+      "msg": "Amount must be greater than zero"
     }
   ],
   "metadata": {
