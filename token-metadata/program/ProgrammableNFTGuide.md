@@ -315,7 +315,7 @@ The `Migration` delegate type is a temporary delegate that is only created by th
 #### Metdata Delegates
 
 `MetadataDelegate`s are delegates that operate at the metadata level. These delegates are represented by `MetadataDelegateRecord` PDA (seeds `["metadata", program id, mint id, delegate role, update authority id, delegate id]`) and do not have an associated spl-token delegate. There can be multiple instances of the same delegate.
-```
+```rust
 pub struct MetadataDelegateRecord {
     pub key: Key,
     pub bump: u8,
