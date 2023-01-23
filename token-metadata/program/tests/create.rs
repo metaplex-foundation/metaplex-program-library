@@ -23,7 +23,7 @@ mod create {
     use mpl_token_metadata::{
         error::MetadataError,
         instruction::{builders::CreateBuilder, CreateArgs, InstructionBuilder},
-        state::{AssetData, Metadata, ProgrammableConfig, TokenStandard, EDITION, PREFIX},
+        state::{AssetData, Metadata, ProgrammableConfig, TokenStandard, EDITION, PREFIX, PrintSupply},
     };
     use solana_program::borsh::try_from_slice_unchecked;
 
@@ -81,7 +81,7 @@ mod create {
             .build(CreateArgs::V1 {
                 asset_data: asset,
                 decimals: Some(0),
-                max_supply: Some(0),
+                print_supply: Some(PrintSupply::Zero),
             })
             .unwrap()
             .instruction();
@@ -192,7 +192,7 @@ mod create {
             .build(CreateArgs::V1 {
                 asset_data: asset,
                 decimals: Some(0),
-                max_supply: Some(0),
+                print_supply: Some(PrintSupply::Zero),
             })
             .unwrap()
             .instruction();
@@ -297,7 +297,7 @@ mod create {
             .build(CreateArgs::V1 {
                 asset_data: asset,
                 decimals: Some(0),
-                max_supply: Some(0),
+                print_supply: Some(PrintSupply::Zero),
             })
             .unwrap()
             .instruction();
