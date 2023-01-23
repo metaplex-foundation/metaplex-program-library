@@ -143,7 +143,7 @@ fn create_v1(program_id: &Pubkey, ctx: Context<Create>, args: CreateArgs) -> Pro
         asset_data.token_standard,
         TokenStandard::NonFungible | TokenStandard::ProgrammableNonFungible
     ) {
-        let print_supply = print_supply.ok_or(MetadataError::MissingPrintSypply)?;
+        let print_supply = print_supply.ok_or(MetadataError::MissingPrintSupply)?;
 
         if let Some(master_edition) = ctx.accounts.master_edition_info {
             create_master_edition(

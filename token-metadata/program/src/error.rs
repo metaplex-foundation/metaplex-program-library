@@ -658,7 +658,7 @@ pub enum MetadataError {
 
     /// 166
     #[error("Print supply is required for non-fungibles")]
-    MissingPrintSypply,
+    MissingPrintSupply,
 }
 
 impl PrintProgramError for MetadataError {
