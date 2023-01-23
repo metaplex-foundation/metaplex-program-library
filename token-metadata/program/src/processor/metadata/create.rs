@@ -43,6 +43,11 @@ fn create_v1(program_id: &Pubkey, ctx: Context<Create>, args: CreateArgs) -> Pro
         print_supply,
     } = args;
 
+    // cannot create non-fungible editions on this instruction
+    if matches!(asset_data.token_standard, TokenStandard::NonFungibleEdition) {
+        return Err(MetadataError::InvalidTokenStandard.into());
+    }
+
     // if the account does not exist, we will allocate a new mint
 
     if ctx.accounts.mint_info.data_is_empty() {
@@ -116,10 +121,6 @@ fn create_v1(program_id: &Pubkey, ctx: Context<Create>, args: CreateArgs) -> Pro
         ) && (mint.supply > 0)
         {
             return Err(MetadataError::MintSupplyMustBeZero.into());
-        }
-        // cannot create non-fungible editions
-        if matches!(asset_data.token_standard, TokenStandard::NonFungibleEdition) {
-            return Err(MetadataError::InvalidTokenStandard.into());
         }
     }
 
