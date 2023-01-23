@@ -156,10 +156,10 @@ test('Transfer: ProgrammableNonFungible (wallet-to-wallet)', async (t) => {
   );
 
   // owner token record
-  const ownerTokenRecord = findTokenRecordPda(mint, owner.publicKey);
+  const ownerTokenRecord = findTokenRecordPda(mint, token);
   amman.addr.addLabel('Owner Token Record', ownerTokenRecord);
   // destination token record
-  const destinationTokenRecord = findTokenRecordPda(mint, destination.publicKey);
+  const destinationTokenRecord = findTokenRecordPda(mint, destinationToken);
   amman.addr.addLabel('Destination Token Record', destinationTokenRecord);
 
   // Transfer the NFT to the destination account, this should work since
@@ -279,10 +279,10 @@ test('Transfer: ProgrammableNonFungible (program-owned)', async (t) => {
   await sendAndConfirmTransaction(connection, invalidAtaTx, [payer]);
 
   // owner token record
-  const ownerTokenRecord = findTokenRecordPda(mint, owner.publicKey);
+  const ownerTokenRecord = findTokenRecordPda(mint, token);
   amman.addr.addLabel('Owner Token Record', ownerTokenRecord);
   // destination token record
-  let destinationTokenRecord = findTokenRecordPda(mint, invalidDestination);
+  let destinationTokenRecord = findTokenRecordPda(mint, invalidDestinationToken);
   amman.addr.addLabel('Destination Token Record', destinationTokenRecord);
 
   // Transfer the NFT to the invalid destination account, this should fail.
@@ -353,7 +353,7 @@ test('Transfer: ProgrammableNonFungible (program-owned)', async (t) => {
   await sendAndConfirmTransaction(connection, ataTx, [payer]);
 
   // destination token record
-  destinationTokenRecord = findTokenRecordPda(mint, metadata);
+  destinationTokenRecord = findTokenRecordPda(mint, destinationToken);
   amman.addr.addLabel('Destination Token Record', destinationTokenRecord);
 
   // Transfer the NFT to the destination account, this should work since
@@ -841,10 +841,10 @@ test('Transfer: ProgrammableNonFungible (uninitialized wallet-to-wallet)', async
   );
 
   // owner token record
-  const ownerTokenRecord = findTokenRecordPda(mint, owner.publicKey);
+  const ownerTokenRecord = findTokenRecordPda(mint, token);
   amman.addr.addLabel('Owner Token Record', ownerTokenRecord);
   // destination token record
-  const destinationTokenRecord = findTokenRecordPda(mint, destination.publicKey);
+  const destinationTokenRecord = findTokenRecordPda(mint, destinationToken);
   amman.addr.addLabel('Destination Token Record', destinationTokenRecord);
 
   // Transfer the NFT to the destination account, this should work since
@@ -932,7 +932,7 @@ test('Transfer: ProgrammableNonFungible (rule set revision)', async (t) => {
   const [, delegate] = await API.getKeypair('Delegate');
   amman.airdrop(connection, delegate.publicKey, 1);
   // token record PDA
-  const tokenRecord = findTokenRecordPda(mint, payer.publicKey);
+  const tokenRecord = findTokenRecordPda(mint, token);
   amman.addr.addLabel('Token Record', tokenRecord);
 
   const args: DelegateArgs = {
@@ -1009,10 +1009,10 @@ test('Transfer: ProgrammableNonFungible (rule set revision)', async (t) => {
   );
 
   // owner token record
-  const ownerTokenRecord = findTokenRecordPda(mint, owner.publicKey);
+  const ownerTokenRecord = findTokenRecordPda(mint, token);
   amman.addr.addLabel('Owner Token Record', ownerTokenRecord);
   // destination token record
-  const destinationTokenRecord = findTokenRecordPda(mint, metadata);
+  const destinationTokenRecord = findTokenRecordPda(mint, destinationToken);
   amman.addr.addLabel('Destination Token Record', destinationTokenRecord);
 
   // Transfer the NFT to the destination account, this should work since

@@ -9,7 +9,7 @@ mod mint {
 
     use mpl_token_metadata::{error::MetadataError, state::TokenStandard};
     use num_traits::FromPrimitive;
-    use solana_program::{program_pack::Pack, pubkey::Pubkey};
+    use solana_program::program_pack::Pack;
     use spl_token::state::Account;
 
     use super::*;
@@ -29,19 +29,12 @@ mod mint {
         // mints one token
 
         let payer_pubkey = context.payer.pubkey();
-        let (token, _) = Pubkey::find_program_address(
-            &[
-                &payer_pubkey.to_bytes(),
-                &spl_token::id().to_bytes(),
-                &asset.mint.pubkey().to_bytes(),
-            ],
-            &spl_associated_token_account::id(),
-        );
-        asset.token = Some(token);
 
         asset.mint(&mut context, None, None, 1).await.unwrap();
 
-        let account = get_account(&mut context, &token).await;
+        // asserts
+
+        let account = get_account(&mut context, &asset.token.unwrap()).await;
         let token_account = Account::unpack(&account.data).unwrap();
 
         assert!(token_account.is_frozen());

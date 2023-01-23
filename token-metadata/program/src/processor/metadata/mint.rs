@@ -146,7 +146,7 @@ pub fn mint_v1(program_id: &Pubkey, ctx: Context<Mint>, args: MintArgs) -> Progr
         amount,
         ctx.accounts.mint_info.key
     );
-    let token_account: Account = assert_initialized(ctx.accounts.token_info)?;
+    let token: Account = assert_initialized(ctx.accounts.token_info)?;
 
     match metadata.token_standard {
         Some(TokenStandard::NonFungible) | Some(TokenStandard::ProgrammableNonFungible) => {
@@ -155,14 +155,6 @@ pub fn mint_v1(program_id: &Pubkey, ctx: Context<Mint>, args: MintArgs) -> Progr
                 metadata.token_standard,
                 Some(TokenStandard::ProgrammableNonFungible)
             ) {
-                // if we are initializing a new account, we need the token_owner
-                let token_owner_info = match ctx.accounts.token_owner_info {
-                    Some(token_owner_info) => token_owner_info,
-                    None => {
-                        return Err(MetadataError::MissingTokenOwnerAccount.into());
-                    }
-                };
-
                 // we always need the token_record_info
                 let token_record_info = match ctx.accounts.token_record_info {
                     Some(token_record_info) => token_record_info,
@@ -171,8 +163,10 @@ pub fn mint_v1(program_id: &Pubkey, ctx: Context<Mint>, args: MintArgs) -> Progr
                     }
                 };
 
-                let (pda_key, _) =
-                    find_token_record_account(ctx.accounts.mint_info.key, token_owner_info.key);
+                let (pda_key, _) = find_token_record_account(
+                    ctx.accounts.mint_info.key,
+                    ctx.accounts.token_info.key,
+                );
                 // validates the derivation
                 assert_keys_equal(&pda_key, token_record_info.key)?;
 
@@ -183,7 +177,7 @@ pub fn mint_v1(program_id: &Pubkey, ctx: Context<Mint>, args: MintArgs) -> Progr
                         program_id,
                         token_record_info,
                         ctx.accounts.mint_info,
-                        token_owner_info,
+                        ctx.accounts.token_info,
                         ctx.accounts.payer_info,
                         ctx.accounts.system_program_info,
                     )?;
@@ -221,7 +215,7 @@ pub fn mint_v1(program_id: &Pubkey, ctx: Context<Mint>, args: MintArgs) -> Progr
             if matches!(
                 metadata.token_standard,
                 Some(TokenStandard::ProgrammableNonFungible)
-            ) && token_account.is_frozen()
+            ) && token.is_frozen()
             {
                 thaw(
                     ctx.accounts.mint_info.clone(),

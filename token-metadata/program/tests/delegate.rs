@@ -52,7 +52,6 @@ mod delegate {
         let user = Keypair::new();
         let user_pubkey = user.pubkey();
         let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
-        let payer_pubkey = payer.pubkey();
 
         asset
             .delegate(
@@ -69,7 +68,7 @@ mod delegate {
 
         // asserts
 
-        let (pda_key, _) = find_token_record_account(&asset.mint.pubkey(), &payer_pubkey);
+        let (pda_key, _) = find_token_record_account(&asset.mint.pubkey(), &asset.token.unwrap());
 
         let pda = get_account(&mut context, &pda_key).await;
         let token_record: TokenRecord = try_from_slice_unchecked(&pda.data).unwrap();
@@ -175,7 +174,6 @@ mod delegate {
         let user = Keypair::new();
         let user_pubkey = user.pubkey();
         let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
-        let payer_pubkey = payer.pubkey();
 
         asset
             .delegate(
@@ -192,7 +190,7 @@ mod delegate {
 
         // asserts
 
-        let (pda_key, _) = find_token_record_account(&asset.mint.pubkey(), &payer_pubkey);
+        let (pda_key, _) = find_token_record_account(&asset.mint.pubkey(), &asset.token.unwrap());
 
         let pda = get_account(&mut context, &pda_key).await;
         let token_record: TokenRecord = try_from_slice_unchecked(&pda.data).unwrap();
@@ -347,7 +345,7 @@ mod delegate {
 
         // asserts
 
-        let (pda_key, _) = find_token_record_account(&asset.mint.pubkey(), &context.payer.pubkey());
+        let (pda_key, _) = find_token_record_account(&asset.mint.pubkey(), &asset.token.unwrap());
         let pda = get_account(&mut context, &pda_key).await;
         let token_record: TokenRecord = try_from_slice_unchecked(&pda.data).unwrap();
 
@@ -358,7 +356,6 @@ mod delegate {
         let user = Keypair::new();
         let user_pubkey = user.pubkey();
         let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
-        let payer_pubkey = payer.pubkey();
 
         asset
             .delegate(
@@ -375,7 +372,7 @@ mod delegate {
 
         // asserts
 
-        let (pda_key, _) = find_token_record_account(&asset.mint.pubkey(), &payer_pubkey);
+        let (pda_key, _) = find_token_record_account(&asset.mint.pubkey(), &asset.token.unwrap());
 
         let pda = get_account(&mut context, &pda_key).await;
         let token_record: TokenRecord = try_from_slice_unchecked(&pda.data).unwrap();

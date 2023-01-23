@@ -93,7 +93,7 @@ test('Delegate: create sale delegate', async (t) => {
 
   const [delegate] = await API.getKeypair('Delegate');
   // token record PDA
-  const tokenRecord = findTokenRecordPda(manager.mint, payer.publicKey);
+  const tokenRecord = findTokenRecordPda(manager.mint, manager.token);
   amman.addr.addLabel('Token Record', tokenRecord);
 
   const args: DelegateArgs = {
@@ -152,7 +152,7 @@ test('Delegate: owner as sale delegate', async (t) => {
   // creates a delegate
 
   // token record PDA
-  const tokenRecord = findTokenRecordPda(manager.mint, payer.publicKey);
+  const tokenRecord = findTokenRecordPda(manager.mint, manager.token);
   amman.addr.addLabel('Token Record', tokenRecord);
 
   const args: DelegateArgs = {
@@ -212,7 +212,7 @@ test('Delegate: create transfer delegate', async (t) => {
 
   const [delegate] = await API.getKeypair('Delegate');
   // token record PDA
-  const tokenRecord = findTokenRecordPda(manager.mint, payer.publicKey);
+  const tokenRecord = findTokenRecordPda(manager.mint, manager.token);
   amman.addr.addLabel('Token Record', tokenRecord);
 
   const args: DelegateArgs = {
@@ -271,7 +271,7 @@ test('Delegate: fail to create sale delegate on NFT', async (t) => {
 
   const [delegate] = await API.getKeypair('Delegate');
   // token record PDA
-  const tokenRecord = findTokenRecordPda(manager.mint, payer.publicKey);
+  const tokenRecord = findTokenRecordPda(manager.mint, manager.token);
   amman.addr.addLabel('Token Record', tokenRecord);
 
   const args: DelegateArgs = {
@@ -314,7 +314,7 @@ test('Delegate: fail to replace pNFT transfer delegate', async (t) => {
 
   const [delegate] = await API.getKeypair('Delegate');
   // token record PDA
-  const tokenRecord = findTokenRecordPda(manager.mint, payer.publicKey);
+  const tokenRecord = findTokenRecordPda(manager.mint, manager.token);
   amman.addr.addLabel('Token Record', tokenRecord);
 
   const args: DelegateArgs = {
@@ -393,7 +393,7 @@ test('Delegate: create utility delegate', async (t) => {
 
   const [delegate] = await API.getKeypair('Delegate');
   // token record PDA
-  const tokenRecord = findTokenRecordPda(manager.mint, payer.publicKey);
+  const tokenRecord = findTokenRecordPda(manager.mint, manager.token);
   amman.addr.addLabel('Token Record', tokenRecord);
 
   const args: DelegateArgs = {
@@ -452,7 +452,7 @@ test('Delegate: try replace sale delegate', async (t) => {
 
   const [delegate] = await API.getKeypair('Delegate');
   // token record PDA
-  const tokenRecord = findTokenRecordPda(manager.mint, payer.publicKey);
+  const tokenRecord = findTokenRecordPda(manager.mint, manager.token);
   amman.addr.addLabel('Token Record', tokenRecord);
 
   const args: DelegateArgs = {

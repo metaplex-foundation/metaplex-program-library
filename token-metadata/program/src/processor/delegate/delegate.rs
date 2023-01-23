@@ -192,8 +192,8 @@ fn create_persistent_delegate_v1(
 
     // authority must be the owner of the token account: spl-token required the
     // token owner to set a delegate
-    let token_account = Account::unpack(&token_info.try_borrow_data()?).unwrap();
-    if token_account.owner != *ctx.accounts.authority_info.key {
+    let token = Account::unpack(&token_info.try_borrow_data()?).unwrap();
+    if token.owner != *ctx.accounts.authority_info.key {
         return Err(MetadataError::IncorrectOwner.into());
     }
 
@@ -210,7 +210,7 @@ fn create_persistent_delegate_v1(
                 Some(token_record_info) => {
                     let (pda_key, _) = find_token_record_account(
                         ctx.accounts.mint_info.key,
-                        ctx.accounts.authority_info.key,
+                        token_info.key,
                     );
 
                     assert_keys_equal(&pda_key, token_record_info.key)?;

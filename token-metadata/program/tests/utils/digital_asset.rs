@@ -158,7 +158,7 @@ impl DigitalAsset {
             &spl_associated_token_account::id(),
         );
 
-        let (token_record, _) = find_token_record_account(&self.mint.pubkey(), &payer_pubkey);
+        let (token_record, _) = find_token_record_account(&self.mint.pubkey(), &token);
 
         let token_record_opt = if self.is_pnft(context).await {
             Some(token_record)
@@ -258,7 +258,7 @@ impl DigitalAsset {
             | DelegateArgs::UtilityV1 { .. }
             | DelegateArgs::StakingV1 { .. } => {
                 let (token_record, _) =
-                    find_token_record_account(&self.mint.pubkey(), &payer.pubkey());
+                    find_token_record_account(&self.mint.pubkey(), &self.token.unwrap());
                 builder.token_record(token_record);
             }
             DelegateArgs::UpdateV1 { .. } => {
@@ -364,7 +364,7 @@ impl DigitalAsset {
             | RevokeArgs::UtilityV1
             | RevokeArgs::StakingV1 => {
                 let (token_record, _) =
-                    find_token_record_account(&self.mint.pubkey(), &payer.pubkey());
+                    find_token_record_account(&self.mint.pubkey(), &self.token.unwrap());
                 builder.token_record(token_record);
             }
             RevokeArgs::UpdateV1 => {
@@ -447,7 +447,7 @@ impl DigitalAsset {
 
         // This can be optional for non pNFTs but always include it for now.
         let (destination_token_record, _bump) =
-            find_token_record_account(&self.mint.pubkey(), &destination_owner);
+            find_token_record_account(&self.mint.pubkey(), &destination_token);
         builder.destination_token_record(destination_token_record);
 
         if let Some(master_edition) = self.master_edition {
@@ -601,12 +601,12 @@ impl DigitalAsset {
 
         // This can be optional for non pNFTs but always include it for now.
         let (owner_token_record, _bump) =
-            find_token_record_account(&self.mint.pubkey(), source_owner);
+            find_token_record_account(&self.mint.pubkey(), source_token);
         builder.owner_token_record(owner_token_record);
 
         // This can be optional for non pNFTs but always include it for now.
         let (destination_token_record, _bump) =
-            find_token_record_account(&self.mint.pubkey(), &destination_owner);
+            find_token_record_account(&self.mint.pubkey(), &destination_token);
         builder.destination_token_record(destination_token_record);
 
         if let Some(master_edition) = self.master_edition {
@@ -661,10 +661,10 @@ impl DigitalAsset {
     pub async fn get_token_delegate_role(
         &self,
         context: &mut ProgramTestContext,
-        token_owner: &Pubkey,
+        token: &Pubkey,
     ) -> Option<TokenDelegateRole> {
         let (delegate_record_pubkey, _) =
-            find_token_record_account(&self.mint.pubkey(), token_owner);
+            find_token_record_account(&self.mint.pubkey(), token);
         let delegate_record_account = context
             .banks_client
             .get_account(delegate_record_pubkey)

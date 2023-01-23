@@ -1,3 +1,4 @@
+use crate::error::MetadataError;
 use crate::processor::{TransferScenario, UpdateScenario};
 use borsh::{BorshDeserialize, BorshSerialize};
 use mpl_utils::cmp_pubkeys;
@@ -142,8 +143,10 @@ pub struct AuthorityRequest<'a, 'b> {
     pub update_authority: &'b Pubkey,
     /// Mint address.
     pub mint: &'a Pubkey,
+    /// Holder's token account info.
+    pub token: Option<&'a Pubkey>,
     /// Holder's token account.
-    pub token: Option<&'b Account>,
+    pub token_account: Option<&'b Account>,
     /// `MetadataDelegateRecord` account of the authority (when the authority is a delegate).
     pub metadata_delegate_record_info: Option<&'a AccountInfo<'a>>,
     /// Expected `MetadataDelegateRole` for the request.
@@ -161,6 +164,7 @@ impl<'a, 'b> Default for AuthorityRequest<'a, 'b> {
             update_authority: &DEFAULT_PUBKEY,
             mint: &DEFAULT_PUBKEY,
             token: None,
+            token_account: None,
             metadata_delegate_record_info: None,
             metadata_delegate_role: None,
             token_record_info: None,
@@ -179,8 +183,10 @@ impl AuthorityType {
             assert_owned_by(token_record_info, &crate::ID)?;
 
             // we can only validate if it is a token delegate when we have the token account
-            if let Some(token) = request.token {
-                let (pda_key, _) = find_token_record_account(request.mint, &token.owner);
+            if let Some(token_account) = request.token_account {
+                let token = request.token.ok_or(MetadataError::MissingTokenAccount)?;
+
+                let (pda_key, _) = find_token_record_account(request.mint, token);
                 let token_record = TokenRecord::from_account_info(token_record_info)?;
 
                 let role_matches = match token_record.delegate_role {
@@ -191,7 +197,7 @@ impl AuthorityType {
                 if cmp_pubkeys(&pda_key, token_record_info.key)
                     && Some(*request.authority) == token_record.delegate
                     && role_matches
-                    && (COption::from(token_record.delegate) == token.delegate)
+                    && (COption::from(token_record.delegate) == token_account.delegate)
                 {
                     return Ok(AuthorityType::Delegate);
                 }
@@ -225,8 +231,8 @@ impl AuthorityType {
 
         // checks if the authority is the token owner
 
-        if let Some(token) = request.token {
-            if cmp_pubkeys(&token.owner, request.authority) {
+        if let Some(token_account) = request.token_account {
+            if cmp_pubkeys(&token_account.owner, request.authority) {
                 return Ok(AuthorityType::Holder);
             }
         }

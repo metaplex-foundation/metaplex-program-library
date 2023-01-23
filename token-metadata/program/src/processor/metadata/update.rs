@@ -116,10 +116,10 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
     let token_standard = metadata
         .token_standard
         .ok_or(MetadataError::InvalidTokenStandard)?;
-    let token = if let Some(token_info) = ctx.accounts.token_info {
-        Some(Account::unpack(&token_info.try_borrow_data()?)?)
+    let (token_pubkey, token) = if let Some(token_info) = ctx.accounts.token_info {
+        (Some(token_info.key), Some(Account::unpack(&token_info.try_borrow_data()?)?))
     } else {
-        None
+        (None, None)
     };
 
     // Determines if we have a valid authority to perform the update. This must
@@ -129,7 +129,8 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
         authority: ctx.accounts.authority_info.key,
         update_authority: &metadata.update_authority,
         mint: ctx.accounts.mint_info.key,
-        token: token.as_ref(),
+        token: token_pubkey,
+        token_account: token.as_ref(),
         metadata_delegate_record_info: ctx.accounts.delegate_record_info,
         metadata_delegate_role: Some(MetadataDelegateRole::Update),
         ..Default::default()

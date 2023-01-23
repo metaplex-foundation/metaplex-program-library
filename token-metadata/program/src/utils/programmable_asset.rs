@@ -29,7 +29,7 @@ pub fn create_token_record_account<'a>(
     program_id: &Pubkey,
     token_record_info: &'a AccountInfo<'a>,
     mint_info: &'a AccountInfo<'a>,
-    token_owner_info: &'a AccountInfo<'a>,
+    token_info: &'a AccountInfo<'a>,
     payer_info: &'a AccountInfo<'a>,
     system_program_info: &'a AccountInfo<'a>,
 ) -> ProgramResult {
@@ -42,7 +42,7 @@ pub fn create_token_record_account<'a>(
         crate::ID.as_ref(),
         mint_info.key.as_ref(),
         TOKEN_RECORD_SEED.as_bytes(),
-        token_owner_info.key.as_ref(),
+        token_info.key.as_ref(),
     ]);
 
     let bump = &[assert_derivation(
