@@ -6141,7 +6141,7 @@
     },
     {
       "code": 166,
-      "name": "MissingPrintSypply",
+      "name": "MissingPrintSupply",
       "msg": "Print supply is required for non-fungibles"
     }
   ],
