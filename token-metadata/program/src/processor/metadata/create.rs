@@ -183,7 +183,7 @@ fn create_v1(program_id: &Pubkey, ctx: Context<Create>, args: CreateArgs) -> Pro
             return Err(MetadataError::InvalidMasterEdition.into());
         }
     } else if print_supply.is_some() {
-        msg!("Ignoring print supply")
+        msg!("Ignoring print supply for selected token standard");
     }
 
     let mut metadata = Metadata::from_account_info(ctx.accounts.metadata_info)?;
