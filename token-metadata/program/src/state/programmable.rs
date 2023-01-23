@@ -13,7 +13,7 @@ use solana_program::{
 };
 use spl_token::state::Account;
 
-use super::{Key, MetadataDelegateRecord, TokenMetadataAccount};
+use super::*;
 use crate::instruction::MetadataDelegateRole;
 use crate::pda::{find_metadata_delegate_record_account, find_token_record_account};
 use crate::state::BorshError;
@@ -48,6 +48,13 @@ pub struct TokenRecord {
     pub bump: u8,
     pub state: TokenState,
     pub rule_set_revision: Option<u64>,
+    #[cfg_attr(
+        feature = "serde-feature",
+        serde(
+            deserialize_with = "deser_option_pubkey",
+            serialize_with = "ser_option_pubkey"
+        )
+    )]
     pub delegate: Option<Pubkey>,
     pub delegate_role: Option<TokenDelegateRole>,
 }
