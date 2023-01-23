@@ -3,8 +3,8 @@
 > **Warning**
 > This is an alpha release, currently only available on devnet. 
 >
-> * :crab: Rust crate: [v1.7.0-alpha.2](https://crates.io/crates/mpl-token-metadata/1.7.0-alpha.2)
-> * :package: NPM package: [v2.6.0-alpha.2](https://www.npmjs.com/package/@metaplex-foundation/mpl-token-metadata/v/2.6.0-alpha.2)
+> * :crab: Rust crate: [v1.7.0-beta.1](https://crates.io/crates/mpl-token-metadata/1.7.0-beta.1)
+> * :package: NPM package: [v2.7.0-beta.1](https://www.npmjs.com/package/@metaplex-foundation/mpl-token-metadata/v/2.7.0-beta.1)
 >
 > **Note:** The instructions are subject to changes.
 
@@ -253,49 +253,60 @@ let create_ix = CreateBuilder::new()
 
 ## Delegates
 
-The new unified api of token metadata exposes a system of delegations where other actors can be 'delegated' powers to do specific actions on the assets or asset grouping (collection). The types of delegates and what they can do is as follows:
+The new unified api of token metadata exposes a system of delegations where other actors can be 'delegated' powers to do specific actions on the assets or asset grouping (collection).
 
-#### Note: For programmable NFTS, auth rules manages which actors can become any of these types of delegates.
+> **Note:**
+> For programmable NFTS, auth rules manages which actors can become any of these types of delegates.
 
 ### Delegate Types
 
 There are two types of delegates on Token Metadata: `TokenDelegate` and `MetadataDelegate`. 
 
-**Token Delegate**
+#### Token Delegate
 
-`TokenDelegate`s are delegates that operate at the token level – i.e., they are spl-token delegates. This allows the delegate to perform operations on the token account (burn, transfer, freeze). There can only be one token delegate at a time and they do not have an individual delegate account associated – their information is stored on the `TokenRecord` account.
+`TokenDelegate`s are delegates that operate at the token level – i.e., they are spl-token delegates. This allows the delegate to perform operations on the token account (burn, transfer, freeze). There can only be one token delegate at a time and they do not have an individual delegate account associated – their information is stored on the `TokenRecord` account. The token record holds information about a particular token account (PDA seeds `[metadata, program id, mint id, "token_record", token account id]`):
+```rust
+pub struct TokenRecord {
+    pub key: Key,
+    pub bump: u8,
+    pub state: TokenState,
+    pub rule_set_revision: Option<u64>,
+    pub delegate: Option<Pubkey>,
+    pub delegate_role: Option<TokenDelegateRole>,
+}
+```
 
-**Token States**
+`TokenState` has three different values and instrution are restricted depending on the token state value:
 
-| Token State | 🔓 Unlocked | 🔐 Locked | 🏠 Listed |
-| --- | --- | --- | --- |
-| Owner Transfer | ✅ | ❌ | ❌ |
-| Delegate Transfer | 🟠 only: Sale, Transfer | ❌ | 🟠 only: Sale |
-| Owner Burn | ✅ | ❌ | ❌ |
-| Delegate Burn | 🟠 only: Utility | ❌ | ❌ |
-| Owner Revoke | ✅ | ❌ | ✅ → 🔓 Unlocked |
-| Owner Approve | ✅ if Sale → 🏠 Listed | ❌ | ❌ |
-| Owner Unlock | ❌ | ❌ | ❌ |
-| Delegate Unlock | ❌ | ✅ → 🔓 Unlocked | ❌ |
-| Owner Lock | ❌ | ❌ | ❌ |
-| Delegate Lock | ✅ if Utility or Staking → 🔐 Locked | ❌ | ❌ |
+| Token State | 🔓 `Unlocked` | 🔐 `Locked` | 🏠 `Listed` |
+| ------------------ | --- | --- | --- |
+| Owner Transfer     | ✅ | ❌ | ❌ |
+| Delegate Transfer  | 🟠 only: Sale, Transfer | ❌ | 🟠 only: Sale |
+| Owner Burn         | ✅ | ❌ | ❌ |
+| Delegate Burn      | 🟠 only: Utility | ❌ | ❌ |
+| Owner Revoke       | ✅ | ❌ | ✅ → 🔓 `Unlocked` |
+| Owner Approve      | ✅ if Sale → 🏠 `Listed` | ❌ | ❌ |
+| Owner Unlock       | ❌ | ❌ | ❌ |
+| Delegate Unlock    | ❌ | ✅ → 🔓 `Unlocked` | ❌ |
+| Owner Lock         | ❌ | ❌ | ❌ |
+| Delegate Lock      | ✅ if Utility or Staking → 🔐 `Locked` | ❌ | ❌ |
 | Mint (destination) | ✅ | ❌ | ✅ |
 
-**Token Delegate Types**
+`TokenDelegateRole` represents the different delegates types. There are six different values and instrution are restricted depending on the token delegate role and token state values:
 
-| Delegate | None | Sale | Transfer | Utility | Staking | Migration | SPL  |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| Token State | 🔓 Unlocked | 🏠 Listed | 🔓 Unlocked | 🔐 Locked🔓 Unlocked |🔐 Locked🔓 Unlocked|🔐 Locked🔓 Unlocked|*Analogous to:* ❄️ Frozen ☀️ Thawn|
-| Owner Transfer | ✅ | ❌ | ✅ → None | 🔓 if Unlocked → `None` |🔓 if Unlocked → None|🔓 if Unlocked → None|☀️ if Thawn → None|
-| Delegate Transfer | N/A | ✅ → None | ✅ → None | ❌ | ❌ | 🔓 if Unlocked → None |☀️ if Thawn → None|
-| Owner Burn | ✅ | ❌ | ✅ | 🔓 if Unlocked | 🔓 if Unlocked | 🔓 if Unlocked | ☀️ if Thawn (full burn) |
-| Delegate Burn | N/A | ❌ | ❌ | 🔓 if Unlocked | ❌ | 🔓 if Unlocked | ☀️ if Thawn (only SPL token) |
-| Owner Revoke | ❌ | ✅ → None | ✅ → None | 🔓 if Unlocked → None |🔓 if Unlocked → None|🔓 if Unlocked → None|☀️ if Thawn|
-| Owner Approve | ✅ → Sale, Transfer, Staking or Utility | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ → SPL Token (Standard) |
-| Owner Unlock | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Delegate Unlock | N/A | ❌ | ❌ | 🔐 if Locked | 🔐 if Locked | 🔐 if Locked | ❄️ if Frozen |
-| Owner Lock | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Delegate Lock | N/A | ❌ | ❌ | 🔓 if Unlocked | 🔓 if Unlocked | 🔓 if Unlocked | ☀️ if Thawn |
+| Delegate | None | Sale | Transfer | Utility | Staking | Migration | Standard (SPL)  |
+| --------------------- | --- | --- | --- | --- | --- | --- | --- |
+| Token State        | 🔓 `Unlocked` | 🏠 `Listed` | 🔓 `Unlocked` | 🔐 `Locked` 🔓 `Unlocked` | 🔐 `Locked` 🔓 `Unlocked` | 🔐 `Locked` 🔓 `Unlocked`| *Analogous to:* ❄️ `Frozen` ☀️ `Thawn` |
+| Owner Transfer     | ✅ | ❌ | ✅ → None | 🔓 if Unlocked → `None` |🔓 if Unlocked → None|🔓 if Unlocked → None|☀️ if Thawn → None|
+| Delegate Transfer  | N/A | ✅ → None | ✅ → None | ❌ | ❌ | 🔓 if Unlocked → None |☀️ if Thawn → None|
+| Owner Burn         | ✅ | ❌ | ✅ | 🔓 if Unlocked | 🔓 if Unlocked | 🔓 if Unlocked | ☀️ if Thawn (full burn) |
+| Delegate Burn      | N/A | ❌ | ❌ | 🔓 if Unlocked | ❌ | 🔓 if Unlocked | ☀️ if Thawn (only SPL token) |
+| Owner Revoke       | ❌ | ✅ → None | ✅ → None | 🔓 if Unlocked → None |🔓 if Unlocked → None|🔓 if Unlocked → None|☀️ if Thawn|
+| Owner Approve      | ✅ → Sale, Transfer, Staking or Utility | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ → SPL Token (Standard) |
+| Owner Unlock       | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Delegate Unlock    | N/A | ❌ | ❌ | 🔐 if Locked | 🔐 if Locked | 🔐 if Locked | ❄️ if Frozen |
+| Owner Lock         | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Delegate Lock      | N/A | ❌ | ❌ | 🔓 if Unlocked | 🔓 if Unlocked | 🔓 if Unlocked | ☀️ if Thawn |
 | Mint (destination) | ✅ | ✅ | ✅ | 🔓 if Unlocked | 🔓 if Unlocked | 🔓 if Unlocked | ☀️ if Thawn |
 | NFTs or PNFTs | PNFTs | PNFTs | PNFTs | PNFTs | PNFTs | PNFTs (only once) | NFTs |
 
