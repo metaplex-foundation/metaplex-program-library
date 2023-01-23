@@ -3551,6 +3551,26 @@ createErrorFromCodeLookup.set(0xa5, () => new InvalidDelegateRoleError());
 createErrorFromNameLookup.set('InvalidDelegateRole', () => new InvalidDelegateRoleError());
 
 /**
+ * MissingPrintSypply: 'Print supply is required for non-fungibles'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MissingPrintSypplyError extends Error {
+  readonly code: number = 0xa6;
+  readonly name: string = 'MissingPrintSypply';
+  constructor() {
+    super('Print supply is required for non-fungibles');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MissingPrintSypplyError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xa6, () => new MissingPrintSypplyError());
+createErrorFromNameLookup.set('MissingPrintSypply', () => new MissingPrintSypplyError());
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

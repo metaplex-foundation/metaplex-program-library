@@ -99,7 +99,7 @@ export class InitTransactions {
     payer: Keypair,
     assetData: AssetData,
     decimals: number,
-    maxSupply: number,
+    printSupply: number,
     handler: PayerTransactionHandler,
     mint: PublicKey | null = null,
   ): Promise<{
@@ -162,7 +162,8 @@ export class InitTransactions {
         __kind: 'V1',
         assetData,
         decimals,
-        maxSupply,
+        printSupply:
+          printSupply == 0 ? { __kind: 'Zero' } : { __kind: 'Limited', fields: [printSupply] },
       },
     };
 

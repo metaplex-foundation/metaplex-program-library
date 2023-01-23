@@ -4707,9 +4707,11 @@
                 }
               },
               {
-                "name": "max_supply",
+                "name": "print_supply",
                 "type": {
-                  "option": "u64"
+                  "option": {
+                    "defined": "PrintSupply"
+                  }
                 }
               }
             ]
@@ -5112,6 +5114,26 @@
             "fields": [
               "publicKey"
             ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "PrintSupply",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Zero"
+          },
+          {
+            "name": "Limited",
+            "fields": [
+              "u64"
+            ]
+          },
+          {
+            "name": "Unlimited"
           }
         ]
       }
@@ -6116,6 +6138,11 @@
       "code": 165,
       "name": "InvalidDelegateRole",
       "msg": "Invalid delegate role"
+    },
+    {
+      "code": 166,
+      "name": "MissingPrintSypply",
+      "msg": "Print supply is required for non-fungibles"
     }
   ],
   "metadata": {
