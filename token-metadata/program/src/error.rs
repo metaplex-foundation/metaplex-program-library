@@ -655,6 +655,10 @@ pub enum MetadataError {
     /// 165
     #[error("Invalid delegate role")]
     InvalidDelegateRole,
+
+    /// 166
+    #[error("Print supply is required for non-fungibles")]
+    MissingPrintSupply,
 }
 
 impl PrintProgramError for MetadataError {

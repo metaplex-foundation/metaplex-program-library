@@ -13,7 +13,10 @@ use super::InstructionBuilder;
 use crate::{
     instruction::MetadataInstruction,
     processor::AuthorizationData,
-    state::{AssetData, Collection, CollectionDetails, Creator, Data, DataV2, MigrationType, Uses},
+    state::{
+        AssetData, Collection, CollectionDetails, Creator, Data, DataV2, MigrationType,
+        PrintSupply, Uses,
+    },
 };
 
 //----------------------+
@@ -40,7 +43,7 @@ pub enum CreateArgs {
     V1 {
         asset_data: AssetData,
         decimals: Option<u8>,
-        max_supply: Option<u64>,
+        print_supply: Option<PrintSupply>,
     },
 }
 

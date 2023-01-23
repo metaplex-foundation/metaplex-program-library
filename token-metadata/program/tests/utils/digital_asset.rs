@@ -11,8 +11,8 @@ use mpl_token_metadata::{
     pda::{find_metadata_delegate_record_account, find_token_record_account},
     processor::AuthorizationData,
     state::{
-        AssetData, Creator, Metadata, ProgrammableConfig, TokenDelegateRole, TokenMetadataAccount,
-        TokenRecord, TokenStandard, EDITION, PREFIX,
+        AssetData, Creator, Metadata, PrintSupply, ProgrammableConfig, TokenDelegateRole,
+        TokenMetadataAccount, TokenRecord, TokenStandard, EDITION, PREFIX,
     },
 };
 use solana_program::{borsh::try_from_slice_unchecked, pubkey::Pubkey};
@@ -122,7 +122,7 @@ impl DigitalAsset {
             .build(CreateArgs::V1 {
                 asset_data: asset,
                 decimals: Some(0),
-                max_supply: Some(0),
+                print_supply: Some(PrintSupply::Zero),
             })
             .unwrap()
             .instruction();
@@ -663,8 +663,7 @@ impl DigitalAsset {
         context: &mut ProgramTestContext,
         token: &Pubkey,
     ) -> Option<TokenDelegateRole> {
-        let (delegate_record_pubkey, _) =
-            find_token_record_account(&self.mint.pubkey(), token);
+        let (delegate_record_pubkey, _) = find_token_record_account(&self.mint.pubkey(), token);
         let delegate_record_account = context
             .banks_client
             .get_account(delegate_record_pubkey)

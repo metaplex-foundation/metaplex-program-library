@@ -7,6 +7,7 @@
 
 import * as beet from '@metaplex-foundation/beet';
 import { AssetData, assetDataBeet } from './AssetData';
+import { PrintSupply, printSupplyBeet } from './PrintSupply';
 /**
  * This type is used to derive the {@link CreateArgs} type as well as the de/serializer.
  * However don't refer to it in your code but use the {@link CreateArgs} type instead.
@@ -20,7 +21,7 @@ export type CreateArgsRecord = {
   V1: {
     assetData: AssetData;
     decimals: beet.COption<number>;
-    maxSupply: beet.COption<beet.bignum>;
+    printSupply: beet.COption<PrintSupply>;
   };
 };
 
@@ -51,7 +52,7 @@ export const createArgsBeet = beet.dataEnum<CreateArgsRecord>([
       [
         ['assetData', assetDataBeet],
         ['decimals', beet.coption(beet.u8)],
-        ['maxSupply', beet.coption(beet.u64)],
+        ['printSupply', beet.coption(printSupplyBeet)],
       ],
       'CreateArgsRecord["V1"]',
     ),
