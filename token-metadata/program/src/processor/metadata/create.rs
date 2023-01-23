@@ -98,6 +98,8 @@ fn create_v1(program_id: &Pubkey, ctx: Context<Create>, args: CreateArgs) -> Pro
             ],
         )?;
     } else {
+        // validates the existing mint account
+
         let mint: Mint = assert_initialized(ctx.accounts.mint_info, MetadataError::Uninitialized)?;
         // NonFungible assets must have decimals == 0 and supply no greater than 1
         if matches!(
@@ -114,6 +116,10 @@ fn create_v1(program_id: &Pubkey, ctx: Context<Create>, args: CreateArgs) -> Pro
         ) && (mint.supply > 0)
         {
             return Err(MetadataError::MintSupplyMustBeZero.into());
+        }
+        // cannot create non-fungible editions
+        if matches!(asset_data.token_standard, TokenStandard::NonFungibleEdition) {
+            return Err(MetadataError::InvalidTokenStandard.into());
         }
     }
 
@@ -176,6 +182,8 @@ fn create_v1(program_id: &Pubkey, ctx: Context<Create>, args: CreateArgs) -> Pro
         } else {
             return Err(MetadataError::InvalidMasterEdition.into());
         }
+    } else if print_supply.is_some() {
+        msg!("Ignoring print supply")
     }
 
     let mut metadata = Metadata::from_account_info(ctx.accounts.metadata_info)?;
