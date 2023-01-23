@@ -14,10 +14,13 @@ const SIZE: usize = 98;
 ///     delegate id
 /// ]
 pub struct MetadataDelegateRecord {
-    pub key: Key,                 // 1
-    pub bump: u8,                 // 1
-    pub mint: Pubkey,             // 32
-    pub delegate: Pubkey,         // 32
+    pub key: Key, // 1
+    pub bump: u8, // 1
+    #[cfg_attr(feature = "serde-feature", serde(with = "As::<DisplayFromStr>"))]
+    pub mint: Pubkey, // 32
+    #[cfg_attr(feature = "serde-feature", serde(with = "As::<DisplayFromStr>"))]
+    pub delegate: Pubkey, // 32
+    #[cfg_attr(feature = "serde-feature", serde(with = "As::<DisplayFromStr>"))]
     pub update_authority: Pubkey, // 32
 }
 
