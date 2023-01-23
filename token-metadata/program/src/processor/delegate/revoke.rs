@@ -173,12 +173,12 @@ fn revoke_persistent_delegate(
 
     // authority must be the owner of the token account: spl-token required the
     // token owner to revoke a delegate
-    let token_account = Account::unpack(&token_info.try_borrow_data()?).unwrap();
-    if token_account.owner != *ctx.accounts.authority_info.key {
+    let token = Account::unpack(&token_info.try_borrow_data()?).unwrap();
+    if token.owner != *ctx.accounts.authority_info.key {
         return Err(MetadataError::IncorrectOwner.into());
     }
 
-    if let COption::Some(existing) = &token_account.delegate {
+    if let COption::Some(existing) = &token.delegate {
         if !cmp_pubkeys(existing, ctx.accounts.delegate_info.key) {
             return Err(MetadataError::InvalidDelegate.into());
         }

@@ -146,7 +146,7 @@ pub fn mint_v1(program_id: &Pubkey, ctx: Context<Mint>, args: MintArgs) -> Progr
         amount,
         ctx.accounts.mint_info.key
     );
-    let token_account: Account = assert_initialized(ctx.accounts.token_info)?;
+    let token: Account = assert_initialized(ctx.accounts.token_info)?;
 
     match metadata.token_standard {
         Some(TokenStandard::NonFungible) | Some(TokenStandard::ProgrammableNonFungible) => {
@@ -215,7 +215,7 @@ pub fn mint_v1(program_id: &Pubkey, ctx: Context<Mint>, args: MintArgs) -> Progr
             if matches!(
                 metadata.token_standard,
                 Some(TokenStandard::ProgrammableNonFungible)
-            ) && token_account.is_frozen()
+            ) && token.is_frozen()
             {
                 thaw(
                     ctx.accounts.mint_info.clone(),
