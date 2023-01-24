@@ -241,7 +241,8 @@ impl DigitalAsset {
             .mint(self.mint.pubkey())
             .metadata(self.metadata)
             .payer(payer.pubkey())
-            .authority(payer.pubkey());
+            .authority(payer.pubkey())
+            .spl_token_program(spl_token::ID);
 
         match args {
             DelegateArgs::CollectionV1 { .. } => {
@@ -290,6 +291,7 @@ impl DigitalAsset {
         }) = metadata.programmable_config
         {
             builder.authorization_rules(rule_set);
+            builder.authorization_rules_program(mpl_token_auth_rules::ID);
         }
 
         let delegate_ix = builder.build(args.clone()).unwrap().instruction();
@@ -347,7 +349,8 @@ impl DigitalAsset {
             .mint(self.mint.pubkey())
             .metadata(self.metadata)
             .payer(approver.pubkey())
-            .authority(approver.pubkey());
+            .authority(approver.pubkey())
+            .spl_token_program(spl_token::ID);
 
         match args {
             RevokeArgs::CollectionV1 => {
@@ -456,6 +459,7 @@ impl DigitalAsset {
 
         if let Some(authorization_rules) = authorization_rules {
             builder.authorization_rules(authorization_rules);
+            builder.authorization_rules_program(mpl_token_auth_rules::ID);
         }
 
         let transfer_ix = builder.build(args).unwrap().instruction();
@@ -484,7 +488,8 @@ impl DigitalAsset {
             .authority(delegate.pubkey())
             .mint(self.mint.pubkey())
             .metadata(self.metadata)
-            .payer(payer.pubkey());
+            .payer(payer.pubkey())
+            .spl_token_program(spl_token::ID);
 
         if let Some(token_record) = token_record {
             builder.token_record(token_record);
@@ -527,7 +532,8 @@ impl DigitalAsset {
             .authority(delegate.pubkey())
             .mint(self.mint.pubkey())
             .metadata(self.metadata)
-            .payer(payer.pubkey());
+            .payer(payer.pubkey())
+            .spl_token_program(spl_token::ID);
 
         if let Some(token_record) = token_record {
             builder.token_record(token_record);
@@ -615,6 +621,7 @@ impl DigitalAsset {
 
         if let Some(authorization_rules) = authorization_rules {
             builder.authorization_rules(authorization_rules);
+            builder.authorization_rules_program(mpl_token_auth_rules::ID);
         }
 
         let transfer_ix = builder.build(args).unwrap().instruction();

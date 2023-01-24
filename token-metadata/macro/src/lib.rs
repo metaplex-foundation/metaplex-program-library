@@ -414,24 +414,24 @@ fn generate_builders(variants: &[Variant]) -> TokenStream {
         let required_accounts = variant.accounts.iter().map(|account| {
             let account_name = syn::parse_str::<syn::Ident>(&account.name).unwrap();
 
-            // are we dealing with a default pubkey?
-            if default_pubkeys.contains_key(&account.name) {
-                let pubkey = default_pubkeys.get(&account.name).unwrap();
-
-                if account.optional {
-                    quote! { #account_name: Some(#pubkey) }
-                } else {
-                    quote! { #account_name: #pubkey }
-                }
-            }
-            // if not a default pubkey, we will need to have it set
-            else if account.optional {
+            if account.optional {
                 quote! {
                     #account_name: self.#account_name
                 }
             } else {
-                quote! {
-                    #account_name: self.#account_name.ok_or(concat!(stringify!(#account_name), " is not set"))?
+                // are we dealing with a default pubkey?
+                if default_pubkeys.contains_key(&account.name) {
+                    let pubkey = default_pubkeys.get(&account.name).unwrap();
+                    // we add the default key as the fallback value
+                    quote! {
+                        #account_name: self.#account_name.unwrap_or(#pubkey)
+                    }
+                }
+                else {
+                    // if not a default pubkey, we will need to have it set
+                    quote! {
+                        #account_name: self.#account_name.ok_or(concat!(stringify!(#account_name), " is not set"))?
+                    }
                 }
             }
         });
