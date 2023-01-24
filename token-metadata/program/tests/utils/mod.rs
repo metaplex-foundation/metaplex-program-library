@@ -1,17 +1,14 @@
 mod assert;
 mod digital_asset;
 mod edition_marker;
-mod external_price;
 mod master_edition_v2;
 mod metadata;
 mod programmable;
 mod rooster_manager;
-mod vault;
 
 pub use assert::*;
 pub use digital_asset::*;
 pub use edition_marker::EditionMarker;
-pub use external_price::ExternalPrice;
 pub use master_edition_v2::MasterEditionV2;
 pub use metadata::{assert_collection_size, Metadata};
 pub use mpl_token_metadata::instruction;
@@ -25,7 +22,6 @@ use solana_sdk::{
     signer::keypair::Keypair, system_instruction, transaction::Transaction,
 };
 use spl_token::state::Mint;
-pub use vault::Vault;
 
 pub const DEFAULT_COLLECTION_DETAILS: Option<CollectionDetails> =
     Some(CollectionDetails::V1 { size: 0 });
