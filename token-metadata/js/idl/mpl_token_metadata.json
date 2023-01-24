@@ -6143,6 +6143,16 @@
       "code": 166,
       "name": "MissingPrintSupply",
       "msg": "Print supply is required for non-fungibles"
+    },
+    {
+      "code": 167,
+      "name": "MissingMasterEditionAccount",
+      "msg": "Missing master edition account"
+    },
+    {
+      "code": 168,
+      "name": "AmountMustBeGreaterThanZero",
+      "msg": "Amount must be greater than zero"
     }
   ],
   "metadata": {

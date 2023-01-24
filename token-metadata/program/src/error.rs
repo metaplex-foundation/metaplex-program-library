@@ -659,6 +659,14 @@ pub enum MetadataError {
     /// 166
     #[error("Print supply is required for non-fungibles")]
     MissingPrintSupply,
+
+    /// 167
+    #[error("Missing master edition account")]
+    MissingMasterEditionAccount,
+
+    /// 168
+    #[error("Amount must be greater than zero")]
+    AmountMustBeGreaterThanZero,
 }
 
 impl PrintProgramError for MetadataError {

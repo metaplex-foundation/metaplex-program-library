@@ -42,6 +42,10 @@ pub fn mint_v1(program_id: &Pubkey, ctx: Context<Mint>, args: MintArgs) -> Progr
     // get the args for the instruction
     let MintArgs::V1 { amount, .. } = args;
 
+    if amount == 0 {
+        return Err(MetadataError::AmountMustBeGreaterThanZero.into());
+    }
+
     // checks that we have the required signers
     assert_signer(ctx.accounts.authority_info)?;
     assert_signer(ctx.accounts.payer_info)?;
@@ -49,8 +53,17 @@ pub fn mint_v1(program_id: &Pubkey, ctx: Context<Mint>, args: MintArgs) -> Progr
     // validates the accounts
 
     assert_owned_by(ctx.accounts.metadata_info, program_id)?;
-    let metadata = Metadata::from_account_info(ctx.accounts.metadata_info)?;
+    assert_derivation(
+        program_id,
+        ctx.accounts.metadata_info,
+        &[
+            PREFIX.as_bytes(),
+            program_id.as_ref(),
+            ctx.accounts.mint_info.key.as_ref(),
+        ],
+    )?;
 
+    let metadata = Metadata::from_account_info(ctx.accounts.metadata_info)?;
     if metadata.mint != *ctx.accounts.mint_info.key {
         return Err(MetadataError::MintMismatch.into());
     }
@@ -81,7 +94,7 @@ pub fn mint_v1(program_id: &Pubkey, ctx: Context<Mint>, args: MintArgs) -> Progr
                     ],
                 )?;
             } else {
-                return Err(MetadataError::InvalidMasterEdition.into());
+                return Err(MetadataError::MissingMasterEditionAccount.into());
             }
 
             if mint.supply > 0 || amount > 1 {
@@ -156,12 +169,10 @@ pub fn mint_v1(program_id: &Pubkey, ctx: Context<Mint>, args: MintArgs) -> Progr
                 Some(TokenStandard::ProgrammableNonFungible)
             ) {
                 // we always need the token_record_info
-                let token_record_info = match ctx.accounts.token_record_info {
-                    Some(token_record_info) => token_record_info,
-                    None => {
-                        return Err(MetadataError::MissingTokenRecord.into());
-                    }
-                };
+                let token_record_info = ctx
+                    .accounts
+                    .token_record_info
+                    .ok_or(MetadataError::MissingTokenRecord)?;
 
                 let (pda_key, _) = find_token_record_account(
                     ctx.accounts.mint_info.key,
@@ -198,13 +209,10 @@ pub fn mint_v1(program_id: &Pubkey, ctx: Context<Mint>, args: MintArgs) -> Progr
             let bump_seed = [bump];
             signer_seeds.push(&bump_seed);
 
-            let master_edition_info =
-                if let Some(master_edition_info) = ctx.accounts.master_edition_info {
-                    master_edition_info
-                } else {
-                    msg!("Missing master edition account");
-                    return Err(ProgramError::NotEnoughAccountKeys);
-                };
+            let master_edition_info = ctx
+                .accounts
+                .master_edition_info
+                .ok_or(MetadataError::MissingMasterEditionAccount)?;
 
             if !cmp_pubkeys(master_edition_info.key, &master_edition_key) {
                 return Err(MetadataError::InvalidMasterEdition.into());

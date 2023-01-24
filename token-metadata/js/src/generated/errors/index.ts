@@ -3571,6 +3571,52 @@ createErrorFromCodeLookup.set(0xa6, () => new MissingPrintSupplyError());
 createErrorFromNameLookup.set('MissingPrintSupply', () => new MissingPrintSupplyError());
 
 /**
+ * MissingMasterEditionAccount: 'Missing master edition account'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MissingMasterEditionAccountError extends Error {
+  readonly code: number = 0xa7;
+  readonly name: string = 'MissingMasterEditionAccount';
+  constructor() {
+    super('Missing master edition account');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MissingMasterEditionAccountError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xa7, () => new MissingMasterEditionAccountError());
+createErrorFromNameLookup.set(
+  'MissingMasterEditionAccount',
+  () => new MissingMasterEditionAccountError(),
+);
+
+/**
+ * AmountMustBeGreaterThanZero: 'Amount must be greater than zero'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class AmountMustBeGreaterThanZeroError extends Error {
+  readonly code: number = 0xa8;
+  readonly name: string = 'AmountMustBeGreaterThanZero';
+  constructor() {
+    super('Amount must be greater than zero');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, AmountMustBeGreaterThanZeroError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xa8, () => new AmountMustBeGreaterThanZeroError());
+createErrorFromNameLookup.set(
+  'AmountMustBeGreaterThanZero',
+  () => new AmountMustBeGreaterThanZeroError(),
+);
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated
