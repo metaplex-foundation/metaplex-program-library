@@ -312,7 +312,7 @@ pub struct TokenRecord {
 
 The `Migration` delegate type is a temporary delegate that is only created by the migration from `NFT` to `pNFT` and cannot be otherwise created through the `Delegate` handler. This special delegate has the same functionality as the `Utility` delegate except that it can also transfer. This allows us to assign all escrowless-style programs this delegate to preserve whatever current functionality they have. Once used, it is cleared and cannot replaced, and programs will then need to select one of the normal delegate types for future actions.
 
-#### Metdata Delegates
+#### Metadata Delegates
 
 `MetadataDelegate`s are delegates that operate at the metadata level. These delegates are represented by `MetadataDelegateRecord` PDA (seeds `["metadata", program id, mint id, delegate role, update authority id, delegate id]`) and do not have an associated spl-token delegate. There can be multiple instances of the same delegate.
 ```rust
@@ -436,5 +436,5 @@ Waiting for fees to stabilize 1...
 ```
 In your second terminal, navigate to the folder `$PROJECTS/metaplex-program-library/token-metadata/js/` and execute:
 ```
-yarn test
+yarn build && yarn test
 ```
