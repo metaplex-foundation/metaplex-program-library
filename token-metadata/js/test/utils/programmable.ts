@@ -19,14 +19,14 @@ export function createPassRuleSet(
   return encode(ruleSet);
 }
 
-export function findTokenRecordPda(mint: PublicKey, tokenOwner: PublicKey): PublicKey {
+export function findTokenRecordPda(mint: PublicKey, token: PublicKey): PublicKey {
   return PublicKey.findProgramAddressSync(
     [
       Buffer.from('metadata'),
       PROGRAM_ID.toBuffer(),
       mint.toBuffer(),
       Buffer.from('token_record'),
-      tokenOwner.toBuffer(),
+      token.toBuffer(),
     ],
     PROGRAM_ID,
   )[0];

@@ -159,7 +159,7 @@ pub fn mint_v1(program_id: &Pubkey, ctx: Context<Mint>, args: MintArgs) -> Progr
         amount,
         ctx.accounts.mint_info.key
     );
-    let token_account: Account = assert_initialized(ctx.accounts.token_info)?;
+    let token: Account = assert_initialized(ctx.accounts.token_info)?;
 
     match metadata.token_standard {
         Some(TokenStandard::NonFungible) | Some(TokenStandard::ProgrammableNonFungible) => {
@@ -174,8 +174,10 @@ pub fn mint_v1(program_id: &Pubkey, ctx: Context<Mint>, args: MintArgs) -> Progr
                     .token_record_info
                     .ok_or(MetadataError::MissingTokenRecord)?;
 
-                let (pda_key, _) =
-                    find_token_record_account(ctx.accounts.mint_info.key, &token_account.owner);
+                let (pda_key, _) = find_token_record_account(
+                    ctx.accounts.mint_info.key,
+                    ctx.accounts.token_info.key,
+                );
                 // validates the derivation
                 assert_keys_equal(&pda_key, token_record_info.key)?;
 
@@ -186,7 +188,7 @@ pub fn mint_v1(program_id: &Pubkey, ctx: Context<Mint>, args: MintArgs) -> Progr
                         program_id,
                         token_record_info,
                         ctx.accounts.mint_info,
-                        &token_account.owner,
+                        ctx.accounts.token_info,
                         ctx.accounts.payer_info,
                         ctx.accounts.system_program_info,
                     )?;
@@ -221,7 +223,7 @@ pub fn mint_v1(program_id: &Pubkey, ctx: Context<Mint>, args: MintArgs) -> Progr
             if matches!(
                 metadata.token_standard,
                 Some(TokenStandard::ProgrammableNonFungible)
-            ) && token_account.is_frozen()
+            ) && token.is_frozen()
             {
                 thaw(
                     ctx.accounts.mint_info.clone(),

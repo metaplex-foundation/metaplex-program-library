@@ -657,10 +657,14 @@ pub enum MetadataError {
     InvalidDelegateRole,
 
     /// 166
+    #[error("Print supply is required for non-fungibles")]
+    MissingPrintSupply,
+
+    /// 167
     #[error("Missing master edition account")]
     MissingMasterEditionAccount,
 
-    /// 167
+    /// 168
     #[error("Amount must be greater than zero")]
     AmountMustBeGreaterThanZero,
 }

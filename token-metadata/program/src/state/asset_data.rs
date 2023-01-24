@@ -1,9 +1,6 @@
+use super::*;
 use borsh::{BorshDeserialize, BorshSerialize};
-#[cfg(feature = "serde-feature")]
-use serde::{Deserialize, Serialize};
 use solana_program::pubkey::Pubkey;
-
-use super::{Collection, CollectionDetails, Creator, Data, DataV2, TokenStandard, Uses};
 
 /// Data representation of an asset.
 #[repr(C)]
@@ -11,6 +8,7 @@ use super::{Collection, CollectionDetails, Creator, Data, DataV2, TokenStandard,
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct AssetData {
     /// Update Authority for the asset.
+    #[cfg_attr(feature = "serde-feature", serde(with = "As::<DisplayFromStr>"))]
     pub update_authority: Pubkey,
     /// The name of the asset.
     pub name: String,
@@ -35,6 +33,13 @@ pub struct AssetData {
     /// Collection item details.
     pub collection_details: Option<CollectionDetails>,
     /// Programmable rule set for the asset.
+    #[cfg_attr(
+        feature = "serde-feature",
+        serde(
+            deserialize_with = "deser_option_pubkey",
+            serialize_with = "ser_option_pubkey"
+        )
+    )]
     pub rule_set: Option<Pubkey>,
 }
 

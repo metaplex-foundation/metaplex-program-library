@@ -40,8 +40,13 @@ fn create_v1(program_id: &Pubkey, ctx: Context<Create>, args: CreateArgs) -> Pro
     let CreateArgs::V1 {
         ref asset_data,
         decimals,
-        max_supply,
+        print_supply,
     } = args;
+
+    // cannot create non-fungible editions on this instruction
+    if matches!(asset_data.token_standard, TokenStandard::NonFungibleEdition) {
+        return Err(MetadataError::InvalidTokenStandard.into());
+    }
 
     // if the account does not exist, we will allocate a new mint
 
@@ -98,6 +103,8 @@ fn create_v1(program_id: &Pubkey, ctx: Context<Create>, args: CreateArgs) -> Pro
             ],
         )?;
     } else {
+        // validates the existing mint account
+
         let mint: Mint = assert_initialized(ctx.accounts.mint_info, MetadataError::Uninitialized)?;
         // NonFungible assets must have decimals == 0 and supply no greater than 1
         if matches!(
@@ -143,6 +150,8 @@ fn create_v1(program_id: &Pubkey, ctx: Context<Create>, args: CreateArgs) -> Pro
         asset_data.token_standard,
         TokenStandard::NonFungible | TokenStandard::ProgrammableNonFungible
     ) {
+        let print_supply = print_supply.ok_or(MetadataError::MissingPrintSupply)?;
+
         if let Some(master_edition) = ctx.accounts.master_edition_info {
             create_master_edition(
                 program_id,
@@ -154,7 +163,7 @@ fn create_v1(program_id: &Pubkey, ctx: Context<Create>, args: CreateArgs) -> Pro
                 ctx.accounts.metadata_info,
                 ctx.accounts.spl_token_program_info,
                 ctx.accounts.system_program_info,
-                max_supply,
+                print_supply.to_option(),
             )?;
 
             // for pNFTs, we store the token standard value at the end of the
@@ -174,6 +183,8 @@ fn create_v1(program_id: &Pubkey, ctx: Context<Create>, args: CreateArgs) -> Pro
         } else {
             return Err(MetadataError::MissingMasterEditionAccount.into());
         }
+    } else if print_supply.is_some() {
+        msg!("Ignoring print supply for selected token standard");
     }
 
     let mut metadata = Metadata::from_account_info(ctx.accounts.metadata_info)?;

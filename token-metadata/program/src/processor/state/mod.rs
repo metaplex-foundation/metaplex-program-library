@@ -89,7 +89,8 @@ pub(crate) fn toggle_asset_state(
         authority: accounts.authority_info.key,
         update_authority: &metadata.update_authority,
         mint: accounts.mint_info.key,
-        token: Some(&token),
+        token: Some(accounts.token_info.key),
+        token_account: Some(&token),
         token_record_info: accounts.token_record_info,
         token_delegate_roles: vec![
             TokenDelegateRole::Utility,
@@ -136,7 +137,8 @@ pub(crate) fn toggle_asset_state(
     ) {
         let (mut token_record, token_record_info) = match accounts.token_record_info {
             Some(token_record_info) => {
-                let (pda_key, _) = find_token_record_account(accounts.mint_info.key, &token.owner);
+                let (pda_key, _) =
+                    find_token_record_account(accounts.mint_info.key, accounts.token_info.key);
 
                 assert_keys_equal(&pda_key, token_record_info.key)?;
                 assert_owned_by(token_record_info, &crate::ID)?;

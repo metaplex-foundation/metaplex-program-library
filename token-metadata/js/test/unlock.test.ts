@@ -126,7 +126,7 @@ test('Unlock: owner unlock ProgrammableNonFungible asset', async (t) => {
     });
   }
 
-  const tokenRecord = findTokenRecordPda(manager.mint, payer.publicKey);
+  const tokenRecord = findTokenRecordPda(manager.mint, manager.token);
   amman.addr.addLabel('Token Record', tokenRecord);
 
   let pda = await TokenRecord.fromAccountAddress(connection, tokenRecord);

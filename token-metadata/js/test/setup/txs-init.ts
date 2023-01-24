@@ -99,7 +99,7 @@ export class InitTransactions {
     payer: Keypair,
     assetData: AssetData,
     decimals: number,
-    maxSupply: number,
+    printSupply: number,
     handler: PayerTransactionHandler,
     mint: PublicKey | null = null,
     metadata: PublicKey | null = null,
@@ -169,7 +169,8 @@ export class InitTransactions {
         __kind: 'V1',
         assetData,
         decimals,
-        maxSupply,
+        printSupply:
+          printSupply == 0 ? { __kind: 'Zero' } : { __kind: 'Limited', fields: [printSupply] },
       },
     };
 
@@ -228,7 +229,7 @@ export class InitTransactions {
     }
 
     if (!tokenRecord) {
-      tokenRecord = findTokenRecordPda(mint, tokenOwner);
+      tokenRecord = findTokenRecordPda(mint, token);
     }
 
     amman.addr.addLabel('Token Account', token);

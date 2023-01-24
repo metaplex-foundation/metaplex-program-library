@@ -73,7 +73,7 @@ test('Lock: owner lock ProgrammableNonFungible asset', async (t) => {
   }
 
   // token record PDA
-  const tokenRecord = findTokenRecordPda(manager.mint, payer.publicKey);
+  const tokenRecord = findTokenRecordPda(manager.mint, manager.token);
   amman.addr.addLabel('Token Record', tokenRecord);
 
   const pda = await TokenRecord.fromAccountAddress(connection, tokenRecord);
@@ -120,7 +120,7 @@ test('Lock: delegate lock ProgrammableNonFungible asset', async (t) => {
   }
 
   // token record PDA
-  const tokenRecord = findTokenRecordPda(manager.mint, payer.publicKey);
+  const tokenRecord = findTokenRecordPda(manager.mint, manager.token);
   amman.addr.addLabel('Token Record', tokenRecord);
 
   let pda = await TokenRecord.fromAccountAddress(connection, tokenRecord);
@@ -344,7 +344,7 @@ test('Lock: lock ProgrammableNonFungible asset with wrong authority', async (t) 
   }
 
   // token record PDA
-  const tokenRecord = findTokenRecordPda(manager.mint, payer.publicKey);
+  const tokenRecord = findTokenRecordPda(manager.mint, manager.token);
   amman.addr.addLabel('Token Record', tokenRecord);
 
   const pda = await TokenRecord.fromAccountAddress(connection, tokenRecord);
@@ -445,7 +445,7 @@ test('Lock: wrong delegate lock ProgrammableNonFungible asset', async (t) => {
     TokenStandard.ProgrammableNonFungible,
   );
 
-  const tokenRecord = findTokenRecordPda(manager.mint, payer.publicKey);
+  const tokenRecord = findTokenRecordPda(manager.mint, manager.token);
   amman.addr.addLabel('Token Record', tokenRecord);
 
   const pda = await TokenRecord.fromAccountAddress(connection, tokenRecord);
@@ -519,7 +519,7 @@ test('Lock: already locked ProgrammableNonFungible asset', async (t) => {
     TokenStandard.ProgrammableNonFungible,
   );
 
-  const tokenRecord = findTokenRecordPda(manager.mint, payer.publicKey);
+  const tokenRecord = findTokenRecordPda(manager.mint, manager.token);
   amman.addr.addLabel('Token Record', tokenRecord);
 
   let pda = await TokenRecord.fromAccountAddress(connection, tokenRecord);

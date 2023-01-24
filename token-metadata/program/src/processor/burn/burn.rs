@@ -7,5 +7,5 @@ pub fn burn<'a>(
     _accounts: &'a [AccountInfo<'a>],
     _args: BurnArgs,
 ) -> ProgramResult {
-    return Err(MetadataError::FeatureNotSupported.into());
+    Err(MetadataError::FeatureNotSupported.into())
 }
