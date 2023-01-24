@@ -197,10 +197,8 @@ fn revoke_persistent_delegate(
 
             let (mut token_record, token_record_info) = match ctx.accounts.token_record_info {
                 Some(token_record_info) => {
-                    let (pda_key, _) = find_token_record_account(
-                        ctx.accounts.mint_info.key,
-                        token_info.key,
-                    );
+                    let (pda_key, _) =
+                        find_token_record_account(ctx.accounts.mint_info.key, token_info.key);
 
                     assert_keys_equal(&pda_key, token_record_info.key)?;
                     assert_owned_by(token_record_info, &crate::ID)?;
@@ -222,7 +220,7 @@ fn revoke_persistent_delegate(
                 if token_record.delegate_role == Some(role) {
                     // resets the token record (state, rule_set_revision and delegate info)
                     token_record.reset();
-                    token_record.save(&mut *token_record_info.try_borrow_mut_data()?)?;
+                    token_record.save(*token_record_info.try_borrow_mut_data()?)?;
                 } else {
                     return Err(MetadataError::InvalidDelegate.into());
                 }
