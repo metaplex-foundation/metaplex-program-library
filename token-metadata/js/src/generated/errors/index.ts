@@ -3577,7 +3577,7 @@ createErrorFromNameLookup.set('MissingPrintSupply', () => new MissingPrintSupply
  * @category generated
  */
 export class MissingMasterEditionAccountError extends Error {
-  readonly code: number = 0xa6;
+  readonly code: number = 0xa7;
   readonly name: string = 'MissingMasterEditionAccount';
   constructor() {
     super('Missing master edition account');
@@ -3587,7 +3587,7 @@ export class MissingMasterEditionAccountError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0xa6, () => new MissingMasterEditionAccountError());
+createErrorFromCodeLookup.set(0xa7, () => new MissingMasterEditionAccountError());
 createErrorFromNameLookup.set(
   'MissingMasterEditionAccount',
   () => new MissingMasterEditionAccountError(),
@@ -3600,7 +3600,7 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class AmountMustBeGreaterThanZeroError extends Error {
-  readonly code: number = 0xa7;
+  readonly code: number = 0xa8;
   readonly name: string = 'AmountMustBeGreaterThanZero';
   constructor() {
     super('Amount must be greater than zero');
@@ -3610,7 +3610,7 @@ export class AmountMustBeGreaterThanZeroError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0xa7, () => new AmountMustBeGreaterThanZeroError());
+createErrorFromCodeLookup.set(0xa8, () => new AmountMustBeGreaterThanZeroError());
 createErrorFromNameLookup.set(
   'AmountMustBeGreaterThanZero',
   () => new AmountMustBeGreaterThanZeroError(),

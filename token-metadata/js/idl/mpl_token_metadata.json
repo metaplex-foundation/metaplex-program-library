@@ -6145,12 +6145,12 @@
       "msg": "Print supply is required for non-fungibles"
     },
     {
-      "code": 166,
+      "code": 167,
       "name": "MissingMasterEditionAccount",
       "msg": "Missing master edition account"
     },
     {
-      "code": 167,
+      "code": 168,
       "name": "AmountMustBeGreaterThanZero",
       "msg": "Amount must be greater than zero"
     }

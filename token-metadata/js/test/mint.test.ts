@@ -198,7 +198,7 @@ test('Mint: fail to mint zero (0) tokens from ProgrammableNonFungible', async (t
   await mintTx.assertError(t, /Amount must be greater than zero/);
 });
 
-test.only('Mint: fail to mint multiple from ProgrammableNonFungible', async (t) => {
+test('Mint: fail to mint multiple from ProgrammableNonFungible', async (t) => {
   const API = new InitTransactions();
   const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
 
