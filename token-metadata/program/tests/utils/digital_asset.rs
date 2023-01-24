@@ -349,7 +349,8 @@ impl DigitalAsset {
             .mint(self.mint.pubkey())
             .metadata(self.metadata)
             .payer(approver.pubkey())
-            .authority(approver.pubkey());
+            .authority(approver.pubkey())
+            .spl_token_program(spl_token::ID);
 
         match args {
             RevokeArgs::CollectionV1 => {
@@ -458,6 +459,7 @@ impl DigitalAsset {
 
         if let Some(authorization_rules) = authorization_rules {
             builder.authorization_rules(authorization_rules);
+            builder.authorization_rules_program(mpl_token_auth_rules::ID);
         }
 
         let transfer_ix = builder.build(args).unwrap().instruction();
@@ -619,6 +621,7 @@ impl DigitalAsset {
 
         if let Some(authorization_rules) = authorization_rules {
             builder.authorization_rules(authorization_rules);
+            builder.authorization_rules_program(mpl_token_auth_rules::ID);
         }
 
         let transfer_ix = builder.build(args).unwrap().instruction();
