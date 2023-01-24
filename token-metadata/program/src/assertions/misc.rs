@@ -7,7 +7,6 @@ use solana_program::{
     program_pack::{IsInitialized, Pack},
     pubkey::Pubkey,
     rent::Rent,
-    system_program,
 };
 use spl_token::state::Account;
 
@@ -119,20 +118,6 @@ pub fn assert_token_program_matches_package(token_program_info: &AccountInfo) ->
 
 pub fn assert_rent_exempt(rent: &Rent, account_info: &AccountInfo) -> ProgramResult {
     mpl_utils::assert_rent_exempt(rent, account_info, MetadataError::NotRentExempt)
-}
-
-pub fn assert_system_wallet(wallet: &AccountInfo) -> ProgramResult {
-    assert_owned_by(wallet, &system_program::ID).map_err(|_| MetadataError::InvalidSystemWallet)?;
-
-    if wallet.data_len() != 0 {
-        return Err(MetadataError::InvalidSystemWallet.into());
-    }
-
-    if wallet.lamports() == 0 {
-        return Err(MetadataError::InvalidSystemWallet.into());
-    }
-
-    Ok(())
 }
 
 pub fn assert_delegate(

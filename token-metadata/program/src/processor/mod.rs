@@ -15,10 +15,7 @@ pub use bubblegum::*;
 pub use burn::*;
 pub use collection::*;
 pub use delegate::*;
-pub use deprecated::{
-    process_create_metadata_accounts_v2,
-    process_deprecated_mint_new_edition_from_master_edition_via_vault_proxy,
-};
+use deprecated::process_create_metadata_accounts_v2;
 pub use edition::*;
 pub use escrow::*;
 pub use freeze::*;
@@ -260,13 +257,9 @@ fn process_legacy_instruction<'a>(
             msg!("Instruction: Convert Master Edition V1 to V2");
             process_convert_master_edition_v1_to_v2(program_id, accounts)
         }
-        MetadataInstruction::MintNewEditionFromMasterEditionViaVaultProxy(args) => {
+        MetadataInstruction::MintNewEditionFromMasterEditionViaVaultProxy(_args) => {
             msg!("Instruction: Mint New Edition from Master Edition Via Vault Proxy, deprecated as of 1.4.0.");
-            process_deprecated_mint_new_edition_from_master_edition_via_vault_proxy(
-                program_id,
-                accounts,
-                args.edition,
-            )
+            Err(MetadataError::Removed.into())
         }
         MetadataInstruction::PuffMetadata => {
             msg!("Instruction: Puff Metadata");

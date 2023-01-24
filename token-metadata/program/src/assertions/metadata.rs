@@ -220,21 +220,6 @@ pub fn assert_holding_amount(
     Ok(())
 }
 
-pub fn assert_metadata_authority(
-    metadata: &Metadata,
-    authority_info: &AccountInfo,
-) -> ProgramResult {
-    if metadata.update_authority != *authority_info.key {
-        return Err(MetadataError::UpdateAuthorityIncorrect.into());
-    }
-
-    if !authority_info.is_signer {
-        return Err(MetadataError::UpdateAuthorityIsNotSigner.into());
-    }
-
-    Ok(())
-}
-
 pub fn assert_metadata_valid(
     program_id: &Pubkey,
     mint_pubkey: &Pubkey,
