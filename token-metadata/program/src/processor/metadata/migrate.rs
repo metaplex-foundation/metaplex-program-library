@@ -48,7 +48,6 @@ pub fn migrate_v1(program_id: &Pubkey, ctx: Context<Migrate>, args: MigrateArgs)
     let mint_info = ctx.accounts.mint_info;
     let collection_metadata_info = ctx.accounts.collection_metadata_info;
     let token_info = ctx.accounts.token_info;
-    let token_owner_info = ctx.accounts.token_owner_info;
     let token_record_info = ctx.accounts.token_record_info;
     let system_program_info = ctx.accounts.system_program_info;
     let sysvar_instructions_info = ctx.accounts.sysvar_instructions_info;
@@ -168,7 +167,7 @@ pub fn migrate_v1(program_id: &Pubkey, ctx: Context<Migrate>, args: MigrateArgs)
                 crate::ID.as_ref(),
                 mint_info.key.as_ref(),
                 TOKEN_RECORD_SEED.as_bytes(),
-                token_owner_info.key.as_ref(),
+                token_info.key.as_ref(),
             ]);
 
             let bump = &[assert_derivation(
