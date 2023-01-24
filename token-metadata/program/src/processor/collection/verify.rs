@@ -7,5 +7,5 @@ pub fn verify<'a>(
     _accounts: &'a [AccountInfo<'a>],
     _args: VerifyArgs,
 ) -> ProgramResult {
-    return Err(MetadataError::FeatureNotSupported.into());
+    Err(MetadataError::FeatureNotSupported.into())
 }

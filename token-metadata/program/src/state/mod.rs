@@ -38,6 +38,8 @@ use solana_program::{
     pubkey::Pubkey,
 };
 pub use uses::*;
+
+#[cfg(feature = "serde-feature")]
 use {
     serde::{Deserialize, Deserializer, Serialize},
     serde_with::{As, DisplayFromStr},
@@ -108,7 +110,7 @@ pub trait TokenMetadataAccount: BorshDeserialize {
 where {
         let data = &a.data.borrow_mut();
 
-        let ua = Self::safe_deserialize(&data).map_err(|_| MetadataError::DataTypeMismatch)?;
+        let ua = Self::safe_deserialize(data).map_err(|_| MetadataError::DataTypeMismatch)?;
 
         // Check that this is a `token-metadata` owned account.
         assert_owned_by(a, &ID)?;

@@ -1,4 +1,3 @@
-#[cfg(feature = "serde-feature")]
 use super::*;
 use borsh::{BorshDeserialize, BorshSerialize};
 use solana_program::pubkey::Pubkey;
