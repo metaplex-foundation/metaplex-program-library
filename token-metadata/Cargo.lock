@@ -1964,7 +1964,6 @@ dependencies = [
  "borsh",
  "mpl-token-auth-rules",
  "mpl-token-metadata-context-derive 0.1.1",
- "mpl-token-vault",
  "mpl-utils 0.0.6",
  "num-derive",
  "num-traits",
