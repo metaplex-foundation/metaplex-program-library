@@ -3,8 +3,8 @@
 > **Warning**
 > This is an alpha release, currently only available on devnet. 
 >
-> * :crab: Rust crate: [v1.7.0-beta.1](https://crates.io/crates/mpl-token-metadata/1.7.0-beta.1)
-> * :package: NPM package: [v2.7.0-beta.1](https://www.npmjs.com/package/@metaplex-foundation/mpl-token-metadata/v/2.7.0-beta.1)
+> * :crab: Rust crate: [v1.7.0-beta.2](https://crates.io/crates/mpl-token-metadata/1.7.0-beta.2)
+> * :package: NPM package: [v2.7.0-beta.2](https://www.npmjs.com/package/@metaplex-foundation/mpl-token-metadata/v/2.7.0-beta.2)
 >
 > **Note:** The instructions are subject to changes.
 
@@ -16,7 +16,7 @@ In order to support assets that can have customizable behavior, a new asset clas
 * [x] [`Create`](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/program/src/instruction/mod.rs#L518-L536) <span style="font-family:'Lucida Console', monospace; font-size: 6pt">([TypeScript](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/js/test/create.test.ts) | [Rust](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/program/tests/create.rs))</span>
 * [x] [`Delegate`](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/program/src/instruction/mod.rs#L562-L585) <span style="font-family:'Lucida Console', monospace; font-size: 6pt">([TypeScript](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/js/test/delegate.test.ts) | [Rust](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/program/tests/delegate.rs))</span>
 * [x] [`Lock`](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/program/src/instruction/mod.rs#L607-L624) <span style="font-family:'Lucida Console', monospace; font-size: 6pt">([TypeScript](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/js/test/lock.test.ts) | [Rust](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/program/tests/lock.rs))</span>
-* [ ] `Migrate`
+* [x] `Migrate`
 * [ ] `Print`
 * [x] [`Mint`](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/program/src/instruction/mod.rs#L538-L560) <span style="font-family:'Lucida Console', monospace; font-size: 6pt">([TypeScript](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/js/test/mint.test.ts) | [Rust](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/program/tests/mint.rs))</span>
 * [x] [`Revoke`](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/program/src/instruction/mod.rs#L587-L605) <span style="font-family:'Lucida Console', monospace; font-size: 6pt">([TypeScript](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/js/test/revoke.test.ts) | [Rust](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/program/tests/revoke.rs))</span>
@@ -97,12 +97,15 @@ pub enum MetadataInstruction {
 Each of these instructions will use versioned `*Args` structs to facilitate future updates, and in turn, not require additional instructions. Operations supported under each instruction are as follows:
 
 - `Burn`
+
 - `Create`
     * [x] Creation of Programmable Non-Fungibles tokens (pNFT)
     * [x] Creation of Non-Fungibles tokens (NFT)
     * [x] Creation of Fungible Assets (*semi-fungible tokens*)
     * [x] Creation of Fungible Tokens (*fungible tokens*)
+
 - `Delegate`
+    See Delegates Section below for more information on what the difference is between types of delegates.
     * [ ] Creation of `Authority` delegates
     * [x] Creation of `Collection` delegates
     * [x] Creation of `Sale` delegates
@@ -110,22 +113,25 @@ Each of these instructions will use versioned `*Args` structs to facilitate futu
     * [x] Creation of `Update` delegates
     * [ ] Creation of `Use` delegates
     * [x] Creation of `Utility` delegates
-    
-    See Delegates Section below for more information on what the difference is between types of delegates.
-    
+
 - `Lock`
     * [x] Lock Programmable Non-Fungibles
     * [x] Lock Non-Fungibles
     * [x] Lock Fungible Assets
     * [x] Lock Fungibles
+
 - `Migrate`
+    * [x] Migrate Non-Fungibles to Programmable Non-Fungibles
+
 - `Mint`
     * [x] Mint Programmable Non-Fungibles tokens (pNFT)
     * [x] Mint of Non-Fungibles tokens (NFT)
     * [x] Mint Fungible Assets (*semi-fungible tokens*)
     * [x] Mint Fungible Tokens (*fungible tokens*)
+
 - `Print`
     * [ ] Print of editions
+
 - `Revoke`
     * [ ] Revoke of `Authority` delegates
     * [x] Revoke of `Collection` delegates
@@ -134,22 +140,27 @@ Each of these instructions will use versioned `*Args` structs to facilitate futu
     * [x] Revoke of `Update` delegates
     * [ ] Revoke of `Use` delegates
     * [x] Revoke of `Utility` delegates
+
 - `Transfer`
     * [x] wallet-to-wallet transfers
     * [x] wallet-to-program transfers
     * [x] program-to-wallet transfers
     * [x] program-to-program transfers
+
 - `Update`
     * [x] Update metadata details for Programmable Non-Fungibles
     * [x] Update metadata details for Non-Fungibles
     * [x] Update metadata details for Fungibles Assets
     * [x] Update metadata details for Fungibles
+
 - `Unlock`
     * [x] Unlock Programmable Non-Fungibles
     * [x] Unlock Non-Fungibles
     * [x] Unlock Fungible Assets
     * [x] Unlock Fungibles
+
 - `Use`
+
 - `Verify`
     * [ ] Verify collection items
     * [ ] Verify creators
