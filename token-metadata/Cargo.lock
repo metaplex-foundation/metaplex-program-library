@@ -1984,7 +1984,7 @@ dependencies = [
  "arrayref",
  "borsh",
  "mpl-token-auth-rules",
- "mpl-token-metadata-context-derive 0.2.0",
+ "mpl-token-metadata-context-derive 0.2.1",
  "mpl-utils 0.0.6",
  "num-derive",
  "num-traits",
@@ -2022,7 +2022,7 @@ dependencies = [
 
 [[package]]
 name = "mpl-token-metadata-context-derive"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "quote 1.0.23",
  "syn 1.0.107",

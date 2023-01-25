@@ -27,7 +27,7 @@ shank = { version = "0.0.11" }
 serde = { version = "1.0.149", optional = true }
 serde_with = { version = "1.14.0", optional = true }
 mpl-utils = { version = "0.0.6", path="../../core/rust/utils" }
-mpl-token-metadata-context-derive = { version = "0.2.0", path = "../macro" }
+mpl-token-metadata-context-derive = { version = "0.2.1", path = "../macro" }
 
 [dev-dependencies]
 rmp-serde = "1.1.1"
