@@ -1056,7 +1056,7 @@ test('Transfer: ProgrammableNonFungible (rule set revision)', async (t) => {
   );
 });
 
-test.only('Transfer: ProgrammableNonFungible with address lookup table (LUT)', async (t) => {
+test('Transfer: ProgrammableNonFungible with address lookup table (LUT)', async (t) => {
   const API = new InitTransactions();
   const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
 

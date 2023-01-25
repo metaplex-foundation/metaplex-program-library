@@ -201,7 +201,6 @@ impl Metadata {
             self.data.name,
             self.data.symbol,
             self.data.uri,
-            self.update_authority,
         );
         asset_data.seller_fee_basis_points = self.data.seller_fee_basis_points;
         asset_data.creators = self.data.creators;

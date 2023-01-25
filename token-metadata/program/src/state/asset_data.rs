@@ -7,9 +7,6 @@ use solana_program::pubkey::Pubkey;
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct AssetData {
-    /// Update Authority for the asset.
-    #[cfg_attr(feature = "serde-feature", serde(with = "As::<DisplayFromStr>"))]
-    pub update_authority: Pubkey,
     /// The name of the asset.
     pub name: String,
     /// The symbol for the asset.
@@ -49,14 +46,12 @@ impl AssetData {
         name: String,
         symbol: String,
         uri: String,
-        update_authority: Pubkey,
     ) -> Self {
         Self {
             name,
             symbol,
             uri,
             seller_fee_basis_points: 0,
-            update_authority,
             creators: None,
             primary_sale_happened: false,
             is_mutable: true,

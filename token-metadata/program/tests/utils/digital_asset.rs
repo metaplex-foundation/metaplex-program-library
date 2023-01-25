@@ -75,7 +75,6 @@ impl DigitalAsset {
             String::from(DEFAULT_NAME),
             String::from(DEFAULT_SYMBOL),
             String::from(DEFAULT_URI),
-            context.payer.pubkey(),
         );
         asset.seller_fee_basis_points = 500;
 
