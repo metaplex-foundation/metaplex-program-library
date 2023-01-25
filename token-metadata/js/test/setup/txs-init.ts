@@ -734,4 +734,52 @@ export class InitTransactions {
       token: token.publicKey,
     };
   }
+
+  async getTransferInstruction(
+    authority: Keypair,
+    tokenOwner: PublicKey,
+    token: PublicKey,
+    mint: PublicKey,
+    metadata: PublicKey,
+    edition: PublicKey,
+    destinationOwner: PublicKey,
+    destination: PublicKey,
+    authorizationRules: PublicKey,
+    amount: number,
+    handler: PayerTransactionHandler,
+    tokenRecord: PublicKey | null = null,
+    destinationTokenRecord: PublicKey | null = null,
+  ): Promise<{ instruction: TransactionInstruction }> {
+    const transferAcccounts: TransferInstructionAccounts = {
+      authority: authority.publicKey,
+      tokenOwner,
+      token,
+      metadata,
+      mint,
+      edition,
+      destinationOwner,
+      destination,
+      payer: authority.publicKey,
+      splTokenProgram: splToken.TOKEN_PROGRAM_ID,
+      splAtaProgram: splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
+      systemProgram: SystemProgram.programId,
+      sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
+      authorizationRules,
+      authorizationRulesProgram: TOKEN_AUTH_RULES_ID,
+      ownerTokenRecord: tokenRecord,
+      destinationTokenRecord,
+    };
+
+    const transferArgs: TransferInstructionArgs = {
+      transferArgs: {
+        __kind: 'V1',
+        amount,
+        authorizationData: null,
+      },
+    };
+
+    const instruction = createTransferInstruction(transferAcccounts, transferArgs);
+
+    return { instruction };
+  }
 }

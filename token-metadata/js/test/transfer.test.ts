@@ -1,6 +1,21 @@
 import test from 'tape';
-import { amman, InitTransactions, killStuckProcess } from './setup';
-import { Keypair, PublicKey, sendAndConfirmTransaction, Transaction } from '@solana/web3.js';
+import {
+  addAddressesToTable,
+  amman,
+  createAndSendV0Tx,
+  createLookupTable,
+  InitTransactions,
+  killStuckProcess,
+  sleep,
+} from './setup';
+import {
+  AddressLookupTableAccount,
+  Keypair,
+  PublicKey,
+  sendAndConfirmTransaction,
+  SYSVAR_INSTRUCTIONS_PUBKEY,
+  Transaction,
+} from '@solana/web3.js';
 import { createAndMintDefaultAsset } from './utils/digital-asset-manager';
 import {
   createAssociatedTokenAccount,
@@ -1034,6 +1049,151 @@ test('Transfer: ProgrammableNonFungible (rule set revision)', async (t) => {
   );
 
   await transferTx.assertSuccess(t);
+
+  t.true(
+    (await getAccount(connection, token)).amount.toString() === '0',
+    'token amount after transfer equal to 0',
+  );
+});
+
+test.only('Transfer: ProgrammableNonFungible with address lookup table (LUT)', async (t) => {
+  const API = new InitTransactions();
+  const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
+
+  // 1) prepares the rule set and the programmable NFT for the transfer
+
+  const owner = payer;
+  const destination = Keypair.generate();
+  amman.airdrop(connection, destination.publicKey, 1);
+
+  //-- set up our rule set with one pubkey match rule for transfer.
+
+  const ruleSetName = 'transfer_test';
+  const ruleSet = {
+    libVersion: 1,
+    ruleSetName: ruleSetName,
+    owner: Array.from(owner.publicKey.toBytes()),
+    operations: {
+      'Transfer:Owner': {
+        ProgramOwned: {
+          program: Array.from(owner.publicKey.toBytes()),
+          field: 'Destination',
+        },
+      },
+    },
+  };
+  const serializedRuleSet = encode(ruleSet);
+
+  //-- Find the ruleset PDA
+  const [ruleSetPda] = PublicKey.findProgramAddressSync(
+    [Buffer.from('rule_set'), payer.publicKey.toBuffer(), Buffer.from(ruleSetName)],
+    TOKEN_AUTH_RULES_ID,
+  );
+
+  //-- create the ruleset at the PDA address with the serialized ruleset values.
+  const { tx: createRuleSetTx } = await API.createRuleSet(
+    t,
+    payer,
+    ruleSetPda,
+    serializedRuleSet,
+    handler,
+  );
+  await createRuleSetTx.assertSuccess(t);
+
+  //-- create an NFT with the programmable config stored on the metadata.
+  const { mint, metadata, masterEdition, token } = await createAndMintDefaultAsset(
+    t,
+    connection,
+    API,
+    handler,
+    payer,
+    TokenStandard.ProgrammableNonFungible,
+    ruleSetPda,
+  );
+
+  const metadataAccount = await Metadata.fromAccountAddress(connection, metadata);
+  spok(t, metadataAccount.programmableConfig, {
+    ruleSet: spokSamePubkey(ruleSetPda),
+  });
+
+  const tokenAccount = await getAccount(connection, token, 'confirmed', TOKEN_PROGRAM_ID);
+  t.true(tokenAccount.amount.toString() === '1', 'token account amount equal to 1');
+
+  const destinationToken = await createAssociatedTokenAccount(
+    connection,
+    payer,
+    mint,
+    destination.publicKey,
+  );
+
+  // owner token record
+  const ownerTokenRecord = findTokenRecordPda(mint, token);
+  amman.addr.addLabel('Owner Token Record', ownerTokenRecord);
+  // destination token record
+  const destinationTokenRecord = findTokenRecordPda(mint, destinationToken);
+  amman.addr.addLabel('Destination Token Record', destinationTokenRecord);
+
+  // 2) creates the lookup table (in practice the LUT would be created when the user 'deposits'
+  // the NFT into the program)
+
+  const { tx, lookupTable } = await createLookupTable(payer.publicKey, payer, handler, connection);
+  await tx.assertSuccess(t);
+
+  //-- adds addresses to the lookup table
+
+  const addresses = [
+    owner.publicKey,
+    ownerTokenRecord,
+    token,
+    mint,
+    metadata,
+    masterEdition,
+    ruleSetPda,
+    SYSVAR_INSTRUCTIONS_PUBKEY,
+  ];
+
+  const { response } = await addAddressesToTable(
+    lookupTable,
+    payer.publicKey,
+    payer,
+    addresses,
+    connection,
+  );
+
+  t.true(response.value.err == null);
+
+  const account = await connection.getAccountInfo(lookupTable);
+  const table = AddressLookupTableAccount.deserialize(account.data);
+
+  spok(t, table, {
+    authority: spokSamePubkey(payer.publicKey),
+    addresses: [...addresses.map((value) => spokSamePubkey(value))],
+  });
+
+  // 3) transfer the programmable NFT using the LUT
+
+  const { instruction: transferIx } = await API.getTransferInstruction(
+    owner,
+    owner.publicKey,
+    token,
+    mint,
+    metadata,
+    masterEdition,
+    destination.publicKey,
+    destinationToken,
+    ruleSetPda,
+    1,
+    handler,
+    ownerTokenRecord,
+    destinationTokenRecord,
+  );
+
+  const lookupTableAccount = await connection.getAddressLookupTable(lookupTable);
+
+  console.log('[ Waiting for lookup table activation ]');
+  await sleep(1000);
+
+  await createAndSendV0Tx(payer, [transferIx], connection, [lookupTableAccount.value]);
 
   t.true(
     (await getAccount(connection, token)).amount.toString() === '0',
