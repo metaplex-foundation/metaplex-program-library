@@ -1,6 +1,6 @@
 {
   "name": "@metaplex-foundation/mpl-token-metadata",
-  "version": "2.5.4",
+  "version": "2.7.0-beta.2",
   "contractVersion": "1.6.3",
   "description": "MPL Token Metadata JavaScript API.",
   "main": "dist/src/mpl-token-metadata.js",
@@ -14,12 +14,14 @@
     "build:docs": "typedoc",
     "build": "rimraf dist && tsc -p tsconfig.json",
     "api:gen": "DEBUG='(solita|rustbin):(info|error)' solita",
-    "test": "cpr test/fixtures dist/test/fixtures && tape dist/test/*.js",
+    "test": "cpr test/fixtures dist/test/fixtures -o && tape dist/test/*.js",
     "lint": "eslint \"{src,test}/**/*.ts\" --format stylish",
     "fix:lint": "yarn lint --fix",
     "prettier": "prettier \"{src,test}/**/*.ts\" --check",
     "fix:prettier": "prettier --write src/",
-    "fix": "yarn fix:lint && yarn fix:prettier"
+    "fix": "yarn fix:lint && yarn fix:prettier",
+    "amman:start": "amman start",
+    "amman:stop": "amman stop"
   },
   "files": [
     "/dist/src"
@@ -48,20 +50,28 @@
     "debug": "^4.3.4"
   },
   "devDependencies": {
-    "@metaplex-foundation/solita": "^0.19.1",
+    "@metaplex-foundation/amman": "^0.12.0",
+    "@metaplex-foundation/amman-client": "^0.2.2",
+    "@metaplex-foundation/solita": "^0.19.3",
+    "@metaplex-foundation/mpl-token-auth-rules": "^0.2.7",
+    "@msgpack/msgpack": "^2.8.0",
     "@types/bn.js": "^5.1.1",
     "@types/debug": "^4.1.7",
     "@types/tape": "^4.13.2",
     "@typescript-eslint/eslint-plugin": "^5.44.0",
     "@typescript-eslint/parser": "^5.44.0",
     "cpr": "^3.0.1",
+    "esbuild": "0.15.12",
+    "esbuild-runner": "^2.2.1",
     "eslint": "^8.3.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-prettier": "^4.2.1",
+    "prettier": "^2.5.1",
     "rimraf": "^3.0.2",
     "spok": "^1.4.3",
     "supports-color": "^9.2.3",
     "tape": "^5.5.3",
+    "typedoc": "^0.23.16",
     "typescript": "^4.9.3"
   }
 }

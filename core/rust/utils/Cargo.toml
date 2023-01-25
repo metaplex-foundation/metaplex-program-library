@@ -1,6 +1,6 @@
 [package]
 name = "mpl-utils"
-version = "0.0.5"
+version = "0.0.6"
 edition = "2021"
 description = "MPL Core Utils library"
 authors = ["Metaplex Developers <dev@metaplex.com>"]
@@ -14,7 +14,7 @@ crate-type = ["lib", "cdylib"]
 path = "src/lib.rs"
 
 [dependencies]
-solana-program = "1.10"
+solana-program = "1.13.5"
 borsh = "0.9.3"
 arrayref = "0.3.6"
 spl-token = { version = "3.2.0", features = ["no-entrypoint"], optional = true }

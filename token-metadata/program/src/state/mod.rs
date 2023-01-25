@@ -1,27 +1,36 @@
+pub(crate) mod asset_data;
 pub(crate) mod collection;
 pub(crate) mod creator;
 pub(crate) mod data;
+pub(crate) mod delegate;
 pub(crate) mod edition;
 pub(crate) mod edition_marker;
 pub(crate) mod escrow;
 pub(crate) mod master_edition;
 pub(crate) mod metadata;
+pub(crate) mod migrate;
+pub(crate) mod programmable;
 pub(crate) mod reservation;
+pub(crate) mod token_auth_payload;
 pub(crate) mod uses;
 
 use std::io::ErrorKind;
 
+pub use asset_data::*;
 use borsh::{maybestd::io::Error as BorshError, BorshDeserialize, BorshSerialize};
 pub use collection::*;
 pub use creator::*;
 pub use data::*;
+pub use delegate::*;
 pub use edition::*;
 pub use edition_marker::*;
 pub use escrow::*;
 pub use master_edition::*;
 pub use metadata::*;
+pub use migrate::*;
 use num_derive::FromPrimitive;
 use num_traits::FromPrimitive;
+pub use programmable::*;
 pub use reservation::*;
 use shank::ShankAccount;
 use solana_program::{
@@ -31,8 +40,9 @@ use solana_program::{
 pub use uses::*;
 #[cfg(feature = "serde-feature")]
 use {
-    serde::{Deserialize, Serialize},
+    serde::{Deserialize, Deserializer, Serialize},
     serde_with::{As, DisplayFromStr},
+    std::str::FromStr,
 };
 
 // Re-export constants to maintain compatibility.
@@ -44,14 +54,18 @@ use crate::{
     ID,
 };
 
+/// Index of the discriminator on the account data.
+pub const DISCRIMINATOR_INDEX: usize = 0;
+
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, FromPrimitive)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, Copy, FromPrimitive)]
 pub enum TokenStandard {
-    NonFungible,        // This is a master edition
-    FungibleAsset,      // A token with metadata that can also have attrributes
-    Fungible,           // A token with simple metadata
-    NonFungibleEdition, // This is a limited edition
+    NonFungible,             // This is a master edition
+    FungibleAsset,           // A token with metadata that can also have attrributes
+    Fungible,                // A token with simple metadata
+    NonFungibleEdition,      // This is a limited edition
+    ProgrammableNonFungible, // NonFungible with programmable configuration
 }
 
 pub trait TokenMetadataAccount: BorshDeserialize {
@@ -93,8 +107,9 @@ pub trait TokenMetadataAccount: BorshDeserialize {
 
     fn from_account_info(a: &AccountInfo) -> Result<Self, ProgramError>
 where {
-        let ua = Self::safe_deserialize(&a.data.borrow_mut())
-            .map_err(|_| MetadataError::DataTypeMismatch)?;
+        let data = &a.data.borrow_mut();
+
+        let ua = Self::safe_deserialize(data).map_err(|_| MetadataError::DataTypeMismatch)?;
 
         // Check that this is a `token-metadata` owned account.
         assert_owned_by(a, &ID)?;
@@ -118,4 +133,26 @@ pub enum Key {
     UseAuthorityRecord,
     CollectionAuthorityRecord,
     TokenOwnedEscrow,
+    TokenRecord,
+    MetadataDelegate,
+}
+
+#[cfg(feature = "serde-feature")]
+fn deser_option_pubkey<'de, D>(deserializer: D) -> Result<Option<Pubkey>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    <Option<String> as serde::de::Deserialize>::deserialize(deserializer)?
+        .map(|s| Pubkey::from_str(&s))
+        .transpose()
+        .map_err(serde::de::Error::custom)
+}
+
+#[cfg(feature = "serde-feature")]
+fn ser_option_pubkey<S>(pubkey: &Option<Pubkey>, serializer: S) -> Result<S::Ok, S::Error>
+where
+    S: serde::Serializer,
+{
+    let pubkey_string = pubkey.as_ref().map(|p| p.to_string());
+    serde::ser::Serialize::serialize(&pubkey_string, serializer)
 }

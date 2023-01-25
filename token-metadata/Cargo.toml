@@ -1,8 +1,13 @@
 [workspace]
 members=[
+  "macro",
   "program",
   "cli"
 ]
 
 [profile.release]
 overflow-checks = true     # Enable integer overflow checks.
+strip = true  # Automatically strip symbols from the binary.
+opt-level = "z" 
+lto = true
+codegen-units = 1

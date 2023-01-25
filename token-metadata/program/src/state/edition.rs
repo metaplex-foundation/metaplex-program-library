@@ -13,6 +13,7 @@ pub struct Edition {
     pub key: Key,
 
     /// Points at MasterEdition struct
+    #[cfg_attr(feature = "serde-feature", serde(with = "As::<DisplayFromStr>"))]
     pub parent: Pubkey,
 
     /// Starting at 0 for master record, this is incremented for each edition minted.

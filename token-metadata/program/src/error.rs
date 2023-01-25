@@ -309,7 +309,7 @@ pub enum MetadataError {
     #[error("Is Mutable can only be flipped to false")]
     IsMutableCanOnlyBeFlippedToFalse,
 
-    #[error("Cannont Verify Collection in this Instruction")]
+    #[error("Collection cannot be verified in this instruction")]
     CollectionCannotBeVerifiedInThisInstruction,
 
     #[error("This instruction was deprecated in a previous release and is now removed")]
@@ -442,7 +442,7 @@ pub enum MetadataError {
     BorshDeserializationError,
 
     /// 112 - Cannot update a verified colleciton in this command
-    #[error("Cannot update a verified colleciton in this command")]
+    #[error("Cannot update a verified collection in this command")]
     CannotUpdateVerifiedCollection,
 
     /// 113 - Edition Account Doesnt Match Collection
@@ -524,10 +524,149 @@ pub enum MetadataError {
     /// 132
     #[error("Invalid bubblegum signer")]
     InvalidBubblegumSigner,
-
-    /// 132
+    /// 133
     #[error("Escrow parent cannot have a delegate")]
     EscrowParentHasDelegate,
+
+    /// 134
+    #[error("Mint needs to be signer to initialize the account")]
+    MintIsNotSigner,
+
+    /// 135
+    #[error("Invalid token standard")]
+    InvalidTokenStandard,
+
+    /// 136
+    #[error("Invalid mint account for specified token standard")]
+    InvalidMintForTokenStandard,
+
+    /// 137
+    #[error("Invalid authorization rules account")]
+    InvalidAuthorizationRules,
+
+    /// 138
+    #[error("Missing authorization rules account")]
+    MissingAuthorizationRules,
+
+    /// 139
+    #[error("Missing programmable configuration")]
+    MissingProgrammableConfig,
+
+    /// 140
+    #[error("Invalid programmable configuration")]
+    InvalidProgrammableConfig,
+
+    /// 141
+    #[error("Delegate already exists")]
+    DelegateAlreadyExists,
+
+    /// 142
+    #[error("Delegate not found")]
+    DelegateNotFound,
+
+    /// 143
+    #[error("Required account not set in instruction builder")]
+    MissingAccountInBuilder,
+
+    /// 144
+    #[error("Required argument not set in instruction builder")]
+    MissingArgumentInBuilder,
+
+    /// 145
+    #[error("Feature not supported currently")]
+    FeatureNotSupported,
+
+    /// 146
+    #[error("Invalid system wallet")]
+    InvalidSystemWallet,
+
+    /// 147
+    #[error("Only the sale delegate can transfer while its set")]
+    OnlySaleDelegateCanTransfer,
+
+    /// 148
+    #[error("Missing token account")]
+    MissingTokenAccount,
+
+    /// 149
+    #[error("Missing SPL token program")]
+    MissingSplTokenProgram,
+
+    /// 150
+    #[error("Missing authorization rules program")]
+    MissingAuthorizationRulesProgram,
+
+    /// 151
+    #[error("Invalid delegate role for transfer")]
+    InvalidDelegateRoleForTransfer,
+
+    /// 152
+    #[error("Invalid transfer authority")]
+    InvalidTransferAuthority,
+
+    /// 153
+    #[error("Instruction not supported for ProgrammableNonFungible assets")]
+    InstructionNotSupported,
+
+    /// 154
+    #[error("Public key does not match expected value")]
+    KeyMismatch,
+
+    /// 155
+    #[error("Token is locked")]
+    LockedToken,
+
+    /// 156
+    #[error("Token is unlocked")]
+    UnlockedToken,
+
+    /// 157
+    #[error("Missing delegate role")]
+    MissingDelegateRole,
+
+    /// 158
+    #[error("Invalid authority type")]
+    InvalidAuthorityType,
+
+    /// 159
+    #[error("Missing token record account")]
+    MissingTokenRecord,
+
+    /// 160
+    #[error("Mint supply must be zero for programmable assets")]
+    MintSupplyMustBeZero,
+
+    /// 161
+    #[error("Data is empty or zeroed")]
+    DataIsEmptyOrZeroed,
+
+    /// 162
+    #[error("Missing token owner")]
+    MissingTokenOwnerAccount,
+
+    /// 163
+    #[error("Master edition account has an invalid length")]
+    InvalidMasterEditionAccountLength,
+
+    /// 164
+    #[error("Incorrect token state")]
+    IncorrectTokenState,
+
+    /// 165
+    #[error("Invalid delegate role")]
+    InvalidDelegateRole,
+
+    /// 166
+    #[error("Print supply is required for non-fungibles")]
+    MissingPrintSupply,
+
+    /// 167
+    #[error("Missing master edition account")]
+    MissingMasterEditionAccount,
+
+    /// 168
+    #[error("Amount must be greater than zero")]
+    AmountMustBeGreaterThanZero,
 }
 
 impl PrintProgramError for MetadataError {

@@ -126,3 +126,50 @@ pub struct TokenMintToParams<'a: 'b, 'b> {
     /// token_program
     pub token_program: AccountInfo<'a>,
 }
+
+pub fn spl_token_transfer(params: TokenTransferParams<'_, '_>) -> ProgramResult {
+    let TokenTransferParams {
+        mint: _,
+        source,
+        destination,
+        amount,
+        authority,
+        token_program,
+        authority_signer_seeds,
+    } = params;
+    let mut seeds: Vec<&[&[u8]]> = vec![];
+    if let Some(seed) = authority_signer_seeds {
+        seeds.push(seed);
+    }
+    invoke_signed(
+        &spl_token::instruction::transfer(
+            token_program.key,
+            source.key,
+            destination.key,
+            authority.key,
+            &[authority.key],
+            amount,
+        )?,
+        &[source, destination, authority],
+        seeds.as_slice(),
+    )
+}
+
+/// TokenTransferParams
+#[derive(Debug)]
+pub struct TokenTransferParams<'a: 'b, 'b> {
+    /// mint
+    pub mint: AccountInfo<'a>,
+    /// source
+    pub source: AccountInfo<'a>,
+    /// destination
+    pub destination: AccountInfo<'a>,
+    /// amount
+    pub amount: u64,
+    /// authority
+    pub authority: AccountInfo<'a>,
+    /// authority_signer_seeds
+    pub authority_signer_seeds: Option<&'b [&'b [u8]]>,
+    /// token_program
+    pub token_program: AccountInfo<'a>,
+}

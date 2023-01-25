@@ -1594,7 +1594,7 @@ createErrorFromNameLookup.set(
 );
 
 /**
- * CollectionCannotBeVerifiedInThisInstruction: 'Cannont Verify Collection in this Instruction'
+ * CollectionCannotBeVerifiedInThisInstruction: 'Collection cannot be verified in this instruction'
  *
  * @category Errors
  * @category generated
@@ -1603,7 +1603,7 @@ export class CollectionCannotBeVerifiedInThisInstructionError extends Error {
   readonly code: number = 0x4a;
   readonly name: string = 'CollectionCannotBeVerifiedInThisInstruction';
   constructor() {
-    super('Cannont Verify Collection in this Instruction');
+    super('Collection cannot be verified in this instruction');
     if (typeof Error.captureStackTrace === 'function') {
       Error.captureStackTrace(this, CollectionCannotBeVerifiedInThisInstructionError);
     }
@@ -2417,7 +2417,7 @@ createErrorFromNameLookup.set(
 );
 
 /**
- * CannotUpdateVerifiedCollection: 'Cannot update a verified colleciton in this command'
+ * CannotUpdateVerifiedCollection: 'Cannot update a verified collection in this command'
  *
  * @category Errors
  * @category generated
@@ -2426,7 +2426,7 @@ export class CannotUpdateVerifiedCollectionError extends Error {
   readonly code: number = 0x70;
   readonly name: string = 'CannotUpdateVerifiedCollection';
   constructor() {
-    super('Cannot update a verified colleciton in this command');
+    super('Cannot update a verified collection in this command');
     if (typeof Error.captureStackTrace === 'function') {
       Error.captureStackTrace(this, CannotUpdateVerifiedCollectionError);
     }
@@ -2853,6 +2853,768 @@ export class InvalidBubblegumSignerError extends Error {
 
 createErrorFromCodeLookup.set(0x84, () => new InvalidBubblegumSignerError());
 createErrorFromNameLookup.set('InvalidBubblegumSigner', () => new InvalidBubblegumSignerError());
+
+/**
+ * EscrowParentHasDelegate: 'Escrow parent cannot have a delegate'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class EscrowParentHasDelegateError extends Error {
+  readonly code: number = 0x85;
+  readonly name: string = 'EscrowParentHasDelegate';
+  constructor() {
+    super('Escrow parent cannot have a delegate');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, EscrowParentHasDelegateError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x85, () => new EscrowParentHasDelegateError());
+createErrorFromNameLookup.set('EscrowParentHasDelegate', () => new EscrowParentHasDelegateError());
+
+/**
+ * MintIsNotSigner: 'Mint needs to be signer to initialize the account'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MintIsNotSignerError extends Error {
+  readonly code: number = 0x86;
+  readonly name: string = 'MintIsNotSigner';
+  constructor() {
+    super('Mint needs to be signer to initialize the account');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MintIsNotSignerError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x86, () => new MintIsNotSignerError());
+createErrorFromNameLookup.set('MintIsNotSigner', () => new MintIsNotSignerError());
+
+/**
+ * InvalidTokenStandard: 'Invalid token standard'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidTokenStandardError extends Error {
+  readonly code: number = 0x87;
+  readonly name: string = 'InvalidTokenStandard';
+  constructor() {
+    super('Invalid token standard');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidTokenStandardError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x87, () => new InvalidTokenStandardError());
+createErrorFromNameLookup.set('InvalidTokenStandard', () => new InvalidTokenStandardError());
+
+/**
+ * InvalidMintForTokenStandard: 'Invalid mint account for specified token standard'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidMintForTokenStandardError extends Error {
+  readonly code: number = 0x88;
+  readonly name: string = 'InvalidMintForTokenStandard';
+  constructor() {
+    super('Invalid mint account for specified token standard');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidMintForTokenStandardError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x88, () => new InvalidMintForTokenStandardError());
+createErrorFromNameLookup.set(
+  'InvalidMintForTokenStandard',
+  () => new InvalidMintForTokenStandardError(),
+);
+
+/**
+ * InvalidAuthorizationRules: 'Invalid authorization rules account'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidAuthorizationRulesError extends Error {
+  readonly code: number = 0x89;
+  readonly name: string = 'InvalidAuthorizationRules';
+  constructor() {
+    super('Invalid authorization rules account');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidAuthorizationRulesError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x89, () => new InvalidAuthorizationRulesError());
+createErrorFromNameLookup.set(
+  'InvalidAuthorizationRules',
+  () => new InvalidAuthorizationRulesError(),
+);
+
+/**
+ * MissingAuthorizationRules: 'Missing authorization rules account'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MissingAuthorizationRulesError extends Error {
+  readonly code: number = 0x8a;
+  readonly name: string = 'MissingAuthorizationRules';
+  constructor() {
+    super('Missing authorization rules account');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MissingAuthorizationRulesError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x8a, () => new MissingAuthorizationRulesError());
+createErrorFromNameLookup.set(
+  'MissingAuthorizationRules',
+  () => new MissingAuthorizationRulesError(),
+);
+
+/**
+ * MissingProgrammableConfig: 'Missing programmable configuration'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MissingProgrammableConfigError extends Error {
+  readonly code: number = 0x8b;
+  readonly name: string = 'MissingProgrammableConfig';
+  constructor() {
+    super('Missing programmable configuration');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MissingProgrammableConfigError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x8b, () => new MissingProgrammableConfigError());
+createErrorFromNameLookup.set(
+  'MissingProgrammableConfig',
+  () => new MissingProgrammableConfigError(),
+);
+
+/**
+ * InvalidProgrammableConfig: 'Invalid programmable configuration'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidProgrammableConfigError extends Error {
+  readonly code: number = 0x8c;
+  readonly name: string = 'InvalidProgrammableConfig';
+  constructor() {
+    super('Invalid programmable configuration');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidProgrammableConfigError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x8c, () => new InvalidProgrammableConfigError());
+createErrorFromNameLookup.set(
+  'InvalidProgrammableConfig',
+  () => new InvalidProgrammableConfigError(),
+);
+
+/**
+ * DelegateAlreadyExists: 'Delegate already exists'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class DelegateAlreadyExistsError extends Error {
+  readonly code: number = 0x8d;
+  readonly name: string = 'DelegateAlreadyExists';
+  constructor() {
+    super('Delegate already exists');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, DelegateAlreadyExistsError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x8d, () => new DelegateAlreadyExistsError());
+createErrorFromNameLookup.set('DelegateAlreadyExists', () => new DelegateAlreadyExistsError());
+
+/**
+ * DelegateNotFound: 'Delegate not found'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class DelegateNotFoundError extends Error {
+  readonly code: number = 0x8e;
+  readonly name: string = 'DelegateNotFound';
+  constructor() {
+    super('Delegate not found');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, DelegateNotFoundError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x8e, () => new DelegateNotFoundError());
+createErrorFromNameLookup.set('DelegateNotFound', () => new DelegateNotFoundError());
+
+/**
+ * MissingAccountInBuilder: 'Required account not set in instruction builder'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MissingAccountInBuilderError extends Error {
+  readonly code: number = 0x8f;
+  readonly name: string = 'MissingAccountInBuilder';
+  constructor() {
+    super('Required account not set in instruction builder');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MissingAccountInBuilderError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x8f, () => new MissingAccountInBuilderError());
+createErrorFromNameLookup.set('MissingAccountInBuilder', () => new MissingAccountInBuilderError());
+
+/**
+ * MissingArgumentInBuilder: 'Required argument not set in instruction builder'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MissingArgumentInBuilderError extends Error {
+  readonly code: number = 0x90;
+  readonly name: string = 'MissingArgumentInBuilder';
+  constructor() {
+    super('Required argument not set in instruction builder');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MissingArgumentInBuilderError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x90, () => new MissingArgumentInBuilderError());
+createErrorFromNameLookup.set(
+  'MissingArgumentInBuilder',
+  () => new MissingArgumentInBuilderError(),
+);
+
+/**
+ * FeatureNotSupported: 'Feature not supported currently'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class FeatureNotSupportedError extends Error {
+  readonly code: number = 0x91;
+  readonly name: string = 'FeatureNotSupported';
+  constructor() {
+    super('Feature not supported currently');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, FeatureNotSupportedError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x91, () => new FeatureNotSupportedError());
+createErrorFromNameLookup.set('FeatureNotSupported', () => new FeatureNotSupportedError());
+
+/**
+ * InvalidSystemWallet: 'Invalid system wallet'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidSystemWalletError extends Error {
+  readonly code: number = 0x92;
+  readonly name: string = 'InvalidSystemWallet';
+  constructor() {
+    super('Invalid system wallet');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidSystemWalletError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x92, () => new InvalidSystemWalletError());
+createErrorFromNameLookup.set('InvalidSystemWallet', () => new InvalidSystemWalletError());
+
+/**
+ * OnlySaleDelegateCanTransfer: 'Only the sale delegate can transfer while its set'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class OnlySaleDelegateCanTransferError extends Error {
+  readonly code: number = 0x93;
+  readonly name: string = 'OnlySaleDelegateCanTransfer';
+  constructor() {
+    super('Only the sale delegate can transfer while its set');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, OnlySaleDelegateCanTransferError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x93, () => new OnlySaleDelegateCanTransferError());
+createErrorFromNameLookup.set(
+  'OnlySaleDelegateCanTransfer',
+  () => new OnlySaleDelegateCanTransferError(),
+);
+
+/**
+ * MissingTokenAccount: 'Missing token account'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MissingTokenAccountError extends Error {
+  readonly code: number = 0x94;
+  readonly name: string = 'MissingTokenAccount';
+  constructor() {
+    super('Missing token account');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MissingTokenAccountError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x94, () => new MissingTokenAccountError());
+createErrorFromNameLookup.set('MissingTokenAccount', () => new MissingTokenAccountError());
+
+/**
+ * MissingSplTokenProgram: 'Missing SPL token program'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MissingSplTokenProgramError extends Error {
+  readonly code: number = 0x95;
+  readonly name: string = 'MissingSplTokenProgram';
+  constructor() {
+    super('Missing SPL token program');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MissingSplTokenProgramError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x95, () => new MissingSplTokenProgramError());
+createErrorFromNameLookup.set('MissingSplTokenProgram', () => new MissingSplTokenProgramError());
+
+/**
+ * MissingAuthorizationRulesProgram: 'Missing authorization rules program'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MissingAuthorizationRulesProgramError extends Error {
+  readonly code: number = 0x96;
+  readonly name: string = 'MissingAuthorizationRulesProgram';
+  constructor() {
+    super('Missing authorization rules program');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MissingAuthorizationRulesProgramError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x96, () => new MissingAuthorizationRulesProgramError());
+createErrorFromNameLookup.set(
+  'MissingAuthorizationRulesProgram',
+  () => new MissingAuthorizationRulesProgramError(),
+);
+
+/**
+ * InvalidDelegateRoleForTransfer: 'Invalid delegate role for transfer'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidDelegateRoleForTransferError extends Error {
+  readonly code: number = 0x97;
+  readonly name: string = 'InvalidDelegateRoleForTransfer';
+  constructor() {
+    super('Invalid delegate role for transfer');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidDelegateRoleForTransferError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x97, () => new InvalidDelegateRoleForTransferError());
+createErrorFromNameLookup.set(
+  'InvalidDelegateRoleForTransfer',
+  () => new InvalidDelegateRoleForTransferError(),
+);
+
+/**
+ * InvalidTransferAuthority: 'Invalid transfer authority'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidTransferAuthorityError extends Error {
+  readonly code: number = 0x98;
+  readonly name: string = 'InvalidTransferAuthority';
+  constructor() {
+    super('Invalid transfer authority');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidTransferAuthorityError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x98, () => new InvalidTransferAuthorityError());
+createErrorFromNameLookup.set(
+  'InvalidTransferAuthority',
+  () => new InvalidTransferAuthorityError(),
+);
+
+/**
+ * InstructionNotSupported: 'Instruction not supported for ProgrammableNonFungible assets'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InstructionNotSupportedError extends Error {
+  readonly code: number = 0x99;
+  readonly name: string = 'InstructionNotSupported';
+  constructor() {
+    super('Instruction not supported for ProgrammableNonFungible assets');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InstructionNotSupportedError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x99, () => new InstructionNotSupportedError());
+createErrorFromNameLookup.set('InstructionNotSupported', () => new InstructionNotSupportedError());
+
+/**
+ * KeyMismatch: 'Public key does not match expected value'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class KeyMismatchError extends Error {
+  readonly code: number = 0x9a;
+  readonly name: string = 'KeyMismatch';
+  constructor() {
+    super('Public key does not match expected value');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, KeyMismatchError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x9a, () => new KeyMismatchError());
+createErrorFromNameLookup.set('KeyMismatch', () => new KeyMismatchError());
+
+/**
+ * LockedToken: 'Token is locked'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class LockedTokenError extends Error {
+  readonly code: number = 0x9b;
+  readonly name: string = 'LockedToken';
+  constructor() {
+    super('Token is locked');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, LockedTokenError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x9b, () => new LockedTokenError());
+createErrorFromNameLookup.set('LockedToken', () => new LockedTokenError());
+
+/**
+ * UnlockedToken: 'Token is unlocked'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class UnlockedTokenError extends Error {
+  readonly code: number = 0x9c;
+  readonly name: string = 'UnlockedToken';
+  constructor() {
+    super('Token is unlocked');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, UnlockedTokenError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x9c, () => new UnlockedTokenError());
+createErrorFromNameLookup.set('UnlockedToken', () => new UnlockedTokenError());
+
+/**
+ * MissingDelegateRole: 'Missing delegate role'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MissingDelegateRoleError extends Error {
+  readonly code: number = 0x9d;
+  readonly name: string = 'MissingDelegateRole';
+  constructor() {
+    super('Missing delegate role');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MissingDelegateRoleError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x9d, () => new MissingDelegateRoleError());
+createErrorFromNameLookup.set('MissingDelegateRole', () => new MissingDelegateRoleError());
+
+/**
+ * InvalidAuthorityType: 'Invalid authority type'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidAuthorityTypeError extends Error {
+  readonly code: number = 0x9e;
+  readonly name: string = 'InvalidAuthorityType';
+  constructor() {
+    super('Invalid authority type');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidAuthorityTypeError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x9e, () => new InvalidAuthorityTypeError());
+createErrorFromNameLookup.set('InvalidAuthorityType', () => new InvalidAuthorityTypeError());
+
+/**
+ * MissingTokenRecord: 'Missing token record account'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MissingTokenRecordError extends Error {
+  readonly code: number = 0x9f;
+  readonly name: string = 'MissingTokenRecord';
+  constructor() {
+    super('Missing token record account');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MissingTokenRecordError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x9f, () => new MissingTokenRecordError());
+createErrorFromNameLookup.set('MissingTokenRecord', () => new MissingTokenRecordError());
+
+/**
+ * MintSupplyMustBeZero: 'Mint supply must be zero for programmable assets'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MintSupplyMustBeZeroError extends Error {
+  readonly code: number = 0xa0;
+  readonly name: string = 'MintSupplyMustBeZero';
+  constructor() {
+    super('Mint supply must be zero for programmable assets');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MintSupplyMustBeZeroError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xa0, () => new MintSupplyMustBeZeroError());
+createErrorFromNameLookup.set('MintSupplyMustBeZero', () => new MintSupplyMustBeZeroError());
+
+/**
+ * DataIsEmptyOrZeroed: 'Data is empty or zeroed'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class DataIsEmptyOrZeroedError extends Error {
+  readonly code: number = 0xa1;
+  readonly name: string = 'DataIsEmptyOrZeroed';
+  constructor() {
+    super('Data is empty or zeroed');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, DataIsEmptyOrZeroedError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xa1, () => new DataIsEmptyOrZeroedError());
+createErrorFromNameLookup.set('DataIsEmptyOrZeroed', () => new DataIsEmptyOrZeroedError());
+
+/**
+ * MissingTokenOwnerAccount: 'Missing token owner'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MissingTokenOwnerAccountError extends Error {
+  readonly code: number = 0xa2;
+  readonly name: string = 'MissingTokenOwnerAccount';
+  constructor() {
+    super('Missing token owner');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MissingTokenOwnerAccountError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xa2, () => new MissingTokenOwnerAccountError());
+createErrorFromNameLookup.set(
+  'MissingTokenOwnerAccount',
+  () => new MissingTokenOwnerAccountError(),
+);
+
+/**
+ * InvalidMasterEditionAccountLength: 'Master edition account has an invalid length'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidMasterEditionAccountLengthError extends Error {
+  readonly code: number = 0xa3;
+  readonly name: string = 'InvalidMasterEditionAccountLength';
+  constructor() {
+    super('Master edition account has an invalid length');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidMasterEditionAccountLengthError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xa3, () => new InvalidMasterEditionAccountLengthError());
+createErrorFromNameLookup.set(
+  'InvalidMasterEditionAccountLength',
+  () => new InvalidMasterEditionAccountLengthError(),
+);
+
+/**
+ * IncorrectTokenState: 'Incorrect token state'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class IncorrectTokenStateError extends Error {
+  readonly code: number = 0xa4;
+  readonly name: string = 'IncorrectTokenState';
+  constructor() {
+    super('Incorrect token state');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, IncorrectTokenStateError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xa4, () => new IncorrectTokenStateError());
+createErrorFromNameLookup.set('IncorrectTokenState', () => new IncorrectTokenStateError());
+
+/**
+ * InvalidDelegateRole: 'Invalid delegate role'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidDelegateRoleError extends Error {
+  readonly code: number = 0xa5;
+  readonly name: string = 'InvalidDelegateRole';
+  constructor() {
+    super('Invalid delegate role');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidDelegateRoleError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xa5, () => new InvalidDelegateRoleError());
+createErrorFromNameLookup.set('InvalidDelegateRole', () => new InvalidDelegateRoleError());
+
+/**
+ * MissingPrintSupply: 'Print supply is required for non-fungibles'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MissingPrintSupplyError extends Error {
+  readonly code: number = 0xa6;
+  readonly name: string = 'MissingPrintSupply';
+  constructor() {
+    super('Print supply is required for non-fungibles');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MissingPrintSupplyError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xa6, () => new MissingPrintSupplyError());
+createErrorFromNameLookup.set('MissingPrintSupply', () => new MissingPrintSupplyError());
+
+/**
+ * MissingMasterEditionAccount: 'Missing master edition account'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MissingMasterEditionAccountError extends Error {
+  readonly code: number = 0xa7;
+  readonly name: string = 'MissingMasterEditionAccount';
+  constructor() {
+    super('Missing master edition account');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MissingMasterEditionAccountError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xa7, () => new MissingMasterEditionAccountError());
+createErrorFromNameLookup.set(
+  'MissingMasterEditionAccount',
+  () => new MissingMasterEditionAccountError(),
+);
+
+/**
+ * AmountMustBeGreaterThanZero: 'Amount must be greater than zero'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class AmountMustBeGreaterThanZeroError extends Error {
+  readonly code: number = 0xa8;
+  readonly name: string = 'AmountMustBeGreaterThanZero';
+  constructor() {
+    super('Amount must be greater than zero');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, AmountMustBeGreaterThanZeroError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xa8, () => new AmountMustBeGreaterThanZeroError());
+createErrorFromNameLookup.set(
+  'AmountMustBeGreaterThanZero',
+  () => new AmountMustBeGreaterThanZeroError(),
+);
 
 /**
  * Attempts to resolve a custom program error from the provided error code.
