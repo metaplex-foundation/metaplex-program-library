@@ -23,7 +23,7 @@ export async function createLookupTable(
   connection: Connection,
 ): Promise<{ tx: ConfirmedTransactionAssertablePromise; lookupTable: PublicKey }> {
   // get current `slot`
-  let slot = await connection.getSlot();
+  const slot = await connection.getSlot();
 
   // create an Address Lookup Table
   const [lookupTableIx, address] = AddressLookupTableProgram.createLookupTable({
@@ -63,7 +63,7 @@ export async function createAndSendV0Tx(
   connection: Connection,
   lookupTables: AddressLookupTableAccount[] = [],
 ): Promise<{ response: RpcResponseAndContext<SignatureResult>; signature: string }> {
-  let latestBlockhash = await connection.getLatestBlockhash('finalized');
+  const latestBlockhash = await connection.getLatestBlockhash('finalized');
 
   const messageV0 = new TransactionMessage({
     payerKey: payer.publicKey,
