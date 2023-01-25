@@ -17,7 +17,6 @@ use solana_sdk::{
     transaction::TransactionError,
 };
 use spl_associated_token_account::get_associated_token_address;
-
 use utils::*;
 
 mod standard_transfer {

@@ -3,9 +3,8 @@ use borsh::{BorshDeserialize, BorshSerialize};
 use serde::{Deserialize, Serialize};
 use solana_program::instruction::{AccountMeta, Instruction};
 
-use crate::processor::AuthorizationData;
-
 use super::{InstructionBuilder, MetadataInstruction};
+use crate::processor::AuthorizationData;
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]

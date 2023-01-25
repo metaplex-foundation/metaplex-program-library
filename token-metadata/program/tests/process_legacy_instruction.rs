@@ -18,8 +18,7 @@ mod process_legacy_instruction {
         instruction::{sign_metadata, DelegateArgs},
         state::{Metadata, TokenStandard},
     };
-    use solana_program::borsh::try_from_slice_unchecked;
-    use solana_program::program_pack::Pack;
+    use solana_program::{borsh::try_from_slice_unchecked, program_pack::Pack};
     use spl_token::state::Account;
 
     use super::*;

@@ -1,11 +1,10 @@
 use solana_program::{account_info::AccountInfo, entrypoint::ProgramResult, pubkey::Pubkey};
 
+use super::toggle_asset_state;
 use crate::{
     instruction::{Unlock, UnlockArgs},
     state::TokenState,
 };
-
-use super::toggle_asset_state;
 
 pub fn unlock<'a>(
     program_id: &Pubkey,

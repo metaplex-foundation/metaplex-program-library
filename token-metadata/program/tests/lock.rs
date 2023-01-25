@@ -14,8 +14,11 @@ mod lock {
         state::{TokenRecord, TokenStandard, TokenState},
     };
     use solana_program::{borsh::try_from_slice_unchecked, program_pack::Pack};
-    use solana_sdk::signature::{Keypair, Signer};
-    use solana_sdk::{instruction::InstructionError, transaction::TransactionError};
+    use solana_sdk::{
+        instruction::InstructionError,
+        signature::{Keypair, Signer},
+        transaction::TransactionError,
+    };
     use spl_token::state::Account;
 
     use super::*;

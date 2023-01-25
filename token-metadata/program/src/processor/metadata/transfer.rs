@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use borsh::BorshDeserialize;
 use mpl_token_auth_rules::processor::cmp_pubkeys;
 use mpl_utils::{assert_signer, token::TokenTransferParams};
@@ -14,7 +16,6 @@ use solana_program::{
     sysvar::{self, instructions::get_instruction_relative},
 };
 use spl_token::state::Account;
-use std::fmt::Display;
 
 use crate::{
     assertions::{assert_keys_equal, assert_owned_by, metadata::assert_holding_amount},
@@ -266,15 +267,13 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
 
             // the authority must be either the token owner or a delegate for the
             // transfer to succeed
-            let available_amount =
-                if cmp_pubkeys(&token.owner, ctx.accounts.authority_info.key) {
-                    token.amount
-                } else if COption::from(*ctx.accounts.authority_info.key) == token.delegate
-                {
-                    token.delegated_amount
-                } else {
-                    return Err(MetadataError::InvalidAuthorityType.into());
-                };
+            let available_amount = if cmp_pubkeys(&token.owner, ctx.accounts.authority_info.key) {
+                token.amount
+            } else if COption::from(*ctx.accounts.authority_info.key) == token.delegate {
+                token.delegated_amount
+            } else {
+                return Err(MetadataError::InvalidAuthorityType.into());
+            };
 
             if available_amount < amount {
                 return Err(MetadataError::NotEnoughTokens.into());

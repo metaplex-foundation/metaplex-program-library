@@ -23,7 +23,9 @@ mod create {
     use mpl_token_metadata::{
         error::MetadataError,
         instruction::{builders::CreateBuilder, CreateArgs, InstructionBuilder},
-        state::{AssetData, Metadata, ProgrammableConfig, TokenStandard, EDITION, PREFIX, PrintSupply},
+        state::{
+            AssetData, Metadata, PrintSupply, ProgrammableConfig, TokenStandard, EDITION, PREFIX,
+        },
     };
     use solana_program::borsh::try_from_slice_unchecked;
 

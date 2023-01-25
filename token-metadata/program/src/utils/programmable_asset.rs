@@ -1,24 +1,20 @@
 use borsh::BorshSerialize;
-use mpl_token_auth_rules::instruction::InstructionBuilder;
 use mpl_token_auth_rules::{
-    instruction::{builders::ValidateBuilder, ValidateArgs},
+    instruction::{builders::ValidateBuilder, InstructionBuilder, ValidateArgs},
     payload::PayloadType,
 };
-use mpl_utils::create_or_allocate_account_raw;
-use mpl_utils::token::TokenTransferParams;
-use solana_program::program_error::ProgramError;
-use solana_program::pubkey::Pubkey;
+use mpl_utils::{create_or_allocate_account_raw, token::TokenTransferParams};
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, msg, program::invoke_signed,
+    program_error::ProgramError, pubkey::Pubkey,
 };
 use spl_token::instruction::{freeze_account, thaw_account};
 
-use crate::processor::TransferScenario;
 use crate::{
     assertions::{assert_derivation, programmable::assert_valid_authorization},
     error::MetadataError,
     pda::{EDITION, PREFIX},
-    processor::AuthorizationData,
+    processor::{AuthorizationData, TransferScenario},
     state::{
         Operation, PayloadKey, ProgrammableConfig, ToAccountMeta, TokenMetadataAccount,
         TokenRecord, TOKEN_RECORD_SEED,

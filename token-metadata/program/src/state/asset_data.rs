@@ -1,6 +1,7 @@
-use super::*;
 use borsh::{BorshDeserialize, BorshSerialize};
 use solana_program::pubkey::Pubkey;
+
+use super::*;
 
 /// Data representation of an asset.
 #[repr(C)]
@@ -41,12 +42,7 @@ pub struct AssetData {
 }
 
 impl AssetData {
-    pub fn new(
-        token_standard: TokenStandard,
-        name: String,
-        symbol: String,
-        uri: String,
-    ) -> Self {
+    pub fn new(token_standard: TokenStandard, name: String, symbol: String, uri: String) -> Self {
         Self {
             name,
             symbol,

@@ -1,4 +1,3 @@
-use super::*;
 use mpl_token_auth_rules::payload::Payload;
 use rooster::{
     instruction::{delegate as rooster_delegate, init, withdraw, WithdrawArgs},
@@ -7,6 +6,8 @@ use rooster::{
 };
 use solana_sdk::compute_budget::ComputeBudgetInstruction;
 use spl_associated_token_account::get_associated_token_address;
+
+use super::*;
 
 pub struct RoosterManager {
     pda: Pubkey,

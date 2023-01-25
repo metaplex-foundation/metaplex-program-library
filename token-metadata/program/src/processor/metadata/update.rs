@@ -1,10 +1,11 @@
+use std::fmt::{Display, Formatter};
+
 use mpl_utils::assert_signer;
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, msg, program_error::ProgramError,
     program_pack::Pack, pubkey::Pubkey, sysvar,
 };
 use spl_token::state::Account;
-use std::fmt::{Display, Formatter};
 
 use crate::{
     assertions::{assert_owned_by, programmable::assert_valid_authorization},
@@ -117,7 +118,10 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
         .token_standard
         .ok_or(MetadataError::InvalidTokenStandard)?;
     let (token_pubkey, token) = if let Some(token_info) = ctx.accounts.token_info {
-        (Some(token_info.key), Some(Account::unpack(&token_info.try_borrow_data()?)?))
+        (
+            Some(token_info.key),
+            Some(Account::unpack(&token_info.try_borrow_data()?)?),
+        )
     } else {
         (None, None)
     };

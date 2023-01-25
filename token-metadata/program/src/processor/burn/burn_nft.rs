@@ -10,16 +10,16 @@ use solana_program::{
     pubkey::Pubkey,
 };
 
-use crate::pda::find_metadata_account;
-use crate::state::Collection;
 use crate::{
     assertions::{
         assert_derivation, assert_owned_by,
         metadata::{assert_currently_holding, assert_verified_member_of_collection},
     },
     error::MetadataError,
+    pda::find_metadata_account,
     state::{
-        CollectionDetails, Key, Metadata, TokenMetadataAccount, EDITION, MAX_METADATA_LEN, PREFIX,
+        Collection, CollectionDetails, Key, Metadata, TokenMetadataAccount, EDITION,
+        MAX_METADATA_LEN, PREFIX,
     },
     utils::clean_write_metadata,
 };

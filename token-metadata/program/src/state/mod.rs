@@ -38,7 +38,6 @@ use solana_program::{
     pubkey::Pubkey,
 };
 pub use uses::*;
-
 #[cfg(feature = "serde-feature")]
 use {
     serde::{Deserialize, Deserializer, Serialize},

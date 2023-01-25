@@ -15,7 +15,6 @@ pub use mpl_token_metadata::instruction;
 use mpl_token_metadata::state::CollectionDetails;
 pub use programmable::create_default_metaplex_rule_set;
 pub use rooster_manager::*;
-
 use solana_program_test::*;
 use solana_sdk::{
     account::Account, program_pack::Pack, pubkey::Pubkey, signature::Signer,

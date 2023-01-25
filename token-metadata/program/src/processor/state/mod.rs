@@ -1,10 +1,8 @@
 mod lock;
 mod unlock;
 
-pub use lock::*;
-pub use unlock::*;
-
 use borsh::BorshSerialize;
+pub use lock::*;
 use mpl_utils::assert_signer;
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program::invoke, program_pack::Pack,
@@ -14,6 +12,7 @@ use spl_token::{
     instruction::{freeze_account, thaw_account},
     state::{Account, Mint},
 };
+pub use unlock::*;
 
 use crate::{
     assertions::{assert_keys_equal, metadata::assert_state},
