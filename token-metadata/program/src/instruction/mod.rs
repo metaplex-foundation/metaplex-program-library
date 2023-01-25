@@ -556,6 +556,8 @@ pub enum MetadataInstruction {
     #[account(12, name="spl_ata_program", desc="SPL Associated Token Account program")]
     #[account(13, optional, name="authorization_rules_program", desc="Token Authorization Rules program")]
     #[account(14, optional, name="authorization_rules", desc="Token Authorization Rules account")]
+    #[account(15, optional, name="address_lookup_table_program", desc="Address Lookup Table program")]
+    #[account(16, optional, writable, name="address_lookup_table", desc="Address Lookup Table account")]
     #[default_optional_accounts]
     Mint(MintArgs),
 

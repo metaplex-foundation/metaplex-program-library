@@ -220,7 +220,7 @@ fn revoke_persistent_delegate(
                 if token_record.delegate_role == Some(role) {
                     // resets the token record (state, rule_set_revision and delegate info)
                     token_record.reset();
-                    token_record.save(*token_record_info.try_borrow_mut_data()?)?;
+                    token_record.save(&mut token_record_info.try_borrow_mut_data()?)?;
                 } else {
                     return Err(MetadataError::InvalidDelegate.into());
                 }

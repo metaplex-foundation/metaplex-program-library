@@ -211,7 +211,7 @@ pub fn migrate_v1(program_id: &Pubkey, ctx: Context<Migrate>, args: MigrateArgs)
                 token_record.delegate_role = Some(TokenDelegateRole::Migration);
             }
 
-            token_record.save(*ctx.accounts.token_record_info.try_borrow_mut_data()?)?;
+            token_record.save(&mut ctx.accounts.token_record_info.try_borrow_mut_data()?)?;
 
             // Migrate the token.
             metadata.token_standard = Some(TokenStandard::ProgrammableNonFungible);

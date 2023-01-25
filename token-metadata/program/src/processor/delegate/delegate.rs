@@ -268,7 +268,7 @@ fn create_persistent_delegate_v1(
 
             token_record.delegate = Some(*ctx.accounts.delegate_info.key);
             token_record.delegate_role = Some(role);
-            token_record.save(*token_record_info.try_borrow_mut_data()?)?;
+            token_record.save(&mut token_record_info.try_borrow_mut_data()?)?;
 
             if let Some(master_edition_info) = ctx.accounts.master_edition_info {
                 assert_owned_by(master_edition_info, &crate::ID)?;
