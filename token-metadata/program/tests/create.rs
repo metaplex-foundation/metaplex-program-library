@@ -44,7 +44,6 @@ mod create {
             name.clone(),
             symbol.clone(),
             uri.clone(),
-            context.payer.pubkey(),
         );
         asset.seller_fee_basis_points = 500;
         asset.rule_set =
@@ -146,7 +145,6 @@ mod create {
             name.clone(),
             symbol.clone(),
             uri.clone(),
-            context.payer.pubkey(),
         );
         asset.seller_fee_basis_points = 500;
         /*
@@ -250,7 +248,6 @@ mod create {
             name.clone(),
             symbol.clone(),
             uri.clone(),
-            context.payer.pubkey(),
         );
         asset.seller_fee_basis_points = 500;
         /*
