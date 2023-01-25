@@ -440,7 +440,7 @@ fn generate_builders(variants: &[Variant]) -> TokenStream {
         let required_args = variant.args.iter().map(|(name, _ty, _generic_ty)| {
             let arg_name = syn::parse_str::<syn::Ident>(name).unwrap();
             quote! {
-                #arg_name: self.#arg_name.ok_or(concat!(stringify!(#arg_name), " is not set"))?
+                #arg_name: self.#arg_name.clone().ok_or(concat!(stringify!(#arg_name), " is not set"))?
             }
         });
 
