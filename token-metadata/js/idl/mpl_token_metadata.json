@@ -2588,6 +2588,20 @@
           "isSigner": false,
           "desc": "Token Authorization Rules account",
           "optional": true
+        },
+        {
+          "name": "addressLookupTableProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Address Lookup Table program",
+          "optional": true
+        },
+        {
+          "name": "addressLookupTable",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Address Lookup Table account",
+          "optional": true
         }
       ],
       "args": [
@@ -4738,6 +4752,12 @@
                     "defined": "AuthorizationData"
                   }
                 }
+              },
+              {
+                "name": "recent_slot",
+                "type": {
+                  "option": "u64"
+                }
               }
             ]
           }
@@ -6153,6 +6173,16 @@
       "code": 168,
       "name": "AmountMustBeGreaterThanZero",
       "msg": "Amount must be greater than zero"
+    },
+    {
+      "code": 169,
+      "name": "MissingRecentSlot",
+      "msg": "Missing recent slot argument for LUT creation"
+    },
+    {
+      "code": 170,
+      "name": "InvalidAddessLookupTableAuthority",
+      "msg": "Invalid LUT authority"
     }
   ],
   "metadata": {

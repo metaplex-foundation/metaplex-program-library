@@ -5,7 +5,7 @@ import spok from 'spok';
 import { AssetData, PROGRAM_ID, TokenStandard } from '../src/generated';
 import test from 'tape';
 import { amman, InitTransactions, killStuckProcess } from './setup';
-import { spokSameBigint } from './utils';
+import { spokSameBigint, spokSamePubkey } from './utils';
 import { DigitalAssetManager } from './utils/digital-asset-manager';
 
 killStuckProcess();
@@ -278,4 +278,84 @@ test('Mint: fail to mint multiple from ProgrammableNonFungible', async (t) => {
     handler,
   );
   await mintTx2.assertError(t, /Editions must have exactly one token/);
+});
+
+test('Mint: ProgrammableNonFungible with address lookup table (LUT) creation', async (t) => {
+  const API = new InitTransactions();
+  const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
+
+  const data: AssetData = {
+    updateAuthority: payer.publicKey,
+    name: 'ProgrammableNonFungible',
+    symbol: 'PNF',
+    uri: 'uri',
+    sellerFeeBasisPoints: 0,
+    creators: [
+      {
+        address: payer.publicKey,
+        share: 100,
+        verified: false,
+      },
+    ],
+    primarySaleHappened: false,
+    isMutable: true,
+    tokenStandard: TokenStandard.ProgrammableNonFungible,
+    collection: null,
+    uses: null,
+    collectionDetails: null,
+    ruleSet: null,
+  };
+
+  const { tx: createTx, metadata, mint } = await API.create(t, payer, data, 0, 0, handler);
+  await createTx.assertSuccess(t);
+
+  // mint 1 asset
+
+  const amount = 1;
+
+  const [masterEdition] = PublicKey.findProgramAddressSync(
+    [Buffer.from('metadata'), PROGRAM_ID.toBuffer(), mint.toBuffer(), Buffer.from('edition')],
+    PROGRAM_ID,
+  );
+  amman.addr.addLabel('Master Edition Account', masterEdition);
+  const daManager = new DigitalAssetManager(mint, metadata, masterEdition);
+
+  const {
+    tx: mintTx,
+    token,
+    lookupTable,
+  } = await API.mint(
+    t,
+    connection,
+    payer,
+    mint,
+    metadata,
+    masterEdition,
+    daManager.emptyAuthorizationData(),
+    amount,
+    handler,
+    null,
+    null,
+    null,
+    true,
+  );
+  await mintTx.assertSuccess(t);
+
+  const tokenAccount = await getAccount(connection, token);
+
+  spok(t, tokenAccount, {
+    amount: spokSameBigint(new BN(1)),
+    isFrozen: true,
+    owner: payer.publicKey,
+  });
+
+  const lookupTableAccount = await connection.getAddressLookupTable(lookupTable);
+
+  t.true(lookupTableAccount.value.isActive());
+  t.true(lookupTableAccount.value.state.addresses.length > 0);
+  spok(t, lookupTableAccount.value, {
+    state: {
+      authority: spokSamePubkey(masterEdition),
+    },
+  });
 });

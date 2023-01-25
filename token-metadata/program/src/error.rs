@@ -667,6 +667,14 @@ pub enum MetadataError {
     /// 168
     #[error("Amount must be greater than zero")]
     AmountMustBeGreaterThanZero,
+
+    /// 169
+    #[error("Missing recent slot argument for LUT creation")]
+    MissingRecentSlot,
+
+    /// 170
+    #[error("Invalid LUT authority")]
+    InvalidAddessLookupTableAuthority,
 }
 
 impl PrintProgramError for MetadataError {

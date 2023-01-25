@@ -1993,6 +1993,7 @@ dependencies = [
  "serde",
  "serde_with",
  "shank 0.0.11",
+ "solana-address-lookup-table-program",
  "solana-program",
  "solana-program-test",
  "solana-sdk",

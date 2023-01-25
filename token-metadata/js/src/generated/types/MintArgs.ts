@@ -17,7 +17,11 @@ import { AuthorizationData, authorizationDataBeet } from './AuthorizationData';
  * @private
  */
 export type MintArgsRecord = {
-  V1: { amount: beet.bignum; authorizationData: beet.COption<AuthorizationData> };
+  V1: {
+    amount: beet.bignum;
+    authorizationData: beet.COption<AuthorizationData>;
+    recentSlot: beet.COption<beet.bignum>;
+  };
 };
 
 /**
@@ -46,6 +50,7 @@ export const mintArgsBeet = beet.dataEnum<MintArgsRecord>([
       [
         ['amount', beet.u64],
         ['authorizationData', beet.coption(authorizationDataBeet)],
+        ['recentSlot', beet.coption(beet.u64)],
       ],
       'MintArgsRecord["V1"]',
     ),

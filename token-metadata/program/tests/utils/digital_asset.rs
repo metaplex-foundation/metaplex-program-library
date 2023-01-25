@@ -188,6 +188,7 @@ impl DigitalAsset {
             .build(MintArgs::V1 {
                 amount,
                 authorization_data,
+                recent_slot: None,
             })
             .unwrap()
             .instruction();

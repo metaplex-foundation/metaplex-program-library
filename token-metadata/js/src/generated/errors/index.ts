@@ -3617,6 +3617,49 @@ createErrorFromNameLookup.set(
 );
 
 /**
+ * MissingRecentSlot: 'Missing recent slot argument for LUT creation'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MissingRecentSlotError extends Error {
+  readonly code: number = 0xa9;
+  readonly name: string = 'MissingRecentSlot';
+  constructor() {
+    super('Missing recent slot argument for LUT creation');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MissingRecentSlotError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xa9, () => new MissingRecentSlotError());
+createErrorFromNameLookup.set('MissingRecentSlot', () => new MissingRecentSlotError());
+
+/**
+ * InvalidAddessLookupTableAuthority: 'Invalid LUT authority'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidAddessLookupTableAuthorityError extends Error {
+  readonly code: number = 0xaa;
+  readonly name: string = 'InvalidAddessLookupTableAuthority';
+  constructor() {
+    super('Invalid LUT authority');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidAddessLookupTableAuthorityError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xaa, () => new InvalidAddessLookupTableAuthorityError());
+createErrorFromNameLookup.set(
+  'InvalidAddessLookupTableAuthority',
+  () => new InvalidAddessLookupTableAuthorityError(),
+);
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

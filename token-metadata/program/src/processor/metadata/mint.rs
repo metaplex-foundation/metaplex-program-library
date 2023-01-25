@@ -1,4 +1,5 @@
 use mpl_utils::{assert_signer, cmp_pubkeys};
+use solana_address_lookup_table_program::state::AddressLookupTable;
 use solana_program::{
     account_info::AccountInfo,
     entrypoint::ProgramResult,
@@ -261,6 +262,79 @@ pub fn mint_v1(program_id: &Pubkey, ctx: Context<Mint>, args: MintArgs) -> Progr
                     master_edition_info.clone(),
                     ctx.accounts.spl_token_program_info.clone(),
                 )?;
+
+                // add this point, if a LUT has been passed in, we add user-specific
+                // addresses to facilitate future transactions
+                if let Some(address_lookup_table_info) = ctx.accounts.address_lookup_table_info {
+                    if address_lookup_table_info.data_is_empty() {
+                        let MintArgs::V1 { recent_slot, .. } = args;
+                        let (ix, pubkey) =
+                            solana_address_lookup_table_program::instruction::create_lookup_table(
+                                master_edition_key,
+                                *ctx.accounts.payer_info.key,
+                                recent_slot.ok_or(MetadataError::MissingRecentSlot)?,
+                            );
+                        assert_keys_equal(&pubkey, address_lookup_table_info.key)?;
+
+                        invoke_signed(
+                            &ix,
+                            &[
+                                address_lookup_table_info.clone(),
+                                master_edition_info.clone(),
+                                ctx.accounts.payer_info.clone(),
+                            ],
+                            &[&signer_seeds],
+                        )?;
+                    } else {
+                        assert_owned_by(
+                            address_lookup_table_info,
+                            &solana_address_lookup_table_program::ID,
+                        )?;
+
+                        let data = address_lookup_table_info.data.borrow();
+                        let lut = AddressLookupTable::deserialize(&data)
+                            .map_err(|_| MetadataError::BorshDeserializationError)?;
+
+                        assert_keys_equal(
+                            &lut.meta
+                                .authority
+                                .ok_or(MetadataError::InvalidAddessLookupTableAuthority)?,
+                            master_edition_info.key,
+                        )?;
+                    }
+
+                    let token_record_info = ctx
+                        .accounts
+                        .token_record_info
+                        .ok_or(MetadataError::MissingTokenRecord)?;
+
+                    // accounts to be added to the LUT; these accounts are specific to the token
+                    // owner and do not change until the token is transferred
+                    let addresses = vec![
+                        token.owner,
+                        *ctx.accounts.token_info.key,
+                        *ctx.accounts.metadata_info.key,
+                        *master_edition_info.key,
+                        *ctx.accounts.mint_info.key,
+                        *ctx.accounts.sysvar_instructions_info.key,
+                        *token_record_info.key,
+                    ];
+
+                    invoke_signed(
+                        &solana_address_lookup_table_program::instruction::extend_lookup_table(
+                            *address_lookup_table_info.key,
+                            master_edition_key,
+                            Some(*ctx.accounts.payer_info.key),
+                            addresses,
+                        ),
+                        &[
+                            address_lookup_table_info.clone(),
+                            master_edition_info.clone(),
+                            ctx.accounts.payer_info.clone(),
+                        ],
+                        &[&signer_seeds],
+                    )?;
+                }
             }
         }
         _ => {

@@ -7,6 +7,7 @@ import {
 } from '@metaplex-foundation/amman-client';
 import * as splToken from '@solana/spl-token';
 import {
+  AddressLookupTableProgram,
   Connection,
   Keypair,
   PublicKey,
@@ -214,7 +215,12 @@ export class InitTransactions {
     token: PublicKey | null = null,
     tokenRecord: PublicKey | null = null,
     tokenOwner: PublicKey | null = null,
-  ): Promise<{ tx: ConfirmedTransactionAssertablePromise; token: PublicKey }> {
+    createLookupTable = false,
+  ): Promise<{
+    tx: ConfirmedTransactionAssertablePromise;
+    token: PublicKey;
+    lookupTable?: PublicKey;
+  }> {
     if (!token) {
       // mint instrution will initialize a ATA account
       const [tokenPda] = PublicKey.findProgramAddressSync(
@@ -230,9 +236,37 @@ export class InitTransactions {
 
     if (!tokenRecord) {
       tokenRecord = findTokenRecordPda(mint, token);
+      amman.addr.addLabel('Token Record Account', tokenRecord);
     }
 
     amman.addr.addLabel('Token Account', token);
+    /*
+    let lutIx = null;
+    let lutAddress = null;
+
+    if (createLookupTable) {
+      [lutIx, lutAddress] = AddressLookupTableProgram.createLookupTable({
+        authority: payer.publicKey,
+        payer: payer.publicKey,
+        recentSlot: await connection.getSlot(),
+      });
+      amman.addr.addLabel('Address Lookup Table Account', lutAddress);
+    }
+    */
+    let lutAddress = null;
+    let slot = null;
+
+    if (createLookupTable) {
+      slot = await connection.getSlot();
+
+      [, lutAddress] = AddressLookupTableProgram.createLookupTable({
+        authority: masterEdition,
+        payer: payer.publicKey,
+        recentSlot: slot,
+      });
+
+      amman.addr.addLabel('Address Lookup Table Account', lutAddress);
+    }
 
     const metadataAccount = await Metadata.fromAccountAddress(connection, metadata);
     const authConfig = metadataAccount.programmableConfig;
@@ -251,6 +285,8 @@ export class InitTransactions {
       splTokenProgram: splToken.TOKEN_PROGRAM_ID,
       authorizationRules: authConfig ? authConfig.ruleSet : null,
       authorizationRulesProgram: TOKEN_AUTH_RULES_ID,
+      addressLookupTableProgram: AddressLookupTableProgram.programId,
+      addressLookupTable: lutAddress,
     };
 
     const payload: Payload = {
@@ -268,6 +304,7 @@ export class InitTransactions {
         __kind: 'V1',
         amount,
         authorizationData,
+        recentSlot: slot,
       },
     };
 
@@ -280,6 +317,7 @@ export class InitTransactions {
     return {
       tx: handler.sendAndConfirmTransaction(tx, [payer], 'tx: Mint'),
       token,
+      lookupTable: lutAddress,
     };
   }
 

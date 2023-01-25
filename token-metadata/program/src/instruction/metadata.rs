@@ -55,6 +55,8 @@ pub enum MintArgs {
         amount: u64,
         /// Required authorization data to validate the request.
         authorization_data: Option<AuthorizationData>,
+        /// Required if initializing a address lookup table.
+        recent_slot: Option<u64>,
     },
 }
 
@@ -593,6 +595,17 @@ impl InstructionBuilder for super::builders::Mint {
         if let Some(rules) = &self.authorization_rules {
             accounts.push(AccountMeta::new_readonly(mpl_token_auth_rules::ID, false));
             accounts.push(AccountMeta::new_readonly(*rules, false));
+        } else {
+            accounts.push(AccountMeta::new_readonly(crate::ID, false));
+            accounts.push(AccountMeta::new_readonly(crate::ID, false));
+        }
+        // Optional address lookup table
+        if let Some(lookup_table) = &self.address_lookup_table {
+            accounts.push(AccountMeta::new_readonly(
+                solana_address_lookup_table_program::ID,
+                false,
+            ));
+            accounts.push(AccountMeta::new(*lookup_table, false));
         } else {
             accounts.push(AccountMeta::new_readonly(crate::ID, false));
             accounts.push(AccountMeta::new_readonly(crate::ID, false));
