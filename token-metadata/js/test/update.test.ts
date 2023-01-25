@@ -757,7 +757,6 @@ test('Update: Update Unverified Collection Key', async (t) => {
     symbol,
     uri,
     sellerFeeBasisPoints: 0,
-    updateAuthority: payer.publicKey,
     creators: [
       {
         address: payer.publicKey,
@@ -839,7 +838,6 @@ test('Update: Fail to Verify an Unverified Collection', async (t) => {
     symbol,
     uri,
     sellerFeeBasisPoints: 0,
-    updateAuthority: payer.publicKey,
     creators: [
       {
         address: payer.publicKey,
@@ -922,7 +920,6 @@ test('Update: Fail to Update a Verified Collection', async (t) => {
     symbol,
     uri,
     sellerFeeBasisPoints: 0,
-    updateAuthority: payer.publicKey,
     creators: [
       {
         address: payer.publicKey,

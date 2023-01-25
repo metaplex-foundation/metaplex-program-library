@@ -15,7 +15,6 @@ test('Mint: ProgrammableNonFungible', async (t) => {
   const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
 
   const data: AssetData = {
-    updateAuthority: payer.publicKey,
     name: 'ProgrammableNonFungible',
     symbol: 'PNF',
     uri: 'uri',
@@ -77,7 +76,6 @@ test('Mint: ProgrammableNonFungible with existing token account', async (t) => {
   const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
 
   const data: AssetData = {
-    updateAuthority: payer.publicKey,
     name: 'ProgrammableNonFungible',
     symbol: 'PNF',
     uri: 'uri',
@@ -151,7 +149,6 @@ test('Mint: fail to mint zero (0) tokens from ProgrammableNonFungible', async (t
   const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
 
   const data: AssetData = {
-    updateAuthority: payer.publicKey,
     name: 'ProgrammableNonFungible',
     symbol: 'PNF',
     uri: 'uri',
@@ -203,7 +200,6 @@ test('Mint: fail to mint multiple from ProgrammableNonFungible', async (t) => {
   const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
 
   const data: AssetData = {
-    updateAuthority: payer.publicKey,
     name: 'ProgrammableNonFungible',
     symbol: 'PNF',
     uri: 'uri',

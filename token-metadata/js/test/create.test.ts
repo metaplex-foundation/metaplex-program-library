@@ -25,7 +25,6 @@ test('Create: ProgrammableNonFungible', async (t) => {
     symbol: 'PNF',
     uri: 'uri',
     sellerFeeBasisPoints: 0,
-    updateAuthority: payer.publicKey,
     creators: [
       {
         address: payer.publicKey,
@@ -78,7 +77,6 @@ test('Create: ProgrammableNonFungible with existing mint account', async (t) => 
     symbol: 'PNF',
     uri: 'uri',
     sellerFeeBasisPoints: 0,
-    updateAuthority: payer.publicKey,
     creators: [
       {
         address: payer.publicKey,
@@ -164,7 +162,6 @@ test('Create: fail to create ProgrammableNonFungible with minted mint account', 
     symbol: 'PNF',
     uri: 'uri',
     sellerFeeBasisPoints: 0,
-    updateAuthority: payer.publicKey,
     creators: [
       {
         address: payer.publicKey,
@@ -195,7 +192,6 @@ test('Create: failt to create ProgrammableNonFungible with existing metadata acc
     symbol: 'PNF',
     uri: 'uri',
     sellerFeeBasisPoints: 0,
-    updateAuthority: payer.publicKey,
     creators: [
       {
         address: payer.publicKey,
@@ -251,7 +247,6 @@ test('Create: failt to create ProgrammableNonFungible with existing master editi
     symbol: 'PNF',
     uri: 'uri',
     sellerFeeBasisPoints: 0,
-    updateAuthority: payer.publicKey,
     creators: [
       {
         address: payer.publicKey,
@@ -317,7 +312,6 @@ test('Create: fail to create ProgrammableNonFungible without master edition', as
     symbol: 'PNF',
     uri: 'uri',
     sellerFeeBasisPoints: 0,
-    updateAuthority: payer.publicKey,
     creators: [
       {
         address: payer.publicKey,
@@ -361,7 +355,6 @@ test('Create: fail to create NonFungible without master edition', async (t) => {
     symbol: 'NF',
     uri: 'uri',
     sellerFeeBasisPoints: 0,
-    updateAuthority: payer.publicKey,
     creators: [
       {
         address: payer.publicKey,
@@ -435,7 +428,6 @@ test('Create: create NonFungible with minted mint account', async (t) => {
     symbol: 'NF',
     uri: 'uri',
     sellerFeeBasisPoints: 0,
-    updateAuthority: payer.publicKey,
     creators: [
       {
         address: payer.publicKey,
@@ -521,7 +513,6 @@ test('Create: fail to create NonFungible with more than 2 mints', async (t) => {
     symbol: 'NF',
     uri: 'uri',
     sellerFeeBasisPoints: 0,
-    updateAuthority: payer.publicKey,
     creators: [
       {
         address: payer.publicKey,
@@ -552,7 +543,6 @@ test('Create: Fungible', async (t) => {
     symbol: 'FUN',
     uri: 'uri',
     sellerFeeBasisPoints: 0,
-    updateAuthority: payer.publicKey,
     creators: [
       {
         address: payer.publicKey,
@@ -610,7 +600,6 @@ test('Create: FungibleAsset', async (t) => {
     symbol: 'FA',
     uri: 'uri',
     sellerFeeBasisPoints: 0,
-    updateAuthority: payer.publicKey,
     creators: [
       {
         address: payer.publicKey,
@@ -700,7 +689,6 @@ test('Create: create Fungible with minted mint account', async (t) => {
     symbol: 'FUN',
     uri: 'uri',
     sellerFeeBasisPoints: 0,
-    updateAuthority: payer.publicKey,
     creators: [
       {
         address: payer.publicKey,
@@ -786,7 +774,6 @@ test('Create: create FungibleAsset with minted mint account', async (t) => {
     symbol: 'FA',
     uri: 'uri',
     sellerFeeBasisPoints: 0,
-    updateAuthority: payer.publicKey,
     creators: [
       {
         address: payer.publicKey,

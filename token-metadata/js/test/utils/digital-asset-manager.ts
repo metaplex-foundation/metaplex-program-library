@@ -33,7 +33,6 @@ export class DigitalAssetManager {
       symbol: md.data.symbol,
       uri: md.data.uri,
       sellerFeeBasisPoints: md.data.sellerFeeBasisPoints,
-      updateAuthority: md.updateAuthority,
       creators: md.data.creators,
       primarySaleHappened: md.primarySaleHappened,
       isMutable: md.isMutable,
@@ -65,7 +64,6 @@ export async function createDefaultAsset(
     symbol,
     uri,
     sellerFeeBasisPoints: 0,
-    updateAuthority: payer.publicKey,
     creators: [
       {
         address: payer.publicKey,

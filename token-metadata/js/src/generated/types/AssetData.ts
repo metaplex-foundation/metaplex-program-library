@@ -5,8 +5,8 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as web3 from '@solana/web3.js';
 import * as beet from '@metaplex-foundation/beet';
+import * as web3 from '@solana/web3.js';
 import * as beetSolana from '@metaplex-foundation/beet-solana';
 import { Creator, creatorBeet } from './Creator';
 import { TokenStandard, tokenStandardBeet } from './TokenStandard';
@@ -14,7 +14,6 @@ import { Collection, collectionBeet } from './Collection';
 import { Uses, usesBeet } from './Uses';
 import { CollectionDetails, collectionDetailsBeet } from './CollectionDetails';
 export type AssetData = {
-  updateAuthority: web3.PublicKey;
   name: string;
   symbol: string;
   uri: string;
@@ -35,7 +34,6 @@ export type AssetData = {
  */
 export const assetDataBeet = new beet.FixableBeetArgsStruct<AssetData>(
   [
-    ['updateAuthority', beetSolana.publicKey],
     ['name', beet.utf8String],
     ['symbol', beet.utf8String],
     ['uri', beet.utf8String],
