@@ -3,6 +3,7 @@ import test from 'tape';
 export * from './amman';
 export * from './txs-init';
 export * from './log';
+export * from './lut';
 
 export function killStuckProcess() {
   test.onFinish(() => process.exit(0));
