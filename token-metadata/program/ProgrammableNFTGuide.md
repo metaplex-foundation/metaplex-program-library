@@ -270,7 +270,7 @@ There are two types of delegates on Token Metadata: `TokenDelegate` and `Metadat
 
 #### Token Delegate
 
-`TokenDelegate`s are delegates that operate at the token level – i.e., they are spl-token delegates. This allows the delegate to perform operations on the token account (burn, transfer, freeze). There can only be one token delegate at a time and they do not have an individual delegate account associated – their information is stored on the `TokenRecord` account. The token record holds information about a particular token account (PDA seeds `[metadata, program id, mint id, "token_record", token account id]`):
+`TokenDelegate`s are delegates that operate at the token level – i.e., they are spl-token delegates. This allows the delegate to perform operations on the token account (burn, transfer, freeze). There can only be one token delegate at a time and they do not have an individual delegate account associated – their information is stored on the `TokenRecord` account. The token record holds information about a particular token account (PDA seeds `["metadata", program id, mint id, "token_record", token account id]`):
 ```rust
 pub struct TokenRecord {
     pub key: Key,
