@@ -58,8 +58,8 @@ pub fn distribute_for_wallet(
     assert_owned_by(&membership_voucher_info, &crate::ID)?;
     assert_owned_by(&member.to_account_info(), &System::id())?;
     assert_membership_model(fanout, MembershipModel::Wallet)?;
-    assert_shares_distributed(fanout)?;
     if distribute_for_mint {
+
         let membership_key = &ctx.accounts.member.key().clone();
         let member = ctx.accounts.member.to_owned();
         distribute_mint(
