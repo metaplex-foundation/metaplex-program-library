@@ -1,5 +1,6 @@
 # Programmable NFT Guide
 
+Developer packages:
 * :crab: Rust crate: [v1.7.0](https://crates.io/crates/mpl-token-metadata/1.7.0)
 * :package: NPM package: [v2.7.0](https://www.npmjs.com/package/@metaplex-foundation/mpl-token-metadata/v/2.7.0)
 
@@ -11,7 +12,7 @@ In order to support assets that can have customizable behavior, a new asset clas
 * [x] [`Create`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/token-metadata/program/src/instruction/mod.rs#L518-L536) <span style="font-family:'Lucida Console', monospace; font-size: 6pt">([TypeScript](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/token-metadata/js/test/create.test.ts) | [Rust](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/token-metadata/program/tests/create.rs))</span>
 * [x] [`Delegate`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/token-metadata/program/src/instruction/mod.rs#L562-L585) <span style="font-family:'Lucida Console', monospace; font-size: 6pt">([TypeScript](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/token-metadata/js/test/delegate.test.ts) | [Rust](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/token-metadata/program/tests/delegate.rs))</span>
 * [x] [`Lock`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/token-metadata/program/src/instruction/mod.rs#L607-L625) <span style="font-family:'Lucida Console', monospace; font-size: 6pt">([TypeScript](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/token-metadata/js/test/lock.test.ts) | [Rust](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/token-metadata/program/tests/lock.rs))</span>
-* [x] `Migrate`
+* [x] [`Migrate`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/token-metadata/program/src/instruction/mod.rs#L647-L664) <span style="font-family:'Lucida Console', monospace; font-size: 6pt">([Rust](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/token-metadata/program/tests/migrate.rs))</span>
 * [ ] `Print`
 * [x] [`Mint`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/token-metadata/program/src/instruction/mod.rs#L538-L560) <span style="font-family:'Lucida Console', monospace; font-size: 6pt">([TypeScript](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/token-metadata/js/test/mint.test.ts) | [Rust](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/token-metadata/program/tests/mint.rs))</span>
 * [x] [`Revoke`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/token-metadata/program/src/instruction/mod.rs#L587-L605) <span style="font-family:'Lucida Console', monospace; font-size: 6pt">([TypeScript](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/token-metadata/js/test/revoke.test.ts) | [Rust](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/token-metadata/program/tests/revoke.rs))</span>
@@ -52,6 +53,8 @@ pub enum TokenStandard {
 When a `ProgrammableNonFungible` asset is created, it can have a `RuleSet` associated. These rules are then validated at each lifecycle action and the action is only performed if the validation succeeds. Since these rules are customizable, the tokens have a *programmable* behavior.
 
 The diagram below highlights the new components of a `ProgrammableNonFungible`:
+
+![image](https://user-images.githubusercontent.com/729235/215168226-c2358a16-eab5-4b6e-af24-4ac01f21303d.png)
 
 ## ⛩️  Unified instructions
 
@@ -319,6 +322,9 @@ pub struct TokenRecord {
 | *Mint (destination)* | ✅ | ✅ | ✅ | 🔓 if `Unlocked` | 🔓 if `Unlocked` | 🔓 if `Unlocked` | ☀️ if `Thawn` |
 
 The `Migration` delegate type is a temporary delegate that is only created by the migration from `NFT` to `pNFT` and cannot be otherwise created through the `Delegate` handler. This special delegate has the same functionality as the `Utility` delegate except that it can also transfer. This allows us to assign all escrowless-style programs this delegate to preserve whatever current functionality they have. Once used, it is cleared and cannot replaced, and programs will then need to select one of the normal delegate types for future actions.
+
+> **Note**
+> Once a token delegate is set, it is not possible to set another one unless the current one is revoked.
 
 #### Metadata Delegates
 
