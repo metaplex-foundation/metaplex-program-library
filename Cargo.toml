@@ -1,6 +1,6 @@
 [package]
 name = "sugar-cli"
-version = "1.1.2-alpha+CMv3"
+version = "2.0.0-beta.1"
 edition = "2021"
 description = "Command line tool for creating and managing Metaplex Candy Machines."
 license = "Apache-2.0"
