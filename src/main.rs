@@ -47,7 +47,7 @@ fn setup_logging(level: Option<EnvFilter>) -> Result<()> {
     let file = OpenOptions::new()
         .write(true)
         .create(true)
-        .open(&log_path)
+        .open(log_path)
         .unwrap();
 
     // Prioritize user-provided level, otherwise read from RUST_LOG env var for log level, fall back to "tracing" if not set.

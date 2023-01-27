@@ -62,8 +62,7 @@ pub fn check_spl_token(program: &Program, input: &str) -> Result<Mint> {
         Ok(token_mint)
     } else {
         Err(anyhow!(format!(
-            "The specified spl-token is not initialized: {}",
-            input
+            "The specified spl-token is not initialized: {input}",
         )))
     }
 }
@@ -78,8 +77,7 @@ pub fn check_spl_token_account(program: &Program, input: &str) -> Result<()> {
         Ok(())
     } else {
         Err(anyhow!(format!(
-            "The specified spl-token account is not initialized: {}",
-            input
+            "The specified spl-token account is not initialized: {input}",
         )))
     }
 }

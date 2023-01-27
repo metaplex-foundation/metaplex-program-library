@@ -171,7 +171,7 @@ pub fn get_asset_pairs(assets_dir: &str) -> Result<HashMap<isize, AssetPair>> {
             return Err(error);
         };
 
-        let img_pattern = format!("^{}\\.((jpg)|(jpeg)|(gif)|(png))$", i);
+        let img_pattern = format!("^{i}\\.((jpg)|(jpeg)|(gif)|(png))$");
 
         let img_regex = RegexBuilder::new(&img_pattern)
             .case_insensitive(true)
@@ -202,7 +202,7 @@ pub fn get_asset_pairs(assets_dir: &str) -> Result<HashMap<isize, AssetPair>> {
         // need a similar check for animation as above, this one checking if there is animation
         // on specific index
 
-        let animation_pattern = format!("^{}\\.((mp3)|(mp4)|(mov)|(webm)|(glb))$", i);
+        let animation_pattern = format!("^{i}\\.((mp3)|(mp4)|(mov)|(webm)|(glb))$");
         let animation_regex = RegexBuilder::new(&animation_pattern)
             .case_insensitive(true)
             .build()

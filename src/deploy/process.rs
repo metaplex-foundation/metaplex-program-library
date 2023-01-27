@@ -81,7 +81,7 @@ pub async fn process_deploy(args: DeployArgs) -> Result<()> {
     let program = client.program(CANDY_MACHINE_ID);
     let mut config_data = get_config_data(&args.config)?;
     if let Err(e) = check_config_to_prevent_bots(&config_data) {
-        println!("{}", e);
+        println!("{e}");
         return Ok(());
     };
 
@@ -115,9 +115,8 @@ pub async fn process_deploy(args: DeployArgs) -> Result<()> {
     let mut candy_pubkey = Pubkey::default();
     if candy_machine_address.is_empty() {
         println!(
-            "{} {}Creating candy machine",
-            style(format!("[1/{}]", total_steps)).bold().dim(),
-            CANDY_EMOJI
+            "{} {CANDY_EMOJI}Creating candy machine",
+            style(format!("[1/{total_steps}]")).bold().dim(),
         );
 
         // Sanity check that all items in the cache are set to 'false', in case
@@ -129,9 +128,8 @@ pub async fn process_deploy(args: DeployArgs) -> Result<()> {
         cache.sync_file()?;
     } else {
         println!(
-            "{} {}Loading candy machine",
-            style(format!("[1/{}]", total_steps)).bold().dim(),
-            CANDY_EMOJI
+            "{} {CANDY_EMOJI}Loading candy machine",
+            style(format!("[1/{total_steps}]")).bold().dim(),
         );
 
         candy_pubkey = match Pubkey::from_str(candy_machine_address) {
@@ -159,14 +157,12 @@ pub async fn process_deploy(args: DeployArgs) -> Result<()> {
             }
             Err(_) => {
                 println!(
-                    "{} Candy machine {} not found on-chain",
-                    WARNING_EMOJI, candy_machine_address
+                    "{WARNING_EMOJI} Candy machine {candy_machine_address} not found on-chain"
                 );
                 println!(
-                    "{} This can happen if the deploy transaction fails or times out",
-                    WARNING_EMOJI
+                    "{WARNING_EMOJI} This can happen if the deploy transaction fails or times out",
                 );
-                println!("{} Creating candy machine", CANDY_EMOJI);
+                println!("{CANDY_EMOJI} Creating candy machine");
 
                 // We set cache items onChain values to false, in case they are set to true
                 // from a previous run. This ensures the config items are actually uploaded.
@@ -243,9 +239,8 @@ pub async fn process_deploy(args: DeployArgs) -> Result<()> {
 
     if let Some(collection_item) = cache.items.get_mut("-1") {
         println!(
-            "\n{} {}Creating and setting the collection NFT for candy machine",
-            style(format!("[2/{}]", total_steps)).bold().dim(),
-            COLLECTION_EMOJI
+            "\n{} {COLLECTION_EMOJI}Creating and setting the collection NFT for candy machine",
+            style(format!("[2/{total_steps}]")).bold().dim(),
         );
 
         if item_redeemed {
@@ -272,11 +267,8 @@ pub async fn process_deploy(args: DeployArgs) -> Result<()> {
     if let Some(freeze_time) = config_data.freeze_time {
         let step_num = 2 + (collection_in_cache as u8);
         println!(
-            "\n{} {}Setting up candy machine with Freeze feature",
-            style(format!("[{}/{}]", step_num, total_steps))
-                .bold()
-                .dim(),
-            ICE_CUBE_EMOJI
+            "\n{} {ICE_CUBE_EMOJI}Setting up candy machine with Freeze feature",
+            style(format!("[{step_num}/{total_steps}]")).bold().dim(),
         );
 
         if item_redeemed {
@@ -297,11 +289,8 @@ pub async fn process_deploy(args: DeployArgs) -> Result<()> {
     if !hidden {
         let step_num = 2 + (collection_in_cache as u8) + (config_data.freeze_time.is_some() as u8);
         println!(
-            "\n{} {}Writing config lines",
-            style(format!("[{}/{}]", step_num, total_steps))
-                .bold()
-                .dim(),
-            PAPER_EMOJI
+            "\n{} {PAPER_EMOJI}Writing config lines",
+            style(format!("[{step_num}/{total_steps}]")).bold().dim(),
         );
 
         let config_lines = generate_config_lines(num_items, &cache.items)?;

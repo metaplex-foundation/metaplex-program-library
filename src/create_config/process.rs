@@ -49,7 +49,7 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
 
     let pubkey_validator = |input: &String| -> Result<(), String> {
         if Pubkey::from_str(input).is_err() {
-            Err(format!("Couldn't parse input of '{}' to a pubkey.", input))
+            Err(format!("Couldn't parse input of '{input}' to a pubkey."))
         } else {
             Ok(())
         }
@@ -58,8 +58,7 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
     let float_validator = |input: &String| -> Result<(), String> {
         if !input.is_empty() && input.parse::<f64>().is_err() {
             Err(format!(
-                "Couldn't parse price input of '{}' to a float.",
-                input
+                "Couldn't parse price input of '{input}' to a float."
             ))
         } else {
             Ok(())
@@ -68,7 +67,7 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
 
     let number_validator = |input: &String| -> Result<(), String> {
         if input.parse::<u64>().is_err() {
-            Err(format!("Couldn't parse input of '{}' to a number.", input))
+            Err(format!("Couldn't parse input of '{input}' to a number."))
         } else {
             Ok(())
         }
@@ -77,8 +76,7 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
     let date_validator = |input: &String| -> Result<(), String> {
         if parse_string_as_date(input).is_err() {
             Err(format!(
-                "Couldn't parse input of '{}' to a valid date.",
-                input
+                "Couldn't parse input of '{input}' to a valid date."
             ))
         } else {
             Ok(())
@@ -87,10 +85,7 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
 
     let url_validator = |input: &String| -> Result<(), String> {
         if Url::parse(input).is_err() {
-            Err(format!(
-                "Couldn't parse input of '{}' to a valid uri.",
-                input
-            ))
+            Err(format!("Couldn't parse input of '{input}' to a valid uri."))
         } else {
             Ok(())
         }
@@ -107,7 +102,7 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
     let seller_fee_basis_points_validator = |input: &String| -> Result<(), String> {
         let value = match input.parse::<u16>() {
             Ok(value) => value,
-            Err(_) => return Err(format!("Couldn't parse input of '{}' to a number.", input)),
+            Err(_) => return Err(format!("Couldn't parse input of '{input}' to a number.")),
         };
         if value > 10_000 {
             Err(String::from(
@@ -121,7 +116,7 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
     let freeze_time_validator = |input: &String| -> Result<(), String> {
         let value = match input.parse::<u8>() {
             Ok(value) => value,
-            Err(_) => return Err(format!("Couldn't parse input of '{}' to a number.", input)),
+            Err(_) => return Err(format!("Couldn't parse input of '{input}' to a number.")),
         };
         if value > MAX_FREEZE_DAYS {
             Err(String::from(
@@ -150,7 +145,7 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
 
     if num_files > 0 {
         println!("\nFound metadata file(s) in folder '{}':", args.assets_dir);
-        println!("  -> Loading values from file '{}'", DEFAULT_METADATA);
+        println!("  -> Loading values from file '{DEFAULT_METADATA}'");
 
         // loads the default values from the first metadata file
         let metadata_file = PathBuf::from(&args.assets_dir)
@@ -222,7 +217,7 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
                 if symbol.is_empty() {
                     "no symbol".to_string()
                 } else {
-                    format!("symbol \"{}\"", symbol)
+                    format!("symbol \"{symbol}\"")
                 },
             ))
             .interact()?
@@ -242,7 +237,7 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
     config_data.seller_fee_basis_points = if num_files > 0 && seller_fee != INVALID_SELLER_FEE && Confirm::with_theme(&theme)
         .with_prompt(
             format!(
-                "Found value {} for seller fee basis points in your metadata file. Is this value correct?", seller_fee,
+                "Found value {seller_fee} for seller fee basis points in your metadata file. Is this value correct?",
             )
         )
         .interact()? {
@@ -541,12 +536,12 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
                     .interact()
                     .unwrap();
 
-                println!("date:{}:date", date);
+                println!("date:{date}:date",);
 
                 // Convert to ISO 8601 for consistency, before storing in config.
                 let formatted_date = parse_string_as_date(&date)?;
 
-                println!("formatted_date: {}", formatted_date);
+                println!("formatted_date: {formatted_date}");
 
                 Some(EndSettings::new(
                     end_setting_type,
@@ -738,7 +733,7 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
 
     if Path::new(&file_path).is_file() {
         save_file = Select::with_theme(&theme)
-            .with_prompt(format!("The file \"{}\" already exists. Do you want to overwrite it with the new config or log the new config to the console?", file_path))
+            .with_prompt(format!("The file \"{file_path}\" already exists. Do you want to overwrite it with the new config or log the new config to the console?"))
             .items(&["Overwrite the file", "Log to console"])
             .default(0)
             .interact()
@@ -757,7 +752,7 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
             Ok(f) => {
                 println!(
                     "{}",
-                    style(format!("Saving config to file: \"{}\"\n", file_path))
+                    style(format!("Saving config to file: \"{file_path}\"\n",))
                 );
                 serde_json::to_writer_pretty(f, &config_data)
                     .expect("Unable to convert config to JSON!");

@@ -73,9 +73,8 @@ pub async fn process_thaw(args: ThawArgs) -> Result<()> {
     let total_steps = if args.all { 4 } else { 2 };
 
     println!(
-        "{} {}Loading candy machine",
-        style(format!("[1/{}]", total_steps)).bold().dim(),
-        LOOKING_GLASS_EMOJI
+        "{} {LOOKING_GLASS_EMOJI}Loading candy machine",
+        style(format!("[1/{total_steps}]")).bold().dim(),
     );
     println!("{} {}", style("Candy machine ID:").bold(), candy_machine_id);
 
@@ -88,9 +87,8 @@ pub async fn process_thaw(args: ThawArgs) -> Result<()> {
 
     if !args.all {
         println!(
-            "\n{} {}Thawing single NFT. . .",
-            style(format!("[2/{}]", total_steps)).bold().dim(),
-            MONEY_BAG_EMOJI
+            "\n{} {MONEY_BAG_EMOJI}Thawing single NFT. . .",
+            style(format!("[2/{total_steps}]")).bold().dim(),
         );
 
         let nft_mint = if let Some(nft_mint) = &args.nft_mint {
@@ -168,10 +166,8 @@ pub async fn process_thaw(args: ThawArgs) -> Result<()> {
 
     // Thaw all frozen NFTs.
     println!(
-        "\n{} {}Getting minted NFTs for candy machine {}",
-        style(format!("[2/{}]", total_steps)).bold().dim(),
-        LOOKING_GLASS_EMOJI,
-        candy_machine_id
+        "\n{} {LOOKING_GLASS_EMOJI}Getting minted NFTs for candy machine {candy_machine_id}",
+        style(format!("[2/{total_steps}]")).bold().dim()
     );
 
     let pb = spinner_with_style();

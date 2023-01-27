@@ -40,7 +40,7 @@ pub fn process_update(args: UpdateArgs) -> Result<()> {
     let config_data = get_config_data(&args.config)?;
 
     if let Err(e) = check_config_to_prevent_bots(&config_data) {
-        println!("{} {}", WARNING_EMOJI, e);
+        println!("{WARNING_EMOJI} {e}");
         return Ok(());
     };
 
@@ -270,7 +270,7 @@ pub fn check_config_to_prevent_bots(config_data: &ConfigData) -> Result<(), Stri
         let hours = (time_to_go_live % ONE_DAY) / ONE_HOUR;
         let minutes = (time_to_go_live % ONE_HOUR) / ONE_MINUTE;
         let seconds = time_to_go_live % ONE_MINUTE;
-        format!("in {}d {}h {}m {}s", days, hours, minutes, seconds)
+        format!("in {days}d {hours}h {minutes}m {seconds}s")
     };
 
     // invert conditions to allow returning early
@@ -280,10 +280,9 @@ pub fn check_config_to_prevent_bots(config_data: &ConfigData) -> Result<(), Stri
     {
         Ok(())
     } else {
-        println!("{} warning: the candy machine will be created with 0 price and no gatekeeper or whitelist token", WARNING_EMOJI);
+        println!("{WARNING_EMOJI} warning: the candy machine will be created with 0 price and no gatekeeper or whitelist token");
         println!(
-            "{} bots will be able to mint from it as soon as it goes live on {} ({})",
-            WARNING_EMOJI,
+            "{WARNING_EMOJI} bots will be able to mint from it as soon as it goes live on {} ({})",
             config_data
                 .go_live_date
                 .as_ref()
@@ -295,17 +294,12 @@ pub fn check_config_to_prevent_bots(config_data: &ConfigData) -> Result<(), Stri
         if time_to_go_live > ONE_WEEK {
             return Ok(());
         } else {
-            println!(
-                "{} candy machine has less than one week left before going live",
-                WARNING_EMOJI
-            );
+            println!("{WARNING_EMOJI} candy machine has less than one week left before going live");
         }
 
         println!();
         println!(
-            "{} it is highly recommended you quit and fix the config before proceeding",
-            WARNING_EMOJI
-        );
+            "{WARNING_EMOJI} it is highly recommended you quit and fix the config before proceeding");
 
         let theme = ColorfulTheme {
             success_prefix: style("✔".to_string()).yellow().force_styling(true),

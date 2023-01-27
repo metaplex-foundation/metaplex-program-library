@@ -36,8 +36,7 @@ impl Hash for SerdePubkey {
 impl FromStr for SerdePubkey {
     type Err = String;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let pubkey =
-            Pubkey::from_str(s).map_err(|e| format!("Error '{}' while parsing '{}'", e, s))?;
+        let pubkey = Pubkey::from_str(s).map_err(|e| format!("Error '{e}' while parsing '{s}'"))?;
         Ok(SerdePubkey(pubkey))
     }
 }

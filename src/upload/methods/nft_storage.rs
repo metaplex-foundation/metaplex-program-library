@@ -77,14 +77,14 @@ impl NftStorageMethod {
             let client_builder = Client::builder();
 
             let mut headers = header::HeaderMap::new();
-            let bearer_value = format!("Bearer {}", auth_token);
+            let bearer_value = format!("Bearer {auth_token}");
             let mut auth_value = header::HeaderValue::from_str(&bearer_value)?;
             auth_value.set_sensitive(true);
             headers.insert(header::AUTHORIZATION, auth_value);
 
             let client = client_builder.default_headers(headers).build()?;
 
-            let url = format!("{}/", NFT_STORAGE_API_URL);
+            let url = format!("{NFT_STORAGE_API_URL}/");
             let response = client.get(url).send().await?;
 
             match response.status() {
@@ -265,8 +265,7 @@ impl Uploader for NftStorageMethod {
                 }: StoreNftError = serde_json::from_value(body)?;
 
                 errors.push(UploadError::SendDataFailed(format!(
-                    "Error uploading batch ({}): {}",
-                    status, message
+                    "Error uploading batch ({status}): {message}",
                 )));
             }
             if !batches.is_empty() {

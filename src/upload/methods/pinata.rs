@@ -193,8 +193,7 @@ impl Config {
                 body.to_string()
             };
             Err(anyhow!(UploadError::SendDataFailed(format!(
-                "Error uploading batch ({}): {}",
-                status, details
+                "Error uploading batch ({status}): {details}",
             ))))
         }
     }

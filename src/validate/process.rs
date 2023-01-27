@@ -39,9 +39,8 @@ pub fn process_validate(args: ValidateArgs) -> Result<()> {
         if !collection_path.is_file() {
             let warning = format!(
                 "+----------------------------------------------+\n\
-                 | {} MISSING COLLECTION FILES IN ASSETS FOLDER |\n\
+                 | {WARNING_EMOJI} MISSING COLLECTION FILES IN ASSETS FOLDER |\n\
                  +----------------------------------------------+",
-                WARNING_EMOJI
             );
             println!(
                 "\n{}\n{}\n",

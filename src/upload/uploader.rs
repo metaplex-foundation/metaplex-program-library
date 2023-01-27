@@ -234,8 +234,7 @@ impl<T: ParallelUploader> Uploader for T {
                 }
                 (Err(err), _index, remaining) => {
                     errors.push(UploadError::SendDataFailed(format!(
-                        "Upload error: {:?}",
-                        err
+                        "Upload error: {err:?}",
                     )));
                     // ignoring all errors
                     handles = remaining;

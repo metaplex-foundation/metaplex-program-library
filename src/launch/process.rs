@@ -26,7 +26,7 @@ pub struct LaunchArgs {
 }
 
 pub async fn process_launch(args: LaunchArgs) -> Result<()> {
-    println!("Starting Sugar launch... {}", LAUNCH_EMOJI);
+    println!("Starting Sugar launch... {LAUNCH_EMOJI}");
 
     let theme = ColorfulTheme {
         prompt_style: Style::new(),

@@ -360,7 +360,7 @@ where
 {
     println!(
         " {} {:?}",
-        style(format!("{}:.. {}:", indent, key)).dim(),
+        style(format!("{indent}:.. {key}:")).dim(),
         value
     );
 }

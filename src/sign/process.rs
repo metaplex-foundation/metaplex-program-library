@@ -66,7 +66,7 @@ pub async fn process_sign(args: SignArgs) -> Result<()> {
             SIGNING_EMOJI,
         );
         let pb = spinner_with_style();
-        pb.set_message(format!("Signing NFT with mint id {}.", mint_id));
+        pb.set_message(format!("Signing NFT with mint id {mint_id}."));
 
         let account_pubkey = Pubkey::from_str(&mint_id)?;
         let metadata_pubkey = find_metadata_pda(&account_pubkey);

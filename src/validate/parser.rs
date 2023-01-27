@@ -65,7 +65,7 @@ pub fn check_category(category: &str) -> Result<(), ValidateParserError> {
     if !VALID_CATEGORIES.contains(&category) {
         return Err(ValidateParserError::InvalidCategory(
             category.to_string(),
-            format!("{:?}", VALID_CATEGORIES),
+            format!("{VALID_CATEGORIES:?}"),
         ));
     }
 

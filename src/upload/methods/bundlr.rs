@@ -83,7 +83,7 @@ impl BundlrMethod {
 
     /// Return the solana address for Bundlr.
     async fn get_bundlr_solana_address(http_client: &HttpClient, node: &str) -> Result<String> {
-        let url = format!("{}/info", node);
+        let url = format!("{node}/info");
         let data = http_client.get(&url).send().await?.json::<Value>().await?;
         let addresses = data
             .get("addresses")
@@ -119,7 +119,7 @@ impl BundlrMethod {
         );
 
         println!("Funding address:");
-        println!("  -> pubkey: {}", payer_pubkey);
+        println!("  -> pubkey: {payer_pubkey}");
         println!(
             "  -> lamports: {} (◎ {})",
             amount,
@@ -135,7 +135,7 @@ impl BundlrMethod {
 
         let mut map = HashMap::new();
         map.insert("tx_id", sig.to_string());
-        let url = format!("{}/account/balance/solana", node);
+        let url = format!("{node}/account/balance/solana");
         let response = http_client.post(&url).json(&map).send().await?;
 
         Ok(response)
@@ -148,7 +148,7 @@ impl BundlrMethod {
         node: &str,
     ) -> Result<u64> {
         debug!("Getting balance for address: {address}");
-        let url = format!("{}/account/balance/solana/?address={}", node, address);
+        let url = format!("{node}/account/balance/solana/?address={address}");
         let response = http_client.get(&url).send().await?.json::<Value>().await?;
         let value = response
             .get("balance")
@@ -292,13 +292,15 @@ impl Prepare for BundlrMethod {
         };
 
         if lamports_fee > balance {
+            let amount = ((lamports_fee - balance) as f64 * 1.3).ceil() as u64;
+
             BundlrMethod::fund_bundlr_address(
                 rpc_client,
                 &http_client,
                 &self.pubkey,
                 &self.node,
                 &sugar_config.keypair,
-                lamports_fee - balance,
+                amount,
             )
             .await?;
 
@@ -329,9 +331,8 @@ impl Prepare for BundlrMethod {
 
             if balance < lamports_fee {
                 let error = anyhow!(format!(
-                    "No Bundlr balance found for address: {0}, check \
+                    "No Bundlr balance found for address: {address}, check \
                     Bundlr cluster and address balance",
-                    address
                 ));
                 error!("{error}");
                 return Err(error);

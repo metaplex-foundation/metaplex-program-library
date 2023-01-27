@@ -46,7 +46,7 @@ pub fn generate_config_lines(
             Some(item) => item,
             None => {
                 return Err(
-                    DeployError::AddConfigLineFailed(format!("Missing cache item {}", i)).into(),
+                    DeployError::AddConfigLineFailed(format!("Missing cache item {i}")).into(),
                 );
             }
         };
@@ -155,8 +155,7 @@ pub async fn upload_config_lines(
             (Err(err), _index, remaining) => {
                 // user will need to retry the upload
                 errors.push(DeployError::AddConfigLineFailed(format!(
-                    "Transaction error: {:?}",
-                    err
+                    "Transaction error: {err:?}"
                 )));
                 // ignoring all errors
                 handles = remaining;
