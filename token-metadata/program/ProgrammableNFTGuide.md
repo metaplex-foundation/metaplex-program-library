@@ -1,7 +1,7 @@
 # Programmable NFT Guide
 
-> * :crab: Rust crate: [v1.7.0](https://crates.io/crates/mpl-token-metadata/1.7.0)
-> * :package: NPM package: [v2.7.0](https://www.npmjs.com/package/@metaplex-foundation/mpl-token-metadata/v/2.7.0)
+* :crab: Rust crate: [v1.7.0](https://crates.io/crates/mpl-token-metadata/1.7.0)
+* :package: NPM package: [v2.7.0](https://www.npmjs.com/package/@metaplex-foundation/mpl-token-metadata/v/2.7.0)
 
 ## 📄  Technical Summary
 
@@ -50,6 +50,8 @@ pub enum TokenStandard {
 ```
 
 When a `ProgrammableNonFungible` asset is created, it can have a `RuleSet` associated. These rules are then validated at each lifecycle action and the action is only performed if the validation succeeds. Since these rules are customizable, the tokens have a *programmable* behavior.
+
+The diagram below highlights the new components of a `ProgrammableNonFungible`:
 
 ## ⛩️  Unified instructions
 
