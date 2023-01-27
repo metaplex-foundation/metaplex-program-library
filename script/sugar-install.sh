@@ -70,8 +70,8 @@ do
       fi
     fi
     # v2 release
-    if [[ "$TAG" == *alpha* ]]; then
-      if [[ "$TAG" > "\"alpha" ]] && [ -z "$TAG_V2" ]; then
+    if [[ "$TAG" == *v2* ]]; then
+      if [[ "$TAG" > "\"v2" ]] && [ -z "$TAG_V2" ]; then
         TAG_V2=`echo $TAG | sed "s/\"//g;s/,//"`
       fi
     fi
@@ -80,14 +80,17 @@ done
 
 echo "🧰 $(CYN "Available releases:")"
 echo ""
-echo "1. $TAG_V1 (Metaplex Candy Machine v2)"
-echo "2. $TAG_V2 (Metaplex Candy Machine v3)"
+echo "Recommended:"
+echo "$(CYN "1. $TAG_V2") (Metaplex Candy Machine V3)"
 echo ""
-echo -n "$(CYN "Select a release [1-2]") (default 2): "
+echo "Legacy:"
+echo "2. $TAG_V1 (Metaplex Candy Machine V2)"
+echo ""
+echo -n "$(CYN "Select a release [1-2]") (default 1): "
 read Version
 
 case "$Version" in
-    1)
+    2)
         RELEASE=$TAG_V1
     ;;
     *)
