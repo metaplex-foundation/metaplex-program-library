@@ -360,7 +360,9 @@ Currently, we have three types of metadata delegates:
 
 ## 📦  JS SDK
 
-Token Metadata includes a low-leve Solita-based SDK, which can be used to interact with the new API. The NPM package can be found [here](https://www.npmjs.com/package/@metaplex-foundation/mpl-token-metadata/v/2.6.0-alpha.1).
+Token Metadata includes a low-leve Solita-based SDK, which can be used to interact with the new API. The NPM package can be found [here](https://www.npmjs.com/package/@metaplex-foundation/mpl-token-metadata/v/2.7.0).
+
+The latest release of the [Metaplex JS SDK v0.18.0](https://github.com/metaplex-foundation/js#programmable-nfts) adds support for Programmable NFTs.
 
 ## 🏛️  Token Authorization Rules
 
