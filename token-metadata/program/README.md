@@ -6,29 +6,29 @@ The Token Metadata program is one of the most important programs when dealing wi
 
 From the root directory of the repository:
 ```sh
-cargo build-bpf --bpf-out-dir ../test-programs/
+cargo build-bpf --bpf-out-dir ../../test-programs/
 ```
 
 ## Testing (BPF)
 From the root directory of the repository:
 ```sh
-cargo test-bpf --bpf-out-dir ../test-programs/
+cargo test-bpf --bpf-out-dir ../../test-programs/
 ```
 
 ## Testing (TypeScript)
 Integration tests are available using [Amman](https://github.com/metaplex-foundation/amman).
 
-After building the program, go to the folder `js` and run:
+After building the program, go to the folder `../js` and run:
 ```
 yarn install
 ```
 
-On a separate terminal, start Amman from the `js` folder:
+On a separate terminal, start Amman from the `../js` folder:
 ```
 yarn amman:start
 ```
 
-Back to your main terminal on the `js` folder, run:
+Back to your main terminal on the `../js` folder, run:
 ```
 yarn build && yarn test
 ```
