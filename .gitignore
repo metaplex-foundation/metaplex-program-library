@@ -10,6 +10,7 @@ node_modules/
 build/
 dist/
 
+.gitpod.yml
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
