@@ -16,7 +16,8 @@ pub struct Metadata {
     pub animation_url: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub external_url: Option<String>,
-    pub attributes: Vec<Attribute>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub attributes: Option<Vec<Attribute>>,
     pub properties: Property,
 }
 
