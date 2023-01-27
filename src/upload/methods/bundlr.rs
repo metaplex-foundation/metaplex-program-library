@@ -290,6 +290,7 @@ impl Prepare for BundlrMethod {
             let program = client.program(CANDY_MACHINE_ID);
             program.rpc()
         };
+        let amount = ((lamports_fee - balance) as f64 * 1.3).ceil() as u64;
 
         if lamports_fee > balance {
             BundlrMethod::fund_bundlr_address(
@@ -298,7 +299,7 @@ impl Prepare for BundlrMethod {
                 &self.pubkey,
                 &self.node,
                 &sugar_config.keypair,
-                lamports_fee - balance,
+                amount,
             )
             .await?;
 
