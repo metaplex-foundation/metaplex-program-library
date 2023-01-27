@@ -16,7 +16,7 @@ on:
 env:
   CARGO_TERM_COLOR: always
   SOLANA_VERSION: 1.14.13
-  RUST_TOOLCHAIN: stable
+  RUST_TOOLCHAIN: 1.65.0
   CACHE: ${{ inputs.cache }}
 
 jobs:
@@ -97,14 +97,13 @@ jobs:
           name: ${{ inputs.name }}
 
       # Run Cargo Test
-      - name: "Cargo Test: ${{ inputs.name }}"
+      - name: 'Cargo Test: ${{ inputs.name }}'
         working-directory: ./${{ inputs.name }}/program
         run: cargo +${{ env.RUST_TOOLCHAIN }} test -- --nocapture --test-threads 1
 
       # Run BPF Test
-      - name: "BPF Test: ${{ inputs.name }}"
+      - name: 'BPF Test: ${{ inputs.name }}'
         working-directory: ./${{ inputs.name }}/program
         run: |
           cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --version
           cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --bpf-out-dir ../../test-programs/ -- --nocapture --test-threads 1
-
