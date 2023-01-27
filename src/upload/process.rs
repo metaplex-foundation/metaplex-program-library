@@ -407,7 +407,12 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
     let mut count = 0;
 
     for (index, item) in &cache.items.0 {
-        let asset_pair = asset_pairs.get(&isize::from_str(index)?).unwrap();
+        let asset_pair = asset_pairs.get(&isize::from_str(index)?).ok_or_else(|| {
+            anyhow!(
+                "cache item {} does not have a corresponding asset pair",
+                index
+            )
+        })?;
 
         // we first check that the asset has an animation file; if there is one,
         // we need to check that the cache item has the link and the link is not empty
