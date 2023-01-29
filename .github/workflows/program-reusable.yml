@@ -16,7 +16,8 @@ on:
 env:
   CARGO_TERM_COLOR: always
   SOLANA_VERSION: 1.14.13
-  RUST_TOOLCHAIN: stable
+  RUST_TOOLCHAIN: 1.65.0
+  BPF_OUT_DIR: test-programs
   CACHE: ${{ inputs.cache }}
 
 jobs:
