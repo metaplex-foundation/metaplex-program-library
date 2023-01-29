@@ -13,23 +13,10 @@ inputs:
 runs:
   using: 'composite'
   steps:
-#    - name: "Cache: ${{ inputs.name }}"
-#      uses: actions/cache@v3
-#      with:
-#        path: |
-#          ~/.cargo/bin/
-#          ~/.cargo/registry/index/
-#          ~/.cargo/registry/cache/
-#          ~/.cargo/git/db/
-#          ./${{ inputs.name }}/program/target/
-#        key:
-#          program-${{ inputs.name }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-#      id: cache-program
     - name: "Build: ${{ inputs.name }}"
       working-directory: ./${{ inputs.name }}/program
       run: |
         mkdir -p ../../test-programs
-        export BPF_OUT_DIR=${{ env.BPF_OUT_DIR }}
         cargo +${{ env.RUST_STABLE }} build-bpf --version
         export BPF_OUT_DIR=../../test-programs/
         cargo +${{ env.RUST_STABLE }} build-bpf --bpf-out-dir ../../test-programs/

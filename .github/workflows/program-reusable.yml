@@ -97,10 +97,6 @@ jobs:
         with:
           name: ${{ inputs.name }}
 
-      - name: export bpf var
-        run: |
-          export BPF_OUT_DIR=${{ env.BPF_OUT_DIR }}
-
       # Run Cargo Test
       - name: "Cargo Test: ${{ inputs.name }}"
         working-directory: ./${{ inputs.name }}/program
@@ -110,6 +106,7 @@ jobs:
       - name: "BPF Test: ${{ inputs.name }}"
         working-directory: ./${{ inputs.name }}/program
         run: |
+          export BPF_OUT_DIR=../../test-programs/
           cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --version
           cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --bpf-out-dir ../../test-programs/ -- --nocapture --test-threads 1
 
