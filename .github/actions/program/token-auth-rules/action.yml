@@ -1,0 +1,11 @@
+
+name: Token Authorization Rules Program
+description: Builds the mpl-token-auth-rules program
+runs:
+  using: 'composite'
+  steps:
+    # Get Token Auth Rules program
+    - name: Get Token Auth Rules program
+      run: |
+        solana program dump auth9SigNpDKz4sJJ1DfCTuZrZNSAgh9sFD3rboVmgg test-programs/mpl_token_auth_rules.so
+      shell: bash

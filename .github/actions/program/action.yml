@@ -43,3 +43,9 @@ runs:
       with:
         name: token-metadata
       if: ${{ inputs.name == 'token-entangler' }}
+
+    - uses: ./.github/actions/program/token-auth-rules/action.yml
+      if: ${{ inputs.name == 'token-metadata' }}
+
+
+
