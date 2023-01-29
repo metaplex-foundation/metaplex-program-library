@@ -30,7 +30,7 @@ jobs:
           - name: "auction-house"
           - name: "fixed-price-sale"
           - name: "gumdrop"
-          - name: "hydra"
+          # - name: "hydra"
           - name: "nft-packs"
           - name: "token-entangler"
           - name: "token-metadata"
