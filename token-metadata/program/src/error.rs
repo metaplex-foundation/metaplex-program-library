@@ -667,6 +667,10 @@ pub enum MetadataError {
     /// 168
     #[error("Amount must be greater than zero")]
     AmountMustBeGreaterThanZero,
+
+    /// 169
+    #[error("Cannot update a programmable asset that has a delegate")]
+    CannotUpdateAssetWithDelegate,
 }
 
 impl PrintProgramError for MetadataError {

@@ -6,16 +6,23 @@ use mpl_token_metadata::{
     state::{MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH},
     utils::puffed_out_string,
 };
+use num_traits::FromPrimitive;
 use solana_program_test::*;
-use solana_sdk::{signature::Signer, transaction::Transaction};
+use solana_sdk::{
+    instruction::InstructionError,
+    signature::Signer,
+    transaction::{Transaction, TransactionError},
+};
 use utils::{DigitalAsset, *};
 
 mod update {
 
     use mpl_token_metadata::{
+        error::MetadataError,
         instruction::{RuleSetToggle, UpdateArgs},
         state::{Data, ProgrammableConfig, TokenStandard},
     };
+    use solana_program::pubkey::Pubkey;
     use solana_sdk::signature::Keypair;
 
     use super::*;
@@ -160,5 +167,153 @@ mod update {
         let metadata = da.get_metadata(context).await;
 
         assert_eq!(metadata.programmable_config, None);
+    }
+
+    #[tokio::test]
+    async fn update_invalid_rule_set() {
+        // Currently users can add an invalid rule set to their pNFT which will effectively
+        // prevent it from being updated again because it either won't be owned by the mpl-token-auth rules
+        // program or it won't be a valid rule set to call validate on.
+        // We relax the check a little to let users fix invalid rule sets.
+        let mut program_test = ProgramTest::new("mpl_token_metadata", mpl_token_metadata::ID, None);
+        program_test.add_program("mpl_token_auth_rules", mpl_token_auth_rules::ID, None);
+        let context = &mut program_test.start_with_context().await;
+
+        let invalid_rule_set = Pubkey::new_unique();
+
+        let authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+
+        let (authorization_rules, _auth_data) =
+            create_default_metaplex_rule_set(context, authority).await;
+
+        let update_authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+
+        // Create with an empty rule set so we can test updating.
+        let mut da = DigitalAsset::new();
+        da.create_and_mint(
+            context,
+            TokenStandard::ProgrammableNonFungible,
+            None,
+            None,
+            1,
+        )
+        .await
+        .unwrap();
+
+        let metadata = da.get_metadata(context).await;
+
+        if let Some(ProgrammableConfig::V1 { rule_set }) = metadata.programmable_config {
+            assert_eq!(rule_set, None);
+        }
+
+        let mut update_args = UpdateArgs::default();
+        let UpdateArgs::V1 { rule_set, .. } = &mut update_args;
+        *rule_set = RuleSetToggle::Set(invalid_rule_set);
+
+        let mut builder = UpdateBuilder::new();
+        builder
+            .authority(update_authority.pubkey())
+            .metadata(da.metadata)
+            .mint(da.mint.pubkey())
+            .token(da.token.unwrap())
+            .payer(update_authority.pubkey());
+
+        if let Some(edition) = da.master_edition {
+            builder.edition(edition);
+        }
+
+        let update_ix = builder.build(update_args.clone()).unwrap().instruction();
+
+        let tx = Transaction::new_signed_with_payer(
+            &[update_ix],
+            Some(&update_authority.pubkey()),
+            &[&update_authority],
+            context.last_blockhash,
+        );
+
+        context.banks_client.process_transaction(tx).await.unwrap();
+
+        let metadata = da.get_metadata(context).await;
+
+        // Should be successfully updated with the invalid rule set.
+        if let Some(ProgrammableConfig::V1 {
+            rule_set: Some(rule_set),
+        }) = metadata.programmable_config
+        {
+            assert_eq!(rule_set, invalid_rule_set);
+        } else {
+            panic!("Missing rule set programmable config");
+        }
+
+        // // Now we pass in a valid authorization rules account owned by mpl-token-auth-rules
+        // // but which does not match the pubkey we are passing in to set as the rule set value.
+        // // This will fail with an "InvalidAuthorizationRules" error.
+        // let mut builder = UpdateBuilder::new();
+        // builder
+        //     .authority(update_authority.pubkey())
+        //     .metadata(da.metadata)
+        //     .mint(da.mint.pubkey())
+        //     .authorization_rules(authorization_rules)
+        //     .payer(update_authority.pubkey());
+
+        // if let Some(edition) = da.master_edition {
+        //     builder.edition(edition);
+        // }
+
+        // let update_ix = builder.build(update_args).unwrap().instruction();
+
+        // let tx = Transaction::new_signed_with_payer(
+        //     &[update_ix],
+        //     Some(&update_authority.pubkey()),
+        //     &[&update_authority],
+        //     context.last_blockhash,
+        // );
+
+        // let err = context
+        //     .banks_client
+        //     .process_transaction(tx)
+        //     .await
+        //     .unwrap_err();
+
+        // assert_custom_error!(err, MetadataError::InvalidAuthorizationRules);
+
+        // // Finally, try to update with the valid rule set, and it should succeed.
+        // let mut update_args = UpdateArgs::default();
+        // let UpdateArgs::V1 { rule_set, .. } = &mut update_args;
+        // *rule_set = RuleSetToggle::Set(authorization_rules);
+
+        // let mut builder = UpdateBuilder::new();
+        // builder
+        //     .authority(update_authority.pubkey())
+        //     .metadata(da.metadata)
+        //     .mint(da.mint.pubkey())
+        //     .authorization_rules(authorization_rules)
+        //     .payer(update_authority.pubkey());
+
+        // if let Some(edition) = da.master_edition {
+        //     builder.edition(edition);
+        // }
+
+        // let update_ix = builder.build(update_args).unwrap().instruction();
+
+        // let tx = Transaction::new_signed_with_payer(
+        //     &[update_ix],
+        //     Some(&update_authority.pubkey()),
+        //     &[&update_authority],
+        //     context.last_blockhash,
+        // );
+
+        // context.banks_client.process_transaction(tx).await.unwrap();
+
+        // let metadata = da.get_metadata(context).await;
+
+        // if let Some(ProgrammableConfig::V1 {
+        //     rule_set: Some(rule_set),
+        // }) = metadata.programmable_config
+        // {
+        //     assert_eq!(rule_set, authorization_rules);
+        // } else {
+        //     panic!("Missing rule set programmable config");
+        // }
     }
 }

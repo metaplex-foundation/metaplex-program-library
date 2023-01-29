@@ -96,6 +96,9 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
     if ctx.accounts.sysvar_instructions_info.key != &sysvar::instructions::ID {
         return Err(ProgramError::IncorrectProgramId);
     }
+
+    // If the current rule set is passed in, also require the mpl-token-auth-rules program
+    // to be passed in.
     if ctx.accounts.authorization_rules_info.is_some() {
         if let Some(authorization_rules_program) = ctx.accounts.authorization_rules_program_info {
             if authorization_rules_program.key != &mpl_token_auth_rules::ID {
@@ -117,6 +120,7 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
     let token_standard = metadata
         .token_standard
         .ok_or(MetadataError::InvalidTokenStandard)?;
+
     let (token_pubkey, token) = if let Some(token_info) = ctx.accounts.token_info {
         (
             Some(token_info.key),
@@ -140,8 +144,24 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
         ..Default::default()
     })?;
 
-    // for pNFTs, we need to validate the authorization rules
+    // For pNFTs, we need to validate the authorization rules, and check
+    // if a delegate is set. We don't allow updating the pNFT if a SPL
+    // delegate is set, to avoid bricking an pNFT in a program.
     if matches!(token_standard, TokenStandard::ProgrammableNonFungible) {
+        // Require the token so we can check if it has a delegate.
+        if token.is_none() {
+            return Err(MetadataError::MissingTokenAccount.into());
+        }
+
+        let token = token.unwrap();
+
+        if token.delegate.is_some() {
+            return Err(MetadataError::CannotUpdateAssetWithDelegate.into());
+        }
+
+        // If the metadata account has a current rule set, we validate that
+        // the current rule set account is passed in and matches value on the
+        // metadata.
         if let Some(config) = &metadata.programmable_config {
             // if we have a programmable rule set
             if let ProgrammableConfig::V1 { rule_set: Some(_) } = config {
