@@ -29,6 +29,7 @@ runs:
       working-directory: ./${{ inputs.name }}/program
       run: |
         mkdir -p ../../test-programs
+        export BPF_OUT_DIR=${{ env.BPF_OUT_DIR }}
         cargo +${{ env.RUST_STABLE }} build-bpf --version
         export BPF_OUT_DIR=../../test-programs/
         cargo +${{ env.RUST_STABLE }} build-bpf --bpf-out-dir ../../test-programs/
