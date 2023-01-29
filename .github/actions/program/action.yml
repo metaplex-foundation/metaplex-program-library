@@ -9,6 +9,8 @@ inputs:
 runs:
   using: 'composite'
   steps:
+    - uses: actions/checkout@v3
+
     # Build and install deps
     - uses: ./.github/actions/build-program
       with:
