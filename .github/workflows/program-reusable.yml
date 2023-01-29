@@ -17,7 +17,6 @@ env:
   CARGO_TERM_COLOR: always
   SOLANA_VERSION: 1.14.13
   RUST_TOOLCHAIN: 1.65.0
-  BPF_OUT_DIR: test-programs
   CACHE: ${{ inputs.cache }}
 
 jobs:
@@ -109,4 +108,3 @@ jobs:
           export BPF_OUT_DIR=../../test-programs/
           cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --version
           cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --bpf-out-dir ../../test-programs/ -- --nocapture --test-threads 1
-
