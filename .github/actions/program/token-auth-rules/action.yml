@@ -7,5 +7,6 @@ runs:
     # Get Token Auth Rules program
     - name: Get Token Auth Rules program
       run: |
+        mkdir -p test-programs
         solana program dump auth9SigNpDKz4sJJ1DfCTuZrZNSAgh9sFD3rboVmgg test-programs/mpl_token_auth_rules.so
       shell: bash
