@@ -46,8 +46,5 @@ runs:
         name: token-metadata
       if: ${{ inputs.name == 'token-entangler' }}
 
-    - uses: ./.github/actions/program/token-auth-rules
+    - uses: ./.github/actions/program/token-auth-rules-and-rooster
       if: ${{ inputs.name == 'token-metadata' }}
-
-
-
