@@ -18,8 +18,8 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  SOLANA_VERSION: 1.10.40
-  RUST_TOOLCHAIN: stable
+  SOLANA_VERSION: 1.14.13
+  RUST_TOOLCHAIN: 1.65.0
   CACHE: ${{ inputs.cache }}
 
 jobs:

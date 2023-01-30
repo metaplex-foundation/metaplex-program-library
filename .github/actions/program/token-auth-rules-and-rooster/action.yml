@@ -1,0 +1,12 @@
+name: Token Authorization Rules and Rooster Programs
+description: Gets mpl-token-auth-rules and rooster
+runs:
+  using: 'composite'
+  steps:
+    # Get Token Auth Rules program
+    - name: Get Token Auth Rules and rooster program
+      run: |
+        mkdir -p test-programs
+        solana program dump -u https://api.mainnet-beta.solana.com auth9SigNpDKz4sJJ1DfCTuZrZNSAgh9sFD3rboVmgg test-programs/mpl_token_auth_rules.so
+        solana program dump -u https://api.mainnet-beta.solana.com Roostrnex2Z9Y2XZC49sFAdZARP8E4iFpEnZC5QJWdz test-programs/rooster.so
+      shell: bash
