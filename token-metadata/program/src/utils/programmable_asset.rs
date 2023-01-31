@@ -5,7 +5,7 @@ use mpl_token_auth_rules::{
 };
 use mpl_utils::{create_or_allocate_account_raw, token::TokenTransferParams};
 use solana_program::{
-    account_info::AccountInfo, entrypoint::ProgramResult, msg, program::invoke_signed,
+    account_info::AccountInfo, entrypoint::ProgramResult, program::invoke_signed,
     program_error::ProgramError, pubkey::Pubkey,
 };
 use spl_token::instruction::{freeze_account, thaw_account};
@@ -195,7 +195,6 @@ pub fn auth_rules_validate(params: AuthRulesValidateParams) -> ProgramResult {
     } = params;
 
     if is_wallet_to_wallet {
-        msg!("Wallet to wallet transfer. Skipping auth rules validation");
         return Ok(());
     }
 
@@ -209,11 +208,8 @@ pub fn auth_rules_validate(params: AuthRulesValidateParams) -> ProgramResult {
 
     if let Some(ref config) = programmable_config {
         if let ProgrammableConfig::V1 { rule_set: Some(_) } = config {
-            msg!("Programmable config exists");
-
             assert_valid_authorization(auth_rules_info, config)?;
 
-            msg!("valid auth data. Adding rules...");
             // We can safely unwrap here because they were all checked for existence
             // in the assertion above.
             let auth_pda = auth_rules_info.unwrap();

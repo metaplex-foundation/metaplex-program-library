@@ -56,8 +56,6 @@ fn create_v1(program_id: &Pubkey, ctx: Context<Create>, args: CreateArgs) -> Pro
             return Err(MetadataError::MintIsNotSigner.into());
         }
 
-        msg!("Initializing mint account");
-
         invoke(
             &system_instruction::create_account(
                 ctx.accounts.payer_info.key,

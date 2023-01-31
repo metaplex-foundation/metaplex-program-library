@@ -2,7 +2,7 @@ use std::fmt::{Display, Formatter};
 
 use mpl_utils::assert_signer;
 use solana_program::{
-    account_info::AccountInfo, entrypoint::ProgramResult, msg, program_error::ProgramError,
+    account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
     program_pack::Pack, pubkey::Pubkey, sysvar,
 };
 use spl_token::state::Account;
@@ -155,18 +155,15 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
             // Metadata authority is the paramount authority so is not subject to
             // auth rules. At this point we already checked that the authority is a
             // signer and that it matches the metadata's update authority.
-            msg!("Authority type: Metadata");
         }
         AuthorityType::Delegate => {
             // Support for delegate update (for pNFTs this involves validating the
             // authoritzation rules)
-            msg!("Authority type: Delegate");
             return Err(MetadataError::FeatureNotSupported.into());
         }
         AuthorityType::Holder => {
             // Support for holder update (for pNFTs this involves validating the
             // authoritzation rules)
-            msg!("Authority type: Holder");
             return Err(MetadataError::FeatureNotSupported.into());
         }
         AuthorityType::None => {

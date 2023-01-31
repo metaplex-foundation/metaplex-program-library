@@ -2,7 +2,6 @@ use mpl_utils::{assert_signer, cmp_pubkeys};
 use solana_program::{
     account_info::AccountInfo,
     entrypoint::ProgramResult,
-    msg,
     program::{invoke, invoke_signed},
     program_error::ProgramError,
     pubkey::Pubkey,
@@ -133,8 +132,6 @@ pub fn mint_v1(program_id: &Pubkey, ctx: Context<Mint>, args: MintArgs) -> Progr
             ],
         )?;
 
-        msg!("Initializing associate token account");
-
         // creating the associated token account
         invoke(
             &spl_associated_token_account::instruction::create_associated_token_account(
@@ -154,11 +151,6 @@ pub fn mint_v1(program_id: &Pubkey, ctx: Context<Mint>, args: MintArgs) -> Progr
         assert_owned_by(ctx.accounts.token_info, &spl_token::id())?;
     }
 
-    msg!(
-        "Minting {} token(s) from mint {}",
-        amount,
-        ctx.accounts.mint_info.key
-    );
     let token: Account = assert_initialized(ctx.accounts.token_info)?;
 
     match metadata.token_standard {
@@ -182,8 +174,6 @@ pub fn mint_v1(program_id: &Pubkey, ctx: Context<Mint>, args: MintArgs) -> Progr
                 assert_keys_equal(&pda_key, token_record_info.key)?;
 
                 if token_record_info.data_is_empty() {
-                    msg!("Initializing token record account");
-
                     create_token_record_account(
                         program_id,
                         token_record_info,
