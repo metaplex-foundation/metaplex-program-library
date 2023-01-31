@@ -145,6 +145,8 @@ pub enum AuthorityType {
 }
 
 pub struct AuthorityRequest<'a, 'b> {
+    /// Determines the precedence of authority types.
+    pub precedence: &'a [AuthorityType],
     /// Pubkey of the authority.
     pub authority: &'a Pubkey,
     /// Metadata's update authority pubkey of the asset.
@@ -168,6 +170,11 @@ pub struct AuthorityRequest<'a, 'b> {
 impl<'a, 'b> Default for AuthorityRequest<'a, 'b> {
     fn default() -> Self {
         Self {
+            precedence: &[
+                AuthorityType::Delegate,
+                AuthorityType::Holder,
+                AuthorityType::Metadata,
+            ],
             authority: &DEFAULT_PUBKEY,
             update_authority: &DEFAULT_PUBKEY,
             mint: &DEFAULT_PUBKEY,
@@ -183,74 +190,94 @@ impl<'a, 'b> Default for AuthorityRequest<'a, 'b> {
 
 impl AuthorityType {
     /// Determines the `AuthorityType`.
+    ///
+    /// The `AuthorityType` is used to determine the authority of a request. An authority can
+    /// be "valid" for multiples types (e.g., the same authority can be the holder and the update
+    /// authority). This ambiguity is resolved by using the `precedence`, which determines the
+    /// priority of types.
     pub fn get_authority_type(request: AuthorityRequest) -> Result<Self, ProgramError> {
-        // checks if the authority is a token delegate
+        // the evaluation follows the `request.precedence` order; as soon as a match is
+        // found, the type is returned
+        for authority_type in request.precedence {
+            match authority_type {
+                AuthorityType::Delegate => {
+                    // checks if the authority is a token delegate
 
-        if let Some(token_record_info) = request.token_record_info {
-            // must be owned by token medatata
-            assert_owned_by(token_record_info, &crate::ID)?;
+                    if let Some(token_record_info) = request.token_record_info {
+                        // must be owned by token medatata
+                        assert_owned_by(token_record_info, &crate::ID)?;
 
-            // we can only validate if it is a token delegate when we have the token account
-            if let Some(token_account) = request.token_account {
-                let token = request.token.ok_or(MetadataError::MissingTokenAccount)?;
+                        // we can only validate if it is a token delegate when we have the token account
+                        if let Some(token_account) = request.token_account {
+                            let token = request.token.ok_or(MetadataError::MissingTokenAccount)?;
 
-                let (pda_key, _) = find_token_record_account(request.mint, token);
-                let token_record = TokenRecord::from_account_info(token_record_info)?;
+                            let (pda_key, _) = find_token_record_account(request.mint, token);
+                            let token_record = TokenRecord::from_account_info(token_record_info)?;
 
-                let role_matches = match token_record.delegate_role {
-                    Some(role) => request.token_delegate_roles.contains(&role),
-                    None => request.token_delegate_roles.is_empty(),
-                };
+                            let role_matches = match token_record.delegate_role {
+                                Some(role) => request.token_delegate_roles.contains(&role),
+                                None => request.token_delegate_roles.is_empty(),
+                            };
 
-                if cmp_pubkeys(&pda_key, token_record_info.key)
-                    && Some(*request.authority) == token_record.delegate
-                    && role_matches
-                    && (COption::from(token_record.delegate) == token_account.delegate)
-                {
-                    return Ok(AuthorityType::Delegate);
-                }
-            }
-        }
+                            if cmp_pubkeys(&pda_key, token_record_info.key)
+                                && Some(*request.authority) == token_record.delegate
+                                && role_matches
+                                && (COption::from(token_record.delegate) == token_account.delegate)
+                            {
+                                return Ok(AuthorityType::Delegate);
+                            }
+                        }
+                    }
 
-        // checks if the authority is a metadata delegate
+                    // checks if the authority is a metadata delegate
 
-        if let Some(metadata_delegate_record_info) = request.metadata_delegate_record_info {
-            // must be owned by token medatata
-            assert_owned_by(metadata_delegate_record_info, &crate::ID)?;
+                    if let Some(metadata_delegate_record_info) =
+                        request.metadata_delegate_record_info
+                    {
+                        // must be owned by token medatata
+                        assert_owned_by(metadata_delegate_record_info, &crate::ID)?;
 
-            if let Some(delegate_role) = request.metadata_delegate_role {
-                let (pda_key, _) = find_metadata_delegate_record_account(
-                    request.mint,
-                    delegate_role,
-                    request.update_authority,
-                    request.authority,
-                );
+                        if let Some(delegate_role) = request.metadata_delegate_role {
+                            let (pda_key, _) = find_metadata_delegate_record_account(
+                                request.mint,
+                                delegate_role,
+                                request.update_authority,
+                                request.authority,
+                            );
 
-                if cmp_pubkeys(&pda_key, metadata_delegate_record_info.key) {
-                    let delegate_record =
-                        MetadataDelegateRecord::from_account_info(metadata_delegate_record_info)?;
+                            if cmp_pubkeys(&pda_key, metadata_delegate_record_info.key) {
+                                let delegate_record = MetadataDelegateRecord::from_account_info(
+                                    metadata_delegate_record_info,
+                                )?;
 
-                    if delegate_record.delegate == *request.authority {
-                        return Ok(AuthorityType::Delegate);
+                                if delegate_record.delegate == *request.authority {
+                                    return Ok(AuthorityType::Delegate);
+                                }
+                            }
+                        }
                     }
                 }
+                AuthorityType::Holder => {
+                    // checks if the authority is the token owner
+
+                    if let Some(token_account) = request.token_account {
+                        if cmp_pubkeys(&token_account.owner, request.authority) {
+                            return Ok(AuthorityType::Holder);
+                        }
+                    }
+                }
+                AuthorityType::Metadata => {
+                    // checks if the authority is the update authority
+
+                    if cmp_pubkeys(request.update_authority, request.authority) {
+                        return Ok(AuthorityType::Metadata);
+                    }
+                }
+                _ => { /* the default return type is 'None' */ }
             }
         }
 
-        // checks if the authority is the token owner
-
-        if let Some(token_account) = request.token_account {
-            if cmp_pubkeys(&token_account.owner, request.authority) {
-                return Ok(AuthorityType::Holder);
-            }
-        }
-
-        // checks if the authority is the update authority
-
-        if cmp_pubkeys(request.update_authority, request.authority) {
-            return Ok(AuthorityType::Metadata);
-        }
-
+        // if we reach this point, no 'valid' authority type has been found
         Ok(AuthorityType::None)
     }
 }
