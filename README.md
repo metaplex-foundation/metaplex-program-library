@@ -29,7 +29,7 @@ See [the docs](https://docs.metaplex.com/tools/sugar/introduction) for full inst
 For macOS, Linux and Windows Subsystem Linux (WSL), run the following install script in your terminal:
 
 ```bash
-bash <(curl -sSf https://sugar.metaplex.com/install.sh)
+bash <(curl -sSf https://raw.githubusercontent.com/metaplex-foundation/sugar/main/script/sugar-install.sh)
 ```
 
 For Windows:
