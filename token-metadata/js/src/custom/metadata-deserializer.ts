@@ -129,7 +129,7 @@ function tryReadOption<T>(
     const fixed = optionBeet.toFixedFromData(buf, offset);
     const value = fixed.read(buf, offset);
     return [value, fixed.byteSize, false];
-  } catch (err) {
+  } catch (e) {
     return [null, NONE_BYTE_SIZE, true];
   }
 }

@@ -368,6 +368,7 @@ mod standard_transfer {
 mod auth_rules_transfer {
     use mpl_token_auth_rules::payload::Payload;
     use mpl_token_metadata::{
+        error::MetadataError,
         instruction::DelegateArgs,
         state::{ProgrammableConfig, TokenDelegateRole},
     };
@@ -979,5 +980,133 @@ mod auth_rules_transfer {
 
         // Transfer should succeed because no rule set is present on the NFT.
         nft.transfer_from(params).await.unwrap();
+    }
+
+    #[tokio::test]
+    async fn locked_transfer_delegate() {
+        // tests a LoackedTransfer delegate transferring from a system wallet to an invalid address and
+        // from a system wallet to the the locked PDA address
+        let mut program_test = ProgramTest::new("mpl_token_metadata", mpl_token_metadata::ID, None);
+        program_test.add_program("mpl_token_auth_rules", mpl_token_auth_rules::ID, None);
+        program_test.add_program("rooster", rooster::ID, None);
+        let mut context = program_test.start_with_context().await;
+
+        let payer = context.payer.dirty_clone();
+
+        // create rule set for the transfer; this has the Rooster program in the allowlist
+        let (rule_set, mut auth_data) = create_default_metaplex_rule_set(&mut context, payer).await;
+
+        // create NFT for transfer tests
+        let mut nft = DigitalAsset::new();
+        nft.create_and_mint(
+            &mut context,
+            TokenStandard::ProgrammableNonFungible,
+            Some(rule_set),
+            Some(auth_data.clone()),
+            1,
+        )
+        .await
+        .unwrap();
+
+        let transfer_amount = 1;
+        // Set up the PDA account.
+        let authority = context.payer.dirty_clone();
+        let rooster_manager = RoosterManager::init(&mut context, authority).await.unwrap();
+
+        // Create a locked transfer delegate
+        let payer = context.payer.dirty_clone();
+        let delegate = Keypair::new();
+        airdrop(&mut context, &delegate.pubkey(), LAMPORTS_PER_SOL)
+            .await
+            .unwrap();
+
+        let delegate_args = DelegateArgs::LockedTransferV1 {
+            amount: transfer_amount,
+            locked_address: rooster_manager.pda(),
+            authorization_data: None,
+        };
+
+        nft.delegate(&mut context, payer, delegate.pubkey(), delegate_args)
+            .await
+            .unwrap();
+
+        let delegate_role = nft
+            .get_token_delegate_role(&mut context, &nft.token.unwrap())
+            .await;
+
+        assert_eq!(delegate_role, Some(TokenDelegateRole::LockedTransfer));
+
+        // tries to make an invalid transfer: the destination address does not match
+        // the address at the delegate creation
+
+        let authority = context.payer.dirty_clone();
+
+        let args = TransferArgs::V1 {
+            authorization_data: None,
+            amount: transfer_amount,
+        };
+
+        let params = TransferFromParams {
+            context: &mut context,
+            authority: &delegate,
+            source_owner: &authority.pubkey(),
+            destination_owner: nft.metadata,
+            destination_token: None,
+            authorization_rules: Some(rule_set),
+            payer: &authority,
+            args: args.clone(),
+        };
+
+        let error = nft.transfer_from(params).await.unwrap_err();
+
+        assert_custom_error_ix!(2, error, MetadataError::InvalidLockedTransferAddress);
+
+        // makes the correct transfer
+
+        let authority = context.payer.dirty_clone();
+
+        // update auth data payload with the seeds of the PDA we're
+        // transferring to.
+        let seeds = SeedsVec {
+            seeds: vec![
+                String::from("rooster").as_bytes().to_vec(),
+                authority.pubkey().as_ref().to_vec(),
+            ],
+        };
+
+        auth_data.payload.insert(
+            PayloadKey::DestinationSeeds.to_string(),
+            PayloadType::Seeds(seeds),
+        );
+
+        let args = TransferArgs::V1 {
+            authorization_data: Some(auth_data.clone()),
+            amount: transfer_amount,
+        };
+
+        let params = TransferFromParams {
+            context: &mut context,
+            authority: &delegate,
+            source_owner: &authority.pubkey(),
+            destination_owner: rooster_manager.pda(),
+            destination_token: None,
+            authorization_rules: Some(rule_set),
+            payer: &authority,
+            args: args.clone(),
+        };
+
+        nft.transfer_from(params).await.unwrap();
+
+        let rooster_ata = get_associated_token_address(&rooster_manager.pda(), &nft.mint.pubkey());
+        let rooster_ata_account = spl_token::state::Account::unpack(
+            get_account(&mut context, &rooster_ata)
+                .await
+                .data
+                .as_slice(),
+        )
+        .unwrap();
+
+        // Destination now has the token.
+        assert_eq!(rooster_ata_account.amount, 1);
     }
 }

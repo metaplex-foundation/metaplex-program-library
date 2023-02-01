@@ -16,7 +16,7 @@ use crate::{
     instruction::{Context, Delegate, DelegateArgs, MetadataDelegateRole},
     pda::{find_token_record_account, PREFIX},
     state::{
-        Metadata, MetadataDelegateRecord, ProgrammableConfig, TokenDelegateRole,
+        Metadata, MetadataDelegateRecord, ProgrammableConfig, Resizable, TokenDelegateRole,
         TokenMetadataAccount, TokenRecord, TokenStandard, TokenState,
     },
     utils::{freeze, thaw},
@@ -70,6 +70,13 @@ pub fn delegate<'a>(
             context,
             args,
             TokenDelegateRole::Standard,
+            amount,
+        ),
+        DelegateArgs::LockedTransferV1 { amount, .. } => create_persistent_delegate_v1(
+            program_id,
+            context,
+            args,
+            TokenDelegateRole::LockedTransfer,
             amount,
         ),
     }
@@ -143,7 +150,7 @@ fn create_delegate_v1(
 fn create_persistent_delegate_v1(
     program_id: &Pubkey,
     ctx: Context<Delegate>,
-    _args: DelegateArgs,
+    args: DelegateArgs,
     role: TokenDelegateRole,
     amount: u64,
 ) -> ProgramResult {
@@ -266,9 +273,23 @@ fn create_persistent_delegate_v1(
                 TokenState::Unlocked
             };
 
+            token_record.locked_transfer = if matches!(role, TokenDelegateRole::LockedTransfer) {
+                if let DelegateArgs::LockedTransferV1 { locked_address, .. } = args {
+                    Some(locked_address)
+                } else {
+                    return Err(MetadataError::InvalidDelegateArgs.into());
+                }
+            } else {
+                None
+            };
+
             token_record.delegate = Some(*ctx.accounts.delegate_info.key);
             token_record.delegate_role = Some(role);
-            token_record.save(*token_record_info.try_borrow_mut_data()?)?;
+            token_record.save(
+                token_record_info,
+                ctx.accounts.payer_info,
+                ctx.accounts.system_program_info,
+            )?;
 
             if let Some(master_edition_info) = ctx.accounts.master_edition_info {
                 assert_owned_by(master_edition_info, &crate::ID)?;

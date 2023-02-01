@@ -256,7 +256,8 @@ impl DigitalAsset {
             DelegateArgs::SaleV1 { .. }
             | DelegateArgs::TransferV1 { .. }
             | DelegateArgs::UtilityV1 { .. }
-            | DelegateArgs::StakingV1 { .. } => {
+            | DelegateArgs::StakingV1 { .. }
+            | DelegateArgs::LockedTransferV1 { .. } => {
                 let (token_record, _) =
                     find_token_record_account(&self.mint.pubkey(), &self.token.unwrap());
                 builder.token_record(token_record);
@@ -364,7 +365,8 @@ impl DigitalAsset {
             RevokeArgs::SaleV1
             | RevokeArgs::TransferV1
             | RevokeArgs::UtilityV1
-            | RevokeArgs::StakingV1 => {
+            | RevokeArgs::StakingV1
+            | RevokeArgs::LockedTransferV1 => {
                 let (token_record, _) =
                     find_token_record_account(&self.mint.pubkey(), &self.token.unwrap());
                 builder.token_record(token_record);
@@ -546,7 +548,7 @@ impl DigitalAsset {
             builder.token(token);
         }
 
-        let utility_ix = builder
+        let unlock_ix = builder
             .build(UnlockArgs::V1 {
                 authorization_data: None,
             })
@@ -554,7 +556,7 @@ impl DigitalAsset {
             .instruction();
 
         let tx = Transaction::new_signed_with_payer(
-            &[utility_ix],
+            &[unlock_ix],
             Some(&payer.pubkey()),
             &[&delegate, &payer],
             context.last_blockhash,

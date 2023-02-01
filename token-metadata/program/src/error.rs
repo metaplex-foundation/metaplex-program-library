@@ -667,6 +667,22 @@ pub enum MetadataError {
     /// 168
     #[error("Amount must be greater than zero")]
     AmountMustBeGreaterThanZero,
+
+    /// 169
+    #[error("Invalid delegate args")]
+    InvalidDelegateArgs,
+
+    /// 170
+    #[error("Missing address for locked transfer")]
+    MissingLockedTransferAddress,
+
+    /// 171
+    #[error("Invalid destination address for locked transfer")]
+    InvalidLockedTransferAddress,
+
+    /// 172
+    #[error("Exceeded account realloc increase limit")]
+    DataIncrementLimitExceeded,
 }
 
 impl PrintProgramError for MetadataError {

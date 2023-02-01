@@ -519,3 +519,64 @@ test('Delegate: try replace sale delegate', async (t) => {
 
   await delegateTx2.assertError(t, /Delegate already exists/);
 });
+
+test('Delegate: create locked transfer delegate', async (t) => {
+  const API = new InitTransactions();
+  const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
+
+  const manager = await createAndMintDefaultAsset(
+    t,
+    connection,
+    API,
+    handler,
+    payer,
+    TokenStandard.ProgrammableNonFungible,
+  );
+
+  // creates a delegate
+
+  const [delegate] = await API.getKeypair('Delegate');
+  // token record PDA
+  const tokenRecord = findTokenRecordPda(manager.mint, manager.token);
+  amman.addr.addLabel('Token Record', tokenRecord);
+
+  const args: DelegateArgs = {
+    __kind: 'LockedTransferV1',
+    amount: 1,
+    lockedAddress: PublicKey.default,
+    authorizationData: null,
+  };
+
+  const { tx: delegateTx } = await API.delegate(
+    delegate,
+    manager.mint,
+    manager.metadata,
+    payer.publicKey,
+    payer,
+    args,
+    handler,
+    null,
+    manager.masterEdition,
+    manager.token,
+    tokenRecord,
+  );
+
+  await delegateTx.assertSuccess(t);
+
+  // asserts
+
+  const tokenAccount = await getAccount(connection, manager.token);
+
+  spok(t, tokenAccount, {
+    delegatedAmount: spokSameBigint(new BN(1)),
+    delegate: spokSamePubkey(delegate),
+  });
+
+  const pda = await TokenRecord.fromAccountAddress(connection, tokenRecord);
+
+  spok(t, pda, {
+    delegate: spokSamePubkey(delegate),
+    delegateRole: TokenDelegateRole.LockedTransfer,
+    lockedTransfer: spokSamePubkey(PublicKey.default),
+  });
+});
