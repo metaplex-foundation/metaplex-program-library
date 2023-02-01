@@ -548,7 +548,7 @@ impl DigitalAsset {
             builder.token(token);
         }
 
-        let utility_ix = builder
+        let unlock_ix = builder
             .build(UnlockArgs::V1 {
                 authorization_data: None,
             })
@@ -556,7 +556,7 @@ impl DigitalAsset {
             .instruction();
 
         let tx = Transaction::new_signed_with_payer(
-            &[utility_ix],
+            &[unlock_ix],
             Some(&payer.pubkey()),
             &[&delegate, &payer],
             context.last_blockhash,
