@@ -30,7 +30,7 @@ impl<'info> Withdraw<'info> {
         let funder = &self.funder;
         let payer = &self.payer;
         let payout_ticket = &mut self.payout_ticket;
-        let rent = &self.rent;
+        let _rent = &self.rent;
         let clock = &self.clock;
         let metadata = &self.metadata.to_account_info();
 
@@ -192,7 +192,6 @@ impl<'info> Withdraw<'info> {
                     associated_token: destination.to_account_info(),
                     authority: funder.to_account_info(),
                     mint: treasury_mint.to_account_info(),
-                    rent: rent.to_account_info(),
                     token_program: token_program.to_account_info(),
                     system_program: system_program.to_account_info(),
                 };
