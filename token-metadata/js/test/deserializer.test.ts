@@ -196,5 +196,5 @@ test('deserialize: failed token record without lockedTransfer', async (t) => {
     failed = true;
   }
 
-  t.true(failed, "deserialization failed");
+  t.true(failed, 'deserialization failed');
 });
