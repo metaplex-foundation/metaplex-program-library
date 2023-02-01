@@ -77,7 +77,7 @@ pub struct TokenRecord {
     /// The role of the current token delegate.
     pub delegate_role: Option<TokenDelegateRole>,
     /// Stores the destination pubkey when a transfer is lock to an allowed address. This
-    /// pubkey gets set when a 'Lease' delegate is approved.
+    /// pubkey gets set when a 'LockTransfer' delegate is approved.
     pub locked_transfer: Option<Pubkey>,
 }
 
