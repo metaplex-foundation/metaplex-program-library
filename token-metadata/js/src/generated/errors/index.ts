@@ -3683,6 +3683,29 @@ createErrorFromNameLookup.set(
 );
 
 /**
+ * DataIncrementLimitExceeded: 'Exceeded account realloc increase limit'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class DataIncrementLimitExceededError extends Error {
+  readonly code: number = 0xac;
+  readonly name: string = 'DataIncrementLimitExceeded';
+  constructor() {
+    super('Exceeded account realloc increase limit');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, DataIncrementLimitExceededError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xac, () => new DataIncrementLimitExceededError());
+createErrorFromNameLookup.set(
+  'DataIncrementLimitExceeded',
+  () => new DataIncrementLimitExceededError(),
+);
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

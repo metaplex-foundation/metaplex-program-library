@@ -182,7 +182,7 @@ test('deserialize: token record without lockedTransfer', async (t) => {
   delegateRoleBeet.write(buffer, offset, TokenDelegateRole.Sale);
   offset += delegateRoleBeet.byteSize;
 
-  let [tokenRecord] = TokenRecord.deserialize(buffer);
+  const [tokenRecord] = TokenRecord.deserialize(buffer);
 
   t.true(tokenRecord.lockedTransfer == null);
 });

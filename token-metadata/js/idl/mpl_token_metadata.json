@@ -6197,6 +6197,11 @@
       "code": 171,
       "name": "InvalidLockedTransferAddress",
       "msg": "Invalid destination address for locked transfer"
+    },
+    {
+      "code": 172,
+      "name": "DataIncrementLimitExceeded",
+      "msg": "Exceeded account realloc increase limit"
     }
   ],
   "metadata": {
