@@ -251,5 +251,5 @@ pub trait Resizable: TokenMetadataAccount + BorshSerialize {
     ///
     /// In most cases this will perform a custom deserialization since the size of the
     /// stored byte array (account) can change.
-    fn from_bytes<'a>(data: &[u8]) -> Result<Self, ProgramError>;
+    fn from_bytes(data: &[u8]) -> Result<Self, ProgramError>;
 }
