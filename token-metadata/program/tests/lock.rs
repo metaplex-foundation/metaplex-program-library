@@ -356,7 +356,7 @@ mod lock {
 
         let token_account = get_account(&mut context, &asset.token.unwrap()).await;
         let token = Account::unpack(&token_account.data).unwrap();
-        // should not be frozen
+        // should be frozen
         assert!(token.is_frozen());
 
         let pda = get_account(&mut context, &pda_key).await;
