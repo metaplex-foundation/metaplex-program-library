@@ -1467,6 +1467,7 @@ pub mod bubblegum {
                             &ctx.accounts.leaf_owner.key(),
                             &ctx.accounts.leaf_owner.key(),
                             &ctx.accounts.mint.key(),
+                            &spl_token::ID,
                         ),
                         &[
                             ctx.accounts.leaf_owner.to_account_info(),
