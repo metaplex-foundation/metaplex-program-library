@@ -685,7 +685,7 @@ pub enum MetadataError {
     DataIncrementLimitExceeded,
 
     /// 173
-    #[error("Cannot update a programmable asset that has a delegate")]
+    #[error("Cannot update the rule set of a programmable asset that has a delegate")]
     CannotUpdateAssetWithDelegate,
 }
 
