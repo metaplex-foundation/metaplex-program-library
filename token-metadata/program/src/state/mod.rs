@@ -36,7 +36,6 @@ use shank::ShankAccount;
 use solana_program::{
     account_info::AccountInfo,
     entrypoint::{ProgramResult, MAX_PERMITTED_DATA_INCREASE},
-    msg,
     program::invoke,
     program_error::ProgramError,
     pubkey::Pubkey,
@@ -200,8 +199,6 @@ pub trait Resizable: TokenMetadataAccount + BorshSerialize {
                     .checked_sub(snapshot)
                     .ok_or(MetadataError::NumericalOverflowError)?;
 
-                msg!("Funding {} lamports for account realloc", lamports_diff);
-
                 invoke(
                     &system_instruction::transfer(payer.key, account_info.key, lamports_diff),
                     &[payer.clone(), account_info.clone(), system_program.clone()],
@@ -211,19 +208,12 @@ pub trait Resizable: TokenMetadataAccount + BorshSerialize {
                     .checked_sub(Rent::get()?.minimum_balance(required_size))
                     .ok_or(MetadataError::NumericalOverflowError)?;
 
-                msg!(
-                    "Withdrawing {} lamports from account realloc",
-                    lamports_diff
-                );
-
                 **account_info.lamports.borrow_mut() = snapshot - lamports_diff;
                 **payer.lamports.borrow_mut() = payer
                     .lamports()
                     .checked_add(lamports_diff)
                     .ok_or(MetadataError::NumericalOverflowError)?;
             }
-
-            msg!("Account realloc by {} bytes", difference);
             // changes the account size to fit the required size
             account_info.realloc(required_size, false)?;
         }
