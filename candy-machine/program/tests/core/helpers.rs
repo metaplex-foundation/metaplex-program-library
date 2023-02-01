@@ -164,6 +164,7 @@ pub async fn create_associated_token_account(
                 &context.payer.pubkey(),
                 wallet,
                 token_mint,
+                &spl_token::ID,
             ),
         ],
         Some(&context.payer.pubkey()),
