@@ -166,7 +166,7 @@ where
 
 /// Trait for resizable accounts.
 ///
-/// Implementing this trait for a type will automatically allow the use of the `resize` method,
+/// Implementing this trait for a type will automatically allow the use of the `save` method,
 /// which can modify the size of an account.
 ///
 /// A type implementing this trait must specify the `from_bytes` method, since an account can
@@ -174,10 +174,9 @@ where
 pub trait Resizable: TokenMetadataAccount + BorshSerialize {
     /// Saves the information to the specified account, resizing the account if needed.
     ///
-    /// The account size can either increase or decrease depending of the current size and
-    /// the new size of the struct. If the size has not change, it has the same effect using
-    /// only the `save` method.
-    fn resize<'a>(
+    /// The account size can either increase or decrease depending on whether the account size
+    /// matches the struct size or not.
+    fn save<'a>(
         &self,
         account_info: &'a AccountInfo<'a>,
         payer: &'a AccountInfo<'a>,
@@ -229,19 +228,10 @@ pub trait Resizable: TokenMetadataAccount + BorshSerialize {
             account_info.realloc(required_size, false)?;
         }
 
-        self.save(account_info)
-    }
-
-    /// Saves the information to the specified account.
-    ///
-    /// This method does not resize the account, an error is generated if there is no
-    /// account space to store all the information.
-    fn save(&self, account_info: &AccountInfo) -> Result<(), ProgramError> {
-        let size = account_info.data_len();
         let mut account_data = account_info.data.borrow_mut();
         // passes a slice to borsh so the internal account data array does not get
         // temporarily resized
-        let mut storage = &mut account_data[..size];
+        let mut storage = &mut account_data[..required_size];
         BorshSerialize::serialize(self, &mut storage)?;
 
         Ok(())

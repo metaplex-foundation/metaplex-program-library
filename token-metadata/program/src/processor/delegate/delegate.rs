@@ -285,7 +285,7 @@ fn create_persistent_delegate_v1(
 
             token_record.delegate = Some(*ctx.accounts.delegate_info.key);
             token_record.delegate_role = Some(role);
-            token_record.resize(
+            token_record.save(
                 token_record_info,
                 ctx.accounts.payer_info,
                 ctx.accounts.system_program_info,

@@ -15,8 +15,8 @@ use crate::{
     pda::{EDITION, PREFIX},
     processor::{AuthorizationData, TransferScenario},
     state::{
-        Operation, PayloadKey, Resizable, ProgrammableConfig, ToAccountMeta,
-        TokenMetadataAccount, TokenRecord, TOKEN_RECORD_SEED,
+        Operation, PayloadKey, ProgrammableConfig, Resizable, ToAccountMeta, TokenMetadataAccount,
+        TokenRecord, TOKEN_RECORD_SEED,
     },
 };
 
@@ -63,7 +63,7 @@ pub fn create_token_record_account<'a>(
         ..Default::default()
     };
 
-    token_record.save(token_record_info)
+    token_record.save(token_record_info, payer_info, system_program_info)
 }
 
 pub fn freeze<'a>(

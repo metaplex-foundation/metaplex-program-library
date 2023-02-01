@@ -380,7 +380,7 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
             frozen_transfer(token_transfer_params, ctx.accounts.edition_info)?;
 
             owner_token_record.reset();
-            owner_token_record.resize(
+            owner_token_record.save(
                 owner_token_record_info,
                 ctx.accounts.payer_info,
                 ctx.accounts.system_program_info,

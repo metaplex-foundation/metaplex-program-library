@@ -223,7 +223,7 @@ fn revoke_persistent_delegate(
                 if token_record.delegate_role == Some(role) {
                     // resets the token record (state, rule_set_revision and delegate info)
                     token_record.reset();
-                    token_record.resize(
+                    token_record.save(
                         token_record_info,
                         ctx.accounts.payer_info,
                         ctx.accounts.system_program_info,
