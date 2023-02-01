@@ -1,3 +1,5 @@
+use std::io::Error;
+
 use borsh::{BorshDeserialize, BorshSerialize};
 use mpl_utils::cmp_pubkeys;
 use num_derive::ToPrimitive;
@@ -9,7 +11,6 @@ use solana_program::{
     program_option::COption, pubkey::Pubkey,
 };
 use spl_token::state::Account;
-use std::io::Error;
 
 use super::*;
 use crate::{

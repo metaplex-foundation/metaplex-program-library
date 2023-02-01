@@ -368,8 +368,9 @@ mod standard_transfer {
 mod auth_rules_transfer {
     use mpl_token_auth_rules::payload::Payload;
     use mpl_token_metadata::{
+        error::MetadataError,
         instruction::DelegateArgs,
-        state::{ProgrammableConfig, TokenDelegateRole}, error::MetadataError,
+        state::{ProgrammableConfig, TokenDelegateRole},
     };
 
     use super::*;
