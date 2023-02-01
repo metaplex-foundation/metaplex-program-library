@@ -200,7 +200,7 @@ pub async fn create_token_metadata(
 
     let tx = Transaction::new_signed_with_payer(
         &[
-            mpl_token_metadata::instruction::create_metadata_accounts_v2(
+            mpl_token_metadata::instruction::create_metadata_accounts_v3(
                 mpl_token_metadata::id(),
                 metadata,
                 *mint,
@@ -215,6 +215,7 @@ pub async fn create_token_metadata(
                 update_authority_is_signer,
                 is_mutable,
                 collection,
+                None,
                 None,
             ),
         ],

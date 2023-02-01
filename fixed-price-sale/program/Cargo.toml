@@ -30,7 +30,6 @@ solana-program = "1.14"
 solana-sdk = "1.14"
 spl-associated-token-account = "1.1.1"
 mpl-testing-utils= {path="../../core/rust/testing-utils" }
-mpl-metaplex = "0.1.0"
 
 [profile.release]
 overflow-checks = true     # Enable integer overflow checks.
