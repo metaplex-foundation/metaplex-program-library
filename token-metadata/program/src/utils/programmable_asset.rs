@@ -1,4 +1,3 @@
-use borsh::BorshSerialize;
 use mpl_token_auth_rules::{
     instruction::{builders::ValidateBuilder, InstructionBuilder, ValidateArgs},
     payload::PayloadType,
@@ -16,8 +15,8 @@ use crate::{
     pda::{EDITION, PREFIX},
     processor::{AuthorizationData, TransferScenario},
     state::{
-        Operation, PayloadKey, ProgrammableConfig, ToAccountMeta, TokenMetadataAccount,
-        TokenRecord, TOKEN_RECORD_SEED,
+        Operation, PayloadKey, Resizable, ProgrammableConfig, ToAccountMeta,
+        TokenMetadataAccount, TokenRecord, TOKEN_RECORD_SEED,
     },
 };
 
@@ -63,9 +62,8 @@ pub fn create_token_record_account<'a>(
         bump: bump[0],
         ..Default::default()
     };
-    token_record.serialize(&mut *token_record_info.try_borrow_mut_data()?)?;
 
-    Ok(())
+    token_record.save(token_record_info)
 }
 
 pub fn freeze<'a>(

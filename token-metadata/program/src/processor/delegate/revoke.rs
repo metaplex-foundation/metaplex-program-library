@@ -13,8 +13,8 @@ use crate::{
     instruction::{Context, MetadataDelegateRole, Revoke, RevokeArgs},
     pda::{find_metadata_delegate_record_account, find_token_record_account},
     state::{
-        Metadata, MetadataDelegateRecord, TokenDelegateRole, TokenMetadataAccount, TokenRecord,
-        TokenStandard,
+        Metadata, MetadataDelegateRecord, Resizable, TokenDelegateRole,
+        TokenMetadataAccount, TokenRecord, TokenStandard,
     },
     utils::{freeze, thaw},
 };
@@ -220,7 +220,11 @@ fn revoke_persistent_delegate(
                 if token_record.delegate_role == Some(role) {
                     // resets the token record (state, rule_set_revision and delegate info)
                     token_record.reset();
-                    token_record.save(*token_record_info.try_borrow_mut_data()?)?;
+                    token_record.resize(
+                        token_record_info,
+                        ctx.accounts.payer_info,
+                        ctx.accounts.system_program_info,
+                    )?;
                 } else {
                     return Err(MetadataError::InvalidDelegate.into());
                 }

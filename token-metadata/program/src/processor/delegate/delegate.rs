@@ -16,7 +16,7 @@ use crate::{
     instruction::{Context, Delegate, DelegateArgs, MetadataDelegateRole},
     pda::{find_token_record_account, PREFIX},
     state::{
-        Metadata, MetadataDelegateRecord, ProgrammableConfig, TokenDelegateRole,
+        Metadata, MetadataDelegateRecord, ProgrammableConfig, Resizable, TokenDelegateRole,
         TokenMetadataAccount, TokenRecord, TokenStandard, TokenState,
     },
     utils::{freeze, thaw},
@@ -268,7 +268,11 @@ fn create_persistent_delegate_v1(
 
             token_record.delegate = Some(*ctx.accounts.delegate_info.key);
             token_record.delegate_role = Some(role);
-            token_record.save(*token_record_info.try_borrow_mut_data()?)?;
+            token_record.resize(
+                token_record_info,
+                ctx.accounts.payer_info,
+                ctx.accounts.system_program_info,
+            )?;
 
             if let Some(master_edition_info) = ctx.accounts.master_edition_info {
                 assert_owned_by(master_edition_info, &crate::ID)?;

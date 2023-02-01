@@ -16,7 +16,7 @@ use crate::{
     state::{
         CollectionAuthorityRecord, Metadata, MigrationType, ProgrammableConfig, TokenDelegateRole,
         TokenMetadataAccount, TokenRecord, TokenStandard, TokenState, TOKEN_RECORD_SEED,
-        TOKEN_STANDARD_INDEX,
+        TOKEN_STANDARD_INDEX, Resizable,
     },
     utils::{
         assert_derivation, assert_edition_valid, assert_initialized, clean_write_metadata, freeze,
@@ -211,7 +211,7 @@ pub fn migrate_v1(program_id: &Pubkey, ctx: Context<Migrate>, args: MigrateArgs)
                 token_record.delegate_role = Some(TokenDelegateRole::Migration);
             }
 
-            token_record.save(*ctx.accounts.token_record_info.try_borrow_mut_data()?)?;
+            token_record.save(ctx.accounts.token_record_info)?;
 
             // Migrate the token.
             metadata.token_standard = Some(TokenStandard::ProgrammableNonFungible);

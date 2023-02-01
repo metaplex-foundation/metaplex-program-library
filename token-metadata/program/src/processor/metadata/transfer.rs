@@ -1,6 +1,5 @@
 use std::fmt::Display;
 
-use borsh::BorshDeserialize;
 use mpl_token_auth_rules::processor::cmp_pubkeys;
 use mpl_utils::{assert_signer, token::TokenTransferParams};
 use solana_program::{
@@ -23,7 +22,7 @@ use crate::{
     instruction::{Context, Transfer, TransferArgs},
     pda::find_token_record_account,
     state::{
-        AuthorityRequest, AuthorityType, Metadata, Operation, TokenDelegateRole,
+        AuthorityRequest, AuthorityType, Metadata, Operation, Resizable, TokenDelegateRole,
         TokenMetadataAccount, TokenRecord, TokenStandard,
     },
     utils::{
@@ -312,9 +311,7 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
             // validates the derivation
             assert_keys_equal(&new_pda_key, destination_token_record_info.key)?;
 
-            let owner_token_record_data = owner_token_record_info.try_borrow_data()?;
-            let mut owner_token_record =
-                TokenRecord::deserialize(&mut owner_token_record_data.as_ref())?;
+            let mut owner_token_record = TokenRecord::from_account_info(owner_token_record_info)?;
 
             msg!("checking if sale delegate");
             let is_sale_delegate = owner_token_record
@@ -361,10 +358,12 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
             auth_rules_validate(auth_rules_validate_params)?;
             frozen_transfer(token_transfer_params, ctx.accounts.edition_info)?;
 
-            // Drop old immutable borrow.
-            drop(owner_token_record_data);
             owner_token_record.reset();
-            owner_token_record.save(&mut owner_token_record_info.data.borrow_mut())?;
+            owner_token_record.resize(
+                owner_token_record_info,
+                ctx.accounts.payer_info,
+                ctx.accounts.system_program_info,
+            )?;
 
             // If the token record account for the destination owner doesn't exist,
             // we create it.

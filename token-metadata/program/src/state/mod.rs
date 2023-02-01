@@ -34,8 +34,15 @@ pub use programmable::*;
 pub use reservation::*;
 use shank::ShankAccount;
 use solana_program::{
-    account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
+    account_info::AccountInfo,
+    entrypoint::{ProgramResult, MAX_PERMITTED_DATA_INCREASE},
+    msg,
+    program::invoke,
+    program_error::ProgramError,
     pubkey::Pubkey,
+    rent::Rent,
+    system_instruction,
+    sysvar::Sysvar,
 };
 pub use uses::*;
 #[cfg(feature = "serde-feature")]
@@ -155,4 +162,94 @@ where
 {
     let pubkey_string = pubkey.as_ref().map(|p| p.to_string());
     serde::ser::Serialize::serialize(&pubkey_string, serializer)
+}
+
+/// Trait for resizable accounts.
+///
+/// Implementing this trait for a type will automatically allow the use of the `resize` method,
+/// which can modify the size of an account.
+///
+/// A type implementing this trait must specify the `from_bytes` method, since an account can
+/// have variable size.
+pub trait Resizable: TokenMetadataAccount + BorshSerialize {
+    /// Saves the information to the specified account, resizing the account if needed.
+    ///
+    /// The account size can either increase or decrease depending of the current size and
+    /// the new size of the struct. If the size has not change, it has the same effect using
+    /// only the `save` method.
+    fn resize<'a>(
+        &self,
+        account_info: &'a AccountInfo<'a>,
+        payer: &'a AccountInfo<'a>,
+        system_program: &'a AccountInfo<'a>,
+    ) -> Result<(), ProgramError> {
+        // the required account size
+        let required_size = Self::size();
+
+        if account_info.data_len() != required_size {
+            // no risk of overflow here since max account size is 10_000_000
+            let difference = required_size as i64 - account_info.data_len() as i64;
+            let snapshot = account_info.lamports();
+
+            if difference > 0 {
+                if difference as usize > MAX_PERMITTED_DATA_INCREASE {
+                    //return err!(CandyGuardError::DataIncrementLimitExceeded);
+                }
+
+                let lamports_diff = Rent::get()?
+                    .minimum_balance(required_size)
+                    .checked_sub(snapshot)
+                    .ok_or(MetadataError::AddressNotInReservation)?;
+
+                msg!("Funding {} lamports for account realloc", lamports_diff);
+
+                invoke(
+                    &system_instruction::transfer(payer.key, account_info.key, lamports_diff),
+                    &[payer.clone(), account_info.clone(), system_program.clone()],
+                )?;
+            } else {
+                let lamports_diff = snapshot
+                    .checked_sub(Rent::get()?.minimum_balance(required_size))
+                    .ok_or(MetadataError::AddressNotInReservation)?;
+
+                msg!(
+                    "Withdrawing {} lamports from account realloc",
+                    lamports_diff
+                );
+
+                **account_info.lamports.borrow_mut() = snapshot - lamports_diff;
+                **payer.lamports.borrow_mut() = payer
+                    .lamports()
+                    .checked_add(lamports_diff)
+                    .ok_or(MetadataError::AddressNotInReservation)?;
+            }
+
+            msg!("Account realloc by {} bytes", difference);
+            // changes the account size to fit the required size
+            account_info.realloc(required_size, false)?;
+        }
+
+        self.save(account_info)
+    }
+
+    /// Saves the information to the specified account.
+    ///
+    /// This method does not resize the account, an error is generated if there is no
+    /// account space to store all the information.
+    fn save(&self, account_info: &AccountInfo) -> Result<(), ProgramError> {
+        let size = account_info.data_len();
+        let mut account_data = account_info.data.borrow_mut();
+        // passes a slice to borsh so the internal account data array does not get
+        // temporarily resized
+        let mut storage = &mut account_data[..size];
+        BorshSerialize::serialize(self, &mut storage)?;
+
+        Ok(())
+    }
+
+    /// Deserializes the struct data from the specified byte array.
+    ///
+    /// In most cases this will perform a custom deserialization since the size of the
+    /// stored byte array (account) can change.
+    fn from_bytes<'a>(data: &[u8]) -> Result<Self, ProgramError>;
 }
