@@ -16,6 +16,7 @@ export enum TokenDelegateRole {
   Utility,
   Staking,
   Standard,
+  LockedTransfer,
   Migration,
 }
 

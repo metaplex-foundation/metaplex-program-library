@@ -24,6 +24,7 @@ export type TokenRecordArgs = {
   ruleSetRevision: beet.COption<beet.bignum>;
   delegate: beet.COption<web3.PublicKey>;
   delegateRole: beet.COption<TokenDelegateRole>;
+  lockedTransfer: beet.COption<web3.PublicKey>;
 };
 /**
  * Holds the data for the {@link TokenRecord} Account and provides de/serialization
@@ -40,6 +41,7 @@ export class TokenRecord implements TokenRecordArgs {
     readonly ruleSetRevision: beet.COption<beet.bignum>,
     readonly delegate: beet.COption<web3.PublicKey>,
     readonly delegateRole: beet.COption<TokenDelegateRole>,
+    readonly lockedTransfer: beet.COption<web3.PublicKey>,
   ) {}
 
   /**
@@ -53,6 +55,7 @@ export class TokenRecord implements TokenRecordArgs {
       args.ruleSetRevision,
       args.delegate,
       args.delegateRole,
+      args.lockedTransfer,
     );
   }
 
@@ -150,6 +153,7 @@ export class TokenRecord implements TokenRecordArgs {
       ruleSetRevision: this.ruleSetRevision,
       delegate: this.delegate,
       delegateRole: this.delegateRole,
+      lockedTransfer: this.lockedTransfer,
     };
   }
 }
@@ -166,6 +170,7 @@ export const tokenRecordBeet = new beet.FixableBeetStruct<TokenRecord, TokenReco
     ['ruleSetRevision', beet.coption(beet.u64)],
     ['delegate', beet.coption(beetSolana.publicKey)],
     ['delegateRole', beet.coption(tokenDelegateRoleBeet)],
+    ['lockedTransfer', beet.coption(beetSolana.publicKey)],
   ],
   TokenRecord.fromArgs,
   'TokenRecord',
