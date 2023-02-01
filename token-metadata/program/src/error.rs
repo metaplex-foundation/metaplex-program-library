@@ -671,6 +671,14 @@ pub enum MetadataError {
     /// 169
     #[error("Invalid delegate args")]
     InvalidDelegateArgs,
+
+    /// 170
+    #[error("Missing address for locked transfer")]
+    MissingLockedTransferAddress,
+
+    /// 171
+    #[error("Invalid destination address for locked transfer")]
+    InvalidLockedTransferAddress,
 }
 
 impl PrintProgramError for MetadataError {
