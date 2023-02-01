@@ -19,7 +19,7 @@ mod update {
 
     use mpl_token_metadata::{
         error::MetadataError,
-        instruction::{RuleSetToggle, UpdateArgs},
+        instruction::{DelegateArgs, RuleSetToggle, UpdateArgs},
         state::{Data, ProgrammableConfig, TokenStandard},
     };
     use solana_program::pubkey::Pubkey;
@@ -110,16 +110,18 @@ mod update {
         let authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
 
         // Create rule-set for the transfer
-        let (authorization_rules, _auth_data) =
+        let (authorization_rules, auth_data) =
             create_default_metaplex_rule_set(context, authority).await;
 
         let update_authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
 
         let mut da = DigitalAsset::new();
-        da.create(
+        da.create_and_mint(
             context,
             TokenStandard::ProgrammableNonFungible,
             Some(authorization_rules),
+            Some(auth_data),
+            1,
         )
         .await
         .unwrap();
@@ -145,6 +147,7 @@ mod update {
             .authority(update_authority.pubkey())
             .metadata(da.metadata)
             .mint(da.mint.pubkey())
+            .token(da.token.unwrap())
             .authorization_rules(authorization_rules)
             .payer(update_authority.pubkey());
 
@@ -245,75 +248,209 @@ mod update {
             panic!("Missing rule set programmable config");
         }
 
-        // // Now we pass in a valid authorization rules account owned by mpl-token-auth-rules
-        // // but which does not match the pubkey we are passing in to set as the rule set value.
-        // // This will fail with an "InvalidAuthorizationRules" error.
-        // let mut builder = UpdateBuilder::new();
-        // builder
-        //     .authority(update_authority.pubkey())
-        //     .metadata(da.metadata)
-        //     .mint(da.mint.pubkey())
-        //     .authorization_rules(authorization_rules)
-        //     .payer(update_authority.pubkey());
+        // Now we pass in a valid authorization rules account owned by mpl-token-auth-rules
+        // but which does not match the pubkey we are passing in to set as the rule set value.
+        // This will fail with an "InvalidAuthorizationRules" error.
+        let mut builder = UpdateBuilder::new();
+        builder
+            .authority(update_authority.pubkey())
+            .metadata(da.metadata)
+            .mint(da.mint.pubkey())
+            .authorization_rules(authorization_rules)
+            .payer(update_authority.pubkey());
 
-        // if let Some(edition) = da.master_edition {
-        //     builder.edition(edition);
-        // }
+        if let Some(edition) = da.master_edition {
+            builder.edition(edition);
+        }
 
-        // let update_ix = builder.build(update_args).unwrap().instruction();
+        let update_ix = builder.build(update_args).unwrap().instruction();
 
-        // let tx = Transaction::new_signed_with_payer(
-        //     &[update_ix],
-        //     Some(&update_authority.pubkey()),
-        //     &[&update_authority],
-        //     context.last_blockhash,
-        // );
+        let tx = Transaction::new_signed_with_payer(
+            &[update_ix],
+            Some(&update_authority.pubkey()),
+            &[&update_authority],
+            context.last_blockhash,
+        );
 
-        // let err = context
-        //     .banks_client
-        //     .process_transaction(tx)
-        //     .await
-        //     .unwrap_err();
+        let err = context
+            .banks_client
+            .process_transaction(tx)
+            .await
+            .unwrap_err();
 
-        // assert_custom_error!(err, MetadataError::InvalidAuthorizationRules);
+        assert_custom_error!(err, MetadataError::InvalidAuthorizationRules);
 
-        // // Finally, try to update with the valid rule set, and it should succeed.
-        // let mut update_args = UpdateArgs::default();
-        // let UpdateArgs::V1 { rule_set, .. } = &mut update_args;
-        // *rule_set = RuleSetToggle::Set(authorization_rules);
+        // Finally, try to update with the valid rule set, and it should succeed.
+        let mut update_args = UpdateArgs::default();
+        let UpdateArgs::V1 { rule_set, .. } = &mut update_args;
+        *rule_set = RuleSetToggle::Set(authorization_rules);
 
-        // let mut builder = UpdateBuilder::new();
-        // builder
-        //     .authority(update_authority.pubkey())
-        //     .metadata(da.metadata)
-        //     .mint(da.mint.pubkey())
-        //     .authorization_rules(authorization_rules)
-        //     .payer(update_authority.pubkey());
+        let mut builder = UpdateBuilder::new();
+        builder
+            .authority(update_authority.pubkey())
+            .metadata(da.metadata)
+            .mint(da.mint.pubkey())
+            .token(da.token.unwrap())
+            .authorization_rules(invalid_rule_set)
+            .payer(update_authority.pubkey());
 
-        // if let Some(edition) = da.master_edition {
-        //     builder.edition(edition);
-        // }
+        if let Some(edition) = da.master_edition {
+            builder.edition(edition);
+        }
 
-        // let update_ix = builder.build(update_args).unwrap().instruction();
+        let update_ix = builder.build(update_args).unwrap().instruction();
 
-        // let tx = Transaction::new_signed_with_payer(
-        //     &[update_ix],
-        //     Some(&update_authority.pubkey()),
-        //     &[&update_authority],
-        //     context.last_blockhash,
-        // );
+        let tx = Transaction::new_signed_with_payer(
+            &[update_ix],
+            Some(&update_authority.pubkey()),
+            &[&update_authority],
+            context.last_blockhash,
+        );
 
-        // context.banks_client.process_transaction(tx).await.unwrap();
+        context.banks_client.process_transaction(tx).await.unwrap();
 
-        // let metadata = da.get_metadata(context).await;
+        let metadata = da.get_metadata(context).await;
 
-        // if let Some(ProgrammableConfig::V1 {
-        //     rule_set: Some(rule_set),
-        // }) = metadata.programmable_config
-        // {
-        //     assert_eq!(rule_set, authorization_rules);
-        // } else {
-        //     panic!("Missing rule set programmable config");
-        // }
+        if let Some(ProgrammableConfig::V1 {
+            rule_set: Some(rule_set),
+        }) = metadata.programmable_config
+        {
+            assert_eq!(rule_set, authorization_rules);
+        } else {
+            panic!("Missing rule set programmable config");
+        }
+    }
+
+    #[tokio::test]
+    async fn cannot_update_rule_set_when_delegate_set() {
+        // When a delegate is set, the rule set cannot be updated.
+        let mut program_test = ProgramTest::new("mpl_token_metadata", mpl_token_metadata::ID, None);
+        program_test.add_program("mpl_token_auth_rules", mpl_token_auth_rules::ID, None);
+        let mut context = &mut program_test.start_with_context().await;
+
+        let authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+
+        // Create rule-set for the transfer
+        let (authorization_rules, auth_data) =
+            create_default_metaplex_rule_set(context, authority.dirty_clone()).await;
+
+        let (new_auth_rules, new_auth_data) =
+            create_default_metaplex_rule_set(context, authority.dirty_clone()).await;
+
+        let update_authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+
+        let mut da = DigitalAsset::new();
+        da.create_and_mint(
+            context,
+            TokenStandard::ProgrammableNonFungible,
+            Some(authorization_rules),
+            Some(auth_data),
+            1,
+        )
+        .await
+        .unwrap();
+
+        let metadata = da.get_metadata(context).await;
+
+        if let Some(ProgrammableConfig::V1 {
+            rule_set: Some(rule_set),
+        }) = metadata.programmable_config
+        {
+            assert_eq!(rule_set, authorization_rules);
+        } else {
+            panic!("Missing rule set programmable config");
+        }
+
+        let delegate = Keypair::new();
+
+        // Set a delegate
+        da.delegate(
+            &mut context,
+            update_authority.dirty_clone(),
+            delegate.pubkey(),
+            DelegateArgs::TransferV1 {
+                amount: 1,
+                authorization_data: None,
+            },
+        )
+        .await
+        .unwrap();
+
+        // Try to clear the rule set.
+        let mut update_args = UpdateArgs::default();
+        let UpdateArgs::V1 { rule_set, .. } = &mut update_args;
+        // remove the rule set
+        *rule_set = RuleSetToggle::Clear;
+
+        let mut builder = UpdateBuilder::new();
+        builder
+            .authority(update_authority.pubkey())
+            .metadata(da.metadata)
+            .mint(da.mint.pubkey())
+            .token(da.token.unwrap())
+            .authorization_rules(authorization_rules)
+            .payer(update_authority.pubkey());
+
+        if let Some(edition) = da.master_edition {
+            builder.edition(edition);
+        }
+
+        let update_ix = builder.build(update_args).unwrap().instruction();
+
+        let tx = Transaction::new_signed_with_payer(
+            &[update_ix],
+            Some(&update_authority.pubkey()),
+            &[&update_authority],
+            context.last_blockhash,
+        );
+
+        let err = context
+            .banks_client
+            .process_transaction(tx)
+            .await
+            .unwrap_err();
+
+        assert_custom_error!(err, MetadataError::CannotUpdateAssetWithDelegate);
+
+        // Try to update the rule set.
+        let mut update_args = UpdateArgs::default();
+        let UpdateArgs::V1 {
+            rule_set,
+            authorization_data,
+            ..
+        } = &mut update_args;
+        // remove the rule set
+        *rule_set = RuleSetToggle::Set(new_auth_rules);
+        *authorization_data = Some(new_auth_data);
+
+        let mut builder = UpdateBuilder::new();
+        builder
+            .authority(update_authority.pubkey())
+            .metadata(da.metadata)
+            .mint(da.mint.pubkey())
+            .token(da.token.unwrap())
+            .authorization_rules(new_auth_rules)
+            .payer(update_authority.pubkey());
+
+        if let Some(edition) = da.master_edition {
+            builder.edition(edition);
+        }
+
+        let update_ix = builder.build(update_args).unwrap().instruction();
+
+        let tx = Transaction::new_signed_with_payer(
+            &[update_ix],
+            Some(&update_authority.pubkey()),
+            &[&update_authority],
+            context.last_blockhash,
+        );
+
+        let err = context
+            .banks_client
+            .process_transaction(tx)
+            .await
+            .unwrap_err();
+
+        assert_custom_error!(err, MetadataError::CannotUpdateAssetWithDelegate);
     }
 }

@@ -38,6 +38,8 @@ use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
     pubkey::Pubkey,
 };
+use spl_token::state::Account as TokenAccount;
+
 pub use uses::*;
 #[cfg(feature = "serde-feature")]
 use {
