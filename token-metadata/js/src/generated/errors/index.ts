@@ -3617,6 +3617,95 @@ createErrorFromNameLookup.set(
 );
 
 /**
+ * InvalidDelegateArgs: 'Invalid delegate args'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidDelegateArgsError extends Error {
+  readonly code: number = 0xa9;
+  readonly name: string = 'InvalidDelegateArgs';
+  constructor() {
+    super('Invalid delegate args');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidDelegateArgsError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xa9, () => new InvalidDelegateArgsError());
+createErrorFromNameLookup.set('InvalidDelegateArgs', () => new InvalidDelegateArgsError());
+
+/**
+ * MissingLockedTransferAddress: 'Missing address for locked transfer'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MissingLockedTransferAddressError extends Error {
+  readonly code: number = 0xaa;
+  readonly name: string = 'MissingLockedTransferAddress';
+  constructor() {
+    super('Missing address for locked transfer');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MissingLockedTransferAddressError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xaa, () => new MissingLockedTransferAddressError());
+createErrorFromNameLookup.set(
+  'MissingLockedTransferAddress',
+  () => new MissingLockedTransferAddressError(),
+);
+
+/**
+ * InvalidLockedTransferAddress: 'Invalid destination address for locked transfer'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidLockedTransferAddressError extends Error {
+  readonly code: number = 0xab;
+  readonly name: string = 'InvalidLockedTransferAddress';
+  constructor() {
+    super('Invalid destination address for locked transfer');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidLockedTransferAddressError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xab, () => new InvalidLockedTransferAddressError());
+createErrorFromNameLookup.set(
+  'InvalidLockedTransferAddress',
+  () => new InvalidLockedTransferAddressError(),
+);
+
+/**
+ * DataIncrementLimitExceeded: 'Exceeded account realloc increase limit'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class DataIncrementLimitExceededError extends Error {
+  readonly code: number = 0xac;
+  readonly name: string = 'DataIncrementLimitExceeded';
+  constructor() {
+    super('Exceeded account realloc increase limit');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, DataIncrementLimitExceededError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xac, () => new DataIncrementLimitExceededError());
+createErrorFromNameLookup.set(
+  'DataIncrementLimitExceeded',
+  () => new DataIncrementLimitExceededError(),
+);
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

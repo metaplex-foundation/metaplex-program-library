@@ -6,6 +6,8 @@
  */
 
 import * as beet from '@metaplex-foundation/beet';
+import * as web3 from '@solana/web3.js';
+import * as beetSolana from '@metaplex-foundation/beet-solana';
 import { AuthorizationData, authorizationDataBeet } from './AuthorizationData';
 /**
  * This type is used to derive the {@link DelegateArgs} type as well as the de/serializer.
@@ -24,6 +26,11 @@ export type DelegateArgsRecord = {
   UtilityV1: { amount: beet.bignum; authorizationData: beet.COption<AuthorizationData> };
   StakingV1: { amount: beet.bignum; authorizationData: beet.COption<AuthorizationData> };
   StandardV1: { amount: beet.bignum };
+  LockedTransferV1: {
+    amount: beet.bignum;
+    lockedAddress: web3.PublicKey;
+    authorizationData: beet.COption<AuthorizationData>;
+  };
 };
 
 /**
@@ -59,6 +66,9 @@ export const isDelegateArgsStakingV1 = (
 export const isDelegateArgsStandardV1 = (
   x: DelegateArgs,
 ): x is DelegateArgs & { __kind: 'StandardV1' } => x.__kind === 'StandardV1';
+export const isDelegateArgsLockedTransferV1 = (
+  x: DelegateArgs,
+): x is DelegateArgs & { __kind: 'LockedTransferV1' } => x.__kind === 'LockedTransferV1';
 
 /**
  * @category userTypes
@@ -130,6 +140,18 @@ export const delegateArgsBeet = beet.dataEnum<DelegateArgsRecord>([
     new beet.BeetArgsStruct<DelegateArgsRecord['StandardV1']>(
       [['amount', beet.u64]],
       'DelegateArgsRecord["StandardV1"]',
+    ),
+  ],
+
+  [
+    'LockedTransferV1',
+    new beet.FixableBeetArgsStruct<DelegateArgsRecord['LockedTransferV1']>(
+      [
+        ['amount', beet.u64],
+        ['lockedAddress', beetSolana.publicKey],
+        ['authorizationData', beet.coption(authorizationDataBeet)],
+      ],
+      'DelegateArgsRecord["LockedTransferV1"]',
     ),
   ],
 ]) as beet.FixableBeet<DelegateArgs, DelegateArgs>;

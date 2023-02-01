@@ -1,23 +1,24 @@
 # Programmable NFT Guide
 
-> * :crab: Rust crate: [v1.7.0](https://crates.io/crates/mpl-token-metadata/1.7.0)
-> * :package: NPM package: [v2.7.0](https://www.npmjs.com/package/@metaplex-foundation/mpl-token-metadata/v/2.7.0)
+Developer packages:
+* :crab: Rust crate: [v1.7.0](https://crates.io/crates/mpl-token-metadata/1.7.0)
+* :package: NPM package: [v2.7.0](https://www.npmjs.com/package/@metaplex-foundation/mpl-token-metadata/v/2.7.0)
 
 ## 📄  Technical Summary
 
 In order to support assets that can have customizable behavior, a new asset class will be introduced into Token Metadata’s `Token Standard` struct. This new token standard will allow for flexible configuration of various lifecycle rules, which will be triggered at specific actions:
 
 * [ ] `Burn`
-* [x] [`Create`](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/program/src/instruction/mod.rs#L518-L536) <span style="font-family:'Lucida Console', monospace; font-size: 6pt">([TypeScript](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/js/test/create.test.ts) | [Rust](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/program/tests/create.rs))</span>
-* [x] [`Delegate`](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/program/src/instruction/mod.rs#L562-L585) <span style="font-family:'Lucida Console', monospace; font-size: 6pt">([TypeScript](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/js/test/delegate.test.ts) | [Rust](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/program/tests/delegate.rs))</span>
-* [x] [`Lock`](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/program/src/instruction/mod.rs#L607-L624) <span style="font-family:'Lucida Console', monospace; font-size: 6pt">([TypeScript](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/js/test/lock.test.ts) | [Rust](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/program/tests/lock.rs))</span>
-* [x] `Migrate`
+* [x] [`Create`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/token-metadata/program/src/instruction/mod.rs#L518-L536) <span style="font-family:'Lucida Console', monospace; font-size: 6pt">([TypeScript](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/token-metadata/js/test/create.test.ts) | [Rust](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/token-metadata/program/tests/create.rs))</span>
+* [x] [`Delegate`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/token-metadata/program/src/instruction/mod.rs#L562-L585) <span style="font-family:'Lucida Console', monospace; font-size: 6pt">([TypeScript](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/token-metadata/js/test/delegate.test.ts) | [Rust](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/token-metadata/program/tests/delegate.rs))</span>
+* [x] [`Lock`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/token-metadata/program/src/instruction/mod.rs#L607-L625) <span style="font-family:'Lucida Console', monospace; font-size: 6pt">([TypeScript](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/token-metadata/js/test/lock.test.ts) | [Rust](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/token-metadata/program/tests/lock.rs))</span>
+* [x] [`Migrate`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/token-metadata/program/src/instruction/mod.rs#L647-L664)
 * [ ] `Print`
-* [x] [`Mint`](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/program/src/instruction/mod.rs#L538-L560) <span style="font-family:'Lucida Console', monospace; font-size: 6pt">([TypeScript](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/js/test/mint.test.ts) | [Rust](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/program/tests/mint.rs))</span>
-* [x] [`Revoke`](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/program/src/instruction/mod.rs#L587-L605) <span style="font-family:'Lucida Console', monospace; font-size: 6pt">([TypeScript](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/js/test/revoke.test.ts) | [Rust](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/program/tests/revoke.rs))</span>
-* [x] [`Transfer`](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/program/src/instruction/mod.rs#L661-L683) <span style="font-family:'Lucida Console', monospace; font-size: 6pt">([TypeScript](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/js/test/transfer.test.ts) | [Rust](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/program/tests/transfer.rs))</span>
-* [x] [`Unlock`](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/program/src/instruction/mod.rs#L626-L643) <span style="font-family:'Lucida Console', monospace; font-size: 6pt">([TypeScript](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/js/test/unlock.test.ts) | [Rust](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/program/tests/unlock.rs))</span>
-* [x] [`Update`](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/program/src/instruction/mod.rs#L685-L702) <span style="font-family:'Lucida Console', monospace; font-size: 6pt">([TypeScript](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/js/test/update.test.ts) | [Rust](https://github.com/metaplex-foundation/metaplex-program-library/blob/feat/programmable-asset/token-metadata/program/tests/update.rs))</span>
+* [x] [`Mint`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/token-metadata/program/src/instruction/mod.rs#L538-L560) <span style="font-family:'Lucida Console', monospace; font-size: 6pt">([TypeScript](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/token-metadata/js/test/mint.test.ts) | [Rust](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/token-metadata/program/tests/mint.rs))</span>
+* [x] [`Revoke`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/token-metadata/program/src/instruction/mod.rs#L587-L605) <span style="font-family:'Lucida Console', monospace; font-size: 6pt">([TypeScript](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/token-metadata/js/test/revoke.test.ts) | [Rust](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/token-metadata/program/tests/revoke.rs))</span>
+* [x] [`Transfer`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/token-metadata/program/src/instruction/mod.rs#L666-L688) <span style="font-family:'Lucida Console', monospace; font-size: 6pt">([TypeScript](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/token-metadata/js/test/transfer.test.ts) | [Rust](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/token-metadata/program/tests/transfer.rs))</span>
+* [x] [`Unlock`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/token-metadata/program/src/instruction/mod.rs#L627-L645) <span style="font-family:'Lucida Console', monospace; font-size: 6pt">([TypeScript](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/token-metadata/js/test/unlock.test.ts) | [Rust](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/token-metadata/program/tests/unlock.rs))</span>
+* [x] [`Update`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/token-metadata/program/src/instruction/mod.rs#L690-L706) <span style="font-family:'Lucida Console', monospace; font-size: 6pt">([TypeScript](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/token-metadata/js/test/update.test.ts) | [Rust](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/token-metadata/program/tests/update.rs))</span>
 * [ ] `Use`
 * [ ] `Verify`
 
@@ -50,6 +51,10 @@ pub enum TokenStandard {
 ```
 
 When a `ProgrammableNonFungible` asset is created, it can have a `RuleSet` associated. These rules are then validated at each lifecycle action and the action is only performed if the validation succeeds. Since these rules are customizable, the tokens have a *programmable* behavior.
+
+The diagram below highlights the new components of a `ProgrammableNonFungible`:
+
+![image](https://user-images.githubusercontent.com/729235/215168226-c2358a16-eab5-4b6e-af24-4ac01f21303d.png)
 
 ## ⛩️  Unified instructions
 
@@ -270,7 +275,7 @@ There are two types of delegates on Token Metadata: `TokenDelegate` and `Metadat
 
 #### Token Delegate
 
-`TokenDelegate`s are delegates that operate at the token level – i.e., they are spl-token delegates. This allows the delegate to perform operations on the token account (burn, transfer, freeze). There can only be one token delegate at a time and they do not have an individual delegate account associated – their information is stored on the `TokenRecord` account. The token record holds information about a particular token account (PDA seeds `[metadata, program id, mint id, "token_record", token account id]`):
+`TokenDelegate`s are delegates that operate at the token level – i.e., they are spl-token delegates. This allows the delegate to perform operations on the token account (burn, transfer, freeze). There can only be one token delegate at a time and they do not have an individual delegate account associated – their information is stored on the `TokenRecord` account. The token record holds information about a particular token account (PDA seeds `["metadata", program id, mint id, "token_record", token account id]`):
 ```rust
 pub struct TokenRecord {
     pub key: Key,
@@ -318,6 +323,9 @@ pub struct TokenRecord {
 
 The `Migration` delegate type is a temporary delegate that is only created by the migration from `NFT` to `pNFT` and cannot be otherwise created through the `Delegate` handler. This special delegate has the same functionality as the `Utility` delegate except that it can also transfer. This allows us to assign all escrowless-style programs this delegate to preserve whatever current functionality they have. Once used, it is cleared and cannot replaced, and programs will then need to select one of the normal delegate types for future actions.
 
+> **Note**
+> Once a token delegate is set, it is not possible to set another one unless the current one is revoked.
+
 #### Metadata Delegates
 
 `MetadataDelegate`s are delegates that operate at the metadata level. These delegates are represented by `MetadataDelegateRecord` PDA (seeds `["metadata", program id, mint id, delegate role, update authority id, delegate id]`) and do not have an associated spl-token delegate. There can be multiple instances of the same delegate.
@@ -352,7 +360,9 @@ Currently, we have three types of metadata delegates:
 
 ## 📦  JS SDK
 
-Token Metadata includes a low-leve Solita-based SDK, which can be used to interact with the new API. The NPM package can be found [here](https://www.npmjs.com/package/@metaplex-foundation/mpl-token-metadata/v/2.6.0-alpha.1).
+Token Metadata includes a low-leve Solita-based SDK, which can be used to interact with the new API. The NPM package can be found [here](https://www.npmjs.com/package/@metaplex-foundation/mpl-token-metadata/v/2.7.0).
+
+The latest release of the [Metaplex JS SDK v0.18.0](https://github.com/metaplex-foundation/js#programmable-nfts) adds support for Programmable NFTs.
 
 ## 🏛️  Token Authorization Rules
 
@@ -373,7 +383,7 @@ More details of the Token Authorization Rules program, including examples, can b
 
 The repository contains both Rust BPF and JavaScript/TypeScript. In order to setup the environment to run the tests, you will need to first clone the required repositories:
 
-* Token Metadata: `https://github.com/metaplex-foundation/metaplex-program-library.git` branch `feat/programmable-asset`
+* Token Metadata: `https://github.com/metaplex-foundation/metaplex-program-library.git` branch `master`
 * Token Authorization Rules: `https://github.com/metaplex-foundation/mpl-token-auth-rules.git`
 * Rooster (for BPF tests): `https://github.com/metaplex-foundation/rooster`
 

@@ -1,5 +1,5 @@
 {
-  "version": "1.7.0-beta.2",
+  "version": "1.7.0",
   "name": "mpl_token_metadata",
   "instructions": [
     {
@@ -3803,6 +3803,12 @@
                 "defined": "TokenDelegateRole"
               }
             }
+          },
+          {
+            "name": "lockedTransfer",
+            "type": {
+              "option": "publicKey"
+            }
           }
         ]
       }
@@ -4629,6 +4635,27 @@
                 "type": "u64"
               }
             ]
+          },
+          {
+            "name": "LockedTransferV1",
+            "fields": [
+              {
+                "name": "amount",
+                "type": "u64"
+              },
+              {
+                "name": "locked_address",
+                "type": "publicKey"
+              },
+              {
+                "name": "authorization_data",
+                "type": {
+                  "option": {
+                    "defined": "AuthorizationData"
+                  }
+                }
+              }
+            ]
           }
         ]
       }
@@ -4658,6 +4685,9 @@
           },
           {
             "name": "StandardV1"
+          },
+          {
+            "name": "LockedTransferV1"
           }
         ]
       }
@@ -5203,6 +5233,9 @@
           },
           {
             "name": "Standard"
+          },
+          {
+            "name": "LockedTransfer"
           },
           {
             "name": "Migration"
@@ -6149,6 +6182,26 @@
       "code": 168,
       "name": "AmountMustBeGreaterThanZero",
       "msg": "Amount must be greater than zero"
+    },
+    {
+      "code": 169,
+      "name": "InvalidDelegateArgs",
+      "msg": "Invalid delegate args"
+    },
+    {
+      "code": 170,
+      "name": "MissingLockedTransferAddress",
+      "msg": "Missing address for locked transfer"
+    },
+    {
+      "code": 171,
+      "name": "InvalidLockedTransferAddress",
+      "msg": "Invalid destination address for locked transfer"
+    },
+    {
+      "code": 172,
+      "name": "DataIncrementLimitExceeded",
+      "msg": "Exceeded account realloc increase limit"
     }
   ],
   "metadata": {
