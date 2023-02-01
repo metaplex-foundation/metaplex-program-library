@@ -28,20 +28,15 @@ pub use escrow::*;
 pub use master_edition::*;
 pub use metadata::*;
 pub use migrate::*;
+use mpl_utils::resize_or_reallocate_account_raw;
 use num_derive::FromPrimitive;
 use num_traits::FromPrimitive;
 pub use programmable::*;
 pub use reservation::*;
 use shank::ShankAccount;
 use solana_program::{
-    account_info::AccountInfo,
-    entrypoint::{ProgramResult, MAX_PERMITTED_DATA_INCREASE},
-    program::invoke,
-    program_error::ProgramError,
+    account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
     pubkey::Pubkey,
-    rent::Rent,
-    system_instruction,
-    sysvar::Sysvar,
 };
 pub use uses::*;
 #[cfg(feature = "serde-feature")]
@@ -178,44 +173,19 @@ pub trait Resizable: TokenMetadataAccount + BorshSerialize {
     fn save<'a>(
         &self,
         account_info: &'a AccountInfo<'a>,
-        payer: &'a AccountInfo<'a>,
-        system_program: &'a AccountInfo<'a>,
+        payer_info: &'a AccountInfo<'a>,
+        system_program_info: &'a AccountInfo<'a>,
     ) -> Result<(), ProgramError> {
         // the required account size
         let required_size = Self::size();
 
         if account_info.data_len() != required_size {
-            // no risk of overflow here since max account size is 10_000_000
-            let difference = required_size as i64 - account_info.data_len() as i64;
-            let snapshot = account_info.lamports();
-
-            if difference > 0 {
-                if difference as usize > MAX_PERMITTED_DATA_INCREASE {
-                    return Err(MetadataError::DataIncrementLimitExceeded.into());
-                }
-
-                let lamports_diff = Rent::get()?
-                    .minimum_balance(required_size)
-                    .checked_sub(snapshot)
-                    .ok_or(MetadataError::NumericalOverflowError)?;
-
-                invoke(
-                    &system_instruction::transfer(payer.key, account_info.key, lamports_diff),
-                    &[payer.clone(), account_info.clone(), system_program.clone()],
-                )?;
-            } else {
-                let lamports_diff = snapshot
-                    .checked_sub(Rent::get()?.minimum_balance(required_size))
-                    .ok_or(MetadataError::NumericalOverflowError)?;
-
-                **account_info.lamports.borrow_mut() = snapshot - lamports_diff;
-                **payer.lamports.borrow_mut() = payer
-                    .lamports()
-                    .checked_add(lamports_diff)
-                    .ok_or(MetadataError::NumericalOverflowError)?;
-            }
-            // changes the account size to fit the required size
-            account_info.realloc(required_size, false)?;
+            resize_or_reallocate_account_raw(
+                account_info,
+                payer_info,
+                system_program_info,
+                required_size,
+            )?;
         }
 
         let mut account_data = account_info.data.borrow_mut();
