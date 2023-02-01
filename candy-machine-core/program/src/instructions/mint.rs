@@ -261,7 +261,7 @@ pub fn get_config_line(
     let value_to_use = if settings.is_sequential {
         mint_number as usize
     } else {
-        let items_available = candy_machine.data.items_available as u64;
+        let items_available = candy_machine.data.items_available;
         let indices_start = HIDDEN_SECTION
             + 4
             + (items_available as usize) * candy_machine.data.get_config_line_size()

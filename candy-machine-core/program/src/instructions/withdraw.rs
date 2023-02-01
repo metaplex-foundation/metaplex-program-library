@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 
 use crate::CandyMachine;
 
-pub fn withdraw<'info>(_ctx: Context<Withdraw<'info>>) -> Result<()> {
+pub fn withdraw(_ctx: Context<Withdraw>) -> Result<()> {
     Ok(())
 }
 
