@@ -50,7 +50,7 @@ pub const TOKEN_RECORD_SIZE: usize = 1 // Key
 /// 2. program id
 /// 3. mint id
 /// 4. `"token_record"`
-/// 5. token account d
+/// 5. token account id
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, ShankAccount)]
