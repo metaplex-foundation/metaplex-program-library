@@ -679,6 +679,10 @@ pub enum MetadataError {
     /// 171
     #[error("Invalid destination address for locked transfer")]
     InvalidLockedTransferAddress,
+
+    /// 172
+    #[error("Exceeded account realloc increase limit")]
+    DataIncrementLimitExceeded,
 }
 
 impl PrintProgramError for MetadataError {

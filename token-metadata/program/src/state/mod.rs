@@ -192,13 +192,13 @@ pub trait Resizable: TokenMetadataAccount + BorshSerialize {
 
             if difference > 0 {
                 if difference as usize > MAX_PERMITTED_DATA_INCREASE {
-                    //return err!(CandyGuardError::DataIncrementLimitExceeded);
+                    return Err(MetadataError::DataIncrementLimitExceeded.into());
                 }
 
                 let lamports_diff = Rent::get()?
                     .minimum_balance(required_size)
                     .checked_sub(snapshot)
-                    .ok_or(MetadataError::AddressNotInReservation)?;
+                    .ok_or(MetadataError::NumericalOverflowError)?;
 
                 msg!("Funding {} lamports for account realloc", lamports_diff);
 
@@ -209,7 +209,7 @@ pub trait Resizable: TokenMetadataAccount + BorshSerialize {
             } else {
                 let lamports_diff = snapshot
                     .checked_sub(Rent::get()?.minimum_balance(required_size))
-                    .ok_or(MetadataError::AddressNotInReservation)?;
+                    .ok_or(MetadataError::NumericalOverflowError)?;
 
                 msg!(
                     "Withdrawing {} lamports from account realloc",
@@ -220,7 +220,7 @@ pub trait Resizable: TokenMetadataAccount + BorshSerialize {
                 **payer.lamports.borrow_mut() = payer
                     .lamports()
                     .checked_add(lamports_diff)
-                    .ok_or(MetadataError::AddressNotInReservation)?;
+                    .ok_or(MetadataError::NumericalOverflowError)?;
             }
 
             msg!("Account realloc by {} bytes", difference);
