@@ -31,8 +31,8 @@ jobs:
           - name: "fixed-price-sale"
             skip_test: true
           - name: "gumdrop"
-          - name: "hydra"
-            skip_test: true
+          # - name: "hydra"
+            # skip_test: true
           - name: "nft-packs"
             skip_test: true
           - name: "token-entangler"
