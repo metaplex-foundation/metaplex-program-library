@@ -94,6 +94,7 @@ pub(crate) fn toggle_asset_state(
         token_delegate_roles: vec![
             TokenDelegateRole::Utility,
             TokenDelegateRole::Staking,
+            TokenDelegateRole::LockedTransfer,
             TokenDelegateRole::Migration,
         ],
         ..Default::default()
