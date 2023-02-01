@@ -2,7 +2,7 @@ import * as beet from '@metaplex-foundation/beet';
 import * as beetSolana from '@metaplex-foundation/beet-solana';
 import { keyBeet } from '../generated/types/Key';
 import { TokenRecord } from '../generated/accounts/TokenRecord';
-import { tokenDelegateRoleBeet, tokenStateBeet } from 'src/generated';
+import { tokenDelegateRoleBeet, tokenStateBeet } from '../generated';
 import { tryReadOption } from '.';
 
 /**
