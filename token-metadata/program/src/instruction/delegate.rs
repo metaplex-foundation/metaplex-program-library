@@ -3,7 +3,10 @@ use std::fmt;
 use borsh::{BorshDeserialize, BorshSerialize};
 #[cfg(feature = "serde-feature")]
 use serde::{Deserialize, Serialize};
-use solana_program::instruction::{AccountMeta, Instruction};
+use solana_program::{
+    instruction::{AccountMeta, Instruction},
+    pubkey::Pubkey,
+};
 
 use super::InstructionBuilder;
 use crate::{instruction::MetadataInstruction, processor::AuthorizationData};
@@ -43,6 +46,13 @@ pub enum DelegateArgs {
     StandardV1 {
         amount: u64,
     },
+    LockedTransferV1 {
+        amount: u64,
+        /// locked destination pubkey
+        locked_address: Pubkey,
+        /// Required authorization data to validate the request.
+        authorization_data: Option<AuthorizationData>,
+    },
 }
 
 #[repr(C)]
@@ -56,6 +66,7 @@ pub enum RevokeArgs {
     UtilityV1,
     StakingV1,
     StandardV1,
+    LockedTransferV1,
 }
 
 #[repr(C)]

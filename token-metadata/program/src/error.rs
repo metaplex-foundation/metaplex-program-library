@@ -667,6 +667,10 @@ pub enum MetadataError {
     /// 168
     #[error("Amount must be greater than zero")]
     AmountMustBeGreaterThanZero,
+
+    /// 169
+    #[error("Invalid delegate args")]
+    InvalidDelegateArgs,
 }
 
 impl PrintProgramError for MetadataError {

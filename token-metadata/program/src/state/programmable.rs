@@ -196,6 +196,7 @@ pub enum TokenDelegateRole {
     Utility,
     Staking,
     Standard,
+    LockedTransfer,
     Migration = 255,
 }
 

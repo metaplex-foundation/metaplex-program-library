@@ -13,8 +13,8 @@ use crate::{
     instruction::{Context, MetadataDelegateRole, Revoke, RevokeArgs},
     pda::{find_metadata_delegate_record_account, find_token_record_account},
     state::{
-        Metadata, MetadataDelegateRecord, Resizable, TokenDelegateRole,
-        TokenMetadataAccount, TokenRecord, TokenStandard,
+        Metadata, MetadataDelegateRecord, Resizable, TokenDelegateRole, TokenMetadataAccount,
+        TokenRecord, TokenStandard,
     },
     utils::{freeze, thaw},
 };
@@ -46,6 +46,9 @@ pub fn revoke<'a>(
         }
         RevokeArgs::StandardV1 => {
             revoke_persistent_delegate(program_id, context, TokenDelegateRole::Standard)
+        }
+        RevokeArgs::LockedTransferV1 => {
+            revoke_persistent_delegate(program_id, context, TokenDelegateRole::LockedTransfer)
         }
     }
 }
