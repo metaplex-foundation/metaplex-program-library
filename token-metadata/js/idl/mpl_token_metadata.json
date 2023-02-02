@@ -6202,6 +6202,11 @@
       "code": 172,
       "name": "DataIncrementLimitExceeded",
       "msg": "Exceeded account realloc increase limit"
+    },
+    {
+      "code": 173,
+      "name": "CannotUpdateAssetWithDelegate",
+      "msg": "Cannot update the rule set of a programmable asset that has a delegate"
     }
   ],
   "metadata": {
