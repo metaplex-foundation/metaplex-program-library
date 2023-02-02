@@ -5,7 +5,7 @@ use anchor_spl::token::Token;
 use arrayref::array_ref;
 use mpl_token_metadata::{
     instruction::{
-        create_master_edition_v3, create_metadata_accounts_v2, freeze_delegated_account,
+        create_master_edition_v3, create_metadata_accounts_v3, freeze_delegated_account,
         update_metadata_accounts_v2,
     },
     state::{MAX_NAME_LENGTH, MAX_URI_LENGTH},
@@ -596,7 +596,7 @@ pub fn handle_mint_nft<'info>(
     ];
 
     invoke_signed(
-        &create_metadata_accounts_v2(
+        &create_metadata_accounts_v3(
             ctx.accounts.token_metadata_program.key(),
             ctx.accounts.metadata.key(),
             ctx.accounts.mint.key(),
@@ -610,6 +610,7 @@ pub fn handle_mint_nft<'info>(
             candy_machine.data.seller_fee_basis_points,
             true,
             candy_machine.data.is_mutable,
+            None,
             None,
             None,
         ),
