@@ -1,6 +1,6 @@
 use crate::state::{Fanout, FanoutMembershipVoucher};
 use crate::utils::logic::calculation::*;
-use crate::utils::validation::{assert_membership_model, assert_owned_by};
+use crate::utils::validation::assert_owned_by;
 use crate::MembershipModel;
 use anchor_lang::prelude::*;
 
