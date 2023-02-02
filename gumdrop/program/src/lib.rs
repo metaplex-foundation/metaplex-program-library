@@ -1,3 +1,5 @@
+#![allow(clippy::result_large_err)]
+
 //! Program for distributing tokens efficiently via uploading a Merkle root.
 use anchor_lang::{
     prelude::*,
@@ -8,7 +10,6 @@ use anchor_lang::{
     },
 };
 use anchor_spl::token::{self, Token, TokenAccount};
-use mpl_token_metadata;
 use std::io::Write;
 
 pub mod merkle_proof;
@@ -102,7 +103,7 @@ fn get_or_create_claim_count<'a>(
     if create_claim_state {
         let lamports = rent.minimum_balance(space);
         let claim_count_seeds = [
-            CLAIM_COUNT.as_ref(),
+            CLAIM_COUNT,
             &index.to_le_bytes(),
             &distributor.key().to_bytes(),
             &[claim_bump],
@@ -133,7 +134,7 @@ fn get_or_create_claim_count<'a>(
     }
 
     // anchor_lang::Account::try_from(&claim_count)?;
-    let mut pa: Account<ClaimCount> = Account::try_from(&claim_count)?;
+    let mut pa: Account<ClaimCount> = Account::try_from(claim_count)?;
 
     if create_claim_state {
         verify_temporal(distributor, temporal, claimant_secret)?;
@@ -262,7 +263,7 @@ pub mod gumdrop {
                         AccountMeta::new(*candy_machine_info.key, false),
                         AccountMeta::new(*ctx.accounts.distributor_wallet.key, true),
                     ],
-                    data: data,
+                    data,
                 },
                 &[
                     candy_machine_info.clone(),
@@ -289,7 +290,7 @@ pub mod gumdrop {
         Ok(())
     }
 
-    pub fn prove_claim<'info>(
+    pub fn prove_claim(
         ctx: Context<ProveClaim>,
         claim_prefix: Vec<u8>,
         claim_bump: u8,
@@ -487,7 +488,7 @@ pub mod gumdrop {
             .ok_or(GumdropError::NumericalOverflow)?;
 
         issue_mint_nft(
-            &distributor,
+            distributor,
             &ctx.accounts.distributor_wallet,
             &ctx.accounts.payer,
             &ctx.accounts.candy_machine_config,
@@ -502,7 +503,7 @@ pub mod gumdrop {
             &ctx.accounts.candy_machine_program,
             &ctx.accounts.rent,
             &ctx.accounts.clock,
-            &ctx.remaining_accounts,
+            ctx.remaining_accounts,
             wallet_bump,
         )?;
 
@@ -653,7 +654,7 @@ pub mod gumdrop {
             .ok_or(GumdropError::NumericalOverflow)?;
 
         issue_mint_nft(
-            &distributor,
+            distributor,
             &ctx.accounts.distributor_wallet,
             &ctx.accounts.payer,
             &ctx.accounts.candy_machine_config,
@@ -668,7 +669,7 @@ pub mod gumdrop {
             &ctx.accounts.candy_machine_program,
             &ctx.accounts.rent,
             &ctx.accounts.clock,
-            &ctx.remaining_accounts,
+            ctx.remaining_accounts,
             wallet_bump,
         )?;
 
@@ -1005,7 +1006,7 @@ pub struct Claim<'info> {
     #[account(
     init,
     seeds = [
-    CLAIM_STATUS.as_ref(),
+    CLAIM_STATUS,
     index.to_le_bytes().as_ref(),
     distributor.key().to_bytes().as_ref()
     ],
@@ -1060,7 +1061,7 @@ pub struct ClaimCandy<'info> {
     /// Status of the claim. Created on first invocation of this function
     #[account(
     seeds = [
-    CLAIM_COUNT.as_ref(),
+    CLAIM_COUNT,
     index.to_le_bytes().as_ref(),
     distributor.key().to_bytes().as_ref()
     ],
@@ -1143,7 +1144,7 @@ pub struct ClaimEdition<'info> {
     /// Status of the claim. Created on first invocation of this function
     #[account(
     seeds = [
-    CLAIM_COUNT.as_ref(),
+    CLAIM_COUNT,
     index.to_le_bytes().as_ref(),
     distributor.key().to_bytes().as_ref()
     ],
@@ -1244,7 +1245,7 @@ pub struct ClaimCandyProven<'info> {
     /// Status of the claim. Created with prove_claim
     #[account(
     seeds = [
-    CLAIM_COUNT.as_ref(),
+    CLAIM_COUNT,
     index.to_le_bytes().as_ref(),
     distributor.key().to_bytes().as_ref()
     ],
