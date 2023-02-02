@@ -3706,6 +3706,29 @@ createErrorFromNameLookup.set(
 );
 
 /**
+ * CannotUpdateAssetWithDelegate: 'Cannot update the rule set of a programmable asset that has a delegate'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class CannotUpdateAssetWithDelegateError extends Error {
+  readonly code: number = 0xad;
+  readonly name: string = 'CannotUpdateAssetWithDelegate';
+  constructor() {
+    super('Cannot update the rule set of a programmable asset that has a delegate');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, CannotUpdateAssetWithDelegateError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xad, () => new CannotUpdateAssetWithDelegateError());
+createErrorFromNameLookup.set(
+  'CannotUpdateAssetWithDelegate',
+  () => new CannotUpdateAssetWithDelegateError(),
+);
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

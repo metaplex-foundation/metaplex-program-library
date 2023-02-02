@@ -683,6 +683,10 @@ pub enum MetadataError {
     /// 172
     #[error("Exceeded account realloc increase limit")]
     DataIncrementLimitExceeded,
+
+    /// 173
+    #[error("Cannot update the rule set of a programmable asset that has a delegate")]
+    CannotUpdateAssetWithDelegate,
 }
 
 impl PrintProgramError for MetadataError {
