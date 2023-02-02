@@ -207,6 +207,8 @@ mod update {
 
         if let Some(ProgrammableConfig::V1 { rule_set }) = metadata.programmable_config {
             assert_eq!(rule_set, None);
+        } else {
+            panic!("Missing rule set programmable config");
         }
 
         let mut update_args = UpdateArgs::default();
@@ -419,7 +421,7 @@ mod update {
             authorization_data,
             ..
         } = &mut update_args;
-        // remove the rule set
+        // update the rule set
         *rule_set = RuleSetToggle::Set(new_auth_rules);
         *authorization_data = Some(new_auth_data);
 
