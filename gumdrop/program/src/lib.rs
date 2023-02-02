@@ -687,11 +687,12 @@ pub mod gumdrop {
         ];
 
         invoke_signed(
-            &mpl_token_metadata::instruction::update_metadata_accounts(
+            &mpl_token_metadata::instruction::update_metadata_accounts_v2(
                 *ctx.accounts.token_metadata_program.key,
                 *ctx.accounts.metadata.key,
                 *ctx.accounts.distributor_wallet.key,
                 Some(*ctx.accounts.new_update_authority.key),
+                None,
                 None,
                 None,
             ),
@@ -819,11 +820,12 @@ fn issue_mint_nft<'info>(
     let cm_config = Config::try_deserialize(&mut cm_config_data)?;
     if cm_config.data.retain_authority {
         invoke_signed(
-            &mpl_token_metadata::instruction::update_metadata_accounts(
+            &mpl_token_metadata::instruction::update_metadata_accounts_v2(
                 *token_metadata_program.key,
                 *candy_machine_metadata.key,
                 *distributor_wallet.key,
                 Some(distributor.base),
+                None,
                 None,
                 None,
             ),
