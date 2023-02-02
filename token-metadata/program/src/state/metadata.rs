@@ -176,11 +176,7 @@ impl Metadata {
             }
 
             // Require the token so we can check if it has a delegate.
-            if token.is_none() {
-                return Err(MetadataError::MissingTokenAccount.into());
-            }
-
-            let token = token.unwrap();
+            let token = token.ok_or(MetadataError::MissingTokenAccount)?;
 
             // If the token has a delegate, we cannot update the rule set.
             if token.delegate.is_some() {
