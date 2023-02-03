@@ -1138,6 +1138,7 @@ mod auth_rules_transfer {
 
         let (destination_token_record, _bump) =
             find_token_record_account(&nft.mint.pubkey(), &destination_token);
+        let pda = get_account(&mut context, &destination_token_record).await;
         let token_record: TokenRecord = try_from_slice_unchecked(&pda.data).unwrap();
 
         assert_eq!(token_record.rule_set_revision, None);
