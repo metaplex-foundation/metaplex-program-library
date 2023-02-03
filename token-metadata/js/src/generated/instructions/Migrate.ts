@@ -41,13 +41,13 @@ export const MigrateStruct = new beet.FixableBeetArgsStruct<
  * @property [_writable_] token Token account
  * @property [] tokenOwner Token account owner
  * @property [] mint Mint account
- * @property [_writable_, **signer**] payer Update authority
+ * @property [_writable_, **signer**] payer Payer
  * @property [**signer**] authority Update authority
  * @property [] collectionMetadata Collection metadata account
  * @property [] delegateRecord Delegate record account
- * @property [] tokenRecord Token record account
+ * @property [_writable_] tokenRecord Token record account
  * @property [] sysvarInstructions Instruction sysvar account
- * @property [] splTokenProgram Token Program
+ * @property [] splTokenProgram SPL Token Program
  * @property [] authorizationRulesProgram (optional) Token Authorization Rules Program
  * @property [] authorizationRules (optional) Token Authorization Rules account
  * @category Instructions
@@ -144,7 +144,7 @@ export function createMigrateInstruction(
     },
     {
       pubkey: accounts.tokenRecord,
-      isWritable: false,
+      isWritable: true,
       isSigner: false,
     },
     {

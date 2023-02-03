@@ -43,9 +43,9 @@ export const TransferStruct = new beet.FixableBeetArgsStruct<
  * @property [] mint Mint of token asset
  * @property [_writable_] metadata Metadata (pda of ['metadata', program id, mint id])
  * @property [] edition (optional) Edition of token asset
- * @property [_writable_] ownerTokenRecord (optional) Token record account
- * @property [_writable_] destinationTokenRecord (optional) Token record account
- * @property [**signer**] authority Transfer authority (token or delegate owner)
+ * @property [_writable_] ownerTokenRecord (optional) Owner token record account
+ * @property [_writable_] destinationTokenRecord (optional) Destination token record account
+ * @property [**signer**] authority Transfer authority (token owner or delegate)
  * @property [_writable_, **signer**] payer Payer
  * @property [] sysvarInstructions Instructions sysvar account
  * @property [] splTokenProgram SPL Token Program
