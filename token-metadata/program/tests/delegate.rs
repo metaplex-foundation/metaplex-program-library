@@ -327,7 +327,8 @@ mod delegate {
         // creates the auth rule set
 
         let payer = context.payer.dirty_clone();
-        let (rule_set, auth_data) = create_default_metaplex_rule_set(&mut context, payer).await;
+        let (rule_set, auth_data) =
+            create_default_metaplex_rule_set(&mut context, payer, false).await;
 
         // asset
 
@@ -472,7 +473,8 @@ mod delegate {
         // creates the auth rule set
 
         let payer = context.payer.dirty_clone();
-        let (rule_set, auth_data) = create_default_metaplex_rule_set(&mut context, payer).await;
+        let (rule_set, auth_data) =
+            create_default_metaplex_rule_set(&mut context, payer, true).await;
 
         // asset
 
@@ -510,7 +512,7 @@ mod delegate {
                 payer,
                 // delegate not authorized
                 user_pubkey,
-                DelegateArgs::SaleV1 {
+                DelegateArgs::TransferV1 {
                     amount: 1,
                     authorization_data: None,
                 },

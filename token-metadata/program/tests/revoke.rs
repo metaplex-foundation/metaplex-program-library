@@ -344,7 +344,8 @@ mod revoke {
         // creates the auth rule set
 
         let payer = context.payer.dirty_clone();
-        let (rule_set, auth_data) = create_default_metaplex_rule_set(&mut context, payer).await;
+        let (rule_set, auth_data) =
+            create_default_metaplex_rule_set(&mut context, payer, false).await;
 
         // asset
 

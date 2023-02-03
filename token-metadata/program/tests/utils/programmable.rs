@@ -79,6 +79,7 @@ macro_rules! get_primitive_rules {
 pub async fn create_default_metaplex_rule_set(
     context: &mut ProgramTestContext,
     creator: Keypair,
+    use_delegate_allow_list: bool,
 ) -> (Pubkey, AuthorizationData) {
     let name = String::from("Metaplex Royalty Enforcement");
     let (ruleset_addr, _ruleset_bump) =
@@ -140,6 +141,14 @@ pub async fn create_default_metaplex_rule_set(
         scenario: DelegateScenario::Token(TokenDelegateRole::Sale),
     };
 
+    let delegate_lockedtransfer_operation = Operation::Delegate {
+        scenario: DelegateScenario::Token(TokenDelegateRole::LockedTransfer),
+    };
+
+    let delegate_transfer_operation = Operation::Delegate {
+        scenario: DelegateScenario::Token(TokenDelegateRole::Transfer),
+    };
+
     let mut royalty_rule_set = RuleSetV1::new(name, creator.pubkey());
     royalty_rule_set
         .add(owner_operation.to_string(), transfer_rule.clone())
@@ -153,9 +162,34 @@ pub async fn create_default_metaplex_rule_set(
     royalty_rule_set
         .add(sale_delegate_operation.to_string(), transfer_rule.clone())
         .unwrap();
-    royalty_rule_set
-        .add(delegate_sale_operation.to_string(), delegate_rule.clone())
-        .unwrap();
+
+    if use_delegate_allow_list {
+        royalty_rule_set
+            .add(delegate_sale_operation.to_string(), delegate_rule.clone())
+            .unwrap();
+        royalty_rule_set
+            .add(
+                delegate_lockedtransfer_operation.to_string(),
+                delegate_rule.clone(),
+            )
+            .unwrap();
+        royalty_rule_set
+            .add(delegate_transfer_operation.to_string(), delegate_rule)
+            .unwrap();
+    } else {
+        royalty_rule_set
+            .add(delegate_sale_operation.to_string(), Rule::Pass.clone())
+            .unwrap();
+        royalty_rule_set
+            .add(
+                delegate_lockedtransfer_operation.to_string(),
+                Rule::Pass.clone(),
+            )
+            .unwrap();
+        royalty_rule_set
+            .add(delegate_transfer_operation.to_string(), Rule::Pass.clone())
+            .unwrap();
+    }
 
     // Serialize the RuleSet using RMP serde.
     let mut serialized_data = Vec::new();
