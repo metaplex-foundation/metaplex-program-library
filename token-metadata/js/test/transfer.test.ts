@@ -32,6 +32,7 @@ import {
   TokenStandard,
   TokenRecord,
   TokenDelegateRole,
+  TransferArgs,
 } from '../src/generated';
 import { PROGRAM_ID as TOKEN_AUTH_RULES_ID } from '@metaplex-foundation/mpl-token-auth-rules';
 import { PROGRAM_ID as TOKEN_METADATA_ID } from '../src/generated';
@@ -1194,6 +1195,128 @@ test('Transfer: ProgrammableNonFungible with address lookup table (LUT)', async 
   await sleep(1000);
 
   await createAndSendV0Tx(payer, [transferIx], connection, [lookupTableAccount.value]);
+
+  t.true(
+    (await getAccount(connection, token)).amount.toString() === '0',
+    'token amount after transfer equal to 0',
+  );
+});
+
+test.only('Transfer: ProgrammableNonFungible (PDA Seeds)', async (t) => {
+  const API = new InitTransactions();
+  const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
+  const owner = payer;
+
+  // create a rule set that allows transfers to token metadata (revision 0)
+
+  const ruleSetName = 'transfer_test';
+  const ruleSetTokenMetadata = {
+    libVersion: 1,
+    ruleSetName: ruleSetName,
+    owner: Array.from(owner.publicKey.toBytes()),
+    operations: {
+      'Transfer:Owner': {
+        All: {
+          rules: [
+            {
+              ProgramOwned: {
+                program: Array.from(TOKEN_METADATA_ID.toBytes()),
+                field: 'Destination',
+              },
+            },
+            {
+              PDAMatch: {
+                program: null,
+                pda_field: 'Destination',
+                seeds_field: 'DestinationSeeds',
+              },
+            },
+          ],
+        },
+      },
+    },
+  };
+
+  const [ruleSetPda] = PublicKey.findProgramAddressSync(
+    [Buffer.from('rule_set'), payer.publicKey.toBuffer(), Buffer.from(ruleSetName)],
+    TOKEN_AUTH_RULES_ID,
+  );
+
+  const { tx: createRuleSetTx } = await API.createRuleSet(
+    t,
+    payer,
+    ruleSetPda,
+    encode(ruleSetTokenMetadata),
+    handler,
+  );
+  await createRuleSetTx.assertSuccess(t);
+
+  // creates a pNFT
+
+  const { mint, metadata, masterEdition, token } = await createAndMintDefaultAsset(
+    t,
+    connection,
+    API,
+    handler,
+    payer,
+    TokenStandard.ProgrammableNonFungible,
+    ruleSetPda,
+  );
+
+  const [destinationToken] = PublicKey.findProgramAddressSync(
+    [metadata.toBuffer(), splToken.TOKEN_PROGRAM_ID.toBuffer(), mint.toBuffer()],
+    splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
+  );
+
+  // owner token record
+  const ownerTokenRecord = findTokenRecordPda(mint, token);
+  amman.addr.addLabel('Owner Token Record', ownerTokenRecord);
+  // destination token record
+  const destinationTokenRecord = findTokenRecordPda(mint, destinationToken);
+  amman.addr.addLabel('Destination Token Record', destinationTokenRecord);
+
+  const map = new Map();
+  map.set('DestinationSeeds', {
+    __kind: 'Seeds',
+    fields: [
+      {
+        seeds: [Buffer.from('metadata'), TOKEN_METADATA_ID.toBuffer(), mint.toBuffer()],
+      },
+    ],
+  });
+
+  const authorizationData = {
+    payload: {
+      map,
+    },
+  };
+
+  const args: TransferArgs = {
+    __kind: 'V1',
+    amount: 1,
+    authorizationData,
+  };
+
+  // Transfer the NFT to the destination account, this should work since
+  // the destination account is in the ruleset.
+  const { tx: transferTx } = await API.transfer(
+    owner,
+    owner.publicKey,
+    token,
+    mint,
+    metadata,
+    masterEdition,
+    metadata,
+    destinationToken,
+    ruleSetPda,
+    1,
+    handler,
+    ownerTokenRecord,
+    destinationTokenRecord,
+    args,
+  );
+
+  await transferTx.assertSuccess(t);
 
   t.true(
     (await getAccount(connection, token)).amount.toString() === '0',
