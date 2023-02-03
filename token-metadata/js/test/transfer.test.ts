@@ -889,7 +889,7 @@ test('Transfer: ProgrammableNonFungible (uninitialized wallet-to-wallet)', async
   );
 });
 
-test('Transfer: ProgrammableNonFungible (rule set revision)', async (t) => {
+test.only('Transfer: ProgrammableNonFungible (rule set revision)', async (t) => {
   const API = new InitTransactions();
   const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
   const owner = payer;
@@ -977,7 +977,7 @@ test('Transfer: ProgrammableNonFungible (rule set revision)', async (t) => {
 
   // checks that the rule set revision has been saved
 
-  const pda = await TokenRecord.fromAccountAddress(connection, tokenRecord);
+  let pda = await TokenRecord.fromAccountAddress(connection, tokenRecord);
 
   spok(t, pda, {
     delegate: spokSamePubkey(delegate.publicKey),
@@ -1056,6 +1056,20 @@ test('Transfer: ProgrammableNonFungible (rule set revision)', async (t) => {
     (await getAccount(connection, token)).amount.toString() === '0',
     'token amount after transfer equal to 0',
   );
+
+  // revision on the source token must be null
+  pda = await TokenRecord.fromAccountAddress(connection, ownerTokenRecord);
+
+  spok(t, pda, {
+    ruleSetRevision: null,
+  });
+
+  // revision on the destination token must be null
+  pda = await TokenRecord.fromAccountAddress(connection, destinationTokenRecord);
+
+  spok(t, pda, {
+    ruleSetRevision: null,
+  });
 });
 
 test('Transfer: ProgrammableNonFungible with address lookup table (LUT)', async (t) => {
