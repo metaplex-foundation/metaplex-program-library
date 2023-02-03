@@ -370,8 +370,10 @@ mod auth_rules_transfer {
     use mpl_token_metadata::{
         error::MetadataError,
         instruction::DelegateArgs,
-        state::{ProgrammableConfig, TokenDelegateRole},
+        pda::find_token_record_account,
+        state::{ProgrammableConfig, TokenDelegateRole, TokenRecord},
     };
+    use solana_program::borsh::try_from_slice_unchecked;
 
     use super::*;
 
@@ -1038,6 +1040,13 @@ mod auth_rules_transfer {
             .await
             .unwrap();
 
+        // asserts (before transfer)
+
+        let pda = get_account(&mut context, &nft.token_record.unwrap()).await;
+        let token_record: TokenRecord = try_from_slice_unchecked(&pda.data).unwrap();
+
+        assert_eq!(token_record.rule_set_revision, Some(0));
+
         let delegate_role = nft
             .get_token_delegate_role(&mut context, &nft.token.unwrap())
             .await;
@@ -1116,5 +1125,21 @@ mod auth_rules_transfer {
 
         // Destination now has the token.
         assert_eq!(rooster_ata_account.amount, 1);
+
+        // asserts (after transfer)
+
+        let pda = get_account(&mut context, &nft.token_record.unwrap()).await;
+        let token_record: TokenRecord = try_from_slice_unchecked(&pda.data).unwrap();
+
+        assert_eq!(token_record.rule_set_revision, None);
+
+        let destination_token =
+            get_associated_token_address(&rooster_manager.pda(), &nft.mint.pubkey());
+
+        let (destination_token_record, _bump) =
+            find_token_record_account(&nft.mint.pubkey(), &destination_token);
+        let token_record: TokenRecord = try_from_slice_unchecked(&pda.data).unwrap();
+
+        assert_eq!(token_record.rule_set_revision, None);
     }
 }
