@@ -17,7 +17,7 @@ use crate::{
     error::MetadataError,
     instruction::MetadataDelegateRole,
     pda::{find_metadata_delegate_record_account, find_token_record_account},
-    processor::{TransferScenario, UpdateScenario},
+    processor::{TransferScenario, UpdateScenario, DelegateScenario},
     utils::assert_owned_by,
 };
 
@@ -353,6 +353,7 @@ impl AuthorityType {
 pub enum Operation {
     Transfer { scenario: TransferScenario },
     Update { scenario: UpdateScenario },
+    Delegate { scenario: DelegateScenario },
 }
 
 impl ToString for Operation {
@@ -360,6 +361,7 @@ impl ToString for Operation {
         match self {
             Self::Transfer { scenario } => format!("Transfer:{}", scenario),
             Self::Update { scenario } => format!("Update:{}", scenario),
+            Self::Delegate { scenario } => format!("Delegate:{}", scenario),
         }
     }
 }

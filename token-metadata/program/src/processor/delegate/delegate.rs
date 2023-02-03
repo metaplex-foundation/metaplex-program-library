@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use borsh::BorshSerialize;
 use mpl_token_auth_rules::utils::get_latest_revision;
 use mpl_utils::{assert_signer, create_or_allocate_account_raw};
@@ -15,12 +17,42 @@ use crate::{
     error::MetadataError,
     instruction::{Context, Delegate, DelegateArgs, MetadataDelegateRole},
     pda::{find_token_record_account, PREFIX},
+    processor::AuthorizationData,
     state::{
-        Metadata, MetadataDelegateRecord, ProgrammableConfig, Resizable, TokenDelegateRole,
-        TokenMetadataAccount, TokenRecord, TokenStandard, TokenState,
+        Metadata, MetadataDelegateRecord, Operation, ProgrammableConfig, Resizable,
+        TokenDelegateRole, TokenMetadataAccount, TokenRecord, TokenStandard, TokenState,
     },
-    utils::{freeze, thaw},
+    utils::{auth_rules_validate, freeze, thaw, AuthRulesValidateParams},
 };
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum DelegateScenario {
+    Metadata(MetadataDelegateRole),
+    Token(TokenDelegateRole),
+}
+
+impl Display for DelegateScenario {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let message = match self {
+            Self::Metadata(role) => match role {
+                MetadataDelegateRole::Authority => "Authority".to_string(),
+                MetadataDelegateRole::Collection => "Collection".to_string(),
+                MetadataDelegateRole::Use => "Use".to_string(),
+                MetadataDelegateRole::Update => "Update".to_string(),
+            },
+            Self::Token(role) => match role {
+                TokenDelegateRole::Sale => "Transfer".to_string(),
+                TokenDelegateRole::Transfer => "Transfer".to_string(),
+                TokenDelegateRole::LockedTransfer => "LockedTransfer".to_string(),
+                TokenDelegateRole::Utility => "Utility".to_string(),
+                TokenDelegateRole::Staking => "Staking".to_string(),
+                _ => panic!("Invalid delegate role"),
+            },
+        };
+
+        write!(f, "{message}")
+    }
+}
 
 /// Delegates an action over an asset to a specific account.
 pub fn delegate<'a>(
@@ -30,56 +62,67 @@ pub fn delegate<'a>(
 ) -> ProgramResult {
     let context = Delegate::to_context(accounts)?;
 
-    match args {
-        DelegateArgs::CollectionV1 { .. } => {
-            create_delegate_v1(program_id, context, args, MetadataDelegateRole::Collection)
-        }
-        DelegateArgs::SaleV1 { amount, .. } => create_persistent_delegate_v1(
-            program_id,
-            context,
-            args,
-            TokenDelegateRole::Sale,
+    // checks if it is a TokenDelegate creation
+    let delegate_args = match &args {
+        DelegateArgs::SaleV1 {
             amount,
-        ),
-        DelegateArgs::TransferV1 { amount, .. } => create_persistent_delegate_v1(
-            program_id,
-            context,
-            args,
-            TokenDelegateRole::Transfer,
+            authorization_data,
+        } => Some((TokenDelegateRole::Sale, amount, authorization_data)),
+        DelegateArgs::TransferV1 {
             amount,
-        ),
-        DelegateArgs::UpdateV1 { .. } => {
-            create_delegate_v1(program_id, context, args, MetadataDelegateRole::Update)
-        }
-        DelegateArgs::UtilityV1 { amount, .. } => create_persistent_delegate_v1(
-            program_id,
-            context,
-            args,
-            TokenDelegateRole::Utility,
+            authorization_data,
+        } => Some((TokenDelegateRole::Transfer, amount, authorization_data)),
+        DelegateArgs::LockedTransferV1 {
             amount,
-        ),
-        DelegateArgs::StakingV1 { amount, .. } => create_persistent_delegate_v1(
-            program_id,
-            context,
-            args,
-            TokenDelegateRole::Staking,
-            amount,
-        ),
-        DelegateArgs::StandardV1 { amount } => create_persistent_delegate_v1(
-            program_id,
-            context,
-            args,
-            TokenDelegateRole::Standard,
-            amount,
-        ),
-        DelegateArgs::LockedTransferV1 { amount, .. } => create_persistent_delegate_v1(
-            program_id,
-            context,
-            args,
+            authorization_data,
+            ..
+        } => Some((
             TokenDelegateRole::LockedTransfer,
             amount,
-        ),
+            authorization_data,
+        )),
+        DelegateArgs::UtilityV1 {
+            amount,
+            authorization_data,
+        } => Some((TokenDelegateRole::Utility, amount, authorization_data)),
+        DelegateArgs::StakingV1 {
+            amount,
+            authorization_data,
+        } => Some((TokenDelegateRole::Staking, amount, authorization_data)),
+        // we don't need to fail if did not find a match at this point
+        _ => None,
+    };
+
+    if let Some((role, amount, authorization_data)) = delegate_args {
+        // proceed with the delegate creation if we have a match
+        return create_persistent_delegate_v1(
+            program_id,
+            context,
+            &args,
+            role,
+            *amount,
+            authorization_data,
+        );
     }
+
+    // checks if it is a MetadataDelegate creation
+    let delegate_args = match &args {
+        DelegateArgs::CollectionV1 { authorization_data } => {
+            Some((MetadataDelegateRole::Collection, authorization_data))
+        }
+        DelegateArgs::UpdateV1 { authorization_data } => {
+            Some((MetadataDelegateRole::Update, authorization_data))
+        }
+        // we don't need to fail if did not find a match at this point
+        _ => None,
+    };
+
+    if let Some((role, _authorization_data)) = delegate_args {
+        return create_delegate_v1(program_id, context, args, role);
+    }
+
+    // this only happens if we did not find a match
+    Err(MetadataError::InvalidDelegateArgs.into())
 }
 
 /// Creates a `DelegateRole::Collection` delegate.
@@ -150,9 +193,10 @@ fn create_delegate_v1(
 fn create_persistent_delegate_v1(
     program_id: &Pubkey,
     ctx: Context<Delegate>,
-    args: DelegateArgs,
+    args: &DelegateArgs,
     role: TokenDelegateRole,
     amount: u64,
+    authorization_data: &Option<AuthorizationData>,
 ) -> ProgramResult {
     // retrieving required optional accounts
 
@@ -261,6 +305,28 @@ fn create_persistent_delegate_v1(
                     &mpl_token_auth_rules::ID,
                 )?;
 
+                let auth_rules_validate_params = AuthRulesValidateParams {
+                    mint_info: ctx.accounts.mint_info,
+                    owner_info: None,
+                    authority_info: Some(ctx.accounts.delegate_info),
+                    source_info: None,
+                    destination_info: None,
+                    programmable_config: metadata.programmable_config,
+                    amount,
+                    auth_data: authorization_data.clone(),
+                    auth_rules_info: ctx.accounts.authorization_rules_info,
+                    operation: Operation::Delegate {
+                        scenario: DelegateScenario::Token(role),
+                    },
+                    is_wallet_to_wallet: false,
+                    rule_set_revision: token_record
+                        .rule_set_revision
+                        .map(|revision| revision as usize),
+                };
+
+                auth_rules_validate(auth_rules_validate_params)?;
+
+                // stores the latest rule set revision
                 token_record.rule_set_revision =
                     get_latest_revision(authorization_rules_info)?.map(|revision| revision as u64);
             }
@@ -275,7 +341,7 @@ fn create_persistent_delegate_v1(
 
             token_record.locked_transfer = if matches!(role, TokenDelegateRole::LockedTransfer) {
                 if let DelegateArgs::LockedTransferV1 { locked_address, .. } = args {
-                    Some(locked_address)
+                    Some(*locked_address)
                 } else {
                     return Err(MetadataError::InvalidDelegateArgs.into());
                 }
