@@ -112,7 +112,7 @@ pub async fn create_default_metaplex_rule_set(
         rules: vec![
             Rule::All {
                 rules: vec![
-                    // source_owned_by_sys_program,
+                    source_owned_by_sys_program,
                     dest_program_allow_list,
                     dest_pda_match,
                     nft_amount.clone(),
@@ -122,7 +122,7 @@ pub async fn create_default_metaplex_rule_set(
                 rules: vec![
                     source_program_allow_list,
                     source_pda_match,
-                    // dest_owned_by_sys_program,
+                    dest_owned_by_sys_program,
                     nft_amount.clone(),
                 ],
             },
@@ -148,10 +148,6 @@ pub async fn create_default_metaplex_rule_set(
         scenario: TransferScenario::SaleDelegate,
     };
 
-    let locked_transfer_delegate_operation = Operation::Transfer {
-        scenario: TransferScenario::LockedTransferDelegate,
-    };
-
     let mut royalty_rule_set = RuleSetV1::new(name, creator.pubkey());
     royalty_rule_set
         .add(owner_operation.to_string(), transfer_rule.clone())
@@ -164,12 +160,6 @@ pub async fn create_default_metaplex_rule_set(
         .unwrap();
     royalty_rule_set
         .add(sale_delegate_operation.to_string(), transfer_rule.clone())
-        .unwrap();
-    royalty_rule_set
-        .add(
-            locked_transfer_delegate_operation.to_string(),
-            transfer_rule.clone(),
-        )
         .unwrap();
 
     // Serialize the RuleSet using RMP serde.
