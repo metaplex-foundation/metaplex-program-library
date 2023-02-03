@@ -889,7 +889,7 @@ test('Transfer: ProgrammableNonFungible (uninitialized wallet-to-wallet)', async
   );
 });
 
-test.only('Transfer: ProgrammableNonFungible (rule set revision)', async (t) => {
+test('Transfer: ProgrammableNonFungible (rule set revision)', async (t) => {
   const API = new InitTransactions();
   const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
   const owner = payer;
