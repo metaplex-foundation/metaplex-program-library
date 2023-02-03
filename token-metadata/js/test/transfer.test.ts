@@ -1202,7 +1202,7 @@ test('Transfer: ProgrammableNonFungible with address lookup table (LUT)', async 
   );
 });
 
-test.only('Transfer: ProgrammableNonFungible (PDA Seeds)', async (t) => {
+test('Transfer: ProgrammableNonFungible (PDA Seeds)', async (t) => {
   const API = new InitTransactions();
   const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
   const owner = payer;
