@@ -2,6 +2,8 @@ use std::io::Error;
 
 use borsh::{BorshDeserialize, BorshSerialize};
 use mpl_utils::cmp_pubkeys;
+#[cfg(feature = "serde-feature")]
+use serde::{Deserialize, Serialize};
 use shank::ShankAccount;
 use solana_program::{
     account_info::AccountInfo, instruction::AccountMeta, program_error::ProgramError,
@@ -9,15 +11,12 @@ use solana_program::{
 };
 use spl_token::state::Account;
 
-#[cfg(feature = "serde-feature")]
-use serde::{Deserialize, Serialize};
-
 use super::*;
 use crate::{
     error::MetadataError,
     instruction::MetadataDelegateRole,
     pda::{find_metadata_delegate_record_account, find_token_record_account},
-    processor::{TransferScenario, UpdateScenario, DelegateScenario},
+    processor::{DelegateScenario, TransferScenario, UpdateScenario},
     utils::assert_owned_by,
 };
 
