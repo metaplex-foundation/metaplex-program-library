@@ -14,7 +14,7 @@
     "build:docs": "typedoc",
     "build": "rimraf dist && tsc -p tsconfig.json",
     "api:gen": "DEBUG='(solita|rustbin):(info|error)' solita",
-    "test": "cpr test/fixtures dist/test/fixtures -o && tape dist/test/*.js",
+    "test": "run-test.sh -a",
     "lint": "eslint \"{src,test}/**/*.ts\" --format stylish",
     "fix:lint": "yarn lint --fix",
     "prettier": "prettier \"{src,test}/**/*.ts\" --check",
