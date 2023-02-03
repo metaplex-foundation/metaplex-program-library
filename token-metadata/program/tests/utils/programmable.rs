@@ -101,9 +101,9 @@ pub async fn create_default_metaplex_rule_set(
         source_program_allow_list,
         source_pda_match,
         dest_owned_by_sys_program,
-        nft_amount,
         authority_program_allow_list,
         authority_pda_match,
+        nft_amount,
     );
 
     // (source is owned by system program && dest is on allow list && destination is a PDA) ||
