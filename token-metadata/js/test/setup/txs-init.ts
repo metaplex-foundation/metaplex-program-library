@@ -7,6 +7,7 @@ import {
 } from '@metaplex-foundation/amman-client';
 import * as splToken from '@solana/spl-token';
 import {
+  ComputeBudgetProgram,
   Connection,
   Keypair,
   PublicKey,
@@ -52,6 +53,7 @@ import {
   UnlockInstructionAccounts,
   UnlockInstructionArgs,
   createUnlockInstruction,
+  TransferArgs,
 } from '../../src/generated';
 import { Test } from 'tape';
 import { amman } from '.';
@@ -297,6 +299,7 @@ export class InitTransactions {
     handler: PayerTransactionHandler,
     tokenRecord: PublicKey | null = null,
     destinationTokenRecord: PublicKey | null = null,
+    args: TransferArgs | null = null,
   ): Promise<{ tx: ConfirmedTransactionAssertablePromise }> {
     amman.addr.addLabel('Mint Account', mint);
     amman.addr.addLabel('Metadata Account', metadata);
@@ -329,17 +332,25 @@ export class InitTransactions {
       destinationTokenRecord,
     };
 
-    const transferArgs: TransferInstructionArgs = {
-      transferArgs: {
+    if (!args) {
+      args = {
         __kind: 'V1',
         amount,
         authorizationData: null,
-      },
+      };
+    }
+
+    const modifyComputeUnits = ComputeBudgetProgram.setComputeUnitLimit({
+      units: 400_000,
+    });
+
+    const transferArgs: TransferInstructionArgs = {
+      transferArgs: args,
     };
 
     const transferIx = createTransferInstruction(transferAcccounts, transferArgs);
 
-    const tx = new Transaction().add(transferIx);
+    const tx = new Transaction().add(modifyComputeUnits).add(transferIx);
 
     return {
       tx: handler.sendAndConfirmTransaction(tx, [authority], 'tx: Transfer'),
