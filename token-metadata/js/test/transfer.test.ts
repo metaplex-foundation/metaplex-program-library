@@ -914,6 +914,7 @@ test('Transfer: ProgrammableNonFungible (rule set revision)', async (t) => {
           field: 'Destination',
         },
       },
+      'Delegate:Transfer': "Pass",
     },
   };
 
