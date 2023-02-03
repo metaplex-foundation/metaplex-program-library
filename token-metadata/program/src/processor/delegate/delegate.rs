@@ -41,7 +41,7 @@ impl Display for DelegateScenario {
                 MetadataDelegateRole::Update => "Update".to_string(),
             },
             Self::Token(role) => match role {
-                TokenDelegateRole::Sale => "Transfer".to_string(),
+                TokenDelegateRole::Sale => "Sale".to_string(),
                 TokenDelegateRole::Transfer => "Transfer".to_string(),
                 TokenDelegateRole::LockedTransfer => "LockedTransfer".to_string(),
                 TokenDelegateRole::Utility => "Utility".to_string(),
