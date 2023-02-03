@@ -268,6 +268,22 @@ pub fn auth_rules_validate(params: AuthRulesValidateParams) -> ProgramResult {
                         PayloadType::Pubkey(*destination_info.key),
                     );
                 }
+                Operation::Delegate { scenario: _ } => {
+                    // get account infos
+                    let destination_info =
+                        destination_info.ok_or(MetadataError::InvalidOperation)?;
+
+                    // delegate amount
+                    auth_data
+                        .payload
+                        .insert(PayloadKey::Amount.to_string(), PayloadType::Number(amount));
+
+                    // delegate authority
+                    auth_data.payload.insert(
+                        PayloadKey::Delegate.to_string(),
+                        PayloadType::Pubkey(*destination_info.key),
+                    );
+                }
                 _ => {
                     return Err(MetadataError::InvalidOperation.into());
                 }

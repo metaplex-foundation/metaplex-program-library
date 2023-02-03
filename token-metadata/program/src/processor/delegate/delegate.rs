@@ -64,14 +64,17 @@ pub fn delegate<'a>(
 
     // checks if it is a TokenDelegate creation
     let delegate_args = match &args {
+        // Sale
         DelegateArgs::SaleV1 {
             amount,
             authorization_data,
         } => Some((TokenDelegateRole::Sale, amount, authorization_data)),
+        // Transfer
         DelegateArgs::TransferV1 {
             amount,
             authorization_data,
         } => Some((TokenDelegateRole::Transfer, amount, authorization_data)),
+        // LockedTransfer
         DelegateArgs::LockedTransferV1 {
             amount,
             authorization_data,
@@ -81,14 +84,18 @@ pub fn delegate<'a>(
             amount,
             authorization_data,
         )),
+        // Utility
         DelegateArgs::UtilityV1 {
             amount,
             authorization_data,
         } => Some((TokenDelegateRole::Utility, amount, authorization_data)),
+        // Staking
         DelegateArgs::StakingV1 {
             amount,
             authorization_data,
         } => Some((TokenDelegateRole::Staking, amount, authorization_data)),
+        // Standard
+        DelegateArgs::StandardV1 { amount } => Some((TokenDelegateRole::Standard, amount, &None)),
         // we don't need to fail if did not find a match at this point
         _ => None,
     };
@@ -308,9 +315,9 @@ fn create_persistent_delegate_v1(
                 let auth_rules_validate_params = AuthRulesValidateParams {
                     mint_info: ctx.accounts.mint_info,
                     owner_info: None,
-                    authority_info: Some(ctx.accounts.delegate_info),
+                    authority_info: None,
                     source_info: None,
-                    destination_info: None,
+                    destination_info: Some(ctx.accounts.delegate_info),
                     programmable_config: metadata.programmable_config,
                     amount,
                     auth_data: authorization_data.clone(),
