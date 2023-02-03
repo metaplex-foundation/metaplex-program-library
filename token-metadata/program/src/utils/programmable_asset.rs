@@ -223,11 +223,11 @@ pub fn auth_rules_validate(params: AuthRulesValidateParams) -> ProgramResult {
             };
 
             let mut additional_rule_accounts = vec![];
-            if let Some(target_info) = source_info {
-                additional_rule_accounts.push(target_info);
+            if let Some(source_info) = source_info {
+                additional_rule_accounts.push(source_info);
             }
-            if let Some(target_info) = destination_info {
-                additional_rule_accounts.push(target_info);
+            if let Some(destination_info) = destination_info {
+                additional_rule_accounts.push(destination_info);
             }
             if let Some(authority_info) = authority_info {
                 additional_rule_accounts.push(authority_info);

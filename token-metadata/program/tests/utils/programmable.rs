@@ -11,6 +11,7 @@ use rmp_serde::Serializer;
 use serde::Serialize;
 use solana_program::system_program;
 use solana_sdk::{
+    compute_budget::ComputeBudgetInstruction,
     pubkey::Pubkey,
     signature::{Keypair, Signer},
     transaction::Transaction,
@@ -18,7 +19,11 @@ use solana_sdk::{
 
 use crate::*;
 
-static PROGRAM_ALLOW_LIST: [Pubkey; 2] = [mpl_token_auth_rules::ID, rooster::ID];
+static PROGRAM_ALLOW_LIST: [Pubkey; 3] = [
+    mpl_token_auth_rules::ID,
+    mpl_token_metadata::ID,
+    rooster::ID,
+];
 
 macro_rules! get_primitive_rules {
     (
@@ -28,6 +33,8 @@ macro_rules! get_primitive_rules {
         $source_program_allow_list:ident,
         $source_pda_match:ident,
         $dest_owned_by_sys_program:ident,
+        $authority_program_allow_list:ident,
+        $authority_pda_match:ident,
         $nft_amount:ident,
     ) => {
         let $source_owned_by_sys_program = Rule::ProgramOwned {
@@ -66,6 +73,16 @@ macro_rules! get_primitive_rules {
             amount: 1,
             operator: CompareOp::Eq,
         };
+
+        let $authority_program_allow_list = Rule::ProgramOwnedList {
+            programs: PROGRAM_ALLOW_LIST.to_vec(),
+            field: PayloadKey::Authority.to_string(),
+        };
+        let $authority_pda_match = Rule::PDAMatch {
+            program: None,
+            pda_field: PayloadKey::Authority.to_string(),
+            seeds_field: PayloadKey::AuthoritySeeds.to_string(),
+        };
     };
 }
 
@@ -85,6 +102,8 @@ pub async fn create_default_metaplex_rule_set(
         source_pda_match,
         dest_owned_by_sys_program,
         nft_amount,
+        authority_program_allow_list,
+        authority_pda_match,
     );
 
     // (source is owned by system program && dest is on allow list && destination is a PDA) ||
@@ -93,7 +112,7 @@ pub async fn create_default_metaplex_rule_set(
         rules: vec![
             Rule::All {
                 rules: vec![
-                    source_owned_by_sys_program,
+                    // source_owned_by_sys_program,
                     dest_program_allow_list,
                     dest_pda_match,
                     nft_amount.clone(),
@@ -103,7 +122,14 @@ pub async fn create_default_metaplex_rule_set(
                 rules: vec![
                     source_program_allow_list,
                     source_pda_match,
-                    dest_owned_by_sys_program,
+                    // dest_owned_by_sys_program,
+                    nft_amount.clone(),
+                ],
+            },
+            Rule::All {
+                rules: vec![
+                    authority_program_allow_list,
+                    authority_pda_match,
                     nft_amount,
                 ],
             },
@@ -122,6 +148,10 @@ pub async fn create_default_metaplex_rule_set(
         scenario: TransferScenario::SaleDelegate,
     };
 
+    let locked_transfer_delegate_operation = Operation::Transfer {
+        scenario: TransferScenario::LockedTransferDelegate,
+    };
+
     let mut royalty_rule_set = RuleSetV1::new(name, creator.pubkey());
     royalty_rule_set
         .add(owner_operation.to_string(), transfer_rule.clone())
@@ -134,6 +164,12 @@ pub async fn create_default_metaplex_rule_set(
         .unwrap();
     royalty_rule_set
         .add(sale_delegate_operation.to_string(), transfer_rule.clone())
+        .unwrap();
+    royalty_rule_set
+        .add(
+            locked_transfer_delegate_operation.to_string(),
+            transfer_rule.clone(),
+        )
         .unwrap();
 
     // Serialize the RuleSet using RMP serde.
@@ -152,9 +188,11 @@ pub async fn create_default_metaplex_rule_set(
         .unwrap()
         .instruction();
 
+    let compute_ix = ComputeBudgetInstruction::set_compute_unit_limit(400_000);
+
     // Add it to a transaction.
     let create_tx = Transaction::new_signed_with_payer(
-        &[create_ix],
+        &[compute_ix, create_ix],
         Some(&creator.pubkey()),
         &[&creator],
         context.last_blockhash,

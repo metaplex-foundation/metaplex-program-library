@@ -36,6 +36,7 @@ pub enum TransferScenario {
     Holder,
     TransferDelegate,
     SaleDelegate,
+    LockedTransferDelegate,
     MigrationDelegate,
 }
 
@@ -45,6 +46,7 @@ impl Display for TransferScenario {
             Self::Holder => write!(f, "Owner"),
             Self::TransferDelegate => write!(f, "TransferDelegate"),
             Self::SaleDelegate => write!(f, "SaleDelegate"),
+            Self::LockedTransferDelegate => write!(f, "LockedTransferDelegate"),
             Self::MigrationDelegate => write!(f, "MigrationDelegate"),
         }
     }
@@ -55,6 +57,7 @@ impl From<TransferScenario> for TokenDelegateRole {
         match delegate {
             TransferScenario::TransferDelegate => TokenDelegateRole::Transfer,
             TransferScenario::SaleDelegate => TokenDelegateRole::Sale,
+            TransferScenario::LockedTransferDelegate => TokenDelegateRole::LockedTransfer,
             TransferScenario::MigrationDelegate => TokenDelegateRole::Migration,
             _ => panic!("Invalid delegate role"),
         }
@@ -66,6 +69,7 @@ impl From<TokenDelegateRole> for TransferScenario {
         match delegate {
             TokenDelegateRole::Transfer => TransferScenario::TransferDelegate,
             TokenDelegateRole::Sale => TransferScenario::SaleDelegate,
+            TokenDelegateRole::LockedTransfer => TransferScenario::LockedTransferDelegate,
             TokenDelegateRole::Migration => TransferScenario::MigrationDelegate,
             _ => panic!("Invalid delegate role"),
         }
