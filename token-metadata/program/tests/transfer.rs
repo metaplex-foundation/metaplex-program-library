@@ -374,6 +374,8 @@ mod auth_rules_transfer {
         state::{ProgrammableConfig, TokenDelegateRole, TokenRecord},
     };
     use solana_program::borsh::try_from_slice_unchecked;
+    use solana_sdk::transaction::Transaction;
+    use spl_associated_token_account::instruction::create_associated_token_account;
 
     use super::*;
 
@@ -1243,5 +1245,100 @@ mod auth_rules_transfer {
         // Destination now has the token.
         assert_eq!(destination_ata_account.amount, 1);
         assert_eq!(source_ata_account.amount, 0);
+    }
+
+    #[tokio::test]
+    async fn destination_token_matches_owner() {
+        // We ensure that the destination owner is linked to the destination token account
+        // so that people cannot get around auth rules by passing in an owner that is in an allowlist
+        // but doesn't actually correspond to the token account.
+        let mut program_test = ProgramTest::new("mpl_token_metadata", mpl_token_metadata::ID, None);
+        program_test.add_program("mpl_token_auth_rules", mpl_token_auth_rules::ID, None);
+        let mut context = program_test.start_with_context().await;
+
+        let payer = context.payer.dirty_clone();
+
+        // create rule set for the transfer; this has the Rooster program in the allowlist
+        let (rule_set, mut auth_data) =
+            create_default_metaplex_rule_set(&mut context, payer, false).await;
+
+        // create NFT for transfer tests
+        let mut nft = DigitalAsset::new();
+        nft.create_and_mint(
+            &mut context,
+            TokenStandard::ProgrammableNonFungible,
+            Some(rule_set),
+            Some(auth_data.clone()),
+            1,
+        )
+        .await
+        .unwrap();
+
+        // We need a PDA from a program not in the allowlist to be the destination
+        // owner.
+        let actual_owner = nft.mint.pubkey();
+        let destination_ata = get_associated_token_address(&actual_owner, &nft.mint.pubkey());
+
+        let payer = context.payer.dirty_clone();
+
+        // Create the ATA for the destination owner so it already exists for the transfer.
+        let ix = create_associated_token_account(
+            &payer.dirty_clone().pubkey(),
+            &actual_owner,
+            &nft.mint.pubkey(),
+            &spl_token::ID,
+        );
+
+        let tx = Transaction::new_signed_with_payer(
+            &[ix],
+            Some(&payer.pubkey()),
+            &[&payer],
+            context.last_blockhash,
+        );
+        context.banks_client.process_transaction(tx).await.unwrap();
+
+        let transfer_amount = 1;
+
+        // update auth data payload with the seeds of the fake owner PDA
+        let seeds = SeedsVec {
+            seeds: vec![
+                String::from("rule_set").as_bytes().to_vec(),
+                payer.pubkey().as_ref().to_vec(),
+                nft.mint.pubkey().as_ref().to_vec(),
+                String::from("Metaplex Royalty Enforcement")
+                    .as_bytes()
+                    .to_vec(),
+            ],
+        };
+
+        auth_data.payload.insert(
+            PayloadKey::DestinationSeeds.to_string(),
+            PayloadType::Seeds(seeds),
+        );
+
+        let args = TransferArgs::V1 {
+            authorization_data: Some(auth_data.clone()),
+            amount: transfer_amount,
+        };
+
+        let authority = context.payer.dirty_clone();
+
+        // We transfer to the ATA of the actual owner,
+        // but pass in a Token Metadata PDA as the destination owner as that program
+        // is in the allowlist.
+        let params = TransferFromParams {
+            context: &mut context,
+            authority: &authority,
+            source_owner: &authority.pubkey(),
+            destination_owner: rule_set,
+            destination_token: Some(destination_ata),
+            authorization_rules: Some(rule_set),
+            payer: &authority,
+            args: args.clone(),
+        };
+
+        let err = nft.transfer_from(params).await.unwrap_err();
+
+        assert_custom_error_ix!(1, err, MetadataError::InvalidOwner);
     }
 }

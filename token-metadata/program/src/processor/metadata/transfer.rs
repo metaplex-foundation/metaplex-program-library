@@ -17,7 +17,10 @@ use solana_program::{
 use spl_token::state::Account;
 
 use crate::{
-    assertions::{assert_keys_equal, assert_owned_by, metadata::assert_holding_amount},
+    assertions::{
+        assert_keys_equal, assert_owned_by, assert_token_matches_owner_and_mint,
+        metadata::assert_holding_amount,
+    },
     error::MetadataError,
     instruction::{Context, Transfer, TransferArgs},
     pda::find_token_record_account,
@@ -143,6 +146,11 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
         )?;
     } else {
         assert_owned_by(ctx.accounts.destination_info, &spl_token::id())?;
+        assert_token_matches_owner_and_mint(
+            ctx.accounts.destination_info,
+            ctx.accounts.destination_owner_info.key,
+            ctx.accounts.mint_info.key,
+        )?;
     }
 
     // Check program IDs.
