@@ -1,6 +1,6 @@
 # Programmable NFT Guide
 
-## Developer packages:
+## Developer packages
 Token metadata
 * :crab: Rust crate: [v1.8.1](https://crates.io/crates/mpl-token-metadata/1.8.1)
 * :package: NPM package: [v2.8.1](https://www.npmjs.com/package/@metaplex-foundation/mpl-token-metadata/v/2.8.1)
