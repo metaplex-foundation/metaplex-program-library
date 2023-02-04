@@ -1941,9 +1941,9 @@ dependencies = [
 
 [[package]]
 name = "mpl-token-auth-rules"
-version = "1.0.0"
+version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a14e1ac5350734fd07f17d7eab733d27b7b45ca963642c565ec34ab015d9ceda"
+checksum = "12b9ceca1f8e1a6e3588e367f7d7790e5f19956165d972709f53f61bb297459e"
 dependencies = [
  "borsh",
  "mpl-token-metadata-context-derive 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",

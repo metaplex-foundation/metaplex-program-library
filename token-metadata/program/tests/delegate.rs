@@ -362,7 +362,7 @@ mod delegate {
             .delegate(
                 &mut context,
                 payer,
-                // delegate must the from Token Auth Rules or Rooster
+                // delegate must be from Token Auth Rules or Rooster
                 rule_set,
                 DelegateArgs::SaleV1 {
                     amount: 1,
