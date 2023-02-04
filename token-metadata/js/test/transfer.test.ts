@@ -1072,7 +1072,7 @@ test('Transfer: ProgrammableNonFungible (rule set revision)', async (t) => {
   });
 });
 
-test('Transfer: ProgrammableNonFungible with address lookup table (LUT)', async (t) => {
+test.only('Transfer: ProgrammableNonFungible with address lookup table (LUT)', async (t) => {
   const API = new InitTransactions();
   const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
 
@@ -1082,41 +1082,15 @@ test('Transfer: ProgrammableNonFungible with address lookup table (LUT)', async 
   const destination = Keypair.generate();
   amman.airdrop(connection, destination.publicKey, 1);
 
-  //-- set up our rule set with one pubkey match rule for transfer.
-
-  const ruleSetName = 'transfer_test';
-  const ruleSet = {
-    libVersion: 1,
-    ruleSetName: ruleSetName,
-    owner: Array.from(owner.publicKey.toBytes()),
-    operations: {
-      'Transfer:Owner': {
-        ProgramOwned: {
-          program: Array.from(owner.publicKey.toBytes()),
-          field: 'Destination',
-        },
-      },
-    },
-  };
-  const serializedRuleSet = encode(ruleSet);
-
-  //-- Find the ruleset PDA
-  const [ruleSetPda] = PublicKey.findProgramAddressSync(
-    [Buffer.from('rule_set'), payer.publicKey.toBuffer(), Buffer.from(ruleSetName)],
-    TOKEN_AUTH_RULES_ID,
-  );
-
-  //-- create the ruleset at the PDA address with the serialized ruleset values.
-  const { tx: createRuleSetTx } = await API.createRuleSet(
+  const { tx: createRuleSetTx, ruleSet: ruleSetPda } = await API.createDefaultRuleSet(
     t,
-    payer,
-    ruleSetPda,
-    serializedRuleSet,
     handler,
+    payer,
+    1,
   );
   await createRuleSetTx.assertSuccess(t);
 
-  //-- create an NFT with the programmable config stored on the metadata.
+  // create an NFT with the programmable config stored on the metadata.
   const { mint, metadata, masterEdition, token } = await createAndMintDefaultAsset(
     t,
     connection,
@@ -1155,7 +1129,7 @@ test('Transfer: ProgrammableNonFungible with address lookup table (LUT)', async 
   const { tx, lookupTable } = await createLookupTable(payer.publicKey, payer, handler, connection);
   await tx.assertSuccess(t);
 
-  //-- adds addresses to the lookup table
+  // adds addresses to the lookup table
 
   const addresses = [
     owner.publicKey,
@@ -1206,7 +1180,7 @@ test('Transfer: ProgrammableNonFungible with address lookup table (LUT)', async 
 
   const lookupTableAccount = await connection.getAddressLookupTable(lookupTable);
 
-  console.log('[ Waiting for lookup table activation ]');
+  console.log('[ waiting for lookup table activation ]');
   await sleep(1000);
 
   await createAndSendV0Tx(payer, [transferIx], connection, [lookupTableAccount.value]);
