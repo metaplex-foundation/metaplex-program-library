@@ -138,3 +138,21 @@ pub fn assert_delegate(
 
     Err(MetadataError::InvalidDelegate.into())
 }
+
+pub fn assert_token_matches_owner_and_mint(
+    token_info: &AccountInfo,
+    owner: &Pubkey,
+    mint: &Pubkey,
+) -> ProgramResult {
+    let token_account: Account = assert_initialized(token_info)?;
+
+    if token_account.owner != *owner {
+        return Err(MetadataError::InvalidOwner.into());
+    }
+
+    if token_account.mint != *mint {
+        return Err(MetadataError::MintMismatch.into());
+    }
+
+    Ok(())
+}
