@@ -84,7 +84,7 @@ jobs:
           working_dir: ./${{ inputs.name }}/js
 
       # Build Rust Programs
-      - uses: ./.github/actions/build-program
+      - uses: ./.github/actions/program
         with:
           name: token-metadata
         if: ${{ inputs.build_token_metadata }}
