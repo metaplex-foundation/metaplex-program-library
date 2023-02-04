@@ -247,7 +247,7 @@ mod delegate {
 
         // asserts
 
-        assert_custom_error!(error, MetadataError::InvalidDelegateRole);
+        assert_custom_error_ix!(1, error, MetadataError::InvalidDelegateRole);
     }
 
     #[tokio::test]
@@ -314,7 +314,7 @@ mod delegate {
             .await
             .unwrap_err();
 
-        assert_custom_error!(error, MetadataError::InvalidDelegateRole);
+        assert_custom_error_ix!(1, error, MetadataError::InvalidDelegateRole);
     }
 
     #[tokio::test]
@@ -522,6 +522,6 @@ mod delegate {
 
         // asserts
 
-        assert_custom_error_ix!(0, error, RuleSetError::ProgramOwnedListCheckFailed);
+        assert_custom_error_ix!(1, error, RuleSetError::ProgramOwnedListCheckFailed);
     }
 }
