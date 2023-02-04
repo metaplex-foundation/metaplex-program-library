@@ -9,7 +9,6 @@ use mpl_token_metadata::{
 };
 use rmp_serde::Serializer;
 use serde::Serialize;
-use solana_program::system_program;
 use solana_sdk::{
     compute_budget::ComputeBudgetInstruction,
     pubkey::Pubkey,
@@ -19,39 +18,19 @@ use solana_sdk::{
 
 use crate::*;
 
-static PROGRAM_ALLOW_LIST: [Pubkey; 3] = [
-    mpl_token_auth_rules::ID,
-    mpl_token_metadata::ID,
-    rooster::ID,
-];
+static PROGRAM_ALLOW_LIST: [Pubkey; 2] = [mpl_token_auth_rules::ID, rooster::ID];
 
 macro_rules! get_primitive_rules {
     (
-        $source_owned_by_sys_program:ident,
         $dest_program_allow_list:ident,
-        $dest_pda_match:ident,
         $source_program_allow_list:ident,
-        $source_pda_match:ident,
-        $dest_owned_by_sys_program:ident,
         $authority_program_allow_list:ident,
-        $authority_pda_match:ident,
         $nft_amount:ident,
         $delegate_program_allow_list:ident,
     ) => {
-        let $source_owned_by_sys_program = Rule::ProgramOwned {
-            program: system_program::ID,
-            field: PayloadKey::Source.to_string(),
-        };
-
         let $dest_program_allow_list = Rule::ProgramOwnedList {
             programs: PROGRAM_ALLOW_LIST.to_vec(),
             field: PayloadKey::Destination.to_string(),
-        };
-
-        let $dest_pda_match = Rule::PDAMatch {
-            program: None,
-            pda_field: PayloadKey::Destination.to_string(),
-            seeds_field: PayloadKey::DestinationSeeds.to_string(),
         };
 
         let $source_program_allow_list = Rule::ProgramOwnedList {
@@ -59,31 +38,15 @@ macro_rules! get_primitive_rules {
             field: PayloadKey::Source.to_string(),
         };
 
-        let $source_pda_match = Rule::PDAMatch {
-            program: None,
-            pda_field: PayloadKey::Source.to_string(),
-            seeds_field: PayloadKey::SourceSeeds.to_string(),
-        };
-
-        let $dest_owned_by_sys_program = Rule::ProgramOwned {
-            program: system_program::ID,
-            field: PayloadKey::Destination.to_string(),
+        let $authority_program_allow_list = Rule::ProgramOwnedList {
+            programs: PROGRAM_ALLOW_LIST.to_vec(),
+            field: PayloadKey::Authority.to_string(),
         };
 
         let $nft_amount = Rule::Amount {
             field: PayloadKey::Amount.to_string(),
             amount: 1,
             operator: CompareOp::Eq,
-        };
-
-        let $authority_program_allow_list = Rule::ProgramOwnedList {
-            programs: PROGRAM_ALLOW_LIST.to_vec(),
-            field: PayloadKey::Authority.to_string(),
-        };
-        let $authority_pda_match = Rule::PDAMatch {
-            program: None,
-            pda_field: PayloadKey::Authority.to_string(),
-            seeds_field: PayloadKey::AuthoritySeeds.to_string(),
         };
 
         let $delegate_program_allow_list = Rule::ProgramOwnedList {
@@ -103,43 +66,26 @@ pub async fn create_default_metaplex_rule_set(
         mpl_token_auth_rules::pda::find_rule_set_address(creator.pubkey(), name.clone());
 
     get_primitive_rules!(
-        source_owned_by_sys_program,
         dest_program_allow_list,
-        dest_pda_match,
         source_program_allow_list,
-        source_pda_match,
-        dest_owned_by_sys_program,
         authority_program_allow_list,
-        authority_pda_match,
         nft_amount,
         delegate_program_allow_list,
     );
 
-    // (source is owned by system program && dest is on allow list && destination is a PDA) ||
-    // (source is on allow list && source is a PDA && dest is owned by system program)
-    let transfer_rule = Rule::Any {
+    // amount is 1 && (
+    //     source owner on allow list
+    //  || dest owner on allow list
+    //  || authority owner on allow list
+    // )
+    let transfer_rule = Rule::All {
         rules: vec![
-            Rule::All {
-                rules: vec![
-                    source_owned_by_sys_program,
-                    dest_program_allow_list.clone(),
-                    dest_pda_match,
-                    nft_amount.clone(),
-                ],
-            },
-            Rule::All {
+            nft_amount.clone(),
+            Rule::Any {
                 rules: vec![
                     source_program_allow_list,
-                    source_pda_match,
-                    dest_owned_by_sys_program,
-                    nft_amount.clone(),
-                ],
-            },
-            Rule::All {
-                rules: vec![
+                    dest_program_allow_list,
                     authority_program_allow_list,
-                    authority_pda_match,
-                    nft_amount.clone(),
                 ],
             },
         ],
