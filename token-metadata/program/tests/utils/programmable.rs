@@ -4,8 +4,8 @@ use mpl_token_auth_rules::{
     state::{CompareOp, Rule, RuleSetV1},
 };
 use mpl_token_metadata::{
-    processor::{AuthorizationData, TransferScenario},
-    state::{Operation, PayloadKey},
+    processor::{AuthorizationData, DelegateScenario, TransferScenario},
+    state::{Operation, PayloadKey, TokenDelegateRole},
 };
 use rmp_serde::Serializer;
 use serde::Serialize;
@@ -36,6 +36,7 @@ macro_rules! get_primitive_rules {
         $authority_program_allow_list:ident,
         $authority_pda_match:ident,
         $nft_amount:ident,
+        $delegate_program_allow_list:ident,
     ) => {
         let $source_owned_by_sys_program = Rule::ProgramOwned {
             program: system_program::ID,
@@ -68,6 +69,7 @@ macro_rules! get_primitive_rules {
             program: system_program::ID,
             field: PayloadKey::Destination.to_string(),
         };
+
         let $nft_amount = Rule::Amount {
             field: PayloadKey::Amount.to_string(),
             amount: 1,
@@ -83,12 +85,18 @@ macro_rules! get_primitive_rules {
             pda_field: PayloadKey::Authority.to_string(),
             seeds_field: PayloadKey::AuthoritySeeds.to_string(),
         };
+
+        let $delegate_program_allow_list = Rule::ProgramOwnedList {
+            programs: PROGRAM_ALLOW_LIST.to_vec(),
+            field: PayloadKey::Delegate.to_string(),
+        };
     };
 }
 
 pub async fn create_default_metaplex_rule_set(
     context: &mut ProgramTestContext,
     creator: Keypair,
+    use_delegate_allow_list: bool,
 ) -> (Pubkey, AuthorizationData) {
     let name = String::from("Metaplex Royalty Enforcement");
     let (ruleset_addr, _ruleset_bump) =
@@ -104,6 +112,7 @@ pub async fn create_default_metaplex_rule_set(
         authority_program_allow_list,
         authority_pda_match,
         nft_amount,
+        delegate_program_allow_list,
     );
 
     // (source is owned by system program && dest is on allow list && destination is a PDA) ||
@@ -113,7 +122,7 @@ pub async fn create_default_metaplex_rule_set(
             Rule::All {
                 rules: vec![
                     source_owned_by_sys_program,
-                    dest_program_allow_list,
+                    dest_program_allow_list.clone(),
                     dest_pda_match,
                     nft_amount.clone(),
                 ],
@@ -130,11 +139,17 @@ pub async fn create_default_metaplex_rule_set(
                 rules: vec![
                     authority_program_allow_list,
                     authority_pda_match,
-                    nft_amount,
+                    nft_amount.clone(),
                 ],
             },
         ],
     };
+
+    let delegate_rule = Rule::All {
+        rules: vec![delegate_program_allow_list, nft_amount],
+    };
+
+    // operations
 
     let owner_operation = Operation::Transfer {
         scenario: TransferScenario::Holder,
@@ -146,6 +161,18 @@ pub async fn create_default_metaplex_rule_set(
 
     let sale_delegate_operation = Operation::Transfer {
         scenario: TransferScenario::SaleDelegate,
+    };
+
+    let delegate_sale_operation = Operation::Delegate {
+        scenario: DelegateScenario::Token(TokenDelegateRole::Sale),
+    };
+
+    let delegate_lockedtransfer_operation = Operation::Delegate {
+        scenario: DelegateScenario::Token(TokenDelegateRole::LockedTransfer),
+    };
+
+    let delegate_transfer_operation = Operation::Delegate {
+        scenario: DelegateScenario::Token(TokenDelegateRole::Transfer),
     };
 
     let mut royalty_rule_set = RuleSetV1::new(name, creator.pubkey());
@@ -161,6 +188,34 @@ pub async fn create_default_metaplex_rule_set(
     royalty_rule_set
         .add(sale_delegate_operation.to_string(), transfer_rule.clone())
         .unwrap();
+
+    if use_delegate_allow_list {
+        royalty_rule_set
+            .add(delegate_sale_operation.to_string(), delegate_rule.clone())
+            .unwrap();
+        royalty_rule_set
+            .add(
+                delegate_lockedtransfer_operation.to_string(),
+                delegate_rule.clone(),
+            )
+            .unwrap();
+        royalty_rule_set
+            .add(delegate_transfer_operation.to_string(), delegate_rule)
+            .unwrap();
+    } else {
+        royalty_rule_set
+            .add(delegate_sale_operation.to_string(), Rule::Pass.clone())
+            .unwrap();
+        royalty_rule_set
+            .add(
+                delegate_lockedtransfer_operation.to_string(),
+                Rule::Pass.clone(),
+            )
+            .unwrap();
+        royalty_rule_set
+            .add(delegate_transfer_operation.to_string(), Rule::Pass.clone())
+            .unwrap();
+    }
 
     // Serialize the RuleSet using RMP serde.
     let mut serialized_data = Vec::new();

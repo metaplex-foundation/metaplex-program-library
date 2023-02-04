@@ -992,7 +992,7 @@ test('Update: Update pNFT Config', async (t) => {
   const API = new InitTransactions();
   const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
 
-  const { mint, metadata, masterEdition } = await createAndMintDefaultAsset(
+  const { mint, metadata, masterEdition, token } = await createAndMintDefaultAsset(
     t,
     connection,
     API,
@@ -1021,6 +1021,7 @@ test('Update: Update pNFT Config', async (t) => {
     updateData,
     null,
     masterEdition,
+    token,
   );
   await updateTx.assertSuccess(t);
 
@@ -1038,7 +1039,7 @@ test('Update: Fail to update rule set on NFT', async (t) => {
   const authority = payer;
   const dummyRuleSet = Keypair.generate().publicKey;
 
-  const { mint, metadata, masterEdition } = await createAndMintDefaultAsset(
+  const { mint, metadata, masterEdition, token } = await createAndMintDefaultAsset(
     t,
     connection,
     API,
@@ -1064,6 +1065,7 @@ test('Update: Fail to update rule set on NFT', async (t) => {
     updateData,
     null,
     masterEdition,
+    token,
   );
   await updateTx.assertError(t, /Invalid token standard/);
 });
@@ -1107,7 +1109,7 @@ test('Update: Update existing pNFT rule set config to None', async (t) => {
   );
   await createRuleSetTx.assertSuccess(t);
 
-  const { mint, metadata, masterEdition } = await createAndMintDefaultAsset(
+  const { mint, metadata, masterEdition, token } = await createAndMintDefaultAsset(
     t,
     connection,
     API,
@@ -1132,7 +1134,7 @@ test('Update: Update existing pNFT rule set config to None', async (t) => {
     updateData,
     null,
     masterEdition,
-    null,
+    token,
     ruleSetPda,
   );
   await updateTx.assertSuccess(t);
@@ -1327,7 +1329,7 @@ test('Update: Holder Authority Type Not Supported', async (t) => {
   await updateTx.assertError(t);
 });
 
-test('Update: Update pNFT Config with locked token', async (t) => {
+test('Update: Cannot Update pNFT Config with locked token', async (t) => {
   const API = new InitTransactions();
   const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
 
@@ -1413,12 +1415,10 @@ test('Update: Update pNFT Config with locked token', async (t) => {
     updateData,
     null,
     masterEdition,
+    token,
   );
-  await updateTx.assertSuccess(t);
-
-  const updatedMetadata = await Metadata.fromAccountAddress(connection, metadata);
-
-  spok(t, updatedMetadata.programmableConfig, {
-    ruleSet: dummyRuleSet,
-  });
+  await updateTx.assertError(
+    t,
+    /Cannot update the rule set of a programmable asset that has a delegate/i,
+  );
 });

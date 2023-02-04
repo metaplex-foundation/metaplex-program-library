@@ -293,7 +293,7 @@ mod lock {
             .await
             .unwrap_err();
 
-        assert_custom_error!(error, MetadataError::LockedToken);
+        assert_custom_error_ix!(1, error, MetadataError::LockedToken);
     }
 
     #[tokio::test]

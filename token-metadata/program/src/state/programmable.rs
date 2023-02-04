@@ -2,7 +2,6 @@ use std::io::Error;
 
 use borsh::{BorshDeserialize, BorshSerialize};
 use mpl_utils::cmp_pubkeys;
-use num_derive::ToPrimitive;
 #[cfg(feature = "serde-feature")]
 use serde::{Deserialize, Serialize};
 use shank::ShankAccount;
@@ -17,7 +16,7 @@ use crate::{
     error::MetadataError,
     instruction::MetadataDelegateRole,
     pda::{find_metadata_delegate_record_account, find_token_record_account},
-    processor::{TransferScenario, UpdateScenario},
+    processor::{DelegateScenario, TransferScenario, UpdateScenario},
     utils::assert_owned_by,
 };
 
@@ -353,6 +352,7 @@ impl AuthorityType {
 pub enum Operation {
     Transfer { scenario: TransferScenario },
     Update { scenario: UpdateScenario },
+    Delegate { scenario: DelegateScenario },
 }
 
 impl ToString for Operation {
@@ -360,11 +360,14 @@ impl ToString for Operation {
         match self {
             Self::Transfer { scenario } => format!("Transfer:{}", scenario),
             Self::Update { scenario } => format!("Update:{}", scenario),
+            Self::Delegate { scenario } => format!("Delegate:{}", scenario),
         }
     }
 }
 
-#[derive(Debug, Clone, ToPrimitive)]
+#[repr(C)]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub enum PayloadKey {
     Amount,
     Authority,

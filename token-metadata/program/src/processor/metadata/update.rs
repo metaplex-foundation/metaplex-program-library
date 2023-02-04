@@ -138,7 +138,11 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
         token_account: token.as_ref(),
         metadata_delegate_record_info: ctx.accounts.delegate_record_info,
         metadata_delegate_role: Some(MetadataDelegateRole::Update),
-        precedence: &[AuthorityType::Metadata, AuthorityType::Delegate],
+        precedence: &[
+            AuthorityType::Metadata,
+            AuthorityType::Delegate,
+            AuthorityType::Holder,
+        ],
         ..Default::default()
     })?;
 

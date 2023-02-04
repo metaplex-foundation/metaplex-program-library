@@ -4452,9 +4452,7 @@
             "name": "map",
             "type": {
               "hashMap": [
-                {
-                  "defined": "PayloadKey"
-                },
+                "string",
                 {
                   "defined": "PayloadType"
                 }
@@ -5264,6 +5262,44 @@
       }
     },
     {
+      "name": "PayloadKey",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Amount"
+          },
+          {
+            "name": "Authority"
+          },
+          {
+            "name": "AuthoritySeeds"
+          },
+          {
+            "name": "Delegate"
+          },
+          {
+            "name": "DelegateSeeds"
+          },
+          {
+            "name": "Destination"
+          },
+          {
+            "name": "DestinationSeeds"
+          },
+          {
+            "name": "Holder"
+          },
+          {
+            "name": "Source"
+          },
+          {
+            "name": "SourceSeeds"
+          }
+        ]
+      }
+    },
+    {
       "name": "PayloadType",
       "type": {
         "kind": "enum",
@@ -5295,26 +5331,6 @@
             "fields": [
               "u64"
             ]
-          }
-        ]
-      }
-    },
-    {
-      "name": "PayloadKey",
-      "type": {
-        "kind": "enum",
-        "variants": [
-          {
-            "name": "Target"
-          },
-          {
-            "name": "Holder"
-          },
-          {
-            "name": "Authority"
-          },
-          {
-            "name": "Amount"
           }
         ]
       }

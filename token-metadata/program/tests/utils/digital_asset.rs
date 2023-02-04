@@ -294,10 +294,12 @@ impl DigitalAsset {
             builder.authorization_rules_program(mpl_token_auth_rules::ID);
         }
 
+        let compute_ix = ComputeBudgetInstruction::set_compute_unit_limit(400_000);
+
         let delegate_ix = builder.build(args.clone()).unwrap().instruction();
 
         let tx = Transaction::new_signed_with_payer(
-            &[delegate_ix],
+            &[compute_ix, delegate_ix],
             Some(&payer.pubkey()),
             &[&payer],
             context.last_blockhash,

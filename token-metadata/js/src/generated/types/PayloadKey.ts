@@ -11,10 +11,16 @@ import * as beet from '@metaplex-foundation/beet';
  * @category generated
  */
 export enum PayloadKey {
-  Target,
-  Holder,
-  Authority,
   Amount,
+  Authority,
+  AuthoritySeeds,
+  Delegate,
+  DelegateSeeds,
+  Destination,
+  DestinationSeeds,
+  Holder,
+  Source,
+  SourceSeeds,
 }
 
 /**

@@ -88,7 +88,7 @@ impl fmt::Display for MetadataDelegateRole {
             Self::Update => "update_delegate".to_string(),
         };
 
-        write!(f, "{}", message)
+        write!(f, "{message}")
     }
 }
 
