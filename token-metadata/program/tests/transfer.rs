@@ -370,8 +370,10 @@ mod auth_rules_transfer {
     use mpl_token_metadata::{
         error::MetadataError,
         instruction::DelegateArgs,
-        state::{ProgrammableConfig, TokenDelegateRole},
+        pda::find_token_record_account,
+        state::{ProgrammableConfig, TokenDelegateRole, TokenRecord},
     };
+    use solana_program::borsh::try_from_slice_unchecked;
 
     use super::*;
 
@@ -387,7 +389,8 @@ mod auth_rules_transfer {
 
         // Create rule-set for the transfer requiring the destination to be program owned
         // by Token Metadata program. (Token Owned Escrow scenario.)
-        let (rule_set, auth_data) = create_default_metaplex_rule_set(&mut context, payer).await;
+        let (rule_set, auth_data) =
+            create_default_metaplex_rule_set(&mut context, payer, false).await;
 
         // Create NFT for transfer tests.
         let mut nft = DigitalAsset::new();
@@ -497,7 +500,8 @@ mod auth_rules_transfer {
         let payer = context.payer.dirty_clone();
 
         // Create rule-set for the transfer; this has the Rooster program in the allowlist.
-        let (rule_set, mut auth_data) = create_default_metaplex_rule_set(&mut context, payer).await;
+        let (rule_set, mut auth_data) =
+            create_default_metaplex_rule_set(&mut context, payer, false).await;
 
         // Create NFT for transfer tests.
         let mut nft = DigitalAsset::new();
@@ -610,12 +614,14 @@ mod auth_rules_transfer {
         let mut program_test = ProgramTest::new("mpl_token_metadata", mpl_token_metadata::ID, None);
         program_test.add_program("mpl_token_auth_rules", mpl_token_auth_rules::ID, None);
         program_test.add_program("rooster", rooster::ID, None);
+        program_test.set_compute_max_units(400_000);
         let mut context = program_test.start_with_context().await;
 
         let payer = context.payer.dirty_clone();
 
         // Create rule-set for the transfer; this has the Rooster program in the allowlist.
-        let (rule_set, mut auth_data) = create_default_metaplex_rule_set(&mut context, payer).await;
+        let (rule_set, mut auth_data) =
+            create_default_metaplex_rule_set(&mut context, payer, false).await;
 
         // Create NFT for transfer tests.
         let mut nft = DigitalAsset::new();
@@ -774,12 +780,14 @@ mod auth_rules_transfer {
         let mut program_test = ProgramTest::new("mpl_token_metadata", mpl_token_metadata::ID, None);
         program_test.add_program("mpl_token_auth_rules", mpl_token_auth_rules::ID, None);
         program_test.add_program("rooster", rooster::ID, None);
+        program_test.set_compute_max_units(400_000);
         let mut context = program_test.start_with_context().await;
 
         let payer = context.payer.dirty_clone();
 
         // Create rule-set for the transfer; this has the Rooster program in the allowlist.
-        let (rule_set, mut auth_data) = create_default_metaplex_rule_set(&mut context, payer).await;
+        let (rule_set, mut auth_data) =
+            create_default_metaplex_rule_set(&mut context, payer, false).await;
 
         // Create NFT for transfer tests.
         let mut nft = DigitalAsset::new();
@@ -989,12 +997,14 @@ mod auth_rules_transfer {
         let mut program_test = ProgramTest::new("mpl_token_metadata", mpl_token_metadata::ID, None);
         program_test.add_program("mpl_token_auth_rules", mpl_token_auth_rules::ID, None);
         program_test.add_program("rooster", rooster::ID, None);
+        program_test.set_compute_max_units(400_000);
         let mut context = program_test.start_with_context().await;
 
         let payer = context.payer.dirty_clone();
 
         // create rule set for the transfer; this has the Rooster program in the allowlist
-        let (rule_set, mut auth_data) = create_default_metaplex_rule_set(&mut context, payer).await;
+        let (rule_set, mut auth_data) =
+            create_default_metaplex_rule_set(&mut context, payer, false).await;
 
         // create NFT for transfer tests
         let mut nft = DigitalAsset::new();
@@ -1029,6 +1039,13 @@ mod auth_rules_transfer {
         nft.delegate(&mut context, payer, delegate.pubkey(), delegate_args)
             .await
             .unwrap();
+
+        // asserts (before transfer)
+
+        let pda = get_account(&mut context, &nft.token_record.unwrap()).await;
+        let token_record: TokenRecord = try_from_slice_unchecked(&pda.data).unwrap();
+
+        assert_eq!(token_record.rule_set_revision, Some(0));
 
         let delegate_role = nft
             .get_token_delegate_role(&mut context, &nft.token.unwrap())
@@ -1108,5 +1125,22 @@ mod auth_rules_transfer {
 
         // Destination now has the token.
         assert_eq!(rooster_ata_account.amount, 1);
+
+        // asserts (after transfer)
+
+        let pda = get_account(&mut context, &nft.token_record.unwrap()).await;
+        let token_record: TokenRecord = try_from_slice_unchecked(&pda.data).unwrap();
+
+        assert_eq!(token_record.rule_set_revision, None);
+
+        let destination_token =
+            get_associated_token_address(&rooster_manager.pda(), &nft.mint.pubkey());
+
+        let (destination_token_record, _bump) =
+            find_token_record_account(&nft.mint.pubkey(), &destination_token);
+        let pda = get_account(&mut context, &destination_token_record).await;
+        let token_record: TokenRecord = try_from_slice_unchecked(&pda.data).unwrap();
+
+        assert_eq!(token_record.rule_set_revision, None);
     }
 }
