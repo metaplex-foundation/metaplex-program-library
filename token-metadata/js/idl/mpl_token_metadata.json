@@ -3063,7 +3063,7 @@
           "name": "payer",
           "isMut": true,
           "isSigner": true,
-          "desc": "Update authority"
+          "desc": "Payer"
         },
         {
           "name": "authority",
@@ -3085,7 +3085,7 @@
         },
         {
           "name": "tokenRecord",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false,
           "desc": "Token record account"
         },
@@ -3105,7 +3105,7 @@
           "name": "splTokenProgram",
           "isMut": false,
           "isSigner": false,
-          "desc": "Token Program"
+          "desc": "SPL Token Program"
         },
         {
           "name": "authorizationRulesProgram",
@@ -3186,21 +3186,21 @@
           "name": "ownerTokenRecord",
           "isMut": true,
           "isSigner": false,
-          "desc": "Token record account",
+          "desc": "Owner token record account",
           "optional": true
         },
         {
           "name": "destinationTokenRecord",
           "isMut": true,
           "isSigner": false,
-          "desc": "Token record account",
+          "desc": "Destination token record account",
           "optional": true
         },
         {
           "name": "authority",
           "isMut": false,
           "isSigner": true,
-          "desc": "Transfer authority (token or delegate owner)"
+          "desc": "Transfer authority (token owner or delegate)"
         },
         {
           "name": "payer",

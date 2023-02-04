@@ -514,6 +514,26 @@ impl InstructionBuilder for super::builders::Create {
     }
 }
 
+/// Migrates an asset to a ProgrammableAsset type.
+///
+/// # Accounts:
+///
+///
+///   0. `[writable]` Metadata account
+///   1. `[writable]` Edition account
+///   2. `[writable]` Token account
+///   3. `[]` Token account owner
+///   4. `[]` Mint account
+///   5. `[writable, signer]` Payer
+///   6. `[signer]` Update authority
+///   7. `[]` Collection metadata account
+///   8. `[]` Delegate record account
+///   9. `[writable]` Token record account
+///   10. `[]` System program
+///   11. `[]` Instruction sysvar account
+///   12. `[]` SPL Token Program
+///   13. `[optional]` Token Authorization Rules Program
+///   14. `[optional]` Token Authorization Rules account
 impl InstructionBuilder for super::builders::Migrate {
     fn instruction(&self) -> solana_program::instruction::Instruction {
         let mut accounts = vec![
@@ -559,15 +579,17 @@ impl InstructionBuilder for super::builders::Migrate {
 ///   1. `[optional]` Owner of the token account
 ///   2. `[]` Metadata account key (pda of ['metadata', program id, mint id])")]
 ///   3. `[optional]` Master Edition account
-///   4. `[writable]` Mint of token asset
-///   5. `[signer]` Authority (mint authority or metadata's update authority for NonFungible asests)
-///   6. `[signer, writable]` Payer
-///   7. `[]` System program
-///   8. `[]` Instructions sysvar account
-///   9. `[]` SPL Token program
-///   10. `[]` SPL Associated Token Account program
-///   11. `[optional]` Token Authorization Rules program
-///   12. `[optional]` Token Authorization Rules account
+///   4. `[optional]` Token record account
+///   5. `[writable]` Mint of token asset
+///   6. `[signer]` Authority (mint authority or metadata's update authority for NonFungible asests)
+///   7. `[optional]` Metadata delegate record
+///   8. `[signer, writable]` Payer
+///   9. `[]` System program
+///   10. `[]` Instructions sysvar account
+///   11. `[]` SPL Token program
+///   12. `[]` SPL Associated Token Account program
+///   13. `[optional]` Token Authorization Rules program
+///   14. `[optional]` Token Authorization Rules account
 impl InstructionBuilder for super::builders::Mint {
     fn instruction(&self) -> solana_program::instruction::Instruction {
         let mut accounts = vec![
@@ -619,15 +641,16 @@ impl InstructionBuilder for super::builders::Mint {
 ///   4. `[]` Mint of token asset
 ///   5. `[writable]` Metadata account
 ///   6. `[optional]` Edition of token asset
-///   7. `[signer] Transfer authority (token or delegate owner)
-///   8. `[optional, writable]` Delegate record PDA
-///   9. `[signer, writable]` Payer
-///   10. `[]` System Program
-///   11. `[]` Instructions sysvar account
-///   12. `[]` SPL Token Program
-///   13. `[]` SPL Associated Token Account program
-///   14. `[optional]` Token Authorization Rules Program
-///   15. `[optional]` Token Authorization Rules account
+///   7. `[optional, writable]` Owner token record account
+///   8. `[optional, writable]` Destination token record account
+///   9. `[signer] Transfer authority (token owner or delegate)
+///   10. `[signer, writable]` Payer
+///   11. `[]` System Program
+///   12. `[]` Instructions sysvar account
+///   13. `[]` SPL Token Program
+///   14. `[]` SPL Associated Token Account program
+///   15. `[optional]` Token Authorization Rules Program
+///   16. `[optional]` Token Authorization Rules account
 impl InstructionBuilder for super::builders::Transfer {
     fn instruction(&self) -> solana_program::instruction::Instruction {
         let mut accounts = vec![
@@ -677,6 +700,21 @@ impl InstructionBuilder for super::builders::Transfer {
     }
 }
 
+/// Updates the metadata of an asset.
+///
+/// # Accounts:
+///
+///   0. `[signer]` Update authority or delegate
+///   1. `[optional]` Delegate record PDA
+///   2. `[optional]` Token account
+///   3. `[]` Mint account
+///   4. `[writable]` Metadata account
+///   5. `[optional]` Edition account
+///   6. `[signer]` Payer
+///   7. `[]` System program
+///   8. `[]` System program
+///   9. `[optional]` Token Authorization Rules Program
+///   10. `[optional]` Token Authorization Rules account
 impl InstructionBuilder for super::builders::Update {
     fn instruction(&self) -> solana_program::instruction::Instruction {
         let mut accounts = vec![
