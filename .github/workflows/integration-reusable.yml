@@ -77,12 +77,6 @@ jobs:
           key: program-${{ inputs.name }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
         if: ${{ env.CACHE != 'false' }}
 
-      # Install JS SDK deps
-      - uses: ./.github/actions/yarn-install-and-build
-        with:
-          cache_id: sdk-${{ inputs.name }}
-          working_dir: ./${{ inputs.name }}/js
-
       # Build Rust Programs
       - uses: ./.github/actions/program
         with:
@@ -97,6 +91,12 @@ jobs:
       - uses: ./.github/actions/build-program
         with:
           name: ${{ inputs.name }}
+
+      # Install JS SDK deps
+      - uses: ./.github/actions/yarn-install-and-build
+        with:
+          cache_id: sdk-${{ inputs.name }}
+          working_dir: ./${{ inputs.name }}/js
 
       # Start local validator
       - name: start-local-test-validator
