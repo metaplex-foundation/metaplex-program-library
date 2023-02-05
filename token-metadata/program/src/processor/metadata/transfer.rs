@@ -193,9 +193,7 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
         token_program: ctx.accounts.spl_token_program_info.clone(),
     };
 
-    let token_standard = metadata
-        .token_standard
-        .ok_or(MetadataError::InvalidTokenStandard)?;
+    let token_standard = metadata.token_standard;
     let token = Account::unpack(&ctx.accounts.token_info.try_borrow_data()?)?;
 
     msg!("getting authority type");
@@ -269,7 +267,7 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
             }
         }
         _ => {
-            if matches!(token_standard, TokenStandard::ProgrammableNonFungible) {
+            if matches!(token_standard, Some(TokenStandard::ProgrammableNonFungible)) {
                 return Err(MetadataError::InvalidAuthorityType.into());
             }
 
@@ -290,7 +288,7 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
     }
 
     match token_standard {
-        TokenStandard::ProgrammableNonFungible => {
+        Some(TokenStandard::ProgrammableNonFungible) => {
             msg!("pNFT");
             // All pNFTs should have a token record passed in and existing.
             // The token delegate role may not be populated, however.

@@ -72,6 +72,7 @@ import {
   TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
 import { findTokenRecordPda } from '../utils/programmable';
+import { encode } from '@msgpack/msgpack';
 
 export class InitTransactions {
   readonly getKeypair: LoadOrGenKeypair | GenLabeledKeypair;
@@ -686,6 +687,86 @@ export class InitTransactions {
     return {
       tx: handler.sendAndConfirmTransaction(tx, [payer], 'tx: CreateOrUpdateRuleSet'),
     };
+  }
+
+  async createDefaultRuleSet(
+    t: Test,
+    handler: PayerTransactionHandler,
+    payer: Keypair,
+    amount = 1,
+  ): Promise<{
+    tx: ConfirmedTransactionAssertablePromise;
+    ruleSet: PublicKey;
+  }> {
+    const allowList = [Array.from(PROGRAM_ID.toBytes())];
+    const transferRules = {
+      All: {
+        rules: [
+          {
+            Amount: {
+              amount,
+              operator: 2 /* equal */,
+              field: 'Amount',
+            },
+          },
+          {
+            Any: {
+              rules: [
+                {
+                  ProgramOwnedList: {
+                    programs: allowList,
+                    field: 'Destination',
+                  },
+                },
+                {
+                  ProgramOwnedList: {
+                    programs: allowList,
+                    field: 'Source',
+                  },
+                },
+                {
+                  ProgramOwnedList: {
+                    programs: allowList,
+                    field: 'Authority',
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    };
+
+    const ruleSetName = 'default_ruleset_test';
+    const ruleSet = {
+      libVersion: 1,
+      ruleSetName: ruleSetName,
+      owner: Array.from(payer.publicKey.toBytes()),
+      operations: {
+        'Transfer:TransferDelegate': transferRules,
+        'Delegate:Sale': 'Pass',
+        'Delegate:Transfer': 'Pass',
+        'Delegate:LockedTransfer': 'Pass',
+      },
+    };
+    const serializedRuleSet = encode(ruleSet);
+
+    // find the rule set PDA
+    const [ruleSetPda] = PublicKey.findProgramAddressSync(
+      [Buffer.from('rule_set'), payer.publicKey.toBuffer(), Buffer.from(ruleSetName)],
+      TOKEN_AUTH_RULES_ID,
+    );
+
+    // creates the rule set
+    const { tx: createRuleSetTx } = await this.createRuleSet(
+      t,
+      payer,
+      ruleSetPda,
+      serializedRuleSet,
+      handler,
+    );
+
+    return { tx: createRuleSetTx, ruleSet: ruleSetPda };
   }
 
   async createMintAccount(
