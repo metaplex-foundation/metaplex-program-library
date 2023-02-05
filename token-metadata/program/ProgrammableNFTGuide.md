@@ -1,11 +1,11 @@
 # Programmable NFT Guide
 
 ## Developer packages
-Token metadata
+Token Metadata
 * :crab: Rust crate: [v1.8.1](https://crates.io/crates/mpl-token-metadata/1.8.1)
 * :package: NPM package: [v2.8.1](https://www.npmjs.com/package/@metaplex-foundation/mpl-token-metadata/v/2.8.1)
 
-Auth rules
+Token Authorization Rules
 * :crab: Rust crate: [v1.1.0](https://crates.io/crates/mpl-token-auth-rules/1.1.0)
 * :package: NPM package: [v1.1.0](https://www.npmjs.com/package/@metaplex-foundation/mpl-token-auth-rules/v/1.1.0)
 
