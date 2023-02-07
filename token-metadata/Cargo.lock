@@ -1865,7 +1865,7 @@ dependencies = [
  "bincode",
  "borsh",
  "clap 2.34.0",
- "mpl-token-metadata 1.8.2",
+ "mpl-token-metadata 1.8.3",
  "solana-clap-utils",
  "solana-cli-config",
  "solana-client",
@@ -1979,7 +1979,7 @@ dependencies = [
 
 [[package]]
 name = "mpl-token-metadata"
-version = "1.8.2"
+version = "1.8.3"
 dependencies = [
  "arrayref",
  "borsh",
