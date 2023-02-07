@@ -246,13 +246,10 @@ fn revoke_persistent_delegate(
                 return Err(MetadataError::MissingEditionAccount.into());
             }
         }
-        Some(_) => {
+        _ => {
             if !matches!(role, TokenDelegateRole::Standard) {
                 return Err(MetadataError::InvalidDelegateRole.into());
             }
-        }
-        None => {
-            return Err(MetadataError::CouldNotDetermineTokenStandard.into());
         }
     }
 
