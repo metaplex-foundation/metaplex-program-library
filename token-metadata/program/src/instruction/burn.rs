@@ -148,6 +148,11 @@ impl InstructionBuilder for super::builders::Burn {
             } else {
                 AccountMeta::new_readonly(crate::ID, false)
             },
+            if let Some(token_record) = self.token_record {
+                AccountMeta::new(token_record, false)
+            } else {
+                AccountMeta::new_readonly(crate::ID, false)
+            },
             AccountMeta::new_readonly(self.system_program, false),
             AccountMeta::new_readonly(self.sysvar_instructions, false),
             AccountMeta::new_readonly(self.spl_token_program, false),

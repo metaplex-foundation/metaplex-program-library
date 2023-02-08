@@ -513,11 +513,12 @@ pub enum MetadataInstruction {
     #[account(7, optional, name="parent_mint", desc="Print edition mint of the asset")]
     #[account(8, optional, name="parent_token", desc="Print edition token account to close")]
     #[account(9, optional, writable, name="edition_marker", desc="Edition marker account")]
-    #[account(10, name="system_program", desc="System program")]
-    #[account(11, name="sysvar_instructions", desc="Instructions sysvar account")]
-    #[account(12, name="spl_token_program", desc="SPL Token Program")]
-    #[account(13, optional, name="authorization_rules", desc="Token Authorization Rules account")]
-    #[account(14, optional, name="authorization_rules_program", desc="Token Authorization Rules Program")]
+    #[account(10, optional, writable, name="token_record", desc="Token record account")]
+    #[account(11, name="system_program", desc="System program")]
+    #[account(12, name="sysvar_instructions", desc="Instructions sysvar account")]
+    #[account(13, name="spl_token_program", desc="SPL Token Program")]
+    #[account(14, optional, name="authorization_rules", desc="Token Authorization Rules account")]
+    #[account(15, optional, name="authorization_rules_program", desc="Token Authorization Rules Program")]
     #[default_optional_accounts]
     Burn(BurnArgs),
 

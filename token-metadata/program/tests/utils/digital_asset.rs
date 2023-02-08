@@ -71,6 +71,8 @@ impl DigitalAsset {
         context: &mut ProgramTestContext,
         args: BurnArgs,
     ) -> Result<(), BanksClientError> {
+        let token_standard = self.get_metadata(context).await.token_standard.unwrap();
+
         let mut builder = BurnBuilder::new();
         builder
             .owner(context.payer.pubkey())
@@ -78,6 +80,10 @@ impl DigitalAsset {
             .edition(self.master_edition.unwrap())
             .mint(self.mint.pubkey())
             .token(self.token.unwrap());
+
+        if token_standard == TokenStandard::ProgrammableNonFungible {
+            builder.token_record(self.token_record.unwrap());
+        }
 
         let burn_ix = builder.build(args).unwrap().instruction();
 
@@ -737,7 +743,7 @@ impl DigitalAsset {
         context: &mut ProgramTestContext,
     ) -> Result<(), BanksClientError> {
         match self.token_standard.unwrap() {
-            TokenStandard::NonFungible => {
+            TokenStandard::NonFungible | TokenStandard::ProgrammableNonFungible => {
                 // Metadata, Master Edition and token account are burned.
                 let md_account = context
                     .banks_client

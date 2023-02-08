@@ -1,5 +1,7 @@
 use super::*;
-use crate::processor::burn::nonfungible_edition::burn_nonfungible_edition;
+use crate::{
+    processor::burn::nonfungible_edition::burn_nonfungible_edition, state::TokenRecord, utils::thaw,
+};
 
 pub fn burn<'a>(
     program_id: &Pubkey,
@@ -88,18 +90,18 @@ fn burn_v1(program_id: &Pubkey, ctx: Context<Burn>, args: BurnArgs) -> ProgramRe
         ctx.accounts.token_info,
     )?;
 
-    let collection_metadata =
-        if let Some(collection_metadata_info) = ctx.accounts.collection_metadata_info {
-            Some(Metadata::from_account_info(collection_metadata_info)?)
-        } else {
-            None
-        };
+    let collection_metadata = ctx
+        .accounts
+        .collection_metadata_info
+        .map(|r| Metadata::from_account_info(r))
+        .transpose()?;
 
     if metadata.token_standard.is_none() {
         return Err(MetadataError::InvalidTokenStandard.into());
     }
     let token_standard = metadata.token_standard.unwrap();
 
+    // NonFungible types can only burn one item.
     if matches!(
         token_standard,
         TokenStandard::NonFungibleEdition
@@ -122,6 +124,38 @@ fn burn_v1(program_id: &Pubkey, ctx: Context<Burn>, args: BurnArgs) -> ProgramRe
         }
         TokenStandard::NonFungibleEdition => {
             burn_nonfungible_edition(&ctx)?;
+        }
+        TokenStandard::ProgrammableNonFungible => {
+            // All the checks are the same as burning a NonFungible token
+            // execpt we also have to check if there's a persistent delegate set.
+            let token_record = ctx
+                .accounts
+                .token_record_info
+                .map(|r| TokenRecord::from_account_info(r))
+                .transpose()?;
+
+            if token_record.is_none() {
+                return Err(MetadataError::MissingTokenRecord.into());
+            }
+            let token_record = token_record.unwrap();
+
+            if token_record.delegate.is_some() {
+                return Err(MetadataError::CannotBurnWithDelegate.into());
+            }
+
+            thaw(
+                ctx.accounts.mint_info.clone(),
+                ctx.accounts.token_info.clone(),
+                ctx.accounts.edition_info.clone(),
+                ctx.accounts.spl_token_program_info.clone(),
+            )?;
+
+            let args = BurnNonFungibleArgs {
+                collection_metadata,
+                metadata,
+            };
+
+            burn_nonfungible(&ctx, args)?;
         }
 
         _ => todo!(),

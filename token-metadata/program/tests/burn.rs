@@ -36,6 +36,32 @@ mod burn_legacy_assets {
     }
 
     #[tokio::test]
+    async fn burn_programmable_nonfungible() {
+        let mut context = program_test().start_with_context().await;
+
+        let mut da = DigitalAsset::new();
+        da.create_and_mint(
+            &mut context,
+            TokenStandard::ProgrammableNonFungible,
+            None,
+            None,
+            1,
+        )
+        .await
+        .unwrap();
+
+        let args = BurnArgs::V1 {
+            authorization_data: None,
+            amount: 1,
+        };
+
+        da.burn(&mut context, args).await.unwrap();
+
+        // Assert that metadata, edition and token account are closed.
+        da.assert_burned(&mut context).await.unwrap();
+    }
+
+    #[tokio::test]
     async fn burn_nonfungible_edition() {
         let mut context = program_test().start_with_context().await;
 
