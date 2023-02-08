@@ -503,15 +503,21 @@ pub enum MetadataInstruction {
     /// 
     /// The configurable `authorization_rules` only apply to `ProgrammableNonFungible` assets and
     /// it may require additional accounts to validate the rules.
-    #[account(0, writable, name="metadata", desc="Metadata (pda of ['metadata', program id, mint id])")]
-    #[account(1, signer, writable, name="owner", desc="Asset owner")]
-    #[account(2, writable, name="mint", desc="Mint of token asset")]
-    #[account(3, writable, name="token_account", desc="Token account to close")]
-    #[account(4, writable, name="master_edition_account", desc="MasterEdition of the asset")]
-    #[account(5, name="spl_token_program", desc="SPL Token Program")]
-    #[account(6, optional, writable, name="collection_metadata", desc="Metadata of the Collection")]
-    #[account(7, optional, name="authorization_rules", desc="Token Authorization Rules account")]
-    #[account(8, optional, name="authorization_rules_program", desc="Token Authorization Rules Program")]
+    #[account(0, signer, writable, name="owner", desc="Asset owner")]
+    #[account(1, optional, writable, name="collection_metadata", desc="Metadata of the Collection")]
+    #[account(2, writable, name="metadata", desc="Metadata (pda of ['metadata', program id, mint id])")]
+    #[account(3, writable, name="edition", desc="MasterEdition of the asset")]
+    #[account(4, writable, name="mint", desc="Mint of token asset")]
+    #[account(5, writable, name="token", desc="Token account to close")]
+    #[account(6, optional, name="parent_edition", desc="Print edition token account")]
+    #[account(7, optional, name="parent_mint", desc="Print edition mint of the asset")]
+    #[account(8, optional, name="parent_token", desc="Print edition token account to close")]
+    #[account(9, optional, writable, name="edition_marker", desc="Edition marker account")]
+    #[account(10, name="system_program", desc="System program")]
+    #[account(11, name="sysvar_instructions", desc="Instructions sysvar account")]
+    #[account(12, name="spl_token_program", desc="SPL Token Program")]
+    #[account(13, optional, name="authorization_rules", desc="Token Authorization Rules account")]
+    #[account(14, optional, name="authorization_rules_program", desc="Token Authorization Rules Program")]
     #[default_optional_accounts]
     Burn(BurnArgs),
 

@@ -55,7 +55,7 @@ mod burn_edition_nft {
         .await
         .unwrap();
 
-        // Metadata, and token account are burned.
+        // Metadata, edition, and token account are burned.
         let print_md = context
             .banks_client
             .get_account(print_edition.new_metadata_pubkey)

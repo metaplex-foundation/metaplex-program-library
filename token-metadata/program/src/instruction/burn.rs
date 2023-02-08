@@ -6,6 +6,7 @@ use solana_program::{
     pubkey::Pubkey,
 };
 
+use super::InstructionBuilder;
 use crate::{instruction::MetadataInstruction, processor::AuthorizationData};
 
 ///# Burn Edition NFT
@@ -14,15 +15,15 @@ use crate::{instruction::MetadataInstruction, processor::AuthorizationData};
 ///
 /// ### Accounts:
 ///
-///   0. [writable] Print NFT Metadata Account
-///   1. [writable, signer]</code> Owner of Print NFT
-///   2. [writable] Mint of Print Edition NFT
-///   3. [writable] Mint of Master Edition NFT
-///   4. [writable] Print Edition Token Account
-///   5. [writable] Master Edition Token Account
-///   6. [writable] Master Edition PDA Account
-///   7. [writable] Print Edition PDA Account
-///   8. [writable] Edition Marker PDA Account
+///   0. `[writable]` Print NFT Metadata Account
+///   1. `[writable, signer]` Owner of Print NFT
+///   2. `[writable]` Mint of Print Edition NFT
+///   3. `[writable]` Mint of Master Edition NFT
+///   4. `[writable]` Print Edition Token Account
+///   5. `[writable]` Master Edition Token Account
+///   6. `[writable]` Master Edition PDA Account
+///   7. `[writable]` Print Edition PDA Account
+///   8. `[writable]` Edition Marker PDA Account
 ///   9. [] SPL Token program.
 pub fn burn_edition_nft(
     program_id: Pubkey,
@@ -103,7 +104,70 @@ pub fn burn_nft(
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub enum BurnArgs {
     V1 {
+        /// The amount of the token to burn
+        amount: u64,
         /// Required authorization data to validate the request.
         authorization_data: Option<AuthorizationData>,
     },
+}
+
+/// Burn an asset.
+///
+/// # Accounts:
+///
+///
+///   0.  `[signer, writable]` Owner of the asset
+///   1.  `[optional, writable]` Collection Metadata account
+///   2.  `[writable]` Item Metadata account
+///   3.  `[writable]` Edition account
+///   4.  `[writable]` Mint account
+///   5.  `[writable]` Token account
+///   6.  `[]` System program
+///   7.  `[]` Instruction sysvar account
+///   8.  `[]` SPL Token Program
+///   9.  `[optional]` Token Authorization Rules Program
+///   10. `[optional]` Token Authorization Rules account
+impl InstructionBuilder for super::builders::Burn {
+    fn instruction(&self) -> solana_program::instruction::Instruction {
+        let mut accounts = vec![
+            AccountMeta::new(self.owner, true),
+            if let Some(collection_metadata) = self.collection_metadata {
+                AccountMeta::new(collection_metadata, false)
+            } else {
+                AccountMeta::new_readonly(crate::ID, false)
+            },
+            AccountMeta::new(self.metadata, false),
+            AccountMeta::new(self.edition, false),
+            AccountMeta::new(self.mint, false),
+            AccountMeta::new(self.token, false),
+            AccountMeta::new_readonly(self.parent_edition.unwrap_or(crate::ID), false),
+            AccountMeta::new_readonly(self.parent_mint.unwrap_or(crate::ID), false),
+            AccountMeta::new_readonly(self.parent_token.unwrap_or(crate::ID), false),
+            if let Some(edition_marker) = self.edition_marker {
+                AccountMeta::new(edition_marker, false)
+            } else {
+                AccountMeta::new_readonly(crate::ID, false)
+            },
+            AccountMeta::new_readonly(self.system_program, false),
+            AccountMeta::new_readonly(self.sysvar_instructions, false),
+            AccountMeta::new_readonly(self.spl_token_program, false),
+        ];
+
+        // Optional authorization rules accounts
+        if let Some(rules) = &self.authorization_rules {
+            accounts.push(AccountMeta::new_readonly(mpl_token_auth_rules::ID, false));
+            accounts.push(AccountMeta::new_readonly(*rules, false));
+        } else {
+            accounts.push(AccountMeta::new_readonly(crate::ID, false));
+            accounts.push(AccountMeta::new_readonly(crate::ID, false));
+        }
+
+        Instruction {
+            program_id: crate::ID,
+            accounts,
+            data: MetadataInstruction::Burn(self.args.clone())
+                .try_to_vec()
+                .unwrap(),
+        }
+    }
 }

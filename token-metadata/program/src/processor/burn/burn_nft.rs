@@ -24,7 +24,7 @@ use crate::{
     utils::clean_write_metadata,
 };
 
-pub fn process_burn_nft(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
+pub fn process_burn_nft<'a>(program_id: &Pubkey, accounts: &'a [AccountInfo<'a>]) -> ProgramResult {
     let account_info_iter = &mut accounts.iter();
 
     let metadata_info = next_account_info(account_info_iter)?;

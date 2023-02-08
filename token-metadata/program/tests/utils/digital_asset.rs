@@ -2,11 +2,11 @@ use mpl_token_metadata::{
     id,
     instruction::{
         builders::{
-            CreateBuilder, DelegateBuilder, LockBuilder, MigrateBuilder, MintBuilder,
+            BurnBuilder, CreateBuilder, DelegateBuilder, LockBuilder, MigrateBuilder, MintBuilder,
             RevokeBuilder, TransferBuilder, UnlockBuilder,
         },
-        CreateArgs, DelegateArgs, InstructionBuilder, LockArgs, MetadataDelegateRole, MigrateArgs,
-        MintArgs, RevokeArgs, TransferArgs, UnlockArgs,
+        BurnArgs, CreateArgs, DelegateArgs, InstructionBuilder, LockArgs, MetadataDelegateRole,
+        MigrateArgs, MintArgs, RevokeArgs, TransferArgs, UnlockArgs,
     },
     pda::{find_metadata_delegate_record_account, find_token_record_account},
     processor::AuthorizationData,
@@ -38,6 +38,7 @@ pub struct DigitalAsset {
     pub token: Option<Pubkey>,
     pub master_edition: Option<Pubkey>,
     pub token_record: Option<Pubkey>,
+    pub token_standard: Option<TokenStandard>,
 }
 
 impl Default for DigitalAsset {
@@ -61,7 +62,33 @@ impl DigitalAsset {
             token: None,
             master_edition: None,
             token_record: None,
+            token_standard: None,
         }
+    }
+
+    pub async fn burn(
+        &mut self,
+        context: &mut ProgramTestContext,
+        args: BurnArgs,
+    ) -> Result<(), BanksClientError> {
+        let mut builder = BurnBuilder::new();
+        builder
+            .owner(context.payer.pubkey())
+            .metadata(self.metadata)
+            .edition(self.master_edition.unwrap())
+            .mint(self.mint.pubkey())
+            .token(self.token.unwrap());
+
+        let burn_ix = builder.build(args).unwrap().instruction();
+
+        let transaction = Transaction::new_signed_with_payer(
+            &[burn_ix],
+            Some(&context.payer.pubkey()),
+            &[&context.payer],
+            context.last_blockhash,
+        );
+
+        context.banks_client.process_transaction(transaction).await
     }
 
     pub async fn create(
@@ -136,6 +163,7 @@ impl DigitalAsset {
         );
 
         self.master_edition = master_edition;
+        self.token_standard = Some(token_standard);
 
         context.banks_client.process_transaction(tx).await
     }
@@ -334,7 +362,12 @@ impl DigitalAsset {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await
+        context.banks_client.process_transaction(tx).await.unwrap();
+
+        let md = self.get_metadata(context).await;
+        self.token_standard = md.token_standard;
+
+        Ok(())
     }
 
     pub async fn revoke(
@@ -697,6 +730,39 @@ impl DigitalAsset {
         }
 
         false
+    }
+
+    pub async fn assert_burned(
+        &self,
+        context: &mut ProgramTestContext,
+    ) -> Result<(), BanksClientError> {
+        match self.token_standard.unwrap() {
+            TokenStandard::NonFungible => {
+                // Metadata, Master Edition and token account are burned.
+                let md_account = context
+                    .banks_client
+                    .get_account(self.metadata)
+                    .await
+                    .unwrap();
+                let token_account = context
+                    .banks_client
+                    .get_account(self.token.unwrap())
+                    .await
+                    .unwrap();
+                let master_edition_account = context
+                    .banks_client
+                    .get_account(self.master_edition.unwrap())
+                    .await
+                    .unwrap();
+
+                assert!(md_account.is_none());
+                assert!(token_account.is_none());
+                assert!(master_edition_account.is_none());
+            }
+            _ => unimplemented!(),
+        }
+
+        Ok(())
     }
 }
 

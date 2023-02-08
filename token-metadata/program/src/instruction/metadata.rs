@@ -643,7 +643,7 @@ impl InstructionBuilder for super::builders::Mint {
 ///   6. `[optional]` Edition of token asset
 ///   7. `[optional, writable]` Owner token record account
 ///   8. `[optional, writable]` Destination token record account
-///   9. `[signer] Transfer authority (token owner or delegate)
+///   9. `[signer]` Transfer authority (token owner or delegate)
 ///   10. `[signer, writable]` Payer
 ///   11. `[]` System Program
 ///   12. `[]` Instructions sysvar account

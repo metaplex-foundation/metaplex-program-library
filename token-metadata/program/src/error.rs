@@ -687,6 +687,26 @@ pub enum MetadataError {
     /// 173
     #[error("Cannot update the rule set of a programmable asset that has a delegate")]
     CannotUpdateAssetWithDelegate,
+
+    /// 174
+    #[error("Invalid token amount for this operation or token standard")]
+    InvalidAmount,
+
+    /// 175
+    #[error("Missing parent mint account")]
+    MissingParentMintAccount,
+
+    /// 176
+    #[error("Missing parent edition account")]
+    MissingParentEditionAccount,
+
+    /// 177
+    #[error("Missing parent token account")]
+    MissingParentTokenAccount,
+
+    /// 178
+    #[error("Missing edition marker account")]
+    MissingEditionMarkerAccount,
 }
 
 impl PrintProgramError for MetadataError {
