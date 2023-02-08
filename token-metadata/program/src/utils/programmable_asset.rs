@@ -1,4 +1,3 @@
-use borsh::BorshSerialize;
 use mpl_token_auth_rules::{
     instruction::{builders::ValidateBuilder, InstructionBuilder, ValidateArgs},
     payload::PayloadType,
@@ -16,7 +15,7 @@ use crate::{
     pda::{EDITION, PREFIX},
     processor::{AuthorizationData, TransferScenario},
     state::{
-        Operation, PayloadKey, ProgrammableConfig, ToAccountMeta, TokenMetadataAccount,
+        Operation, PayloadKey, ProgrammableConfig, Resizable, ToAccountMeta, TokenMetadataAccount,
         TokenRecord, TOKEN_RECORD_SEED,
     },
 };
@@ -63,9 +62,8 @@ pub fn create_token_record_account<'a>(
         bump: bump[0],
         ..Default::default()
     };
-    token_record.serialize(&mut *token_record_info.try_borrow_mut_data()?)?;
 
-    Ok(())
+    token_record.save(token_record_info, payer_info, system_program_info)
 }
 
 pub fn freeze<'a>(
@@ -225,11 +223,11 @@ pub fn auth_rules_validate(params: AuthRulesValidateParams) -> ProgramResult {
             };
 
             let mut additional_rule_accounts = vec![];
-            if let Some(target_info) = source_info {
-                additional_rule_accounts.push(target_info);
+            if let Some(source_info) = source_info {
+                additional_rule_accounts.push(source_info);
             }
-            if let Some(target_info) = destination_info {
-                additional_rule_accounts.push(target_info);
+            if let Some(destination_info) = destination_info {
+                additional_rule_accounts.push(destination_info);
             }
             if let Some(authority_info) = authority_info {
                 additional_rule_accounts.push(authority_info);
@@ -267,6 +265,22 @@ pub fn auth_rules_validate(params: AuthRulesValidateParams) -> ProgramResult {
                     // Transfer Destination
                     auth_data.payload.insert(
                         PayloadKey::Destination.to_string(),
+                        PayloadType::Pubkey(*destination_info.key),
+                    );
+                }
+                Operation::Delegate { scenario: _ } => {
+                    // get account infos
+                    let destination_info =
+                        destination_info.ok_or(MetadataError::InvalidOperation)?;
+
+                    // delegate amount
+                    auth_data
+                        .payload
+                        .insert(PayloadKey::Amount.to_string(), PayloadType::Number(amount));
+
+                    // delegate authority
+                    auth_data.payload.insert(
+                        PayloadKey::Delegate.to_string(),
                         PayloadType::Pubkey(*destination_info.key),
                     );
                 }

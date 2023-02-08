@@ -3,7 +3,10 @@ use std::fmt;
 use borsh::{BorshDeserialize, BorshSerialize};
 #[cfg(feature = "serde-feature")]
 use serde::{Deserialize, Serialize};
-use solana_program::instruction::{AccountMeta, Instruction};
+use solana_program::{
+    instruction::{AccountMeta, Instruction},
+    pubkey::Pubkey,
+};
 
 use super::InstructionBuilder;
 use crate::{instruction::MetadataInstruction, processor::AuthorizationData};
@@ -43,6 +46,13 @@ pub enum DelegateArgs {
     StandardV1 {
         amount: u64,
     },
+    LockedTransferV1 {
+        amount: u64,
+        /// locked destination pubkey
+        locked_address: Pubkey,
+        /// Required authorization data to validate the request.
+        authorization_data: Option<AuthorizationData>,
+    },
 }
 
 #[repr(C)]
@@ -56,6 +66,7 @@ pub enum RevokeArgs {
     UtilityV1,
     StakingV1,
     StandardV1,
+    LockedTransferV1,
 }
 
 #[repr(C)]
@@ -77,7 +88,7 @@ impl fmt::Display for MetadataDelegateRole {
             Self::Update => "update_delegate".to_string(),
         };
 
-        write!(f, "{}", message)
+        write!(f, "{message}")
     }
 }
 
@@ -85,19 +96,20 @@ impl fmt::Display for MetadataDelegateRole {
 ///
 /// # Accounts:
 ///
-///   0. `[writable]` Delegate record account
+///   0. `[optional, writable]` Delegate record account
 ///   1. `[]` Delegated owner
 ///   2. `[writable]` Metadata account
 ///   3. `[optional]` Master Edition account
-///   4. `[]` Mint account
-///   5. `[optional, writable]` Token account
-///   6. `[signer]` Approver (update authority or token owner) to approve the delegation
-///   7. `[signer, writable]` Payer
-///   8. `[]` System Program
-///   9. `[]` Instructions sysvar account
-///   10. `[optional]` SPL Token Program
-///   11. `[optional]` Token Authorization Rules program
-///   12. `[optional]` Token Authorization Rules account
+///   4. `[optional, writable]` Token record account
+///   5. `[]` Mint account
+///   6. `[optional, writable]` Token account
+///   7. `[signer]` Update authority or token owner
+///   8. `[signer, writable]` Payer
+///   9. `[]` System Program
+///   10. `[]` Instructions sysvar account
+///   11. `[optional]` SPL Token Program
+///   12. `[optional]` Token Authorization Rules program
+///   13. `[optional]` Token Authorization Rules account
 impl InstructionBuilder for super::builders::Delegate {
     fn instruction(&self) -> solana_program::instruction::Instruction {
         let accounts = vec![
@@ -143,19 +155,20 @@ impl InstructionBuilder for super::builders::Delegate {
 ///
 /// # Accounts:
 ///
-///   0. `[writable]` Delegate record account
+///   0. `[optional, writable]` Delegate record account
 ///   1. `[]` Delegated owner
 ///   2. `[writable]` Metadata account
 ///   3. `[optional]` Master Edition account
-///   4. `[]` Mint account
-///   5. `[optional, writable]` Token account
-///   6. `[signer]` Authority (update authority, token owner or delegate) of the revoke
-///   7. `[signer, writable]` Payer
-///   8. `[]` System Program
-///   9. `[]` Instructions sysvar account
-///   10. `[optional]` SPL Token Program
-///   11. `[optional]` Token Authorization Rules program
-///   12. `[optional]` Token Authorization Rules account
+///   4. `[optional, writable]` Token record account
+///   5. `[]` Mint account
+///   6. `[optional, writable]` Token account
+///   7. `[signer]` Update authority or token owner
+///   8. `[signer, writable]` Payer
+///   9. `[]` System Program
+///   10. `[]` Instructions sysvar account
+///   11. `[optional]` SPL Token Program
+///   12. `[optional]` Token Authorization Rules program
+///   13. `[optional]` Token Authorization Rules account
 impl InstructionBuilder for super::builders::Revoke {
     fn instruction(&self) -> solana_program::instruction::Instruction {
         let accounts = vec![

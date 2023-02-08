@@ -1,5 +1,5 @@
 {
-  "version": "4.5.1",
+  "version": "4.6.0",
   "name": "candy_machine",
   "instructions": [
     {
@@ -1171,7 +1171,7 @@
   "metadata": {
     "address": "cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ",
     "origin": "anchor",
-    "binaryVersion": "0.25.0",
-    "libVersion": "0.25.0"
+    "binaryVersion": "0.26.0",
+    "libVersion": "0.26.0"
   }
 }

@@ -11,6 +11,7 @@ import * as beetSolana from '@metaplex-foundation/beet-solana';
 import { Key, keyBeet } from '../types/Key';
 import { TokenState, tokenStateBeet } from '../types/TokenState';
 import { TokenDelegateRole, tokenDelegateRoleBeet } from '../types/TokenDelegateRole';
+import * as customSerializer from '../../custom/token-record-deserializer';
 
 /**
  * Arguments used to create {@link TokenRecord}
@@ -24,6 +25,7 @@ export type TokenRecordArgs = {
   ruleSetRevision: beet.COption<beet.bignum>;
   delegate: beet.COption<web3.PublicKey>;
   delegateRole: beet.COption<TokenDelegateRole>;
+  lockedTransfer: beet.COption<web3.PublicKey>;
 };
 /**
  * Holds the data for the {@link TokenRecord} Account and provides de/serialization
@@ -40,6 +42,7 @@ export class TokenRecord implements TokenRecordArgs {
     readonly ruleSetRevision: beet.COption<beet.bignum>,
     readonly delegate: beet.COption<web3.PublicKey>,
     readonly delegateRole: beet.COption<TokenDelegateRole>,
+    readonly lockedTransfer: beet.COption<web3.PublicKey>,
   ) {}
 
   /**
@@ -53,6 +56,7 @@ export class TokenRecord implements TokenRecordArgs {
       args.ruleSetRevision,
       args.delegate,
       args.delegateRole,
+      args.lockedTransfer,
     );
   }
 
@@ -99,7 +103,7 @@ export class TokenRecord implements TokenRecordArgs {
    * @returns a tuple of the account data and the offset up to which the buffer was read to obtain it.
    */
   static deserialize(buf: Buffer, offset = 0): [TokenRecord, number] {
-    return tokenRecordBeet.deserialize(buf, offset);
+    return resolvedDeserialize(buf, offset);
   }
 
   /**
@@ -107,7 +111,7 @@ export class TokenRecord implements TokenRecordArgs {
    * @returns a tuple of the created Buffer and the offset up to which the buffer was written to store it.
    */
   serialize(): [Buffer, number] {
-    return tokenRecordBeet.serialize(this);
+    return resolvedSerialize(this);
   }
 
   /**
@@ -150,6 +154,7 @@ export class TokenRecord implements TokenRecordArgs {
       ruleSetRevision: this.ruleSetRevision,
       delegate: this.delegate,
       delegateRole: this.delegateRole,
+      lockedTransfer: this.lockedTransfer,
     };
   }
 }
@@ -166,7 +171,22 @@ export const tokenRecordBeet = new beet.FixableBeetStruct<TokenRecord, TokenReco
     ['ruleSetRevision', beet.coption(beet.u64)],
     ['delegate', beet.coption(beetSolana.publicKey)],
     ['delegateRole', beet.coption(tokenDelegateRoleBeet)],
+    ['lockedTransfer', beet.coption(beetSolana.publicKey)],
   ],
   TokenRecord.fromArgs,
   'TokenRecord',
 );
+
+const serializer = customSerializer as unknown as {
+  serialize: typeof tokenRecordBeet.serialize;
+  deserialize: typeof tokenRecordBeet.deserialize;
+};
+
+const resolvedSerialize =
+  typeof serializer.serialize === 'function'
+    ? serializer.serialize.bind(serializer)
+    : tokenRecordBeet.serialize.bind(tokenRecordBeet);
+const resolvedDeserialize =
+  typeof serializer.deserialize === 'function'
+    ? serializer.deserialize.bind(serializer)
+    : tokenRecordBeet.deserialize.bind(tokenRecordBeet);

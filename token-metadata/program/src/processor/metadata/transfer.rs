@@ -1,6 +1,5 @@
 use std::fmt::Display;
 
-use borsh::BorshDeserialize;
 use mpl_token_auth_rules::processor::cmp_pubkeys;
 use mpl_utils::{assert_signer, token::TokenTransferParams};
 use solana_program::{
@@ -18,12 +17,15 @@ use solana_program::{
 use spl_token::state::Account;
 
 use crate::{
-    assertions::{assert_keys_equal, assert_owned_by, metadata::assert_holding_amount},
+    assertions::{
+        assert_keys_equal, assert_owned_by, assert_token_matches_owner_and_mint,
+        metadata::assert_holding_amount,
+    },
     error::MetadataError,
     instruction::{Context, Transfer, TransferArgs},
     pda::find_token_record_account,
     state::{
-        AuthorityRequest, AuthorityType, Metadata, Operation, TokenDelegateRole,
+        AuthorityRequest, AuthorityType, Metadata, Operation, Resizable, TokenDelegateRole,
         TokenMetadataAccount, TokenRecord, TokenStandard,
     },
     utils::{
@@ -144,6 +146,11 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
         )?;
     } else {
         assert_owned_by(ctx.accounts.destination_info, &spl_token::id())?;
+        assert_token_matches_owner_and_mint(
+            ctx.accounts.destination_info,
+            ctx.accounts.destination_owner_info.key,
+            ctx.accounts.mint_info.key,
+        )?;
     }
 
     // Check program IDs.
@@ -176,6 +183,18 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
     msg!("deserializing metadata");
     let metadata = Metadata::from_account_info(ctx.accounts.metadata_info)?;
 
+    // Must be the actual current owner of the token where
+    // mint, token, owner and metadata accounts all match up.
+    assert_holding_amount(
+        &crate::ID,
+        ctx.accounts.token_owner_info,
+        ctx.accounts.metadata_info,
+        &metadata,
+        ctx.accounts.mint_info,
+        ctx.accounts.token_info,
+        amount,
+    )?;
+
     let token_transfer_params: TokenTransferParams = TokenTransferParams {
         mint: ctx.accounts.mint_info.clone(),
         source: ctx.accounts.token_info.clone(),
@@ -186,9 +205,7 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
         token_program: ctx.accounts.spl_token_program_info.clone(),
     };
 
-    let token_standard = metadata
-        .token_standard
-        .ok_or(MetadataError::InvalidTokenStandard)?;
+    let token_standard = metadata.token_standard;
     let token = Account::unpack(&ctx.accounts.token_info.try_borrow_data()?)?;
 
     msg!("getting authority type");
@@ -202,6 +219,7 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
         token_delegate_roles: vec![
             TokenDelegateRole::Sale,
             TokenDelegateRole::Transfer,
+            TokenDelegateRole::LockedTransfer,
             TokenDelegateRole::Migration,
         ],
         ..Default::default()
@@ -240,18 +258,6 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
             // PDA to go around this restriction for cases where they are passing through a proper system wallet
             // signer via an invoke call.
             is_wallet_to_wallet = !is_cpi && wallets_are_system_program_owned;
-
-            // Must be the actual current owner of the token where
-            // mint, token, owner and metadata accounts all match up.
-            assert_holding_amount(
-                &crate::ID,
-                ctx.accounts.token_owner_info,
-                ctx.accounts.metadata_info,
-                &metadata,
-                ctx.accounts.mint_info,
-                ctx.accounts.token_info,
-                amount,
-            )?;
         }
         AuthorityType::Delegate => {
             // the delegate has already being validated, but we need to validate
@@ -261,7 +267,7 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
             }
         }
         _ => {
-            if matches!(token_standard, TokenStandard::ProgrammableNonFungible) {
+            if matches!(token_standard, Some(TokenStandard::ProgrammableNonFungible)) {
                 return Err(MetadataError::InvalidAuthorityType.into());
             }
 
@@ -282,7 +288,7 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
     }
 
     match token_standard {
-        TokenStandard::ProgrammableNonFungible => {
+        Some(TokenStandard::ProgrammableNonFungible) => {
             msg!("pNFT");
             // All pNFTs should have a token record passed in and existing.
             // The token delegate role may not be populated, however.
@@ -312,14 +318,17 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
             // validates the derivation
             assert_keys_equal(&new_pda_key, destination_token_record_info.key)?;
 
-            let owner_token_record_data = owner_token_record_info.try_borrow_data()?;
-            let mut owner_token_record =
-                TokenRecord::deserialize(&mut owner_token_record_data.as_ref())?;
+            let mut owner_token_record = TokenRecord::from_account_info(owner_token_record_info)?;
 
             msg!("checking if sale delegate");
             let is_sale_delegate = owner_token_record
                 .delegate_role
                 .map(|role| role == TokenDelegateRole::Sale)
+                .unwrap_or(false);
+
+            let is_locked_transfer_delegate = owner_token_record
+                .delegate_role
+                .map(|role| role == TokenDelegateRole::LockedTransfer)
                 .unwrap_or(false);
 
             msg!("determining scenario");
@@ -335,7 +344,22 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
                         return Err(MetadataError::MissingDelegateRole.into());
                     }
 
-                    owner_token_record.delegate_role.unwrap().into()
+                    // need to validate whether the destination key matches the locked
+                    // transfer address
+                    if is_locked_transfer_delegate {
+                        let locked_address = owner_token_record
+                            .locked_transfer
+                            .ok_or(MetadataError::MissingLockedTransferAddress)?;
+
+                        if !cmp_pubkeys(&locked_address, ctx.accounts.destination_owner_info.key) {
+                            return Err(MetadataError::InvalidLockedTransferAddress.into());
+                        }
+                        // locked transfer is a special case of the transfer restricted to a specific
+                        // address, so after validating the address we proceed as a 'normal' transfer
+                        TokenDelegateRole::Transfer.into()
+                    } else {
+                        owner_token_record.delegate_role.unwrap().into()
+                    }
                 }
                 _ => return Err(MetadataError::InvalidTransferAuthority.into()),
             };
@@ -361,10 +385,12 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
             auth_rules_validate(auth_rules_validate_params)?;
             frozen_transfer(token_transfer_params, ctx.accounts.edition_info)?;
 
-            // Drop old immutable borrow.
-            drop(owner_token_record_data);
             owner_token_record.reset();
-            owner_token_record.save(&mut owner_token_record_info.data.borrow_mut())?;
+            owner_token_record.save(
+                owner_token_record_info,
+                ctx.accounts.payer_info,
+                ctx.accounts.system_program_info,
+            )?;
 
             // If the token record account for the destination owner doesn't exist,
             // we create it.

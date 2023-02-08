@@ -6,10 +6,9 @@
  */
 
 import * as beet from '@metaplex-foundation/beet';
-import { PayloadKey, payloadKeyBeet } from './PayloadKey';
 import { PayloadType, payloadTypeBeet } from './PayloadType';
 export type Payload = {
-  map: Map<PayloadKey, PayloadType>;
+  map: Map<string, PayloadType>;
 };
 
 /**
@@ -17,6 +16,6 @@ export type Payload = {
  * @category generated
  */
 export const payloadBeet = new beet.FixableBeetArgsStruct<Payload>(
-  [['map', beet.map(payloadKeyBeet, payloadTypeBeet)]],
+  [['map', beet.map(beet.utf8String, payloadTypeBeet)]],
   'Payload',
 );

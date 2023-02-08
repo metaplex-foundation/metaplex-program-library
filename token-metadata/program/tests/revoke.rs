@@ -338,12 +338,14 @@ mod revoke {
     async fn clear_rule_set_revision_on_delegate() {
         let mut program_test = ProgramTest::new("mpl_token_metadata", mpl_token_metadata::ID, None);
         program_test.add_program("mpl_token_auth_rules", mpl_token_auth_rules::ID, None);
+        program_test.set_compute_max_units(400_000);
         let mut context = program_test.start_with_context().await;
 
         // creates the auth rule set
 
         let payer = context.payer.dirty_clone();
-        let (rule_set, auth_data) = create_default_metaplex_rule_set(&mut context, payer).await;
+        let (rule_set, auth_data) =
+            create_default_metaplex_rule_set(&mut context, payer, false).await;
 
         // asset
 
@@ -371,15 +373,13 @@ mod revoke {
 
         // delegates the asset for transfer
 
-        let user = Keypair::new();
-        let user_pubkey = user.pubkey();
         let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
 
         asset
             .delegate(
                 &mut context,
                 payer,
-                user_pubkey,
+                rule_set,
                 DelegateArgs::SaleV1 {
                     amount: 1,
                     authorization_data: None,
@@ -396,7 +396,7 @@ mod revoke {
         let token_record: TokenRecord = try_from_slice_unchecked(&pda.data).unwrap();
 
         assert_eq!(token_record.key, Key::TokenRecord);
-        assert_eq!(token_record.delegate, Some(user_pubkey));
+        assert_eq!(token_record.delegate, Some(rule_set));
         assert_eq!(token_record.delegate_role, Some(TokenDelegateRole::Sale));
         assert_eq!(token_record.rule_set_revision, Some(0));
 
@@ -406,13 +406,7 @@ mod revoke {
         let authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
 
         asset
-            .revoke(
-                &mut context,
-                payer,
-                authority,
-                user_pubkey,
-                RevokeArgs::SaleV1,
-            )
+            .revoke(&mut context, payer, authority, rule_set, RevokeArgs::SaleV1)
             .await
             .unwrap();
 

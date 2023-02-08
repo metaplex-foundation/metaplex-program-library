@@ -1,7 +1,14 @@
 import { getAccount } from '@solana/spl-token';
+import { PublicKey } from '@solana/web3.js';
 import { BN } from 'bn.js';
 import spok from 'spok';
-import { DelegateArgs, TokenRecord, TokenStandard, TokenState } from '../src/generated';
+import {
+  DelegateArgs,
+  TokenDelegateRole,
+  TokenRecord,
+  TokenStandard,
+  TokenState,
+} from '../src/generated';
 import test from 'tape';
 import { amman, InitTransactions, killStuckProcess } from './setup';
 import { spokSameBigint } from './utils';
@@ -396,4 +403,113 @@ test('Unlock: delegate unlock NonFungible asset', async (t) => {
       isFrozen: false,
     });
   }
+});
+
+test('Unlock: LockedTransfer delegate unlock ProgrammableNonFungible asset', async (t) => {
+  const API = new InitTransactions();
+  const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
+
+  const manager = await createAndMintDefaultAsset(
+    t,
+    connection,
+    API,
+    handler,
+    payer,
+    TokenStandard.ProgrammableNonFungible,
+  );
+
+  if (manager.token) {
+    const tokenAccount = await getAccount(connection, manager.token);
+
+    spok(t, tokenAccount, {
+      amount: spokSameBigint(new BN(1)),
+      isFrozen: true,
+      owner: payer.publicKey,
+    });
+  }
+
+  // token record PDA
+  const tokenRecord = findTokenRecordPda(manager.mint, manager.token);
+  amman.addr.addLabel('Token Record', tokenRecord);
+
+  let pda = await TokenRecord.fromAccountAddress(connection, tokenRecord);
+
+  spok(t, pda, {
+    state: TokenState.Unlocked /* asset should be unlocked */,
+  });
+
+  // creates a delegate
+
+  const [, delegate] = await API.getKeypair('Delegate');
+
+  const args: DelegateArgs = {
+    __kind: 'LockedTransferV1',
+    amount: 1,
+    lockedAddress: PublicKey.default,
+    authorizationData: null,
+  };
+
+  const { tx: delegateTx } = await API.delegate(
+    delegate.publicKey,
+    manager.mint,
+    manager.metadata,
+    payer.publicKey,
+    payer,
+    args,
+    handler,
+    null,
+    manager.masterEdition,
+    manager.token,
+    tokenRecord,
+  );
+
+  await delegateTx.assertSuccess(t);
+
+  // lock asset with delegate
+
+  const { tx: lockTx } = await API.lock(
+    delegate,
+    manager.mint,
+    manager.metadata,
+    manager.token,
+    payer,
+    handler,
+    tokenRecord,
+    null,
+    manager.masterEdition,
+  );
+  await lockTx.assertSuccess(t);
+
+  pda = await TokenRecord.fromAccountAddress(connection, tokenRecord);
+
+  spok(t, pda, {
+    state: TokenState.Locked /* asset should be locked */,
+    delegateRole: TokenDelegateRole.LockedTransfer,
+    lockedTransfer: PublicKey.default,
+  });
+
+  // unlocks the token
+
+  // unlock asset with delegate
+
+  const { tx: unlockTx } = await API.unlock(
+    delegate,
+    manager.mint,
+    manager.metadata,
+    manager.token,
+    payer,
+    handler,
+    tokenRecord,
+    null,
+    manager.masterEdition,
+  );
+  await unlockTx.assertSuccess(t);
+
+  pda = await TokenRecord.fromAccountAddress(connection, tokenRecord);
+
+  spok(t, pda, {
+    state: TokenState.Unlocked /* should be unlocked */,
+    delegateRole: TokenDelegateRole.LockedTransfer,
+    lockedTransfer: PublicKey.default,
+  });
 });

@@ -1,3 +1,7 @@
+/// These types exist to give Shank a way to create the Payload type as it
+/// cannnot create it from the remote type from mpl-token-auth-rules.
+/// Care will need to be taken to ensure they stay synced with any changes in
+/// mpl-token-auth-rules.
 use std::collections::HashMap;
 
 use borsh::{BorshDeserialize, BorshSerialize};
@@ -8,22 +12,22 @@ use solana_program::pubkey::Pubkey;
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
-pub struct SeedsVec {
-    pub seeds: Vec<Vec<u8>>,
+struct SeedsVec {
+    seeds: Vec<Vec<u8>>,
 }
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
-pub struct LeafInfo {
-    pub leaf: [u8; 32],
-    pub proof: Vec<[u8; 32]>,
+struct LeafInfo {
+    leaf: [u8; 32],
+    proof: Vec<[u8; 32]>,
 }
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
-pub enum PayloadType {
+enum PayloadType {
     Pubkey(Pubkey),
     Seeds(SeedsVec),
     MerkleProof(LeafInfo),
@@ -33,16 +37,6 @@ pub enum PayloadType {
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, Default)]
-pub struct Payload {
-    map: HashMap<PayloadKey, PayloadType>,
-}
-
-#[repr(C)]
-#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialOrd, Hash, PartialEq, Eq, Debug, Clone, Copy)]
-pub enum PayloadKey {
-    Target,
-    Holder,
-    Authority,
-    Amount,
+struct Payload {
+    map: HashMap<String, PayloadType>,
 }

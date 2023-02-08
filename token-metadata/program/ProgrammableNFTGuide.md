@@ -1,8 +1,13 @@
 # Programmable NFT Guide
 
-Developer packages:
-* :crab: Rust crate: [v1.7.0](https://crates.io/crates/mpl-token-metadata/1.7.0)
-* :package: NPM package: [v2.7.0](https://www.npmjs.com/package/@metaplex-foundation/mpl-token-metadata/v/2.7.0)
+## Developer packages
+Token Metadata
+* :crab: Rust crate: [v1.8.1](https://crates.io/crates/mpl-token-metadata/1.8.1)
+* :package: NPM package: [v2.8.1](https://www.npmjs.com/package/@metaplex-foundation/mpl-token-metadata/v/2.8.1)
+
+Token Authorization Rules
+* :crab: Rust crate: [v1.1.0](https://crates.io/crates/mpl-token-auth-rules/1.1.0)
+* :package: NPM package: [v1.1.0](https://www.npmjs.com/package/@metaplex-foundation/mpl-token-auth-rules/v/1.1.0)
 
 ## 📄  Technical Summary
 
@@ -284,6 +289,7 @@ pub struct TokenRecord {
     pub rule_set_revision: Option<u64>,
     pub delegate: Option<Pubkey>,
     pub delegate_role: Option<TokenDelegateRole>,
+    pub locked_transfer: Option<Pubkey>,
 }
 ```
 
@@ -305,23 +311,25 @@ pub struct TokenRecord {
 
 `TokenDelegateRole` represents the different delegates types. There are six different values and instrution are restricted depending on the token delegate role and token state values:
 
-| **Delegate** | None | `Sale` | `Transfer` | `Utility` | `Staking` | `Migration` | `Standard` (SPL)  |
-| --------------------- | --- | --- | --- | --- | --- | --- | --- |
-| 🔵 `NFT` or 🟣 `pNFT` | 🔵 🟣 | 🟣 | 🟣 | 🟣 | 🟣 | 🟣 (only once) | 🔵 |
-| **Token State**        | 🔓 `Unlocked` | 🏠 `Listed` | 🔓 `Unlocked` | 🔐 `Locked`<br/>🔓 `Unlocked` | 🔐 `Locked`<br/>🔓 `Unlocked` | 🔐 `Locked`<br/>🔓 `Unlocked`| *Analogous to:* ❄️ `Frozen`<br/>☀️ `Thawn` |
-| *Owner Transfer*     | ✅ | ❌ | ✅ → None | 🔓 if `Unlocked` → None |🔓 if Unlocked → None |🔓 if `Unlocked` → None|☀️ if `Thawn` → None|
-| *Delegate Transfer*  | N/A | ✅ → None | ✅ → None | ❌ | ❌ | 🔓 if `Unlocked` → None |☀️ if `Thawn` → None|
-| *Owner Burn*         | ✅ | ❌ | ✅ | 🔓 if `Unlocked` | 🔓 if `Unlocked` | 🔓 if `Unlocked` | ☀️ if `Thawn` (full burn) |
-| *Delegate Burn*      | N/A | ❌ | ❌ | 🔓 if `Unlocked` | ❌ | 🔓 if `Unlocked` | ☀️ if `Thawn` (only SPL token) |
-| *Owner Revoke*       | ❌ | ✅ → None | ✅ → None | 🔓 if `Unlocked` → None |🔓 if `Unlocked` → None|🔓 if `Unlocked` → None|☀️ if `Thawn`|
-| *Owner Approve*      | ✅ → `Sale`, `Transfer`, `Staking` or `Utility` | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ → `Standard` (SPL) |
-| *Owner Unlock*       | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| *Delegate Unlock*    | N/A | ❌ | ❌ | 🔐 if `Locked` | 🔐 if `Locked` | 🔐 if `Locked` | ☀️ if `Frozen` |
-| *Owner Lock*         | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| *Delegate Lock*      | N/A | ❌ | ❌ | 🔓 if `Unlocked` | 🔓 if `Unlocked` | 🔓 if `Unlocked` | ☀️ if `Thawn` |
-| *Mint (destination)* | ✅ | ✅ | ✅ | 🔓 if `Unlocked` | 🔓 if `Unlocked` | 🔓 if `Unlocked` | ☀️ if `Thawn` |
+| **Delegate** | None | `Sale` | `Transfer` | `LockedTransfer` | `Utility` | `Staking` | `Migration` | `Standard` (SPL)  |
+| --------------------- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 🔵 `NFT` or 🟣 `pNFT` | 🔵 🟣 | 🟣 | 🟣 | 🟣 | 🟣 | 🟣 | 🟣 (only once) | 🔵 |
+| **Token State**        | 🔓 `Unlocked` | 🏠 `Listed` | 🔓 `Unlocked` | 🔐 `Locked`<br/>🔓 `Unlocked` | 🔐 `Locked`<br/>🔓 `Unlocked` | 🔐 `Locked`<br/>🔓 `Unlocked` | 🔐 `Locked`<br/>🔓 `Unlocked`| *Analogous to:* ❄️ `Frozen`<br/>☀️ `Thawn` |
+| *Owner Transfer*     | ✅  | ❌ | ✅ → None | 🔓 if `Unlocked` → None | 🔓 if `Unlocked` → None |🔓 if Unlocked → None |🔓 if `Unlocked` → None|☀️ if `Thawn` → None|
+| *Delegate Transfer*  | N/A | ✅ → None | ✅ → None | ✅ to locked address → None | ❌ | ❌ | 🔓 if `Unlocked` → None |☀️ if `Thawn` → None|
+| *Owner Burn*         | ✅  | ❌ | ✅ | 🔓 if `Unlocked` | 🔓 if `Unlocked` | 🔓 if `Unlocked` | 🔓 if `Unlocked` | ☀️ if `Thawn` (full burn) |
+| *Delegate Burn*      | N/A | ❌ | ❌ | ❌ | 🔓 if `Unlocked` | ❌ | 🔓 if `Unlocked` | ☀️ if `Thawn` (only SPL token) |
+| *Owner Revoke*       | ❌  | ✅ → None | ✅ → None | 🔓 if `Unlocked` → None | 🔓 if `Unlocked` → None |🔓 if `Unlocked` → None|🔓 if `Unlocked` → None|☀️ if `Thawn`|
+| *Owner Approve*      | ✅ → `Sale`, `Transfer`, `LockedTransfer`, `Staking` or `Utility` | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ → `Standard` (SPL) |
+| *Owner Unlock*       | ❌  | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| *Delegate Unlock*    | N/A | ❌ | ❌ | 🔐 if `Locked` | 🔐 if `Locked` | 🔐 if `Locked` | 🔐 if `Locked` | ☀️ if `Frozen` |
+| *Owner Lock*         | ❌  | ❌ | ❌ | ❌ |  ❌ | ❌ | ❌ | ❌ |
+| *Delegate Lock*      | N/A | ❌ | ❌ | 🔓 if `Unlocked` | 🔓 if `Unlocked` | 🔓 if `Unlocked` | 🔓 if `Unlocked` | ☀️ if `Thawn` |
+| *Mint (destination)* | ✅  | ✅ | ✅ | 🔓 if `Unlocked` | 🔓 if `Unlocked` | 🔓 if `Unlocked` | 🔓 if `Unlocked` | ☀️ if `Thawn` |
 
 The `Migration` delegate type is a temporary delegate that is only created by the migration from `NFT` to `pNFT` and cannot be otherwise created through the `Delegate` handler. This special delegate has the same functionality as the `Utility` delegate except that it can also transfer. This allows us to assign all escrowless-style programs this delegate to preserve whatever current functionality they have. Once used, it is cleared and cannot replaced, and programs will then need to select one of the normal delegate types for future actions.
+
+The `LockedTransfer` delegate type is a delegate that can lock and unlock a `pNFT` (similarly to the `Staking`) with the additional functionality of being able to transfer to a pre-determined address. The address is specified at the creation of the delegate thourhg the `locked_address` argument.
 
 > **Note**
 > Once a token delegate is set, it is not possible to set another one unless the current one is revoked.
