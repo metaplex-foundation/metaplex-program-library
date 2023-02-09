@@ -31,7 +31,7 @@ export function computeCreatorHash(creators: Creator[]): Buffer {
       creator.address.toBuffer(),
       Buffer.from([creator.share]),
     ]);
-    bufferOfCreatorShares = Buffer.concat([bufferOfCreatorShares, Buffer.from([creator.share])]);
+    bufferOfCreatorShares = Buffer.concat([bufferOfCreatorShares, Buffer.from([creator.verified ? 1 : 0]), Buffer.from([creator.share])]);
   }
   return Buffer.from(keccak_256.digest(bufferOfCreatorData));
 }

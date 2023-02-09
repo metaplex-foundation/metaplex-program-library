@@ -22,6 +22,8 @@ export enum Key {
   UseAuthorityRecord,
   CollectionAuthorityRecord,
   TokenOwnedEscrow,
+  TokenRecord,
+  MetadataDelegate,
 }
 
 /**

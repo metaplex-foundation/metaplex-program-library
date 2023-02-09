@@ -10,7 +10,7 @@ use spl_token::{instruction::freeze_account, state::Mint};
 use crate::{
     assertions::{
         assert_delegated_tokens, assert_derivation, assert_freeze_authority_matches_mint,
-        assert_initialized, assert_owned_by,
+        assert_initialized, assert_owned_by, edition::assert_edition_is_not_programmable,
     },
     error::MetadataError,
     state::{EDITION, PREFIX},
@@ -51,6 +51,10 @@ pub fn process_freeze_delegated_account(
         edition_info,
         &edition_info_path,
     )?];
+
+    // check that we are not dealing with a pNFT master edition
+    assert_edition_is_not_programmable(edition_info)?;
+
     let mut edition_info_seeds = edition_info_path.clone();
     edition_info_seeds.push(edition_info_path_bump_seed);
     invoke_signed(

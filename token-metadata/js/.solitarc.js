@@ -14,5 +14,6 @@ module.exports = {
   programDir,
   serializers: {
     Metadata: './src/custom/metadata-deserializer.ts',
+    TokenRecord: './src/custom/token-record-deserializer.ts',
   },
 };

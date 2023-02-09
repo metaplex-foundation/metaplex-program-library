@@ -1,24 +1,26 @@
 mod assert;
+mod digital_asset;
 mod edition_marker;
-mod external_price;
 mod master_edition_v2;
 mod metadata;
-mod vault;
+mod programmable;
+mod rooster_manager;
 
 pub use assert::*;
+pub use digital_asset::*;
 pub use edition_marker::EditionMarker;
-pub use external_price::ExternalPrice;
 pub use master_edition_v2::MasterEditionV2;
 pub use metadata::{assert_collection_size, Metadata};
 pub use mpl_token_metadata::instruction;
 use mpl_token_metadata::state::CollectionDetails;
+pub use programmable::create_default_metaplex_rule_set;
+pub use rooster_manager::*;
 use solana_program_test::*;
 use solana_sdk::{
     account::Account, program_pack::Pack, pubkey::Pubkey, signature::Signer,
     signer::keypair::Keypair, system_instruction, transaction::Transaction,
 };
 use spl_token::state::Mint;
-pub use vault::Vault;
 
 pub const DEFAULT_COLLECTION_DETAILS: Option<CollectionDetails> =
     Some(CollectionDetails::V1 { size: 0 });
@@ -219,4 +221,14 @@ pub async fn create_mint(
     );
 
     context.banks_client.process_transaction(tx).await
+}
+
+pub trait DirtyClone {
+    fn dirty_clone(&self) -> Self;
+}
+
+impl DirtyClone for Keypair {
+    fn dirty_clone(&self) -> Self {
+        Keypair::from_bytes(&self.to_bytes()).unwrap()
+    }
 }

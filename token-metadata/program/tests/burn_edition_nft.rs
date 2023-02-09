@@ -690,6 +690,8 @@ mod burn_edition_nft {
             .await
             .unwrap();
 
+        context.warp_to_slot(10).unwrap();
+
         let print_editions = master_edition
             .mint_editions(&mut context, &original_nft, 10)
             .await
