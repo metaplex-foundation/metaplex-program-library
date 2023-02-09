@@ -840,10 +840,7 @@ mod collection_migrations {
         .await
         .unwrap();
 
-        // This needs to succeed because if the collection parent is burned
-        // we don't have to worry about sized collection math and items
-        // should be able to be unverified so they can be migrated to a new
-        // collection.
+        // This should succeed.
         nft_item_one
             .unverify_collection(
                 &mut context,
@@ -859,6 +856,106 @@ mod collection_migrations {
         // Now we can migrate it over to collection b.
         nft_item_one
             .set_and_verify_collection(
+                &mut context,
+                collection_b_nft.pubkey,
+                &kp,
+                kp.pubkey(),
+                collection_b_nft.mint.pubkey(),
+                collection_b_me.pubkey,
+                None,
+            )
+            .await
+            .unwrap();
+
+        let account = get_account(&mut context, &nft_item_one.pubkey).await;
+        let md = TmMetadata::safe_deserialize(&account.data).unwrap();
+
+        let collection = md.collection.unwrap();
+
+        assert_eq!(collection.key, collection_b_nft.mint.pubkey());
+        assert!(collection.verified);
+    }
+
+    #[tokio::test]
+    pub async fn burned_collection_parent_sized_collection() {
+        let mut context = program_test().start_with_context().await;
+
+        // Sized collection
+        let (collection_a_nft, collection_a_me) =
+            Metadata::create_default_sized_parent(&mut context)
+                .await
+                .unwrap();
+
+        // Sized collection
+        let (collection_b_nft, collection_b_me) =
+            Metadata::create_default_sized_parent(&mut context)
+                .await
+                .unwrap();
+
+        let (nft_item_one, _me_item_one) =
+            Metadata::create_default_nft(&mut context).await.unwrap();
+        let (nft_item_two, _me_item_two) =
+            Metadata::create_default_nft(&mut context).await.unwrap();
+
+        let kpbytes = &context.payer;
+        let kp = Keypair::from_bytes(&kpbytes.to_bytes()).unwrap();
+
+        // Add the items to Collection A
+        nft_item_one
+            .set_and_verify_sized_collection_item(
+                &mut context,
+                collection_a_nft.pubkey,
+                &kp,
+                kp.pubkey(),
+                collection_a_nft.mint.pubkey(),
+                collection_a_me.pubkey,
+                None,
+            )
+            .await
+            .unwrap();
+
+        nft_item_two
+            .set_and_verify_sized_collection_item(
+                &mut context,
+                collection_a_nft.pubkey,
+                &kp,
+                kp.pubkey(),
+                collection_a_nft.mint.pubkey(),
+                collection_a_me.pubkey,
+                None,
+            )
+            .await
+            .unwrap();
+
+        // Burn the collection A parent.
+        burn(
+            &mut context,
+            collection_a_nft.pubkey,
+            &kp,
+            collection_a_nft.mint.pubkey(),
+            collection_a_nft.token.pubkey(),
+            collection_a_me.pubkey,
+            None,
+        )
+        .await
+        .unwrap();
+
+        // This should succeed.
+        nft_item_one
+            .unverify_collection(
+                &mut context,
+                collection_a_nft.pubkey,
+                &kp,
+                collection_a_nft.mint.pubkey(),
+                collection_a_me.pubkey,
+                None,
+            )
+            .await
+            .unwrap();
+
+        // Now we can migrate it over to collection b.
+        nft_item_one
+            .set_and_verify_sized_collection_item(
                 &mut context,
                 collection_b_nft.pubkey,
                 &kp,
@@ -937,10 +1034,6 @@ mod collection_migrations {
         .await
         .unwrap();
 
-        // This needs to succeed because if the collection parent is burned
-        // we don't have to worry about sized collection math and items
-        // should be able to be unverified so they can be migrated to a new
-        // collection.
         let err = nft_item_one
             .unverify_collection(
                 &mut context,
