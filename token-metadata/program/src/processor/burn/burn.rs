@@ -1,6 +1,8 @@
 use super::*;
 use crate::{
-    processor::burn::nonfungible_edition::burn_nonfungible_edition, state::TokenRecord, utils::thaw,
+    processor::burn::{fungible::burn_fungible, nonfungible_edition::burn_nonfungible_edition},
+    state::TokenRecord,
+    utils::thaw,
 };
 
 pub fn burn<'a>(
@@ -17,10 +19,7 @@ pub fn burn<'a>(
 
 fn burn_v1(program_id: &Pubkey, ctx: Context<Burn>, args: BurnArgs) -> ProgramResult {
     msg!("Burn V1");
-    let BurnArgs::V1 {
-        amount,
-        authorization_data,
-    } = args;
+    let BurnArgs::V1 { amount, .. } = args;
 
     // Validate accounts
 
@@ -32,9 +31,12 @@ fn burn_v1(program_id: &Pubkey, ctx: Context<Burn>, args: BurnArgs) -> ProgramRe
         assert_owned_by(collection_metadata_info, program_id)?;
     }
     assert_owned_by(ctx.accounts.metadata_info, program_id)?;
-    assert_owned_by(ctx.accounts.edition_info, program_id)?;
     assert_owned_by(ctx.accounts.mint_info, &spl_token::ID)?;
     assert_owned_by(ctx.accounts.token_info, &spl_token::ID)?;
+
+    if let Some(edition_info) = ctx.accounts.edition_info {
+        assert_owned_by(edition_info, program_id)?;
+    }
 
     if let Some(parent_edition) = ctx.accounts.parent_edition_info {
         assert_owned_by(parent_edition, program_id)?;
@@ -101,7 +103,8 @@ fn burn_v1(program_id: &Pubkey, ctx: Context<Burn>, args: BurnArgs) -> ProgramRe
     }
     let token_standard = metadata.token_standard.unwrap();
 
-    // NonFungible types can only burn one item.
+    // NonFungible types can only burn one item and must have the edition
+    // account present.
     if matches!(
         token_standard,
         TokenStandard::NonFungibleEdition
@@ -110,6 +113,10 @@ fn burn_v1(program_id: &Pubkey, ctx: Context<Burn>, args: BurnArgs) -> ProgramRe
     ) {
         if amount != 1 {
             return Err(MetadataError::InvalidAmount.into());
+        }
+
+        if ctx.accounts.edition_info.is_none() {
+            return Err(MetadataError::MissingEdition.into());
         }
     }
 
@@ -127,7 +134,7 @@ fn burn_v1(program_id: &Pubkey, ctx: Context<Burn>, args: BurnArgs) -> ProgramRe
         }
         TokenStandard::ProgrammableNonFungible => {
             // All the checks are the same as burning a NonFungible token
-            // execpt we also have to check if there's a persistent delegate set.
+            // except we also have to check if there's a persistent delegate set.
             let token_record = ctx
                 .accounts
                 .token_record_info
@@ -146,7 +153,7 @@ fn burn_v1(program_id: &Pubkey, ctx: Context<Burn>, args: BurnArgs) -> ProgramRe
             thaw(
                 ctx.accounts.mint_info.clone(),
                 ctx.accounts.token_info.clone(),
-                ctx.accounts.edition_info.clone(),
+                ctx.accounts.edition_info.unwrap().clone(),
                 ctx.accounts.spl_token_program_info.clone(),
             )?;
 
@@ -157,8 +164,9 @@ fn burn_v1(program_id: &Pubkey, ctx: Context<Burn>, args: BurnArgs) -> ProgramRe
 
             burn_nonfungible(&ctx, args)?;
         }
-
-        _ => todo!(),
+        TokenStandard::Fungible | TokenStandard::FungibleAsset => {
+            burn_fungible(&ctx, amount)?;
+        }
     }
 
     Ok(())

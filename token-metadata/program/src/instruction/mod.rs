@@ -506,7 +506,7 @@ pub enum MetadataInstruction {
     #[account(0, signer, writable, name="owner", desc="Asset owner")]
     #[account(1, optional, writable, name="collection_metadata", desc="Metadata of the Collection")]
     #[account(2, writable, name="metadata", desc="Metadata (pda of ['metadata', program id, mint id])")]
-    #[account(3, writable, name="edition", desc="MasterEdition of the asset")]
+    #[account(3, optional, writable, name="edition", desc="MasterEdition of the asset")]
     #[account(4, writable, name="mint", desc="Mint of token asset")]
     #[account(5, writable, name="token", desc="Token account to close")]
     #[account(6, optional, name="parent_edition", desc="Print edition token account")]

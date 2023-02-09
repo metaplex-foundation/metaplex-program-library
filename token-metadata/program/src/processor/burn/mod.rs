@@ -11,7 +11,7 @@ use mpl_utils::{
 };
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, msg, program_error::ProgramError,
-    pubkey::Pubkey, system_program, sysvar,
+    program_pack::Pack, pubkey::Pubkey, system_program, sysvar,
 };
 use spl_token::state::Account as TokenAccount;
 
@@ -34,6 +34,7 @@ use crate::{
 mod burn;
 mod burn_edition_nft;
 mod burn_nft;
+mod fungible;
 mod nonfungible;
 mod nonfungible_edition;
 

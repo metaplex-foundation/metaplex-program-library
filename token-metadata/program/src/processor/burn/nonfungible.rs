@@ -6,6 +6,8 @@ pub(crate) struct BurnNonFungibleArgs {
 }
 
 pub(crate) fn burn_nonfungible(ctx: &Context<Burn>, args: BurnNonFungibleArgs) -> ProgramResult {
+    let edition_info = ctx.accounts.edition_info.unwrap();
+
     // If the NFT is a verified part of a collection but the user has not provided the collection
     // metadata account, we cannot burn it because we need to check if we need to decrement the collection size.
     if args.collection_metadata.is_none()
@@ -15,7 +17,7 @@ pub(crate) fn burn_nonfungible(ctx: &Context<Burn>, args: BurnNonFungibleArgs) -
         return Err(MetadataError::MissingCollectionMetadata.into());
     }
 
-    let edition_account_data = ctx.accounts.edition_info.try_borrow_data()?;
+    let edition_account_data = edition_info.try_borrow_data()?;
 
     // First byte is the object key.
     let key = edition_account_data
@@ -45,7 +47,7 @@ pub(crate) fn burn_nonfungible(ctx: &Context<Burn>, args: BurnNonFungibleArgs) -
         ctx.accounts.mint_info.key.as_ref(),
         EDITION.as_bytes(),
     ]);
-    assert_derivation(&crate::ID, ctx.accounts.edition_info, &edition_info_path)?;
+    assert_derivation(&crate::ID, edition_info, &edition_info_path)?;
 
     // Burn the SPL token
     let params = TokenBurnParams {
@@ -69,7 +71,7 @@ pub(crate) fn burn_nonfungible(ctx: &Context<Burn>, args: BurnNonFungibleArgs) -
     spl_token_close(params)?;
 
     close_program_account(ctx.accounts.metadata_info, ctx.accounts.owner_info)?;
-    close_program_account(ctx.accounts.edition_info, ctx.accounts.owner_info)?;
+    close_program_account(edition_info, ctx.accounts.owner_info)?;
 
     if let Some(mut collection_metadata) = args.collection_metadata {
         if ctx.accounts.collection_metadata_info.is_none() {

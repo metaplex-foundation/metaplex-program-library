@@ -1,6 +1,8 @@
 use super::*;
 
 pub(crate) fn burn_nonfungible_edition(ctx: &Context<Burn>) -> ProgramResult {
+    let edition_info = ctx.accounts.edition_info.unwrap();
+
     let parent_mint_info = if let Some(parent_mint_info) = ctx.accounts.parent_mint_info {
         parent_mint_info
     } else {
@@ -42,7 +44,7 @@ pub(crate) fn burn_nonfungible_edition(ctx: &Context<Burn>) -> ProgramResult {
     let print_edition_mint_supply = get_mint_supply(ctx.accounts.mint_info)?;
 
     if !is_print_edition(
-        ctx.accounts.edition_info,
+        edition_info,
         print_edition_mint_decimals,
         print_edition_mint_supply,
     ) {
@@ -79,7 +81,7 @@ pub(crate) fn burn_nonfungible_edition(ctx: &Context<Burn>) -> ProgramResult {
     assert_derivation(&crate::ID, parent_edition_info, &print_edition_info_path)
         .map_err(|_| MetadataError::InvalidPrintEdition)?;
 
-    let print_edition = Edition::from_account_info(ctx.accounts.edition_info)?;
+    let print_edition = Edition::from_account_info(edition_info)?;
 
     // Print Edition actually belongs to the master edition.
     if print_edition.parent != *parent_edition_info.key {
@@ -108,7 +110,7 @@ pub(crate) fn burn_nonfungible_edition(ctx: &Context<Burn>) -> ProgramResult {
     spl_token_close(params)?;
 
     close_program_account(ctx.accounts.metadata_info, ctx.accounts.owner_info)?;
-    close_program_account(ctx.accounts.edition_info, ctx.accounts.owner_info)?;
+    close_program_account(edition_info, ctx.accounts.owner_info)?;
 
     //       **EDITION HOUSEKEEPING**
     // Set the particular bit for this edition to 0 to allow reprinting,

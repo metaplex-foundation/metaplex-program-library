@@ -711,6 +711,10 @@ pub enum MetadataError {
     /// 179
     #[error("Cannot burn while persistent delegate is set")]
     CannotBurnWithDelegate,
+
+    /// 180
+    #[error("Missing edition account")]
+    MissingEdition,
 }
 
 impl PrintProgramError for MetadataError {

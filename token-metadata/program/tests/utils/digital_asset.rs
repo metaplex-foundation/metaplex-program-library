@@ -77,9 +77,12 @@ impl DigitalAsset {
         builder
             .owner(context.payer.pubkey())
             .metadata(self.metadata)
-            .edition(self.master_edition.unwrap())
             .mint(self.mint.pubkey())
             .token(self.token.unwrap());
+
+        if let Some(edition) = self.master_edition {
+            builder.edition(edition);
+        }
 
         if token_standard == TokenStandard::ProgrammableNonFungible {
             builder.token_record(self.token_record.unwrap());

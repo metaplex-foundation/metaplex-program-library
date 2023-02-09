@@ -6,12 +6,13 @@ use mpl_token_metadata::{
     instruction::{builders::BurnBuilder, BurnArgs, InstructionBuilder},
     state::{Creator, Key, TokenStandard},
 };
-use num_traits::FromPrimitive;
+use solana_program::program_pack::Pack;
 use solana_program_test::*;
 use solana_sdk::{signer::Signer, transaction::Transaction};
+use spl_token::state::Account as TokenAccount;
 use utils::*;
 
-mod burn_legacy_assets {
+mod burn_assets {
 
     use super::*;
 
@@ -154,6 +155,62 @@ mod burn_legacy_assets {
         assert!(print_md.is_none());
         assert!(token_account.is_none());
         assert!(print_edition_account.is_none());
+    }
+
+    #[tokio::test]
+    async fn burn_fungible() {
+        let mut context = program_test().start_with_context().await;
+
+        let initial_amount = 10;
+        let burn_amount = 1;
+
+        let mut da = DigitalAsset::new();
+        da.create_and_mint(
+            &mut context,
+            TokenStandard::Fungible,
+            None,
+            None,
+            initial_amount,
+        )
+        .await
+        .unwrap();
+
+        let args = BurnArgs::V1 {
+            authorization_data: None,
+            amount: burn_amount,
+        };
+
+        da.burn(&mut context, args).await.unwrap();
+
+        // We only burned one token, so the token account should still exist.
+        let token_account = context
+            .banks_client
+            .get_account(da.token.unwrap())
+            .await
+            .unwrap()
+            .unwrap();
+
+        let token = TokenAccount::unpack(&token_account.data).unwrap();
+
+        assert_eq!(token.amount, initial_amount - burn_amount);
+
+        let burn_remaining = initial_amount - burn_amount;
+
+        let args = BurnArgs::V1 {
+            authorization_data: None,
+            amount: burn_remaining,
+        };
+
+        da.burn(&mut context, args).await.unwrap();
+
+        // The token account should be closed now.
+        let token_account = context
+            .banks_client
+            .get_account(da.token.unwrap())
+            .await
+            .unwrap();
+
+        assert!(token_account.is_none());
     }
 }
 
