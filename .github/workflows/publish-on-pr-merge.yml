@@ -10,8 +10,8 @@ permissions:
 
 env:
   NODE_VERSION: 17.0.1
-  ANCHOR_VERSION: 0.25.0
-  SOLANA_VERSION_STABLE: 1.10.40
+  ANCHOR_VERSION: 0.26.0
+  SOLANA_VERSION_STABLE: 1.14.13
   RUST_TOOLCHAIN: stable
 
 jobs:
@@ -24,11 +24,10 @@ jobs:
           GITHUB_CONTEXT: ${{ toJson(github) }}
         run: echo "$GITHUB_CONTEXT"
 
-  # alt: on version, publish comment or label and then parse here.
-  get-changes-scope:
+  get-pr-number:
     runs-on: ubuntu-latest
     outputs:
-      changed-packages: ${{ steps.get-changed-package-scope.outputs.result }}
+      pull-number: ${{ steps.get-pr-for-commit.outputs.pull-number }}
     steps:
       - uses: actions/checkout@v3
 
@@ -38,11 +37,26 @@ jobs:
         with:
           commit-sha: ${{ github.sha }}
 
+  # alt: on version, publish comment or label and then parse here.
+  get-changes-scope:
+    if: ${{ jobs.get-pr-number.outputs.pull-number }} != -1
+    runs-on: ubuntu-latest
+    outputs:
+      changed-packages: ${{ steps.get-changed-package-scope.outputs.result }}
+    steps:
+      - uses: actions/checkout@v3
+
+      # - name: Get PR for push event HEAD commit
+      #   uses: ./.github/actions/get-pr-for-commit
+      #   id: get-pr-for-commit
+      #   with:
+      #     commit-sha: ${{ github.sha }}
+
       - name: List changed files
         uses: ./.github/actions/list-changed-files
         id: list-changed-files
         with:
-          pull-number: ${{ steps.get-pr-for-commit.outputs.pull-number }}
+          pull-number: ${{ jobs.get-pr-number.outputs.pull-number }}
           # only include files which might contain version bumps
           include: '["package.json", "Cargo.toml"]'
 
@@ -66,6 +80,7 @@ jobs:
             return Array.from(Object.keys(uniqueFilesObj))
 
   publish-version-changes:
+    if: ${{ jobs.get-pr-number.outputs.pull-number }} != -1
     needs: [get-changes-scope]
     runs-on: ubuntu-latest
     steps:

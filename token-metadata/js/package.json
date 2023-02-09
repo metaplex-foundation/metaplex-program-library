@@ -1,7 +1,7 @@
 {
   "name": "@metaplex-foundation/mpl-token-metadata",
-  "version": "2.7.0",
-  "contractVersion": "1.7.0",
+  "version": "2.8.3",
+  "contractVersion": "1.8.3",
   "description": "MPL Token Metadata JavaScript API.",
   "main": "dist/src/mpl-token-metadata.js",
   "types": "dist/src/mpl-token-metadata.d.ts",
@@ -53,7 +53,7 @@
     "@metaplex-foundation/amman": "^0.12.0",
     "@metaplex-foundation/amman-client": "^0.2.2",
     "@metaplex-foundation/solita": "^0.19.3",
-    "@metaplex-foundation/mpl-token-auth-rules": "^0.2.7",
+    "@metaplex-foundation/mpl-token-auth-rules": "^1.1.0",
     "@msgpack/msgpack": "^2.8.0",
     "@types/bn.js": "^5.1.1",
     "@types/debug": "^4.1.7",

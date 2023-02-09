@@ -1,6 +1,7 @@
+use std::io::Error;
+
 use borsh::{BorshDeserialize, BorshSerialize};
 use mpl_utils::cmp_pubkeys;
-use num_derive::ToPrimitive;
 #[cfg(feature = "serde-feature")]
 use serde::{Deserialize, Serialize};
 use shank::ShankAccount;
@@ -15,9 +16,8 @@ use crate::{
     error::MetadataError,
     instruction::MetadataDelegateRole,
     pda::{find_metadata_delegate_record_account, find_token_record_account},
-    processor::{TransferScenario, UpdateScenario},
-    state::BorshError,
-    utils::{assert_owned_by, try_from_slice_checked},
+    processor::{DelegateScenario, TransferScenario, UpdateScenario},
+    utils::assert_owned_by,
 };
 
 /// Empty pubkey constant.
@@ -27,28 +27,45 @@ pub const TOKEN_RECORD_SEED: &str = "token_record";
 
 pub const TOKEN_STATE_INDEX: usize = 2;
 
-pub const TOKEN_RECORD_SIZE: usize = 1 // Key
-+ 1  // bump
-+ 1  // state
-+ 9  // rule set revision
-+ 33 // delegate
-+ 2; // delegate role
+pub const LOCKED_TRANSFER_SIZE: usize = 33; // Optional Pubkey
 
+pub const TOKEN_RECORD_SIZE: usize = 1 // Key
++ 1   // bump
++ 1   // state
++ 9   // rule set revision
++ 33  // delegate
++ 2   // delegate role
++ 33; // locked transfer
+
+/// The `TokenRecord` struct represents the state of the token account holding a `pNFT`. Given
+/// that the token account is always frozen, it includes a `state` that provides an abstraction
+/// of frozen (locked) and thaw (unlocked).
+///
+/// It also stores state regarding token delegates that are set on the token account: the pubkey
+/// of the delegate set (this would match the spl-token account delegate) and the role.
+///
+/// Every token account holding a `pNFT` has a token record associated. The seeds for the token
+/// record PDA are:
+/// 1. `"metadata"`
+/// 2. program id
+/// 3. mint id
+/// 4. `"token_record"`
+/// 5. token account id
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, ShankAccount)]
-/// SEEDS = [
-///     "metadata",
-///     program id,
-///     mint id,
-///     "token_record",
-///     token owner id
-/// ]
 pub struct TokenRecord {
+    /// Account key.
     pub key: Key,
+    /// Derivation bump.
     pub bump: u8,
+    /// Represented the token state.
     pub state: TokenState,
+    /// Stores the rule set revision (if any). The revision is updated every time
+    /// a new token delegate is approved.
     pub rule_set_revision: Option<u64>,
+    /// Pubkey of the current token delegate. This delegate key will match the spl-token
+    /// delegate pubkey.
     #[cfg_attr(
         feature = "serde-feature",
         serde(
@@ -57,7 +74,11 @@ pub struct TokenRecord {
         )
     )]
     pub delegate: Option<Pubkey>,
+    /// The role of the current token delegate.
     pub delegate_role: Option<TokenDelegateRole>,
+    /// Stores the destination pubkey when a transfer is lock to an allowed address. This
+    /// pubkey gets set when a 'LockTransfer' delegate is approved.
+    pub locked_transfer: Option<Pubkey>,
 }
 
 impl Default for TokenRecord {
@@ -69,6 +90,7 @@ impl Default for TokenRecord {
             rule_set_revision: None,
             delegate: None,
             delegate_role: None,
+            locked_transfer: None,
         }
     }
 }
@@ -81,15 +103,18 @@ impl TokenMetadataAccount for TokenRecord {
     fn size() -> usize {
         TOKEN_RECORD_SIZE
     }
+
+    fn safe_deserialize(data: &[u8]) -> Result<Self, BorshError> {
+        Self::from_bytes(data).map_err(|e| Error::new(ErrorKind::Other, e.to_string()))
+    }
+
+    fn from_account_info(account_info: &AccountInfo) -> Result<Self, ProgramError> {
+        let data = &account_info.try_borrow_data()?;
+        Self::from_bytes(data)
+    }
 }
 
 impl TokenRecord {
-    pub fn from_bytes(data: &[u8]) -> Result<TokenRecord, ProgramError> {
-        let record: TokenRecord =
-            try_from_slice_checked(data, Key::TokenRecord, TokenRecord::size())?;
-        Ok(record)
-    }
-
     pub fn is_locked(&self) -> bool {
         matches!(self.state, TokenState::Locked)
     }
@@ -100,12 +125,52 @@ impl TokenRecord {
         self.rule_set_revision = None;
         self.delegate = None;
         self.delegate_role = None;
+        self.locked_transfer = None;
     }
+}
 
-    pub fn save(&self, data: &mut [u8]) -> Result<(), BorshError> {
-        let mut storage = &mut data[..Self::size()];
-        BorshSerialize::serialize(self, &mut storage)?;
-        Ok(())
+impl Resizable for TokenRecord {
+    fn from_bytes<'a>(account_data: &[u8]) -> Result<TokenRecord, ProgramError> {
+        // we perform a manual deserializagtion since we are potentially dealing
+        // with accounts of different sizes
+        let length = TokenRecord::size() as i64 - account_data.len() as i64;
+
+        // we use the account length in the 'is_correct_account_type' since we are
+        // manually checking that the account length is valid
+        if !(length == 0 || length == LOCKED_TRANSFER_SIZE as i64)
+            || !TokenRecord::is_correct_account_type(
+                account_data,
+                Key::TokenRecord,
+                account_data.len(),
+            )
+        {
+            return Err(MetadataError::DataTypeMismatch.into());
+        }
+        // mutable "pointer" to the account data
+        let mut data = account_data;
+
+        let key: Key = BorshDeserialize::deserialize(&mut data)?;
+        let bump: u8 = BorshDeserialize::deserialize(&mut data)?;
+        let state: TokenState = BorshDeserialize::deserialize(&mut data)?;
+        let rule_set_revision: Option<u64> = BorshDeserialize::deserialize(&mut data)?;
+        let delegate: Option<Pubkey> = BorshDeserialize::deserialize(&mut data)?;
+        let delegate_role: Option<TokenDelegateRole> = BorshDeserialize::deserialize(&mut data)?;
+
+        let locked_transfer: Option<Pubkey> = if length == 0 {
+            BorshDeserialize::deserialize(&mut data)?
+        } else {
+            None
+        };
+
+        Ok(TokenRecord {
+            key,
+            bump,
+            state,
+            rule_set_revision,
+            delegate,
+            delegate_role,
+            locked_transfer,
+        })
     }
 }
 
@@ -131,6 +196,7 @@ pub enum TokenDelegateRole {
     Utility,
     Staking,
     Standard,
+    LockedTransfer,
     Migration = 255,
 }
 
@@ -145,6 +211,8 @@ pub enum AuthorityType {
 }
 
 pub struct AuthorityRequest<'a, 'b> {
+    /// Determines the precedence of authority types.
+    pub precedence: &'a [AuthorityType],
     /// Pubkey of the authority.
     pub authority: &'a Pubkey,
     /// Metadata's update authority pubkey of the asset.
@@ -168,6 +236,11 @@ pub struct AuthorityRequest<'a, 'b> {
 impl<'a, 'b> Default for AuthorityRequest<'a, 'b> {
     fn default() -> Self {
         Self {
+            precedence: &[
+                AuthorityType::Delegate,
+                AuthorityType::Holder,
+                AuthorityType::Metadata,
+            ],
             authority: &DEFAULT_PUBKEY,
             update_authority: &DEFAULT_PUBKEY,
             mint: &DEFAULT_PUBKEY,
@@ -183,74 +256,94 @@ impl<'a, 'b> Default for AuthorityRequest<'a, 'b> {
 
 impl AuthorityType {
     /// Determines the `AuthorityType`.
+    ///
+    /// The `AuthorityType` is used to determine the authority of a request. An authority can
+    /// be "valid" for multiples types (e.g., the same authority can be the holder and the update
+    /// authority). This ambiguity is resolved by using the `precedence`, which determines the
+    /// priority of types.
     pub fn get_authority_type(request: AuthorityRequest) -> Result<Self, ProgramError> {
-        // checks if the authority is a token delegate
+        // the evaluation follows the `request.precedence` order; as soon as a match is
+        // found, the type is returned
+        for authority_type in request.precedence {
+            match authority_type {
+                AuthorityType::Delegate => {
+                    // checks if the authority is a token delegate
 
-        if let Some(token_record_info) = request.token_record_info {
-            // must be owned by token medatata
-            assert_owned_by(token_record_info, &crate::ID)?;
+                    if let Some(token_record_info) = request.token_record_info {
+                        // must be owned by token medatata
+                        assert_owned_by(token_record_info, &crate::ID)?;
 
-            // we can only validate if it is a token delegate when we have the token account
-            if let Some(token_account) = request.token_account {
-                let token = request.token.ok_or(MetadataError::MissingTokenAccount)?;
+                        // we can only validate if it is a token delegate when we have the token account
+                        if let Some(token_account) = request.token_account {
+                            let token = request.token.ok_or(MetadataError::MissingTokenAccount)?;
 
-                let (pda_key, _) = find_token_record_account(request.mint, token);
-                let token_record = TokenRecord::from_account_info(token_record_info)?;
+                            let (pda_key, _) = find_token_record_account(request.mint, token);
+                            let token_record = TokenRecord::from_account_info(token_record_info)?;
 
-                let role_matches = match token_record.delegate_role {
-                    Some(role) => request.token_delegate_roles.contains(&role),
-                    None => request.token_delegate_roles.is_empty(),
-                };
+                            let role_matches = match token_record.delegate_role {
+                                Some(role) => request.token_delegate_roles.contains(&role),
+                                None => request.token_delegate_roles.is_empty(),
+                            };
 
-                if cmp_pubkeys(&pda_key, token_record_info.key)
-                    && Some(*request.authority) == token_record.delegate
-                    && role_matches
-                    && (COption::from(token_record.delegate) == token_account.delegate)
-                {
-                    return Ok(AuthorityType::Delegate);
-                }
-            }
-        }
+                            if cmp_pubkeys(&pda_key, token_record_info.key)
+                                && Some(*request.authority) == token_record.delegate
+                                && role_matches
+                                && (COption::from(token_record.delegate) == token_account.delegate)
+                            {
+                                return Ok(AuthorityType::Delegate);
+                            }
+                        }
+                    }
 
-        // checks if the authority is a metadata delegate
+                    // checks if the authority is a metadata delegate
 
-        if let Some(metadata_delegate_record_info) = request.metadata_delegate_record_info {
-            // must be owned by token medatata
-            assert_owned_by(metadata_delegate_record_info, &crate::ID)?;
+                    if let Some(metadata_delegate_record_info) =
+                        request.metadata_delegate_record_info
+                    {
+                        // must be owned by token medatata
+                        assert_owned_by(metadata_delegate_record_info, &crate::ID)?;
 
-            if let Some(delegate_role) = request.metadata_delegate_role {
-                let (pda_key, _) = find_metadata_delegate_record_account(
-                    request.mint,
-                    delegate_role,
-                    request.update_authority,
-                    request.authority,
-                );
+                        if let Some(delegate_role) = request.metadata_delegate_role {
+                            let (pda_key, _) = find_metadata_delegate_record_account(
+                                request.mint,
+                                delegate_role,
+                                request.update_authority,
+                                request.authority,
+                            );
 
-                if cmp_pubkeys(&pda_key, metadata_delegate_record_info.key) {
-                    let delegate_record =
-                        MetadataDelegateRecord::from_account_info(metadata_delegate_record_info)?;
+                            if cmp_pubkeys(&pda_key, metadata_delegate_record_info.key) {
+                                let delegate_record = MetadataDelegateRecord::from_account_info(
+                                    metadata_delegate_record_info,
+                                )?;
 
-                    if delegate_record.delegate == *request.authority {
-                        return Ok(AuthorityType::Delegate);
+                                if delegate_record.delegate == *request.authority {
+                                    return Ok(AuthorityType::Delegate);
+                                }
+                            }
+                        }
                     }
                 }
+                AuthorityType::Holder => {
+                    // checks if the authority is the token owner
+
+                    if let Some(token_account) = request.token_account {
+                        if cmp_pubkeys(&token_account.owner, request.authority) {
+                            return Ok(AuthorityType::Holder);
+                        }
+                    }
+                }
+                AuthorityType::Metadata => {
+                    // checks if the authority is the update authority
+
+                    if cmp_pubkeys(request.update_authority, request.authority) {
+                        return Ok(AuthorityType::Metadata);
+                    }
+                }
+                _ => { /* the default return type is 'None' */ }
             }
         }
 
-        // checks if the authority is the token owner
-
-        if let Some(token_account) = request.token_account {
-            if cmp_pubkeys(&token_account.owner, request.authority) {
-                return Ok(AuthorityType::Holder);
-            }
-        }
-
-        // checks if the authority is the update authority
-
-        if cmp_pubkeys(request.update_authority, request.authority) {
-            return Ok(AuthorityType::Metadata);
-        }
-
+        // if we reach this point, no 'valid' authority type has been found
         Ok(AuthorityType::None)
     }
 }
@@ -259,6 +352,7 @@ impl AuthorityType {
 pub enum Operation {
     Transfer { scenario: TransferScenario },
     Update { scenario: UpdateScenario },
+    Delegate { scenario: DelegateScenario },
 }
 
 impl ToString for Operation {
@@ -266,11 +360,14 @@ impl ToString for Operation {
         match self {
             Self::Transfer { scenario } => format!("Transfer:{}", scenario),
             Self::Update { scenario } => format!("Update:{}", scenario),
+            Self::Delegate { scenario } => format!("Delegate:{}", scenario),
         }
     }
 }
 
-#[derive(Debug, Clone, ToPrimitive)]
+#[repr(C)]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub enum PayloadKey {
     Amount,
     Authority,

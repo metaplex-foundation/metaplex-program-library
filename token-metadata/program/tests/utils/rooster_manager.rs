@@ -1,6 +1,9 @@
 use mpl_token_auth_rules::payload::Payload;
 use rooster::{
-    instruction::{delegate as rooster_delegate, init, withdraw, WithdrawArgs},
+    instruction::{
+        delegate as rooster_delegate, delegate_transfer, init, withdraw, DelegateTransferArgs,
+        WithdrawArgs,
+    },
     pda::find_rooster_pda,
     AuthorizationData,
 };
@@ -110,6 +113,48 @@ impl RoosterManager {
             &[ix],
             Some(&delegate.pubkey()),
             &[delegate],
+            context.last_blockhash,
+        );
+
+        context.banks_client.process_transaction(tx).await
+    }
+
+    pub async fn delegate_transfer(
+        self,
+        context: &mut ProgramTestContext,
+        authority: &Keypair,
+        source_owner: Pubkey,
+        destination_owner: Pubkey,
+        mint: Pubkey,
+        rule_set: Pubkey,
+        payload: Payload,
+    ) -> Result<(), BanksClientError> {
+        let source_token = get_associated_token_address(&source_owner, &mint);
+        let destination_token = get_associated_token_address(&destination_owner, &mint);
+
+        let compute_ix = ComputeBudgetInstruction::set_compute_unit_limit(800_000);
+
+        let args = DelegateTransferArgs {
+            amount: 1,
+            auth_data: AuthorizationData::new(payload),
+        };
+
+        let ix = delegate_transfer(
+            authority.pubkey(),
+            self.pda,
+            source_owner,
+            source_token,
+            destination_owner,
+            destination_token,
+            mint,
+            rule_set,
+            args,
+        );
+
+        let tx = Transaction::new_signed_with_payer(
+            &[compute_ix, ix],
+            Some(&authority.pubkey()),
+            &[authority],
             context.last_blockhash,
         );
 

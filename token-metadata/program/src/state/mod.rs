@@ -28,6 +28,7 @@ pub use escrow::*;
 pub use master_edition::*;
 pub use metadata::*;
 pub use migrate::*;
+use mpl_utils::resize_or_reallocate_account_raw;
 use num_derive::FromPrimitive;
 use num_traits::FromPrimitive;
 pub use programmable::*;
@@ -37,6 +38,7 @@ use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
     pubkey::Pubkey,
 };
+use spl_token::state::Account as TokenAccount;
 pub use uses::*;
 #[cfg(feature = "serde-feature")]
 use {
@@ -155,4 +157,50 @@ where
 {
     let pubkey_string = pubkey.as_ref().map(|p| p.to_string());
     serde::ser::Serialize::serialize(&pubkey_string, serializer)
+}
+
+/// Trait for resizable accounts.
+///
+/// Implementing this trait for a type will automatically allow the use of the `save` method,
+/// which can modify the size of an account.
+///
+/// A type implementing this trait must specify the `from_bytes` method, since an account can
+/// have variable size.
+pub trait Resizable: TokenMetadataAccount + BorshSerialize {
+    /// Saves the information to the specified account, resizing the account if needed.
+    ///
+    /// The account size can either increase or decrease depending on whether the account size
+    /// matches the struct size or not.
+    fn save<'a>(
+        &self,
+        account_info: &'a AccountInfo<'a>,
+        payer_info: &'a AccountInfo<'a>,
+        system_program_info: &'a AccountInfo<'a>,
+    ) -> Result<(), ProgramError> {
+        // the required account size
+        let required_size = Self::size();
+
+        if account_info.data_len() != required_size {
+            resize_or_reallocate_account_raw(
+                account_info,
+                payer_info,
+                system_program_info,
+                required_size,
+            )?;
+        }
+
+        let mut account_data = account_info.data.borrow_mut();
+        // passes a slice to borsh so the internal account data array does not get
+        // temporarily resized
+        let mut storage = &mut account_data[..required_size];
+        BorshSerialize::serialize(self, &mut storage)?;
+
+        Ok(())
+    }
+
+    /// Deserializes the struct data from the specified byte array.
+    ///
+    /// In most cases this will perform a custom deserialization since the size of the
+    /// stored byte array (account) can change.
+    fn from_bytes(data: &[u8]) -> Result<Self, ProgramError>;
 }

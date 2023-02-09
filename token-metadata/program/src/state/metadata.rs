@@ -84,6 +84,7 @@ impl Metadata {
         args: UpdateArgs,
         update_authority: &AccountInfo<'a>,
         metadata: &AccountInfo<'a>,
+        token: Option<TokenAccount>,
     ) -> ProgramResult {
         let UpdateArgs::V1 {
             data,
@@ -168,10 +169,18 @@ impl Metadata {
             .ok_or(MetadataError::InvalidTokenStandard)?;
 
         // if the rule_set data is either 'Set' or 'Clear', only allow updating if the
-        // token standard is equal to `ProgrammableNonFungible`
+        // token standard is equal to `ProgrammableNonFungible` and no SPL delegate is set.
         if matches!(rule_set, RuleSetToggle::Clear | RuleSetToggle::Set(_)) {
             if token_standard != TokenStandard::ProgrammableNonFungible {
                 return Err(MetadataError::InvalidTokenStandard.into());
+            }
+
+            // Require the token so we can check if it has a delegate.
+            let token = token.ok_or(MetadataError::MissingTokenAccount)?;
+
+            // If the token has a delegate, we cannot update the rule set.
+            if token.delegate.is_some() {
+                return Err(MetadataError::CannotUpdateAssetWithDelegate.into());
             }
 
             self.programmable_config =

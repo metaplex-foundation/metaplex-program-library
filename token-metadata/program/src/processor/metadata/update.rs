@@ -75,10 +75,7 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
             ],
         )?;
     }
-    // authorization rules
-    if let Some(authorization_rules) = ctx.accounts.authorization_rules_info {
-        assert_owned_by(authorization_rules, &mpl_token_auth_rules::ID)?;
-    }
+
     // token owner
     if let Some(holder_token_account) = ctx.accounts.token_info {
         assert_owned_by(holder_token_account, &spl_token::ID)?;
@@ -96,6 +93,9 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
     if ctx.accounts.sysvar_instructions_info.key != &sysvar::instructions::ID {
         return Err(ProgramError::IncorrectProgramId);
     }
+
+    // If the current rule set is passed in, also require the mpl-token-auth-rules program
+    // to be passed in.
     if ctx.accounts.authorization_rules_info.is_some() {
         if let Some(authorization_rules_program) = ctx.accounts.authorization_rules_program_info {
             if authorization_rules_program.key != &mpl_token_auth_rules::ID {
@@ -117,6 +117,7 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
     let token_standard = metadata
         .token_standard
         .ok_or(MetadataError::InvalidTokenStandard)?;
+
     let (token_pubkey, token) = if let Some(token_info) = ctx.accounts.token_info {
         (
             Some(token_info.key),
@@ -137,11 +138,19 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
         token_account: token.as_ref(),
         metadata_delegate_record_info: ctx.accounts.delegate_record_info,
         metadata_delegate_role: Some(MetadataDelegateRole::Update),
+        precedence: &[
+            AuthorityType::Metadata,
+            AuthorityType::Delegate,
+            AuthorityType::Holder,
+        ],
         ..Default::default()
     })?;
 
-    // for pNFTs, we need to validate the authorization rules
+    // For pNFTs, we need to validate the authorization rules.
     if matches!(token_standard, TokenStandard::ProgrammableNonFungible) {
+        // If the metadata account has a current rule set, we validate that
+        // the current rule set account is passed in and matches value on the
+        // metadata.
         if let Some(config) = &metadata.programmable_config {
             // if we have a programmable rule set
             if let ProgrammableConfig::V1 { rule_set: Some(_) } = config {
@@ -177,6 +186,7 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
         args,
         ctx.accounts.authority_info,
         ctx.accounts.metadata_info,
+        token,
     )?;
 
     Ok(())

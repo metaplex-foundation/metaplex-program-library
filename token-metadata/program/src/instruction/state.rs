@@ -30,7 +30,7 @@ pub enum UnlockArgs {
 ///
 /// # Accounts:
 ///
-///   0. `[signer]` Delegate
+///   0. `[signer]` Delegate account
 ///   1. `[optional]` Token owner
 ///   2. `[writable]` Token account
 ///   3. `[]` Mint account
@@ -86,7 +86,7 @@ impl InstructionBuilder for super::builders::Lock {
 ///
 /// # Accounts:
 ///
-///   0. `[signer]` Delegate
+///   0. `[signer]` Delegate account
 ///   1. `[optional]` Token owner
 ///   2. `[writable]` Token account
 ///   3. `[]` Mint account

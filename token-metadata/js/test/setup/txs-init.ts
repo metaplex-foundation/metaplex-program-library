@@ -7,6 +7,7 @@ import {
 } from '@metaplex-foundation/amman-client';
 import * as splToken from '@solana/spl-token';
 import {
+  ComputeBudgetProgram,
   Connection,
   Keypair,
   PublicKey,
@@ -52,6 +53,7 @@ import {
   UnlockInstructionAccounts,
   UnlockInstructionArgs,
   createUnlockInstruction,
+  TransferArgs,
 } from '../../src/generated';
 import { Test } from 'tape';
 import { amman } from '.';
@@ -70,6 +72,7 @@ import {
   TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
 import { findTokenRecordPda } from '../utils/programmable';
+import { encode } from '@msgpack/msgpack';
 
 export class InitTransactions {
   readonly getKeypair: LoadOrGenKeypair | GenLabeledKeypair;
@@ -297,6 +300,7 @@ export class InitTransactions {
     handler: PayerTransactionHandler,
     tokenRecord: PublicKey | null = null,
     destinationTokenRecord: PublicKey | null = null,
+    args: TransferArgs | null = null,
   ): Promise<{ tx: ConfirmedTransactionAssertablePromise }> {
     amman.addr.addLabel('Mint Account', mint);
     amman.addr.addLabel('Metadata Account', metadata);
@@ -329,17 +333,25 @@ export class InitTransactions {
       destinationTokenRecord,
     };
 
-    const transferArgs: TransferInstructionArgs = {
-      transferArgs: {
+    if (!args) {
+      args = {
         __kind: 'V1',
         amount,
         authorizationData: null,
-      },
+      };
+    }
+
+    const modifyComputeUnits = ComputeBudgetProgram.setComputeUnitLimit({
+      units: 400_000,
+    });
+
+    const transferArgs: TransferInstructionArgs = {
+      transferArgs: args,
     };
 
     const transferIx = createTransferInstruction(transferAcccounts, transferArgs);
 
-    const tx = new Transaction().add(transferIx);
+    const tx = new Transaction().add(modifyComputeUnits).add(transferIx);
 
     return {
       tx: handler.sendAndConfirmTransaction(tx, [authority], 'tx: Transfer'),
@@ -675,6 +687,86 @@ export class InitTransactions {
     return {
       tx: handler.sendAndConfirmTransaction(tx, [payer], 'tx: CreateOrUpdateRuleSet'),
     };
+  }
+
+  async createDefaultRuleSet(
+    t: Test,
+    handler: PayerTransactionHandler,
+    payer: Keypair,
+    amount = 1,
+  ): Promise<{
+    tx: ConfirmedTransactionAssertablePromise;
+    ruleSet: PublicKey;
+  }> {
+    const allowList = [Array.from(PROGRAM_ID.toBytes())];
+    const transferRules = {
+      All: {
+        rules: [
+          {
+            Amount: {
+              amount,
+              operator: 2 /* equal */,
+              field: 'Amount',
+            },
+          },
+          {
+            Any: {
+              rules: [
+                {
+                  ProgramOwnedList: {
+                    programs: allowList,
+                    field: 'Destination',
+                  },
+                },
+                {
+                  ProgramOwnedList: {
+                    programs: allowList,
+                    field: 'Source',
+                  },
+                },
+                {
+                  ProgramOwnedList: {
+                    programs: allowList,
+                    field: 'Authority',
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    };
+
+    const ruleSetName = 'default_ruleset_test';
+    const ruleSet = {
+      libVersion: 1,
+      ruleSetName: ruleSetName,
+      owner: Array.from(payer.publicKey.toBytes()),
+      operations: {
+        'Transfer:TransferDelegate': transferRules,
+        'Delegate:Sale': 'Pass',
+        'Delegate:Transfer': 'Pass',
+        'Delegate:LockedTransfer': 'Pass',
+      },
+    };
+    const serializedRuleSet = encode(ruleSet);
+
+    // find the rule set PDA
+    const [ruleSetPda] = PublicKey.findProgramAddressSync(
+      [Buffer.from('rule_set'), payer.publicKey.toBuffer(), Buffer.from(ruleSetName)],
+      TOKEN_AUTH_RULES_ID,
+    );
+
+    // creates the rule set
+    const { tx: createRuleSetTx } = await this.createRuleSet(
+      t,
+      payer,
+      ruleSetPda,
+      serializedRuleSet,
+      handler,
+    );
+
+    return { tx: createRuleSetTx, ruleSet: ruleSetPda };
   }
 
   async createMintAccount(
