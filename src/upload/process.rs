@@ -485,7 +485,7 @@ async fn upload_data(
     uploader: &dyn Uploader,
     interrupted: Arc<AtomicBool>,
 ) -> Result<Vec<UploadError>> {
-    let mut extension = HashSet::with_capacity(1);
+    let mut extension = String::new();
     let mut paths = Vec::new();
 
     for index in indices {
@@ -514,17 +514,11 @@ async fn upload_data(
             .extension()
             .and_then(OsStr::to_str)
             .expect("Failed to convert extension from unicode");
-        extension.insert(String::from(ext));
+
+        extension = String::from(ext);
 
         paths.push(file_path);
     }
-
-    // validates that all files have the same extension
-    let extension = if extension.len() == 1 {
-        extension.iter().next().unwrap()
-    } else {
-        return Err(anyhow!("Invalid file extension: {:?}", extension));
-    };
 
     let content_type = match data_type {
         DataType::Image => format!("image/{}", extension),

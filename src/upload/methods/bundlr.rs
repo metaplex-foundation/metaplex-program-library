@@ -290,9 +290,11 @@ impl Prepare for BundlrMethod {
             let program = client.program(CANDY_MACHINE_ID);
             program.rpc()
         };
-        let amount = ((lamports_fee - balance) as f64 * 1.3).ceil() as u64;
 
         if lamports_fee > balance {
+            // calculates the additional amount to fund the wallet, with padding.
+            let amount = ((lamports_fee - balance) as f64 * 1.3).ceil() as u64;
+
             BundlrMethod::fund_bundlr_address(
                 rpc_client,
                 &http_client,
