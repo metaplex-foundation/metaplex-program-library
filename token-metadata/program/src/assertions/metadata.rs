@@ -9,6 +9,7 @@ use spl_token::state::Account;
 use crate::{
     assertions::{assert_initialized, assert_owned_by},
     error::MetadataError,
+    pda::PREFIX,
     state::{
         Creator, Data, Metadata, TokenRecord, TokenState, MAX_CREATOR_LIMIT, MAX_NAME_LENGTH,
         MAX_SYMBOL_LENGTH, MAX_URI_LENGTH,

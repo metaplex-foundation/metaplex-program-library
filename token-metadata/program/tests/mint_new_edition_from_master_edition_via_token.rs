@@ -2,7 +2,6 @@
 pub mod utils;
 
 use borsh::BorshSerialize;
-use mpl_token_metadata::state::Collection;
 use mpl_token_metadata::{
     error::MetadataError,
     id, instruction,
