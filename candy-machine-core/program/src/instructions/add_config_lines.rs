@@ -125,7 +125,7 @@ pub fn add_config_lines(
 
         if current_value != data[byte_position] {
             // add the new index to the mint indices vec
-            let index_position = indices_start + (position as usize) * 4;
+            let index_position = indices_start + position * 4;
             data[index_position..index_position + 4]
                 .copy_from_slice(&u32::to_le_bytes(position as u32));
 
