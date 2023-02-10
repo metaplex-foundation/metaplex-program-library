@@ -81,7 +81,7 @@ fn find_external_program_error(code: String) -> String {
     } else {
         let mut errors = Vec::with_capacity(2);
 
-        if let Some(e) = CANDY_MACHINE_ERROR.get(&parsed_code) {
+        if let Some(e) = CANDY_CORE_ERROR.get(&parsed_code) {
             errors.push(format!("Candy Machine: {e}"));
         }
         if let Some(e) = CANDY_GUARD_ERROR.get(&parsed_code) {
