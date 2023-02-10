@@ -218,7 +218,7 @@ pub struct AuthorityRequest<'a, 'b> {
     /// Metadata's update authority pubkey of the asset.
     pub update_authority: &'b Pubkey,
     /// Mint address.
-    pub mint: &'a Pubkey,
+    pub mint: &'b Pubkey,
     /// Holder's token account info.
     pub token: Option<&'a Pubkey>,
     /// Holder's token account.
