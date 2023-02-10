@@ -36,12 +36,10 @@ pub fn unverify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) -> Pro
 
     // First, if there's no collection set, we can just short-circuit
     // since there's nothing to unverify.
-    if metadata.collection.is_none() {
-        return Ok(());
-    }
-
-    // Unwrap ok because of check above.
-    let collection = metadata.collection.clone().unwrap();
+    let collection = match metadata.collection.as_mut() {
+        Some(collection) => collection,
+        None => return Ok(()),
+    };
 
     // Short-circuit if it's already unverified.
     if !collection.verified {
@@ -69,8 +67,7 @@ pub fn unverify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) -> Pro
 
     if parent_burned {
         // If the parent is burned, we need to check that the authority
-        // is the update authority on the item metadata and then we can
-        // just unverify the NFT and return.
+        // is the update authority on the item metadata.
         //
         // Collection Delegates for burned collection parents should not be
         // respected as there's currently no way to revoke them.
@@ -78,44 +75,40 @@ pub fn unverify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) -> Pro
         if metadata.update_authority != *collection_authority_info.key {
             return Err(MetadataError::UpdateAuthorityIncorrect.into());
         }
-
-        metadata.collection.as_mut().unwrap().verified = false;
-        clean_write_metadata(&mut metadata, metadata_info)?;
-        return Ok(());
-    }
-
-    // If the parent is not burned, we need to ensure the collection
-    // metadata and edition accounts are owned by the token metadata program.
-    assert_owned_by(collection_metadata_info, program_id)?;
-    assert_owned_by(edition_account_info, program_id)?;
-
-    // Now we can deserialize the collection metadata account.
-    let collection_metadata = Metadata::from_account_info(collection_metadata_info)?;
-
-    // This handler can only unverify non-sized NFTs
-    if collection_metadata.collection_details.is_some() {
-        return Err(MetadataError::SizedCollection.into());
-    }
-
-    if using_delegated_collection_authority {
-        let collection_authority_record = next_account_info(account_info_iter)?;
-        assert_has_collection_authority(
-            collection_authority_info,
-            &collection_metadata,
-            collection_mint_info.key,
-            Some(collection_authority_record),
-        )?;
     } else {
-        assert_has_collection_authority(
-            collection_authority_info,
-            &collection_metadata,
-            collection_mint_info.key,
-            None,
-        )?;
+        // If the parent is not burned, we need to ensure the collection
+        // metadata and edition accounts are owned by the token metadata program.
+        assert_owned_by(collection_metadata_info, program_id)?;
+        assert_owned_by(edition_account_info, program_id)?;
+
+        // Now we can deserialize the collection metadata account.
+        let collection_metadata = Metadata::from_account_info(collection_metadata_info)?;
+
+        // This handler can only unverify non-sized NFTs
+        if collection_metadata.collection_details.is_some() {
+            return Err(MetadataError::SizedCollection.into());
+        }
+
+        if using_delegated_collection_authority {
+            let collection_authority_record = next_account_info(account_info_iter)?;
+            assert_has_collection_authority(
+                collection_authority_info,
+                &collection_metadata,
+                collection_mint_info.key,
+                Some(collection_authority_record),
+            )?;
+        } else {
+            assert_has_collection_authority(
+                collection_authority_info,
+                &collection_metadata,
+                collection_mint_info.key,
+                None,
+            )?;
+        }
     }
 
     // Unverify and update the metadata
-    metadata.collection.as_mut().unwrap().verified = false;
+    collection.verified = false;
     clean_write_metadata(&mut metadata, metadata_info)?;
 
     Ok(())
