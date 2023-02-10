@@ -151,7 +151,7 @@ if [ ! "$(command -v $BIN)" = "" ]; then
     echo -n "$(CYN "Replace it? [Y/n]") (default 'n'): "
     read REPLACE
 
-    if [ "$REPLACE" = Y ]; then
+    if [ "$REPLACE" != "${REPLACE#[Yy]}" ]; then
         echo ""
         echo "'$BIN' binary will be moved to '$(dirname "$EXISTING")'."
 
@@ -194,7 +194,7 @@ else
             echo -n "$(CYN "Would you like to create '$ENV_FILE'? [Y/n]") (default 'n'): "
             read CREATE
 
-            if [ "$CREATE" = Y ]; then
+            if [ "$CREATE" != "${CREATE#[Yy]}" ]; then
                 echo "  => adding '$TARGET' to 'PATH' variable in '$ENV_FILE'"
                 echo "export PATH=\"$HOME/bin:\$PATH\"" >> "$ENV_FILE"
             else
