@@ -15,7 +15,7 @@ use crate::{instruction::MetadataInstruction, processor::AuthorizationData};
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub enum DelegateArgs {
-    CollectionV1 {
+    UpdateCollectionItemsV1 {
         /// Required authorization data to validate the request.
         authorization_data: Option<AuthorizationData>,
     },
@@ -59,7 +59,7 @@ pub enum DelegateArgs {
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub enum RevokeArgs {
-    CollectionV1,
+    UpdateCollectionItemsV1,
     SaleV1,
     TransferV1,
     UpdateV1,
@@ -74,18 +74,20 @@ pub enum RevokeArgs {
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, Copy)]
 pub enum MetadataDelegateRole {
     Authority,
-    Collection,
     Use,
     Update,
+    UpdateCollectionItems,
+    VerifyCollection,
 }
 
 impl fmt::Display for MetadataDelegateRole {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let message = match self {
-            Self::Authority => "authority_delegate".to_string(),
-            Self::Collection => "collection_delegate".to_string(),
-            Self::Use => "use_delegate".to_string(),
-            Self::Update => "update_delegate".to_string(),
+            Self::Authority => "authority".to_string(),
+            Self::Use => "use".to_string(),
+            Self::Update => "update".to_string(),
+            Self::UpdateCollectionItems => "update_collection_items".to_string(),
+            Self::VerifyCollection => "verify_collection".to_string(),
         };
 
         write!(f, "{message}")
