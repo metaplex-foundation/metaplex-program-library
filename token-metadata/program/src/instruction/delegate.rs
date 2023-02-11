@@ -83,11 +83,11 @@ pub enum MetadataDelegateRole {
 impl fmt::Display for MetadataDelegateRole {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let message = match self {
-            Self::Authority => "authority".to_string(),
-            Self::Use => "use".to_string(),
-            Self::Update => "update".to_string(),
-            Self::UpdateCollectionItems => "update_collection_items".to_string(),
-            Self::VerifyCollection => "verify_collection".to_string(),
+            Self::Authority => "authority_delegate".to_string(),
+            Self::Use => "use_delegate".to_string(),
+            Self::Update => "update_delegate".to_string(),
+            Self::UpdateCollectionItems => "update_collection_items_delegate".to_string(),
+            Self::VerifyCollection => "verify_collection_delegate".to_string(),
         };
 
         write!(f, "{message}")

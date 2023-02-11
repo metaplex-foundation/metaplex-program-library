@@ -146,7 +146,10 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
         token: token_pubkey,
         token_account: token.as_ref(),
         metadata_delegate_record_info: ctx.accounts.delegate_record_info,
-        metadata_delegate_role: Some(MetadataDelegateRole::Update),
+        metadata_delegate_roles: Some(&[
+            MetadataDelegateRole::Update,
+            MetadataDelegateRole::UpdateCollectionItems,
+        ]),
         precedence: &[
             AuthorityType::Metadata,
             AuthorityType::MetadataDelegate,
