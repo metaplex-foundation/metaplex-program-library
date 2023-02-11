@@ -25,7 +25,7 @@ test('Delegate: create collection delegate', async (t) => {
   const API = new InitTransactions();
   const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
 
-  const manager = await createAndMintDefaultAsset(
+  const collection = await createAndMintDefaultAsset(
     t,
     connection,
     API,
@@ -42,8 +42,8 @@ test('Delegate: create collection delegate', async (t) => {
     [
       Buffer.from('metadata'),
       PROGRAM_ID.toBuffer(),
-      manager.mint.toBuffer(),
-      Buffer.from('collection_delegate'),
+      collection.mint.toBuffer(),
+      Buffer.from('update_collection_items'),
       payer.publicKey.toBuffer(),
       delegate.toBuffer(),
     ],
@@ -52,20 +52,20 @@ test('Delegate: create collection delegate', async (t) => {
   amman.addr.addLabel('Metadata Delegate Record', delegateRecord);
 
   const args: DelegateArgs = {
-    __kind: 'CollectionV1',
+    __kind: 'UpdateCollectionItemsV1',
     authorizationData: null,
   };
 
   const { tx: delegateTx } = await API.delegate(
     delegate,
-    manager.mint,
-    manager.metadata,
+    collection.mint,
+    collection.metadata,
     payer.publicKey,
     payer,
     args,
     handler,
     delegateRecord,
-    manager.masterEdition,
+    collection.masterEdition,
   );
 
   await delegateTx.assertSuccess(t);
@@ -74,7 +74,7 @@ test('Delegate: create collection delegate', async (t) => {
 
   spok(t, pda, {
     delegate: spokSamePubkey(delegate),
-    mint: spokSamePubkey(manager.mint),
+    mint: spokSamePubkey(collection.mint),
   });
 });
 

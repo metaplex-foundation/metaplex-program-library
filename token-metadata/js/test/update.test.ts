@@ -4,6 +4,7 @@ import {
   Data,
   DelegateArgs,
   Metadata,
+  MetadataDelegateRecord,
   PROGRAM_ID,
   TokenRecord,
   TokenStandard,
@@ -1181,7 +1182,6 @@ test('Update: Delegate Authority Type Not Supported', async (t) => {
   const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
 
   const daManager = await createDefaultAsset(t, connection, API, handler, payer);
-  const { mint, metadata, masterEdition } = daManager;
 
   // creates a delegate
 
@@ -1226,7 +1226,7 @@ test('Update: Delegate Authority Type Not Supported', async (t) => {
     name: 'DigitalAsset2',
     symbol: 'DA2',
     uri: 'uri2',
-    sellerFeeBasisPoints: 0,
+    sellerFeeBasisPoints: 10,
     creators: assetData.creators,
   };
   const authorizationData = daManager.emptyAuthorizationData();
@@ -1238,20 +1238,30 @@ test('Update: Delegate Authority Type Not Supported', async (t) => {
   const { tx: updateTx } = await API.update(
     t,
     handler,
-    mint,
-    metadata,
+    daManager.mint,
+    daManager.metadata,
     authority,
     updateData,
     delegateRecord,
-    masterEdition,
+    daManager.masterEdition,
   );
+  await updateTx.assertSuccess(t);
 
-  updateTx.then((x) =>
-    x.assertLogs(t, [/Authority type: Delegate/i, /Feature not supported currently/i], {
-      txLabel: 'tx: Update',
-    }),
+  const metadata = await Metadata.fromAccountAddress(connection, daManager.metadata);
+
+  spok(t, metadata, {
+    data: {
+      sellerFeeBasisPoints: 10,
+    },
+  });
+
+  t.equal(
+    metadata.data.name.replace(/\0+/, ''),
+    'DigitalAsset2',
+    "'DigitalAsset2' match updated name",
   );
-  await updateTx.assertError(t);
+  t.equal(metadata.data.symbol.replace(/\0+/, ''), 'DA2', "'DA2' match updated symbol");
+  t.equal(metadata.data.uri.replace(/\0+/, ''), 'uri2', "'uri2' match updated uri");
 });
 
 test('Update: Holder Authority Type Not Supported', async (t) => {
@@ -1421,4 +1431,96 @@ test('Update: Cannot Update pNFT Config with locked token', async (t) => {
     t,
     /Cannot update the rule set of a programmable asset that has a delegate/i,
   );
+});
+
+test('Update: delegate update collection item', async (t) => {
+  const API = new InitTransactions();
+  const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
+
+  const collection = await createAndMintDefaultAsset(
+    t,
+    connection,
+    API,
+    handler,
+    payer,
+    TokenStandard.ProgrammableNonFungible,
+  );
+
+  const nft = await createAndMintDefaultAsset(
+    t,
+    connection,
+    API,
+    handler,
+    payer,
+    TokenStandard.ProgrammableNonFungible,
+    null,
+    1,
+    collection.mint,
+  );
+
+  // creates a delegate
+
+  const [, delegate] = await API.getKeypair('Delegate');
+  // delegate PDA
+  const [delegateRecord] = PublicKey.findProgramAddressSync(
+    [
+      Buffer.from('metadata'),
+      PROGRAM_ID.toBuffer(),
+      collection.mint.toBuffer(),
+      Buffer.from('update_collection_items_delegate'),
+      payer.publicKey.toBuffer(),
+      delegate.publicKey.toBuffer(),
+    ],
+    PROGRAM_ID,
+  );
+  amman.addr.addLabel('Metadata Delegate Record', delegateRecord);
+
+  const args: DelegateArgs = {
+    __kind: 'UpdateCollectionItemsV1',
+    authorizationData: null,
+  };
+
+  const { tx: delegateTx } = await API.delegate(
+    delegate.publicKey,
+    collection.mint,
+    collection.metadata,
+    payer.publicKey,
+    payer,
+    args,
+    handler,
+    delegateRecord,
+    collection.masterEdition,
+  );
+
+  await delegateTx.assertSuccess(t);
+
+  const pda = await MetadataDelegateRecord.fromAccountAddress(connection, delegateRecord);
+
+  spok(t, pda, {
+    delegate: spokSamePubkey(delegate.publicKey),
+    mint: spokSamePubkey(collection.mint),
+  });
+
+  // update the nft via the delegate
+
+  const dummyRuleSet = Keypair.generate().publicKey;
+
+  const updateData = new UpdateTestData();
+  updateData.ruleSet = {
+    __kind: 'Set',
+    fields: [dummyRuleSet],
+  };
+
+  const { tx: updateTx } = await API.update(
+    t,
+    handler,
+    nft.mint,
+    nft.metadata,
+    delegate,
+    updateData,
+    delegateRecord,
+    nft.masterEdition,
+    nft.token,
+  );
+  await updateTx.assertSuccess(t);
 });

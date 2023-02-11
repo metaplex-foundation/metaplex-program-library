@@ -19,7 +19,7 @@ import { AuthorizationData, authorizationDataBeet } from './AuthorizationData';
  * @private
  */
 export type DelegateArgsRecord = {
-  CollectionV1: { authorizationData: beet.COption<AuthorizationData> };
+  UpdateCollectionItemsV1: { authorizationData: beet.COption<AuthorizationData> };
   SaleV1: { amount: beet.bignum; authorizationData: beet.COption<AuthorizationData> };
   TransferV1: { amount: beet.bignum; authorizationData: beet.COption<AuthorizationData> };
   UpdateV1: { authorizationData: beet.COption<AuthorizationData> };
@@ -46,9 +46,10 @@ export type DelegateArgsRecord = {
  */
 export type DelegateArgs = beet.DataEnumKeyAsKind<DelegateArgsRecord>;
 
-export const isDelegateArgsCollectionV1 = (
+export const isDelegateArgsUpdateCollectionItemsV1 = (
   x: DelegateArgs,
-): x is DelegateArgs & { __kind: 'CollectionV1' } => x.__kind === 'CollectionV1';
+): x is DelegateArgs & { __kind: 'UpdateCollectionItemsV1' } =>
+  x.__kind === 'UpdateCollectionItemsV1';
 export const isDelegateArgsSaleV1 = (x: DelegateArgs): x is DelegateArgs & { __kind: 'SaleV1' } =>
   x.__kind === 'SaleV1';
 export const isDelegateArgsTransferV1 = (
@@ -76,10 +77,10 @@ export const isDelegateArgsLockedTransferV1 = (
  */
 export const delegateArgsBeet = beet.dataEnum<DelegateArgsRecord>([
   [
-    'CollectionV1',
-    new beet.FixableBeetArgsStruct<DelegateArgsRecord['CollectionV1']>(
+    'UpdateCollectionItemsV1',
+    new beet.FixableBeetArgsStruct<DelegateArgsRecord['UpdateCollectionItemsV1']>(
       [['authorizationData', beet.coption(authorizationDataBeet)]],
-      'DelegateArgsRecord["CollectionV1"]',
+      'DelegateArgsRecord["UpdateCollectionItemsV1"]',
     ),
   ],
 

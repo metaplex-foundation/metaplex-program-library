@@ -12,9 +12,10 @@ import * as beet from '@metaplex-foundation/beet';
  */
 export enum MetadataDelegateRole {
   Authority,
-  Collection,
   Use,
   Update,
+  UpdateCollectionItems,
+  VerifyCollection,
 }
 
 /**

@@ -4532,7 +4532,7 @@
         "kind": "enum",
         "variants": [
           {
-            "name": "CollectionV1",
+            "name": "UpdateCollectionItemsV1",
             "fields": [
               {
                 "name": "authorization_data",
@@ -4664,7 +4664,7 @@
         "kind": "enum",
         "variants": [
           {
-            "name": "CollectionV1"
+            "name": "UpdateCollectionItemsV1"
           },
           {
             "name": "SaleV1"
@@ -4699,13 +4699,16 @@
             "name": "Authority"
           },
           {
-            "name": "Collection"
-          },
-          {
             "name": "Use"
           },
           {
             "name": "Update"
+          },
+          {
+            "name": "UpdateCollectionItems"
+          },
+          {
+            "name": "VerifyCollection"
           }
         ]
       }
@@ -5253,10 +5256,13 @@
             "name": "Metadata"
           },
           {
-            "name": "Delegate"
+            "name": "Holder"
           },
           {
-            "name": "Holder"
+            "name": "MetadataDelegate"
+          },
+          {
+            "name": "TokenDelegate"
           }
         ]
       }
