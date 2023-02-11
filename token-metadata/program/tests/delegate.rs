@@ -129,7 +129,7 @@ mod delegate {
                 &mut context,
                 payer,
                 user_pubkey,
-                DelegateArgs::CollectionV1 {
+                DelegateArgs::UpdateCollectionItemsV1 {
                     authorization_data: None,
                 },
             )
@@ -140,7 +140,7 @@ mod delegate {
 
         let (pda_key, _) = find_metadata_delegate_record_account(
             &asset.mint.pubkey(),
-            MetadataDelegateRole::Collection,
+            MetadataDelegateRole::UpdateCollectionItems,
             &payer_pubkey,
             &user_pubkey,
         );

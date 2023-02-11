@@ -244,10 +244,10 @@ impl DigitalAsset {
             .spl_token_program(spl_token::ID);
 
         match args {
-            DelegateArgs::CollectionV1 { .. } => {
+            DelegateArgs::UpdateCollectionItemsV1 { .. } => {
                 let (delegate_record, _) = find_metadata_delegate_record_account(
                     &self.mint.pubkey(),
-                    MetadataDelegateRole::Collection,
+                    MetadataDelegateRole::UpdateCollectionItems,
                     &payer.pubkey(),
                     &delegate,
                 );
@@ -355,10 +355,10 @@ impl DigitalAsset {
             .spl_token_program(spl_token::ID);
 
         match args {
-            RevokeArgs::CollectionV1 => {
+            RevokeArgs::UpdateCollectionItemsV1 => {
                 let (delegate_record, _) = find_metadata_delegate_record_account(
                     &self.mint.pubkey(),
-                    MetadataDelegateRole::Collection,
+                    MetadataDelegateRole::UpdateCollectionItems,
                     &payer.pubkey(),
                     &delegate,
                 );

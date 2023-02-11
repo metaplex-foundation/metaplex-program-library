@@ -144,7 +144,7 @@ mod revoke {
                 &mut context,
                 payer,
                 user_pubkey,
-                DelegateArgs::CollectionV1 {
+                DelegateArgs::UpdateCollectionItemsV1 {
                     authorization_data: None,
                 },
             )
@@ -154,7 +154,7 @@ mod revoke {
         // checks that the delegate exists
         let (pda_key, _) = find_metadata_delegate_record_account(
             &asset.mint.pubkey(),
-            MetadataDelegateRole::Collection,
+            MetadataDelegateRole::UpdateCollectionItems,
             &payer_pubkey,
             &user_pubkey,
         );
@@ -173,7 +173,7 @@ mod revoke {
                 payer,
                 approver,
                 user_pubkey,
-                RevokeArgs::CollectionV1,
+                RevokeArgs::UpdateCollectionItemsV1,
             )
             .await
             .unwrap();
