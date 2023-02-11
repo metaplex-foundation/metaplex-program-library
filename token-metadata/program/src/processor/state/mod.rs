@@ -80,61 +80,36 @@ pub(crate) fn toggle_asset_state(
         return Err(MetadataError::MintMismatch.into());
     }
 
-    // approver authority – this can be either:
-    //  1. token delegate: valid token_record.delegate
-    //  2. spl-delegate: for non-programmable assets, approver == token.delegate
-
-    let authority_type = AuthorityType::get_authority_type(AuthorityRequest {
-        authority: accounts.authority_info.key,
-        update_authority: &metadata.update_authority,
-        mint: accounts.mint_info.key,
-        token: Some(accounts.token_info.key),
-        token_account: Some(&token),
-        token_record_info: accounts.token_record_info,
-        token_delegate_roles: vec![
-            TokenDelegateRole::Utility,
-            TokenDelegateRole::Staking,
-            TokenDelegateRole::LockedTransfer,
-            TokenDelegateRole::Migration,
-        ],
-        ..Default::default()
-    })?;
-
-    let has_authority = match authority_type {
-        // holder is not allowed to lock/unlock
-        AuthorityType::Holder => false,
-        // (token) delegates can lock/unlock
-        AuthorityType::Delegate => true,
-        // if there is no authority, we checked if there is an spl-token
-        // delegate set (this will be the case for non-programmable assets)
-        _ => {
-            if !matches!(
-                metadata.token_standard,
-                Some(TokenStandard::ProgrammableNonFungible),
-            ) {
-                // check if the approver has an spl-token delegate
-                assert_delegated_tokens(
-                    accounts.authority_info,
-                    accounts.mint_info,
-                    accounts.token_info,
-                )?;
-
-                true
-            } else {
-                false
-            }
-        }
-    };
-
-    if !has_authority {
-        // approver does not have authority to lock/unlock
-        return Err(MetadataError::InvalidAuthorityType.into());
-    }
+    // authority – this can be either:
+    //  1. token delegate (programmable non-fungible): valid token_record.delegate
+    //  2. spl-delegate (non-fungibles): authority == token.delegate
+    //  3. freeze authority (fungibles): authority == freeze_authority
 
     if matches!(
         metadata.token_standard,
         Some(TokenStandard::ProgrammableNonFungible)
     ) {
+        let authority_type = AuthorityType::get_authority_type(AuthorityRequest {
+            precedence: &[AuthorityType::Delegate],
+            authority: accounts.authority_info.key,
+            update_authority: &metadata.update_authority,
+            mint: accounts.mint_info.key,
+            token: Some(accounts.token_info.key),
+            token_account: Some(&token),
+            token_record_info: accounts.token_record_info,
+            token_delegate_roles: vec![
+                TokenDelegateRole::Utility,
+                TokenDelegateRole::Staking,
+                TokenDelegateRole::LockedTransfer,
+                TokenDelegateRole::Migration,
+            ],
+            ..Default::default()
+        })?;
+        // only a delegate can lock/unlock
+        if !matches!(authority_type, AuthorityType::Delegate) {
+            return Err(MetadataError::InvalidAuthorityType.into());
+        }
+
         let (mut token_record, token_record_info) = match accounts.token_record_info {
             Some(token_record_info) => {
                 let (pda_key, _) =
@@ -158,39 +133,12 @@ pub(crate) fn toggle_asset_state(
         assert_state(&token_record, from)?;
         // for pNFTs, we only need to flip the programmable state
         token_record.state = to;
+
         // save the state
-        token_record.serialize(&mut *token_record_info.try_borrow_mut_data()?)?;
+        token_record
+            .serialize(&mut *token_record_info.try_borrow_mut_data()?)
+            .map_err(|_| MetadataError::BorshSerializationError.into())
     } else {
-        // for non-programmable assets, we need to freeze the token account,
-        // which requires the freeze_authority/master_edition, token and spl-token program
-        // accounts to be on the transaction
-
-        let mint: Mint = assert_initialized(accounts.mint_info)?;
-
-        let (freeze_authority, is_master_edition) = match accounts.master_edition_info {
-            Some(master_edition_info) => {
-                assert_owned_by(master_edition_info, &crate::ID)?;
-                assert_freeze_authority_matches_mint(&mint.freeze_authority, master_edition_info)?;
-                (master_edition_info, true)
-            }
-            None => {
-                // in this case, the approver must be a spl-token delegate (which
-                // has been already validated), so we need to validate that we have
-                // the token owner
-
-                let token_owner_info = match accounts.token_owner_info {
-                    Some(token_owner_info) => token_owner_info,
-                    None => {
-                        return Err(MetadataError::MissingTokenOwnerAccount.into());
-                    }
-                };
-
-                assert_keys_equal(token_owner_info.key, &token.owner)?;
-
-                (token_owner_info, false)
-            }
-        };
-
         let spl_token_program_info = match accounts.spl_token_program_info {
             Some(spl_token_program_info) => {
                 assert_keys_equal(spl_token_program_info.key, &spl_token::ID)?;
@@ -201,17 +149,59 @@ pub(crate) fn toggle_asset_state(
             }
         };
 
-        match to {
-            TokenState::Locked => {
-                if is_master_edition {
-                    // this will validate the master_edition derivation
+        // we don't rely on the token standard to support legacy assets without
+        // a token standard set; for non-fungibles, the master edition is the freeze
+        // authority and we allow lock/unlock if the authority is a delegate; for
+        // fungibles, the authority must match the freeze authority of the mint
+
+        if let Some(master_edition_info) = accounts.master_edition_info {
+            // check whether the authority is an spl-token delegate or not
+            assert_delegated_tokens(
+                accounts.authority_info,
+                accounts.mint_info,
+                accounts.token_info,
+            )
+            .map_err(|_| MetadataError::InvalidAuthorityType)?;
+
+            match to {
+                TokenState::Locked => {
+                    // this will validate the master_edition derivation, which
+                    // is the freeze authority
                     freeze(
                         accounts.mint_info.clone(),
                         accounts.token_info.clone(),
-                        freeze_authority.clone(),
+                        master_edition_info.clone(),
                         spl_token_program_info.clone(),
-                    )?;
-                } else {
+                    )
+                }
+                TokenState::Unlocked => {
+                    // this will validate the master_edition derivation, which
+                    // is the freeze authority
+                    thaw(
+                        accounts.mint_info.clone(),
+                        accounts.token_info.clone(),
+                        master_edition_info.clone(),
+                        spl_token_program_info.clone(),
+                    )
+                }
+                TokenState::Listed => Err(MetadataError::IncorrectTokenState.into()),
+            }
+        } else {
+            // fungibles: the authority must be the mint freeze authority
+            let mint: Mint = assert_initialized(accounts.mint_info)?;
+
+            assert_freeze_authority_matches_mint(&mint.freeze_authority, accounts.authority_info)
+                .map_err(|_| MetadataError::InvalidAuthorityType)?;
+
+            // the token owner must be the owner of the token account
+            let token_owner_info = accounts
+                .token_owner_info
+                .ok_or(MetadataError::MissingTokenOwnerAccount)?;
+
+            assert_keys_equal(token_owner_info.key, &token.owner)?;
+
+            match to {
+                TokenState::Locked => {
                     // for fungible assets, we invoke spl-token directly
                     // since we have the freeze authority
                     invoke(
@@ -219,27 +209,17 @@ pub(crate) fn toggle_asset_state(
                             spl_token_program_info.key,
                             accounts.token_info.key,
                             accounts.mint_info.key,
-                            freeze_authority.key,
+                            accounts.authority_info.key,
                             &[],
                         )?,
                         &[
                             accounts.token_info.clone(),
                             accounts.mint_info.clone(),
-                            freeze_authority.clone(),
+                            accounts.authority_info.clone(),
                         ],
-                    )?;
+                    )
                 }
-            }
-            TokenState::Unlocked => {
-                if is_master_edition {
-                    // this will validate the master_edition derivation
-                    thaw(
-                        accounts.mint_info.clone(),
-                        accounts.token_info.clone(),
-                        freeze_authority.clone(),
-                        spl_token_program_info.clone(),
-                    )?;
-                } else {
+                TokenState::Unlocked => {
                     // for fungible assets, we invoke spl-token directly
                     // since we have the freeze authority
                     invoke(
@@ -247,22 +227,18 @@ pub(crate) fn toggle_asset_state(
                             spl_token_program_info.key,
                             accounts.token_info.key,
                             accounts.mint_info.key,
-                            freeze_authority.key,
+                            accounts.authority_info.key,
                             &[],
                         )?,
                         &[
                             accounts.token_info.clone(),
                             accounts.mint_info.clone(),
-                            freeze_authority.clone(),
+                            accounts.authority_info.clone(),
                         ],
-                    )?;
+                    )
                 }
-            }
-            TokenState::Listed => {
-                return Err(MetadataError::IncorrectTokenState.into());
+                TokenState::Listed => Err(MetadataError::IncorrectTokenState.into()),
             }
         }
     }
-
-    Ok(())
 }
