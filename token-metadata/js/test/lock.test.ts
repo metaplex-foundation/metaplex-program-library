@@ -3,6 +3,7 @@ import { PublicKey } from '@solana/web3.js';
 import { BN } from 'bn.js';
 import spok from 'spok';
 import {
+  AssetData,
   DelegateArgs,
   TokenDelegateRole,
   TokenRecord,
@@ -257,21 +258,75 @@ test('Lock: delegate lock NonFungible asset', async (t) => {
 
 test('Lock: lock Fungible asset', async (t) => {
   const API = new InitTransactions();
-  const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
+  const { fstTxHandler: handler, authorityPair: authority, connection } = await API.authority();
 
-  const manager = await createAndMintDefaultAsset(
+  // initialize a mint account
+
+  const { tx: splMintTx, mint } = await API.createMintAccount(authority, connection, handler);
+  await splMintTx.assertSuccess(t);
+
+  // create the metadata
+
+  const data: AssetData = {
+    name: 'Fungible',
+    symbol: 'FUN',
+    uri: 'uri',
+    sellerFeeBasisPoints: 0,
+    creators: [
+      {
+        address: authority.publicKey,
+        share: 100,
+        verified: false,
+      },
+    ],
+    primarySaleHappened: false,
+    isMutable: true,
+    tokenStandard: TokenStandard.Fungible,
+    collection: null,
+    uses: null,
+    collectionDetails: null,
+    ruleSet: null,
+  };
+
+  const { tx: createTx, metadata } = await API.create(t, authority, data, 0, 0, handler, mint);
+  // executes the transaction
+  await createTx.assertSuccess(t);
+
+  // initialize a token account
+
+  const {
+    fstTxHandler: payerHandler,
+    payerPair: payer,
+    connection: payerConnection,
+  } = await API.payer();
+
+  const { tx: tokenTx, token } = await API.createTokenAccount(
+    mint,
+    payer,
+    payerConnection,
+    payerHandler,
+    payer.publicKey,
+  );
+  await tokenTx.assertSuccess(t);
+
+  // mint
+
+  const { tx: mintTx } = await API.mint(
     t,
     connection,
-    API,
-    handler,
-    payer,
-    TokenStandard.Fungible,
+    authority,
+    mint,
+    metadata,
+    null,
     null,
     100,
+    handler,
+    token,
   );
+  await mintTx.assertSuccess(t);
 
-  if (manager.token) {
-    const tokenAccount = await getAccount(connection, manager.token);
+  if (token) {
+    const tokenAccount = await getAccount(connection, token);
 
     spok(t, tokenAccount, {
       amount: spokSameBigint(new BN(100)),
@@ -280,37 +335,13 @@ test('Lock: lock Fungible asset', async (t) => {
     });
   }
 
-  // creates a delegate
-
-  const [, delegate] = await API.getKeypair('Delegate');
-
-  const args: DelegateArgs = {
-    __kind: 'StandardV1',
-    amount: 100,
-  };
-
-  const { tx: delegateTx } = await API.delegate(
-    delegate.publicKey,
-    manager.mint,
-    manager.metadata,
-    payer.publicKey,
-    payer,
-    args,
-    handler,
-    null,
-    null,
-    manager.token,
-  );
-
-  await delegateTx.assertSuccess(t);
-
   // lock asset
 
   const { tx: lockTx } = await API.lock(
-    delegate,
-    manager.mint,
-    manager.metadata,
-    manager.token,
+    authority /* freeze authority */,
+    mint,
+    metadata,
+    token,
     payer,
     handler,
     null,
@@ -318,8 +349,8 @@ test('Lock: lock Fungible asset', async (t) => {
   );
   await lockTx.assertSuccess(t);
 
-  if (manager.token) {
-    const tokenAccount = await getAccount(connection, manager.token);
+  if (token) {
+    const tokenAccount = await getAccount(connection, token);
 
     spok(t, tokenAccount, {
       isFrozen: true,
@@ -436,7 +467,7 @@ test('Lock: wrong delegate lock NonFungible asset', async (t) => {
     null,
     manager.masterEdition,
   );
-  await lockTx.assertError(t, /not been delegated to this user/);
+  await lockTx.assertError(t, /Invalid authority type/);
 });
 
 test('Lock: wrong delegate lock ProgrammableNonFungible asset', async (t) => {

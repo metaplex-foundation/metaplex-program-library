@@ -242,34 +242,10 @@ test('Unlock: unlock Fungible asset', async (t) => {
     });
   }
 
-  // creates a delegate
-
-  const [, delegate] = await API.getKeypair('Delegate');
-
-  const args: DelegateArgs = {
-    __kind: 'StandardV1',
-    amount: 100,
-  };
-
-  const { tx: delegateTx } = await API.delegate(
-    delegate.publicKey,
-    manager.mint,
-    manager.metadata,
-    payer.publicKey,
-    payer,
-    args,
-    handler,
-    null,
-    null,
-    manager.token,
-  );
-
-  await delegateTx.assertSuccess(t);
-
   // lock asset
 
   const { tx: lockTx } = await API.lock(
-    delegate,
+    payer,
     manager.mint,
     manager.metadata,
     manager.token,
@@ -288,10 +264,10 @@ test('Unlock: unlock Fungible asset', async (t) => {
     });
   }
 
-  // lock asset
+  // unlock asset
 
   const { tx: unlockTx } = await API.unlock(
-    delegate,
+    payer,
     manager.mint,
     manager.metadata,
     manager.token,
