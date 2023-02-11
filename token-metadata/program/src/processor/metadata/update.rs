@@ -127,55 +127,33 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
         (None, None)
     };
 
+    // there is a special case of the 'UpdateCollectionItems', where the
+    // validation should use the collection key as the mint parameter
+    let collection_mint = if let Some(Collection { key, .. }) = &metadata.collection {
+        Some(key)
+    } else {
+        None
+    };
+
     // Determines if we have a valid authority to perform the update. This must
     // be either the update authority, a delegate or the holder. This call fails
     // if no valid authority is present.
-    let mut authority_type = AuthorityType::get_authority_type(AuthorityRequest {
+    let authority_type = AuthorityType::get_authority_type(AuthorityRequest {
         authority: ctx.accounts.authority_info.key,
         update_authority: &metadata.update_authority,
         mint: ctx.accounts.mint_info.key,
+        collection_mint,
         token: token_pubkey,
         token_account: token.as_ref(),
         metadata_delegate_record_info: ctx.accounts.delegate_record_info,
         metadata_delegate_role: Some(MetadataDelegateRole::Update),
         precedence: &[
             AuthorityType::Metadata,
-            AuthorityType::Delegate,
+            AuthorityType::MetadataDelegate,
             AuthorityType::Holder,
         ],
         ..Default::default()
     })?;
-
-    if matches!(authority_type, AuthorityType::None)
-        && ctx.accounts.delegate_record_info.is_some()
-        && metadata.collection.is_some()
-    {
-        // there is a special case of the 'UpdateCollectionItems', where the
-        // validation should use the collection key as the mint parameter
-        let collection_mint = if let Some(Collection { key, .. }) = &metadata.collection {
-            key
-        } else {
-            return Err(MetadataError::CollectionNotFound.into());
-        };
-
-        authority_type = AuthorityType::get_authority_type(AuthorityRequest {
-            authority: ctx.accounts.authority_info.key,
-            // using the metadata update authority since it needs to match the
-            // authority that approved the collection delegate
-            update_authority: &metadata.update_authority,
-            mint: collection_mint,
-            token: token_pubkey,
-            token_account: token.as_ref(),
-            metadata_delegate_record_info: ctx.accounts.delegate_record_info,
-            metadata_delegate_role: Some(MetadataDelegateRole::UpdateCollectionItems),
-            precedence: &[
-                AuthorityType::Metadata,
-                AuthorityType::Delegate,
-                AuthorityType::Holder,
-            ],
-            ..Default::default()
-        })?;
-    }
 
     // For pNFTs, we need to validate the authorization rules.
     if matches!(token_standard, TokenStandard::ProgrammableNonFungible) {
@@ -197,7 +175,7 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
             // signer and that it matches the metadata's update authority.
             msg!("Authority type: Metadata");
         }
-        AuthorityType::Delegate => {
+        AuthorityType::MetadataDelegate => {
             // Support for delegate update (for pNFTs this involves validating the
             // authoritzation rules)
             msg!("Authority type: Delegate");
@@ -208,7 +186,7 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
             msg!("Authority type: Holder");
             return Err(MetadataError::FeatureNotSupported.into());
         }
-        AuthorityType::None => {
+        _ => {
             return Err(MetadataError::UpdateAuthorityIncorrect.into());
         }
     }

@@ -259,7 +259,7 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
             // signer via an invoke call.
             is_wallet_to_wallet = !is_cpi && wallets_are_system_program_owned;
         }
-        AuthorityType::Delegate => {
+        AuthorityType::TokenDelegate => {
             // the delegate has already being validated, but we need to validate
             // that it can transfer the required amount
             if token.delegated_amount < amount || token.amount < amount {
@@ -339,7 +339,7 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
                     }
                     TransferScenario::Holder
                 }
-                AuthorityType::Delegate => {
+                AuthorityType::TokenDelegate => {
                     if owner_token_record.delegate_role.is_none() {
                         return Err(MetadataError::MissingDelegateRole.into());
                     }

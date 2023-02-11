@@ -206,8 +206,9 @@ pub enum TokenDelegateRole {
 pub enum AuthorityType {
     None,
     Metadata,
-    Delegate,
     Holder,
+    MetadataDelegate,
+    TokenDelegate,
 }
 
 pub struct AuthorityRequest<'a, 'b> {
@@ -219,6 +220,8 @@ pub struct AuthorityRequest<'a, 'b> {
     pub update_authority: &'b Pubkey,
     /// Mint address.
     pub mint: &'b Pubkey,
+    /// Collection mint address.
+    pub collection_mint: Option<&'b Pubkey>,
     /// Holder's token account info.
     pub token: Option<&'a Pubkey>,
     /// Holder's token account.
@@ -237,13 +240,15 @@ impl<'a, 'b> Default for AuthorityRequest<'a, 'b> {
     fn default() -> Self {
         Self {
             precedence: &[
-                AuthorityType::Delegate,
+                AuthorityType::TokenDelegate,
                 AuthorityType::Holder,
+                AuthorityType::MetadataDelegate,
                 AuthorityType::Metadata,
             ],
             authority: &DEFAULT_PUBKEY,
             update_authority: &DEFAULT_PUBKEY,
             mint: &DEFAULT_PUBKEY,
+            collection_mint: None,
             token: None,
             token_account: None,
             metadata_delegate_record_info: None,
@@ -266,7 +271,7 @@ impl AuthorityType {
         // found, the type is returned
         for authority_type in request.precedence {
             match authority_type {
-                AuthorityType::Delegate => {
+                AuthorityType::TokenDelegate => {
                     // checks if the authority is a token delegate
 
                     if let Some(token_record_info) = request.token_record_info {
@@ -290,11 +295,12 @@ impl AuthorityType {
                                 && role_matches
                                 && (COption::from(token_record.delegate) == token_account.delegate)
                             {
-                                return Ok(AuthorityType::Delegate);
+                                return Ok(AuthorityType::TokenDelegate);
                             }
                         }
                     }
-
+                }
+                AuthorityType::MetadataDelegate => {
                     // checks if the authority is a metadata delegate
 
                     if let Some(metadata_delegate_record_info) =
@@ -304,6 +310,7 @@ impl AuthorityType {
                         assert_owned_by(metadata_delegate_record_info, &crate::ID)?;
 
                         if let Some(delegate_role) = request.metadata_delegate_role {
+                            // looking up the delegate on the metadata mint
                             let (pda_key, _) = find_metadata_delegate_record_account(
                                 request.mint,
                                 delegate_role,
@@ -317,7 +324,29 @@ impl AuthorityType {
                                 )?;
 
                                 if delegate_record.delegate == *request.authority {
-                                    return Ok(AuthorityType::Delegate);
+                                    return Ok(AuthorityType::MetadataDelegate);
+                                }
+                            }
+
+                            // looking up the delegate on the collection mint (this is for
+                            // collection-level delegates)
+                            if let Some(mint) = request.collection_mint {
+                                let (pda_key, _) = find_metadata_delegate_record_account(
+                                    mint,
+                                    delegate_role,
+                                    request.update_authority,
+                                    request.authority,
+                                );
+
+                                if cmp_pubkeys(&pda_key, metadata_delegate_record_info.key) {
+                                    let delegate_record =
+                                        MetadataDelegateRecord::from_account_info(
+                                            metadata_delegate_record_info,
+                                        )?;
+
+                                    if delegate_record.delegate == *request.authority {
+                                        return Ok(AuthorityType::MetadataDelegate);
+                                    }
                                 }
                             }
                         }

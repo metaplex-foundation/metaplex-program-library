@@ -104,7 +104,7 @@ pub(crate) fn toggle_asset_state(
         // holder is not allowed to lock/unlock
         AuthorityType::Holder => false,
         // (token) delegates can lock/unlock
-        AuthorityType::Delegate => true,
+        AuthorityType::TokenDelegate => true,
         // if there is no authority, we checked if there is an spl-token
         // delegate set (this will be the case for non-programmable assets)
         _ => {
