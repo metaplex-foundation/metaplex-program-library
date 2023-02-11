@@ -103,7 +103,7 @@ test('Revoke: revoke transfer delegate', async (t) => {
   });
 });
 
-test('Revoke: revoke collection delegate', async (t) => {
+test('Revoke: revoke update collection items delegate', async (t) => {
   const API = new InitTransactions();
   const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
 
@@ -125,7 +125,7 @@ test('Revoke: revoke collection delegate', async (t) => {
       Buffer.from('metadata'),
       PROGRAM_ID.toBuffer(),
       manager.mint.toBuffer(),
-      Buffer.from('collection_delegate'),
+      Buffer.from('update_collection_items_delegate'),
       payer.publicKey.toBuffer(),
       delegate.publicKey.toBuffer(),
     ],
@@ -134,7 +134,7 @@ test('Revoke: revoke collection delegate', async (t) => {
   amman.addr.addLabel('Delegate Record', delegateRecord);
 
   const delegateArgs: DelegateArgs = {
-    __kind: 'CollectionV1',
+    __kind: 'UpdateCollectionItemsV1',
     authorizationData: null,
   };
 
@@ -170,7 +170,7 @@ test('Revoke: revoke collection delegate', async (t) => {
     manager.metadata,
     payer,
     payer,
-    RevokeArgs.CollectionV1,
+    RevokeArgs.UpdateCollectionItemsV1,
     handler,
     delegateRecord,
     manager.masterEdition,
@@ -187,7 +187,7 @@ test('Revoke: revoke collection delegate', async (t) => {
   }
 });
 
-test('Revoke: self-revoke collection delegate', async (t) => {
+test('Revoke: self-revoke update collection items delegate', async (t) => {
   const API = new InitTransactions();
   const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
 
@@ -209,7 +209,7 @@ test('Revoke: self-revoke collection delegate', async (t) => {
       Buffer.from('metadata'),
       PROGRAM_ID.toBuffer(),
       manager.mint.toBuffer(),
-      Buffer.from('collection_delegate'),
+      Buffer.from('update_collection_items_delegate'),
       payer.publicKey.toBuffer(),
       delegate.publicKey.toBuffer(),
     ],
@@ -218,7 +218,7 @@ test('Revoke: self-revoke collection delegate', async (t) => {
   amman.addr.addLabel('Delegate Record', delegateRecord);
 
   const delegateArgs: DelegateArgs = {
-    __kind: 'CollectionV1',
+    __kind: 'UpdateCollectionItemsV1',
     authorizationData: null,
   };
 
@@ -254,7 +254,7 @@ test('Revoke: self-revoke collection delegate', async (t) => {
     manager.metadata,
     delegate,
     payer,
-    RevokeArgs.CollectionV1,
+    RevokeArgs.UpdateCollectionItemsV1,
     handler,
     delegateRecord,
     manager.masterEdition,
@@ -278,7 +278,7 @@ test('Revoke: self-revoke collection delegate', async (t) => {
     manager.metadata,
     delegate,
     payer,
-    RevokeArgs.CollectionV1,
+    RevokeArgs.UpdateCollectionItemsV1,
     handler,
     delegateRecord,
     manager.token,
