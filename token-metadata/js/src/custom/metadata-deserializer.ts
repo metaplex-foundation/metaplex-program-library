@@ -3,6 +3,7 @@ import * as beetSolana from '@metaplex-foundation/beet-solana';
 import { Metadata } from '../generated/accounts/Metadata';
 import { collectionBeet } from '../generated/types/Collection';
 import { collectionDetailsBeet } from '../generated/types/CollectionDetails';
+import { programmableConfigBeet } from '../generated/types/ProgrammableConfig';
 import { dataBeet } from '../generated/types/Data';
 import { keyBeet } from '../generated/types/Key';
 import { tokenStandardBeet } from '../generated/types/TokenStandard';
@@ -87,8 +88,19 @@ export function deserialize(buf: Buffer, offset = 0): [Metadata, number] {
       : tryReadOption(beet.coption(collectionDetailsBeet), buf, cursor);
   cursor += collectionDetailsDelta;
 
+  // programmable_config
+  const [programmableConfig, programmableConfigDelta, programmableConfigCorrupted] =
+    tokenCorrupted || collectionCorrupted || usesCorrupted
+      ? [null, NONE_BYTE_SIZE, true]
+      : tryReadOption(beet.coption(programmableConfigBeet), buf, cursor);
+  cursor += programmableConfigDelta;
+
   const anyCorrupted =
-    tokenCorrupted || collectionCorrupted || usesCorrupted || collectionDetailsCorrupted;
+    tokenCorrupted ||
+    collectionCorrupted ||
+    usesCorrupted ||
+    collectionDetailsCorrupted ||
+    programmableConfigCorrupted;
 
   const args = {
     key,
@@ -102,6 +114,7 @@ export function deserialize(buf: Buffer, offset = 0): [Metadata, number] {
     collection: anyCorrupted ? null : collection,
     uses: anyCorrupted ? null : uses,
     collectionDetails: anyCorrupted ? null : collectionDetails,
+    programmableConfig: anyCorrupted ? null : programmableConfig,
   };
 
   return [Metadata.fromArgs(args), cursor];
@@ -116,7 +129,7 @@ function tryReadOption<T>(
     const fixed = optionBeet.toFixedFromData(buf, offset);
     const value = fixed.read(buf, offset);
     return [value, fixed.byteSize, false];
-  } catch (err) {
+  } catch (e) {
     return [null, NONE_BYTE_SIZE, true];
   }
 }

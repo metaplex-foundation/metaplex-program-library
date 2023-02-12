@@ -2,14 +2,7 @@
 // @ts-check
 const base = require('../../.base-ammanrc.js');
 const validator = {
-    ...base.validator,
-    programs: [base.programs.metadata],
+  ...base.validator,
+  programs: [base.programs.metadata, base.programs.token_auth_rules],
 };
-
-const storage = {
-    enabled: true,
-    storageId: 'mock-storage',
-    clearOnStart: true,
-};
-
-module.exports = { validator, storage };
+module.exports = { validator };

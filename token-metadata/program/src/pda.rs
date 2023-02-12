@@ -1,5 +1,7 @@
 use solana_program::pubkey::Pubkey;
 
+use crate::{instruction::MetadataDelegateRole, state::TOKEN_RECORD_SEED};
+
 /// prefix used for PDAs to avoid certain collision attacks:
 /// https://en.wikipedia.org/wiki/Collision_attack#Chosen-prefix_collision_attack
 
@@ -74,6 +76,38 @@ pub fn find_collection_authority_account(mint: &Pubkey, authority: &Pubkey) -> (
 pub fn find_program_as_burner_account() -> (Pubkey, u8) {
     Pubkey::find_program_address(
         &[PREFIX.as_bytes(), crate::id().as_ref(), BURN.as_bytes()],
+        &crate::id(),
+    )
+}
+
+pub fn find_metadata_delegate_record_account(
+    mint: &Pubkey,
+    role: MetadataDelegateRole,
+    update_authority: &Pubkey,
+    delegate: &Pubkey,
+) -> (Pubkey, u8) {
+    Pubkey::find_program_address(
+        &[
+            PREFIX.as_bytes(),
+            crate::id().as_ref(),
+            mint.as_ref(),
+            role.to_string().as_bytes(),
+            update_authority.as_ref(),
+            delegate.as_ref(),
+        ],
+        &crate::id(),
+    )
+}
+
+pub fn find_token_record_account(mint: &Pubkey, token: &Pubkey) -> (Pubkey, u8) {
+    Pubkey::find_program_address(
+        &[
+            PREFIX.as_bytes(),
+            crate::id().as_ref(),
+            mint.as_ref(),
+            TOKEN_RECORD_SEED.as_bytes(),
+            token.as_ref(),
+        ],
         &crate::id(),
     )
 }

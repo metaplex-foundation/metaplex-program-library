@@ -72,10 +72,7 @@ impl EditionMarker {
         let my_position_in_index_starting_from_right =
             EditionMarker::get_offset_from_right(offset_from_start)?;
 
-        Ok((
-            index,
-            u8::pow(2, my_position_in_index_starting_from_right as u32),
-        ))
+        Ok((index, u8::pow(2, my_position_in_index_starting_from_right)))
     }
 
     pub fn edition_taken(&self, edition: u64) -> Result<bool, ProgramError> {

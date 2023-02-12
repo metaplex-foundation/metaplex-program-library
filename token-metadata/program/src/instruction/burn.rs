@@ -1,10 +1,12 @@
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
+#[cfg(feature = "serde-feature")]
+use serde::{Deserialize, Serialize};
 use solana_program::{
     instruction::{AccountMeta, Instruction},
     pubkey::Pubkey,
 };
 
-use crate::instruction::MetadataInstruction;
+use crate::{instruction::MetadataInstruction, processor::AuthorizationData};
 
 ///# Burn Edition NFT
 ///
@@ -94,4 +96,14 @@ pub fn burn_nft(
         accounts,
         data: MetadataInstruction::BurnNft.try_to_vec().unwrap(),
     }
+}
+
+#[repr(C)]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+pub enum BurnArgs {
+    V1 {
+        /// Required authorization data to validate the request.
+        authorization_data: Option<AuthorizationData>,
+    },
 }

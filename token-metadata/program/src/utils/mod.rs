@@ -2,19 +2,8 @@ pub(crate) mod collection;
 pub(crate) mod compression;
 pub(crate) mod master_edition;
 pub(crate) mod metadata;
+pub(crate) mod programmable_asset;
 
-pub use crate::assertions::{
-    assert_delegated_tokens, assert_derivation, assert_freeze_authority_matches_mint,
-    assert_initialized, assert_mint_authority_matches_mint, assert_owned_by, assert_rent_exempt,
-    assert_token_program_matches_package,
-    edition::{
-        assert_edition_is_not_mint_authority, assert_edition_valid, assert_supply_invariance,
-    },
-    metadata::{
-        assert_currently_holding, assert_data_valid, assert_update_authority_is_correct,
-        assert_verified_member_of_collection,
-    },
-};
 pub use collection::*;
 pub use compression::*;
 pub use master_edition::*;
@@ -27,12 +16,23 @@ pub use mpl_utils::{
         get_owner_from_token_account, spl_token_burn, spl_token_close, spl_token_mint_to,
     },
 };
+pub use programmable_asset::*;
 use solana_program::{
     account_info::AccountInfo, borsh::try_from_slice_unchecked, entrypoint::ProgramResult, msg,
-    program::invoke_signed, program_error::ProgramError, pubkey::Pubkey,
+    program::invoke_signed, program_error::ProgramError, pubkey::Pubkey, system_program,
 };
 use spl_token::instruction::{set_authority, AuthorityType};
 
+pub use crate::assertions::{
+    assert_delegated_tokens, assert_derivation, assert_freeze_authority_matches_mint,
+    assert_initialized, assert_mint_authority_matches_mint, assert_owned_by, assert_rent_exempt,
+    assert_token_program_matches_package,
+    edition::{assert_edition_is_not_mint_authority, assert_edition_valid},
+    metadata::{
+        assert_currently_holding, assert_data_valid, assert_update_authority_is_correct,
+        assert_verified_member_of_collection,
+    },
+};
 use crate::{
     error::MetadataError,
     state::{
@@ -185,6 +185,25 @@ pub fn zero_account(s: &str, size: usize) -> String {
     s.to_owned() + std::str::from_utf8(&array_of_zeroes).unwrap()
 }
 
+pub fn close_program_account<'a>(
+    account_info: &AccountInfo<'a>,
+    funds_dest_account_info: &AccountInfo<'a>,
+) -> ProgramResult {
+    // Transfer lamports from the account to the destination account.
+    let dest_starting_lamports = funds_dest_account_info.lamports();
+    **funds_dest_account_info.lamports.borrow_mut() = dest_starting_lamports
+        .checked_add(account_info.lamports())
+        .unwrap();
+    **account_info.lamports.borrow_mut() = 0;
+
+    // Realloc the account data size to 0 bytes and teassign ownership of
+    // the account to the system program
+    account_info.realloc(0, false)?;
+    account_info.assign(&system_program::ID);
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     pub use solana_program::pubkey::Pubkey;
@@ -239,6 +258,7 @@ mod tests {
             uses: None,
             token_standard: None,
             collection_details: None,
+            programmable_config: None,
         };
 
         puff_out_data_fields(&mut metadata);

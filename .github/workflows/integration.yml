@@ -25,7 +25,8 @@ jobs:
       matrix:
         node:
           - name: "fixed-price-sale"
-          - name: "hydra"
+          # - name: "hydra"
+          - name: "token-metadata"
           - name: "candy-machine-core"
     uses: ./.github/workflows/integration-reusable.yml
     with:

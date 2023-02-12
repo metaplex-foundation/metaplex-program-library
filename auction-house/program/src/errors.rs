@@ -177,4 +177,8 @@ pub enum AuctionHouseError {
     // 6043
     #[msg("Insufficient funds in escrow account to purchase.")]
     InsufficientFunds,
+
+    // 6044
+    #[msg("This sale requires exactly one signer: either the seller or the authority.")]
+    SaleRequiresExactlyOneSigner,
 }

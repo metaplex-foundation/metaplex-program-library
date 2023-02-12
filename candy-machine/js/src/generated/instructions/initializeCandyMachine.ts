@@ -51,6 +51,7 @@ export type InitializeCandyMachineInstructionAccounts = {
   payer: web3.PublicKey;
   systemProgram?: web3.PublicKey;
   rent?: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
 };
 
 export const initializeCandyMachineInstructionDiscriminator = [
@@ -108,6 +109,12 @@ export function createInitializeCandyMachineInstruction(
       isSigner: false,
     },
   ];
+
+  if (accounts.anchorRemainingAccounts != null) {
+    for (const acc of accounts.anchorRemainingAccounts) {
+      keys.push(acc);
+    }
+  }
 
   const ix = new web3.TransactionInstruction({
     programId,

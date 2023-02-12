@@ -1,4 +1,12 @@
 use super::*;
+use crate::{
+    assertions::{
+        collection::assert_collection_update_is_valid, metadata::assert_data_valid,
+        uses::assert_valid_use,
+    },
+    instruction::{CollectionDetailsToggle, CollectionToggle, RuleSetToggle, UpdateArgs},
+    utils::{clean_write_metadata, puff_out_data_fields},
+};
 
 pub const MAX_NAME_LENGTH: usize = 32;
 
@@ -16,7 +24,9 @@ pub const MAX_METADATA_LEN: usize = 1 // key
 + 2              // token standard
 + 34             // collection
 + 18             // uses
-+ 118; // Padding
++ 10             // collection details
++ 33             // programmable config
++ 75; // Padding
 
 pub const MAX_DATA_SIZE: usize = 4
     + MAX_NAME_LENGTH
@@ -33,9 +43,15 @@ pub const MAX_DATA_SIZE: usize = 4
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(Clone, BorshSerialize, Debug, PartialEq, Eq, ShankAccount)]
 pub struct Metadata {
+    /// Account discriminator.
     pub key: Key,
+    /// Address of the update authority.
+    #[cfg_attr(feature = "serde-feature", serde(with = "As::<DisplayFromStr>"))]
     pub update_authority: Pubkey,
+    /// Address of the mint.
+    #[cfg_attr(feature = "serde-feature", serde(with = "As::<DisplayFromStr>"))]
     pub mint: Pubkey,
+    /// Asset data.
     pub data: Data,
     // Immutable, once flipped, all sales of this metadata are considered secondary.
     pub primary_sale_happened: bool,
@@ -49,8 +65,168 @@ pub struct Metadata {
     pub collection: Option<Collection>,
     /// Uses
     pub uses: Option<Uses>,
-    /// Item Details
+    /// Collection Details
     pub collection_details: Option<CollectionDetails>,
+    /// Programmable Config
+    pub programmable_config: Option<ProgrammableConfig>,
+}
+
+impl Metadata {
+    pub fn save(&self, data: &mut [u8]) -> Result<(), BorshError> {
+        let mut bytes = Vec::with_capacity(MAX_METADATA_LEN);
+        BorshSerialize::serialize(&self, &mut bytes)?;
+        data[..bytes.len()].copy_from_slice(&bytes);
+        Ok(())
+    }
+
+    pub(crate) fn update_v1<'a>(
+        &mut self,
+        args: UpdateArgs,
+        update_authority: &AccountInfo<'a>,
+        metadata: &AccountInfo<'a>,
+        token: Option<TokenAccount>,
+    ) -> ProgramResult {
+        let UpdateArgs::V1 {
+            data,
+            primary_sale_happened,
+            is_mutable,
+            collection,
+            uses,
+            new_update_authority,
+            rule_set,
+            collection_details,
+            ..
+        } = args;
+
+        if let Some(data) = data {
+            if !self.is_mutable {
+                return Err(MetadataError::DataIsImmutable.into());
+            }
+
+            assert_data_valid(
+                &data,
+                update_authority.key,
+                self,
+                false,
+                update_authority.is_signer,
+            )?;
+            self.data = data;
+        }
+
+        // if the Collection data is 'Set', only allow updating if it's unverified
+        // or if it exactly matches the existing collection info; if the Collection data
+        // is 'Clear', then only set to 'None' it if it's unverified.
+        match collection {
+            CollectionToggle::Set(_) => {
+                let collection_option = collection.to_option();
+                assert_collection_update_is_valid(false, &self.collection, &collection_option)?;
+                self.collection = collection_option;
+            }
+            CollectionToggle::Clear => {
+                if let Some(current_collection) = self.collection.as_ref() {
+                    // Can't change a verified collection in this command.
+                    if current_collection.verified {
+                        return Err(MetadataError::CannotUpdateVerifiedCollection.into());
+                    }
+                    // If it's unverified, it's ok to set to None.
+                    self.collection = None;
+                }
+            }
+            CollectionToggle::None => { /* nothing to do */ }
+        }
+
+        if uses.is_some() {
+            let uses_option = uses.to_option();
+            // If already None leave it as None.
+            assert_valid_use(&uses_option, &self.uses)?;
+            self.uses = uses_option;
+        }
+
+        if let Some(authority) = new_update_authority {
+            self.update_authority = authority;
+        }
+
+        if let Some(primary_sale) = primary_sale_happened {
+            // If received primary_sale is true, flip to true.
+            if primary_sale || !self.primary_sale_happened {
+                self.primary_sale_happened = primary_sale
+            } else {
+                return Err(MetadataError::PrimarySaleCanOnlyBeFlippedToTrue.into());
+            }
+        }
+
+        if let Some(mutable) = is_mutable {
+            // If received value is false, flip to false.
+            if !mutable || self.is_mutable {
+                self.is_mutable = mutable
+            } else {
+                return Err(MetadataError::IsMutableCanOnlyBeFlippedToFalse.into());
+            }
+        }
+
+        let token_standard = self
+            .token_standard
+            .ok_or(MetadataError::InvalidTokenStandard)?;
+
+        // if the rule_set data is either 'Set' or 'Clear', only allow updating if the
+        // token standard is equal to `ProgrammableNonFungible` and no SPL delegate is set.
+        if matches!(rule_set, RuleSetToggle::Clear | RuleSetToggle::Set(_)) {
+            if token_standard != TokenStandard::ProgrammableNonFungible {
+                return Err(MetadataError::InvalidTokenStandard.into());
+            }
+
+            // Require the token so we can check if it has a delegate.
+            let token = token.ok_or(MetadataError::MissingTokenAccount)?;
+
+            // If the token has a delegate, we cannot update the rule set.
+            if token.delegate.is_some() {
+                return Err(MetadataError::CannotUpdateAssetWithDelegate.into());
+            }
+
+            self.programmable_config =
+                rule_set.to_option().map(|rule_set| ProgrammableConfig::V1 {
+                    rule_set: Some(rule_set),
+                });
+        }
+
+        if let CollectionDetailsToggle::Set(collection_details) = collection_details {
+            // only unsized collections can have the size set, and only once.
+            if self.collection_details.is_some() {
+                return Err(MetadataError::SizedCollection.into());
+            }
+
+            self.collection_details = Some(collection_details);
+        }
+
+        puff_out_data_fields(self);
+        clean_write_metadata(self, metadata)?;
+
+        Ok(())
+    }
+
+    pub fn into_asset_data(self) -> AssetData {
+        let mut asset_data = AssetData::new(
+            self.token_standard.unwrap_or(TokenStandard::NonFungible),
+            self.data.name,
+            self.data.symbol,
+            self.data.uri,
+        );
+        asset_data.seller_fee_basis_points = self.data.seller_fee_basis_points;
+        asset_data.creators = self.data.creators;
+        asset_data.primary_sale_happened = self.primary_sale_happened;
+        asset_data.is_mutable = self.is_mutable;
+        asset_data.collection = self.collection;
+        asset_data.uses = self.uses;
+        asset_data.collection_details = self.collection_details;
+        asset_data.rule_set =
+            if let Some(ProgrammableConfig::V1 { rule_set }) = self.programmable_config {
+                rule_set
+            } else {
+                None
+            };
+
+        asset_data
+    }
 }
 
 impl Default for Metadata {
@@ -67,6 +243,7 @@ impl Default for Metadata {
             collection: None,
             uses: None,
             collection_details: None,
+            programmable_config: None,
         }
     }
 }
@@ -89,6 +266,48 @@ impl borsh::de::BorshDeserialize for Metadata {
         let md = meta_deser_unchecked(buf)?;
         Ok(md)
     }
+}
+
+#[repr(C)]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+/// Represents the print supply of a non-fungible asset.
+pub enum PrintSupply {
+    /// The asset does not have any prints.
+    Zero,
+    /// The asset has a limited amount of prints.
+    Limited(u64),
+    /// The asset has an unlimited amount of prints.
+    Unlimited,
+}
+
+impl PrintSupply {
+    /// Converts the print supply to an option.
+    pub fn to_option(&self) -> Option<u64> {
+        match self {
+            PrintSupply::Zero => Some(0),
+            PrintSupply::Limited(supply) => Some(*supply),
+            PrintSupply::Unlimited => None,
+        }
+    }
+}
+
+/// Configuration for programmable assets.
+#[repr(C)]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+pub enum ProgrammableConfig {
+    V1 {
+        /// Programmable authorization rules.
+        #[cfg_attr(
+            feature = "serde-feature",
+            serde(
+                deserialize_with = "deser_option_pubkey",
+                serialize_with = "ser_option_pubkey"
+            )
+        )]
+        rule_set: Option<Pubkey>,
+    },
 }
 
 #[cfg(test)]

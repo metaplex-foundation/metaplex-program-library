@@ -16,8 +16,10 @@ use crate::{
         metadata::{assert_currently_holding, assert_verified_member_of_collection},
     },
     error::MetadataError,
+    pda::find_metadata_account,
     state::{
-        CollectionDetails, Key, Metadata, TokenMetadataAccount, EDITION, MAX_METADATA_LEN, PREFIX,
+        Collection, CollectionDetails, Key, Metadata, TokenMetadataAccount, EDITION,
+        MAX_METADATA_LEN, PREFIX,
     },
     utils::clean_write_metadata,
 };
@@ -150,26 +152,41 @@ pub fn process_burn_nft(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progra
 
     if collection_nft_provided {
         let collection_metadata_info = next_account_info(account_info_iter)?;
+        if collection_metadata_info.data_is_empty() {
+            let Collection {
+                key: expected_collection_mint,
+                ..
+            } = metadata
+                .collection
+                .as_ref()
+                .ok_or(MetadataError::CollectionNotFound)?;
+            let (expected_collection_metadata_key, _) =
+                find_metadata_account(expected_collection_mint);
+            // Check that the empty collection account passed in is actually the burned collection nft
+            if expected_collection_metadata_key != *collection_metadata_info.key {
+                return Err(MetadataError::NotAMemberOfCollection.into());
+            }
+        } else {
+            // Get our collections metadata into a Rust type so we can update the collection size after burning.
+            let mut collection_metadata = Metadata::from_account_info(collection_metadata_info)?;
 
-        // Get our collections metadata into a Rust type so we can update the collection size after burning.
-        let mut collection_metadata = Metadata::from_account_info(collection_metadata_info)?;
+            // Owned by token metadata program.
+            assert_owned_by(collection_metadata_info, program_id)?;
 
-        // Owned by token metadata program.
-        assert_owned_by(collection_metadata_info, program_id)?;
+            // NFT is actually a verified member of the specified collection.
+            assert_verified_member_of_collection(&metadata, &collection_metadata)?;
 
-        // NFT is actually a verified member of the specified collection.
-        assert_verified_member_of_collection(&metadata, &collection_metadata)?;
-
-        // Update collection size if it's sized.
-        if let Some(ref details) = collection_metadata.collection_details {
-            match details {
-                CollectionDetails::V1 { size } => {
-                    collection_metadata.collection_details = Some(CollectionDetails::V1 {
-                        size: size
-                            .checked_sub(1)
-                            .ok_or(MetadataError::NumericalOverflowError)?,
-                    });
-                    clean_write_metadata(&mut collection_metadata, collection_metadata_info)?;
+            // Update collection size if it's sized.
+            if let Some(ref details) = collection_metadata.collection_details {
+                match details {
+                    CollectionDetails::V1 { size } => {
+                        collection_metadata.collection_details = Some(CollectionDetails::V1 {
+                            size: size
+                                .checked_sub(1)
+                                .ok_or(MetadataError::NumericalOverflowError)?,
+                        });
+                        clean_write_metadata(&mut collection_metadata, collection_metadata_info)?;
+                    }
                 }
             }
         }

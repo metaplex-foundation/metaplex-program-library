@@ -9,6 +9,8 @@ inputs:
 runs:
   using: 'composite'
   steps:
+    - uses: actions/checkout@v3
+
     # Build and install deps
     - uses: ./.github/actions/build-program
       with:
@@ -43,3 +45,6 @@ runs:
       with:
         name: token-metadata
       if: ${{ inputs.name == 'token-entangler' }}
+
+    - uses: ./.github/actions/program/token-auth-rules-and-rooster
+      if: ${{ inputs.name == 'token-metadata' }}

@@ -35,6 +35,11 @@ const programs = {
     programId: 'CndyV3LdqHUfDLmE5naZjVN8rBZz4tqhdefbAnjHG3JR',
     deployPath: localDeployPath('mpl_candy_machine_core'),
   },
+  token_auth_rules: {
+    label: 'Token Auth Rules',
+    programId: 'auth9SigNpDKz4sJJ1DfCTuZrZNSAgh9sFD3rboVmgg',
+    deployPath: localDeployPath('mpl_token_auth_rules'),
+  },
 };
 
 const validator = {

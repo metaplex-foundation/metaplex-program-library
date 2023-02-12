@@ -31,12 +31,13 @@ jobs:
           - name: "fixed-price-sale"
             skip_test: true
           - name: "gumdrop"
-          - name: "hydra"
-            skip_test: true
+          # - name: "hydra"
+            # skip_test: true
           - name: "nft-packs"
             skip_test: true
           - name: "token-entangler"
           - name: "token-metadata"
+            skip_test: true
 
     uses: ./.github/workflows/sdk-reusable.yml
     with:

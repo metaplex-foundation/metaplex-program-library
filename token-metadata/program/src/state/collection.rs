@@ -7,6 +7,7 @@ pub const COLLECTION_AUTHORITY_RECORD_SIZE: usize = 35;
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct Collection {
     pub verified: bool,
+    #[cfg_attr(feature = "serde-feature", serde(with = "As::<DisplayFromStr>"))]
     pub key: Pubkey,
 }
 

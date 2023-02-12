@@ -11,7 +11,6 @@ use solana_program::{
 
 /// Create account almost from scratch, lifted from
 /// <https://github.com/solana-labs/solana-program-library/tree/master/associated-token-account/program/src/processor.rs#L51-L98>
-#[inline(always)]
 pub fn create_or_allocate_account_raw<'a>(
     program_id: Pubkey,
     new_account_info: &AccountInfo<'a>,
@@ -58,7 +57,6 @@ pub fn create_or_allocate_account_raw<'a>(
 }
 
 /// Resize an account using realloc, lifted from Solana Cookbook
-#[inline(always)]
 pub fn resize_or_reallocate_account_raw<'a>(
     target_account: &AccountInfo<'a>,
     funding_account: &AccountInfo<'a>,
@@ -84,7 +82,6 @@ pub fn resize_or_reallocate_account_raw<'a>(
 }
 
 /// Close src_account and transfer lamports to dst_account, lifted from Solana Cookbook
-#[inline(always)]
 pub fn close_account_raw<'a>(
     dest_account_info: &AccountInfo<'a>,
     src_account_info: &AccountInfo<'a>,

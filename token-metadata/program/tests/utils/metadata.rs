@@ -1,6 +1,9 @@
 use mpl_token_metadata::{
     id, instruction,
-    state::{Collection, CollectionDetails, Creator, Data, DataV2, Uses, PREFIX},
+    state::{
+        Collection, CollectionDetails, Creator, Data, DataV2, Metadata as TmMetadata,
+        TokenMetadataAccount, TokenStandard, Uses, PREFIX,
+    },
 };
 use solana_program::borsh::try_from_slice_unchecked;
 use solana_sdk::{
@@ -32,12 +35,50 @@ impl Metadata {
         }
     }
 
+    pub async fn into_digital_asset(self, context: &mut ProgramTestContext) -> DigitalAsset {
+        let token_record = if self.is_pnft(context).await {
+            Some(self.token.pubkey())
+        } else {
+            None
+        };
+
+        DigitalAsset {
+            metadata: self.pubkey,
+            mint: self.mint,
+            token: Some(self.token.pubkey()),
+            master_edition: None,
+            token_record,
+        }
+    }
+
     pub async fn get_data(
         &self,
         context: &mut ProgramTestContext,
     ) -> mpl_token_metadata::state::Metadata {
         let account = get_account(context, &self.pubkey).await;
         try_from_slice_unchecked(&account.data).unwrap()
+    }
+
+    pub async fn is_pnft(&self, context: &mut ProgramTestContext) -> bool {
+        let md = self.get_metadata(context).await;
+        if let Some(standard) = md.token_standard {
+            if standard == TokenStandard::ProgrammableNonFungible {
+                return true;
+            }
+        }
+
+        false
+    }
+
+    pub async fn get_metadata(&self, context: &mut ProgramTestContext) -> TmMetadata {
+        let metadata_account = context
+            .banks_client
+            .get_account(self.pubkey)
+            .await
+            .unwrap()
+            .unwrap();
+
+        TmMetadata::safe_deserialize(&metadata_account.data).unwrap()
     }
 
     #[allow(deprecated)]
@@ -139,6 +180,70 @@ impl Metadata {
         )
         .await?;
 
+        let tx = Transaction::new_signed_with_payer(
+            &[instruction::create_metadata_accounts_v2(
+                id(),
+                self.pubkey,
+                self.mint.pubkey(),
+                context.payer.pubkey(),
+                context.payer.pubkey(),
+                context.payer.pubkey(),
+                name,
+                symbol,
+                uri,
+                creators,
+                seller_fee_basis_points,
+                false,
+                is_mutable,
+                collection,
+                uses,
+            )],
+            Some(&context.payer.pubkey()),
+            &[&context.payer],
+            context.last_blockhash,
+        );
+
+        context.banks_client.process_transaction(tx).await
+    }
+
+    pub async fn create_fungible_v2(
+        &self,
+        context: &mut ProgramTestContext,
+        name: String,
+        symbol: String,
+        uri: String,
+        creators: Option<Vec<Creator>>,
+        seller_fee_basis_points: u16,
+        is_mutable: bool,
+        collection: Option<Collection>,
+        uses: Option<Uses>,
+    ) -> Result<(), BanksClientError> {
+        create_mint(
+            context,
+            &self.mint,
+            &context.payer.pubkey(),
+            Some(&context.payer.pubkey()),
+            0,
+        )
+        .await?;
+        create_token_account(
+            context,
+            &self.token,
+            &self.mint.pubkey(),
+            &context.payer.pubkey(),
+        )
+        .await?;
+        mint_tokens(
+            context,
+            &self.mint.pubkey(),
+            &self.token.pubkey(),
+            10,
+            &context.payer.pubkey(),
+            None,
+        )
+        .await?;
+
+        #[allow(deprecated)]
         let tx = Transaction::new_signed_with_payer(
             &[instruction::create_metadata_accounts_v2(
                 id(),
