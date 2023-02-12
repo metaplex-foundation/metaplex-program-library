@@ -21,7 +21,7 @@ import { encode } from '@msgpack/msgpack';
 
 killStuckProcess();
 
-test('Delegate: create collection delegate', async (t) => {
+test('Delegate: create update collection items delegate', async (t) => {
   const API = new InitTransactions();
   const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
 
@@ -43,7 +43,7 @@ test('Delegate: create collection delegate', async (t) => {
       Buffer.from('metadata'),
       PROGRAM_ID.toBuffer(),
       collection.mint.toBuffer(),
-      Buffer.from('update_collection_items'),
+      Buffer.from('update_collection_items_delegate'),
       payer.publicKey.toBuffer(),
       delegate.toBuffer(),
     ],
