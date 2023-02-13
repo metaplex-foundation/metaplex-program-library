@@ -84,7 +84,7 @@ impl DigitalAsset {
 
         let mut builder = BurnBuilder::new();
         builder
-            .owner(context.payer.pubkey())
+            .authority(context.payer.pubkey())
             .metadata(self.metadata)
             .mint(self.mint.pubkey())
             .token(self.token.unwrap());

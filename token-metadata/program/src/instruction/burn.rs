@@ -130,7 +130,7 @@ pub enum BurnArgs {
 impl InstructionBuilder for super::builders::Burn {
     fn instruction(&self) -> solana_program::instruction::Instruction {
         let mut accounts = vec![
-            AccountMeta::new(self.owner, true),
+            AccountMeta::new(self.authority, true),
             if let Some(collection_metadata) = self.collection_metadata {
                 AccountMeta::new(collection_metadata, false)
             } else {

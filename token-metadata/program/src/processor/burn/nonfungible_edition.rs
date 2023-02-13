@@ -92,7 +92,7 @@ pub(crate) fn burn_nonfungible_edition(ctx: &Context<Burn>) -> ProgramResult {
     let params = TokenBurnParams {
         mint: ctx.accounts.mint_info.clone(),
         source: ctx.accounts.token_info.clone(),
-        authority: ctx.accounts.owner_info.clone(),
+        authority: ctx.accounts.authority_info.clone(),
         token_program: ctx.accounts.spl_token_program_info.clone(),
         amount: 1,
         authority_signer_seeds: None,
@@ -103,21 +103,21 @@ pub(crate) fn burn_nonfungible_edition(ctx: &Context<Burn>) -> ProgramResult {
     let params = TokenCloseParams {
         token_program: ctx.accounts.spl_token_program_info.clone(),
         account: ctx.accounts.token_info.clone(),
-        destination: ctx.accounts.owner_info.clone(),
-        owner: ctx.accounts.owner_info.clone(),
+        destination: ctx.accounts.authority_info.clone(),
+        owner: ctx.accounts.authority_info.clone(),
         authority_signer_seeds: None,
     };
     spl_token_close(params)?;
 
-    close_program_account(ctx.accounts.metadata_info, ctx.accounts.owner_info)?;
-    close_program_account(edition_info, ctx.accounts.owner_info)?;
+    close_program_account(ctx.accounts.metadata_info, ctx.accounts.authority_info)?;
+    close_program_account(edition_info, ctx.accounts.authority_info)?;
 
     //       **EDITION HOUSEKEEPING**
     // Set the particular bit for this edition to 0 to allow reprinting,
     // IF the print edition owner is also the master edition owner.
     // Otherwise leave the bit set to 1 to disallow reprinting.
     let mut edition_marker: EditionMarker = EditionMarker::from_account_info(edition_marker_info)?;
-    let owner_is_the_same = *ctx.accounts.owner_info.key == master_edition_token_account.owner;
+    let owner_is_the_same = *ctx.accounts.authority_info.key == master_edition_token_account.owner;
 
     if owner_is_the_same {
         let (index, mask) = EditionMarker::get_index_and_mask(print_edition.edition)?;
@@ -127,7 +127,7 @@ pub(crate) fn burn_nonfungible_edition(ctx: &Context<Burn>) -> ProgramResult {
     // If the entire edition marker is empty, then we can close the account.
     // Otherwise, serialize the new edition marker and update the account data.
     if edition_marker.ledger.iter().all(|i| *i == 0) {
-        close_program_account(edition_marker_info, ctx.accounts.owner_info)?;
+        close_program_account(edition_marker_info, ctx.accounts.authority_info)?;
     } else {
         let mut edition_marker_info_data = edition_marker_info.try_borrow_mut_data()?;
         edition_marker_info_data[0..].fill(0);

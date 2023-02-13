@@ -53,7 +53,7 @@ pub(crate) fn burn_nonfungible(ctx: &Context<Burn>, args: BurnNonFungibleArgs) -
     let params = TokenBurnParams {
         mint: ctx.accounts.mint_info.clone(),
         source: ctx.accounts.token_info.clone(),
-        authority: ctx.accounts.owner_info.clone(),
+        authority: ctx.accounts.authority_info.clone(),
         token_program: ctx.accounts.spl_token_program_info.clone(),
         amount: 1,
         authority_signer_seeds: None,
@@ -64,14 +64,14 @@ pub(crate) fn burn_nonfungible(ctx: &Context<Burn>, args: BurnNonFungibleArgs) -
     let params = TokenCloseParams {
         token_program: ctx.accounts.spl_token_program_info.clone(),
         account: ctx.accounts.token_info.clone(),
-        destination: ctx.accounts.owner_info.clone(),
-        owner: ctx.accounts.owner_info.clone(),
+        destination: ctx.accounts.authority_info.clone(),
+        owner: ctx.accounts.authority_info.clone(),
         authority_signer_seeds: None,
     };
     spl_token_close(params)?;
 
-    close_program_account(ctx.accounts.metadata_info, ctx.accounts.owner_info)?;
-    close_program_account(edition_info, ctx.accounts.owner_info)?;
+    close_program_account(ctx.accounts.metadata_info, ctx.accounts.authority_info)?;
+    close_program_account(edition_info, ctx.accounts.authority_info)?;
 
     if let Some(mut collection_metadata) = args.collection_metadata {
         if ctx.accounts.collection_metadata_info.is_none() {

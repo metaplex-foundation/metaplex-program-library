@@ -116,7 +116,7 @@ mod success_cases {
 
         let mut builder = BurnBuilder::new();
         builder
-            .owner(context.payer.pubkey())
+            .authority(context.payer.pubkey())
             .metadata(nft_edition_marker.new_metadata_pubkey)
             .edition(nft_edition_marker.new_edition_pubkey)
             .mint(nft_edition_marker.mint.pubkey())
