@@ -1,6 +1,7 @@
 use mpl_token_metadata::{
     id,
     instruction::{
+        self,
         builders::{
             BurnBuilder, CreateBuilder, DelegateBuilder, LockBuilder, MigrateBuilder, MintBuilder,
             RevokeBuilder, TransferBuilder, UnlockBuilder,
@@ -8,11 +9,14 @@ use mpl_token_metadata::{
         BurnArgs, CreateArgs, DelegateArgs, InstructionBuilder, LockArgs, MetadataDelegateRole,
         MigrateArgs, MintArgs, RevokeArgs, TransferArgs, UnlockArgs,
     },
-    pda::{find_metadata_delegate_record_account, find_token_record_account},
+    pda::{
+        find_master_edition_account, find_metadata_account, find_metadata_delegate_record_account,
+        find_token_record_account,
+    },
     processor::AuthorizationData,
     state::{
         AssetData, Creator, Metadata, PrintSupply, ProgrammableConfig, TokenDelegateRole,
-        TokenMetadataAccount, TokenRecord, TokenStandard, EDITION, PREFIX,
+        TokenMetadataAccount, TokenRecord, TokenStandard, EDITION, EDITION_MARKER_BIT_SIZE, PREFIX,
     },
 };
 use solana_program::{borsh::try_from_slice_unchecked, pubkey::Pubkey};
@@ -26,7 +30,7 @@ use spl_associated_token_account::{
     get_associated_token_address, instruction::create_associated_token_account,
 };
 
-use super::get_account;
+use super::{create_mint, create_token_account, get_account, mint_tokens};
 
 pub const DEFAULT_NAME: &str = "Digital Asset";
 pub const DEFAULT_SYMBOL: &str = "DA";
@@ -36,9 +40,10 @@ pub struct DigitalAsset {
     pub metadata: Pubkey,
     pub mint: Keypair,
     pub token: Option<Pubkey>,
-    pub master_edition: Option<Pubkey>,
+    pub edition: Option<Pubkey>,
     pub token_record: Option<Pubkey>,
     pub token_standard: Option<TokenStandard>,
+    pub edition_num: Option<u64>,
 }
 
 impl Default for DigitalAsset {
@@ -60,9 +65,10 @@ impl DigitalAsset {
             metadata,
             mint,
             token: None,
-            master_edition: None,
+            edition: None,
             token_record: None,
             token_standard: None,
+            edition_num: None,
         }
     }
 
@@ -70,8 +76,11 @@ impl DigitalAsset {
         &mut self,
         context: &mut ProgramTestContext,
         args: BurnArgs,
+        parent_asset: Option<DigitalAsset>,
+        collection_metadata: Option<Pubkey>,
     ) -> Result<(), BanksClientError> {
-        let token_standard = self.get_metadata(context).await.token_standard.unwrap();
+        let md = self.get_metadata(context).await;
+        let token_standard = md.token_standard.unwrap();
 
         let mut builder = BurnBuilder::new();
         builder
@@ -80,12 +89,38 @@ impl DigitalAsset {
             .mint(self.mint.pubkey())
             .token(self.token.unwrap());
 
-        if let Some(edition) = self.master_edition {
+        if let Some(parent_asset) = parent_asset {
+            builder.parent_mint(parent_asset.mint.pubkey());
+            builder.parent_token(parent_asset.token.unwrap());
+            builder.parent_edition(parent_asset.edition.unwrap());
+
+            let edition_num = self.edition_num.unwrap();
+
+            let marker_num = edition_num.checked_div(EDITION_MARKER_BIT_SIZE).unwrap();
+
+            let (edition_marker, _) = Pubkey::find_program_address(
+                &[
+                    PREFIX.as_bytes(),
+                    mpl_token_metadata::ID.as_ref(),
+                    parent_asset.mint.pubkey().as_ref(),
+                    EDITION.as_bytes(),
+                    marker_num.to_string().as_bytes(),
+                ],
+                &mpl_token_metadata::ID,
+            );
+            builder.edition_marker(edition_marker);
+        }
+
+        if let Some(edition) = self.edition {
             builder.edition(edition);
         }
 
         if token_standard == TokenStandard::ProgrammableNonFungible {
             builder.token_record(self.token_record.unwrap());
+        }
+
+        if let Some(collection_metadata) = collection_metadata {
+            builder.collection_metadata(collection_metadata);
         }
 
         let burn_ix = builder.build(args).unwrap().instruction();
@@ -105,6 +140,22 @@ impl DigitalAsset {
         context: &mut ProgramTestContext,
         token_standard: TokenStandard,
         authorization_rules: Option<Pubkey>,
+    ) -> Result<(), BanksClientError> {
+        self.create_asset(
+            context,
+            token_standard,
+            authorization_rules,
+            PrintSupply::Zero,
+        )
+        .await
+    }
+
+    pub async fn create_asset(
+        &mut self,
+        context: &mut ProgramTestContext,
+        token_standard: TokenStandard,
+        authorization_rules: Option<Pubkey>,
+        print_supply: PrintSupply,
     ) -> Result<(), BanksClientError> {
         let mut asset = AssetData::new(
             token_standard,
@@ -136,19 +187,19 @@ impl DigitalAsset {
             .initialize_mint(true)
             .update_authority_as_signer(true);
 
-        let master_edition = match token_standard {
+        let edition = match token_standard {
             TokenStandard::NonFungible | TokenStandard::ProgrammableNonFungible => {
                 // master edition PDA address
-                let master_edition_seeds = &[
+                let edition_seeds = &[
                     PREFIX.as_bytes(),
                     program_id.as_ref(),
                     mint_pubkey.as_ref(),
                     EDITION.as_bytes(),
                 ];
-                let (master_edition, _) = Pubkey::find_program_address(master_edition_seeds, &id());
+                let (edition, _) = Pubkey::find_program_address(edition_seeds, &id());
                 // sets the master edition to the builder
-                builder.master_edition(master_edition);
-                Some(master_edition)
+                builder.master_edition(edition);
+                Some(edition)
             }
             _ => None,
         };
@@ -157,7 +208,7 @@ impl DigitalAsset {
             .build(CreateArgs::V1 {
                 asset_data: asset,
                 decimals: Some(0),
-                print_supply: Some(PrintSupply::Zero),
+                print_supply: Some(print_supply),
             })
             .unwrap()
             .instruction();
@@ -171,7 +222,7 @@ impl DigitalAsset {
             context.last_blockhash,
         );
 
-        self.master_edition = master_edition;
+        self.edition = edition;
         self.token_standard = Some(token_standard);
 
         context.banks_client.process_transaction(tx).await
@@ -212,7 +263,7 @@ impl DigitalAsset {
             .payer(payer_pubkey)
             .authority(payer_pubkey);
 
-        if let Some(edition) = self.master_edition {
+        if let Some(edition) = self.edition {
             builder.master_edition(edition);
         }
 
@@ -264,6 +315,19 @@ impl DigitalAsset {
             .await
     }
 
+    pub async fn create_and_mint_nonfungible(
+        &mut self,
+        context: &mut ProgramTestContext,
+        print_supply: PrintSupply,
+    ) -> Result<(), BanksClientError> {
+        // creates the metadata
+        self.create_asset(context, TokenStandard::NonFungible, None, print_supply)
+            .await
+            .unwrap();
+        // mints tokens
+        self.mint(context, None, None, 1).await
+    }
+
     pub async fn delegate(
         &mut self,
         context: &mut ProgramTestContext,
@@ -311,7 +375,7 @@ impl DigitalAsset {
             DelegateArgs::StandardV1 { .. } => { /* nothing to add */ }
         }
 
-        if let Some(edition) = self.master_edition {
+        if let Some(edition) = self.edition {
             builder.master_edition(edition);
         }
 
@@ -356,7 +420,7 @@ impl DigitalAsset {
         builder
             .mint(self.mint.pubkey())
             .metadata(self.metadata)
-            .edition(self.master_edition.unwrap())
+            .edition(self.edition.unwrap())
             .token(self.token.unwrap())
             .payer(authority.pubkey())
             .collection_metadata(collection_metadata)
@@ -377,6 +441,82 @@ impl DigitalAsset {
         self.token_standard = md.token_standard;
 
         Ok(())
+    }
+
+    pub async fn print_edition(
+        &self,
+        context: &mut ProgramTestContext,
+        edition_num: u64,
+    ) -> Result<DigitalAsset, BanksClientError> {
+        let print_mint = Keypair::new();
+        let print_token = Keypair::new();
+        let (print_metadata, _) = find_metadata_account(&print_mint.pubkey());
+        let (print_edition, _) = find_master_edition_account(&print_mint.pubkey());
+
+        create_mint(
+            context,
+            &print_mint,
+            &context.payer.pubkey(),
+            Some(&context.payer.pubkey()),
+            0,
+        )
+        .await?;
+        create_token_account(
+            context,
+            &print_token,
+            &print_mint.pubkey(),
+            &context.payer.pubkey(),
+        )
+        .await?;
+        mint_tokens(
+            context,
+            &print_mint.pubkey(),
+            &print_token.pubkey(),
+            1,
+            &context.payer.pubkey(),
+            None,
+        )
+        .await?;
+
+        let tx = Transaction::new_signed_with_payer(
+            &[instruction::mint_new_edition_from_master_edition_via_token(
+                id(),
+                print_metadata,
+                print_edition,
+                self.edition.unwrap(),
+                print_mint.pubkey(),
+                context.payer.pubkey(),
+                context.payer.pubkey(),
+                context.payer.pubkey(),
+                self.token.unwrap(),
+                context.payer.pubkey(),
+                self.metadata,
+                self.mint.pubkey(),
+                edition_num,
+            )],
+            Some(&context.payer.pubkey()),
+            &[&context.payer, &context.payer],
+            context.last_blockhash,
+        );
+
+        context
+            .banks_client
+            .process_transaction_with_commitment(
+                tx,
+                solana_sdk::commitment_config::CommitmentLevel::Confirmed,
+            )
+            .await
+            .unwrap();
+
+        Ok(DigitalAsset {
+            mint: print_mint,
+            token: Some(print_token.pubkey()),
+            metadata: print_metadata,
+            edition: Some(print_edition),
+            token_standard: self.token_standard,
+            token_record: None,
+            edition_num: Some(edition_num),
+        })
     }
 
     pub async fn revoke(
@@ -427,7 +567,7 @@ impl DigitalAsset {
             RevokeArgs::StandardV1 { .. } => { /* nothing to add */ }
         }
 
-        if let Some(edition) = self.master_edition {
+        if let Some(edition) = self.edition {
             builder.master_edition(edition);
         }
 
@@ -498,8 +638,8 @@ impl DigitalAsset {
             find_token_record_account(&self.mint.pubkey(), &destination_token);
         builder.destination_token_record(destination_token_record);
 
-        if let Some(master_edition) = self.master_edition {
-            builder.edition(master_edition);
+        if let Some(edition) = self.edition {
+            builder.edition(edition);
         }
 
         if let Some(authorization_rules) = authorization_rules {
@@ -540,7 +680,7 @@ impl DigitalAsset {
             builder.token_record(token_record);
         }
 
-        if let Some(edition) = self.master_edition {
+        if let Some(edition) = self.edition {
             builder.edition(edition);
         }
 
@@ -584,7 +724,7 @@ impl DigitalAsset {
             builder.token_record(token_record);
         }
 
-        if let Some(edition) = self.master_edition {
+        if let Some(edition) = self.edition {
             builder.edition(edition);
         }
 
@@ -660,8 +800,8 @@ impl DigitalAsset {
             find_token_record_account(&self.mint.pubkey(), &destination_token);
         builder.destination_token_record(destination_token_record);
 
-        if let Some(master_edition) = self.master_edition {
-            builder.edition(master_edition);
+        if let Some(edition) = self.edition {
+            builder.edition(edition);
         }
 
         if let Some(authorization_rules) = authorization_rules {
@@ -758,15 +898,15 @@ impl DigitalAsset {
                     .get_account(self.token.unwrap())
                     .await
                     .unwrap();
-                let master_edition_account = context
+                let edition_account = context
                     .banks_client
-                    .get_account(self.master_edition.unwrap())
+                    .get_account(self.edition.unwrap())
                     .await
                     .unwrap();
 
                 assert!(md_account.is_none());
                 assert!(token_account.is_none());
-                assert!(master_edition_account.is_none());
+                assert!(edition_account.is_none());
             }
             _ => unimplemented!(),
         }

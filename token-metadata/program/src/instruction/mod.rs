@@ -503,7 +503,7 @@ pub enum MetadataInstruction {
     /// 
     /// The configurable `authorization_rules` only apply to `ProgrammableNonFungible` assets and
     /// it may require additional accounts to validate the rules.
-    #[account(0, signer, writable, name="owner", desc="Asset owner")]
+    #[account(0, signer, writable, name="authority", desc="Asset owner or Utility delegate")]
     #[account(1, optional, writable, name="collection_metadata", desc="Metadata of the Collection")]
     #[account(2, writable, name="metadata", desc="Metadata (pda of ['metadata', program id, mint id])")]
     #[account(3, optional, writable, name="edition", desc="MasterEdition of the asset")]

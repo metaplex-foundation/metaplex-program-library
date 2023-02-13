@@ -1,6 +1,5 @@
 use mpl_token_metadata::{
-    id,
-    instruction::{self, builders::BurnBuilder, BurnArgs},
+    id, instruction,
     state::{
         Collection, CollectionDetails, Creator, Data, DataV2, Metadata as TmMetadata,
         TokenMetadataAccount, TokenStandard, Uses, PREFIX,
@@ -36,7 +35,11 @@ impl Metadata {
         }
     }
 
-    pub async fn into_digital_asset(self, context: &mut ProgramTestContext) -> DigitalAsset {
+    pub async fn into_digital_asset(
+        self,
+        context: &mut ProgramTestContext,
+        edition: Option<Pubkey>,
+    ) -> DigitalAsset {
         let token_record = if self.is_pnft(context).await {
             Some(self.token.pubkey())
         } else {
@@ -49,9 +52,10 @@ impl Metadata {
             metadata: self.pubkey,
             mint: self.mint,
             token: Some(self.token.pubkey()),
-            master_edition: None,
+            edition,
             token_record,
             token_standard: md.token_standard,
+            edition_num: None,
         }
     }
 

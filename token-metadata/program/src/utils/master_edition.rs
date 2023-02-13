@@ -99,6 +99,9 @@ pub fn process_mint_new_edition_from_master_edition_via_token_logic<'a>(
     let edition_number = edition.checked_div(EDITION_MARKER_BIT_SIZE).unwrap();
     let as_string = edition_number.to_string();
 
+    msg!("marker num:{:?}", as_string);
+    msg!("master_metadata.mint: {:?}", master_metadata.mint);
+
     let bump = assert_derivation(
         program_id,
         edition_marker_info,
@@ -111,7 +114,11 @@ pub fn process_mint_new_edition_from_master_edition_via_token_logic<'a>(
         ],
     )?;
 
+    msg!("bump: {:?}", bump);
+
     if edition_marker_info.data_is_empty() {
+        msg!("creating edition marker");
+        msg!("edition marker: {:?}", edition_marker_info.key);
         let seeds = &[
             PREFIX.as_bytes(),
             program_id.as_ref(),

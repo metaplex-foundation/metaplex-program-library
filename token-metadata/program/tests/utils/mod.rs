@@ -232,3 +232,9 @@ impl DirtyClone for Keypair {
         Keypair::from_bytes(&self.to_bytes()).unwrap()
     }
 }
+
+pub async fn warp100(context: &mut ProgramTestContext) {
+    let current_slot = context.banks_client.get_root_slot().await.unwrap();
+    println!("Warping to slot: {}", current_slot + 100);
+    context.warp_to_slot(current_slot + 100).unwrap();
+}

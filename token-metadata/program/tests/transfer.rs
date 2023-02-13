@@ -591,7 +591,7 @@ mod auth_rules_transfer {
                 authority.pubkey(),
                 nft.mint.pubkey(),
                 nft.metadata,
-                nft.master_edition.unwrap(),
+                nft.edition.unwrap(),
                 rule_set,
                 payload,
             )
@@ -724,7 +724,7 @@ mod auth_rules_transfer {
                 &delegate,
                 nft.mint.pubkey(),
                 nft.metadata,
-                nft.master_edition.unwrap(),
+                nft.edition.unwrap(),
                 Some(rule_set),
                 rooster_delegate_args,
             )
@@ -889,7 +889,7 @@ mod auth_rules_transfer {
                 &delegate,
                 nft.mint.pubkey(),
                 nft.metadata,
-                nft.master_edition.unwrap(),
+                nft.edition.unwrap(),
                 Some(rule_set),
                 rooster_delegate_args,
             )
