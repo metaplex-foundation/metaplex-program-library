@@ -517,8 +517,6 @@ pub enum MetadataInstruction {
     #[account(11, name="system_program", desc="System program")]
     #[account(12, name="sysvar_instructions", desc="Instructions sysvar account")]
     #[account(13, name="spl_token_program", desc="SPL Token Program")]
-    #[account(14, optional, name="authorization_rules", desc="Token Authorization Rules account")]
-    #[account(15, optional, name="authorization_rules_program", desc="Token Authorization Rules Program")]
     #[default_optional_accounts]
     Burn(BurnArgs),
 

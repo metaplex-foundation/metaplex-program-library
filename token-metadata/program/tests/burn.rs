@@ -31,10 +31,7 @@ mod success_cases {
             .await
             .unwrap();
 
-        let args = BurnArgs::V1 {
-            authorization_data: None,
-            amount: 1,
-        };
+        let args = BurnArgs::V1 { amount: 1 };
 
         da.burn(&mut context, args, None, None).await.unwrap();
 
@@ -57,10 +54,7 @@ mod success_cases {
         .await
         .unwrap();
 
-        let args = BurnArgs::V1 {
-            authorization_data: None,
-            amount: 1,
-        };
+        let args = BurnArgs::V1 { amount: 1 };
 
         da.burn(&mut context, args, None, None).await.unwrap();
 
@@ -109,10 +103,7 @@ mod success_cases {
         assert_eq!(edition_marker.key, Key::EditionMarker);
         assert_eq!(print_edition.data[0], 1);
 
-        let args = BurnArgs::V1 {
-            authorization_data: None,
-            amount: 1,
-        };
+        let args = BurnArgs::V1 { amount: 1 };
 
         let mut builder = BurnBuilder::new();
         builder
@@ -182,7 +173,6 @@ mod success_cases {
         .unwrap();
 
         let args = BurnArgs::V1 {
-            authorization_data: None,
             amount: burn_amount,
         };
 
@@ -203,7 +193,6 @@ mod success_cases {
         let burn_remaining = initial_amount - burn_amount;
 
         let args = BurnArgs::V1 {
-            authorization_data: None,
             amount: burn_remaining,
         };
 
@@ -261,15 +250,7 @@ mod failure_cases {
         assert!(print_edition_account.is_some());
 
         let err = original_nft
-            .burn(
-                &mut context,
-                BurnArgs::V1 {
-                    authorization_data: None,
-                    amount: 1,
-                },
-                None,
-                None,
-            )
+            .burn(&mut context, BurnArgs::V1 { amount: 1 }, None, None)
             .await
             .unwrap_err();
 
@@ -380,15 +361,7 @@ mod failure_cases {
 
         // Burn the NFT w/o passing in collection metadata. This should fail.
         let err = da
-            .burn(
-                &mut context,
-                BurnArgs::V1 {
-                    authorization_data: None,
-                    amount: 1,
-                },
-                None,
-                None,
-            )
+            .burn(&mut context, BurnArgs::V1 { amount: 1 }, None, None)
             .await
             .unwrap_err();
 
@@ -463,10 +436,7 @@ mod failure_cases {
         // Burn the NFT
         da.burn(
             &mut context,
-            BurnArgs::V1 {
-                authorization_data: None,
-                amount: 1,
-            },
+            BurnArgs::V1 { amount: 1 },
             None,
             Some(collection_parent_nft.pubkey),
         )

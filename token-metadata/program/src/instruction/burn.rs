@@ -106,8 +106,6 @@ pub enum BurnArgs {
     V1 {
         /// The amount of the token to burn
         amount: u64,
-        /// Required authorization data to validate the request.
-        authorization_data: Option<AuthorizationData>,
     },
 }
 
@@ -116,20 +114,23 @@ pub enum BurnArgs {
 /// # Accounts:
 ///
 ///
-///   0.  `[signer, writable]` Owner of the asset
-///   1.  `[optional, writable]` Collection Metadata account
-///   2.  `[writable]` Item Metadata account
-///   3.  `[writable]` Edition account
-///   4.  `[writable]` Mint account
-///   5.  `[writable]` Token account
-///   6.  `[]` System program
-///   7.  `[]` Instruction sysvar account
-///   8.  `[]` SPL Token Program
-///   9.  `[optional]` Token Authorization Rules Program
-///   10. `[optional]` Token Authorization Rules account
+///   0.   `[signer, writable]` Owner or Utility Delegate of the asset
+///   1.   `[optional, writable]` Collection Metadata account
+///   2.   `[writable]` Metadata account
+///   3.   `[optional, writable]` Edition account
+///   4.   `[writable]` Mint account
+///   5.   `[writable]` Token account
+///   6.   `[optional]` Parent Edition account
+///   7.   `[optional]` Parent Mint account
+///   8.   `[optional]` Parent Token account
+///   9.   `[optional, writable]` Edition Marker account
+///  10.   `[optional, writable]` Token record account
+///  11.   `[]` System program
+///  12.   `[]` Instruction sysvar account
+///  13.   `[]` SPL Token Program
 impl InstructionBuilder for super::builders::Burn {
     fn instruction(&self) -> solana_program::instruction::Instruction {
-        let mut accounts = vec![
+        let accounts = vec![
             AccountMeta::new(self.authority, true),
             if let Some(collection_metadata) = self.collection_metadata {
                 AccountMeta::new(collection_metadata, false)
@@ -161,15 +162,6 @@ impl InstructionBuilder for super::builders::Burn {
             AccountMeta::new_readonly(self.sysvar_instructions, false),
             AccountMeta::new_readonly(self.spl_token_program, false),
         ];
-
-        // Optional authorization rules accounts
-        if let Some(rules) = &self.authorization_rules {
-            accounts.push(AccountMeta::new_readonly(mpl_token_auth_rules::ID, false));
-            accounts.push(AccountMeta::new_readonly(*rules, false));
-        } else {
-            accounts.push(AccountMeta::new_readonly(crate::ID, false));
-            accounts.push(AccountMeta::new_readonly(crate::ID, false));
-        }
 
         Instruction {
             program_id: crate::ID,

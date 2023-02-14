@@ -19,7 +19,7 @@ pub fn burn<'a>(
 
 fn burn_v1(program_id: &Pubkey, ctx: Context<Burn>, args: BurnArgs) -> ProgramResult {
     msg!("Burn V1");
-    let BurnArgs::V1 { amount, .. } = args;
+    let BurnArgs::V1 { amount } = args;
 
     // Validate accounts
 
@@ -48,10 +48,6 @@ fn burn_v1(program_id: &Pubkey, ctx: Context<Burn>, args: BurnArgs) -> ProgramRe
         assert_owned_by(parent_token, &spl_token::ID)?;
     }
 
-    if let Some(authorization_rules) = ctx.accounts.authorization_rules_info {
-        assert_owned_by(authorization_rules, &mpl_token_auth_rules::ID)?;
-    }
-
     // Check program IDs.
     if ctx.accounts.spl_token_program_info.key != &spl_token::ID {
         return Err(ProgramError::IncorrectProgramId);
@@ -63,12 +59,6 @@ fn burn_v1(program_id: &Pubkey, ctx: Context<Burn>, args: BurnArgs) -> ProgramRe
 
     if ctx.accounts.sysvar_instructions_info.key != &sysvar::instructions::ID {
         return Err(ProgramError::IncorrectProgramId);
-    }
-
-    if let Some(auth_rules_program) = ctx.accounts.authorization_rules_program_info {
-        if auth_rules_program.key != &mpl_token_auth_rules::ID {
-            return Err(ProgramError::IncorrectProgramId);
-        }
     }
 
     // Deserialize accounts.
