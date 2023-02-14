@@ -14,7 +14,7 @@ use thiserror::Error;
 pub enum NFTPacksError {
     /// Allowed amount to redeem should be more then 0
     #[error("Allowed amount to redeem should be more then 0")]
-    WrongAllowedAmountToRedeem,
+    WrongAllowedAmountToRedeem= 6000,
 
     /// Wrong redeem date
     #[error("Wrong redeem date")]
