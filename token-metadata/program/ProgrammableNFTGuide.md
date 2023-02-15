@@ -32,7 +32,7 @@ These lifecycle rules will be configured by creators – e.g., creators may choo
 Interaction with assets will be provided by Token Metadata:
 
 1. Transfer instructions (and other spl-token instructions) are now sent to Token Metadata instead.
-2. Token Metadata will expose new versioned instructions under an unified and simplified API. Spl-token proxy instructions are close to the existing instruction interface with the addition of a new required `authorization_rules` account argument. E.g., `CreateMetadataAccount` and `UpdateMetadata` are replaced with `Create` and `Update`.
+2. Token Metadata will expose new versioned instructions under a unified and simplified API. Spl-token proxy instructions are close to the existing instruction interface with the addition of a new required `authorization_rules` account argument. E.g., `CreateMetadataAccount` and `UpdateMetadata` are replaced with `Create` and `Update`.
 3. The `authorization_rules` account can be easily discovered on-chain using account derivation or via the Metaplex Read API, an RPC indexing extension run by many existing RPC providers.
 
 ## 🚛  Extending the `TokenStandard`
@@ -63,7 +63,7 @@ The diagram below highlights the new components of a `ProgrammableNonFungible`:
 
 ## ⛩️  Unified instructions
 
-To interact with the new asset class, a new set of instructions will be added to Token Metadata. Note that current instructions will continue to work using the existing token standards – the new instructions are required for interacting with `ProgrammableNonFungible` assets. At the same time, the **new instructions will support all asset classes** so all interaction can happen via an unified interface regardless of the asset class.
+To interact with the new asset class, a new set of instructions will be added to Token Metadata. Note that current instructions will continue to work using the existing token standards – the new instructions are required for interacting with `ProgrammableNonFungible` assets. At the same time, the **new instructions will support all asset classes** so all interaction can happen via a unified interface regardless of the asset class.
 
 Token Metadata instruction will be expanded to include:
 
@@ -104,8 +104,8 @@ Each of these instructions will use versioned `*Args` structs to facilitate futu
 - `Burn`
 
 - `Create`
-    * [x] Creation of Programmable Non-Fungibles tokens (pNFT)
-    * [x] Creation of Non-Fungibles tokens (NFT)
+    * [x] Creation of Programmable Non-Fungible tokens (pNFT)
+    * [x] Creation of Non-Fungible tokens (NFT)
     * [x] Creation of Fungible Assets (*semi-fungible tokens*)
     * [x] Creation of Fungible Tokens (*fungible tokens*)
 
@@ -129,8 +129,8 @@ Each of these instructions will use versioned `*Args` structs to facilitate futu
     * [x] Migrate Non-Fungibles to Programmable Non-Fungibles
 
 - `Mint`
-    * [x] Mint Programmable Non-Fungibles tokens (pNFT)
-    * [x] Mint of Non-Fungibles tokens (NFT)
+    * [x] Mint Programmable Non-Fungible tokens (pNFT)
+    * [x] Mint of Non-Fungible tokens (NFT)
     * [x] Mint Fungible Assets (*semi-fungible tokens*)
     * [x] Mint Fungible Tokens (*fungible tokens*)
 
@@ -172,9 +172,9 @@ Each of these instructions will use versioned `*Args` structs to facilitate futu
 
 ## 🏗️  Positional Optional Accounts
 
-The new instruction handlers support positional optional accounts, where an account can be present or not in a transaction. When a instruction is created, it is necessary to provide a list of `PublicKeys` for the instruction accounts – e.g.:
+The new instruction handlers support positional optional accounts, where an account can be present or not in a transaction. When an instruction is created, it is necessary to provide a list of `PublicKeys` for the instruction accounts – e.g.:
 ```javascript
-const mintAcccounts: MintInstructionAccounts = {
+const mintAccounts: MintInstructionAccounts = {
     token,
     tokenOwner,
     metadata,
@@ -200,9 +200,9 @@ When you are minting from a semi-fungible token, there is no need to pass a `mas
 2. The relative position of accounts is maintained since there is a public key value for the account;
 3. The program can easily determine if the account key represent a "valid" public key or a "not-set-value".
 
-Using this approach, the same handler supports a positional optinal account by just ommiting the `masterEdition`:
+Using this approach, the same handler supports a positional optional account by just ommiting the `masterEdition`:
 ```javascript
-const mintAcccounts: MintInstructionAccounts = {
+const mintAccounts: MintInstructionAccounts = {
     token,
     tokenOwner,
     metadata,
@@ -211,7 +211,7 @@ const mintAcccounts: MintInstructionAccounts = {
     ...
 };
 ```
-Under the hood, you set the Token Metadata's `PROGRAM_ID` is set as the master edition account `PublicKey`. This will inform the program that the `masterEdition` account was not set and still maintain the relative position of the remaining accounts. Token Metadata includes a Rust crate and an NPM package with instruction builders that support positional optional accounts – you only need to set the "required" accounts using these builders.
+Under the hood, the Token Metadata's `PROGRAM_ID` is set as the master edition account `PublicKey`. This will inform the program that the `masterEdition` account was not set and still maintain the relative position of the remaining accounts. Token Metadata includes a Rust crate and an NPM package with instruction builders that support positional optional accounts – you only need to set the "required" accounts using these builders.
 
 > **Note**
 > This is a similar approach used by Anchor v0.26 to support positional optional accounts
@@ -269,10 +269,10 @@ let create_ix = CreateBuilder::new()
 
 ## 👤  Delegates
 
-The new unified api of token metadata exposes a system of delegations where other actors can be 'delegated' powers to do specific actions on the assets or asset grouping (collection).
+The new unified API of token metadata exposes a system of delegations where other actors can be 'delegated' powers to do specific actions on the assets or asset grouping (collection).
 
 > **Note:**
-> For programmable NFTS, auth rules manages which actors can become any of these types of delegates.
+> For programmable NFTs, auth rules manage which actors can become any of these types of delegates.
 
 ### Delegate Types
 
@@ -293,7 +293,7 @@ pub struct TokenRecord {
 }
 ```
 
-`TokenState` has three different values and instrution are restricted depending on the token state value:
+`TokenState` has three different values and instructions are restricted depending on the token state value:
 
 | **Token State** | 🔓 `Unlocked` | 🔐 `Locked` | 🏠 `Listed` |
 | ------------------ | --- | --- | --- |
@@ -309,7 +309,7 @@ pub struct TokenRecord {
 | *Delegate Lock*      | ✅ if Utility or Staking → 🔐 `Locked` | ❌ | ❌ |
 | *Mint (destination)* | ✅ | ❌ | ✅ |
 
-`TokenDelegateRole` represents the different delegates types. There are six different values and instrution are restricted depending on the token delegate role and token state values:
+`TokenDelegateRole` represents the different delegate types. There are six different values and instructions are restricted depending on the token delegate role and token state values:
 
 | **Delegate** | None | `Sale` | `Transfer` | `LockedTransfer` | `Utility` | `Staking` | `Migration` | `Standard` (SPL)  |
 | --------------------- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -327,9 +327,9 @@ pub struct TokenRecord {
 | *Delegate Lock*      | N/A | ❌ | ❌ | 🔓 if `Unlocked` | 🔓 if `Unlocked` | 🔓 if `Unlocked` | 🔓 if `Unlocked` | ☀️ if `Thawn` |
 | *Mint (destination)* | ✅  | ✅ | ✅ | 🔓 if `Unlocked` | 🔓 if `Unlocked` | 🔓 if `Unlocked` | 🔓 if `Unlocked` | ☀️ if `Thawn` |
 
-The `Migration` delegate type is a temporary delegate that is only created by the migration from `NFT` to `pNFT` and cannot be otherwise created through the `Delegate` handler. This special delegate has the same functionality as the `Utility` delegate except that it can also transfer. This allows us to assign all escrowless-style programs this delegate to preserve whatever current functionality they have. Once used, it is cleared and cannot replaced, and programs will then need to select one of the normal delegate types for future actions.
+The `Migration` delegate type is a temporary delegate that is only created by the migration from `NFT` to `pNFT` and cannot be otherwise created through the `Delegate` handler. This special delegate has the same functionality as the `Utility` delegate except that it can also transfer. This allows us to assign all escrowless-style programs this delegate to preserve whatever current functionality they have. Once used, it is cleared and cannot be replaced, and programs will then need to select one of the normal delegate types for future actions.
 
-The `LockedTransfer` delegate type is a delegate that can lock and unlock a `pNFT` (similarly to the `Staking`) with the additional functionality of being able to transfer to a pre-determined address. The address is specified at the creation of the delegate thourhg the `locked_address` argument.
+The `LockedTransfer` delegate type is a delegate that can lock and unlock a `pNFT` (similarly to the `Staking`) with the additional functionality of being able to transfer to a pre-determined address. The address is specified at the creation of the delegate through the `locked_address` argument.
 
 > **Note**
 > Once a token delegate is set, it is not possible to set another one unless the current one is revoked.
@@ -362,13 +362,13 @@ Currently, we have three types of metadata delegates:
 
 ### Handling Auth Rule Set Updates with Delegates
 
-**Problem:** When interacting with programs, `pNFT`s have a configurable rule set that indicates which programs are allowed to interact with the asset. Given that a rule set can be edited at any point, this can cause issues for programs when rules change after they have become a delegate. The end result of this is that a `pNFT` could end up “stuck” in a contract, since the auth rules may have changed and the program has not changed to accomplish the requirements d to interact with the asset.
+**Problem:** When interacting with programs, `pNFT`s have a configurable rule set that indicates which programs are allowed to interact with the asset. Given that a rule set can be edited at any point, this can cause issues for programs when rules change after they have become a delegate. The end result of this is that a `pNFT` could end up “stuck” in a contract, since the auth rules may have changed and the program has not changed to accomplish the requirements to interact with the asset.
 
 **Solution:** Rule sets are stored with a revision number associated – i.e., each time an edit is performed, a new revision of the rule set is created. When a delegate is set on a `pNFT`, the rule set revision on the `pNFT` will be “locked” at the current (latest) revision and it will remain locked until the `pNFT` is transferred or the delegate is revoked. This will guarantee that the delegated program will be able to interact with the `pNFT` – the revision at the delegate point will be used to validate the actions. The “lock” on the rule set revision will also be released when a `Transfer` happens, since the delegate information gets cleared, and any further interaction will then use the latest revision of the rule set.
 
 ## 📦  JS SDK
 
-Token Metadata includes a low-leve Solita-based SDK, which can be used to interact with the new API. The NPM package can be found [here](https://www.npmjs.com/package/@metaplex-foundation/mpl-token-metadata/v/2.7.0).
+Token Metadata includes a low-level Solita-based SDK, which can be used to interact with the new API. The NPM package can be found [here](https://www.npmjs.com/package/@metaplex-foundation/mpl-token-metadata/v/2.7.0).
 
 The latest release of the [Metaplex JS SDK v0.18.0](https://github.com/metaplex-foundation/js#programmable-nfts) adds support for Programmable NFTs.
 
@@ -414,7 +414,7 @@ To get Rust BPF tests working, you will first need to build both Token Auth Rule
   Then, copy the generated `.so` file from `$PROJECTS/rooster/program/target/deploy` into `$PROJECTS/metaplex-program-library/token-metadata/target/deploy/`
 
 > **Note:**
-> The `$PROJECTS/rooster/program/target/deploy` into `$PROJECTS/metaplex-program-library/token-metadata/target/deploy/` might not exist. In this case, you will first need to build the token metadata program.
+> The folder `$PROJECTS/metaplex-program-library/token-metadata/target/deploy/` might not exist. In this case, you will first need to build the token metadata program.
 
 After building the programs, the BPF tests can be run from the folder `$PROJECTS/rooster/program/target/deploy` into `$PROJECTS/metaplex-program-library/token-metadata/program` by executing:
 ```
