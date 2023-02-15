@@ -272,8 +272,6 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             message: args.metadata.clone(),
         };
 
-        let owner = clone_keypair(&args.owner);
-
         self.tx_builder(
             accounts,
             data,

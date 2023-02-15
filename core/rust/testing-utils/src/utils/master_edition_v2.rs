@@ -101,7 +101,7 @@ impl MasterEditionV2 {
         max_supply: Option<u64>,
     ) -> Result<(), BanksClientError> {
         let tx = Transaction::new_signed_with_payer(
-            &[instruction::create_master_edition(
+            &[instruction::create_master_edition_v3(
                 id(),
                 self.pubkey,
                 self.mint_pubkey,

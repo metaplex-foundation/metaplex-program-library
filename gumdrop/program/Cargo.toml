@@ -19,12 +19,12 @@ cpi = ["no-entrypoint"]
 default = []
 
 [dependencies]
-anchor-lang = "0.24.2"
-anchor-spl = "0.24.2"
-solana-program = "1.9.18"
-spl-token = "3.2.0"
-spl-associated-token-account = { version = "=1.0.3", features = [ "no-entrypoint" ] }
-mpl-token-metadata = { version="=1.2.7", features = [ "no-entrypoint" ] }
+anchor-lang = "0.26.0"
+anchor-spl = "0.26.0"
+solana-program = "1.14.13"
+spl-token = "3.5.0"
+spl-associated-token-account = { version = "1.1.1", features = [ "no-entrypoint" ] }
+mpl-token-metadata = { version="=1.7.0", features = [ "no-entrypoint" ] }
 
 [profile.release]
 overflow-checks = true     # Enable integer overflow checks.

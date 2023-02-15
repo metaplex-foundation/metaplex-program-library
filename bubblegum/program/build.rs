@@ -7,7 +7,7 @@ use std::{path::Path, process::Command};
 // action for tests alone.
 fn main() {
     let ci = env::var("CI_PUBLISH");
-    if ci.unwrap_or("false".to_string()) == *"false" {
+    if ci.unwrap_or_else(|_| "false".to_string()) == *"false" {
         // The build script's working folder is always that of the containing package.
         let spl_compression_so_path = Path::new("../../test-programs/spl_account_compression.so");
         let spl_wrapper_so_path = Path::new("../../test-programs/spl_noop.so");
