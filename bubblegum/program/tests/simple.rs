@@ -280,6 +280,7 @@ async fn test_decompress_passes() {
             // Simply copying this, since the expected value is not straightforward to predict.
             edition_nonce: meta.edition_nonce,
             token_standard: Some(TokenStandard::NonFungible),
+            programmable_config: None,
         };
 
         assert_eq!(meta, expected_meta);
