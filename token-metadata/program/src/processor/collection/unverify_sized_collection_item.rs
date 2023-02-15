@@ -3,7 +3,6 @@ use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
     pubkey::Pubkey,
-    system_program,
 };
 
 use crate::{
@@ -63,8 +62,7 @@ pub fn unverify_sized_collection_item(
     // the NFT.
     //
     // This check needs to happen before the program owned check.
-    let parent_burned = collection_metadata_info.data_is_empty()
-        && collection_metadata_info.owner == &system_program::ID;
+    let parent_burned = collection_metadata_info.data_is_empty();
 
     if parent_burned {
         // If the parent is burned, we need to check that the authority
