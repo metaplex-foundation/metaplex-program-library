@@ -1378,7 +1378,8 @@ async fn fail_unverify_already_unverified() {
     // Allow time to pass so our tx isn't rejected for being 'already processed'.
     context.warp_to_slot(100).unwrap();
 
-    let error = test_metadata
+    // Check short-circuits so this will succeed but colletion size will not be decremented.
+    test_metadata
         .unverify_sized_collection_item(
             &mut context,
             test_collection.pubkey,
@@ -1388,10 +1389,9 @@ async fn fail_unverify_already_unverified() {
             None,
         )
         .await
-        .unwrap_err();
+        .unwrap();
 
-    assert_custom_error!(error, MetadataError::AlreadyUnverified);
-
+    // Collection size is the same.
     assert_collection_size(&mut context, &test_collection, size).await;
 }
 
