@@ -32,6 +32,12 @@ then
         cd core/rust/testing-utils
         cargo build-bpf --bpf-out-dir ../../../test-programs/
         cd ../../../
+elif [[ $input = "token-auth-rules" ]]
+then
+    solana program dump -u https://api.mainnet-beta.solana.com auth9SigNpDKz4sJJ1DfCTuZrZNSAgh9sFD3rboVmgg ./test-programs/mpl_token_auth_rules.so
+elif [[ $input = "rooster" ]]
+then
+    solana program dump -u https://api.mainnet-beta.solana.com Roostrnex2Z9Y2XZC49sFAdZARP8E4iFpEnZC5QJWdz ./test-programs/rooster.so
 else
     echo "Invalid program name: $input"
     exit 1

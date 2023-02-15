@@ -22,7 +22,7 @@ pub fn unverify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) -> Pro
     let collection_authority_info = next_account_info(account_info_iter)?;
     let collection_mint_info = next_account_info(account_info_iter)?;
     let collection_metadata_info = next_account_info(account_info_iter)?;
-    let edition_account_info = next_account_info(account_info_iter)?;
+    let _edition_account_info = next_account_info(account_info_iter)?;
 
     let using_delegated_collection_authority = accounts.len() == 6;
 
@@ -79,7 +79,6 @@ pub fn unverify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) -> Pro
         // If the parent is not burned, we need to ensure the collection
         // metadata and edition accounts are owned by the token metadata program.
         assert_owned_by(collection_metadata_info, program_id)?;
-        assert_owned_by(edition_account_info, program_id)?;
 
         // Now we can deserialize the collection metadata account.
         let collection_metadata = Metadata::from_account_info(collection_metadata_info)?;
