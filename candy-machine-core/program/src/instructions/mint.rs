@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 use arrayref::array_ref;
 use mpl_token_metadata::{
     instruction::{
-        create_master_edition_v3, create_metadata_accounts_v2, set_and_verify_collection,
+        create_master_edition_v3, create_metadata_accounts_v3, set_and_verify_collection,
         set_and_verify_sized_collection_item, update_metadata_accounts_v2,
     },
     state::{Metadata, TokenMetadataAccount},
@@ -122,7 +122,7 @@ pub fn mint<'info>(ctx: Context<'_, '_, '_, 'info, Mint<'info>>) -> Result<()> {
     ];
 
     invoke_signed(
-        &create_metadata_accounts_v2(
+        &create_metadata_accounts_v3(
             ctx.accounts.token_metadata_program.key(),
             ctx.accounts.nft_metadata.key(),
             ctx.accounts.nft_mint.key(),
@@ -136,6 +136,7 @@ pub fn mint<'info>(ctx: Context<'_, '_, '_, 'info, Mint<'info>>) -> Result<()> {
             candy_machine.data.seller_fee_basis_points,
             true,
             candy_machine.data.is_mutable,
+            None,
             None,
             None,
         ),
@@ -260,7 +261,7 @@ pub fn get_config_line(
     let value_to_use = if settings.is_sequential {
         mint_number as usize
     } else {
-        let items_available = candy_machine.data.items_available as u64;
+        let items_available = candy_machine.data.items_available;
         let indices_start = HIDDEN_SECTION
             + 4
             + (items_available as usize) * candy_machine.data.get_config_line_size()

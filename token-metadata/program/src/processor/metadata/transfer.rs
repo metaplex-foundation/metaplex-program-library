@@ -183,6 +183,18 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
     msg!("deserializing metadata");
     let metadata = Metadata::from_account_info(ctx.accounts.metadata_info)?;
 
+    // Must be the actual current owner of the token where
+    // mint, token, owner and metadata accounts all match up.
+    assert_holding_amount(
+        &crate::ID,
+        ctx.accounts.token_owner_info,
+        ctx.accounts.metadata_info,
+        &metadata,
+        ctx.accounts.mint_info,
+        ctx.accounts.token_info,
+        amount,
+    )?;
+
     let token_transfer_params: TokenTransferParams = TokenTransferParams {
         mint: ctx.accounts.mint_info.clone(),
         source: ctx.accounts.token_info.clone(),
@@ -246,18 +258,6 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
             // PDA to go around this restriction for cases where they are passing through a proper system wallet
             // signer via an invoke call.
             is_wallet_to_wallet = !is_cpi && wallets_are_system_program_owned;
-
-            // Must be the actual current owner of the token where
-            // mint, token, owner and metadata accounts all match up.
-            assert_holding_amount(
-                &crate::ID,
-                ctx.accounts.token_owner_info,
-                ctx.accounts.metadata_info,
-                &metadata,
-                ctx.accounts.mint_info,
-                ctx.accounts.token_info,
-                amount,
-            )?;
         }
         AuthorityType::Delegate => {
             // the delegate has already being validated, but we need to validate
