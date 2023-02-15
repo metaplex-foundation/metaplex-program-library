@@ -99,7 +99,6 @@ pub(crate) fn burn_nonfungible_edition(ctx: &Context<Burn>) -> ProgramResult {
     };
     spl_token_burn(params)?;
 
-    // Close token account.
     let params = TokenCloseParams {
         token_program: ctx.accounts.spl_token_program_info.clone(),
         account: ctx.accounts.token_info.clone(),

@@ -7,7 +7,7 @@ use solana_program::{
 };
 
 use super::InstructionBuilder;
-use crate::{instruction::MetadataInstruction, processor::AuthorizationData};
+use crate::instruction::MetadataInstruction;
 
 ///# Burn Edition NFT
 ///

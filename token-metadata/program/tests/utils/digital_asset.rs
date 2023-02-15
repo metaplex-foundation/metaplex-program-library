@@ -75,6 +75,7 @@ impl DigitalAsset {
     pub async fn burn(
         &mut self,
         context: &mut ProgramTestContext,
+        authority: Keypair,
         args: BurnArgs,
         parent_asset: Option<DigitalAsset>,
         collection_metadata: Option<Pubkey>,
@@ -84,7 +85,7 @@ impl DigitalAsset {
 
         let mut builder = BurnBuilder::new();
         builder
-            .authority(context.payer.pubkey())
+            .authority(authority.pubkey())
             .metadata(self.metadata)
             .mint(self.mint.pubkey())
             .token(self.token.unwrap());
@@ -127,8 +128,8 @@ impl DigitalAsset {
 
         let transaction = Transaction::new_signed_with_payer(
             &[burn_ix],
-            Some(&context.payer.pubkey()),
-            &[&context.payer],
+            Some(&authority.pubkey()),
+            &[&authority],
             context.last_blockhash,
         );
 

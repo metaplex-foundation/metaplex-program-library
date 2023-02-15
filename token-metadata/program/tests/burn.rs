@@ -4,7 +4,7 @@ pub mod utils;
 
 use mpl_token_metadata::{
     error::MetadataError,
-    instruction::{builders::BurnBuilder, BurnArgs, InstructionBuilder},
+    instruction::{builders::BurnBuilder, BurnArgs, DelegateArgs, InstructionBuilder},
     state::{Creator, Key, Metadata as ProgramMetadata, TokenStandard},
 };
 use num_traits::FromPrimitive;
@@ -20,11 +20,14 @@ use spl_token::state::Account as TokenAccount;
 use utils::*;
 
 mod success_cases {
+
     use super::*;
 
     #[tokio::test]
     async fn burn_nonfungible() {
         let mut context = program_test().start_with_context().await;
+
+        let owner = context.payer.dirty_clone();
 
         let mut da = DigitalAsset::new();
         da.create_and_mint(&mut context, TokenStandard::NonFungible, None, None, 1)
@@ -33,15 +36,19 @@ mod success_cases {
 
         let args = BurnArgs::V1 { amount: 1 };
 
-        da.burn(&mut context, args, None, None).await.unwrap();
+        da.burn(&mut context, owner, args, None, None)
+            .await
+            .unwrap();
 
         // Assert that metadata, edition and token account are closed.
         da.assert_burned(&mut context).await.unwrap();
     }
 
     #[tokio::test]
-    async fn burn_programmable_nonfungible() {
+    async fn owner_burn_programmable_nonfungible() {
         let mut context = program_test().start_with_context().await;
+
+        let owner = context.payer.dirty_clone();
 
         let mut da = DigitalAsset::new();
         da.create_and_mint(
@@ -56,7 +63,50 @@ mod success_cases {
 
         let args = BurnArgs::V1 { amount: 1 };
 
-        da.burn(&mut context, args, None, None).await.unwrap();
+        da.burn(&mut context, owner, args, None, None)
+            .await
+            .unwrap();
+
+        // Assert that metadata, edition and token account are closed.
+        da.assert_burned(&mut context).await.unwrap();
+    }
+
+    #[tokio::test]
+    async fn utility_delegate_burn_programmable_nonfungible() {
+        let mut context = program_test().start_with_context().await;
+
+        let payer = context.payer.dirty_clone();
+        let delegate = Keypair::new();
+        delegate.airdrop(&mut context, 1_000_000_000).await.unwrap();
+
+        let mut da = DigitalAsset::new();
+        da.create_and_mint(
+            &mut context,
+            TokenStandard::ProgrammableNonFungible,
+            None,
+            None,
+            1,
+        )
+        .await
+        .unwrap();
+
+        da.delegate(
+            &mut context,
+            payer,
+            delegate.pubkey(),
+            DelegateArgs::UtilityV1 {
+                amount: 1,
+                authorization_data: None,
+            },
+        )
+        .await
+        .unwrap();
+
+        let args = BurnArgs::V1 { amount: 1 };
+
+        da.burn(&mut context, delegate, args, None, None)
+            .await
+            .unwrap();
 
         // Assert that metadata, edition and token account are closed.
         da.assert_burned(&mut context).await.unwrap();
@@ -158,6 +208,8 @@ mod success_cases {
     async fn burn_fungible() {
         let mut context = program_test().start_with_context().await;
 
+        let owner = context.payer.dirty_clone();
+
         let initial_amount = 10;
         let burn_amount = 1;
 
@@ -176,7 +228,9 @@ mod success_cases {
             amount: burn_amount,
         };
 
-        da.burn(&mut context, args, None, None).await.unwrap();
+        da.burn(&mut context, owner.dirty_clone(), args, None, None)
+            .await
+            .unwrap();
 
         // We only burned one token, so the token account should still exist.
         let token_account = context
@@ -196,7 +250,9 @@ mod success_cases {
             amount: burn_remaining,
         };
 
-        da.burn(&mut context, args, None, None).await.unwrap();
+        da.burn(&mut context, owner, args, None, None)
+            .await
+            .unwrap();
 
         // The token account should be closed now.
         let token_account = context
@@ -219,6 +275,8 @@ mod failure_cases {
     #[tokio::test]
     async fn fail_to_burn_master_edition_with_existing_prints() {
         let mut context = program_test().start_with_context().await;
+
+        let owner = context.payer.dirty_clone();
 
         let mut original_nft = DigitalAsset::new();
         original_nft
@@ -250,7 +308,7 @@ mod failure_cases {
         assert!(print_edition_account.is_some());
 
         let err = original_nft
-            .burn(&mut context, BurnArgs::V1 { amount: 1 }, None, None)
+            .burn(&mut context, owner, BurnArgs::V1 { amount: 1 }, None, None)
             .await
             .unwrap_err();
 
@@ -260,6 +318,8 @@ mod failure_cases {
     #[tokio::test]
     async fn require_md_account_to_burn_collection_nft() {
         let mut context = program_test().start_with_context().await;
+
+        let owner = context.payer.dirty_clone();
 
         // Create a Collection Parent NFT with the CollectionDetails struct populated
         let collection_parent_nft = Metadata::new();
@@ -361,7 +421,7 @@ mod failure_cases {
 
         // Burn the NFT w/o passing in collection metadata. This should fail.
         let err = da
-            .burn(&mut context, BurnArgs::V1 { amount: 1 }, None, None)
+            .burn(&mut context, owner, BurnArgs::V1 { amount: 1 }, None, None)
             .await
             .unwrap_err();
 
@@ -371,6 +431,8 @@ mod failure_cases {
     #[tokio::test]
     async fn burn_unsized_collection_item() {
         let mut context = program_test().start_with_context().await;
+
+        let owner = context.payer.dirty_clone();
 
         // Create a Collection Parent NFT without the CollectionDetails struct
         let collection_parent_nft = Metadata::new();
@@ -436,6 +498,7 @@ mod failure_cases {
         // Burn the NFT
         da.burn(
             &mut context,
+            owner,
             BurnArgs::V1 { amount: 1 },
             None,
             Some(collection_parent_nft.pubkey),
