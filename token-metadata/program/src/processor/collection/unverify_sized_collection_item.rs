@@ -3,12 +3,13 @@ use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
     pubkey::Pubkey,
+    system_program,
 };
 
 use crate::{
     assertions::{
-        assert_owned_by,
-        collection::{assert_collection_verify_is_valid, assert_has_collection_authority},
+        assert_owned_by, collection::assert_has_collection_authority,
+        metadata::assert_metadata_derivation,
     },
     error::MetadataError,
     state::{Metadata, TokenMetadataAccount},
@@ -23,8 +24,8 @@ pub fn unverify_sized_collection_item(
     let metadata_info = next_account_info(account_info_iter)?;
     let collection_authority_info = next_account_info(account_info_iter)?;
     let payer_info = next_account_info(account_info_iter)?;
-    let collection_mint = next_account_info(account_info_iter)?;
-    let collection_info = next_account_info(account_info_iter)?;
+    let collection_mint_info = next_account_info(account_info_iter)?;
+    let collection_metadata_info = next_account_info(account_info_iter)?;
     let edition_account_info = next_account_info(account_info_iter)?;
 
     let using_delegated_collection_authority = accounts.len() == 7;
@@ -33,52 +34,77 @@ pub fn unverify_sized_collection_item(
     assert_signer(payer_info)?;
 
     assert_owned_by(metadata_info, program_id)?;
-    assert_owned_by(collection_info, program_id)?;
-    assert_owned_by(collection_mint, &spl_token::id())?;
-    assert_owned_by(edition_account_info, program_id)?;
+    assert_owned_by(collection_mint_info, &spl_token::id())?;
 
     let mut metadata = Metadata::from_account_info(metadata_info)?;
-    let mut collection_metadata = Metadata::from_account_info(collection_info)?;
 
-    // Don't unverify already unverified items, otherwise we end up with invalid size data.
-    if let Some(collection) = &metadata.collection {
-        if !collection.verified {
-            return Err(MetadataError::AlreadyUnverified.into());
+    // First, if there's no collection set, we can just short-circuit
+    // since there's nothing to unverify.
+    let collection = match metadata.collection.as_mut() {
+        Some(collection) => collection,
+        None => return Ok(()),
+    };
+
+    // Short-circuit if it's already unverified.
+    if !collection.verified {
+        return Ok(());
+    }
+
+    // The collection parent must be the actual parent of the
+    // collection item.
+    if collection.key != *collection_mint_info.key {
+        return Err(MetadataError::NotAMemberOfCollection.into());
+    }
+
+    assert_metadata_derivation(program_id, collection_metadata_info, collection_mint_info)?;
+
+    // Check if the collection metadata account is burned. If it is,
+    // there's no sized data to update and the user can simply unverify
+    // the NFT.
+    //
+    // This check needs to happen before the program owned check.
+    let parent_burned = collection_metadata_info.data_is_empty()
+        && collection_metadata_info.owner == &system_program::ID;
+
+    if parent_burned {
+        // If the parent is burned, we need to check that the authority
+        // is the update authority on the item metadata.
+        //
+        // Collection Delegates for burned collection parents should not be
+        // respected as there's currently no way to revoke them.
+
+        if metadata.update_authority != *collection_authority_info.key {
+            return Err(MetadataError::UpdateAuthorityIncorrect.into());
         }
-    }
-
-    assert_collection_verify_is_valid(
-        &metadata.collection,
-        &collection_metadata,
-        collection_mint,
-        edition_account_info,
-    )?;
-    if using_delegated_collection_authority {
-        let collection_authority_record = next_account_info(account_info_iter)?;
-        assert_has_collection_authority(
-            collection_authority_info,
-            &collection_metadata,
-            collection_mint.key,
-            Some(collection_authority_record),
-        )?;
     } else {
-        assert_has_collection_authority(
-            collection_authority_info,
-            &collection_metadata,
-            collection_mint.key,
-            None,
-        )?;
+        // If the parent is not burned, we need to ensure the collection
+        // metadata and edition accounts are owned by the token metadata program.
+        assert_owned_by(collection_metadata_info, program_id)?;
+        assert_owned_by(edition_account_info, program_id)?;
+
+        // Now we can deserialize the collection metadata account.
+        let mut collection_metadata = Metadata::from_account_info(collection_metadata_info)?;
+
+        if using_delegated_collection_authority {
+            let collection_authority_record = next_account_info(account_info_iter)?;
+            assert_has_collection_authority(
+                collection_authority_info,
+                &collection_metadata,
+                collection_mint_info.key,
+                Some(collection_authority_record),
+            )?;
+        } else {
+            assert_has_collection_authority(
+                collection_authority_info,
+                &collection_metadata,
+                collection_mint_info.key,
+                None,
+            )?;
+        }
+        decrement_collection_size(&mut collection_metadata, collection_metadata_info)?;
     }
 
-    // If the NFT has collection data, we set it to be unverified and then update the collection
-    // size on the Collection Parent.
-    if let Some(collection) = &mut metadata.collection {
-        decrement_collection_size(&mut collection_metadata, collection_info)?;
-
-        collection.verified = false;
-        clean_write_metadata(&mut metadata, metadata_info)?;
-    } else {
-        return Err(MetadataError::CollectionNotFound.into());
-    }
+    collection.verified = false;
+    clean_write_metadata(&mut metadata, metadata_info)?;
     Ok(())
 }
