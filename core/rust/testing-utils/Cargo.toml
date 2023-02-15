@@ -14,21 +14,21 @@ crate-type = ["lib"]
 path = "src/lib.rs"
 
 [dependencies]
-anchor-client = "0.25"
-shellexpand = "2.1.0"
+anchor-client = "0.26"
+shellexpand = "2.1.2"
 serde_json = "1.0"
-solana-program-test = "1.10"
-solana-program = "1.10"
-solana-sdk = "1.10" 
-spl-token = { version = "3.3",  features = ["no-entrypoint"] }
-spl-associated-token-account = { version = "~1.0.5",  features = ["no-entrypoint"] }
-mpl-token-metadata = { version="1.4", features = [ "no-entrypoint" ] }
+solana-program-test = "1.14"
+solana-program = "1.14"
+solana-sdk = "1.14"
+spl-token = { version = "3.5",  features = ["no-entrypoint"] }
+spl-associated-token-account = { version = "1.1.1",  features = ["no-entrypoint"] }
+mpl-token-metadata = { version="1.7", features = [ "no-entrypoint" ] }
 mpl-token-vault = { version = "0.2", features = [ "no-entrypoint" ] }
 rand = "0.8.5"
 num = "0.4"
 num-derive = "0.3"
 num-traits = "0.2"
-borsh = "0.9.1"
+borsh = "0.9.3"
 
 [profile.release]
 overflow-checks = true     # Enable integer overflow checks.

@@ -52,6 +52,7 @@ pub fn make_ata<'a>(
             fee_payer.key,
             wallet.key,
             mint.key,
+            &spl_token::ID,
         ),
         &[
             ata,
