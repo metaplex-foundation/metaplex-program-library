@@ -3117,12 +3117,7 @@ mod buy {
 
     #[tokio::test]
     async fn err_gated_unverified_nft() {
-        setup_context!(
-            context,
-            mpl_fixed_price_sale,
-            mpl_token_metadata,
-            mpl_metaplex
-        );
+        setup_context!(context, mpl_fixed_price_sale, mpl_token_metadata);
         let (admin_wallet, store_keypair) = setup_store(&mut context).await;
 
         let (selling_resource_keypair, selling_resource_owner_keypair, _vault) =

@@ -97,14 +97,14 @@ pub fn assert_has_collection_authority(
 
 pub fn assert_collection_verify_is_valid(
     member_collection: &Option<Collection>,
-    collection_data: &Metadata,
+    collection_metadata: &Metadata,
     collection_mint: &AccountInfo,
     edition_account_info: &AccountInfo,
 ) -> Result<(), ProgramError> {
     match member_collection {
         Some(collection) => {
             if collection.key != *collection_mint.key
-                || collection_data.mint != *collection_mint.key
+                || collection_metadata.mint != *collection_mint.key
             {
                 return Err(MetadataError::CollectionNotFound.into());
             }
@@ -120,13 +120,13 @@ pub fn assert_collection_verify_is_valid(
         &[
             PREFIX.as_bytes(),
             crate::id().as_ref(),
-            collection_data.mint.as_ref(),
+            collection_metadata.mint.as_ref(),
             EDITION.as_bytes(),
         ],
     )
     .map_err(|_| MetadataError::CollectionMasterEditionAccountInvalid)?;
 
-    assert_master_edition(collection_data, edition_account_info)?;
+    assert_master_edition(collection_metadata, edition_account_info)?;
     Ok(())
 }
 
