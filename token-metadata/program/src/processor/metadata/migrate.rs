@@ -93,17 +93,6 @@ pub fn migrate_v1(program_id: &Pubkey, ctx: Context<Migrate>, args: MigrateArgs)
     let mut metadata = Metadata::from_account_info(metadata_info)?;
     let collection_metadata = Metadata::from_account_info(collection_metadata_info)?;
 
-    let token_standard = metadata.token_standard.ok_or_else(|| {
-        <MetadataError as std::convert::Into<ProgramError>>::into(
-            MetadataError::InvalidTokenStandard,
-        )
-    })?;
-
-    // Can only migrate NFT --> PNFT right now.
-    if !matches!(token_standard, TokenStandard::NonFungible) {
-        return Err(MetadataError::InvalidTokenStandard.into());
-    }
-
     match migration_type {
         MigrationType::CollectionV1 => return Err(MetadataError::FeatureNotSupported.into()),
         MigrationType::ProgrammableV1 => {
