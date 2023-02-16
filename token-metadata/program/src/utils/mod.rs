@@ -18,7 +18,7 @@ pub use mpl_utils::{
 };
 pub use programmable_asset::*;
 use solana_program::{
-    account_info::AccountInfo, borsh::try_from_slice_unchecked, entrypoint::ProgramResult, msg,
+    account_info::AccountInfo, borsh::try_from_slice_unchecked, entrypoint::ProgramResult,
     program::invoke_signed, program_error::ProgramError, pubkey::Pubkey, system_program,
 };
 use spl_token::instruction::{set_authority, AuthorityType};
@@ -116,7 +116,6 @@ pub fn transfer_mint_authority<'a>(
     mint_authority_info: &AccountInfo<'a>,
     token_program_info: &AccountInfo<'a>,
 ) -> ProgramResult {
-    msg!("Setting mint authority");
     let accounts = &[
         mint_authority_info.clone(),
         mint_info.clone(),
@@ -136,7 +135,6 @@ pub fn transfer_mint_authority<'a>(
         accounts,
         &[],
     )?;
-    msg!("Setting freeze authority");
     let freeze_authority = get_mint_freeze_authority(mint_info)?;
     if freeze_authority.is_some() {
         invoke_signed(
@@ -152,7 +150,6 @@ pub fn transfer_mint_authority<'a>(
             accounts,
             &[],
         )?;
-        msg!("Finished setting freeze authority");
     } else {
         return Err(MetadataError::NoFreezeAuthoritySet.into());
     }

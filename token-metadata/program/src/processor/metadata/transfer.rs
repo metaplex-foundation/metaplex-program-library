@@ -5,7 +5,6 @@ use mpl_utils::{assert_signer, token::TokenTransferParams};
 use solana_program::{
     account_info::AccountInfo,
     entrypoint::ProgramResult,
-    msg,
     program::invoke,
     program_error::ProgramError,
     program_option::COption,
@@ -88,7 +87,6 @@ pub fn transfer<'a>(
 }
 
 fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) -> ProgramResult {
-    msg!("Transfer V1");
     let TransferArgs::V1 {
         authorization_data: auth_data,
         amount,
@@ -180,7 +178,6 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
     let mut is_wallet_to_wallet = false;
 
     // Deserialize metadata.
-    msg!("deserializing metadata");
     let metadata = Metadata::from_account_info(ctx.accounts.metadata_info)?;
 
     // Must be the actual current owner of the token where
@@ -208,7 +205,6 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
     let token_standard = metadata.token_standard;
     let token = Account::unpack(&ctx.accounts.token_info.try_borrow_data()?)?;
 
-    msg!("getting authority type");
     let authority_type = AuthorityType::get_authority_type(AuthorityRequest {
         authority: ctx.accounts.authority_info.key,
         update_authority: &metadata.update_authority,
@@ -227,8 +223,6 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
 
     match authority_type {
         AuthorityType::Holder => {
-            msg!("Owner transfer");
-
             // Wallet-to-wallet are currently exempt from auth rules so we need to check this and pass it into
             // the auth rules validator function.
             //
@@ -289,7 +283,6 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
 
     match token_standard {
         Some(TokenStandard::ProgrammableNonFungible) => {
-            msg!("pNFT");
             // All pNFTs should have a token record passed in and existing.
             // The token delegate role may not be populated, however.
             let owner_token_record_info =
@@ -320,7 +313,6 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
 
             let mut owner_token_record = TokenRecord::from_account_info(owner_token_record_info)?;
 
-            msg!("checking if sale delegate");
             let is_sale_delegate = owner_token_record
                 .delegate_role
                 .map(|role| role == TokenDelegateRole::Sale)
@@ -331,7 +323,6 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
                 .map(|role| role == TokenDelegateRole::LockedTransfer)
                 .unwrap_or(false);
 
-            msg!("determining scenario");
             let scenario = match authority_type {
                 AuthorityType::Holder => {
                     if is_sale_delegate {
@@ -395,8 +386,6 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
             // If the token record account for the destination owner doesn't exist,
             // we create it.
             if destination_token_record_info.data_is_empty() {
-                msg!("Initializing new token record account");
-
                 create_token_record_account(
                     program_id,
                     destination_token_record_info,
@@ -407,10 +396,7 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
                 )?;
             }
         }
-        _ => {
-            msg!("Transferring standard asset");
-            mpl_utils::token::spl_token_transfer(token_transfer_params).unwrap()
-        }
+        _ => mpl_utils::token::spl_token_transfer(token_transfer_params).unwrap(),
     }
 
     Ok(())

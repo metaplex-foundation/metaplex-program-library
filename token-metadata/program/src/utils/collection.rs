@@ -13,13 +13,11 @@ pub fn increment_collection_size(
                         .checked_add(1)
                         .ok_or(MetadataError::NumericalOverflowError)?,
                 });
-                msg!("Clean writing collection parent metadata");
                 clean_write_metadata(metadata, metadata_info)?;
                 Ok(())
             }
         }
     } else {
-        msg!("No collection details found. Cannot increment collection size.");
         Err(MetadataError::UnsizedCollection.into())
     }
 }
@@ -41,7 +39,6 @@ pub fn decrement_collection_size(
             }
         }
     } else {
-        msg!("No collection details found. Cannot decrement collection size.");
         Err(MetadataError::UnsizedCollection.into())
     }
 }
