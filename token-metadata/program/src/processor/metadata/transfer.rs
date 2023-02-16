@@ -25,8 +25,8 @@ use crate::{
     instruction::{Context, Transfer, TransferArgs},
     pda::find_token_record_account,
     state::{
-        AuthorityRequest, AuthorityType, Metadata, Operation, Resizable, TokenDelegateRole,
-        TokenMetadataAccount, TokenRecord, TokenStandard,
+        AuthorityRequest, AuthorityResponse, AuthorityType, Metadata, Operation, Resizable,
+        TokenDelegateRole, TokenMetadataAccount, TokenRecord, TokenStandard,
     },
     utils::{
         assert_derivation, auth_rules_validate, create_token_record_account, frozen_transfer,
@@ -209,21 +209,22 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
     let token = Account::unpack(&ctx.accounts.token_info.try_borrow_data()?)?;
 
     msg!("getting authority type");
-    let authority_type = AuthorityType::get_authority_type(AuthorityRequest {
-        authority: ctx.accounts.authority_info.key,
-        update_authority: &metadata.update_authority,
-        mint: ctx.accounts.mint_info.key,
-        token: Some(ctx.accounts.token_info.key),
-        token_account: Some(&token),
-        token_record_info: ctx.accounts.owner_token_record_info,
-        token_delegate_roles: vec![
-            TokenDelegateRole::Sale,
-            TokenDelegateRole::Transfer,
-            TokenDelegateRole::LockedTransfer,
-            TokenDelegateRole::Migration,
-        ],
-        ..Default::default()
-    })?;
+    let AuthorityResponse { authority_type, .. } =
+        AuthorityType::get_authority_type(AuthorityRequest {
+            authority: ctx.accounts.authority_info.key,
+            update_authority: &metadata.update_authority,
+            mint: ctx.accounts.mint_info.key,
+            token: Some(ctx.accounts.token_info.key),
+            token_account: Some(&token),
+            token_record_info: ctx.accounts.owner_token_record_info,
+            token_delegate_roles: vec![
+                TokenDelegateRole::Sale,
+                TokenDelegateRole::Transfer,
+                TokenDelegateRole::LockedTransfer,
+                TokenDelegateRole::Migration,
+            ],
+            ..Default::default()
+        })?;
 
     match authority_type {
         AuthorityType::Holder => {

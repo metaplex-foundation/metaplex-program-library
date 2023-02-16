@@ -200,17 +200,6 @@ pub enum TokenDelegateRole {
     Migration = 255,
 }
 
-#[repr(C)]
-#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
-pub enum AuthorityType {
-    None,
-    Metadata,
-    Holder,
-    MetadataDelegate,
-    TokenDelegate,
-}
-
 pub struct AuthorityRequest<'a, 'b> {
     /// Determines the precedence of authority types.
     pub precedence: &'a [AuthorityType],
@@ -259,6 +248,27 @@ impl<'a, 'b> Default for AuthorityRequest<'a, 'b> {
     }
 }
 
+/// Struct to represent the authority type identified from
+/// an authority request.
+#[derive(Default)]
+pub struct AuthorityResponse {
+    pub authority_type: AuthorityType,
+    pub token_delegate_role: Option<TokenDelegateRole>,
+    pub metadata_delegate_role: Option<MetadataDelegateRole>,
+}
+
+#[repr(C)]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, Default)]
+pub enum AuthorityType {
+    #[default]
+    None,
+    Metadata,
+    Holder,
+    MetadataDelegate,
+    TokenDelegate,
+}
+
 impl AuthorityType {
     /// Determines the `AuthorityType`.
     ///
@@ -266,7 +276,9 @@ impl AuthorityType {
     /// be "valid" for multiples types (e.g., the same authority can be the holder and the update
     /// authority). This ambiguity is resolved by using the `precedence`, which determines the
     /// priority of types.
-    pub fn get_authority_type(request: AuthorityRequest) -> Result<Self, ProgramError> {
+    pub fn get_authority_type(
+        request: AuthorityRequest,
+    ) -> Result<AuthorityResponse, ProgramError> {
         // the evaluation follows the `request.precedence` order; as soon as a match is
         // found, the type is returned
         for authority_type in request.precedence {
@@ -295,7 +307,11 @@ impl AuthorityType {
                                 && role_matches
                                 && (COption::from(token_record.delegate) == token_account.delegate)
                             {
-                                return Ok(AuthorityType::TokenDelegate);
+                                return Ok(AuthorityResponse {
+                                    authority_type: AuthorityType::TokenDelegate,
+                                    token_delegate_role: token_record.delegate_role,
+                                    ..Default::default()
+                                });
                             }
                         }
                     }
@@ -326,7 +342,11 @@ impl AuthorityType {
                                         )?;
 
                                     if delegate_record.delegate == *request.authority {
-                                        return Ok(AuthorityType::MetadataDelegate);
+                                        return Ok(AuthorityResponse {
+                                            authority_type: AuthorityType::MetadataDelegate,
+                                            metadata_delegate_role: Some(*role),
+                                            ..Default::default()
+                                        });
                                     }
                                 }
 
@@ -347,7 +367,11 @@ impl AuthorityType {
                                             )?;
 
                                         if delegate_record.delegate == *request.authority {
-                                            return Ok(AuthorityType::MetadataDelegate);
+                                            return Ok(AuthorityResponse {
+                                                authority_type: AuthorityType::MetadataDelegate,
+                                                metadata_delegate_role: Some(*role),
+                                                ..Default::default()
+                                            });
                                         }
                                     }
                                 }
@@ -360,7 +384,10 @@ impl AuthorityType {
 
                     if let Some(token_account) = request.token_account {
                         if cmp_pubkeys(&token_account.owner, request.authority) {
-                            return Ok(AuthorityType::Holder);
+                            return Ok(AuthorityResponse {
+                                authority_type: AuthorityType::Holder,
+                                ..Default::default()
+                            });
                         }
                     }
                 }
@@ -368,7 +395,10 @@ impl AuthorityType {
                     // checks if the authority is the update authority
 
                     if cmp_pubkeys(request.update_authority, request.authority) {
-                        return Ok(AuthorityType::Metadata);
+                        return Ok(AuthorityResponse {
+                            authority_type: AuthorityType::Metadata,
+                            ..Default::default()
+                        });
                     }
                 }
                 _ => { /* the default return type is 'None' */ }
@@ -376,7 +406,7 @@ impl AuthorityType {
         }
 
         // if we reach this point, no 'valid' authority type has been found
-        Ok(AuthorityType::None)
+        Ok(AuthorityResponse::default())
     }
 }
 

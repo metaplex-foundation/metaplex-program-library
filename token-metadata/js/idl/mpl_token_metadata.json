@@ -4532,7 +4532,7 @@
         "kind": "enum",
         "variants": [
           {
-            "name": "UpdateCollectionItemsV1",
+            "name": "CollectionV1",
             "fields": [
               {
                 "name": "authorization_data",
@@ -4654,6 +4654,19 @@
                 }
               }
             ]
+          },
+          {
+            "name": "ProgrammableConfigV1",
+            "fields": [
+              {
+                "name": "authorization_data",
+                "type": {
+                  "option": {
+                    "defined": "AuthorizationData"
+                  }
+                }
+              }
+            ]
           }
         ]
       }
@@ -4664,7 +4677,7 @@
         "kind": "enum",
         "variants": [
           {
-            "name": "UpdateCollectionItemsV1"
+            "name": "CollectionV1"
           },
           {
             "name": "SaleV1"
@@ -4686,6 +4699,9 @@
           },
           {
             "name": "LockedTransferV1"
+          },
+          {
+            "name": "ProgrammableConfigV1"
           }
         ]
       }
@@ -4699,16 +4715,16 @@
             "name": "Authority"
           },
           {
+            "name": "Collection"
+          },
+          {
             "name": "Use"
           },
           {
             "name": "Update"
           },
           {
-            "name": "UpdateCollectionItems"
-          },
-          {
-            "name": "VerifyCollection"
+            "name": "ProgrammableConfig"
           }
         ]
       }

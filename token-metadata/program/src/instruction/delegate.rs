@@ -15,7 +15,7 @@ use crate::{instruction::MetadataInstruction, processor::AuthorizationData};
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub enum DelegateArgs {
-    UpdateCollectionItemsV1 {
+    CollectionV1 {
         /// Required authorization data to validate the request.
         authorization_data: Option<AuthorizationData>,
     },
@@ -53,13 +53,17 @@ pub enum DelegateArgs {
         /// Required authorization data to validate the request.
         authorization_data: Option<AuthorizationData>,
     },
+    ProgrammableConfigV1 {
+        /// Required authorization data to validate the request.
+        authorization_data: Option<AuthorizationData>,
+    },
 }
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub enum RevokeArgs {
-    UpdateCollectionItemsV1,
+    CollectionV1,
     SaleV1,
     TransferV1,
     UpdateV1,
@@ -67,6 +71,7 @@ pub enum RevokeArgs {
     StakingV1,
     StandardV1,
     LockedTransferV1,
+    ProgrammableConfigV1,
 }
 
 #[repr(C)]
@@ -74,20 +79,20 @@ pub enum RevokeArgs {
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, Copy)]
 pub enum MetadataDelegateRole {
     Authority,
+    Collection,
     Use,
     Update,
-    UpdateCollectionItems,
-    VerifyCollection,
+    ProgrammableConfig,
 }
 
 impl fmt::Display for MetadataDelegateRole {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let message = match self {
             Self::Authority => "authority_delegate".to_string(),
+            Self::Collection => "collection_delegate".to_string(),
             Self::Use => "use_delegate".to_string(),
             Self::Update => "update_delegate".to_string(),
-            Self::UpdateCollectionItems => "update_collection_items_delegate".to_string(),
-            Self::VerifyCollection => "verify_collection_delegate".to_string(),
+            Self::ProgrammableConfig => "programmable_config_delegate".to_string(),
         };
 
         write!(f, "{message}")

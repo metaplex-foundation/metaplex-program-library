@@ -43,7 +43,7 @@ test('Delegate: create update collection items delegate', async (t) => {
       Buffer.from('metadata'),
       PROGRAM_ID.toBuffer(),
       collection.mint.toBuffer(),
-      Buffer.from('update_collection_items_delegate'),
+      Buffer.from('collection_delegate'),
       payer.publicKey.toBuffer(),
       delegate.toBuffer(),
     ],
@@ -52,7 +52,7 @@ test('Delegate: create update collection items delegate', async (t) => {
   amman.addr.addLabel('Metadata Delegate Record', delegateRecord);
 
   const args: DelegateArgs = {
-    __kind: 'UpdateCollectionItemsV1',
+    __kind: 'CollectionV1',
     authorizationData: null,
   };
 

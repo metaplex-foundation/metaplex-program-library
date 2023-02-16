@@ -244,10 +244,10 @@ impl DigitalAsset {
             .spl_token_program(spl_token::ID);
 
         match args {
-            DelegateArgs::UpdateCollectionItemsV1 { .. } => {
+            DelegateArgs::CollectionV1 { .. } => {
                 let (delegate_record, _) = find_metadata_delegate_record_account(
                     &self.mint.pubkey(),
-                    MetadataDelegateRole::UpdateCollectionItems,
+                    MetadataDelegateRole::Collection,
                     &payer.pubkey(),
                     &delegate,
                 );
@@ -266,6 +266,15 @@ impl DigitalAsset {
                 let (delegate_record, _) = find_metadata_delegate_record_account(
                     &self.mint.pubkey(),
                     MetadataDelegateRole::Update,
+                    &payer.pubkey(),
+                    &delegate,
+                );
+                builder.delegate_record(delegate_record);
+            }
+            DelegateArgs::ProgrammableConfigV1 { .. } => {
+                let (delegate_record, _) = find_metadata_delegate_record_account(
+                    &self.mint.pubkey(),
+                    MetadataDelegateRole::ProgrammableConfig,
                     &payer.pubkey(),
                     &delegate,
                 );
@@ -355,10 +364,10 @@ impl DigitalAsset {
             .spl_token_program(spl_token::ID);
 
         match args {
-            RevokeArgs::UpdateCollectionItemsV1 => {
+            RevokeArgs::CollectionV1 => {
                 let (delegate_record, _) = find_metadata_delegate_record_account(
                     &self.mint.pubkey(),
-                    MetadataDelegateRole::UpdateCollectionItems,
+                    MetadataDelegateRole::Collection,
                     &payer.pubkey(),
                     &delegate,
                 );
@@ -377,6 +386,15 @@ impl DigitalAsset {
                 let (delegate_record, _) = find_metadata_delegate_record_account(
                     &self.mint.pubkey(),
                     MetadataDelegateRole::Update,
+                    &payer.pubkey(),
+                    &delegate,
+                );
+                builder.delegate_record(delegate_record);
+            }
+            RevokeArgs::ProgrammableConfigV1 => {
+                let (delegate_record, _) = find_metadata_delegate_record_account(
+                    &self.mint.pubkey(),
+                    MetadataDelegateRole::ProgrammableConfig,
                     &payer.pubkey(),
                     &delegate,
                 );

@@ -13,8 +13,8 @@ use crate::{
     instruction::{Context, MetadataDelegateRole, Update, UpdateArgs},
     pda::{EDITION, PREFIX},
     state::{
-        AuthorityRequest, AuthorityType, Collection, Metadata, ProgrammableConfig,
-        TokenMetadataAccount, TokenStandard,
+        AuthorityRequest, AuthorityResponse, AuthorityType, Collection, Metadata,
+        ProgrammableConfig, TokenMetadataAccount, TokenStandard,
     },
     utils::assert_derivation,
 };
@@ -138,7 +138,11 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
     // Determines if we have a valid authority to perform the update. This must
     // be either the update authority, a delegate or the holder. This call fails
     // if no valid authority is present.
-    let authority_type = AuthorityType::get_authority_type(AuthorityRequest {
+    let AuthorityResponse {
+        authority_type,
+        metadata_delegate_role,
+        ..
+    } = AuthorityType::get_authority_type(AuthorityRequest {
         authority: ctx.accounts.authority_info.key,
         update_authority: &metadata.update_authority,
         mint: ctx.accounts.mint_info.key,
@@ -148,7 +152,7 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
         metadata_delegate_record_info: ctx.accounts.delegate_record_info,
         metadata_delegate_roles: Some(&[
             MetadataDelegateRole::Update,
-            MetadataDelegateRole::UpdateCollectionItems,
+            MetadataDelegateRole::ProgrammableConfig,
         ]),
         precedence: &[
             AuthorityType::Metadata,
@@ -201,6 +205,8 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
         ctx.accounts.authority_info,
         ctx.accounts.metadata_info,
         token,
+        authority_type,
+        metadata_delegate_role,
     )?;
 
     Ok(())

@@ -11,7 +11,7 @@ import * as beet from '@metaplex-foundation/beet';
  * @category generated
  */
 export enum RevokeArgs {
-  UpdateCollectionItemsV1,
+  CollectionV1,
   SaleV1,
   TransferV1,
   UpdateV1,
@@ -19,6 +19,7 @@ export enum RevokeArgs {
   StakingV1,
   StandardV1,
   LockedTransferV1,
+  ProgrammableConfigV1,
 }
 
 /**

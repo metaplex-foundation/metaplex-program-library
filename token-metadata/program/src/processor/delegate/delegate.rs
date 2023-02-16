@@ -36,10 +36,10 @@ impl Display for DelegateScenario {
         let message = match self {
             Self::Metadata(role) => match role {
                 MetadataDelegateRole::Authority => "Authority".to_string(),
+                MetadataDelegateRole::Collection => "Collection".to_string(),
                 MetadataDelegateRole::Use => "Use".to_string(),
                 MetadataDelegateRole::Update => "Update".to_string(),
-                MetadataDelegateRole::UpdateCollectionItems => "UpdateCollectionItems".to_string(),
-                MetadataDelegateRole::VerifyCollection => "VerifyCollection".to_string(),
+                MetadataDelegateRole::ProgrammableConfig => "ProgrammableConfig".to_string(),
             },
             Self::Token(role) => match role {
                 TokenDelegateRole::Sale => "Sale".to_string(),
@@ -115,12 +115,14 @@ pub fn delegate<'a>(
 
     // checks if it is a MetadataDelegate creation
     let delegate_args = match &args {
-        DelegateArgs::UpdateCollectionItemsV1 { authorization_data } => Some((
-            MetadataDelegateRole::UpdateCollectionItems,
-            authorization_data,
-        )),
+        DelegateArgs::CollectionV1 { authorization_data } => {
+            Some((MetadataDelegateRole::Collection, authorization_data))
+        }
         DelegateArgs::UpdateV1 { authorization_data } => {
             Some((MetadataDelegateRole::Update, authorization_data))
+        }
+        DelegateArgs::ProgrammableConfigV1 { authorization_data } => {
+            Some((MetadataDelegateRole::ProgrammableConfig, authorization_data))
         }
         // we don't need to fail if did not find a match at this point
         _ => None,

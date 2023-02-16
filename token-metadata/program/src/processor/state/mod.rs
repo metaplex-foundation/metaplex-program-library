@@ -19,8 +19,8 @@ use crate::{
     error::MetadataError,
     pda::find_token_record_account,
     state::{
-        AuthorityRequest, AuthorityType, Metadata, TokenDelegateRole, TokenMetadataAccount,
-        TokenRecord, TokenStandard, TokenState,
+        AuthorityRequest, AuthorityResponse, AuthorityType, Metadata, TokenDelegateRole,
+        TokenMetadataAccount, TokenRecord, TokenStandard, TokenState,
     },
     utils::{
         assert_delegated_tokens, assert_freeze_authority_matches_mint, assert_initialized,
@@ -84,21 +84,22 @@ pub(crate) fn toggle_asset_state(
     //  1. token delegate: valid token_record.delegate
     //  2. spl-delegate: for non-programmable assets, approver == token.delegate
 
-    let authority_type = AuthorityType::get_authority_type(AuthorityRequest {
-        authority: accounts.authority_info.key,
-        update_authority: &metadata.update_authority,
-        mint: accounts.mint_info.key,
-        token: Some(accounts.token_info.key),
-        token_account: Some(&token),
-        token_record_info: accounts.token_record_info,
-        token_delegate_roles: vec![
-            TokenDelegateRole::Utility,
-            TokenDelegateRole::Staking,
-            TokenDelegateRole::LockedTransfer,
-            TokenDelegateRole::Migration,
-        ],
-        ..Default::default()
-    })?;
+    let AuthorityResponse { authority_type, .. } =
+        AuthorityType::get_authority_type(AuthorityRequest {
+            authority: accounts.authority_info.key,
+            update_authority: &metadata.update_authority,
+            mint: accounts.mint_info.key,
+            token: Some(accounts.token_info.key),
+            token_account: Some(&token),
+            token_record_info: accounts.token_record_info,
+            token_delegate_roles: vec![
+                TokenDelegateRole::Utility,
+                TokenDelegateRole::Staking,
+                TokenDelegateRole::LockedTransfer,
+                TokenDelegateRole::Migration,
+            ],
+            ..Default::default()
+        })?;
 
     let has_authority = match authority_type {
         // holder is not allowed to lock/unlock

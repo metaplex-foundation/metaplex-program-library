@@ -1433,7 +1433,7 @@ test('Update: Cannot Update pNFT Config with locked token', async (t) => {
   );
 });
 
-test('Update: delegate update collection item', async (t) => {
+test('Update: programmable config delegate update collection item', async (t) => {
   const API = new InitTransactions();
   const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
 
@@ -1458,6 +1458,13 @@ test('Update: delegate update collection item', async (t) => {
     collection.mint,
   );
 
+  let metadata = await Metadata.fromAccountAddress(connection, nft.metadata);
+
+  spok(t, metadata, {
+    tokenStandard: TokenStandard.ProgrammableNonFungible,
+    programmableConfig: { __kind: 'V1', ruleSet: null },
+  });
+
   // creates a delegate
 
   const [, delegate] = await API.getKeypair('Delegate');
@@ -1467,7 +1474,7 @@ test('Update: delegate update collection item', async (t) => {
       Buffer.from('metadata'),
       PROGRAM_ID.toBuffer(),
       collection.mint.toBuffer(),
-      Buffer.from('update_collection_items_delegate'),
+      Buffer.from('programmable_config_delegate'),
       payer.publicKey.toBuffer(),
       delegate.publicKey.toBuffer(),
     ],
@@ -1476,7 +1483,7 @@ test('Update: delegate update collection item', async (t) => {
   amman.addr.addLabel('Metadata Delegate Record', delegateRecord);
 
   const args: DelegateArgs = {
-    __kind: 'UpdateCollectionItemsV1',
+    __kind: 'ProgrammableConfigV1',
     authorizationData: null,
   };
 
@@ -1523,4 +1530,11 @@ test('Update: delegate update collection item', async (t) => {
     nft.token,
   );
   await updateTx.assertSuccess(t);
+
+  metadata = await Metadata.fromAccountAddress(connection, nft.metadata);
+
+  spok(t, metadata, {
+    tokenStandard: TokenStandard.ProgrammableNonFungible,
+    programmableConfig: { __kind: 'V1', ruleSet: spokSamePubkey(dummyRuleSet) },
+  });
 });

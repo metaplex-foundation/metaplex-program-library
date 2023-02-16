@@ -4,7 +4,9 @@ use crate::{
         collection::assert_collection_update_is_valid, metadata::assert_data_valid,
         uses::assert_valid_use,
     },
-    instruction::{CollectionDetailsToggle, CollectionToggle, RuleSetToggle, UpdateArgs},
+    instruction::{
+        CollectionDetailsToggle, CollectionToggle, MetadataDelegateRole, RuleSetToggle, UpdateArgs,
+    },
     utils::{clean_write_metadata, puff_out_data_fields},
 };
 
@@ -85,6 +87,8 @@ impl Metadata {
         update_authority: &AccountInfo<'a>,
         metadata: &AccountInfo<'a>,
         token: Option<TokenAccount>,
+        authority_type: AuthorityType,
+        delegate_role: Option<MetadataDelegateRole>,
     ) -> ProgramResult {
         let UpdateArgs::V1 {
             data,
@@ -98,104 +102,116 @@ impl Metadata {
             ..
         } = args;
 
-        if let Some(data) = data {
-            if !self.is_mutable {
-                return Err(MetadataError::DataIsImmutable.into());
-            }
-
-            assert_data_valid(
-                &data,
-                update_authority.key,
-                self,
-                false,
-                update_authority.is_signer,
-            )?;
-            self.data = data;
-        }
-
-        // if the Collection data is 'Set', only allow updating if it's unverified
-        // or if it exactly matches the existing collection info; if the Collection data
-        // is 'Clear', then only set to 'None' it if it's unverified.
-        match collection {
-            CollectionToggle::Set(_) => {
-                let collection_option = collection.to_option();
-                assert_collection_update_is_valid(false, &self.collection, &collection_option)?;
-                self.collection = collection_option;
-            }
-            CollectionToggle::Clear => {
-                if let Some(current_collection) = self.collection.as_ref() {
-                    // Can't change a verified collection in this command.
-                    if current_collection.verified {
-                        return Err(MetadataError::CannotUpdateVerifiedCollection.into());
-                    }
-                    // If it's unverified, it's ok to set to None.
-                    self.collection = None;
-                }
-            }
-            CollectionToggle::None => { /* nothing to do */ }
-        }
-
-        if uses.is_some() {
-            let uses_option = uses.to_option();
-            // If already None leave it as None.
-            assert_valid_use(&uses_option, &self.uses)?;
-            self.uses = uses_option;
-        }
-
-        if let Some(authority) = new_update_authority {
-            self.update_authority = authority;
-        }
-
-        if let Some(primary_sale) = primary_sale_happened {
-            // If received primary_sale is true, flip to true.
-            if primary_sale || !self.primary_sale_happened {
-                self.primary_sale_happened = primary_sale
-            } else {
-                return Err(MetadataError::PrimarySaleCanOnlyBeFlippedToTrue.into());
-            }
-        }
-
-        if let Some(mutable) = is_mutable {
-            // If received value is false, flip to false.
-            if !mutable || self.is_mutable {
-                self.is_mutable = mutable
-            } else {
-                return Err(MetadataError::IsMutableCanOnlyBeFlippedToFalse.into());
-            }
-        }
-
+        // only allow update if the token standard is known
         let token_standard = self
             .token_standard
             .ok_or(MetadataError::InvalidTokenStandard)?;
 
-        // if the rule_set data is either 'Set' or 'Clear', only allow updating if the
-        // token standard is equal to `ProgrammableNonFungible` and no SPL delegate is set.
-        if matches!(rule_set, RuleSetToggle::Clear | RuleSetToggle::Set(_)) {
-            if token_standard != TokenStandard::ProgrammableNonFungible {
-                return Err(MetadataError::InvalidTokenStandard.into());
+        if matches!(authority_type, AuthorityType::Metadata)
+            || matches!(delegate_role, Some(MetadataDelegateRole::Update))
+        {
+            if let Some(data) = data {
+                if !self.is_mutable {
+                    return Err(MetadataError::DataIsImmutable.into());
+                }
+
+                assert_data_valid(
+                    &data,
+                    update_authority.key,
+                    self,
+                    false,
+                    update_authority.is_signer,
+                )?;
+                self.data = data;
             }
 
-            // Require the token so we can check if it has a delegate.
-            let token = token.ok_or(MetadataError::MissingTokenAccount)?;
-
-            // If the token has a delegate, we cannot update the rule set.
-            if token.delegate.is_some() {
-                return Err(MetadataError::CannotUpdateAssetWithDelegate.into());
+            // if the Collection data is 'Set', only allow updating if it's unverified
+            // or if it exactly matches the existing collection info; if the Collection data
+            // is 'Clear', then only set to 'None' it if it's unverified.
+            match collection {
+                CollectionToggle::Set(_) => {
+                    let collection_option = collection.to_option();
+                    assert_collection_update_is_valid(false, &self.collection, &collection_option)?;
+                    self.collection = collection_option;
+                }
+                CollectionToggle::Clear => {
+                    if let Some(current_collection) = self.collection.as_ref() {
+                        // Can't change a verified collection in this command.
+                        if current_collection.verified {
+                            return Err(MetadataError::CannotUpdateVerifiedCollection.into());
+                        }
+                        // If it's unverified, it's ok to set to None.
+                        self.collection = None;
+                    }
+                }
+                CollectionToggle::None => { /* nothing to do */ }
             }
 
-            self.programmable_config =
-                rule_set.to_option().map(|rule_set| ProgrammableConfig::V1 {
-                    rule_set: Some(rule_set),
-                });
+            if uses.is_some() {
+                let uses_option = uses.to_option();
+                // If already None leave it as None.
+                assert_valid_use(&uses_option, &self.uses)?;
+                self.uses = uses_option;
+            }
+
+            if let Some(authority) = new_update_authority {
+                self.update_authority = authority;
+            }
+
+            if let Some(primary_sale) = primary_sale_happened {
+                // If received primary_sale is true, flip to true.
+                if primary_sale || !self.primary_sale_happened {
+                    self.primary_sale_happened = primary_sale
+                } else {
+                    return Err(MetadataError::PrimarySaleCanOnlyBeFlippedToTrue.into());
+                }
+            }
+
+            if let Some(mutable) = is_mutable {
+                // If received value is false, flip to false.
+                if !mutable || self.is_mutable {
+                    self.is_mutable = mutable
+                } else {
+                    return Err(MetadataError::IsMutableCanOnlyBeFlippedToFalse.into());
+                }
+            }
+
+            if let CollectionDetailsToggle::Set(collection_details) = collection_details {
+                // only unsized collections can have the size set, and only once.
+                if self.collection_details.is_some() {
+                    return Err(MetadataError::SizedCollection.into());
+                }
+
+                self.collection_details = Some(collection_details);
+            }
         }
 
-        if let CollectionDetailsToggle::Set(collection_details) = collection_details {
-            // only unsized collections can have the size set, and only once.
-            if self.collection_details.is_some() {
-                return Err(MetadataError::SizedCollection.into());
-            }
+        if matches!(authority_type, AuthorityType::Metadata)
+            || matches!(
+                delegate_role,
+                Some(MetadataDelegateRole::ProgrammableConfig)
+            )
+        {
+            // if the rule_set data is either 'Set' or 'Clear', only allow updating if the
+            // token standard is equal to `ProgrammableNonFungible` and no SPL delegate is set.
+            if matches!(rule_set, RuleSetToggle::Clear | RuleSetToggle::Set(_)) {
+                if token_standard != TokenStandard::ProgrammableNonFungible {
+                    return Err(MetadataError::InvalidTokenStandard.into());
+                }
 
-            self.collection_details = Some(collection_details);
+                // Require the token so we can check if it has a token delegate.
+                let token = token.ok_or(MetadataError::MissingTokenAccount)?;
+
+                // If the token has a delegate, we cannot update the rule set.
+                if token.delegate.is_some() {
+                    return Err(MetadataError::CannotUpdateAssetWithDelegate.into());
+                }
+
+                self.programmable_config =
+                    rule_set.to_option().map(|rule_set| ProgrammableConfig::V1 {
+                        rule_set: Some(rule_set),
+                    });
+            }
         }
 
         puff_out_data_fields(self);
