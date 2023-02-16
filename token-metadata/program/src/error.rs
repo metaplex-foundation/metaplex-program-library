@@ -687,6 +687,12 @@ pub enum MetadataError {
     /// 173
     #[error("Cannot update the rule set of a programmable asset that has a delegate")]
     CannotUpdateAssetWithDelegate,
+    #[error("Invalid Associated Token Account Program")]
+    InvalidAssociatedTokenAccountProgram,
+
+    /// 174
+    #[error("Invalid InstructionsSysvar")]
+    InvalidInstructionsSysvar,
 }
 
 impl PrintProgramError for MetadataError {
