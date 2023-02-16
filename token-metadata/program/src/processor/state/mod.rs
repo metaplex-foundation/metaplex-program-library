@@ -31,11 +31,10 @@ use crate::{
 pub(crate) struct ToggleAccounts<'a> {
     payer_info: &'a AccountInfo<'a>,
     authority_info: &'a AccountInfo<'a>,
-    token_owner_info: Option<&'a AccountInfo<'a>>,
     mint_info: &'a AccountInfo<'a>,
     token_info: &'a AccountInfo<'a>,
     metadata_info: &'a AccountInfo<'a>,
-    master_edition_info: Option<&'a AccountInfo<'a>>,
+    edition_info: Option<&'a AccountInfo<'a>>,
     token_record_info: Option<&'a AccountInfo<'a>>,
     system_program_info: &'a AccountInfo<'a>,
     sysvar_instructions_info: &'a AccountInfo<'a>,
@@ -150,11 +149,11 @@ pub(crate) fn toggle_asset_state(
         };
 
         // we don't rely on the token standard to support legacy assets without
-        // a token standard set; for non-fungibles, the master edition is the freeze
+        // a token standard set; for non-fungibles, the (master) edition is the freeze
         // authority and we allow lock/unlock if the authority is a delegate; for
         // fungibles, the authority must match the freeze authority of the mint
 
-        if let Some(master_edition_info) = accounts.master_edition_info {
+        if let Some(edition_info) = accounts.edition_info {
             // check whether the authority is an spl-token delegate or not
             assert_delegated_tokens(
                 accounts.authority_info,
@@ -165,22 +164,22 @@ pub(crate) fn toggle_asset_state(
 
             match to {
                 TokenState::Locked => {
-                    // this will validate the master_edition derivation, which
+                    // this will validate the (master) edition derivation, which
                     // is the freeze authority
                     freeze(
                         accounts.mint_info.clone(),
                         accounts.token_info.clone(),
-                        master_edition_info.clone(),
+                        edition_info.clone(),
                         spl_token_program_info.clone(),
                     )
                 }
                 TokenState::Unlocked => {
-                    // this will validate the master_edition derivation, which
+                    // this will validate the (master) edition derivation, which
                     // is the freeze authority
                     thaw(
                         accounts.mint_info.clone(),
                         accounts.token_info.clone(),
-                        master_edition_info.clone(),
+                        edition_info.clone(),
                         spl_token_program_info.clone(),
                     )
                 }
@@ -192,13 +191,6 @@ pub(crate) fn toggle_asset_state(
 
             assert_freeze_authority_matches_mint(&mint.freeze_authority, accounts.authority_info)
                 .map_err(|_| MetadataError::InvalidAuthorityType)?;
-
-            // the token owner must be the owner of the token account
-            let token_owner_info = accounts
-                .token_owner_info
-                .ok_or(MetadataError::MissingTokenOwnerAccount)?;
-
-            assert_keys_equal(token_owner_info.key, &token.owner)?;
 
             match to {
                 TokenState::Locked => {
