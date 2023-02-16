@@ -7,37 +7,43 @@ use solana_program::{
 };
 
 use crate::{
-    assertions::{assert_derivation, assert_initialized, assert_owned_by},
+    assertions::{assert_derivation, assert_initialized, assert_keys_equal, assert_owned_by},
     error::MetadataError,
-    state::{
-        EscrowAuthority, Metadata, TokenMetadataAccount, TokenOwnedEscrow, TokenStandard,
-        ESCROW_POSTFIX, PREFIX,
-    },
+    pda::{EDITION, PREFIX},
+    state::{EscrowAuthority, Metadata, TokenMetadataAccount, TokenOwnedEscrow, TokenStandard},
     utils::check_token_standard,
 };
 
+use super::find_escrow_seeds;
+
 pub fn process_close_escrow_account(
-    program_id: &Pubkey,
+    _program_id: &Pubkey,
     accounts: &[AccountInfo],
 ) -> ProgramResult {
     let account_info_iter = &mut accounts.iter();
 
     let escrow_account_info = next_account_info(account_info_iter)?;
-    let metadata_account_info = next_account_info(account_info_iter)?;
-    let mint_account_info = next_account_info(account_info_iter)?;
-    let token_account_info = next_account_info(account_info_iter)?;
-    let edition_account_info = next_account_info(account_info_iter)?;
-    let payer_account_info = next_account_info(account_info_iter)?;
-    let system_account_info = next_account_info(account_info_iter)?;
+    assert_owned_by(escrow_account_info, &crate::ID)?;
 
+    let metadata_account_info = next_account_info(account_info_iter)?;
+    assert_owned_by(metadata_account_info, &crate::ID)?;
+
+    let mint_account_info = next_account_info(account_info_iter)?;
+    assert_owned_by(mint_account_info, &spl_token::id())?;
+
+    let token_account_info = next_account_info(account_info_iter)?;
+    assert_owned_by(token_account_info, &spl_token::id())?;
+
+    let edition_account_info = next_account_info(account_info_iter)?;
+    assert_owned_by(edition_account_info, &crate::ID)?;
+
+    let payer_account_info = next_account_info(account_info_iter)?;
+    assert_signer(payer_account_info)?;
+
+    let system_account_info = next_account_info(account_info_iter)?;
     if *system_account_info.key != system_program::id() {
         return Err(MetadataError::InvalidSystemProgram.into());
     }
-
-    assert_owned_by(metadata_account_info, program_id)?;
-    assert_owned_by(mint_account_info, &spl_token::id())?;
-    assert_owned_by(token_account_info, &spl_token::id())?;
-    assert_signer(payer_account_info)?;
 
     let metadata: Metadata = Metadata::from_account_info(metadata_account_info)?;
 
@@ -52,20 +58,46 @@ pub fn process_close_escrow_account(
         return Err(MetadataError::MustBeNonFungible.into());
     };
 
-    let bump_seed = assert_derivation(
-        program_id,
-        escrow_account_info,
+    // Check that the edition account is for this mint.
+    let _edition_bump = assert_derivation(
+        &crate::ID,
+        edition_account_info,
         &[
             PREFIX.as_bytes(),
-            program_id.as_ref(),
+            crate::id().as_ref(),
             mint_account_info.key.as_ref(),
-            ESCROW_POSTFIX.as_bytes(),
+            EDITION.as_bytes(),
         ],
     )?;
 
-    assert_owned_by(escrow_account_info, program_id)?;
+    let token_account: spl_token::state::Account = assert_initialized(token_account_info)?;
+
+    if token_account.mint != *mint_account_info.key {
+        return Err(MetadataError::MintMismatch.into());
+    }
+
+    if token_account.amount != 1 {
+        return Err(MetadataError::NotEnoughTokens.into());
+    }
+
+    if token_account.mint != metadata.mint {
+        return Err(MetadataError::MintMismatch.into());
+    }
+
+    let creator_type = if token_account.owner == *payer_account_info.key {
+        EscrowAuthority::TokenOwner
+    } else {
+        EscrowAuthority::Creator(*payer_account_info.key)
+    };
+
+    // Derive the seeds for PDA signing.
+    let escrow_seeds = find_escrow_seeds(mint_account_info.key, &creator_type);
+
+    let bump_seed = assert_derivation(&crate::ID, escrow_account_info, &escrow_seeds)?;
+
     let token_account: spl_token::state::Account = assert_initialized(token_account_info)?;
     let toe = TokenOwnedEscrow::from_account_info(escrow_account_info)?;
+    assert_keys_equal(&toe.base_token, mint_account_info.key)?;
 
     if bump_seed != toe.bump {
         return Err(MetadataError::InvalidEscrowBumpSeed.into());

@@ -1,6 +1,9 @@
 use std::collections::HashMap;
 
-use solana_program::{account_info::AccountInfo, entrypoint::ProgramResult, pubkey::Pubkey};
+use solana_program::{
+    account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
+    pubkey::Pubkey,
+};
 use spl_token::state::Account;
 
 use crate::{
@@ -258,4 +261,21 @@ pub fn assert_state(token_record: &TokenRecord, state: TokenState) -> ProgramRes
 
 pub fn assert_not_locked(token_record: &TokenRecord) -> ProgramResult {
     assert_state(token_record, TokenState::Unlocked)
+}
+
+pub fn assert_metadata_derivation(
+    program_id: &Pubkey,
+    metadata_info: &AccountInfo,
+    mint_info: &AccountInfo,
+) -> Result<u8, ProgramError> {
+    let path = &[
+        PREFIX.as_bytes(),
+        program_id.as_ref(),
+        mint_info.key.as_ref(),
+    ];
+    let (pubkey, bump) = Pubkey::find_program_address(path, program_id);
+    if pubkey != *metadata_info.key {
+        return Err(MetadataError::MintMismatch.into());
+    }
+    Ok(bump)
 }

@@ -715,6 +715,14 @@ pub enum MetadataError {
     /// 180
     #[error("Missing edition account")]
     MissingEdition,
+
+    /// 181
+    #[error("Invalid Associated Token Account Program")]
+    InvalidAssociatedTokenAccountProgram,
+
+    /// 182
+    #[error("Invalid InstructionsSysvar")]
+    InvalidInstructionsSysvar,
 }
 
 impl PrintProgramError for MetadataError {
