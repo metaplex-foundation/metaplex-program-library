@@ -2030,6 +2030,7 @@ dependencies = [
  "arrayref",
  "env_logger",
  "mpl-testing-utils",
+ "mpl-token-auth-rules",
  "mpl-token-metadata",
  "serde_json",
  "shellexpand",

@@ -1,5 +1,10 @@
 use crate::{constants::*, errors::*, utils::*, AuctionHouse, Auctioneer, AuthorityScope, *};
 use anchor_lang::{prelude::*, solana_program::program_pack::Pack, AnchorDeserialize};
+use mpl_token_auth_rules::payload::{Payload, PayloadType, SeedsVec};
+use mpl_token_metadata::{
+    instruction::{builders::TransferBuilder, InstructionBuilder, TransferArgs},
+    processor::AuthorizationData,
+};
 use spl_token::state::Account as SplAccount;
 
 /// Accounts for the [`execute_sale` handler](auction_house/fn.execute_sale.html).
@@ -159,6 +164,24 @@ pub struct ExecuteSale<'info> {
     pub program_as_signer: UncheckedAccount<'info>,
 
     pub rent: Sysvar<'info, Rent>,
+    //
+    // we are at the absolute stack limit, but if we had them, it'd look something like this
+    //
+    //pub creator1: Option<UncheckedAccount<'info>>
+    //pub creator2: Option<UncheckedAccount<'info>>
+    //pub creator3: Option<UncheckedAccount<'info>>
+    //pub creator4: Option<UncheckedAccount<'info>>
+    //pub creator5: Option<UncheckedAccount<'info>>
+    //#[account(
+    //    constraint = meta_program.key() == mpl_token_metadata::ID
+    //)]
+    //pub meta_program: Option<UncheckedAccount<'info>>,
+    //pub edition: Option<UncheckedAccount<'info>>,
+    //pub owner_tr: Option<UncheckedAccount<'info>>,
+    //pub destination_tr: Option<UncheckedAccount<'info>>,
+    //pub auth_rules_program: Option<UncheckedAccount<'info>>,
+    //pub auth_rules: Option<UncheckedAccount<'info>>,
+    //pub sysvar_instructions: Option<UncheckedAccount<'info>>,
 }
 
 impl<'info> From<AuctioneerExecuteSale<'info>> for ExecuteSale<'info> {
@@ -637,7 +660,7 @@ pub struct AuctioneerExecuteSale<'info> {
         ],
         bump = ah_auctioneer_pda.bump
     )]
-    pub ah_auctioneer_pda: Account<'info, Auctioneer>,
+    pub ah_auctioneer_pda: Box<Account<'info, Auctioneer>>,
 
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
@@ -653,6 +676,23 @@ pub struct AuctioneerExecuteSale<'info> {
     pub program_as_signer: UncheckedAccount<'info>,
 
     pub rent: Sysvar<'info, Rent>,
+    // we are at the absolute stack limit, but if we had them, it'd look something like this
+    //
+    //pub creator1: Option<UncheckedAccount<'info>>
+    //pub creator2: Option<UncheckedAccount<'info>>
+    //pub creator3: Option<UncheckedAccount<'info>>
+    //pub creator4: Option<UncheckedAccount<'info>>
+    //pub creator5: Option<UncheckedAccount<'info>>
+    //#[account(
+    //    constraint = meta_program.key() == mpl_token_metadata::ID
+    //)]
+    //pub meta_program: Option<UncheckedAccount<'info>>,
+    //pub edition: Option<UncheckedAccount<'info>>,
+    //pub owner_tr: Option<UncheckedAccount<'info>>,
+    //pub destination_tr: Option<UncheckedAccount<'info>>,
+    //pub auth_rules_program: Option<UncheckedAccount<'info>>,
+    //pub auth_rules: Option<UncheckedAccount<'info>>,
+    //pub sysvar_instructions: Option<UncheckedAccount<'info>>,
 }
 
 pub fn auctioneer_execute_sale<'info>(
@@ -873,7 +913,7 @@ pub struct AuctioneerExecutePartialSale<'info> {
         ],
         bump = ah_auctioneer_pda.bump
     )]
-    pub ah_auctioneer_pda: Account<'info, Auctioneer>,
+    pub ah_auctioneer_pda: Box<Account<'info, Auctioneer>>,
 
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
@@ -884,6 +924,23 @@ pub struct AuctioneerExecutePartialSale<'info> {
     pub program_as_signer: UncheckedAccount<'info>,
 
     pub rent: Sysvar<'info, Rent>,
+    // we are at the absolute stack limit, but if we had them, it'd look something like this
+    //
+    //pub creator1: Option<UncheckedAccount<'info>>
+    //pub creator2: Option<UncheckedAccount<'info>>
+    //pub creator3: Option<UncheckedAccount<'info>>
+    //pub creator4: Option<UncheckedAccount<'info>>
+    //pub creator5: Option<UncheckedAccount<'info>>
+    //#[account(
+    //    constraint = meta_program.key() == mpl_token_metadata::ID
+    //)]
+    //pub meta_program: Option<UncheckedAccount<'info>>,
+    //pub edition: Option<UncheckedAccount<'info>>,
+    //pub owner_tr: Option<UncheckedAccount<'info>>,
+    //pub destination_tr: Option<UncheckedAccount<'info>>,
+    //pub auth_rules_program: Option<UncheckedAccount<'info>>,
+    //pub auth_rules: Option<UncheckedAccount<'info>>,
+    //pub sysvar_instructions: Option<UncheckedAccount<'info>>,
 }
 
 impl<'info> From<AuctioneerExecutePartialSale<'info>> for AuctioneerExecuteSale<'info> {
@@ -1194,8 +1251,10 @@ fn auctioneer_execute_sale_logic<'c, 'info>(
         ah_seeds
     };
 
+    let remaining_accounts = &mut remaining_accounts.iter();
+
     let buyer_leftover_after_royalties = pay_creator_fees(
-        &mut remaining_accounts.iter(),
+        remaining_accounts,
         &metadata_clone,
         &escrow_clone,
         &auction_house_clone,
@@ -1319,24 +1378,99 @@ fn auctioneer_execute_sale_logic<'c, 'info>(
         &[program_as_signer_bump],
     ];
 
-    invoke_signed(
-        &spl_token::instruction::transfer(
-            token_program.key,
-            &token_account.key(),
-            &buyer_receipt_token_account.key(),
-            &program_as_signer.key(),
-            &[],
-            size,
-        )?,
-        &[
-            token_account.to_account_info(),
-            buyer_receipt_clone,
-            program_as_signer.to_account_info(),
-            token_clone,
-        ],
-        &[&program_as_signer_seeds],
-    )?;
+    match next_account_info(remaining_accounts) {
+        Ok(metadata_program) => {
+            require!(
+                metadata_program.key() == mpl_token_metadata::ID,
+                AuctionHouseError::PublicKeyMismatch
+            );
 
+            let edition = next_account_info(remaining_accounts)?;
+            let owner_tr = next_account_info(remaining_accounts)?;
+            let destination_tr = next_account_info(remaining_accounts)?;
+            let auth_rules_program = next_account_info(remaining_accounts)?;
+            let auth_rules = next_account_info(remaining_accounts)?;
+            let sysvar_instructions = next_account_info(remaining_accounts)?;
+
+            let mpl_transfer = TransferBuilder::new()
+                .token(*token_account.key)
+                .token_owner(*seller.key)
+                .destination(*buyer_receipt_token_account.key)
+                .destination_owner(*buyer.key)
+                .mint(*token_mint.key)
+                .metadata(*metadata.key)
+                .edition(*edition.key)
+                .owner_token_record(*owner_tr.key)
+                .destination_token_record(*destination_tr.key)
+                .authority(program_as_signer.key())
+                .payer(*wallet_to_use.key)
+                .system_program(*system_program.key)
+                .sysvar_instructions(*sysvar_instructions.key)
+                .spl_token_program(*token_program.key)
+                .spl_ata_program(*ata_program.key)
+                .authorization_rules_program(*auth_rules_program.key)
+                .authorization_rules(*auth_rules.key)
+                .build(TransferArgs::V1 {
+                    amount: size,
+                    authorization_data: Some(AuthorizationData {
+                        payload: Payload::from([(
+                            "SourceSeeds".to_string(),
+                            PayloadType::Seeds(SeedsVec {
+                                seeds: vec![PREFIX.as_bytes().to_vec(), SIGNER.as_bytes().to_vec()],
+                            }),
+                        )]),
+                    }),
+                })
+                .unwrap() // @TODO: revisit this unwrap
+                .instruction();
+
+            let mpl_transfer_accounts = [
+                metadata_program.clone(),
+                token_account_clone,
+                seller.to_account_info(),
+                buyer_receipt_token_account.to_account_info(),
+                buyer.to_account_info(),
+                token_mint.to_account_info(),
+                metadata.to_account_info(),
+                edition.to_account_info(),
+                owner_tr.to_account_info(),
+                destination_tr.to_account_info(),
+                program_as_signer.to_account_info(),
+                wallet_to_use.to_account_info(),
+                system_program.to_account_info(),
+                sysvar_instructions.to_account_info(),
+                token_program.to_account_info(),
+                ata_program.to_account_info(),
+                auth_rules_program.to_account_info(),
+                auth_rules.to_account_info(),
+            ];
+
+            invoke_signed(
+                &mpl_transfer,
+                &mpl_transfer_accounts,
+                &[&program_as_signer_seeds],
+            )?;
+        }
+        Err(_) => {
+            invoke_signed(
+                &spl_token::instruction::transfer(
+                    token_program.key,
+                    &token_account.key(),
+                    &buyer_receipt_token_account.key(),
+                    &program_as_signer.key(),
+                    &[],
+                    size,
+                )?,
+                &[
+                    token_account.to_account_info(),
+                    buyer_receipt_clone,
+                    program_as_signer.to_account_info(),
+                    token_clone,
+                ],
+                &[&program_as_signer_seeds],
+            )?;
+        }
+    }
     // Close the buyer trade state account if the rest of execute sale was successful.
     close_account(
         &buyer_trade_state.to_account_info(),
@@ -1576,8 +1710,10 @@ fn execute_sale_logic<'c, 'info>(
         ah_seeds
     };
 
+    let remaining_accounts = &mut remaining_accounts.iter();
+
     let buyer_leftover_after_royalties = pay_creator_fees(
-        &mut remaining_accounts.iter(),
+        remaining_accounts,
         &metadata_clone,
         &escrow_clone,
         &auction_house_clone,
@@ -1695,23 +1831,99 @@ fn execute_sale_logic<'c, 'info>(
         &[program_as_signer_bump],
     ];
 
-    invoke_signed(
-        &spl_token::instruction::transfer(
-            token_program.key,
-            &token_account.key(),
-            &buyer_receipt_token_account.key(),
-            &program_as_signer.key(),
-            &[],
-            size,
-        )?,
-        &[
-            token_account.to_account_info(),
-            buyer_receipt_clone,
-            program_as_signer.to_account_info(),
-            token_clone,
-        ],
-        &[&program_as_signer_seeds],
-    )?;
+    match next_account_info(remaining_accounts) {
+        Ok(metadata_program) => {
+            require!(
+                metadata_program.key() == mpl_token_metadata::ID,
+                AuctionHouseError::PublicKeyMismatch
+            );
+
+            let edition = next_account_info(remaining_accounts)?;
+            let owner_tr = next_account_info(remaining_accounts)?;
+            let destination_tr = next_account_info(remaining_accounts)?;
+            let auth_rules_program = next_account_info(remaining_accounts)?;
+            let auth_rules = next_account_info(remaining_accounts)?;
+            let sysvar_instructions = next_account_info(remaining_accounts)?;
+
+            let mpl_transfer = TransferBuilder::new()
+                .token(*token_account.key)
+                .token_owner(*seller.key)
+                .destination(*buyer_receipt_token_account.key)
+                .destination_owner(*buyer.key)
+                .mint(*token_mint.key)
+                .metadata(*metadata.key)
+                .edition(*edition.key)
+                .owner_token_record(*owner_tr.key)
+                .destination_token_record(*destination_tr.key)
+                .authority(program_as_signer.key())
+                .payer(*wallet_to_use.key)
+                .system_program(*system_program.key)
+                .sysvar_instructions(*sysvar_instructions.key)
+                .spl_token_program(*token_program.key)
+                .spl_ata_program(*ata_program.key)
+                .authorization_rules_program(*auth_rules_program.key)
+                .authorization_rules(*auth_rules.key)
+                .build(TransferArgs::V1 {
+                    amount: size,
+                    authorization_data: Some(AuthorizationData {
+                        payload: Payload::from([(
+                            "SourceSeeds".to_string(),
+                            PayloadType::Seeds(SeedsVec {
+                                seeds: vec![PREFIX.as_bytes().to_vec(), SIGNER.as_bytes().to_vec()],
+                            }),
+                        )]),
+                    }),
+                })
+                .unwrap() // @TODO: revisit this unwrap
+                .instruction();
+
+            let mpl_transfer_accounts = [
+                metadata_program.clone(),
+                token_account_clone,
+                seller.to_account_info(),
+                buyer_receipt_token_account.to_account_info(),
+                buyer.to_account_info(),
+                token_mint.to_account_info(),
+                metadata.to_account_info(),
+                edition.to_account_info(),
+                owner_tr.to_account_info(),
+                destination_tr.to_account_info(),
+                program_as_signer.to_account_info(),
+                wallet_to_use.to_account_info(),
+                system_program.to_account_info(),
+                sysvar_instructions.to_account_info(),
+                token_program.to_account_info(),
+                ata_program.to_account_info(),
+                auth_rules_program.to_account_info(),
+                auth_rules.to_account_info(),
+            ];
+
+            invoke_signed(
+                &mpl_transfer,
+                &mpl_transfer_accounts,
+                &[&program_as_signer_seeds],
+            )?;
+        }
+        Err(_) => {
+            invoke_signed(
+                &spl_token::instruction::transfer(
+                    token_program.key,
+                    &token_account.key(),
+                    &buyer_receipt_token_account.key(),
+                    &program_as_signer.key(),
+                    &[],
+                    size,
+                )?,
+                &[
+                    token_account.to_account_info(),
+                    buyer_receipt_clone,
+                    program_as_signer.to_account_info(),
+                    token_clone,
+                ],
+                &[&program_as_signer_seeds],
+            )?;
+        }
+    }
 
     // Close the buyer trade state account if the rest of execute sale was successful.
     close_account(
