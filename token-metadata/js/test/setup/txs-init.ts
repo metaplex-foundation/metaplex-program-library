@@ -98,7 +98,7 @@ export class InitTransactions {
   }
 
   async authority() {
-    const [authority, authorityPair] = await this.getKeypair('Payer');
+    const [authority, authorityPair] = await this.getKeypair('Authority');
 
     const connection = new Connection(LOCALHOST, 'confirmed');
     await amman.airdrop(connection, authority, 2);
