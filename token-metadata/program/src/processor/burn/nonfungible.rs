@@ -1,7 +1,6 @@
 use super::*;
 
 pub(crate) struct BurnNonFungibleArgs {
-    pub(crate) collection_metadata: Option<Metadata>,
     pub(crate) metadata: Metadata,
 }
 
@@ -10,7 +9,7 @@ pub(crate) fn burn_nonfungible(ctx: &Context<Burn>, args: BurnNonFungibleArgs) -
 
     // If the NFT is a verified part of a collection but the user has not provided the collection
     // metadata account, we cannot burn it because we need to check if we need to decrement the collection size.
-    if args.collection_metadata.is_none()
+    if ctx.accounts.collection_metadata_info.is_none()
         && args.metadata.collection.is_some()
         && args.metadata.collection.as_ref().unwrap().verified
     {
@@ -72,12 +71,7 @@ pub(crate) fn burn_nonfungible(ctx: &Context<Burn>, args: BurnNonFungibleArgs) -
     close_program_account(ctx.accounts.metadata_info, ctx.accounts.authority_info)?;
     close_program_account(edition_info, ctx.accounts.authority_info)?;
 
-    if let Some(mut collection_metadata) = args.collection_metadata {
-        if ctx.accounts.collection_metadata_info.is_none() {
-            return Err(MetadataError::MissingCollectionMetadata.into());
-        }
-        let collection_metadata_info = ctx.accounts.collection_metadata_info.unwrap();
-
+    if let Some(collection_metadata_info) = ctx.accounts.collection_metadata_info {
         if collection_metadata_info.data_is_empty() {
             let Collection {
                 key: expected_collection_mint,
@@ -96,6 +90,10 @@ pub(crate) fn burn_nonfungible(ctx: &Context<Burn>, args: BurnNonFungibleArgs) -
                 return Err(MetadataError::NotAMemberOfCollection.into());
             }
         } else {
+            assert_owned_by(collection_metadata_info, &crate::ID)?;
+            
+            let mut collection_metadata = Metadata::from_account_info(collection_metadata_info)?;
+
             // Owned by token metadata program.
             assert_owned_by(collection_metadata_info, &crate::ID)?;
 

@@ -27,9 +27,6 @@ fn burn_v1(program_id: &Pubkey, ctx: Context<Burn>, args: BurnArgs) -> ProgramRe
     assert_signer(ctx.accounts.authority_info)?;
 
     // Assert program ownership.
-    if let Some(collection_metadata_info) = ctx.accounts.collection_metadata_info {
-        assert_owned_by(collection_metadata_info, program_id)?;
-    }
     assert_owned_by(ctx.accounts.metadata_info, program_id)?;
     assert_owned_by(ctx.accounts.mint_info, &spl_token::ID)?;
     assert_owned_by(ctx.accounts.token_info, &spl_token::ID)?;
@@ -113,12 +110,6 @@ fn burn_v1(program_id: &Pubkey, ctx: Context<Burn>, args: BurnArgs) -> ProgramRe
         _ => return Err(MetadataError::InvalidAuthorityType.into()),
     }
 
-    let collection_metadata = ctx
-        .accounts
-        .collection_metadata_info
-        .map(|r| Metadata::from_account_info(r))
-        .transpose()?;
-
     if metadata.token_standard.is_none() {
         return Err(MetadataError::InvalidTokenStandard.into());
     }
@@ -143,10 +134,7 @@ fn burn_v1(program_id: &Pubkey, ctx: Context<Burn>, args: BurnArgs) -> ProgramRe
 
     match token_standard {
         TokenStandard::NonFungible => {
-            let args = BurnNonFungibleArgs {
-                collection_metadata,
-                metadata,
-            };
+            let args = BurnNonFungibleArgs { metadata };
 
             burn_nonfungible(&ctx, args)?;
         }
@@ -179,10 +167,7 @@ fn burn_v1(program_id: &Pubkey, ctx: Context<Burn>, args: BurnArgs) -> ProgramRe
                 ctx.accounts.spl_token_program_info.clone(),
             )?;
 
-            let args = BurnNonFungibleArgs {
-                collection_metadata,
-                metadata,
-            };
+            let args = BurnNonFungibleArgs { metadata };
 
             burn_nonfungible(&ctx, args)?;
         }
