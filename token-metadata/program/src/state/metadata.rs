@@ -87,6 +87,7 @@ impl Metadata {
         update_authority: &AccountInfo<'a>,
         metadata: &AccountInfo<'a>,
         token: Option<TokenAccount>,
+        token_standard: Option<TokenStandard>,
         authority_type: AuthorityType,
         delegate_role: Option<MetadataDelegateRole>,
     ) -> ProgramResult {
@@ -102,10 +103,18 @@ impl Metadata {
             ..
         } = args;
 
-        // only allow update if the token standard is known
-        let token_standard = self
-            .token_standard
-            .ok_or(MetadataError::InvalidTokenStandard)?;
+        // updates the token standard only if the current value is None
+        let token_standard = match self.token_standard {
+            Some(ts) => ts,
+            None => {
+                if let Some(ts) = token_standard {
+                    self.token_standard = Some(ts);
+                    ts
+                } else {
+                    return Err(MetadataError::InvalidTokenStandard.into());
+                }
+            }
+        };
 
         if matches!(authority_type, AuthorityType::Metadata) {
             if let Some(data) = data {

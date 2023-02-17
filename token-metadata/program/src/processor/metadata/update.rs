@@ -16,7 +16,7 @@ use crate::{
         AuthorityRequest, AuthorityResponse, AuthorityType, Collection, Metadata,
         ProgrammableConfig, TokenMetadataAccount, TokenStandard,
     },
-    utils::assert_derivation,
+    utils::{assert_derivation, check_token_standard},
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -114,9 +114,11 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
         return Err(MetadataError::MintMismatch.into());
     }
 
-    let token_standard = metadata
-        .token_standard
-        .ok_or(MetadataError::InvalidTokenStandard)?;
+    let token_standard = if let Some(token_standard) = metadata.token_standard {
+        token_standard
+    } else {
+        check_token_standard(ctx.accounts.mint_info, ctx.accounts.edition_info)?
+    };
 
     let (token_pubkey, token) = if let Some(token_info) = ctx.accounts.token_info {
         (
@@ -202,6 +204,7 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
         ctx.accounts.authority_info,
         ctx.accounts.metadata_info,
         token,
+        Some(token_standard),
         authority_type,
         metadata_delegate_role,
     )?;
