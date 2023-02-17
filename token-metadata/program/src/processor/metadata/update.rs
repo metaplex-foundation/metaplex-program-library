@@ -164,18 +164,18 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
             // Metadata authority is the paramount authority so is not subject to
             // auth rules. At this point we already checked that the authority is a
             // signer and that it matches the metadata's update authority.
-            msg!("Authority type: Metadata");
+            msg!("Auth type: Metadata");
         }
         AuthorityType::Delegate => {
             // Support for delegate update (for pNFTs this involves validating the
             // authoritzation rules)
-            msg!("Authority type: Delegate");
+            msg!("Auth type: Delegate");
             return Err(MetadataError::FeatureNotSupported.into());
         }
         AuthorityType::Holder => {
             // Support for holder update (for pNFTs this involves validating the
             // authoritzation rules)
-            msg!("Authority type: Holder");
+            msg!("Auth type: Holder");
             return Err(MetadataError::FeatureNotSupported.into());
         }
         AuthorityType::None => {

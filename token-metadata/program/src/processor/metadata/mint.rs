@@ -133,7 +133,7 @@ pub fn mint_v1(program_id: &Pubkey, ctx: Context<Mint>, args: MintArgs) -> Progr
             ],
         )?;
 
-        msg!("Initializing associate token account");
+        msg!("Init ATA");
 
         // creating the associated token account
         invoke(
@@ -154,11 +154,6 @@ pub fn mint_v1(program_id: &Pubkey, ctx: Context<Mint>, args: MintArgs) -> Progr
         assert_owned_by(ctx.accounts.token_info, &spl_token::id())?;
     }
 
-    msg!(
-        "Minting {} token(s) from mint {}",
-        amount,
-        ctx.accounts.mint_info.key
-    );
     let token: Account = assert_initialized(ctx.accounts.token_info)?;
 
     match metadata.token_standard {
@@ -182,7 +177,7 @@ pub fn mint_v1(program_id: &Pubkey, ctx: Context<Mint>, args: MintArgs) -> Progr
                 assert_keys_equal(&pda_key, token_record_info.key)?;
 
                 if token_record_info.data_is_empty() {
-                    msg!("Initializing token record account");
+                    msg!("Init token record");
 
                     create_token_record_account(
                         program_id,
