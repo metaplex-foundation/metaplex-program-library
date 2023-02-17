@@ -93,7 +93,10 @@
         {
           "name": "systemProgram",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "System program account."
+          ]
         }
       ],
       "args": [
@@ -102,6 +105,108 @@
           "type": {
             "defined": "CandyMachineData"
           }
+        }
+      ]
+    },
+    {
+      "name": "initializeV2",
+      "docs": [
+        "Initialize the candy machine account with the specified data and token standard."
+      ],
+      "accounts": [
+        {
+          "name": "candyMachine",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authorityPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "payer",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "collectionMetadata",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "collectionMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "collectionMasterEdition",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "collectionUpdateAuthority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "collectionAuthorityRecord",
+          "isMut": true,
+          "isSigner": false,
+          "isOptional": true
+        },
+        {
+          "name": "delegateRecord",
+          "isMut": true,
+          "isSigner": false,
+          "isOptional": true
+        },
+        {
+          "name": "tokenMetadataProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "System program account."
+          ]
+        },
+        {
+          "name": "sysvarInstructions",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "authorizationRulesProgram",
+          "isMut": false,
+          "isSigner": false,
+          "isOptional": true
+        },
+        {
+          "name": "authorizationRules",
+          "isMut": false,
+          "isSigner": false,
+          "isOptional": true
+        }
+      ],
+      "args": [
+        {
+          "name": "data",
+          "type": {
+            "defined": "CandyMachineData"
+          }
+        },
+        {
+          "name": "tokenStandard",
+          "type": "u8"
         }
       ]
     },
@@ -362,7 +467,128 @@
         {
           "name": "systemProgram",
           "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "System program account."
+          ]
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "setCollectionV2",
+      "docs": [
+        "Set the collection mint for the candy machine."
+      ],
+      "accounts": [
+        {
+          "name": "candyMachine",
+          "isMut": true,
           "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "authorityPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "payer",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "collectionUpdateAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "collectionMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "collectionMetadata",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "collectionAuthorityRecord",
+          "isMut": true,
+          "isSigner": false,
+          "isOptional": true
+        },
+        {
+          "name": "delegateRecord",
+          "isMut": true,
+          "isSigner": false,
+          "isOptional": true
+        },
+        {
+          "name": "newCollectionUpdateAuthority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "newCollectionMetadata",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "newCollectionMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "newCollectionMasterEdition",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "newCollectionAuthorityRecord",
+          "isMut": true,
+          "isSigner": false,
+          "isOptional": true
+        },
+        {
+          "name": "newDelegateRecord",
+          "isMut": true,
+          "isSigner": false,
+          "isOptional": true
+        },
+        {
+          "name": "tokenMetadataProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "System program account."
+          ]
+        },
+        {
+          "name": "sysvarInstructions",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "authorizationRulesProgram",
+          "isMut": false,
+          "isSigner": false,
+          "isOptional": true
+        },
+        {
+          "name": "authorizationRules",
+          "isMut": false,
+          "isSigner": false,
+          "isOptional": true
         }
       ],
       "args": []
@@ -922,6 +1148,11 @@
       "code": 6024,
       "name": "MissingMetadataDelegateRecord",
       "msg": "Missing metadata delegate record"
+    },
+    {
+      "code": 6025,
+      "name": "InvalidTokenStandard",
+      "msg": "Invalid token standard"
     }
   ],
   "metadata": {

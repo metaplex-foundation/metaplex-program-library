@@ -166,7 +166,85 @@ export class InitTransactions {
 
     return { tx: txPromise, candyMachine: candyMachine.publicKey };
   }
+  /*
+  async initializeV2(
+    t: Test,
+    payer: Keypair,
+    data: program.CandyMachineData,
+    tokenStandard: TokenStandard,
+    handler: PayerTransactionHandler,
+    connection: Connection,
+  ): Promise<{ tx: ConfirmedTransactionAssertablePromise; candyMachine: PublicKey }> {
+    // creates a collection nft
+    const metaplex = Metaplex.make(connection).use(keypairIdentity(payer));
 
+    const { nft: collection } = await metaplex.nfts().create({
+      uri: COLLECTION_METADATA,
+      name: 'CORE Collection',
+      sellerFeeBasisPoints: 500,
+    });
+
+    const [, candyMachine] = await this.getKeypair('Candy Machine Account');
+    const authorityPda = metaplex
+      .candyMachines()
+      .pdas()
+      .authority({ candyMachine: candyMachine.publicKey });
+
+    await amman.addr.addLabel('Collection Mint', collection.address);
+
+    const collectionAuthorityRecord = metaplex.nfts().pdas().collectionAuthorityRecord({
+      mint: collection.mint.address,
+      collectionAuthority: authorityPda,
+    });
+    await amman.addr.addLabel('Collection Authority Record', collectionAuthorityRecord);
+
+    const collectionMetadata = metaplex.nfts().pdas().metadata({ mint: collection.mint.address });
+    await amman.addr.addLabel('Collection Metadata', collectionMetadata);
+
+    const collectionMasterEdition = metaplex
+      .nfts()
+      .pdas()
+      .masterEdition({ mint: collection.mint.address });
+    await amman.addr.addLabel('Collection Master Edition', collectionMasterEdition);
+
+    const accounts: program.InitializeV2InstructionAccounts = {
+      authorityPda,
+      collectionUpdateAuthority: collection.updateAuthorityAddress,
+      candyMachine: candyMachine.publicKey,
+      authority: payer.publicKey,
+      payer: payer.publicKey,
+      collectionMetadata,
+      collectionMint: collection.address,
+      collectionMasterEdition,
+      collectionAuthorityRecord,
+      tokenMetadataProgram: METAPLEX_PROGRAM_ID,
+      systemProgram: SystemProgram.programId,
+    };
+
+    const args: program.InitializeInstructionArgs = {
+      data: data,
+    };
+
+    const ixInitialize = program.createInitializeInstruction(accounts, args);
+    const ixCreateAccount = SystemProgram.createAccount({
+      fromPubkey: payer.publicKey,
+      newAccountPubkey: candyMachine.publicKey,
+      lamports: await connection.getMinimumBalanceForRentExemption(getCandyMachineSpace(data)),
+      space: getCandyMachineSpace(data),
+      programId: program.PROGRAM_ID,
+    });
+
+    const tx = new Transaction().add(ixCreateAccount).add(ixInitialize);
+
+    const txPromise = handler.sendAndConfirmTransaction(
+      tx,
+      [candyMachine, payer],
+      'tx: Initialize',
+    );
+
+    return { tx: txPromise, candyMachine: candyMachine.publicKey };
+  }
+  */
   async addConfigLines(
     t: Test,
     candyMachine: PublicKey,

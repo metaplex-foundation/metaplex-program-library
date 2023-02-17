@@ -556,6 +556,26 @@ createErrorFromNameLookup.set(
 );
 
 /**
+ * InvalidTokenStandard: 'Invalid token standard'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidTokenStandardError extends Error {
+  readonly code: number = 0x1789;
+  readonly name: string = 'InvalidTokenStandard';
+  constructor() {
+    super('Invalid token standard');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidTokenStandardError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1789, () => new InvalidTokenStandardError());
+createErrorFromNameLookup.set('InvalidTokenStandard', () => new InvalidTokenStandardError());
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated
