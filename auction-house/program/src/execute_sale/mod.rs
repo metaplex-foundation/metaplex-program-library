@@ -164,24 +164,40 @@ pub struct ExecuteSale<'info> {
     pub program_as_signer: UncheckedAccount<'info>,
 
     pub rent: Sysvar<'info, Rent>,
-    //
     // we are at the absolute stack limit, but if we had them, it'd look something like this
-    //
-    //pub creator1: Option<UncheckedAccount<'info>>
-    //pub creator2: Option<UncheckedAccount<'info>>
-    //pub creator3: Option<UncheckedAccount<'info>>
-    //pub creator4: Option<UncheckedAccount<'info>>
-    //pub creator5: Option<UncheckedAccount<'info>>
-    //#[account(
-    //    constraint = meta_program.key() == mpl_token_metadata::ID
-    //)]
-    //pub meta_program: Option<UncheckedAccount<'info>>,
-    //pub edition: Option<UncheckedAccount<'info>>,
-    //pub owner_tr: Option<UncheckedAccount<'info>>,
-    //pub destination_tr: Option<UncheckedAccount<'info>>,
-    //pub auth_rules_program: Option<UncheckedAccount<'info>>,
-    //pub auth_rules: Option<UncheckedAccount<'info>>,
-    //pub sysvar_instructions: Option<UncheckedAccount<'info>>,
+    // ...ExecuteSaleRemainingAccounts
+}
+
+// this is only here to help cpi & other contexts build appropriate account_metas, as we are
+// blowing stack limit
+#[derive(Accounts)]
+pub struct ExecuteSaleRemainingAccounts<'info> {
+    #[account(mut)]
+    pub creator1: Option<UncheckedAccount<'info>>,
+    #[account(mut)]
+    pub creator2: Option<UncheckedAccount<'info>>,
+    #[account(mut)]
+    pub creator3: Option<UncheckedAccount<'info>>,
+    #[account(mut)]
+    pub creator4: Option<UncheckedAccount<'info>>,
+    #[account(mut)]
+    pub creator5: Option<UncheckedAccount<'info>>,
+    ///CHECK: checked in execute_sale function
+    pub metadata_program: Option<UncheckedAccount<'info>>,
+    ///CHECK: checked in cpi
+    pub edition: Option<UncheckedAccount<'info>>,
+    ///CHECK: checked in cpi
+    #[account(mut)]
+    pub owner_tr: Option<UncheckedAccount<'info>>,
+    ///CHECK: checked in cpi
+    #[account(mut)]
+    pub destination_tr: Option<UncheckedAccount<'info>>,
+    ///CHECK: checked in cpi
+    pub auth_rules_program: Option<UncheckedAccount<'info>>,
+    ///CHECK: checked in cpi
+    pub auth_rules: Option<UncheckedAccount<'info>>,
+    ///CHECK: checked in cpi
+    pub sysvar_instructions: Option<UncheckedAccount<'info>>,
 }
 
 impl<'info> From<AuctioneerExecuteSale<'info>> for ExecuteSale<'info> {
@@ -677,22 +693,7 @@ pub struct AuctioneerExecuteSale<'info> {
 
     pub rent: Sysvar<'info, Rent>,
     // we are at the absolute stack limit, but if we had them, it'd look something like this
-    //
-    //pub creator1: Option<UncheckedAccount<'info>>
-    //pub creator2: Option<UncheckedAccount<'info>>
-    //pub creator3: Option<UncheckedAccount<'info>>
-    //pub creator4: Option<UncheckedAccount<'info>>
-    //pub creator5: Option<UncheckedAccount<'info>>
-    //#[account(
-    //    constraint = meta_program.key() == mpl_token_metadata::ID
-    //)]
-    //pub meta_program: Option<UncheckedAccount<'info>>,
-    //pub edition: Option<UncheckedAccount<'info>>,
-    //pub owner_tr: Option<UncheckedAccount<'info>>,
-    //pub destination_tr: Option<UncheckedAccount<'info>>,
-    //pub auth_rules_program: Option<UncheckedAccount<'info>>,
-    //pub auth_rules: Option<UncheckedAccount<'info>>,
-    //pub sysvar_instructions: Option<UncheckedAccount<'info>>,
+    // ...ExecuteSaleRemainingAccounts
 }
 
 pub fn auctioneer_execute_sale<'info>(
@@ -925,22 +926,7 @@ pub struct AuctioneerExecutePartialSale<'info> {
 
     pub rent: Sysvar<'info, Rent>,
     // we are at the absolute stack limit, but if we had them, it'd look something like this
-    //
-    //pub creator1: Option<UncheckedAccount<'info>>
-    //pub creator2: Option<UncheckedAccount<'info>>
-    //pub creator3: Option<UncheckedAccount<'info>>
-    //pub creator4: Option<UncheckedAccount<'info>>
-    //pub creator5: Option<UncheckedAccount<'info>>
-    //#[account(
-    //    constraint = meta_program.key() == mpl_token_metadata::ID
-    //)]
-    //pub meta_program: Option<UncheckedAccount<'info>>,
-    //pub edition: Option<UncheckedAccount<'info>>,
-    //pub owner_tr: Option<UncheckedAccount<'info>>,
-    //pub destination_tr: Option<UncheckedAccount<'info>>,
-    //pub auth_rules_program: Option<UncheckedAccount<'info>>,
-    //pub auth_rules: Option<UncheckedAccount<'info>>,
-    //pub sysvar_instructions: Option<UncheckedAccount<'info>>,
+    // ...ExecuteSaleRemainingAccounts
 }
 
 impl<'info> From<AuctioneerExecutePartialSale<'info>> for AuctioneerExecuteSale<'info> {

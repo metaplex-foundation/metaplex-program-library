@@ -29,6 +29,7 @@ pub struct Sell<'info> {
 
     /// CHECK: Verified through CPI
     /// Metaplex metadata account decorating SPL mint account.
+    #[account(mut)]
     pub metadata: UncheckedAccount<'info>,
 
     /// CHECK: Verified through CPI
@@ -106,28 +107,30 @@ pub struct Sell<'info> {
 
     pub rent: Sysvar<'info, Rent>,
     // we are at stack limit, but if we weren't, it'd look something like this:
-    /////CHECK: constraint
-    //#[account(
-    //    constraint = metadata_program.key() == mpl_token_metadata::ID
-    //)]
-    //pub metadata_program: Option<UncheckedAccount<'info>>,
-    /////CHECK: checked in cpi
-    //pub delegate_record: Option<UncheckedAccount<'info>>,
-    /////CHECK: checked in cpi
-    //pub token_record: Option<UncheckedAccount<'info>>,
-    /////CHECK: checked in cpi
-    //pub token_mint: Option<UncheckedAccount<'info>>,
-    /////CHECK: checked in cpi
-    //pub edition: Option<UncheckedAccount<'info>>,
-    /////CHECK: checked in cpi
-    //pub auth_rules_program: Option<UncheckedAccount<'info>>,
-    /////CHECK: checked in cpi
-    //pub auth_rules: Option<UncheckedAccount<'info>>,
-    /////CHECK: consraint
-    //#[account(constraint =
-    //    sysvar_instructions.key().to_string() == "Sysvar1nstructions1111111111111111111111111"
-    //)]
-    //pub sysvar_instructions: Option<UncheckedAccount<'info>>,
+    // ...SellRemainingAccounts
+}
+
+// This isn't for an ix, only to help gather the account_metas and contexts
+#[derive(Accounts)]
+pub struct SellRemainingAccounts<'info> {
+    ///CHECK: checked in sell function
+    pub metadata_program: UncheckedAccount<'info>,
+    ///CHECK: checked in cpi
+    #[account(mut)]
+    pub delegate_record: UncheckedAccount<'info>,
+    ///CHECK: checked in cpi
+    #[account(mut)]
+    pub token_record: UncheckedAccount<'info>,
+    ///CHECK: checked in cpi
+    pub token_mint: UncheckedAccount<'info>,
+    ///CHECK: checked in cpi
+    pub edition: UncheckedAccount<'info>,
+    ///CHECK: checked in cpi
+    pub auth_rules_program: UncheckedAccount<'info>,
+    ///CHECK: checked in cpi
+    pub auth_rules: UncheckedAccount<'info>,
+    ///CHECK: checked in cpi
+    pub sysvar_instructions: UncheckedAccount<'info>,
 }
 
 impl<'info> From<AuctioneerSell<'info>> for Sell<'info> {
@@ -260,29 +263,6 @@ pub struct AuctioneerSell<'info> {
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
     pub rent: Sysvar<'info, Rent>,
-    // we are at stack limit, but if we weren't, it'd look something like this:
-    /////CHECK: constraint
-    //#[account(
-    //    constraint = metadata_program.key() == mpl_token_metadata::ID
-    //)]
-    //pub metadata_program: Option<UncheckedAccount<'info>>,
-    /////CHECK: checked in cpi
-    //pub delegate_record: Option<UncheckedAccount<'info>>,
-    /////CHECK: checked in cpi
-    //pub token_record: Option<UncheckedAccount<'info>>,
-    /////CHECK: checked in cpi
-    //pub token_mint: Option<UncheckedAccount<'info>>,
-    /////CHECK: checked in cpi
-    //pub edition: Option<UncheckedAccount<'info>>,
-    /////CHECK: checked in cpi
-    //pub auth_rules_program: Option<UncheckedAccount<'info>>,
-    /////CHECK: checked in cpi
-    //pub auth_rules: Option<UncheckedAccount<'info>>,
-    /////CHECK: consraint
-    //#[account(constraint =
-    //    sysvar_instructions.key().to_string() == "Sysvar1nstructions1111111111111111111111111"
-    //)]
-    //pub sysvar_instructions: Option<UncheckedAccount<'info>>,
 }
 
 pub fn sell<'info>(

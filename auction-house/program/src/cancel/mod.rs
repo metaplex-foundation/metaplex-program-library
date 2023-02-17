@@ -57,32 +57,34 @@ pub struct Cancel<'info> {
     pub trade_state: UncheckedAccount<'info>,
 
     pub token_program: Program<'info, Token>,
-    /////CHECK: constraint
-    //#[account(
-    //    constraint = metadata_program.key() == mpl_token_metadata::ID
-    //)]
-    //pub metadata_program: Option<UncheckedAccount<'info>>,
-    /////CHECK: checked in cpi
-    //pub delegate_record: Option<UncheckedAccount<'info>>,
-    /////CHECK: checked in cpi
-    //pub metadata: Option<UncheckedAccount<'info>>,
-    /////CHECK: checked in cpi
-    //pub edition: Option<UncheckedAccount<'info>>,
-    /////CHECK: checked in cpi
-    //pub token_record: Option<UncheckedAccount<'info>>,
-    /////CHECK: checked in cpi
-    //pub token_mint: Option<UncheckedAccount<'info>>,
-    /////CHECK: checked in cpi
-    //pub auth_rules_program: Option<UncheckedAccount<'info>>,
-    /////CHECK: checked in cpi
-    //pub auth_rules: Option<UncheckedAccount<'info>>,
-    /////CHECK: consraint
-    //#[account(constraint =
-    //    sysvar_instructions.key().to_string() == "Sysvar1nstructions1111111111111111111111111"
-    //)]
-    //pub sysvar_instructions: Option<UncheckedAccount<'info>>,
-    /////CHECK: chekced in cpi
-    //pub system_program: Option<UncheckedAccount<'info>>,
+}
+
+// this isn't for an ix, only here to help gather accounts
+#[derive(Accounts)]
+pub struct CancelRemainingAccounts<'info> {
+    ///CHECK: checked in cancel function
+    pub metadata_program: UncheckedAccount<'info>,
+    ///CHECK: checked in cpi
+    #[account(mut)]
+    pub delegate_record: UncheckedAccount<'info>,
+    ///CHECK: checked in cpi
+    #[account(mut)]
+    pub metadata: UncheckedAccount<'info>,
+    ///CHECK: checked in cpi
+    pub edition: UncheckedAccount<'info>,
+    ///CHECK: checked in cpi
+    #[account(mut)]
+    pub token_record: UncheckedAccount<'info>,
+    ///CHECK: checked in cpi
+    pub token_mint: UncheckedAccount<'info>,
+    ///CHECK: checked in cpi
+    pub auth_rules_program: UncheckedAccount<'info>,
+    ///CHECK: checked in cpi
+    pub auth_rules: UncheckedAccount<'info>,
+    ///CHECK: checked in cpi
+    pub sysvar_instructions: UncheckedAccount<'info>,
+    ///CHECK: chekced in cpi
+    pub system_program: UncheckedAccount<'info>,
 }
 
 impl<'info> From<AuctioneerCancel<'info>> for Cancel<'info> {
@@ -279,8 +281,6 @@ fn cancel_logic<'c, 'info>(
                     AuctionHouseError::PublicKeyMismatch
                 );
 
-                let program_as_signer = next_account_info(remaining_accounts)?;
-
                 let delegate_record = next_account_info(remaining_accounts)?;
                 let metadata = next_account_info(remaining_accounts)?;
                 let edition = next_account_info(remaining_accounts)?;
@@ -319,7 +319,6 @@ fn cancel_logic<'c, 'info>(
                     token_account.to_account_info(),
                     wallet.to_account_info(),
                     token_mint.to_account_info(),
-                    program_as_signer.to_account_info(),
                     system_program.to_account_info(),
                     sysvar_instructions.to_account_info(),
                     token_program.to_account_info(),
