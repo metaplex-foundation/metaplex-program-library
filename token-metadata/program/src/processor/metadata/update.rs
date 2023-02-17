@@ -246,9 +246,10 @@ fn validate_update(
                 return Err(MetadataError::InvalidUpdateArgs.into());
             }
         }
-        _ => {
+        Some(_) => {
             return Err(MetadataError::InvalidAuthorityType.into());
         }
+        None => { /* no delegate role to check */ }
     }
 
     Ok(())

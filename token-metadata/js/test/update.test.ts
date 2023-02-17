@@ -1174,7 +1174,7 @@ test('Update: Invalid Update Authority Fails', async (t) => {
     null,
     masterEdition,
   );
-  await updateTx.assertError(t, /Update Authority given does not match/);
+  await updateTx.assertError(t, /Invalid authority type/);
 });
 
 test('Update: Delegate Authority Type Not Supported', async (t) => {
@@ -1246,7 +1246,7 @@ test('Update: Delegate Authority Type Not Supported', async (t) => {
     daManager.masterEdition,
   );
   updateTx.then((x) =>
-    x.assertLogs(t, [/Update Authority given does not match/i], {
+    x.assertLogs(t, [/Invalid authority type/i], {
       txLabel: 'tx: Update',
     }),
   );
