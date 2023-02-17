@@ -6245,6 +6245,16 @@
       "code": 173,
       "name": "CannotUpdateAssetWithDelegate",
       "msg": "Cannot update the rule set of a programmable asset that has a delegate"
+    },
+    {
+      "code": 174,
+      "name": "InvalidAssociatedTokenAccountProgram",
+      "msg": "Invalid Associated Token Account Program"
+    },
+    {
+      "code": 175,
+      "name": "InvalidInstructionsSysvar",
+      "msg": "Invalid InstructionsSysvar"
     }
   ],
   "metadata": {

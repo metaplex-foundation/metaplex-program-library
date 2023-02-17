@@ -150,7 +150,7 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
         token: token_pubkey,
         token_account: token.as_ref(),
         metadata_delegate_record_info: ctx.accounts.delegate_record_info,
-        metadata_delegate_roles: Some(&[MetadataDelegateRole::ProgrammableConfig]),
+        metadata_delegate_roles: vec![MetadataDelegateRole::ProgrammableConfig],
         precedence: &[
             AuthorityType::Metadata,
             AuthorityType::MetadataDelegate,
@@ -177,17 +177,17 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
             // Metadata authority is the paramount authority so is not subject to
             // auth rules. At this point we already checked that the authority is a
             // signer and that it matches the metadata's update authority.
-            msg!("Authority type: Metadata");
+            msg!("Auth type: Metadata");
         }
         AuthorityType::MetadataDelegate => {
             // Support for delegate update (for pNFTs this involves validating the
             // authoritzation rules)
-            msg!("Authority type: Delegate");
+            msg!("Auth type: Delegate");
         }
         AuthorityType::Holder => {
             // Support for holder update (for pNFTs this involves validating the
             // authoritzation rules)
-            msg!("Authority type: Holder");
+            msg!("Auth type: Holder");
             return Err(MetadataError::FeatureNotSupported.into());
         }
         _ => {

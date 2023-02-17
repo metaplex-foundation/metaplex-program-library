@@ -1245,23 +1245,12 @@ test('Update: Delegate Authority Type Not Supported', async (t) => {
     delegateRecord,
     daManager.masterEdition,
   );
-  await updateTx.assertSuccess(t);
-
-  const metadata = await Metadata.fromAccountAddress(connection, daManager.metadata);
-
-  spok(t, metadata, {
-    data: {
-      sellerFeeBasisPoints: 10,
-    },
-  });
-
-  t.equal(
-    metadata.data.name.replace(/\0+/, ''),
-    'DigitalAsset2',
-    "'DigitalAsset2' match updated name",
+  updateTx.then((x) =>
+    x.assertLogs(t, [/Update Authority given does not match/i], {
+      txLabel: 'tx: Update',
+    }),
   );
-  t.equal(metadata.data.symbol.replace(/\0+/, ''), 'DA2', "'DA2' match updated symbol");
-  t.equal(metadata.data.uri.replace(/\0+/, ''), 'uri2', "'uri2' match updated uri");
+  await updateTx.assertError(t);
 });
 
 test('Update: Holder Authority Type Not Supported', async (t) => {
@@ -1332,7 +1321,7 @@ test('Update: Holder Authority Type Not Supported', async (t) => {
   );
 
   updateTx.then((x) =>
-    x.assertLogs(t, [/Authority type: Holder/i, /Feature not supported currently/i], {
+    x.assertLogs(t, [/Auth type: Holder/i, /Feature not supported currently/i], {
       txLabel: 'tx: Update',
     }),
   );

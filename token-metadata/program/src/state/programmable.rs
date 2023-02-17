@@ -218,7 +218,7 @@ pub struct AuthorityRequest<'a, 'b> {
     /// `MetadataDelegateRecord` account of the authority (when the authority is a delegate).
     pub metadata_delegate_record_info: Option<&'a AccountInfo<'a>>,
     /// Expected `MetadataDelegateRole` for the request.
-    pub metadata_delegate_roles: Option<&'a [MetadataDelegateRole]>,
+    pub metadata_delegate_roles: Vec<MetadataDelegateRole>,
     /// `TokenRecord` account.
     pub token_record_info: Option<&'a AccountInfo<'a>>,
     /// Expected `TokenDelegateRole` for the request.
@@ -241,7 +241,7 @@ impl<'a, 'b> Default for AuthorityRequest<'a, 'b> {
             token: None,
             token_account: None,
             metadata_delegate_record_info: None,
-            metadata_delegate_roles: None,
+            metadata_delegate_roles: Vec::with_capacity(0),
             token_record_info: None,
             token_delegate_roles: Vec::with_capacity(0),
         }
@@ -325,11 +325,34 @@ impl AuthorityType {
                         // must be owned by token medatata
                         assert_owned_by(metadata_delegate_record_info, &crate::ID)?;
 
-                        if let Some(delegate_roles) = request.metadata_delegate_roles {
-                            for role in delegate_roles {
-                                // looking up the delegate on the metadata mint
+                        for role in &request.metadata_delegate_roles {
+                            // looking up the delegate on the metadata mint
+                            let (pda_key, _) = find_metadata_delegate_record_account(
+                                request.mint,
+                                *role,
+                                request.update_authority,
+                                request.authority,
+                            );
+
+                            if cmp_pubkeys(&pda_key, metadata_delegate_record_info.key) {
+                                let delegate_record = MetadataDelegateRecord::from_account_info(
+                                    metadata_delegate_record_info,
+                                )?;
+
+                                if delegate_record.delegate == *request.authority {
+                                    return Ok(AuthorityResponse {
+                                        authority_type: AuthorityType::MetadataDelegate,
+                                        metadata_delegate_role: Some(*role),
+                                        ..Default::default()
+                                    });
+                                }
+                            }
+
+                            // looking up the delegate on the collection mint (this is for
+                            // collection-level delegates)
+                            if let Some(mint) = request.collection_mint {
                                 let (pda_key, _) = find_metadata_delegate_record_account(
-                                    request.mint,
+                                    mint,
                                     *role,
                                     request.update_authority,
                                     request.authority,
@@ -347,32 +370,6 @@ impl AuthorityType {
                                             metadata_delegate_role: Some(*role),
                                             ..Default::default()
                                         });
-                                    }
-                                }
-
-                                // looking up the delegate on the collection mint (this is for
-                                // collection-level delegates)
-                                if let Some(mint) = request.collection_mint {
-                                    let (pda_key, _) = find_metadata_delegate_record_account(
-                                        mint,
-                                        *role,
-                                        request.update_authority,
-                                        request.authority,
-                                    );
-
-                                    if cmp_pubkeys(&pda_key, metadata_delegate_record_info.key) {
-                                        let delegate_record =
-                                            MetadataDelegateRecord::from_account_info(
-                                                metadata_delegate_record_info,
-                                            )?;
-
-                                        if delegate_record.delegate == *request.authority {
-                                            return Ok(AuthorityResponse {
-                                                authority_type: AuthorityType::MetadataDelegate,
-                                                metadata_delegate_role: Some(*role),
-                                                ..Default::default()
-                                            });
-                                        }
                                     }
                                 }
                             }
