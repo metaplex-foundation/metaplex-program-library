@@ -107,9 +107,7 @@ impl Metadata {
             .token_standard
             .ok_or(MetadataError::InvalidTokenStandard)?;
 
-        if matches!(authority_type, AuthorityType::Metadata)
-            || matches!(delegate_role, Some(MetadataDelegateRole::Update))
-        {
+        if matches!(authority_type, AuthorityType::Metadata) {
             if let Some(data) = data {
                 if !self.is_mutable {
                     return Err(MetadataError::DataIsImmutable.into());
