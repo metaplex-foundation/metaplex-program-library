@@ -2518,13 +2518,18 @@ mod nft_edition {
 }
 
 mod fungible {
+    use mpl_token_metadata::instruction::TransferArgs;
+    use solana_program::native_token::LAMPORTS_PER_SOL;
+
     use super::*;
 
     #[tokio::test]
-    async fn burn_fungible() {
+    async fn owner_burn() {
         let mut context = program_test().start_with_context().await;
 
-        let owner = context.payer.dirty_clone();
+        let update_authority = context.payer.dirty_clone();
+        let owner = Keypair::new();
+        owner.airdrop(&mut context, LAMPORTS_PER_SOL).await.unwrap();
 
         let initial_amount = 10;
         let burn_amount = 1;
@@ -2537,6 +2542,25 @@ mod fungible {
             None,
             initial_amount,
         )
+        .await
+        .unwrap();
+
+        // Transfer to a new owner so the update authority is separate.
+        let args = TransferArgs::V1 {
+            authorization_data: None,
+            amount: 10,
+        };
+
+        da.transfer_from(TransferFromParams {
+            context: &mut context,
+            authority: &update_authority,
+            source_owner: &update_authority.pubkey(),
+            destination_owner: owner.pubkey(),
+            destination_token: None, // fn will create the ATA
+            payer: &update_authority,
+            authorization_rules: None,
+            args,
+        })
         .await
         .unwrap();
 
@@ -2578,5 +2602,102 @@ mod fungible {
             .unwrap();
 
         assert!(token_account.is_none());
+    }
+
+    #[tokio::test]
+    async fn only_owner_can_burn() {
+        let mut context = program_test().start_with_context().await;
+
+        let not_owner = Keypair::new();
+
+        not_owner
+            .airdrop(&mut context, LAMPORTS_PER_SOL)
+            .await
+            .unwrap();
+
+        let initial_amount = 10;
+        let burn_amount = 1;
+
+        let mut da = DigitalAsset::new();
+        da.create_and_mint(
+            &mut context,
+            TokenStandard::Fungible,
+            None,
+            None,
+            initial_amount,
+        )
+        .await
+        .unwrap();
+
+        let args = BurnArgs::V1 {
+            amount: burn_amount,
+        };
+
+        let err = da
+            .burn(&mut context, not_owner.dirty_clone(), args, None, None)
+            .await
+            .unwrap_err();
+
+        assert_custom_error!(err, MetadataError::InvalidAuthorityType);
+    }
+
+    #[tokio::test]
+    async fn owner_token_must_match_mint() {
+        let mut context = program_test().start_with_context().await;
+
+        let owner = context.payer.dirty_clone();
+
+        let initial_amount = 10;
+
+        let mut da = DigitalAsset::new();
+        da.create_and_mint(
+            &mut context,
+            TokenStandard::Fungible,
+            None,
+            None,
+            initial_amount,
+        )
+        .await
+        .unwrap();
+
+        let mut other_da = DigitalAsset::new();
+        other_da
+            .create_and_mint(
+                &mut context,
+                TokenStandard::Fungible,
+                None,
+                None,
+                initial_amount,
+            )
+            .await
+            .unwrap();
+
+        let args = BurnArgs::V1 {
+            amount: initial_amount,
+        };
+
+        let mut builder = BurnBuilder::new();
+        builder
+            .authority(owner.pubkey())
+            .metadata(da.metadata)
+            .mint(da.mint.pubkey())
+            .token(other_da.token.unwrap());
+
+        let burn_ix = builder.build(args).unwrap().instruction();
+
+        let transaction = Transaction::new_signed_with_payer(
+            &[burn_ix],
+            Some(&context.payer.pubkey()),
+            &[&context.payer, &owner],
+            context.last_blockhash,
+        );
+
+        let err = context
+            .banks_client
+            .process_transaction(transaction)
+            .await
+            .unwrap_err();
+
+        assert_custom_error!(err, MetadataError::MintMismatch);
     }
 }

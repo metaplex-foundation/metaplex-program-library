@@ -2,7 +2,7 @@ use super::*;
 use crate::{
     processor::burn::{fungible::burn_fungible, nonfungible_edition::burn_nonfungible_edition},
     state::{AuthorityRequest, AuthorityType, TokenDelegateRole, TokenRecord, TokenState},
-    utils::thaw,
+    utils::{check_token_standard, thaw},
 };
 
 pub fn burn<'a>(
@@ -115,10 +115,13 @@ fn burn_v1(program_id: &Pubkey, ctx: Context<Burn>, args: BurnArgs) -> ProgramRe
         _ => return Err(MetadataError::InvalidAuthorityType.into()),
     }
 
-    if metadata.token_standard.is_none() {
-        return Err(MetadataError::InvalidTokenStandard.into());
-    }
-    let token_standard = metadata.token_standard.unwrap();
+    let token_standard = match metadata
+        .token_standard
+        .or_else(|| check_token_standard(ctx.accounts.mint_info, ctx.accounts.edition_info).ok())
+    {
+        Some(token_standard) => token_standard,
+        None => return Err(MetadataError::InvalidTokenStandard.into()),
+    };
 
     // NonFungible types can only burn one item and must have the edition
     // account present.
