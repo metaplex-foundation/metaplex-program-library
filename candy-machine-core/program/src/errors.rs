@@ -76,4 +76,7 @@ pub enum CandyError {
 
     #[msg("Missing metadata delegate record")]
     MissingMetadataDelegateRecord,
+
+    #[msg("Invalid token standard")]
+    InvalidTokenStandard,
 }

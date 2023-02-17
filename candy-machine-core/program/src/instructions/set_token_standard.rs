@@ -1,17 +1,12 @@
 use anchor_lang::{prelude::*, solana_program::sysvar};
-use mpl_token_metadata::{
-    instruction::{
-        builders::{DelegateBuilder, RevokeBuilder},
-        revoke_collection_authority, DelegateArgs, InstructionBuilder, RevokeArgs,
-    },
-    state::{Metadata, TokenMetadataAccount, TokenStandard},
-};
-use solana_program::program::{invoke, invoke_signed};
+use mpl_token_metadata::state::{Metadata, TokenMetadataAccount, TokenStandard};
 
-use crate::{cmp_pubkeys, constants::AUTHORITY_SEED, CandyError, CandyMachine, PNFT_FEATURE};
-
-use super::set_collection::{
-    approve_collection_authority_helper, ApproveCollectionAuthorityHelperAccounts,
+use crate::{
+    approve_collection_authority_helper, approve_metadata_delegate, cmp_pubkeys,
+    constants::AUTHORITY_SEED, revoke_collection_authority_helper, revoke_metadata_delegate,
+    ApproveCollectionAuthorityHelperAccounts, ApproveMetadataDelegateHelperAccounts, CandyError,
+    CandyMachine, RevokeCollectionAuthorityHelperAccounts, RevokeMetadataDelegateHelperAccounts,
+    PNFT_FEATURE,
 };
 
 pub fn set_token_standard(ctx: Context<SetTokenStandard>, token_standard: u8) -> Result<()> {
@@ -28,6 +23,9 @@ pub fn set_token_standard(ctx: Context<SetTokenStandard>, token_standard: u8) ->
     if token_standard == TokenStandard::ProgrammableNonFungible as u8
         && !candy_machine.is_enabled(PNFT_FEATURE)
     {
+        // enables minting pNFTs
+        candy_machine.enable_feature(PNFT_FEATURE);
+
         // revoking the legacy collection authority
 
         let collection_authority_record = ctx
@@ -36,35 +34,21 @@ pub fn set_token_standard(ctx: Context<SetTokenStandard>, token_standard: u8) ->
             .as_ref()
             .ok_or(CandyError::MissingCollectionAuthorityRecord)?;
 
-        let revoke_collection_infos = vec![
-            collection_authority_record.to_account_info(),
-            ctx.accounts.authority_pda.to_account_info(),
-            ctx.accounts.collection_metadata.to_account_info(),
-            ctx.accounts.collection_mint.to_account_info(),
-        ];
+        let revoke_accounts = RevokeCollectionAuthorityHelperAccounts {
+            authority_pda: ctx.accounts.authority_pda.to_account_info(),
+            collection_authority_record: collection_authority_record.to_account_info(),
+            collection_metadata: ctx.accounts.collection_metadata.to_account_info(),
+            collection_mint: ctx.accounts.collection_mint.to_account_info(),
+            token_metadata_program: ctx.accounts.token_metadata_program.to_account_info(),
+        };
 
-        let candy_machine_key = candy_machine.key();
-
-        let authority_seeds = [
-            AUTHORITY_SEED.as_bytes(),
-            candy_machine_key.as_ref(),
-            &[*ctx.bumps.get("authority_pda").unwrap()],
-        ];
-
-        invoke_signed(
-            &revoke_collection_authority(
-                ctx.accounts.token_metadata_program.key(),
-                collection_authority_record.key(),
-                ctx.accounts.authority_pda.key(),
-                ctx.accounts.authority_pda.key(),
-                ctx.accounts.collection_metadata.key(),
-                ctx.accounts.collection_mint.key(),
-            ),
-            revoke_collection_infos.as_slice(),
-            &[&authority_seeds],
+        revoke_collection_authority_helper(
+            revoke_accounts,
+            candy_machine.key(),
+            *ctx.bumps.get("authority_pda").unwrap(),
         )?;
 
-        // setting a new delegate
+        // approve a new metadata delegate
 
         let delegate_record = ctx
             .accounts
@@ -72,50 +56,34 @@ pub fn set_token_standard(ctx: Context<SetTokenStandard>, token_standard: u8) ->
             .as_ref()
             .ok_or(CandyError::MissingMetadataDelegateRecord)?;
 
-        let mut delegate_builder = DelegateBuilder::new();
-        delegate_builder
-            .delegate_record(delegate_record.key())
-            .delegate(ctx.accounts.authority_pda.key())
-            .mint(ctx.accounts.collection_mint.key())
-            .metadata(ctx.accounts.collection_metadata.key())
-            .payer(ctx.accounts.payer.key())
-            .authority(ctx.accounts.collection_update_authority.key());
+        let delegate_accounts = ApproveMetadataDelegateHelperAccounts {
+            authority_pda: ctx.accounts.authority_pda.to_account_info(),
+            collection_metadata: ctx.accounts.collection_metadata.to_account_info(),
+            collection_mint: ctx.accounts.collection_mint.to_account_info(),
+            collection_update_authority: ctx.accounts.collection_update_authority.to_account_info(),
+            delegate_record: delegate_record.to_account_info(),
+            payer: ctx.accounts.payer.to_account_info(),
+            system_program: ctx.accounts.system_program.to_account_info(),
+            sysvar_instructions: ctx.accounts.sysvar_instructions.to_account_info(),
+            authorization_rules_program: ctx
+                .accounts
+                .authorization_rules_program
+                .as_ref()
+                .map(|authorization_rules_program| authorization_rules_program.to_account_info()),
+            authorization_rules: ctx
+                .accounts
+                .authorization_rules
+                .as_ref()
+                .map(|authorization_rules| authorization_rules.to_account_info()),
+        };
 
-        let mut delegate_infos = vec![
-            delegate_record.to_account_info(),
-            ctx.accounts.authority_pda.to_account_info(),
-            ctx.accounts.collection_metadata.to_account_info(),
-            ctx.accounts.collection_mint.to_account_info(),
-            ctx.accounts.collection_update_authority.to_account_info(),
-            ctx.accounts.payer.to_account_info(),
-            ctx.accounts.system_program.to_account_info(),
-            ctx.accounts.sysvar_instructions.to_account_info(),
-        ];
-
-        if let Some(authorization_rules_program) = &ctx.accounts.authorization_rules_program {
-            delegate_builder.authorization_rules_program(authorization_rules_program.key());
-            delegate_infos.push(authorization_rules_program.to_account_info());
-        }
-
-        if let Some(authorization_rules) = &ctx.accounts.authorization_rules {
-            delegate_builder.authorization_rules(authorization_rules.key());
-            delegate_infos.push(authorization_rules.to_account_info());
-        }
-
-        let delegate_ix = delegate_builder
-            .build(DelegateArgs::CollectionV1 {
-                authorization_data: None,
-            })
-            .map_err(|_| CandyError::InstructionBuilderFailed)?
-            .instruction();
-
-        invoke(&delegate_ix, &delegate_infos)?;
-
-        // enables minting pNFTs
-        candy_machine.enable_feature(PNFT_FEATURE);
+        approve_metadata_delegate(delegate_accounts)
     } else if token_standard == TokenStandard::NonFungible as u8
         && candy_machine.is_enabled(PNFT_FEATURE)
     {
+        // disables minting pNFTs
+        candy_machine.disable_feature(PNFT_FEATURE);
+
         // revoking the delegate
 
         let delegate_record = ctx
@@ -124,42 +92,28 @@ pub fn set_token_standard(ctx: Context<SetTokenStandard>, token_standard: u8) ->
             .as_ref()
             .ok_or(CandyError::MissingMetadataDelegateRecord)?;
 
-        let mut revoke_builder = RevokeBuilder::new();
-        revoke_builder
-            .delegate_record(delegate_record.key())
-            .delegate(ctx.accounts.authority_pda.key())
-            .mint(ctx.accounts.collection_mint.key())
-            .metadata(ctx.accounts.collection_metadata.key())
-            .payer(ctx.accounts.payer.key())
-            .authority(ctx.accounts.collection_update_authority.key());
+        let revoke_accounts = RevokeMetadataDelegateHelperAccounts {
+            authority_pda: ctx.accounts.authority_pda.to_account_info(),
+            collection_metadata: ctx.accounts.collection_metadata.to_account_info(),
+            collection_mint: ctx.accounts.collection_mint.to_account_info(),
+            collection_update_authority: ctx.accounts.collection_update_authority.to_account_info(),
+            delegate_record: delegate_record.to_account_info(),
+            payer: ctx.accounts.payer.to_account_info(),
+            system_program: ctx.accounts.system_program.to_account_info(),
+            sysvar_instructions: ctx.accounts.sysvar_instructions.to_account_info(),
+            authorization_rules_program: ctx
+                .accounts
+                .authorization_rules_program
+                .as_ref()
+                .map(|authorization_rules_program| authorization_rules_program.to_account_info()),
+            authorization_rules: ctx
+                .accounts
+                .authorization_rules
+                .as_ref()
+                .map(|authorization_rules| authorization_rules.to_account_info()),
+        };
 
-        let mut revoke_infos = vec![
-            delegate_record.to_account_info(),
-            ctx.accounts.authority_pda.to_account_info(),
-            ctx.accounts.collection_metadata.to_account_info(),
-            ctx.accounts.collection_mint.to_account_info(),
-            ctx.accounts.collection_update_authority.to_account_info(),
-            ctx.accounts.payer.to_account_info(),
-            ctx.accounts.system_program.to_account_info(),
-            ctx.accounts.sysvar_instructions.to_account_info(),
-        ];
-
-        if let Some(authorization_rules_program) = &ctx.accounts.authorization_rules_program {
-            revoke_builder.authorization_rules_program(authorization_rules_program.key());
-            revoke_infos.push(authorization_rules_program.to_account_info());
-        }
-
-        if let Some(authorization_rules) = &ctx.accounts.authorization_rules {
-            revoke_builder.authorization_rules(authorization_rules.key());
-            revoke_infos.push(authorization_rules.to_account_info());
-        }
-
-        let revoke_ix = revoke_builder
-            .build(RevokeArgs::CollectionV1)
-            .map_err(|_| CandyError::InstructionBuilderFailed)?
-            .instruction();
-
-        invoke(&revoke_ix, &revoke_infos)?;
+        revoke_metadata_delegate(revoke_accounts)?;
 
         // setting a legacy collection authority
 
@@ -180,13 +134,10 @@ pub fn set_token_standard(ctx: Context<SetTokenStandard>, token_standard: u8) ->
             collection_update_authority: ctx.accounts.collection_update_authority.to_account_info(),
         };
 
-        approve_collection_authority_helper(approve_accounts)?;
-
-        // disables minting pNFTs
-        candy_machine.disable_feature(PNFT_FEATURE);
+        approve_collection_authority_helper(approve_accounts)
+    } else {
+        err!(CandyError::InvalidTokenStandard)
     }
-
-    Ok(())
 }
 
 #[derive(Accounts)]
@@ -233,7 +184,7 @@ pub struct SetTokenStandard<'info> {
 
     /// CHECK: account constraints checked in account trait
     #[account(address = sysvar::instructions::id())]
-    pub sysvar_instructions: UncheckedAccount<'info>,
+    sysvar_instructions: UncheckedAccount<'info>,
 
     /// CHECK: account checked in CPI
     #[account(address = mpl_token_auth_rules::id())]
@@ -241,5 +192,5 @@ pub struct SetTokenStandard<'info> {
 
     /// CHECK: account constraints checked in account trait
     #[account(owner = mpl_token_auth_rules::id())]
-    pub authorization_rules: Option<UncheckedAccount<'info>>,
+    authorization_rules: Option<UncheckedAccount<'info>>,
 }

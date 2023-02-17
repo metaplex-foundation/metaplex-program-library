@@ -63,6 +63,7 @@ pub struct Initialize<'info> {
         constraint = candy_machine.to_account_info().owner == program_id && candy_machine.to_account_info().data_len() >= data.get_space_for_candy()?
     )]
     candy_machine: UncheckedAccount<'info>,
+
     /// CHECK: account checked in seeds constraint
     #[account(
         mut,
@@ -70,23 +71,33 @@ pub struct Initialize<'info> {
         bump
     )]
     authority_pda: UncheckedAccount<'info>,
+
     /// CHECK: authority can be any account and is not written to or read
     authority: UncheckedAccount<'info>,
+
     // payer of the transaction
     payer: Signer<'info>,
+
     /// CHECK: account checked in CPI
     collection_metadata: UncheckedAccount<'info>,
+
     /// CHECK: account checked in CPI
     collection_mint: UncheckedAccount<'info>,
+
     /// CHECK: account checked in CPI
     collection_master_edition: UncheckedAccount<'info>,
+
     #[account(mut)]
     collection_update_authority: Signer<'info>,
+
     /// CHECK: account checked in CPI
     #[account(mut)]
     collection_authority_record: UncheckedAccount<'info>,
+
     /// CHECK: account checked in CPI
     #[account(address = mpl_token_metadata::id())]
     token_metadata_program: UncheckedAccount<'info>,
+
+    /// System program account.
     system_program: Program<'info, System>,
 }

@@ -8,7 +8,8 @@ use mpl_token_metadata::{
         InstructionBuilder, MintArgs, RuleSetToggle, UpdateArgs,
     },
     state::{
-        AssetData, Metadata, PrintSupply, ProgrammableConfig, TokenMetadataAccount, TokenStandard,
+        AssetData, Collection, Metadata, PrintSupply, ProgrammableConfig, TokenMetadataAccount,
+        TokenStandard,
     },
 };
 use solana_program::{program::invoke_signed, sysvar};
@@ -227,6 +228,10 @@ fn mint_one<'info>(
     asset_data.seller_fee_basis_points = candy_machine.data.seller_fee_basis_points;
     asset_data.is_mutable = candy_machine.data.is_mutable;
     asset_data.creators = Some(creators);
+    asset_data.collection = Some(Collection {
+        verified: false,
+        key: candy_machine.collection_mint,
+    });
 
     // create metadata accounts
 

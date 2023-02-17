@@ -33,6 +33,15 @@ pub mod candy_machine_core {
         instructions::initialize(ctx, data)
     }
 
+    /// Initialize the candy machine account with the specified data and token standard.
+    pub fn initialize_v2(
+        ctx: Context<InitializeV2>,
+        data: CandyMachineData,
+        token_standard: u8,
+    ) -> Result<()> {
+        instructions::initialize_v2(ctx, data, token_standard)
+    }
+
     /// Mint an NFT. Only the candy machine mint authority is allowed to mint.
     pub fn mint<'info>(ctx: Context<'_, '_, '_, 'info, Mint<'info>>) -> Result<()> {
         instructions::mint(ctx)
@@ -46,6 +55,11 @@ pub mod candy_machine_core {
     /// Set the collection mint for the candy machine.
     pub fn set_collection(ctx: Context<SetCollection>) -> Result<()> {
         instructions::set_collection(ctx)
+    }
+
+    /// Set the collection mint for the candy machine.
+    pub fn set_collection_v2(ctx: Context<SetCollectionV2>) -> Result<()> {
+        instructions::set_collection_v2(ctx)
     }
 
     /// Set a new mint authority of the candy machine.
