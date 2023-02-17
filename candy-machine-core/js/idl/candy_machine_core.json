@@ -114,87 +114,152 @@
         {
           "name": "candyMachine",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "The candy machine account."
+          ]
         },
         {
           "name": "authorityPda",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "The candy machine authority account. This is the account that holds a delegate",
+            "to verify an item into the collection.",
+            ""
+          ]
         },
         {
           "name": "mintAuthority",
           "isMut": false,
-          "isSigner": true
+          "isSigner": true,
+          "docs": [
+            "The candy machine mint authority (mint only allowed for the mint_authority)."
+          ]
         },
         {
           "name": "payer",
           "isMut": true,
-          "isSigner": true
+          "isSigner": true,
+          "docs": [
+            "Payer for the transaction and account allocation (rent)."
+          ]
         },
         {
           "name": "nftMint",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Mint account of the NFT. The account will be initialized if necessary.",
+            ""
+          ]
         },
         {
           "name": "nftMintAuthority",
           "isMut": false,
-          "isSigner": true
+          "isSigner": true,
+          "docs": [
+            "Mint authority of the NFT. In most cases this will be the owner of the NFT."
+          ]
         },
         {
           "name": "nftMetadata",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "The medate account of the NFT. This account must be uninitialized.",
+            ""
+          ]
         },
         {
           "name": "nftMasterEdition",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "The master edition account of the NFT. The account will be initialized if necessary.",
+            ""
+          ]
         },
         {
           "name": "collectionAuthorityRecord",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "The collection authority record account is either the delegated authority record (legacy)",
+            "or a metadata delegate record for the `authority_pda`. The delegate is set when a new collection",
+            "is set to the candy machine.",
+            ""
+          ]
         },
         {
           "name": "collectionMint",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "The mint account of the collection NFT.",
+            ""
+          ]
         },
         {
           "name": "collectionMetadata",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "The metadata account of the collection NFT.",
+            ""
+          ]
         },
         {
           "name": "collectionMasterEdition",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "The master edition account of the collection NFT.",
+            ""
+          ]
         },
         {
           "name": "collectionUpdateAuthority",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "The update authority of the collection NFT.",
+            ""
+          ]
         },
         {
           "name": "tokenMetadataProgram",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "Token Metadata program.",
+            ""
+          ]
         },
         {
           "name": "tokenProgram",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "SPL Token program."
+          ]
         },
         {
           "name": "systemProgram",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "System program."
+          ]
         },
         {
           "name": "recentSlothashes",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "SlotHashes sysvar cluster data.",
+            ""
+          ]
         }
       ],
       "args": []
@@ -325,6 +390,94 @@
         }
       ],
       "args": []
+    },
+    {
+      "name": "setTokenStandard",
+      "docs": [
+        "Set the token standard of the minted NFTs."
+      ],
+      "accounts": [
+        {
+          "name": "candyMachine",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "authorityPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "payer",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "delegateRecord",
+          "isMut": true,
+          "isSigner": false,
+          "isOptional": true
+        },
+        {
+          "name": "collectionMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "collectionMetadata",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "collectionAuthorityRecord",
+          "isMut": true,
+          "isSigner": false,
+          "isOptional": true
+        },
+        {
+          "name": "collectionUpdateAuthority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "tokenMetadataProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "sysvarInstructions",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "authorizationRulesProgram",
+          "isMut": false,
+          "isSigner": false,
+          "isOptional": true
+        },
+        {
+          "name": "authorizationRules",
+          "isMut": false,
+          "isSigner": false,
+          "isOptional": true
+        }
+      ],
+      "args": [
+        {
+          "name": "tokenStandard",
+          "type": "u8"
+        }
+      ]
     },
     {
       "name": "update",
@@ -749,6 +902,26 @@
       "code": 6020,
       "name": "NotFullyLoaded",
       "msg": "Not all config lines were added to the candy machine"
+    },
+    {
+      "code": 6021,
+      "name": "InstructionBuilderFailed",
+      "msg": "Instruction could not be created"
+    },
+    {
+      "code": 6022,
+      "name": "MissingRemainingAccounts",
+      "msg": "Missing required remaining accounts"
+    },
+    {
+      "code": 6023,
+      "name": "MissingCollectionAuthorityRecord",
+      "msg": "Missing collection authority record"
+    },
+    {
+      "code": 6024,
+      "name": "MissingMetadataDelegateRecord",
+      "msg": "Missing metadata delegate record"
     }
   ],
   "metadata": {

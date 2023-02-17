@@ -33,6 +33,7 @@ export type SetMintAuthorityInstructionAccounts = {
   candyMachine: web3.PublicKey;
   authority: web3.PublicKey;
   mintAuthority: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
 };
 
 export const setMintAuthorityInstructionDiscriminator = [67, 127, 155, 187, 100, 174, 103, 121];
@@ -69,6 +70,12 @@ export function createSetMintAuthorityInstruction(
       isSigner: true,
     },
   ];
+
+  if (accounts.anchorRemainingAccounts != null) {
+    for (const acc of accounts.anchorRemainingAccounts) {
+      keys.push(acc);
+    }
+  }
 
   const ix = new web3.TransactionInstruction({
     programId,

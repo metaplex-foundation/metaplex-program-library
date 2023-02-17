@@ -41,7 +41,6 @@ pub fn initialize(ctx: Context<Initialize>, data: CandyMachineData) -> Result<()
         authority_pda: ctx.accounts.authority_pda.to_account_info(),
         collection_mint: ctx.accounts.collection_mint.to_account_info(),
         collection_metadata: ctx.accounts.collection_metadata.to_account_info(),
-        collection_master_edition: ctx.accounts.collection_master_edition.to_account_info(),
         collection_authority_record: ctx.accounts.collection_authority_record.to_account_info(),
         token_metadata_program: ctx.accounts.token_metadata_program.to_account_info(),
         system_program: ctx.accounts.system_program.to_account_info(),

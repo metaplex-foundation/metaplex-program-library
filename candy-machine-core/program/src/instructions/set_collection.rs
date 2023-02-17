@@ -1,15 +1,11 @@
 use anchor_lang::prelude::*;
 use mpl_token_metadata::{
-    assertions::collection::assert_master_edition,
     instruction::{approve_collection_authority, revoke_collection_authority},
     state::{Metadata, TokenMetadataAccount},
 };
 use solana_program::program::{invoke, invoke_signed};
 
-use crate::{
-    cmp_pubkeys, constants::AUTHORITY_SEED, utils::assert_edition_from_mint, CandyError,
-    CandyMachine,
-};
+use crate::{cmp_pubkeys, constants::AUTHORITY_SEED, CandyError, CandyMachine};
 
 pub fn set_collection(ctx: Context<SetCollection>) -> Result<()> {
     let accounts = ctx.accounts;
@@ -59,7 +55,6 @@ pub fn set_collection(ctx: Context<SetCollection>) -> Result<()> {
         collection_update_authority: accounts.new_collection_update_authority.to_account_info(),
         collection_mint: accounts.new_collection_mint.to_account_info(),
         collection_metadata: accounts.new_collection_metadata.to_account_info(),
-        collection_master_edition: accounts.new_collection_master_edition.to_account_info(),
         collection_authority_record: accounts.new_collection_authority_record.to_account_info(),
         token_metadata_program: accounts.token_metadata_program.to_account_info(),
         system_program: accounts.system_program.to_account_info(),
@@ -79,7 +74,6 @@ pub fn approve_collection_authority_helper(
         collection_update_authority,
         collection_mint,
         collection_metadata,
-        collection_master_edition,
         collection_authority_record,
         token_metadata_program,
         system_program,
@@ -97,9 +91,6 @@ pub fn approve_collection_authority_helper(
     if !cmp_pubkeys(&collection_data.mint, &collection_mint.key()) {
         return err!(CandyError::MintMismatch);
     }
-
-    assert_master_edition(&collection_data, &collection_master_edition)?;
-    assert_edition_from_mint(&collection_master_edition, &collection_mint)?;
 
     let approve_collection_authority_ix = approve_collection_authority(
         token_metadata_program.key(),
@@ -142,8 +133,6 @@ pub struct ApproveCollectionAuthorityHelperAccounts<'info> {
     pub collection_mint: AccountInfo<'info>,
     /// CHECK: account checked in CPI
     pub collection_metadata: AccountInfo<'info>,
-    /// CHECK: account checked in CPI
-    pub collection_master_edition: AccountInfo<'info>,
     /// CHECK: account checked in CPI
     pub collection_authority_record: AccountInfo<'info>,
     /// CHECK: account checked in CPI

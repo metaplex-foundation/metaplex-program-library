@@ -2,6 +2,11 @@ use anchor_lang::prelude::*;
 
 use super::candy_machine_data::CandyMachineData;
 
+// Indicates the position for the pNFT feature flag. If the bit
+// on this position is set to 1, then the candy machine will mint
+// pNFTs.
+pub const PNFT_FEATURE: u64 = 1 << (std::mem::size_of::<u64>() - 1);
+
 /// Candy machine state and config data.
 #[account]
 #[derive(Default, Debug)]
@@ -26,6 +31,20 @@ pub struct CandyMachine {
     // - (item_available / 8) + 1 bit mask to keep track of which ConfigLines
     //   have been added
     // - (u32 * items_available) mint indices
+}
+
+impl CandyMachine {
+    pub fn is_enabled(&self, feature: u64) -> bool {
+        (self.features & feature) > 0
+    }
+
+    pub fn enable_feature(&mut self, feature: u64) {
+        self.features |= feature
+    }
+
+    pub fn disable_feature(&mut self, feature: u64) {
+        self.features &= !feature
+    }
 }
 
 /// Config line struct for storing asset (NFT) data pre-mint.

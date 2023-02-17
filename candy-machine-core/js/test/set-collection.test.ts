@@ -47,14 +47,11 @@ test('set collection', async (t) => {
   // creates a new collection nft
   const metaplex = Metaplex.make(connection).use(keypairIdentity(payerPair));
 
-  const { nft: newCollection } = await metaplex
-    .nfts()
-    .create({
-      uri: COLLECTION_METADATA,
-      name: 'CORE Collection',
-      sellerFeeBasisPoints: 500,
-    })
-    .run();
+  const { nft: newCollection } = await metaplex.nfts().create({
+    uri: COLLECTION_METADATA,
+    name: 'CORE Collection',
+    sellerFeeBasisPoints: 500,
+  });
 
   const candyMachineObject = await CandyMachine.fromAccountAddress(connection, address);
 
@@ -112,14 +109,11 @@ test('set collection: wrong collection mint', async (t) => {
   // creates a new collection nft
   const metaplex = Metaplex.make(connection).use(keypairIdentity(payerPair));
 
-  const { nft: newCollection } = await metaplex
-    .nfts()
-    .create({
-      uri: COLLECTION_METADATA,
-      name: 'CORE Collection',
-      sellerFeeBasisPoints: 500,
-    })
-    .run();
+  const { nft: newCollection } = await metaplex.nfts().create({
+    uri: COLLECTION_METADATA,
+    name: 'CORE Collection',
+    sellerFeeBasisPoints: 500,
+  });
 
   const { tx: txSet } = await API.setCollection(
     t,

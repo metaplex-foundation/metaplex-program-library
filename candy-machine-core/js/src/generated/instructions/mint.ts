@@ -57,6 +57,7 @@ export type MintInstructionAccounts = {
   tokenProgram?: web3.PublicKey;
   systemProgram?: web3.PublicKey;
   recentSlothashes: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
 };
 
 export const mintInstructionDiscriminator = [51, 57, 225, 47, 182, 146, 137, 166];
@@ -163,6 +164,12 @@ export function createMintInstruction(
       isSigner: false,
     },
   ];
+
+  if (accounts.anchorRemainingAccounts != null) {
+    for (const acc of accounts.anchorRemainingAccounts) {
+      keys.push(acc);
+    }
+  }
 
   const ix = new web3.TransactionInstruction({
     programId,

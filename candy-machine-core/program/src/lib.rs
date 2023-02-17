@@ -53,6 +53,11 @@ pub mod candy_machine_core {
         instructions::set_mint_authority(ctx)
     }
 
+    /// Set the token standard of the minted NFTs.
+    pub fn set_token_standard(ctx: Context<SetTokenStandard>, token_standard: u8) -> Result<()> {
+        instructions::set_token_standard(ctx, token_standard)
+    }
+
     /// Update the candy machine configuration.
     pub fn update(ctx: Context<Update>, data: CandyMachineData) -> Result<()> {
         instructions::update(ctx, data)

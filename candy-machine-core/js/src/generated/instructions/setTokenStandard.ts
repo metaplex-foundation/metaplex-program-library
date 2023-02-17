@@ -10,69 +10,86 @@ import * as web3 from '@solana/web3.js';
 
 /**
  * @category Instructions
- * @category SetCollection
+ * @category SetTokenStandard
  * @category generated
  */
-export const setCollectionStruct = new beet.BeetArgsStruct<{
-  instructionDiscriminator: number[] /* size: 8 */;
-}>(
-  [['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)]],
-  'SetCollectionInstructionArgs',
+export type SetTokenStandardInstructionArgs = {
+  tokenStandard: number;
+};
+/**
+ * @category Instructions
+ * @category SetTokenStandard
+ * @category generated
+ */
+export const setTokenStandardStruct = new beet.BeetArgsStruct<
+  SetTokenStandardInstructionArgs & {
+    instructionDiscriminator: number[] /* size: 8 */;
+  }
+>(
+  [
+    ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
+    ['tokenStandard', beet.u8],
+  ],
+  'SetTokenStandardInstructionArgs',
 );
 /**
- * Accounts required by the _setCollection_ instruction
+ * Accounts required by the _setTokenStandard_ instruction
  *
  * @property [_writable_] candyMachine
  * @property [**signer**] authority
  * @property [_writable_] authorityPda
  * @property [**signer**] payer
+ * @property [_writable_] delegateRecord
  * @property [] collectionMint
- * @property [] collectionMetadata
+ * @property [_writable_] collectionMetadata
  * @property [_writable_] collectionAuthorityRecord
- * @property [_writable_, **signer**] newCollectionUpdateAuthority
- * @property [] newCollectionMetadata
- * @property [] newCollectionMint
- * @property [] newCollectionMasterEdition
- * @property [_writable_] newCollectionAuthorityRecord
+ * @property [_writable_, **signer**] collectionUpdateAuthority
  * @property [] tokenMetadataProgram
+ * @property [] sysvarInstructions
+ * @property [] authorizationRulesProgram
+ * @property [] authorizationRules
  * @category Instructions
- * @category SetCollection
+ * @category SetTokenStandard
  * @category generated
  */
-export type SetCollectionInstructionAccounts = {
+export type SetTokenStandardInstructionAccounts = {
   candyMachine: web3.PublicKey;
   authority: web3.PublicKey;
   authorityPda: web3.PublicKey;
   payer: web3.PublicKey;
+  delegateRecord: web3.PublicKey;
   collectionMint: web3.PublicKey;
   collectionMetadata: web3.PublicKey;
   collectionAuthorityRecord: web3.PublicKey;
-  newCollectionUpdateAuthority: web3.PublicKey;
-  newCollectionMetadata: web3.PublicKey;
-  newCollectionMint: web3.PublicKey;
-  newCollectionMasterEdition: web3.PublicKey;
-  newCollectionAuthorityRecord: web3.PublicKey;
+  collectionUpdateAuthority: web3.PublicKey;
   tokenMetadataProgram: web3.PublicKey;
   systemProgram?: web3.PublicKey;
+  sysvarInstructions: web3.PublicKey;
+  authorizationRulesProgram: web3.PublicKey;
+  authorizationRules: web3.PublicKey;
   anchorRemainingAccounts?: web3.AccountMeta[];
 };
 
-export const setCollectionInstructionDiscriminator = [192, 254, 206, 76, 168, 182, 59, 223];
+export const setTokenStandardInstructionDiscriminator = [147, 212, 106, 195, 30, 170, 209, 128];
 
 /**
- * Creates a _SetCollection_ instruction.
+ * Creates a _SetTokenStandard_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
+ * @param args to provide as instruction data to the program
+ *
  * @category Instructions
- * @category SetCollection
+ * @category SetTokenStandard
  * @category generated
  */
-export function createSetCollectionInstruction(
-  accounts: SetCollectionInstructionAccounts,
+export function createSetTokenStandardInstruction(
+  accounts: SetTokenStandardInstructionAccounts,
+  args: SetTokenStandardInstructionArgs,
   programId = new web3.PublicKey('CndyV3LdqHUfDLmE5naZjVN8rBZz4tqhdefbAnjHG3JR'),
 ) {
-  const [data] = setCollectionStruct.serialize({
-    instructionDiscriminator: setCollectionInstructionDiscriminator,
+  const [data] = setTokenStandardStruct.serialize({
+    instructionDiscriminator: setTokenStandardInstructionDiscriminator,
+    ...args,
   });
   const keys: web3.AccountMeta[] = [
     {
@@ -96,13 +113,18 @@ export function createSetCollectionInstruction(
       isSigner: true,
     },
     {
+      pubkey: accounts.delegateRecord,
+      isWritable: true,
+      isSigner: false,
+    },
+    {
       pubkey: accounts.collectionMint,
       isWritable: false,
       isSigner: false,
     },
     {
       pubkey: accounts.collectionMetadata,
-      isWritable: false,
+      isWritable: true,
       isSigner: false,
     },
     {
@@ -111,29 +133,9 @@ export function createSetCollectionInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.newCollectionUpdateAuthority,
+      pubkey: accounts.collectionUpdateAuthority,
       isWritable: true,
       isSigner: true,
-    },
-    {
-      pubkey: accounts.newCollectionMetadata,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.newCollectionMint,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.newCollectionMasterEdition,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.newCollectionAuthorityRecord,
-      isWritable: true,
-      isSigner: false,
     },
     {
       pubkey: accounts.tokenMetadataProgram,
@@ -142,6 +144,21 @@ export function createSetCollectionInstruction(
     },
     {
       pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.sysvarInstructions,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.authorizationRulesProgram,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.authorizationRules,
       isWritable: false,
       isSigner: false,
     },

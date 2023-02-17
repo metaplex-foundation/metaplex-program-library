@@ -32,7 +32,7 @@ export async function drain(
     await mintTransaction.assertNone();
 
     const metaplex = Metaplex.make(connection).use(keypairIdentity(payer));
-    const nft = await metaplex.nfts().findByMint({ mintAddress }).run();
+    const nft = await metaplex.nfts().findByMint({ mintAddress });
     indices.push(parseInt(nft.name));
   }
 

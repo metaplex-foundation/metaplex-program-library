@@ -4,5 +4,6 @@ export * from './mint';
 export * from './setAuthority';
 export * from './setCollection';
 export * from './setMintAuthority';
+export * from './setTokenStandard';
 export * from './update';
 export * from './withdraw';

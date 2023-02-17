@@ -464,6 +464,98 @@ createErrorFromCodeLookup.set(0x1784, () => new NotFullyLoadedError());
 createErrorFromNameLookup.set('NotFullyLoaded', () => new NotFullyLoadedError());
 
 /**
+ * InstructionBuilderFailed: 'Instruction could not be created'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InstructionBuilderFailedError extends Error {
+  readonly code: number = 0x1785;
+  readonly name: string = 'InstructionBuilderFailed';
+  constructor() {
+    super('Instruction could not be created');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InstructionBuilderFailedError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1785, () => new InstructionBuilderFailedError());
+createErrorFromNameLookup.set(
+  'InstructionBuilderFailed',
+  () => new InstructionBuilderFailedError(),
+);
+
+/**
+ * MissingRemainingAccounts: 'Missing required remaining accounts'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MissingRemainingAccountsError extends Error {
+  readonly code: number = 0x1786;
+  readonly name: string = 'MissingRemainingAccounts';
+  constructor() {
+    super('Missing required remaining accounts');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MissingRemainingAccountsError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1786, () => new MissingRemainingAccountsError());
+createErrorFromNameLookup.set(
+  'MissingRemainingAccounts',
+  () => new MissingRemainingAccountsError(),
+);
+
+/**
+ * MissingCollectionAuthorityRecord: 'Missing collection authority record'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MissingCollectionAuthorityRecordError extends Error {
+  readonly code: number = 0x1787;
+  readonly name: string = 'MissingCollectionAuthorityRecord';
+  constructor() {
+    super('Missing collection authority record');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MissingCollectionAuthorityRecordError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1787, () => new MissingCollectionAuthorityRecordError());
+createErrorFromNameLookup.set(
+  'MissingCollectionAuthorityRecord',
+  () => new MissingCollectionAuthorityRecordError(),
+);
+
+/**
+ * MissingMetadataDelegateRecord: 'Missing metadata delegate record'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MissingMetadataDelegateRecordError extends Error {
+  readonly code: number = 0x1788;
+  readonly name: string = 'MissingMetadataDelegateRecord';
+  constructor() {
+    super('Missing metadata delegate record');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MissingMetadataDelegateRecordError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1788, () => new MissingMetadataDelegateRecordError());
+createErrorFromNameLookup.set(
+  'MissingMetadataDelegateRecord',
+  () => new MissingMetadataDelegateRecordError(),
+);
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated
