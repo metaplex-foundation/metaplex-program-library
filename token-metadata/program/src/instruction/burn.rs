@@ -145,7 +145,11 @@ impl InstructionBuilder for super::builders::Burn {
             },
             AccountMeta::new(self.mint, false),
             AccountMeta::new(self.token, false),
-            AccountMeta::new_readonly(self.parent_edition.unwrap_or(crate::ID), false),
+            if let Some(parent_edition) = self.parent_edition {
+                AccountMeta::new(parent_edition, false)
+            } else {
+                AccountMeta::new_readonly(crate::ID, false)
+            },
             AccountMeta::new_readonly(self.parent_mint.unwrap_or(crate::ID), false),
             AccountMeta::new_readonly(self.parent_token.unwrap_or(crate::ID), false),
             if let Some(edition_marker) = self.edition_marker {

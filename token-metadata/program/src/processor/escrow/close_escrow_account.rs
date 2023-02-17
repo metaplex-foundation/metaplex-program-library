@@ -6,6 +6,7 @@ use solana_program::{
     system_program,
 };
 
+use super::find_escrow_seeds;
 use crate::{
     assertions::{assert_derivation, assert_initialized, assert_keys_equal, assert_owned_by},
     error::MetadataError,
@@ -13,8 +14,6 @@ use crate::{
     state::{EscrowAuthority, Metadata, TokenMetadataAccount, TokenOwnedEscrow, TokenStandard},
     utils::check_token_standard,
 };
-
-use super::find_escrow_seeds;
 
 pub fn process_close_escrow_account(
     _program_id: &Pubkey,

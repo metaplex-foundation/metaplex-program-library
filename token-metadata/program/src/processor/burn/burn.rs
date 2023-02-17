@@ -44,6 +44,9 @@ fn burn_v1(program_id: &Pubkey, ctx: Context<Burn>, args: BurnArgs) -> ProgramRe
     if let Some(parent_token) = ctx.accounts.parent_token_info {
         assert_owned_by(parent_token, &spl_token::ID)?;
     }
+    if let Some(edition_marker) = ctx.accounts.edition_marker_info {
+        assert_owned_by(edition_marker, program_id)?;
+    }
 
     // Check program IDs.
     if ctx.accounts.spl_token_program_info.key != &spl_token::ID {
@@ -58,10 +61,12 @@ fn burn_v1(program_id: &Pubkey, ctx: Context<Burn>, args: BurnArgs) -> ProgramRe
         return Err(ProgramError::IncorrectProgramId);
     }
 
+    msg!("Deserializing accounts");
     // Deserialize accounts.
     let metadata = Metadata::from_account_info(ctx.accounts.metadata_info)?;
     let token: TokenAccount = assert_initialized(ctx.accounts.token_info)?;
 
+    msg!("Getting authority type");
     let authority_type = AuthorityType::get_authority_type(AuthorityRequest {
         authority: ctx.accounts.authority_info.key,
         update_authority: &metadata.update_authority,
@@ -132,13 +137,16 @@ fn burn_v1(program_id: &Pubkey, ctx: Context<Burn>, args: BurnArgs) -> ProgramRe
         }
     }
 
+    msg!("Matching type");
     match token_standard {
         TokenStandard::NonFungible => {
+            msg!("NonFungible");
             let args = BurnNonFungibleArgs { metadata };
 
             burn_nonfungible(&ctx, args)?;
         }
         TokenStandard::NonFungibleEdition => {
+            msg!("NonFungibleEdition");
             burn_nonfungible_edition(&ctx)?;
         }
         TokenStandard::ProgrammableNonFungible => {

@@ -7,6 +7,16 @@ pub(crate) struct BurnNonFungibleArgs {
 pub(crate) fn burn_nonfungible(ctx: &Context<Burn>, args: BurnNonFungibleArgs) -> ProgramResult {
     let edition_info = ctx.accounts.edition_info.unwrap();
 
+    // If you're passing in parent accounts for a nonfungible you're using this handler wrong.
+    // Parent accounts are only for burning nonfungible editions.
+    if ctx.accounts.parent_mint_info.is_some()
+        || ctx.accounts.parent_edition_info.is_some()
+        || ctx.accounts.parent_token_info.is_some()
+        || ctx.accounts.edition_marker_info.is_some()
+    {
+        return Err(MetadataError::InvalidParentAccounts.into());
+    }
+
     // If the NFT is a verified part of a collection but the user has not provided the collection
     // metadata account, we cannot burn it because we need to check if we need to decrement the collection size.
     if ctx.accounts.collection_metadata_info.is_none()
@@ -91,7 +101,7 @@ pub(crate) fn burn_nonfungible(ctx: &Context<Burn>, args: BurnNonFungibleArgs) -
             }
         } else {
             assert_owned_by(collection_metadata_info, &crate::ID)?;
-            
+
             let mut collection_metadata = Metadata::from_account_info(collection_metadata_info)?;
 
             // Owned by token metadata program.

@@ -1,7 +1,10 @@
 use borsh::BorshSerialize;
 use mpl_token_metadata::{
     id,
-    instruction::{self, MetadataInstruction, MintNewEditionFromMasterEditionViaTokenArgs},
+    instruction::{
+        self, builders::BurnBuilder, BurnArgs, InstructionBuilder, MetadataInstruction,
+        MintNewEditionFromMasterEditionViaTokenArgs,
+    },
     state::{EDITION, EDITION_MARKER_BIT_SIZE, PREFIX},
 };
 use solana_program::{
@@ -18,6 +21,35 @@ use spl_associated_token_account::{
 };
 
 use crate::*;
+
+#[derive(Clone, Debug)]
+pub struct BurnPrintArgs<'a> {
+    pub authority: &'a Keypair,
+    pub metadata: Option<Pubkey>,
+    pub edition: Option<Pubkey>,
+    pub mint: Option<Pubkey>,
+    pub token: Option<Pubkey>,
+    pub parent_mint: Option<Pubkey>,
+    pub parent_token: Option<Pubkey>,
+    pub parent_edition: Option<Pubkey>,
+    pub edition_marker: Option<Pubkey>,
+}
+
+impl<'a> BurnPrintArgs<'a> {
+    pub fn default(authority: &'a Keypair) -> BurnPrintArgs<'a> {
+        Self {
+            authority,
+            metadata: None,
+            edition: None,
+            mint: None,
+            token: None,
+            parent_mint: None,
+            parent_token: None,
+            parent_edition: None,
+            edition_marker: None,
+        }
+    }
+}
 
 #[derive(Debug)]
 pub struct EditionMarker {
@@ -232,6 +264,37 @@ impl EditionMarker {
         );
 
         context.banks_client.process_transaction(transfer_tx).await
+    }
+
+    pub async fn burn<'a>(
+        &self,
+        context: &mut ProgramTestContext,
+        args: BurnPrintArgs<'a>,
+    ) -> Result<(), BanksClientError> {
+        let burn_args = BurnArgs::V1 { amount: 1 };
+
+        let mut builder = BurnBuilder::new();
+        builder
+            .authority(args.authority.pubkey())
+            .metadata(args.metadata.unwrap_or(self.new_metadata_pubkey))
+            .edition(args.edition.unwrap_or(self.new_edition_pubkey))
+            .mint(args.mint.unwrap_or(self.mint.pubkey()))
+            .token(args.token.unwrap_or(self.token.pubkey()))
+            .parent_mint(args.parent_mint.unwrap_or(self.metadata_mint_pubkey))
+            .parent_token(args.parent_token.unwrap_or(self.metadata_token_pubkey))
+            .parent_edition(args.parent_edition.unwrap_or(self.master_edition_pubkey))
+            .edition_marker(args.edition_marker.unwrap_or(self.pubkey));
+
+        let burn_ix = builder.build(burn_args).unwrap().instruction();
+
+        let transaction = Transaction::new_signed_with_payer(
+            &[burn_ix],
+            Some(&context.payer.pubkey()),
+            &[&context.payer, &args.authority],
+            context.last_blockhash,
+        );
+
+        context.banks_client.process_transaction(transaction).await
     }
 
     pub async fn exists_on_chain(&self, context: &mut ProgramTestContext) -> bool {

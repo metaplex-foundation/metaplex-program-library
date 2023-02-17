@@ -723,6 +723,10 @@ pub enum MetadataError {
     /// 182
     #[error("Invalid InstructionsSysvar")]
     InvalidInstructionsSysvar,
+
+    /// 183
+    #[error("Invalid or Unneeded parent accounts")]
+    InvalidParentAccounts,
 }
 
 impl PrintProgramError for MetadataError {

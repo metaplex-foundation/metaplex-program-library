@@ -20,8 +20,8 @@ use crate::{
     },
     error::MetadataError,
     state::{
-        Edition, EditionMarker, MasterEditionV2, Metadata, TokenMetadataAccount, EDITION,
-        EDITION_MARKER_BIT_SIZE, MAX_METADATA_LEN, PREFIX,
+        Edition, EditionMarker, MasterEdition, MasterEditionV2, Metadata, TokenMetadataAccount,
+        EDITION, EDITION_MARKER_BIT_SIZE, MAX_METADATA_LEN, PREFIX,
     },
     utils::{is_master_edition, is_print_edition},
 };
@@ -239,7 +239,7 @@ pub fn process_burn_edition_nft(program_id: &Pubkey, accounts: &[AccountInfo]) -
         .checked_sub(1)
         .ok_or(MetadataError::NumericalOverflowError)?;
 
-    master_edition.serialize(&mut *master_edition_info.try_borrow_mut_data()?)?;
+    master_edition.save(master_edition_info)?;
 
     Ok(())
 }
