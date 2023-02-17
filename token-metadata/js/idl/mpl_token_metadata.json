@@ -6255,6 +6255,11 @@
       "code": 175,
       "name": "InvalidInstructionsSysvar",
       "msg": "Invalid InstructionsSysvar"
+    },
+    {
+      "code": 176,
+      "name": "InvalidUpdateArgs",
+      "msg": "Authority cannot apply all update args"
     }
   ],
   "metadata": {
