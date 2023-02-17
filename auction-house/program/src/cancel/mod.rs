@@ -3,11 +3,7 @@ use solana_program::program_memory::sol_memset;
 
 use crate::{constants::*, errors::*, utils::*, AuctionHouse, AuthorityScope, *};
 
-use mpl_token_auth_rules::payload::{Payload, PayloadType, SeedsVec};
-use mpl_token_metadata::{
-    instruction::{builders::RevokeBuilder, InstructionBuilder, RevokeArgs},
-    processor::AuthorizationData,
-};
+use mpl_token_metadata::instruction::{builders::RevokeBuilder, InstructionBuilder, RevokeArgs};
 
 /// Accounts for the [`cancel` handler](auction_house/fn.cancel.html).
 #[derive(Accounts)]
