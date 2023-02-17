@@ -132,9 +132,9 @@ impl Metadata {
                 self.data = data;
             }
 
-            // if the Collection data is 'Set', only allow updating if it's unverified
+            // if the Collection data is 'Set', only allow updating if it is unverified
             // or if it exactly matches the existing collection info; if the Collection data
-            // is 'Clear', then only set to 'None' it if it's unverified.
+            // is 'Clear', then only set to 'None' if it is unverified.
             match collection {
                 CollectionToggle::Set(_) => {
                     let collection_option = collection.to_option();
