@@ -3,6 +3,12 @@ use solana_program::program_memory::sol_memset;
 
 use crate::{constants::*, errors::*, utils::*, AuctionHouse, AuthorityScope, *};
 
+use mpl_token_auth_rules::payload::{Payload, PayloadType, SeedsVec};
+use mpl_token_metadata::{
+    instruction::{builders::RevokeBuilder, InstructionBuilder, RevokeArgs},
+    processor::AuthorizationData,
+};
+
 /// Accounts for the [`cancel` handler](auction_house/fn.cancel.html).
 #[derive(Accounts)]
 #[instruction(buyer_price: u64, token_size: u64)]
@@ -55,6 +61,32 @@ pub struct Cancel<'info> {
     pub trade_state: UncheckedAccount<'info>,
 
     pub token_program: Program<'info, Token>,
+    /////CHECK: constraint
+    //#[account(
+    //    constraint = metadata_program.key() == mpl_token_metadata::ID
+    //)]
+    //pub metadata_program: Option<UncheckedAccount<'info>>,
+    /////CHECK: checked in cpi
+    //pub delegate_record: Option<UncheckedAccount<'info>>,
+    /////CHECK: checked in cpi
+    //pub metadata: Option<UncheckedAccount<'info>>,
+    /////CHECK: checked in cpi
+    //pub edition: Option<UncheckedAccount<'info>>,
+    /////CHECK: checked in cpi
+    //pub token_record: Option<UncheckedAccount<'info>>,
+    /////CHECK: checked in cpi
+    //pub token_mint: Option<UncheckedAccount<'info>>,
+    /////CHECK: checked in cpi
+    //pub auth_rules_program: Option<UncheckedAccount<'info>>,
+    /////CHECK: checked in cpi
+    //pub auth_rules: Option<UncheckedAccount<'info>>,
+    /////CHECK: consraint
+    //#[account(constraint =
+    //    sysvar_instructions.key().to_string() == "Sysvar1nstructions1111111111111111111111111"
+    //)]
+    //pub sysvar_instructions: Option<UncheckedAccount<'info>>,
+    /////CHECK: chekced in cpi
+    //pub system_program: Option<UncheckedAccount<'info>>,
 }
 
 impl<'info> From<AuctioneerCancel<'info>> for Cancel<'info> {
@@ -155,7 +187,12 @@ pub fn cancel<'info>(
         return Err(AuctionHouseError::MustUseAuctioneerHandler.into());
     }
 
-    cancel_logic(ctx.accounts, buyer_price, token_size)
+    cancel_logic(
+        ctx.accounts,
+        ctx.remaining_accounts,
+        buyer_price,
+        token_size,
+    )
 }
 
 pub fn auctioneer_cancel<'info>(
@@ -180,12 +217,18 @@ pub fn auctioneer_cancel<'info>(
 
     let mut accounts: Cancel<'info> = (*ctx.accounts).clone().into();
 
-    cancel_logic(&mut accounts, buyer_price, token_size)
+    cancel_logic(
+        &mut accounts,
+        ctx.remaining_accounts,
+        buyer_price,
+        token_size,
+    )
 }
 
 #[allow(clippy::needless_lifetimes)]
-fn cancel_logic<'info>(
+fn cancel_logic<'c, 'info>(
     accounts: &mut Cancel<'info>,
+    remaining_accounts: &'c [AccountInfo<'info>],
     buyer_price: u64,
     token_size: u64,
 ) -> Result<()> {
@@ -230,21 +273,83 @@ fn cancel_logic<'info>(
         &seeds,
     )?;
 
+    let remaining_accounts = &mut remaining_accounts.iter();
+
     if token_account.owner == wallet.key() && wallet.is_signer {
-        invoke(
-            &revoke(
-                &token_program.key(),
-                &token_account.key(),
-                &wallet.key(),
-                &[],
-            )
-            .unwrap(),
-            &[
-                token_program.to_account_info(),
-                token_account.to_account_info(),
-                wallet.to_account_info(),
-            ],
-        )?;
+        match next_account_info(remaining_accounts) {
+            Ok(metadata_program) => {
+                require!(
+                    metadata_program.key() == mpl_token_metadata::ID,
+                    AuctionHouseError::PublicKeyMismatch
+                );
+
+                let program_as_signer = next_account_info(remaining_accounts)?;
+
+                let delegate_record = next_account_info(remaining_accounts)?;
+                let metadata = next_account_info(remaining_accounts)?;
+                let edition = next_account_info(remaining_accounts)?;
+                let token_record = next_account_info(remaining_accounts)?;
+                let token_mint = next_account_info(remaining_accounts)?;
+                let auth_rules_program = next_account_info(remaining_accounts)?;
+                let auth_rules = next_account_info(remaining_accounts)?;
+                let sysvar_instructions = next_account_info(remaining_accounts)?;
+                let system_program = next_account_info(remaining_accounts)?;
+
+                let revoke = RevokeBuilder::new()
+                    .delegate_record(delegate_record.key())
+                    .delegate(authority.key())
+                    .metadata(metadata.key())
+                    .master_edition(edition.key())
+                    .token_record(token_record.key())
+                    .mint(token_mint.key())
+                    .token(token_account.key())
+                    .authority(wallet.key())
+                    .payer(wallet.key())
+                    .system_program(system_program.key())
+                    .sysvar_instructions(sysvar_instructions.key())
+                    .spl_token_program(token_program.key())
+                    .authorization_rules_program(auth_rules_program.key())
+                    .authorization_rules(auth_rules.key())
+                    .build(RevokeArgs::SaleV1)
+                    .unwrap()
+                    .instruction();
+
+                let revoke_accounts = [
+                    metadata_program.to_account_info(),
+                    delegate_record.to_account_info(),
+                    authority.to_account_info(),
+                    metadata.to_account_info(),
+                    edition.to_account_info(),
+                    token_account.to_account_info(),
+                    wallet.to_account_info(),
+                    token_mint.to_account_info(),
+                    program_as_signer.to_account_info(),
+                    system_program.to_account_info(),
+                    sysvar_instructions.to_account_info(),
+                    token_program.to_account_info(),
+                    auth_rules_program.to_account_info(),
+                    auth_rules.to_account_info(),
+                ];
+
+                invoke(&revoke, &revoke_accounts)?;
+            }
+            Err(_) => {
+                invoke(
+                    &revoke(
+                        &token_program.key(),
+                        &token_account.key(),
+                        &wallet.key(),
+                        &[],
+                    )
+                    .unwrap(),
+                    &[
+                        token_program.to_account_info(),
+                        token_account.to_account_info(),
+                        wallet.to_account_info(),
+                    ],
+                )?;
+            }
+        }
     }
 
     let curr_lamp = trade_state.lamports();
