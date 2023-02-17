@@ -1247,7 +1247,7 @@ test('Update: Delegate Authority Type Not Supported', async (t) => {
   );
 
   updateTx.then((x) =>
-    x.assertLogs(t, [/Authority type: Delegate/i, /Feature not supported currently/i], {
+    x.assertLogs(t, [/Auth type: Delegate/i, /Feature not supported currently/i], {
       txLabel: 'tx: Update',
     }),
   );
@@ -1322,7 +1322,7 @@ test('Update: Holder Authority Type Not Supported', async (t) => {
   );
 
   updateTx.then((x) =>
-    x.assertLogs(t, [/Authority type: Holder/i, /Feature not supported currently/i], {
+    x.assertLogs(t, [/Auth type: Holder/i, /Feature not supported currently/i], {
       txLabel: 'tx: Update',
     }),
   );

@@ -193,7 +193,7 @@ pub fn auth_rules_validate(params: AuthRulesValidateParams) -> ProgramResult {
     } = params;
 
     if is_wallet_to_wallet {
-        msg!("Wallet to wallet transfer. Skipping auth rules validation");
+        msg!("Wallet to wallet");
         return Ok(());
     }
 
@@ -211,7 +211,6 @@ pub fn auth_rules_validate(params: AuthRulesValidateParams) -> ProgramResult {
 
             assert_valid_authorization(auth_rules_info, config)?;
 
-            msg!("valid auth data. Adding rules...");
             // We can safely unwrap here because they were all checked for existence
             // in the assertion above.
             let auth_pda = auth_rules_info.unwrap();
