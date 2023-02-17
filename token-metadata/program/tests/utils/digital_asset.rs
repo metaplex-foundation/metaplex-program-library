@@ -589,7 +589,7 @@ impl DigitalAsset {
     }
 
     pub async fn transfer_from(
-        &self,
+        &mut self,
         params: TransferFromParams<'_>,
     ) -> Result<(), BanksClientError> {
         let TransferFromParams {
@@ -659,7 +659,13 @@ impl DigitalAsset {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await
+        context.banks_client.process_transaction(tx).await.unwrap();
+
+        // Update token values for new owner.
+        self.token = Some(destination_token);
+        self.token_record = Some(destination_token_record);
+
+        Ok(())
     }
 
     pub async fn lock(

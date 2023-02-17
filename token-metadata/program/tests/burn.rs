@@ -24,10 +24,63 @@ use spl_token::state::Account as TokenAccount;
 use utils::*;
 
 mod pnft {
+    use mpl_token_metadata::{instruction::TransferArgs, pda::find_token_record_account};
+    use solana_program::system_instruction;
+
     use super::*;
 
     #[tokio::test]
-    async fn owner_burn_programmable_nonfungible() {
+    async fn owner_burn() {
+        // The owner of the token can burn it.
+        let mut context = program_test().start_with_context().await;
+
+        let update_authority = context.payer.dirty_clone();
+        let owner = Keypair::new();
+        owner.airdrop(&mut context, 1_000_000).await.unwrap();
+
+        let mut da = DigitalAsset::new();
+        da.create_and_mint(
+            &mut context,
+            TokenStandard::ProgrammableNonFungible,
+            None,
+            None,
+            1,
+        )
+        .await
+        .unwrap();
+
+        // Transfer to a new owner so the update authority is separate.
+        let args = TransferArgs::V1 {
+            authorization_data: None,
+            amount: 1,
+        };
+
+        da.transfer_from(TransferFromParams {
+            context: &mut context,
+            authority: &update_authority,
+            source_owner: &update_authority.pubkey(),
+            destination_owner: owner.pubkey(),
+            destination_token: None, // fn will create the ATA
+            payer: &update_authority,
+            authorization_rules: None,
+            args,
+        })
+        .await
+        .unwrap();
+
+        let args = BurnArgs::V1 { amount: 1 };
+
+        da.burn(&mut context, owner, args, None, None)
+            .await
+            .unwrap();
+
+        // Assert that metadata, edition and token account are closed.
+        da.assert_burned(&mut context).await.unwrap();
+    }
+
+    #[tokio::test]
+    async fn owner_same_as_ua_can_burn() {
+        // When the owner is the same as the update authority, the owner can burn.
         let mut context = program_test().start_with_context().await;
 
         let owner = context.payer.dirty_clone();
@@ -54,7 +107,56 @@ mod pnft {
     }
 
     #[tokio::test]
-    async fn utility_delegate_burn_programmable_nonfungible() {
+    async fn update_authority_cannot_burn() {
+        let mut context = program_test().start_with_context().await;
+
+        let update_authority = context.payer.dirty_clone();
+        let owner = Keypair::new();
+        owner.airdrop(&mut context, 1_000_000_000).await.unwrap();
+
+        let mut da = DigitalAsset::new();
+        da.create_and_mint(
+            &mut context,
+            TokenStandard::ProgrammableNonFungible,
+            None,
+            None,
+            1,
+        )
+        .await
+        .unwrap();
+
+        // Transfer to a new owner so the update authority is separate.
+        let args = TransferArgs::V1 {
+            authorization_data: None,
+            amount: 1,
+        };
+
+        da.transfer_from(TransferFromParams {
+            context: &mut context,
+            authority: &update_authority,
+            source_owner: &update_authority.pubkey(),
+            destination_owner: owner.pubkey(),
+            destination_token: None, // fn will create the ATA
+            payer: &update_authority,
+            authorization_rules: None,
+            args,
+        })
+        .await
+        .unwrap();
+
+        // Try to burn with the update authority who is no longer the owner.
+        let args = BurnArgs::V1 { amount: 1 };
+
+        let err = da
+            .burn(&mut context, update_authority, args, None, None)
+            .await
+            .unwrap_err();
+
+        assert_custom_error!(err, MetadataError::InvalidAuthorityType);
+    }
+
+    #[tokio::test]
+    async fn utility_delegate_burn() {
         let mut context = program_test().start_with_context().await;
 
         let payer = context.payer.dirty_clone();
@@ -92,6 +194,674 @@ mod pnft {
 
         // Assert that metadata, edition and token account are closed.
         da.assert_burned(&mut context).await.unwrap();
+    }
+
+    #[tokio::test]
+    async fn staking_delegate_cannot_burn() {
+        let mut context = program_test().start_with_context().await;
+
+        let payer = context.payer.dirty_clone();
+        let delegate = Keypair::new();
+        delegate.airdrop(&mut context, 1_000_000_000).await.unwrap();
+
+        let mut da = DigitalAsset::new();
+        da.create_and_mint(
+            &mut context,
+            TokenStandard::ProgrammableNonFungible,
+            None,
+            None,
+            1,
+        )
+        .await
+        .unwrap();
+
+        da.delegate(
+            &mut context,
+            payer,
+            delegate.pubkey(),
+            DelegateArgs::StakingV1 {
+                amount: 1,
+                authorization_data: None,
+            },
+        )
+        .await
+        .unwrap();
+
+        let args = BurnArgs::V1 { amount: 1 };
+
+        let err = da
+            .burn(&mut context, delegate, args, None, None)
+            .await
+            .unwrap_err();
+
+        assert_custom_error!(err, MetadataError::InvalidAuthorityType);
+    }
+
+    #[tokio::test]
+    async fn sale_delegate_cannot_burn() {
+        let mut context = program_test().start_with_context().await;
+
+        let payer = context.payer.dirty_clone();
+        let delegate = Keypair::new();
+        delegate.airdrop(&mut context, 1_000_000_000).await.unwrap();
+
+        let mut da = DigitalAsset::new();
+        da.create_and_mint(
+            &mut context,
+            TokenStandard::ProgrammableNonFungible,
+            None,
+            None,
+            1,
+        )
+        .await
+        .unwrap();
+
+        da.delegate(
+            &mut context,
+            payer,
+            delegate.pubkey(),
+            DelegateArgs::SaleV1 {
+                amount: 1,
+                authorization_data: None,
+            },
+        )
+        .await
+        .unwrap();
+
+        let args = BurnArgs::V1 { amount: 1 };
+
+        let err = da
+            .burn(&mut context, delegate, args, None, None)
+            .await
+            .unwrap_err();
+
+        assert_custom_error!(err, MetadataError::InvalidAuthorityType);
+    }
+
+    #[tokio::test]
+    async fn locked_transfer_delegate_cannot_burn() {
+        let mut context = program_test().start_with_context().await;
+
+        let payer = context.payer.dirty_clone();
+        let delegate = Keypair::new();
+        delegate.airdrop(&mut context, 1_000_000_000).await.unwrap();
+
+        let mut da = DigitalAsset::new();
+        da.create_and_mint(
+            &mut context,
+            TokenStandard::ProgrammableNonFungible,
+            None,
+            None,
+            1,
+        )
+        .await
+        .unwrap();
+
+        da.delegate(
+            &mut context,
+            payer,
+            delegate.pubkey(),
+            DelegateArgs::LockedTransferV1 {
+                amount: 1,
+                locked_address: delegate.pubkey(),
+                authorization_data: None,
+            },
+        )
+        .await
+        .unwrap();
+
+        let args = BurnArgs::V1 { amount: 1 };
+
+        let err = da
+            .burn(&mut context, delegate, args, None, None)
+            .await
+            .unwrap_err();
+
+        assert_custom_error!(err, MetadataError::InvalidAuthorityType);
+    }
+
+    #[tokio::test]
+    async fn owner_burn_token_account_must_match_mint() {
+        // Try to burn NFT with a token account that does not match the mint.
+        let mut context = program_test().start_with_context().await;
+
+        let owner = context.payer.dirty_clone();
+
+        let mut da = DigitalAsset::new();
+        da.create_and_mint(
+            &mut context,
+            TokenStandard::ProgrammableNonFungible,
+            None,
+            None,
+            1,
+        )
+        .await
+        .unwrap();
+
+        let mut other_da = DigitalAsset::new();
+        other_da
+            .create_and_mint(
+                &mut context,
+                TokenStandard::ProgrammableNonFungible,
+                None,
+                None,
+                1,
+            )
+            .await
+            .unwrap();
+
+        let args = BurnArgs::V1 { amount: 1 };
+
+        let mut builder = BurnBuilder::new();
+        builder
+            .authority(owner.pubkey())
+            .metadata(da.metadata)
+            .edition(da.edition.unwrap())
+            .mint(da.mint.pubkey())
+            .token(other_da.token.unwrap());
+
+        let burn_ix = builder.build(args).unwrap().instruction();
+
+        let transaction = Transaction::new_signed_with_payer(
+            &[burn_ix],
+            Some(&context.payer.pubkey()),
+            &[&context.payer, &owner],
+            context.last_blockhash,
+        );
+
+        let err = context
+            .banks_client
+            .process_transaction(transaction)
+            .await
+            .unwrap_err();
+
+        assert_custom_error!(err, MetadataError::MintMismatch);
+    }
+
+    #[tokio::test]
+    async fn delegate_burn_token_account_must_match_mint() {
+        // Try to burn NFT with a token account that does not match the mint.
+        let mut context = program_test().start_with_context().await;
+
+        let owner = context.payer.dirty_clone();
+        let delegate = Keypair::new();
+        delegate.airdrop(&mut context, 1_000_000_000).await.unwrap();
+
+        let mut da = DigitalAsset::new();
+        da.create_and_mint(
+            &mut context,
+            TokenStandard::ProgrammableNonFungible,
+            None,
+            None,
+            1,
+        )
+        .await
+        .unwrap();
+
+        da.delegate(
+            &mut context,
+            owner.dirty_clone(),
+            delegate.pubkey(),
+            DelegateArgs::UtilityV1 {
+                amount: 1,
+                authorization_data: None,
+            },
+        )
+        .await
+        .unwrap();
+
+        // We try three cases here:
+        // 1. The new token account for the same mint but with the correct token record.
+        // This will fail with InvalidAuthorityType since the token record will not match
+        // the token account passed in.
+        //
+        // 2. The new token account for the same mint but with a fake token record.
+        // We cannot manually create a valid PDA token record account so we just derive it
+        // and pass it in. This makes it owned by the system program and will fail with
+        // IncorrectOwner.
+        //
+        // 3. We pass in a token record account that is owned by Token Metadata but is not
+        // a valid PDA. This fails with InvalidAuthorityType because it doesn't match the derivation.
+
+        // 1.
+        // Create a token account for a new wallet but the same mint.
+        let new_wallet = Keypair::new();
+        new_wallet
+            .airdrop(&mut context, 1_000_000_000)
+            .await
+            .unwrap();
+
+        let new_wallet_token = Keypair::new();
+
+        let create_token_ix = system_instruction::create_account(
+            &context.payer.pubkey(),
+            &new_wallet_token.pubkey(),
+            100_000_000,
+            165,
+            &spl_token::ID,
+        );
+        let init_token_ix = spl_token::instruction::initialize_account(
+            &spl_token::ID,
+            &new_wallet_token.pubkey(),
+            &da.mint.pubkey(),
+            &new_wallet.pubkey(),
+        )
+        .unwrap();
+
+        let args = BurnArgs::V1 { amount: 1 };
+
+        let mut builder = BurnBuilder::new();
+        builder
+            .authority(delegate.pubkey())
+            .metadata(da.metadata)
+            .edition(da.edition.unwrap())
+            .mint(da.mint.pubkey())
+            .token(new_wallet_token.pubkey())
+            .token_record(da.token_record.unwrap());
+
+        let burn_ix = builder.build(args).unwrap().instruction();
+
+        let transaction = Transaction::new_signed_with_payer(
+            &[create_token_ix, init_token_ix, burn_ix.clone()],
+            Some(&context.payer.pubkey()),
+            &[&context.payer, &delegate, &new_wallet_token],
+            context.last_blockhash,
+        );
+
+        let err = context
+            .banks_client
+            .process_transaction(transaction)
+            .await
+            .unwrap_err();
+
+        assert_custom_error_ix!(2, err, MetadataError::InvalidAuthorityType);
+
+        // 2.
+        let new_wallet = Keypair::new();
+        new_wallet
+            .airdrop(&mut context, 1_000_000_000)
+            .await
+            .unwrap();
+
+        let new_wallet_token = Keypair::new();
+
+        let create_token_ix = system_instruction::create_account(
+            &new_wallet.pubkey(),
+            &new_wallet_token.pubkey(),
+            100_000_000,
+            165,
+            &spl_token::ID,
+        );
+        let init_token_ix = spl_token::instruction::initialize_account(
+            &spl_token::ID,
+            &new_wallet_token.pubkey(),
+            &da.mint.pubkey(),
+            &new_wallet.pubkey(),
+        )
+        .unwrap();
+
+        // Valid token record: correctly derived but uninitialized and owned by the system program.
+        let (new_wallet_token_record, _) =
+            find_token_record_account(&da.mint.pubkey(), &new_wallet_token.pubkey());
+
+        let mut builder = BurnBuilder::new();
+        builder
+            .authority(delegate.pubkey())
+            .metadata(da.metadata)
+            .edition(da.edition.unwrap())
+            .mint(da.mint.pubkey())
+            .token(new_wallet_token.pubkey())
+            .token_record(new_wallet_token_record); // Match token and record so we bypass this check.
+
+        let transaction = Transaction::new_signed_with_payer(
+            &[create_token_ix, init_token_ix, burn_ix.clone()],
+            Some(&context.payer.pubkey()),
+            &[&context.payer, &delegate, &new_wallet, &new_wallet_token],
+            context.last_blockhash,
+        );
+
+        let err = context
+            .banks_client
+            .process_transaction(transaction)
+            .await
+            .unwrap_err();
+
+        assert_custom_error_ix!(2, err, MetadataError::IncorrectOwner);
+
+        // 3.
+        let new_wallet = Keypair::new();
+        new_wallet
+            .airdrop(&mut context, 1_000_000_000)
+            .await
+            .unwrap();
+
+        let new_wallet_token = Keypair::new();
+
+        let create_token_ix = system_instruction::create_account(
+            &context.payer.pubkey(),
+            &new_wallet_token.pubkey(),
+            100_000_000,
+            165,
+            &spl_token::ID,
+        );
+        let init_token_ix = spl_token::instruction::initialize_account(
+            &spl_token::ID,
+            &new_wallet_token.pubkey(),
+            &da.mint.pubkey(),
+            &new_wallet.pubkey(),
+        )
+        .unwrap();
+
+        // Fake token record: owned by the Token Metadata program but not correctly derived.
+        let fake_token_record = Keypair::new();
+        let create_fake_token_record_ix = system_instruction::create_account(
+            &context.payer.pubkey(),
+            &fake_token_record.pubkey(),
+            100_000_000,
+            80,
+            &mpl_token_metadata::ID,
+        );
+
+        let args = BurnArgs::V1 { amount: 1 };
+
+        let mut builder = BurnBuilder::new();
+        builder
+            .authority(delegate.pubkey())
+            .metadata(da.metadata)
+            .edition(da.edition.unwrap())
+            .mint(da.mint.pubkey())
+            .token(new_wallet_token.pubkey())
+            .token_record(fake_token_record.pubkey());
+
+        let burn_ix = builder.build(args).unwrap().instruction();
+
+        let transaction = Transaction::new_signed_with_payer(
+            &[
+                create_token_ix,
+                init_token_ix,
+                create_fake_token_record_ix,
+                burn_ix.clone(),
+            ],
+            Some(&context.payer.pubkey()),
+            &[
+                &context.payer,
+                &delegate,
+                &new_wallet_token,
+                &fake_token_record,
+            ],
+            context.last_blockhash,
+        );
+
+        let err = context
+            .banks_client
+            .process_transaction(transaction)
+            .await
+            .unwrap_err();
+
+        assert_custom_error_ix!(3, err, MetadataError::InvalidAuthorityType);
+    }
+
+    #[tokio::test]
+    async fn owner_burn_metadata_must_match_mint() {
+        // Try to burn NFT with a metadata account that does not match the mint.
+        let mut context = program_test().start_with_context().await;
+
+        let owner = context.payer.dirty_clone();
+
+        let mut da = DigitalAsset::new();
+        da.create_and_mint(
+            &mut context,
+            TokenStandard::ProgrammableNonFungible,
+            None,
+            None,
+            1,
+        )
+        .await
+        .unwrap();
+
+        let mut other_da = DigitalAsset::new();
+        other_da
+            .create_and_mint(
+                &mut context,
+                TokenStandard::ProgrammableNonFungible,
+                None,
+                None,
+                1,
+            )
+            .await
+            .unwrap();
+
+        let args = BurnArgs::V1 { amount: 1 };
+
+        let mut builder = BurnBuilder::new();
+        builder
+            .authority(owner.pubkey())
+            .metadata(other_da.metadata)
+            .edition(da.edition.unwrap())
+            .mint(da.mint.pubkey())
+            .token(da.token.unwrap());
+
+        let burn_ix = builder.build(args).unwrap().instruction();
+
+        let transaction = Transaction::new_signed_with_payer(
+            &[burn_ix],
+            Some(&context.payer.pubkey()),
+            &[&context.payer, &owner],
+            context.last_blockhash,
+        );
+
+        let err = context
+            .banks_client
+            .process_transaction(transaction)
+            .await
+            .unwrap_err();
+
+        assert_custom_error!(err, MetadataError::MintMismatch);
+    }
+
+    #[tokio::test]
+    async fn delegate_burn_metadata_must_match_mint() {
+        // Try to burn NFT with a metadata that does not match the mint.
+        let mut context = program_test().start_with_context().await;
+
+        let owner = context.payer.dirty_clone();
+        let delegate = Keypair::new();
+        delegate.airdrop(&mut context, 1_000_000_000).await.unwrap();
+
+        let mut da = DigitalAsset::new();
+        da.create_and_mint(
+            &mut context,
+            TokenStandard::ProgrammableNonFungible,
+            None,
+            None,
+            1,
+        )
+        .await
+        .unwrap();
+
+        let mut other_da = DigitalAsset::new();
+        other_da
+            .create_and_mint(
+                &mut context,
+                TokenStandard::ProgrammableNonFungible,
+                None,
+                None,
+                1,
+            )
+            .await
+            .unwrap();
+
+        da.delegate(
+            &mut context,
+            owner.dirty_clone(),
+            delegate.pubkey(),
+            DelegateArgs::UtilityV1 {
+                amount: 1,
+                authorization_data: None,
+            },
+        )
+        .await
+        .unwrap();
+
+        let args = BurnArgs::V1 { amount: 1 };
+
+        let mut builder = BurnBuilder::new();
+        builder
+            .authority(delegate.pubkey())
+            .metadata(other_da.metadata)
+            .edition(da.edition.unwrap())
+            .mint(da.mint.pubkey())
+            .token(da.token.unwrap())
+            .token_record(da.token_record.unwrap());
+
+        let burn_ix = builder.build(args).unwrap().instruction();
+
+        let transaction = Transaction::new_signed_with_payer(
+            &[burn_ix.clone()],
+            Some(&context.payer.pubkey()),
+            &[&context.payer, &delegate],
+            context.last_blockhash,
+        );
+
+        let err = context
+            .banks_client
+            .process_transaction(transaction)
+            .await
+            .unwrap_err();
+
+        assert_custom_error_ix!(0, err, MetadataError::MintMismatch);
+    }
+
+    #[tokio::test]
+    async fn owner_burn_edition_must_match_mint() {
+        // Try to burn NFT with an edition account that does not match the mint.
+        let mut context = program_test().start_with_context().await;
+
+        let owner = context.payer.dirty_clone();
+
+        let mut da = DigitalAsset::new();
+        da.create_and_mint(
+            &mut context,
+            TokenStandard::ProgrammableNonFungible,
+            None,
+            None,
+            1,
+        )
+        .await
+        .unwrap();
+
+        let mut other_da = DigitalAsset::new();
+        other_da
+            .create_and_mint(
+                &mut context,
+                TokenStandard::ProgrammableNonFungible,
+                None,
+                None,
+                1,
+            )
+            .await
+            .unwrap();
+
+        let args = BurnArgs::V1 { amount: 1 };
+
+        let mut builder = BurnBuilder::new();
+        builder
+            .authority(owner.pubkey())
+            .metadata(da.metadata)
+            .edition(other_da.edition.unwrap())
+            .mint(da.mint.pubkey())
+            .token(da.token.unwrap())
+            .token_record(da.token_record.unwrap());
+
+        let burn_ix = builder.build(args).unwrap().instruction();
+
+        let transaction = Transaction::new_signed_with_payer(
+            &[burn_ix],
+            Some(&context.payer.pubkey()),
+            &[&context.payer, &owner],
+            context.last_blockhash,
+        );
+
+        let err = context
+            .banks_client
+            .process_transaction(transaction)
+            .await
+            .unwrap_err();
+
+        assert_custom_error!(err, MetadataError::DerivedKeyInvalid);
+    }
+
+    #[tokio::test]
+    async fn delegate_burn_edition_must_match_mint() {
+        // Try to burn NFT with an edition account that does not match the mint.
+        let mut context = program_test().start_with_context().await;
+
+        let owner = context.payer.dirty_clone();
+        let delegate = Keypair::new();
+        delegate.airdrop(&mut context, 1_000_000_000).await.unwrap();
+
+        let mut da = DigitalAsset::new();
+        da.create_and_mint(
+            &mut context,
+            TokenStandard::ProgrammableNonFungible,
+            None,
+            None,
+            1,
+        )
+        .await
+        .unwrap();
+
+        da.delegate(
+            &mut context,
+            owner.dirty_clone(),
+            delegate.pubkey(),
+            DelegateArgs::UtilityV1 {
+                amount: 1,
+                authorization_data: None,
+            },
+        )
+        .await
+        .unwrap();
+
+        let mut other_da = DigitalAsset::new();
+        other_da
+            .create_and_mint(
+                &mut context,
+                TokenStandard::ProgrammableNonFungible,
+                None,
+                None,
+                1,
+            )
+            .await
+            .unwrap();
+
+        let args = BurnArgs::V1 { amount: 1 };
+
+        let mut builder = BurnBuilder::new();
+        builder
+            .authority(delegate.pubkey())
+            .metadata(da.metadata)
+            .edition(other_da.edition.unwrap())
+            .mint(da.mint.pubkey())
+            .token(da.token.unwrap())
+            .token_record(da.token_record.unwrap());
+
+        let burn_ix = builder.build(args).unwrap().instruction();
+
+        let transaction = Transaction::new_signed_with_payer(
+            &[burn_ix],
+            Some(&context.payer.pubkey()),
+            &[&context.payer, &delegate],
+            context.last_blockhash,
+        );
+
+        let err = context
+            .banks_client
+            .process_transaction(transaction)
+            .await
+            .unwrap_err();
+
+        assert_custom_error!(err, MetadataError::DerivedKeyInvalid);
     }
 }
 
