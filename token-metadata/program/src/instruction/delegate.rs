@@ -67,6 +67,7 @@ pub enum RevokeArgs {
     StakingV1,
     StandardV1,
     LockedTransferV1,
+    MigrationV1,
 }
 
 #[repr(C)]

@@ -50,6 +50,9 @@ pub fn revoke<'a>(
         RevokeArgs::LockedTransferV1 => {
             revoke_persistent_delegate(program_id, context, TokenDelegateRole::LockedTransfer)
         }
+        RevokeArgs::MigrationV1 => {
+            revoke_persistent_delegate(program_id, context, TokenDelegateRole::Migration)
+        }
     }
 }
 
