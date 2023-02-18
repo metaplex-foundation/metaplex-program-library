@@ -115,12 +115,10 @@ fn burn_v1(program_id: &Pubkey, ctx: Context<Burn>, args: BurnArgs) -> ProgramRe
         _ => return Err(MetadataError::InvalidAuthorityType.into()),
     }
 
-    let token_standard = match metadata
-        .token_standard
-        .or_else(|| check_token_standard(ctx.accounts.mint_info, ctx.accounts.edition_info).ok())
-    {
-        Some(token_standard) => token_standard,
-        None => return Err(MetadataError::InvalidTokenStandard.into()),
+    let token_standard = if let Some(token_standard) = metadata.token_standard {
+        token_standard
+    } else {
+        check_token_standard(ctx.accounts.mint_info, ctx.accounts.edition_info)?
     };
 
     // NonFungible types can only burn one item and must have the edition

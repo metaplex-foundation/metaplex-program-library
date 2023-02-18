@@ -55,7 +55,7 @@ mod pnft {
             amount: 1,
         };
 
-        da.transfer_from(TransferFromParams {
+        da.transfer(TransferParams {
             context: &mut context,
             authority: &update_authority,
             source_owner: &update_authority.pubkey(),
@@ -131,7 +131,7 @@ mod pnft {
             amount: 1,
         };
 
-        da.transfer_from(TransferFromParams {
+        da.transfer(TransferParams {
             context: &mut context,
             authority: &update_authority,
             source_owner: &update_authority.pubkey(),
@@ -2551,7 +2551,7 @@ mod fungible {
             amount: 10,
         };
 
-        da.transfer_from(TransferFromParams {
+        da.transfer(TransferParams {
             context: &mut context,
             authority: &update_authority,
             source_owner: &update_authority.pubkey(),

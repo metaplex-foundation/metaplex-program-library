@@ -36,6 +36,11 @@ pub const DEFAULT_NAME: &str = "Digital Asset";
 pub const DEFAULT_SYMBOL: &str = "DA";
 pub const DEFAULT_URI: &str = "https://digital.asset.org";
 
+// This represents a generic Metaplex Digital asset of various Token Standards.
+// It is used to abstract away the various accounts that are created for a given
+// Digital Asset. Since different asset types have different accounts, care
+// should be taken that appropriate handlers update appropriate accounts, such as when
+// transferring a DigitalAsset, the token account should be updated.
 pub struct DigitalAsset {
     pub metadata: Pubkey,
     pub mint: Keypair,
@@ -289,14 +294,10 @@ impl DigitalAsset {
             context.last_blockhash,
         );
 
-        match context.banks_client.process_transaction(tx).await {
-            Ok(_) => {
-                self.token = Some(token);
-                self.token_record = token_record_opt;
-                Ok(())
-            }
-            Err(error) => Err(error),
-        }
+        context.banks_client.process_transaction(tx).await.map(|_| {
+            self.token = Some(token);
+            self.token_record = token_record_opt;
+        })
     }
 
     pub async fn create_and_mint(
@@ -588,11 +589,11 @@ impl DigitalAsset {
         context.banks_client.process_transaction(tx).await
     }
 
-    pub async fn transfer_from(
-        &mut self,
-        params: TransferFromParams<'_>,
-    ) -> Result<(), BanksClientError> {
-        let TransferFromParams {
+    // This transfers a DigitalAsset from its existing Token Account to a new one
+    // and should update the token account after a successful transfer, as well as the
+    // token record if appropriate (for pNFTs).
+    pub async fn transfer(&mut self, params: TransferParams<'_>) -> Result<(), BanksClientError> {
+        let TransferParams {
             context,
             authority,
             source_owner,
@@ -637,7 +638,12 @@ impl DigitalAsset {
         // This can be optional for non pNFTs but always include it for now.
         let (destination_token_record, _bump) =
             find_token_record_account(&self.mint.pubkey(), &destination_token);
-        builder.destination_token_record(destination_token_record);
+        let destination_token_record_opt = if self.is_pnft(context).await {
+            builder.destination_token_record(destination_token_record);
+            Some(destination_token_record)
+        } else {
+            None
+        };
 
         if let Some(edition) = self.edition {
             builder.edition(edition);
@@ -659,13 +665,11 @@ impl DigitalAsset {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await.unwrap();
-
-        // Update token values for new owner.
-        self.token = Some(destination_token);
-        self.token_record = Some(destination_token_record);
-
-        Ok(())
+        context.banks_client.process_transaction(tx).await.map(|_| {
+            // Update token values for new owner.
+            self.token = Some(destination_token);
+            self.token_record = destination_token_record_opt;
+        })
     }
 
     pub async fn lock(
@@ -750,80 +754,6 @@ impl DigitalAsset {
             &[unlock_ix],
             Some(&payer.pubkey()),
             &[&delegate, &payer],
-            context.last_blockhash,
-        );
-
-        context.banks_client.process_transaction(tx).await
-    }
-
-    pub async fn transfer_to(&self, params: TransferToParams<'_>) -> Result<(), BanksClientError> {
-        let TransferToParams {
-            context,
-            authority,
-            source_owner,
-            source_token,
-            destination_owner,
-            destination_token,
-            authorization_rules,
-            payer,
-            args,
-        } = params;
-
-        // Increase compute budget to handle larger test transactions.
-        let compute_ix = ComputeBudgetInstruction::set_compute_unit_limit(400_000);
-        let mut instructions = vec![compute_ix];
-
-        let destination_token = if let Some(destination_token) = destination_token {
-            destination_token
-        } else {
-            instructions.push(create_associated_token_account(
-                &authority.pubkey(),
-                &destination_owner,
-                &self.mint.pubkey(),
-                &spl_token::id(),
-            ));
-
-            get_associated_token_address(&destination_owner, &self.mint.pubkey())
-        };
-
-        let mut builder = TransferBuilder::new();
-        builder
-            .authority(authority.pubkey())
-            .token_owner(*source_owner)
-            .token(*source_token)
-            .destination_owner(destination_owner)
-            .destination(destination_token)
-            .metadata(self.metadata)
-            .payer(payer.pubkey())
-            .mint(self.mint.pubkey());
-
-        // This can be optional for non pNFTs but always include it for now.
-        let (owner_token_record, _bump) =
-            find_token_record_account(&self.mint.pubkey(), source_token);
-        builder.owner_token_record(owner_token_record);
-
-        // This can be optional for non pNFTs but always include it for now.
-        let (destination_token_record, _bump) =
-            find_token_record_account(&self.mint.pubkey(), &destination_token);
-        builder.destination_token_record(destination_token_record);
-
-        if let Some(edition) = self.edition {
-            builder.edition(edition);
-        }
-
-        if let Some(authorization_rules) = authorization_rules {
-            builder.authorization_rules(authorization_rules);
-            builder.authorization_rules_program(mpl_token_auth_rules::ID);
-        }
-
-        let transfer_ix = builder.build(args).unwrap().instruction();
-
-        instructions.push(transfer_ix);
-
-        let tx = Transaction::new_signed_with_payer(
-            &instructions,
-            Some(&authority.pubkey()),
-            &[authority, payer],
             context.last_blockhash,
         );
 
@@ -922,22 +852,10 @@ impl DigitalAsset {
     }
 }
 
-pub struct TransferFromParams<'a> {
+pub struct TransferParams<'a> {
     pub context: &'a mut ProgramTestContext,
     pub authority: &'a Keypair,
     pub source_owner: &'a Pubkey,
-    pub destination_owner: Pubkey,
-    pub destination_token: Option<Pubkey>,
-    pub payer: &'a Keypair,
-    pub authorization_rules: Option<Pubkey>,
-    pub args: TransferArgs,
-}
-
-pub struct TransferToParams<'a> {
-    pub context: &'a mut ProgramTestContext,
-    pub authority: &'a Keypair,
-    pub source_owner: &'a Pubkey,
-    pub source_token: &'a Pubkey,
     pub destination_owner: Pubkey,
     pub destination_token: Option<Pubkey>,
     pub payer: &'a Keypair,
