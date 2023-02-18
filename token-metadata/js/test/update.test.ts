@@ -4,6 +4,7 @@ import {
   Data,
   DelegateArgs,
   Metadata,
+  MetadataDelegateRecord,
   PROGRAM_ID,
   TokenRecord,
   TokenStandard,
@@ -1173,7 +1174,7 @@ test('Update: Invalid Update Authority Fails', async (t) => {
     null,
     masterEdition,
   );
-  await updateTx.assertError(t, /Update Authority given does not match/);
+  await updateTx.assertError(t, /Invalid authority type/);
 });
 
 test('Update: Delegate Authority Type Not Supported', async (t) => {
@@ -1181,7 +1182,6 @@ test('Update: Delegate Authority Type Not Supported', async (t) => {
   const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
 
   const daManager = await createDefaultAsset(t, connection, API, handler, payer);
-  const { mint, metadata, masterEdition } = daManager;
 
   // creates a delegate
 
@@ -1226,7 +1226,7 @@ test('Update: Delegate Authority Type Not Supported', async (t) => {
     name: 'DigitalAsset2',
     symbol: 'DA2',
     uri: 'uri2',
-    sellerFeeBasisPoints: 0,
+    sellerFeeBasisPoints: 10,
     creators: assetData.creators,
   };
   const authorizationData = daManager.emptyAuthorizationData();
@@ -1238,16 +1238,15 @@ test('Update: Delegate Authority Type Not Supported', async (t) => {
   const { tx: updateTx } = await API.update(
     t,
     handler,
-    mint,
-    metadata,
+    daManager.mint,
+    daManager.metadata,
     authority,
     updateData,
     delegateRecord,
-    masterEdition,
+    daManager.masterEdition,
   );
-
   updateTx.then((x) =>
-    x.assertLogs(t, [/Auth type: Delegate/i, /Feature not supported currently/i], {
+    x.assertLogs(t, [/Invalid authority type/i], {
       txLabel: 'tx: Update',
     }),
   );
@@ -1421,4 +1420,219 @@ test('Update: Cannot Update pNFT Config with locked token', async (t) => {
     t,
     /Cannot update the rule set of a programmable asset that has a delegate/i,
   );
+});
+
+test('Update: rule set update with programmable config delegate', async (t) => {
+  const API = new InitTransactions();
+  const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
+
+  const collection = await createAndMintDefaultAsset(
+    t,
+    connection,
+    API,
+    handler,
+    payer,
+    TokenStandard.ProgrammableNonFungible,
+  );
+
+  const nft = await createAndMintDefaultAsset(
+    t,
+    connection,
+    API,
+    handler,
+    payer,
+    TokenStandard.ProgrammableNonFungible,
+    null,
+    1,
+    collection.mint,
+  );
+
+  let metadata = await Metadata.fromAccountAddress(connection, nft.metadata);
+
+  spok(t, metadata, {
+    tokenStandard: TokenStandard.ProgrammableNonFungible,
+    programmableConfig: { __kind: 'V1', ruleSet: null },
+  });
+
+  // creates a delegate
+
+  const [, delegate] = await API.getKeypair('Delegate');
+  // delegate PDA
+  const [delegateRecord] = PublicKey.findProgramAddressSync(
+    [
+      Buffer.from('metadata'),
+      PROGRAM_ID.toBuffer(),
+      collection.mint.toBuffer(),
+      Buffer.from('programmable_config_delegate'),
+      payer.publicKey.toBuffer(),
+      delegate.publicKey.toBuffer(),
+    ],
+    PROGRAM_ID,
+  );
+  amman.addr.addLabel('Metadata Delegate Record', delegateRecord);
+
+  const args: DelegateArgs = {
+    __kind: 'ProgrammableConfigV1',
+    authorizationData: null,
+  };
+
+  const { tx: delegateTx } = await API.delegate(
+    delegate.publicKey,
+    collection.mint,
+    collection.metadata,
+    payer.publicKey,
+    payer,
+    args,
+    handler,
+    delegateRecord,
+    collection.masterEdition,
+  );
+
+  await delegateTx.assertSuccess(t);
+
+  const pda = await MetadataDelegateRecord.fromAccountAddress(connection, delegateRecord);
+
+  spok(t, pda, {
+    delegate: spokSamePubkey(delegate.publicKey),
+    mint: spokSamePubkey(collection.mint),
+  });
+
+  // update the nft via the delegate
+
+  const dummyRuleSet = Keypair.generate().publicKey;
+
+  const updateData = new UpdateTestData();
+  updateData.ruleSet = {
+    __kind: 'Set',
+    fields: [dummyRuleSet],
+  };
+
+  const { tx: updateTx } = await API.update(
+    t,
+    handler,
+    nft.mint,
+    nft.metadata,
+    delegate,
+    updateData,
+    delegateRecord,
+    nft.masterEdition,
+    nft.token,
+  );
+  await updateTx.assertSuccess(t);
+
+  metadata = await Metadata.fromAccountAddress(connection, nft.metadata);
+
+  spok(t, metadata, {
+    tokenStandard: TokenStandard.ProgrammableNonFungible,
+    programmableConfig: { __kind: 'V1', ruleSet: spokSamePubkey(dummyRuleSet) },
+  });
+});
+
+test('Update: fail to update metadata with programmable config delegate', async (t) => {
+  const API = new InitTransactions();
+  const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
+
+  const collection = await createAndMintDefaultAsset(
+    t,
+    connection,
+    API,
+    handler,
+    payer,
+    TokenStandard.ProgrammableNonFungible,
+  );
+
+  const nft = await createAndMintDefaultAsset(
+    t,
+    connection,
+    API,
+    handler,
+    payer,
+    TokenStandard.ProgrammableNonFungible,
+    null,
+    1,
+    collection.mint,
+  );
+
+  const metadata = await Metadata.fromAccountAddress(connection, nft.metadata);
+
+  spok(t, metadata, {
+    tokenStandard: TokenStandard.ProgrammableNonFungible,
+    programmableConfig: { __kind: 'V1', ruleSet: null },
+  });
+
+  // creates a delegate
+
+  const [, delegate] = await API.getKeypair('Delegate');
+  // delegate PDA
+  const [delegateRecord] = PublicKey.findProgramAddressSync(
+    [
+      Buffer.from('metadata'),
+      PROGRAM_ID.toBuffer(),
+      collection.mint.toBuffer(),
+      Buffer.from('programmable_config_delegate'),
+      payer.publicKey.toBuffer(),
+      delegate.publicKey.toBuffer(),
+    ],
+    PROGRAM_ID,
+  );
+  amman.addr.addLabel('Metadata Delegate Record', delegateRecord);
+
+  const args: DelegateArgs = {
+    __kind: 'ProgrammableConfigV1',
+    authorizationData: null,
+  };
+
+  const { tx: delegateTx } = await API.delegate(
+    delegate.publicKey,
+    collection.mint,
+    collection.metadata,
+    payer.publicKey,
+    payer,
+    args,
+    handler,
+    delegateRecord,
+    collection.masterEdition,
+  );
+
+  await delegateTx.assertSuccess(t);
+
+  const pda = await MetadataDelegateRecord.fromAccountAddress(connection, delegateRecord);
+
+  spok(t, pda, {
+    delegate: spokSamePubkey(delegate.publicKey),
+    mint: spokSamePubkey(collection.mint),
+  });
+
+  // update the nft via the delegate
+
+  const dummyRuleSet = Keypair.generate().publicKey;
+
+  const updateData = new UpdateTestData();
+  // Original values:
+  // name = 'DigitalAsset'
+  // symbol = 'DA'
+  // uri = 'uri'
+  updateData.data = {
+    name: 'NewDigitalAsset',
+    symbol: 'NewDA',
+    ...metadata.data,
+  };
+
+  updateData.ruleSet = {
+    __kind: 'Set',
+    fields: [dummyRuleSet],
+  };
+
+  const { tx: updateTx } = await API.update(
+    t,
+    handler,
+    nft.mint,
+    nft.metadata,
+    delegate,
+    updateData,
+    delegateRecord,
+    nft.masterEdition,
+    nft.token,
+  );
+  await updateTx.assertError(t, /Authority cannot apply all update args/i);
 });
