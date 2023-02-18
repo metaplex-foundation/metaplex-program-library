@@ -11,18 +11,21 @@ use utils::*;
 
 mod revoke {
 
+    use borsh::BorshSerialize;
     use mpl_token_metadata::{
         error::MetadataError,
         instruction::{DelegateArgs, MetadataDelegateRole, RevokeArgs},
         pda::{find_metadata_delegate_record_account, find_token_record_account},
         state::{
             Key, Metadata, MetadataDelegateRecord, TokenDelegateRole, TokenRecord, TokenStandard,
+            TOKEN_RECORD_SIZE,
         },
     };
     use num_traits::FromPrimitive;
     use solana_program::{
         borsh::try_from_slice_unchecked, program_option::COption, program_pack::Pack,
     };
+    use solana_sdk::account::{Account as SdkAccount, AccountSharedData};
     use spl_token::state::Account;
 
     use super::*;
@@ -416,5 +419,103 @@ mod revoke {
         let token_record: TokenRecord = try_from_slice_unchecked(&pda.data).unwrap();
         // the revision must have been cleared
         assert_eq!(token_record.rule_set_revision, None);
+    }
+
+    #[tokio::test]
+    async fn revoke_migration_delegate_programmable_nonfungible() {
+        let mut context = program_test().start_with_context().await;
+
+        // asset
+
+        let mut asset = DigitalAsset::default();
+        asset
+            .create_and_mint(
+                &mut context,
+                TokenStandard::ProgrammableNonFungible,
+                None,
+                None,
+                1,
+            )
+            .await
+            .unwrap();
+
+        assert!(asset.token.is_some());
+
+        // delegates the asset for sale
+
+        let user = Keypair::new();
+        let user_pubkey = user.pubkey();
+        let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+
+        asset
+            .delegate(
+                &mut context,
+                payer,
+                user_pubkey,
+                DelegateArgs::TransferV1 {
+                    amount: 1,
+                    authorization_data: None,
+                },
+            )
+            .await
+            .unwrap();
+
+        let (pda_key, _) = find_token_record_account(&asset.mint.pubkey(), &asset.token.unwrap());
+
+        let pda = get_account(&mut context, &pda_key).await;
+        let mut token_record: TokenRecord = try_from_slice_unchecked(&pda.data).unwrap();
+
+        assert_eq!(token_record.delegate, Some(user_pubkey));
+        assert_eq!(
+            token_record.delegate_role,
+            Some(TokenDelegateRole::Transfer)
+        );
+
+        // inject the token delegate role to 'Migration' since we cannot create
+        // one through the API
+        token_record.delegate_role = Some(TokenDelegateRole::Migration);
+        let mut data = vec![0u8; TOKEN_RECORD_SIZE];
+        let mut buffer = &mut data[..TOKEN_RECORD_SIZE];
+        BorshSerialize::serialize(&token_record, &mut buffer).unwrap();
+
+        let record_account = SdkAccount {
+            lamports: pda.lamports,
+            data,
+            owner: mpl_token_metadata::ID,
+            executable: false,
+            rent_epoch: pda.rent_epoch,
+        };
+        let record_account_shared_data: AccountSharedData = record_account.into();
+        context.set_account(&pda_key, &record_account_shared_data);
+
+        // revokes the delegate
+        let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+        let approver = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+
+        asset
+            .revoke(
+                &mut context,
+                payer,
+                approver,
+                user_pubkey,
+                RevokeArgs::MigrationV1,
+            )
+            .await
+            .unwrap();
+
+        let pda = get_account(&mut context, &pda_key).await;
+        let token_record: TokenRecord = try_from_slice_unchecked(&pda.data).unwrap();
+
+        assert_eq!(token_record.delegate, None);
+
+        if let Some(token) = asset.token {
+            let account = get_account(&mut context, &token).await;
+            let token_account = Account::unpack(&account.data).unwrap();
+
+            assert!(token_account.is_frozen());
+            assert_eq!(token_account.delegate, COption::None);
+        } else {
+            panic!("Missing token account");
+        }
     }
 }

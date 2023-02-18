@@ -368,7 +368,8 @@ impl DigitalAsset {
             | RevokeArgs::TransferV1
             | RevokeArgs::UtilityV1
             | RevokeArgs::StakingV1
-            | RevokeArgs::LockedTransferV1 => {
+            | RevokeArgs::LockedTransferV1
+            | RevokeArgs::MigrationV1 => {
                 let (token_record, _) =
                     find_token_record_account(&self.mint.pubkey(), &self.token.unwrap());
                 builder.token_record(token_record);
