@@ -200,16 +200,6 @@ pub enum TokenDelegateRole {
     Migration = 255,
 }
 
-#[repr(C)]
-#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
-pub enum AuthorityType {
-    None,
-    Metadata,
-    Delegate,
-    Holder,
-}
-
 pub struct AuthorityRequest<'a, 'b> {
     /// Determines the precedence of authority types.
     pub precedence: &'a [AuthorityType],
@@ -218,7 +208,9 @@ pub struct AuthorityRequest<'a, 'b> {
     /// Metadata's update authority pubkey of the asset.
     pub update_authority: &'b Pubkey,
     /// Mint address.
-    pub mint: &'a Pubkey,
+    pub mint: &'b Pubkey,
+    /// Collection mint address.
+    pub collection_mint: Option<&'b Pubkey>,
     /// Holder's token account info.
     pub token: Option<&'a Pubkey>,
     /// Holder's token account.
@@ -226,7 +218,7 @@ pub struct AuthorityRequest<'a, 'b> {
     /// `MetadataDelegateRecord` account of the authority (when the authority is a delegate).
     pub metadata_delegate_record_info: Option<&'a AccountInfo<'a>>,
     /// Expected `MetadataDelegateRole` for the request.
-    pub metadata_delegate_role: Option<MetadataDelegateRole>,
+    pub metadata_delegate_roles: Vec<MetadataDelegateRole>,
     /// `TokenRecord` account.
     pub token_record_info: Option<&'a AccountInfo<'a>>,
     /// Expected `TokenDelegateRole` for the request.
@@ -237,21 +229,44 @@ impl<'a, 'b> Default for AuthorityRequest<'a, 'b> {
     fn default() -> Self {
         Self {
             precedence: &[
-                AuthorityType::Delegate,
+                AuthorityType::TokenDelegate,
                 AuthorityType::Holder,
+                AuthorityType::MetadataDelegate,
                 AuthorityType::Metadata,
             ],
             authority: &DEFAULT_PUBKEY,
             update_authority: &DEFAULT_PUBKEY,
             mint: &DEFAULT_PUBKEY,
+            collection_mint: None,
             token: None,
             token_account: None,
             metadata_delegate_record_info: None,
-            metadata_delegate_role: None,
+            metadata_delegate_roles: Vec::with_capacity(0),
             token_record_info: None,
             token_delegate_roles: Vec::with_capacity(0),
         }
     }
+}
+
+/// Struct to represent the authority type identified from
+/// an authority request.
+#[derive(Default)]
+pub struct AuthorityResponse {
+    pub authority_type: AuthorityType,
+    pub token_delegate_role: Option<TokenDelegateRole>,
+    pub metadata_delegate_role: Option<MetadataDelegateRole>,
+}
+
+#[repr(C)]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, Default)]
+pub enum AuthorityType {
+    #[default]
+    None,
+    Metadata,
+    Holder,
+    MetadataDelegate,
+    TokenDelegate,
 }
 
 impl AuthorityType {
@@ -261,12 +276,14 @@ impl AuthorityType {
     /// be "valid" for multiples types (e.g., the same authority can be the holder and the update
     /// authority). This ambiguity is resolved by using the `precedence`, which determines the
     /// priority of types.
-    pub fn get_authority_type(request: AuthorityRequest) -> Result<Self, ProgramError> {
+    pub fn get_authority_type(
+        request: AuthorityRequest,
+    ) -> Result<AuthorityResponse, ProgramError> {
         // the evaluation follows the `request.precedence` order; as soon as a match is
         // found, the type is returned
         for authority_type in request.precedence {
             match authority_type {
-                AuthorityType::Delegate => {
+                AuthorityType::TokenDelegate => {
                     // checks if the authority is a token delegate
 
                     if let Some(token_record_info) = request.token_record_info {
@@ -290,11 +307,16 @@ impl AuthorityType {
                                 && role_matches
                                 && (COption::from(token_record.delegate) == token_account.delegate)
                             {
-                                return Ok(AuthorityType::Delegate);
+                                return Ok(AuthorityResponse {
+                                    authority_type: AuthorityType::TokenDelegate,
+                                    token_delegate_role: token_record.delegate_role,
+                                    ..Default::default()
+                                });
                             }
                         }
                     }
-
+                }
+                AuthorityType::MetadataDelegate => {
                     // checks if the authority is a metadata delegate
 
                     if let Some(metadata_delegate_record_info) =
@@ -303,10 +325,11 @@ impl AuthorityType {
                         // must be owned by token medatata
                         assert_owned_by(metadata_delegate_record_info, &crate::ID)?;
 
-                        if let Some(delegate_role) = request.metadata_delegate_role {
+                        for role in &request.metadata_delegate_roles {
+                            // looking up the delegate on the metadata mint
                             let (pda_key, _) = find_metadata_delegate_record_account(
                                 request.mint,
-                                delegate_role,
+                                *role,
                                 request.update_authority,
                                 request.authority,
                             );
@@ -317,7 +340,37 @@ impl AuthorityType {
                                 )?;
 
                                 if delegate_record.delegate == *request.authority {
-                                    return Ok(AuthorityType::Delegate);
+                                    return Ok(AuthorityResponse {
+                                        authority_type: AuthorityType::MetadataDelegate,
+                                        metadata_delegate_role: Some(*role),
+                                        ..Default::default()
+                                    });
+                                }
+                            }
+
+                            // looking up the delegate on the collection mint (this is for
+                            // collection-level delegates)
+                            if let Some(mint) = request.collection_mint {
+                                let (pda_key, _) = find_metadata_delegate_record_account(
+                                    mint,
+                                    *role,
+                                    request.update_authority,
+                                    request.authority,
+                                );
+
+                                if cmp_pubkeys(&pda_key, metadata_delegate_record_info.key) {
+                                    let delegate_record =
+                                        MetadataDelegateRecord::from_account_info(
+                                            metadata_delegate_record_info,
+                                        )?;
+
+                                    if delegate_record.delegate == *request.authority {
+                                        return Ok(AuthorityResponse {
+                                            authority_type: AuthorityType::MetadataDelegate,
+                                            metadata_delegate_role: Some(*role),
+                                            ..Default::default()
+                                        });
+                                    }
                                 }
                             }
                         }
@@ -328,7 +381,10 @@ impl AuthorityType {
 
                     if let Some(token_account) = request.token_account {
                         if cmp_pubkeys(&token_account.owner, request.authority) {
-                            return Ok(AuthorityType::Holder);
+                            return Ok(AuthorityResponse {
+                                authority_type: AuthorityType::Holder,
+                                ..Default::default()
+                            });
                         }
                     }
                 }
@@ -336,7 +392,10 @@ impl AuthorityType {
                     // checks if the authority is the update authority
 
                     if cmp_pubkeys(request.update_authority, request.authority) {
-                        return Ok(AuthorityType::Metadata);
+                        return Ok(AuthorityResponse {
+                            authority_type: AuthorityType::Metadata,
+                            ..Default::default()
+                        });
                     }
                 }
                 _ => { /* the default return type is 'None' */ }
@@ -344,7 +403,7 @@ impl AuthorityType {
         }
 
         // if we reach this point, no 'valid' authority type has been found
-        Ok(AuthorityType::None)
+        Ok(AuthorityResponse::default())
     }
 }
 

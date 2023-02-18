@@ -13,10 +13,10 @@ use crate::{
     instruction::{Context, MetadataDelegateRole, Update, UpdateArgs},
     pda::{EDITION, PREFIX},
     state::{
-        AuthorityRequest, AuthorityType, Metadata, ProgrammableConfig, TokenMetadataAccount,
-        TokenStandard,
+        AuthorityRequest, AuthorityResponse, AuthorityType, Collection, Metadata,
+        ProgrammableConfig, TokenMetadataAccount, TokenStandard,
     },
-    utils::assert_derivation,
+    utils::{assert_derivation, check_token_standard},
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -114,9 +114,11 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
         return Err(MetadataError::MintMismatch.into());
     }
 
-    let token_standard = metadata
-        .token_standard
-        .ok_or(MetadataError::InvalidTokenStandard)?;
+    let token_standard = if let Some(token_standard) = metadata.token_standard {
+        token_standard
+    } else {
+        check_token_standard(ctx.accounts.mint_info, ctx.accounts.edition_info)?
+    };
 
     let (token_pubkey, token) = if let Some(token_info) = ctx.accounts.token_info {
         (
@@ -127,20 +129,33 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
         (None, None)
     };
 
+    // there is a special case for collection-level delegates, where the
+    // validation should use the collection key as the mint parameter
+    let collection_mint = if let Some(Collection { key, .. }) = &metadata.collection {
+        Some(key)
+    } else {
+        None
+    };
+
     // Determines if we have a valid authority to perform the update. This must
     // be either the update authority, a delegate or the holder. This call fails
     // if no valid authority is present.
-    let authority_type = AuthorityType::get_authority_type(AuthorityRequest {
+    let AuthorityResponse {
+        authority_type,
+        metadata_delegate_role,
+        ..
+    } = AuthorityType::get_authority_type(AuthorityRequest {
         authority: ctx.accounts.authority_info.key,
         update_authority: &metadata.update_authority,
         mint: ctx.accounts.mint_info.key,
+        collection_mint,
         token: token_pubkey,
         token_account: token.as_ref(),
         metadata_delegate_record_info: ctx.accounts.delegate_record_info,
-        metadata_delegate_role: Some(MetadataDelegateRole::Update),
+        metadata_delegate_roles: vec![MetadataDelegateRole::ProgrammableConfig],
         precedence: &[
             AuthorityType::Metadata,
-            AuthorityType::Delegate,
+            AuthorityType::MetadataDelegate,
             AuthorityType::Holder,
         ],
         ..Default::default()
@@ -159,29 +174,7 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
         }
     }
 
-    match authority_type {
-        AuthorityType::Metadata => {
-            // Metadata authority is the paramount authority so is not subject to
-            // auth rules. At this point we already checked that the authority is a
-            // signer and that it matches the metadata's update authority.
-            msg!("Auth type: Metadata");
-        }
-        AuthorityType::Delegate => {
-            // Support for delegate update (for pNFTs this involves validating the
-            // authoritzation rules)
-            msg!("Auth type: Delegate");
-            return Err(MetadataError::FeatureNotSupported.into());
-        }
-        AuthorityType::Holder => {
-            // Support for holder update (for pNFTs this involves validating the
-            // authoritzation rules)
-            msg!("Auth type: Holder");
-            return Err(MetadataError::FeatureNotSupported.into());
-        }
-        AuthorityType::None => {
-            return Err(MetadataError::UpdateAuthorityIncorrect.into());
-        }
-    }
+    validate_update(&args, &authority_type, metadata_delegate_role)?;
 
     // If we reach here without errors we have validated that the authority is allowed to
     // perform an update.
@@ -190,7 +183,74 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
         ctx.accounts.authority_info,
         ctx.accounts.metadata_info,
         token,
+        Some(token_standard),
+        authority_type,
+        metadata_delegate_role,
     )?;
+
+    Ok(())
+}
+
+/// Validates that the authority is only updating metadata fields
+/// that it has access to.
+fn validate_update(
+    args: &UpdateArgs,
+    authority_type: &AuthorityType,
+    metadata_delegate_role: Option<MetadataDelegateRole>,
+) -> ProgramResult {
+    // validate the authority type
+
+    match authority_type {
+        AuthorityType::Metadata => {
+            // metadata authority is the paramount (upadte) authority
+            msg!("Auth type: Metadata");
+        }
+        AuthorityType::MetadataDelegate => {
+            // support for delegate update
+            msg!("Auth type: Delegate");
+        }
+        AuthorityType::Holder => {
+            // support for holder update
+            msg!("Auth type: Holder");
+            return Err(MetadataError::FeatureNotSupported.into());
+        }
+        _ => {
+            return Err(MetadataError::InvalidAuthorityType.into());
+        }
+    }
+
+    let UpdateArgs::V1 {
+        data,
+        primary_sale_happened,
+        is_mutable,
+        collection,
+        uses,
+        new_update_authority,
+        collection_details,
+        ..
+    } = args;
+
+    // validate the delegate role: this consist in checking that
+    // the delegate is only updating fields that it has access to
+    match metadata_delegate_role {
+        Some(MetadataDelegateRole::ProgrammableConfig) => {
+            // can only update the programmable config
+            if data.is_some()
+                || primary_sale_happened.is_some()
+                || is_mutable.is_some()
+                || collection.is_some()
+                || uses.is_some()
+                || new_update_authority.is_some()
+                || collection_details.is_some()
+            {
+                return Err(MetadataError::InvalidUpdateArgs.into());
+            }
+        }
+        Some(_) => {
+            return Err(MetadataError::InvalidAuthorityType.into());
+        }
+        None => { /* no delegate role to check */ }
+    }
 
     Ok(())
 }
