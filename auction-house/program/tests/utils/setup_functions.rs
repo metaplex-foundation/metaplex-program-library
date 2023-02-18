@@ -21,7 +21,10 @@ use mpl_auction_house::{
 use mpl_testing_utils::{solana::airdrop, utils::Metadata};
 use std::result::Result as StdResult;
 
-use mpl_token_metadata::pda::find_metadata_account;
+use mpl_token_auth_rules::pda::find_rule_set_address;
+use mpl_token_metadata::pda::{
+    find_master_edition_account, find_metadata_account, find_token_record_account,
+};
 use solana_program_test::*;
 use solana_sdk::{instruction::Instruction, transaction::Transaction};
 use spl_associated_token_account::get_associated_token_address;
@@ -962,6 +965,121 @@ pub fn sell(
         rent: sysvar::rent::id(),
     };
     let account_metas = accounts.to_account_metas(None);
+
+    let data = mpl_auction_house::instruction::Sell {
+        trade_state_bump: sts_bump,
+        free_trade_state_bump: free_sts_bump,
+        program_as_signer_bump: pas_bump,
+        token_size,
+        buyer_price: sale_price,
+    }
+    .data();
+
+    let instruction = Instruction {
+        program_id,
+        data,
+        accounts: account_metas,
+    };
+
+    let listing_receipt_accounts = mpl_auction_house::accounts::PrintListingReceipt {
+        receipt: listing_receipt,
+        bookkeeper: test_metadata.token.pubkey(),
+        system_program: system_program::id(),
+        rent: sysvar::rent::id(),
+        instruction: sysvar::instructions::id(),
+    };
+
+    let print_receipt_instruction = Instruction {
+        program_id,
+        data: mpl_auction_house::instruction::PrintListingReceipt { receipt_bump }.data(),
+        accounts: listing_receipt_accounts.to_account_metas(None),
+    };
+
+    (
+        (accounts, listing_receipt_accounts),
+        Transaction::new_signed_with_payer(
+            &[instruction, print_receipt_instruction],
+            Some(&test_metadata.token.pubkey()),
+            &[&test_metadata.token],
+            context.last_blockhash,
+        ),
+    )
+}
+
+pub fn sell_pnft(
+    context: &mut ProgramTestContext,
+    ahkey: &Pubkey,
+    ah: &AuctionHouse,
+    test_metadata: &Metadata,
+    sale_price: u64,
+    token_size: u64,
+) -> (
+    (
+        mpl_auction_house::accounts::Sell,
+        mpl_auction_house::accounts::PrintListingReceipt,
+    ),
+    Transaction,
+) {
+    let program_id = mpl_auction_house::id();
+    let token =
+        get_associated_token_address(&test_metadata.token.pubkey(), &test_metadata.mint.pubkey());
+    let (seller_trade_state, sts_bump) = find_trade_state_address(
+        &test_metadata.token.pubkey(),
+        ahkey,
+        &token,
+        &ah.treasury_mint,
+        &test_metadata.mint.pubkey(),
+        sale_price,
+        token_size,
+    );
+    let (listing_receipt, receipt_bump) = find_listing_receipt_address(&seller_trade_state);
+
+    let (free_seller_trade_state, free_sts_bump) = find_trade_state_address(
+        &test_metadata.token.pubkey(),
+        ahkey,
+        &token,
+        &ah.treasury_mint,
+        &test_metadata.mint.pubkey(),
+        0,
+        token_size,
+    );
+    let (pas, pas_bump) = find_program_as_signer_address();
+    let pas_token = get_associated_token_address(&pas, &test_metadata.mint.pubkey());
+
+    let accounts = mpl_auction_house::accounts::Sell {
+        wallet: test_metadata.token.pubkey(),
+        token_account: token,
+        metadata: test_metadata.pubkey,
+        authority: ah.authority,
+        auction_house: *ahkey,
+        auction_house_fee_account: ah.auction_house_fee_account,
+        seller_trade_state,
+        free_seller_trade_state,
+        token_program: spl_token::id(),
+        system_program: solana_program::system_program::id(),
+        program_as_signer: pas,
+        rent: sysvar::rent::id(),
+    };
+
+    let (token_record, _) = find_token_record_account(&test_metadata.mint.pubkey(), &token);
+    let (delegate_record, _) = find_token_record_account(&test_metadata.mint.pubkey(), &pas_token);
+    let (edition, _) = find_master_edition_account(&test_metadata.mint.pubkey());
+    let (auth_rules, _) = find_rule_set_address(mpl_auction_house::id(), "".to_string());
+
+    let p_nft_accounts = mpl_auction_house::accounts::SellRemainingAccounts {
+        metadata_program: mpl_token_metadata::id(),
+        delegate_record,
+        token_record,
+        token_mint: test_metadata.mint.pubkey(),
+        edition,
+        auth_rules_program: mpl_token_auth_rules::id(),
+        auth_rules,
+        sysvar_instructions: sysvar::instructions::id(),
+    };
+
+    let mut account_metas = accounts.to_account_metas(None);
+
+    account_metas.append(&mut p_nft_accounts.to_account_metas(None));
 
     let data = mpl_auction_house::instruction::Sell {
         trade_state_bump: sts_bump,
