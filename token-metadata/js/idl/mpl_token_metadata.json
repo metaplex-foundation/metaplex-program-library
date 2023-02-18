@@ -4654,6 +4654,19 @@
                 }
               }
             ]
+          },
+          {
+            "name": "ProgrammableConfigV1",
+            "fields": [
+              {
+                "name": "authorization_data",
+                "type": {
+                  "option": {
+                    "defined": "AuthorizationData"
+                  }
+                }
+              }
+            ]
           }
         ]
       }
@@ -4686,6 +4699,9 @@
           },
           {
             "name": "LockedTransferV1"
+          },
+          {
+            "name": "ProgrammableConfigV1"
           }
         ]
       }
@@ -4706,6 +4722,9 @@
           },
           {
             "name": "Update"
+          },
+          {
+            "name": "ProgrammableConfig"
           }
         ]
       }
@@ -5253,10 +5272,13 @@
             "name": "Metadata"
           },
           {
-            "name": "Delegate"
+            "name": "Holder"
           },
           {
-            "name": "Holder"
+            "name": "MetadataDelegate"
+          },
+          {
+            "name": "TokenDelegate"
           }
         ]
       }
@@ -6223,6 +6245,21 @@
       "code": 173,
       "name": "CannotUpdateAssetWithDelegate",
       "msg": "Cannot update the rule set of a programmable asset that has a delegate"
+    },
+    {
+      "code": 174,
+      "name": "InvalidAssociatedTokenAccountProgram",
+      "msg": "Invalid Associated Token Account Program"
+    },
+    {
+      "code": 175,
+      "name": "InvalidInstructionsSysvar",
+      "msg": "Invalid InstructionsSysvar"
+    },
+    {
+      "code": 176,
+      "name": "InvalidUpdateArgs",
+      "msg": "Authority cannot apply all update args"
     }
   ],
   "metadata": {

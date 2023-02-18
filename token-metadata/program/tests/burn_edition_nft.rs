@@ -555,7 +555,7 @@ mod burn_edition_nft {
     }
 
     #[tokio::test]
-    pub async fn master_supplies_are_decremented() {
+    pub async fn master_supply_is_decremented() {
         let mut context = program_test().start_with_context().await;
 
         let original_nft = Metadata::new();
@@ -642,7 +642,7 @@ mod burn_edition_nft {
         let master_edition_struct: ProgramMasterEdition =
             ProgramMasterEdition::safe_deserialize(&master_edition_account.data).unwrap();
 
-        // Master edition owner burning should decrement only the supply.
+        // Master edition owner burning should decrement the supply.
         assert!(master_edition_struct.supply == 1);
         assert!(master_edition_struct.max_supply == Some(10));
 
@@ -672,9 +672,8 @@ mod burn_edition_nft {
         let master_edition_struct: ProgramMasterEdition =
             ProgramMasterEdition::safe_deserialize(&master_edition_account.data).unwrap();
 
-        // Second owner burning should decrement both supply and max_supply.
+        // Second owner burning should decrement the supply.
         assert!(master_edition_struct.supply == 0);
-        assert!(master_edition_struct.max_supply == Some(9));
     }
 
     #[tokio::test]

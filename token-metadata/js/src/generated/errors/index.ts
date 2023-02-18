@@ -3729,6 +3729,72 @@ createErrorFromNameLookup.set(
 );
 
 /**
+ * InvalidAssociatedTokenAccountProgram: 'Invalid Associated Token Account Program'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidAssociatedTokenAccountProgramError extends Error {
+  readonly code: number = 0xae;
+  readonly name: string = 'InvalidAssociatedTokenAccountProgram';
+  constructor() {
+    super('Invalid Associated Token Account Program');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidAssociatedTokenAccountProgramError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xae, () => new InvalidAssociatedTokenAccountProgramError());
+createErrorFromNameLookup.set(
+  'InvalidAssociatedTokenAccountProgram',
+  () => new InvalidAssociatedTokenAccountProgramError(),
+);
+
+/**
+ * InvalidInstructionsSysvar: 'Invalid InstructionsSysvar'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidInstructionsSysvarError extends Error {
+  readonly code: number = 0xaf;
+  readonly name: string = 'InvalidInstructionsSysvar';
+  constructor() {
+    super('Invalid InstructionsSysvar');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidInstructionsSysvarError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xaf, () => new InvalidInstructionsSysvarError());
+createErrorFromNameLookup.set(
+  'InvalidInstructionsSysvar',
+  () => new InvalidInstructionsSysvarError(),
+);
+
+/**
+ * InvalidUpdateArgs: 'Authority cannot apply all update args'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidUpdateArgsError extends Error {
+  readonly code: number = 0xb0;
+  readonly name: string = 'InvalidUpdateArgs';
+  constructor() {
+    super('Authority cannot apply all update args');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidUpdateArgsError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xb0, () => new InvalidUpdateArgsError());
+createErrorFromNameLookup.set('InvalidUpdateArgs', () => new InvalidUpdateArgsError());
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

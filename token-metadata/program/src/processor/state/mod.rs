@@ -19,8 +19,8 @@ use crate::{
     error::MetadataError,
     pda::find_token_record_account,
     state::{
-        AuthorityRequest, AuthorityType, Metadata, TokenDelegateRole, TokenMetadataAccount,
-        TokenRecord, TokenStandard, TokenState,
+        AuthorityRequest, AuthorityResponse, AuthorityType, Metadata, TokenDelegateRole,
+        TokenMetadataAccount, TokenRecord, TokenStandard, TokenState,
     },
     utils::{
         assert_delegated_tokens, assert_freeze_authority_matches_mint, assert_initialized,
@@ -88,24 +88,25 @@ pub(crate) fn toggle_asset_state(
         metadata.token_standard,
         Some(TokenStandard::ProgrammableNonFungible)
     ) {
-        let authority_type = AuthorityType::get_authority_type(AuthorityRequest {
-            precedence: &[AuthorityType::Delegate],
-            authority: accounts.authority_info.key,
-            update_authority: &metadata.update_authority,
-            mint: accounts.mint_info.key,
-            token: Some(accounts.token_info.key),
-            token_account: Some(&token),
-            token_record_info: accounts.token_record_info,
-            token_delegate_roles: vec![
-                TokenDelegateRole::Utility,
-                TokenDelegateRole::Staking,
-                TokenDelegateRole::LockedTransfer,
-                TokenDelegateRole::Migration,
-            ],
-            ..Default::default()
-        })?;
+        let AuthorityResponse { authority_type, .. } =
+            AuthorityType::get_authority_type(AuthorityRequest {
+                precedence: &[AuthorityType::TokenDelegate],
+                authority: accounts.authority_info.key,
+                update_authority: &metadata.update_authority,
+                mint: accounts.mint_info.key,
+                token: Some(accounts.token_info.key),
+                token_account: Some(&token),
+                token_record_info: accounts.token_record_info,
+                token_delegate_roles: vec![
+                    TokenDelegateRole::Utility,
+                    TokenDelegateRole::Staking,
+                    TokenDelegateRole::LockedTransfer,
+                    TokenDelegateRole::Migration,
+                ],
+                ..Default::default()
+            })?;
         // only a delegate can lock/unlock
-        if !matches!(authority_type, AuthorityType::Delegate) {
+        if !matches!(authority_type, AuthorityType::TokenDelegate) {
             return Err(MetadataError::InvalidAuthorityType.into());
         }
 

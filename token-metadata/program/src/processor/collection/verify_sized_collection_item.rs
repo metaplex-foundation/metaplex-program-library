@@ -2,7 +2,6 @@ use mpl_utils::assert_signer;
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
-    msg,
     pubkey::Pubkey,
 };
 
@@ -74,7 +73,6 @@ pub fn verify_sized_collection_item(
     // If the NFT has unverified collection data, we set it to be verified and then update the collection
     // size on the Collection Parent.
     if let Some(collection) = &mut metadata.collection {
-        msg!("Verifying sized collection item");
         increment_collection_size(&mut collection_metadata, collection_info)?;
 
         collection.verified = true;
