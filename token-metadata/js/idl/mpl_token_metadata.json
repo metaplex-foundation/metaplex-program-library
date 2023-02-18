@@ -2829,7 +2829,7 @@
           "name": "authority",
           "isMut": false,
           "isSigner": true,
-          "desc": "Delegate account"
+          "desc": "Delegate or freeze authority"
         },
         {
           "name": "tokenOwner",
@@ -2931,7 +2931,7 @@
           "name": "authority",
           "isMut": false,
           "isSigner": true,
-          "desc": "Delegate account"
+          "desc": "Delegate or freeze authority"
         },
         {
           "name": "tokenOwner",

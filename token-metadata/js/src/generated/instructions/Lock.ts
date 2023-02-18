@@ -36,7 +36,7 @@ export const LockStruct = new beet.FixableBeetArgsStruct<
 /**
  * Accounts required by the _Lock_ instruction
  *
- * @property [**signer**] authority Delegate account
+ * @property [**signer**] authority Delegate or freeze authority
  * @property [] tokenOwner (optional) Token owner account
  * @property [_writable_] token Token account
  * @property [] mint Mint account
