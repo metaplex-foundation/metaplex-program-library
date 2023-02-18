@@ -97,6 +97,22 @@ export class InitTransactions {
     };
   }
 
+  async authority() {
+    const [authority, authorityPair] = await this.getKeypair('Authority');
+
+    const connection = new Connection(LOCALHOST, 'confirmed');
+    await amman.airdrop(connection, authority, 2);
+
+    const transactionHandler = amman.payerTransactionHandler(connection, authorityPair);
+
+    return {
+      fstTxHandler: transactionHandler,
+      connection,
+      authority,
+      authorityPair,
+    };
+  }
+
   async create(
     t: Test,
     payer: Keypair,

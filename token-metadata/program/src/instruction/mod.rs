@@ -613,7 +613,7 @@ pub enum MetadataInstruction {
     /// 
     /// The configurable `authorization_rules` only apply to `ProgrammableNonFungible` assets and
     /// it may require additional accounts to validate the rules.
-    #[account(0, signer, name="authority", desc="Delegate account")]
+    #[account(0, signer, name="authority", desc="Delegate or freeze authority")]
     #[account(1, optional, name="token_owner", desc="Token owner account")]
     #[account(2, writable, name="token", desc="Token account")]
     #[account(3, name="mint", desc="Mint account")]
@@ -633,7 +633,7 @@ pub enum MetadataInstruction {
     /// 
     /// The configurable `authorization_rules` only apply to `ProgrammableNonFungible` assets and
     /// it may require additional accounts to validate the rules.
-    #[account(0, signer, name="authority", desc="Delegate account")]
+    #[account(0, signer, name="authority", desc="Delegate or freeze authority")]
     #[account(1, optional, name="token_owner", desc="Token owner account")]
     #[account(2, writable, name="token", desc="Token account")]
     #[account(3, name="mint", desc="Mint account")]

@@ -2829,7 +2829,7 @@
           "name": "authority",
           "isMut": false,
           "isSigner": true,
-          "desc": "Delegate account"
+          "desc": "Delegate or freeze authority"
         },
         {
           "name": "tokenOwner",
@@ -2931,7 +2931,7 @@
           "name": "authority",
           "isMut": false,
           "isSigner": true,
-          "desc": "Delegate account"
+          "desc": "Delegate or freeze authority"
         },
         {
           "name": "tokenOwner",
@@ -4654,6 +4654,19 @@
                 }
               }
             ]
+          },
+          {
+            "name": "ProgrammableConfigV1",
+            "fields": [
+              {
+                "name": "authorization_data",
+                "type": {
+                  "option": {
+                    "defined": "AuthorizationData"
+                  }
+                }
+              }
+            ]
           }
         ]
       }
@@ -4686,6 +4699,9 @@
           },
           {
             "name": "LockedTransferV1"
+          },
+          {
+            "name": "ProgrammableConfigV1"
           }
         ]
       }
@@ -4706,6 +4722,9 @@
           },
           {
             "name": "Update"
+          },
+          {
+            "name": "ProgrammableConfig"
           }
         ]
       }
@@ -5253,10 +5272,13 @@
             "name": "Metadata"
           },
           {
-            "name": "Delegate"
+            "name": "Holder"
           },
           {
-            "name": "Holder"
+            "name": "MetadataDelegate"
+          },
+          {
+            "name": "TokenDelegate"
           }
         ]
       }
@@ -6233,6 +6255,11 @@
       "code": 175,
       "name": "InvalidInstructionsSysvar",
       "msg": "Invalid InstructionsSysvar"
+    },
+    {
+      "code": 176,
+      "name": "InvalidUpdateArgs",
+      "msg": "Authority cannot apply all update args"
     }
   ],
   "metadata": {

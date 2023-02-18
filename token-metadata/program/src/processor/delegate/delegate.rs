@@ -39,6 +39,7 @@ impl Display for DelegateScenario {
                 MetadataDelegateRole::Collection => "Collection".to_string(),
                 MetadataDelegateRole::Use => "Use".to_string(),
                 MetadataDelegateRole::Update => "Update".to_string(),
+                MetadataDelegateRole::ProgrammableConfig => "ProgrammableConfig".to_string(),
             },
             Self::Token(role) => match role {
                 TokenDelegateRole::Sale => "Sale".to_string(),
@@ -119,6 +120,9 @@ pub fn delegate<'a>(
         }
         DelegateArgs::UpdateV1 { authorization_data } => {
             Some((MetadataDelegateRole::Update, authorization_data))
+        }
+        DelegateArgs::ProgrammableConfigV1 { authorization_data } => {
+            Some((MetadataDelegateRole::ProgrammableConfig, authorization_data))
         }
         // we don't need to fail if did not find a match at this point
         _ => None,

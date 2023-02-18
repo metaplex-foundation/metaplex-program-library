@@ -727,6 +727,10 @@ pub enum MetadataError {
     /// 183
     #[error("Invalid or Unneeded parent accounts")]
     InvalidParentAccounts,
+
+    /// 184
+    #[error("Authority cannot apply all update args")]
+    InvalidUpdateArgs,
 }
 
 impl PrintProgramError for MetadataError {

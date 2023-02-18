@@ -67,7 +67,7 @@ fn burn_v1(program_id: &Pubkey, ctx: Context<Burn>, args: BurnArgs) -> ProgramRe
     let token: TokenAccount = assert_initialized(ctx.accounts.token_info)?;
 
     msg!("Getting authority type");
-    let authority_type = AuthorityType::get_authority_type(AuthorityRequest {
+    let authority_response = AuthorityType::get_authority_type(AuthorityRequest {
         authority: ctx.accounts.authority_info.key,
         update_authority: &metadata.update_authority,
         mint: ctx.accounts.mint_info.key,
@@ -75,11 +75,11 @@ fn burn_v1(program_id: &Pubkey, ctx: Context<Burn>, args: BurnArgs) -> ProgramRe
         token_account: Some(&token),
         token_record_info: ctx.accounts.token_record_info,
         token_delegate_roles: vec![TokenDelegateRole::Utility],
-        precedence: &[AuthorityType::Holder, AuthorityType::Delegate],
+        precedence: &[AuthorityType::Holder, AuthorityType::TokenDelegate],
         ..Default::default()
     })?;
 
-    match authority_type {
+    match authority_response.authority_type {
         AuthorityType::Holder => {
             // Checks:
             // * Metadata is owned by the token-metadata program
@@ -99,7 +99,7 @@ fn burn_v1(program_id: &Pubkey, ctx: Context<Burn>, args: BurnArgs) -> ProgramRe
                 ctx.accounts.token_info,
             )?;
         }
-        AuthorityType::Delegate => {
+        AuthorityType::TokenDelegate => {
             if &token.mint != ctx.accounts.mint_info.key {
                 return Err(MetadataError::MintMismatch.into());
             }
