@@ -3775,6 +3775,26 @@ createErrorFromNameLookup.set(
 );
 
 /**
+ * InvalidUpdateArgs: 'Authority cannot apply all update args'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidUpdateArgsError extends Error {
+  readonly code: number = 0xb0;
+  readonly name: string = 'InvalidUpdateArgs';
+  constructor() {
+    super('Authority cannot apply all update args');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidUpdateArgsError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xb0, () => new InvalidUpdateArgsError());
+createErrorFromNameLookup.set('InvalidUpdateArgs', () => new InvalidUpdateArgsError());
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

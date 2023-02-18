@@ -271,6 +271,15 @@ impl DigitalAsset {
                 );
                 builder.delegate_record(delegate_record);
             }
+            DelegateArgs::ProgrammableConfigV1 { .. } => {
+                let (delegate_record, _) = find_metadata_delegate_record_account(
+                    &self.mint.pubkey(),
+                    MetadataDelegateRole::ProgrammableConfig,
+                    &payer.pubkey(),
+                    &delegate,
+                );
+                builder.delegate_record(delegate_record);
+            }
             DelegateArgs::StandardV1 { .. } => { /* nothing to add */ }
         }
 
@@ -378,6 +387,15 @@ impl DigitalAsset {
                 let (delegate_record, _) = find_metadata_delegate_record_account(
                     &self.mint.pubkey(),
                     MetadataDelegateRole::Update,
+                    &payer.pubkey(),
+                    &delegate,
+                );
+                builder.delegate_record(delegate_record);
+            }
+            RevokeArgs::ProgrammableConfigV1 => {
+                let (delegate_record, _) = find_metadata_delegate_record_account(
+                    &self.mint.pubkey(),
+                    MetadataDelegateRole::ProgrammableConfig,
                     &payer.pubkey(),
                     &delegate,
                 );

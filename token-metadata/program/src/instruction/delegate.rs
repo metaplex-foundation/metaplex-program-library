@@ -53,6 +53,10 @@ pub enum DelegateArgs {
         /// Required authorization data to validate the request.
         authorization_data: Option<AuthorizationData>,
     },
+    ProgrammableConfigV1 {
+        /// Required authorization data to validate the request.
+        authorization_data: Option<AuthorizationData>,
+    },
 }
 
 #[repr(C)]
@@ -67,6 +71,7 @@ pub enum RevokeArgs {
     StakingV1,
     StandardV1,
     LockedTransferV1,
+    ProgrammableConfigV1,
     MigrationV1,
 }
 
@@ -78,6 +83,7 @@ pub enum MetadataDelegateRole {
     Collection,
     Use,
     Update,
+    ProgrammableConfig,
 }
 
 impl fmt::Display for MetadataDelegateRole {
@@ -87,6 +93,7 @@ impl fmt::Display for MetadataDelegateRole {
             Self::Collection => "collection_delegate".to_string(),
             Self::Use => "use_delegate".to_string(),
             Self::Update => "update_delegate".to_string(),
+            Self::ProgrammableConfig => "programmable_config_delegate".to_string(),
         };
 
         write!(f, "{message}")
