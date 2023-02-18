@@ -36,29 +36,38 @@ export const BurnStruct = new beet.FixableBeetArgsStruct<
 /**
  * Accounts required by the _Burn_ instruction
  *
- * @property [_writable_] metadata Metadata (pda of ['metadata', program id, mint id])
- * @property [_writable_, **signer**] owner Asset owner
- * @property [_writable_] mint Mint of token asset
- * @property [_writable_] tokenAccount Token account to close
- * @property [_writable_] masterEditionAccount MasterEdition of the asset
- * @property [] splTokenProgram SPL Token Program
+ * @property [_writable_, **signer**] authority Asset owner or Utility delegate
  * @property [_writable_] collectionMetadata (optional) Metadata of the Collection
- * @property [] authorizationRules (optional) Token Authorization Rules account
- * @property [] authorizationRulesProgram (optional) Token Authorization Rules Program
+ * @property [_writable_] metadata Metadata (pda of ['metadata', program id, mint id])
+ * @property [_writable_] edition (optional) MasterEdition of the asset
+ * @property [_writable_] mint Mint of token asset
+ * @property [_writable_] token Token account to close
+ * @property [] parentEdition (optional) Print edition token account
+ * @property [] parentMint (optional) Print edition mint of the asset
+ * @property [] parentToken (optional) Print edition token account to close
+ * @property [_writable_] editionMarker (optional) Edition marker account
+ * @property [_writable_] tokenRecord (optional) Token record account
+ * @property [] sysvarInstructions Instructions sysvar account
+ * @property [] splTokenProgram SPL Token Program
  * @category Instructions
  * @category Burn
  * @category generated
  */
 export type BurnInstructionAccounts = {
-  metadata: web3.PublicKey;
-  owner: web3.PublicKey;
-  mint: web3.PublicKey;
-  tokenAccount: web3.PublicKey;
-  masterEditionAccount: web3.PublicKey;
-  splTokenProgram: web3.PublicKey;
+  authority: web3.PublicKey;
   collectionMetadata?: web3.PublicKey;
-  authorizationRules?: web3.PublicKey;
-  authorizationRulesProgram?: web3.PublicKey;
+  metadata: web3.PublicKey;
+  edition?: web3.PublicKey;
+  mint: web3.PublicKey;
+  token: web3.PublicKey;
+  parentEdition?: web3.PublicKey;
+  parentMint?: web3.PublicKey;
+  parentToken?: web3.PublicKey;
+  editionMarker?: web3.PublicKey;
+  tokenRecord?: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
+  sysvarInstructions: web3.PublicKey;
+  splTokenProgram: web3.PublicKey;
 };
 
 export const burnInstructionDiscriminator = 41;
@@ -87,34 +96,9 @@ export function createBurnInstruction(
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: accounts.metadata,
-      isWritable: true,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.owner,
+      pubkey: accounts.authority,
       isWritable: true,
       isSigner: true,
-    },
-    {
-      pubkey: accounts.mint,
-      isWritable: true,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.tokenAccount,
-      isWritable: true,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.masterEditionAccount,
-      isWritable: true,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.splTokenProgram,
-      isWritable: false,
-      isSigner: false,
     },
     {
       pubkey: accounts.collectionMetadata ?? programId,
@@ -122,12 +106,62 @@ export function createBurnInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.authorizationRules ?? programId,
+      pubkey: accounts.metadata,
+      isWritable: true,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.edition ?? programId,
+      isWritable: accounts.edition != null,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.mint,
+      isWritable: true,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.token,
+      isWritable: true,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.parentEdition ?? programId,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: accounts.authorizationRulesProgram ?? programId,
+      pubkey: accounts.parentMint ?? programId,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.parentToken ?? programId,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.editionMarker ?? programId,
+      isWritable: accounts.editionMarker != null,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.tokenRecord ?? programId,
+      isWritable: accounts.tokenRecord != null,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.sysvarInstructions,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.splTokenProgram,
       isWritable: false,
       isSigner: false,
     },
