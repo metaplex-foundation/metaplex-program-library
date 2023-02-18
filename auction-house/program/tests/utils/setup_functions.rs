@@ -22,9 +22,7 @@ use mpl_testing_utils::{solana::airdrop, utils::Metadata};
 use std::result::Result as StdResult;
 
 use mpl_token_auth_rules::pda::find_rule_set_address;
-use mpl_token_metadata::pda::{
-    find_master_edition_account, find_metadata_account, find_token_record_account,
-};
+use mpl_token_metadata::pda::{find_metadata_account, find_token_record_account};
 use solana_program_test::*;
 use solana_sdk::{instruction::Instruction, transaction::Transaction};
 use spl_associated_token_account::get_associated_token_address;
@@ -1021,12 +1019,11 @@ pub fn sell_pnft(
     Transaction,
 ) {
     let program_id = mpl_auction_house::id();
-    let token =
-        get_associated_token_address(&test_metadata.token.pubkey(), &test_metadata.mint.pubkey());
+    let ata = test_metadata.ata;
     let (seller_trade_state, sts_bump) = find_trade_state_address(
         &test_metadata.token.pubkey(),
         ahkey,
-        &token,
+        &ata,
         &ah.treasury_mint,
         &test_metadata.mint.pubkey(),
         sale_price,
@@ -1037,7 +1034,7 @@ pub fn sell_pnft(
     let (free_seller_trade_state, free_sts_bump) = find_trade_state_address(
         &test_metadata.token.pubkey(),
         ahkey,
-        &token,
+        &ata,
         &ah.treasury_mint,
         &test_metadata.mint.pubkey(),
         0,
@@ -1048,7 +1045,7 @@ pub fn sell_pnft(
 
     let accounts = mpl_auction_house::accounts::Sell {
         wallet: test_metadata.token.pubkey(),
-        token_account: token,
+        token_account: ata,
         metadata: test_metadata.pubkey,
         authority: ah.authority,
         auction_house: *ahkey,
@@ -1061,17 +1058,15 @@ pub fn sell_pnft(
         rent: sysvar::rent::id(),
     };
 
-    let (token_record, _) = find_token_record_account(&test_metadata.mint.pubkey(), &token);
     let (delegate_record, _) = find_token_record_account(&test_metadata.mint.pubkey(), &pas_token);
-    let (edition, _) = find_master_edition_account(&test_metadata.mint.pubkey());
     let (auth_rules, _) = find_rule_set_address(mpl_auction_house::id(), "".to_string());
 
     let p_nft_accounts = mpl_auction_house::accounts::SellRemainingAccounts {
         metadata_program: mpl_token_metadata::id(),
         delegate_record,
-        token_record,
+        token_record: test_metadata.token_record,
         token_mint: test_metadata.mint.pubkey(),
-        edition,
+        edition: test_metadata.master_edition,
         auth_rules_program: mpl_token_auth_rules::id(),
         auth_rules,
         sysvar_instructions: sysvar::instructions::id(),

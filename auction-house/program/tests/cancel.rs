@@ -6,6 +6,13 @@ use common::*;
 use solana_sdk::sysvar;
 use utils::{helpers::default_scopes, setup_functions::*};
 
+use mpl_auction_house::{pda::find_program_as_signer_address, receipt::ListingReceipt};
+use mpl_token_auth_rules::pda::find_rule_set_address;
+use mpl_token_metadata::{
+    pda::find_token_record_account,
+    state::{PrintSupply, TokenStandard},
+};
+
 #[tokio::test]
 async fn cancel_listing() {
     let mut context = auction_house_program_test().start_with_context().await;
@@ -107,6 +114,130 @@ async fn cancel_listing() {
 
     assert_eq!(listing_receipt.canceled_at, Some(timestamp));
     assert_eq!(listing_receipt.purchase_receipt, None);
+}
+
+#[tokio::test]
+async fn cancel_pnft_success() {
+    let mut context = auction_house_program_test().start_with_context().await;
+    // Payer Wallet
+    let (ah, ahkey, _) = existing_auction_house_test_context(&mut context)
+        .await
+        .unwrap();
+    let test_metadata = Metadata::new();
+    let owner_pubkey = &test_metadata.token.pubkey();
+    airdrop(&mut context, owner_pubkey, TEN_SOL).await.unwrap();
+    test_metadata
+        .create_via_builder(
+            &mut context,
+            "Test".to_string(),
+            "TST".to_string(),
+            "uri".to_string(),
+            None,
+            10,
+            false,
+            None,
+            None,
+            true,
+            TokenStandard::ProgrammableNonFungible,
+            None,
+            None,
+            Some(0),
+            Some(PrintSupply::Zero),
+        )
+        .await
+        .unwrap();
+
+    test_metadata
+        .mint_via_builder(&mut context, 1)
+        .await
+        .unwrap();
+
+    let ((acc, _), sell_pnft_tx) = sell_pnft(&mut context, &ahkey, &ah, &test_metadata, 10, 1);
+
+    context
+        .banks_client
+        .process_transaction(sell_pnft_tx)
+        .await
+        .unwrap();
+
+    let (pas, _) = find_program_as_signer_address();
+    let pas_token = get_associated_token_address(&pas, &test_metadata.mint.pubkey());
+
+    let mut accounts = mpl_auction_house::accounts::Cancel {
+        auction_house: ahkey,
+        wallet: test_metadata.token.pubkey(),
+        token_account: test_metadata.ata,
+        authority: ah.authority,
+        trade_state: acc.seller_trade_state,
+        token_program: spl_token::id(),
+        token_mint: test_metadata.mint.pubkey(),
+        auction_house_fee_account: ah.auction_house_fee_account,
+    }
+    .to_account_metas(None);
+
+    let (delegate_record, _) = find_token_record_account(&test_metadata.mint.pubkey(), &pas_token);
+    let (auth_rules, _) = find_rule_set_address(mpl_auction_house::id(), "".to_string());
+
+    let remaining_accounts = mpl_auction_house::accounts::CancelRemainingAccounts {
+        metadata_program: mpl_token_metadata::id(),
+        program_as_signer: pas,
+        delegate_record,
+        metadata: test_metadata.pubkey,
+        edition: test_metadata.master_edition,
+        token_record: test_metadata.token_record,
+        token_mint: test_metadata.mint.pubkey(),
+        auth_rules_program: mpl_token_auth_rules::id(),
+        auth_rules,
+        sysvar_instructions: sysvar::instructions::id(),
+        system_program: solana_program::system_program::id(),
+    };
+
+    accounts.append(&mut remaining_accounts.to_account_metas(None));
+
+    let instruction = Instruction {
+        program_id: mpl_auction_house::id(),
+        data: mpl_auction_house::instruction::Cancel {
+            buyer_price: 10,
+            token_size: 1,
+        }
+        .data(),
+        accounts,
+    };
+
+    let (listing_receipt, _) = find_listing_receipt_address(&acc.seller_trade_state);
+
+    let accounts = mpl_auction_house::accounts::CancelListingReceipt {
+        receipt: listing_receipt,
+        system_program: solana_program::system_program::id(),
+        instruction: sysvar::instructions::id(),
+    }
+    .to_account_metas(None);
+    let cancel_listing_receipt_instruction = Instruction {
+        program_id: mpl_auction_house::id(),
+        data: mpl_auction_house::instruction::CancelListingReceipt {}.data(),
+        accounts,
+    };
+
+    let tx = Transaction::new_signed_with_payer(
+        &[instruction, cancel_listing_receipt_instruction],
+        Some(&test_metadata.token.pubkey()),
+        &[&test_metadata.token],
+        context.last_blockhash,
+    );
+
+    context.banks_client.process_transaction(tx).await.unwrap();
+
+    let token = context
+        .banks_client
+        .get_account(test_metadata.ata)
+        .await
+        .expect("getting ata")
+        .expect("empty ata");
+
+    let token: anchor_spl::token::TokenAccount =
+        anchor_spl::token::TokenAccount::try_deserialize(&mut &token.data[..]).unwrap();
+
+    assert!(token.delegate.is_none());
 }
 
 #[tokio::test]

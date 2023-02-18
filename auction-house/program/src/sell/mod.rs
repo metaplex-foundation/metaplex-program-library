@@ -489,17 +489,20 @@ fn sell_logic<'c, 'info>(
                     .instruction();
 
                 let delegate_accounts = [
+                    wallet.to_account_info(),
                     metadata_program.to_account_info(),
+                    delegate_record.to_account_info(),
+                    token_record.to_account_info(),
                     token_account.to_account_info(),
                     token_mint.to_account_info(),
                     metadata.to_account_info(),
                     edition.to_account_info(),
                     program_as_signer.to_account_info(),
                     system_program.to_account_info(),
-                    sysvar_instructions.to_account_info(),
                     token_program.to_account_info(),
                     auth_rules_program.to_account_info(),
                     auth_rules.to_account_info(),
+                    sysvar_instructions.to_account_info(),
                 ];
 
                 invoke(&delegate, &delegate_accounts)?;

@@ -68,6 +68,8 @@ pub struct CancelRemainingAccounts<'info> {
     #[account(mut)]
     pub delegate_record: UncheckedAccount<'info>,
     ///CHECK: checked in cpi
+    pub program_as_signer: UncheckedAccount<'info>,
+    ///CHECK: checked in cpi
     #[account(mut)]
     pub metadata: UncheckedAccount<'info>,
     ///CHECK: checked in cpi
@@ -282,6 +284,7 @@ fn cancel_logic<'c, 'info>(
                 );
 
                 let delegate_record = next_account_info(remaining_accounts)?;
+                let program_as_signer = next_account_info(remaining_accounts)?;
                 let metadata = next_account_info(remaining_accounts)?;
                 let edition = next_account_info(remaining_accounts)?;
                 let token_record = next_account_info(remaining_accounts)?;
@@ -293,7 +296,7 @@ fn cancel_logic<'c, 'info>(
 
                 let revoke = RevokeBuilder::new()
                     .delegate_record(delegate_record.key())
-                    .delegate(authority.key())
+                    .delegate(program_as_signer.key())
                     .metadata(metadata.key())
                     .master_edition(edition.key())
                     .token_record(token_record.key())
@@ -311,10 +314,13 @@ fn cancel_logic<'c, 'info>(
                     .instruction();
 
                 let revoke_accounts = [
+                    wallet.to_account_info(),
+                    program_as_signer.to_account_info(),
                     metadata_program.to_account_info(),
                     delegate_record.to_account_info(),
                     authority.to_account_info(),
                     metadata.to_account_info(),
+                    token_record.to_account_info(),
                     edition.to_account_info(),
                     token_account.to_account_info(),
                     wallet.to_account_info(),
