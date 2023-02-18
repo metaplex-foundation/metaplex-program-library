@@ -39,15 +39,15 @@ export const setTokenStandardStruct = new beet.BeetArgsStruct<
  * @property [**signer**] authority
  * @property [_writable_] authorityPda
  * @property [**signer**] payer
- * @property [_writable_] delegateRecord
+ * @property [_writable_] delegateRecord (optional)
  * @property [] collectionMint
  * @property [_writable_] collectionMetadata
- * @property [_writable_] collectionAuthorityRecord
+ * @property [_writable_] collectionAuthorityRecord (optional)
  * @property [_writable_, **signer**] collectionUpdateAuthority
  * @property [] tokenMetadataProgram
  * @property [] sysvarInstructions
- * @property [] authorizationRulesProgram
- * @property [] authorizationRules
+ * @property [] authorizationRulesProgram (optional)
+ * @property [] authorizationRules (optional)
  * @category Instructions
  * @category SetTokenStandard
  * @category generated
@@ -57,16 +57,16 @@ export type SetTokenStandardInstructionAccounts = {
   authority: web3.PublicKey;
   authorityPda: web3.PublicKey;
   payer: web3.PublicKey;
-  delegateRecord: web3.PublicKey;
+  delegateRecord?: web3.PublicKey;
   collectionMint: web3.PublicKey;
   collectionMetadata: web3.PublicKey;
-  collectionAuthorityRecord: web3.PublicKey;
+  collectionAuthorityRecord?: web3.PublicKey;
   collectionUpdateAuthority: web3.PublicKey;
   tokenMetadataProgram: web3.PublicKey;
   systemProgram?: web3.PublicKey;
   sysvarInstructions: web3.PublicKey;
-  authorizationRulesProgram: web3.PublicKey;
-  authorizationRules: web3.PublicKey;
+  authorizationRulesProgram?: web3.PublicKey;
+  authorizationRules?: web3.PublicKey;
   anchorRemainingAccounts?: web3.AccountMeta[];
 };
 
@@ -74,6 +74,9 @@ export const setTokenStandardInstructionDiscriminator = [147, 212, 106, 195, 30,
 
 /**
  * Creates a _SetTokenStandard_ instruction.
+ *
+ * Optional accounts that are not provided default to the program ID since
+ * this was indicated in the IDL from which this instruction was generated.
  *
  * @param accounts that will be accessed while the instruction is processed
  * @param args to provide as instruction data to the program
@@ -113,8 +116,8 @@ export function createSetTokenStandardInstruction(
       isSigner: true,
     },
     {
-      pubkey: accounts.delegateRecord,
-      isWritable: true,
+      pubkey: accounts.delegateRecord ?? programId,
+      isWritable: accounts.delegateRecord != null,
       isSigner: false,
     },
     {
@@ -128,8 +131,8 @@ export function createSetTokenStandardInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.collectionAuthorityRecord,
-      isWritable: true,
+      pubkey: accounts.collectionAuthorityRecord ?? programId,
+      isWritable: accounts.collectionAuthorityRecord != null,
       isSigner: false,
     },
     {
@@ -153,12 +156,12 @@ export function createSetTokenStandardInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.authorizationRulesProgram,
+      pubkey: accounts.authorizationRulesProgram ?? programId,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: accounts.authorizationRules,
+      pubkey: accounts.authorizationRules ?? programId,
       isWritable: false,
       isSigner: false,
     },

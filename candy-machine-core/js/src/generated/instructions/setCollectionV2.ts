@@ -29,18 +29,18 @@ export const setCollectionV2Struct = new beet.BeetArgsStruct<{
  * @property [] collectionUpdateAuthority
  * @property [] collectionMint
  * @property [] collectionMetadata
- * @property [_writable_] collectionAuthorityRecord
- * @property [_writable_] delegateRecord
+ * @property [_writable_] collectionAuthorityRecord (optional)
+ * @property [_writable_] delegateRecord (optional)
  * @property [_writable_, **signer**] newCollectionUpdateAuthority
  * @property [] newCollectionMetadata
  * @property [] newCollectionMint
  * @property [] newCollectionMasterEdition
- * @property [_writable_] newCollectionAuthorityRecord
- * @property [_writable_] newDelegateRecord
+ * @property [_writable_] newCollectionAuthorityRecord (optional)
+ * @property [_writable_] newDelegateRecord (optional)
  * @property [] tokenMetadataProgram
  * @property [] sysvarInstructions
- * @property [] authorizationRulesProgram
- * @property [] authorizationRules
+ * @property [] authorizationRulesProgram (optional)
+ * @property [] authorizationRules (optional)
  * @category Instructions
  * @category SetCollectionV2
  * @category generated
@@ -53,19 +53,19 @@ export type SetCollectionV2InstructionAccounts = {
   collectionUpdateAuthority: web3.PublicKey;
   collectionMint: web3.PublicKey;
   collectionMetadata: web3.PublicKey;
-  collectionAuthorityRecord: web3.PublicKey;
-  delegateRecord: web3.PublicKey;
+  collectionAuthorityRecord?: web3.PublicKey;
+  delegateRecord?: web3.PublicKey;
   newCollectionUpdateAuthority: web3.PublicKey;
   newCollectionMetadata: web3.PublicKey;
   newCollectionMint: web3.PublicKey;
   newCollectionMasterEdition: web3.PublicKey;
-  newCollectionAuthorityRecord: web3.PublicKey;
-  newDelegateRecord: web3.PublicKey;
+  newCollectionAuthorityRecord?: web3.PublicKey;
+  newDelegateRecord?: web3.PublicKey;
   tokenMetadataProgram: web3.PublicKey;
   systemProgram?: web3.PublicKey;
   sysvarInstructions: web3.PublicKey;
-  authorizationRulesProgram: web3.PublicKey;
-  authorizationRules: web3.PublicKey;
+  authorizationRulesProgram?: web3.PublicKey;
+  authorizationRules?: web3.PublicKey;
   anchorRemainingAccounts?: web3.AccountMeta[];
 };
 
@@ -73,6 +73,9 @@ export const setCollectionV2InstructionDiscriminator = [229, 35, 61, 91, 15, 14,
 
 /**
  * Creates a _SetCollectionV2_ instruction.
+ *
+ * Optional accounts that are not provided default to the program ID since
+ * this was indicated in the IDL from which this instruction was generated.
  *
  * @param accounts that will be accessed while the instruction is processed
  * @category Instructions
@@ -123,13 +126,13 @@ export function createSetCollectionV2Instruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.collectionAuthorityRecord,
-      isWritable: true,
+      pubkey: accounts.collectionAuthorityRecord ?? programId,
+      isWritable: accounts.collectionAuthorityRecord != null,
       isSigner: false,
     },
     {
-      pubkey: accounts.delegateRecord,
-      isWritable: true,
+      pubkey: accounts.delegateRecord ?? programId,
+      isWritable: accounts.delegateRecord != null,
       isSigner: false,
     },
     {
@@ -153,13 +156,13 @@ export function createSetCollectionV2Instruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.newCollectionAuthorityRecord,
-      isWritable: true,
+      pubkey: accounts.newCollectionAuthorityRecord ?? programId,
+      isWritable: accounts.newCollectionAuthorityRecord != null,
       isSigner: false,
     },
     {
-      pubkey: accounts.newDelegateRecord,
-      isWritable: true,
+      pubkey: accounts.newDelegateRecord ?? programId,
+      isWritable: accounts.newDelegateRecord != null,
       isSigner: false,
     },
     {
@@ -178,12 +181,12 @@ export function createSetCollectionV2Instruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.authorizationRulesProgram,
+      pubkey: accounts.authorizationRulesProgram ?? programId,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: accounts.authorizationRules,
+      pubkey: accounts.authorizationRules ?? programId,
       isWritable: false,
       isSigner: false,
     },

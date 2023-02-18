@@ -46,12 +46,12 @@ export const initializeV2Struct = new beet.FixableBeetArgsStruct<
  * @property [] collectionMint
  * @property [] collectionMasterEdition
  * @property [_writable_, **signer**] collectionUpdateAuthority
- * @property [_writable_] collectionAuthorityRecord
- * @property [_writable_] delegateRecord
+ * @property [_writable_] collectionAuthorityRecord (optional)
+ * @property [_writable_] delegateRecord (optional)
  * @property [] tokenMetadataProgram
  * @property [] sysvarInstructions
- * @property [] authorizationRulesProgram
- * @property [] authorizationRules
+ * @property [] authorizationRulesProgram (optional)
+ * @property [] authorizationRules (optional)
  * @category Instructions
  * @category InitializeV2
  * @category generated
@@ -65,13 +65,13 @@ export type InitializeV2InstructionAccounts = {
   collectionMint: web3.PublicKey;
   collectionMasterEdition: web3.PublicKey;
   collectionUpdateAuthority: web3.PublicKey;
-  collectionAuthorityRecord: web3.PublicKey;
-  delegateRecord: web3.PublicKey;
+  collectionAuthorityRecord?: web3.PublicKey;
+  delegateRecord?: web3.PublicKey;
   tokenMetadataProgram: web3.PublicKey;
   systemProgram?: web3.PublicKey;
   sysvarInstructions: web3.PublicKey;
-  authorizationRulesProgram: web3.PublicKey;
-  authorizationRules: web3.PublicKey;
+  authorizationRulesProgram?: web3.PublicKey;
+  authorizationRules?: web3.PublicKey;
   anchorRemainingAccounts?: web3.AccountMeta[];
 };
 
@@ -79,6 +79,9 @@ export const initializeV2InstructionDiscriminator = [67, 153, 175, 39, 218, 16, 
 
 /**
  * Creates a _InitializeV2_ instruction.
+ *
+ * Optional accounts that are not provided default to the program ID since
+ * this was indicated in the IDL from which this instruction was generated.
  *
  * @param accounts that will be accessed while the instruction is processed
  * @param args to provide as instruction data to the program
@@ -138,13 +141,13 @@ export function createInitializeV2Instruction(
       isSigner: true,
     },
     {
-      pubkey: accounts.collectionAuthorityRecord,
-      isWritable: true,
+      pubkey: accounts.collectionAuthorityRecord ?? programId,
+      isWritable: accounts.collectionAuthorityRecord != null,
       isSigner: false,
     },
     {
-      pubkey: accounts.delegateRecord,
-      isWritable: true,
+      pubkey: accounts.delegateRecord ?? programId,
+      isWritable: accounts.delegateRecord != null,
       isSigner: false,
     },
     {
@@ -163,12 +166,12 @@ export function createInitializeV2Instruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.authorizationRulesProgram,
+      pubkey: accounts.authorizationRulesProgram ?? programId,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: accounts.authorizationRules,
+      pubkey: accounts.authorizationRules ?? programId,
       isWritable: false,
       isSigner: false,
     },
