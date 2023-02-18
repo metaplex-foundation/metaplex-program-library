@@ -314,12 +314,13 @@ mod burn_edition_nft {
             original_nft.token.pubkey(),
             master_edition.pubkey,
             second_nft.pubkey,
-            Pubkey::new_unique(), // throwaway key since it will fail before it gets to this check
+            // it will fail before it evaluates edition marker but we need an account that will pass initial owner checks
+            original_nft.pubkey,
         )
         .await
         .unwrap_err();
 
-        assert_custom_error!(err, MetadataError::NotAPrintEdition);
+        assert_custom_error!(err, MetadataError::MintMismatch);
     }
 
     #[tokio::test]
@@ -354,12 +355,14 @@ mod burn_edition_nft {
             original_nft.token.pubkey(),
             second_print_edition.pubkey,
             print_edition.pubkey,
-            Pubkey::new_unique(), // throwaway key since it will fail before it gets to this check
+            // Use the second print edition as the master edition, which will pass the
+            // initial owner checks but fail to match the mint.
+            print_edition.pubkey,
         )
         .await
         .unwrap_err();
 
-        assert_custom_error!(err, MetadataError::NotAMasterEdition);
+        assert_custom_error!(err, MetadataError::MintMismatch);
     }
 
     #[tokio::test]
@@ -389,7 +392,8 @@ mod burn_edition_nft {
             original_nft.mint.pubkey(),
             print_edition.token.pubkey(),
             original_nft.token.pubkey(),
-            Pubkey::new_unique(),
+            // Use a key that will pass the owner check but is not a master edition.
+            print_edition.new_edition_pubkey,
             print_edition.new_edition_pubkey,
             print_edition.pubkey,
         )
@@ -458,7 +462,8 @@ mod burn_edition_nft {
             print_edition.token.pubkey(),
             original_nft.token.pubkey(),
             master_edition.pubkey,
-            Pubkey::new_unique(),
+            // Use a key that will pass the owner check but is not a print edition.
+            master_edition.pubkey,
             print_edition.pubkey,
         )
         .await
