@@ -1,19 +1,27 @@
 use crate::{solana::create_associated_token_account, utils::*};
 use mpl_token_metadata::{
     id, instruction,
-    state::{Collection, Creator, DataV2, Uses, PREFIX},
+    instruction::{builders::*, CreateArgs, InstructionBuilder, MintArgs},
+    pda::{find_master_edition_account, find_metadata_account, find_token_record_account},
+    state::{
+        AssetData, Collection, CollectionDetails, Creator, DataV2, PrintSupply, TokenStandard, Uses,
+    },
 };
 use solana_program::borsh::try_from_slice_unchecked;
 use solana_program_test::*;
 use solana_sdk::{
     pubkey::Pubkey, signature::Signer, signer::keypair::Keypair, transaction::Transaction,
 };
+use spl_associated_token_account::get_associated_token_address;
 
 #[derive(Debug)]
 pub struct Metadata {
     pub mint: Keypair,
-    pub pubkey: Pubkey,
     pub token: Keypair,
+    pub ata: Pubkey,
+    pub pubkey: Pubkey,
+    pub master_edition: Pubkey,
+    pub token_record: Pubkey,
 }
 
 impl Default for Metadata {
@@ -25,16 +33,21 @@ impl Default for Metadata {
 impl Metadata {
     pub fn new() -> Self {
         let mint = Keypair::new();
-        let mint_pubkey = mint.pubkey();
-        let program_id = id();
+        // for builder functions, this is the token owner
+        let token = Keypair::new();
 
-        let metadata_seeds = &[PREFIX.as_bytes(), program_id.as_ref(), mint_pubkey.as_ref()];
-        let (pubkey, _) = Pubkey::find_program_address(metadata_seeds, &id());
+        let (pubkey, _) = find_metadata_account(&mint.pubkey());
+        let (master_edition, _) = find_master_edition_account(&mint.pubkey());
+        let ata = get_associated_token_address(&token.pubkey(), &mint.pubkey());
+        let (token_record, _) = find_token_record_account(&mint.pubkey(), &ata);
 
-        Metadata {
+        Self {
             mint,
             pubkey,
-            token: Keypair::new(),
+            token,
+            ata,
+            token_record,
+            master_edition,
         }
     }
 
@@ -93,6 +106,102 @@ impl Metadata {
             )],
             Some(&context.payer.pubkey()),
             &[&context.payer],
+            context.last_blockhash,
+        );
+
+        context.banks_client.process_transaction(tx).await
+    }
+
+    pub async fn mint_via_builder(
+        &self,
+        context: &mut ProgramTestContext,
+        amount: u64,
+    ) -> Result<(), BanksClientError> {
+        let ix = MintBuilder::new()
+            .token(self.ata)
+            .token_owner(self.token.pubkey())
+            .metadata(self.pubkey)
+            .master_edition(self.master_edition)
+            .token_record(self.token_record)
+            .mint(self.mint.pubkey())
+            .authority(context.payer.pubkey())
+            .payer(context.payer.pubkey())
+            .system_program(solana_sdk::system_program::ID)
+            .sysvar_instructions(solana_sdk::sysvar::instructions::ID)
+            .spl_token_program(spl_token::id())
+            .spl_ata_program(spl_associated_token_account::id())
+            .build(MintArgs::V1 {
+                amount,
+                authorization_data: None,
+            })
+            .unwrap()
+            .instruction();
+
+        let tx = Transaction::new_signed_with_payer(
+            &[ix],
+            Some(&context.payer.pubkey()),
+            &[&context.payer],
+            context.last_blockhash,
+        );
+
+        context.banks_client.process_transaction(tx).await
+    }
+
+    pub async fn create_via_builder(
+        &self,
+        context: &mut ProgramTestContext,
+        name: String,
+        symbol: String,
+        uri: String,
+        creators: Option<Vec<Creator>>,
+        seller_fee_basis_points: u16,
+        is_mutable: bool,
+        collection: Option<Collection>,
+        uses: Option<Uses>,
+        primary_sale_happened: bool,
+        token_standard: TokenStandard,
+        collection_details: Option<CollectionDetails>,
+        rule_set: Option<Pubkey>,
+        decimals: Option<u8>,
+        print_supply: Option<PrintSupply>,
+    ) -> Result<(), BanksClientError> {
+        let ix = CreateBuilder::new()
+            .metadata(self.pubkey)
+            .master_edition(self.master_edition)
+            .mint(self.mint.pubkey())
+            .authority(context.payer.pubkey())
+            .payer(context.payer.pubkey())
+            .update_authority(context.payer.pubkey())
+            .system_program(solana_sdk::system_program::ID)
+            .sysvar_instructions(solana_sdk::sysvar::instructions::ID)
+            .spl_token_program(spl_token::id())
+            .initialize_mint(true)
+            .update_authority_as_signer(true)
+            .build(CreateArgs::V1 {
+                asset_data: AssetData {
+                    primary_sale_happened,
+                    token_standard,
+                    symbol,
+                    name,
+                    uri,
+                    seller_fee_basis_points,
+                    creators,
+                    is_mutable,
+                    collection,
+                    uses,
+                    collection_details,
+                    rule_set,
+                },
+                decimals,
+                print_supply,
+            })
+            .unwrap()
+            .instruction();
+
+        let tx = Transaction::new_signed_with_payer(
+            &[ix],
+            Some(&context.payer.pubkey()),
+            &[&context.payer, &self.mint],
             context.last_blockhash,
         );
 
