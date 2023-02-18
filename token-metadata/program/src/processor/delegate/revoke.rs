@@ -39,6 +39,8 @@ pub fn revoke<'a>(
         RevokeArgs::UtilityV1 => Some(TokenDelegateRole::Utility),
         // Staking
         RevokeArgs::StakingV1 => Some(TokenDelegateRole::Staking),
+        // Migration
+        RevokeArgs::MigrationV1 => Some(TokenDelegateRole::Migration),
         // Standard
         RevokeArgs::StandardV1 => Some(TokenDelegateRole::Standard),
         // we don't need to fail if did not find a match at this point

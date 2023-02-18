@@ -72,6 +72,7 @@ pub enum RevokeArgs {
     StandardV1,
     LockedTransferV1,
     ProgrammableConfigV1,
+    MigrationV1,
 }
 
 #[repr(C)]
