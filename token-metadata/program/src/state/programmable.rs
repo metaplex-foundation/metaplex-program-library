@@ -131,7 +131,7 @@ impl TokenRecord {
 
 impl Resizable for TokenRecord {
     fn from_bytes<'a>(account_data: &[u8]) -> Result<TokenRecord, ProgramError> {
-        // we perform a manual deserializagtion since we are potentially dealing
+        // we perform a manual deserialization since we are potentially dealing
         // with accounts of different sizes
         let length = TokenRecord::size() as i64 - account_data.len() as i64;
 
