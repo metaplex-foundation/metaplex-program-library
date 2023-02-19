@@ -475,7 +475,7 @@ fn sell_logic<'c, 'info>(
                         amount: token_size,
                         authorization_data: Some(AuthorizationData {
                             payload: Payload::from([
-                                ("Amount".to_string(), PayloadType::Number(1)),
+                                ("Amount".to_string(), PayloadType::Number(token_size)),
                                 (
                                     "Delegate".to_string(),
                                     PayloadType::Pubkey(*program_as_signer.key),
