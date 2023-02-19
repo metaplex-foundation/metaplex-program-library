@@ -110,8 +110,12 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
     if let Some(master_edition) = ctx.accounts.edition_info {
         assert_owned_by(master_edition, program_id)?;
     }
+
+    // if a blank rule set comes in we don't need to check this, catch all
     if let Some(authorization_rules) = ctx.accounts.authorization_rules_info {
-        assert_owned_by(authorization_rules, &mpl_token_auth_rules::ID)?;
+        if !authorization_rules.data_is_empty() {
+            assert_owned_by(authorization_rules, &mpl_token_auth_rules::ID)?;
+        }
     }
 
     // Check if the destination exists.
