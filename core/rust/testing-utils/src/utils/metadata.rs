@@ -3,6 +3,7 @@ use mpl_token_metadata::{
     id, instruction,
     instruction::{builders::*, CreateArgs, InstructionBuilder, MintArgs},
     pda::{find_master_edition_account, find_metadata_account, find_token_record_account},
+    processor::AuthorizationData,
     state::{
         AssetData, Collection, CollectionDetails, Creator, DataV2, PrintSupply, TokenStandard, Uses,
     },
@@ -116,6 +117,7 @@ impl Metadata {
         &self,
         context: &mut ProgramTestContext,
         amount: u64,
+        authorization_data: Option<AuthorizationData>,
     ) -> Result<(), BanksClientError> {
         let ix = MintBuilder::new()
             .token(self.ata)
@@ -132,7 +134,7 @@ impl Metadata {
             .spl_ata_program(spl_associated_token_account::id())
             .build(MintArgs::V1 {
                 amount,
-                authorization_data: None,
+                authorization_data,
             })
             .unwrap()
             .instruction();

@@ -113,7 +113,7 @@ async fn sell_pnft_success() {
         .unwrap();
 
     test_metadata
-        .mint_via_builder(&mut context, 1)
+        .mint_via_builder(&mut context, 1, None)
         .await
         .unwrap();
 
