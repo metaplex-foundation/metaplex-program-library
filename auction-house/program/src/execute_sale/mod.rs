@@ -39,6 +39,7 @@ pub struct ExecuteSale<'info> {
 
     /// CHECK: Validated in execute_sale_logic.
     /// Metaplex metadata account decorating SPL mint account.
+    #[account(mut)]
     pub metadata: UncheckedAccount<'info>,
 
     /// CHECK: Validated in execute_sale_logic.
@@ -168,36 +169,40 @@ pub struct ExecuteSale<'info> {
     // ...ExecuteSaleRemainingAccounts
 }
 
+//    // @TODO: Figure out better way to expose optional creator accounts
+//pub struct ExecuteSaleCreatorAccounts<'info> {
+//    #[account(mut)]
+//    pub creator1: Option<UncheckedAccount<'info>>,
+//    #[account(mut)]
+//    pub creator2: Option<UncheckedAccount<'info>>,
+//    #[account(mut)]
+//    pub creator3: Option<UncheckedAccount<'info>>,
+//    #[account(mut)]
+//    pub creator4: Option<UncheckedAccount<'info>>,
+//    #[account(mut)]
+//    pub creator5: Option<UncheckedAccount<'info>>,
+//}
+
 // this is only here to help cpi & other contexts build appropriate account_metas, as we are
-// blowing stack limit
+// blowing stack limit in primary derive
 #[derive(Accounts)]
 pub struct ExecuteSaleRemainingAccounts<'info> {
-    #[account(mut)]
-    pub creator1: Option<UncheckedAccount<'info>>,
-    #[account(mut)]
-    pub creator2: Option<UncheckedAccount<'info>>,
-    #[account(mut)]
-    pub creator3: Option<UncheckedAccount<'info>>,
-    #[account(mut)]
-    pub creator4: Option<UncheckedAccount<'info>>,
-    #[account(mut)]
-    pub creator5: Option<UncheckedAccount<'info>>,
     ///CHECK: checked in execute_sale function
-    pub metadata_program: Option<UncheckedAccount<'info>>,
+    pub metadata_program: UncheckedAccount<'info>,
     ///CHECK: checked in cpi
-    pub edition: Option<UncheckedAccount<'info>>,
-    ///CHECK: checked in cpi
-    #[account(mut)]
-    pub owner_tr: Option<UncheckedAccount<'info>>,
+    pub edition: UncheckedAccount<'info>,
     ///CHECK: checked in cpi
     #[account(mut)]
-    pub destination_tr: Option<UncheckedAccount<'info>>,
+    pub owner_tr: UncheckedAccount<'info>,
     ///CHECK: checked in cpi
-    pub auth_rules_program: Option<UncheckedAccount<'info>>,
+    #[account(mut)]
+    pub destination_tr: UncheckedAccount<'info>,
     ///CHECK: checked in cpi
-    pub auth_rules: Option<UncheckedAccount<'info>>,
+    pub auth_rules_program: UncheckedAccount<'info>,
     ///CHECK: checked in cpi
-    pub sysvar_instructions: Option<UncheckedAccount<'info>>,
+    pub auth_rules: UncheckedAccount<'info>,
+    ///CHECK: checked in cpi
+    pub sysvar_instructions: UncheckedAccount<'info>,
 }
 
 impl<'info> From<AuctioneerExecuteSale<'info>> for ExecuteSale<'info> {
@@ -1389,7 +1394,7 @@ fn auctioneer_execute_sale_logic<'c, 'info>(
                 .owner_token_record(*owner_tr.key)
                 .destination_token_record(*destination_tr.key)
                 .authority(program_as_signer.key())
-                .payer(*wallet_to_use.key)
+                .payer(*fee_payer.key)
                 .system_program(*system_program.key)
                 .sysvar_instructions(*sysvar_instructions.key)
                 .spl_token_program(*token_program.key)
@@ -1407,7 +1412,7 @@ fn auctioneer_execute_sale_logic<'c, 'info>(
                         )]),
                     }),
                 })
-                .unwrap() // @TODO: revisit this unwrap
+                .unwrap()
                 .instruction();
 
             let mpl_transfer_accounts = [
@@ -1422,7 +1427,7 @@ fn auctioneer_execute_sale_logic<'c, 'info>(
                 owner_tr.to_account_info(),
                 destination_tr.to_account_info(),
                 program_as_signer.to_account_info(),
-                wallet_to_use.to_account_info(),
+                fee_payer.to_account_info(),
                 system_program.to_account_info(),
                 sysvar_instructions.to_account_info(),
                 token_program.to_account_info(),
@@ -1434,7 +1439,7 @@ fn auctioneer_execute_sale_logic<'c, 'info>(
             invoke_signed(
                 &mpl_transfer,
                 &mpl_transfer_accounts,
-                &[&program_as_signer_seeds],
+                &[&program_as_signer_seeds, fee_payer_seeds],
             )?;
         }
         Err(_) => {
@@ -1842,7 +1847,7 @@ fn execute_sale_logic<'c, 'info>(
                 .owner_token_record(*owner_tr.key)
                 .destination_token_record(*destination_tr.key)
                 .authority(program_as_signer.key())
-                .payer(*wallet_to_use.key)
+                .payer(*fee_payer.key)
                 .system_program(*system_program.key)
                 .sysvar_instructions(*sysvar_instructions.key)
                 .spl_token_program(*token_program.key)
@@ -1860,7 +1865,7 @@ fn execute_sale_logic<'c, 'info>(
                         )]),
                     }),
                 })
-                .unwrap() // @TODO: revisit this unwrap
+                .unwrap()
                 .instruction();
 
             let mpl_transfer_accounts = [
@@ -1869,13 +1874,13 @@ fn execute_sale_logic<'c, 'info>(
                 seller.to_account_info(),
                 buyer_receipt_token_account.to_account_info(),
                 buyer.to_account_info(),
+                fee_payer.to_account_info(),
                 token_mint.to_account_info(),
                 metadata.to_account_info(),
                 edition.to_account_info(),
                 owner_tr.to_account_info(),
                 destination_tr.to_account_info(),
                 program_as_signer.to_account_info(),
-                wallet_to_use.to_account_info(),
                 system_program.to_account_info(),
                 sysvar_instructions.to_account_info(),
                 token_program.to_account_info(),
@@ -1887,7 +1892,7 @@ fn execute_sale_logic<'c, 'info>(
             invoke_signed(
                 &mpl_transfer,
                 &mpl_transfer_accounts,
-                &[&program_as_signer_seeds],
+                &[&program_as_signer_seeds, fee_payer_seeds],
             )?;
         }
         Err(_) => {
