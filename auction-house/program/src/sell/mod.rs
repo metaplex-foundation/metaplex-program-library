@@ -474,15 +474,22 @@ fn sell_logic<'c, 'info>(
                     .build(DelegateArgs::SaleV1 {
                         amount: token_size,
                         authorization_data: Some(AuthorizationData {
-                            payload: Payload::from([(
-                                "DestinationSeeds".to_string(),
-                                PayloadType::Seeds(SeedsVec {
-                                    seeds: vec![
-                                        PREFIX.as_bytes().to_vec(),
-                                        SIGNER.as_bytes().to_vec(),
-                                    ],
-                                }),
-                            )]),
+                            payload: Payload::from([
+                                ("Amount".to_string(), PayloadType::Number(1)),
+                                (
+                                    "Delegate".to_string(),
+                                    PayloadType::Pubkey(*program_as_signer.key),
+                                ),
+                                (
+                                    "DelegateSeeds".to_string(),
+                                    PayloadType::Seeds(SeedsVec {
+                                        seeds: vec![
+                                            PREFIX.as_bytes().to_vec(),
+                                            SIGNER.as_bytes().to_vec(),
+                                        ],
+                                    }),
+                                ),
+                            ]),
                         }),
                     })
                     .unwrap()
