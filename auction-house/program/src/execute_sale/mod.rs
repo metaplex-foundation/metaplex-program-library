@@ -1405,7 +1405,7 @@ fn auctioneer_execute_sale_logic<'c, 'info>(
                     amount: size,
                     authorization_data: Some(AuthorizationData {
                         payload: Payload::from([
-                            ("Amount".to_string(), PayloadType::Number(1)),
+                            ("Amount".to_string(), PayloadType::Number(size)),
                             (
                                 "Authority".to_string(),
                                 PayloadType::Pubkey(*program_as_signer.key),
