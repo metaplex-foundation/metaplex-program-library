@@ -3,7 +3,7 @@ use crate::{
     error::MetadataError,
     instruction::{Context, MetadataDelegateRole, Verify, VerifyArgs},
     state::{AuthorityRequest, AuthorityType, Metadata, TokenMetadataAccount},
-    utils::increment_collection_size,
+    utils::{clean_write_metadata, increment_collection_size},
 };
 
 use borsh::BorshSerialize;
@@ -136,6 +136,6 @@ fn verify_collection_v1(program_id: &Pubkey, ctx: Context<Verify>) -> ProgramRes
     }
 
     // Reserialize metadata.
-    metadata.serialize(&mut *ctx.accounts.metadata_info.try_borrow_mut_data()?)?;
+    clean_write_metadata(&mut metadata, ctx.accounts.metadata_info)?;
     Ok(())
 }
