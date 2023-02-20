@@ -43,3 +43,7 @@ env_logger="0.9.3"
 
 [profile.release]
 overflow-checks = true     # Enable integer overflow checks.
+strip = true
+opt-level = "z"
+lto = true
+codegen-units = 1

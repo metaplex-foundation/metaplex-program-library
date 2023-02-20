@@ -1867,12 +1867,22 @@ fn execute_sale_logic<'c, 'info>(
                 .build(TransferArgs::V1 {
                     amount: size,
                     authorization_data: Some(AuthorizationData {
-                        payload: Payload::from([(
-                            "SourceSeeds".to_string(),
-                            PayloadType::Seeds(SeedsVec {
-                                seeds: vec![PREFIX.as_bytes().to_vec(), SIGNER.as_bytes().to_vec()],
-                            }),
-                        )]),
+                        payload: Payload::from([
+                            ("Amount".to_string(), PayloadType::Number(size)),
+                            (
+                                "Authority".to_string(),
+                                PayloadType::Pubkey(*program_as_signer.key),
+                            ),
+                            (
+                                "AuthoritySeeds".to_string(),
+                                PayloadType::Seeds(SeedsVec {
+                                    seeds: vec![
+                                        PREFIX.as_bytes().to_vec(),
+                                        SIGNER.as_bytes().to_vec(),
+                                    ],
+                                }),
+                            ),
+                        ]),
                     }),
                 })
                 .unwrap()
