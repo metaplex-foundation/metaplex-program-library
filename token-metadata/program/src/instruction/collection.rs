@@ -6,7 +6,7 @@ use solana_program::{
     pubkey::Pubkey,
 };
 
-use crate::{instruction::MetadataInstruction, processor::AuthorizationData};
+use crate::instruction::MetadataInstruction;
 
 ///# Approve Collection Authority
 ///
@@ -411,8 +411,6 @@ pub fn verify_sized_collection_item(
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub enum VerifyArgs {
-    V1 {
-        /// Required authorization data to validate the request.
-        authorization_data: Option<AuthorizationData>,
-    },
+    CreatorV1,
+    CollectionV1,
 }
