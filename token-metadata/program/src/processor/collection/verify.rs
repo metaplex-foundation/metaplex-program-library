@@ -97,7 +97,7 @@ fn verify_collection_v1(program_id: &Pubkey, ctx: Context<Verify>) -> ProgramRes
     }
 
     // Verify the collection in the item's metadata matches the collection mint.  Also verify
-    // the collection metadata matches the collectin mint, and the collection edition derivation.
+    // the collection metadata matches the collection mint, and the collection edition derivation.
     assert_collection_verify_is_valid(
         &metadata.collection,
         &collection_metadata,
@@ -105,8 +105,8 @@ fn verify_collection_v1(program_id: &Pubkey, ctx: Context<Verify>) -> ProgramRes
         collection_master_edition_info,
     )?;
 
-    // Determines if we have a valid authority to perform the collection verification. This must
-    // be either be the collection delegate. This call fails if no valid authority is present.
+    // Determines if we have a valid authority to perform the collection verification.  This call
+    // fails if no valid authority is present.
     let authority_response = AuthorityType::get_authority_type(AuthorityRequest {
         authority: ctx.accounts.authority_info.key,
         update_authority: &collection_metadata.update_authority,
