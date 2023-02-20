@@ -4702,6 +4702,9 @@
           },
           {
             "name": "ProgrammableConfigV1"
+          },
+          {
+            "name": "MigrationV1"
           }
         ]
       }
