@@ -22,7 +22,7 @@ export type VerifyInstructionArgs = {
  * @category Verify
  * @category generated
  */
-export const VerifyStruct = new beet.FixableBeetArgsStruct<
+export const VerifyStruct = new beet.BeetArgsStruct<
   VerifyInstructionArgs & {
     instructionDiscriminator: number;
   }
@@ -36,21 +36,26 @@ export const VerifyStruct = new beet.FixableBeetArgsStruct<
 /**
  * Accounts required by the _Verify_ instruction
  *
+ * @property [**signer**] authority Creator to verify, collection owner or delegate
+ * @property [] delegateRecord (optional) Delegate record PDA
  * @property [_writable_] metadata Metadata account
- * @property [_writable_, **signer**] collectionAuthority Collection Update authority
- * @property [_writable_, **signer**] payer payer
- * @property [] authorizationRules (optional) Token Authorization Rules account
- * @property [] authorizationRulesProgram (optional) Token Authorization Rules Program
+ * @property [] collectionMint (optional) Mint of the Collection
+ * @property [_writable_] collectionMetadata (optional) Metadata Account of the Collection
+ * @property [] collectionMasterEdition (optional) Master Edition Account of the Collection Token
+ * @property [] sysvarInstructions Instructions sysvar account
  * @category Instructions
  * @category Verify
  * @category generated
  */
 export type VerifyInstructionAccounts = {
+  authority: web3.PublicKey;
+  delegateRecord?: web3.PublicKey;
   metadata: web3.PublicKey;
-  collectionAuthority: web3.PublicKey;
-  payer: web3.PublicKey;
-  authorizationRules?: web3.PublicKey;
-  authorizationRulesProgram?: web3.PublicKey;
+  collectionMint?: web3.PublicKey;
+  collectionMetadata?: web3.PublicKey;
+  collectionMasterEdition?: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
+  sysvarInstructions: web3.PublicKey;
 };
 
 export const verifyInstructionDiscriminator = 52;
@@ -79,27 +84,42 @@ export function createVerifyInstruction(
   });
   const keys: web3.AccountMeta[] = [
     {
+      pubkey: accounts.authority,
+      isWritable: false,
+      isSigner: true,
+    },
+    {
+      pubkey: accounts.delegateRecord ?? programId,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
       pubkey: accounts.metadata,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: accounts.collectionAuthority,
-      isWritable: true,
-      isSigner: true,
-    },
-    {
-      pubkey: accounts.payer,
-      isWritable: true,
-      isSigner: true,
-    },
-    {
-      pubkey: accounts.authorizationRules ?? programId,
+      pubkey: accounts.collectionMint ?? programId,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: accounts.authorizationRulesProgram ?? programId,
+      pubkey: accounts.collectionMetadata ?? programId,
+      isWritable: accounts.collectionMetadata != null,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.collectionMasterEdition ?? programId,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.sysvarInstructions,
       isWritable: false,
       isSigner: false,
     },

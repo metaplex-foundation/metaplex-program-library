@@ -2225,7 +2225,7 @@ createErrorFromCodeLookup.set(0x66, () => new SizedCollectionError());
 createErrorFromNameLookup.set('SizedCollection', () => new SizedCollectionError());
 
 /**
- * MissingCollectionMetadata: 'Can't burn a verified member of a collection w/o providing collection metadata account'
+ * MissingCollectionMetadata: 'Missing collection metadata account'
  *
  * @category Errors
  * @category generated
@@ -2234,7 +2234,7 @@ export class MissingCollectionMetadataError extends Error {
   readonly code: number = 0x67;
   readonly name: string = 'MissingCollectionMetadata';
   constructor() {
-    super("Can't burn a verified member of a collection w/o providing collection metadata account");
+    super('Missing collection metadata account');
     if (typeof Error.captureStackTrace === 'function') {
       Error.captureStackTrace(this, MissingCollectionMetadataError);
     }
@@ -3793,6 +3793,69 @@ export class InvalidUpdateArgsError extends Error {
 
 createErrorFromCodeLookup.set(0xb0, () => new InvalidUpdateArgsError());
 createErrorFromNameLookup.set('InvalidUpdateArgs', () => new InvalidUpdateArgsError());
+
+/**
+ * MissingDelegateRecord: 'Missing delegate record PDA account'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MissingDelegateRecordError extends Error {
+  readonly code: number = 0xb1;
+  readonly name: string = 'MissingDelegateRecord';
+  constructor() {
+    super('Missing delegate record PDA account');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MissingDelegateRecordError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xb1, () => new MissingDelegateRecordError());
+createErrorFromNameLookup.set('MissingDelegateRecord', () => new MissingDelegateRecordError());
+
+/**
+ * MissingCollectionMint: 'Missing collection mint account'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MissingCollectionMintError extends Error {
+  readonly code: number = 0xb2;
+  readonly name: string = 'MissingCollectionMint';
+  constructor() {
+    super('Missing collection mint account');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MissingCollectionMintError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xb2, () => new MissingCollectionMintError());
+createErrorFromNameLookup.set('MissingCollectionMint', () => new MissingCollectionMintError());
+
+/**
+ * MissingCollectionMasterEdition: 'Missing collection master edition account'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MissingCollectionMasterEditionError extends Error {
+  readonly code: number = 0xb3;
+  readonly name: string = 'MissingCollectionMasterEdition';
+  constructor() {
+    super('Missing collection master edition account');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MissingCollectionMasterEditionError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xb3, () => new MissingCollectionMasterEditionError());
+createErrorFromNameLookup.set(
+  'MissingCollectionMasterEdition',
+  () => new MissingCollectionMasterEditionError(),
+);
 
 /**
  * Attempts to resolve a custom program error from the provided error code.
