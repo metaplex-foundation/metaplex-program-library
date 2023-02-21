@@ -864,6 +864,16 @@ impl DigitalAsset {
         let on_chain_creators = metadata.data.creators;
         assert_eq!(on_chain_creators, *creators);
     }
+
+    pub async fn assert_collection_matches_on_chain(
+        &self,
+        context: &mut ProgramTestContext,
+        collection: &Option<Collection>,
+    ) {
+        let metadata = self.get_metadata(context).await;
+        let on_chain_collection = metadata.collection;
+        assert_eq!(on_chain_collection, *collection);
+    }
 }
 
 pub struct TransferFromParams<'a> {
