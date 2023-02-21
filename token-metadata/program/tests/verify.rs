@@ -1046,6 +1046,85 @@ mod pnft {
         }
 
         #[tokio::test]
+        async fn incorrect_collection_update_authority() {
+            let mut context = program_test().start_with_context().await;
+
+            // Create a Collection Parent NFT with the CollectionDetails struct populated
+            let collection_parent_nft = Metadata::new();
+            collection_parent_nft
+                .create_v3(
+                    &mut context,
+                    "Test".to_string(),
+                    "TST".to_string(),
+                    "uri".to_string(),
+                    None,
+                    10,
+                    false,
+                    None,
+                    None,
+                    DEFAULT_COLLECTION_DETAILS, // Collection Parent
+                )
+                .await
+                .unwrap();
+
+            let parent_master_edition_account = MasterEditionV2::new(&collection_parent_nft);
+            parent_master_edition_account
+                .create_v3(&mut context, Some(0))
+                .await
+                .unwrap();
+
+            let collection = Some(Collection {
+                key: collection_parent_nft.mint.pubkey(),
+                verified: false,
+            });
+
+            let mut da = DigitalAsset::new();
+            da.create_and_mint_with_collection(
+                &mut context,
+                TokenStandard::ProgrammableNonFungible,
+                None,
+                None,
+                1,
+                collection.clone(),
+            )
+            .await
+            .unwrap();
+
+            da.assert_collection_matches_on_chain(&mut context, &collection)
+                .await;
+
+            // Create a keypair to use instead of the collection update authority.
+            let incorrect_update_authority = Keypair::new();
+            airdrop(
+                &mut context,
+                &incorrect_update_authority.pubkey(),
+                LAMPORTS_PER_SOL,
+            )
+            .await
+            .unwrap();
+
+            let args = VerifyArgs::CollectionV1;
+            let err = da
+                .verify(
+                    &mut context,
+                    incorrect_update_authority,
+                    args,
+                    None,
+                    None,
+                    Some(collection_parent_nft.mint.pubkey()),
+                    Some(collection_parent_nft.pubkey),
+                    Some(parent_master_edition_account.pubkey),
+                )
+                .await
+                .unwrap_err();
+
+            assert_custom_error!(err, MetadataError::UpdateAuthorityIncorrect);
+
+            da.assert_collection_matches_on_chain(&mut context, &collection)
+                .await;
+        }
+
+        #[tokio::test]
         async fn collection_update_authority_pass() {
             let mut context = program_test().start_with_context().await;
 
