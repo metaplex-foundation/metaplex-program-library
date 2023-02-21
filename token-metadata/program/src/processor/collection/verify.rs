@@ -6,7 +6,6 @@ use crate::{
     utils::{clean_write_metadata, increment_collection_size},
 };
 
-use borsh::BorshSerialize;
 use mpl_utils::assert_signer;
 use solana_program::{account_info::AccountInfo, entrypoint::ProgramResult, pubkey::Pubkey};
 
@@ -47,11 +46,9 @@ fn verify_creator_v1(program_id: &Pubkey, ctx: Context<Verify>) -> ProgramResult
     }
 
     // Reserialize item metadata.
-    metadata.serialize(&mut *ctx.accounts.metadata_info.try_borrow_mut_data()?)?;
+    clean_write_metadata(&mut metadata, ctx.accounts.metadata_info)?;
     Ok(())
 }
-
-//#[account(1, optional, name="delegate_record", desc="Delegate record PDA")]
 
 fn verify_collection_v1(program_id: &Pubkey, ctx: Context<Verify>) -> ProgramResult {
     // Assert program ownership/signers.

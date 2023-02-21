@@ -733,7 +733,7 @@ pub enum MetadataInstruction {
     ///
     /// Depending on the type of verification (e.g., creator or collection), additional accounts
     /// are required.
-    #[account(0, signer, name="authority", desc="Creator to verify, collection owner or delegate")]
+    #[account(0, signer, name="authority", desc="Creator to verify, collection update authority or delegate")]
     #[account(1, optional, name="delegate_record", desc="Delegate record PDA")]
     #[account(2, writable, name="metadata", desc="Metadata account")]
     #[account(3, optional, name="collection_mint", desc="Mint of the Collection")]

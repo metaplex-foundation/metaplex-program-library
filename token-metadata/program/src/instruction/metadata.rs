@@ -764,7 +764,7 @@ impl InstructionBuilder for super::builders::Update {
 ///
 /// # Accounts:
 ///
-///   0. `[signer]` Creator to verify, collection owner or delegate
+///   0. `[signer]` Creator to verify, collection update authority or delegate
 ///   1. `[optional]` Delegate record PDA
 ///   2. `[writable]` Metadata account
 ///   3. `[optional]` Mint of the Collection

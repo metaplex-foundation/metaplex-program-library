@@ -3,10 +3,10 @@ use mpl_token_metadata::{
     instruction::{
         builders::{
             CreateBuilder, DelegateBuilder, LockBuilder, MigrateBuilder, MintBuilder,
-            RevokeBuilder, TransferBuilder, UnlockBuilder,
+            RevokeBuilder, TransferBuilder, UnlockBuilder, VerifyBuilder,
         },
         CreateArgs, DelegateArgs, InstructionBuilder, LockArgs, MetadataDelegateRole, MigrateArgs,
-        MintArgs, RevokeArgs, TransferArgs, UnlockArgs,
+        MintArgs, RevokeArgs, TransferArgs, UnlockArgs, VerifyArgs,
     },
     pda::{find_metadata_delegate_record_account, find_token_record_account},
     processor::AuthorizationData,
@@ -64,26 +64,90 @@ impl DigitalAsset {
         }
     }
 
+    pub async fn verify(
+        &mut self,
+        context: &mut ProgramTestContext,
+        authority: Keypair,
+        args: VerifyArgs,
+        metadata: Option<Pubkey>,
+        collection_update_authority: Option<Pubkey>,
+        delegate: Option<Pubkey>,
+        collection_mint: Option<Pubkey>,
+        collection_metadata: Option<Pubkey>,
+        collection_master_edition: Option<Pubkey>,
+    ) -> Result<(), BanksClientError> {
+        let mut builder = VerifyBuilder::new();
+        builder
+            .authority(authority.pubkey())
+            .metadata(metadata.unwrap_or(self.metadata));
+
+        match args {
+            VerifyArgs::CreatorV1 => (),
+            VerifyArgs::CollectionV1 => {
+                let (delegate_record, _) = find_metadata_delegate_record_account(
+                    &self.mint.pubkey(),
+                    MetadataDelegateRole::Collection,
+                    &collection_update_authority.unwrap(),
+                    &delegate.unwrap(),
+                );
+                builder.delegate_record(delegate_record);
+                builder.collection_mint(collection_mint.unwrap());
+                builder.collection_metadata(collection_metadata.unwrap());
+                builder.collection_master_edition(collection_master_edition.unwrap());
+            }
+        }
+
+        let verify_ix = builder.build(args).unwrap().instruction();
+
+        let transaction = Transaction::new_signed_with_payer(
+            &[verify_ix],
+            Some(&authority.pubkey()),
+            &[&authority],
+            context.last_blockhash,
+        );
+
+        context.banks_client.process_transaction(transaction).await
+    }
+
     pub async fn create(
         &mut self,
         context: &mut ProgramTestContext,
         token_standard: TokenStandard,
         authorization_rules: Option<Pubkey>,
     ) -> Result<(), BanksClientError> {
-        let mut asset = AssetData::new(
+        let creators = Some(vec![Creator {
+            address: context.payer.pubkey(),
+            share: 100,
+            verified: true,
+        }]);
+
+        self.create_advanced(
+            context,
             token_standard,
             String::from(DEFAULT_NAME),
             String::from(DEFAULT_SYMBOL),
             String::from(DEFAULT_URI),
-        );
-        asset.seller_fee_basis_points = 500;
+            500,
+            creators,
+            authorization_rules,
+        )
+        .await
+    }
 
-        let creators = vec![Creator {
-            address: context.payer.pubkey(),
-            share: 100,
-            verified: true,
-        }];
-        asset.creators = Some(creators);
+    pub async fn create_advanced(
+        &mut self,
+        context: &mut ProgramTestContext,
+        token_standard: TokenStandard,
+        name: String,
+        symbol: String,
+        uri: String,
+        seller_fee_basis_points: u16,
+        creators: Option<Vec<Creator>>,
+        authorization_rules: Option<Pubkey>,
+    ) -> Result<(), BanksClientError> {
+        let mut asset = AssetData::new(token_standard, name, symbol, uri);
+        asset.seller_fee_basis_points = seller_fee_basis_points;
+        asset.creators = creators;
         asset.rule_set = authorization_rules;
 
         let payer_pubkey = context.payer.pubkey();
@@ -222,6 +286,34 @@ impl DigitalAsset {
         self.create(context, token_standard, authorization_rules)
             .await
             .unwrap();
+        // mints tokens
+        self.mint(context, authorization_rules, authorization_data, amount)
+            .await
+    }
+
+    pub async fn create_and_mint_with_creators(
+        &mut self,
+        context: &mut ProgramTestContext,
+        token_standard: TokenStandard,
+        authorization_rules: Option<Pubkey>,
+        authorization_data: Option<AuthorizationData>,
+        amount: u64,
+        creators: Option<Vec<Creator>>,
+    ) -> Result<(), BanksClientError> {
+        // creates the metadata
+        self.create_advanced(
+            context,
+            token_standard,
+            String::from(DEFAULT_NAME),
+            String::from(DEFAULT_SYMBOL),
+            String::from(DEFAULT_URI),
+            500,
+            creators,
+            authorization_rules,
+        )
+        .await
+        .unwrap();
+
         // mints tokens
         self.mint(context, authorization_rules, authorization_data, amount)
             .await
@@ -716,6 +808,16 @@ impl DigitalAsset {
         }
 
         false
+    }
+
+    pub async fn assert_creators_matches_on_chain(
+        &self,
+        context: &mut ProgramTestContext,
+        creators: &Option<Vec<Creator>>,
+    ) {
+        let metadata = self.get_metadata(context).await;
+        let on_chain_creators = metadata.data.creators;
+        assert_eq!(on_chain_creators, *creators);
     }
 }
 
