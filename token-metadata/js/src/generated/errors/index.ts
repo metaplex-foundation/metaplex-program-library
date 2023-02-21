@@ -3795,33 +3795,13 @@ createErrorFromCodeLookup.set(0xb0, () => new InvalidUpdateArgsError());
 createErrorFromNameLookup.set('InvalidUpdateArgs', () => new InvalidUpdateArgsError());
 
 /**
- * MissingDelegateRecord: 'Missing delegate record PDA account'
- *
- * @category Errors
- * @category generated
- */
-export class MissingDelegateRecordError extends Error {
-  readonly code: number = 0xb1;
-  readonly name: string = 'MissingDelegateRecord';
-  constructor() {
-    super('Missing delegate record PDA account');
-    if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, MissingDelegateRecordError);
-    }
-  }
-}
-
-createErrorFromCodeLookup.set(0xb1, () => new MissingDelegateRecordError());
-createErrorFromNameLookup.set('MissingDelegateRecord', () => new MissingDelegateRecordError());
-
-/**
  * MissingCollectionMint: 'Missing collection mint account'
  *
  * @category Errors
  * @category generated
  */
 export class MissingCollectionMintError extends Error {
-  readonly code: number = 0xb2;
+  readonly code: number = 0xb1;
   readonly name: string = 'MissingCollectionMint';
   constructor() {
     super('Missing collection mint account');
@@ -3831,7 +3811,7 @@ export class MissingCollectionMintError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0xb2, () => new MissingCollectionMintError());
+createErrorFromCodeLookup.set(0xb1, () => new MissingCollectionMintError());
 createErrorFromNameLookup.set('MissingCollectionMint', () => new MissingCollectionMintError());
 
 /**
@@ -3841,7 +3821,7 @@ createErrorFromNameLookup.set('MissingCollectionMint', () => new MissingCollecti
  * @category generated
  */
 export class MissingCollectionMasterEditionError extends Error {
-  readonly code: number = 0xb3;
+  readonly code: number = 0xb2;
   readonly name: string = 'MissingCollectionMasterEdition';
   constructor() {
     super('Missing collection master edition account');
@@ -3851,7 +3831,7 @@ export class MissingCollectionMasterEditionError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0xb3, () => new MissingCollectionMasterEditionError());
+createErrorFromCodeLookup.set(0xb2, () => new MissingCollectionMasterEditionError());
 createErrorFromNameLookup.set(
   'MissingCollectionMasterEdition',
   () => new MissingCollectionMasterEditionError(),

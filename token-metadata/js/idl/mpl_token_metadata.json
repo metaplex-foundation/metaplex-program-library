@@ -6279,16 +6279,11 @@
     },
     {
       "code": 177,
-      "name": "MissingDelegateRecord",
-      "msg": "Missing delegate record PDA account"
-    },
-    {
-      "code": 178,
       "name": "MissingCollectionMint",
       "msg": "Missing collection mint account"
     },
     {
-      "code": 179,
+      "code": 178,
       "name": "MissingCollectionMasterEdition",
       "msg": "Missing collection master edition account"
     }
