@@ -156,7 +156,7 @@ fn burn_v1(program_id: &Pubkey, ctx: Context<Burn>, args: BurnArgs) -> ProgramRe
             let token_record = ctx
                 .accounts
                 .token_record_info
-                .map(|r| TokenRecord::from_account_info(r))
+                .map(TokenRecord::from_account_info)
                 .transpose()?;
 
             if token_record.is_none() {

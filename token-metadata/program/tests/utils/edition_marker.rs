@@ -290,7 +290,7 @@ impl EditionMarker {
         let transaction = Transaction::new_signed_with_payer(
             &[burn_ix],
             Some(&context.payer.pubkey()),
-            &[&context.payer, &args.authority],
+            &[&context.payer, (args.authority)],
             context.last_blockhash,
         );
 

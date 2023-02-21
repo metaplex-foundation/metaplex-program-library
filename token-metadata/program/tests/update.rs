@@ -368,7 +368,7 @@ mod update {
 
         // Set a delegate
         da.delegate(
-            &mut context,
+            context,
             update_authority.dirty_clone(),
             delegate.pubkey(),
             DelegateArgs::TransferV1 {

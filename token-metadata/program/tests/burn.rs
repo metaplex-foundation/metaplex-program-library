@@ -952,7 +952,7 @@ mod nft {
 
         let parent_nft_account = get_account(&mut context, &collection_parent_nft.pubkey).await;
         let parent_metadata =
-            ProgramMetadata::safe_deserialize(&mut parent_nft_account.data.as_slice()).unwrap();
+            ProgramMetadata::safe_deserialize(parent_nft_account.data.as_slice()).unwrap();
 
         if let Some(details) = parent_metadata.collection_details {
             match details {
@@ -980,7 +980,7 @@ mod nft {
         // Will look here, this is causing the problem.
         let parent_nft_account = get_account(&mut context, &collection_parent_nft.pubkey).await;
         let parent_metadata =
-            ProgramMetadata::safe_deserialize(&mut parent_nft_account.data.as_slice()).unwrap();
+            ProgramMetadata::safe_deserialize(parent_nft_account.data.as_slice()).unwrap();
 
         if let Some(details) = parent_metadata.collection_details {
             match details {
@@ -1009,7 +1009,7 @@ mod nft {
 
         let parent_nft_account = get_account(&mut context, &collection_parent_nft.pubkey).await;
         let parent_metadata =
-            ProgramMetadata::safe_deserialize(&mut parent_nft_account.data.as_slice()).unwrap();
+            ProgramMetadata::safe_deserialize(parent_nft_account.data.as_slice()).unwrap();
 
         if let Some(details) = parent_metadata.collection_details {
             match details {
@@ -1344,7 +1344,7 @@ mod nft {
 
         let parent_nft_account = get_account(&mut context, &collection_parent_nft.pubkey).await;
         let parent_metadata =
-            ProgramMetadata::safe_deserialize(&mut parent_nft_account.data.as_slice()).unwrap();
+            ProgramMetadata::safe_deserialize(parent_nft_account.data.as_slice()).unwrap();
 
         if let Some(details) = parent_metadata.collection_details {
             match details {
@@ -1371,7 +1371,7 @@ mod nft {
 
         let parent_nft_account = get_account(&mut context, &collection_parent_nft.pubkey).await;
         let parent_metadata =
-            ProgramMetadata::safe_deserialize(&mut parent_nft_account.data.as_slice()).unwrap();
+            ProgramMetadata::safe_deserialize(parent_nft_account.data.as_slice()).unwrap();
 
         if let Some(details) = parent_metadata.collection_details {
             match details {
@@ -1930,7 +1930,7 @@ mod nft_edition {
         let payer = &context.payer.dirty_clone();
 
         let args = BurnPrintArgs {
-            authority: &payer,
+            authority: payer,
             metadata: Some(print_edition.new_metadata_pubkey),
             edition: Some(print_edition.new_edition_pubkey),
             mint: Some(print_edition.mint.pubkey()),
@@ -1965,7 +1965,7 @@ mod nft_edition {
         let payer = &context.payer.dirty_clone();
 
         let args = BurnPrintArgs {
-            authority: &payer,
+            authority: payer,
             metadata: Some(print_edition.new_metadata_pubkey),
             edition: Some(print_edition.new_edition_pubkey),
             mint: Some(print_edition.mint.pubkey()),
@@ -1995,7 +1995,7 @@ mod nft_edition {
             .unwrap();
 
         let args = BurnPrintArgs {
-            authority: &payer,
+            authority: payer,
             metadata: Some(print_edition.new_metadata_pubkey),
             edition: Some(print_edition.new_edition_pubkey),
             mint: Some(print_edition.mint.pubkey()),
@@ -2030,7 +2030,7 @@ mod nft_edition {
         let payer = &context.payer.dirty_clone();
 
         let args = BurnPrintArgs {
-            authority: &payer,
+            authority: payer,
             metadata: Some(print_edition.new_metadata_pubkey),
             edition: Some(Pubkey::new_unique()),
             mint: Some(print_edition.mint.pubkey()),
@@ -2054,7 +2054,7 @@ mod nft_edition {
         second_print_edition.create(&mut context).await.unwrap();
 
         let args = BurnPrintArgs {
-            authority: &payer,
+            authority: payer,
             metadata: Some(print_edition.new_metadata_pubkey),
             edition: Some(second_print_edition.new_edition_pubkey),
             mint: Some(print_edition.mint.pubkey()),
@@ -2089,7 +2089,7 @@ mod nft_edition {
         let payer = &context.payer.dirty_clone();
 
         let args = BurnPrintArgs {
-            authority: &payer,
+            authority: payer,
             metadata: Some(print_edition.new_metadata_pubkey),
             edition: Some(print_edition.new_edition_pubkey),
             mint: Some(print_edition.mint.pubkey()),
@@ -2113,7 +2113,7 @@ mod nft_edition {
         second_print_edition.create(&mut context).await.unwrap();
 
         let args = BurnPrintArgs {
-            authority: &payer,
+            authority: payer,
             metadata: Some(print_edition.new_metadata_pubkey),
             edition: Some(print_edition.new_edition_pubkey),
             mint: Some(print_edition.mint.pubkey()),
@@ -2190,7 +2190,7 @@ mod nft_edition {
 
         let payer = &context.payer.dirty_clone();
 
-        let burn_print_args = BurnPrintArgs::default(&payer);
+        let burn_print_args = BurnPrintArgs::default(payer);
 
         // Master edition owner burning.
         print_edition
@@ -2274,7 +2274,7 @@ mod nft_edition {
         assert!(ledger[0] == 0b0111_1111);
         assert!(ledger[1] == 0b1110_0000);
 
-        let default_args = BurnPrintArgs::default(&payer);
+        let default_args = BurnPrintArgs::default(payer);
 
         // Burn the second one
         print_editions[1]
@@ -2361,7 +2361,7 @@ mod nft_edition {
 
         let payer = &context.payer.dirty_clone();
 
-        let owner_burn_args = BurnPrintArgs::default(&payer);
+        let owner_burn_args = BurnPrintArgs::default(payer);
 
         // Burn owner's edition.
         print_edition
@@ -2437,7 +2437,7 @@ mod nft_edition {
 
         let payer = &context.payer.dirty_clone();
 
-        let mut owner_burn_args = BurnPrintArgs::default(&payer);
+        let mut owner_burn_args = BurnPrintArgs::default(payer);
 
         owner_burn_args = BurnPrintArgs {
             parent_token: Some(other_nft.token.pubkey()),
@@ -2476,7 +2476,7 @@ mod nft_edition {
 
         let payer = &context.payer.dirty_clone();
 
-        let mut owner_burn_args = BurnPrintArgs::default(&payer);
+        let mut owner_burn_args = BurnPrintArgs::default(payer);
 
         // Wrong print edition mint account.
         owner_burn_args = BurnPrintArgs {
@@ -2500,7 +2500,7 @@ mod nft_edition {
             .await
             .unwrap();
 
-        let mut owner_burn_args = BurnPrintArgs::default(&payer);
+        let mut owner_burn_args = BurnPrintArgs::default(payer);
 
         // Wrong master edition mint account.
         owner_burn_args = BurnPrintArgs {
