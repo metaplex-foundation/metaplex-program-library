@@ -722,6 +722,330 @@ mod pnft {
         }
 
         #[tokio::test]
+        async fn fail_already_verified() {
+            let mut context = program_test().start_with_context().await;
+
+            // Create a Collection Parent NFT with the CollectionDetails struct populated
+            let collection_parent_nft = Metadata::new();
+            collection_parent_nft
+                .create_v3(
+                    &mut context,
+                    "Test".to_string(),
+                    "TST".to_string(),
+                    "uri".to_string(),
+                    None,
+                    10,
+                    false,
+                    None,
+                    None,
+                    DEFAULT_COLLECTION_DETAILS, // Collection Parent
+                )
+                .await
+                .unwrap();
+
+            let parent_master_edition_account = MasterEditionV2::new(&collection_parent_nft);
+            parent_master_edition_account
+                .create_v3(&mut context, Some(0))
+                .await
+                .unwrap();
+
+            let collection = Some(Collection {
+                key: collection_parent_nft.mint.pubkey(),
+                verified: false,
+            });
+
+            let mut da = DigitalAsset::new();
+            da.create_and_mint_with_collection(
+                &mut context,
+                TokenStandard::ProgrammableNonFungible,
+                None,
+                None,
+                1,
+                collection.clone(),
+            )
+            .await
+            .unwrap();
+
+            da.assert_collection_matches_on_chain(&mut context, &collection)
+                .await;
+
+            let args = VerifyArgs::CollectionV1;
+            let payer = context.payer.dirty_clone();
+            da.verify(
+                &mut context,
+                payer,
+                args,
+                None,
+                None,
+                Some(collection_parent_nft.mint.pubkey()),
+                Some(collection_parent_nft.pubkey),
+                Some(parent_master_edition_account.pubkey),
+            )
+            .await
+            .unwrap();
+
+            let verified_collection = Some(Collection {
+                key: collection_parent_nft.mint.pubkey(),
+                verified: true,
+            });
+
+            da.assert_collection_matches_on_chain(&mut context, &verified_collection)
+                .await;
+
+            // Skip ahead.
+            context.warp_to_slot(2).unwrap();
+
+            // Try to verify again.
+            let args = VerifyArgs::CollectionV1;
+            let payer = context.payer.dirty_clone();
+            let err = da
+                .verify(
+                    &mut context,
+                    payer,
+                    args,
+                    None,
+                    None,
+                    Some(collection_parent_nft.mint.pubkey()),
+                    Some(collection_parent_nft.pubkey),
+                    Some(parent_master_edition_account.pubkey),
+                )
+                .await
+                .unwrap_err();
+
+            assert_custom_error!(err, MetadataError::AlreadyVerified);
+
+            da.assert_collection_matches_on_chain(&mut context, &verified_collection)
+                .await;
+        }
+
+        #[tokio::test]
+        async fn collection_not_found_on_item() {
+            let mut context = program_test().start_with_context().await;
+
+            // Create a Collection Parent NFT with the CollectionDetails struct populated
+            let collection_parent_nft = Metadata::new();
+            collection_parent_nft
+                .create_v3(
+                    &mut context,
+                    "Test".to_string(),
+                    "TST".to_string(),
+                    "uri".to_string(),
+                    None,
+                    10,
+                    false,
+                    None,
+                    None,
+                    DEFAULT_COLLECTION_DETAILS, // Collection Parent
+                )
+                .await
+                .unwrap();
+
+            let parent_master_edition_account = MasterEditionV2::new(&collection_parent_nft);
+            parent_master_edition_account
+                .create_v3(&mut context, Some(0))
+                .await
+                .unwrap();
+
+            // No collection on item's metadata.
+            let collection = None;
+
+            let mut da = DigitalAsset::new();
+            da.create_and_mint_with_collection(
+                &mut context,
+                TokenStandard::ProgrammableNonFungible,
+                None,
+                None,
+                1,
+                collection.clone(),
+            )
+            .await
+            .unwrap();
+
+            da.assert_collection_matches_on_chain(&mut context, &collection)
+                .await;
+
+            let args = VerifyArgs::CollectionV1;
+            let payer = context.payer.dirty_clone();
+            let err = da
+                .verify(
+                    &mut context,
+                    payer,
+                    args,
+                    None,
+                    None,
+                    Some(collection_parent_nft.mint.pubkey()),
+                    Some(collection_parent_nft.pubkey),
+                    Some(parent_master_edition_account.pubkey),
+                )
+                .await
+                .unwrap_err();
+
+            assert_custom_error!(err, MetadataError::CollectionNotFound);
+
+            da.assert_collection_matches_on_chain(&mut context, &collection)
+                .await;
+        }
+
+        #[tokio::test]
+        async fn item_collection_key_does_not_match_passed_in_collection_mint() {
+            let mut context = program_test().start_with_context().await;
+
+            // Create a Collection Parent NFT with the CollectionDetails struct populated
+            let collection_parent_nft = Metadata::new();
+            collection_parent_nft
+                .create_v3(
+                    &mut context,
+                    "Test".to_string(),
+                    "TST".to_string(),
+                    "uri".to_string(),
+                    None,
+                    10,
+                    false,
+                    None,
+                    None,
+                    DEFAULT_COLLECTION_DETAILS, // Collection Parent
+                )
+                .await
+                .unwrap();
+
+            let parent_master_edition_account = MasterEditionV2::new(&collection_parent_nft);
+            parent_master_edition_account
+                .create_v3(&mut context, Some(0))
+                .await
+                .unwrap();
+
+            // Use a different collection key for the item.
+            let collection = Some(Collection {
+                key: Keypair::new().pubkey(),
+                verified: false,
+            });
+
+            let mut da = DigitalAsset::new();
+            da.create_and_mint_with_collection(
+                &mut context,
+                TokenStandard::ProgrammableNonFungible,
+                None,
+                None,
+                1,
+                collection.clone(),
+            )
+            .await
+            .unwrap();
+
+            da.assert_collection_matches_on_chain(&mut context, &collection)
+                .await;
+
+            let args = VerifyArgs::CollectionV1;
+            let payer = context.payer.dirty_clone();
+            let err = da
+                .verify(
+                    &mut context,
+                    payer,
+                    args,
+                    None,
+                    None,
+                    Some(collection_parent_nft.mint.pubkey()),
+                    Some(collection_parent_nft.pubkey),
+                    Some(parent_master_edition_account.pubkey),
+                )
+                .await
+                .unwrap_err();
+
+            assert_custom_error!(err, MetadataError::CollectionNotFound);
+
+            da.assert_collection_matches_on_chain(&mut context, &collection)
+                .await;
+        }
+
+        #[tokio::test]
+        async fn collection_metadata_mint_does_not_match_passed_in_collection_mint() {
+            let mut context = program_test().start_with_context().await;
+
+            // Create a Collection Parent NFT with the CollectionDetails struct populated
+            let collection_parent_nft = Metadata::new();
+            collection_parent_nft
+                .create_v3(
+                    &mut context,
+                    "Test".to_string(),
+                    "TST".to_string(),
+                    "uri".to_string(),
+                    None,
+                    10,
+                    false,
+                    None,
+                    None,
+                    DEFAULT_COLLECTION_DETAILS, // Collection Parent
+                )
+                .await
+                .unwrap();
+
+            let parent_master_edition_account = MasterEditionV2::new(&collection_parent_nft);
+            parent_master_edition_account
+                .create_v3(&mut context, Some(0))
+                .await
+                .unwrap();
+
+            // Create a second Collection Parent NFT with the CollectionDetails struct populated
+            let second_collection_parent_nft = Metadata::new();
+            second_collection_parent_nft
+                .create_v3(
+                    &mut context,
+                    "Test".to_string(),
+                    "TST".to_string(),
+                    "uri".to_string(),
+                    None,
+                    10,
+                    false,
+                    None,
+                    None,
+                    DEFAULT_COLLECTION_DETAILS, // Collection Parent
+                )
+                .await
+                .unwrap();
+
+            let collection = Some(Collection {
+                key: collection_parent_nft.mint.pubkey(),
+                verified: false,
+            });
+
+            let mut da = DigitalAsset::new();
+            da.create_and_mint_with_collection(
+                &mut context,
+                TokenStandard::ProgrammableNonFungible,
+                None,
+                None,
+                1,
+                collection.clone(),
+            )
+            .await
+            .unwrap();
+
+            da.assert_collection_matches_on_chain(&mut context, &collection)
+                .await;
+
+            let args = VerifyArgs::CollectionV1;
+            let payer = context.payer.dirty_clone();
+            let err = da
+                .verify(
+                    &mut context,
+                    payer,
+                    args,
+                    None,
+                    None,
+                    Some(second_collection_parent_nft.mint.pubkey()),
+                    Some(collection_parent_nft.pubkey),
+                    Some(parent_master_edition_account.pubkey),
+                )
+                .await
+                .unwrap_err();
+
+            assert_custom_error!(err, MetadataError::CollectionNotFound);
+
+            da.assert_collection_matches_on_chain(&mut context, &collection)
+                .await;
+        }
+
+        #[tokio::test]
         async fn collection_update_authority_pass() {
             let mut context = program_test().start_with_context().await;
 
