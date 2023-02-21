@@ -329,7 +329,7 @@ mod update {
         let mut program_test = ProgramTest::new("mpl_token_metadata", mpl_token_metadata::ID, None);
         program_test.add_program("mpl_token_auth_rules", mpl_token_auth_rules::ID, None);
         program_test.set_compute_max_units(400_000);
-        let mut context = &mut program_test.start_with_context().await;
+        let context = &mut program_test.start_with_context().await;
 
         let authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
 
