@@ -1,6 +1,6 @@
 [package]
 name = "mpl-bubblegum"
-version = "0.6.0"
+version = "0.7.0"
 description = "NFT Compression"
 authors = ["Metaplex Developers <dev@metaplex.com>"]
 repository = "https://github.com/metaplex-foundation/metaplex-program-library"
