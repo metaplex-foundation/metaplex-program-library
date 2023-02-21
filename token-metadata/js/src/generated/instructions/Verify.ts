@@ -36,7 +36,7 @@ export const VerifyStruct = new beet.BeetArgsStruct<
 /**
  * Accounts required by the _Verify_ instruction
  *
- * @property [**signer**] authority Creator to verify, collection owner or delegate
+ * @property [**signer**] authority Creator to verify, collection update authority or delegate
  * @property [] delegateRecord (optional) Delegate record PDA
  * @property [_writable_] metadata Metadata account
  * @property [] collectionMint (optional) Mint of the Collection

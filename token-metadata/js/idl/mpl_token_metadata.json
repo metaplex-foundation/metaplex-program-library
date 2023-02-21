@@ -3453,7 +3453,7 @@
           "name": "authority",
           "isMut": false,
           "isSigner": true,
-          "desc": "Creator to verify, collection owner or delegate"
+          "desc": "Creator to verify, collection update authority or delegate"
         },
         {
           "name": "delegateRecord",
