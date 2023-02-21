@@ -699,14 +699,14 @@ pub enum MetadataError {
     InvalidUpdateArgs,
 
     /// 177
-    #[error("Missing delegate record PDA account")]
-    MissingDelegateRecord,
+    //#[error("Missing delegate record PDA account")]
+    //MissingDelegateRecord,
 
-    /// 178
+    /// 177
     #[error("Missing collection mint account")]
     MissingCollectionMint,
 
-    /// 179
+    /// 178
     #[error("Missing collection master edition account")]
     MissingCollectionMasterEdition,
 }

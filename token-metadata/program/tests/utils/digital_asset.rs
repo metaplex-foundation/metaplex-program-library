@@ -11,8 +11,8 @@ use mpl_token_metadata::{
     pda::{find_metadata_delegate_record_account, find_token_record_account},
     processor::AuthorizationData,
     state::{
-        AssetData, Creator, Metadata, PrintSupply, ProgrammableConfig, TokenDelegateRole,
-        TokenMetadataAccount, TokenRecord, TokenStandard, EDITION, PREFIX,
+        AssetData, Collection, Creator, Metadata, PrintSupply, ProgrammableConfig,
+        TokenDelegateRole, TokenMetadataAccount, TokenRecord, TokenStandard, EDITION, PREFIX,
     },
 };
 use solana_program::{borsh::try_from_slice_unchecked, pubkey::Pubkey};
@@ -70,8 +70,8 @@ impl DigitalAsset {
         authority: Keypair,
         args: VerifyArgs,
         metadata: Option<Pubkey>,
-        collection_update_authority: Option<Pubkey>,
-        delegate: Option<Pubkey>,
+        //collection_update_authority: Option<Pubkey>,
+        delegate_record: Option<Pubkey>,
         collection_mint: Option<Pubkey>,
         collection_metadata: Option<Pubkey>,
         collection_master_edition: Option<Pubkey>,
@@ -84,16 +84,28 @@ impl DigitalAsset {
         match args {
             VerifyArgs::CreatorV1 => (),
             VerifyArgs::CollectionV1 => {
-                let (delegate_record, _) = find_metadata_delegate_record_account(
-                    &self.mint.pubkey(),
-                    MetadataDelegateRole::Collection,
-                    &collection_update_authority.unwrap(),
-                    &delegate.unwrap(),
-                );
-                builder.delegate_record(delegate_record);
-                builder.collection_mint(collection_mint.unwrap());
-                builder.collection_metadata(collection_metadata.unwrap());
-                builder.collection_master_edition(collection_master_edition.unwrap());
+                if let Some(delegate_record) = delegate_record {
+                    builder.delegate_record(delegate_record);
+                }
+
+                if let Some(collection_mint) = collection_mint {
+                    builder.collection_mint(collection_mint);
+                }
+
+                if let Some(collection_metadata) = collection_metadata {
+                    builder.collection_metadata(collection_metadata);
+                }
+
+                if let Some(collection_master_edition) = collection_master_edition {
+                    builder.collection_master_edition(collection_master_edition);
+                }
+
+                // let (delegate_record, _) = find_metadata_delegate_record_account(
+                //     &self.mint.pubkey(),
+                //     MetadataDelegateRole::Collection,
+                //     &collection_update_authority.unwrap(),
+                //     &delegate.unwrap(),
+                // );
             }
         }
 
@@ -129,6 +141,7 @@ impl DigitalAsset {
             String::from(DEFAULT_URI),
             500,
             creators,
+            None,
             authorization_rules,
         )
         .await
@@ -143,11 +156,13 @@ impl DigitalAsset {
         uri: String,
         seller_fee_basis_points: u16,
         creators: Option<Vec<Creator>>,
+        collection: Option<Collection>,
         authorization_rules: Option<Pubkey>,
     ) -> Result<(), BanksClientError> {
         let mut asset = AssetData::new(token_standard, name, symbol, uri);
         asset.seller_fee_basis_points = seller_fee_basis_points;
         asset.creators = creators;
+        asset.collection = collection;
         asset.rule_set = authorization_rules;
 
         let payer_pubkey = context.payer.pubkey();
@@ -309,6 +324,36 @@ impl DigitalAsset {
             String::from(DEFAULT_URI),
             500,
             creators,
+            None,
+            authorization_rules,
+        )
+        .await
+        .unwrap();
+
+        // mints tokens
+        self.mint(context, authorization_rules, authorization_data, amount)
+            .await
+    }
+
+    pub async fn create_and_mint_with_collection(
+        &mut self,
+        context: &mut ProgramTestContext,
+        token_standard: TokenStandard,
+        authorization_rules: Option<Pubkey>,
+        authorization_data: Option<AuthorizationData>,
+        amount: u64,
+        collection: Option<Collection>,
+    ) -> Result<(), BanksClientError> {
+        // creates the metadata
+        self.create_advanced(
+            context,
+            token_standard,
+            String::from(DEFAULT_NAME),
+            String::from(DEFAULT_SYMBOL),
+            String::from(DEFAULT_URI),
+            500,
+            None,
+            collection,
             authorization_rules,
         )
         .await

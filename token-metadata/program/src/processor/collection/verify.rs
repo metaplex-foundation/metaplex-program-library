@@ -56,9 +56,8 @@ fn verify_collection_v1(program_id: &Pubkey, ctx: Context<Verify>) -> ProgramRes
     // Authority account is the collection authority and must be a signer.
     assert_signer(ctx.accounts.authority_info)?;
 
-    match ctx.accounts.delegate_record_info {
-        Some(delegate_record_info) => assert_owned_by(delegate_record_info, program_id)?,
-        None => return Err(MetadataError::MissingDelegateRecord.into()),
+    if let Some(delegate_record_info) = ctx.accounts.delegate_record_info {
+        assert_owned_by(delegate_record_info, program_id)?;
     }
 
     assert_owned_by(ctx.accounts.metadata_info, program_id)?;
