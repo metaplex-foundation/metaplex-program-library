@@ -53,6 +53,7 @@ export async function createDefaultAsset(
   payer: Keypair,
   tokenStandard: TokenStandard = TokenStandard.NonFungible,
   ruleSet: PublicKey | null = null,
+  collection: PublicKey | null = null,
 ): Promise<DigitalAssetManager> {
   const name = 'DigitalAsset';
   const symbol = 'DA';
@@ -74,7 +75,7 @@ export async function createDefaultAsset(
     primarySaleHappened: false,
     isMutable: true,
     tokenStandard,
-    collection: null,
+    collection: collection ? { key: collection, verified: false } : null,
     uses: null,
     collectionDetails: null,
     ruleSet,
@@ -102,6 +103,7 @@ export async function createAndMintDefaultAsset(
   tokenStandard: TokenStandard = TokenStandard.NonFungible,
   ruleSet: PublicKey | null = null,
   amount = 1,
+  collection: PublicKey | null = null,
 ): Promise<DigitalAssetManager> {
   const daManager = await createDefaultAsset(
     t,
@@ -111,6 +113,7 @@ export async function createAndMintDefaultAsset(
     payer,
     tokenStandard,
     ruleSet,
+    collection,
   );
   const { mint, metadata, masterEdition } = daManager;
 

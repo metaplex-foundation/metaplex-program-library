@@ -31,6 +31,7 @@ export type DelegateArgsRecord = {
     lockedAddress: web3.PublicKey;
     authorizationData: beet.COption<AuthorizationData>;
   };
+  ProgrammableConfigV1: { authorizationData: beet.COption<AuthorizationData> };
 };
 
 /**
@@ -69,6 +70,9 @@ export const isDelegateArgsStandardV1 = (
 export const isDelegateArgsLockedTransferV1 = (
   x: DelegateArgs,
 ): x is DelegateArgs & { __kind: 'LockedTransferV1' } => x.__kind === 'LockedTransferV1';
+export const isDelegateArgsProgrammableConfigV1 = (
+  x: DelegateArgs,
+): x is DelegateArgs & { __kind: 'ProgrammableConfigV1' } => x.__kind === 'ProgrammableConfigV1';
 
 /**
  * @category userTypes
@@ -152,6 +156,14 @@ export const delegateArgsBeet = beet.dataEnum<DelegateArgsRecord>([
         ['authorizationData', beet.coption(authorizationDataBeet)],
       ],
       'DelegateArgsRecord["LockedTransferV1"]',
+    ),
+  ],
+
+  [
+    'ProgrammableConfigV1',
+    new beet.FixableBeetArgsStruct<DelegateArgsRecord['ProgrammableConfigV1']>(
+      [['authorizationData', beet.coption(authorizationDataBeet)]],
+      'DelegateArgsRecord["ProgrammableConfigV1"]',
     ),
   ],
 ]) as beet.FixableBeet<DelegateArgs, DelegateArgs>;

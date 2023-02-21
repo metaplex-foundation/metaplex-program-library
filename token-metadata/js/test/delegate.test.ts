@@ -21,11 +21,11 @@ import { encode } from '@msgpack/msgpack';
 
 killStuckProcess();
 
-test('Delegate: create collection delegate', async (t) => {
+test('Delegate: create update collection items delegate', async (t) => {
   const API = new InitTransactions();
   const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
 
-  const manager = await createAndMintDefaultAsset(
+  const collection = await createAndMintDefaultAsset(
     t,
     connection,
     API,
@@ -42,7 +42,7 @@ test('Delegate: create collection delegate', async (t) => {
     [
       Buffer.from('metadata'),
       PROGRAM_ID.toBuffer(),
-      manager.mint.toBuffer(),
+      collection.mint.toBuffer(),
       Buffer.from('collection_delegate'),
       payer.publicKey.toBuffer(),
       delegate.toBuffer(),
@@ -58,14 +58,14 @@ test('Delegate: create collection delegate', async (t) => {
 
   const { tx: delegateTx } = await API.delegate(
     delegate,
-    manager.mint,
-    manager.metadata,
+    collection.mint,
+    collection.metadata,
     payer.publicKey,
     payer,
     args,
     handler,
     delegateRecord,
-    manager.masterEdition,
+    collection.masterEdition,
   );
 
   await delegateTx.assertSuccess(t);
@@ -74,7 +74,7 @@ test('Delegate: create collection delegate', async (t) => {
 
   spok(t, pda, {
     delegate: spokSamePubkey(delegate),
-    mint: spokSamePubkey(manager.mint),
+    mint: spokSamePubkey(collection.mint),
   });
 });
 

@@ -16,6 +16,7 @@ impl Default for MembershipModel {
     }
 }
 
+pub const FANOUT_ACCOUNT_SIZE: usize = 300;
 #[account]
 #[derive(Default, Debug)]
 pub struct Fanout {

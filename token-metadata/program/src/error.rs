@@ -691,6 +691,10 @@ pub enum MetadataError {
     /// 175
     #[error("")]
     InvalidInstructionsSysvar,
+
+    /// 175
+    #[error("Authority cannot apply all update args")]
+    InvalidUpdateArgs,
 }
 
 impl PrintProgramError for MetadataError {
