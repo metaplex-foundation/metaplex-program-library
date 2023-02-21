@@ -11,8 +11,9 @@ use mpl_token_metadata::{
     pda::{find_metadata_delegate_record_account, find_token_record_account},
     processor::AuthorizationData,
     state::{
-        AssetData, Collection, Creator, Metadata, PrintSupply, ProgrammableConfig,
-        TokenDelegateRole, TokenMetadataAccount, TokenRecord, TokenStandard, EDITION, PREFIX,
+        AssetData, Collection, CollectionDetails, Creator, Metadata, PrintSupply,
+        ProgrammableConfig, TokenDelegateRole, TokenMetadataAccount, TokenRecord, TokenStandard,
+        EDITION, PREFIX,
     },
 };
 use solana_program::{borsh::try_from_slice_unchecked, pubkey::Pubkey};
@@ -142,6 +143,7 @@ impl DigitalAsset {
             500,
             creators,
             None,
+            None,
             authorization_rules,
         )
         .await
@@ -157,12 +159,14 @@ impl DigitalAsset {
         seller_fee_basis_points: u16,
         creators: Option<Vec<Creator>>,
         collection: Option<Collection>,
+        collection_details: Option<CollectionDetails>,
         authorization_rules: Option<Pubkey>,
     ) -> Result<(), BanksClientError> {
         let mut asset = AssetData::new(token_standard, name, symbol, uri);
         asset.seller_fee_basis_points = seller_fee_basis_points;
         asset.creators = creators;
         asset.collection = collection;
+        asset.collection_details = collection_details;
         asset.rule_set = authorization_rules;
 
         let payer_pubkey = context.payer.pubkey();
@@ -325,6 +329,7 @@ impl DigitalAsset {
             500,
             creators,
             None,
+            None,
             authorization_rules,
         )
         .await
@@ -335,7 +340,7 @@ impl DigitalAsset {
             .await
     }
 
-    pub async fn create_and_mint_with_collection(
+    pub async fn create_and_mint_item_with_collection(
         &mut self,
         context: &mut ProgramTestContext,
         token_standard: TokenStandard,
@@ -354,6 +359,37 @@ impl DigitalAsset {
             500,
             None,
             collection,
+            None,
+            authorization_rules,
+        )
+        .await
+        .unwrap();
+
+        // mints tokens
+        self.mint(context, authorization_rules, authorization_data, amount)
+            .await
+    }
+
+    pub async fn create_and_mint_collection_parent(
+        &mut self,
+        context: &mut ProgramTestContext,
+        token_standard: TokenStandard,
+        authorization_rules: Option<Pubkey>,
+        authorization_data: Option<AuthorizationData>,
+        amount: u64,
+        collection_details: Option<CollectionDetails>,
+    ) -> Result<(), BanksClientError> {
+        // creates the metadata
+        self.create_advanced(
+            context,
+            token_standard,
+            String::from(DEFAULT_NAME),
+            String::from(DEFAULT_SYMBOL),
+            String::from(DEFAULT_URI),
+            500,
+            None,
+            None,
+            collection_details,
             authorization_rules,
         )
         .await

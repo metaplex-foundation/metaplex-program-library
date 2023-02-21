@@ -257,7 +257,7 @@ mod pnft {
             });
 
             let mut da = DigitalAsset::new();
-            da.create_and_mint_with_collection(
+            da.create_and_mint_item_with_collection(
                 &mut context,
                 TokenStandard::ProgrammableNonFungible,
                 None,
@@ -329,7 +329,7 @@ mod pnft {
             });
 
             let mut da = DigitalAsset::new();
-            da.create_and_mint_with_collection(
+            da.create_and_mint_item_with_collection(
                 &mut context,
                 TokenStandard::ProgrammableNonFungible,
                 None,
@@ -401,7 +401,7 @@ mod pnft {
             });
 
             let mut da = DigitalAsset::new();
-            da.create_and_mint_with_collection(
+            da.create_and_mint_item_with_collection(
                 &mut context,
                 TokenStandard::ProgrammableNonFungible,
                 None,
@@ -473,7 +473,7 @@ mod pnft {
             });
 
             let mut da = DigitalAsset::new();
-            da.create_and_mint_with_collection(
+            da.create_and_mint_item_with_collection(
                 &mut context,
                 TokenStandard::ProgrammableNonFungible,
                 None,
@@ -545,7 +545,7 @@ mod pnft {
             });
 
             let mut da = DigitalAsset::new();
-            da.create_and_mint_with_collection(
+            da.create_and_mint_item_with_collection(
                 &mut context,
                 TokenStandard::ProgrammableNonFungible,
                 None,
@@ -615,7 +615,7 @@ mod pnft {
             });
 
             let mut da = DigitalAsset::new();
-            da.create_and_mint_with_collection(
+            da.create_and_mint_item_with_collection(
                 &mut context,
                 TokenStandard::ProgrammableNonFungible,
                 None,
@@ -685,7 +685,7 @@ mod pnft {
             });
 
             let mut da = DigitalAsset::new();
-            da.create_and_mint_with_collection(
+            da.create_and_mint_item_with_collection(
                 &mut context,
                 TokenStandard::ProgrammableNonFungible,
                 None,
@@ -755,7 +755,7 @@ mod pnft {
             });
 
             let mut da = DigitalAsset::new();
-            da.create_and_mint_with_collection(
+            da.create_and_mint_item_with_collection(
                 &mut context,
                 TokenStandard::ProgrammableNonFungible,
                 None,
@@ -850,7 +850,7 @@ mod pnft {
             let collection = None;
 
             let mut da = DigitalAsset::new();
-            da.create_and_mint_with_collection(
+            da.create_and_mint_item_with_collection(
                 &mut context,
                 TokenStandard::ProgrammableNonFungible,
                 None,
@@ -921,7 +921,7 @@ mod pnft {
             });
 
             let mut da = DigitalAsset::new();
-            da.create_and_mint_with_collection(
+            da.create_and_mint_item_with_collection(
                 &mut context,
                 TokenStandard::ProgrammableNonFungible,
                 None,
@@ -1009,7 +1009,7 @@ mod pnft {
             });
 
             let mut da = DigitalAsset::new();
-            da.create_and_mint_with_collection(
+            da.create_and_mint_item_with_collection(
                 &mut context,
                 TokenStandard::ProgrammableNonFungible,
                 None,
@@ -1079,7 +1079,7 @@ mod pnft {
             });
 
             let mut da = DigitalAsset::new();
-            da.create_and_mint_with_collection(
+            da.create_and_mint_item_with_collection(
                 &mut context,
                 TokenStandard::ProgrammableNonFungible,
                 None,
@@ -1125,7 +1125,7 @@ mod pnft {
         }
 
         #[tokio::test]
-        async fn collection_update_authority_pass() {
+        async fn pass_collection_update_authority() {
             let mut context = program_test().start_with_context().await;
 
             // Create a Collection Parent NFT with the CollectionDetails struct populated
@@ -1158,7 +1158,7 @@ mod pnft {
             });
 
             let mut da = DigitalAsset::new();
-            da.create_and_mint_with_collection(
+            da.create_and_mint_item_with_collection(
                 &mut context,
                 TokenStandard::ProgrammableNonFungible,
                 None,
@@ -1189,6 +1189,68 @@ mod pnft {
 
             let verified_collection = Some(Collection {
                 key: collection_parent_nft.mint.pubkey(),
+                verified: true,
+            });
+
+            da.assert_collection_matches_on_chain(&mut context, &verified_collection)
+                .await;
+        }
+
+        #[tokio::test]
+        async fn pass_collection_update_authority_collection_created_new_handlers() {
+            let mut context = program_test().start_with_context().await;
+
+            // Create a Collection Parent NFT with the CollectionDetails struct populated
+            let mut collection_parent_da = DigitalAsset::new();
+            collection_parent_da
+                .create_and_mint_collection_parent(
+                    &mut context,
+                    TokenStandard::NonFungible,
+                    None,
+                    None,
+                    1,
+                    DEFAULT_COLLECTION_DETAILS,
+                )
+                .await
+                .unwrap();
+
+            let collection = Some(Collection {
+                key: collection_parent_da.mint.pubkey(),
+                verified: false,
+            });
+
+            let mut da = DigitalAsset::new();
+            da.create_and_mint_item_with_collection(
+                &mut context,
+                TokenStandard::ProgrammableNonFungible,
+                None,
+                None,
+                1,
+                collection.clone(),
+            )
+            .await
+            .unwrap();
+
+            da.assert_collection_matches_on_chain(&mut context, &collection)
+                .await;
+
+            let args = VerifyArgs::CollectionV1;
+            let payer = context.payer.dirty_clone();
+            da.verify(
+                &mut context,
+                payer,
+                args,
+                None,
+                None,
+                Some(collection_parent_da.mint.pubkey()),
+                Some(collection_parent_da.metadata),
+                Some(collection_parent_da.master_edition.unwrap()),
+            )
+            .await
+            .unwrap();
+
+            let verified_collection = Some(Collection {
+                key: collection_parent_da.mint.pubkey(),
                 verified: true,
             });
 
