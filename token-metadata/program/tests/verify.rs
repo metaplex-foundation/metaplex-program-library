@@ -4,7 +4,9 @@ pub mod utils;
 
 use mpl_token_metadata::{
     error::MetadataError,
-    instruction::{DelegateArgs, MetadataDelegateRole, VerifyArgs},
+    instruction::{
+        builders::VerifyBuilder, DelegateArgs, InstructionBuilder, MetadataDelegateRole, VerifyArgs,
+    },
     pda::{find_metadata_delegate_record_account, find_token_record_account},
     state::{Collection, CollectionDetails, Creator, TokenStandard},
 };
@@ -12,7 +14,7 @@ use num_traits::FromPrimitive;
 use solana_program::native_token::LAMPORTS_PER_SOL;
 use solana_program_test::*;
 use solana_sdk::{
-    instruction::InstructionError, signature::Keypair, signer::Signer,
+    instruction::InstructionError, signature::Keypair, signer::Signer, transaction::Transaction,
     transaction::TransactionError,
 };
 use utils::*;
@@ -1135,6 +1137,135 @@ mod pnft {
 
             da.assert_item_collection_matches_on_chain(&mut context, &collection)
                 .await;
+        }
+
+        #[tokio::test]
+        async fn pass_sized_collection_update_authority_collection_and_item_old_handlers() {
+            pass_collection_update_authority_collection_and_item_old_handlers(
+                DEFAULT_COLLECTION_DETAILS,
+            )
+            .await;
+        }
+
+        #[tokio::test]
+        async fn pass_unsized_collection_update_authority_collection_and_item_old_handlers() {
+            pass_collection_update_authority_collection_and_item_old_handlers(None).await;
+        }
+
+        async fn pass_collection_update_authority_collection_and_item_old_handlers(
+            collection_details: Option<CollectionDetails>,
+        ) {
+            let mut context = program_test().start_with_context().await;
+
+            // Create a Collection Parent NFT with the CollectionDetails struct populated
+            let collection_parent_nft = Metadata::new();
+            collection_parent_nft
+                .create_v3(
+                    &mut context,
+                    "Test".to_string(),
+                    "TST".to_string(),
+                    "uri".to_string(),
+                    None,
+                    10,
+                    false,
+                    None,
+                    None,
+                    collection_details.clone(), // Collection Parent
+                )
+                .await
+                .unwrap();
+
+            let parent_master_edition_account = MasterEditionV2::new(&collection_parent_nft);
+            parent_master_edition_account
+                .create_v3(&mut context, Some(0))
+                .await
+                .unwrap();
+
+            let collection_metadata = collection_parent_nft.get_data(&mut context).await;
+            assert_eq!(collection_metadata.collection_details, collection_details);
+
+            let collection = Some(Collection {
+                key: collection_parent_nft.mint.pubkey(),
+                verified: false,
+            });
+
+            // Create our item using old handler.
+            let name = "Test".to_string();
+            let symbol = "TST".to_string();
+            let uri = "uri".to_string();
+            let test_metadata = Metadata::new();
+            test_metadata
+                .create_v2(
+                    &mut context,
+                    name,
+                    symbol,
+                    uri,
+                    None,
+                    10,
+                    false,
+                    collection,
+                    None,
+                )
+                .await
+                .unwrap();
+
+            // Check metadata unverified collection.
+            let metadata = test_metadata.get_data(&mut context).await;
+            assert_eq!(
+                metadata.collection.to_owned().unwrap().key,
+                collection_parent_nft.mint.pubkey()
+            );
+            assert!(!metadata.collection.unwrap().verified);
+
+            // Check collection details.
+            let collection_metadata = collection_parent_nft.get_data(&mut context).await;
+            assert_eq!(collection_metadata.collection_details, collection_details);
+
+            // Build verify instruction.
+            let mut builder = VerifyBuilder::new();
+            builder
+                .authority(context.payer.pubkey())
+                .metadata(test_metadata.pubkey)
+                .collection_mint(collection_parent_nft.mint.pubkey())
+                .collection_metadata(collection_parent_nft.pubkey)
+                .collection_master_edition(parent_master_edition_account.pubkey);
+
+            let verify_ix = builder
+                .build(VerifyArgs::CollectionV1)
+                .unwrap()
+                .instruction();
+
+            let transaction = Transaction::new_signed_with_payer(
+                &[verify_ix],
+                Some(&context.payer.pubkey()),
+                &[&context.payer],
+                context.last_blockhash,
+            );
+
+            context
+                .banks_client
+                .process_transaction(transaction)
+                .await
+                .unwrap();
+
+            // Check metadata verified collection.
+            let metadata = test_metadata.get_data(&mut context).await;
+            assert_eq!(
+                metadata.collection.to_owned().unwrap().key,
+                collection_parent_nft.mint.pubkey()
+            );
+            assert!(metadata.collection.unwrap().verified);
+
+            // If sized collection, check collection parent size is updated.
+            let verified_collection_details = collection_details.map(|details| match details {
+                CollectionDetails::V1 { size } => CollectionDetails::V1 { size: size + 1 },
+            });
+
+            let collection_metadata = collection_parent_nft.get_data(&mut context).await;
+            assert_eq!(
+                collection_metadata.collection_details,
+                verified_collection_details
+            );
         }
 
         #[tokio::test]
