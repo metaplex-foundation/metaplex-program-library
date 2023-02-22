@@ -14,7 +14,6 @@ use std::{assert_eq, time::SystemTime};
 use solana_program::{instruction::Instruction, system_program, sysvar};
 
 use solana_program::program_pack::Pack;
-use std::str::FromStr;
 
 use mpl_auction_house::pda::{
     find_auctioneer_pda, find_escrow_payment_address, find_program_as_signer_address,
