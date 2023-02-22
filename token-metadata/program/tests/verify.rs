@@ -1136,20 +1136,22 @@ mod verify_collection {
             .await;
     }
 
+    // TODO ADD METADATA FAIL HERE
+
     #[tokio::test]
-    async fn pass_sized_collection_update_authority_collection_and_item_old_handlers() {
-        pass_collection_update_authority_collection_and_item_old_handlers(
+    async fn pass_item_nft_sized_collection_update_authority_collection_and_item_old_handlers() {
+        pass_item_nft_collection_update_authority_collection_and_item_old_handlers(
             DEFAULT_COLLECTION_DETAILS,
         )
         .await;
     }
 
     #[tokio::test]
-    async fn pass_unsized_collection_update_authority_collection_and_item_old_handlers() {
-        pass_collection_update_authority_collection_and_item_old_handlers(None).await;
+    async fn pass_item_nft_unsized_collection_update_authority_collection_and_item_old_handlers() {
+        pass_item_nft_collection_update_authority_collection_and_item_old_handlers(None).await;
     }
 
-    async fn pass_collection_update_authority_collection_and_item_old_handlers(
+    async fn pass_item_nft_collection_update_authority_collection_and_item_old_handlers(
         collection_details: Option<CollectionDetails>,
     ) {
         let mut context = program_test().start_with_context().await;
@@ -1266,16 +1268,19 @@ mod verify_collection {
     }
 
     #[tokio::test]
-    async fn pass_sized_collection_update_authority_collection_old_handler() {
-        pass_collection_update_authority_collection_old_handler(DEFAULT_COLLECTION_DETAILS).await;
+    async fn pass_item_pnft_sized_collection_update_authority_collection_old_handler() {
+        pass_item_pnft_collection_update_authority_collection_old_handler(
+            DEFAULT_COLLECTION_DETAILS,
+        )
+        .await;
     }
 
     #[tokio::test]
-    async fn pass_unsized_collection_update_authority_collection_old_handler() {
-        pass_collection_update_authority_collection_old_handler(None).await;
+    async fn pass_item_pnft_unsized_collection_update_authority_collection_old_handler() {
+        pass_item_pnft_collection_update_authority_collection_old_handler(None).await;
     }
 
-    async fn pass_collection_update_authority_collection_old_handler(
+    async fn pass_item_pnft_collection_update_authority_collection_old_handler(
         collection_details: Option<CollectionDetails>,
     ) {
         let mut context = program_test().start_with_context().await;
@@ -1616,36 +1621,28 @@ mod verify_collection {
     }
 
     #[tokio::test]
-    async fn update_delegate_cannot_verify_collection_created_new_handlers() {
+    async fn update_delegate_cannot_verify() {
         let delegate_args = DelegateArgs::UpdateV1 {
             authorization_data: None,
         };
 
         let delegate_role = MetadataDelegateRole::Update;
 
-        metadata_delegate_cannot_verify_collection_created_new_handlers(
-            delegate_args,
-            delegate_role,
-        )
-        .await;
+        other_metadata_delegates_cannot_verify(delegate_args, delegate_role).await;
     }
 
     #[tokio::test]
-    async fn programmable_config_delegate_cannot_verify_collection_created_new_handlers() {
+    async fn programmable_config_delegate_cannot_verify() {
         let delegate_args = DelegateArgs::ProgrammableConfigV1 {
             authorization_data: None,
         };
 
         let delegate_role = MetadataDelegateRole::ProgrammableConfig;
 
-        metadata_delegate_cannot_verify_collection_created_new_handlers(
-            delegate_args,
-            delegate_role,
-        )
-        .await;
+        other_metadata_delegates_cannot_verify(delegate_args, delegate_role).await;
     }
 
-    async fn metadata_delegate_cannot_verify_collection_created_new_handlers(
+    async fn other_metadata_delegates_cannot_verify(
         delegate_args: DelegateArgs,
         delegate_role: MetadataDelegateRole,
     ) {
@@ -1739,7 +1736,7 @@ mod verify_collection {
     }
 
     #[tokio::test]
-    async fn other_collection_delegate_cannot_verify_collection_created_new_handlers() {
+    async fn delegate_for_different_collection_cannot_verify() {
         let mut context = program_test().start_with_context().await;
 
         // Create a Collection Parent NFT with the CollectionDetails struct populated
@@ -1868,7 +1865,7 @@ mod verify_collection {
     }
 
     #[tokio::test]
-    async fn standard_delegate_fails_collection_created_new_handlers() {
+    async fn standard_delegate_fails() {
         let mut context = program_test().start_with_context().await;
 
         // Create a Collection Parent NFT with the CollectionDetails struct populated
