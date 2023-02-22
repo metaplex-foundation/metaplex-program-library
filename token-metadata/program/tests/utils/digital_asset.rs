@@ -65,13 +65,13 @@ impl DigitalAsset {
         }
     }
 
+    // Note the authority is the payer of the transaction.
     pub async fn verify(
         &mut self,
         context: &mut ProgramTestContext,
         authority: Keypair,
         args: VerifyArgs,
         metadata: Option<Pubkey>,
-        //collection_update_authority: Option<Pubkey>,
         delegate_record: Option<Pubkey>,
         collection_mint: Option<Pubkey>,
         collection_metadata: Option<Pubkey>,
@@ -100,13 +100,6 @@ impl DigitalAsset {
                 if let Some(collection_master_edition) = collection_master_edition {
                     builder.collection_master_edition(collection_master_edition);
                 }
-
-                // let (delegate_record, _) = find_metadata_delegate_record_account(
-                //     &self.mint.pubkey(),
-                //     MetadataDelegateRole::Collection,
-                //     &collection_update_authority.unwrap(),
-                //     &delegate.unwrap(),
-                // );
             }
         }
 
