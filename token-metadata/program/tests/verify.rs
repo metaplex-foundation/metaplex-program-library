@@ -1138,16 +1138,19 @@ mod pnft {
         }
 
         #[tokio::test]
-        async fn pass_sized_collection_update_authority() {
-            pass_collection_update_authority(DEFAULT_COLLECTION_DETAILS).await;
+        async fn pass_sized_collection_update_authority_collection_old_handler() {
+            pass_collection_update_authority_collection_old_handler(DEFAULT_COLLECTION_DETAILS)
+                .await;
         }
 
         #[tokio::test]
-        async fn pass_unsized_collection_update_authority() {
-            pass_collection_update_authority(None).await;
+        async fn pass_unsized_collection_update_authority_collection_old_handler() {
+            pass_collection_update_authority_collection_old_handler(None).await;
         }
 
-        async fn pass_collection_update_authority(collection_details: Option<CollectionDetails>) {
+        async fn pass_collection_update_authority_collection_old_handler(
+            collection_details: Option<CollectionDetails>,
+        ) {
             let mut context = program_test().start_with_context().await;
 
             // Create a Collection Parent NFT with the CollectionDetails struct populated
@@ -1163,7 +1166,7 @@ mod pnft {
                     false,
                     None,
                     None,
-                    collection_details, // Collection Parent
+                    collection_details.clone(), // Collection Parent
                 )
                 .await
                 .unwrap();
@@ -1173,6 +1176,9 @@ mod pnft {
                 .create_v3(&mut context, Some(0))
                 .await
                 .unwrap();
+
+            let collection_metadata = collection_parent_nft.get_data(&mut context).await;
+            assert_eq!(collection_metadata.collection_details, collection_details);
 
             let collection = Some(Collection {
                 key: collection_parent_nft.mint.pubkey(),
@@ -1193,6 +1199,9 @@ mod pnft {
 
             da.assert_item_collection_matches_on_chain(&mut context, &collection)
                 .await;
+
+            let collection_metadata = collection_parent_nft.get_data(&mut context).await;
+            assert_eq!(collection_metadata.collection_details, collection_details);
 
             let args = VerifyArgs::CollectionV1;
             let payer = context.payer.dirty_clone();
@@ -1216,12 +1225,21 @@ mod pnft {
 
             da.assert_item_collection_matches_on_chain(&mut context, &verified_collection)
                 .await;
+
+            let verified_collection_details = collection_details.map(|details| match details {
+                CollectionDetails::V1 { size } => CollectionDetails::V1 { size: size + 1 },
+            });
+
+            let collection_metadata = collection_parent_nft.get_data(&mut context).await;
+            assert_eq!(
+                collection_metadata.collection_details,
+                verified_collection_details
+            );
         }
 
         #[tokio::test]
-        async fn pass_item_pnft_sized_collection_update_authority_collection_created_new_handlers()
-        {
-            pass_collection_update_authority_collection_created_new_handlers(
+        async fn pass_item_pnft_sized_collection_update_authority_collection_new_handler() {
+            pass_collection_update_authority_collection_new_handler(
                 DEFAULT_COLLECTION_DETAILS,
                 TokenStandard::ProgrammableNonFungible,
             )
@@ -1229,8 +1247,8 @@ mod pnft {
         }
 
         #[tokio::test]
-        async fn pass_item_nft_sized_collection_update_authority_collection_created_new_handlers() {
-            pass_collection_update_authority_collection_created_new_handlers(
+        async fn pass_item_nft_sized_collection_update_authority_collection_new_handler() {
+            pass_collection_update_authority_collection_new_handler(
                 DEFAULT_COLLECTION_DETAILS,
                 TokenStandard::NonFungible,
             )
@@ -1238,9 +1256,8 @@ mod pnft {
         }
 
         #[tokio::test]
-        async fn pass_item_pnft_unsized_collection_update_authority_collection_created_new_handlers(
-        ) {
-            pass_collection_update_authority_collection_created_new_handlers(
+        async fn pass_item_pnft_unsized_collection_update_authority_collection_new_handler() {
+            pass_collection_update_authority_collection_new_handler(
                 None,
                 TokenStandard::ProgrammableNonFungible,
             )
@@ -1248,16 +1265,15 @@ mod pnft {
         }
 
         #[tokio::test]
-        async fn pass_item_nft_unsized_collection_update_authority_collection_created_new_handlers()
-        {
-            pass_collection_update_authority_collection_created_new_handlers(
+        async fn pass_item_nft_unsized_collection_update_authority_collection_new_handler() {
+            pass_collection_update_authority_collection_new_handler(
                 None,
                 TokenStandard::NonFungible,
             )
             .await;
         }
 
-        async fn pass_collection_update_authority_collection_created_new_handlers(
+        async fn pass_collection_update_authority_collection_new_handler(
             collection_details: Option<CollectionDetails>,
             item_token_standard: TokenStandard,
         ) {
@@ -1341,8 +1357,8 @@ mod pnft {
         }
 
         #[tokio::test]
-        async fn pass_item_pnft_delegated_authority_sized_collection_created_new_handlers() {
-            pass_delegated_authority_collection_created_new_handlers(
+        async fn pass_item_pnft_delegated_authority_sized_collection_new_handler() {
+            pass_delegated_authority_collection_new_handler(
                 DEFAULT_COLLECTION_DETAILS,
                 TokenStandard::ProgrammableNonFungible,
             )
@@ -1350,8 +1366,8 @@ mod pnft {
         }
 
         #[tokio::test]
-        async fn pass_item_nft_delegated_authority_sized_collection_created_new_handlers() {
-            pass_delegated_authority_collection_created_new_handlers(
+        async fn pass_item_nft_delegated_authority_sized_collection_new_handler() {
+            pass_delegated_authority_collection_new_handler(
                 DEFAULT_COLLECTION_DETAILS,
                 TokenStandard::NonFungible,
             )
@@ -1359,8 +1375,8 @@ mod pnft {
         }
 
         #[tokio::test]
-        async fn pass_item_pnft_delegated_authority_unsized_collection_created_new_handlers() {
-            pass_delegated_authority_collection_created_new_handlers(
+        async fn pass_item_pnft_delegated_authority_unsized_collection_new_handler() {
+            pass_delegated_authority_collection_new_handler(
                 None,
                 TokenStandard::ProgrammableNonFungible,
             )
@@ -1368,15 +1384,11 @@ mod pnft {
         }
 
         #[tokio::test]
-        async fn pass_item_nft_delegated_authority_unsized_collection_created_new_handlers() {
-            pass_delegated_authority_collection_created_new_handlers(
-                None,
-                TokenStandard::NonFungible,
-            )
-            .await;
+        async fn pass_item_nft_delegated_authority_unsized_collection_new_handler() {
+            pass_delegated_authority_collection_new_handler(None, TokenStandard::NonFungible).await;
         }
 
-        async fn pass_delegated_authority_collection_created_new_handlers(
+        async fn pass_delegated_authority_collection_new_handler(
             collection_details: Option<CollectionDetails>,
             item_token_standard: TokenStandard,
         ) {
