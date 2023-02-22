@@ -1467,7 +1467,7 @@ mod pnft {
 
             let (delegate_record, _) = find_metadata_delegate_record_account(
                 &collection_parent_da.mint.pubkey(),
-                MetadataDelegateRole::Collection,
+                MetadataDelegateRole::Update,
                 &payer_pubkey,
                 &delegate.pubkey(),
             );
@@ -1487,7 +1487,7 @@ mod pnft {
                 .await
                 .unwrap_err();
 
-            assert_custom_error!(err, MetadataError::IncorrectOwner);
+            assert_custom_error!(err, MetadataError::UpdateAuthorityIncorrect);
 
             da.assert_item_collection_matches_on_chain(&mut context, &collection)
                 .await;
