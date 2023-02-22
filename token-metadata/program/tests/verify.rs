@@ -1314,7 +1314,19 @@ mod pnft {
         }
 
         #[tokio::test]
-        async fn pass_delegated_authority_collection_created_new_handlers() {
+        async fn pass_delegated_authority_sized_collection_created_new_handlers() {
+            pass_delegated_authority_collection_created_new_handlers(DEFAULT_COLLECTION_DETAILS)
+                .await;
+        }
+
+        #[tokio::test]
+        async fn pass_delegated_authority_unsized_collection_created_new_handlers() {
+            pass_delegated_authority_collection_created_new_handlers(None).await;
+        }
+
+        async fn pass_delegated_authority_collection_created_new_handlers(
+            collection_details: Option<CollectionDetails>,
+        ) {
             let mut context = program_test().start_with_context().await;
 
             // Create a Collection Parent NFT with the CollectionDetails struct populated
@@ -1326,16 +1338,13 @@ mod pnft {
                     None,
                     None,
                     1,
-                    DEFAULT_COLLECTION_DETAILS,
+                    collection_details.clone(),
                 )
                 .await
                 .unwrap();
 
             collection_parent_da
-                .assert_collection_details_matches_on_chain(
-                    &mut context,
-                    &DEFAULT_COLLECTION_DETAILS,
-                )
+                .assert_collection_details_matches_on_chain(&mut context, &collection_details)
                 .await;
 
             let collection = Some(Collection {
@@ -1359,10 +1368,7 @@ mod pnft {
                 .await;
 
             collection_parent_da
-                .assert_collection_details_matches_on_chain(
-                    &mut context,
-                    &DEFAULT_COLLECTION_DETAILS,
-                )
+                .assert_collection_details_matches_on_chain(&mut context, &collection_details)
                 .await;
 
             // Create a Collection delegate.
@@ -1414,7 +1420,9 @@ mod pnft {
             da.assert_item_collection_matches_on_chain(&mut context, &verified_collection)
                 .await;
 
-            let verified_collection_details = Some(CollectionDetails::V1 { size: 1 });
+            let verified_collection_details = collection_details.map(|details| match details {
+                CollectionDetails::V1 { size } => CollectionDetails::V1 { size: size + 1 },
+            });
 
             collection_parent_da
                 .assert_collection_details_matches_on_chain(
