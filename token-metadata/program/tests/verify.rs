@@ -1392,5 +1392,112 @@ mod pnft {
                 )
                 .await;
         }
+
+        #[tokio::test]
+        async fn update_delegate_cannot_verify_collection_created_new_handlers() {
+            let mut context = program_test().start_with_context().await;
+
+            // Create a Collection Parent NFT with the CollectionDetails struct populated
+            let mut collection_parent_da = DigitalAsset::new();
+            collection_parent_da
+                .create_and_mint_collection_parent(
+                    &mut context,
+                    TokenStandard::NonFungible,
+                    None,
+                    None,
+                    1,
+                    DEFAULT_COLLECTION_DETAILS,
+                )
+                .await
+                .unwrap();
+
+            collection_parent_da
+                .assert_collection_details_matches_on_chain(
+                    &mut context,
+                    &DEFAULT_COLLECTION_DETAILS,
+                )
+                .await;
+
+            let collection = Some(Collection {
+                key: collection_parent_da.mint.pubkey(),
+                verified: false,
+            });
+
+            let mut da = DigitalAsset::new();
+            da.create_and_mint_item_with_collection(
+                &mut context,
+                TokenStandard::ProgrammableNonFungible,
+                None,
+                None,
+                1,
+                collection.clone(),
+            )
+            .await
+            .unwrap();
+
+            da.assert_item_collection_matches_on_chain(&mut context, &collection)
+                .await;
+
+            collection_parent_da
+                .assert_collection_details_matches_on_chain(
+                    &mut context,
+                    &DEFAULT_COLLECTION_DETAILS,
+                )
+                .await;
+
+            // Create an Update delegate.
+            let delegate = Keypair::new();
+            airdrop(&mut context, &delegate.pubkey(), LAMPORTS_PER_SOL)
+                .await
+                .unwrap();
+
+            let payer = context.payer.dirty_clone();
+            let payer_pubkey = payer.pubkey();
+            collection_parent_da
+                .delegate(
+                    &mut context,
+                    payer,
+                    delegate.pubkey(),
+                    DelegateArgs::UpdateV1 {
+                        authorization_data: None,
+                    },
+                )
+                .await
+                .unwrap();
+
+            let (delegate_record, _) = find_metadata_delegate_record_account(
+                &collection_parent_da.mint.pubkey(),
+                MetadataDelegateRole::Collection,
+                &payer_pubkey,
+                &delegate.pubkey(),
+            );
+
+            let args = VerifyArgs::CollectionV1;
+            let err = da
+                .verify(
+                    &mut context,
+                    delegate,
+                    args,
+                    None,
+                    Some(delegate_record),
+                    Some(collection_parent_da.mint.pubkey()),
+                    Some(collection_parent_da.metadata),
+                    Some(collection_parent_da.master_edition.unwrap()),
+                )
+                .await
+                .unwrap_err();
+
+            assert_custom_error!(err, MetadataError::IncorrectOwner);
+
+            da.assert_item_collection_matches_on_chain(&mut context, &collection)
+                .await;
+
+            collection_parent_da
+                .assert_collection_details_matches_on_chain(
+                    &mut context,
+                    &DEFAULT_COLLECTION_DETAILS,
+                )
+                .await;
+        }
     }
 }
