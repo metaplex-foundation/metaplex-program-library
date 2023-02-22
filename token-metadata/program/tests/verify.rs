@@ -4,8 +4,9 @@ pub mod utils;
 
 use mpl_token_metadata::{
     error::MetadataError,
-    instruction::VerifyArgs,
-    state::{Collection, Creator, TokenStandard},
+    instruction::{DelegateArgs, MetadataDelegateRole, VerifyArgs},
+    pda::find_metadata_delegate_record_account,
+    state::{Collection, CollectionDetails, Creator, TokenStandard},
 };
 use num_traits::FromPrimitive;
 use solana_program::native_token::LAMPORTS_PER_SOL;
@@ -268,7 +269,7 @@ mod pnft {
             .await
             .unwrap();
 
-            da.assert_collection_matches_on_chain(&mut context, &collection)
+            da.assert_item_collection_matches_on_chain(&mut context, &collection)
                 .await;
 
             let args = VerifyArgs::CollectionV1;
@@ -291,7 +292,7 @@ mod pnft {
 
             assert_custom_error!(err, MetadataError::IncorrectOwner);
 
-            da.assert_collection_matches_on_chain(&mut context, &collection)
+            da.assert_item_collection_matches_on_chain(&mut context, &collection)
                 .await;
         }
 
@@ -340,7 +341,7 @@ mod pnft {
             .await
             .unwrap();
 
-            da.assert_collection_matches_on_chain(&mut context, &collection)
+            da.assert_item_collection_matches_on_chain(&mut context, &collection)
                 .await;
 
             let args = VerifyArgs::CollectionV1;
@@ -363,7 +364,7 @@ mod pnft {
 
             assert_custom_error!(err, MetadataError::IncorrectOwner);
 
-            da.assert_collection_matches_on_chain(&mut context, &collection)
+            da.assert_item_collection_matches_on_chain(&mut context, &collection)
                 .await;
         }
 
@@ -412,7 +413,7 @@ mod pnft {
             .await
             .unwrap();
 
-            da.assert_collection_matches_on_chain(&mut context, &collection)
+            da.assert_item_collection_matches_on_chain(&mut context, &collection)
                 .await;
 
             let args = VerifyArgs::CollectionV1;
@@ -435,7 +436,7 @@ mod pnft {
 
             assert_custom_error!(err, MetadataError::IncorrectOwner);
 
-            da.assert_collection_matches_on_chain(&mut context, &collection)
+            da.assert_item_collection_matches_on_chain(&mut context, &collection)
                 .await;
         }
 
@@ -484,7 +485,7 @@ mod pnft {
             .await
             .unwrap();
 
-            da.assert_collection_matches_on_chain(&mut context, &collection)
+            da.assert_item_collection_matches_on_chain(&mut context, &collection)
                 .await;
 
             let args = VerifyArgs::CollectionV1;
@@ -507,7 +508,7 @@ mod pnft {
 
             assert_custom_error!(err, MetadataError::IncorrectOwner);
 
-            da.assert_collection_matches_on_chain(&mut context, &collection)
+            da.assert_item_collection_matches_on_chain(&mut context, &collection)
                 .await;
         }
 
@@ -556,7 +557,7 @@ mod pnft {
             .await
             .unwrap();
 
-            da.assert_collection_matches_on_chain(&mut context, &collection)
+            da.assert_item_collection_matches_on_chain(&mut context, &collection)
                 .await;
 
             let args = VerifyArgs::CollectionV1;
@@ -577,7 +578,7 @@ mod pnft {
 
             assert_custom_error!(err, MetadataError::MissingCollectionMint);
 
-            da.assert_collection_matches_on_chain(&mut context, &collection)
+            da.assert_item_collection_matches_on_chain(&mut context, &collection)
                 .await;
         }
 
@@ -626,7 +627,7 @@ mod pnft {
             .await
             .unwrap();
 
-            da.assert_collection_matches_on_chain(&mut context, &collection)
+            da.assert_item_collection_matches_on_chain(&mut context, &collection)
                 .await;
 
             let args = VerifyArgs::CollectionV1;
@@ -647,7 +648,7 @@ mod pnft {
 
             assert_custom_error!(err, MetadataError::MissingCollectionMetadata);
 
-            da.assert_collection_matches_on_chain(&mut context, &collection)
+            da.assert_item_collection_matches_on_chain(&mut context, &collection)
                 .await;
         }
 
@@ -696,7 +697,7 @@ mod pnft {
             .await
             .unwrap();
 
-            da.assert_collection_matches_on_chain(&mut context, &collection)
+            da.assert_item_collection_matches_on_chain(&mut context, &collection)
                 .await;
 
             let args = VerifyArgs::CollectionV1;
@@ -717,7 +718,7 @@ mod pnft {
 
             assert_custom_error!(err, MetadataError::MissingCollectionMasterEdition);
 
-            da.assert_collection_matches_on_chain(&mut context, &collection)
+            da.assert_item_collection_matches_on_chain(&mut context, &collection)
                 .await;
         }
 
@@ -766,7 +767,7 @@ mod pnft {
             .await
             .unwrap();
 
-            da.assert_collection_matches_on_chain(&mut context, &collection)
+            da.assert_item_collection_matches_on_chain(&mut context, &collection)
                 .await;
 
             let args = VerifyArgs::CollectionV1;
@@ -789,7 +790,7 @@ mod pnft {
                 verified: true,
             });
 
-            da.assert_collection_matches_on_chain(&mut context, &verified_collection)
+            da.assert_item_collection_matches_on_chain(&mut context, &verified_collection)
                 .await;
 
             // Skip ahead.
@@ -814,7 +815,7 @@ mod pnft {
 
             assert_custom_error!(err, MetadataError::AlreadyVerified);
 
-            da.assert_collection_matches_on_chain(&mut context, &verified_collection)
+            da.assert_item_collection_matches_on_chain(&mut context, &verified_collection)
                 .await;
         }
 
@@ -861,7 +862,7 @@ mod pnft {
             .await
             .unwrap();
 
-            da.assert_collection_matches_on_chain(&mut context, &collection)
+            da.assert_item_collection_matches_on_chain(&mut context, &collection)
                 .await;
 
             let args = VerifyArgs::CollectionV1;
@@ -882,7 +883,7 @@ mod pnft {
 
             assert_custom_error!(err, MetadataError::CollectionNotFound);
 
-            da.assert_collection_matches_on_chain(&mut context, &collection)
+            da.assert_item_collection_matches_on_chain(&mut context, &collection)
                 .await;
         }
 
@@ -932,7 +933,7 @@ mod pnft {
             .await
             .unwrap();
 
-            da.assert_collection_matches_on_chain(&mut context, &collection)
+            da.assert_item_collection_matches_on_chain(&mut context, &collection)
                 .await;
 
             let args = VerifyArgs::CollectionV1;
@@ -953,7 +954,7 @@ mod pnft {
 
             assert_custom_error!(err, MetadataError::CollectionNotFound);
 
-            da.assert_collection_matches_on_chain(&mut context, &collection)
+            da.assert_item_collection_matches_on_chain(&mut context, &collection)
                 .await;
         }
 
@@ -1020,7 +1021,7 @@ mod pnft {
             .await
             .unwrap();
 
-            da.assert_collection_matches_on_chain(&mut context, &collection)
+            da.assert_item_collection_matches_on_chain(&mut context, &collection)
                 .await;
 
             let args = VerifyArgs::CollectionV1;
@@ -1041,7 +1042,7 @@ mod pnft {
 
             assert_custom_error!(err, MetadataError::CollectionNotFound);
 
-            da.assert_collection_matches_on_chain(&mut context, &collection)
+            da.assert_item_collection_matches_on_chain(&mut context, &collection)
                 .await;
         }
 
@@ -1090,7 +1091,7 @@ mod pnft {
             .await
             .unwrap();
 
-            da.assert_collection_matches_on_chain(&mut context, &collection)
+            da.assert_item_collection_matches_on_chain(&mut context, &collection)
                 .await;
 
             // Create a keypair to use instead of the collection update authority.
@@ -1120,7 +1121,7 @@ mod pnft {
 
             assert_custom_error!(err, MetadataError::UpdateAuthorityIncorrect);
 
-            da.assert_collection_matches_on_chain(&mut context, &collection)
+            da.assert_item_collection_matches_on_chain(&mut context, &collection)
                 .await;
         }
 
@@ -1169,7 +1170,7 @@ mod pnft {
             .await
             .unwrap();
 
-            da.assert_collection_matches_on_chain(&mut context, &collection)
+            da.assert_item_collection_matches_on_chain(&mut context, &collection)
                 .await;
 
             let args = VerifyArgs::CollectionV1;
@@ -1192,7 +1193,7 @@ mod pnft {
                 verified: true,
             });
 
-            da.assert_collection_matches_on_chain(&mut context, &verified_collection)
+            da.assert_item_collection_matches_on_chain(&mut context, &verified_collection)
                 .await;
         }
 
@@ -1214,6 +1215,13 @@ mod pnft {
                 .await
                 .unwrap();
 
+            collection_parent_da
+                .assert_collection_details_matches_on_chain(
+                    &mut context,
+                    &DEFAULT_COLLECTION_DETAILS,
+                )
+                .await;
+
             let collection = Some(Collection {
                 key: collection_parent_da.mint.pubkey(),
                 verified: false,
@@ -1231,7 +1239,14 @@ mod pnft {
             .await
             .unwrap();
 
-            da.assert_collection_matches_on_chain(&mut context, &collection)
+            da.assert_item_collection_matches_on_chain(&mut context, &collection)
+                .await;
+
+            collection_parent_da
+                .assert_collection_details_matches_on_chain(
+                    &mut context,
+                    &DEFAULT_COLLECTION_DETAILS,
+                )
                 .await;
 
             let args = VerifyArgs::CollectionV1;
@@ -1254,7 +1269,127 @@ mod pnft {
                 verified: true,
             });
 
-            da.assert_collection_matches_on_chain(&mut context, &verified_collection)
+            da.assert_item_collection_matches_on_chain(&mut context, &verified_collection)
+                .await;
+
+            let verified_collection_details = Some(CollectionDetails::V1 { size: 1 });
+
+            collection_parent_da
+                .assert_collection_details_matches_on_chain(
+                    &mut context,
+                    &verified_collection_details,
+                )
+                .await;
+        }
+
+        #[tokio::test]
+        async fn pass_delegated_authority_collection_created_new_handlers() {
+            let mut context = program_test().start_with_context().await;
+
+            // Create a Collection Parent NFT with the CollectionDetails struct populated
+            let mut collection_parent_da = DigitalAsset::new();
+            collection_parent_da
+                .create_and_mint_collection_parent(
+                    &mut context,
+                    TokenStandard::NonFungible,
+                    None,
+                    None,
+                    1,
+                    DEFAULT_COLLECTION_DETAILS,
+                )
+                .await
+                .unwrap();
+
+            collection_parent_da
+                .assert_collection_details_matches_on_chain(
+                    &mut context,
+                    &DEFAULT_COLLECTION_DETAILS,
+                )
+                .await;
+
+            let collection = Some(Collection {
+                key: collection_parent_da.mint.pubkey(),
+                verified: false,
+            });
+
+            let mut da = DigitalAsset::new();
+            da.create_and_mint_item_with_collection(
+                &mut context,
+                TokenStandard::ProgrammableNonFungible,
+                None,
+                None,
+                1,
+                collection.clone(),
+            )
+            .await
+            .unwrap();
+
+            da.assert_item_collection_matches_on_chain(&mut context, &collection)
+                .await;
+
+            collection_parent_da
+                .assert_collection_details_matches_on_chain(
+                    &mut context,
+                    &DEFAULT_COLLECTION_DETAILS,
+                )
+                .await;
+
+            // Create a Collection delegate.
+            let delegate = Keypair::new();
+            airdrop(&mut context, &delegate.pubkey(), LAMPORTS_PER_SOL)
+                .await
+                .unwrap();
+
+            let payer = context.payer.dirty_clone();
+            let payer_pubkey = payer.pubkey();
+            collection_parent_da
+                .delegate(
+                    &mut context,
+                    payer,
+                    delegate.pubkey(),
+                    DelegateArgs::CollectionV1 {
+                        authorization_data: None,
+                    },
+                )
+                .await
+                .unwrap();
+
+            let (delegate_record, _) = find_metadata_delegate_record_account(
+                &collection_parent_da.mint.pubkey(),
+                MetadataDelegateRole::Collection,
+                &payer_pubkey,
+                &delegate.pubkey(),
+            );
+
+            let args = VerifyArgs::CollectionV1;
+            da.verify(
+                &mut context,
+                delegate,
+                args,
+                None,
+                Some(delegate_record),
+                Some(collection_parent_da.mint.pubkey()),
+                Some(collection_parent_da.metadata),
+                Some(collection_parent_da.master_edition.unwrap()),
+            )
+            .await
+            .unwrap();
+
+            let verified_collection = Some(Collection {
+                key: collection_parent_da.mint.pubkey(),
+                verified: true,
+            });
+
+            da.assert_item_collection_matches_on_chain(&mut context, &verified_collection)
+                .await;
+
+            let verified_collection_details = Some(CollectionDetails::V1 { size: 1 });
+
+            collection_parent_da
+                .assert_collection_details_matches_on_chain(
+                    &mut context,
+                    &verified_collection_details,
+                )
                 .await;
         }
     }

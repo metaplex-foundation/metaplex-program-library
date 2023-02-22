@@ -901,7 +901,7 @@ impl DigitalAsset {
         assert_eq!(on_chain_creators, *creators);
     }
 
-    pub async fn assert_collection_matches_on_chain(
+    pub async fn assert_item_collection_matches_on_chain(
         &self,
         context: &mut ProgramTestContext,
         collection: &Option<Collection>,
@@ -909,6 +909,16 @@ impl DigitalAsset {
         let metadata = self.get_metadata(context).await;
         let on_chain_collection = metadata.collection;
         assert_eq!(on_chain_collection, *collection);
+    }
+
+    pub async fn assert_collection_details_matches_on_chain(
+        &self,
+        context: &mut ProgramTestContext,
+        collection_details: &Option<CollectionDetails>,
+    ) {
+        let metadata = self.get_metadata(context).await;
+        let on_chain_collection_details = metadata.collection_details;
+        assert_eq!(on_chain_collection_details, *collection_details);
     }
 }
 
