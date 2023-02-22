@@ -1219,20 +1219,47 @@ mod pnft {
         }
 
         #[tokio::test]
-        async fn pass_sized_collection_update_authority_collection_created_new_handlers() {
+        async fn pass_item_pnft_sized_collection_update_authority_collection_created_new_handlers()
+        {
             pass_collection_update_authority_collection_created_new_handlers(
                 DEFAULT_COLLECTION_DETAILS,
+                TokenStandard::ProgrammableNonFungible,
             )
             .await;
         }
 
         #[tokio::test]
-        async fn pass_unsized_collection_update_authority_collection_created_new_handlers() {
-            pass_collection_update_authority_collection_created_new_handlers(None).await;
+        async fn pass_item_nft_sized_collection_update_authority_collection_created_new_handlers() {
+            pass_collection_update_authority_collection_created_new_handlers(
+                DEFAULT_COLLECTION_DETAILS,
+                TokenStandard::NonFungible,
+            )
+            .await;
+        }
+
+        #[tokio::test]
+        async fn pass_item_pnft_unsized_collection_update_authority_collection_created_new_handlers(
+        ) {
+            pass_collection_update_authority_collection_created_new_handlers(
+                None,
+                TokenStandard::ProgrammableNonFungible,
+            )
+            .await;
+        }
+
+        #[tokio::test]
+        async fn pass_item_nft_unsized_collection_update_authority_collection_created_new_handlers()
+        {
+            pass_collection_update_authority_collection_created_new_handlers(
+                None,
+                TokenStandard::NonFungible,
+            )
+            .await;
         }
 
         async fn pass_collection_update_authority_collection_created_new_handlers(
             collection_details: Option<CollectionDetails>,
+            item_token_standard: TokenStandard,
         ) {
             let mut context = program_test().start_with_context().await;
 
@@ -1262,7 +1289,7 @@ mod pnft {
             let mut da = DigitalAsset::new();
             da.create_and_mint_item_with_collection(
                 &mut context,
-                TokenStandard::ProgrammableNonFungible,
+                item_token_standard,
                 None,
                 None,
                 1,
@@ -1314,18 +1341,44 @@ mod pnft {
         }
 
         #[tokio::test]
-        async fn pass_delegated_authority_sized_collection_created_new_handlers() {
-            pass_delegated_authority_collection_created_new_handlers(DEFAULT_COLLECTION_DETAILS)
-                .await;
+        async fn pass_item_pnft_delegated_authority_sized_collection_created_new_handlers() {
+            pass_delegated_authority_collection_created_new_handlers(
+                DEFAULT_COLLECTION_DETAILS,
+                TokenStandard::ProgrammableNonFungible,
+            )
+            .await;
         }
 
         #[tokio::test]
-        async fn pass_delegated_authority_unsized_collection_created_new_handlers() {
-            pass_delegated_authority_collection_created_new_handlers(None).await;
+        async fn pass_item_nft_delegated_authority_sized_collection_created_new_handlers() {
+            pass_delegated_authority_collection_created_new_handlers(
+                DEFAULT_COLLECTION_DETAILS,
+                TokenStandard::NonFungible,
+            )
+            .await;
+        }
+
+        #[tokio::test]
+        async fn pass_item_pnft_delegated_authority_unsized_collection_created_new_handlers() {
+            pass_delegated_authority_collection_created_new_handlers(
+                None,
+                TokenStandard::ProgrammableNonFungible,
+            )
+            .await;
+        }
+
+        #[tokio::test]
+        async fn pass_item_nft_delegated_authority_unsized_collection_created_new_handlers() {
+            pass_delegated_authority_collection_created_new_handlers(
+                None,
+                TokenStandard::NonFungible,
+            )
+            .await;
         }
 
         async fn pass_delegated_authority_collection_created_new_handlers(
             collection_details: Option<CollectionDetails>,
+            item_token_standard: TokenStandard,
         ) {
             let mut context = program_test().start_with_context().await;
 
@@ -1355,7 +1408,7 @@ mod pnft {
             let mut da = DigitalAsset::new();
             da.create_and_mint_item_with_collection(
                 &mut context,
-                TokenStandard::ProgrammableNonFungible,
+                item_token_standard,
                 None,
                 None,
                 1,
