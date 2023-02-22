@@ -63,7 +63,7 @@ pub(crate) fn burn_nonfungible_edition(ctx: &Context<Burn>) -> ProgramResult {
     }
 
     if master_edition_token_account.amount < 1 {
-        return Err(MetadataError::NotEnoughTokens.into());
+        return Err(MetadataError::InsufficientTokenBalance.into());
     }
 
     // Master and Print editions are valid PDAs for their given mints.

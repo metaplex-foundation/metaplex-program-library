@@ -4,7 +4,7 @@ pub(crate) fn burn_fungible(ctx: &Context<Burn>, amount: u64) -> ProgramResult {
     let token = TokenAccount::unpack(&ctx.accounts.token_info.data.borrow())?;
 
     if amount > token.amount {
-        return Err(MetadataError::NotEnoughTokens.into());
+        return Err(MetadataError::InsufficientTokenBalance.into());
     }
 
     // Burn the SPL tokens

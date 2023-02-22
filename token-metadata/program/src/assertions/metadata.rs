@@ -214,7 +214,7 @@ pub fn assert_holding_amount(
     }
 
     if token_account.amount < amount {
-        return Err(MetadataError::NotEnoughTokens.into());
+        return Err(MetadataError::InsufficientTokenBalance.into());
     }
 
     if token_account.mint != metadata.mint {

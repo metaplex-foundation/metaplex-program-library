@@ -731,6 +731,10 @@ pub enum MetadataError {
     /// 184
     #[error("Authority cannot apply all update args")]
     InvalidUpdateArgs,
+
+    /// 185
+    #[error("Token account does not have enough tokens")]
+    InsufficientTokenBalance,
 }
 
 impl PrintProgramError for MetadataError {

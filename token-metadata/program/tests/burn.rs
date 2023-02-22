@@ -1750,7 +1750,7 @@ mod nft_edition {
 
         // We've passed in the correct token account associated with the old owner but
         // it has 0 tokens so we get this error.
-        assert_custom_error!(err, MetadataError::NotEnoughTokens);
+        assert_custom_error!(err, MetadataError::InsufficientTokenBalance);
 
         // Old owner should not be able to burn even if we pass in the new token
         // account associated with the new owner.

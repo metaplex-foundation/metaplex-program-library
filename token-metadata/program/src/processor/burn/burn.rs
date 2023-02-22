@@ -105,7 +105,7 @@ fn burn_v1(program_id: &Pubkey, ctx: Context<Burn>, args: BurnArgs) -> ProgramRe
             }
 
             if token.amount < amount {
-                return Err(MetadataError::NotEnoughTokens.into());
+                return Err(MetadataError::InsufficientTokenBalance.into());
             }
 
             if token.mint != metadata.mint {
