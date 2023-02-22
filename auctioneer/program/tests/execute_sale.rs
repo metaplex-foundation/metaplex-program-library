@@ -7,7 +7,7 @@ use utils::setup_functions::*;
 
 use anchor_lang::{InstructionData, ToAccountMetas};
 use mpl_testing_utils::{solana::airdrop, utils::Metadata};
-use solana_sdk::signer::Signer;
+use solana_sdk::{compute_budget::ComputeBudgetInstruction, signer::Signer};
 
 use std::{assert_eq, time::SystemTime};
 
@@ -316,12 +316,7 @@ async fn execute_sale_success() {
         .await
         .unwrap();
 
-    let compute_ix = Instruction {
-        program_id: Pubkey::from_str("ComputeBudget111111111111111111111111111111")
-            .expect("ComputeBudget key error"),
-        accounts: vec![],
-        data: vec![0x00, 0x30, 0x57, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00],
-    };
+    let compute_ix = ComputeBudgetInstruction::set_compute_unit_limit(350_000);
 
     let tx = Transaction::new_signed_with_payer(
         &[compute_ix, instruction],
@@ -547,12 +542,7 @@ async fn execute_sale_two_bids_success() {
         .await
         .unwrap();
 
-    let compute_ix = Instruction {
-        program_id: Pubkey::from_str("ComputeBudget111111111111111111111111111111")
-            .expect("ComputeBudget key error"),
-        accounts: vec![],
-        data: vec![0x00, 0x30, 0x57, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00],
-    };
+    let compute_ix = ComputeBudgetInstruction::set_compute_unit_limit(350_000);
 
     let tx = Transaction::new_signed_with_payer(
         &[compute_ix, instruction],
