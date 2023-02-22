@@ -179,6 +179,12 @@ fn burn_v1(program_id: &Pubkey, ctx: Context<Burn>, args: BurnArgs) -> ProgramRe
             let args = BurnNonFungibleArgs { metadata };
 
             burn_nonfungible(&ctx, args)?;
+
+            // Also close the token_record account.
+            close_program_account(
+                &ctx.accounts.token_record_info.unwrap().clone(),
+                &ctx.accounts.authority_info.clone(),
+            )?;
         }
         TokenStandard::Fungible | TokenStandard::FungibleAsset => {
             burn_fungible(&ctx, amount)?;

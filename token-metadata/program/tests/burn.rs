@@ -74,7 +74,7 @@ mod pnft {
             .await
             .unwrap();
 
-        // Assert that metadata, edition and token account are closed.
+        // Assert that metadata, edition, token and token record accounts are closed.
         da.assert_burned(&mut context).await.unwrap();
     }
 
@@ -102,7 +102,7 @@ mod pnft {
             .await
             .unwrap();
 
-        // Assert that metadata, edition and token account are closed.
+        // Assert that metadata, edition, token and token record accounts are closed.
         da.assert_burned(&mut context).await.unwrap();
     }
 
@@ -192,7 +192,7 @@ mod pnft {
             .await
             .unwrap();
 
-        // Assert that metadata, edition and token account are closed.
+        // Assert that metadata, edition, token and token record accounts are closed.
         da.assert_burned(&mut context).await.unwrap();
     }
 

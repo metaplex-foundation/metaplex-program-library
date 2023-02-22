@@ -842,30 +842,54 @@ impl DigitalAsset {
         context: &mut ProgramTestContext,
     ) -> Result<(), BanksClientError> {
         match self.token_standard.unwrap() {
-            TokenStandard::NonFungible | TokenStandard::ProgrammableNonFungible => {
-                // Metadata, Master Edition and token account are burned.
-                let md_account = context
-                    .banks_client
-                    .get_account(self.metadata)
-                    .await
-                    .unwrap();
-                let token_account = context
-                    .banks_client
-                    .get_account(self.token.unwrap())
-                    .await
-                    .unwrap();
-                let edition_account = context
-                    .banks_client
-                    .get_account(self.edition.unwrap())
-                    .await
-                    .unwrap();
-
-                assert!(md_account.is_none());
-                assert!(token_account.is_none());
-                assert!(edition_account.is_none());
+            TokenStandard::NonFungible => {
+                self.non_fungigble_accounts_closed(context).await?;
+            }
+            TokenStandard::ProgrammableNonFungible => {
+                self.programmable_non_fungigble_accounts_closed(context)
+                    .await?;
             }
             _ => unimplemented!(),
         }
+
+        Ok(())
+    }
+
+    async fn non_fungigble_accounts_closed(
+        &self,
+        context: &mut ProgramTestContext,
+    ) -> Result<(), BanksClientError> {
+        // Metadata, Master Edition and token account are burned.
+        let md_account = context.banks_client.get_account(self.metadata).await?;
+        let token_account = context
+            .banks_client
+            .get_account(self.token.unwrap())
+            .await?;
+        let edition_account = context
+            .banks_client
+            .get_account(self.edition.unwrap())
+            .await?;
+
+        assert!(md_account.is_none());
+        assert!(token_account.is_none());
+        assert!(edition_account.is_none());
+
+        Ok(())
+    }
+
+    async fn programmable_non_fungigble_accounts_closed(
+        &self,
+        context: &mut ProgramTestContext,
+    ) -> Result<(), BanksClientError> {
+        self.non_fungigble_accounts_closed(context).await?;
+
+        // Token record is burned.
+        let token_record_account = context
+            .banks_client
+            .get_account(self.token_record.unwrap())
+            .await?;
+
+        assert!(token_record_account.is_none());
 
         Ok(())
     }
