@@ -495,7 +495,7 @@ mod update {
             name: new_name.clone(),
             symbol: new_symbol.clone(),
             uri: new_uri.clone(),
-            creators: None, // This should not erase the verified creators.
+            creators: None, // This should not erase the verified creator.
             seller_fee_basis_points: 0,
         };
 
