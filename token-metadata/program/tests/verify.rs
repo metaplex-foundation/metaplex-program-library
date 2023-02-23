@@ -239,30 +239,13 @@ mod verify_collection {
     async fn metadata_wrong_owner() {
         let mut context = program_test().start_with_context().await;
 
-        // Create a Collection Parent NFT with the CollectionDetails struct populated
-        let collection_parent_nft = Metadata::new();
-        collection_parent_nft
-            .create_v3(
-                &mut context,
-                "Test".to_string(),
-                "TST".to_string(),
-                "uri".to_string(),
-                None,
-                10,
-                false,
-                None,
-                None,
-                DEFAULT_COLLECTION_DETAILS, // Collection Parent
-            )
-            .await
-            .unwrap();
+        // Create a Collection Parent NFT with the CollectionDetails struct populated.
+        let (collection_parent_nft, parent_master_edition_account) =
+            Metadata::create_default_sized_parent(&mut context)
+                .await
+                .unwrap();
 
-        let parent_master_edition_account = MasterEditionV2::new(&collection_parent_nft);
-        parent_master_edition_account
-            .create_v3(&mut context, Some(0))
-            .await
-            .unwrap();
-
+        // Create and mint item.
         let collection = Some(Collection {
             key: collection_parent_nft.mint.pubkey(),
             verified: false,
@@ -311,30 +294,13 @@ mod verify_collection {
     async fn collection_mint_info_wrong_owner() {
         let mut context = program_test().start_with_context().await;
 
-        // Create a Collection Parent NFT with the CollectionDetails struct populated
-        let collection_parent_nft = Metadata::new();
-        collection_parent_nft
-            .create_v3(
-                &mut context,
-                "Test".to_string(),
-                "TST".to_string(),
-                "uri".to_string(),
-                None,
-                10,
-                false,
-                None,
-                None,
-                DEFAULT_COLLECTION_DETAILS, // Collection Parent
-            )
-            .await
-            .unwrap();
+        // Create a Collection Parent NFT with the CollectionDetails struct populated.
+        let (collection_parent_nft, parent_master_edition_account) =
+            Metadata::create_default_sized_parent(&mut context)
+                .await
+                .unwrap();
 
-        let parent_master_edition_account = MasterEditionV2::new(&collection_parent_nft);
-        parent_master_edition_account
-            .create_v3(&mut context, Some(0))
-            .await
-            .unwrap();
-
+        // Create and mint item.
         let collection = Some(Collection {
             key: collection_parent_nft.mint.pubkey(),
             verified: false,
@@ -383,30 +349,13 @@ mod verify_collection {
     async fn collection_metadata_info_wrong_owner() {
         let mut context = program_test().start_with_context().await;
 
-        // Create a Collection Parent NFT with the CollectionDetails struct populated
-        let collection_parent_nft = Metadata::new();
-        collection_parent_nft
-            .create_v3(
-                &mut context,
-                "Test".to_string(),
-                "TST".to_string(),
-                "uri".to_string(),
-                None,
-                10,
-                false,
-                None,
-                None,
-                DEFAULT_COLLECTION_DETAILS, // Collection Parent
-            )
-            .await
-            .unwrap();
+        // Create a Collection Parent NFT with the CollectionDetails struct populated.
+        let (collection_parent_nft, parent_master_edition_account) =
+            Metadata::create_default_sized_parent(&mut context)
+                .await
+                .unwrap();
 
-        let parent_master_edition_account = MasterEditionV2::new(&collection_parent_nft);
-        parent_master_edition_account
-            .create_v3(&mut context, Some(0))
-            .await
-            .unwrap();
-
+        // Create and mint item.
         let collection = Some(Collection {
             key: collection_parent_nft.mint.pubkey(),
             verified: false,
@@ -455,30 +404,12 @@ mod verify_collection {
     async fn collection_master_edition_info_wrong_owner() {
         let mut context = program_test().start_with_context().await;
 
-        // Create a Collection Parent NFT with the CollectionDetails struct populated
-        let collection_parent_nft = Metadata::new();
-        collection_parent_nft
-            .create_v3(
-                &mut context,
-                "Test".to_string(),
-                "TST".to_string(),
-                "uri".to_string(),
-                None,
-                10,
-                false,
-                None,
-                None,
-                DEFAULT_COLLECTION_DETAILS, // Collection Parent
-            )
+        // Create a Collection Parent NFT with the CollectionDetails struct populated.
+        let (collection_parent_nft, _) = Metadata::create_default_sized_parent(&mut context)
             .await
             .unwrap();
 
-        let parent_master_edition_account = MasterEditionV2::new(&collection_parent_nft);
-        parent_master_edition_account
-            .create_v3(&mut context, Some(0))
-            .await
-            .unwrap();
-
+        // Create and mint item.
         let collection = Some(Collection {
             key: collection_parent_nft.mint.pubkey(),
             verified: false,
@@ -527,30 +458,13 @@ mod verify_collection {
     async fn missing_collection_mint_info() {
         let mut context = program_test().start_with_context().await;
 
-        // Create a Collection Parent NFT with the CollectionDetails struct populated
-        let collection_parent_nft = Metadata::new();
-        collection_parent_nft
-            .create_v3(
-                &mut context,
-                "Test".to_string(),
-                "TST".to_string(),
-                "uri".to_string(),
-                None,
-                10,
-                false,
-                None,
-                None,
-                DEFAULT_COLLECTION_DETAILS, // Collection Parent
-            )
-            .await
-            .unwrap();
+        // Create a Collection Parent NFT with the CollectionDetails struct populated.
+        let (collection_parent_nft, parent_master_edition_account) =
+            Metadata::create_default_sized_parent(&mut context)
+                .await
+                .unwrap();
 
-        let parent_master_edition_account = MasterEditionV2::new(&collection_parent_nft);
-        parent_master_edition_account
-            .create_v3(&mut context, Some(0))
-            .await
-            .unwrap();
-
+        // Create and mint item.
         let collection = Some(Collection {
             key: collection_parent_nft.mint.pubkey(),
             verified: false,
@@ -597,30 +511,13 @@ mod verify_collection {
     async fn missing_collection_metadata_info() {
         let mut context = program_test().start_with_context().await;
 
-        // Create a Collection Parent NFT with the CollectionDetails struct populated
-        let collection_parent_nft = Metadata::new();
-        collection_parent_nft
-            .create_v3(
-                &mut context,
-                "Test".to_string(),
-                "TST".to_string(),
-                "uri".to_string(),
-                None,
-                10,
-                false,
-                None,
-                None,
-                DEFAULT_COLLECTION_DETAILS, // Collection Parent
-            )
-            .await
-            .unwrap();
+        // Create a Collection Parent NFT with the CollectionDetails struct populated.
+        let (collection_parent_nft, parent_master_edition_account) =
+            Metadata::create_default_sized_parent(&mut context)
+                .await
+                .unwrap();
 
-        let parent_master_edition_account = MasterEditionV2::new(&collection_parent_nft);
-        parent_master_edition_account
-            .create_v3(&mut context, Some(0))
-            .await
-            .unwrap();
-
+        // Create and mint item.
         let collection = Some(Collection {
             key: collection_parent_nft.mint.pubkey(),
             verified: false,
@@ -667,30 +564,12 @@ mod verify_collection {
     async fn missing_collection_master_edition_info() {
         let mut context = program_test().start_with_context().await;
 
-        // Create a Collection Parent NFT with the CollectionDetails struct populated
-        let collection_parent_nft = Metadata::new();
-        collection_parent_nft
-            .create_v3(
-                &mut context,
-                "Test".to_string(),
-                "TST".to_string(),
-                "uri".to_string(),
-                None,
-                10,
-                false,
-                None,
-                None,
-                DEFAULT_COLLECTION_DETAILS, // Collection Parent
-            )
+        // Create a Collection Parent NFT with the CollectionDetails struct populated.
+        let (collection_parent_nft, _) = Metadata::create_default_sized_parent(&mut context)
             .await
             .unwrap();
 
-        let parent_master_edition_account = MasterEditionV2::new(&collection_parent_nft);
-        parent_master_edition_account
-            .create_v3(&mut context, Some(0))
-            .await
-            .unwrap();
-
+        // Create and mint item.
         let collection = Some(Collection {
             key: collection_parent_nft.mint.pubkey(),
             verified: false,
@@ -737,30 +616,13 @@ mod verify_collection {
     async fn fail_already_verified() {
         let mut context = program_test().start_with_context().await;
 
-        // Create a Collection Parent NFT with the CollectionDetails struct populated
-        let collection_parent_nft = Metadata::new();
-        collection_parent_nft
-            .create_v3(
-                &mut context,
-                "Test".to_string(),
-                "TST".to_string(),
-                "uri".to_string(),
-                None,
-                10,
-                false,
-                None,
-                None,
-                DEFAULT_COLLECTION_DETAILS, // Collection Parent
-            )
-            .await
-            .unwrap();
+        // Create a Collection Parent NFT with the CollectionDetails struct populated.
+        let (collection_parent_nft, parent_master_edition_account) =
+            Metadata::create_default_sized_parent(&mut context)
+                .await
+                .unwrap();
 
-        let parent_master_edition_account = MasterEditionV2::new(&collection_parent_nft);
-        parent_master_edition_account
-            .create_v3(&mut context, Some(0))
-            .await
-            .unwrap();
-
+        // Create and mint item.
         let collection = Some(Collection {
             key: collection_parent_nft.mint.pubkey(),
             verified: false,
@@ -834,33 +696,16 @@ mod verify_collection {
     async fn collection_not_found_on_item() {
         let mut context = program_test().start_with_context().await;
 
-        // Create a Collection Parent NFT with the CollectionDetails struct populated
-        let collection_parent_nft = Metadata::new();
-        collection_parent_nft
-            .create_v3(
-                &mut context,
-                "Test".to_string(),
-                "TST".to_string(),
-                "uri".to_string(),
-                None,
-                10,
-                false,
-                None,
-                None,
-                DEFAULT_COLLECTION_DETAILS, // Collection Parent
-            )
-            .await
-            .unwrap();
-
-        let parent_master_edition_account = MasterEditionV2::new(&collection_parent_nft);
-        parent_master_edition_account
-            .create_v3(&mut context, Some(0))
-            .await
-            .unwrap();
+        // Create a Collection Parent NFT with the CollectionDetails struct populated.
+        let (collection_parent_nft, parent_master_edition_account) =
+            Metadata::create_default_sized_parent(&mut context)
+                .await
+                .unwrap();
 
         // No collection on item's metadata.
         let collection = None;
 
+        // Create and mint item.
         let mut da = DigitalAsset::new();
         da.create_and_mint_item_with_collection(
             &mut context,
@@ -902,29 +747,11 @@ mod verify_collection {
     async fn item_collection_key_does_not_match_passed_in_collection_mint() {
         let mut context = program_test().start_with_context().await;
 
-        // Create a Collection Parent NFT with the CollectionDetails struct populated
-        let collection_parent_nft = Metadata::new();
-        collection_parent_nft
-            .create_v3(
-                &mut context,
-                "Test".to_string(),
-                "TST".to_string(),
-                "uri".to_string(),
-                None,
-                10,
-                false,
-                None,
-                None,
-                DEFAULT_COLLECTION_DETAILS, // Collection Parent
-            )
-            .await
-            .unwrap();
-
-        let parent_master_edition_account = MasterEditionV2::new(&collection_parent_nft);
-        parent_master_edition_account
-            .create_v3(&mut context, Some(0))
-            .await
-            .unwrap();
+        // Create a Collection Parent NFT with the CollectionDetails struct populated.
+        let (collection_parent_nft, parent_master_edition_account) =
+            Metadata::create_default_sized_parent(&mut context)
+                .await
+                .unwrap();
 
         // Use a different collection key for the item.
         let collection = Some(Collection {
@@ -932,6 +759,7 @@ mod verify_collection {
             verified: false,
         });
 
+        // Create and mint item.
         let mut da = DigitalAsset::new();
         da.create_and_mint_item_with_collection(
             &mut context,
@@ -973,48 +801,18 @@ mod verify_collection {
     async fn collection_metadata_mint_does_not_match_passed_in_collection_mint() {
         let mut context = program_test().start_with_context().await;
 
-        // Create a Collection Parent NFT with the CollectionDetails struct populated
-        let collection_parent_nft = Metadata::new();
-        collection_parent_nft
-            .create_v3(
-                &mut context,
-                "Test".to_string(),
-                "TST".to_string(),
-                "uri".to_string(),
-                None,
-                10,
-                false,
-                None,
-                None,
-                DEFAULT_COLLECTION_DETAILS, // Collection Parent
-            )
-            .await
-            .unwrap();
-
-        let parent_master_edition_account = MasterEditionV2::new(&collection_parent_nft);
-        parent_master_edition_account
-            .create_v3(&mut context, Some(0))
-            .await
-            .unwrap();
+        // Create a Collection Parent NFT with the CollectionDetails struct populated.
+        let (collection_parent_nft, parent_master_edition_account) =
+            Metadata::create_default_sized_parent(&mut context)
+                .await
+                .unwrap();
 
         // Create a second Collection Parent NFT with the CollectionDetails struct populated
-        let second_collection_parent_nft = Metadata::new();
-        second_collection_parent_nft
-            .create_v3(
-                &mut context,
-                "Test".to_string(),
-                "TST".to_string(),
-                "uri".to_string(),
-                None,
-                10,
-                false,
-                None,
-                None,
-                DEFAULT_COLLECTION_DETAILS, // Collection Parent
-            )
+        let (second_collection_parent_nft, _) = Metadata::create_default_sized_parent(&mut context)
             .await
             .unwrap();
 
+        // Create and mint item.
         let collection = Some(Collection {
             key: collection_parent_nft.mint.pubkey(),
             verified: false,
@@ -1061,30 +859,13 @@ mod verify_collection {
     async fn incorrect_collection_update_authority() {
         let mut context = program_test().start_with_context().await;
 
-        // Create a Collection Parent NFT with the CollectionDetails struct populated
-        let collection_parent_nft = Metadata::new();
-        collection_parent_nft
-            .create_v3(
-                &mut context,
-                "Test".to_string(),
-                "TST".to_string(),
-                "uri".to_string(),
-                None,
-                10,
-                false,
-                None,
-                None,
-                DEFAULT_COLLECTION_DETAILS, // Collection Parent
-            )
-            .await
-            .unwrap();
+        // Create a Collection Parent NFT with the CollectionDetails struct populated.
+        let (collection_parent_nft, parent_master_edition_account) =
+            Metadata::create_default_sized_parent(&mut context)
+                .await
+                .unwrap();
 
-        let parent_master_edition_account = MasterEditionV2::new(&collection_parent_nft);
-        parent_master_edition_account
-            .create_v3(&mut context, Some(0))
-            .await
-            .unwrap();
-
+        // Create and mint item.
         let collection = Some(Collection {
             key: collection_parent_nft.mint.pubkey(),
             verified: false,
@@ -1371,29 +1152,11 @@ mod verify_collection {
     async fn pass_with_changed_collection_update_authority() {
         let mut context = program_test().start_with_context().await;
 
-        // Create a Collection Parent NFT with the CollectionDetails struct populated
-        let collection_parent_nft = Metadata::new();
-        collection_parent_nft
-            .create_v3(
-                &mut context,
-                "Test".to_string(),
-                "TST".to_string(),
-                "uri".to_string(),
-                None,
-                10,
-                false,
-                None,
-                None,
-                DEFAULT_COLLECTION_DETAILS, // Collection Parent
-            )
-            .await
-            .unwrap();
-
-        let parent_master_edition_account = MasterEditionV2::new(&collection_parent_nft);
-        parent_master_edition_account
-            .create_v3(&mut context, Some(0))
-            .await
-            .unwrap();
+        // Create a Collection Parent NFT with the CollectionDetails struct populated.
+        let (collection_parent_nft, parent_master_edition_account) =
+            Metadata::create_default_sized_parent(&mut context)
+                .await
+                .unwrap();
 
         let collection_metadata = collection_parent_nft.get_data(&mut context).await;
         assert_eq!(
@@ -1472,29 +1235,11 @@ mod verify_collection {
     async fn item_update_authority_cannot_verify() {
         let mut context = program_test().start_with_context().await;
 
-        // Create a Collection Parent NFT with the CollectionDetails struct populated
-        let collection_parent_nft = Metadata::new();
-        collection_parent_nft
-            .create_v3(
-                &mut context,
-                "Test".to_string(),
-                "TST".to_string(),
-                "uri".to_string(),
-                None,
-                10,
-                false,
-                None,
-                None,
-                DEFAULT_COLLECTION_DETAILS, // Collection Parent
-            )
-            .await
-            .unwrap();
-
-        let parent_master_edition_account = MasterEditionV2::new(&collection_parent_nft);
-        parent_master_edition_account
-            .create_v3(&mut context, Some(0))
-            .await
-            .unwrap();
+        // Create a Collection Parent NFT with the CollectionDetails struct populated.
+        let (collection_parent_nft, parent_master_edition_account) =
+            Metadata::create_default_sized_parent(&mut context)
+                .await
+                .unwrap();
 
         let collection_metadata = collection_parent_nft.get_data(&mut context).await;
         assert_eq!(
