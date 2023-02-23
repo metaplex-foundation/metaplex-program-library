@@ -20,12 +20,13 @@ mod update {
     use mpl_token_metadata::{
         error::MetadataError,
         instruction::{DelegateArgs, RuleSetToggle, UpdateArgs},
-        state::{Data, ProgrammableConfig, TokenStandard},
+        state::{Creator, Data, ProgrammableConfig, TokenStandard},
     };
     use solana_program::pubkey::Pubkey;
     use solana_sdk::signature::Keypair;
 
     use super::*;
+
     #[tokio::test]
     async fn success_update() {
         let context = &mut program_test().start_with_context().await;
@@ -61,7 +62,7 @@ mod update {
             name: new_name.clone(),
             symbol: new_symbol.clone(),
             uri: new_uri.clone(),
-            creators: None,
+            creators: metadata.data.creators, // keep the same creators
             seller_fee_basis_points: 0,
         };
 
@@ -455,5 +456,143 @@ mod update {
             .unwrap_err();
 
         assert_custom_error!(err, MetadataError::CannotUpdateAssetWithDelegate);
+    }
+
+    #[tokio::test]
+    async fn none_does_not_erase_verified_creators() {
+        // When passing in `None` for the creators field, it should not erase the verified creators.
+        let context = &mut program_test().start_with_context().await;
+
+        let update_authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+
+        let mut da = DigitalAsset::new();
+        // This creates with update authority as a verified creator.
+        da.create(context, TokenStandard::NonFungible, None)
+            .await
+            .unwrap();
+
+        let metadata = da.get_metadata(context).await;
+        assert_eq!(
+            metadata.data.name,
+            puffed_out_string(DEFAULT_NAME, MAX_NAME_LENGTH)
+        );
+        assert_eq!(
+            metadata.data.symbol,
+            puffed_out_string(DEFAULT_SYMBOL, MAX_SYMBOL_LENGTH)
+        );
+        assert_eq!(
+            metadata.data.uri,
+            puffed_out_string(DEFAULT_URI, MAX_URI_LENGTH)
+        );
+        assert_eq!(metadata.update_authority, update_authority.pubkey());
+
+        let new_name = puffed_out_string("New Name", MAX_NAME_LENGTH);
+        let new_symbol = puffed_out_string("NEW", MAX_SYMBOL_LENGTH);
+        let new_uri = puffed_out_string("https://new.digital.asset.org", MAX_URI_LENGTH);
+
+        // Change a few values and update the metadata.
+        let data = Data {
+            name: new_name.clone(),
+            symbol: new_symbol.clone(),
+            uri: new_uri.clone(),
+            creators: None, // This should not erase the verified creator.
+            seller_fee_basis_points: 0,
+        };
+
+        let mut update_args = UpdateArgs::default();
+        let UpdateArgs::V1 {
+            data: current_data, ..
+        } = &mut update_args;
+        *current_data = Some(data);
+
+        let err = da
+            .update(context, update_authority.dirty_clone(), update_args)
+            .await
+            .unwrap_err();
+
+        assert_custom_error!(err, MetadataError::CannotRemoveVerifiedCreator);
+    }
+
+    #[tokio::test]
+    async fn set_creators_to_none_with_no_verified_creators() {
+        // When passing in `None` for the creators field, it should set the creators
+        // field to `None` if there are no verified creators.
+        let context = &mut program_test().start_with_context().await;
+
+        let update_authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+
+        let mut da = DigitalAsset::new();
+        // This creates with update authority as a verified creator.
+        da.create_and_mint(context, TokenStandard::NonFungible, None, None, 1)
+            .await
+            .unwrap();
+
+        let metadata = da.get_metadata(context).await;
+        assert_eq!(
+            metadata.data.name,
+            puffed_out_string(DEFAULT_NAME, MAX_NAME_LENGTH)
+        );
+        assert_eq!(
+            metadata.data.symbol,
+            puffed_out_string(DEFAULT_SYMBOL, MAX_SYMBOL_LENGTH)
+        );
+        assert_eq!(
+            metadata.data.uri,
+            puffed_out_string(DEFAULT_URI, MAX_URI_LENGTH)
+        );
+        assert_eq!(metadata.update_authority, update_authority.pubkey());
+
+        // Unverify the creator.
+        let creators = Some(vec![Creator {
+            address: context.payer.pubkey(),
+            share: 100,
+            verified: false,
+        }]);
+
+        let data = Data {
+            name: metadata.data.name,
+            symbol: metadata.data.symbol,
+            uri: metadata.data.uri,
+            creators: creators.clone(),
+            seller_fee_basis_points: metadata.data.seller_fee_basis_points,
+        };
+
+        let mut update_args = UpdateArgs::default();
+        let UpdateArgs::V1 {
+            data: current_data, ..
+        } = &mut update_args;
+        *current_data = Some(data);
+
+        da.update(context, update_authority.dirty_clone(), update_args)
+            .await
+            .unwrap();
+
+        let metadata = da.get_metadata(context).await;
+
+        assert_eq!(metadata.data.creators, creators);
+        assert!(!metadata.data.creators.unwrap()[0].verified);
+
+        // Now set the creators to None.
+        let data = Data {
+            name: metadata.data.name,
+            symbol: metadata.data.symbol,
+            uri: metadata.data.uri,
+            creators: None,
+            seller_fee_basis_points: metadata.data.seller_fee_basis_points,
+        };
+
+        let mut update_args = UpdateArgs::default();
+        let UpdateArgs::V1 {
+            data: current_data, ..
+        } = &mut update_args;
+        *current_data = Some(data);
+
+        da.update(context, update_authority.dirty_clone(), update_args)
+            .await
+            .unwrap();
+
+        let metadata = da.get_metadata(context).await;
+
+        assert_eq!(metadata.data.creators, None);
     }
 }
