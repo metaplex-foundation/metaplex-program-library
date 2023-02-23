@@ -101,12 +101,7 @@ pub(crate) fn verify_collection_v1(program_id: &Pubkey, ctx: Context<Verify>) ->
     Ok(())
 }
 
-#[allow(unreachable_code)]
-#[allow(unused_variables)]
 pub(crate) fn unverify_collection_v1(program_id: &Pubkey, ctx: Context<Unverify>) -> ProgramResult {
-    // Not tested so returning.
-    return Err(MetadataError::FeatureNotSupported.into());
-
     // Assert program ownership/signers.
 
     // Authority account is the collection authority and must be a signer.

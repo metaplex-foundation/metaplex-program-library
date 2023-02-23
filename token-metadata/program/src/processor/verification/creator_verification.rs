@@ -30,12 +30,7 @@ pub(crate) fn verify_creator_v1(program_id: &Pubkey, ctx: Context<Verify>) -> Pr
     Ok(())
 }
 
-#[allow(unreachable_code)]
-#[allow(unused_variables)]
 pub(crate) fn unverify_creator_v1(program_id: &Pubkey, ctx: Context<Unverify>) -> ProgramResult {
-    // Not tested so returning.
-    return Err(MetadataError::FeatureNotSupported.into());
-
     // Assert program ownership/signers.
 
     // Authority account is the creator and must be a signer.
