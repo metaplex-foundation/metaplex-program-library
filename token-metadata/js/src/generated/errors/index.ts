@@ -3967,6 +3967,29 @@ createErrorFromCodeLookup.set(0xb8, () => new InvalidUpdateArgsError());
 createErrorFromNameLookup.set('InvalidUpdateArgs', () => new InvalidUpdateArgsError());
 
 /**
+ * InsufficientTokenBalance: 'Token account does not have enough tokens'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InsufficientTokenBalanceError extends Error {
+  readonly code: number = 0xb9;
+  readonly name: string = 'InsufficientTokenBalance';
+  constructor() {
+    super('Token account does not have enough tokens');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InsufficientTokenBalanceError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xb9, () => new InsufficientTokenBalanceError());
+createErrorFromNameLookup.set(
+  'InsufficientTokenBalance',
+  () => new InsufficientTokenBalanceError(),
+);
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

@@ -6333,6 +6333,11 @@
       "code": 184,
       "name": "InvalidUpdateArgs",
       "msg": "Authority cannot apply all update args"
+    },
+    {
+      "code": 185,
+      "name": "InsufficientTokenBalance",
+      "msg": "Token account does not have enough tokens"
     }
   ],
   "metadata": {
