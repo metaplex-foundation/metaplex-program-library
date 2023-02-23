@@ -138,6 +138,10 @@ pub fn process_instruction<'a>(
             msg!("IX: Verify");
             verification::verify(program_id, accounts, args)
         }
+        MetadataInstruction::Unverify(args) => {
+            msg!("IX: Unverify");
+            verification::unverify(program_id, accounts, args)
+        }
         _ => {
             // pNFT accounts can only be used by the "new" API; before forwarding
             // the transaction to the "legacy" processor we determine whether we are

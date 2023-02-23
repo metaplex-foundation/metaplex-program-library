@@ -406,11 +406,3 @@ pub fn verify_sized_collection_item(
             .unwrap(),
     }
 }
-
-#[repr(C)]
-#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
-pub enum VerifyArgs {
-    CreatorV1,
-    CollectionV1,
-}

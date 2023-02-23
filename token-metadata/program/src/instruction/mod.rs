@@ -728,9 +728,6 @@ pub enum MetadataInstruction {
 
     /// Verifies that an asset was created by a specific creator or belongs in an specified collection.
     ///
-    /// The configurable `authorization_rules` only apply to `ProgrammableNonFungible` assets and
-    /// it may require additional accounts to validate the rules.
-    ///
     /// Depending on the type of verification (e.g., creator or collection), additional accounts
     /// are required.
     #[account(0, signer, name="authority", desc="Creator to verify, collection update authority or delegate")]
@@ -743,6 +740,20 @@ pub enum MetadataInstruction {
     #[account(7, name="sysvar_instructions", desc="Instructions sysvar account")]
     #[default_optional_accounts]
     Verify(VerifyArgs),
+
+    /// Unverifies that an asset was created by a specific creator or belongs in an specified collection.
+    ///
+    /// Depending on the type of verification (e.g., creator or collection), additional accounts
+    /// are required.
+    #[account(0, signer, name="authority", desc="Creator to verify, collection (or metadata if parent burned) update authority or delegate")]
+    #[account(1, optional, name="delegate_record", desc="Delegate record PDA")]
+    #[account(2, writable, name="metadata", desc="Metadata account")]
+    #[account(3, optional, name="collection_mint", desc="Mint of the Collection")]
+    #[account(4, optional, writable, name="collection_metadata", desc="Metadata Account of the Collection")]
+    #[account(5, name="system_program", desc="System program")]
+    #[account(6, name="sysvar_instructions", desc="Instructions sysvar account")]
+    #[default_optional_accounts]
+    Unverify(VerifyArgs),
 }
 
 pub struct Context<'a, T> {

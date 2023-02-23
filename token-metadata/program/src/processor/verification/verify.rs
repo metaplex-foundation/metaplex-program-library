@@ -1,7 +1,8 @@
 use crate::{
-    instruction::{Verify, VerifyArgs},
+    instruction::{Unverify, Verify, VerifyArgs},
     processor::verification::{
-        collection::collection_verification_v1, creator::creator_verification_v1,
+        collection_verification::{unverify_collection_v1, verify_collection_v1},
+        creator_verification::{unverify_creator_v1, verify_creator_v1},
     },
 };
 use solana_program::{account_info::AccountInfo, entrypoint::ProgramResult, pubkey::Pubkey};
@@ -14,8 +15,8 @@ pub fn verify<'a>(
     let context = Verify::to_context(accounts)?;
 
     match args {
-        VerifyArgs::CreatorV1 => creator_verification_v1(program_id, context, true),
-        VerifyArgs::CollectionV1 => collection_verification_v1(program_id, context, true),
+        VerifyArgs::CreatorV1 => verify_creator_v1(program_id, context),
+        VerifyArgs::CollectionV1 => verify_collection_v1(program_id, context),
     }
 }
 
@@ -24,10 +25,10 @@ pub fn unverify<'a>(
     accounts: &'a [AccountInfo<'a>],
     args: VerifyArgs,
 ) -> ProgramResult {
-    let context = Verify::to_context(accounts)?;
+    let context = Unverify::to_context(accounts)?;
 
     match args {
-        VerifyArgs::CreatorV1 => creator_verification_v1(program_id, context, false),
-        VerifyArgs::CollectionV1 => collection_verification_v1(program_id, context, false),
+        VerifyArgs::CreatorV1 => unverify_creator_v1(program_id, context),
+        VerifyArgs::CollectionV1 => unverify_collection_v1(program_id, context),
     }
 }

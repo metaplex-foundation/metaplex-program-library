@@ -4526,20 +4526,6 @@
       }
     },
     {
-      "name": "VerifyArgs",
-      "type": {
-        "kind": "enum",
-        "variants": [
-          {
-            "name": "CreatorV1"
-          },
-          {
-            "name": "CollectionV1"
-          }
-        ]
-      }
-    },
-    {
       "name": "DelegateArgs",
       "type": {
         "kind": "enum",
@@ -5006,6 +4992,20 @@
                 }
               }
             ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "VerifyArgs",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "CreatorV1"
+          },
+          {
+            "name": "CollectionV1"
           }
         ]
       }

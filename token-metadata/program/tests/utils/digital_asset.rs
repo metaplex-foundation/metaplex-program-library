@@ -3,7 +3,7 @@ use mpl_token_metadata::{
     instruction::{
         builders::{
             CreateBuilder, DelegateBuilder, LockBuilder, MigrateBuilder, MintBuilder,
-            RevokeBuilder, TransferBuilder, UnlockBuilder, VerifyBuilder,
+            RevokeBuilder, TransferBuilder, UnlockBuilder, UnverifyBuilder, VerifyBuilder,
         },
         CreateArgs, DelegateArgs, InstructionBuilder, LockArgs, MetadataDelegateRole, MigrateArgs,
         MintArgs, RevokeArgs, TransferArgs, UnlockArgs, VerifyArgs,
@@ -107,6 +107,51 @@ impl DigitalAsset {
 
         let transaction = Transaction::new_signed_with_payer(
             &[verify_ix],
+            Some(&authority.pubkey()),
+            &[&authority],
+            context.last_blockhash,
+        );
+
+        context.banks_client.process_transaction(transaction).await
+    }
+
+    // Note the authority is the payer of the transaction.
+    pub async fn unverify(
+        &mut self,
+        context: &mut ProgramTestContext,
+        authority: Keypair,
+        args: VerifyArgs,
+        metadata: Option<Pubkey>,
+        delegate_record: Option<Pubkey>,
+        collection_mint: Option<Pubkey>,
+        collection_metadata: Option<Pubkey>,
+    ) -> Result<(), BanksClientError> {
+        let mut builder = UnverifyBuilder::new();
+        builder
+            .authority(authority.pubkey())
+            .metadata(metadata.unwrap_or(self.metadata));
+
+        match args {
+            VerifyArgs::CreatorV1 => (),
+            VerifyArgs::CollectionV1 => {
+                if let Some(delegate_record) = delegate_record {
+                    builder.delegate_record(delegate_record);
+                }
+
+                if let Some(collection_mint) = collection_mint {
+                    builder.collection_mint(collection_mint);
+                }
+
+                if let Some(collection_metadata) = collection_metadata {
+                    builder.collection_metadata(collection_metadata);
+                }
+            }
+        }
+
+        let unverify_ix = builder.build(args).unwrap().instruction();
+
+        let transaction = Transaction::new_signed_with_payer(
+            &[unverify_ix],
             Some(&authority.pubkey()),
             &[&authority],
             context.last_blockhash,
