@@ -1,6 +1,6 @@
 [package]
 name = "mpl-token-metadata"
-version = "1.8.4"
+version = "1.8.5"
 description = "Metaplex Metadata"
 authors = ["Metaplex Developers <dev@metaplex.com>"]
 repository = "https://github.com/metaplex-foundation/metaplex-program-library"
