@@ -32,6 +32,14 @@ impl TreeConfig {
         let remaining_mints = self.total_mint_capacity.saturating_sub(self.num_minted);
         requested_capacity <= remaining_mints
     }
+
+    pub fn get_metadata_auth_for_v0(&self) -> Pubkey {
+        if !self.is_public {
+            self.tree_creator.clone()
+        } else {
+            Pubkey::default()
+        }
+    }
 }
 
 #[account]

@@ -533,7 +533,7 @@ fn process_mint_v1<'info>(
         &delegate,
         authority.num_minted,
         &merkle_tree.key(),
-        &authority.tree_creator,
+        &authority.get_metadata_auth_for_v0(),
     )?;
     let leaf: LeafSchema = metadata.to_leaf_schema_v0()?;
     wrap_application_data_v1(leaf.to_event().try_to_vec()?, wrapper)?;
