@@ -154,6 +154,6 @@ pub struct AddConfigLines<'info> {
     #[account(mut, has_one = authority)]
     candy_machine: Account<'info, CandyMachine>,
 
-    // Autority of the candy machine.
+    /// Autority of the candy machine.
     authority: Signer<'info>,
 }

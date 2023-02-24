@@ -88,29 +88,7 @@ pub fn set_collection_v2(ctx: Context<SetCollectionV2>) -> Result<()> {
     approve_metadata_delegate(delegate_accounts)
 }
 
-/// Set the collection PDA for the candy machine.
-///
-/// # Accounts
-///
-///   0. `[writable]` Candy Machine account (must be pre-allocated but zero content)
-///   1. `[signer]` Candy Machine authority
-///   2. `[]` Authority PDA (seeds `["candy_machine", candy machine id]`)
-///   3. `[signer]` Payer
-///   4. `[]` Collection update authority
-///   5. `[]` Collection mint
-///   6. `[]` Collection metadata
-///   7. `[optional, writable]` Metadata delegate record
-///   8. `[optional, writable]` Collection authority record
-///   9. `[signer]` New collection update authority
-///   10. `[]` New collection mint
-///   11. `[]` New collection metadata
-///   12. `[]` New collection master edition
-///   13. `[writable]` New metadata delegate record
-///   14. `[]` Token Metadata program
-///   15. `[]` System program
-///   16. `[]` Instructions sysvar account
-///   17. `[optional]` Token Authorization Rules program
-///   18. `[optional]` Token authorization rules account
+/// Sets the collection PDA for the candy machine.
 #[derive(Accounts)]
 pub struct SetCollectionV2<'info> {
     /// Candy Machine account.

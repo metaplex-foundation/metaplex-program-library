@@ -10,12 +10,16 @@ pub fn set_mint_authority(ctx: Context<SetMintAuthority>) -> Result<()> {
     Ok(())
 }
 
+/// Sets a new candy machine authority.
 #[derive(Accounts)]
 pub struct SetMintAuthority<'info> {
+    /// Candy Machine account.
     #[account(mut, has_one = authority)]
     candy_machine: Account<'info, CandyMachine>,
-    // candy machine authority
+
+    /// Candy Machine authority
     authority: Signer<'info>,
-    // candy machine mint authority to set
+
+    /// New candy machine authority
     mint_authority: Signer<'info>,
 }

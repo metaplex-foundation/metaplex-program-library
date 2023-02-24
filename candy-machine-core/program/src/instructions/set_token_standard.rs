@@ -79,23 +79,6 @@ pub fn set_token_standard(ctx: Context<SetTokenStandard>, token_standard: u8) ->
 }
 
 /// Set the token standard to mint.
-///
-/// # Accounts
-///
-///   0. `[writable]` Candy Machine account (must be pre-allocated but zero content)
-///   1. `[signer]` Candy Machine authority
-///   2. `[]` Authority PDA (seeds `["candy_machine", candy machine id]`)
-///   3. `[signer]` Payer
-///   4. `[optional, writable]` Metadata delegate record
-///   5. `[]` Collection mint
-///   6. `[]` Collection metadata
-///   7. `[optional, writable]` Collection authority record
-///   8. `[]` Collection update authority
-///   9. `[]` Token Metadata program
-///   10. `[]` System program
-///   11. `[]` Instructions sysvar account
-///   12. `[optional]` Token Authorization Rules program
-///   13. `[optional]` Token authorization rules account
 #[derive(Accounts)]
 pub struct SetTokenStandard<'info> {
     /// Candy Machine account.

@@ -16,7 +16,6 @@ use solana_program::{
     program_memory::sol_memcmp,
     program_pack::{IsInitialized, Pack},
     pubkey::{Pubkey, PUBKEY_BYTES},
-    system_instruction,
 };
 use std::result::Result as StdResult;
 
@@ -153,27 +152,6 @@ pub fn fixed_length_string(value: String, length: usize) -> Result<String> {
 
     let padding = NULL_STRING.repeat(length - value.len());
     Ok(value + &padding)
-}
-
-pub fn punish_bots<'a>(
-    error: CandyError,
-    bot_account: AccountInfo<'a>,
-    payment_account: AccountInfo<'a>,
-    system_program: AccountInfo<'a>,
-    fee: u64,
-) -> Result<()> {
-    msg!(
-        "{}, Candy Machine Botting is taxed at {:?} lamports",
-        error.to_string(),
-        fee
-    );
-
-    let final_fee = fee.min(bot_account.lamports());
-    invoke(
-        &system_instruction::transfer(bot_account.key, payment_account.key, final_fee),
-        &[bot_account, payment_account, system_program],
-    )?;
-    Ok(())
 }
 
 /// Replace the index pattern variables on the specified string.
@@ -380,12 +358,12 @@ pub fn revoke_metadata_delegate(accounts: RevokeMetadataDelegateHelperAccounts) 
 }
 
 pub fn assert_token_standard(token_standard: u8) -> Result<()> {
-    if token_standard != TokenStandard::NonFungible as u8
-        && token_standard != TokenStandard::ProgrammableNonFungible as u8
+    if token_standard == TokenStandard::NonFungible as u8
+        || token_standard == TokenStandard::ProgrammableNonFungible as u8
     {
-        err!(CandyError::InvalidTokenStandard)
-    } else {
         Ok(())
+    } else {
+        err!(CandyError::InvalidTokenStandard)
     }
 }
 

@@ -20,8 +20,8 @@ use crate::{
     AccountVersion, CandyError, CandyMachine, ConfigLine,
 };
 
+/// Accounts to mint an NFT.
 pub(crate) struct MintAccounts<'info> {
-    //candy_machine: &'info mut Box<Account<'info, CandyMachine>>,
     pub(crate) authority_pda: AccountInfo<'info>,
     pub(crate) payer: AccountInfo<'info>,
     pub(crate) nft_mint: AccountInfo<'info>,
@@ -89,6 +89,11 @@ pub fn mint_v2<'info>(ctx: Context<'_, '_, '_, 'info, MintV2<'info>>) -> Result<
     )
 }
 
+/// Mint a new NFT.
+///
+/// The index minted depends on the configuration of the candy machine: it could be
+/// a psuedo-randomly selected one or sequential. In both cases, after minted a
+/// specific index, the candy machine does not allow to mint the same index again.
 pub(crate) fn process_mint<'info>(
     candy_machine: &mut Box<Account<'info, CandyMachine>>,
     accounts: MintAccounts,
@@ -171,7 +176,7 @@ pub(crate) fn process_mint<'info>(
     }
 
     match candy_machine.version {
-        AccountVersion::V1 => legacy_mint_one(
+        AccountVersion::V1 => create(
             candy_machine,
             accounts,
             bump,
@@ -179,7 +184,7 @@ pub(crate) fn process_mint<'info>(
             creators,
             collection_metadata,
         ),
-        AccountVersion::V2 => mint_one(
+        AccountVersion::V2 => create_and_mint(
             candy_machine,
             accounts,
             bump,
@@ -190,6 +195,9 @@ pub(crate) fn process_mint<'info>(
     }
 }
 
+/// Selects and returns the information of a config line.
+///
+/// The selection could be either sequential or random.
 pub fn get_config_line(
     candy_machine: &Account<'_, CandyMachine>,
     index: usize,
@@ -277,7 +285,8 @@ pub fn get_config_line(
     })
 }
 
-fn mint_one<'info>(
+/// Creates the metadata accounts and mint a new token.
+fn create_and_mint<'info>(
     candy_machine: &mut Box<Account<'info, CandyMachine>>,
     accounts: MintAccounts,
     bump: u8,
@@ -460,7 +469,8 @@ fn mint_one<'info>(
     invoke_signed(&update_ix, &update_infos, &[&authority_seeds]).map_err(|error| error.into())
 }
 
-fn legacy_mint_one<'info>(
+/// Creates the metadata accounts
+fn create<'info>(
     candy_machine: &mut Box<Account<'info, CandyMachine>>,
     accounts: MintAccounts,
     bump: u8,
@@ -606,30 +616,26 @@ fn legacy_mint_one<'info>(
     .map_err(|error| error.into())
 }
 
-/// Mint a new NFT pseudo-randomly from the config array.
-///
-/// The index minted depends on the configuration of the candy machine: it could be
-/// a psuedo-randomly selected one or sequential. In both cases, after minted a
-/// specific index, the candy machine does not allow to mint the same index again.
+/// Mints a new NFT.
 #[derive(Accounts)]
 pub struct MintV2<'info> {
-    /// The candy machine account.
+    /// Candy machine account.
     #[account(mut, has_one = mint_authority)]
     candy_machine: Box<Account<'info, CandyMachine>>,
 
-    /// The candy machine authority account. This is the account that holds a delegate
+    /// Candy machine authority account. This is the account that holds a delegate
     /// to verify an item into the collection.
     ///
     /// CHECK: account constraints checked in account trait
     #[account(mut, seeds = [AUTHORITY_SEED.as_bytes(), candy_machine.key().as_ref()], bump)]
     authority_pda: AccountInfo<'info>,
 
-    /// The candy machine mint authority (mint only allowed for the mint_authority).
-    mint_authority: AccountInfo<'info>,
+    /// Candy machine mint authority (mint only allowed for the mint_authority).
+    mint_authority: Signer<'info>,
 
     /// Payer for the transaction and account allocation (rent).
     #[account(mut)]
-    payer: AccountInfo<'info>,
+    payer: Signer<'info>,
 
     /// Mint account of the NFT. The account will be initialized if necessary.
     ///
@@ -638,15 +644,15 @@ pub struct MintV2<'info> {
     nft_mint: AccountInfo<'info>,
 
     /// Mint authority of the NFT. In most cases this will be the owner of the NFT.
-    nft_mint_authority: AccountInfo<'info>,
+    nft_mint_authority: Signer<'info>,
 
-    /// The medate account of the NFT. This account must be uninitialized.
+    /// Metadata account of the NFT. This account must be uninitialized.
     ///
     /// CHECK: account checked in CPI
     #[account(mut)]
     nft_metadata: AccountInfo<'info>,
 
-    /// The master edition account of the NFT. The account will be initialized if necessary.
+    /// Master edition account of the NFT. The account will be initialized if necessary.
     ///
     /// CHECK: account checked in CPI
     #[account(mut)]
@@ -664,28 +670,28 @@ pub struct MintV2<'info> {
     #[account(mut)]
     token_record: Option<AccountInfo<'info>>,
 
-    /// The collection authority record.
+    /// Collection authority record.
     ///
     /// CHECK: account checked in CPI
     collection_authority_record: Option<AccountInfo<'info>>,
 
-    /// The mint account of the collection NFT.
+    /// Mint account of the collection NFT.
     ///
     /// CHECK: account checked in CPI
     collection_mint: AccountInfo<'info>,
 
-    /// The metadata account of the collection NFT.
+    /// Metadata account of the collection NFT.
     ///
     /// CHECK: account checked in CPI
     #[account(mut)]
     collection_metadata: AccountInfo<'info>,
 
-    /// The master edition account of the collection NFT.
+    /// Master edition account of the collection NFT.
     ///
     /// CHECK: account checked in CPI
     collection_master_edition: AccountInfo<'info>,
 
-    /// The update authority of the collection NFT.
+    /// Update authority of the collection NFT.
     ///
     /// CHECK: account checked in CPI
     collection_update_authority: AccountInfo<'info>,

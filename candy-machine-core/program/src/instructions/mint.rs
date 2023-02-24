@@ -40,25 +40,21 @@ pub fn mint<'info>(ctx: Context<'_, '_, '_, 'info, Mint<'info>>) -> Result<()> {
     )
 }
 
-/// Mint a new NFT pseudo-randomly from the config array.
-///
-/// The index minted depends on the configuration of the candy machine: it could be
-/// a psuedo-randomly selected one or sequential. In both cases, after minted a
-/// specific index, the candy machine does not allow to mint the same index again.
+/// Mint a new NFT.
 #[derive(Accounts)]
 pub struct Mint<'info> {
-    /// The candy machine account.
+    /// Candy machine account.
     #[account(mut, has_one = mint_authority)]
     candy_machine: Box<Account<'info, CandyMachine>>,
 
-    /// The candy machine authority account. This is the account that holds a delegate
+    /// Candy machine authority account. This is the account that holds a delegate
     /// to verify an item into the collection.
     ///
     /// CHECK: account constraints checked in account trait
     #[account(mut, seeds = [AUTHORITY_SEED.as_bytes(), candy_machine.key().as_ref()], bump)]
     authority_pda: UncheckedAccount<'info>,
 
-    /// The candy machine mint authority (mint only allowed for the mint_authority).
+    /// Candy machine mint authority (mint only allowed for the mint_authority).
     mint_authority: Signer<'info>,
 
     /// Payer for the transaction and account allocation (rent).
@@ -74,42 +70,42 @@ pub struct Mint<'info> {
     /// Mint authority of the NFT. In most cases this will be the owner of the NFT.
     nft_mint_authority: Signer<'info>,
 
-    /// The medate account of the NFT. This account must be uninitialized.
+    /// Metadata account of the NFT. This account must be uninitialized.
     ///
     /// CHECK: account checked in CPI
     #[account(mut)]
     nft_metadata: UncheckedAccount<'info>,
 
-    /// The master edition account of the NFT. The account will be initialized if necessary.
+    /// Master edition account of the NFT. The account will be initialized if necessary.
     ///
     /// CHECK: account checked in CPI
     #[account(mut)]
     nft_master_edition: UncheckedAccount<'info>,
 
-    /// The collection authority record account is either the delegated authority record (legacy)
+    /// Collection authority record account is either the delegated authority record (legacy)
     /// or a metadata delegate record for the `authority_pda`. The delegate is set when a new collection
     /// is set to the candy machine.
     ///
     /// CHECK: account checked in CPI
     collection_authority_record: UncheckedAccount<'info>,
 
-    /// The mint account of the collection NFT.
+    /// Mint account of the collection NFT.
     ///
     /// CHECK: account checked in CPI
     collection_mint: UncheckedAccount<'info>,
 
-    /// The metadata account of the collection NFT.
+    /// Metadata account of the collection NFT.
     ///
     /// CHECK: account checked in CPI
     #[account(mut)]
     collection_metadata: UncheckedAccount<'info>,
 
-    /// The master edition account of the collection NFT.
+    /// Master edition account of the collection NFT.
     ///
     /// CHECK: account checked in CPI
     collection_master_edition: UncheckedAccount<'info>,
 
-    /// The update authority of the collection NFT.
+    /// Update authority of the collection NFT.
     ///
     /// CHECK: account checked in CPI
     collection_update_authority: UncheckedAccount<'info>,

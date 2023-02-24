@@ -636,6 +636,26 @@ createErrorFromCodeLookup.set(0x178c, () => new MissingSplAtaProgramError());
 createErrorFromNameLookup.set('MissingSplAtaProgram', () => new MissingSplAtaProgramError());
 
 /**
+ * InvalidAccountVersion: 'Invalid account version'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidAccountVersionError extends Error {
+  readonly code: number = 0x178d;
+  readonly name: string = 'InvalidAccountVersion';
+  constructor() {
+    super('Invalid account version');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidAccountVersionError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x178d, () => new InvalidAccountVersionError());
+createErrorFromNameLookup.set('InvalidAccountVersion', () => new InvalidAccountVersionError());
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

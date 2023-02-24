@@ -57,12 +57,15 @@ pub fn set_collection(ctx: Context<SetCollection>) -> Result<()> {
 /// Set the collection PDA for the candy machine
 #[derive(Accounts)]
 pub struct SetCollection<'info> {
+    /// Candy Machine account.
     #[account(mut, has_one = authority)]
     candy_machine: Account<'info, CandyMachine>,
 
-    // candy machine authority
+    /// Candy Machine authority.
     authority: Signer<'info>,
 
+    /// Authority PDA.
+    ///
     /// CHECK: account checked in seeds constraint
     #[account(
         mut, seeds = [AUTHORITY_SEED.as_bytes(), candy_machine.to_account_info().key.as_ref()],
@@ -70,40 +73,56 @@ pub struct SetCollection<'info> {
     )]
     authority_pda: UncheckedAccount<'info>,
 
-    // payer of the transaction
+    /// Payer of the transaction.
     payer: Signer<'info>,
 
+    /// Mint account of the collection.
+    ///
     /// CHECK: account checked in CPI
     collection_mint: UncheckedAccount<'info>,
 
+    /// Metadata account of the collection.
+    ///
     /// CHECK: account checked in CPI
     collection_metadata: UncheckedAccount<'info>,
 
+    /// Collection authority record.
+    ///
     /// CHECK: account checked in CPI
     #[account(mut)]
     collection_authority_record: UncheckedAccount<'info>,
 
-    // update authority of the new collection NFT
+    /// Update authority of the new collection NFT.
     #[account(mut)]
     new_collection_update_authority: Signer<'info>,
 
+    /// New collection metadata.
+    ///
     /// CHECK: account checked in CPI
     new_collection_metadata: UncheckedAccount<'info>,
 
+    /// New collection mint.
+    ///
     /// CHECK: account checked in CPI
     new_collection_mint: UncheckedAccount<'info>,
 
+    /// New collection master edition.
+    ///
     /// CHECK: account checked in CPI
     new_collection_master_edition: UncheckedAccount<'info>,
 
+    /// New collection authority record.
+    ///
     /// CHECK: account checked in CPI
     #[account(mut)]
     new_collection_authority_record: UncheckedAccount<'info>,
 
+    /// Token Metadata program.
+    ///
     /// CHECK: account checked in CPI
     #[account(address = mpl_token_metadata::id())]
     token_metadata_program: UncheckedAccount<'info>,
 
-    /// System program account.
+    /// System program.
     system_program: Program<'info, System>,
 }

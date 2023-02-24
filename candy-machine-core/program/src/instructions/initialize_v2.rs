@@ -9,12 +9,6 @@ use crate::{
     AccountVersion, ApproveMetadataDelegateHelperAccounts,
 };
 
-#[derive(AnchorDeserialize, AnchorSerialize)]
-pub enum NftType {
-    NonFungible,
-    ProgrammableNonFungible,
-}
-
 pub fn initialize_v2(
     ctx: Context<InitializeV2>,
     data: CandyMachineData,
@@ -75,24 +69,7 @@ pub fn initialize_v2(
     approve_metadata_delegate(delegate_accounts)
 }
 
-/// Create a new candy machine.
-///
-/// # Accounts
-///
-///   0. `[writable]` Candy Machine account (must be pre-allocated but zero content)
-///   1. `[writable]` Authority PDA (seeds `["candy_machine", candy machine id]`)
-///   2. `[]` Candy Machine authority
-///   3. `[signer]` Payer
-///   4. `[]` Collection metadata
-///   5. `[]` Collection mint
-///   6. `[]` Collection master edition
-///   7. `[signer]` Collection update authority
-///   8. `[writable]` Metadata delegate record
-///   9. `[]` Token Metadata program
-///   10. `[]` System program
-///   11. `[]` Instructions sysvar account
-///   12. `[optional]` Token Authorization Rules program
-///   13. `[optional]` Token authorization rules account
+/// Initializes a new candy machine.
 #[derive(Accounts)]
 #[instruction(data: CandyMachineData, token_standard: u8)]
 pub struct InitializeV2<'info> {
@@ -122,7 +99,7 @@ pub struct InitializeV2<'info> {
     /// CHECK: authority can be any account and is not written to or read
     authority: UncheckedAccount<'info>,
 
-    // Payer of the transaction.
+    /// Payer of the transaction.
     payer: Signer<'info>,
 
     /// Metadata account of the collection.
@@ -154,7 +131,7 @@ pub struct InitializeV2<'info> {
 
     /// Token Metadata program.
     ///
-    /// CHECK: account checked in CPI
+    /// CHECK: account constraint checked in account trait
     #[account(address = mpl_token_metadata::id())]
     token_metadata_program: UncheckedAccount<'info>,
 
@@ -163,19 +140,19 @@ pub struct InitializeV2<'info> {
 
     /// Instructions sysvar account.
     ///
-    /// CHECK: account constraints checked in account trait
+    /// CHECK: account constraint checked in account trait
     #[account(address = sysvar::instructions::id())]
     sysvar_instructions: UncheckedAccount<'info>,
 
     /// Token Authorization Rules program.
     ///
-    /// CHECK: account checked in CPI
+    /// CHECK: account constraint checked in account trait
     #[account(address = mpl_token_auth_rules::id())]
     authorization_rules_program: Option<UncheckedAccount<'info>>,
 
     /// Token Authorization rules account for the collection metadata (if any).
     ///
-    /// CHECK: account constraints checked in account trait
+    /// CHECK: account checked in CPI
     #[account(owner = mpl_token_auth_rules::id())]
     authorization_rules: Option<UncheckedAccount<'info>>,
 }

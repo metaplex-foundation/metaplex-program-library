@@ -54,10 +54,13 @@ pub fn initialize(ctx: Context<Initialize>, data: CandyMachineData) -> Result<()
     Ok(())
 }
 
-/// Create a new candy machine.
+/// Initializes a new candy machine.
 #[derive(Accounts)]
 #[instruction(data: CandyMachineData)]
 pub struct Initialize<'info> {
+    /// Candy Machine account. The account space must be allocated to allow accounts larger
+    /// than 10kb.
+    ///
     /// CHECK: account constraints checked in account trait
     #[account(
         zero,
@@ -66,6 +69,8 @@ pub struct Initialize<'info> {
     )]
     candy_machine: UncheckedAccount<'info>,
 
+    /// Authority PDA used to verify minted NFTs to the collection.
+    ///
     /// CHECK: account checked in seeds constraint
     #[account(
         mut,
@@ -74,32 +79,46 @@ pub struct Initialize<'info> {
     )]
     authority_pda: UncheckedAccount<'info>,
 
+    /// Candy Machine authority. This is the address that controls the upate of the candy machine.
+    ///
     /// CHECK: authority can be any account and is not written to or read
     authority: UncheckedAccount<'info>,
 
-    // payer of the transaction
+    /// Payer of the transaction.
     payer: Signer<'info>,
 
+    /// Metadata account of the collection.
+    ///
     /// CHECK: account checked in CPI
     collection_metadata: UncheckedAccount<'info>,
 
+    /// Mint account of the collection.
+    ///
     /// CHECK: account checked in CPI
     collection_mint: UncheckedAccount<'info>,
 
+    /// Master Edition account of the collection.
+    ///
     /// CHECK: account checked in CPI
     collection_master_edition: UncheckedAccount<'info>,
 
+    /// Update authority of the collection. This needs to be a signer so the candy
+    /// machine can approve a delegate to verify minted NFTs to the collection.
     #[account(mut)]
     collection_update_authority: Signer<'info>,
 
+    /// Collection authority record. The delegate is used to verify NFTs.
+    ///
     /// CHECK: account checked in CPI
     #[account(mut)]
     collection_authority_record: UncheckedAccount<'info>,
 
-    /// CHECK: account checked in CPI
+    /// Token Metadata program.
+    ///
+    /// CHECK: account constraint checked in account trait
     #[account(address = mpl_token_metadata::id())]
     token_metadata_program: UncheckedAccount<'info>,
 
-    /// System program account.
+    /// System program.
     system_program: Program<'info, System>,
 }
