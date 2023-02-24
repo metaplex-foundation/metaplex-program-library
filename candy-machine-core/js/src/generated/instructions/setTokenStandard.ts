@@ -43,7 +43,7 @@ export const setTokenStandardStruct = new beet.BeetArgsStruct<
  * @property [] collectionMint
  * @property [_writable_] collectionMetadata
  * @property [_writable_] collectionAuthorityRecord (optional)
- * @property [_writable_, **signer**] collectionUpdateAuthority
+ * @property [**signer**] collectionUpdateAuthority
  * @property [] tokenMetadataProgram
  * @property [] sysvarInstructions
  * @property [] authorizationRulesProgram (optional)
@@ -137,7 +137,7 @@ export function createSetTokenStandardInstruction(
     },
     {
       pubkey: accounts.collectionUpdateAuthority,
-      isWritable: true,
+      isWritable: false,
       isSigner: true,
     },
     {

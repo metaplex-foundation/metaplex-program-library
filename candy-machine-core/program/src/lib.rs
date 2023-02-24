@@ -42,9 +42,19 @@ pub mod candy_machine_core {
         instructions::initialize_v2(ctx, data, token_standard)
     }
 
-    /// Mint an NFT. Only the candy machine mint authority is allowed to mint.
-    pub fn mint<'info>(ctx: Context<'_, '_, '_, 'info, Mint<'info>>) -> Result<()> {
+    /// Mint an NFT.
+    ///
+    /// Only the candy machine mint authority is allowed to mint.
+    pub fn mint<'a, 'b, 'c, 'info>(ctx: Context<'a, 'b, 'c, 'info, Mint<'info>>) -> Result<()> {
         instructions::mint(ctx)
+    }
+
+    /// Mint an NFT.
+    ///
+    /// Only the candy machine mint authority is allowed to mint. This handler mints both
+    /// NFTs and Programmable NFts.
+    pub fn mint_v2<'info>(ctx: Context<'_, '_, '_, 'info, MintV2<'info>>) -> Result<()> {
+        instructions::mint_v2(ctx)
     }
 
     /// Set a new authority of the candy machine.

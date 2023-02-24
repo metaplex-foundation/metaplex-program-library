@@ -2,15 +2,11 @@ import test from 'tape';
 import { InitTransactions, killStuckProcess } from './setup';
 import { drain } from './utils/minter';
 import spok from 'spok';
-import { CandyMachine, CandyMachineData, ConfigLine } from '../src/generated';
-import { TokenStandard } from '@metaplex-foundation/mpl-token-metadata';
-import { keypairIdentity, Metaplex } from '@metaplex-foundation/js';
-import { getAccount } from '@solana/spl-token';
-import { spokSamePubkey } from './utils';
+import { CandyMachineData, ConfigLine } from '../src/generated';
 
 killStuckProcess();
 
-test('mint (authority)', async (t) => {
+test('mint: authority', async (t) => {
   const API = new InitTransactions();
   const { fstTxHandler, payerPair, connection } = await API.payer();
   const items = 10;
@@ -68,7 +64,7 @@ test('mint (authority)', async (t) => {
   await mintTransaction.assertSuccess(t);
 });
 
-test('mint (sequential)', async (t) => {
+test('mint: sequential', async (t) => {
   const API = new InitTransactions();
   const { fstTxHandler, payerPair, connection } = await API.payer();
   const items = 10;
@@ -132,7 +128,7 @@ test('mint (sequential)', async (t) => {
   await mintTransaction.assertError(t, /Candy machine is empty/i);
 });
 
-test('mint (random)', async (t) => {
+test('mint: random', async (t) => {
   const API = new InitTransactions();
   const { fstTxHandler, payerPair, connection } = await API.payer();
   const items = 10;
@@ -201,7 +197,7 @@ test('mint (random)', async (t) => {
   await mintTransaction.assertError(t, /Candy machine is empty/i);
 });
 
-test('mint (hidden settings)', async (t) => {
+test('mint: hidden settings', async (t) => {
   const API = new InitTransactions();
   const { fstTxHandler, payerPair, connection } = await API.payer();
   const items = 10;
@@ -245,105 +241,4 @@ test('mint (hidden settings)', async (t) => {
   // candy machine should be empty
   const { tx: mintTransaction } = await API.mint(t, address, payerPair, fstTxHandler, connection);
   await mintTransaction.assertError(t, /Candy machine is empty/i);
-});
-
-test.only('mint (Programmable NFT)', async (t) => {
-  const API = new InitTransactions();
-  const { fstTxHandler, payerPair, connection } = await API.payer();
-  const items = 10;
-
-  const data: CandyMachineData = {
-    itemsAvailable: items,
-    symbol: 'CORE',
-    sellerFeeBasisPoints: 500,
-    maxSupply: 0,
-    isMutable: true,
-    creators: [
-      {
-        address: payerPair.publicKey,
-        verified: false,
-        percentageShare: 100,
-      },
-    ],
-    configLineSettings: {
-      prefixName: 'TEST ',
-      nameLength: 10,
-      prefixUri: 'https://arweave.net/',
-      uriLength: 50,
-      isSequential: false,
-    },
-    hiddenSettings: null,
-  };
-
-  const { tx: transaction, candyMachine: address } = await API.initialize(
-    t,
-    payerPair,
-    data,
-    fstTxHandler,
-    connection,
-  );
-  // executes the transaction
-  await transaction.assertSuccess(t);
-
-  const lines: ConfigLine[] = [];
-
-  for (let i = 0; i < items; i++) {
-    lines[i] = {
-      name: `NFT #${i + 1}`,
-      uri: 'uJSdJIsz_tYTcjUEWdeVSj0aR90K-hjDauATWZSi-tQ',
-    };
-  }
-
-  const { txs } = await API.addConfigLines(t, address, payerPair, lines, 0);
-  for (const tx of txs) {
-    await fstTxHandler
-      .sendAndConfirmTransaction(tx, [payerPair], 'tx: AddConfigLines')
-      .assertSuccess(t);
-  }
-
-  // to pNFT
-  const candyMachineObject = await CandyMachine.fromAccountAddress(connection, address);
-
-  const { tx: txpNft } = await API.setTokenStandard(
-    t,
-    payerPair,
-    address,
-    candyMachineObject.collectionMint,
-    payerPair,
-    TokenStandard.ProgrammableNonFungible,
-    fstTxHandler,
-    connection,
-  );
-  await txpNft.assertSuccess(t);
-
-  const { tx: mintTransaction, mintAddress: mint } = await API.mint(
-    t,
-    address,
-    payerPair,
-    fstTxHandler,
-    connection,
-  );
-  await mintTransaction.assertSuccess(t);
-
-  const metaplex = Metaplex.make(connection).use(keypairIdentity(payerPair));
-  const nftTokenAccount = metaplex
-    .tokens()
-    .pdas()
-    .associatedTokenAccount({ mint: mint, owner: payerPair.publicKey });
-
-  const ataAccount = await getAccount(connection, nftTokenAccount);
-
-  spok(t, ataAccount, {
-    isFrozen: true,
-    mint: spokSamePubkey(mint),
-  });
-
-  const nft = await metaplex.nfts().findByMint({ mintAddress: mint });
-
-  spok(t, nft, {
-    mint: {
-      address: spokSamePubkey(mint),
-    },
-    tokenStandard: TokenStandard.ProgrammableNonFungible,
-  });
 });

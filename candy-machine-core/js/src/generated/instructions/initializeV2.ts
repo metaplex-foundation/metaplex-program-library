@@ -42,12 +42,11 @@ export const initializeV2Struct = new beet.FixableBeetArgsStruct<
  * @property [_writable_] authorityPda
  * @property [] authority
  * @property [**signer**] payer
- * @property [] collectionMetadata
+ * @property [_writable_] collectionMetadata
  * @property [] collectionMint
  * @property [] collectionMasterEdition
  * @property [_writable_, **signer**] collectionUpdateAuthority
- * @property [_writable_] collectionAuthorityRecord (optional)
- * @property [_writable_] delegateRecord (optional)
+ * @property [_writable_] delegateRecord
  * @property [] tokenMetadataProgram
  * @property [] sysvarInstructions
  * @property [] authorizationRulesProgram (optional)
@@ -65,8 +64,7 @@ export type InitializeV2InstructionAccounts = {
   collectionMint: web3.PublicKey;
   collectionMasterEdition: web3.PublicKey;
   collectionUpdateAuthority: web3.PublicKey;
-  collectionAuthorityRecord?: web3.PublicKey;
-  delegateRecord?: web3.PublicKey;
+  delegateRecord: web3.PublicKey;
   tokenMetadataProgram: web3.PublicKey;
   systemProgram?: web3.PublicKey;
   sysvarInstructions: web3.PublicKey;
@@ -122,7 +120,7 @@ export function createInitializeV2Instruction(
     },
     {
       pubkey: accounts.collectionMetadata,
-      isWritable: false,
+      isWritable: true,
       isSigner: false,
     },
     {
@@ -141,13 +139,8 @@ export function createInitializeV2Instruction(
       isSigner: true,
     },
     {
-      pubkey: accounts.collectionAuthorityRecord ?? programId,
-      isWritable: accounts.collectionAuthorityRecord != null,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.delegateRecord ?? programId,
-      isWritable: accounts.delegateRecord != null,
+      pubkey: accounts.delegateRecord,
+      isWritable: true,
       isSigner: false,
     },
     {

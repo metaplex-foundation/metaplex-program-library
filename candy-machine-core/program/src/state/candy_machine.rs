@@ -2,17 +2,16 @@ use anchor_lang::prelude::*;
 
 use super::candy_machine_data::CandyMachineData;
 
-// Indicates the position for the pNFT feature flag. If the bit
-// on this position is set to 1, then the candy machine will mint
-// pNFTs.
-pub const PNFT_FEATURE: u64 = 1 << (std::mem::size_of::<u64>() - 1);
-
 /// Candy machine state and config data.
 #[account]
 #[derive(Default, Debug)]
 pub struct CandyMachine {
-    /// Features versioning flags.
-    pub features: u64,
+    /// Version of the account.
+    pub version: AccountVersion,
+    /// Token standard to mint NFTs.
+    pub token_standard: u8,
+    /// Features flags.
+    pub features: [u8; 2],
     /// Authority address.
     pub authority: Pubkey,
     /// Authority address allowed to mint from the candy machine.
@@ -33,20 +32,6 @@ pub struct CandyMachine {
     // - (u32 * items_available) mint indices
 }
 
-impl CandyMachine {
-    pub fn is_enabled(&self, feature: u64) -> bool {
-        (self.features & feature) > 0
-    }
-
-    pub fn enable_feature(&mut self, feature: u64) {
-        self.features |= feature
-    }
-
-    pub fn disable_feature(&mut self, feature: u64) {
-        self.features &= !feature
-    }
-}
-
 /// Config line struct for storing asset (NFT) data pre-mint.
 #[derive(AnchorSerialize, AnchorDeserialize, Debug)]
 pub struct ConfigLine {
@@ -54,4 +39,12 @@ pub struct ConfigLine {
     pub name: String,
     /// URI to JSON metadata.
     pub uri: String,
+}
+
+/// Account versioning.
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Default, Debug)]
+pub enum AccountVersion {
+    #[default]
+    V1,
+    V2,
 }

@@ -1,13 +1,19 @@
 use anchor_lang::{prelude::*, solana_program::sysvar, Discriminator};
-use mpl_token_metadata::state::{TokenStandard, MAX_SYMBOL_LENGTH};
+use mpl_token_metadata::state::MAX_SYMBOL_LENGTH;
 
 use crate::{
-    approve_collection_authority_helper, approve_metadata_delegate,
+    approve_metadata_delegate, assert_token_standard,
     constants::{AUTHORITY_SEED, HIDDEN_SECTION},
     state::{CandyMachine, CandyMachineData},
     utils::fixed_length_string,
-    ApproveCollectionAuthorityHelperAccounts, ApproveMetadataDelegateHelperAccounts, CandyError,
+    AccountVersion, ApproveMetadataDelegateHelperAccounts,
 };
+
+#[derive(AnchorDeserialize, AnchorSerialize)]
+pub enum NftType {
+    NonFungible,
+    ProgrammableNonFungible,
+}
 
 pub fn initialize_v2(
     ctx: Context<InitializeV2>,
@@ -16,9 +22,13 @@ pub fn initialize_v2(
 ) -> Result<()> {
     let candy_machine_account = &mut ctx.accounts.candy_machine;
 
+    assert_token_standard(token_standard)?;
+
     let mut candy_machine = CandyMachine {
         data,
-        features: 0,
+        version: AccountVersion::V2,
+        token_standard,
+        features: [0u8; 2],
         authority: ctx.accounts.authority.key(),
         mint_authority: ctx.accounts.authority.key(),
         collection_mint: ctx.accounts.collection_mint.key(),
@@ -40,63 +50,55 @@ pub fn initialize_v2(
         account_data[HIDDEN_SECTION..HIDDEN_SECTION + 4].copy_from_slice(&u32::MIN.to_le_bytes());
     }
 
-    if token_standard == TokenStandard::ProgrammableNonFungible as u8 {
-        let delegate_record = ctx
+    // approves the metadata delegate so the candy machine can verify minted NFTs
+    let delegate_accounts = ApproveMetadataDelegateHelperAccounts {
+        authority_pda: ctx.accounts.authority_pda.to_account_info(),
+        collection_metadata: ctx.accounts.collection_metadata.to_account_info(),
+        collection_mint: ctx.accounts.collection_mint.to_account_info(),
+        collection_update_authority: ctx.accounts.collection_update_authority.to_account_info(),
+        delegate_record: ctx.accounts.delegate_record.to_account_info(),
+        payer: ctx.accounts.payer.to_account_info(),
+        system_program: ctx.accounts.system_program.to_account_info(),
+        sysvar_instructions: ctx.accounts.sysvar_instructions.to_account_info(),
+        authorization_rules_program: ctx
             .accounts
-            .delegate_record
+            .authorization_rules_program
             .as_ref()
-            .ok_or(CandyError::MissingMetadataDelegateRecord)?;
-
-        let delegate_accounts = ApproveMetadataDelegateHelperAccounts {
-            authority_pda: ctx.accounts.authority_pda.to_account_info(),
-            collection_metadata: ctx.accounts.collection_metadata.to_account_info(),
-            collection_mint: ctx.accounts.collection_mint.to_account_info(),
-            collection_update_authority: ctx.accounts.collection_update_authority.to_account_info(),
-            delegate_record: delegate_record.to_account_info(),
-            payer: ctx.accounts.payer.to_account_info(),
-            system_program: ctx.accounts.system_program.to_account_info(),
-            sysvar_instructions: ctx.accounts.sysvar_instructions.to_account_info(),
-            authorization_rules_program: ctx
-                .accounts
-                .authorization_rules_program
-                .as_ref()
-                .map(|authorization_rules_program| authorization_rules_program.to_account_info()),
-            authorization_rules: ctx
-                .accounts
-                .authorization_rules
-                .as_ref()
-                .map(|authorization_rules| authorization_rules.to_account_info()),
-        };
-
-        approve_metadata_delegate(delegate_accounts)
-    } else if token_standard == TokenStandard::NonFungible as u8 {
-        let collection_authority_record = ctx
+            .map(|authorization_rules_program| authorization_rules_program.to_account_info()),
+        authorization_rules: ctx
             .accounts
-            .collection_authority_record
+            .authorization_rules
             .as_ref()
-            .ok_or(CandyError::MissingCollectionAuthorityRecord)?;
+            .map(|authorization_rules| authorization_rules.to_account_info()),
+    };
 
-        let approve_accounts = ApproveCollectionAuthorityHelperAccounts {
-            payer: ctx.accounts.payer.to_account_info(),
-            authority_pda: ctx.accounts.authority_pda.to_account_info(),
-            collection_mint: ctx.accounts.collection_mint.to_account_info(),
-            collection_metadata: ctx.accounts.collection_metadata.to_account_info(),
-            collection_authority_record: collection_authority_record.to_account_info(),
-            token_metadata_program: ctx.accounts.token_metadata_program.to_account_info(),
-            system_program: ctx.accounts.system_program.to_account_info(),
-            collection_update_authority: ctx.accounts.collection_update_authority.to_account_info(),
-        };
-
-        approve_collection_authority_helper(approve_accounts)
-    } else {
-        err!(CandyError::InvalidTokenStandard)
-    }
+    approve_metadata_delegate(delegate_accounts)
 }
 
 /// Create a new candy machine.
+///
+/// # Accounts
+///
+///   0. `[writable]` Candy Machine account (must be pre-allocated but zero content)
+///   1. `[writable]` Authority PDA (seeds `["candy_machine", candy machine id]`)
+///   2. `[]` Candy Machine authority
+///   3. `[signer]` Payer
+///   4. `[]` Collection metadata
+///   5. `[]` Collection mint
+///   6. `[]` Collection master edition
+///   7. `[signer]` Collection update authority
+///   8. `[writable]` Metadata delegate record
+///   9. `[]` Token Metadata program
+///   10. `[]` System program
+///   11. `[]` Instructions sysvar account
+///   12. `[optional]` Token Authorization Rules program
+///   13. `[optional]` Token authorization rules account
 #[derive(Accounts)]
 #[instruction(data: CandyMachineData, token_standard: u8)]
 pub struct InitializeV2<'info> {
+    /// Candy Machine account. The account space must be allocated to allow accounts larger
+    /// than 10kb.
+    ///
     /// CHECK: account constraints checked in account trait
     #[account(
         zero,
@@ -105,6 +107,8 @@ pub struct InitializeV2<'info> {
     )]
     candy_machine: UncheckedAccount<'info>,
 
+    /// Authority PDA used to verify minted NFTs to the collection.
+    ///
     /// CHECK: account checked in seeds constraint
     #[account(
         mut,
@@ -113,46 +117,64 @@ pub struct InitializeV2<'info> {
     )]
     authority_pda: UncheckedAccount<'info>,
 
+    /// Candy Machine authority. This is the address that controls the upate of the candy machine.
+    ///
     /// CHECK: authority can be any account and is not written to or read
     authority: UncheckedAccount<'info>,
 
-    // payer of the transaction
+    // Payer of the transaction.
     payer: Signer<'info>,
 
+    /// Metadata account of the collection.
+    ///
     /// CHECK: account checked in CPI
+    #[account(mut)]
     collection_metadata: UncheckedAccount<'info>,
 
+    /// Mint account of the collection.
+    ///
     /// CHECK: account checked in CPI
     collection_mint: UncheckedAccount<'info>,
 
+    /// Master Edition account of the collection.
+    ///
     /// CHECK: account checked in CPI
     collection_master_edition: UncheckedAccount<'info>,
 
+    /// Update authority of the collection. This needs to be a signer so the candy
+    /// machine can approve a delegate to verify minted NFTs to the collection.
     #[account(mut)]
     collection_update_authority: Signer<'info>,
 
+    /// Metadata delegate record. The delegate is used to verify NFTs.
+    ///
     /// CHECK: account checked in CPI
     #[account(mut)]
-    collection_authority_record: Option<UncheckedAccount<'info>>,
+    delegate_record: UncheckedAccount<'info>,
 
-    #[account(mut)]
-    delegate_record: Option<UncheckedAccount<'info>>,
-
+    /// Token Metadata program.
+    ///
     /// CHECK: account checked in CPI
     #[account(address = mpl_token_metadata::id())]
     token_metadata_program: UncheckedAccount<'info>,
 
-    /// System program account.
+    /// System program.
     system_program: Program<'info, System>,
 
+    /// Instructions sysvar account.
+    ///
     /// CHECK: account constraints checked in account trait
     #[account(address = sysvar::instructions::id())]
     sysvar_instructions: UncheckedAccount<'info>,
 
+    /// Token Authorization Rules program.
+    ///
     /// CHECK: account checked in CPI
     #[account(address = mpl_token_auth_rules::id())]
     authorization_rules_program: Option<UncheckedAccount<'info>>,
 
+    /// Token Authorization rules account for the collection metadata (if any).
+    ///
     /// CHECK: account constraints checked in account trait
     #[account(owner = mpl_token_auth_rules::id())]
     authorization_rules: Option<UncheckedAccount<'info>>,

@@ -52,7 +52,10 @@ pub fn update(ctx: Context<Update>, data: CandyMachineData) -> Result<()> {
 /// Update the candy machine state.
 #[derive(Accounts)]
 pub struct Update<'info> {
+    /// Candy Machine account.
     #[account(mut, has_one = authority)]
     candy_machine: Account<'info, CandyMachine>,
+
+    /// Authority of the candy machine.
     authority: Signer<'info>,
 }

@@ -68,9 +68,6 @@ pub enum CandyError {
     #[msg("Instruction could not be created")]
     InstructionBuilderFailed,
 
-    #[msg("Missing required remaining accounts")]
-    MissingRemainingAccounts,
-
     #[msg("Missing collection authority record")]
     MissingCollectionAuthorityRecord,
 
@@ -79,4 +76,19 @@ pub enum CandyError {
 
     #[msg("Invalid token standard")]
     InvalidTokenStandard,
+
+    #[msg("Missing token account")]
+    MissingTokenAccount,
+
+    #[msg("Missing token record")]
+    MissingTokenRecord,
+
+    #[msg("Missing instructions sysvar account")]
+    MissingInstructionsSysvar,
+
+    #[msg("Missing SPL ATA program")]
+    MissingSplAtaProgram,
+
+    #[msg("Invalid account version")]
+    InvalidAccountVersion,
 }

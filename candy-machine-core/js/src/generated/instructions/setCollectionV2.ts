@@ -24,19 +24,18 @@ export const setCollectionV2Struct = new beet.BeetArgsStruct<{
  *
  * @property [_writable_] candyMachine
  * @property [**signer**] authority
- * @property [_writable_] authorityPda
+ * @property [] authorityPda
  * @property [**signer**] payer
  * @property [] collectionUpdateAuthority
  * @property [] collectionMint
  * @property [] collectionMetadata
- * @property [_writable_] collectionAuthorityRecord (optional)
  * @property [_writable_] delegateRecord (optional)
- * @property [_writable_, **signer**] newCollectionUpdateAuthority
- * @property [] newCollectionMetadata
+ * @property [_writable_] collectionAuthorityRecord (optional)
+ * @property [**signer**] newCollectionUpdateAuthority
  * @property [] newCollectionMint
+ * @property [] newCollectionMetadata
  * @property [] newCollectionMasterEdition
- * @property [_writable_] newCollectionAuthorityRecord (optional)
- * @property [_writable_] newDelegateRecord (optional)
+ * @property [_writable_] newDelegateRecord
  * @property [] tokenMetadataProgram
  * @property [] sysvarInstructions
  * @property [] authorizationRulesProgram (optional)
@@ -53,14 +52,13 @@ export type SetCollectionV2InstructionAccounts = {
   collectionUpdateAuthority: web3.PublicKey;
   collectionMint: web3.PublicKey;
   collectionMetadata: web3.PublicKey;
-  collectionAuthorityRecord?: web3.PublicKey;
   delegateRecord?: web3.PublicKey;
+  collectionAuthorityRecord?: web3.PublicKey;
   newCollectionUpdateAuthority: web3.PublicKey;
-  newCollectionMetadata: web3.PublicKey;
   newCollectionMint: web3.PublicKey;
+  newCollectionMetadata: web3.PublicKey;
   newCollectionMasterEdition: web3.PublicKey;
-  newCollectionAuthorityRecord?: web3.PublicKey;
-  newDelegateRecord?: web3.PublicKey;
+  newDelegateRecord: web3.PublicKey;
   tokenMetadataProgram: web3.PublicKey;
   systemProgram?: web3.PublicKey;
   sysvarInstructions: web3.PublicKey;
@@ -102,7 +100,7 @@ export function createSetCollectionV2Instruction(
     },
     {
       pubkey: accounts.authorityPda,
-      isWritable: true,
+      isWritable: false,
       isSigner: false,
     },
     {
@@ -126,27 +124,27 @@ export function createSetCollectionV2Instruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.collectionAuthorityRecord ?? programId,
-      isWritable: accounts.collectionAuthorityRecord != null,
-      isSigner: false,
-    },
-    {
       pubkey: accounts.delegateRecord ?? programId,
       isWritable: accounts.delegateRecord != null,
       isSigner: false,
     },
     {
+      pubkey: accounts.collectionAuthorityRecord ?? programId,
+      isWritable: accounts.collectionAuthorityRecord != null,
+      isSigner: false,
+    },
+    {
       pubkey: accounts.newCollectionUpdateAuthority,
-      isWritable: true,
+      isWritable: false,
       isSigner: true,
     },
     {
-      pubkey: accounts.newCollectionMetadata,
+      pubkey: accounts.newCollectionMint,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: accounts.newCollectionMint,
+      pubkey: accounts.newCollectionMetadata,
       isWritable: false,
       isSigner: false,
     },
@@ -156,13 +154,8 @@ export function createSetCollectionV2Instruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.newCollectionAuthorityRecord ?? programId,
-      isWritable: accounts.newCollectionAuthorityRecord != null,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.newDelegateRecord ?? programId,
-      isWritable: accounts.newDelegateRecord != null,
+      pubkey: accounts.newDelegateRecord,
+      isWritable: true,
       isSigner: false,
     },
     {

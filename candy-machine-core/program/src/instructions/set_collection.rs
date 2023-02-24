@@ -2,13 +2,17 @@ use anchor_lang::prelude::*;
 
 use crate::{
     approve_collection_authority_helper, cmp_pubkeys, constants::AUTHORITY_SEED,
-    revoke_collection_authority_helper, ApproveCollectionAuthorityHelperAccounts, CandyError,
-    CandyMachine, RevokeCollectionAuthorityHelperAccounts,
+    revoke_collection_authority_helper, AccountVersion, ApproveCollectionAuthorityHelperAccounts,
+    CandyError, CandyMachine, RevokeCollectionAuthorityHelperAccounts,
 };
 
 pub fn set_collection(ctx: Context<SetCollection>) -> Result<()> {
     let accounts = ctx.accounts;
     let candy_machine = &mut accounts.candy_machine;
+
+    if !matches!(candy_machine.version, AccountVersion::V1) {
+        return err!(CandyError::InvalidAccountVersion);
+    }
 
     if candy_machine.items_redeemed > 0 {
         return err!(CandyError::NoChangingCollectionDuringMint);

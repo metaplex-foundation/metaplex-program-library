@@ -7,7 +7,7 @@ use mpl_token_metadata::{
         builders::{DelegateBuilder, RevokeBuilder},
         revoke_collection_authority, DelegateArgs, InstructionBuilder, RevokeArgs,
     },
-    state::{Metadata, TokenMetadataAccount, EDITION, PREFIX},
+    state::{Metadata, TokenMetadataAccount, TokenStandard, EDITION, PREFIX},
     utils::assert_derivation,
 };
 use solana_program::{
@@ -26,6 +26,26 @@ use crate::{
     },
     CandyError,
 };
+
+/// Anchor wrapper for Token program.
+#[derive(Debug, Clone)]
+pub struct Token;
+
+impl anchor_lang::Id for Token {
+    fn id() -> Pubkey {
+        spl_token::id()
+    }
+}
+
+/// Anchor wrapper for Associated Token program.
+#[derive(Debug, Clone)]
+pub struct AssociatedToken;
+
+impl anchor_lang::Id for AssociatedToken {
+    fn id() -> Pubkey {
+        spl_associated_token_account::id()
+    }
+}
 
 pub struct ApproveCollectionAuthorityHelperAccounts<'info> {
     /// CHECK: account checked in CPI
@@ -357,6 +377,16 @@ pub fn revoke_metadata_delegate(accounts: RevokeMetadataDelegateHelperAccounts) 
         .instruction();
 
     invoke(&revoke_ix, &revoke_infos).map_err(|error| error.into())
+}
+
+pub fn assert_token_standard(token_standard: u8) -> Result<()> {
+    if token_standard != TokenStandard::NonFungible as u8
+        && token_standard != TokenStandard::ProgrammableNonFungible as u8
+    {
+        err!(CandyError::InvalidTokenStandard)
+    } else {
+        Ok(())
+    }
 }
 
 #[cfg(test)]

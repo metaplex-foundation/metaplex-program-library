@@ -1,12 +1,12 @@
 use anchor_lang::{prelude::*, Discriminator};
-use mpl_token_metadata::state::MAX_SYMBOL_LENGTH;
+use mpl_token_metadata::state::{TokenStandard, MAX_SYMBOL_LENGTH};
 
 use crate::{
     approve_collection_authority_helper,
     constants::{AUTHORITY_SEED, HIDDEN_SECTION},
     state::{CandyMachine, CandyMachineData},
     utils::fixed_length_string,
-    ApproveCollectionAuthorityHelperAccounts,
+    AccountVersion, ApproveCollectionAuthorityHelperAccounts,
 };
 
 pub fn initialize(ctx: Context<Initialize>, data: CandyMachineData) -> Result<()> {
@@ -14,7 +14,9 @@ pub fn initialize(ctx: Context<Initialize>, data: CandyMachineData) -> Result<()
 
     let mut candy_machine = CandyMachine {
         data,
-        features: 0,
+        version: AccountVersion::V1,
+        token_standard: TokenStandard::NonFungible as u8,
+        features: [0u8; 2],
         authority: ctx.accounts.authority.key(),
         mint_authority: ctx.accounts.authority.key(),
         collection_mint: ctx.accounts.collection_mint.key(),

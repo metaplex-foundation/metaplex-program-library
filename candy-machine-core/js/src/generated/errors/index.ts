@@ -487,36 +487,13 @@ createErrorFromNameLookup.set(
 );
 
 /**
- * MissingRemainingAccounts: 'Missing required remaining accounts'
- *
- * @category Errors
- * @category generated
- */
-export class MissingRemainingAccountsError extends Error {
-  readonly code: number = 0x1786;
-  readonly name: string = 'MissingRemainingAccounts';
-  constructor() {
-    super('Missing required remaining accounts');
-    if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, MissingRemainingAccountsError);
-    }
-  }
-}
-
-createErrorFromCodeLookup.set(0x1786, () => new MissingRemainingAccountsError());
-createErrorFromNameLookup.set(
-  'MissingRemainingAccounts',
-  () => new MissingRemainingAccountsError(),
-);
-
-/**
  * MissingCollectionAuthorityRecord: 'Missing collection authority record'
  *
  * @category Errors
  * @category generated
  */
 export class MissingCollectionAuthorityRecordError extends Error {
-  readonly code: number = 0x1787;
+  readonly code: number = 0x1786;
   readonly name: string = 'MissingCollectionAuthorityRecord';
   constructor() {
     super('Missing collection authority record');
@@ -526,7 +503,7 @@ export class MissingCollectionAuthorityRecordError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x1787, () => new MissingCollectionAuthorityRecordError());
+createErrorFromCodeLookup.set(0x1786, () => new MissingCollectionAuthorityRecordError());
 createErrorFromNameLookup.set(
   'MissingCollectionAuthorityRecord',
   () => new MissingCollectionAuthorityRecordError(),
@@ -539,7 +516,7 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class MissingMetadataDelegateRecordError extends Error {
-  readonly code: number = 0x1788;
+  readonly code: number = 0x1787;
   readonly name: string = 'MissingMetadataDelegateRecord';
   constructor() {
     super('Missing metadata delegate record');
@@ -549,7 +526,7 @@ export class MissingMetadataDelegateRecordError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x1788, () => new MissingMetadataDelegateRecordError());
+createErrorFromCodeLookup.set(0x1787, () => new MissingMetadataDelegateRecordError());
 createErrorFromNameLookup.set(
   'MissingMetadataDelegateRecord',
   () => new MissingMetadataDelegateRecordError(),
@@ -562,7 +539,7 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class InvalidTokenStandardError extends Error {
-  readonly code: number = 0x1789;
+  readonly code: number = 0x1788;
   readonly name: string = 'InvalidTokenStandard';
   constructor() {
     super('Invalid token standard');
@@ -572,8 +549,91 @@ export class InvalidTokenStandardError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x1789, () => new InvalidTokenStandardError());
+createErrorFromCodeLookup.set(0x1788, () => new InvalidTokenStandardError());
 createErrorFromNameLookup.set('InvalidTokenStandard', () => new InvalidTokenStandardError());
+
+/**
+ * MissingTokenAccount: 'Missing token account'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MissingTokenAccountError extends Error {
+  readonly code: number = 0x1789;
+  readonly name: string = 'MissingTokenAccount';
+  constructor() {
+    super('Missing token account');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MissingTokenAccountError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1789, () => new MissingTokenAccountError());
+createErrorFromNameLookup.set('MissingTokenAccount', () => new MissingTokenAccountError());
+
+/**
+ * MissingTokenRecord: 'Missing token record'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MissingTokenRecordError extends Error {
+  readonly code: number = 0x178a;
+  readonly name: string = 'MissingTokenRecord';
+  constructor() {
+    super('Missing token record');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MissingTokenRecordError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x178a, () => new MissingTokenRecordError());
+createErrorFromNameLookup.set('MissingTokenRecord', () => new MissingTokenRecordError());
+
+/**
+ * MissingInstructionsSysvar: 'Missing instructions sysvar account'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MissingInstructionsSysvarError extends Error {
+  readonly code: number = 0x178b;
+  readonly name: string = 'MissingInstructionsSysvar';
+  constructor() {
+    super('Missing instructions sysvar account');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MissingInstructionsSysvarError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x178b, () => new MissingInstructionsSysvarError());
+createErrorFromNameLookup.set(
+  'MissingInstructionsSysvar',
+  () => new MissingInstructionsSysvarError(),
+);
+
+/**
+ * MissingSplAtaProgram: 'Missing SPL ATA program'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MissingSplAtaProgramError extends Error {
+  readonly code: number = 0x178c;
+  readonly name: string = 'MissingSplAtaProgram';
+  constructor() {
+    super('Missing SPL ATA program');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MissingSplAtaProgramError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x178c, () => new MissingSplAtaProgramError());
+createErrorFromNameLookup.set('MissingSplAtaProgram', () => new MissingSplAtaProgramError());
 
 /**
  * Attempts to resolve a custom program error from the provided error code.
