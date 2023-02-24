@@ -1,6 +1,8 @@
 use std::fmt::Display;
 
-use mpl_bubblegum::state::metaplex_adapter::{Creator, MetadataArgs, TokenProgramVersion};
+use mpl_bubblegum::state::metaplex_adapter::{
+    Creator, MetadataArgs, TokenProgramVersion, TokenStandard,
+};
 use solana_program::pubkey::Pubkey;
 use solana_program_test::{BanksClient, ProgramTestContext};
 use solana_sdk::{
@@ -96,7 +98,7 @@ impl BubblegumTestContext {
             primary_sale_happened: false,
             is_mutable: false,
             edition_nonce: None,
-            token_standard: None,
+            token_standard: Some(TokenStandard::NonFungible),
             token_program_version: TokenProgramVersion::Original,
             collection: None,
             uses: None,
