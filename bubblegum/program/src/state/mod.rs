@@ -1,4 +1,5 @@
 pub mod leaf_schema;
+pub mod metadata_model;
 pub mod metaplex_adapter;
 pub mod metaplex_anchor;
 
