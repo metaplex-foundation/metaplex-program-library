@@ -645,12 +645,11 @@
           ]
         },
         {
-          "name": "collectionAuthorityRecord",
+          "name": "delegateRecord",
           "isMut": false,
           "isSigner": false,
-          "isOptional": true,
           "docs": [
-            "Collection authority record.",
+            "Collection authority or metadata delegate record.",
             ""
           ]
         },

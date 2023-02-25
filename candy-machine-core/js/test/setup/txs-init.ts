@@ -503,7 +503,7 @@ export class InitTransactions {
       nftMetadata,
       nftMasterEdition,
       token: nftTokenAccount,
-      collectionAuthorityRecord,
+      delegateRecord: collectionAuthorityRecord,
       collectionMint,
       collectionUpdateAuthority: collection.updateAuthorityAddress,
       collectionMetadata,

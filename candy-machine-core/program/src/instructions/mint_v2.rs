@@ -30,7 +30,7 @@ pub(crate) struct MintAccounts<'info> {
     pub(crate) nft_master_edition: AccountInfo<'info>,
     pub(crate) token: Option<AccountInfo<'info>>,
     pub(crate) token_record: Option<AccountInfo<'info>>,
-    pub(crate) collection_authority_record: Option<AccountInfo<'info>>,
+    pub(crate) delegate_record: AccountInfo<'info>,
     pub(crate) collection_mint: AccountInfo<'info>,
     pub(crate) collection_metadata: AccountInfo<'info>,
     pub(crate) collection_master_edition: AccountInfo<'info>,
@@ -51,7 +51,7 @@ pub fn mint_v2<'info>(ctx: Context<'_, '_, '_, 'info, MintV2<'info>>) -> Result<
             .as_ref()
             .map(|spl_ata_program| spl_ata_program.to_account_info()),
         authority_pda: ctx.accounts.authority_pda.to_account_info(),
-        collection_authority_record: None,
+        delegate_record: ctx.accounts.delegate_record.to_account_info(),
         collection_master_edition: ctx.accounts.collection_master_edition.to_account_info(),
         collection_metadata: ctx.accounts.collection_metadata.to_account_info(),
         collection_mint: ctx.accounts.collection_mint.to_account_info(),
@@ -478,11 +478,6 @@ fn create<'info>(
     creators: Vec<mpl_token_metadata::state::Creator>,
     collection_metadata: Metadata,
 ) -> Result<()> {
-    let collection_authority_record = accounts
-        .collection_authority_record
-        .as_ref()
-        .ok_or(CandyError::MissingCollectionAuthorityRecord)?;
-
     let metadata_infos = vec![
         accounts.nft_metadata.to_account_info(),
         accounts.nft_mint.to_account_info(),
@@ -581,7 +576,7 @@ fn create<'info>(
             collection_mint.key(),
             accounts.collection_metadata.key(),
             collection_master_edition.key(),
-            Some(collection_authority_record.key()),
+            Some(accounts.delegate_record.key()),
         )
     } else {
         set_and_verify_collection(
@@ -593,7 +588,7 @@ fn create<'info>(
             collection_mint.key(),
             accounts.collection_metadata.key(),
             collection_master_edition.key(),
-            Some(collection_authority_record.key()),
+            Some(accounts.delegate_record.key()),
         )
     };
 
@@ -605,7 +600,7 @@ fn create<'info>(
         collection_mint.to_account_info(),
         accounts.collection_metadata.to_account_info(),
         collection_master_edition.to_account_info(),
-        collection_authority_record.to_account_info(),
+        accounts.delegate_record.to_account_info(),
     ];
 
     invoke_signed(
@@ -628,7 +623,7 @@ pub struct MintV2<'info> {
     ///
     /// CHECK: account constraints checked in account trait
     #[account(mut, seeds = [AUTHORITY_SEED.as_bytes(), candy_machine.key().as_ref()], bump)]
-    authority_pda: AccountInfo<'info>,
+    authority_pda: UncheckedAccount<'info>,
 
     /// Candy machine mint authority (mint only allowed for the mint_authority).
     mint_authority: Signer<'info>,
@@ -641,7 +636,7 @@ pub struct MintV2<'info> {
     ///
     /// CHECK: account checked in CPI
     #[account(mut)]
-    nft_mint: AccountInfo<'info>,
+    nft_mint: UncheckedAccount<'info>,
 
     /// Mint authority of the NFT. In most cases this will be the owner of the NFT.
     nft_mint_authority: Signer<'info>,
@@ -650,57 +645,57 @@ pub struct MintV2<'info> {
     ///
     /// CHECK: account checked in CPI
     #[account(mut)]
-    nft_metadata: AccountInfo<'info>,
+    nft_metadata: UncheckedAccount<'info>,
 
     /// Master edition account of the NFT. The account will be initialized if necessary.
     ///
     /// CHECK: account checked in CPI
     #[account(mut)]
-    nft_master_edition: AccountInfo<'info>,
+    nft_master_edition: UncheckedAccount<'info>,
 
     /// Destination token account (required for pNFT).
     ///
     /// CHECK: account checked in CPI
     #[account(mut)]
-    token: Option<AccountInfo<'info>>,
+    token: Option<UncheckedAccount<'info>>,
 
     /// Token record (required for pNFT).
     ///
     /// CHECK: account checked in CPI
     #[account(mut)]
-    token_record: Option<AccountInfo<'info>>,
+    token_record: Option<UncheckedAccount<'info>>,
 
-    /// Collection authority record.
+    /// Collection authority or metadata delegate record.
     ///
     /// CHECK: account checked in CPI
-    collection_authority_record: Option<AccountInfo<'info>>,
+    delegate_record: UncheckedAccount<'info>,
 
     /// Mint account of the collection NFT.
     ///
     /// CHECK: account checked in CPI
-    collection_mint: AccountInfo<'info>,
+    collection_mint: UncheckedAccount<'info>,
 
     /// Metadata account of the collection NFT.
     ///
     /// CHECK: account checked in CPI
     #[account(mut)]
-    collection_metadata: AccountInfo<'info>,
+    collection_metadata: UncheckedAccount<'info>,
 
     /// Master edition account of the collection NFT.
     ///
     /// CHECK: account checked in CPI
-    collection_master_edition: AccountInfo<'info>,
+    collection_master_edition: UncheckedAccount<'info>,
 
     /// Update authority of the collection NFT.
     ///
     /// CHECK: account checked in CPI
-    collection_update_authority: AccountInfo<'info>,
+    collection_update_authority: UncheckedAccount<'info>,
 
     /// Token Metadata program.
     ///
     /// CHECK: account checked in CPI
     #[account(address = mpl_token_metadata::id())]
-    token_metadata_program: AccountInfo<'info>,
+    token_metadata_program: UncheckedAccount<'info>,
 
     /// SPL Token program.
     spl_token_program: Program<'info, Token>,
@@ -715,11 +710,11 @@ pub struct MintV2<'info> {
     ///
     /// CHECK: account constraints checked in account trait
     #[account(address = sysvar::instructions::id())]
-    sysvar_instructions: Option<AccountInfo<'info>>,
+    sysvar_instructions: Option<UncheckedAccount<'info>>,
 
     /// SlotHashes sysvar cluster data.
     ///
     /// CHECK: account constraints checked in account trait
     #[account(address = sysvar::slot_hashes::id())]
-    recent_slothashes: AccountInfo<'info>,
+    recent_slothashes: UncheckedAccount<'info>,
 }
