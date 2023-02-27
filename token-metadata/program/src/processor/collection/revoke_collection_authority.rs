@@ -2,14 +2,14 @@ use mpl_utils::assert_signer;
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
-    program_memory::sol_memset,
     pubkey::Pubkey,
 };
 
 use crate::{
     assertions::{assert_owned_by, collection::assert_is_collection_delegated_authority},
     error::MetadataError,
-    state::{Metadata, TokenMetadataAccount, USE_AUTHORITY_RECORD_SIZE},
+    state::{Metadata, TokenMetadataAccount},
+    utils::close_program_account,
 };
 
 pub fn process_revoke_collection_authority(
@@ -33,11 +33,12 @@ pub fn process_revoke_collection_authority(
     {
         return Err(MetadataError::RevokeCollectionAuthoritySignerIncorrect.into());
     }
+
     if metadata.mint != *mint_info.key {
         return Err(MetadataError::MintMismatch.into());
     }
-    let collection_authority_info_empty = collection_authority_record.try_data_is_empty()?;
-    if collection_authority_info_empty {
+
+    if collection_authority_record.try_data_is_empty()? {
         return Err(MetadataError::CollectionAuthorityDoesNotExist.into());
     }
 
@@ -47,17 +48,5 @@ pub fn process_revoke_collection_authority(
         mint_info.key,
     )?;
 
-    let lamports = collection_authority_record.lamports();
-    **collection_authority_record.try_borrow_mut_lamports()? = 0;
-    **revoke_authority.try_borrow_mut_lamports()? = revoke_authority
-        .lamports()
-        .checked_add(lamports)
-        .ok_or(MetadataError::NumericalOverflowError)?;
-    sol_memset(
-        &mut collection_authority_record.try_borrow_mut_data()?,
-        0,
-        USE_AUTHORITY_RECORD_SIZE,
-    );
-
-    Ok(())
+    close_program_account(collection_authority_record, revoke_authority)
 }

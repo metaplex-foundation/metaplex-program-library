@@ -4,10 +4,10 @@ use mpl_token_metadata::{
         self,
         builders::{
             BurnBuilder, CreateBuilder, DelegateBuilder, LockBuilder, MigrateBuilder, MintBuilder,
-            RevokeBuilder, TransferBuilder, UnlockBuilder,
+            RevokeBuilder, TransferBuilder, UnlockBuilder, UpdateBuilder,
         },
         BurnArgs, CreateArgs, DelegateArgs, InstructionBuilder, LockArgs, MetadataDelegateRole,
-        MigrateArgs, MintArgs, RevokeArgs, TransferArgs, UnlockArgs,
+        MigrateArgs, MintArgs, RevokeArgs, TransferArgs, UnlockArgs, UpdateArgs,
     },
     pda::{
         find_master_edition_account, find_metadata_account, find_metadata_delegate_record_account,
@@ -773,6 +773,35 @@ impl DigitalAsset {
             &[unlock_ix],
             Some(&payer.pubkey()),
             &[&delegate, &payer],
+            context.last_blockhash,
+        );
+
+        context.banks_client.process_transaction(tx).await
+    }
+
+    pub async fn update(
+        &self,
+        context: &mut ProgramTestContext,
+        authority: Keypair,
+        update_args: UpdateArgs,
+    ) -> Result<(), BanksClientError> {
+        let mut builder = UpdateBuilder::new();
+        builder
+            .authority(authority.pubkey())
+            .metadata(self.metadata)
+            .payer(authority.pubkey())
+            .mint(self.mint.pubkey());
+
+        if let Some(master_edition) = self.edition {
+            builder.edition(master_edition);
+        }
+
+        let update_ix = builder.build(update_args).unwrap().instruction();
+
+        let tx = Transaction::new_signed_with_payer(
+            &[update_ix],
+            Some(&authority.pubkey()),
+            &[&authority],
             context.last_blockhash,
         );
 
