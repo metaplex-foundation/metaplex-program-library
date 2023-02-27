@@ -120,7 +120,7 @@ pub enum BurnArgs {
 ///   3.   `[optional, writable]` Edition account
 ///   4.   `[writable]` Mint account
 ///   5.   `[writable]` Token account
-///   6.   `[optional]` Parent Edition account
+///   6.   `[optional, writable]` Parent Edition account
 ///   7.   `[optional]` Parent Mint account
 ///   8.   `[optional]` Parent Token account
 ///   9.   `[optional, writable]` Edition Marker account

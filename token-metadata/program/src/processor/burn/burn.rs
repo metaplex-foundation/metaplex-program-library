@@ -5,6 +5,32 @@ use crate::{
     utils::{check_token_standard, thaw},
 };
 
+/// Burn an asset, closing associated accounts.
+///
+/// Supports burning the following asset types:
+/// - ProgrammableNonFungible
+/// - NonFungible
+/// - NonFungigbleEdition
+/// - Fungible
+/// - FungibleAsset
+///
+/// Parent accounts only required for burning print editions are the accounts for the master edition
+/// associated with the print edition.
+/// The Token Record account is required for burning a ProgrammableNonFungible asset.
+///
+/// This handler closes the following accounts:
+///
+/// For ProgrammableNonFungible assets:
+/// - Metadata, Edition, Token, TokenRecord
+///
+/// For NonFungible assets:
+/// - Metadata, Edition, Token
+///
+/// For NonFungibleEdition assets:
+/// - Metadata, Edition, Token, and the EditionMarker, if all prints for it are burned.
+///
+/// For Fungible assets:
+/// - Only the token account, if all tokens are burned.
 pub fn burn<'a>(
     program_id: &Pubkey,
     accounts: &'a [AccountInfo<'a>],
@@ -17,6 +43,7 @@ pub fn burn<'a>(
     }
 }
 
+// V1 implementation of the burn instruction.
 fn burn_v1(program_id: &Pubkey, ctx: Context<Burn>, args: BurnArgs) -> ProgramResult {
     msg!("Burn V1");
     let BurnArgs::V1 { amount } = args;

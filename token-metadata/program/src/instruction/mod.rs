@@ -501,8 +501,30 @@ pub enum MetadataInstruction {
 
     /// Burns an asset, closing associated accounts.
     /// 
-    /// The configurable `authorization_rules` only apply to `ProgrammableNonFungible` assets and
-    /// it may require additional accounts to validate the rules.
+    /// Supports burning the following asset types:
+    /// - ProgrammableNonFungible
+    /// - NonFungible
+    /// - NonFungigbleEdition
+    /// - Fungible
+    /// - FungibleAsset
+    ///
+    /// Parent accounts only required for burning print editions are the accounts for the master edition
+    /// associated with the print edition.
+    /// The Token Record account is required for burning a ProgrammableNonFungible asset.
+    ///
+    /// This handler closes the following accounts:
+    ///
+    /// For ProgrammableNonFungible assets:
+    /// - Metadata, Edition, Token, TokenRecord
+    ///
+    /// For NonFungible assets:
+    /// - Metadata, Edition, Token
+    ///
+    /// For NonFungibleEdition assets:
+    /// - Metadata, Edition, Token, and the EditionMarker, if all prints for it are burned.
+    ///
+    /// For Fungible assets:
+    /// - Only the token account, if all tokens are burned.
     #[account(0, signer, writable, name="authority", desc="Asset owner or Utility delegate")]
     #[account(1, optional, writable, name="collection_metadata", desc="Metadata of the Collection")]
     #[account(2, writable, name="metadata", desc="Metadata (pda of ['metadata', program id, mint id])")]
