@@ -19,7 +19,7 @@ import { CandyMachineData, candyMachineDataBeet } from '../types/CandyMachineDat
 export type CandyMachineArgs = {
   version: AccountVersion;
   tokenStandard: number;
-  features: number[] /* size: 2 */;
+  features: number[] /* size: 6 */;
   authority: web3.PublicKey;
   mintAuthority: web3.PublicKey;
   collectionMint: web3.PublicKey;
@@ -39,7 +39,7 @@ export class CandyMachine implements CandyMachineArgs {
   private constructor(
     readonly version: AccountVersion,
     readonly tokenStandard: number,
-    readonly features: number[] /* size: 2 */,
+    readonly features: number[] /* size: 6 */,
     readonly authority: web3.PublicKey,
     readonly mintAuthority: web3.PublicKey,
     readonly collectionMint: web3.PublicKey,
@@ -196,7 +196,7 @@ export const candyMachineBeet = new beet.FixableBeetStruct<
     ['accountDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
     ['version', accountVersionBeet],
     ['tokenStandard', beet.u8],
-    ['features', beet.uniformFixedSizeArray(beet.u8, 2)],
+    ['features', beet.uniformFixedSizeArray(beet.u8, 6)],
     ['authority', beetSolana.publicKey],
     ['mintAuthority', beetSolana.publicKey],
     ['collectionMint', beetSolana.publicKey],

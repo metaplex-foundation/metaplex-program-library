@@ -46,7 +46,7 @@ export const initializeV2Struct = new beet.FixableBeetArgsStruct<
  * @property [] collectionMint
  * @property [] collectionMasterEdition
  * @property [_writable_, **signer**] collectionUpdateAuthority
- * @property [_writable_] delegateRecord
+ * @property [_writable_] collectionDelegateRecord
  * @property [] tokenMetadataProgram
  * @property [] sysvarInstructions
  * @property [] authorizationRulesProgram (optional)
@@ -64,7 +64,7 @@ export type InitializeV2InstructionAccounts = {
   collectionMint: web3.PublicKey;
   collectionMasterEdition: web3.PublicKey;
   collectionUpdateAuthority: web3.PublicKey;
-  delegateRecord: web3.PublicKey;
+  collectionDelegateRecord: web3.PublicKey;
   tokenMetadataProgram: web3.PublicKey;
   systemProgram?: web3.PublicKey;
   sysvarInstructions: web3.PublicKey;
@@ -139,7 +139,7 @@ export function createInitializeV2Instruction(
       isSigner: true,
     },
     {
-      pubkey: accounts.delegateRecord,
+      pubkey: accounts.collectionDelegateRecord,
       isWritable: true,
       isSigner: false,
     },

@@ -22,7 +22,7 @@ pub fn initialize_v2(
         data,
         version: AccountVersion::V2,
         token_standard,
-        features: [0u8; 2],
+        features: [0u8; 6],
         authority: ctx.accounts.authority.key(),
         mint_authority: ctx.accounts.authority.key(),
         collection_mint: ctx.accounts.collection_mint.key(),
@@ -50,7 +50,7 @@ pub fn initialize_v2(
         collection_metadata: ctx.accounts.collection_metadata.to_account_info(),
         collection_mint: ctx.accounts.collection_mint.to_account_info(),
         collection_update_authority: ctx.accounts.collection_update_authority.to_account_info(),
-        delegate_record: ctx.accounts.delegate_record.to_account_info(),
+        delegate_record: ctx.accounts.collection_delegate_record.to_account_info(),
         payer: ctx.accounts.payer.to_account_info(),
         system_program: ctx.accounts.system_program.to_account_info(),
         sysvar_instructions: ctx.accounts.sysvar_instructions.to_account_info(),
@@ -127,7 +127,7 @@ pub struct InitializeV2<'info> {
     ///
     /// CHECK: account checked in CPI
     #[account(mut)]
-    delegate_record: UncheckedAccount<'info>,
+    collection_delegate_record: UncheckedAccount<'info>,
 
     /// Token Metadata program.
     ///

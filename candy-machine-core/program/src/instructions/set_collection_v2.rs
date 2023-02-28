@@ -21,17 +21,13 @@ pub fn set_collection_v2(ctx: Context<SetCollectionV2>) -> Result<()> {
 
     if matches!(candy_machine.version, AccountVersion::V2) {
         // revoking the existing metadata delegate
-        let delegate_record = accounts
-            .delegate_record
-            .as_ref()
-            .ok_or(CandyError::MissingMetadataDelegateRecord)?;
 
         let revoke_accounts = RevokeMetadataDelegateHelperAccounts {
             authority_pda: accounts.authority_pda.to_account_info(),
             collection_metadata: accounts.collection_metadata.to_account_info(),
             collection_mint: accounts.collection_mint.to_account_info(),
             collection_update_authority: accounts.collection_update_authority.to_account_info(),
-            delegate_record: delegate_record.to_account_info(),
+            delegate_record: accounts.collection_delegate_record.to_account_info(),
             payer: accounts.payer.to_account_info(),
             system_program: accounts.system_program.to_account_info(),
             sysvar_instructions: accounts.sysvar_instructions.to_account_info(),
@@ -42,14 +38,10 @@ pub fn set_collection_v2(ctx: Context<SetCollectionV2>) -> Result<()> {
         revoke_metadata_delegate(revoke_accounts)?;
     } else {
         // revoking the existing collection authority
-        let collection_authority_record = accounts
-            .collection_authority_record
-            .as_ref()
-            .ok_or(CandyError::MissingCollectionAuthorityRecord)?;
 
         let revoke_accounts = RevokeCollectionAuthorityHelperAccounts {
             authority_pda: accounts.authority_pda.to_account_info(),
-            collection_authority_record: collection_authority_record.to_account_info(),
+            collection_authority_record: accounts.collection_delegate_record.to_account_info(),
             collection_metadata: accounts.collection_metadata.to_account_info(),
             collection_mint: accounts.collection_mint.to_account_info(),
             token_metadata_program: accounts.token_metadata_program.to_account_info(),
@@ -71,7 +63,7 @@ pub fn set_collection_v2(ctx: Context<SetCollectionV2>) -> Result<()> {
         collection_metadata: accounts.new_collection_metadata.to_account_info(),
         collection_mint: accounts.new_collection_mint.to_account_info(),
         collection_update_authority: accounts.new_collection_update_authority.to_account_info(),
-        delegate_record: accounts.new_delegate_record.to_account_info(),
+        delegate_record: accounts.new_collection_delegate_record.to_account_info(),
         payer: accounts.payer.to_account_info(),
         system_program: accounts.system_program.to_account_info(),
         sysvar_instructions: accounts.sysvar_instructions.to_account_info(),
@@ -125,17 +117,11 @@ pub struct SetCollectionV2<'info> {
     /// CHECK: account checked in CPI
     collection_metadata: UncheckedAccount<'info>,
 
-    /// Metadata delegate record.
+    /// Collection authority or metadata delegate record.
     ///
     /// CHECK: account checked in CPI
     #[account(mut)]
-    delegate_record: Option<UncheckedAccount<'info>>,
-
-    /// Collection authority record.
-    ///
-    /// CHECK: account checked in CPI
-    #[account(mut)]
-    collection_authority_record: Option<UncheckedAccount<'info>>,
+    collection_delegate_record: UncheckedAccount<'info>,
 
     /// Update authority of the new collection NFT.
     new_collection_update_authority: Signer<'info>,
@@ -159,7 +145,7 @@ pub struct SetCollectionV2<'info> {
     ///
     /// CHECK: account checked in CPI
     #[account(mut)]
-    new_delegate_record: UncheckedAccount<'info>,
+    new_collection_delegate_record: UncheckedAccount<'info>,
 
     /// Token Metadata program.
     ///

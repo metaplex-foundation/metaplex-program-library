@@ -5,6 +5,8 @@ use super::mint_v2::{process_mint, MintAccounts};
 use crate::{constants::AUTHORITY_SEED, utils::*, AccountVersion, CandyError, CandyMachine};
 
 pub fn mint<'info>(ctx: Context<'_, '_, '_, 'info, Mint<'info>>) -> Result<()> {
+    msg!("(Deprecated as of 0.2.0) Use MintV2 instead");
+
     if !matches!(ctx.accounts.candy_machine.version, AccountVersion::V1) {
         return err!(CandyError::InvalidAccountVersion);
     }
@@ -12,7 +14,7 @@ pub fn mint<'info>(ctx: Context<'_, '_, '_, 'info, Mint<'info>>) -> Result<()> {
     let accounts = MintAccounts {
         spl_ata_program: None,
         authority_pda: ctx.accounts.authority_pda.to_account_info(),
-        delegate_record: ctx.accounts.collection_authority_record.to_account_info(),
+        collection_delegate_record: ctx.accounts.collection_authority_record.to_account_info(),
         collection_master_edition: ctx.accounts.collection_master_edition.to_account_info(),
         collection_metadata: ctx.accounts.collection_metadata.to_account_info(),
         collection_mint: ctx.accounts.collection_mint.to_account_info(),

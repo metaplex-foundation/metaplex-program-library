@@ -101,7 +101,7 @@ pub mod candy_machine_core {
     ///   14. `[]` SPL Token program
     ///   15. `[]` System program
     ///   16. `[]` SlotHashes sysvar cluster data.
-    pub fn mint<'a, 'b, 'c, 'info>(ctx: Context<'a, 'b, 'c, 'info, Mint<'info>>) -> Result<()> {
+    pub fn mint<'info>(ctx: Context<'_, '_, '_, 'info, Mint<'info>>) -> Result<()> {
         instructions::mint(ctx)
     }
 
@@ -186,7 +186,7 @@ pub mod candy_machine_core {
     ///   10. `[]` New collection mint
     ///   11. `[]` New collection metadata
     ///   12. `[]` New collection master edition
-    ///   13. `[writable]` New metadata delegate record
+    ///   13. `[writable]` New collection metadata delegate record
     ///   14. `[]` Token Metadata program
     ///   15. `[]` System program
     ///   16. `[]` Instructions sysvar account

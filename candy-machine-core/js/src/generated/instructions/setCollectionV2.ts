@@ -29,13 +29,12 @@ export const setCollectionV2Struct = new beet.BeetArgsStruct<{
  * @property [] collectionUpdateAuthority
  * @property [] collectionMint
  * @property [] collectionMetadata
- * @property [_writable_] delegateRecord (optional)
- * @property [_writable_] collectionAuthorityRecord (optional)
+ * @property [_writable_] collectionDelegateRecord
  * @property [**signer**] newCollectionUpdateAuthority
  * @property [] newCollectionMint
  * @property [] newCollectionMetadata
  * @property [] newCollectionMasterEdition
- * @property [_writable_] newDelegateRecord
+ * @property [_writable_] newCollectionDelegateRecord
  * @property [] tokenMetadataProgram
  * @property [] sysvarInstructions
  * @property [] authorizationRulesProgram (optional)
@@ -52,13 +51,12 @@ export type SetCollectionV2InstructionAccounts = {
   collectionUpdateAuthority: web3.PublicKey;
   collectionMint: web3.PublicKey;
   collectionMetadata: web3.PublicKey;
-  delegateRecord?: web3.PublicKey;
-  collectionAuthorityRecord?: web3.PublicKey;
+  collectionDelegateRecord: web3.PublicKey;
   newCollectionUpdateAuthority: web3.PublicKey;
   newCollectionMint: web3.PublicKey;
   newCollectionMetadata: web3.PublicKey;
   newCollectionMasterEdition: web3.PublicKey;
-  newDelegateRecord: web3.PublicKey;
+  newCollectionDelegateRecord: web3.PublicKey;
   tokenMetadataProgram: web3.PublicKey;
   systemProgram?: web3.PublicKey;
   sysvarInstructions: web3.PublicKey;
@@ -124,13 +122,8 @@ export function createSetCollectionV2Instruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.delegateRecord ?? programId,
-      isWritable: accounts.delegateRecord != null,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.collectionAuthorityRecord ?? programId,
-      isWritable: accounts.collectionAuthorityRecord != null,
+      pubkey: accounts.collectionDelegateRecord,
+      isWritable: true,
       isSigner: false,
     },
     {
@@ -154,7 +147,7 @@ export function createSetCollectionV2Instruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.newDelegateRecord,
+      pubkey: accounts.newCollectionDelegateRecord,
       isWritable: true,
       isSigner: false,
     },

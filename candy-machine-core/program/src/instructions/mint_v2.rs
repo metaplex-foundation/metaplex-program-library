@@ -30,7 +30,7 @@ pub(crate) struct MintAccounts<'info> {
     pub(crate) nft_master_edition: AccountInfo<'info>,
     pub(crate) token: Option<AccountInfo<'info>>,
     pub(crate) token_record: Option<AccountInfo<'info>>,
-    pub(crate) delegate_record: AccountInfo<'info>,
+    pub(crate) collection_delegate_record: AccountInfo<'info>,
     pub(crate) collection_mint: AccountInfo<'info>,
     pub(crate) collection_metadata: AccountInfo<'info>,
     pub(crate) collection_master_edition: AccountInfo<'info>,
@@ -51,7 +51,7 @@ pub fn mint_v2<'info>(ctx: Context<'_, '_, '_, 'info, MintV2<'info>>) -> Result<
             .as_ref()
             .map(|spl_ata_program| spl_ata_program.to_account_info()),
         authority_pda: ctx.accounts.authority_pda.to_account_info(),
-        delegate_record: ctx.accounts.delegate_record.to_account_info(),
+        collection_delegate_record: ctx.accounts.collection_delegate_record.to_account_info(),
         collection_master_edition: ctx.accounts.collection_master_edition.to_account_info(),
         collection_metadata: ctx.accounts.collection_metadata.to_account_info(),
         collection_mint: ctx.accounts.collection_mint.to_account_info(),
@@ -576,7 +576,7 @@ fn create<'info>(
             collection_mint.key(),
             accounts.collection_metadata.key(),
             collection_master_edition.key(),
-            Some(accounts.delegate_record.key()),
+            Some(accounts.collection_delegate_record.key()),
         )
     } else {
         set_and_verify_collection(
@@ -588,7 +588,7 @@ fn create<'info>(
             collection_mint.key(),
             accounts.collection_metadata.key(),
             collection_master_edition.key(),
-            Some(accounts.delegate_record.key()),
+            Some(accounts.collection_delegate_record.key()),
         )
     };
 
@@ -600,7 +600,7 @@ fn create<'info>(
         collection_mint.to_account_info(),
         accounts.collection_metadata.to_account_info(),
         collection_master_edition.to_account_info(),
-        accounts.delegate_record.to_account_info(),
+        accounts.collection_delegate_record.to_account_info(),
     ];
 
     invoke_signed(
@@ -668,7 +668,7 @@ pub struct MintV2<'info> {
     /// Collection authority or metadata delegate record.
     ///
     /// CHECK: account checked in CPI
-    delegate_record: UncheckedAccount<'info>,
+    collection_delegate_record: UncheckedAccount<'info>,
 
     /// Mint account of the collection NFT.
     ///

@@ -29,7 +29,7 @@ export const mintV2Struct = new beet.BeetArgsStruct<{
  * @property [_writable_] nftMasterEdition
  * @property [_writable_] token (optional)
  * @property [_writable_] tokenRecord (optional)
- * @property [] delegateRecord
+ * @property [] collectionDelegateRecord
  * @property [] collectionMint
  * @property [_writable_] collectionMetadata
  * @property [] collectionMasterEdition
@@ -54,7 +54,7 @@ export type MintV2InstructionAccounts = {
   nftMasterEdition: web3.PublicKey;
   token?: web3.PublicKey;
   tokenRecord?: web3.PublicKey;
-  delegateRecord: web3.PublicKey;
+  collectionDelegateRecord: web3.PublicKey;
   collectionMint: web3.PublicKey;
   collectionMetadata: web3.PublicKey;
   collectionMasterEdition: web3.PublicKey;
@@ -140,7 +140,7 @@ export function createMintV2Instruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.delegateRecord,
+      pubkey: accounts.collectionDelegateRecord,
       isWritable: false,
       isSigner: false,
     },

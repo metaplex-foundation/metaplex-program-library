@@ -10,13 +10,15 @@ use crate::{
 };
 
 pub fn initialize(ctx: Context<Initialize>, data: CandyMachineData) -> Result<()> {
+    msg!("(Deprecated as of 0.2.0) Use InitializeV2 instead");
+
     let candy_machine_account = &mut ctx.accounts.candy_machine;
 
     let mut candy_machine = CandyMachine {
         data,
         version: AccountVersion::V1,
         token_standard: TokenStandard::NonFungible as u8,
-        features: [0u8; 2],
+        features: [0u8; 6],
         authority: ctx.accounts.authority.key(),
         mint_authority: ctx.accounts.authority.key(),
         collection_mint: ctx.accounts.collection_mint.key(),

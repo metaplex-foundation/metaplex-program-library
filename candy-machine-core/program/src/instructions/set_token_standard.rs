@@ -44,17 +44,12 @@ pub fn set_token_standard(ctx: Context<SetTokenStandard>, token_standard: u8) ->
 
         // approve a new metadata delegate
 
-        let delegate_record = accounts
-            .delegate_record
-            .as_ref()
-            .ok_or(CandyError::MissingMetadataDelegateRecord)?;
-
         let delegate_accounts = ApproveMetadataDelegateHelperAccounts {
             authority_pda: accounts.authority_pda.to_account_info(),
             collection_metadata: accounts.collection_metadata.to_account_info(),
             collection_mint: accounts.collection_mint.to_account_info(),
             collection_update_authority: accounts.collection_update_authority.to_account_info(),
-            delegate_record: delegate_record.to_account_info(),
+            delegate_record: accounts.collection_delegate_record.to_account_info(),
             payer: accounts.payer.to_account_info(),
             system_program: accounts.system_program.to_account_info(),
             sysvar_instructions: accounts.sysvar_instructions.to_account_info(),
@@ -72,6 +67,12 @@ pub fn set_token_standard(ctx: Context<SetTokenStandard>, token_standard: u8) ->
         // bump the version of the account since we are setting a metadata delegate
         candy_machine.version = AccountVersion::V2;
     }
+
+    msg!(
+        "Changing token standard from {} to {}",
+        candy_machine.token_standard,
+        token_standard
+    );
 
     candy_machine.token_standard = token_standard;
 
@@ -101,11 +102,11 @@ pub struct SetTokenStandard<'info> {
     /// Payer of the transaction.
     payer: Signer<'info>,
 
-    /// Metadata delegate record.
+    /// Collection metadata delegate record.
     ///
     /// CHECK: account checked in CPI
     #[account(mut)]
-    delegate_record: Option<UncheckedAccount<'info>>,
+    collection_delegate_record: UncheckedAccount<'info>,
 
     /// Collection mint.
     ///

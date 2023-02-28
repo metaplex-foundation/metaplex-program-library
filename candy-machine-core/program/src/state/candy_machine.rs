@@ -11,7 +11,7 @@ pub struct CandyMachine {
     /// Token standard to mint NFTs.
     pub token_standard: u8,
     /// Features flags.
-    pub features: [u8; 2],
+    pub features: [u8; 6],
     /// Authority address.
     pub authority: Pubkey,
     /// Authority address allowed to mint from the candy machine.

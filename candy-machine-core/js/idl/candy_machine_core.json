@@ -271,7 +271,7 @@
           ]
         },
         {
-          "name": "delegateRecord",
+          "name": "collectionDelegateRecord",
           "isMut": true,
           "isSigner": false,
           "docs": [
@@ -645,7 +645,7 @@
           ]
         },
         {
-          "name": "delegateRecord",
+          "name": "collectionDelegateRecord",
           "isMut": false,
           "isSigner": false,
           "docs": [
@@ -1019,22 +1019,11 @@
           ]
         },
         {
-          "name": "delegateRecord",
+          "name": "collectionDelegateRecord",
           "isMut": true,
           "isSigner": false,
-          "isOptional": true,
           "docs": [
-            "Metadata delegate record.",
-            ""
-          ]
-        },
-        {
-          "name": "collectionAuthorityRecord",
-          "isMut": true,
-          "isSigner": false,
-          "isOptional": true,
-          "docs": [
-            "Collection authority record.",
+            "Collection authority or metadata delegate record.",
             ""
           ]
         },
@@ -1074,7 +1063,7 @@
           ]
         },
         {
-          "name": "newDelegateRecord",
+          "name": "newCollectionDelegateRecord",
           "isMut": true,
           "isSigner": false,
           "docs": [
@@ -1229,12 +1218,11 @@
           ]
         },
         {
-          "name": "delegateRecord",
+          "name": "collectionDelegateRecord",
           "isMut": true,
           "isSigner": false,
-          "isOptional": true,
           "docs": [
-            "Metadata delegate record.",
+            "Collection metadata delegate record.",
             ""
           ]
         },
@@ -1432,7 +1420,7 @@
             "type": {
               "array": [
                 "u8",
-                2
+                6
               ]
             }
           },

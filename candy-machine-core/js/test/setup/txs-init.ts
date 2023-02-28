@@ -202,13 +202,13 @@ export class InitTransactions {
       .masterEdition({ mint: collection.mint.address });
     await amman.addr.addLabel('Collection Master Edition', collectionMasterEdition);
 
-    const delegateRecord = metaplex.nfts().pdas().metadataDelegateRecord({
+    const collectionDelegateRecord = metaplex.nfts().pdas().metadataDelegateRecord({
       mint: collection.address,
       type: 'CollectionV1',
       updateAuthority: payer.publicKey,
       delegate: authorityPda,
     });
-    await amman.addr.addLabel('Metadata Delegate Record', delegateRecord);
+    await amman.addr.addLabel('Metadata Delegate Record', collectionDelegateRecord);
 
     const accounts: program.InitializeV2InstructionAccounts = {
       authorityPda,
@@ -219,7 +219,7 @@ export class InitTransactions {
       collectionMetadata,
       collectionMint: collection.address,
       collectionMasterEdition,
-      delegateRecord,
+      collectionDelegateRecord,
       tokenMetadataProgram: METAPLEX_PROGRAM_ID,
       systemProgram: SystemProgram.programId,
       sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
@@ -503,7 +503,7 @@ export class InitTransactions {
       nftMetadata,
       nftMasterEdition,
       token: nftTokenAccount,
-      delegateRecord: collectionAuthorityRecord,
+      collectionDelegateRecord: collectionAuthorityRecord,
       collectionMint,
       collectionUpdateAuthority: collection.updateAuthorityAddress,
       collectionMetadata,
@@ -640,7 +640,7 @@ export class InitTransactions {
     t: Test,
     payer: Keypair,
     candyMachine: PublicKey,
-    collection: PublicKey,
+    candyMachineObject: CandyMachine,
     collectionUpdateAuthority: Keypair,
     tokenStandard: TokenStandard,
     handler: PayerTransactionHandler,
@@ -651,22 +651,29 @@ export class InitTransactions {
     const authorityPda = metaplex.candyMachines().pdas().authority({ candyMachine });
     amman.addr.addLabel('Authority PDA', authorityPda);
 
-    const collectionMetadata = metaplex.nfts().pdas().metadata({ mint: collection });
-    amman.addr.addLabel('Collection Metadata', authorityPda);
-
-    const collectionAuthorityRecord = metaplex
+    const collectionMetadata = metaplex
       .nfts()
       .pdas()
-      .collectionAuthorityRecord({ mint: collection, collectionAuthority: authorityPda });
-    amman.addr.addLabel('Collection Authority Record', authorityPda);
+      .metadata({ mint: candyMachineObject.collectionMint });
+    amman.addr.addLabel('Collection Metadata', authorityPda);
 
-    const delegateRecord = metaplex.nfts().pdas().metadataDelegateRecord({
-      mint: collection,
+    let collectionAuthorityRecord = null;
+
+    if (candyMachineObject.version == AccountVersion.V1) {
+      collectionAuthorityRecord = metaplex.nfts().pdas().collectionAuthorityRecord({
+        mint: candyMachineObject.collectionMint,
+        collectionAuthority: authorityPda,
+      });
+      amman.addr.addLabel('Collection Authority Record', collectionAuthorityRecord);
+    }
+
+    const collectionDelegateRecord = metaplex.nfts().pdas().metadataDelegateRecord({
+      mint: candyMachineObject.collectionMint,
       type: 'CollectionV1',
       updateAuthority: payer.publicKey,
       delegate: authorityPda,
     });
-    amman.addr.addLabel('Delegate Record', authorityPda);
+    amman.addr.addLabel('Collection Delegate Record', collectionDelegateRecord);
 
     const accounts: program.SetTokenStandardInstructionAccounts = {
       authorityPda,
@@ -674,10 +681,10 @@ export class InitTransactions {
       authority: payer.publicKey,
       payer: payer.publicKey,
       collectionAuthorityRecord,
+      collectionDelegateRecord,
       collectionMetadata,
-      collectionMint: collection,
+      collectionMint: candyMachineObject.collectionMint,
       collectionUpdateAuthority: collectionUpdateAuthority.publicKey,
-      delegateRecord,
       tokenMetadataProgram: METAPLEX_PROGRAM_ID,
       authorizationRules: program.PROGRAM_ID,
       authorizationRulesProgram: program.PROGRAM_ID,
