@@ -88,12 +88,10 @@ fn burn_v1(program_id: &Pubkey, ctx: Context<Burn>, args: BurnArgs) -> ProgramRe
         return Err(ProgramError::IncorrectProgramId);
     }
 
-    msg!("Deserializing accounts");
     // Deserialize accounts.
     let metadata = Metadata::from_account_info(ctx.accounts.metadata_info)?;
     let token: TokenAccount = assert_initialized(ctx.accounts.token_info)?;
 
-    msg!("Getting authority type");
     let authority_response = AuthorityType::get_authority_type(AuthorityRequest {
         authority: ctx.accounts.authority_info.key,
         update_authority: &metadata.update_authority,
@@ -167,16 +165,13 @@ fn burn_v1(program_id: &Pubkey, ctx: Context<Burn>, args: BurnArgs) -> ProgramRe
         return Err(MetadataError::InvalidAmount.into());
     }
 
-    msg!("Matching type");
     match token_standard {
         TokenStandard::NonFungible => {
-            msg!("NonFungible");
             let args = BurnNonFungibleArgs { metadata };
 
             burn_nonfungible(&ctx, args)?;
         }
         TokenStandard::NonFungibleEdition => {
-            msg!("NonFungibleEdition");
             burn_nonfungible_edition(&ctx)?;
         }
         TokenStandard::ProgrammableNonFungible => {

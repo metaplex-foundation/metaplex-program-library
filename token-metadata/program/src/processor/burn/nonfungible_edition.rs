@@ -33,7 +33,6 @@ pub(crate) fn burn_nonfungible_edition(ctx: &Context<Burn>) -> ProgramResult {
     let master_edition_mint_decimals = get_mint_decimals(parent_mint_info)?;
     let master_edition_mint_supply = get_mint_supply(parent_mint_info)?;
 
-    msg!("Checking if master edition is valid...");
     if !is_master_edition(
         parent_edition_info,
         master_edition_mint_decimals,
@@ -46,7 +45,6 @@ pub(crate) fn burn_nonfungible_edition(ctx: &Context<Burn>) -> ProgramResult {
     let print_edition_mint_decimals = get_mint_decimals(ctx.accounts.mint_info)?;
     let print_edition_mint_supply = get_mint_supply(ctx.accounts.mint_info)?;
 
-    msg!("Checking if print edition is valid...");
     if !is_print_edition(
         edition_info,
         print_edition_mint_decimals,
@@ -137,9 +135,8 @@ pub(crate) fn burn_nonfungible_edition(ctx: &Context<Burn>) -> ProgramResult {
     // Set the particular bit for this edition to 0 to allow reprinting,
     // IF the print edition owner is also the master edition owner.
     // Otherwise leave the bit set to 1 to disallow reprinting.
-    msg!("Deserializing edition marker...");
     let mut edition_marker: EditionMarker = EditionMarker::from_account_info(edition_marker_info)?;
-    msg!("Is the owner the same");
+
     let owner_is_the_same = *ctx.accounts.authority_info.key == master_edition_token_account.owner;
 
     if owner_is_the_same {
@@ -158,16 +155,13 @@ pub(crate) fn burn_nonfungible_edition(ctx: &Context<Burn>) -> ProgramResult {
     }
 
     // Decrement the suppply on the master edition now that we've successfully burned a print.
-    msg!("Deserializing master edition...");
     let mut master_edition: MasterEditionV2 =
         MasterEditionV2::from_account_info(parent_edition_info)?;
-    msg!("Decrementing supply...");
     master_edition.supply = master_edition
         .supply
         .checked_sub(1)
         .ok_or(MetadataError::NumericalOverflowError)?;
 
-    msg!("Saving master edition...");
     master_edition.save(parent_edition_info)?;
 
     Ok(())
