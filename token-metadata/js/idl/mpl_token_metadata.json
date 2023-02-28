@@ -2385,23 +2385,23 @@
         },
         {
           "name": "parentEdition",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false,
-          "desc": "Print edition token account",
+          "desc": "Master edition token account",
           "optional": true
         },
         {
           "name": "parentMint",
           "isMut": false,
           "isSigner": false,
-          "desc": "Print edition mint of the asset",
+          "desc": "Master edition mint of the asset",
           "optional": true
         },
         {
           "name": "parentToken",
           "isMut": false,
           "isSigner": false,
-          "desc": "Print edition token account to close",
+          "desc": "Master edition token account to close",
           "optional": true
         },
         {

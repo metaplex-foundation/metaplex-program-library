@@ -42,9 +42,9 @@ export const BurnStruct = new beet.FixableBeetArgsStruct<
  * @property [_writable_] edition (optional) MasterEdition of the asset
  * @property [_writable_] mint Mint of token asset
  * @property [_writable_] token Token account to close
- * @property [] parentEdition (optional) Print edition token account
- * @property [] parentMint (optional) Print edition mint of the asset
- * @property [] parentToken (optional) Print edition token account to close
+ * @property [_writable_] parentEdition (optional) Master edition token account
+ * @property [] parentMint (optional) Master edition mint of the asset
+ * @property [] parentToken (optional) Master edition token account to close
  * @property [_writable_] editionMarker (optional) Edition marker account
  * @property [_writable_] tokenRecord (optional) Token record account
  * @property [] sysvarInstructions Instructions sysvar account
@@ -127,7 +127,7 @@ export function createBurnInstruction(
     },
     {
       pubkey: accounts.parentEdition ?? programId,
-      isWritable: false,
+      isWritable: accounts.parentEdition != null,
       isSigner: false,
     },
     {
