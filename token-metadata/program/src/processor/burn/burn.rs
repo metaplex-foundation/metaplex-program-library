@@ -163,6 +163,8 @@ fn burn_v1(program_id: &Pubkey, ctx: Context<Burn>, args: BurnArgs) -> ProgramRe
         if ctx.accounts.edition_info.is_none() {
             return Err(MetadataError::MissingEdition.into());
         }
+    } else if amount < 1 {
+        return Err(MetadataError::InvalidAmount.into());
     }
 
     msg!("Matching type");
