@@ -39,7 +39,7 @@ export const MintStruct = new beet.FixableBeetArgsStruct<
  * @property [_writable_] token Token or Associated Token account
  * @property [] tokenOwner (optional) Owner of the token account
  * @property [] metadata Metadata account (pda of ['metadata', program id, mint id])
- * @property [] masterEdition (optional) Master Edition account
+ * @property [_writable_] masterEdition (optional) Master Edition account
  * @property [_writable_] tokenRecord (optional) Token record account
  * @property [_writable_] mint Mint of token asset
  * @property [**signer**] authority (Mint or Update) authority
@@ -114,7 +114,7 @@ export function createMintInstruction(
     },
     {
       pubkey: accounts.masterEdition ?? programId,
-      isWritable: false,
+      isWritable: accounts.masterEdition != null,
       isSigner: false,
     },
     {

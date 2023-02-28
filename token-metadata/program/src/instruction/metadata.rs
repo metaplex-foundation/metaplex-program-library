@@ -596,7 +596,11 @@ impl InstructionBuilder for super::builders::Mint {
             AccountMeta::new(self.token, false),
             AccountMeta::new_readonly(self.token_owner.unwrap_or(crate::ID), false),
             AccountMeta::new_readonly(self.metadata, false),
-            AccountMeta::new_readonly(self.master_edition.unwrap_or(crate::ID), false),
+            if let Some(master_edition) = self.master_edition {
+                AccountMeta::new(master_edition, false)
+            } else {
+                AccountMeta::new_readonly(crate::ID, false)
+            },
             if let Some(token_record) = self.token_record {
                 AccountMeta::new(token_record, false)
             } else {
