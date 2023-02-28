@@ -1,7 +1,6 @@
 #![allow(clippy::module_inception)]
 
 use arrayref::array_ref;
-use borsh::BorshSerialize;
 use mpl_utils::{
     assert_signer,
     token::{

@@ -149,9 +149,7 @@ pub(crate) fn burn_nonfungible_edition(ctx: &Context<Burn>) -> ProgramResult {
     if edition_marker.ledger.iter().all(|i| *i == 0) {
         close_program_account(edition_marker_info, ctx.accounts.authority_info)?;
     } else {
-        let mut edition_marker_info_data = edition_marker_info.try_borrow_mut_data()?;
-        edition_marker_info_data[0..].fill(0);
-        edition_marker.serialize(&mut *edition_marker_info_data)?;
+        edition_marker.save(edition_marker_info)?;
     }
 
     // Decrement the suppply on the master edition now that we've successfully burned a print.
