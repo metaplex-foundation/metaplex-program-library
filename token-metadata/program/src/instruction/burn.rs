@@ -114,16 +114,16 @@ pub enum BurnArgs {
 /// # Accounts:
 ///
 ///
-///   0.   `[signer, writable]` Owner or Utility Delegate of the asset
-///   1.   `[optional, writable]` Collection Metadata account
-///   2.   `[writable]` Metadata account
-///   3.   `[optional, writable]` Edition account
-///   4.   `[writable]` Mint account
-///   5.   `[writable]` Token account
-///   6.   `[optional, writable]` Parent Edition account
-///   7.   `[optional]` Parent Mint account
-///   8.   `[optional]` Parent Token account
-///   9.   `[optional, writable]` Edition Marker account
+///   0.   `[signer, writable]` Asset owner or Utility delegate
+///   1.   `[optional, writable]` Metadata of the Collection
+///   2.   `[writable]` Metadata (pda of ['metadata', program id, mint id])
+///   3.   `[optional, writable]` Edition of the asset
+///   4.   `[writable]` Mint of token account
+///   5.   `[writable]` Token account to close
+///   6.   `[optional, writable]` Master edition token account
+///   7.   `[optional]` Master edition mint of the assset
+///   8.   `[optional]` Master edition token account
+///   9.   `[optional, writable]` Edition marker account
 ///  10.   `[optional, writable]` Token record account
 ///  11.   `[]` System program
 ///  12.   `[]` Instruction sysvar account
