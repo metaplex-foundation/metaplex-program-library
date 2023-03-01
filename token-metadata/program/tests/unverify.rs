@@ -186,59 +186,59 @@ mod verify_creator {
         da.assert_creators_matches_on_chain(&mut context, &unverified_creators)
             .await;
     }
-}
 
-async fn create_mint_verify_check(
-    context: &mut ProgramTestContext,
-    da: &mut DigitalAsset,
-    creator: Keypair,
-    unverified_creators: &Option<Vec<Creator>>,
-) {
-    // Create and mint item.
-    da.create_and_mint_with_creators(
-        context,
-        TokenStandard::ProgrammableNonFungible,
-        None,
-        None,
-        1,
-        unverified_creators.clone(),
-    )
-    .await
-    .unwrap();
+    async fn create_mint_verify_check(
+        context: &mut ProgramTestContext,
+        da: &mut DigitalAsset,
+        creator: Keypair,
+        unverified_creators: &Option<Vec<Creator>>,
+    ) {
+        // Create and mint item.
+        da.create_and_mint_with_creators(
+            context,
+            TokenStandard::ProgrammableNonFungible,
+            None,
+            None,
+            1,
+            unverified_creators.clone(),
+        )
+        .await
+        .unwrap();
 
-    da.assert_creators_matches_on_chain(context, unverified_creators)
-        .await;
+        da.assert_creators_matches_on_chain(context, unverified_creators)
+            .await;
 
-    // Verify.
-    let args = VerifyArgs::CreatorV1;
+        // Verify.
+        let args = VerifyArgs::CreatorV1;
 
-    let verified_creators = Some(
-        unverified_creators
-            .clone()
-            .unwrap()
-            .into_iter()
-            .map(|mut c| {
-                if c.address == creator.pubkey() {
-                    c.verified = true
-                }
-                c
-            })
-            .collect::<Vec<Creator>>(),
-    );
+        let verified_creators = Some(
+            unverified_creators
+                .clone()
+                .unwrap()
+                .into_iter()
+                .map(|mut c| {
+                    if c.address == creator.pubkey() {
+                        c.verified = true
+                    }
+                    c
+                })
+                .collect::<Vec<Creator>>(),
+        );
 
-    da.verify(
-        context,
-        creator.dirty_clone(),
-        args,
-        None,
-        None,
-        None,
-        None,
-        None,
-    )
-    .await
-    .unwrap();
+        da.verify(
+            context,
+            creator.dirty_clone(),
+            args,
+            None,
+            None,
+            None,
+            None,
+            None,
+        )
+        .await
+        .unwrap();
 
-    da.assert_creators_matches_on_chain(context, &verified_creators)
-        .await;
+        da.assert_creators_matches_on_chain(context, &verified_creators)
+            .await;
+    }
 }
