@@ -4,14 +4,17 @@ pub mod utils;
 
 use mpl_token_metadata::{
     error::MetadataError,
-    instruction::VerifyArgs,
-    state::{Creator, TokenStandard},
+    instruction::{
+        builders::VerifyBuilder, DelegateArgs, InstructionBuilder, MetadataDelegateRole, VerifyArgs,
+    },
+    pda::{find_metadata_delegate_record_account, find_token_record_account},
+    state::{Collection, CollectionDetails, Creator, TokenStandard},
 };
 use num_traits::FromPrimitive;
 use solana_program::native_token::LAMPORTS_PER_SOL;
 use solana_program_test::*;
 use solana_sdk::{
-    instruction::InstructionError, signature::Keypair, signer::Signer,
+    instruction::InstructionError, signature::Keypair, signer::Signer, transaction::Transaction,
     transaction::TransactionError,
 };
 use utils::*;
@@ -36,7 +39,7 @@ mod verify_creator {
         }]);
 
         // Create, mint, verify creator, and check creators matches on-chain.
-        create_mint_verify_check(
+        create_mint_verify_creator_check(
             &mut context,
             &mut da,
             creator.dirty_clone(),
@@ -89,7 +92,7 @@ mod verify_creator {
         }]);
 
         // Create, mint, verify creator, and check creators matches on-chain.
-        create_mint_verify_check(
+        create_mint_verify_creator_check(
             &mut context,
             &mut da,
             creator.dirty_clone(),
@@ -168,7 +171,7 @@ mod verify_creator {
         }]);
 
         // Create, mint, verify creator, and check creators matches on-chain.
-        create_mint_verify_check(
+        create_mint_verify_creator_check(
             &mut context,
             &mut da,
             creator.dirty_clone(),
@@ -187,7 +190,7 @@ mod verify_creator {
             .await;
     }
 
-    async fn create_mint_verify_check(
+    async fn create_mint_verify_creator_check(
         context: &mut ProgramTestContext,
         da: &mut DigitalAsset,
         creator: Keypair,
@@ -240,5 +243,180 @@ mod verify_creator {
 
         da.assert_creators_matches_on_chain(context, &verified_creators)
             .await;
+    }
+}
+
+mod verify_collection {
+    use super::*;
+
+    #[tokio::test]
+    async fn pass_item_pnft_sized_collection_update_authority_collection_new_handler() {
+        pass_collection_update_authority_collection_new_handler(
+            DEFAULT_COLLECTION_DETAILS,
+            TokenStandard::ProgrammableNonFungible,
+        )
+        .await;
+    }
+
+    #[tokio::test]
+    async fn pass_item_nft_sized_collection_update_authority_collection_new_handler() {
+        pass_collection_update_authority_collection_new_handler(
+            DEFAULT_COLLECTION_DETAILS,
+            TokenStandard::NonFungible,
+        )
+        .await;
+    }
+
+    #[tokio::test]
+    async fn pass_item_pnft_unsized_collection_update_authority_collection_new_handler() {
+        pass_collection_update_authority_collection_new_handler(
+            None,
+            TokenStandard::ProgrammableNonFungible,
+        )
+        .await;
+    }
+
+    #[tokio::test]
+    async fn pass_item_nft_unsized_collection_update_authority_collection_new_handler() {
+        pass_collection_update_authority_collection_new_handler(None, TokenStandard::NonFungible)
+            .await;
+    }
+
+    async fn pass_collection_update_authority_collection_new_handler(
+        collection_details: Option<CollectionDetails>,
+        item_token_standard: TokenStandard,
+    ) {
+        let mut context = program_test().start_with_context().await;
+
+        let mut test_items = create_mint_verify_collection_check(
+            &mut context,
+            collection_details.clone(),
+            item_token_standard,
+        )
+        .await;
+
+        // Unverify.
+        let args = VerifyArgs::CollectionV1;
+        let payer = context.payer.dirty_clone();
+        test_items
+            .da
+            .unverify(
+                &mut context,
+                payer,
+                args,
+                None,
+                None,
+                Some(test_items.collection_parent_da.mint.pubkey()),
+                Some(test_items.collection_parent_da.metadata),
+            )
+            .await
+            .unwrap();
+
+        test_items
+            .da
+            .assert_item_collection_matches_on_chain(
+                &mut context,
+                &test_items.unverified_collection,
+            )
+            .await;
+
+        test_items
+            .collection_parent_da
+            .assert_collection_details_matches_on_chain(&mut context, &collection_details)
+            .await;
+    }
+
+    struct CollectionTestItems {
+        collection_parent_da: DigitalAsset,
+        unverified_collection: Option<Collection>,
+        da: DigitalAsset,
+    }
+
+    async fn create_mint_verify_collection_check(
+        context: &mut ProgramTestContext,
+        collection_details: Option<CollectionDetails>,
+        item_token_standard: TokenStandard,
+    ) -> CollectionTestItems {
+        // Create a collection parent NFT with the CollectionDetails struct populated.
+        let mut collection_parent_da = DigitalAsset::new();
+        collection_parent_da
+            .create_and_mint_collection_parent(
+                context,
+                TokenStandard::NonFungible,
+                None,
+                None,
+                1,
+                collection_details.clone(),
+            )
+            .await
+            .unwrap();
+
+        collection_parent_da
+            .assert_collection_details_matches_on_chain(context, &collection_details)
+            .await;
+
+        // Create and mint item.
+        let unverified_collection = Some(Collection {
+            key: collection_parent_da.mint.pubkey(),
+            verified: false,
+        });
+
+        let mut da = DigitalAsset::new();
+        da.create_and_mint_item_with_collection(
+            context,
+            item_token_standard,
+            None,
+            None,
+            1,
+            unverified_collection.clone(),
+        )
+        .await
+        .unwrap();
+
+        da.assert_item_collection_matches_on_chain(context, &unverified_collection)
+            .await;
+
+        collection_parent_da
+            .assert_collection_details_matches_on_chain(context, &collection_details)
+            .await;
+
+        // Verify.
+        let args = VerifyArgs::CollectionV1;
+        let payer = context.payer.dirty_clone();
+        da.verify(
+            context,
+            payer,
+            args,
+            None,
+            None,
+            Some(collection_parent_da.mint.pubkey()),
+            Some(collection_parent_da.metadata),
+            Some(collection_parent_da.master_edition.unwrap()),
+        )
+        .await
+        .unwrap();
+
+        let verified_collection = Some(Collection {
+            key: collection_parent_da.mint.pubkey(),
+            verified: true,
+        });
+
+        da.assert_item_collection_matches_on_chain(context, &verified_collection)
+            .await;
+
+        // Check collection details.  If sized collection, size should be updated.
+        let verified_collection_details = collection_details.map(|details| match details {
+            CollectionDetails::V1 { size } => CollectionDetails::V1 { size: size + 1 },
+        });
+
+        collection_parent_da
+            .assert_collection_details_matches_on_chain(context, &verified_collection_details)
+            .await;
+
+        CollectionTestItems {
+            collection_parent_da,
+            unverified_collection,
+            da,
+        }
     }
 }
