@@ -1,3 +1,5 @@
+use crate::utils::decrement_collection_size;
+
 use super::*;
 
 pub(crate) struct BurnNonFungibleArgs {
@@ -101,27 +103,14 @@ pub(crate) fn burn_nonfungible(ctx: &Context<Burn>, args: BurnNonFungibleArgs) -
             }
         } else {
             assert_owned_by(collection_metadata_info, &crate::ID)?;
-
             let mut collection_metadata = Metadata::from_account_info(collection_metadata_info)?;
-
-            // Owned by token metadata program.
-            assert_owned_by(collection_metadata_info, &crate::ID)?;
 
             // NFT is actually a verified member of the specified collection.
             assert_verified_member_of_collection(&args.metadata, &collection_metadata)?;
 
             // Update collection size if it's sized.
-            if let Some(ref details) = collection_metadata.collection_details {
-                match details {
-                    CollectionDetails::V1 { size } => {
-                        collection_metadata.collection_details = Some(CollectionDetails::V1 {
-                            size: size
-                                .checked_sub(1)
-                                .ok_or(MetadataError::NumericalOverflowError)?,
-                        });
-                        clean_write_metadata(&mut collection_metadata, collection_metadata_info)?;
-                    }
-                }
+            if collection_metadata.collection_details.is_some() {
+                decrement_collection_size(&mut collection_metadata, collection_metadata_info)?;
             }
         }
     }

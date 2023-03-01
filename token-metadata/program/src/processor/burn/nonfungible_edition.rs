@@ -5,29 +5,25 @@ use super::*;
 pub(crate) fn burn_nonfungible_edition(ctx: &Context<Burn>) -> ProgramResult {
     let edition_info = ctx.accounts.edition_info.unwrap();
 
-    let parent_mint_info = if let Some(parent_mint_info) = ctx.accounts.parent_mint_info {
-        parent_mint_info
-    } else {
-        return Err(MetadataError::MissingParentMintAccount.into());
-    };
+    let parent_mint_info = ctx
+        .accounts
+        .parent_mint_info
+        .ok_or(MetadataError::MissingParentMintAccount)?;
 
-    let parent_edition_info = if let Some(parent_edition_info) = ctx.accounts.parent_edition_info {
-        parent_edition_info
-    } else {
-        return Err(MetadataError::MissingParentEditionAccount.into());
-    };
+    let parent_edition_info = ctx
+        .accounts
+        .parent_edition_info
+        .ok_or(MetadataError::MissingParentEditionAccount)?;
 
-    let parent_token_info = if let Some(parent_token_info) = ctx.accounts.parent_token_info {
-        parent_token_info
-    } else {
-        return Err(MetadataError::MissingParentTokenAccount.into());
-    };
+    let parent_token_info = ctx
+        .accounts
+        .parent_token_info
+        .ok_or(MetadataError::MissingParentTokenAccount)?;
 
-    let edition_marker_info = if let Some(edition_marker_info) = ctx.accounts.edition_marker_info {
-        edition_marker_info
-    } else {
-        return Err(MetadataError::MissingEditionMarkerAccount.into());
-    };
+    let edition_marker_info = ctx
+        .accounts
+        .edition_marker_info
+        .ok_or(MetadataError::MissingEditionMarkerAccount)?;
 
     // Ensure the master edition is actually a master edition.
     let master_edition_mint_decimals = get_mint_decimals(parent_mint_info)?;

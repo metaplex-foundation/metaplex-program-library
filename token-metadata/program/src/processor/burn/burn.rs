@@ -62,7 +62,6 @@ fn burn_v1(program_id: &Pubkey, ctx: Context<Burn>, args: BurnArgs) -> ProgramRe
     if let Some(edition_info) = ctx.accounts.edition_info {
         assert_owned_by(edition_info, program_id)?;
     }
-
     if let Some(parent_edition) = ctx.accounts.parent_edition_info {
         assert_owned_by(parent_edition, program_id)?;
     }
@@ -75,17 +74,20 @@ fn burn_v1(program_id: &Pubkey, ctx: Context<Burn>, args: BurnArgs) -> ProgramRe
     if let Some(edition_marker) = ctx.accounts.edition_marker_info {
         assert_owned_by(edition_marker, program_id)?;
     }
-
-    // Check program IDs.
-    if ctx.accounts.spl_token_program_info.key != &spl_token::ID {
-        return Err(ProgramError::IncorrectProgramId);
+    if let Some(token_record) = ctx.accounts.token_record_info {
+        assert_owned_by(token_record, program_id)?;
     }
 
+    // Check program IDs.
     if ctx.accounts.system_program_info.key != &system_program::ID {
         return Err(ProgramError::IncorrectProgramId);
     }
 
     if ctx.accounts.sysvar_instructions_info.key != &sysvar::instructions::ID {
+        return Err(ProgramError::IncorrectProgramId);
+    }
+
+    if ctx.accounts.spl_token_program_info.key != &spl_token::ID {
         return Err(ProgramError::IncorrectProgramId);
     }
 
@@ -170,13 +172,8 @@ fn burn_v1(program_id: &Pubkey, ctx: Context<Burn>, args: BurnArgs) -> ProgramRe
             let token_record = ctx
                 .accounts
                 .token_record_info
-                .map(TokenRecord::from_account_info)
-                .transpose()?;
-
-            if token_record.is_none() {
-                return Err(MetadataError::MissingTokenRecord.into());
-            }
-            let token_record = token_record.unwrap();
+                .ok_or_else(|| MetadataError::MissingTokenRecord.into())
+                .and_then(TokenRecord::from_account_info)?;
 
             // Locked and Listed states cannot be burned.
             if token_record.state != TokenState::Unlocked {

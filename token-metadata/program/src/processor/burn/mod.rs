@@ -20,13 +20,12 @@ use crate::{
     pda::{find_metadata_account, EDITION, PREFIX},
     processor::burn::nonfungible::{burn_nonfungible, BurnNonFungibleArgs},
     state::{
-        Collection, CollectionDetails, Edition, EditionMarker, Key, Metadata, TokenMetadataAccount,
-        TokenStandard,
+        Collection, Edition, EditionMarker, Key, Metadata, TokenMetadataAccount, TokenStandard,
     },
     utils::{
         assert_derivation, assert_initialized, assert_owned_by,
-        assert_verified_member_of_collection, clean_write_metadata, close_program_account,
-        is_master_edition, is_print_edition,
+        assert_verified_member_of_collection, close_program_account, is_master_edition,
+        is_print_edition,
     },
 };
 
