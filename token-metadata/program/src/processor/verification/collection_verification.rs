@@ -62,8 +62,8 @@ pub(crate) fn verify_collection_v1(program_id: &Pubkey, ctx: Context<Verify>) ->
         _ => return Err(MetadataError::UpdateAuthorityIncorrect.into()),
     }
 
-    // Verify the collection in the item's metadata matches the collection mint.  Also verify
-    // the collection metadata matches the collection mint, and the collection edition derivation.
+    // Ensure the collection exists, the item isn't already verified, and that
+    // collection item belongs to the parent and metadata is derived from the mint.
     match metadata.collection {
         Some(ref mut collection) => {
             // Short-circuit if it's already verified.
