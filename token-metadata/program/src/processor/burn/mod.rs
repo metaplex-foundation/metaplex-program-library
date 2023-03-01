@@ -24,7 +24,7 @@ use crate::{
         TokenStandard,
     },
     utils::{
-        assert_currently_holding, assert_derivation, assert_initialized, assert_owned_by,
+        assert_derivation, assert_initialized, assert_owned_by,
         assert_verified_member_of_collection, clean_write_metadata, close_program_account,
         is_master_edition, is_print_edition,
     },

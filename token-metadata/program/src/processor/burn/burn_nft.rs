@@ -5,13 +5,11 @@ use solana_program::{
     program_error::ProgramError,
     pubkey::Pubkey,
 };
-use spl_token::state::Account as TokenAccount;
 
 use crate::{
     assertions::{assert_owned_by, metadata::assert_currently_holding},
     instruction::{Burn, Context},
     state::{Metadata, TokenMetadataAccount},
-    utils::assert_initialized,
 };
 
 use super::nonfungible::{burn_nonfungible, BurnNonFungibleArgs};
@@ -51,7 +49,6 @@ pub fn process_burn_nft<'a>(program_id: &Pubkey, accounts: &'a [AccountInfo<'a>]
 
     // Deserialize accounts.
     let metadata = Metadata::from_account_info(metadata_info)?;
-    let _: TokenAccount = assert_initialized(token_info)?;
 
     // Checks:
     // * Metadata is owned by the token-metadata program

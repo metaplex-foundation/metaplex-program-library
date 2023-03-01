@@ -105,40 +105,29 @@ fn burn_v1(program_id: &Pubkey, ctx: Context<Burn>, args: BurnArgs) -> ProgramRe
         ..Default::default()
     })?;
 
-    match authority_response.authority_type {
-        AuthorityType::Holder => {
-            // Checks:
-            // * Metadata is owned by the token-metadata program
-            // * Mint is owned by the spl-token program
-            // * Token is owned by the spl-token program
-            // * Token account is initialized
-            // * Token account data owner is 'owner'
-            // * Token account belongs to mint
-            // * Token account has 1 or more tokens
-            // * Mint matches metadata.mint
-            assert_currently_holding(
-                &crate::ID,
-                ctx.accounts.authority_info,
-                ctx.accounts.metadata_info,
-                &metadata,
-                ctx.accounts.mint_info,
-                ctx.accounts.token_info,
-            )?;
-        }
-        AuthorityType::TokenDelegate => {
-            if &token.mint != ctx.accounts.mint_info.key {
-                return Err(MetadataError::MintMismatch.into());
-            }
+    // Must be either the holder or a token delegate.
+    if !matches!(
+        authority_response.authority_type,
+        AuthorityType::Holder | AuthorityType::TokenDelegate
+    ) {
+        return Err(MetadataError::InvalidAuthorityType.into());
+    }
 
-            if token.amount < amount {
-                return Err(MetadataError::InsufficientTokenBalance.into());
-            }
+    // Validate relationships between accounts.
 
-            if token.mint != metadata.mint {
-                return Err(MetadataError::MintMismatch.into());
-            }
-        }
-        _ => return Err(MetadataError::InvalidAuthorityType.into()),
+    // Mint account passed in matches the mint of the token account.
+    if &token.mint != ctx.accounts.mint_info.key {
+        return Err(MetadataError::MintMismatch.into());
+    }
+
+    // Token account must have sufficient balance for burn.
+    if token.amount < amount {
+        return Err(MetadataError::InsufficientTokenBalance.into());
+    }
+
+    // Metadata account must match the mint.
+    if token.mint != metadata.mint {
+        return Err(MetadataError::MintMismatch.into());
     }
 
     let token_standard = if let Some(token_standard) = metadata.token_standard {
