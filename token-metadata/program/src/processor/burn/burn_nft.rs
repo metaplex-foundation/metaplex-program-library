@@ -1,3 +1,5 @@
+use super::*;
+
 use mpl_utils::assert_signer;
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
@@ -7,7 +9,7 @@ use solana_program::{
 };
 
 use crate::{
-    assertions::{assert_owned_by, metadata::assert_currently_holding},
+    assertions::assert_owned_by,
     instruction::{Burn, Context},
     state::{Metadata, TokenMetadataAccount},
 };
@@ -49,24 +51,29 @@ pub fn process_burn_nft<'a>(program_id: &Pubkey, accounts: &'a [AccountInfo<'a>]
 
     // Deserialize accounts.
     let metadata = Metadata::from_account_info(metadata_info)?;
+    let token: TokenAccount = assert_initialized(token_info)?;
 
-    // Checks:
-    // * Metadata is owned by the token-metadata program
-    // * Mint is owned by the spl-token program
-    // * Token is owned by the spl-token program
-    // * Token account is initialized
-    // * Token account data owner is 'owner'
-    // * Token account belongs to mint
-    // * Token account has 1 or more tokens
-    // * Mint matches metadata.mint
-    assert_currently_holding(
-        program_id,
-        owner_info,
-        metadata_info,
-        &metadata,
-        mint_info,
-        token_info,
-    )?;
+    // Validate relationships between accounts.
+
+    // Owner passed in matches the owner of the token account.
+    if token.owner != *owner_info.key {
+        return Err(MetadataError::InvalidOwner.into());
+    }
+
+    // Mint account passed in matches the mint of the token account.
+    if &token.mint != mint_info.key {
+        return Err(MetadataError::MintMismatch.into());
+    }
+
+    // Token account must have sufficient balance for burn.
+    if token.amount != 1 {
+        return Err(MetadataError::InsufficientTokenBalance.into());
+    }
+
+    // Metadata account must match the mint.
+    if token.mint != metadata.mint {
+        return Err(MetadataError::MintMismatch.into());
+    }
 
     // Contruct our new Burn handler context so we can re-use the same code for both.
     let accounts = Burn {

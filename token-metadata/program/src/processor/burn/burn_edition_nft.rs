@@ -7,7 +7,8 @@ use solana_program::{
 use spl_token::state::Account as TokenAccount;
 
 use crate::{
-    assertions::{assert_owned_by, metadata::assert_currently_holding},
+    assertions::assert_owned_by,
+    error::MetadataError,
     instruction::{Burn, Context},
     state::{Metadata, TokenMetadataAccount},
     utils::assert_initialized,
@@ -49,26 +50,29 @@ pub fn process_burn_edition_nft<'a>(
     assert_owned_by(print_edition_token_info, &spl_token::id())?;
 
     let metadata = Metadata::from_account_info(metadata_info)?;
-    let _: TokenAccount = assert_initialized(print_edition_token_info)?;
+    let token: TokenAccount = assert_initialized(print_edition_token_info)?;
 
-    // Checks:
-    // * Metadata is owned by the token-metadata program
-    // * Mint is owned by the spl-token program
-    // * Token is owned by the spl-token program
-    // * Token account is initialized
-    // * Token account data owner is 'owner'
-    // * Token account belongs to mint
-    // * Token account has 1 or more tokens
-    // * Mint matches metadata.mint
-    assert_currently_holding(
-        program_id,
-        owner_info,
-        metadata_info,
-        &metadata,
-        print_edition_mint_info,
-        print_edition_token_info,
-    )?;
+    // Validate relationships between accounts.
 
+    // Owner passed in matches the owner of the token account.
+    if token.owner != *owner_info.key {
+        return Err(MetadataError::InvalidOwner.into());
+    }
+
+    // Mint account passed in matches the mint of the token account.
+    if &token.mint != print_edition_mint_info.key {
+        return Err(MetadataError::MintMismatch.into());
+    }
+
+    // Token account must have sufficient balance for burn.
+    if token.amount != 1 {
+        return Err(MetadataError::InsufficientTokenBalance.into());
+    }
+
+    // Metadata account must match the mint.
+    if token.mint != metadata.mint {
+        return Err(MetadataError::MintMismatch.into());
+    }
     // Contruct our new Burn handler context so we can re-use the same code for both.
     let accounts = Burn {
         authority_info: owner_info,
