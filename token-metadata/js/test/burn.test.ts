@@ -83,10 +83,12 @@ test('Burn: ProgrammableNonFungible asset', async (t) => {
   const metadataAccount = await connection.getAccountInfo(metadata);
   const editionAccount = await connection.getAccountInfo(masterEdition);
   const tokenAccount = await connection.getAccountInfo(token);
+  const tokenRecordAccount = await connection.getAccountInfo(tokenRecord);
 
   t.equal(metadataAccount, null);
   t.equal(editionAccount, null);
   t.equal(tokenAccount, null);
+  t.equal(tokenRecordAccount, null);
 });
 
 test('Burn: Fungible', async (t) => {

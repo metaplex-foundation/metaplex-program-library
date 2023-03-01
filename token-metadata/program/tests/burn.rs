@@ -1539,7 +1539,7 @@ mod nft {
     }
 
     #[tokio::test]
-    pub async fn burn_with_invalid_parents() {
+    pub async fn cannot_burn_with_invalid_parents() {
         // Create two master editions and try burn the second with the first
         // as the parent accounts. This is using the handler wrong and would be
         // confusing for it to succeed even though it could, so it fails.
