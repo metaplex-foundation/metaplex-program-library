@@ -39,7 +39,6 @@ mod verify_creator {
         let mut context = program_test().start_with_context().await;
 
         // Create and mint item.
-        let payer = context.payer.dirty_clone();
         let creator = Keypair::new();
         airdrop(&mut context, &creator.pubkey(), LAMPORTS_PER_SOL)
             .await
@@ -72,7 +71,7 @@ mod verify_creator {
         let err = da
             .verify(
                 &mut context,
-                payer,
+                creator,
                 args,
                 Some(metadata_wrong_owner),
                 None,
@@ -94,7 +93,6 @@ mod verify_creator {
         let mut context = program_test().start_with_context().await;
 
         // Create and mint item.
-        let payer = context.payer.dirty_clone();
         let creator = Keypair::new();
         airdrop(&mut context, &creator.pubkey(), LAMPORTS_PER_SOL)
             .await
@@ -122,6 +120,7 @@ mod verify_creator {
             .await;
 
         // Verify.
+        let payer = context.payer.dirty_clone();
         let args = VerifyArgs::CreatorV1;
         let err = da
             .verify(&mut context, payer, args, None, None, None, None, None)
@@ -139,7 +138,6 @@ mod verify_creator {
         let mut context = program_test().start_with_context().await;
 
         // Create and mint item.
-        let payer = context.payer.dirty_clone();
         let mut da = DigitalAsset::new();
         da.create_and_mint_with_creators(
             &mut context,
@@ -156,6 +154,7 @@ mod verify_creator {
             .await;
 
         // Verify.
+        let payer = context.payer.dirty_clone();
         let args = VerifyArgs::CreatorV1;
         let err = da
             .verify(&mut context, payer, args, None, None, None, None, None)
