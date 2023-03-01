@@ -39,12 +39,12 @@ export const BurnStruct = new beet.FixableBeetArgsStruct<
  * @property [_writable_, **signer**] authority Asset owner or Utility delegate
  * @property [_writable_] collectionMetadata (optional) Metadata of the Collection
  * @property [_writable_] metadata Metadata (pda of ['metadata', program id, mint id])
- * @property [_writable_] edition (optional) MasterEdition of the asset
+ * @property [_writable_] edition (optional) Edition of the asset
  * @property [_writable_] mint Mint of token asset
  * @property [_writable_] token Token account to close
  * @property [_writable_] parentEdition (optional) Master edition token account
  * @property [] parentMint (optional) Master edition mint of the asset
- * @property [] parentToken (optional) Master edition token account to close
+ * @property [] parentToken (optional) Master edition token account
  * @property [_writable_] editionMarker (optional) Edition marker account
  * @property [_writable_] tokenRecord (optional) Token record account
  * @property [] sysvarInstructions Instructions sysvar account

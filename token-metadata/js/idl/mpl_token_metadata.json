@@ -2368,7 +2368,7 @@
           "name": "edition",
           "isMut": true,
           "isSigner": false,
-          "desc": "MasterEdition of the asset",
+          "desc": "Edition of the asset",
           "optional": true
         },
         {
@@ -2401,7 +2401,7 @@
           "name": "parentToken",
           "isMut": false,
           "isSigner": false,
-          "desc": "Master edition token account to close",
+          "desc": "Master edition token account",
           "optional": true
         },
         {
