@@ -4,17 +4,15 @@ pub mod utils;
 
 use mpl_token_metadata::{
     error::MetadataError,
-    instruction::{
-        builders::VerifyBuilder, DelegateArgs, InstructionBuilder, MetadataDelegateRole, VerifyArgs,
-    },
-    pda::{find_metadata_delegate_record_account, find_token_record_account},
+    instruction::{DelegateArgs, MetadataDelegateRole, VerifyArgs},
+    pda::find_metadata_delegate_record_account,
     state::{Collection, CollectionDetails, Creator, TokenStandard},
 };
 use num_traits::FromPrimitive;
 use solana_program::native_token::LAMPORTS_PER_SOL;
 use solana_program_test::*;
 use solana_sdk::{
-    instruction::InstructionError, signature::Keypair, signer::Signer, transaction::Transaction,
+    instruction::InstructionError, signature::Keypair, signer::Signer,
     transaction::TransactionError,
 };
 use utils::*;
@@ -306,6 +304,110 @@ mod verify_collection {
                 args,
                 None,
                 None,
+                Some(test_items.collection_parent_da.mint.pubkey()),
+                Some(test_items.collection_parent_da.metadata),
+            )
+            .await
+            .unwrap();
+
+        test_items
+            .da
+            .assert_item_collection_matches_on_chain(
+                &mut context,
+                &test_items.unverified_collection,
+            )
+            .await;
+
+        test_items
+            .collection_parent_da
+            .assert_collection_details_matches_on_chain(&mut context, &collection_details)
+            .await;
+    }
+
+    #[tokio::test]
+    async fn pass_item_pnft_delegated_authority_sized_collection_new_handler() {
+        pass_delegated_authority_collection_new_handler(
+            DEFAULT_COLLECTION_DETAILS,
+            TokenStandard::ProgrammableNonFungible,
+        )
+        .await;
+    }
+
+    #[tokio::test]
+    async fn pass_item_nft_delegated_authority_sized_collection_new_handler() {
+        pass_delegated_authority_collection_new_handler(
+            DEFAULT_COLLECTION_DETAILS,
+            TokenStandard::NonFungible,
+        )
+        .await;
+    }
+
+    #[tokio::test]
+    async fn pass_item_pnft_delegated_authority_unsized_collection_new_handler() {
+        pass_delegated_authority_collection_new_handler(
+            None,
+            TokenStandard::ProgrammableNonFungible,
+        )
+        .await;
+    }
+
+    #[tokio::test]
+    async fn pass_item_nft_delegated_authority_unsized_collection_new_handler() {
+        pass_delegated_authority_collection_new_handler(None, TokenStandard::NonFungible).await;
+    }
+
+    async fn pass_delegated_authority_collection_new_handler(
+        collection_details: Option<CollectionDetails>,
+        item_token_standard: TokenStandard,
+    ) {
+        let mut context = program_test().start_with_context().await;
+
+        let mut test_items = create_mint_verify_collection_check(
+            &mut context,
+            collection_details.clone(),
+            item_token_standard,
+        )
+        .await;
+
+        // Create a Collection delegate.
+        let delegate = Keypair::new();
+        airdrop(&mut context, &delegate.pubkey(), LAMPORTS_PER_SOL)
+            .await
+            .unwrap();
+
+        let payer = context.payer.dirty_clone();
+        let payer_pubkey = payer.pubkey();
+        test_items
+            .collection_parent_da
+            .delegate(
+                &mut context,
+                payer,
+                delegate.pubkey(),
+                DelegateArgs::CollectionV1 {
+                    authorization_data: None,
+                },
+            )
+            .await
+            .unwrap();
+
+        // Find delegate record PDA.
+        let (delegate_record, _) = find_metadata_delegate_record_account(
+            &test_items.collection_parent_da.mint.pubkey(),
+            MetadataDelegateRole::Collection,
+            &payer_pubkey,
+            &delegate.pubkey(),
+        );
+
+        // Unverify.
+        let args = VerifyArgs::CollectionV1;
+        test_items
+            .da
+            .unverify(
+                &mut context,
+                delegate,
+                args,
+                None,
+                Some(delegate_record),
                 Some(test_items.collection_parent_da.mint.pubkey()),
                 Some(test_items.collection_parent_da.metadata),
             )
