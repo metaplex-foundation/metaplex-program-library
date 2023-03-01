@@ -787,7 +787,7 @@ mod verify_collection {
             .await
             .unwrap_err();
 
-        assert_custom_error!(err, MetadataError::CollectionNotFound);
+        assert_custom_error!(err, MetadataError::MintMismatch);
 
         da.assert_item_collection_matches_on_chain(&mut context, &collection)
             .await;
@@ -846,7 +846,7 @@ mod verify_collection {
             .await
             .unwrap_err();
 
-        assert_custom_error!(err, MetadataError::CollectionNotFound);
+        assert_custom_error!(err, MetadataError::MintMismatch);
 
         da.assert_item_collection_matches_on_chain(&mut context, &collection)
             .await;

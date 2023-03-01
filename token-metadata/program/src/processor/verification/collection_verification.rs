@@ -1,8 +1,5 @@
 use crate::{
-    assertions::{
-        assert_owned_by, collection::assert_collection_verify_is_valid,
-        metadata::assert_metadata_derivation,
-    },
+    assertions::{assert_owned_by, metadata::assert_metadata_derivation},
     error::MetadataError,
     instruction::{Context, MetadataDelegateRole, Unverify, Verify},
     state::{AuthorityRequest, AuthorityType, Metadata, TokenMetadataAccount},
@@ -45,23 +42,6 @@ pub(crate) fn verify_collection_v1(program_id: &Pubkey, ctx: Context<Verify>) ->
     let mut metadata = Metadata::from_account_info(ctx.accounts.metadata_info)?;
     let mut collection_metadata = Metadata::from_account_info(collection_metadata_info)?;
 
-    // Don't verify already verified items, otherwise for sized collections we end up with invalid
-    // size data.
-    if let Some(collection) = &metadata.collection {
-        if collection.verified {
-            return Err(MetadataError::AlreadyVerified.into());
-        }
-    }
-
-    // Verify the collection in the item's metadata matches the collection mint.  Also verify
-    // the collection metadata matches the collection mint, and the collection edition derivation.
-    assert_collection_verify_is_valid(
-        &metadata.collection,
-        &collection_metadata,
-        collection_mint_info,
-        collection_master_edition_info,
-    )?;
-
     // Determines if we have a valid authority to perform the collection verification.  The
     // required authority is either the collection parent's metadata update authority, or a
     // collection delegate for the collection parent.  This call fails if no valid authority is
@@ -82,9 +62,23 @@ pub(crate) fn verify_collection_v1(program_id: &Pubkey, ctx: Context<Verify>) ->
         _ => return Err(MetadataError::UpdateAuthorityIncorrect.into()),
     }
 
-    // Destructure the collection field from the item metadata.
-    match metadata.collection.as_mut() {
-        Some(collection) => {
+    // Verify the collection in the item's metadata matches the collection mint.  Also verify
+    // the collection metadata matches the collection mint, and the collection edition derivation.
+    match metadata.collection {
+        Some(ref mut collection) => {
+            // Short-circuit if it's already verified.
+            if collection.verified {
+                return Err(MetadataError::AlreadyVerified.into());
+            }
+
+            // The collection parent must be the actual parent of the collection item
+            // and the metadata must be derived from the mint.
+            if collection.key != *collection_mint_info.key
+                || collection_metadata.mint != *collection_mint_info.key
+            {
+                return Err(MetadataError::MintMismatch.into());
+            }
+
             // Set item metadata collection to verified.
             collection.verified = true;
 
@@ -92,13 +86,12 @@ pub(crate) fn verify_collection_v1(program_id: &Pubkey, ctx: Context<Verify>) ->
             if collection_metadata.collection_details.is_some() {
                 increment_collection_size(&mut collection_metadata, collection_metadata_info)?;
             }
-        }
-        None => return Err(MetadataError::CollectionNotFound.into()),
-    };
 
-    // Reserialize metadata.
-    clean_write_metadata(&mut metadata, ctx.accounts.metadata_info)?;
-    Ok(())
+            // Reserialize metadata.
+            clean_write_metadata(&mut metadata, ctx.accounts.metadata_info)
+        }
+        None => Err(MetadataError::CollectionNotFound.into()),
+    }
 }
 
 #[allow(unreachable_code)]
