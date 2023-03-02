@@ -6,7 +6,6 @@
  */
 
 import * as beet from '@metaplex-foundation/beet';
-import { AuthorizationData, authorizationDataBeet } from './AuthorizationData';
 /**
  * This type is used to derive the {@link BurnArgs} type as well as the de/serializer.
  * However don't refer to it in your code but use the {@link BurnArgs} type instead.
@@ -17,7 +16,7 @@ import { AuthorizationData, authorizationDataBeet } from './AuthorizationData';
  * @private
  */
 export type BurnArgsRecord = {
-  V1: { authorizationData: beet.COption<AuthorizationData> };
+  V1: { amount: beet.bignum };
 };
 
 /**
@@ -42,9 +41,6 @@ export const isBurnArgsV1 = (x: BurnArgs): x is BurnArgs & { __kind: 'V1' } => x
 export const burnArgsBeet = beet.dataEnum<BurnArgsRecord>([
   [
     'V1',
-    new beet.FixableBeetArgsStruct<BurnArgsRecord['V1']>(
-      [['authorizationData', beet.coption(authorizationDataBeet)]],
-      'BurnArgsRecord["V1"]',
-    ),
+    new beet.BeetArgsStruct<BurnArgsRecord['V1']>([['amount', beet.u64]], 'BurnArgsRecord["V1"]'),
   ],
 ]) as beet.FixableBeet<BurnArgs, BurnArgs>;

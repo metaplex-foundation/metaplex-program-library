@@ -687,26 +687,54 @@ pub enum MetadataError {
     CannotUpdateAssetWithDelegate,
 
     /// 174
+    #[error("Invalid token amount for this operation or token standard")]
+    InvalidAmount,
+
+    /// 175
+    #[error("Missing master edition mint account")]
+    MissingMasterEditionMintAccount,
+
+    /// 176
+    #[error("Missing master edition token account")]
+    MissingMasterEditionTokenAccount,
+
+    /// 177
+    #[error("Missing edition marker account")]
+    MissingEditionMarkerAccount,
+
+    /// 178
+    #[error("Cannot burn while persistent delegate is set")]
+    CannotBurnWithDelegate,
+
+    /// 179
+    #[error("Missing edition account")]
+    MissingEdition,
+
+    /// 180
     #[error("Invalid Associated Token Account Program")]
     InvalidAssociatedTokenAccountProgram,
 
-    /// 175
+    /// 181
     #[error("Invalid InstructionsSysvar")]
     InvalidInstructionsSysvar,
 
-    /// 176
+    /// 182
+    #[error("Invalid or Unneeded parent accounts")]
+    InvalidParentAccounts,
+
+    /// 183
     #[error("Authority cannot apply all update args")]
     InvalidUpdateArgs,
 
-    /// 177
-    //#[error("Missing delegate record PDA account")]
-    //MissingDelegateRecord,
+    /// 184
+    #[error("Token account does not have enough tokens")]
+    InsufficientTokenBalance,
 
-    /// 177
+    /// 185
     #[error("Missing collection mint account")]
     MissingCollectionMint,
 
-    /// 178
+    /// 186
     #[error("Missing collection master edition account")]
     MissingCollectionMasterEdition,
 }

@@ -87,7 +87,7 @@ pub fn revoke_collection_authority(
 //# Set And Verify Collection
 ///
 ///Allows the same Update Authority (Or Delegated Authority) on an NFT and Collection to
-/// perform [update_metadata_accounts_v2] with collection and [verify_collection] on the
+/// perform update_metadata_accounts_v2 with collection and [verify_collection] on the
 /// NFT/Collection in one instruction.
 ///
 /// ### Accounts:
@@ -139,7 +139,7 @@ pub fn set_and_verify_collection(
 
 //# Set And Verify Collection V2 -- Supports v1.3 Collection Details
 ///
-///Allows the same Update Authority (Or Delegated Authority) on an NFT and Collection to perform [update_metadata_accounts_v2] with collection and [verify_collection] on the NFT/Collection in one instruction
+///Allows the same Update Authority (Or Delegated Authority) on an NFT and Collection to perform update_metadata_accounts_v2 with collection and [verify_collection] on the NFT/Collection in one instruction
 ///
 /// ### Accounts:
 ///

@@ -1414,7 +1414,7 @@ mod verify_collection {
             None,
             Some(collection_parent_da.mint.pubkey()),
             Some(collection_parent_da.metadata),
-            Some(collection_parent_da.master_edition.unwrap()),
+            Some(collection_parent_da.edition.unwrap()),
         )
         .await
         .unwrap();
@@ -1556,7 +1556,7 @@ mod verify_collection {
             Some(delegate_record),
             Some(collection_parent_da.mint.pubkey()),
             Some(collection_parent_da.metadata),
-            Some(collection_parent_da.master_edition.unwrap()),
+            Some(collection_parent_da.edition.unwrap()),
         )
         .await
         .unwrap();
@@ -1682,7 +1682,7 @@ mod verify_collection {
                 Some(delegate_record),
                 Some(collection_parent_da.mint.pubkey()),
                 Some(collection_parent_da.metadata),
-                Some(collection_parent_da.master_edition.unwrap()),
+                Some(collection_parent_da.edition.unwrap()),
             )
             .await
             .unwrap_err();
@@ -1812,7 +1812,7 @@ mod verify_collection {
                 Some(second_collection_delegate_record),
                 Some(first_collection_parent_da.mint.pubkey()),
                 Some(first_collection_parent_da.metadata),
-                Some(first_collection_parent_da.master_edition.unwrap()),
+                Some(first_collection_parent_da.edition.unwrap()),
             )
             .await
             .unwrap_err();
@@ -1910,7 +1910,7 @@ mod verify_collection {
                 Some(token_record),
                 Some(collection_parent_da.mint.pubkey()),
                 Some(collection_parent_da.metadata),
-                Some(collection_parent_da.master_edition.unwrap()),
+                Some(collection_parent_da.edition.unwrap()),
             )
             .await
             .unwrap_err();

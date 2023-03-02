@@ -357,7 +357,7 @@ mod create {
         assert_eq!(metadata.uses, None);
         assert_eq!(metadata.collection, None);
         assert_eq!(metadata.programmable_config, None);
-        assert!(asset.master_edition.is_some());
+        assert!(asset.edition.is_some());
     }
 
     #[tokio::test]
@@ -401,7 +401,7 @@ mod create {
         assert_eq!(metadata.uses, None);
         assert_eq!(metadata.collection, None);
         assert_eq!(metadata.programmable_config, None);
-        assert!(asset.master_edition.is_none());
+        assert!(asset.edition.is_none());
     }
 
     #[tokio::test]
@@ -445,6 +445,6 @@ mod create {
         assert_eq!(metadata.uses, None);
         assert_eq!(metadata.collection, None);
         assert_eq!(metadata.programmable_config, None);
-        assert!(asset.master_edition.is_none());
+        assert!(asset.edition.is_none());
     }
 }
