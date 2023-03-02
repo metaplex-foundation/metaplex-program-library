@@ -5,7 +5,7 @@ pub mod utils;
 use mpl_token_metadata::{
     error::MetadataError,
     instruction::{DelegateArgs, MetadataDelegateRole, VerifyArgs},
-    pda::find_metadata_delegate_record_account,
+    pda::{find_metadata_delegate_record_account, find_token_record_account},
     state::{Collection, CollectionDetails, Creator, TokenStandard},
 };
 use num_traits::FromPrimitive;
@@ -246,6 +246,11 @@ mod verify_creator {
 
 mod verify_collection {
     use super::*;
+
+    #[tokio::test]
+    async fn delegate_record_wrong_owner() {
+        // See `standard_delegate_fails`.
+    }
 
     #[tokio::test]
     async fn metadata_wrong_owner() {
@@ -1295,6 +1300,170 @@ mod verify_collection {
             .unwrap_err();
 
         assert_custom_error!(err, MetadataError::UpdateAuthorityIncorrect);
+
+        test_items
+            .da
+            .assert_item_collection_matches_on_chain(&mut context, &test_items.verified_collection)
+            .await;
+
+        // Check collection details.  It should not be updated.
+        test_items
+            .collection_parent_da
+            .assert_collection_details_matches_on_chain(
+                &mut context,
+                &test_items.verified_collection_details,
+            )
+            .await;
+    }
+
+    #[tokio::test]
+    async fn delegate_for_different_collection_cannot_verify() {
+        let mut context = program_test().start_with_context().await;
+
+        // This creates a collection and item and makes the item a member of the first collection.
+        let mut test_items = create_mint_verify_collection_check(
+            &mut context,
+            DEFAULT_COLLECTION_DETAILS,
+            TokenStandard::ProgrammableNonFungible,
+        )
+        .await;
+
+        // Create a second collection parent NFT with the CollectionDetails struct populated.
+        let mut second_collection_parent_da = DigitalAsset::new();
+        second_collection_parent_da
+            .create_and_mint_collection_parent(
+                &mut context,
+                TokenStandard::NonFungible,
+                None,
+                None,
+                1,
+                DEFAULT_COLLECTION_DETAILS,
+            )
+            .await
+            .unwrap();
+
+        second_collection_parent_da
+            .assert_collection_details_matches_on_chain(&mut context, &DEFAULT_COLLECTION_DETAILS)
+            .await;
+
+        // Create a Collection delegate for the second collection.
+        let second_collection_delegate = Keypair::new();
+        airdrop(
+            &mut context,
+            &second_collection_delegate.pubkey(),
+            LAMPORTS_PER_SOL,
+        )
+        .await
+        .unwrap();
+
+        let payer = context.payer.dirty_clone();
+        let payer_pubkey = payer.pubkey();
+        second_collection_parent_da
+            .delegate(
+                &mut context,
+                payer,
+                second_collection_delegate.pubkey(),
+                DelegateArgs::CollectionV1 {
+                    authorization_data: None,
+                },
+            )
+            .await
+            .unwrap();
+
+        // Find delegate record PDA.
+        let (second_collection_delegate_record, _) = find_metadata_delegate_record_account(
+            &second_collection_parent_da.mint.pubkey(),
+            MetadataDelegateRole::Collection,
+            &payer_pubkey,
+            &second_collection_delegate.pubkey(),
+        );
+
+        // Unverify.
+        let args = VerifyArgs::CollectionV1;
+        let err = test_items
+            .da
+            .unverify(
+                &mut context,
+                second_collection_delegate,
+                args,
+                None,
+                Some(second_collection_delegate_record),
+                Some(test_items.collection_parent_da.mint.pubkey()),
+                Some(test_items.collection_parent_da.metadata),
+            )
+            .await
+            .unwrap_err();
+
+        assert_custom_error!(err, MetadataError::UpdateAuthorityIncorrect);
+
+        test_items
+            .da
+            .assert_item_collection_matches_on_chain(&mut context, &test_items.verified_collection)
+            .await;
+
+        // Check collection details.  They should not be updated.
+        test_items
+            .collection_parent_da
+            .assert_collection_details_matches_on_chain(
+                &mut context,
+                &test_items.verified_collection_details,
+            )
+            .await;
+
+        second_collection_parent_da
+            .assert_collection_details_matches_on_chain(&mut context, &DEFAULT_COLLECTION_DETAILS)
+            .await;
+    }
+
+    #[tokio::test]
+    async fn standard_delegate_fails() {
+        let mut context = program_test().start_with_context().await;
+
+        let mut test_items = create_mint_verify_collection_check(
+            &mut context,
+            DEFAULT_COLLECTION_DETAILS,
+            TokenStandard::ProgrammableNonFungible,
+        )
+        .await;
+
+        // Create a Standard delegate.
+        let delegate = Keypair::new();
+        airdrop(&mut context, &delegate.pubkey(), LAMPORTS_PER_SOL)
+            .await
+            .unwrap();
+
+        let payer = context.payer.dirty_clone();
+        let delegate_args = DelegateArgs::StandardV1 { amount: 1 };
+        test_items
+            .collection_parent_da
+            .delegate(&mut context, payer, delegate.pubkey(), delegate_args)
+            .await
+            .unwrap();
+
+        // This account was not actually created by the delegate instruction but we will send
+        // it anyways and expect to see an `IncorrectOwner` failure.
+        let (token_record, _) = find_token_record_account(
+            &test_items.collection_parent_da.mint.pubkey(),
+            &test_items.collection_parent_da.token.unwrap(),
+        );
+
+        // Unverify.
+        let args = VerifyArgs::CollectionV1;
+        let err = test_items
+            .da
+            .unverify(
+                &mut context,
+                delegate,
+                args,
+                None,
+                Some(token_record),
+                Some(test_items.collection_parent_da.mint.pubkey()),
+                Some(test_items.collection_parent_da.metadata),
+            )
+            .await
+            .unwrap_err();
+
+        assert_custom_error!(err, MetadataError::IncorrectOwner);
 
         test_items
             .da
