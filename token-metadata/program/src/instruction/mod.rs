@@ -9,6 +9,7 @@ mod freeze;
 mod metadata;
 mod state;
 mod uses;
+mod verification;
 
 use borsh::{BorshDeserialize, BorshSerialize};
 pub use bubblegum::*;
@@ -26,6 +27,7 @@ use shank::ShankInstruction;
 use solana_program::account_info::AccountInfo;
 pub use state::*;
 pub use uses::*;
+pub use verification::*;
 
 #[allow(deprecated)]
 pub use crate::deprecated_instruction::{
