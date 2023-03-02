@@ -1,5 +1,5 @@
-mod collection_verification;
-mod creator_verification;
+mod collection;
+mod creator;
 mod verify;
 
 pub use verify::*;

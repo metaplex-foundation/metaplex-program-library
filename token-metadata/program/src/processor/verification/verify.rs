@@ -1,8 +1,8 @@
 use crate::{
     instruction::{Unverify, Verify, VerifyArgs},
     processor::verification::{
-        collection_verification::{unverify_collection_v1, verify_collection_v1},
-        creator_verification::{unverify_creator_v1, verify_creator_v1},
+        collection::{unverify_collection_v1, verify_collection_v1},
+        creator::{unverify_creator_v1, verify_creator_v1},
     },
 };
 use solana_program::{account_info::AccountInfo, entrypoint::ProgramResult, pubkey::Pubkey};
