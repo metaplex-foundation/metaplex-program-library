@@ -65,14 +65,14 @@ fn burn_v1(program_id: &Pubkey, ctx: Context<Burn>, args: BurnArgs) -> ProgramRe
     if let Some(edition_info) = ctx.accounts.edition_info {
         assert_owned_by(edition_info, program_id)?;
     }
-    if let Some(parent_edition) = ctx.accounts.parent_edition_info {
-        assert_owned_by(parent_edition, program_id)?;
+    if let Some(master_edition) = ctx.accounts.master_edition_info {
+        assert_owned_by(master_edition, program_id)?;
     }
-    if let Some(parent_mint) = ctx.accounts.parent_mint_info {
-        assert_owned_by(parent_mint, &spl_token::ID)?;
+    if let Some(master_edition_mint) = ctx.accounts.master_edition_mint_info {
+        assert_owned_by(master_edition_mint, &spl_token::ID)?;
     }
-    if let Some(parent_token) = ctx.accounts.parent_token_info {
-        assert_owned_by(parent_token, &spl_token::ID)?;
+    if let Some(master_edition_token) = ctx.accounts.master_edition_token_info {
+        assert_owned_by(master_edition_token, &spl_token::ID)?;
     }
     if let Some(edition_marker) = ctx.accounts.edition_marker_info {
         assert_owned_by(edition_marker, program_id)?;
@@ -107,20 +107,20 @@ fn burn_v1(program_id: &Pubkey, ctx: Context<Burn>, args: BurnArgs) -> ProgramRe
         assert_derivation(&crate::ID, edition_info, &edition_info_path)?;
     }
 
-    if let Some(parent_edition_info) = ctx.accounts.parent_edition_info {
-        let parent_mint_info = ctx
+    if let Some(master_edition_info) = ctx.accounts.master_edition_info {
+        let master_edition_mint_info = ctx
             .accounts
-            .parent_mint_info
-            .ok_or(MetadataError::MissingParentMintAccount)?;
+            .master_edition_mint_info
+            .ok_or(MetadataError::MissingMasterEditionMintAccount)?;
 
-        // Burn item has a valid parent edition.
-        let parent_edition_info_path = Vec::from([
+        // Burn item has a valid master edition parent.
+        let master_edition_info_path = Vec::from([
             PREFIX.as_bytes(),
             crate::ID.as_ref(),
-            parent_mint_info.key.as_ref(),
+            master_edition_mint_info.key.as_ref(),
             EDITION.as_bytes(),
         ]);
-        assert_derivation(&crate::ID, parent_edition_info, &parent_edition_info_path)
+        assert_derivation(&crate::ID, master_edition_info, &master_edition_info_path)
             .map_err(|_| MetadataError::InvalidMasterEdition)?;
     }
 
@@ -130,20 +130,20 @@ fn burn_v1(program_id: &Pubkey, ctx: Context<Burn>, args: BurnArgs) -> ProgramRe
             .edition_info
             .ok_or(MetadataError::MissingEditionAccount)?;
 
-        let parent_edition_info = ctx
+        let master_edition_info = ctx
             .accounts
-            .parent_edition_info
+            .master_edition_info
             .ok_or(MetadataError::MissingEditionAccount)?;
 
-        let parent_mint_info = ctx
+        let master_edition_mint_info = ctx
             .accounts
-            .parent_mint_info
-            .ok_or(MetadataError::MissingParentMintAccount)?;
+            .master_edition_mint_info
+            .ok_or(MetadataError::MissingMasterEditionMintAccount)?;
 
         let print_edition = Edition::from_account_info(edition_info)?;
 
         // Print Edition actually belongs to the master edition.
-        if print_edition.parent != *parent_edition_info.key {
+        if print_edition.parent != *master_edition_info.key {
             return Err(MetadataError::PrintEditionDoesNotMatchMasterEdition.into());
         }
 
@@ -157,7 +157,7 @@ fn burn_v1(program_id: &Pubkey, ctx: Context<Burn>, args: BurnArgs) -> ProgramRe
         let edition_marker_info_path = Vec::from([
             PREFIX.as_bytes(),
             crate::ID.as_ref(),
-            parent_mint_info.key.as_ref(),
+            master_edition_mint_info.key.as_ref(),
             EDITION.as_bytes(),
             edition_marker_number_str.as_bytes(),
         ]);

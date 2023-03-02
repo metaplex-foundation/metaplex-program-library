@@ -5,20 +5,20 @@ use super::*;
 pub(crate) fn burn_nonfungible_edition(ctx: &Context<Burn>) -> ProgramResult {
     let edition_info = ctx.accounts.edition_info.unwrap();
 
-    let parent_mint_info = ctx
+    let master_edition_mint_info = ctx
         .accounts
-        .parent_mint_info
-        .ok_or(MetadataError::MissingParentMintAccount)?;
+        .master_edition_mint_info
+        .ok_or(MetadataError::MissingMasterEditionMintAccount)?;
 
-    let parent_edition_info = ctx
+    let master_edition_info = ctx
         .accounts
-        .parent_edition_info
-        .ok_or(MetadataError::MissingParentEditionAccount)?;
+        .master_edition_info
+        .ok_or(MetadataError::MissingMasterEditionAccount)?;
 
-    let parent_token_info = ctx
+    let master_edition_token_info = ctx
         .accounts
-        .parent_token_info
-        .ok_or(MetadataError::MissingParentTokenAccount)?;
+        .master_edition_token_info
+        .ok_or(MetadataError::MissingMasterEditionTokenAccount)?;
 
     let edition_marker_info = ctx
         .accounts
@@ -26,11 +26,11 @@ pub(crate) fn burn_nonfungible_edition(ctx: &Context<Burn>) -> ProgramResult {
         .ok_or(MetadataError::MissingEditionMarkerAccount)?;
 
     // Ensure the master edition is actually a master edition.
-    let master_edition_mint_decimals = get_mint_decimals(parent_mint_info)?;
-    let master_edition_mint_supply = get_mint_supply(parent_mint_info)?;
+    let master_edition_mint_decimals = get_mint_decimals(master_edition_mint_info)?;
+    let master_edition_mint_supply = get_mint_supply(master_edition_mint_info)?;
 
     if !is_master_edition(
-        parent_edition_info,
+        master_edition_info,
         master_edition_mint_decimals,
         master_edition_mint_supply,
     ) {
@@ -50,9 +50,9 @@ pub(crate) fn burn_nonfungible_edition(ctx: &Context<Burn>) -> ProgramResult {
     }
 
     // Master Edition token account checks.
-    let master_edition_token_account: TokenAccount = assert_initialized(parent_token_info)?;
+    let master_edition_token_account: TokenAccount = assert_initialized(master_edition_token_info)?;
 
-    if master_edition_token_account.mint != *parent_mint_info.key {
+    if master_edition_token_account.mint != *master_edition_mint_info.key {
         return Err(MetadataError::MintMismatch.into());
     }
 
@@ -108,13 +108,13 @@ pub(crate) fn burn_nonfungible_edition(ctx: &Context<Burn>) -> ProgramResult {
 
     // Decrement the suppply on the master edition now that we've successfully burned a print.
     let mut master_edition: MasterEditionV2 =
-        MasterEditionV2::from_account_info(parent_edition_info)?;
+        MasterEditionV2::from_account_info(master_edition_info)?;
     master_edition.supply = master_edition
         .supply
         .checked_sub(1)
         .ok_or(MetadataError::NumericalOverflowError)?;
 
-    master_edition.save(parent_edition_info)?;
+    master_edition.save(master_edition_info)?;
 
     Ok(())
 }

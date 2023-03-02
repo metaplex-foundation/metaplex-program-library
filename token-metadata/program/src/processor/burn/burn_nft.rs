@@ -83,9 +83,9 @@ pub fn process_burn_nft<'a>(program_id: &Pubkey, accounts: &'a [AccountInfo<'a>]
         edition_info: Some(edition_info),
         mint_info,
         token_info,
-        parent_edition_info: None,
-        parent_mint_info: None,
-        parent_token_info: None,
+        master_edition_info: None,
+        master_edition_mint_info: None,
+        master_edition_token_info: None,
         edition_marker_info: None,
         token_record_info: None,
         // This handler doesn't get system program and sysvars instructions

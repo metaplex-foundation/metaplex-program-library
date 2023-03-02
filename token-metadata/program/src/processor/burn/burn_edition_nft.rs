@@ -81,9 +81,9 @@ pub fn process_burn_edition_nft<'a>(
         edition_info: Some(print_edition_info),
         mint_info: print_edition_mint_info,
         token_info: print_edition_token_info,
-        parent_edition_info: Some(master_edition_info),
-        parent_mint_info: Some(master_edition_mint_info),
-        parent_token_info: Some(master_edition_token_info),
+        master_edition_info: Some(master_edition_info),
+        master_edition_mint_info: Some(master_edition_mint_info),
+        master_edition_token_info: Some(master_edition_token_info),
         edition_marker_info: Some(edition_marker_info),
         token_record_info: None,
         // This handler doesn't get system program and sysvars instructions

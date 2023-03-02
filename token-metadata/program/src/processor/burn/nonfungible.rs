@@ -9,11 +9,11 @@ pub(crate) struct BurnNonFungibleArgs {
 pub(crate) fn burn_nonfungible(ctx: &Context<Burn>, args: BurnNonFungibleArgs) -> ProgramResult {
     let edition_info = ctx.accounts.edition_info.unwrap();
 
-    // If you're passing in parent accounts for a nonfungible you're using this handler wrong.
+    // If you're passing in parent master edition accounts for a nonfungible you're using this handler wrong.
     // Parent accounts are only for burning nonfungible editions.
-    if ctx.accounts.parent_mint_info.is_some()
-        || ctx.accounts.parent_edition_info.is_some()
-        || ctx.accounts.parent_token_info.is_some()
+    if ctx.accounts.master_edition_mint_info.is_some()
+        || ctx.accounts.master_edition_info.is_some()
+        || ctx.accounts.master_edition_token_info.is_some()
         || ctx.accounts.edition_marker_info.is_some()
     {
         return Err(MetadataError::InvalidParentAccounts.into());

@@ -96,9 +96,9 @@ impl DigitalAsset {
             .token(self.token.unwrap());
 
         if let Some(parent_asset) = parent_asset {
-            builder.parent_mint(parent_asset.mint.pubkey());
-            builder.parent_token(parent_asset.token.unwrap());
-            builder.parent_edition(parent_asset.edition.unwrap());
+            builder.master_edition_mint(parent_asset.mint.pubkey());
+            builder.master_edition_token(parent_asset.token.unwrap());
+            builder.master_edition(parent_asset.edition.unwrap());
 
             let edition_num = self.edition_num.unwrap();
 

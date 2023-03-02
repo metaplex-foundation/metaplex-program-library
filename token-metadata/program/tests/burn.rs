@@ -1579,9 +1579,9 @@ mod nft {
             .edition(second_master_edition.pubkey)
             .mint(second_nft.mint.pubkey())
             .token(second_nft.token.pubkey())
-            .parent_mint(original_nft.mint.pubkey())
-            .parent_token(original_nft.token.pubkey())
-            .parent_edition(master_edition.pubkey)
+            .master_edition_mint(original_nft.mint.pubkey())
+            .master_edition_token(original_nft.token.pubkey())
+            .master_edition(master_edition.pubkey)
             .edition_marker(print_edition.pubkey);
 
         let burn_ix = builder.build(args).unwrap().instruction();
@@ -1656,9 +1656,9 @@ mod nft_edition {
             .edition(nft_edition_marker.new_edition_pubkey)
             .mint(nft_edition_marker.mint.pubkey())
             .token(nft_edition_marker.token.pubkey())
-            .parent_mint(nft.mint.pubkey())
-            .parent_token(nft.token.pubkey())
-            .parent_edition(nft_master_edition.pubkey)
+            .master_edition_mint(nft.mint.pubkey())
+            .master_edition_token(nft.token.pubkey())
+            .master_edition(nft_master_edition.pubkey)
             .edition_marker(nft_edition_marker.pubkey);
 
         let burn_ix = builder.build(args).unwrap().instruction();
@@ -1786,9 +1786,9 @@ mod nft_edition {
             .edition(print_edition.new_edition_pubkey)
             .mint(print_edition.mint.pubkey())
             .token(new_owner_token_account)
-            .parent_mint(original_nft.mint.pubkey())
-            .parent_token(original_nft.token.pubkey())
-            .parent_edition(master_edition.pubkey)
+            .master_edition_mint(original_nft.mint.pubkey())
+            .master_edition_token(original_nft.token.pubkey())
+            .master_edition(master_edition.pubkey)
             .edition_marker(print_edition.pubkey);
 
         let burn_ix = builder.build(args).unwrap().instruction();
@@ -1839,9 +1839,9 @@ mod nft_edition {
             .edition(print_edition.new_edition_pubkey)
             .mint(print_edition.mint.pubkey())
             .token(print_edition.token.pubkey())
-            .parent_mint(original_nft.mint.pubkey())
-            .parent_token(original_nft.token.pubkey())
-            .parent_edition(master_edition.pubkey)
+            .master_edition_mint(original_nft.mint.pubkey())
+            .master_edition_token(original_nft.token.pubkey())
+            .master_edition(master_edition.pubkey)
             .edition_marker(print_edition.pubkey);
 
         let default_args = BurnPrintArgs::default(&not_owner);
@@ -1851,9 +1851,9 @@ mod nft_edition {
             edition: Some(print_edition.new_edition_pubkey),
             mint: Some(print_edition.mint.pubkey()),
             token: Some(print_edition.token.pubkey()),
-            parent_mint: Some(original_nft.mint.pubkey()),
-            parent_token: Some(original_nft.token.pubkey()),
-            parent_edition: Some(master_edition.pubkey),
+            master_edition_mint: Some(original_nft.mint.pubkey()),
+            master_edition_token: Some(original_nft.token.pubkey()),
+            master_edition: Some(master_edition.pubkey),
             edition_marker: Some(print_edition.pubkey),
             ..default_args
         };
@@ -1896,9 +1896,9 @@ mod nft_edition {
         let args = BurnPrintArgs {
             metadata: Some(print_edition.new_metadata_pubkey),
             token: Some(print_edition.token.pubkey()),
-            parent_mint: Some(original_nft.mint.pubkey()),
-            parent_token: Some(original_nft.token.pubkey()),
-            parent_edition: Some(master_edition.pubkey),
+            master_edition_mint: Some(original_nft.mint.pubkey()),
+            master_edition_token: Some(original_nft.token.pubkey()),
+            master_edition: Some(master_edition.pubkey),
             edition_marker: Some(print_edition.pubkey),
             ..default_args
         };
@@ -1935,9 +1935,9 @@ mod nft_edition {
             edition: Some(print_edition.new_edition_pubkey),
             mint: Some(print_edition.mint.pubkey()),
             token: Some(print_edition.token.pubkey()),
-            parent_mint: Some(original_nft.mint.pubkey()),
-            parent_token: Some(original_nft.token.pubkey()),
-            parent_edition: Some(second_print_edition.pubkey),
+            master_edition_mint: Some(original_nft.mint.pubkey()),
+            master_edition_token: Some(original_nft.token.pubkey()),
+            master_edition: Some(second_print_edition.pubkey),
             edition_marker: Some(print_edition.pubkey),
         };
 
@@ -1970,9 +1970,9 @@ mod nft_edition {
             edition: Some(print_edition.new_edition_pubkey),
             mint: Some(print_edition.mint.pubkey()),
             token: Some(print_edition.token.pubkey()),
-            parent_mint: Some(original_nft.mint.pubkey()),
-            parent_token: Some(original_nft.token.pubkey()),
-            parent_edition: Some(Pubkey::new_unique()),
+            master_edition_mint: Some(original_nft.mint.pubkey()),
+            master_edition_token: Some(original_nft.token.pubkey()),
+            master_edition: Some(Pubkey::new_unique()),
             edition_marker: Some(print_edition.pubkey),
         };
 
@@ -2000,9 +2000,9 @@ mod nft_edition {
             edition: Some(print_edition.new_edition_pubkey),
             mint: Some(print_edition.mint.pubkey()),
             token: Some(print_edition.token.pubkey()),
-            parent_mint: Some(original_nft.mint.pubkey()),
-            parent_token: Some(original_nft.token.pubkey()),
-            parent_edition: Some(incorrect_master_edition.pubkey),
+            master_edition_mint: Some(original_nft.mint.pubkey()),
+            master_edition_token: Some(original_nft.token.pubkey()),
+            master_edition: Some(incorrect_master_edition.pubkey),
             edition_marker: Some(print_edition.pubkey),
         };
 
@@ -2035,9 +2035,9 @@ mod nft_edition {
             edition: Some(Pubkey::new_unique()),
             mint: Some(print_edition.mint.pubkey()),
             token: Some(print_edition.token.pubkey()),
-            parent_mint: Some(original_nft.mint.pubkey()),
-            parent_token: Some(original_nft.token.pubkey()),
-            parent_edition: Some(master_edition.pubkey),
+            master_edition_mint: Some(original_nft.mint.pubkey()),
+            master_edition_token: Some(original_nft.token.pubkey()),
+            master_edition: Some(master_edition.pubkey),
             edition_marker: Some(print_edition.pubkey),
         };
 
@@ -2059,9 +2059,9 @@ mod nft_edition {
             edition: Some(second_print_edition.new_edition_pubkey),
             mint: Some(print_edition.mint.pubkey()),
             token: Some(print_edition.token.pubkey()),
-            parent_mint: Some(original_nft.mint.pubkey()),
-            parent_token: Some(original_nft.token.pubkey()),
-            parent_edition: Some(master_edition.pubkey),
+            master_edition_mint: Some(original_nft.mint.pubkey()),
+            master_edition_token: Some(original_nft.token.pubkey()),
+            master_edition: Some(master_edition.pubkey),
             edition_marker: Some(print_edition.pubkey),
         };
 
@@ -2094,9 +2094,9 @@ mod nft_edition {
             edition: Some(print_edition.new_edition_pubkey),
             mint: Some(print_edition.mint.pubkey()),
             token: Some(print_edition.token.pubkey()),
-            parent_mint: Some(original_nft.mint.pubkey()),
-            parent_token: Some(original_nft.token.pubkey()),
-            parent_edition: Some(master_edition.pubkey),
+            master_edition_mint: Some(original_nft.mint.pubkey()),
+            master_edition_token: Some(original_nft.token.pubkey()),
+            master_edition: Some(master_edition.pubkey),
             edition_marker: Some(Pubkey::new_unique()),
         };
 
@@ -2118,9 +2118,9 @@ mod nft_edition {
             edition: Some(print_edition.new_edition_pubkey),
             mint: Some(print_edition.mint.pubkey()),
             token: Some(print_edition.token.pubkey()),
-            parent_mint: Some(original_nft.mint.pubkey()),
-            parent_token: Some(original_nft.token.pubkey()),
-            parent_edition: Some(master_edition.pubkey),
+            master_edition_mint: Some(original_nft.mint.pubkey()),
+            master_edition_token: Some(original_nft.token.pubkey()),
+            master_edition: Some(master_edition.pubkey),
             edition_marker: Some(second_print_edition.new_edition_pubkey),
         };
 
@@ -2440,9 +2440,9 @@ mod nft_edition {
         let mut owner_burn_args = BurnPrintArgs::default(payer);
 
         owner_burn_args = BurnPrintArgs {
-            parent_token: Some(other_nft.token.pubkey()),
-            parent_mint: Some(other_nft.mint.pubkey()),
-            parent_edition: Some(other_master_edition.pubkey),
+            master_edition_token: Some(other_nft.token.pubkey()),
+            master_edition_mint: Some(other_nft.mint.pubkey()),
+            master_edition: Some(other_master_edition.pubkey),
             edition_marker: Some(other_print_edition.pubkey),
             ..owner_burn_args
         };
@@ -2504,7 +2504,7 @@ mod nft_edition {
 
         // Wrong master edition mint account.
         owner_burn_args = BurnPrintArgs {
-            parent_mint: Some(other_nft.mint.pubkey()),
+            master_edition_mint: Some(other_nft.mint.pubkey()),
             ..owner_burn_args
         };
 

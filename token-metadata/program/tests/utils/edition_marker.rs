@@ -29,9 +29,9 @@ pub struct BurnPrintArgs<'a> {
     pub edition: Option<Pubkey>,
     pub mint: Option<Pubkey>,
     pub token: Option<Pubkey>,
-    pub parent_mint: Option<Pubkey>,
-    pub parent_token: Option<Pubkey>,
-    pub parent_edition: Option<Pubkey>,
+    pub master_edition_mint: Option<Pubkey>,
+    pub master_edition_token: Option<Pubkey>,
+    pub master_edition: Option<Pubkey>,
     pub edition_marker: Option<Pubkey>,
 }
 
@@ -43,9 +43,9 @@ impl<'a> BurnPrintArgs<'a> {
             edition: None,
             mint: None,
             token: None,
-            parent_mint: None,
-            parent_token: None,
-            parent_edition: None,
+            master_edition_mint: None,
+            master_edition_token: None,
+            master_edition: None,
             edition_marker: None,
         }
     }
@@ -280,9 +280,15 @@ impl EditionMarker {
             .edition(args.edition.unwrap_or(self.new_edition_pubkey))
             .mint(args.mint.unwrap_or_else(|| self.mint.pubkey()))
             .token(args.token.unwrap_or_else(|| self.token.pubkey()))
-            .parent_mint(args.parent_mint.unwrap_or(self.metadata_mint_pubkey))
-            .parent_token(args.parent_token.unwrap_or(self.metadata_token_pubkey))
-            .parent_edition(args.parent_edition.unwrap_or(self.master_edition_pubkey))
+            .master_edition_mint(
+                args.master_edition_mint
+                    .unwrap_or(self.metadata_mint_pubkey),
+            )
+            .master_edition_token(
+                args.master_edition_token
+                    .unwrap_or(self.metadata_token_pubkey),
+            )
+            .master_edition(args.master_edition.unwrap_or(self.master_edition_pubkey))
             .edition_marker(args.edition_marker.unwrap_or(self.pubkey));
 
         let burn_ix = builder.build(burn_args).unwrap().instruction();

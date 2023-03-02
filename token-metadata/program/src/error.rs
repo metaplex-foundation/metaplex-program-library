@@ -693,46 +693,42 @@ pub enum MetadataError {
     InvalidAmount,
 
     /// 175
-    #[error("Missing parent mint account")]
-    MissingParentMintAccount,
+    #[error("Missing master edition mint account")]
+    MissingMasterEditionMintAccount,
 
     /// 176
-    #[error("Missing parent edition account")]
-    MissingParentEditionAccount,
+    #[error("Missing master edition token account")]
+    MissingMasterEditionTokenAccount,
 
     /// 177
-    #[error("Missing parent token account")]
-    MissingParentTokenAccount,
-
-    /// 178
     #[error("Missing edition marker account")]
     MissingEditionMarkerAccount,
 
-    /// 179
+    /// 178
     #[error("Cannot burn while persistent delegate is set")]
     CannotBurnWithDelegate,
 
-    /// 180
+    /// 179
     #[error("Missing edition account")]
     MissingEdition,
 
-    /// 181
+    /// 180
     #[error("Invalid Associated Token Account Program")]
     InvalidAssociatedTokenAccountProgram,
 
-    /// 182
+    /// 181
     #[error("Invalid InstructionsSysvar")]
     InvalidInstructionsSysvar,
 
-    /// 183
+    /// 182
     #[error("Invalid or Unneeded parent accounts")]
     InvalidParentAccounts,
 
-    /// 184
+    /// 183
     #[error("Authority cannot apply all update args")]
     InvalidUpdateArgs,
 
-    /// 185
+    /// 184
     #[error("Token account does not have enough tokens")]
     InsufficientTokenBalance,
 }
