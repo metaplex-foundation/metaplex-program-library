@@ -51,6 +51,15 @@ pub(crate) fn burn_nonfungible(ctx: &Context<Burn>, args: BurnNonFungibleArgs) -
     // close_program_account.
     drop(edition_account_data);
 
+    // Has a valid Master Edition or Print Edition.
+    let edition_info_path = Vec::from([
+        PREFIX.as_bytes(),
+        crate::ID.as_ref(),
+        ctx.accounts.mint_info.key.as_ref(),
+        EDITION.as_bytes(),
+    ]);
+    assert_derivation(&crate::ID, edition_info, &edition_info_path)?;
+
     // Burn the SPL token
     let params = TokenBurnParams {
         mint: ctx.accounts.mint_info.clone(),

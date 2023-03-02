@@ -1,4 +1,4 @@
-use crate::state::{MasterEdition, MasterEditionV2};
+use crate::state::{MasterEdition, MasterEditionV2, EDITION_MARKER_BIT_SIZE};
 
 use super::*;
 
@@ -60,7 +60,49 @@ pub(crate) fn burn_nonfungible_edition(ctx: &Context<Burn>) -> ProgramResult {
         return Err(MetadataError::InsufficientTokenBalance.into());
     }
 
+    // Master and Print editions are valid PDAs for their given mints.
+    let master_edition_info_path = Vec::from([
+        PREFIX.as_bytes(),
+        crate::ID.as_ref(),
+        master_edition_mint_info.key.as_ref(),
+        EDITION.as_bytes(),
+    ]);
+    assert_derivation(&crate::ID, master_edition_info, &master_edition_info_path)
+        .map_err(|_| MetadataError::InvalidMasterEdition)?;
+
+    let print_edition_info_path = Vec::from([
+        PREFIX.as_bytes(),
+        crate::ID.as_ref(),
+        ctx.accounts.mint_info.key.as_ref(),
+        EDITION.as_bytes(),
+    ]);
+    assert_derivation(&crate::ID, edition_info, &print_edition_info_path)
+        .map_err(|_| MetadataError::InvalidPrintEdition)?;
+
     let print_edition = Edition::from_account_info(edition_info)?;
+
+    // Print Edition actually belongs to the master edition.
+    if print_edition.parent != *master_edition_info.key {
+        return Err(MetadataError::PrintEditionDoesNotMatchMasterEdition.into());
+    }
+
+    // Which edition marker is this edition in
+    let edition_marker_number = print_edition
+        .edition
+        .checked_div(EDITION_MARKER_BIT_SIZE)
+        .ok_or(MetadataError::NumericalOverflowError)?;
+    let edition_marker_number_str = edition_marker_number.to_string();
+
+    // Ensure we were passed the correct edition marker PDA.
+    let edition_marker_info_path = Vec::from([
+        PREFIX.as_bytes(),
+        crate::ID.as_ref(),
+        master_edition_mint_info.key.as_ref(),
+        EDITION.as_bytes(),
+        edition_marker_number_str.as_bytes(),
+    ]);
+    assert_derivation(&crate::ID, edition_marker_info, &edition_marker_info_path)
+        .map_err(|_| MetadataError::InvalidEditionMarker)?;
 
     // Burn the SPL token
     let params = TokenBurnParams {

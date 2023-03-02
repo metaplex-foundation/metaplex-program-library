@@ -2,10 +2,7 @@ use super::*;
 
 use crate::{
     processor::burn::{fungible::burn_fungible, nonfungible_edition::burn_nonfungible_edition},
-    state::{
-        AuthorityRequest, AuthorityType, TokenDelegateRole, TokenRecord, TokenState,
-        EDITION_MARKER_BIT_SIZE,
-    },
+    state::{AuthorityRequest, AuthorityType, TokenDelegateRole, TokenRecord, TokenState},
     utils::{check_token_standard, thaw},
 };
 
@@ -92,77 +89,6 @@ fn burn_v1(program_id: &Pubkey, ctx: Context<Burn>, args: BurnArgs) -> ProgramRe
 
     if ctx.accounts.spl_token_program_info.key != &spl_token::ID {
         return Err(ProgramError::IncorrectProgramId);
-    }
-
-    // Assert derivations.
-
-    if let Some(edition_info) = ctx.accounts.edition_info {
-        // Burn item has a valid edition.
-        let edition_info_path = Vec::from([
-            PREFIX.as_bytes(),
-            crate::ID.as_ref(),
-            ctx.accounts.mint_info.key.as_ref(),
-            EDITION.as_bytes(),
-        ]);
-        assert_derivation(&crate::ID, edition_info, &edition_info_path)?;
-    }
-
-    if let Some(master_edition_info) = ctx.accounts.master_edition_info {
-        let master_edition_mint_info = ctx
-            .accounts
-            .master_edition_mint_info
-            .ok_or(MetadataError::MissingMasterEditionMintAccount)?;
-
-        // Burn item has a valid master edition parent.
-        let master_edition_info_path = Vec::from([
-            PREFIX.as_bytes(),
-            crate::ID.as_ref(),
-            master_edition_mint_info.key.as_ref(),
-            EDITION.as_bytes(),
-        ]);
-        assert_derivation(&crate::ID, master_edition_info, &master_edition_info_path)
-            .map_err(|_| MetadataError::InvalidMasterEdition)?;
-    }
-
-    if let Some(edition_marker_info) = ctx.accounts.edition_marker_info {
-        let edition_info = ctx
-            .accounts
-            .edition_info
-            .ok_or(MetadataError::MissingEditionAccount)?;
-
-        let master_edition_info = ctx
-            .accounts
-            .master_edition_info
-            .ok_or(MetadataError::MissingEditionAccount)?;
-
-        let master_edition_mint_info = ctx
-            .accounts
-            .master_edition_mint_info
-            .ok_or(MetadataError::MissingMasterEditionMintAccount)?;
-
-        let print_edition = Edition::from_account_info(edition_info)?;
-
-        // Print Edition actually belongs to the master edition.
-        if print_edition.parent != *master_edition_info.key {
-            return Err(MetadataError::PrintEditionDoesNotMatchMasterEdition.into());
-        }
-
-        // Which edition marker is this edition in
-        let edition_marker_number = print_edition
-            .edition
-            .checked_div(EDITION_MARKER_BIT_SIZE)
-            .ok_or(MetadataError::NumericalOverflowError)?;
-        let edition_marker_number_str = edition_marker_number.to_string();
-
-        let edition_marker_info_path = Vec::from([
-            PREFIX.as_bytes(),
-            crate::ID.as_ref(),
-            master_edition_mint_info.key.as_ref(),
-            EDITION.as_bytes(),
-            edition_marker_number_str.as_bytes(),
-        ]);
-        assert_derivation(&crate::ID, edition_marker_info, &edition_marker_info_path)
-            .map_err(|_| MetadataError::InvalidEditionMarker)?;
     }
 
     // Deserialize accounts.
