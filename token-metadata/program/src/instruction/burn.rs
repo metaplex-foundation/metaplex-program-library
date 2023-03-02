@@ -18,9 +18,9 @@ use crate::instruction::MetadataInstruction;
 ///   0. `[writable]` Print NFT Metadata Account
 ///   1. `[writable, signer]` Owner of Print NFT
 ///   2. `[writable]` Mint of Print Edition NFT
-///   3. `[writable]` Mint of Master Edition NFT
+///   3. `[]` Mint of Master Edition NFT
 ///   4. `[writable]` Print Edition Token Account
-///   5. `[writable]` Master Edition Token Account
+///   5. `[]` Master Edition Token Account
 ///   6. `[writable]` Master Edition PDA Account
 ///   7. `[writable]` Print Edition PDA Account
 ///   8. `[writable]` Edition Marker PDA Account
