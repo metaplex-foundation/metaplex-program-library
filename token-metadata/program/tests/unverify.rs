@@ -17,6 +17,18 @@ use solana_sdk::{
 };
 use utils::*;
 
+// Note: at the time these tests were created, the only Metadata delegates that have been
+// implemented are `Collection`, `Update`, and `ProgrammableConfig`.  We have tested each of these
+// cases.
+
+// Also at this time, a collection parent NFT cannot have a token standard of
+// `ProgrammableNonFungible`.  This means that using the new delegate handler, the only Token
+// delegate that can be issued for a collection parent NFT is `TokenDelegateRole::Standard`, which
+// means no token record PDA account will be created. Thus, we cannot properly test that the
+// Standard delegate is not authorized to verify a collection because if we send a non-existent
+// token record account to the verify handler (as a delegate record), it simply fails because the
+// owner is incorrect.
+
 mod verify_creator {
     use super::*;
 

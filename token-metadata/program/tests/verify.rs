@@ -1738,9 +1738,9 @@ mod verify_collection {
             .assert_collection_details_matches_on_chain(&mut context, &DEFAULT_COLLECTION_DETAILS)
             .await;
 
-        // Make the item a member of the second collection.
+        // Make the item a member of the first collection.
         let collection = Some(Collection {
-            key: second_collection_parent_da.mint.pubkey(),
+            key: first_collection_parent_da.mint.pubkey(),
             verified: false,
         });
 
@@ -1769,11 +1769,11 @@ mod verify_collection {
             .assert_collection_details_matches_on_chain(&mut context, &DEFAULT_COLLECTION_DETAILS)
             .await;
 
-        // Create a Collection delegate with the first collection.
-        let first_collection_delegate = Keypair::new();
+        // Create a Collection delegate for the second collection.
+        let second_collection_delegate = Keypair::new();
         airdrop(
             &mut context,
-            &first_collection_delegate.pubkey(),
+            &second_collection_delegate.pubkey(),
             LAMPORTS_PER_SOL,
         )
         .await
@@ -1781,11 +1781,11 @@ mod verify_collection {
 
         let payer = context.payer.dirty_clone();
         let payer_pubkey = payer.pubkey();
-        first_collection_parent_da
+        second_collection_parent_da
             .delegate(
                 &mut context,
                 payer,
-                first_collection_delegate.pubkey(),
+                second_collection_delegate.pubkey(),
                 DelegateArgs::CollectionV1 {
                     authorization_data: None,
                 },
@@ -1794,11 +1794,11 @@ mod verify_collection {
             .unwrap();
 
         // Find delegate record PDA.
-        let (first_collection_delegate_record, _) = find_metadata_delegate_record_account(
-            &first_collection_parent_da.mint.pubkey(),
+        let (second_collection_delegate_record, _) = find_metadata_delegate_record_account(
+            &second_collection_parent_da.mint.pubkey(),
             MetadataDelegateRole::Collection,
             &payer_pubkey,
-            &first_collection_delegate.pubkey(),
+            &second_collection_delegate.pubkey(),
         );
 
         // Verify.
@@ -1806,13 +1806,13 @@ mod verify_collection {
         let err = da
             .verify(
                 &mut context,
-                first_collection_delegate,
+                second_collection_delegate,
                 args,
                 None,
-                Some(first_collection_delegate_record),
-                Some(second_collection_parent_da.mint.pubkey()),
-                Some(second_collection_parent_da.metadata),
-                Some(second_collection_parent_da.master_edition.unwrap()),
+                Some(second_collection_delegate_record),
+                Some(first_collection_parent_da.mint.pubkey()),
+                Some(first_collection_parent_da.metadata),
+                Some(first_collection_parent_da.master_edition.unwrap()),
             )
             .await
             .unwrap_err();
