@@ -1599,7 +1599,7 @@ mod nft {
             .await
             .unwrap_err();
 
-        assert_custom_error!(err, MetadataError::InvalidParentAccounts);
+        assert_custom_error!(err, MetadataError::DataTypeMismatch);
     }
 }
 
@@ -1943,7 +1943,7 @@ mod nft_edition {
 
         let err = print_edition.burn(&mut context, args).await.unwrap_err();
 
-        assert_custom_error!(err, MetadataError::NotAMasterEdition);
+        assert_custom_error!(err, MetadataError::InvalidMasterEdition);
     }
 
     #[tokio::test]
@@ -2067,7 +2067,7 @@ mod nft_edition {
 
         let err = print_edition.burn(&mut context, args).await.unwrap_err();
 
-        assert_custom_error!(err, MetadataError::InvalidPrintEdition);
+        assert_custom_error!(err, MetadataError::DerivedKeyInvalid);
     }
 
     #[tokio::test]
@@ -2489,7 +2489,7 @@ mod nft_edition {
             .await
             .unwrap_err();
 
-        assert_custom_error!(err, MetadataError::MintMismatch);
+        assert_custom_error!(err, MetadataError::DerivedKeyInvalid);
 
         let other_nft = Metadata::new();
         other_nft.create_v3_default(&mut context).await.unwrap();
@@ -2513,7 +2513,7 @@ mod nft_edition {
             .await
             .unwrap_err();
 
-        assert_custom_error!(err, MetadataError::MintMismatch);
+        assert_custom_error!(err, MetadataError::InvalidMasterEdition);
     }
 }
 
