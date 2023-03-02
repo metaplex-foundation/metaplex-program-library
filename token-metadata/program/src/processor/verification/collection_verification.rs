@@ -44,11 +44,11 @@ pub(crate) fn verify_collection_v1(program_id: &Pubkey, ctx: Context<Verify>) ->
     let mut metadata = Metadata::from_account_info(ctx.accounts.metadata_info)?;
     let mut collection_metadata = Metadata::from_account_info(collection_metadata_info)?;
 
-    // Don't verify already verified items, otherwise for sized collections we end up with invalid
-    // size data.
+    // Short circuit if its already verified.  If we let the rest of this instruction run, then for
+    // sized collections we would end up with invalid size data.
     if let Some(collection) = &metadata.collection {
         if collection.verified {
-            return Err(MetadataError::AlreadyVerified.into());
+            return Ok(());
         }
     }
 
