@@ -13,7 +13,9 @@ Token Authorization Rules
 
 In order to support assets that can have customizable behavior, a new asset class will be introduced into Token Metadata’s `Token Standard` struct. This new token standard will allow for flexible configuration of various lifecycle rules, which will be triggered at specific actions:
 
-* [ ] `Burn`
+* [x] [`Burn`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/token-metadata/program/src/instruction/mod.rs#L502-L516)<span style="font-family:'Lucida Console', monospace; font-size: 6pt">([TypeScript](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/token-metadata/js/test/burn.test.ts)
+|
+[Rust](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/token-metadata/program/tests/burn.rs))</span>
 * [x] [`Create`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/token-metadata/program/src/instruction/mod.rs#L518-L536) <span style="font-family:'Lucida Console', monospace; font-size: 6pt">([TypeScript](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/token-metadata/js/test/create.test.ts) | [Rust](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/token-metadata/program/tests/create.rs))</span>
 * [x] [`Delegate`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/token-metadata/program/src/instruction/mod.rs#L562-L585) <span style="font-family:'Lucida Console', monospace; font-size: 6pt">([TypeScript](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/token-metadata/js/test/delegate.test.ts) | [Rust](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/token-metadata/program/tests/delegate.rs))</span>
 * [x] [`Lock`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/token-metadata/program/src/instruction/mod.rs#L607-L625) <span style="font-family:'Lucida Console', monospace; font-size: 6pt">([TypeScript](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/token-metadata/js/test/lock.test.ts) | [Rust](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/token-metadata/program/tests/lock.rs))</span>
@@ -102,6 +104,10 @@ pub enum MetadataInstruction {
 Each of these instructions will use versioned `*Args` structs to facilitate future updates, and in turn, not require additional instructions. Operations supported under each instruction are as follows:
 
 - `Burn`
+    * [x] Burn Programmable Non-Fungibles
+    * [x] Burn Non-Fungibles
+    * [x] Burn Non-Fungible Editions
+    * [x] Burn Fungibles
 
 - `Create`
     * [x] Creation of Programmable Non-Fungible tokens (pNFT)

@@ -55,7 +55,7 @@ mod standard_transfer {
             amount: 1,
         };
 
-        let params = TransferFromParams {
+        let params = TransferParams {
             context: &mut context,
             authority,
             source_owner: &authority.pubkey(),
@@ -66,7 +66,7 @@ mod standard_transfer {
             args,
         };
 
-        da.transfer_from(params).await.unwrap();
+        da.transfer(params).await.unwrap();
 
         let token_account = spl_token::state::Account::unpack(
             &context
@@ -113,7 +113,7 @@ mod standard_transfer {
             amount,
         };
 
-        let params = TransferFromParams {
+        let params = TransferParams {
             context: &mut context,
             authority,
             source_owner: &authority.pubkey(),
@@ -124,7 +124,7 @@ mod standard_transfer {
             args,
         };
 
-        da.transfer_from(params).await.unwrap();
+        da.transfer(params).await.unwrap();
 
         let token_account = spl_token::state::Account::unpack(
             &context
@@ -171,7 +171,7 @@ mod standard_transfer {
             amount: transfer_amount,
         };
 
-        let params = TransferFromParams {
+        let params = TransferParams {
             context: &mut context,
             authority,
             source_owner: &authority.pubkey(),
@@ -182,7 +182,7 @@ mod standard_transfer {
             args,
         };
 
-        da.transfer_from(params).await.unwrap();
+        da.transfer(params).await.unwrap();
 
         let token_account = spl_token::state::Account::unpack(
             &context
@@ -256,7 +256,7 @@ mod standard_transfer {
 
         let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
 
-        let params = TransferFromParams {
+        let params = TransferParams {
             context: &mut context,
             authority: &delegate,
             source_owner,
@@ -267,7 +267,7 @@ mod standard_transfer {
             args: args.clone(),
         };
 
-        da.transfer_from(params).await.unwrap();
+        da.transfer(params).await.unwrap();
 
         let token_account = spl_token::state::Account::unpack(
             &context
@@ -347,7 +347,7 @@ mod standard_transfer {
         // Associated token account already exists so we pass it in,
         // otherwise we will get an "IllegalOwner" errror.
 
-        let params = TransferFromParams {
+        let params = TransferParams {
             context: &mut context,
             authority: &fake_delegate,
             source_owner,
@@ -358,7 +358,7 @@ mod standard_transfer {
             args,
         };
 
-        let err = da.transfer_from(params).await.unwrap_err();
+        let err = da.transfer(params).await.unwrap_err();
 
         // Owner does not match.
         assert_custom_error_ix!(1, err, MetadataError::InvalidAuthorityType);
@@ -436,7 +436,7 @@ mod auth_rules_transfer {
             amount: transfer_amount,
         };
 
-        let params = TransferFromParams {
+        let params = TransferParams {
             context: &mut context,
             authority,
             source_owner: &authority.pubkey(),
@@ -447,7 +447,7 @@ mod auth_rules_transfer {
             args: args.clone(),
         };
 
-        let err = nft.transfer_from(params).await.unwrap_err();
+        let err = nft.transfer(params).await.unwrap_err();
 
         assert_custom_error_ix!(
             2,
@@ -461,7 +461,7 @@ mod auth_rules_transfer {
 
         let authority = &Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
 
-        let params = TransferFromParams {
+        let params = TransferParams {
             context: &mut context,
             authority,
             source_owner: &authority.pubkey(),
@@ -472,7 +472,7 @@ mod auth_rules_transfer {
             args,
         };
 
-        nft.transfer_from(params).await.unwrap();
+        nft.transfer(params).await.unwrap();
 
         let destination_token =
             get_associated_token_address(&destination_owner, &nft.mint.pubkey());
@@ -543,7 +543,7 @@ mod auth_rules_transfer {
             amount: transfer_amount,
         };
 
-        let params = TransferFromParams {
+        let params = TransferParams {
             context: &mut context,
             authority: &authority,
             source_owner: &authority.pubkey(),
@@ -554,7 +554,7 @@ mod auth_rules_transfer {
             args: args.clone(),
         };
 
-        nft.transfer_from(params).await.unwrap();
+        nft.transfer(params).await.unwrap();
 
         let destination_token =
             get_associated_token_address(&rooster_manager.pda(), &nft.mint.pubkey());
@@ -591,7 +591,7 @@ mod auth_rules_transfer {
                 authority.pubkey(),
                 nft.mint.pubkey(),
                 nft.metadata,
-                nft.master_edition.unwrap(),
+                nft.edition.unwrap(),
                 rule_set,
                 payload,
             )
@@ -636,6 +636,8 @@ mod auth_rules_transfer {
         )
         .await
         .unwrap();
+
+        let original_token = nft.token.unwrap();
 
         let transfer_amount = 1;
 
@@ -686,7 +688,7 @@ mod auth_rules_transfer {
             amount: transfer_amount,
         };
 
-        let params = TransferFromParams {
+        let params = TransferParams {
             context: &mut context,
             authority: &delegate,
             source_owner: &authority.pubkey(),
@@ -697,7 +699,7 @@ mod auth_rules_transfer {
             args: args.clone(),
         };
 
-        nft.transfer_from(params).await.unwrap();
+        nft.transfer(params).await.unwrap();
 
         let rooster_ata = get_associated_token_address(&rooster_manager.pda(), &nft.mint.pubkey());
         let rooster_ata_account = spl_token::state::Account::unpack(
@@ -724,7 +726,7 @@ mod auth_rules_transfer {
                 &delegate,
                 nft.mint.pubkey(),
                 nft.metadata,
-                nft.master_edition.unwrap(),
+                nft.edition.unwrap(),
                 Some(rule_set),
                 rooster_delegate_args,
             )
@@ -749,19 +751,18 @@ mod auth_rules_transfer {
             amount: transfer_amount,
         };
 
-        let params = TransferToParams {
+        let params = TransferParams {
             context: &mut context,
             authority: &delegate,
             source_owner: &rooster_manager.pda(),
-            source_token: &rooster_ata,
             destination_owner: authority.pubkey(),
-            destination_token: Some(nft.token.unwrap()),
+            destination_token: Some(original_token),
             authorization_rules: Some(rule_set),
             payer: &delegate,
             args: args.clone(),
         };
 
-        nft.transfer_to(params).await.unwrap();
+        nft.transfer(params).await.unwrap();
 
         let authority_ata = get_associated_token_address(&authority.pubkey(), &nft.mint.pubkey());
         let authority_ata_account = spl_token::state::Account::unpack(
@@ -864,7 +865,7 @@ mod auth_rules_transfer {
             amount: transfer_amount,
         };
 
-        let params = TransferFromParams {
+        let params = TransferParams {
             context: &mut context,
             authority: &delegate,
             source_owner: &authority.pubkey(),
@@ -875,7 +876,7 @@ mod auth_rules_transfer {
             args: args.clone(),
         };
         nft.metadata = nft_naughty.metadata;
-        let err = nft.transfer_from(params).await.unwrap_err();
+        let err = nft.transfer(params).await.unwrap_err();
         assert_custom_error_ix!(2, err, MetadataError::MintMismatch);
     }
 
@@ -906,6 +907,7 @@ mod auth_rules_transfer {
         .await
         .unwrap();
 
+        let original_token = nft.token.unwrap();
         let transfer_amount = 1;
 
         // Create a sale delegate
@@ -954,7 +956,7 @@ mod auth_rules_transfer {
             amount: transfer_amount,
         };
 
-        let params = TransferFromParams {
+        let params = TransferParams {
             context: &mut context,
             authority: &delegate,
             source_owner: &authority.pubkey(),
@@ -965,7 +967,7 @@ mod auth_rules_transfer {
             args: args.clone(),
         };
 
-        nft.transfer_from(params).await.unwrap();
+        nft.transfer(params).await.unwrap();
 
         let rooster_ata = get_associated_token_address(&rooster_manager.pda(), &nft.mint.pubkey());
         let rooster_ata_account = spl_token::state::Account::unpack(
@@ -992,7 +994,7 @@ mod auth_rules_transfer {
                 &delegate,
                 nft.mint.pubkey(),
                 nft.metadata,
-                nft.master_edition.unwrap(),
+                nft.edition.unwrap(),
                 Some(rule_set),
                 rooster_delegate_args,
             )
@@ -1017,19 +1019,18 @@ mod auth_rules_transfer {
             amount: transfer_amount,
         };
 
-        let params = TransferToParams {
+        let params = TransferParams {
             context: &mut context,
             authority: &delegate,
             source_owner: &rooster_manager.pda(),
-            source_token: &rooster_ata,
             destination_owner: authority.pubkey(),
-            destination_token: Some(nft.token.unwrap()),
+            destination_token: Some(original_token),
             authorization_rules: Some(rule_set),
             payer: &delegate,
             args: args.clone(),
         };
 
-        nft.transfer_to(params).await.unwrap();
+        nft.transfer(params).await.unwrap();
 
         let authority_ata = get_associated_token_address(&authority.pubkey(), &nft.mint.pubkey());
         let authority_ata_account = spl_token::state::Account::unpack(
@@ -1080,7 +1081,7 @@ mod auth_rules_transfer {
             amount: transfer_amount,
         };
 
-        let params = TransferFromParams {
+        let params = TransferParams {
             context: &mut context,
             authority,
             source_owner: &authority.pubkey(),
@@ -1092,7 +1093,7 @@ mod auth_rules_transfer {
         };
 
         // Transfer should succeed because no rule set is present on the NFT.
-        nft.transfer_from(params).await.unwrap();
+        nft.transfer(params).await.unwrap();
     }
 
     #[tokio::test]
@@ -1168,7 +1169,7 @@ mod auth_rules_transfer {
             amount: transfer_amount,
         };
 
-        let params = TransferFromParams {
+        let params = TransferParams {
             context: &mut context,
             authority: &delegate,
             source_owner: &authority.pubkey(),
@@ -1179,7 +1180,7 @@ mod auth_rules_transfer {
             args: args.clone(),
         };
 
-        let error = nft.transfer_from(params).await.unwrap_err();
+        let error = nft.transfer(params).await.unwrap_err();
 
         assert_custom_error_ix!(2, error, MetadataError::InvalidLockedTransferAddress);
 
@@ -1206,7 +1207,7 @@ mod auth_rules_transfer {
             amount: transfer_amount,
         };
 
-        let params = TransferFromParams {
+        let params = TransferParams {
             context: &mut context,
             authority: &delegate,
             source_owner: &authority.pubkey(),
@@ -1217,7 +1218,7 @@ mod auth_rules_transfer {
             args: args.clone(),
         };
 
-        nft.transfer_from(params).await.unwrap();
+        nft.transfer(params).await.unwrap();
 
         let rooster_ata = get_associated_token_address(&rooster_manager.pda(), &nft.mint.pubkey());
         let rooster_ata_account = spl_token::state::Account::unpack(
@@ -1351,7 +1352,7 @@ mod auth_rules_transfer {
     }
 
     #[tokio::test]
-    async fn destination_token_matches_owner() {
+    async fn destination_token_matches_destination_owner() {
         // We ensure that the destination owner is linked to the destination token account
         // so that people cannot get around auth rules by passing in an owner that is in an allowlist
         // but doesn't actually correspond to the token account.
@@ -1429,7 +1430,7 @@ mod auth_rules_transfer {
         // We transfer to the ATA of the actual owner,
         // but pass in a Token Metadata PDA as the destination owner as that program
         // is in the allowlist.
-        let params = TransferFromParams {
+        let params = TransferParams {
             context: &mut context,
             authority: &authority,
             source_owner: &authority.pubkey(),
@@ -1440,7 +1441,7 @@ mod auth_rules_transfer {
             args: args.clone(),
         };
 
-        let err = nft.transfer_from(params).await.unwrap_err();
+        let err = nft.transfer(params).await.unwrap_err();
 
         assert_custom_error_ix!(1, err, MetadataError::InvalidOwner);
     }

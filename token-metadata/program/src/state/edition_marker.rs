@@ -91,6 +91,16 @@ impl EditionMarker {
         self.ledger[index] |= mask;
         Ok(())
     }
+
+    pub fn save(self, account_info: &AccountInfo) -> ProgramResult {
+        // Clear all data to ensure it is serialized cleanly.
+        let mut edition_marker_data = account_info.try_borrow_mut_data()?;
+        edition_marker_data[0..].fill(0);
+
+        borsh::BorshSerialize::serialize(&self, &mut *edition_marker_data)?;
+
+        Ok(())
+    }
 }
 
 #[cfg(test)]

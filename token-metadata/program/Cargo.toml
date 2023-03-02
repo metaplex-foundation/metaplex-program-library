@@ -35,6 +35,7 @@ rooster = { git = "https://github.com/metaplex-foundation/rooster" }
 solana-sdk = "1.14"
 solana-program-test = "1.14"
 serde = { version = "1.0.147", features = ["derive"]}
+async-trait = "0.1.64"
 
 [lib]
 crate-type = ["cdylib", "lib"]
