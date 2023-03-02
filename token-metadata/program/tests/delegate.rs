@@ -213,6 +213,71 @@ mod delegate {
     }
 
     #[tokio::test]
+    async fn set_utility_delegate_programmable_nonfungible() {
+        let mut context = program_test().start_with_context().await;
+
+        // asset
+
+        let mut asset = DigitalAsset::default();
+        asset
+            .create_and_mint(
+                &mut context,
+                TokenStandard::ProgrammableNonFungible,
+                None,
+                None,
+                1,
+            )
+            .await
+            .unwrap();
+
+        assert!(asset.token.is_some());
+
+        // delegates the asset for transfer
+
+        let user = Keypair::new();
+        let user_pubkey = user.pubkey();
+        let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+
+        asset
+            .delegate(
+                &mut context,
+                payer,
+                user_pubkey,
+                DelegateArgs::UtilityV1 {
+                    amount: 1,
+                    authorization_data: None,
+                },
+            )
+            .await
+            .unwrap();
+
+        // asserts
+
+        let (pda_key, _) = find_token_record_account(&asset.mint.pubkey(), &asset.token.unwrap());
+
+        let pda = get_account(&mut context, &pda_key).await;
+        let token_record: TokenRecord = try_from_slice_unchecked(&pda.data).unwrap();
+
+        assert_eq!(token_record.key, Key::TokenRecord);
+        assert_eq!(token_record.delegate, Some(user_pubkey));
+        assert_eq!(token_record.delegate_role, Some(TokenDelegateRole::Utility));
+
+        if let Some(token) = asset.token {
+            let account = get_account(&mut context, &token).await;
+            let token_account = Account::unpack(&account.data).unwrap();
+
+            assert!(token_account.is_frozen());
+            assert_eq!(token_account.delegate, COption::Some(user_pubkey));
+            assert_eq!(token_account.delegated_amount, 1);
+
+            // Utilty Delegate should also have the Close Authority so it can burn.
+            assert_eq!(token_account.close_authority, COption::Some(user_pubkey));
+        } else {
+            panic!("Missing token account");
+        }
+    }
+
+    #[tokio::test]
     async fn cannot_set_sale_delegate_nonfungible() {
         let mut context = program_test().start_with_context().await;
 

@@ -3729,13 +3729,142 @@ createErrorFromNameLookup.set(
 );
 
 /**
+ * InvalidAmount: 'Invalid token amount for this operation or token standard'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidAmountError extends Error {
+  readonly code: number = 0xae;
+  readonly name: string = 'InvalidAmount';
+  constructor() {
+    super('Invalid token amount for this operation or token standard');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidAmountError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xae, () => new InvalidAmountError());
+createErrorFromNameLookup.set('InvalidAmount', () => new InvalidAmountError());
+
+/**
+ * MissingMasterEditionMintAccount: 'Missing master edition mint account'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MissingMasterEditionMintAccountError extends Error {
+  readonly code: number = 0xaf;
+  readonly name: string = 'MissingMasterEditionMintAccount';
+  constructor() {
+    super('Missing master edition mint account');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MissingMasterEditionMintAccountError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xaf, () => new MissingMasterEditionMintAccountError());
+createErrorFromNameLookup.set(
+  'MissingMasterEditionMintAccount',
+  () => new MissingMasterEditionMintAccountError(),
+);
+
+/**
+ * MissingMasterEditionTokenAccount: 'Missing master edition token account'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MissingMasterEditionTokenAccountError extends Error {
+  readonly code: number = 0xb0;
+  readonly name: string = 'MissingMasterEditionTokenAccount';
+  constructor() {
+    super('Missing master edition token account');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MissingMasterEditionTokenAccountError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xb0, () => new MissingMasterEditionTokenAccountError());
+createErrorFromNameLookup.set(
+  'MissingMasterEditionTokenAccount',
+  () => new MissingMasterEditionTokenAccountError(),
+);
+
+/**
+ * MissingEditionMarkerAccount: 'Missing edition marker account'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MissingEditionMarkerAccountError extends Error {
+  readonly code: number = 0xb1;
+  readonly name: string = 'MissingEditionMarkerAccount';
+  constructor() {
+    super('Missing edition marker account');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MissingEditionMarkerAccountError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xb1, () => new MissingEditionMarkerAccountError());
+createErrorFromNameLookup.set(
+  'MissingEditionMarkerAccount',
+  () => new MissingEditionMarkerAccountError(),
+);
+
+/**
+ * CannotBurnWithDelegate: 'Cannot burn while persistent delegate is set'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class CannotBurnWithDelegateError extends Error {
+  readonly code: number = 0xb2;
+  readonly name: string = 'CannotBurnWithDelegate';
+  constructor() {
+    super('Cannot burn while persistent delegate is set');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, CannotBurnWithDelegateError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xb2, () => new CannotBurnWithDelegateError());
+createErrorFromNameLookup.set('CannotBurnWithDelegate', () => new CannotBurnWithDelegateError());
+
+/**
+ * MissingEdition: 'Missing edition account'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MissingEditionError extends Error {
+  readonly code: number = 0xb3;
+  readonly name: string = 'MissingEdition';
+  constructor() {
+    super('Missing edition account');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MissingEditionError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xb3, () => new MissingEditionError());
+createErrorFromNameLookup.set('MissingEdition', () => new MissingEditionError());
+
+/**
  * InvalidAssociatedTokenAccountProgram: 'Invalid Associated Token Account Program'
  *
  * @category Errors
  * @category generated
  */
 export class InvalidAssociatedTokenAccountProgramError extends Error {
-  readonly code: number = 0xae;
+  readonly code: number = 0xb4;
   readonly name: string = 'InvalidAssociatedTokenAccountProgram';
   constructor() {
     super('Invalid Associated Token Account Program');
@@ -3745,7 +3874,7 @@ export class InvalidAssociatedTokenAccountProgramError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0xae, () => new InvalidAssociatedTokenAccountProgramError());
+createErrorFromCodeLookup.set(0xb4, () => new InvalidAssociatedTokenAccountProgramError());
 createErrorFromNameLookup.set(
   'InvalidAssociatedTokenAccountProgram',
   () => new InvalidAssociatedTokenAccountProgramError(),
@@ -3758,7 +3887,7 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class InvalidInstructionsSysvarError extends Error {
-  readonly code: number = 0xaf;
+  readonly code: number = 0xb5;
   readonly name: string = 'InvalidInstructionsSysvar';
   constructor() {
     super('Invalid InstructionsSysvar');
@@ -3768,11 +3897,31 @@ export class InvalidInstructionsSysvarError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0xaf, () => new InvalidInstructionsSysvarError());
+createErrorFromCodeLookup.set(0xb5, () => new InvalidInstructionsSysvarError());
 createErrorFromNameLookup.set(
   'InvalidInstructionsSysvar',
   () => new InvalidInstructionsSysvarError(),
 );
+
+/**
+ * InvalidParentAccounts: 'Invalid or Unneeded parent accounts'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidParentAccountsError extends Error {
+  readonly code: number = 0xb6;
+  readonly name: string = 'InvalidParentAccounts';
+  constructor() {
+    super('Invalid or Unneeded parent accounts');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidParentAccountsError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xb6, () => new InvalidParentAccountsError());
+createErrorFromNameLookup.set('InvalidParentAccounts', () => new InvalidParentAccountsError());
 
 /**
  * InvalidUpdateArgs: 'Authority cannot apply all update args'
@@ -3781,7 +3930,7 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class InvalidUpdateArgsError extends Error {
-  readonly code: number = 0xb0;
+  readonly code: number = 0xb7;
   readonly name: string = 'InvalidUpdateArgs';
   constructor() {
     super('Authority cannot apply all update args');
@@ -3791,8 +3940,31 @@ export class InvalidUpdateArgsError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0xb0, () => new InvalidUpdateArgsError());
+createErrorFromCodeLookup.set(0xb7, () => new InvalidUpdateArgsError());
 createErrorFromNameLookup.set('InvalidUpdateArgs', () => new InvalidUpdateArgsError());
+
+/**
+ * InsufficientTokenBalance: 'Token account does not have enough tokens'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InsufficientTokenBalanceError extends Error {
+  readonly code: number = 0xb8;
+  readonly name: string = 'InsufficientTokenBalance';
+  constructor() {
+    super('Token account does not have enough tokens');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InsufficientTokenBalanceError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xb8, () => new InsufficientTokenBalanceError());
+createErrorFromNameLookup.set(
+  'InsufficientTokenBalance',
+  () => new InsufficientTokenBalanceError(),
+);
 
 /**
  * Attempts to resolve a custom program error from the provided error code.

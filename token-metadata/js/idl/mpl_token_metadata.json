@@ -1,5 +1,5 @@
 {
-  "version": "1.8.3",
+  "version": "1.8.5",
   "name": "mpl_token_metadata",
   "instructions": [
     {
@@ -2346,40 +2346,10 @@
       "name": "Burn",
       "accounts": [
         {
-          "name": "metadata",
-          "isMut": true,
-          "isSigner": false,
-          "desc": "Metadata (pda of ['metadata', program id, mint id])"
-        },
-        {
-          "name": "owner",
+          "name": "authority",
           "isMut": true,
           "isSigner": true,
-          "desc": "Asset owner"
-        },
-        {
-          "name": "mint",
-          "isMut": true,
-          "isSigner": false,
-          "desc": "Mint of token asset"
-        },
-        {
-          "name": "tokenAccount",
-          "isMut": true,
-          "isSigner": false,
-          "desc": "Token account to close"
-        },
-        {
-          "name": "masterEditionAccount",
-          "isMut": true,
-          "isSigner": false,
-          "desc": "MasterEdition of the asset"
-        },
-        {
-          "name": "splTokenProgram",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "SPL Token Program"
+          "desc": "Asset owner or Utility delegate"
         },
         {
           "name": "collectionMetadata",
@@ -2389,18 +2359,82 @@
           "optional": true
         },
         {
-          "name": "authorizationRules",
-          "isMut": false,
+          "name": "metadata",
+          "isMut": true,
           "isSigner": false,
-          "desc": "Token Authorization Rules account",
+          "desc": "Metadata (pda of ['metadata', program id, mint id])"
+        },
+        {
+          "name": "edition",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Edition of the asset",
           "optional": true
         },
         {
-          "name": "authorizationRulesProgram",
+          "name": "mint",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Mint of token asset"
+        },
+        {
+          "name": "token",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Token account to close"
+        },
+        {
+          "name": "masterEdition",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Master edition account",
+          "optional": true
+        },
+        {
+          "name": "masterEditionMint",
           "isMut": false,
           "isSigner": false,
-          "desc": "Token Authorization Rules Program",
+          "desc": "Master edition mint of the asset",
           "optional": true
+        },
+        {
+          "name": "masterEditionToken",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Master edition token account",
+          "optional": true
+        },
+        {
+          "name": "editionMarker",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Edition marker account",
+          "optional": true
+        },
+        {
+          "name": "tokenRecord",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Token record account",
+          "optional": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "System program"
+        },
+        {
+          "name": "sysvarInstructions",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Instructions sysvar account"
+        },
+        {
+          "name": "splTokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "SPL Token Program"
         }
       ],
       "args": [
@@ -2514,7 +2548,7 @@
         },
         {
           "name": "masterEdition",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false,
           "desc": "Master Edition account",
           "optional": true
@@ -4493,12 +4527,8 @@
             "name": "V1",
             "fields": [
               {
-                "name": "authorization_data",
-                "type": {
-                  "option": {
-                    "defined": "AuthorizationData"
-                  }
-                }
+                "name": "amount",
+                "type": "u64"
               }
             ]
           }
@@ -4702,6 +4732,9 @@
           },
           {
             "name": "ProgrammableConfigV1"
+          },
+          {
+            "name": "MigrationV1"
           }
         ]
       }
@@ -6248,18 +6281,58 @@
     },
     {
       "code": 174,
+      "name": "InvalidAmount",
+      "msg": "Invalid token amount for this operation or token standard"
+    },
+    {
+      "code": 175,
+      "name": "MissingMasterEditionMintAccount",
+      "msg": "Missing master edition mint account"
+    },
+    {
+      "code": 176,
+      "name": "MissingMasterEditionTokenAccount",
+      "msg": "Missing master edition token account"
+    },
+    {
+      "code": 177,
+      "name": "MissingEditionMarkerAccount",
+      "msg": "Missing edition marker account"
+    },
+    {
+      "code": 178,
+      "name": "CannotBurnWithDelegate",
+      "msg": "Cannot burn while persistent delegate is set"
+    },
+    {
+      "code": 179,
+      "name": "MissingEdition",
+      "msg": "Missing edition account"
+    },
+    {
+      "code": 180,
       "name": "InvalidAssociatedTokenAccountProgram",
       "msg": "Invalid Associated Token Account Program"
     },
     {
-      "code": 175,
+      "code": 181,
       "name": "InvalidInstructionsSysvar",
       "msg": "Invalid InstructionsSysvar"
     },
     {
-      "code": 176,
+      "code": 182,
+      "name": "InvalidParentAccounts",
+      "msg": "Invalid or Unneeded parent accounts"
+    },
+    {
+      "code": 183,
       "name": "InvalidUpdateArgs",
       "msg": "Authority cannot apply all update args"
+    },
+    {
+      "code": 184,
+      "name": "InsufficientTokenBalance",
+      "msg": "Token account does not have enough tokens"
     }
   ],
   "metadata": {

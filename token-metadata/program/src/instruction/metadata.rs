@@ -596,7 +596,11 @@ impl InstructionBuilder for super::builders::Mint {
             AccountMeta::new(self.token, false),
             AccountMeta::new_readonly(self.token_owner.unwrap_or(crate::ID), false),
             AccountMeta::new_readonly(self.metadata, false),
-            AccountMeta::new_readonly(self.master_edition.unwrap_or(crate::ID), false),
+            if let Some(master_edition) = self.master_edition {
+                AccountMeta::new(master_edition, false)
+            } else {
+                AccountMeta::new_readonly(crate::ID, false)
+            },
             if let Some(token_record) = self.token_record {
                 AccountMeta::new(token_record, false)
             } else {
@@ -643,7 +647,7 @@ impl InstructionBuilder for super::builders::Mint {
 ///   6. `[optional]` Edition of token asset
 ///   7. `[optional, writable]` Owner token record account
 ///   8. `[optional, writable]` Destination token record account
-///   9. `[signer] Transfer authority (token owner or delegate)
+///   9. `[signer]` Transfer authority (token owner or delegate)
 ///   10. `[signer, writable]` Payer
 ///   11. `[]` System Program
 ///   12. `[]` Instructions sysvar account

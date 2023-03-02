@@ -453,6 +453,7 @@ mod update_metadata_account_v2 {
             )
             .await
             .unwrap();
+
         let test_collection = Metadata::new();
         test_collection
             .create_v2(
@@ -619,7 +620,7 @@ mod update_metadata_account_v2 {
     }
 
     #[tokio::test]
-    async fn can_set_unverified_data_to_none() {
+    async fn can_set_unverified_collection_data_to_none() {
         let mut context = program_test().start_with_context().await;
 
         let test_collection = Metadata::new();
@@ -1038,4 +1039,81 @@ async fn fail_cannot_unverify_another_creator_by_removing_from_array() {
         .unwrap_err();
 
     assert_custom_error!(result, MetadataError::CannotUnverifyAnotherCreator);
+}
+
+#[tokio::test]
+async fn fail_cannot_unverify_creators_by_setting_to_none() {
+    let mut context = program_test().start_with_context().await;
+    let creators = vec![Creator {
+        address: context.payer.pubkey(),
+        verified: true,
+        share: 100,
+    }];
+
+    // Create metadata with one verified creator.
+    let test_metadata = Metadata::new();
+    test_metadata
+        .create_v2(
+            &mut context,
+            "Test".to_string(),
+            "TST".to_string(),
+            "uri".to_string(),
+            Some(creators),
+            10,
+            true,
+            None,
+            None,
+        )
+        .await
+        .unwrap();
+
+    // Update authority.
+    let new_update_authority = Keypair::new();
+    let tx = Transaction::new_signed_with_payer(
+        &[instruction::update_metadata_accounts_v2(
+            id(),
+            test_metadata.pubkey,
+            context.payer.pubkey(),
+            Some(new_update_authority.pubkey()),
+            None,
+            None,
+            None,
+        )],
+        Some(&context.payer.pubkey()),
+        &[&context.payer],
+        context.last_blockhash,
+    );
+    context.banks_client.process_transaction(tx).await.unwrap();
+
+    // Try to update metadata by setting creators to None.
+    let tx = Transaction::new_signed_with_payer(
+        &[instruction::update_metadata_accounts_v2(
+            id(),
+            test_metadata.pubkey,
+            new_update_authority.pubkey(),
+            None,
+            Some(DataV2 {
+                name: "Test".to_string(),
+                symbol: "TST".to_string(),
+                uri: "uri".to_string(),
+                creators: None,
+                seller_fee_basis_points: 10,
+                collection: None,
+                uses: None,
+            }),
+            None,
+            None,
+        )],
+        Some(&context.payer.pubkey()),
+        &[&context.payer, &new_update_authority],
+        context.last_blockhash,
+    );
+
+    let result = context
+        .banks_client
+        .process_transaction(tx)
+        .await
+        .unwrap_err();
+
+    assert_custom_error!(result, MetadataError::CannotRemoveVerifiedCreator);
 }
