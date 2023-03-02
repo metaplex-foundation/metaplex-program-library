@@ -248,6 +248,265 @@ mod verify_collection {
     use super::*;
 
     #[tokio::test]
+    async fn metadata_wrong_owner() {
+        let mut context = program_test().start_with_context().await;
+
+        let mut test_items = create_mint_verify_collection_check(
+            &mut context,
+            DEFAULT_COLLECTION_DETAILS,
+            TokenStandard::ProgrammableNonFungible,
+        )
+        .await;
+
+        // Unverify.
+        let args = VerifyArgs::CollectionV1;
+        let payer = context.payer.dirty_clone();
+        let metadata_wrong_owner = Keypair::new().pubkey();
+        let err = test_items
+            .da
+            .unverify(
+                &mut context,
+                payer,
+                args,
+                Some(metadata_wrong_owner),
+                None,
+                Some(test_items.collection_parent_da.mint.pubkey()),
+                Some(test_items.collection_parent_da.metadata),
+            )
+            .await
+            .unwrap_err();
+
+        assert_custom_error!(err, MetadataError::IncorrectOwner);
+
+        let verified_collection = Some(Collection {
+            key: test_items.collection_parent_da.mint.pubkey(),
+            verified: true,
+        });
+
+        test_items
+            .da
+            .assert_item_collection_matches_on_chain(&mut context, &verified_collection)
+            .await;
+
+        // Check collection details.  If sized collection, size should be updated.
+        let verified_collection_details = DEFAULT_COLLECTION_DETAILS.map(|details| match details {
+            CollectionDetails::V1 { size } => CollectionDetails::V1 { size: size + 1 },
+        });
+
+        test_items
+            .collection_parent_da
+            .assert_collection_details_matches_on_chain(&mut context, &verified_collection_details)
+            .await;
+    }
+
+    #[tokio::test]
+    async fn collection_mint_info_wrong_owner() {
+        let mut context = program_test().start_with_context().await;
+
+        let mut test_items = create_mint_verify_collection_check(
+            &mut context,
+            DEFAULT_COLLECTION_DETAILS,
+            TokenStandard::ProgrammableNonFungible,
+        )
+        .await;
+
+        // Unverify.
+        let args = VerifyArgs::CollectionV1;
+        let payer = context.payer.dirty_clone();
+        let collection_mint_info_wrong_owner = Keypair::new().pubkey();
+        let err = test_items
+            .da
+            .unverify(
+                &mut context,
+                payer,
+                args,
+                None,
+                None,
+                Some(collection_mint_info_wrong_owner),
+                Some(test_items.collection_parent_da.metadata),
+            )
+            .await
+            .unwrap_err();
+
+        assert_custom_error!(err, MetadataError::IncorrectOwner);
+
+        let verified_collection = Some(Collection {
+            key: test_items.collection_parent_da.mint.pubkey(),
+            verified: true,
+        });
+
+        test_items
+            .da
+            .assert_item_collection_matches_on_chain(&mut context, &verified_collection)
+            .await;
+
+        // Check collection details.  If sized collection, size should be updated.
+        let verified_collection_details = DEFAULT_COLLECTION_DETAILS.map(|details| match details {
+            CollectionDetails::V1 { size } => CollectionDetails::V1 { size: size + 1 },
+        });
+
+        test_items
+            .collection_parent_da
+            .assert_collection_details_matches_on_chain(&mut context, &verified_collection_details)
+            .await;
+    }
+
+    #[tokio::test]
+    async fn collection_metadata_info_wrong_owner() {
+        let mut context = program_test().start_with_context().await;
+
+        let mut test_items = create_mint_verify_collection_check(
+            &mut context,
+            DEFAULT_COLLECTION_DETAILS,
+            TokenStandard::ProgrammableNonFungible,
+        )
+        .await;
+
+        // Unverify.
+        let args = VerifyArgs::CollectionV1;
+        let payer = context.payer.dirty_clone();
+        let collection_metadata_info_wrong_owner = Keypair::new().pubkey();
+        let err = test_items
+            .da
+            .unverify(
+                &mut context,
+                payer,
+                args,
+                None,
+                None,
+                Some(test_items.collection_parent_da.mint.pubkey()),
+                Some(collection_metadata_info_wrong_owner),
+            )
+            .await
+            .unwrap_err();
+
+        // In this case it will be MintMismatch because it fails a derivation check.
+        assert_custom_error!(err, MetadataError::MintMismatch);
+
+        let verified_collection = Some(Collection {
+            key: test_items.collection_parent_da.mint.pubkey(),
+            verified: true,
+        });
+
+        test_items
+            .da
+            .assert_item_collection_matches_on_chain(&mut context, &verified_collection)
+            .await;
+
+        // Check collection details.  If sized collection, size should be updated.
+        let verified_collection_details = DEFAULT_COLLECTION_DETAILS.map(|details| match details {
+            CollectionDetails::V1 { size } => CollectionDetails::V1 { size: size + 1 },
+        });
+
+        test_items
+            .collection_parent_da
+            .assert_collection_details_matches_on_chain(&mut context, &verified_collection_details)
+            .await;
+    }
+
+    #[tokio::test]
+    async fn missing_collection_mint_info() {
+        let mut context = program_test().start_with_context().await;
+
+        let mut test_items = create_mint_verify_collection_check(
+            &mut context,
+            DEFAULT_COLLECTION_DETAILS,
+            TokenStandard::ProgrammableNonFungible,
+        )
+        .await;
+
+        // Unverify.
+        let args = VerifyArgs::CollectionV1;
+        let payer = context.payer.dirty_clone();
+        let err = test_items
+            .da
+            .unverify(
+                &mut context,
+                payer,
+                args,
+                None,
+                None,
+                None,
+                Some(test_items.collection_parent_da.metadata),
+            )
+            .await
+            .unwrap_err();
+
+        assert_custom_error!(err, MetadataError::MissingCollectionMint);
+
+        let verified_collection = Some(Collection {
+            key: test_items.collection_parent_da.mint.pubkey(),
+            verified: true,
+        });
+
+        test_items
+            .da
+            .assert_item_collection_matches_on_chain(&mut context, &verified_collection)
+            .await;
+
+        // Check collection details.  If sized collection, size should be updated.
+        let verified_collection_details = DEFAULT_COLLECTION_DETAILS.map(|details| match details {
+            CollectionDetails::V1 { size } => CollectionDetails::V1 { size: size + 1 },
+        });
+
+        test_items
+            .collection_parent_da
+            .assert_collection_details_matches_on_chain(&mut context, &verified_collection_details)
+            .await;
+    }
+
+    #[tokio::test]
+    async fn missing_collection_metadata_info() {
+        let mut context = program_test().start_with_context().await;
+
+        let mut test_items = create_mint_verify_collection_check(
+            &mut context,
+            DEFAULT_COLLECTION_DETAILS,
+            TokenStandard::ProgrammableNonFungible,
+        )
+        .await;
+
+        // Unverify.
+        let args = VerifyArgs::CollectionV1;
+        let payer = context.payer.dirty_clone();
+        let err = test_items
+            .da
+            .unverify(
+                &mut context,
+                payer,
+                args,
+                None,
+                None,
+                Some(test_items.collection_parent_da.mint.pubkey()),
+                None,
+            )
+            .await
+            .unwrap_err();
+
+        assert_custom_error!(err, MetadataError::MissingCollectionMetadata);
+
+        let verified_collection = Some(Collection {
+            key: test_items.collection_parent_da.mint.pubkey(),
+            verified: true,
+        });
+
+        test_items
+            .da
+            .assert_item_collection_matches_on_chain(&mut context, &verified_collection)
+            .await;
+
+        // Check collection details.  If sized collection, size should be updated.
+        let verified_collection_details = DEFAULT_COLLECTION_DETAILS.map(|details| match details {
+            CollectionDetails::V1 { size } => CollectionDetails::V1 { size: size + 1 },
+        });
+
+        test_items
+            .collection_parent_da
+            .assert_collection_details_matches_on_chain(&mut context, &verified_collection_details)
+            .await;
+    }
+
+    #[tokio::test]
     async fn pass_item_pnft_sized_collection_update_authority_collection_new_handler() {
         pass_collection_update_authority_collection_new_handler(
             DEFAULT_COLLECTION_DETAILS,
