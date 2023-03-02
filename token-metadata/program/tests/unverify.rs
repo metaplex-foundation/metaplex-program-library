@@ -278,24 +278,18 @@ mod verify_collection {
 
         assert_custom_error!(err, MetadataError::IncorrectOwner);
 
-        let verified_collection = Some(Collection {
-            key: test_items.collection_parent_da.mint.pubkey(),
-            verified: true,
-        });
-
         test_items
             .da
-            .assert_item_collection_matches_on_chain(&mut context, &verified_collection)
+            .assert_item_collection_matches_on_chain(&mut context, &test_items.verified_collection)
             .await;
 
         // Check collection details.  If sized collection, size should be updated.
-        let verified_collection_details = DEFAULT_COLLECTION_DETAILS.map(|details| match details {
-            CollectionDetails::V1 { size } => CollectionDetails::V1 { size: size + 1 },
-        });
-
         test_items
             .collection_parent_da
-            .assert_collection_details_matches_on_chain(&mut context, &verified_collection_details)
+            .assert_collection_details_matches_on_chain(
+                &mut context,
+                &test_items.verified_collection_details,
+            )
             .await;
     }
 
@@ -330,24 +324,18 @@ mod verify_collection {
 
         assert_custom_error!(err, MetadataError::IncorrectOwner);
 
-        let verified_collection = Some(Collection {
-            key: test_items.collection_parent_da.mint.pubkey(),
-            verified: true,
-        });
-
         test_items
             .da
-            .assert_item_collection_matches_on_chain(&mut context, &verified_collection)
+            .assert_item_collection_matches_on_chain(&mut context, &test_items.verified_collection)
             .await;
 
         // Check collection details.  If sized collection, size should be updated.
-        let verified_collection_details = DEFAULT_COLLECTION_DETAILS.map(|details| match details {
-            CollectionDetails::V1 { size } => CollectionDetails::V1 { size: size + 1 },
-        });
-
         test_items
             .collection_parent_da
-            .assert_collection_details_matches_on_chain(&mut context, &verified_collection_details)
+            .assert_collection_details_matches_on_chain(
+                &mut context,
+                &test_items.verified_collection_details,
+            )
             .await;
     }
 
@@ -383,24 +371,18 @@ mod verify_collection {
         // In this case it will be MintMismatch because it fails a derivation check.
         assert_custom_error!(err, MetadataError::MintMismatch);
 
-        let verified_collection = Some(Collection {
-            key: test_items.collection_parent_da.mint.pubkey(),
-            verified: true,
-        });
-
         test_items
             .da
-            .assert_item_collection_matches_on_chain(&mut context, &verified_collection)
+            .assert_item_collection_matches_on_chain(&mut context, &test_items.verified_collection)
             .await;
 
         // Check collection details.  If sized collection, size should be updated.
-        let verified_collection_details = DEFAULT_COLLECTION_DETAILS.map(|details| match details {
-            CollectionDetails::V1 { size } => CollectionDetails::V1 { size: size + 1 },
-        });
-
         test_items
             .collection_parent_da
-            .assert_collection_details_matches_on_chain(&mut context, &verified_collection_details)
+            .assert_collection_details_matches_on_chain(
+                &mut context,
+                &test_items.verified_collection_details,
+            )
             .await;
     }
 
@@ -434,24 +416,18 @@ mod verify_collection {
 
         assert_custom_error!(err, MetadataError::MissingCollectionMint);
 
-        let verified_collection = Some(Collection {
-            key: test_items.collection_parent_da.mint.pubkey(),
-            verified: true,
-        });
-
         test_items
             .da
-            .assert_item_collection_matches_on_chain(&mut context, &verified_collection)
+            .assert_item_collection_matches_on_chain(&mut context, &test_items.verified_collection)
             .await;
 
         // Check collection details.  If sized collection, size should be updated.
-        let verified_collection_details = DEFAULT_COLLECTION_DETAILS.map(|details| match details {
-            CollectionDetails::V1 { size } => CollectionDetails::V1 { size: size + 1 },
-        });
-
         test_items
             .collection_parent_da
-            .assert_collection_details_matches_on_chain(&mut context, &verified_collection_details)
+            .assert_collection_details_matches_on_chain(
+                &mut context,
+                &test_items.verified_collection_details,
+            )
             .await;
     }
 
@@ -485,24 +461,18 @@ mod verify_collection {
 
         assert_custom_error!(err, MetadataError::MissingCollectionMetadata);
 
-        let verified_collection = Some(Collection {
-            key: test_items.collection_parent_da.mint.pubkey(),
-            verified: true,
-        });
-
         test_items
             .da
-            .assert_item_collection_matches_on_chain(&mut context, &verified_collection)
+            .assert_item_collection_matches_on_chain(&mut context, &test_items.verified_collection)
             .await;
 
         // Check collection details.  If sized collection, size should be updated.
-        let verified_collection_details = DEFAULT_COLLECTION_DETAILS.map(|details| match details {
-            CollectionDetails::V1 { size } => CollectionDetails::V1 { size: size + 1 },
-        });
-
         test_items
             .collection_parent_da
-            .assert_collection_details_matches_on_chain(&mut context, &verified_collection_details)
+            .assert_collection_details_matches_on_chain(
+                &mut context,
+                &test_items.verified_collection_details,
+            )
             .await;
     }
 
@@ -697,24 +667,18 @@ mod verify_collection {
 
         assert_custom_error!(err, MetadataError::NotAMemberOfCollection);
 
-        let verified_collection = Some(Collection {
-            key: test_items.collection_parent_da.mint.pubkey(),
-            verified: true,
-        });
-
         test_items
             .da
-            .assert_item_collection_matches_on_chain(&mut context, &verified_collection)
+            .assert_item_collection_matches_on_chain(&mut context, &test_items.verified_collection)
             .await;
 
         // Check collection details.  If sized collection, size should be updated.
-        let verified_collection_details = DEFAULT_COLLECTION_DETAILS.map(|details| match details {
-            CollectionDetails::V1 { size } => CollectionDetails::V1 { size: size + 1 },
-        });
-
         test_items
             .collection_parent_da
-            .assert_collection_details_matches_on_chain(&mut context, &verified_collection_details)
+            .assert_collection_details_matches_on_chain(
+                &mut context,
+                &test_items.verified_collection_details,
+            )
             .await;
 
         // Second collection's details should not be changed.
@@ -771,24 +735,18 @@ mod verify_collection {
 
         assert_custom_error!(err, MetadataError::MintMismatch);
 
-        let verified_collection = Some(Collection {
-            key: test_items.collection_parent_da.mint.pubkey(),
-            verified: true,
-        });
-
         test_items
             .da
-            .assert_item_collection_matches_on_chain(&mut context, &verified_collection)
+            .assert_item_collection_matches_on_chain(&mut context, &test_items.verified_collection)
             .await;
 
         // Check collection details.  If sized collection, size should be updated.
-        let verified_collection_details = DEFAULT_COLLECTION_DETAILS.map(|details| match details {
-            CollectionDetails::V1 { size } => CollectionDetails::V1 { size: size + 1 },
-        });
-
         test_items
             .collection_parent_da
-            .assert_collection_details_matches_on_chain(&mut context, &verified_collection_details)
+            .assert_collection_details_matches_on_chain(
+                &mut context,
+                &test_items.verified_collection_details,
+            )
             .await;
 
         // Second collection's details should not be changed.
@@ -836,24 +794,18 @@ mod verify_collection {
 
         assert_custom_error!(err, MetadataError::UpdateAuthorityIncorrect);
 
-        let verified_collection = Some(Collection {
-            key: test_items.collection_parent_da.mint.pubkey(),
-            verified: true,
-        });
-
         test_items
             .da
-            .assert_item_collection_matches_on_chain(&mut context, &verified_collection)
+            .assert_item_collection_matches_on_chain(&mut context, &test_items.verified_collection)
             .await;
 
         // Check collection details.  If sized collection, size should be updated.
-        let verified_collection_details = DEFAULT_COLLECTION_DETAILS.map(|details| match details {
-            CollectionDetails::V1 { size } => CollectionDetails::V1 { size: size + 1 },
-        });
-
         test_items
             .collection_parent_da
-            .assert_collection_details_matches_on_chain(&mut context, &verified_collection_details)
+            .assert_collection_details_matches_on_chain(
+                &mut context,
+                &test_items.verified_collection_details,
+            )
             .await;
     }
 
@@ -1269,10 +1221,102 @@ mod verify_collection {
             .await;
     }
 
+    #[tokio::test]
+    async fn update_delegate_cannot_unverify() {
+        let delegate_args = DelegateArgs::UpdateV1 {
+            authorization_data: None,
+        };
+
+        let delegate_role = MetadataDelegateRole::Update;
+
+        other_metadata_delegates_cannot_unverify(delegate_args, delegate_role).await;
+    }
+
+    #[tokio::test]
+    async fn programmable_config_delegate_cannot_unverify() {
+        let delegate_args = DelegateArgs::ProgrammableConfigV1 {
+            authorization_data: None,
+        };
+
+        let delegate_role = MetadataDelegateRole::ProgrammableConfig;
+
+        other_metadata_delegates_cannot_unverify(delegate_args, delegate_role).await;
+    }
+
+    async fn other_metadata_delegates_cannot_unverify(
+        delegate_args: DelegateArgs,
+        delegate_role: MetadataDelegateRole,
+    ) {
+        let mut context = program_test().start_with_context().await;
+
+        let mut test_items = create_mint_verify_collection_check(
+            &mut context,
+            DEFAULT_COLLECTION_DETAILS,
+            TokenStandard::ProgrammableNonFungible,
+        )
+        .await;
+
+        // Create a metadata delegate.
+        let delegate = Keypair::new();
+        airdrop(&mut context, &delegate.pubkey(), LAMPORTS_PER_SOL)
+            .await
+            .unwrap();
+
+        let payer = context.payer.dirty_clone();
+        let payer_pubkey = payer.pubkey();
+        test_items
+            .collection_parent_da
+            .delegate(&mut context, payer, delegate.pubkey(), delegate_args)
+            .await
+            .unwrap();
+
+        // Find delegate record PDA.
+        let (delegate_record, _) = find_metadata_delegate_record_account(
+            &test_items.collection_parent_da.mint.pubkey(),
+            delegate_role,
+            &payer_pubkey,
+            &delegate.pubkey(),
+        );
+
+        // Unverify.
+        let args = VerifyArgs::CollectionV1;
+        let err = test_items
+            .da
+            .unverify(
+                &mut context,
+                delegate,
+                args,
+                None,
+                Some(delegate_record),
+                Some(test_items.collection_parent_da.mint.pubkey()),
+                Some(test_items.collection_parent_da.metadata),
+            )
+            .await
+            .unwrap_err();
+
+        assert_custom_error!(err, MetadataError::UpdateAuthorityIncorrect);
+
+        test_items
+            .da
+            .assert_item_collection_matches_on_chain(&mut context, &test_items.verified_collection)
+            .await;
+
+        // Check collection details.  It should not be updated.
+        test_items
+            .collection_parent_da
+            .assert_collection_details_matches_on_chain(
+                &mut context,
+                &test_items.verified_collection_details,
+            )
+            .await;
+    }
+
     struct CollectionTestItems {
         collection_parent_da: DigitalAsset,
-        unverified_collection: Option<Collection>,
         da: DigitalAsset,
+        unverified_collection: Option<Collection>,
+        verified_collection: Option<Collection>,
+        verified_collection_details: Option<CollectionDetails>,
     }
 
     async fn create_mint_verify_collection_check(
@@ -1358,8 +1402,10 @@ mod verify_collection {
 
         CollectionTestItems {
             collection_parent_da,
-            unverified_collection,
             da,
+            unverified_collection,
+            verified_collection,
+            verified_collection_details,
         }
     }
 }
