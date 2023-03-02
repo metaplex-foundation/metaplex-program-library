@@ -7,7 +7,7 @@
 
 import * as beet from '@metaplex-foundation/beet';
 import * as web3 from '@solana/web3.js';
-import { VerifyArgs, verifyArgsBeet } from '../types/VerifyArgs';
+import { VerificationArgs, verificationArgsBeet } from '../types/VerificationArgs';
 
 /**
  * @category Instructions
@@ -15,7 +15,7 @@ import { VerifyArgs, verifyArgsBeet } from '../types/VerifyArgs';
  * @category generated
  */
 export type UnverifyInstructionArgs = {
-  verifyArgs: VerifyArgs;
+  verificationArgs: VerificationArgs;
 };
 /**
  * @category Instructions
@@ -29,7 +29,7 @@ export const UnverifyStruct = new beet.BeetArgsStruct<
 >(
   [
     ['instructionDiscriminator', beet.u8],
-    ['verifyArgs', verifyArgsBeet],
+    ['verificationArgs', verificationArgsBeet],
   ],
   'UnverifyInstructionArgs',
 );

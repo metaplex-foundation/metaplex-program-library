@@ -3538,9 +3538,9 @@
       ],
       "args": [
         {
-          "name": "verifyArgs",
+          "name": "verificationArgs",
           "type": {
-            "defined": "VerifyArgs"
+            "defined": "VerificationArgs"
           }
         }
       ],
@@ -3601,9 +3601,9 @@
       ],
       "args": [
         {
-          "name": "verifyArgs",
+          "name": "verificationArgs",
           "type": {
-            "defined": "VerifyArgs"
+            "defined": "VerificationArgs"
           }
         }
       ],
@@ -5090,20 +5090,6 @@
       }
     },
     {
-      "name": "VerifyArgs",
-      "type": {
-        "kind": "enum",
-        "variants": [
-          {
-            "name": "CreatorV1"
-          },
-          {
-            "name": "CollectionV1"
-          }
-        ]
-      }
-    },
-    {
       "name": "LockArgs",
       "type": {
         "kind": "enum",
@@ -5162,6 +5148,20 @@
                 }
               }
             ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "VerificationArgs",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "CreatorV1"
+          },
+          {
+            "name": "CollectionV1"
           }
         ]
       }

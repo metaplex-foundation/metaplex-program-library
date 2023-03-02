@@ -4,7 +4,7 @@ pub mod utils;
 
 use mpl_token_metadata::{
     error::MetadataError,
-    instruction::{DelegateArgs, MetadataDelegateRole, VerifyArgs},
+    instruction::{DelegateArgs, MetadataDelegateRole, VerificationArgs},
     pda::{find_metadata_delegate_record_account, find_token_record_account},
     state::{Collection, CollectionDetails, Creator, TokenStandard},
 };
@@ -64,7 +64,7 @@ mod verify_creator {
         }]);
 
         // Unverify creator.
-        let args = VerifyArgs::CreatorV1;
+        let args = VerificationArgs::CreatorV1;
         let metadata_wrong_owner = Keypair::new().pubkey();
         let err = da
             .unverify(
@@ -118,7 +118,7 @@ mod verify_creator {
 
         // Unverify creator.
         let payer = context.payer.dirty_clone();
-        let args = VerifyArgs::CreatorV1;
+        let args = VerificationArgs::CreatorV1;
         let err = da
             .unverify(&mut context, payer, args, None, None, None, None)
             .await
@@ -152,7 +152,7 @@ mod verify_creator {
 
         // Unverify creator.
         let payer = context.payer.dirty_clone();
-        let args = VerifyArgs::CreatorV1;
+        let args = VerificationArgs::CreatorV1;
         let err = da
             .unverify(&mut context, payer, args, None, None, None, None)
             .await
@@ -190,7 +190,7 @@ mod verify_creator {
         .await;
 
         // Unverify creator.
-        let args = VerifyArgs::CreatorV1;
+        let args = VerificationArgs::CreatorV1;
 
         da.unverify(&mut context, creator, args, None, None, None, None)
             .await
@@ -222,7 +222,7 @@ mod verify_creator {
             .await;
 
         // Verify.
-        let args = VerifyArgs::CreatorV1;
+        let args = VerificationArgs::CreatorV1;
 
         let verified_creators = Some(
             unverified_creators
@@ -276,7 +276,7 @@ mod verify_collection {
         .await;
 
         // Unverify.
-        let args = VerifyArgs::CollectionV1;
+        let args = VerificationArgs::CollectionV1;
         let payer = context.payer.dirty_clone();
         let metadata_wrong_owner = Keypair::new().pubkey();
         let err = test_items
@@ -322,7 +322,7 @@ mod verify_collection {
         .await;
 
         // Unverify.
-        let args = VerifyArgs::CollectionV1;
+        let args = VerificationArgs::CollectionV1;
         let payer = context.payer.dirty_clone();
         let collection_mint_info_wrong_owner = Keypair::new().pubkey();
         let err = test_items
@@ -368,7 +368,7 @@ mod verify_collection {
         .await;
 
         // Unverify.
-        let args = VerifyArgs::CollectionV1;
+        let args = VerificationArgs::CollectionV1;
         let payer = context.payer.dirty_clone();
         let collection_metadata_info_wrong_owner = Keypair::new().pubkey();
         let err = test_items
@@ -416,7 +416,7 @@ mod verify_collection {
         .await;
 
         // Unverify.
-        let args = VerifyArgs::CollectionV1;
+        let args = VerificationArgs::CollectionV1;
         let payer = context.payer.dirty_clone();
         let err = test_items
             .da
@@ -461,7 +461,7 @@ mod verify_collection {
         .await;
 
         // Unverify.
-        let args = VerifyArgs::CollectionV1;
+        let args = VerificationArgs::CollectionV1;
         let payer = context.payer.dirty_clone();
         let err = test_items
             .da
@@ -540,7 +540,7 @@ mod verify_collection {
             .await;
 
         // Unverify.
-        let args = VerifyArgs::CollectionV1;
+        let args = VerificationArgs::CollectionV1;
         let payer = context.payer.dirty_clone();
         da.unverify(
             &mut context,
@@ -574,7 +574,7 @@ mod verify_collection {
         .await;
 
         // Unverify.
-        let args = VerifyArgs::CollectionV1;
+        let args = VerificationArgs::CollectionV1;
         let payer = context.payer.dirty_clone();
         test_items
             .da
@@ -607,7 +607,7 @@ mod verify_collection {
         context.warp_to_slot(2).unwrap();
 
         // Unverify again.
-        let args = VerifyArgs::CollectionV1;
+        let args = VerificationArgs::CollectionV1;
         let payer = context.payer.dirty_clone();
         test_items
             .da
@@ -667,7 +667,7 @@ mod verify_collection {
             .await;
 
         // Unverify.
-        let args = VerifyArgs::CollectionV1;
+        let args = VerificationArgs::CollectionV1;
         let payer = context.payer.dirty_clone();
         let err = test_items
             .da
@@ -735,7 +735,7 @@ mod verify_collection {
             .await;
 
         // Unverify.
-        let args = VerifyArgs::CollectionV1;
+        let args = VerificationArgs::CollectionV1;
         let payer = context.payer.dirty_clone();
         let err = test_items
             .da
@@ -795,7 +795,7 @@ mod verify_collection {
         .unwrap();
 
         // Unverify.
-        let args = VerifyArgs::CollectionV1;
+        let args = VerificationArgs::CollectionV1;
         let err = test_items
             .da
             .unverify(
@@ -874,7 +874,7 @@ mod verify_collection {
         .await;
 
         // Unverify.
-        let args = VerifyArgs::CollectionV1;
+        let args = VerificationArgs::CollectionV1;
         let payer = context.payer.dirty_clone();
         test_items
             .da
@@ -953,7 +953,7 @@ mod verify_collection {
 
         // Verify.
         let payer = context.payer.dirty_clone();
-        let args = VerifyArgs::CollectionV1;
+        let args = VerificationArgs::CollectionV1;
         da.verify(
             &mut context,
             payer,
@@ -994,7 +994,7 @@ mod verify_collection {
             .unwrap();
 
         // Unverify using the new collection update authority.
-        let args = VerifyArgs::CollectionV1;
+        let args = VerificationArgs::CollectionV1;
         da.unverify(
             &mut context,
             new_collection_update_authority,
@@ -1066,7 +1066,7 @@ mod verify_collection {
 
         // Verify.
         let payer = context.payer.dirty_clone();
-        let args = VerifyArgs::CollectionV1;
+        let args = VerificationArgs::CollectionV1;
         da.verify(
             &mut context,
             payer,
@@ -1108,7 +1108,7 @@ mod verify_collection {
 
         // Unverify using item update authority.
         let payer = context.payer.dirty_clone();
-        let args = VerifyArgs::CollectionV1;
+        let args = VerificationArgs::CollectionV1;
         let err = da
             .unverify(
                 &mut context,
@@ -1210,7 +1210,7 @@ mod verify_collection {
         );
 
         // Unverify.
-        let args = VerifyArgs::CollectionV1;
+        let args = VerificationArgs::CollectionV1;
         test_items
             .da
             .unverify(
@@ -1297,7 +1297,7 @@ mod verify_collection {
         );
 
         // Unverify.
-        let args = VerifyArgs::CollectionV1;
+        let args = VerificationArgs::CollectionV1;
         let err = test_items
             .da
             .unverify(
@@ -1392,7 +1392,7 @@ mod verify_collection {
         );
 
         // Unverify.
-        let args = VerifyArgs::CollectionV1;
+        let args = VerificationArgs::CollectionV1;
         let err = test_items
             .da
             .unverify(
@@ -1461,7 +1461,7 @@ mod verify_collection {
         );
 
         // Unverify.
-        let args = VerifyArgs::CollectionV1;
+        let args = VerificationArgs::CollectionV1;
         let err = test_items
             .da
             .unverify(
@@ -1550,7 +1550,7 @@ mod verify_collection {
             .await;
 
         // Verify.
-        let args = VerifyArgs::CollectionV1;
+        let args = VerificationArgs::CollectionV1;
         let payer = context.payer.dirty_clone();
         da.verify(
             context,

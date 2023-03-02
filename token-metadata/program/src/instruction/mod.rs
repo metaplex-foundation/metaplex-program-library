@@ -768,7 +768,7 @@ pub enum MetadataInstruction {
     #[account(6, name="system_program", desc="System program")]
     #[account(7, name="sysvar_instructions", desc="Instructions sysvar account")]
     #[default_optional_accounts]
-    Verify(VerifyArgs),
+    Verify(VerificationArgs),
 
     /// Unverifies that an asset was created by a specific creator or belongs in an specified collection.
     ///
@@ -782,7 +782,7 @@ pub enum MetadataInstruction {
     #[account(5, name="system_program", desc="System program")]
     #[account(6, name="sysvar_instructions", desc="Instructions sysvar account")]
     #[default_optional_accounts]
-    Unverify(VerifyArgs),
+    Unverify(VerificationArgs),
 }
 
 pub struct Context<'a, T> {

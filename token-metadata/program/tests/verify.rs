@@ -5,7 +5,8 @@ pub mod utils;
 use mpl_token_metadata::{
     error::MetadataError,
     instruction::{
-        builders::VerifyBuilder, DelegateArgs, InstructionBuilder, MetadataDelegateRole, VerifyArgs,
+        builders::VerifyBuilder, DelegateArgs, InstructionBuilder, MetadataDelegateRole,
+        VerificationArgs,
     },
     pda::{find_metadata_delegate_record_account, find_token_record_account},
     state::{Collection, CollectionDetails, Creator, TokenStandard},
@@ -66,7 +67,7 @@ mod verify_creator {
             .await;
 
         // Verify.
-        let args = VerifyArgs::CreatorV1;
+        let args = VerificationArgs::CreatorV1;
         let metadata_wrong_owner = Keypair::new().pubkey();
         let err = da
             .verify(
@@ -121,7 +122,7 @@ mod verify_creator {
 
         // Verify.
         let payer = context.payer.dirty_clone();
-        let args = VerifyArgs::CreatorV1;
+        let args = VerificationArgs::CreatorV1;
         let err = da
             .verify(&mut context, payer, args, None, None, None, None, None)
             .await
@@ -155,7 +156,7 @@ mod verify_creator {
 
         // Verify.
         let payer = context.payer.dirty_clone();
-        let args = VerifyArgs::CreatorV1;
+        let args = VerificationArgs::CreatorV1;
         let err = da
             .verify(&mut context, payer, args, None, None, None, None, None)
             .await
@@ -199,7 +200,7 @@ mod verify_creator {
             .await;
 
         // Verify.
-        let args = VerifyArgs::CreatorV1;
+        let args = VerificationArgs::CreatorV1;
 
         let verified_creators = Some(vec![Creator {
             address: creator.pubkey(),
@@ -256,7 +257,7 @@ mod verify_collection {
             .await;
 
         // Verify.
-        let args = VerifyArgs::CollectionV1;
+        let args = VerificationArgs::CollectionV1;
         let payer = context.payer.dirty_clone();
         let metadata_wrong_owner = Keypair::new().pubkey();
         let err = da
@@ -311,7 +312,7 @@ mod verify_collection {
             .await;
 
         // Verify.
-        let args = VerifyArgs::CollectionV1;
+        let args = VerificationArgs::CollectionV1;
         let payer = context.payer.dirty_clone();
         let collection_mint_info_wrong_owner = Keypair::new().pubkey();
         let err = da
@@ -366,7 +367,7 @@ mod verify_collection {
             .await;
 
         // Verify.
-        let args = VerifyArgs::CollectionV1;
+        let args = VerificationArgs::CollectionV1;
         let payer = context.payer.dirty_clone();
         let collection_metadata_info_wrong_owner = Keypair::new().pubkey();
         let err = da
@@ -420,7 +421,7 @@ mod verify_collection {
             .await;
 
         // Verify.
-        let args = VerifyArgs::CollectionV1;
+        let args = VerificationArgs::CollectionV1;
         let payer = context.payer.dirty_clone();
         let collection_master_edition_info_wrong_owner = Keypair::new().pubkey();
         let err = da
@@ -475,7 +476,7 @@ mod verify_collection {
             .await;
 
         // Verify.
-        let args = VerifyArgs::CollectionV1;
+        let args = VerificationArgs::CollectionV1;
         let payer = context.payer.dirty_clone();
         let err = da
             .verify(
@@ -529,7 +530,7 @@ mod verify_collection {
             .await;
 
         // Verify.
-        let args = VerifyArgs::CollectionV1;
+        let args = VerificationArgs::CollectionV1;
         let payer = context.payer.dirty_clone();
         let err = da
             .verify(
@@ -582,7 +583,7 @@ mod verify_collection {
             .await;
 
         // Verify.
-        let args = VerifyArgs::CollectionV1;
+        let args = VerificationArgs::CollectionV1;
         let payer = context.payer.dirty_clone();
         let err = da
             .verify(
@@ -650,7 +651,7 @@ mod verify_collection {
         );
 
         // Verify.
-        let args = VerifyArgs::CollectionV1;
+        let args = VerificationArgs::CollectionV1;
         let payer = context.payer.dirty_clone();
         da.verify(
             &mut context,
@@ -688,7 +689,7 @@ mod verify_collection {
         context.warp_to_slot(2).unwrap();
 
         // Verify again.
-        let args = VerifyArgs::CollectionV1;
+        let args = VerificationArgs::CollectionV1;
         let payer = context.payer.dirty_clone();
         da.verify(
             &mut context,
@@ -744,7 +745,7 @@ mod verify_collection {
             .await;
 
         // Verify.
-        let args = VerifyArgs::CollectionV1;
+        let args = VerificationArgs::CollectionV1;
         let payer = context.payer.dirty_clone();
         let err = da
             .verify(
@@ -799,7 +800,7 @@ mod verify_collection {
             .await;
 
         // Verify.
-        let args = VerifyArgs::CollectionV1;
+        let args = VerificationArgs::CollectionV1;
         let payer = context.payer.dirty_clone();
         let err = da
             .verify(
@@ -858,7 +859,7 @@ mod verify_collection {
             .await;
 
         // Verify.
-        let args = VerifyArgs::CollectionV1;
+        let args = VerificationArgs::CollectionV1;
         let payer = context.payer.dirty_clone();
         let err = da
             .verify(
@@ -922,7 +923,7 @@ mod verify_collection {
         .unwrap();
 
         // Verify.
-        let args = VerifyArgs::CollectionV1;
+        let args = VerificationArgs::CollectionV1;
         let err = da
             .verify(
                 &mut context,
@@ -1037,7 +1038,7 @@ mod verify_collection {
 
         // Verify.
         let verify_ix = builder
-            .build(VerifyArgs::CollectionV1)
+            .build(VerificationArgs::CollectionV1)
             .unwrap()
             .instruction();
 
@@ -1146,7 +1147,7 @@ mod verify_collection {
         assert_eq!(collection_metadata.collection_details, collection_details);
 
         // Verify.
-        let args = VerifyArgs::CollectionV1;
+        let args = VerificationArgs::CollectionV1;
         let payer = context.payer.dirty_clone();
         da.verify(
             &mut context,
@@ -1234,7 +1235,7 @@ mod verify_collection {
         );
 
         // Verify using the new collection update authority.
-        let args = VerifyArgs::CollectionV1;
+        let args = VerificationArgs::CollectionV1;
         da.verify(
             &mut context,
             new_collection_update_authority,
@@ -1322,7 +1323,7 @@ mod verify_collection {
 
         // Verify using the new collection update authority.
         let payer = context.payer.dirty_clone();
-        let args = VerifyArgs::CollectionV1;
+        let args = VerificationArgs::CollectionV1;
         let err = da
             .verify(
                 &mut context,
@@ -1433,7 +1434,7 @@ mod verify_collection {
             .await;
 
         // Verify.
-        let args = VerifyArgs::CollectionV1;
+        let args = VerificationArgs::CollectionV1;
         let payer = context.payer.dirty_clone();
         da.verify(
             &mut context,
@@ -1576,7 +1577,7 @@ mod verify_collection {
         );
 
         // Verify.
-        let args = VerifyArgs::CollectionV1;
+        let args = VerificationArgs::CollectionV1;
         da.verify(
             &mut context,
             delegate,
@@ -1701,7 +1702,7 @@ mod verify_collection {
         );
 
         // Verify.
-        let args = VerifyArgs::CollectionV1;
+        let args = VerificationArgs::CollectionV1;
         let err = da
             .verify(
                 &mut context,
@@ -1831,7 +1832,7 @@ mod verify_collection {
         );
 
         // Verify.
-        let args = VerifyArgs::CollectionV1;
+        let args = VerificationArgs::CollectionV1;
         let err = da
             .verify(
                 &mut context,
@@ -1929,7 +1930,7 @@ mod verify_collection {
         );
 
         // Verify.
-        let args = VerifyArgs::CollectionV1;
+        let args = VerificationArgs::CollectionV1;
         let err = da
             .verify(
                 &mut context,

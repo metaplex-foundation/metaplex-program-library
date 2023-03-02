@@ -10,7 +10,7 @@ import * as beet from '@metaplex-foundation/beet';
  * @category enums
  * @category generated
  */
-export enum VerifyArgs {
+export enum VerificationArgs {
   CreatorV1,
   CollectionV1,
 }
@@ -19,7 +19,7 @@ export enum VerifyArgs {
  * @category userTypes
  * @category generated
  */
-export const verifyArgsBeet = beet.fixedScalarEnum(VerifyArgs) as beet.FixedSizeBeet<
-  VerifyArgs,
-  VerifyArgs
+export const verificationArgsBeet = beet.fixedScalarEnum(VerificationArgs) as beet.FixedSizeBeet<
+  VerificationArgs,
+  VerificationArgs
 >;

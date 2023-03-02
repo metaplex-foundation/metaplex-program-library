@@ -9,7 +9,7 @@ use crate::instruction::MetadataInstruction;
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
-pub enum VerifyArgs {
+pub enum VerificationArgs {
     CreatorV1,
     CollectionV1,
 }

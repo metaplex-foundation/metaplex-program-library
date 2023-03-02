@@ -8,7 +8,7 @@ use mpl_token_metadata::{
             VerifyBuilder,
         },
         BurnArgs, CreateArgs, DelegateArgs, InstructionBuilder, LockArgs, MetadataDelegateRole,
-        MigrateArgs, MintArgs, RevokeArgs, TransferArgs, UnlockArgs, UpdateArgs, VerifyArgs,
+        MigrateArgs, MintArgs, RevokeArgs, TransferArgs, UnlockArgs, UpdateArgs, VerificationArgs,
     },
     pda::{
         find_master_edition_account, find_metadata_account, find_metadata_delegate_record_account,
@@ -148,7 +148,7 @@ impl DigitalAsset {
         &mut self,
         context: &mut ProgramTestContext,
         authority: Keypair,
-        args: VerifyArgs,
+        args: VerificationArgs,
         metadata: Option<Pubkey>,
         delegate_record: Option<Pubkey>,
         collection_mint: Option<Pubkey>,
@@ -161,8 +161,8 @@ impl DigitalAsset {
             .metadata(metadata.unwrap_or(self.metadata));
 
         match args {
-            VerifyArgs::CreatorV1 => (),
-            VerifyArgs::CollectionV1 => {
+            VerificationArgs::CreatorV1 => (),
+            VerificationArgs::CollectionV1 => {
                 if let Some(delegate_record) = delegate_record {
                     builder.delegate_record(delegate_record);
                 }
@@ -198,7 +198,7 @@ impl DigitalAsset {
         &mut self,
         context: &mut ProgramTestContext,
         authority: Keypair,
-        args: VerifyArgs,
+        args: VerificationArgs,
         metadata: Option<Pubkey>,
         delegate_record: Option<Pubkey>,
         collection_mint: Option<Pubkey>,
@@ -210,8 +210,8 @@ impl DigitalAsset {
             .metadata(metadata.unwrap_or(self.metadata));
 
         match args {
-            VerifyArgs::CreatorV1 => (),
-            VerifyArgs::CollectionV1 => {
+            VerificationArgs::CreatorV1 => (),
+            VerificationArgs::CollectionV1 => {
                 if let Some(delegate_record) = delegate_record {
                     builder.delegate_record(delegate_record);
                 }
