@@ -934,6 +934,237 @@ mod verify_collection {
             .await;
     }
 
+    // Note this test still uses Metadata instead of DigitalAsset for collection because Update is
+    // not finished.
+    #[tokio::test]
+    async fn pass_with_changed_collection_update_authority() {
+        let mut context = program_test().start_with_context().await;
+
+        // Create a collection parent NFT with the CollectionDetails struct populated.
+        let (collection_parent_nft, parent_master_edition_account) =
+            Metadata::create_default_sized_parent(&mut context)
+                .await
+                .unwrap();
+
+        // Check collection details.
+        let collection_metadata = collection_parent_nft.get_data(&mut context).await;
+        assert_eq!(
+            collection_metadata.collection_details,
+            DEFAULT_COLLECTION_DETAILS
+        );
+
+        // Create and mint item.
+        let collection = Some(Collection {
+            key: collection_parent_nft.mint.pubkey(),
+            verified: false,
+        });
+
+        let mut da = DigitalAsset::new();
+        da.create_and_mint_item_with_collection(
+            &mut context,
+            TokenStandard::ProgrammableNonFungible,
+            None,
+            None,
+            1,
+            collection.clone(),
+        )
+        .await
+        .unwrap();
+
+        da.assert_item_collection_matches_on_chain(&mut context, &collection)
+            .await;
+
+        // Check collection details.
+        let collection_metadata = collection_parent_nft.get_data(&mut context).await;
+        assert_eq!(
+            collection_metadata.collection_details,
+            DEFAULT_COLLECTION_DETAILS
+        );
+
+        // Verify.
+        let payer = context.payer.dirty_clone();
+        let args = VerifyArgs::CollectionV1;
+        da.verify(
+            &mut context,
+            payer,
+            args,
+            None,
+            None,
+            Some(collection_parent_nft.mint.pubkey()),
+            Some(collection_parent_nft.pubkey),
+            Some(parent_master_edition_account.pubkey),
+        )
+        .await
+        .unwrap();
+
+        let verified_collection = Some(Collection {
+            key: collection_parent_nft.mint.pubkey(),
+            verified: true,
+        });
+
+        da.assert_item_collection_matches_on_chain(&mut context, &verified_collection)
+            .await;
+
+        // Check collection details.  If sized collection, size should be updated.
+        let verified_collection_details = DEFAULT_COLLECTION_DETAILS.map(|details| match details {
+            CollectionDetails::V1 { size } => CollectionDetails::V1 { size: size + 1 },
+        });
+
+        let collection_metadata = collection_parent_nft.get_data(&mut context).await;
+        assert_eq!(
+            collection_metadata.collection_details,
+            verified_collection_details
+        );
+
+        // Change the collection to have a different update authority.
+        let new_collection_update_authority = Keypair::new();
+        collection_parent_nft
+            .change_update_authority(&mut context, new_collection_update_authority.pubkey())
+            .await
+            .unwrap();
+
+        // Unverify using the new collection update authority.
+        let args = VerifyArgs::CollectionV1;
+        da.unverify(
+            &mut context,
+            new_collection_update_authority,
+            args,
+            None,
+            None,
+            Some(collection_parent_nft.mint.pubkey()),
+            Some(collection_parent_nft.pubkey),
+        )
+        .await
+        .unwrap();
+
+        da.assert_item_collection_matches_on_chain(&mut context, &collection)
+            .await;
+
+        let collection_metadata = collection_parent_nft.get_data(&mut context).await;
+        assert_eq!(
+            collection_metadata.collection_details,
+            DEFAULT_COLLECTION_DETAILS
+        );
+    }
+
+    // Note this test still uses Metadata instead of DigitalAsset for collection because Update is
+    // not finished.
+    #[tokio::test]
+    async fn item_update_authority_cannot_unverify() {
+        let mut context = program_test().start_with_context().await;
+
+        // Create a collection parent NFT with the CollectionDetails struct populated.
+        let (collection_parent_nft, parent_master_edition_account) =
+            Metadata::create_default_sized_parent(&mut context)
+                .await
+                .unwrap();
+
+        // Check collection details.
+        let collection_metadata = collection_parent_nft.get_data(&mut context).await;
+        assert_eq!(
+            collection_metadata.collection_details,
+            DEFAULT_COLLECTION_DETAILS
+        );
+
+        // Create and mint item.
+        let collection = Some(Collection {
+            key: collection_parent_nft.mint.pubkey(),
+            verified: false,
+        });
+
+        let mut da = DigitalAsset::new();
+        da.create_and_mint_item_with_collection(
+            &mut context,
+            TokenStandard::ProgrammableNonFungible,
+            None,
+            None,
+            1,
+            collection.clone(),
+        )
+        .await
+        .unwrap();
+
+        da.assert_item_collection_matches_on_chain(&mut context, &collection)
+            .await;
+
+        // Check collection details.
+        let collection_metadata = collection_parent_nft.get_data(&mut context).await;
+        assert_eq!(
+            collection_metadata.collection_details,
+            DEFAULT_COLLECTION_DETAILS
+        );
+
+        // Verify.
+        let payer = context.payer.dirty_clone();
+        let args = VerifyArgs::CollectionV1;
+        da.verify(
+            &mut context,
+            payer,
+            args,
+            None,
+            None,
+            Some(collection_parent_nft.mint.pubkey()),
+            Some(collection_parent_nft.pubkey),
+            Some(parent_master_edition_account.pubkey),
+        )
+        .await
+        .unwrap();
+
+        let verified_collection = Some(Collection {
+            key: collection_parent_nft.mint.pubkey(),
+            verified: true,
+        });
+
+        da.assert_item_collection_matches_on_chain(&mut context, &verified_collection)
+            .await;
+
+        // Check collection details.  If sized collection, size should be updated.
+        let verified_collection_details = DEFAULT_COLLECTION_DETAILS.map(|details| match details {
+            CollectionDetails::V1 { size } => CollectionDetails::V1 { size: size + 1 },
+        });
+
+        let collection_metadata = collection_parent_nft.get_data(&mut context).await;
+        assert_eq!(
+            collection_metadata.collection_details,
+            verified_collection_details
+        );
+
+        // Change the collection to have a different update authority.
+        let new_collection_update_authority = Keypair::new();
+        collection_parent_nft
+            .change_update_authority(&mut context, new_collection_update_authority.pubkey())
+            .await
+            .unwrap();
+
+        // Unverify using item update authority.
+        let payer = context.payer.dirty_clone();
+        let args = VerifyArgs::CollectionV1;
+        let err = da
+            .unverify(
+                &mut context,
+                payer,
+                args,
+                None,
+                None,
+                Some(collection_parent_nft.mint.pubkey()),
+                Some(collection_parent_nft.pubkey),
+            )
+            .await
+            .unwrap_err();
+
+        assert_custom_error!(err, MetadataError::UpdateAuthorityIncorrect);
+
+        da.assert_item_collection_matches_on_chain(&mut context, &verified_collection)
+            .await;
+
+        // Check collection details.  Should have stayed the same.
+        let collection_metadata = collection_parent_nft.get_data(&mut context).await;
+        assert_eq!(
+            collection_metadata.collection_details,
+            verified_collection_details
+        );
+    }
+
     #[tokio::test]
     async fn pass_item_pnft_delegated_authority_sized_collection_new_handler() {
         pass_delegated_authority_collection_new_handler(
