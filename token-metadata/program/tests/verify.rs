@@ -221,7 +221,7 @@ mod verify_collection {
 
     #[tokio::test]
     async fn delegate_record_wrong_owner() {
-        // See `standard_delegate_fails_collection_created_new_handlers`.
+        // See `standard_delegate_fails`.
     }
 
     #[tokio::test]

@@ -26,8 +26,7 @@ pub(crate) fn verify_creator_v1(program_id: &Pubkey, ctx: Context<Verify>) -> Pr
     )?;
 
     // Reserialize item metadata.
-    clean_write_metadata(&mut metadata, ctx.accounts.metadata_info)?;
-    Ok(())
+    clean_write_metadata(&mut metadata, ctx.accounts.metadata_info)
 }
 
 pub(crate) fn unverify_creator_v1(program_id: &Pubkey, ctx: Context<Unverify>) -> ProgramResult {
@@ -48,8 +47,7 @@ pub(crate) fn unverify_creator_v1(program_id: &Pubkey, ctx: Context<Unverify>) -
     )?;
 
     // Reserialize item metadata.
-    clean_write_metadata(&mut metadata, ctx.accounts.metadata_info)?;
-    Ok(())
+    clean_write_metadata(&mut metadata, ctx.accounts.metadata_info)
 }
 
 fn find_and_set_creator(

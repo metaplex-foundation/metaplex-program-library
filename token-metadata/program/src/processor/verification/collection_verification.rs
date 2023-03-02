@@ -14,12 +14,11 @@ use solana_program::{entrypoint::ProgramResult, pubkey::Pubkey};
 pub(crate) fn verify_collection_v1(program_id: &Pubkey, ctx: Context<Verify>) -> ProgramResult {
     // Assert program ownership/signers.
 
-    // Authority account is the collection authority and must be a signer.
+    // Authority account must be a signer.  What this authority account actually represents is
+    // checked below.
     assert_signer(ctx.accounts.authority_info)?;
 
-    if let Some(delegate_record_info) = ctx.accounts.delegate_record_info {
-        assert_owned_by(delegate_record_info, program_id)?;
-    }
+    // Note: `ctx.accounts.delegate_record_info` owner check done inside of `get_authority_type`.
 
     assert_owned_by(ctx.accounts.metadata_info, program_id)?;
 
@@ -97,19 +96,17 @@ pub(crate) fn verify_collection_v1(program_id: &Pubkey, ctx: Context<Verify>) ->
     };
 
     // Reserialize metadata.
-    clean_write_metadata(&mut metadata, ctx.accounts.metadata_info)?;
-    Ok(())
+    clean_write_metadata(&mut metadata, ctx.accounts.metadata_info)
 }
 
 pub(crate) fn unverify_collection_v1(program_id: &Pubkey, ctx: Context<Unverify>) -> ProgramResult {
     // Assert program ownership/signers.
 
-    // Authority account is the collection authority and must be a signer.
+    // Authority account must be a signer.  What this authority account actually represents is
+    // checked below.
     assert_signer(ctx.accounts.authority_info)?;
 
-    if let Some(delegate_record_info) = ctx.accounts.delegate_record_info {
-        assert_owned_by(delegate_record_info, program_id)?;
-    }
+    // Note: `ctx.accounts.delegate_record_info` owner check done inside of `get_authority_type`.
 
     assert_owned_by(ctx.accounts.metadata_info, program_id)?;
 
@@ -123,7 +120,8 @@ pub(crate) fn unverify_collection_v1(program_id: &Pubkey, ctx: Context<Unverify>
         .accounts
         .collection_metadata_info
         .ok_or(MetadataError::MissingCollectionMetadata)?;
-    // Owner check done below after derivation check.
+    // Owner check done below after derivation check (since collection parent may be
+    // burned and if so would be owned by System Program).
 
     // Deserialize item metadata.
     let mut metadata = Metadata::from_account_info(ctx.accounts.metadata_info)?;
@@ -148,7 +146,8 @@ pub(crate) fn unverify_collection_v1(program_id: &Pubkey, ctx: Context<Unverify>
     // Ensure the metadata is derived from the mint.
     assert_metadata_derivation(program_id, collection_metadata_info, collection_mint_info)?;
 
-    // Set up authority request for burned parent case.
+    // Set up authority request for a Metadata delegate.  We will fill in update authority
+    // and metadata delegate roles below.
     let mut auth_request = AuthorityRequest {
         authority: ctx.accounts.authority_info.key,
         mint: &collection.key,
@@ -157,7 +156,7 @@ pub(crate) fn unverify_collection_v1(program_id: &Pubkey, ctx: Context<Unverify>
         ..Default::default()
     };
 
-    // Check if the collection parent metadata account is burned.
+    // If the collection parent metadata account has been burned then its data will be empty.
     let parent_burned = collection_metadata_info.data_is_empty();
 
     let authority_response = if parent_burned {
