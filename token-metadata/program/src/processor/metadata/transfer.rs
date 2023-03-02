@@ -266,7 +266,7 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
             // the delegate has already being validated, but we need to validate
             // that it can transfer the required amount
             if token.delegated_amount < amount || token.amount < amount {
-                return Err(MetadataError::NotEnoughTokens.into());
+                return Err(MetadataError::InsufficientTokenBalance.into());
             }
         }
         _ => {
@@ -285,7 +285,7 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
             };
 
             if available_amount < amount {
-                return Err(MetadataError::NotEnoughTokens.into());
+                return Err(MetadataError::InsufficientTokenBalance.into());
             }
         }
     }

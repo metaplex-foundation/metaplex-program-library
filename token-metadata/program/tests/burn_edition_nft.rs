@@ -55,7 +55,7 @@ mod burn_edition_nft {
         .await
         .unwrap();
 
-        // Metadata, and token account are burned.
+        // Metadata, edition, and token account are burned.
         let print_md = context
             .banks_client
             .get_account(print_edition.new_metadata_pubkey)
@@ -145,7 +145,7 @@ mod burn_edition_nft {
 
         // We've passed in the correct token account associated with the old owner but
         // it has 0 tokens so we get this error.
-        assert_custom_error!(err, MetadataError::NotEnoughTokens);
+        assert_custom_error!(err, MetadataError::InsufficientTokenBalance);
 
         // Old owner should not be able to burn even if we pass in the new token
         // account associated with the new owner.
@@ -314,12 +314,13 @@ mod burn_edition_nft {
             original_nft.token.pubkey(),
             master_edition.pubkey,
             second_nft.pubkey,
-            Pubkey::new_unique(), // throwaway key since it will fail before it gets to this check
+            // it will fail before it evaluates edition marker but we need an account that will pass initial owner checks
+            original_nft.pubkey,
         )
         .await
         .unwrap_err();
 
-        assert_custom_error!(err, MetadataError::NotAPrintEdition);
+        assert_custom_error!(err, MetadataError::MintMismatch);
     }
 
     #[tokio::test]
@@ -354,12 +355,14 @@ mod burn_edition_nft {
             original_nft.token.pubkey(),
             second_print_edition.pubkey,
             print_edition.pubkey,
-            Pubkey::new_unique(), // throwaway key since it will fail before it gets to this check
+            // Use the second print edition as the master edition, which will pass the
+            // initial owner checks but fail to match the mint.
+            print_edition.pubkey,
         )
         .await
         .unwrap_err();
 
-        assert_custom_error!(err, MetadataError::NotAMasterEdition);
+        assert_custom_error!(err, MetadataError::MintMismatch);
     }
 
     #[tokio::test]
@@ -389,7 +392,8 @@ mod burn_edition_nft {
             original_nft.mint.pubkey(),
             print_edition.token.pubkey(),
             original_nft.token.pubkey(),
-            Pubkey::new_unique(),
+            // Use a key that will pass the owner check but is not a master edition.
+            print_edition.new_edition_pubkey,
             print_edition.new_edition_pubkey,
             print_edition.pubkey,
         )
@@ -458,7 +462,8 @@ mod burn_edition_nft {
             print_edition.token.pubkey(),
             original_nft.token.pubkey(),
             master_edition.pubkey,
-            Pubkey::new_unique(),
+            // Use a key that will pass the owner check but is not a print edition.
+            master_edition.pubkey,
             print_edition.pubkey,
         )
         .await

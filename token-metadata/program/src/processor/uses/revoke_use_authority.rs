@@ -3,7 +3,6 @@ use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
     program::invoke,
-    program_memory::sol_memset,
     pubkey::Pubkey,
 };
 use spl_token::instruction::revoke;
@@ -17,9 +16,8 @@ use crate::{
         },
     },
     error::MetadataError,
-    state::{
-        Metadata, TokenMetadataAccount, UseAuthorityRecord, UseMethod, USE_AUTHORITY_RECORD_SIZE,
-    },
+    state::{Metadata, TokenMetadataAccount, UseAuthorityRecord, UseMethod},
+    utils::close_program_account,
 };
 
 pub fn process_revoke_use_authority(
@@ -50,7 +48,7 @@ pub fn process_revoke_use_authority(
         mint_info,
         token_account_info,
     )?;
-    let data = &mut use_authority_record_info.try_borrow_mut_data()?;
+    let data = use_authority_record_info.try_borrow_mut_data()?;
     process_use_authority_validation(data.len(), false)?;
     assert_owned_by(use_authority_record_info, program_id)?;
     let canonical_bump = assert_use_authority_derivation(
@@ -59,7 +57,7 @@ pub fn process_revoke_use_authority(
         user_info,
         mint_info,
     )?;
-    let mut record = UseAuthorityRecord::from_bytes(data)?;
+    let mut record = UseAuthorityRecord::from_bytes(&data)?;
     if record.bump_empty() {
         record.bump = canonical_bump;
     }
@@ -81,12 +79,9 @@ pub fn process_revoke_use_authority(
             ],
         )?;
     }
-    let lamports = use_authority_record_info.lamports();
-    **use_authority_record_info.try_borrow_mut_lamports()? = 0;
-    **owner_info.try_borrow_mut_lamports()? = owner_info
-        .lamports()
-        .checked_add(lamports)
-        .ok_or(MetadataError::NumericalOverflowError)?;
-    sol_memset(data, 0, USE_AUTHORITY_RECORD_SIZE);
-    Ok(())
+
+    // Drop use_authority_record_info account data borrow.
+    drop(data);
+
+    close_program_account(use_authority_record_info, owner_info)
 }
