@@ -3749,72 +3749,49 @@ createErrorFromCodeLookup.set(0xae, () => new InvalidAmountError());
 createErrorFromNameLookup.set('InvalidAmount', () => new InvalidAmountError());
 
 /**
- * MissingParentMintAccount: 'Missing parent mint account'
+ * MissingMasterEditionMintAccount: 'Missing master edition mint account'
  *
  * @category Errors
  * @category generated
  */
-export class MissingParentMintAccountError extends Error {
+export class MissingMasterEditionMintAccountError extends Error {
   readonly code: number = 0xaf;
-  readonly name: string = 'MissingParentMintAccount';
+  readonly name: string = 'MissingMasterEditionMintAccount';
   constructor() {
-    super('Missing parent mint account');
+    super('Missing master edition mint account');
     if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, MissingParentMintAccountError);
+      Error.captureStackTrace(this, MissingMasterEditionMintAccountError);
     }
   }
 }
 
-createErrorFromCodeLookup.set(0xaf, () => new MissingParentMintAccountError());
+createErrorFromCodeLookup.set(0xaf, () => new MissingMasterEditionMintAccountError());
 createErrorFromNameLookup.set(
-  'MissingParentMintAccount',
-  () => new MissingParentMintAccountError(),
+  'MissingMasterEditionMintAccount',
+  () => new MissingMasterEditionMintAccountError(),
 );
 
 /**
- * MissingParentEditionAccount: 'Missing parent edition account'
+ * MissingMasterEditionTokenAccount: 'Missing master edition token account'
  *
  * @category Errors
  * @category generated
  */
-export class MissingParentEditionAccountError extends Error {
+export class MissingMasterEditionTokenAccountError extends Error {
   readonly code: number = 0xb0;
-  readonly name: string = 'MissingParentEditionAccount';
+  readonly name: string = 'MissingMasterEditionTokenAccount';
   constructor() {
-    super('Missing parent edition account');
+    super('Missing master edition token account');
     if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, MissingParentEditionAccountError);
+      Error.captureStackTrace(this, MissingMasterEditionTokenAccountError);
     }
   }
 }
 
-createErrorFromCodeLookup.set(0xb0, () => new MissingParentEditionAccountError());
+createErrorFromCodeLookup.set(0xb0, () => new MissingMasterEditionTokenAccountError());
 createErrorFromNameLookup.set(
-  'MissingParentEditionAccount',
-  () => new MissingParentEditionAccountError(),
-);
-
-/**
- * MissingParentTokenAccount: 'Missing parent token account'
- *
- * @category Errors
- * @category generated
- */
-export class MissingParentTokenAccountError extends Error {
-  readonly code: number = 0xb1;
-  readonly name: string = 'MissingParentTokenAccount';
-  constructor() {
-    super('Missing parent token account');
-    if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, MissingParentTokenAccountError);
-    }
-  }
-}
-
-createErrorFromCodeLookup.set(0xb1, () => new MissingParentTokenAccountError());
-createErrorFromNameLookup.set(
-  'MissingParentTokenAccount',
-  () => new MissingParentTokenAccountError(),
+  'MissingMasterEditionTokenAccount',
+  () => new MissingMasterEditionTokenAccountError(),
 );
 
 /**
@@ -3824,7 +3801,7 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class MissingEditionMarkerAccountError extends Error {
-  readonly code: number = 0xb2;
+  readonly code: number = 0xb1;
   readonly name: string = 'MissingEditionMarkerAccount';
   constructor() {
     super('Missing edition marker account');
@@ -3834,7 +3811,7 @@ export class MissingEditionMarkerAccountError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0xb2, () => new MissingEditionMarkerAccountError());
+createErrorFromCodeLookup.set(0xb1, () => new MissingEditionMarkerAccountError());
 createErrorFromNameLookup.set(
   'MissingEditionMarkerAccount',
   () => new MissingEditionMarkerAccountError(),
@@ -3847,7 +3824,7 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class CannotBurnWithDelegateError extends Error {
-  readonly code: number = 0xb3;
+  readonly code: number = 0xb2;
   readonly name: string = 'CannotBurnWithDelegate';
   constructor() {
     super('Cannot burn while persistent delegate is set');
@@ -3857,7 +3834,7 @@ export class CannotBurnWithDelegateError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0xb3, () => new CannotBurnWithDelegateError());
+createErrorFromCodeLookup.set(0xb2, () => new CannotBurnWithDelegateError());
 createErrorFromNameLookup.set('CannotBurnWithDelegate', () => new CannotBurnWithDelegateError());
 
 /**
@@ -3867,7 +3844,7 @@ createErrorFromNameLookup.set('CannotBurnWithDelegate', () => new CannotBurnWith
  * @category generated
  */
 export class MissingEditionError extends Error {
-  readonly code: number = 0xb4;
+  readonly code: number = 0xb3;
   readonly name: string = 'MissingEdition';
   constructor() {
     super('Missing edition account');
@@ -3877,7 +3854,7 @@ export class MissingEditionError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0xb4, () => new MissingEditionError());
+createErrorFromCodeLookup.set(0xb3, () => new MissingEditionError());
 createErrorFromNameLookup.set('MissingEdition', () => new MissingEditionError());
 
 /**
@@ -3887,7 +3864,7 @@ createErrorFromNameLookup.set('MissingEdition', () => new MissingEditionError())
  * @category generated
  */
 export class InvalidAssociatedTokenAccountProgramError extends Error {
-  readonly code: number = 0xb5;
+  readonly code: number = 0xb4;
   readonly name: string = 'InvalidAssociatedTokenAccountProgram';
   constructor() {
     super('Invalid Associated Token Account Program');
@@ -3897,7 +3874,7 @@ export class InvalidAssociatedTokenAccountProgramError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0xb5, () => new InvalidAssociatedTokenAccountProgramError());
+createErrorFromCodeLookup.set(0xb4, () => new InvalidAssociatedTokenAccountProgramError());
 createErrorFromNameLookup.set(
   'InvalidAssociatedTokenAccountProgram',
   () => new InvalidAssociatedTokenAccountProgramError(),
@@ -3910,7 +3887,7 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class InvalidInstructionsSysvarError extends Error {
-  readonly code: number = 0xb6;
+  readonly code: number = 0xb5;
   readonly name: string = 'InvalidInstructionsSysvar';
   constructor() {
     super('Invalid InstructionsSysvar');
@@ -3920,7 +3897,7 @@ export class InvalidInstructionsSysvarError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0xb6, () => new InvalidInstructionsSysvarError());
+createErrorFromCodeLookup.set(0xb5, () => new InvalidInstructionsSysvarError());
 createErrorFromNameLookup.set(
   'InvalidInstructionsSysvar',
   () => new InvalidInstructionsSysvarError(),
@@ -3933,7 +3910,7 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class InvalidParentAccountsError extends Error {
-  readonly code: number = 0xb7;
+  readonly code: number = 0xb6;
   readonly name: string = 'InvalidParentAccounts';
   constructor() {
     super('Invalid or Unneeded parent accounts');
@@ -3943,7 +3920,7 @@ export class InvalidParentAccountsError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0xb7, () => new InvalidParentAccountsError());
+createErrorFromCodeLookup.set(0xb6, () => new InvalidParentAccountsError());
 createErrorFromNameLookup.set('InvalidParentAccounts', () => new InvalidParentAccountsError());
 
 /**
@@ -3953,7 +3930,7 @@ createErrorFromNameLookup.set('InvalidParentAccounts', () => new InvalidParentAc
  * @category generated
  */
 export class InvalidUpdateArgsError extends Error {
-  readonly code: number = 0xb8;
+  readonly code: number = 0xb7;
   readonly name: string = 'InvalidUpdateArgs';
   constructor() {
     super('Authority cannot apply all update args');
@@ -3963,7 +3940,7 @@ export class InvalidUpdateArgsError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0xb8, () => new InvalidUpdateArgsError());
+createErrorFromCodeLookup.set(0xb7, () => new InvalidUpdateArgsError());
 createErrorFromNameLookup.set('InvalidUpdateArgs', () => new InvalidUpdateArgsError());
 
 /**
@@ -3973,7 +3950,7 @@ createErrorFromNameLookup.set('InvalidUpdateArgs', () => new InvalidUpdateArgsEr
  * @category generated
  */
 export class InsufficientTokenBalanceError extends Error {
-  readonly code: number = 0xb9;
+  readonly code: number = 0xb8;
   readonly name: string = 'InsufficientTokenBalance';
   constructor() {
     super('Token account does not have enough tokens');
@@ -3983,7 +3960,7 @@ export class InsufficientTokenBalanceError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0xb9, () => new InsufficientTokenBalanceError());
+createErrorFromCodeLookup.set(0xb8, () => new InsufficientTokenBalanceError());
 createErrorFromNameLookup.set(
   'InsufficientTokenBalance',
   () => new InsufficientTokenBalanceError(),

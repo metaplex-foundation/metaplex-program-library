@@ -2384,21 +2384,21 @@
           "desc": "Token account to close"
         },
         {
-          "name": "parentEdition",
+          "name": "masterEdition",
           "isMut": true,
           "isSigner": false,
-          "desc": "Master edition token account",
+          "desc": "Master edition account",
           "optional": true
         },
         {
-          "name": "parentMint",
+          "name": "masterEditionMint",
           "isMut": false,
           "isSigner": false,
           "desc": "Master edition mint of the asset",
           "optional": true
         },
         {
-          "name": "parentToken",
+          "name": "masterEditionToken",
           "isMut": false,
           "isSigner": false,
           "desc": "Master edition token account",
@@ -6286,56 +6286,51 @@
     },
     {
       "code": 175,
-      "name": "MissingParentMintAccount",
-      "msg": "Missing parent mint account"
+      "name": "MissingMasterEditionMintAccount",
+      "msg": "Missing master edition mint account"
     },
     {
       "code": 176,
-      "name": "MissingParentEditionAccount",
-      "msg": "Missing parent edition account"
+      "name": "MissingMasterEditionTokenAccount",
+      "msg": "Missing master edition token account"
     },
     {
       "code": 177,
-      "name": "MissingParentTokenAccount",
-      "msg": "Missing parent token account"
-    },
-    {
-      "code": 178,
       "name": "MissingEditionMarkerAccount",
       "msg": "Missing edition marker account"
     },
     {
-      "code": 179,
+      "code": 178,
       "name": "CannotBurnWithDelegate",
       "msg": "Cannot burn while persistent delegate is set"
     },
     {
-      "code": 180,
+      "code": 179,
       "name": "MissingEdition",
       "msg": "Missing edition account"
     },
     {
-      "code": 181,
+      "code": 180,
       "name": "InvalidAssociatedTokenAccountProgram",
       "msg": "Invalid Associated Token Account Program"
     },
     {
-      "code": 182,
+      "code": 181,
       "name": "InvalidInstructionsSysvar",
       "msg": "Invalid InstructionsSysvar"
     },
     {
-      "code": 183,
+      "code": 182,
       "name": "InvalidParentAccounts",
       "msg": "Invalid or Unneeded parent accounts"
     },
     {
-      "code": 184,
+      "code": 183,
       "name": "InvalidUpdateArgs",
       "msg": "Authority cannot apply all update args"
     },
     {
-      "code": 185,
+      "code": 184,
       "name": "InsufficientTokenBalance",
       "msg": "Token account does not have enough tokens"
     }

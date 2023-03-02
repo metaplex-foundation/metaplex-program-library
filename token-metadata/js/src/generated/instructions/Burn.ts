@@ -42,9 +42,9 @@ export const BurnStruct = new beet.FixableBeetArgsStruct<
  * @property [_writable_] edition (optional) Edition of the asset
  * @property [_writable_] mint Mint of token asset
  * @property [_writable_] token Token account to close
- * @property [_writable_] parentEdition (optional) Master edition token account
- * @property [] parentMint (optional) Master edition mint of the asset
- * @property [] parentToken (optional) Master edition token account
+ * @property [_writable_] masterEdition (optional) Master edition account
+ * @property [] masterEditionMint (optional) Master edition mint of the asset
+ * @property [] masterEditionToken (optional) Master edition token account
  * @property [_writable_] editionMarker (optional) Edition marker account
  * @property [_writable_] tokenRecord (optional) Token record account
  * @property [] sysvarInstructions Instructions sysvar account
@@ -60,9 +60,9 @@ export type BurnInstructionAccounts = {
   edition?: web3.PublicKey;
   mint: web3.PublicKey;
   token: web3.PublicKey;
-  parentEdition?: web3.PublicKey;
-  parentMint?: web3.PublicKey;
-  parentToken?: web3.PublicKey;
+  masterEdition?: web3.PublicKey;
+  masterEditionMint?: web3.PublicKey;
+  masterEditionToken?: web3.PublicKey;
   editionMarker?: web3.PublicKey;
   tokenRecord?: web3.PublicKey;
   systemProgram?: web3.PublicKey;
@@ -126,17 +126,17 @@ export function createBurnInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.parentEdition ?? programId,
-      isWritable: accounts.parentEdition != null,
+      pubkey: accounts.masterEdition ?? programId,
+      isWritable: accounts.masterEdition != null,
       isSigner: false,
     },
     {
-      pubkey: accounts.parentMint ?? programId,
+      pubkey: accounts.masterEditionMint ?? programId,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: accounts.parentToken ?? programId,
+      pubkey: accounts.masterEditionToken ?? programId,
       isWritable: false,
       isSigner: false,
     },
