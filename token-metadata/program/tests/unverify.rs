@@ -357,7 +357,7 @@ mod verify_collection {
     }
 
     #[tokio::test]
-    async fn collection_metadata_info_wrong_owner() {
+    async fn collection_metadata_info_wrong_derivation() {
         let mut context = program_test().start_with_context().await;
 
         let mut test_items = create_mint_verify_collection_check(
@@ -385,7 +385,8 @@ mod verify_collection {
             .await
             .unwrap_err();
 
-        // In this case it will be MintMismatch because it fails a derivation check.
+        // In this case it will be MintMismatch because it fails a derivation check before
+        // it gets to an owner check.
         assert_custom_error!(err, MetadataError::MintMismatch);
 
         test_items
@@ -494,6 +495,74 @@ mod verify_collection {
     }
 
     #[tokio::test]
+    async fn pass_no_collection_on_item() {
+        let mut context = program_test().start_with_context().await;
+
+        // Create a collection parent NFT with the CollectionDetails struct populated.
+        let mut collection_parent_da = DigitalAsset::new();
+        collection_parent_da
+            .create_and_mint_collection_parent(
+                &mut context,
+                TokenStandard::NonFungible,
+                None,
+                None,
+                1,
+                DEFAULT_COLLECTION_DETAILS,
+            )
+            .await
+            .unwrap();
+
+        collection_parent_da
+            .assert_collection_details_matches_on_chain(&mut context, &DEFAULT_COLLECTION_DETAILS)
+            .await;
+
+        // No collection on item's metadata.
+        let collection = None;
+
+        // Create and mint item.
+        let mut da = DigitalAsset::new();
+        da.create_and_mint_item_with_collection(
+            &mut context,
+            TokenStandard::ProgrammableNonFungible,
+            None,
+            None,
+            1,
+            collection.clone(),
+        )
+        .await
+        .unwrap();
+
+        da.assert_item_collection_matches_on_chain(&mut context, &collection)
+            .await;
+
+        collection_parent_da
+            .assert_collection_details_matches_on_chain(&mut context, &DEFAULT_COLLECTION_DETAILS)
+            .await;
+
+        // Unverify.
+        let args = VerifyArgs::CollectionV1;
+        let payer = context.payer.dirty_clone();
+        da.unverify(
+            &mut context,
+            payer,
+            args,
+            None,
+            None,
+            Some(collection_parent_da.mint.pubkey()),
+            Some(collection_parent_da.metadata),
+        )
+        .await
+        .unwrap();
+
+        da.assert_item_collection_matches_on_chain(&mut context, &collection)
+            .await;
+
+        collection_parent_da
+            .assert_collection_details_matches_on_chain(&mut context, &DEFAULT_COLLECTION_DETAILS)
+            .await;
+    }
+
+    #[tokio::test]
     async fn pass_already_unverified() {
         let mut context = program_test().start_with_context().await;
 
@@ -569,74 +638,6 @@ mod verify_collection {
     }
 
     #[tokio::test]
-    async fn pass_no_collection_on_item() {
-        let mut context = program_test().start_with_context().await;
-
-        // Create a collection parent NFT with the CollectionDetails struct populated.
-        let mut collection_parent_da = DigitalAsset::new();
-        collection_parent_da
-            .create_and_mint_collection_parent(
-                &mut context,
-                TokenStandard::NonFungible,
-                None,
-                None,
-                1,
-                DEFAULT_COLLECTION_DETAILS,
-            )
-            .await
-            .unwrap();
-
-        collection_parent_da
-            .assert_collection_details_matches_on_chain(&mut context, &DEFAULT_COLLECTION_DETAILS)
-            .await;
-
-        // No collection on item's metadata.
-        let collection = None;
-
-        // Create and mint item.
-        let mut da = DigitalAsset::new();
-        da.create_and_mint_item_with_collection(
-            &mut context,
-            TokenStandard::ProgrammableNonFungible,
-            None,
-            None,
-            1,
-            collection.clone(),
-        )
-        .await
-        .unwrap();
-
-        da.assert_item_collection_matches_on_chain(&mut context, &collection)
-            .await;
-
-        collection_parent_da
-            .assert_collection_details_matches_on_chain(&mut context, &DEFAULT_COLLECTION_DETAILS)
-            .await;
-
-        // Unverify.
-        let args = VerifyArgs::CollectionV1;
-        let payer = context.payer.dirty_clone();
-        da.unverify(
-            &mut context,
-            payer,
-            args,
-            None,
-            None,
-            Some(collection_parent_da.mint.pubkey()),
-            Some(collection_parent_da.metadata),
-        )
-        .await
-        .unwrap();
-
-        da.assert_item_collection_matches_on_chain(&mut context, &collection)
-            .await;
-
-        collection_parent_da
-            .assert_collection_details_matches_on_chain(&mut context, &DEFAULT_COLLECTION_DETAILS)
-            .await;
-    }
-
-    #[tokio::test]
     async fn collection_on_item_metadata_does_not_match_passed_in_collection_mint() {
         let mut context = program_test().start_with_context().await;
 
@@ -705,7 +706,7 @@ mod verify_collection {
     }
 
     #[tokio::test]
-    async fn collection_metadata_wrong_derivation() {
+    async fn other_collections_metadata_fails_derivation_check() {
         let mut context = program_test().start_with_context().await;
 
         let mut test_items = create_mint_verify_collection_check(

@@ -123,6 +123,7 @@ pub(crate) fn unverify_collection_v1(program_id: &Pubkey, ctx: Context<Unverify>
         .accounts
         .collection_metadata_info
         .ok_or(MetadataError::MissingCollectionMetadata)?;
+    // Owner check done below after derivation check.
 
     // Deserialize item metadata.
     let mut metadata = Metadata::from_account_info(ctx.accounts.metadata_info)?;
