@@ -151,19 +151,23 @@ pub(crate) fn unverify_collection_v1(program_id: &Pubkey, ctx: Context<Unverify>
     // Set up authority request for burned parent case.
     let mut auth_request = AuthorityRequest {
         authority: ctx.accounts.authority_info.key,
-        update_authority: &metadata.update_authority,
-        mint: &metadata.mint,
+        mint: &collection.key,
         metadata_delegate_record_info: ctx.accounts.delegate_record_info,
-        metadata_delegate_roles: vec![MetadataDelegateRole::Update],
         precedence: &[AuthorityType::Metadata, AuthorityType::MetadataDelegate],
         ..Default::default()
     };
 
-    // Check if the collection metadata account is burned. If it is, there's no sized data to
-    // update and the user can simply unverify the NFT.
+    // Check if the collection parent metadata account is burned.
     let parent_burned = collection_metadata_info.data_is_empty();
 
-    if !parent_burned {
+    let authority_response = if parent_burned {
+        // If the collection parent is burned, we need to use an authority for the item rather than
+        // the collection.  The required authority is either the item's metadata update authority,
+        // or an update delegate for the item.  This call fails if no valid authority is present.
+        auth_request.update_authority = &metadata.update_authority;
+        auth_request.metadata_delegate_roles = vec![MetadataDelegateRole::Update];
+        AuthorityType::get_authority_type(auth_request)
+    } else {
         // If the parent is not burned, we need to ensure the collection metadata account is owned
         // by the token metadata program.
         assert_owned_by(collection_metadata_info, program_id)?;
@@ -171,20 +175,18 @@ pub(crate) fn unverify_collection_v1(program_id: &Pubkey, ctx: Context<Unverify>
         // Now we can deserialize the collection metadata account.
         let mut collection_metadata = Metadata::from_account_info(collection_metadata_info)?;
 
-        // Set the authority to the collection parent's update authority.
-        auth_request.update_authority = &collection_metadata.update_authority;
-
         // In the case of a sized collection, update the size on the collection parent.
         if collection_metadata.collection_details.is_some() {
             decrement_collection_size(&mut collection_metadata, collection_metadata_info)?;
         }
-    }
 
-    // Determines if we have a valid authority to perform the collection verification.  The
-    // required authority is either the collection parent's metadata update authority, or a
-    // collection delegate for the collection parent.  This call fails if no valid authority is
-    // present.
-    let authority_response = AuthorityType::get_authority_type(auth_request)?;
+        // If the collection parent is not burned, the required authority is either the collection
+        // parent's metadata update authority, or a collection delegate for the collection parent.
+        // This call fails if no valid authority is present.
+        auth_request.update_authority = &collection_metadata.update_authority;
+        auth_request.metadata_delegate_roles = vec![MetadataDelegateRole::Collection];
+        AuthorityType::get_authority_type(auth_request)
+    }?;
 
     // Validate that authority type is expected.
     match authority_response.authority_type {
