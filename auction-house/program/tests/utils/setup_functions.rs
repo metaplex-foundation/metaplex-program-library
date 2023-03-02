@@ -1076,6 +1076,14 @@ pub fn sell_pnft(
 
     account_metas.append(&mut p_nft_accounts.to_account_metas(None));
 
+    //@TODO: remove later
+    if let Some(md_ix) = account_metas
+        .iter()
+        .position(|x| x.pubkey == test_metadata.pubkey)
+    {
+        account_metas[md_ix].is_writable = true;
+    }
+
     let data = mpl_auction_house::instruction::Sell {
         trade_state_bump: sts_bump,
         free_trade_state_bump: free_sts_bump,
@@ -1111,6 +1119,105 @@ pub fn sell_pnft(
             &[instruction, print_receipt_instruction],
             Some(&test_metadata.token.pubkey()),
             &[&test_metadata.token],
+            context.last_blockhash,
+        ),
+    )
+}
+
+pub fn auctioneer_sell_pnft(
+    context: &mut ProgramTestContext,
+    ahkey: &Pubkey,
+    ah: &AuctionHouse,
+    test_metadata: &Metadata,
+    auctioneer_authority: &Keypair,
+) -> (mpl_auction_house::accounts::AuctioneerSell, Transaction) {
+    let program_id = mpl_auction_house::id();
+    let ata = test_metadata.ata;
+    let (seller_trade_state, sts_bump) = find_auctioneer_trade_state_address(
+        &test_metadata.token.pubkey(),
+        ahkey,
+        &ata,
+        &ah.treasury_mint,
+        &test_metadata.mint.pubkey(),
+        1,
+    );
+
+    let (free_seller_trade_state, free_sts_bump) = find_trade_state_address(
+        &test_metadata.token.pubkey(),
+        ahkey,
+        &ata,
+        &ah.treasury_mint,
+        &test_metadata.mint.pubkey(),
+        0,
+        1,
+    );
+    let (pas, pas_bump) = find_program_as_signer_address();
+    let pas_token = get_associated_token_address(&pas, &test_metadata.mint.pubkey());
+    let (auctioneer_pda, _) = find_auctioneer_pda(ahkey, &auctioneer_authority.pubkey());
+
+    let accounts = mpl_auction_house::accounts::AuctioneerSell {
+        wallet: test_metadata.token.pubkey(),
+        token_account: ata,
+        metadata: test_metadata.pubkey,
+        authority: ah.authority,
+        auctioneer_authority: auctioneer_authority.pubkey(),
+        auction_house: *ahkey,
+        auction_house_fee_account: ah.auction_house_fee_account,
+        seller_trade_state,
+        free_seller_trade_state,
+        ah_auctioneer_pda: auctioneer_pda,
+        token_program: spl_token::id(),
+        system_program: solana_program::system_program::id(),
+        program_as_signer: pas,
+        rent: sysvar::rent::id(),
+    };
+
+    let (delegate_record, _) = find_token_record_account(&test_metadata.mint.pubkey(), &pas_token);
+    let (auth_rules, _) = find_rule_set_address(mpl_auction_house::id(), "".to_string());
+
+    let p_nft_accounts = mpl_auction_house::accounts::SellRemainingAccounts {
+        metadata_program: mpl_token_metadata::id(),
+        delegate_record,
+        token_record: test_metadata.token_record,
+        token_mint: test_metadata.mint.pubkey(),
+        edition: test_metadata.master_edition,
+        auth_rules_program: mpl_token_auth_rules::id(),
+        auth_rules,
+        sysvar_instructions: sysvar::instructions::id(),
+    };
+
+    let mut account_metas = accounts.to_account_metas(None);
+
+    account_metas.append(&mut p_nft_accounts.to_account_metas(None));
+
+    //@TODO: remove later
+    if let Some(md_ix) = account_metas
+        .iter()
+        .position(|x| x.pubkey == test_metadata.pubkey)
+    {
+        account_metas[md_ix].is_writable = true;
+    }
+
+    let data = mpl_auction_house::instruction::AuctioneerSell {
+        trade_state_bump: sts_bump,
+        free_trade_state_bump: free_sts_bump,
+        program_as_signer_bump: pas_bump,
+        token_size: 1,
+    }
+    .data();
+
+    let instruction = Instruction {
+        program_id,
+        data,
+        accounts: account_metas,
+    };
+
+    (
+        accounts,
+        Transaction::new_signed_with_payer(
+            &[instruction],
+            Some(&test_metadata.token.pubkey()),
+            &[&test_metadata.token, auctioneer_authority],
             context.last_blockhash,
         ),
     )

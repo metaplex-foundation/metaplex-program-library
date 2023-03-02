@@ -39,7 +39,7 @@ pub struct ExecuteSale<'info> {
 
     /// CHECK: Validated in execute_sale_logic.
     /// Metaplex metadata account decorating SPL mint account.
-    #[account(mut)]
+    //@TODO: re-enable this later #[account(mut)]
     pub metadata: UncheckedAccount<'info>,
 
     /// CHECK: Validated in execute_sale_logic.
@@ -551,6 +551,7 @@ pub struct AuctioneerExecuteSale<'info> {
 
     /// CHECK: Validated in execute_sale_logic.
     /// Metaplex metadata account decorating SPL mint account.
+    //@TODO: re-enable this later #[account(mut)]
     pub metadata: UncheckedAccount<'info>,
 
     /// CHECK: Validated in execute_sale_logic.

@@ -29,7 +29,7 @@ pub struct Sell<'info> {
 
     /// CHECK: Verified through CPI
     /// Metaplex metadata account decorating SPL mint account.
-    #[account(mut)]
+    //@TODO: remove #[account(mut)]
     pub metadata: UncheckedAccount<'info>,
 
     /// CHECK: Verified through CPI
@@ -172,6 +172,7 @@ pub struct AuctioneerSell<'info> {
 
     /// CHECK: Validated by assert_metadata_valid.
     /// Metaplex metadata account decorating SPL mint account.
+    //@TODO: remove #[account(mut)]
     pub metadata: UncheckedAccount<'info>,
 
     /// CHECK: Verified through CPI
