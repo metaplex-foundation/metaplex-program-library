@@ -655,7 +655,7 @@ mod create_meta_accounts {
         };
 
         let create_tx = Transaction::new_signed_with_payer(
-            &[instruction::create_metadata_accounts_v2(
+            &[instruction::create_metadata_accounts_v3(
                 id(),
                 test_metadata.pubkey,
                 test_metadata.mint.pubkey(),
@@ -671,6 +671,7 @@ mod create_meta_accounts {
                 true,
                 None,
                 uses.to_owned(),
+                None,
             )],
             Some(&context.payer.pubkey()),
             &[&context.payer, &mint_authority],

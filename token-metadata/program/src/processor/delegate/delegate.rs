@@ -7,7 +7,7 @@ use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program::invoke, program_pack::Pack,
     pubkey::Pubkey, system_program, sysvar,
 };
-use spl_token::state::Account;
+use spl_token::{instruction::AuthorityType as SplAuthorityType, state::Account};
 
 use crate::{
     assertions::{
@@ -39,6 +39,7 @@ impl Display for DelegateScenario {
                 MetadataDelegateRole::Collection => "Collection".to_string(),
                 MetadataDelegateRole::Use => "Use".to_string(),
                 MetadataDelegateRole::Update => "Update".to_string(),
+                MetadataDelegateRole::ProgrammableConfig => "ProgrammableConfig".to_string(),
             },
             Self::Token(role) => match role {
                 TokenDelegateRole::Sale => "Sale".to_string(),
@@ -119,6 +120,9 @@ pub fn delegate<'a>(
         }
         DelegateArgs::UpdateV1 { authorization_data } => {
             Some((MetadataDelegateRole::Update, authorization_data))
+        }
+        DelegateArgs::ProgrammableConfigV1 { authorization_data } => {
+            Some((MetadataDelegateRole::ProgrammableConfig, authorization_data))
         }
         // we don't need to fail if did not find a match at this point
         _ => None,
@@ -294,7 +298,7 @@ fn create_persistent_delegate_v1(
                 rule_set: Some(rule_set),
             }) = metadata.programmable_config
             {
-                // valudates that we got the correct rule set
+                // validates that we got the correct rule set
                 let authorization_rules_info = ctx
                     .accounts
                     .authorization_rules_info
@@ -400,6 +404,26 @@ fn create_persistent_delegate_v1(
             ctx.accounts.authority_info.clone(),
         ],
     )?;
+
+    // For Utility Delegates we request Close Authority as well so that the
+    // token can be closed by the delegate on Burn.
+    if matches!(role, TokenDelegateRole::Utility) {
+        invoke(
+            &spl_token::instruction::set_authority(
+                spl_token_program_info.key,
+                token_info.key,
+                Some(ctx.accounts.delegate_info.key),
+                SplAuthorityType::CloseAccount,
+                ctx.accounts.authority_info.key,
+                &[],
+            )?,
+            &[
+                token_info.clone(),
+                ctx.accounts.delegate_info.clone(),
+                ctx.accounts.authority_info.clone(),
+            ],
+        )?;
+    }
 
     if matches!(
         metadata.token_standard,

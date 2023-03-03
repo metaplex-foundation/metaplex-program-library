@@ -3,7 +3,7 @@ use solana_program::pubkey::Pubkey;
 use crate::{instruction::MetadataDelegateRole, state::TOKEN_RECORD_SEED};
 
 /// prefix used for PDAs to avoid certain collision attacks:
-/// https://en.wikipedia.org/wiki/Collision_attack#Chosen-prefix_collision_attack
+/// <https://en.wikipedia.org/wiki/Collision_attack#Chosen-prefix_collision_attack>
 
 pub const PREFIX: &str = "metadata";
 

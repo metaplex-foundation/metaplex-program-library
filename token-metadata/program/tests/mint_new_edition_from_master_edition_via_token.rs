@@ -122,7 +122,7 @@ mod mint_new_edition_from_master_edition_via_token {
             &[&creator],
             context.last_blockhash,
         );
-        let _result = context.banks_client.process_transaction(tx).await;
+        context.banks_client.process_transaction(tx).await.unwrap();
 
         let kpbytes = &context.payer;
         let kp = Keypair::from_bytes(&kpbytes.to_bytes()).unwrap();

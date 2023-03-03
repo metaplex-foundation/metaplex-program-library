@@ -54,6 +54,9 @@ import {
   UnlockInstructionArgs,
   createUnlockInstruction,
   TransferArgs,
+  BurnInstructionAccounts,
+  BurnInstructionArgs,
+  createBurnInstruction,
 } from '../../src/generated';
 import { Test } from 'tape';
 import { amman } from '.';
@@ -94,6 +97,73 @@ export class InitTransactions {
       connection,
       payer,
       payerPair,
+    };
+  }
+
+  async authority() {
+    const [authority, authorityPair] = await this.getKeypair('Authority');
+
+    const connection = new Connection(LOCALHOST, 'confirmed');
+    await amman.airdrop(connection, authority, 2);
+
+    const transactionHandler = amman.payerTransactionHandler(connection, authorityPair);
+
+    return {
+      fstTxHandler: transactionHandler,
+      connection,
+      authority,
+      authorityPair,
+    };
+  }
+
+  async burn(
+    handler: PayerTransactionHandler,
+    authority: Keypair,
+    mint: PublicKey,
+    metadata: PublicKey,
+    token: PublicKey,
+    amount: number,
+    edition: PublicKey | null = null,
+    tokenRecord: PublicKey | null = null,
+    masterEdition: PublicKey | null = null,
+    masterEditionMint: PublicKey | null = null,
+    masterEditionToken: PublicKey | null = null,
+    editionMarker: PublicKey | null = null,
+  ): Promise<{ tx: ConfirmedTransactionAssertablePromise }> {
+    amman.addr.addLabel('Mint Account', mint);
+    amman.addr.addLabel('Metadata Account', metadata);
+    if (edition != null) {
+      amman.addr.addLabel('Edition Account', edition);
+    }
+
+    const burnAccounts: BurnInstructionAccounts = {
+      authority: authority.publicKey,
+      metadata,
+      edition,
+      mint,
+      token,
+      tokenRecord,
+      masterEdition,
+      masterEditionMint,
+      masterEditionToken,
+      editionMarker,
+      systemProgram: SystemProgram.programId,
+      sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
+      splTokenProgram: splToken.TOKEN_PROGRAM_ID,
+    };
+
+    const burnArgs: BurnInstructionArgs = {
+      burnArgs: {
+        __kind: 'V1',
+        amount,
+      },
+    };
+
+    const burnIx = createBurnInstruction(burnAccounts, burnArgs);
+    const tx = new Transaction().add(burnIx);
+
+    return {
+      tx: handler.sendAndConfirmTransaction(tx, [authority], 'tx: Burn'),
     };
   }
 

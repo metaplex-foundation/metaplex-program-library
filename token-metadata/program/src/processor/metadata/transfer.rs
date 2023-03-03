@@ -25,8 +25,8 @@ use crate::{
     instruction::{Context, Transfer, TransferArgs},
     pda::find_token_record_account,
     state::{
-        AuthorityRequest, AuthorityType, Metadata, Operation, Resizable, TokenDelegateRole,
-        TokenMetadataAccount, TokenRecord, TokenStandard,
+        AuthorityRequest, AuthorityResponse, AuthorityType, Metadata, Operation, Resizable,
+        TokenDelegateRole, TokenMetadataAccount, TokenRecord, TokenStandard,
     },
     utils::{
         assert_derivation, auth_rules_validate, create_token_record_account, frozen_transfer,
@@ -88,7 +88,6 @@ pub fn transfer<'a>(
 }
 
 fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) -> ProgramResult {
-    msg!("Transfer V1");
     let TransferArgs::V1 {
         authorization_data: auth_data,
         amount,
@@ -180,7 +179,6 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
     let mut is_wallet_to_wallet = false;
 
     // Deserialize metadata.
-    msg!("deserializing metadata");
     let metadata = Metadata::from_account_info(ctx.accounts.metadata_info)?;
 
     // Must be the actual current owner of the token where
@@ -209,21 +207,22 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
     let token = Account::unpack(&ctx.accounts.token_info.try_borrow_data()?)?;
 
     msg!("getting authority type");
-    let authority_type = AuthorityType::get_authority_type(AuthorityRequest {
-        authority: ctx.accounts.authority_info.key,
-        update_authority: &metadata.update_authority,
-        mint: ctx.accounts.mint_info.key,
-        token: Some(ctx.accounts.token_info.key),
-        token_account: Some(&token),
-        token_record_info: ctx.accounts.owner_token_record_info,
-        token_delegate_roles: vec![
-            TokenDelegateRole::Sale,
-            TokenDelegateRole::Transfer,
-            TokenDelegateRole::LockedTransfer,
-            TokenDelegateRole::Migration,
-        ],
-        ..Default::default()
-    })?;
+    let AuthorityResponse { authority_type, .. } =
+        AuthorityType::get_authority_type(AuthorityRequest {
+            authority: ctx.accounts.authority_info.key,
+            update_authority: &metadata.update_authority,
+            mint: ctx.accounts.mint_info.key,
+            token: Some(ctx.accounts.token_info.key),
+            token_account: Some(&token),
+            token_record_info: ctx.accounts.owner_token_record_info,
+            token_delegate_roles: vec![
+                TokenDelegateRole::Sale,
+                TokenDelegateRole::Transfer,
+                TokenDelegateRole::LockedTransfer,
+                TokenDelegateRole::Migration,
+            ],
+            ..Default::default()
+        })?;
 
     match authority_type {
         AuthorityType::Holder => {
@@ -259,11 +258,11 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
             // signer via an invoke call.
             is_wallet_to_wallet = !is_cpi && wallets_are_system_program_owned;
         }
-        AuthorityType::Delegate => {
+        AuthorityType::TokenDelegate => {
             // the delegate has already being validated, but we need to validate
             // that it can transfer the required amount
             if token.delegated_amount < amount || token.amount < amount {
-                return Err(MetadataError::NotEnoughTokens.into());
+                return Err(MetadataError::InsufficientTokenBalance.into());
             }
         }
         _ => {
@@ -282,7 +281,7 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
             };
 
             if available_amount < amount {
-                return Err(MetadataError::NotEnoughTokens.into());
+                return Err(MetadataError::InsufficientTokenBalance.into());
             }
         }
     }
@@ -339,7 +338,7 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
                     }
                     TransferScenario::Holder
                 }
-                AuthorityType::Delegate => {
+                AuthorityType::TokenDelegate => {
                     if owner_token_record.delegate_role.is_none() {
                         return Err(MetadataError::MissingDelegateRole.into());
                     }
@@ -395,7 +394,7 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
             // If the token record account for the destination owner doesn't exist,
             // we create it.
             if destination_token_record_info.data_is_empty() {
-                msg!("Initializing new token record account");
+                msg!("Init new token record");
 
                 create_token_record_account(
                     program_id,
@@ -407,10 +406,7 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
                 )?;
             }
         }
-        _ => {
-            msg!("Transferring standard asset");
-            mpl_utils::token::spl_token_transfer(token_transfer_params).unwrap()
-        }
+        _ => mpl_utils::token::spl_token_transfer(token_transfer_params).unwrap(),
     }
 
     Ok(())

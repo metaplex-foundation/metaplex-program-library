@@ -13,8 +13,9 @@ import * as beet from '@metaplex-foundation/beet';
 export enum AuthorityType {
   None,
   Metadata,
-  Delegate,
   Holder,
+  MetadataDelegate,
+  TokenDelegate,
 }
 
 /**

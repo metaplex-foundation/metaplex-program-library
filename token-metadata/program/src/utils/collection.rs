@@ -1,3 +1,5 @@
+use solana_program::msg;
+
 use super::*;
 use crate::state::CollectionDetails;
 
@@ -13,13 +15,13 @@ pub fn increment_collection_size(
                         .checked_add(1)
                         .ok_or(MetadataError::NumericalOverflowError)?,
                 });
-                msg!("Clean writing collection parent metadata");
+                msg!("Clean write collection metadata");
                 clean_write_metadata(metadata, metadata_info)?;
                 Ok(())
             }
         }
     } else {
-        msg!("No collection details found. Cannot increment collection size.");
+        msg!("No collection details. Can't increment.");
         Err(MetadataError::UnsizedCollection.into())
     }
 }
@@ -41,7 +43,7 @@ pub fn decrement_collection_size(
             }
         }
     } else {
-        msg!("No collection details found. Cannot decrement collection size.");
+        msg!("No collection details. Can't decrement.");
         Err(MetadataError::UnsizedCollection.into())
     }
 }

@@ -27,33 +27,49 @@ pub fn revoke<'a>(
 ) -> ProgramResult {
     let context = Revoke::to_context(accounts)?;
 
-    match args {
-        RevokeArgs::CollectionV1 => {
-            revoke_delegate(program_id, context, MetadataDelegateRole::Collection)
-        }
-        RevokeArgs::SaleV1 => {
-            revoke_persistent_delegate(program_id, context, TokenDelegateRole::Sale)
-        }
-        RevokeArgs::TransferV1 => {
-            revoke_persistent_delegate(program_id, context, TokenDelegateRole::Transfer)
-        }
-        RevokeArgs::UpdateV1 => revoke_delegate(program_id, context, MetadataDelegateRole::Update),
-        RevokeArgs::UtilityV1 => {
-            revoke_persistent_delegate(program_id, context, TokenDelegateRole::Utility)
-        }
-        RevokeArgs::StakingV1 => {
-            revoke_persistent_delegate(program_id, context, TokenDelegateRole::Staking)
-        }
-        RevokeArgs::StandardV1 => {
-            revoke_persistent_delegate(program_id, context, TokenDelegateRole::Standard)
-        }
-        RevokeArgs::LockedTransferV1 => {
-            revoke_persistent_delegate(program_id, context, TokenDelegateRole::LockedTransfer)
-        }
+    // checks if it is a TokenDelegate creation
+    let token_delegate = match &args {
+        // Sale
+        RevokeArgs::SaleV1 => Some(TokenDelegateRole::Sale),
+        // Transfer
+        RevokeArgs::TransferV1 => Some(TokenDelegateRole::Transfer),
+        // LockedTransfer
+        RevokeArgs::LockedTransferV1 => Some(TokenDelegateRole::LockedTransfer),
+        // Utility
+        RevokeArgs::UtilityV1 => Some(TokenDelegateRole::Utility),
+        // Staking
+        RevokeArgs::StakingV1 => Some(TokenDelegateRole::Staking),
+        // Migration
+        RevokeArgs::MigrationV1 => Some(TokenDelegateRole::Migration),
+        // Standard
+        RevokeArgs::StandardV1 => Some(TokenDelegateRole::Standard),
+        // we don't need to fail if did not find a match at this point
+        _ => None,
+    };
+
+    if let Some(role) = token_delegate {
+        // proceed with the delegate creation if we have a match
+        return revoke_persistent_delegate_v1(program_id, context, role);
     }
+
+    // checks if it is a MetadataDelegate creation
+    let metadata_delegate = match &args {
+        RevokeArgs::CollectionV1 => Some(MetadataDelegateRole::Collection),
+        RevokeArgs::UpdateV1 => Some(MetadataDelegateRole::Update),
+        RevokeArgs::ProgrammableConfigV1 => Some(MetadataDelegateRole::ProgrammableConfig),
+        // we don't need to fail if did not find a match at this point
+        _ => None,
+    };
+
+    if let Some(role) = metadata_delegate {
+        return revoke_delegate_v1(program_id, context, role);
+    }
+
+    // this only happens if we did not find a match
+    Err(MetadataError::InvalidDelegateArgs.into())
 }
 
-fn revoke_delegate(
+fn revoke_delegate_v1(
     program_id: &Pubkey,
     ctx: Context<Revoke>,
     role: MetadataDelegateRole,
@@ -126,7 +142,7 @@ fn revoke_delegate(
     )
 }
 
-fn revoke_persistent_delegate(
+fn revoke_persistent_delegate_v1(
     program_id: &Pubkey,
     ctx: Context<Revoke>,
     role: TokenDelegateRole,

@@ -140,7 +140,7 @@ mod process_legacy_instruction {
             mpl_token_metadata::id(),
             delegate_pubkey,
             asset.token.unwrap(),
-            asset.master_edition.unwrap(),
+            asset.edition.unwrap(),
             asset.mint.pubkey(),
         );
         let thaw_tx = Transaction::new_signed_with_payer(
@@ -172,7 +172,7 @@ mod process_legacy_instruction {
             mpl_token_metadata::id(),
             delegate_pubkey,
             asset.token.unwrap(),
-            asset.master_edition.unwrap(),
+            asset.edition.unwrap(),
             asset.mint.pubkey(),
         );
 
