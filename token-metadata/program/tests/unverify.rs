@@ -17,18 +17,6 @@ use solana_sdk::{
 };
 use utils::*;
 
-// Note: at the time these tests were created, the only Metadata delegates that have been
-// implemented are `Collection`, `Update`, and `ProgrammableConfig`.  We have tested each of these
-// cases.
-
-// Also at this time, a collection parent NFT cannot have a token standard of
-// `ProgrammableNonFungible`.  This means that using the new delegate handler, the only Token
-// delegate that can be issued for a collection parent NFT is `TokenDelegateRole::Standard`, which
-// means no token record PDA account will be created. Thus, we cannot properly test that the
-// Standard delegate is not authorized to verify a collection because if we send a non-existent
-// token record account to the verify handler (as a delegate record), it simply fails because the
-// owner is incorrect.
-
 mod verify_creator {
     use super::*;
 
@@ -261,7 +249,7 @@ mod verify_collection {
 
     #[tokio::test]
     async fn delegate_record_wrong_owner() {
-        // See `standard_delegate_fails`.
+        // See `standard_delegate_cannot_verify()`.
     }
 
     #[tokio::test]
@@ -272,6 +260,7 @@ mod verify_collection {
             &mut context,
             DEFAULT_COLLECTION_DETAILS,
             TokenStandard::ProgrammableNonFungible,
+            TokenStandard::NonFungible,
         )
         .await;
 
@@ -318,6 +307,7 @@ mod verify_collection {
             &mut context,
             DEFAULT_COLLECTION_DETAILS,
             TokenStandard::ProgrammableNonFungible,
+            TokenStandard::NonFungible,
         )
         .await;
 
@@ -364,6 +354,7 @@ mod verify_collection {
             &mut context,
             DEFAULT_COLLECTION_DETAILS,
             TokenStandard::ProgrammableNonFungible,
+            TokenStandard::NonFungible,
         )
         .await;
 
@@ -412,6 +403,7 @@ mod verify_collection {
             &mut context,
             DEFAULT_COLLECTION_DETAILS,
             TokenStandard::ProgrammableNonFungible,
+            TokenStandard::NonFungible,
         )
         .await;
 
@@ -457,6 +449,7 @@ mod verify_collection {
             &mut context,
             DEFAULT_COLLECTION_DETAILS,
             TokenStandard::ProgrammableNonFungible,
+            TokenStandard::NonFungible,
         )
         .await;
 
@@ -570,6 +563,7 @@ mod verify_collection {
             &mut context,
             DEFAULT_COLLECTION_DETAILS,
             TokenStandard::ProgrammableNonFungible,
+            TokenStandard::NonFungible,
         )
         .await;
 
@@ -645,6 +639,7 @@ mod verify_collection {
             &mut context,
             DEFAULT_COLLECTION_DETAILS,
             TokenStandard::ProgrammableNonFungible,
+            TokenStandard::NonFungible,
         )
         .await;
 
@@ -713,6 +708,7 @@ mod verify_collection {
             &mut context,
             DEFAULT_COLLECTION_DETAILS,
             TokenStandard::ProgrammableNonFungible,
+            TokenStandard::NonFungible,
         )
         .await;
 
@@ -781,6 +777,7 @@ mod verify_collection {
             &mut context,
             DEFAULT_COLLECTION_DETAILS,
             TokenStandard::ProgrammableNonFungible,
+            TokenStandard::NonFungible,
         )
         .await;
 
@@ -824,83 +821,6 @@ mod verify_collection {
                 &mut context,
                 &test_items.verified_collection_details,
             )
-            .await;
-    }
-
-    #[tokio::test]
-    async fn pass_item_pnft_sized_collection_update_authority_collection_new_handler() {
-        pass_collection_update_authority_collection_new_handler(
-            DEFAULT_COLLECTION_DETAILS,
-            TokenStandard::ProgrammableNonFungible,
-        )
-        .await;
-    }
-
-    #[tokio::test]
-    async fn pass_item_nft_sized_collection_update_authority_collection_new_handler() {
-        pass_collection_update_authority_collection_new_handler(
-            DEFAULT_COLLECTION_DETAILS,
-            TokenStandard::NonFungible,
-        )
-        .await;
-    }
-
-    #[tokio::test]
-    async fn pass_item_pnft_unsized_collection_update_authority_collection_new_handler() {
-        pass_collection_update_authority_collection_new_handler(
-            None,
-            TokenStandard::ProgrammableNonFungible,
-        )
-        .await;
-    }
-
-    #[tokio::test]
-    async fn pass_item_nft_unsized_collection_update_authority_collection_new_handler() {
-        pass_collection_update_authority_collection_new_handler(None, TokenStandard::NonFungible)
-            .await;
-    }
-
-    async fn pass_collection_update_authority_collection_new_handler(
-        collection_details: Option<CollectionDetails>,
-        item_token_standard: TokenStandard,
-    ) {
-        let mut context = program_test().start_with_context().await;
-
-        let mut test_items = create_mint_verify_collection_check(
-            &mut context,
-            collection_details.clone(),
-            item_token_standard,
-        )
-        .await;
-
-        // Unverify.
-        let args = VerificationArgs::CollectionV1;
-        let payer = context.payer.dirty_clone();
-        test_items
-            .da
-            .unverify(
-                &mut context,
-                payer,
-                args,
-                None,
-                None,
-                Some(test_items.collection_parent_da.mint.pubkey()),
-                Some(test_items.collection_parent_da.metadata),
-            )
-            .await
-            .unwrap();
-
-        test_items
-            .da
-            .assert_item_collection_matches_on_chain(
-                &mut context,
-                &test_items.unverified_collection,
-            )
-            .await;
-
-        test_items
-            .collection_parent_da
-            .assert_collection_details_matches_on_chain(&mut context, &collection_details)
             .await;
     }
 
@@ -1136,40 +1056,89 @@ mod verify_collection {
     }
 
     #[tokio::test]
-    async fn pass_item_pnft_delegated_authority_sized_collection_new_handler() {
-        pass_delegated_authority_collection_new_handler(
-            DEFAULT_COLLECTION_DETAILS,
-            TokenStandard::ProgrammableNonFungible,
-        )
-        .await;
-    }
-
-    #[tokio::test]
-    async fn pass_item_nft_delegated_authority_sized_collection_new_handler() {
-        pass_delegated_authority_collection_new_handler(
-            DEFAULT_COLLECTION_DETAILS,
+    async fn pass_unsized_collection_item_nft_collection_nft_new_handler_update_authority() {
+        pass_collection_new_handler_collection_update_authority(
+            None,
+            TokenStandard::NonFungible,
             TokenStandard::NonFungible,
         )
         .await;
     }
 
     #[tokio::test]
-    async fn pass_item_pnft_delegated_authority_unsized_collection_new_handler() {
-        pass_delegated_authority_collection_new_handler(
+    async fn pass_unsized_collection_item_nft_collection_pnft_new_handler_update_authority() {
+        pass_collection_new_handler_collection_update_authority(
             None,
+            TokenStandard::NonFungible,
             TokenStandard::ProgrammableNonFungible,
         )
         .await;
     }
 
     #[tokio::test]
-    async fn pass_item_nft_delegated_authority_unsized_collection_new_handler() {
-        pass_delegated_authority_collection_new_handler(None, TokenStandard::NonFungible).await;
+    async fn pass_unsized_collection_item_pnft_collection_nft_new_handler_update_authority() {
+        pass_collection_new_handler_collection_update_authority(
+            None,
+            TokenStandard::ProgrammableNonFungible,
+            TokenStandard::NonFungible,
+        )
+        .await;
     }
 
-    async fn pass_delegated_authority_collection_new_handler(
+    #[tokio::test]
+    async fn pass_unsized_collection_item_pnft_collection_pnft_new_handler_update_authority() {
+        pass_collection_new_handler_collection_update_authority(
+            None,
+            TokenStandard::ProgrammableNonFungible,
+            TokenStandard::ProgrammableNonFungible,
+        )
+        .await;
+    }
+
+    #[tokio::test]
+    async fn pass_sized_collection_item_nft_collection_nft_new_handler_update_authority() {
+        pass_collection_new_handler_collection_update_authority(
+            DEFAULT_COLLECTION_DETAILS,
+            TokenStandard::NonFungible,
+            TokenStandard::NonFungible,
+        )
+        .await;
+    }
+
+    #[tokio::test]
+    async fn pass_sized_collection_item_nft_collection_pnft_new_handler_update_authority() {
+        pass_collection_new_handler_collection_update_authority(
+            DEFAULT_COLLECTION_DETAILS,
+            TokenStandard::NonFungible,
+            TokenStandard::ProgrammableNonFungible,
+        )
+        .await;
+    }
+
+    #[tokio::test]
+    async fn pass_sized_collection_item_pnft_collection_nft_new_handler_update_authority() {
+        pass_collection_new_handler_collection_update_authority(
+            DEFAULT_COLLECTION_DETAILS,
+            TokenStandard::ProgrammableNonFungible,
+            TokenStandard::NonFungible,
+        )
+        .await;
+    }
+
+    #[tokio::test]
+    async fn pass_sized_collection_item_pnft_collection_pnft_new_handler_update_authority() {
+        pass_collection_new_handler_collection_update_authority(
+            DEFAULT_COLLECTION_DETAILS,
+            TokenStandard::ProgrammableNonFungible,
+            TokenStandard::ProgrammableNonFungible,
+        )
+        .await;
+    }
+
+    async fn pass_collection_new_handler_collection_update_authority(
         collection_details: Option<CollectionDetails>,
         item_token_standard: TokenStandard,
+        collection_token_standard: TokenStandard,
     ) {
         let mut context = program_test().start_with_context().await;
 
@@ -1177,6 +1146,133 @@ mod verify_collection {
             &mut context,
             collection_details.clone(),
             item_token_standard,
+            collection_token_standard,
+        )
+        .await;
+
+        // Unverify.
+        let args = VerificationArgs::CollectionV1;
+        let payer = context.payer.dirty_clone();
+        test_items
+            .da
+            .unverify(
+                &mut context,
+                payer,
+                args,
+                None,
+                None,
+                Some(test_items.collection_parent_da.mint.pubkey()),
+                Some(test_items.collection_parent_da.metadata),
+            )
+            .await
+            .unwrap();
+
+        test_items
+            .da
+            .assert_item_collection_matches_on_chain(
+                &mut context,
+                &test_items.unverified_collection,
+            )
+            .await;
+
+        test_items
+            .collection_parent_da
+            .assert_collection_details_matches_on_chain(&mut context, &collection_details)
+            .await;
+    }
+
+    #[tokio::test]
+    async fn pass_unsized_collection_item_nft_collection_nft_new_handler_delegated_authority() {
+        pass_collection_new_handler_delegated_authority(
+            None,
+            TokenStandard::NonFungible,
+            TokenStandard::NonFungible,
+        )
+        .await;
+    }
+
+    #[tokio::test]
+    async fn pass_unsized_collection_item_nft_collection_pnft_new_handler_delegated_authority() {
+        pass_collection_new_handler_delegated_authority(
+            None,
+            TokenStandard::NonFungible,
+            TokenStandard::ProgrammableNonFungible,
+        )
+        .await;
+    }
+
+    #[tokio::test]
+    async fn pass_unsized_collection_item_pnft_collection_nft_new_handler_delegated_authority() {
+        pass_collection_new_handler_delegated_authority(
+            None,
+            TokenStandard::ProgrammableNonFungible,
+            TokenStandard::NonFungible,
+        )
+        .await;
+    }
+
+    #[tokio::test]
+    async fn pass_unsized_collection_item_pnft_collection_pnft_new_handler_delegated_authority() {
+        pass_collection_new_handler_delegated_authority(
+            None,
+            TokenStandard::ProgrammableNonFungible,
+            TokenStandard::ProgrammableNonFungible,
+        )
+        .await;
+    }
+
+    #[tokio::test]
+    async fn pass_sized_collection_item_nft_collection_nft_new_handler_delegated_authority() {
+        pass_collection_new_handler_delegated_authority(
+            DEFAULT_COLLECTION_DETAILS,
+            TokenStandard::NonFungible,
+            TokenStandard::NonFungible,
+        )
+        .await;
+    }
+
+    #[tokio::test]
+    async fn pass_sized_collection_item_nft_collection_pnft_new_handler_delegated_authority() {
+        pass_collection_new_handler_delegated_authority(
+            DEFAULT_COLLECTION_DETAILS,
+            TokenStandard::NonFungible,
+            TokenStandard::ProgrammableNonFungible,
+        )
+        .await;
+    }
+
+    #[tokio::test]
+    async fn pass_sized_collection_item_pnft_collection_nft_new_handler_delegated_authority() {
+        pass_collection_new_handler_delegated_authority(
+            DEFAULT_COLLECTION_DETAILS,
+            TokenStandard::ProgrammableNonFungible,
+            TokenStandard::NonFungible,
+        )
+        .await;
+    }
+
+    #[tokio::test]
+    async fn pass_sized_collection_item_pnft_collection_pnft_new_handler_delegated_authority() {
+        pass_collection_new_handler_delegated_authority(
+            DEFAULT_COLLECTION_DETAILS,
+            TokenStandard::ProgrammableNonFungible,
+            TokenStandard::ProgrammableNonFungible,
+        )
+        .await;
+    }
+
+    async fn pass_collection_new_handler_delegated_authority(
+        collection_details: Option<CollectionDetails>,
+        item_token_standard: TokenStandard,
+        collection_token_standard: TokenStandard,
+    ) {
+        let mut context = program_test().start_with_context().await;
+
+        let mut test_items = create_mint_verify_collection_check(
+            &mut context,
+            collection_details.clone(),
+            item_token_standard,
+            collection_token_standard,
         )
         .await;
 
@@ -1267,9 +1363,11 @@ mod verify_collection {
     ) {
         let mut context = program_test().start_with_context().await;
 
+        // Use pNFT for collection parent for this test.
         let mut test_items = create_mint_verify_collection_check(
             &mut context,
             DEFAULT_COLLECTION_DETAILS,
+            TokenStandard::ProgrammableNonFungible,
             TokenStandard::ProgrammableNonFungible,
         )
         .await;
@@ -1330,7 +1428,7 @@ mod verify_collection {
     }
 
     #[tokio::test]
-    async fn delegate_for_different_collection_cannot_verify() {
+    async fn delegate_for_different_collection_cannot_unverify() {
         let mut context = program_test().start_with_context().await;
 
         // This creates a collection and item and makes the item a member of the first collection.
@@ -1338,15 +1436,16 @@ mod verify_collection {
             &mut context,
             DEFAULT_COLLECTION_DETAILS,
             TokenStandard::ProgrammableNonFungible,
+            TokenStandard::ProgrammableNonFungible,
         )
         .await;
 
-        // Create a second collection parent NFT with the CollectionDetails struct populated.
+        // Create a second collection parent pNFT with the CollectionDetails struct populated.
         let mut second_collection_parent_da = DigitalAsset::new();
         second_collection_parent_da
             .create_and_mint_collection_parent(
                 &mut context,
-                TokenStandard::NonFungible,
+                TokenStandard::ProgrammableNonFungible,
                 None,
                 None,
                 1,
@@ -1429,13 +1528,15 @@ mod verify_collection {
     }
 
     #[tokio::test]
-    async fn standard_delegate_fails() {
+    async fn standard_delegate_cannot_verify() {
         let mut context = program_test().start_with_context().await;
 
+        // Use NFT for collection parent for this test.
         let mut test_items = create_mint_verify_collection_check(
             &mut context,
             DEFAULT_COLLECTION_DETAILS,
             TokenStandard::ProgrammableNonFungible,
+            TokenStandard::NonFungible,
         )
         .await;
 
@@ -1493,6 +1594,75 @@ mod verify_collection {
             .await;
     }
 
+    #[tokio::test]
+    async fn utility_delegate_cannot_unverify() {
+        let mut context = program_test().start_with_context().await;
+
+        // Use pNFT for collection parent for this test.
+        let mut test_items = create_mint_verify_collection_check(
+            &mut context,
+            DEFAULT_COLLECTION_DETAILS,
+            TokenStandard::ProgrammableNonFungible,
+            TokenStandard::ProgrammableNonFungible,
+        )
+        .await;
+
+        // Create a Utility delegate.
+        let delegate = Keypair::new();
+        airdrop(&mut context, &delegate.pubkey(), LAMPORTS_PER_SOL)
+            .await
+            .unwrap();
+
+        let payer = context.payer.dirty_clone();
+        let delegate_args = DelegateArgs::UtilityV1 {
+            amount: 1,
+            authorization_data: None,
+        };
+        test_items
+            .collection_parent_da
+            .delegate(&mut context, payer, delegate.pubkey(), delegate_args)
+            .await
+            .unwrap();
+
+        // Find the token_record account for the Utility Delegate.
+        let (token_record, _) = find_token_record_account(
+            &test_items.collection_parent_da.mint.pubkey(),
+            &test_items.collection_parent_da.token.unwrap(),
+        );
+
+        // Unverify.
+        let args = VerificationArgs::CollectionV1;
+        let err = test_items
+            .da
+            .unverify(
+                &mut context,
+                delegate,
+                args,
+                None,
+                Some(token_record),
+                Some(test_items.collection_parent_da.mint.pubkey()),
+                Some(test_items.collection_parent_da.metadata),
+            )
+            .await
+            .unwrap_err();
+
+        assert_custom_error!(err, MetadataError::UpdateAuthorityIncorrect);
+
+        test_items
+            .da
+            .assert_item_collection_matches_on_chain(&mut context, &test_items.verified_collection)
+            .await;
+
+        // Check collection details.  It should not be updated.
+        test_items
+            .collection_parent_da
+            .assert_collection_details_matches_on_chain(
+                &mut context,
+                &test_items.verified_collection_details,
+            )
+            .await;
+    }
+
     struct CollectionTestItems {
         collection_parent_da: DigitalAsset,
         da: DigitalAsset,
@@ -1505,13 +1675,14 @@ mod verify_collection {
         context: &mut ProgramTestContext,
         collection_details: Option<CollectionDetails>,
         item_token_standard: TokenStandard,
+        collection_token_standard: TokenStandard,
     ) -> CollectionTestItems {
-        // Create a collection parent NFT with the CollectionDetails struct populated.
+        // Create a collection parent NFT or pNFT with the CollectionDetails struct populated.
         let mut collection_parent_da = DigitalAsset::new();
         collection_parent_da
             .create_and_mint_collection_parent(
                 context,
-                TokenStandard::NonFungible,
+                collection_token_standard,
                 None,
                 None,
                 1,
