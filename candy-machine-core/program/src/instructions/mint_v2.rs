@@ -461,7 +461,6 @@ fn create_and_mint<'info>(
         accounts.nft_master_edition.to_account_info(),
         accounts.nft_mint.to_account_info(),
         accounts.payer.to_account_info(),
-        accounts.nft_mint_authority.to_account_info(),
         accounts.system_program.to_account_info(),
         sysvar_instructions_info.to_account_info(),
     ];

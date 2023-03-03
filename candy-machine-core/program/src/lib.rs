@@ -64,7 +64,7 @@ pub mod candy_machine_core {
     ///   5. `[]` Collection mint
     ///   6. `[]` Collection master edition
     ///   7. `[signer]` Collection update authority
-    ///   8. `[writable]` Metadata delegate record
+    ///   8. `[writable]` Collection metadata delegate record
     ///   9. `[]` Token Metadata program
     ///   10. `[]` System program
     ///   11. `[]` Instructions sysvar account
@@ -122,7 +122,7 @@ pub mod candy_machine_core {
     ///   7. `[writable]` Master edition account of the NFT
     ///   8. `[optional, writable]` Destination token account
     ///   9. `[optional, writable]` Token record
-    ///   10. `[optional]` Collection authority record
+    ///   10. `[]` Collection delegate or authority record
     ///   11. `[]` Collection mint
     ///   12. `[writable]` Collection metadata
     ///   13. `[]` Collection master edition
@@ -131,7 +131,7 @@ pub mod candy_machine_core {
     ///   16. `[]` SPL Token program
     ///   17. `[optional]` SPL Associated Token program
     ///   18. `[]` System program
-    ///   19. `[]` Instructions sysvar account
+    ///   19. `[optional]` Instructions sysvar account
     ///   20. `[]` SlotHashes sysvar cluster data.
     pub fn mint_v2<'info>(ctx: Context<'_, '_, '_, 'info, MintV2<'info>>) -> Result<()> {
         instructions::mint_v2(ctx)

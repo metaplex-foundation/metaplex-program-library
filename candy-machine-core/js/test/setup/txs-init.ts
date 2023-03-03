@@ -480,18 +480,22 @@ export class InitTransactions {
       .pdas()
       .associatedTokenAccount({ mint: nftMint, owner: payer.publicKey });
 
+    const authorityPda = metaplex.candyMachines().pdas().authority({ candyMachine });
+
     const collectionMint = candyMachineObject.collectionMint;
     // retrieves the collection nft
     const collection = await metaplex.nfts().findByMint({ mintAddress: collectionMint });
     // collection PDAs
-    const authorityPda = metaplex.candyMachines().pdas().authority({ candyMachine });
-    const collectionAuthorityRecord = metaplex.nfts().pdas().collectionAuthorityRecord({
-      mint: collectionMint,
-      collectionAuthority: authorityPda,
-    });
-
     const collectionMetadata = metaplex.nfts().pdas().metadata({ mint: collectionMint });
     const collectionMasterEdition = metaplex.nfts().pdas().masterEdition({ mint: collectionMint });
+
+    const collectionDelegateRecord = metaplex.nfts().pdas().metadataDelegateRecord({
+      mint: collection.address,
+      type: 'CollectionV1',
+      updateAuthority: payer.publicKey,
+      delegate: authorityPda,
+    });
+    await amman.addr.addLabel('Metadata Delegate Record', collectionDelegateRecord);
 
     const accounts: program.MintV2InstructionAccounts = {
       candyMachine: candyMachine,
@@ -503,7 +507,7 @@ export class InitTransactions {
       nftMetadata,
       nftMasterEdition,
       token: nftTokenAccount,
-      collectionDelegateRecord: collectionAuthorityRecord,
+      collectionDelegateRecord,
       collectionMint,
       collectionUpdateAuthority: collection.updateAuthorityAddress,
       collectionMetadata,
