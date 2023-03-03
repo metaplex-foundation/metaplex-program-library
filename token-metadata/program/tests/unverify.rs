@@ -1759,6 +1759,12 @@ mod unverify_collection {
             .await
             .unwrap();
 
+        // Assert that metadata, edition, token and token record accounts are closed.
+        collection_parent_da
+            .assert_burned(&mut context)
+            .await
+            .unwrap();
+
         // Unverify using the new collection update authority.
         let args = VerificationArgs::CollectionV1;
         let err = da
@@ -1877,6 +1883,12 @@ mod unverify_collection {
         let payer = context.payer.dirty_clone();
         collection_parent_da
             .burn(&mut context, payer, args, None, None)
+            .await
+            .unwrap();
+
+        // Assert that metadata, edition, token and token record accounts are closed.
+        collection_parent_da
+            .assert_burned(&mut context)
             .await
             .unwrap();
 
