@@ -134,7 +134,7 @@ export function createExecuteSaleInstruction(
     },
     {
       pubkey: accounts.metadata,
-      isWritable: true,
+      isWritable: false,
       isSigner: false,
     },
     {

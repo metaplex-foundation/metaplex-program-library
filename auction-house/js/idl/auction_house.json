@@ -1246,7 +1246,7 @@
         },
         {
           "name": "metadata",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false,
           "docs": [
             "Metaplex metadata account decorating SPL mint account."
