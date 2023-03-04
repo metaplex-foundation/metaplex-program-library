@@ -31,11 +31,11 @@ test('Verify and Unverify: creator', async (t) => {
     TokenStandard.ProgrammableNonFungible,
   );
 
-  // Creator is set for item but unverified.
+  // Creator is unverified.
   const metadataInitial = await Metadata.fromAccountAddress(connection, daItemManager.metadata);
   const unverifiedCreators = [
     {
-      address: payer.publicKey,
+      address: spokSamePubkey(payer.publicKey),
       verified: false,
       share: 100,
     },
@@ -63,12 +63,12 @@ test('Verify and Unverify: creator', async (t) => {
 
   await verifyTx.assertSuccess(t);
 
-  // Collection is set for item and verified.
+  // Creator is verified.
   const metadataVerified = await Metadata.fromAccountAddress(connection, daItemManager.metadata);
   const verifiedCreators = [
     {
-      address: payer.publicKey,
-      verified: false,
+      address: spokSamePubkey(payer.publicKey),
+      verified: true,
       share: 100,
     },
   ];
@@ -93,7 +93,7 @@ test('Verify and Unverify: creator', async (t) => {
 
   await unverifyTx.assertSuccess(t);
 
-  // Collection is set for item and verified.
+  // Creator is unverified.
   const metadataUnverified = await Metadata.fromAccountAddress(connection, daItemManager.metadata);
   spok(t, metadataUnverified.data, {
     creators: unverifiedCreators,
@@ -128,13 +128,16 @@ test('Verify and Unverify: NFT member of NFT collection', async (t) => {
     handler,
     payer,
     TokenStandard.NonFungible,
+    null,
+    1,
     daCollectionManager.mint,
   );
 
   // Collection is set for item but unverified.
   const metadataInitial = await Metadata.fromAccountAddress(connection, daItemManager.metadata);
-  spok(t, metadataInitial, {
-    collection: { key: spokSamePubkey(daCollectionManager.mint), verified: false },
+  spok(t, metadataInitial.collection, {
+    key: spokSamePubkey(daCollectionManager.mint),
+    verified: false,
   });
 
   // Verify.
@@ -156,10 +159,11 @@ test('Verify and Unverify: NFT member of NFT collection', async (t) => {
 
   await verifyTx.assertSuccess(t);
 
-  // Collection is set for item and verified.
+  // Collection is verified.
   const metadataVerified = await Metadata.fromAccountAddress(connection, daItemManager.metadata);
-  spok(t, metadataVerified, {
-    collection: { key: spokSamePubkey(daCollectionManager.mint), verified: true },
+  spok(t, metadataVerified.collection, {
+    key: spokSamePubkey(daCollectionManager.mint),
+    verified: true,
   });
 
   // Unverify.
@@ -179,10 +183,11 @@ test('Verify and Unverify: NFT member of NFT collection', async (t) => {
 
   await unverifyTx.assertSuccess(t);
 
-  // Collection is set for item and verified.
+  // Collection is unverified.
   const metadataUnverified = await Metadata.fromAccountAddress(connection, daItemManager.metadata);
-  spok(t, metadataUnverified, {
-    collection: { key: spokSamePubkey(daCollectionManager.mint), verified: false },
+  spok(t, metadataUnverified.collection, {
+    key: spokSamePubkey(daCollectionManager.mint),
+    verified: false,
   });
 });
 
@@ -214,13 +219,16 @@ test('Verify and Unverify: pNFT member of pNFT collection', async (t) => {
     handler,
     payer,
     TokenStandard.ProgrammableNonFungible,
+    null,
+    1,
     daCollectionManager.mint,
   );
 
   // Collection is set for item but unverified.
   const metadataInitial = await Metadata.fromAccountAddress(connection, daItemManager.metadata);
-  spok(t, metadataInitial, {
-    collection: { key: spokSamePubkey(daCollectionManager.mint), verified: false },
+  spok(t, metadataInitial.collection, {
+    key: spokSamePubkey(daCollectionManager.mint),
+    verified: false,
   });
 
   // Verify.
@@ -242,10 +250,11 @@ test('Verify and Unverify: pNFT member of pNFT collection', async (t) => {
 
   await verifyTx.assertSuccess(t);
 
-  // Collection is set for item and verified.
+  // Collection is verified.
   const metadataVerified = await Metadata.fromAccountAddress(connection, daItemManager.metadata);
-  spok(t, metadataVerified, {
-    collection: { key: spokSamePubkey(daCollectionManager.mint), verified: true },
+  spok(t, metadataVerified.collection, {
+    key: spokSamePubkey(daCollectionManager.mint),
+    verified: true,
   });
 
   // Unverify.
@@ -265,9 +274,10 @@ test('Verify and Unverify: pNFT member of pNFT collection', async (t) => {
 
   await unverifyTx.assertSuccess(t);
 
-  // Collection is set for item and verified.
+  // Collection is unverified.
   const metadataUnverified = await Metadata.fromAccountAddress(connection, daItemManager.metadata);
-  spok(t, metadataUnverified, {
-    collection: { key: spokSamePubkey(daCollectionManager.mint), verified: false },
+  spok(t, metadataUnverified.collection, {
+    key: spokSamePubkey(daCollectionManager.mint),
+    verified: false,
   });
 });
