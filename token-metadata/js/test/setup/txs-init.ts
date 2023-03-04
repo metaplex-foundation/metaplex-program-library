@@ -62,7 +62,7 @@ import {
   createVerifyInstruction,
   UnverifyInstructionAccounts,
   UnverifyInstructionArgs,
-  createUnverifyInstruction
+  createUnverifyInstruction,
 } from '../../src/generated';
 import { Test } from 'tape';
 import { amman } from '.';

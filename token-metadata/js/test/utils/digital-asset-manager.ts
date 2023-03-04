@@ -4,7 +4,7 @@ import {
   Metadata,
   TokenStandard,
   AuthorizationData,
-  CollectionDetails
+  CollectionDetails,
 } from '../../src/generated';
 import { InitTransactions } from '../setup';
 import test from 'tape';
@@ -150,7 +150,7 @@ export async function createAndMintDefaultCollectionParent(
   handler: PayerTransactionHandler,
   payer: Keypair,
   tokenStandard: TokenStandard = TokenStandard.NonFungible,
-  collectionDetails: CollectionDetails
+  collectionDetails: CollectionDetails,
 ): Promise<DigitalAssetManager> {
   const daManager = await createDefaultAsset(
     t,
