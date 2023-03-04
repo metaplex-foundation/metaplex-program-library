@@ -1,5 +1,11 @@
 import { Connection, PublicKey } from '@solana/web3.js';
-import { AssetData, Metadata, TokenStandard, AuthorizationData } from '../../src/generated';
+import {
+  AssetData,
+  Metadata,
+  TokenStandard,
+  AuthorizationData,
+  CollectionDetails
+} from '../../src/generated';
 import { InitTransactions } from '../setup';
 import test from 'tape';
 import { PayerTransactionHandler } from '@metaplex-foundation/amman-client';
@@ -54,6 +60,7 @@ export async function createDefaultAsset(
   tokenStandard: TokenStandard = TokenStandard.NonFungible,
   ruleSet: PublicKey | null = null,
   collection: PublicKey | null = null,
+  collectionDetails: CollectionDetails | null = null,
 ): Promise<DigitalAssetManager> {
   const name = 'DigitalAsset';
   const symbol = 'DA';
@@ -77,7 +84,7 @@ export async function createDefaultAsset(
     tokenStandard,
     collection: collection ? { key: collection, verified: false } : null,
     uses: null,
-    collectionDetails: null,
+    collectionDetails,
     ruleSet,
   };
 
@@ -114,6 +121,7 @@ export async function createAndMintDefaultAsset(
     tokenStandard,
     ruleSet,
     collection,
+    null,
   );
   const { mint, metadata, masterEdition } = daManager;
 
@@ -126,6 +134,46 @@ export async function createAndMintDefaultAsset(
     masterEdition,
     daManager.emptyAuthorizationData(),
     amount,
+    handler,
+  );
+  await mintTx.assertSuccess(t);
+
+  daManager.token = token;
+
+  return daManager;
+}
+
+export async function createAndMintDefaultCollectionParent(
+  t: test.Test,
+  connection: Connection,
+  API: InitTransactions,
+  handler: PayerTransactionHandler,
+  payer: Keypair,
+  tokenStandard: TokenStandard = TokenStandard.NonFungible,
+  collectionDetails: CollectionDetails
+): Promise<DigitalAssetManager> {
+  const daManager = await createDefaultAsset(
+    t,
+    connection,
+    API,
+    handler,
+    payer,
+    tokenStandard,
+    null,
+    null,
+    collectionDetails,
+  );
+  const { mint, metadata, masterEdition } = daManager;
+
+  const { tx: mintTx, token } = await API.mint(
+    t,
+    connection,
+    payer,
+    mint,
+    metadata,
+    masterEdition,
+    daManager.emptyAuthorizationData(),
+    1,
     handler,
   );
   await mintTx.assertSuccess(t);
