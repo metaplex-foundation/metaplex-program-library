@@ -1108,6 +1108,98 @@ mod verify_collection {
     }
 
     #[tokio::test]
+    async fn fail_collection_wrong_token_standard() {
+        let mut context = program_test().start_with_context().await;
+
+        // Create a collection parent NFT with the CollectionDetails struct populated.
+        let collection_parent_nft = Metadata::new();
+        collection_parent_nft
+            .create_v3(
+                &mut context,
+                "Test".to_string(),
+                "TST".to_string(),
+                "uri".to_string(),
+                None,
+                10,
+                false,
+                None,
+                None,
+                DEFAULT_COLLECTION_DETAILS,
+            )
+            .await
+            .unwrap();
+
+        // This legacy `create` method uses an old `create_master_edition` instruction that does not update
+        // the token standard on the test collection.
+        let parent_master_edition_account = MasterEditionV2::new(&collection_parent_nft);
+        parent_master_edition_account
+            .create(&mut context, Some(0))
+            .await
+            .unwrap();
+
+        let collection_metadata = collection_parent_nft.get_data(&mut context).await;
+        assert_eq!(
+            collection_metadata.token_standard,
+            Some(TokenStandard::FungibleAsset)
+        );
+
+        // Create and mint item.
+        let collection = Some(Collection {
+            key: collection_parent_nft.mint.pubkey(),
+            verified: false,
+        });
+
+        let mut da = DigitalAsset::new();
+        da.create_and_mint_item_with_collection(
+            &mut context,
+            TokenStandard::ProgrammableNonFungible,
+            None,
+            None,
+            1,
+            collection.clone(),
+        )
+        .await
+        .unwrap();
+
+        assert_collection_unverified_item_and_parent(
+            &mut context,
+            &da,
+            &collection,
+            &collection_parent_nft,
+            &DEFAULT_COLLECTION_DETAILS,
+        )
+        .await;
+
+        // Verify.
+        let args = VerificationArgs::CollectionV1;
+        let payer = context.payer.dirty_clone();
+        let err = da
+            .verify(
+                &mut context,
+                payer,
+                args,
+                None,
+                None,
+                Some(collection_parent_nft.mint.pubkey()),
+                Some(collection_parent_nft.pubkey),
+                Some(parent_master_edition_account.pubkey),
+            )
+            .await
+            .unwrap_err();
+
+        assert_custom_error!(err, MetadataError::CollectionMustBeAUniqueMasterEdition);
+
+        assert_collection_unverified_item_and_parent(
+            &mut context,
+            &da,
+            &collection,
+            &collection_parent_nft,
+            &DEFAULT_COLLECTION_DETAILS,
+        )
+        .await;
+    }
+
+    #[tokio::test]
     async fn fail_collection_master_edition_has_nonzero_max_supply() {
         let mut context = program_test().start_with_context().await;
 
