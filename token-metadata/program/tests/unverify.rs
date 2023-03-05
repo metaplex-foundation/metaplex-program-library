@@ -284,19 +284,14 @@ mod unverify_collection {
 
         assert_custom_error!(err, MetadataError::IncorrectOwner);
 
-        test_items
-            .da
-            .assert_item_collection_matches_on_chain(&mut context, &test_items.verified_collection)
-            .await;
-
-        // Check collection details.  If sized collection, size should be updated.
-        test_items
-            .collection_parent_da
-            .assert_collection_details_matches_on_chain(
-                &mut context,
-                &test_items.verified_collection_details,
-            )
-            .await;
+        assert_collection_verified_item_and_parent(
+            &mut context,
+            &test_items.da,
+            &test_items.collection,
+            &test_items.collection_parent_da,
+            &DEFAULT_COLLECTION_DETAILS,
+        )
+        .await;
     }
 
     #[tokio::test]
@@ -331,19 +326,14 @@ mod unverify_collection {
 
         assert_custom_error!(err, MetadataError::IncorrectOwner);
 
-        test_items
-            .da
-            .assert_item_collection_matches_on_chain(&mut context, &test_items.verified_collection)
-            .await;
-
-        // Check collection details.  If sized collection, size should be updated.
-        test_items
-            .collection_parent_da
-            .assert_collection_details_matches_on_chain(
-                &mut context,
-                &test_items.verified_collection_details,
-            )
-            .await;
+        assert_collection_verified_item_and_parent(
+            &mut context,
+            &test_items.da,
+            &test_items.collection,
+            &test_items.collection_parent_da,
+            &DEFAULT_COLLECTION_DETAILS,
+        )
+        .await;
     }
 
     #[tokio::test]
@@ -380,19 +370,14 @@ mod unverify_collection {
         // it gets to an owner check.
         assert_custom_error!(err, MetadataError::MintMismatch);
 
-        test_items
-            .da
-            .assert_item_collection_matches_on_chain(&mut context, &test_items.verified_collection)
-            .await;
-
-        // Check collection details.  If sized collection, size should be updated.
-        test_items
-            .collection_parent_da
-            .assert_collection_details_matches_on_chain(
-                &mut context,
-                &test_items.verified_collection_details,
-            )
-            .await;
+        assert_collection_verified_item_and_parent(
+            &mut context,
+            &test_items.da,
+            &test_items.collection,
+            &test_items.collection_parent_da,
+            &DEFAULT_COLLECTION_DETAILS,
+        )
+        .await;
     }
 
     #[tokio::test]
@@ -426,19 +411,14 @@ mod unverify_collection {
 
         assert_custom_error!(err, MetadataError::MissingCollectionMint);
 
-        test_items
-            .da
-            .assert_item_collection_matches_on_chain(&mut context, &test_items.verified_collection)
-            .await;
-
-        // Check collection details.  If sized collection, size should be updated.
-        test_items
-            .collection_parent_da
-            .assert_collection_details_matches_on_chain(
-                &mut context,
-                &test_items.verified_collection_details,
-            )
-            .await;
+        assert_collection_verified_item_and_parent(
+            &mut context,
+            &test_items.da,
+            &test_items.collection,
+            &test_items.collection_parent_da,
+            &DEFAULT_COLLECTION_DETAILS,
+        )
+        .await;
     }
 
     #[tokio::test]
@@ -472,19 +452,14 @@ mod unverify_collection {
 
         assert_custom_error!(err, MetadataError::MissingCollectionMetadata);
 
-        test_items
-            .da
-            .assert_item_collection_matches_on_chain(&mut context, &test_items.verified_collection)
-            .await;
-
-        // Check collection details.  If sized collection, size should be updated.
-        test_items
-            .collection_parent_da
-            .assert_collection_details_matches_on_chain(
-                &mut context,
-                &test_items.verified_collection_details,
-            )
-            .await;
+        assert_collection_verified_item_and_parent(
+            &mut context,
+            &test_items.da,
+            &test_items.collection,
+            &test_items.collection_parent_da,
+            &DEFAULT_COLLECTION_DETAILS,
+        )
+        .await;
     }
 
     #[tokio::test]
@@ -505,10 +480,6 @@ mod unverify_collection {
             .await
             .unwrap();
 
-        collection_parent_da
-            .assert_collection_details_matches_on_chain(&mut context, &DEFAULT_COLLECTION_DETAILS)
-            .await;
-
         // No collection on item's metadata.
         let collection = None;
 
@@ -525,12 +496,14 @@ mod unverify_collection {
         .await
         .unwrap();
 
-        da.assert_item_collection_matches_on_chain(&mut context, &collection)
-            .await;
-
-        collection_parent_da
-            .assert_collection_details_matches_on_chain(&mut context, &DEFAULT_COLLECTION_DETAILS)
-            .await;
+        assert_collection_unverified_item_and_parent(
+            &mut context,
+            &da,
+            &collection,
+            &collection_parent_da,
+            &DEFAULT_COLLECTION_DETAILS,
+        )
+        .await;
 
         // Unverify.
         let args = VerificationArgs::CollectionV1;
@@ -547,12 +520,14 @@ mod unverify_collection {
         .await
         .unwrap();
 
-        da.assert_item_collection_matches_on_chain(&mut context, &collection)
-            .await;
-
-        collection_parent_da
-            .assert_collection_details_matches_on_chain(&mut context, &DEFAULT_COLLECTION_DETAILS)
-            .await;
+        assert_collection_unverified_item_and_parent(
+            &mut context,
+            &da,
+            &collection,
+            &collection_parent_da,
+            &DEFAULT_COLLECTION_DETAILS,
+        )
+        .await;
     }
 
     #[tokio::test]
@@ -584,18 +559,14 @@ mod unverify_collection {
             .await
             .unwrap();
 
-        test_items
-            .da
-            .assert_item_collection_matches_on_chain(
-                &mut context,
-                &test_items.unverified_collection,
-            )
-            .await;
-
-        test_items
-            .collection_parent_da
-            .assert_collection_details_matches_on_chain(&mut context, &DEFAULT_COLLECTION_DETAILS)
-            .await;
+        assert_collection_unverified_item_and_parent(
+            &mut context,
+            &test_items.da,
+            &test_items.collection,
+            &test_items.collection_parent_da,
+            &DEFAULT_COLLECTION_DETAILS,
+        )
+        .await;
 
         // Skip ahead.
         context.warp_to_slot(2).unwrap();
@@ -617,18 +588,14 @@ mod unverify_collection {
             .await
             .unwrap();
 
-        test_items
-            .da
-            .assert_item_collection_matches_on_chain(
-                &mut context,
-                &test_items.unverified_collection,
-            )
-            .await;
-
-        test_items
-            .collection_parent_da
-            .assert_collection_details_matches_on_chain(&mut context, &DEFAULT_COLLECTION_DETAILS)
-            .await;
+        assert_collection_unverified_item_and_parent(
+            &mut context,
+            &test_items.da,
+            &test_items.collection,
+            &test_items.collection_parent_da,
+            &DEFAULT_COLLECTION_DETAILS,
+        )
+        .await;
     }
 
     #[tokio::test]
@@ -680,19 +647,14 @@ mod unverify_collection {
 
         assert_custom_error!(err, MetadataError::NotAMemberOfCollection);
 
-        test_items
-            .da
-            .assert_item_collection_matches_on_chain(&mut context, &test_items.verified_collection)
-            .await;
-
-        // Check collection details.  If sized collection, size should be updated.
-        test_items
-            .collection_parent_da
-            .assert_collection_details_matches_on_chain(
-                &mut context,
-                &test_items.verified_collection_details,
-            )
-            .await;
+        assert_collection_verified_item_and_parent(
+            &mut context,
+            &test_items.da,
+            &test_items.collection,
+            &test_items.collection_parent_da,
+            &DEFAULT_COLLECTION_DETAILS,
+        )
+        .await;
 
         // Second collection's details should not be changed.
         second_collection_parent_da
@@ -749,19 +711,14 @@ mod unverify_collection {
 
         assert_custom_error!(err, MetadataError::MintMismatch);
 
-        test_items
-            .da
-            .assert_item_collection_matches_on_chain(&mut context, &test_items.verified_collection)
-            .await;
-
-        // Check collection details.  If sized collection, size should be updated.
-        test_items
-            .collection_parent_da
-            .assert_collection_details_matches_on_chain(
-                &mut context,
-                &test_items.verified_collection_details,
-            )
-            .await;
+        assert_collection_verified_item_and_parent(
+            &mut context,
+            &test_items.da,
+            &test_items.collection,
+            &test_items.collection_parent_da,
+            &DEFAULT_COLLECTION_DETAILS,
+        )
+        .await;
 
         // Second collection's details should not be changed.
         second_collection_parent_da
@@ -809,19 +766,14 @@ mod unverify_collection {
 
         assert_custom_error!(err, MetadataError::UpdateAuthorityIncorrect);
 
-        test_items
-            .da
-            .assert_item_collection_matches_on_chain(&mut context, &test_items.verified_collection)
-            .await;
-
-        // Check collection details.  If sized collection, size should be updated.
-        test_items
-            .collection_parent_da
-            .assert_collection_details_matches_on_chain(
-                &mut context,
-                &test_items.verified_collection_details,
-            )
-            .await;
+        assert_collection_verified_item_and_parent(
+            &mut context,
+            &test_items.da,
+            &test_items.collection,
+            &test_items.collection_parent_da,
+            &DEFAULT_COLLECTION_DETAILS,
+        )
+        .await;
     }
 
     #[tokio::test]
@@ -833,13 +785,6 @@ mod unverify_collection {
             Metadata::create_default_sized_parent(&mut context)
                 .await
                 .unwrap();
-
-        // Check collection details.
-        let collection_metadata = collection_parent_nft.get_data(&mut context).await;
-        assert_eq!(
-            collection_metadata.collection_details,
-            DEFAULT_COLLECTION_DETAILS
-        );
 
         // Create and mint item.
         let collection = Some(Collection {
@@ -944,13 +889,6 @@ mod unverify_collection {
             Metadata::create_default_sized_parent(&mut context)
                 .await
                 .unwrap();
-
-        // Check collection details.
-        let collection_metadata = collection_parent_nft.get_data(&mut context).await;
-        assert_eq!(
-            collection_metadata.collection_details,
-            DEFAULT_COLLECTION_DETAILS
-        );
 
         // Create and mint item.
         let collection = Some(Collection {
@@ -1163,18 +1101,14 @@ mod unverify_collection {
             .await
             .unwrap();
 
-        test_items
-            .da
-            .assert_item_collection_matches_on_chain(
-                &mut context,
-                &test_items.unverified_collection,
-            )
-            .await;
-
-        test_items
-            .collection_parent_da
-            .assert_collection_details_matches_on_chain(&mut context, &collection_details)
-            .await;
+        assert_collection_unverified_item_and_parent(
+            &mut context,
+            &test_items.da,
+            &test_items.collection,
+            &test_items.collection_parent_da,
+            &collection_details,
+        )
+        .await;
     }
 
     #[tokio::test]
@@ -1317,18 +1251,14 @@ mod unverify_collection {
             .await
             .unwrap();
 
-        test_items
-            .da
-            .assert_item_collection_matches_on_chain(
-                &mut context,
-                &test_items.unverified_collection,
-            )
-            .await;
-
-        test_items
-            .collection_parent_da
-            .assert_collection_details_matches_on_chain(&mut context, &collection_details)
-            .await;
+        assert_collection_unverified_item_and_parent(
+            &mut context,
+            &test_items.da,
+            &test_items.collection,
+            &test_items.collection_parent_da,
+            &collection_details,
+        )
+        .await;
     }
 
     #[tokio::test]
@@ -1408,19 +1338,14 @@ mod unverify_collection {
 
         assert_custom_error!(err, MetadataError::UpdateAuthorityIncorrect);
 
-        test_items
-            .da
-            .assert_item_collection_matches_on_chain(&mut context, &test_items.verified_collection)
-            .await;
-
-        // Check collection details.  It should not be updated.
-        test_items
-            .collection_parent_da
-            .assert_collection_details_matches_on_chain(
-                &mut context,
-                &test_items.verified_collection_details,
-            )
-            .await;
+        assert_collection_verified_item_and_parent(
+            &mut context,
+            &test_items.da,
+            &test_items.collection,
+            &test_items.collection_parent_da,
+            &DEFAULT_COLLECTION_DETAILS,
+        )
+        .await;
     }
 
     #[tokio::test]
@@ -1450,10 +1375,6 @@ mod unverify_collection {
             .await
             .unwrap();
 
-        second_collection_parent_da
-            .assert_collection_details_matches_on_chain(&mut context, &DEFAULT_COLLECTION_DETAILS)
-            .await;
-
         // Create a Collection delegate for the second collection.
         let second_collection_delegate = Keypair::new();
         airdrop(
@@ -1477,6 +1398,10 @@ mod unverify_collection {
             )
             .await
             .unwrap();
+
+        second_collection_parent_da
+            .assert_collection_details_matches_on_chain(&mut context, &DEFAULT_COLLECTION_DETAILS)
+            .await;
 
         // Find delegate record PDA.
         let (second_collection_delegate_record, _) = find_metadata_delegate_record_account(
@@ -1504,19 +1429,14 @@ mod unverify_collection {
 
         assert_custom_error!(err, MetadataError::UpdateAuthorityIncorrect);
 
-        test_items
-            .da
-            .assert_item_collection_matches_on_chain(&mut context, &test_items.verified_collection)
-            .await;
-
-        // Check collection details.  They should not be updated.
-        test_items
-            .collection_parent_da
-            .assert_collection_details_matches_on_chain(
-                &mut context,
-                &test_items.verified_collection_details,
-            )
-            .await;
+        assert_collection_verified_item_and_parent(
+            &mut context,
+            &test_items.da,
+            &test_items.collection,
+            &test_items.collection_parent_da,
+            &DEFAULT_COLLECTION_DETAILS,
+        )
+        .await;
 
         second_collection_parent_da
             .assert_collection_details_matches_on_chain(&mut context, &DEFAULT_COLLECTION_DETAILS)
@@ -1575,19 +1495,14 @@ mod unverify_collection {
 
         assert_custom_error!(err, MetadataError::IncorrectOwner);
 
-        test_items
-            .da
-            .assert_item_collection_matches_on_chain(&mut context, &test_items.verified_collection)
-            .await;
-
-        // Check collection details.  It should not be updated.
-        test_items
-            .collection_parent_da
-            .assert_collection_details_matches_on_chain(
-                &mut context,
-                &test_items.verified_collection_details,
-            )
-            .await;
+        assert_collection_verified_item_and_parent(
+            &mut context,
+            &test_items.da,
+            &test_items.collection,
+            &test_items.collection_parent_da,
+            &DEFAULT_COLLECTION_DETAILS,
+        )
+        .await;
     }
 
     #[tokio::test]
@@ -1644,19 +1559,14 @@ mod unverify_collection {
 
         assert_custom_error!(err, MetadataError::UpdateAuthorityIncorrect);
 
-        test_items
-            .da
-            .assert_item_collection_matches_on_chain(&mut context, &test_items.verified_collection)
-            .await;
-
-        // Check collection details.  It should not be updated.
-        test_items
-            .collection_parent_da
-            .assert_collection_details_matches_on_chain(
-                &mut context,
-                &test_items.verified_collection_details,
-            )
-            .await;
+        assert_collection_verified_item_and_parent(
+            &mut context,
+            &test_items.da,
+            &test_items.collection,
+            &test_items.collection_parent_da,
+            &DEFAULT_COLLECTION_DETAILS,
+        )
+        .await;
     }
 
     #[tokio::test]
@@ -1668,13 +1578,6 @@ mod unverify_collection {
             Metadata::create_default_sized_parent(&mut context)
                 .await
                 .unwrap();
-
-        // Check collection details.
-        let collection_metadata = collection_parent_nft.get_data(&mut context).await;
-        assert_eq!(
-            collection_metadata.collection_details,
-            DEFAULT_COLLECTION_DETAILS
-        );
 
         // Create and mint item.
         let collection = Some(Collection {
@@ -1795,13 +1698,6 @@ mod unverify_collection {
             Metadata::create_default_sized_parent(&mut context)
                 .await
                 .unwrap();
-
-        // Check collection details.
-        let collection_metadata = collection_parent_nft.get_data(&mut context).await;
-        assert_eq!(
-            collection_metadata.collection_details,
-            DEFAULT_COLLECTION_DETAILS
-        );
 
         // Create and mint item.
         let collection = Some(Collection {
@@ -1986,9 +1882,14 @@ mod unverify_collection {
 
         assert_custom_error!(err, MetadataError::UpdateAuthorityIncorrect);
 
+        let verified_collection = test_items.collection.clone().map(|mut c| {
+            c.verified = true;
+            c
+        });
+
         test_items
             .da
-            .assert_item_collection_matches_on_chain(&mut context, &test_items.verified_collection)
+            .assert_item_collection_matches_on_chain(&mut context, &verified_collection)
             .await;
     }
 
@@ -2053,19 +1954,14 @@ mod unverify_collection {
 
         test_items
             .da
-            .assert_item_collection_matches_on_chain(
-                &mut context,
-                &test_items.unverified_collection,
-            )
+            .assert_item_collection_matches_on_chain(&mut context, &test_items.collection)
             .await;
     }
 
     struct CollectionTestItems {
-        collection_parent_da: DigitalAsset,
         da: DigitalAsset,
-        unverified_collection: Option<Collection>,
-        verified_collection: Option<Collection>,
-        verified_collection_details: Option<CollectionDetails>,
+        collection: Option<Collection>,
+        collection_parent_da: DigitalAsset,
     }
 
     async fn create_mint_verify_collection_check(
@@ -2088,12 +1984,8 @@ mod unverify_collection {
             .await
             .unwrap();
 
-        collection_parent_da
-            .assert_collection_details_matches_on_chain(context, &collection_details)
-            .await;
-
         // Create and mint item.
-        let unverified_collection = Some(Collection {
+        let collection = Some(Collection {
             key: collection_parent_da.mint.pubkey(),
             verified: false,
         });
@@ -2105,17 +1997,19 @@ mod unverify_collection {
             None,
             None,
             1,
-            unverified_collection.clone(),
+            collection.clone(),
         )
         .await
         .unwrap();
 
-        da.assert_item_collection_matches_on_chain(context, &unverified_collection)
-            .await;
-
-        collection_parent_da
-            .assert_collection_details_matches_on_chain(context, &collection_details)
-            .await;
+        assert_collection_unverified_item_and_parent(
+            context,
+            &da,
+            &collection,
+            &collection_parent_da,
+            &collection_details,
+        )
+        .await;
 
         // Verify.
         let args = VerificationArgs::CollectionV1;
@@ -2133,29 +2027,61 @@ mod unverify_collection {
         .await
         .unwrap();
 
-        let verified_collection = Some(Collection {
-            key: collection_parent_da.mint.pubkey(),
-            verified: true,
-        });
+        assert_collection_verified_item_and_parent(
+            context,
+            &da,
+            &collection,
+            &collection_parent_da,
+            &collection_details,
+        )
+        .await;
 
-        da.assert_item_collection_matches_on_chain(context, &verified_collection)
+        CollectionTestItems {
+            da,
+            collection,
+            collection_parent_da,
+        }
+    }
+
+    async fn assert_collection_unverified_item_and_parent(
+        context: &mut ProgramTestContext,
+        item_da: &DigitalAsset,
+        collection: &Option<Collection>,
+        collection_parent_da: &DigitalAsset,
+        collection_details: &Option<CollectionDetails>,
+    ) {
+        item_da
+            .assert_item_collection_matches_on_chain(context, collection)
             .await;
 
-        // Check collection details.  If sized collection, size should be updated.
-        let verified_collection_details = collection_details.map(|details| match details {
+        collection_parent_da
+            .assert_collection_details_matches_on_chain(context, collection_details)
+            .await;
+    }
+
+    async fn assert_collection_verified_item_and_parent(
+        context: &mut ProgramTestContext,
+        item_da: &DigitalAsset,
+        collection: &Option<Collection>,
+        collection_parent_da: &DigitalAsset,
+        collection_details: &Option<CollectionDetails>,
+    ) {
+        let verified_collection = collection.clone().map(|mut c| {
+            c.verified = true;
+            c
+        });
+
+        item_da
+            .assert_item_collection_matches_on_chain(context, &verified_collection)
+            .await;
+
+        // Collection size should be updated.
+        let verified_collection_details = collection_details.clone().map(|details| match details {
             CollectionDetails::V1 { size } => CollectionDetails::V1 { size: size + 1 },
         });
 
         collection_parent_da
             .assert_collection_details_matches_on_chain(context, &verified_collection_details)
             .await;
-
-        CollectionTestItems {
-            collection_parent_da,
-            da,
-            unverified_collection,
-            verified_collection,
-            verified_collection_details,
-        }
     }
 }

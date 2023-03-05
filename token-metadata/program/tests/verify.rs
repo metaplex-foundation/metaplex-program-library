@@ -241,8 +241,14 @@ mod verify_collection {
         .await
         .unwrap();
 
-        da.assert_item_collection_matches_on_chain(&mut context, &collection)
-            .await;
+        assert_collection_unverified_item_and_parent(
+            &mut context,
+            &da,
+            &collection,
+            &collection_parent_nft,
+            &DEFAULT_COLLECTION_DETAILS,
+        )
+        .await;
 
         // Verify.
         let args = VerificationArgs::CollectionV1;
@@ -264,8 +270,14 @@ mod verify_collection {
 
         assert_custom_error!(err, MetadataError::IncorrectOwner);
 
-        da.assert_item_collection_matches_on_chain(&mut context, &collection)
-            .await;
+        assert_collection_unverified_item_and_parent(
+            &mut context,
+            &da,
+            &collection,
+            &collection_parent_nft,
+            &DEFAULT_COLLECTION_DETAILS,
+        )
+        .await;
     }
 
     #[tokio::test]
@@ -296,8 +308,14 @@ mod verify_collection {
         .await
         .unwrap();
 
-        da.assert_item_collection_matches_on_chain(&mut context, &collection)
-            .await;
+        assert_collection_unverified_item_and_parent(
+            &mut context,
+            &da,
+            &collection,
+            &collection_parent_nft,
+            &DEFAULT_COLLECTION_DETAILS,
+        )
+        .await;
 
         // Verify.
         let args = VerificationArgs::CollectionV1;
@@ -319,8 +337,14 @@ mod verify_collection {
 
         assert_custom_error!(err, MetadataError::IncorrectOwner);
 
-        da.assert_item_collection_matches_on_chain(&mut context, &collection)
-            .await;
+        assert_collection_unverified_item_and_parent(
+            &mut context,
+            &da,
+            &collection,
+            &collection_parent_nft,
+            &DEFAULT_COLLECTION_DETAILS,
+        )
+        .await;
     }
 
     #[tokio::test]
@@ -351,8 +375,14 @@ mod verify_collection {
         .await
         .unwrap();
 
-        da.assert_item_collection_matches_on_chain(&mut context, &collection)
-            .await;
+        assert_collection_unverified_item_and_parent(
+            &mut context,
+            &da,
+            &collection,
+            &collection_parent_nft,
+            &DEFAULT_COLLECTION_DETAILS,
+        )
+        .await;
 
         // Verify.
         let args = VerificationArgs::CollectionV1;
@@ -374,8 +404,14 @@ mod verify_collection {
 
         assert_custom_error!(err, MetadataError::IncorrectOwner);
 
-        da.assert_item_collection_matches_on_chain(&mut context, &collection)
-            .await;
+        assert_collection_unverified_item_and_parent(
+            &mut context,
+            &da,
+            &collection,
+            &collection_parent_nft,
+            &DEFAULT_COLLECTION_DETAILS,
+        )
+        .await;
     }
 
     #[tokio::test]
@@ -405,8 +441,14 @@ mod verify_collection {
         .await
         .unwrap();
 
-        da.assert_item_collection_matches_on_chain(&mut context, &collection)
-            .await;
+        assert_collection_unverified_item_and_parent(
+            &mut context,
+            &da,
+            &collection,
+            &collection_parent_nft,
+            &DEFAULT_COLLECTION_DETAILS,
+        )
+        .await;
 
         // Verify.
         let args = VerificationArgs::CollectionV1;
@@ -428,8 +470,14 @@ mod verify_collection {
 
         assert_custom_error!(err, MetadataError::IncorrectOwner);
 
-        da.assert_item_collection_matches_on_chain(&mut context, &collection)
-            .await;
+        assert_collection_unverified_item_and_parent(
+            &mut context,
+            &da,
+            &collection,
+            &collection_parent_nft,
+            &DEFAULT_COLLECTION_DETAILS,
+        )
+        .await;
     }
 
     #[tokio::test]
@@ -460,8 +508,14 @@ mod verify_collection {
         .await
         .unwrap();
 
-        da.assert_item_collection_matches_on_chain(&mut context, &collection)
-            .await;
+        assert_collection_unverified_item_and_parent(
+            &mut context,
+            &da,
+            &collection,
+            &collection_parent_nft,
+            &DEFAULT_COLLECTION_DETAILS,
+        )
+        .await;
 
         // Verify.
         let args = VerificationArgs::CollectionV1;
@@ -482,8 +536,14 @@ mod verify_collection {
 
         assert_custom_error!(err, MetadataError::MissingCollectionMint);
 
-        da.assert_item_collection_matches_on_chain(&mut context, &collection)
-            .await;
+        assert_collection_unverified_item_and_parent(
+            &mut context,
+            &da,
+            &collection,
+            &collection_parent_nft,
+            &DEFAULT_COLLECTION_DETAILS,
+        )
+        .await;
     }
 
     #[tokio::test]
@@ -514,8 +574,14 @@ mod verify_collection {
         .await
         .unwrap();
 
-        da.assert_item_collection_matches_on_chain(&mut context, &collection)
-            .await;
+        assert_collection_unverified_item_and_parent(
+            &mut context,
+            &da,
+            &collection,
+            &collection_parent_nft,
+            &DEFAULT_COLLECTION_DETAILS,
+        )
+        .await;
 
         // Verify.
         let args = VerificationArgs::CollectionV1;
@@ -536,8 +602,14 @@ mod verify_collection {
 
         assert_custom_error!(err, MetadataError::MissingCollectionMetadata);
 
-        da.assert_item_collection_matches_on_chain(&mut context, &collection)
-            .await;
+        assert_collection_unverified_item_and_parent(
+            &mut context,
+            &da,
+            &collection,
+            &collection_parent_nft,
+            &DEFAULT_COLLECTION_DETAILS,
+        )
+        .await;
     }
 
     #[tokio::test]
@@ -567,8 +639,14 @@ mod verify_collection {
         .await
         .unwrap();
 
-        da.assert_item_collection_matches_on_chain(&mut context, &collection)
-            .await;
+        assert_collection_unverified_item_and_parent(
+            &mut context,
+            &da,
+            &collection,
+            &collection_parent_nft,
+            &DEFAULT_COLLECTION_DETAILS,
+        )
+        .await;
 
         // Verify.
         let args = VerificationArgs::CollectionV1;
@@ -589,8 +667,14 @@ mod verify_collection {
 
         assert_custom_error!(err, MetadataError::MissingCollectionMasterEdition);
 
-        da.assert_item_collection_matches_on_chain(&mut context, &collection)
-            .await;
+        assert_collection_unverified_item_and_parent(
+            &mut context,
+            &da,
+            &collection,
+            &collection_parent_nft,
+            &DEFAULT_COLLECTION_DETAILS,
+        )
+        .await;
     }
 
     #[tokio::test]
@@ -602,13 +686,6 @@ mod verify_collection {
             Metadata::create_default_sized_parent(&mut context)
                 .await
                 .unwrap();
-
-        // Check collection details.  Should be default.
-        let collection_metadata = collection_parent_nft.get_data(&mut context).await;
-        assert_eq!(
-            collection_metadata.collection_details,
-            DEFAULT_COLLECTION_DETAILS
-        );
 
         // Create and mint item.
         let collection = Some(Collection {
@@ -628,15 +705,14 @@ mod verify_collection {
         .await
         .unwrap();
 
-        da.assert_item_collection_matches_on_chain(&mut context, &collection)
-            .await;
-
-        // Check collection details.  Should still be default.
-        let collection_metadata = collection_parent_nft.get_data(&mut context).await;
-        assert_eq!(
-            collection_metadata.collection_details,
-            DEFAULT_COLLECTION_DETAILS
-        );
+        assert_collection_unverified_item_and_parent(
+            &mut context,
+            &da,
+            &collection,
+            &collection_parent_nft,
+            &DEFAULT_COLLECTION_DETAILS,
+        )
+        .await;
 
         // Verify.
         let args = VerificationArgs::CollectionV1;
@@ -654,24 +730,14 @@ mod verify_collection {
         .await
         .unwrap();
 
-        let verified_collection = Some(Collection {
-            key: collection_parent_nft.mint.pubkey(),
-            verified: true,
-        });
-
-        da.assert_item_collection_matches_on_chain(&mut context, &verified_collection)
-            .await;
-
-        // Check collection details.  Size should be updated.
-        let verified_collection_details = DEFAULT_COLLECTION_DETAILS.map(|details| match details {
-            CollectionDetails::V1 { size } => CollectionDetails::V1 { size: size + 1 },
-        });
-
-        let collection_metadata = collection_parent_nft.get_data(&mut context).await;
-        assert_eq!(
-            collection_metadata.collection_details,
-            verified_collection_details
-        );
+        assert_collection_verified_item_and_parent(
+            &mut context,
+            &da,
+            &collection,
+            &collection_parent_nft,
+            &DEFAULT_COLLECTION_DETAILS,
+        )
+        .await;
 
         // Skip ahead.
         context.warp_to_slot(2).unwrap();
@@ -692,15 +758,14 @@ mod verify_collection {
         .await
         .unwrap();
 
-        da.assert_item_collection_matches_on_chain(&mut context, &verified_collection)
-            .await;
-
-        // Check collection details.  It should not have updated this time.
-        let collection_metadata = collection_parent_nft.get_data(&mut context).await;
-        assert_eq!(
-            collection_metadata.collection_details,
-            verified_collection_details
-        );
+        assert_collection_verified_item_and_parent(
+            &mut context,
+            &da,
+            &collection,
+            &collection_parent_nft,
+            &DEFAULT_COLLECTION_DETAILS,
+        )
+        .await;
     }
 
     #[tokio::test]
@@ -729,8 +794,14 @@ mod verify_collection {
         .await
         .unwrap();
 
-        da.assert_item_collection_matches_on_chain(&mut context, &collection)
-            .await;
+        assert_collection_unverified_item_and_parent(
+            &mut context,
+            &da,
+            &collection,
+            &collection_parent_nft,
+            &DEFAULT_COLLECTION_DETAILS,
+        )
+        .await;
 
         // Verify.
         let args = VerificationArgs::CollectionV1;
@@ -751,8 +822,14 @@ mod verify_collection {
 
         assert_custom_error!(err, MetadataError::CollectionNotFound);
 
-        da.assert_item_collection_matches_on_chain(&mut context, &collection)
-            .await;
+        assert_collection_unverified_item_and_parent(
+            &mut context,
+            &da,
+            &collection,
+            &collection_parent_nft,
+            &DEFAULT_COLLECTION_DETAILS,
+        )
+        .await;
     }
 
     #[tokio::test]
@@ -784,8 +861,14 @@ mod verify_collection {
         .await
         .unwrap();
 
-        da.assert_item_collection_matches_on_chain(&mut context, &collection)
-            .await;
+        assert_collection_unverified_item_and_parent(
+            &mut context,
+            &da,
+            &collection,
+            &collection_parent_nft,
+            &DEFAULT_COLLECTION_DETAILS,
+        )
+        .await;
 
         // Verify.
         let args = VerificationArgs::CollectionV1;
@@ -806,8 +889,14 @@ mod verify_collection {
 
         assert_custom_error!(err, MetadataError::CollectionNotFound);
 
-        da.assert_item_collection_matches_on_chain(&mut context, &collection)
-            .await;
+        assert_collection_unverified_item_and_parent(
+            &mut context,
+            &da,
+            &collection,
+            &collection_parent_nft,
+            &DEFAULT_COLLECTION_DETAILS,
+        )
+        .await;
     }
 
     #[tokio::test]
@@ -843,8 +932,21 @@ mod verify_collection {
         .await
         .unwrap();
 
-        da.assert_item_collection_matches_on_chain(&mut context, &collection)
-            .await;
+        assert_collection_unverified_item_and_parent(
+            &mut context,
+            &da,
+            &collection,
+            &collection_parent_nft,
+            &DEFAULT_COLLECTION_DETAILS,
+        )
+        .await;
+
+        // Check second collection details.
+        let second_collection_metadata = second_collection_parent_nft.get_data(&mut context).await;
+        assert_eq!(
+            second_collection_metadata.collection_details,
+            DEFAULT_COLLECTION_DETAILS
+        );
 
         // Verify.
         let args = VerificationArgs::CollectionV1;
@@ -865,8 +967,21 @@ mod verify_collection {
 
         assert_custom_error!(err, MetadataError::CollectionNotFound);
 
-        da.assert_item_collection_matches_on_chain(&mut context, &collection)
-            .await;
+        assert_collection_unverified_item_and_parent(
+            &mut context,
+            &da,
+            &collection,
+            &collection_parent_nft,
+            &DEFAULT_COLLECTION_DETAILS,
+        )
+        .await;
+
+        // Check second collection details.
+        let second_collection_metadata = second_collection_parent_nft.get_data(&mut context).await;
+        assert_eq!(
+            second_collection_metadata.collection_details,
+            DEFAULT_COLLECTION_DETAILS
+        );
     }
 
     #[tokio::test]
@@ -897,13 +1012,6 @@ mod verify_collection {
             .await
             .unwrap();
 
-        // Check collection details.
-        let collection_metadata = collection_parent_nft.get_data(&mut context).await;
-        assert_eq!(
-            collection_metadata.collection_details,
-            DEFAULT_COLLECTION_DETAILS
-        );
-
         // Create a second collection parent NFT.
         let second_collection_parent_nft = Metadata::new();
         second_collection_parent_nft
@@ -929,13 +1037,6 @@ mod verify_collection {
             .await
             .unwrap();
 
-        // Check collection details.
-        let second_collection_metadata = second_collection_parent_nft.get_data(&mut context).await;
-        assert_eq!(
-            second_collection_metadata.collection_details,
-            DEFAULT_COLLECTION_DETAILS
-        );
-
         // Create and mint item.
         let collection = Some(Collection {
             key: collection_parent_nft.mint.pubkey(),
@@ -954,16 +1055,16 @@ mod verify_collection {
         .await
         .unwrap();
 
-        da.assert_item_collection_matches_on_chain(&mut context, &collection)
-            .await;
+        assert_collection_unverified_item_and_parent(
+            &mut context,
+            &da,
+            &collection,
+            &collection_parent_nft,
+            &DEFAULT_COLLECTION_DETAILS,
+        )
+        .await;
 
-        // Check collection details for both.
-        let collection_metadata = collection_parent_nft.get_data(&mut context).await;
-        assert_eq!(
-            collection_metadata.collection_details,
-            DEFAULT_COLLECTION_DETAILS
-        );
-
+        // Check second collection details.
         let second_collection_metadata = second_collection_parent_nft.get_data(&mut context).await;
         assert_eq!(
             second_collection_metadata.collection_details,
@@ -989,16 +1090,16 @@ mod verify_collection {
 
         assert_custom_error!(err, MetadataError::CollectionMasterEditionAccountInvalid);
 
-        da.assert_item_collection_matches_on_chain(&mut context, &collection)
-            .await;
+        assert_collection_unverified_item_and_parent(
+            &mut context,
+            &da,
+            &collection,
+            &collection_parent_nft,
+            &DEFAULT_COLLECTION_DETAILS,
+        )
+        .await;
 
-        // Check collection details for both.
-        let collection_metadata = collection_parent_nft.get_data(&mut context).await;
-        assert_eq!(
-            collection_metadata.collection_details,
-            DEFAULT_COLLECTION_DETAILS
-        );
-
+        // Check second collection details.
         let second_collection_metadata = second_collection_parent_nft.get_data(&mut context).await;
         assert_eq!(
             second_collection_metadata.collection_details,
@@ -1035,13 +1136,6 @@ mod verify_collection {
             .await
             .unwrap();
 
-        // Check collection details.
-        let collection_metadata = collection_parent_nft.get_data(&mut context).await;
-        assert_eq!(
-            collection_metadata.collection_details,
-            DEFAULT_COLLECTION_DETAILS
-        );
-
         // Create and mint item.
         let collection = Some(Collection {
             key: collection_parent_nft.mint.pubkey(),
@@ -1060,15 +1154,14 @@ mod verify_collection {
         .await
         .unwrap();
 
-        da.assert_item_collection_matches_on_chain(&mut context, &collection)
-            .await;
-
-        // Check collection details.
-        let collection_metadata = collection_parent_nft.get_data(&mut context).await;
-        assert_eq!(
-            collection_metadata.collection_details,
-            DEFAULT_COLLECTION_DETAILS
-        );
+        assert_collection_unverified_item_and_parent(
+            &mut context,
+            &da,
+            &collection,
+            &collection_parent_nft,
+            &DEFAULT_COLLECTION_DETAILS,
+        )
+        .await;
 
         // Verify.
         let args = VerificationArgs::CollectionV1;
@@ -1089,15 +1182,14 @@ mod verify_collection {
 
         assert_custom_error!(err, MetadataError::CollectionMustBeAUniqueMasterEdition);
 
-        da.assert_item_collection_matches_on_chain(&mut context, &collection)
-            .await;
-
-        // Check collection details.
-        let collection_metadata = collection_parent_nft.get_data(&mut context).await;
-        assert_eq!(
-            collection_metadata.collection_details,
-            DEFAULT_COLLECTION_DETAILS
-        );
+        assert_collection_unverified_item_and_parent(
+            &mut context,
+            &da,
+            &collection,
+            &collection_parent_nft,
+            &DEFAULT_COLLECTION_DETAILS,
+        )
+        .await;
     }
 
     #[tokio::test]
@@ -1128,8 +1220,14 @@ mod verify_collection {
         .await
         .unwrap();
 
-        da.assert_item_collection_matches_on_chain(&mut context, &collection)
-            .await;
+        assert_collection_unverified_item_and_parent(
+            &mut context,
+            &da,
+            &collection,
+            &collection_parent_nft,
+            &DEFAULT_COLLECTION_DETAILS,
+        )
+        .await;
 
         // Create a keypair to use instead of the collection update authority.
         let incorrect_update_authority = Keypair::new();
@@ -1159,8 +1257,14 @@ mod verify_collection {
 
         assert_custom_error!(err, MetadataError::UpdateAuthorityIncorrect);
 
-        da.assert_item_collection_matches_on_chain(&mut context, &collection)
-            .await;
+        assert_collection_unverified_item_and_parent(
+            &mut context,
+            &da,
+            &collection,
+            &collection_parent_nft,
+            &DEFAULT_COLLECTION_DETAILS,
+        )
+        .await;
     }
 
     #[tokio::test]
@@ -1209,12 +1313,12 @@ mod verify_collection {
         let collection_metadata = collection_parent_nft.get_data(&mut context).await;
         assert_eq!(collection_metadata.collection_details, collection_details);
 
+        // Create item using old handler.
         let collection = Some(Collection {
             key: collection_parent_nft.mint.pubkey(),
             verified: false,
         });
 
-        // Create our item using old handler.
         let name = "Test".to_string();
         let symbol = "TST".to_string();
         let uri = "uri".to_string();
@@ -1336,10 +1440,6 @@ mod verify_collection {
             .await
             .unwrap();
 
-        // Check collection details.
-        let collection_metadata = collection_parent_nft.get_data(&mut context).await;
-        assert_eq!(collection_metadata.collection_details, collection_details);
-
         // Create and mint item.
         let collection = Some(Collection {
             key: collection_parent_nft.mint.pubkey(),
@@ -1358,12 +1458,14 @@ mod verify_collection {
         .await
         .unwrap();
 
-        da.assert_item_collection_matches_on_chain(&mut context, &collection)
-            .await;
-
-        // Check collection details.
-        let collection_metadata = collection_parent_nft.get_data(&mut context).await;
-        assert_eq!(collection_metadata.collection_details, collection_details);
+        assert_collection_unverified_item_and_parent(
+            &mut context,
+            &da,
+            &collection,
+            &collection_parent_nft,
+            &collection_details,
+        )
+        .await;
 
         // Verify.
         let args = VerificationArgs::CollectionV1;
@@ -1381,24 +1483,14 @@ mod verify_collection {
         .await
         .unwrap();
 
-        let verified_collection = Some(Collection {
-            key: collection_parent_nft.mint.pubkey(),
-            verified: true,
-        });
-
-        da.assert_item_collection_matches_on_chain(&mut context, &verified_collection)
-            .await;
-
-        // Check collection details.  If sized collection, size should be updated.
-        let verified_collection_details = collection_details.map(|details| match details {
-            CollectionDetails::V1 { size } => CollectionDetails::V1 { size: size + 1 },
-        });
-
-        let collection_metadata = collection_parent_nft.get_data(&mut context).await;
-        assert_eq!(
-            collection_metadata.collection_details,
-            verified_collection_details
-        );
+        assert_collection_verified_item_and_parent(
+            &mut context,
+            &da,
+            &collection,
+            &collection_parent_nft,
+            &collection_details,
+        )
+        .await;
     }
 
     #[tokio::test]
@@ -1410,13 +1502,6 @@ mod verify_collection {
             Metadata::create_default_sized_parent(&mut context)
                 .await
                 .unwrap();
-
-        // Check collection details.
-        let collection_metadata = collection_parent_nft.get_data(&mut context).await;
-        assert_eq!(
-            collection_metadata.collection_details,
-            DEFAULT_COLLECTION_DETAILS
-        );
 
         // Change the collection to have a different update authority.
         let new_collection_update_authority = Keypair::new();
@@ -1443,15 +1528,14 @@ mod verify_collection {
         .await
         .unwrap();
 
-        da.assert_item_collection_matches_on_chain(&mut context, &collection)
-            .await;
-
-        // Check collection details.
-        let collection_metadata = collection_parent_nft.get_data(&mut context).await;
-        assert_eq!(
-            collection_metadata.collection_details,
-            DEFAULT_COLLECTION_DETAILS
-        );
+        assert_collection_unverified_item_and_parent(
+            &mut context,
+            &da,
+            &collection,
+            &collection_parent_nft,
+            &DEFAULT_COLLECTION_DETAILS,
+        )
+        .await;
 
         // Verify using the new collection update authority.
         let args = VerificationArgs::CollectionV1;
@@ -1468,24 +1552,14 @@ mod verify_collection {
         .await
         .unwrap();
 
-        let verified_collection = Some(Collection {
-            key: collection_parent_nft.mint.pubkey(),
-            verified: true,
-        });
-
-        da.assert_item_collection_matches_on_chain(&mut context, &verified_collection)
-            .await;
-
-        // Check collection details.  If sized collection, size should be updated.
-        let verified_collection_details = DEFAULT_COLLECTION_DETAILS.map(|details| match details {
-            CollectionDetails::V1 { size } => CollectionDetails::V1 { size: size + 1 },
-        });
-
-        let collection_metadata = collection_parent_nft.get_data(&mut context).await;
-        assert_eq!(
-            collection_metadata.collection_details,
-            verified_collection_details
-        );
+        assert_collection_verified_item_and_parent(
+            &mut context,
+            &da,
+            &collection,
+            &collection_parent_nft,
+            &DEFAULT_COLLECTION_DETAILS,
+        )
+        .await;
     }
 
     #[tokio::test]
@@ -1497,13 +1571,6 @@ mod verify_collection {
             Metadata::create_default_sized_parent(&mut context)
                 .await
                 .unwrap();
-
-        // Check collection details.
-        let collection_metadata = collection_parent_nft.get_data(&mut context).await;
-        assert_eq!(
-            collection_metadata.collection_details,
-            DEFAULT_COLLECTION_DETAILS
-        );
 
         // Change the collection to have a different update authority.
         let new_collection_update_authority = Keypair::new();
@@ -1530,15 +1597,14 @@ mod verify_collection {
         .await
         .unwrap();
 
-        da.assert_item_collection_matches_on_chain(&mut context, &collection)
-            .await;
-
-        // Check collection details.
-        let collection_metadata = collection_parent_nft.get_data(&mut context).await;
-        assert_eq!(
-            collection_metadata.collection_details,
-            DEFAULT_COLLECTION_DETAILS
-        );
+        assert_collection_unverified_item_and_parent(
+            &mut context,
+            &da,
+            &collection,
+            &collection_parent_nft,
+            &DEFAULT_COLLECTION_DETAILS,
+        )
+        .await;
 
         // Verify using the new collection update authority.
         let payer = context.payer.dirty_clone();
@@ -1559,14 +1625,56 @@ mod verify_collection {
 
         assert_custom_error!(err, MetadataError::UpdateAuthorityIncorrect);
 
-        da.assert_item_collection_matches_on_chain(&mut context, &collection)
+        assert_collection_unverified_item_and_parent(
+            &mut context,
+            &da,
+            &collection,
+            &collection_parent_nft,
+            &DEFAULT_COLLECTION_DETAILS,
+        )
+        .await;
+    }
+
+    async fn assert_collection_unverified_item_and_parent(
+        context: &mut ProgramTestContext,
+        item_da: &DigitalAsset,
+        collection: &Option<Collection>,
+        collection_parent_nft: &Metadata,
+        collection_details: &Option<CollectionDetails>,
+    ) {
+        item_da
+            .assert_item_collection_matches_on_chain(context, collection)
             .await;
 
-        // Check collection details.  It should not be updated.
-        let collection_metadata = collection_parent_nft.get_data(&mut context).await;
+        let collection_metadata = collection_parent_nft.get_data(context).await;
+        assert_eq!(collection_metadata.collection_details, *collection_details);
+    }
+
+    async fn assert_collection_verified_item_and_parent(
+        context: &mut ProgramTestContext,
+        item_da: &DigitalAsset,
+        collection: &Option<Collection>,
+        collection_parent_nft: &Metadata,
+        collection_details: &Option<CollectionDetails>,
+    ) {
+        let verified_collection = collection.clone().map(|mut c| {
+            c.verified = true;
+            c
+        });
+
+        item_da
+            .assert_item_collection_matches_on_chain(context, &verified_collection)
+            .await;
+
+        // Collection size should be updated.
+        let verified_collection_details = collection_details.clone().map(|details| match details {
+            CollectionDetails::V1 { size } => CollectionDetails::V1 { size: size + 1 },
+        });
+
+        let collection_metadata = collection_parent_nft.get_data(context).await;
         assert_eq!(
             collection_metadata.collection_details,
-            DEFAULT_COLLECTION_DETAILS
+            verified_collection_details
         );
     }
 
@@ -1670,10 +1778,6 @@ mod verify_collection {
             )
             .await
             .unwrap();
-
-        collection_parent_da
-            .assert_collection_details_matches_on_chain(&mut context, &collection_details)
-            .await;
 
         // Create and mint item.
         let collection = Some(Collection {
@@ -1967,10 +2071,6 @@ mod verify_collection {
             .await
             .unwrap();
 
-        collection_parent_da
-            .assert_collection_details_matches_on_chain(&mut context, &DEFAULT_COLLECTION_DETAILS)
-            .await;
-
         // Create and mint item.
         let collection = Some(Collection {
             key: collection_parent_da.mint.pubkey(),
@@ -2062,10 +2162,6 @@ mod verify_collection {
             .await
             .unwrap();
 
-        first_collection_parent_da
-            .assert_collection_details_matches_on_chain(&mut context, &DEFAULT_COLLECTION_DETAILS)
-            .await;
-
         // Create a second collection parent pNFT with the CollectionDetails struct populated.
         let mut second_collection_parent_da = DigitalAsset::new();
         second_collection_parent_da
@@ -2079,10 +2175,6 @@ mod verify_collection {
             )
             .await
             .unwrap();
-
-        second_collection_parent_da
-            .assert_collection_details_matches_on_chain(&mut context, &DEFAULT_COLLECTION_DETAILS)
-            .await;
 
         // Make the item a member of the first collection.
         let collection = Some(Collection {
@@ -2196,10 +2288,6 @@ mod verify_collection {
             .await
             .unwrap();
 
-        collection_parent_da
-            .assert_collection_details_matches_on_chain(&mut context, &DEFAULT_COLLECTION_DETAILS)
-            .await;
-
         // Create and mint item.
         let collection = Some(Collection {
             key: collection_parent_da.mint.pubkey(),
@@ -2289,10 +2377,6 @@ mod verify_collection {
             )
             .await
             .unwrap();
-
-        collection_parent_da
-            .assert_collection_details_matches_on_chain(&mut context, &DEFAULT_COLLECTION_DETAILS)
-            .await;
 
         // Create and mint item.
         let collection = Some(Collection {
