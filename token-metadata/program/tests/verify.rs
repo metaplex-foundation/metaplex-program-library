@@ -210,7 +210,7 @@ mod verify_collection {
 
     #[tokio::test]
     async fn delegate_record_wrong_owner() {
-        // See `collection_standard_delegate_cannot_verify()`.
+        // See `collections_standard_delegate_cannot_verify()`.
     }
 
     #[tokio::test]
@@ -2118,7 +2118,7 @@ mod verify_collection {
     }
 
     #[tokio::test]
-    async fn collection_update_delegate_cannot_verify() {
+    async fn collections_update_delegate_cannot_verify() {
         let delegate_args = DelegateArgs::UpdateV1 {
             authorization_data: None,
         };
@@ -2134,7 +2134,7 @@ mod verify_collection {
     }
 
     #[tokio::test]
-    async fn collection_programmable_config_delegate_cannot_verify() {
+    async fn collections_programmable_config_delegate_cannot_verify() {
         let delegate_args = DelegateArgs::ProgrammableConfigV1 {
             authorization_data: None,
         };
@@ -2150,7 +2150,19 @@ mod verify_collection {
     }
 
     #[tokio::test]
-    async fn item_update_delegate_cannot_verify() {
+    async fn items_collection_delegate_cannot_verify() {
+        let delegate_args = DelegateArgs::CollectionV1 {
+            authorization_data: None,
+        };
+
+        let delegate_role = MetadataDelegateRole::Collection;
+
+        other_metadata_delegates_cannot_verify(AssetToDelegate::Item, delegate_args, delegate_role)
+            .await;
+    }
+
+    #[tokio::test]
+    async fn items_update_delegate_cannot_verify() {
         let delegate_args = DelegateArgs::UpdateV1 {
             authorization_data: None,
         };
@@ -2162,7 +2174,7 @@ mod verify_collection {
     }
 
     #[tokio::test]
-    async fn item_programmable_config_delegate_cannot_verify() {
+    async fn items_programmable_config_delegate_cannot_verify() {
         let delegate_args = DelegateArgs::ProgrammableConfigV1 {
             authorization_data: None,
         };
@@ -2404,7 +2416,7 @@ mod verify_collection {
     }
 
     #[tokio::test]
-    async fn collection_standard_delegate_cannot_verify() {
+    async fn collections_standard_delegate_cannot_verify() {
         let mut context = program_test().start_with_context().await;
 
         // Use NFT for collection parent for this test.
@@ -2494,12 +2506,12 @@ mod verify_collection {
     }
 
     #[tokio::test]
-    async fn collection_utility_delegate_cannot_verify() {
+    async fn collections_utility_delegate_cannot_verify() {
         utility_delegate_cannot_verify(AssetToDelegate::CollectionParent).await;
     }
 
     #[tokio::test]
-    async fn item_utility_delegate_cannot_verify() {
+    async fn items_utility_delegate_cannot_verify() {
         utility_delegate_cannot_verify(AssetToDelegate::Item).await;
     }
 
