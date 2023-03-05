@@ -249,7 +249,7 @@ mod unverify_collection {
 
     #[tokio::test]
     async fn delegate_record_wrong_owner() {
-        // See `standard_delegate_cannot_verify()`.
+        // See `collection_standard_delegate_cannot_unverify()`.
     }
 
     #[tokio::test]
@@ -1262,28 +1262,76 @@ mod unverify_collection {
     }
 
     #[tokio::test]
-    async fn update_delegate_cannot_unverify() {
+    async fn collection_update_delegate_cannot_unverify() {
         let delegate_args = DelegateArgs::UpdateV1 {
             authorization_data: None,
         };
 
         let delegate_role = MetadataDelegateRole::Update;
 
-        other_metadata_delegates_cannot_unverify(delegate_args, delegate_role).await;
+        other_metadata_delegates_cannot_unverify(
+            AssetToDelegate::CollectionParent,
+            delegate_args,
+            delegate_role,
+        )
+        .await;
     }
 
     #[tokio::test]
-    async fn programmable_config_delegate_cannot_unverify() {
+    async fn collection_programmable_config_delegate_cannot_unverify() {
         let delegate_args = DelegateArgs::ProgrammableConfigV1 {
             authorization_data: None,
         };
 
         let delegate_role = MetadataDelegateRole::ProgrammableConfig;
 
-        other_metadata_delegates_cannot_unverify(delegate_args, delegate_role).await;
+        other_metadata_delegates_cannot_unverify(
+            AssetToDelegate::CollectionParent,
+            delegate_args,
+            delegate_role,
+        )
+        .await;
+    }
+
+    #[tokio::test]
+    async fn item_update_delegate_cannot_unverify() {
+        let delegate_args = DelegateArgs::UpdateV1 {
+            authorization_data: None,
+        };
+
+        let delegate_role = MetadataDelegateRole::Update;
+
+        other_metadata_delegates_cannot_unverify(
+            AssetToDelegate::Item,
+            delegate_args,
+            delegate_role,
+        )
+        .await;
+    }
+
+    #[tokio::test]
+    async fn item_programmable_config_delegate_cannot_unverify() {
+        let delegate_args = DelegateArgs::ProgrammableConfigV1 {
+            authorization_data: None,
+        };
+
+        let delegate_role = MetadataDelegateRole::ProgrammableConfig;
+
+        other_metadata_delegates_cannot_unverify(
+            AssetToDelegate::Item,
+            delegate_args,
+            delegate_role,
+        )
+        .await;
+    }
+
+    enum AssetToDelegate {
+        CollectionParent,
+        Item,
     }
 
     async fn other_metadata_delegates_cannot_unverify(
+        asset_to_delegate: AssetToDelegate,
         delegate_args: DelegateArgs,
         delegate_role: MetadataDelegateRole,
     ) {
@@ -1298,23 +1346,27 @@ mod unverify_collection {
         )
         .await;
 
-        // Create a metadata delegate for the collection parent.
+        // Create a metadata delegate.
         let delegate = Keypair::new();
         airdrop(&mut context, &delegate.pubkey(), LAMPORTS_PER_SOL)
             .await
             .unwrap();
 
+        let asset = match asset_to_delegate {
+            AssetToDelegate::CollectionParent => &mut test_items.collection_parent_da,
+            AssetToDelegate::Item => &mut test_items.da,
+        };
+
         let payer = context.payer.dirty_clone();
         let payer_pubkey = payer.pubkey();
-        test_items
-            .collection_parent_da
+        asset
             .delegate(&mut context, payer, delegate.pubkey(), delegate_args)
             .await
             .unwrap();
 
         // Find delegate record PDA.
         let (delegate_record, _) = find_metadata_delegate_record_account(
-            &test_items.collection_parent_da.mint.pubkey(),
+            &asset.mint.pubkey(),
             delegate_role,
             &payer_pubkey,
             &delegate.pubkey(),
@@ -1444,7 +1496,7 @@ mod unverify_collection {
     }
 
     #[tokio::test]
-    async fn standard_delegate_cannot_verify() {
+    async fn collection_standard_delegate_cannot_unverify() {
         let mut context = program_test().start_with_context().await;
 
         // Use NFT for collection parent for this test.
@@ -1506,7 +1558,16 @@ mod unverify_collection {
     }
 
     #[tokio::test]
-    async fn utility_delegate_cannot_unverify() {
+    async fn collection_utility_delegate_cannot_unverify() {
+        utility_delegate_cannot_unverify(AssetToDelegate::CollectionParent).await;
+    }
+
+    #[tokio::test]
+    async fn item_utility_delegate_cannot_unverify() {
+        utility_delegate_cannot_unverify(AssetToDelegate::Item).await;
+    }
+
+    async fn utility_delegate_cannot_unverify(asset_to_delegate: AssetToDelegate) {
         let mut context = program_test().start_with_context().await;
 
         // Use pNFT for collection parent for this test.
@@ -1524,22 +1585,24 @@ mod unverify_collection {
             .await
             .unwrap();
 
+        let asset = match asset_to_delegate {
+            AssetToDelegate::CollectionParent => &mut test_items.collection_parent_da,
+            AssetToDelegate::Item => &mut test_items.da,
+        };
+
         let payer = context.payer.dirty_clone();
         let delegate_args = DelegateArgs::UtilityV1 {
             amount: 1,
             authorization_data: None,
         };
-        test_items
-            .collection_parent_da
+        asset
             .delegate(&mut context, payer, delegate.pubkey(), delegate_args)
             .await
             .unwrap();
 
         // Find the token_record account for the Utility Delegate.
-        let (token_record, _) = find_token_record_account(
-            &test_items.collection_parent_da.mint.pubkey(),
-            &test_items.collection_parent_da.token.unwrap(),
-        );
+        let (token_record, _) =
+            find_token_record_account(&asset.mint.pubkey(), &asset.token.unwrap());
 
         // Unverify.
         let args = VerificationArgs::CollectionV1;
@@ -2043,7 +2106,7 @@ mod unverify_collection {
     }
 
     #[tokio::test]
-    async fn pass_unverify_burned_pnft_collection_using_item_delegate() {
+    async fn pass_unverify_burned_pnft_collection_using_item_update_delegate() {
         let mut context = program_test().start_with_context().await;
 
         let mut test_items = create_mint_verify_collection_check(
