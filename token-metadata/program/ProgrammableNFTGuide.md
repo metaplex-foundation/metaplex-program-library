@@ -97,7 +97,7 @@ pub enum MetadataInstruction {
     // Authorizes the use of a token
     Use(UseArgs),
     // Verifies creator/collection for an asset
-    Verify(VerifyArgs),
+    Verify(VerificationArgs),
 }
 ```
 

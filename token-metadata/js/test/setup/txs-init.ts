@@ -57,6 +57,12 @@ import {
   BurnInstructionAccounts,
   BurnInstructionArgs,
   createBurnInstruction,
+  VerifyInstructionAccounts,
+  VerifyInstructionArgs,
+  createVerifyInstruction,
+  UnverifyInstructionAccounts,
+  UnverifyInstructionArgs,
+  createUnverifyInstruction,
 } from '../../src/generated';
 import { Test } from 'tape';
 import { amman } from '.';
@@ -164,6 +170,66 @@ export class InitTransactions {
 
     return {
       tx: handler.sendAndConfirmTransaction(tx, [authority], 'tx: Burn'),
+    };
+  }
+
+  async verify(
+    handler: PayerTransactionHandler,
+    authority: Keypair,
+    delegateRecord: PublicKey | null = null,
+    metadata: PublicKey,
+    collectionMint: PublicKey | null = null,
+    collectionMetadata: PublicKey | null = null,
+    collectionMasterEdition: PublicKey | null = null,
+    args: VerifyInstructionArgs,
+  ): Promise<{ tx: ConfirmedTransactionAssertablePromise }> {
+    amman.addr.addLabel('Metadata Account', metadata);
+
+    const verifyAccounts: VerifyInstructionAccounts = {
+      authority: authority.publicKey,
+      delegateRecord,
+      metadata,
+      collectionMint,
+      collectionMetadata,
+      collectionMasterEdition,
+      systemProgram: SystemProgram.programId,
+      sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
+    };
+
+    const verifyIx = createVerifyInstruction(verifyAccounts, args);
+    const tx = new Transaction().add(verifyIx);
+
+    return {
+      tx: handler.sendAndConfirmTransaction(tx, [authority], 'tx: Verify'),
+    };
+  }
+
+  async unverify(
+    handler: PayerTransactionHandler,
+    authority: Keypair,
+    delegateRecord: PublicKey | null = null,
+    metadata: PublicKey,
+    collectionMint: PublicKey | null = null,
+    collectionMetadata: PublicKey | null = null,
+    args: UnverifyInstructionArgs,
+  ): Promise<{ tx: ConfirmedTransactionAssertablePromise }> {
+    amman.addr.addLabel('Metadata Account', metadata);
+
+    const unverifyAccounts: UnverifyInstructionAccounts = {
+      authority: authority.publicKey,
+      delegateRecord,
+      metadata,
+      collectionMint,
+      collectionMetadata,
+      systemProgram: SystemProgram.programId,
+      sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
+    };
+
+    const unverifyIx = createUnverifyInstruction(unverifyAccounts, args);
+    const tx = new Transaction().add(unverifyIx);
+
+    return {
+      tx: handler.sendAndConfirmTransaction(tx, [authority], 'tx: Verify'),
     };
   }
 

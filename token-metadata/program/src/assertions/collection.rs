@@ -136,9 +136,13 @@ pub fn assert_master_edition(
 ) -> Result<(), ProgramError> {
     let edition = MasterEditionV2::from_account_info(edition_account_info)
         .map_err(|_err: ProgramError| MetadataError::CollectionMustBeAUniqueMasterEdition)?;
-    if collection_data.token_standard != Some(TokenStandard::NonFungible)
-        || edition.max_supply != Some(0)
-    {
+
+    match collection_data.token_standard {
+        Some(TokenStandard::NonFungible) | Some(TokenStandard::ProgrammableNonFungible) => (),
+        _ => return Err(MetadataError::CollectionMustBeAUniqueMasterEdition.into()),
+    }
+
+    if edition.max_supply != Some(0) {
         return Err(MetadataError::CollectionMustBeAUniqueMasterEdition.into());
     }
     Ok(())
