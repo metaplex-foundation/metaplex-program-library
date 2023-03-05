@@ -2279,18 +2279,6 @@ mod unverify_collection {
 
     #[tokio::test]
     async fn collections_utility_delegate_cannot_unverify_burned_pnft_parent() {
-        utility_delegate_cannot_unverify_burned_pnft_parent(AssetToDelegate::CollectionParent)
-            .await;
-    }
-
-    #[tokio::test]
-    async fn items_utility_delegate_cannot_unverify_burned_pnft_parent() {
-        utility_delegate_cannot_unverify_burned_pnft_parent(AssetToDelegate::Item).await;
-    }
-
-    async fn utility_delegate_cannot_unverify_burned_pnft_parent(
-        asset_to_delegate: AssetToDelegate,
-    ) {
         let mut context = program_test().start_with_context().await;
 
         // Use pNFT for collection parent for this test.
@@ -2302,30 +2290,107 @@ mod unverify_collection {
         )
         .await;
 
-        // Create a Utility delegate.
+        // Create a Utility delegate for collection parent.
         let delegate = Keypair::new();
         airdrop(&mut context, &delegate.pubkey(), LAMPORTS_PER_SOL)
             .await
             .unwrap();
-
-        let asset = match asset_to_delegate {
-            AssetToDelegate::CollectionParent => &mut test_items.collection_parent_da,
-            AssetToDelegate::Item => &mut test_items.da,
-        };
 
         let payer = context.payer.dirty_clone();
         let delegate_args = DelegateArgs::UtilityV1 {
             amount: 1,
             authorization_data: None,
         };
-        asset
+        test_items
+            .collection_parent_da
+            .delegate(&mut context, payer, delegate.pubkey(), delegate_args)
+            .await
+            .unwrap();
+
+        // Find the token_record account for the Utility Delegate.
+        let (token_record, _) = find_token_record_account(
+            &test_items.collection_parent_da.mint.pubkey(),
+            &test_items.collection_parent_da.token.unwrap(),
+        );
+
+        // Burn collection parent.  Note the delegate has to be used as the authority in this case.
+        let args = BurnArgs::V1 { amount: 1 };
+        test_items
+            .collection_parent_da
+            .burn(&mut context, delegate.dirty_clone(), args, None, None)
+            .await
+            .unwrap();
+
+        // Assert that metadata, edition, token and token record accounts are closed.
+        test_items
+            .collection_parent_da
+            .assert_burned(&mut context)
+            .await
+            .unwrap();
+
+        // Unverify.
+        let args = VerificationArgs::CollectionV1;
+        let err = test_items
+            .da
+            .unverify(
+                &mut context,
+                delegate,
+                args,
+                None,
+                Some(token_record),
+                Some(test_items.collection_parent_da.mint.pubkey()),
+                Some(test_items.collection_parent_da.metadata),
+            )
+            .await
+            .unwrap_err();
+
+        // In this case the token record will be closed so we expect IncorrectOwner.
+        assert_custom_error!(err, MetadataError::IncorrectOwner);
+
+        let verified_collection = test_items.collection.clone().map(|mut c| {
+            c.verified = true;
+            c
+        });
+
+        test_items
+            .da
+            .assert_item_collection_matches_on_chain(&mut context, &verified_collection)
+            .await;
+    }
+
+    #[tokio::test]
+    async fn items_utility_delegate_cannot_unverify_burned_pnft_parent() {
+        let mut context = program_test().start_with_context().await;
+
+        // Use pNFT for collection parent for this test.
+        let mut test_items = create_mint_verify_collection_check(
+            &mut context,
+            DEFAULT_COLLECTION_DETAILS,
+            TokenStandard::ProgrammableNonFungible,
+            TokenStandard::ProgrammableNonFungible,
+        )
+        .await;
+
+        // Create a Utility delegate for the item.
+        let delegate = Keypair::new();
+        airdrop(&mut context, &delegate.pubkey(), LAMPORTS_PER_SOL)
+            .await
+            .unwrap();
+
+        let payer = context.payer.dirty_clone();
+        let delegate_args = DelegateArgs::UtilityV1 {
+            amount: 1,
+            authorization_data: None,
+        };
+        test_items
+            .da
             .delegate(&mut context, payer, delegate.pubkey(), delegate_args)
             .await
             .unwrap();
 
         // Find the token_record account for the Utility Delegate.
         let (token_record, _) =
-            find_token_record_account(&asset.mint.pubkey(), &asset.token.unwrap());
+            find_token_record_account(&test_items.da.mint.pubkey(), &test_items.da.token.unwrap());
 
         // Burn collection parent.
         let args = BurnArgs::V1 { amount: 1 };
@@ -2360,6 +2425,16 @@ mod unverify_collection {
             .unwrap_err();
 
         assert_custom_error!(err, MetadataError::UpdateAuthorityIncorrect);
+
+        let verified_collection = test_items.collection.clone().map(|mut c| {
+            c.verified = true;
+            c
+        });
+
+        test_items
+            .da
+            .assert_item_collection_matches_on_chain(&mut context, &verified_collection)
+            .await;
     }
 
     struct CollectionTestItems {
