@@ -1958,6 +1958,95 @@ mod unverify_collection {
             .await;
     }
 
+    #[tokio::test]
+    async fn pass_unverify_burned_pnft_collection_using_item_delegate() {
+        let mut context = program_test().start_with_context().await;
+
+        let mut test_items = create_mint_verify_collection_check(
+            &mut context,
+            DEFAULT_COLLECTION_DETAILS,
+            TokenStandard::ProgrammableNonFungible,
+            TokenStandard::ProgrammableNonFungible,
+        )
+        .await;
+
+        // Change the collection to have a different update authority.
+        let mut args = UpdateArgs::default();
+        let UpdateArgs::V1 {
+            new_update_authority,
+            ..
+        } = &mut args;
+        *new_update_authority = Some(Keypair::new().pubkey());
+        let payer = context.payer.dirty_clone();
+        test_items
+            .collection_parent_da
+            .update(&mut context, payer, args)
+            .await
+            .unwrap();
+
+        // Burn collection parent.
+        let args = BurnArgs::V1 { amount: 1 };
+        let payer = context.payer.dirty_clone();
+        test_items
+            .collection_parent_da
+            .burn(&mut context, payer, args, None, None)
+            .await
+            .unwrap();
+
+        // Assert that metadata, edition, token and token record accounts are closed.
+        test_items
+            .collection_parent_da
+            .assert_burned(&mut context)
+            .await
+            .unwrap();
+
+        // Create a metadata delegate for the item.
+        let delegate = Keypair::new();
+        airdrop(&mut context, &delegate.pubkey(), LAMPORTS_PER_SOL)
+            .await
+            .unwrap();
+
+        let payer = context.payer.dirty_clone();
+        let payer_pubkey = payer.pubkey();
+        let delegate_args = DelegateArgs::UpdateV1 {
+            authorization_data: None,
+        };
+        test_items
+            .da
+            .delegate(&mut context, payer, delegate.pubkey(), delegate_args)
+            .await
+            .unwrap();
+
+        // Find delegate record PDA.
+        let (delegate_record, _) = find_metadata_delegate_record_account(
+            &test_items.da.mint.pubkey(),
+            MetadataDelegateRole::Update,
+            &payer_pubkey,
+            &delegate.pubkey(),
+        );
+
+        // Unverify.
+        let args = VerificationArgs::CollectionV1;
+        test_items
+            .da
+            .unverify(
+                &mut context,
+                delegate,
+                args,
+                None,
+                Some(delegate_record),
+                Some(test_items.collection_parent_da.mint.pubkey()),
+                Some(test_items.collection_parent_da.metadata),
+            )
+            .await
+            .unwrap();
+
+        test_items
+            .da
+            .assert_item_collection_matches_on_chain(&mut context, &test_items.collection)
+            .await;
+    }
+
     struct CollectionTestItems {
         da: DigitalAsset,
         collection: Option<Collection>,
