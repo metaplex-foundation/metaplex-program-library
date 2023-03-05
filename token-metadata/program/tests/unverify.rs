@@ -337,50 +337,6 @@ mod unverify_collection {
     }
 
     #[tokio::test]
-    async fn collection_metadata_info_wrong_derivation() {
-        let mut context = program_test().start_with_context().await;
-
-        let mut test_items = create_mint_verify_collection_check(
-            &mut context,
-            DEFAULT_COLLECTION_DETAILS,
-            TokenStandard::ProgrammableNonFungible,
-            TokenStandard::NonFungible,
-        )
-        .await;
-
-        // Unverify.
-        let args = VerificationArgs::CollectionV1;
-        let payer = context.payer.dirty_clone();
-        let collection_metadata_info_wrong_owner = Keypair::new().pubkey();
-        let err = test_items
-            .da
-            .unverify(
-                &mut context,
-                payer,
-                args,
-                None,
-                None,
-                Some(test_items.collection_parent_da.mint.pubkey()),
-                Some(collection_metadata_info_wrong_owner),
-            )
-            .await
-            .unwrap_err();
-
-        // In this case it will be MintMismatch because it fails a derivation check before
-        // it gets to an owner check.
-        assert_custom_error!(err, MetadataError::MintMismatch);
-
-        assert_collection_verified_item_and_parent(
-            &mut context,
-            &test_items.da,
-            &test_items.collection,
-            &test_items.collection_parent_da,
-            &DEFAULT_COLLECTION_DETAILS,
-        )
-        .await;
-    }
-
-    #[tokio::test]
     async fn missing_collection_mint_info() {
         let mut context = program_test().start_with_context().await;
 
@@ -660,6 +616,50 @@ mod unverify_collection {
         second_collection_parent_da
             .assert_collection_details_matches_on_chain(&mut context, &DEFAULT_COLLECTION_DETAILS)
             .await;
+    }
+
+    #[tokio::test]
+    async fn collection_metadata_info_wrong_derivation() {
+        let mut context = program_test().start_with_context().await;
+
+        let mut test_items = create_mint_verify_collection_check(
+            &mut context,
+            DEFAULT_COLLECTION_DETAILS,
+            TokenStandard::ProgrammableNonFungible,
+            TokenStandard::NonFungible,
+        )
+        .await;
+
+        // Unverify.
+        let args = VerificationArgs::CollectionV1;
+        let payer = context.payer.dirty_clone();
+        let wrong_collection_metadata = Keypair::new().pubkey();
+        let err = test_items
+            .da
+            .unverify(
+                &mut context,
+                payer,
+                args,
+                None,
+                None,
+                Some(test_items.collection_parent_da.mint.pubkey()),
+                Some(wrong_collection_metadata),
+            )
+            .await
+            .unwrap_err();
+
+        // In this case it will be MintMismatch because it fails a derivation check before
+        // it gets to an owner check.
+        assert_custom_error!(err, MetadataError::MintMismatch);
+
+        assert_collection_verified_item_and_parent(
+            &mut context,
+            &test_items.da,
+            &test_items.collection,
+            &test_items.collection_parent_da,
+            &DEFAULT_COLLECTION_DETAILS,
+        )
+        .await;
     }
 
     #[tokio::test]
@@ -1808,6 +1808,87 @@ mod unverify_collection {
     }
 
     #[tokio::test]
+    async fn burned_pnft_collections_update_authority_cannot_unverify() {
+        let mut context = program_test().start_with_context().await;
+
+        let mut test_items = create_mint_verify_collection_check(
+            &mut context,
+            DEFAULT_COLLECTION_DETAILS,
+            TokenStandard::ProgrammableNonFungible,
+            TokenStandard::ProgrammableNonFungible,
+        )
+        .await;
+
+        // Change the collection to have a different update authority.
+        let new_collection_update_authority = Keypair::new();
+        airdrop(
+            &mut context,
+            &new_collection_update_authority.pubkey(),
+            LAMPORTS_PER_SOL,
+        )
+        .await
+        .unwrap();
+
+        let mut args = UpdateArgs::default();
+        let UpdateArgs::V1 {
+            new_update_authority,
+            ..
+        } = &mut args;
+        *new_update_authority = Some(new_collection_update_authority.pubkey());
+
+        let payer = context.payer.dirty_clone();
+        test_items
+            .collection_parent_da
+            .update(&mut context, payer, args)
+            .await
+            .unwrap();
+
+        // Burn collection parent.
+        let args = BurnArgs::V1 { amount: 1 };
+        let payer = context.payer.dirty_clone();
+        test_items
+            .collection_parent_da
+            .burn(&mut context, payer, args, None, None)
+            .await
+            .unwrap();
+
+        // Assert that metadata, edition, token and token record accounts are closed.
+        test_items
+            .collection_parent_da
+            .assert_burned(&mut context)
+            .await
+            .unwrap();
+
+        // Unverify.
+        let args = VerificationArgs::CollectionV1;
+        let err = test_items
+            .da
+            .unverify(
+                &mut context,
+                new_collection_update_authority,
+                args,
+                None,
+                None,
+                Some(test_items.collection_parent_da.mint.pubkey()),
+                Some(test_items.collection_parent_da.metadata),
+            )
+            .await
+            .unwrap_err();
+
+        assert_custom_error!(err, MetadataError::UpdateAuthorityIncorrect);
+
+        let verified_collection = test_items.collection.clone().map(|mut c| {
+            c.verified = true;
+            c
+        });
+
+        test_items
+            .da
+            .assert_item_collection_matches_on_chain(&mut context, &verified_collection)
+            .await;
+    }
+
+    #[tokio::test]
     async fn burned_pnft_collections_delegate_cannot_unverify() {
         let mut context = program_test().start_with_context().await;
 
@@ -1864,7 +1945,7 @@ mod unverify_collection {
             .await
             .unwrap();
 
-        // Unverify.
+        // Unverify using burned collection parent's delegate.
         let args = VerificationArgs::CollectionV1;
         let err = test_items
             .da
@@ -1906,12 +1987,15 @@ mod unverify_collection {
         .await;
 
         // Change the collection to have a different update authority.
+        let new_collection_update_authority = Keypair::new();
+
         let mut args = UpdateArgs::default();
         let UpdateArgs::V1 {
             new_update_authority,
             ..
         } = &mut args;
-        *new_update_authority = Some(Keypair::new().pubkey());
+        *new_update_authority = Some(new_collection_update_authority.pubkey());
+
         let payer = context.payer.dirty_clone();
         test_items
             .collection_parent_da
@@ -1971,12 +2055,15 @@ mod unverify_collection {
         .await;
 
         // Change the collection to have a different update authority.
+        let new_collection_update_authority = Keypair::new();
+
         let mut args = UpdateArgs::default();
         let UpdateArgs::V1 {
             new_update_authority,
             ..
         } = &mut args;
-        *new_update_authority = Some(Keypair::new().pubkey());
+        *new_update_authority = Some(new_collection_update_authority.pubkey());
+
         let payer = context.payer.dirty_clone();
         test_items
             .collection_parent_da
@@ -2000,7 +2087,7 @@ mod unverify_collection {
             .await
             .unwrap();
 
-        // Create a metadata delegate for the item.
+        // Create a metadata update delegate for the item.
         let delegate = Keypair::new();
         airdrop(&mut context, &delegate.pubkey(), LAMPORTS_PER_SOL)
             .await

@@ -1698,7 +1698,7 @@ mod verify_collection {
         )
         .await;
 
-        // Verify using the new collection update authority.
+        // Verify using item update authority.
         let payer = context.payer.dirty_clone();
         let args = VerificationArgs::CollectionV1;
         let err = da
@@ -1758,7 +1758,7 @@ mod verify_collection {
             .assert_item_collection_matches_on_chain(context, &verified_collection)
             .await;
 
-        // Collection size should be updated.
+        // Check collection details.  If sized collection, size should be updated.
         let verified_collection_details = collection_details.clone().map(|details| match details {
             CollectionDetails::V1 { size } => CollectionDetails::V1 { size: size + 1 },
         });
@@ -2030,10 +2030,6 @@ mod verify_collection {
             )
             .await
             .unwrap();
-
-        collection_parent_da
-            .assert_collection_details_matches_on_chain(&mut context, &collection_details)
-            .await;
 
         // Create and mint item.
         let collection = Some(Collection {
