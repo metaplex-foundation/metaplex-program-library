@@ -144,7 +144,7 @@ export function createAuctioneerExecutePartialSaleInstruction(
     },
     {
       pubkey: accounts.metadata,
-      isWritable: false,
+      isWritable: true,
       isSigner: false,
     },
     {

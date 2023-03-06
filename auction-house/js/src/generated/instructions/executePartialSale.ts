@@ -138,7 +138,7 @@ export function createExecutePartialSaleInstruction(
     },
     {
       pubkey: accounts.metadata,
-      isWritable: false,
+      isWritable: true,
       isSigner: false,
     },
     {
