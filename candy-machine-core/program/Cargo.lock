@@ -1005,7 +1005,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a69803fbfbc4bb0327de86f49d2639692c7c60276cb87d6cced84bb8189f2000"
 dependencies = [
  "borsh",
- "mpl-token-metadata-context-derive",
+ "mpl-token-metadata-context-derive 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "num-derive",
  "num-traits",
  "rmp-serde",
@@ -1018,14 +1018,12 @@ dependencies = [
 
 [[package]]
 name = "mpl-token-metadata"
-version = "1.8.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "301235b920e1b3a4bf9c3ffd6a16b1db1f3ac5bdcb6b6f201d4bb7a9fd1d94a0"
+version = "1.8.5"
 dependencies = [
  "arrayref",
  "borsh",
  "mpl-token-auth-rules",
- "mpl-token-metadata-context-derive",
+ "mpl-token-metadata-context-derive 0.2.1",
  "mpl-utils",
  "num-derive",
  "num-traits",
@@ -1034,6 +1032,14 @@ dependencies = [
  "spl-associated-token-account",
  "spl-token",
  "thiserror",
+]
+
+[[package]]
+name = "mpl-token-metadata-context-derive"
+version = "0.2.1"
+dependencies = [
+ "quote",
+ "syn",
 ]
 
 [[package]]
@@ -1049,8 +1055,6 @@ dependencies = [
 [[package]]
 name = "mpl-utils"
 version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7fc48e64c50dba956acb46eec86d6968ef0401ef37031426da479f1f2b592066"
 dependencies = [
  "arrayref",
  "borsh",

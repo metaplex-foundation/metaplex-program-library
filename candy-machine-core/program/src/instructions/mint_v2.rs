@@ -2,10 +2,10 @@ use anchor_lang::prelude::*;
 use arrayref::array_ref;
 use mpl_token_metadata::{
     instruction::{
-        builders::{CreateBuilder, MintBuilder, UpdateBuilder},
+        builders::{CreateBuilder, MintBuilder, UpdateBuilder, VerifyBuilder},
         create_master_edition_v3, create_metadata_accounts_v3, set_and_verify_collection,
         set_and_verify_sized_collection_item, update_metadata_accounts_v2, CreateArgs,
-        InstructionBuilder, MintArgs, RuleSetToggle, UpdateArgs,
+        InstructionBuilder, MintArgs, RuleSetToggle, UpdateArgs, VerificationArgs,
     },
     state::{
         AssetData, Collection, Metadata, PrintSupply, ProgrammableConfig, TokenMetadataAccount,
@@ -465,7 +465,33 @@ fn create_and_mint<'info>(
         sysvar_instructions_info.to_account_info(),
     ];
 
-    invoke_signed(&update_ix, &update_infos, &[&authority_seeds]).map_err(|error| error.into())
+    invoke_signed(&update_ix, &update_infos, &[&authority_seeds])?;
+
+    // verify the minted nft into the collection
+
+    let verify_ix = VerifyBuilder::new()
+        .authority(accounts.authority_pda.key())
+        .delegate_record(accounts.collection_delegate_record.key())
+        .metadata(accounts.nft_metadata.key())
+        .collection_mint(accounts.collection_mint.key())
+        .collection_metadata(accounts.collection_metadata.key())
+        .collection_master_edition(accounts.collection_master_edition.key())
+        .build(VerificationArgs::CollectionV1)
+        .map_err(|_| CandyError::InstructionBuilderFailed)?
+        .instruction();
+
+    let verify_infos = vec![
+        accounts.authority_pda.to_account_info(),
+        accounts.collection_delegate_record.to_account_info(),
+        accounts.nft_metadata.to_account_info(),
+        accounts.collection_mint.to_account_info(),
+        accounts.collection_metadata.to_account_info(),
+        accounts.collection_master_edition.to_account_info(),
+        accounts.system_program.to_account_info(),
+        sysvar_instructions_info.to_account_info(),
+    ];
+
+    invoke_signed(&verify_ix, &verify_infos, &[&authority_seeds]).map_err(|error| error.into())
 }
 
 /// Creates the metadata accounts
@@ -716,4 +742,16 @@ pub struct MintV2<'info> {
     /// CHECK: account constraints checked in account trait
     #[account(address = sysvar::slot_hashes::id())]
     recent_slothashes: UncheckedAccount<'info>,
+
+    /// Token Authorization Rules program.
+    ///
+    /// CHECK: account checked in CPI
+    #[account(address = mpl_token_auth_rules::id())]
+    authorization_rules_program: Option<UncheckedAccount<'info>>,
+
+    /// Token Authorization rules account for the collection metadata (if any).
+    ///
+    /// CHECK: account constraints checked in account trait
+    #[account(owner = mpl_token_auth_rules::id())]
+    authorization_rules: Option<UncheckedAccount<'info>>,
 }

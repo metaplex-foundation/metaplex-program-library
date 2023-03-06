@@ -741,6 +741,26 @@
             "SlotHashes sysvar cluster data.",
             ""
           ]
+        },
+        {
+          "name": "authorizationRulesProgram",
+          "isMut": false,
+          "isSigner": false,
+          "isOptional": true,
+          "docs": [
+            "Token Authorization Rules program.",
+            ""
+          ]
+        },
+        {
+          "name": "authorizationRules",
+          "isMut": false,
+          "isSigner": false,
+          "isOptional": true,
+          "docs": [
+            "Token Authorization rules account for the collection metadata (if any).",
+            ""
+          ]
         }
       ],
       "args": [],
