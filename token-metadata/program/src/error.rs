@@ -403,10 +403,8 @@ pub enum MetadataError {
     #[error("Can't use this function on a sized collection")]
     SizedCollection,
 
-    /// 103 - Can't burn a verified member of a collection w/o providing collection metadata account
-    #[error(
-        "Can't burn a verified member of a collection w/o providing collection metadata account"
-    )]
+    /// 103 - Missing collection metadata account.
+    #[error("Missing collection metadata account")]
     MissingCollectionMetadata,
 
     /// 104 - This NFT is not a member of the specified collection.
@@ -731,6 +729,14 @@ pub enum MetadataError {
     /// 184
     #[error("Token account does not have enough tokens")]
     InsufficientTokenBalance,
+
+    /// 185
+    #[error("Missing collection mint account")]
+    MissingCollectionMint,
+
+    /// 186
+    #[error("Missing collection master edition account")]
+    MissingCollectionMasterEdition,
 }
 
 impl PrintProgramError for MetadataError {

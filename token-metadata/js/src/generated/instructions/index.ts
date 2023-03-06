@@ -40,6 +40,7 @@ export * from './ThawDelegatedAccount';
 export * from './Transfer';
 export * from './TransferOutOfEscrow';
 export * from './Unlock';
+export * from './Unverify';
 export * from './UnverifyCollection';
 export * from './UnverifySizedCollectionItem';
 export * from './Update';

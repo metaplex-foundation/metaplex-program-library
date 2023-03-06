@@ -9,6 +9,7 @@ mod freeze;
 mod metadata;
 mod state;
 mod uses;
+mod verification;
 
 use borsh::{BorshDeserialize, BorshSerialize};
 pub use bubblegum::*;
@@ -26,6 +27,7 @@ use shank::ShankInstruction;
 use solana_program::account_info::AccountInfo;
 pub use state::*;
 pub use uses::*;
+pub use verification::*;
 
 #[allow(deprecated)]
 pub use crate::deprecated_instruction::{
@@ -753,20 +755,34 @@ pub enum MetadataInstruction {
     #[default_optional_accounts]
     Use(UseArgs),
 
-    /// Verifies that an asset belongs in an specified collection.
-    /// 
-    /// The configurable `authorization_rules` only apply to `ProgrammableNonFungible` assets and
-    /// it may require additional accounts to validate the rules.
-    /// 
+    /// Verifies that an asset was created by a specific creator or belongs in an specified collection.
+    ///
     /// Depending on the type of verification (e.g., creator or collection), additional accounts
     /// are required.
-    #[account(0, writable, name="metadata", desc="Metadata account")]
-    #[account(1, signer, writable, name="collection_authority", desc="Collection Update authority")]
-    #[account(2, signer, writable, name="payer", desc="payer")]
-    #[account(3, optional, name="authorization_rules", desc="Token Authorization Rules account")]
-    #[account(4, optional, name="authorization_rules_program", desc="Token Authorization Rules Program")]
+    #[account(0, signer, name="authority", desc="Creator to verify, collection update authority or delegate")]
+    #[account(1, optional, name="delegate_record", desc="Delegate record PDA")]
+    #[account(2, writable, name="metadata", desc="Metadata account")]
+    #[account(3, optional, name="collection_mint", desc="Mint of the Collection")]
+    #[account(4, optional, writable, name="collection_metadata", desc="Metadata Account of the Collection")]
+    #[account(5, optional, name="collection_master_edition", desc="Master Edition Account of the Collection Token")]
+    #[account(6, name="system_program", desc="System program")]
+    #[account(7, name="sysvar_instructions", desc="Instructions sysvar account")]
     #[default_optional_accounts]
-    Verify(VerifyArgs),
+    Verify(VerificationArgs),
+
+    /// Unverifies that an asset was created by a specific creator or belongs in an specified collection.
+    ///
+    /// Depending on the type of verification (e.g., creator or collection), additional accounts
+    /// are required.
+    #[account(0, signer, name="authority", desc="Creator to verify, collection (or metadata if parent burned) update authority or delegate")]
+    #[account(1, optional, name="delegate_record", desc="Delegate record PDA")]
+    #[account(2, writable, name="metadata", desc="Metadata account")]
+    #[account(3, optional, name="collection_mint", desc="Mint of the Collection")]
+    #[account(4, optional, writable, name="collection_metadata", desc="Metadata Account of the Collection")]
+    #[account(5, name="system_program", desc="System program")]
+    #[account(6, name="sysvar_instructions", desc="Instructions sysvar account")]
+    #[default_optional_accounts]
+    Unverify(VerificationArgs),
 }
 
 pub struct Context<'a, T> {
