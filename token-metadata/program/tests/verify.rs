@@ -210,7 +210,7 @@ mod verify_collection {
 
     #[tokio::test]
     async fn delegate_record_wrong_owner() {
-        // See `standard_delegate_cannot_verify()`.
+        // See `collections_standard_delegate_cannot_verify()`.
     }
 
     #[tokio::test]
@@ -1108,6 +1108,98 @@ mod verify_collection {
     }
 
     #[tokio::test]
+    async fn fail_collection_wrong_token_standard() {
+        let mut context = program_test().start_with_context().await;
+
+        // Create a collection parent NFT with the CollectionDetails struct populated.
+        let collection_parent_nft = Metadata::new();
+        collection_parent_nft
+            .create_v3(
+                &mut context,
+                "Test".to_string(),
+                "TST".to_string(),
+                "uri".to_string(),
+                None,
+                10,
+                false,
+                None,
+                None,
+                DEFAULT_COLLECTION_DETAILS,
+            )
+            .await
+            .unwrap();
+
+        // This legacy `create` method uses an old `create_master_edition` instruction that does not update
+        // the token standard on the test collection.
+        let parent_master_edition_account = MasterEditionV2::new(&collection_parent_nft);
+        parent_master_edition_account
+            .create(&mut context, Some(0))
+            .await
+            .unwrap();
+
+        let collection_metadata = collection_parent_nft.get_data(&mut context).await;
+        assert_eq!(
+            collection_metadata.token_standard,
+            Some(TokenStandard::FungibleAsset)
+        );
+
+        // Create and mint item.
+        let collection = Some(Collection {
+            key: collection_parent_nft.mint.pubkey(),
+            verified: false,
+        });
+
+        let mut da = DigitalAsset::new();
+        da.create_and_mint_item_with_collection(
+            &mut context,
+            TokenStandard::ProgrammableNonFungible,
+            None,
+            None,
+            1,
+            collection.clone(),
+        )
+        .await
+        .unwrap();
+
+        assert_collection_unverified_item_and_parent(
+            &mut context,
+            &da,
+            &collection,
+            &collection_parent_nft,
+            &DEFAULT_COLLECTION_DETAILS,
+        )
+        .await;
+
+        // Verify.
+        let args = VerificationArgs::CollectionV1;
+        let payer = context.payer.dirty_clone();
+        let err = da
+            .verify(
+                &mut context,
+                payer,
+                args,
+                None,
+                None,
+                Some(collection_parent_nft.mint.pubkey()),
+                Some(collection_parent_nft.pubkey),
+                Some(parent_master_edition_account.pubkey),
+            )
+            .await
+            .unwrap_err();
+
+        assert_custom_error!(err, MetadataError::CollectionMustBeAUniqueMasterEdition);
+
+        assert_collection_unverified_item_and_parent(
+            &mut context,
+            &da,
+            &collection,
+            &collection_parent_nft,
+            &DEFAULT_COLLECTION_DETAILS,
+        )
+        .await;
+    }
+
+    #[tokio::test]
     async fn fail_collection_master_edition_has_nonzero_max_supply() {
         let mut context = program_test().start_with_context().await;
 
@@ -1606,7 +1698,7 @@ mod verify_collection {
         )
         .await;
 
-        // Verify using the new collection update authority.
+        // Verify using item update authority.
         let payer = context.payer.dirty_clone();
         let args = VerificationArgs::CollectionV1;
         let err = da
@@ -1666,7 +1758,7 @@ mod verify_collection {
             .assert_item_collection_matches_on_chain(context, &verified_collection)
             .await;
 
-        // Collection size should be updated.
+        // Check collection details.  If sized collection, size should be updated.
         let verified_collection_details = collection_details.clone().map(|details| match details {
             CollectionDetails::V1 { size } => CollectionDetails::V1 { size: size + 1 },
         });
@@ -1939,10 +2031,6 @@ mod verify_collection {
             .await
             .unwrap();
 
-        collection_parent_da
-            .assert_collection_details_matches_on_chain(&mut context, &collection_details)
-            .await;
-
         // Create and mint item.
         let collection = Some(Collection {
             key: collection_parent_da.mint.pubkey(),
@@ -2030,28 +2118,80 @@ mod verify_collection {
     }
 
     #[tokio::test]
-    async fn update_delegate_cannot_verify() {
+    async fn collections_update_delegate_cannot_verify() {
         let delegate_args = DelegateArgs::UpdateV1 {
             authorization_data: None,
         };
 
         let delegate_role = MetadataDelegateRole::Update;
 
-        other_metadata_delegates_cannot_verify(delegate_args, delegate_role).await;
+        other_metadata_delegates_cannot_verify(
+            AssetToDelegate::CollectionParent,
+            delegate_args,
+            delegate_role,
+        )
+        .await;
     }
 
     #[tokio::test]
-    async fn programmable_config_delegate_cannot_verify() {
+    async fn collections_programmable_config_delegate_cannot_verify() {
         let delegate_args = DelegateArgs::ProgrammableConfigV1 {
             authorization_data: None,
         };
 
         let delegate_role = MetadataDelegateRole::ProgrammableConfig;
 
-        other_metadata_delegates_cannot_verify(delegate_args, delegate_role).await;
+        other_metadata_delegates_cannot_verify(
+            AssetToDelegate::CollectionParent,
+            delegate_args,
+            delegate_role,
+        )
+        .await;
+    }
+
+    #[tokio::test]
+    async fn items_collection_delegate_cannot_verify() {
+        let delegate_args = DelegateArgs::CollectionV1 {
+            authorization_data: None,
+        };
+
+        let delegate_role = MetadataDelegateRole::Collection;
+
+        other_metadata_delegates_cannot_verify(AssetToDelegate::Item, delegate_args, delegate_role)
+            .await;
+    }
+
+    #[tokio::test]
+    async fn items_update_delegate_cannot_verify() {
+        let delegate_args = DelegateArgs::UpdateV1 {
+            authorization_data: None,
+        };
+
+        let delegate_role = MetadataDelegateRole::Update;
+
+        other_metadata_delegates_cannot_verify(AssetToDelegate::Item, delegate_args, delegate_role)
+            .await;
+    }
+
+    #[tokio::test]
+    async fn items_programmable_config_delegate_cannot_verify() {
+        let delegate_args = DelegateArgs::ProgrammableConfigV1 {
+            authorization_data: None,
+        };
+
+        let delegate_role = MetadataDelegateRole::ProgrammableConfig;
+
+        other_metadata_delegates_cannot_verify(AssetToDelegate::Item, delegate_args, delegate_role)
+            .await;
+    }
+
+    enum AssetToDelegate {
+        CollectionParent,
+        Item,
     }
 
     async fn other_metadata_delegates_cannot_verify(
+        asset_to_delegate: AssetToDelegate,
         delegate_args: DelegateArgs,
         delegate_role: MetadataDelegateRole,
     ) {
@@ -2102,16 +2242,21 @@ mod verify_collection {
             .await
             .unwrap();
 
+        let asset = match asset_to_delegate {
+            AssetToDelegate::CollectionParent => &mut collection_parent_da,
+            AssetToDelegate::Item => &mut da,
+        };
+
         let payer = context.payer.dirty_clone();
         let payer_pubkey = payer.pubkey();
-        collection_parent_da
+        asset
             .delegate(&mut context, payer, delegate.pubkey(), delegate_args)
             .await
             .unwrap();
 
         // Find delegate record PDA.
         let (delegate_record, _) = find_metadata_delegate_record_account(
-            &collection_parent_da.mint.pubkey(),
+            &asset.mint.pubkey(),
             delegate_role,
             &payer_pubkey,
             &delegate.pubkey(),
@@ -2271,7 +2416,7 @@ mod verify_collection {
     }
 
     #[tokio::test]
-    async fn standard_delegate_cannot_verify() {
+    async fn collections_standard_delegate_cannot_verify() {
         let mut context = program_test().start_with_context().await;
 
         // Use NFT for collection parent for this test.
@@ -2361,7 +2506,16 @@ mod verify_collection {
     }
 
     #[tokio::test]
-    async fn utility_delegate_cannot_verify() {
+    async fn collections_utility_delegate_cannot_verify() {
+        utility_delegate_cannot_verify(AssetToDelegate::CollectionParent).await;
+    }
+
+    #[tokio::test]
+    async fn items_utility_delegate_cannot_verify() {
+        utility_delegate_cannot_verify(AssetToDelegate::Item).await;
+    }
+
+    async fn utility_delegate_cannot_verify(asset_to_delegate: AssetToDelegate) {
         let mut context = program_test().start_with_context().await;
 
         // Use pNFT for collection parent for this test.
@@ -2409,21 +2563,24 @@ mod verify_collection {
             .await
             .unwrap();
 
+        let asset = match asset_to_delegate {
+            AssetToDelegate::CollectionParent => &mut collection_parent_da,
+            AssetToDelegate::Item => &mut da,
+        };
+
         let payer = context.payer.dirty_clone();
         let delegate_args = DelegateArgs::UtilityV1 {
             amount: 1,
             authorization_data: None,
         };
-        collection_parent_da
+        asset
             .delegate(&mut context, payer, delegate.pubkey(), delegate_args)
             .await
             .unwrap();
 
         // Find the token_record account for the Utility Delegate.
-        let (token_record, _) = find_token_record_account(
-            &collection_parent_da.mint.pubkey(),
-            &collection_parent_da.token.unwrap(),
-        );
+        let (token_record, _) =
+            find_token_record_account(&asset.mint.pubkey(), &asset.token.unwrap());
 
         // Verify.
         let args = VerificationArgs::CollectionV1;

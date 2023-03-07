@@ -150,7 +150,6 @@ pub(crate) fn unverify_collection_v1(program_id: &Pubkey, ctx: Context<Unverify>
     // and metadata delegate roles below.
     let mut auth_request = AuthorityRequest {
         authority: ctx.accounts.authority_info.key,
-        mint: &collection.key,
         metadata_delegate_record_info: ctx.accounts.delegate_record_info,
         precedence: &[AuthorityType::Metadata, AuthorityType::MetadataDelegate],
         ..Default::default()
@@ -163,6 +162,7 @@ pub(crate) fn unverify_collection_v1(program_id: &Pubkey, ctx: Context<Unverify>
         // If the collection parent is burned, we need to use an authority for the item rather than
         // the collection.  The required authority is either the item's metadata update authority,
         // or an update delegate for the item.  This call fails if no valid authority is present.
+        auth_request.mint = &metadata.mint;
         auth_request.update_authority = &metadata.update_authority;
         auth_request.metadata_delegate_roles = vec![MetadataDelegateRole::Update];
         AuthorityType::get_authority_type(auth_request)
@@ -182,6 +182,7 @@ pub(crate) fn unverify_collection_v1(program_id: &Pubkey, ctx: Context<Unverify>
         // If the collection parent is not burned, the required authority is either the collection
         // parent's metadata update authority, or a collection delegate for the collection parent.
         // This call fails if no valid authority is present.
+        auth_request.mint = collection_mint_info.key;
         auth_request.update_authority = &collection_metadata.update_authority;
         auth_request.metadata_delegate_roles = vec![MetadataDelegateRole::Collection];
         AuthorityType::get_authority_type(auth_request)
