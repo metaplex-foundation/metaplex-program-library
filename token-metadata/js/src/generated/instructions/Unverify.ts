@@ -11,19 +11,19 @@ import { VerificationArgs, verificationArgsBeet } from '../types/VerificationArg
 
 /**
  * @category Instructions
- * @category Verify
+ * @category Unverify
  * @category generated
  */
-export type VerifyInstructionArgs = {
+export type UnverifyInstructionArgs = {
   verificationArgs: VerificationArgs;
 };
 /**
  * @category Instructions
- * @category Verify
+ * @category Unverify
  * @category generated
  */
-export const VerifyStruct = new beet.BeetArgsStruct<
-  VerifyInstructionArgs & {
+export const UnverifyStruct = new beet.BeetArgsStruct<
+  UnverifyInstructionArgs & {
     instructionDiscriminator: number;
   }
 >(
@@ -31,37 +31,35 @@ export const VerifyStruct = new beet.BeetArgsStruct<
     ['instructionDiscriminator', beet.u8],
     ['verificationArgs', verificationArgsBeet],
   ],
-  'VerifyInstructionArgs',
+  'UnverifyInstructionArgs',
 );
 /**
- * Accounts required by the _Verify_ instruction
+ * Accounts required by the _Unverify_ instruction
  *
- * @property [**signer**] authority Creator to verify, collection update authority or delegate
+ * @property [**signer**] authority Creator to verify, collection (or metadata if parent burned) update authority or delegate
  * @property [] delegateRecord (optional) Delegate record PDA
  * @property [_writable_] metadata Metadata account
  * @property [] collectionMint (optional) Mint of the Collection
  * @property [_writable_] collectionMetadata (optional) Metadata Account of the Collection
- * @property [] collectionMasterEdition (optional) Master Edition Account of the Collection Token
  * @property [] sysvarInstructions Instructions sysvar account
  * @category Instructions
- * @category Verify
+ * @category Unverify
  * @category generated
  */
-export type VerifyInstructionAccounts = {
+export type UnverifyInstructionAccounts = {
   authority: web3.PublicKey;
   delegateRecord?: web3.PublicKey;
   metadata: web3.PublicKey;
   collectionMint?: web3.PublicKey;
   collectionMetadata?: web3.PublicKey;
-  collectionMasterEdition?: web3.PublicKey;
   systemProgram?: web3.PublicKey;
   sysvarInstructions: web3.PublicKey;
 };
 
-export const verifyInstructionDiscriminator = 52;
+export const unverifyInstructionDiscriminator = 53;
 
 /**
- * Creates a _Verify_ instruction.
+ * Creates a _Unverify_ instruction.
  *
  * Optional accounts that are not provided default to the program ID since
  * this was indicated in the IDL from which this instruction was generated.
@@ -70,16 +68,16 @@ export const verifyInstructionDiscriminator = 52;
  * @param args to provide as instruction data to the program
  *
  * @category Instructions
- * @category Verify
+ * @category Unverify
  * @category generated
  */
-export function createVerifyInstruction(
-  accounts: VerifyInstructionAccounts,
-  args: VerifyInstructionArgs,
+export function createUnverifyInstruction(
+  accounts: UnverifyInstructionAccounts,
+  args: UnverifyInstructionArgs,
   programId = new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
 ) {
-  const [data] = VerifyStruct.serialize({
-    instructionDiscriminator: verifyInstructionDiscriminator,
+  const [data] = UnverifyStruct.serialize({
+    instructionDiscriminator: unverifyInstructionDiscriminator,
     ...args,
   });
   const keys: web3.AccountMeta[] = [
@@ -106,11 +104,6 @@ export function createVerifyInstruction(
     {
       pubkey: accounts.collectionMetadata ?? programId,
       isWritable: accounts.collectionMetadata != null,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.collectionMasterEdition ?? programId,
-      isWritable: false,
       isSigner: false,
     },
     {

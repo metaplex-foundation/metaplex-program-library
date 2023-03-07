@@ -79,7 +79,7 @@ mod update {
             .mint(da.mint.pubkey())
             .payer(update_authority.pubkey());
 
-        if let Some(edition) = da.master_edition {
+        if let Some(edition) = da.edition {
             builder.edition(edition);
         }
 
@@ -152,7 +152,7 @@ mod update {
             .authorization_rules(authorization_rules)
             .payer(update_authority.pubkey());
 
-        if let Some(edition) = da.master_edition {
+        if let Some(edition) = da.edition {
             builder.edition(edition);
         }
 
@@ -224,7 +224,7 @@ mod update {
             .token(da.token.unwrap())
             .payer(update_authority.pubkey());
 
-        if let Some(edition) = da.master_edition {
+        if let Some(edition) = da.edition {
             builder.edition(edition);
         }
 
@@ -262,7 +262,7 @@ mod update {
             .authorization_rules(authorization_rules)
             .payer(update_authority.pubkey());
 
-        if let Some(edition) = da.master_edition {
+        if let Some(edition) = da.edition {
             builder.edition(edition);
         }
 
@@ -297,7 +297,7 @@ mod update {
             .authorization_rules(invalid_rule_set)
             .payer(update_authority.pubkey());
 
-        if let Some(edition) = da.master_edition {
+        if let Some(edition) = da.edition {
             builder.edition(edition);
         }
 
@@ -395,7 +395,7 @@ mod update {
             .authorization_rules(authorization_rules)
             .payer(update_authority.pubkey());
 
-        if let Some(edition) = da.master_edition {
+        if let Some(edition) = da.edition {
             builder.edition(edition);
         }
 
@@ -436,7 +436,7 @@ mod update {
             .authorization_rules(new_auth_rules)
             .payer(update_authority.pubkey());
 
-        if let Some(edition) = da.master_edition {
+        if let Some(edition) = da.edition {
             builder.edition(edition);
         }
 

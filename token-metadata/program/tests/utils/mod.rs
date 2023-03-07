@@ -7,8 +7,9 @@ mod programmable;
 mod rooster_manager;
 
 pub use assert::*;
+use async_trait::async_trait;
 pub use digital_asset::*;
-pub use edition_marker::EditionMarker;
+pub use edition_marker::*;
 pub use master_edition_v2::MasterEditionV2;
 pub use metadata::{assert_collection_size, Metadata};
 pub use mpl_token_metadata::instruction;
@@ -230,5 +231,42 @@ pub trait DirtyClone {
 impl DirtyClone for Keypair {
     fn dirty_clone(&self) -> Self {
         Keypair::from_bytes(&self.to_bytes()).unwrap()
+    }
+}
+
+pub async fn warp100(context: &mut ProgramTestContext) {
+    let current_slot = context.banks_client.get_root_slot().await.unwrap();
+    println!("Warping to slot: {}", current_slot + 100);
+    context.warp_to_slot(current_slot + 100).unwrap();
+}
+
+#[async_trait]
+pub trait Airdrop {
+    async fn airdrop(
+        &self,
+        context: &mut ProgramTestContext,
+        lamports: u64,
+    ) -> Result<(), BanksClientError>;
+}
+
+#[async_trait]
+impl Airdrop for Keypair {
+    async fn airdrop(
+        &self,
+        context: &mut ProgramTestContext,
+        lamports: u64,
+    ) -> Result<(), BanksClientError> {
+        let tx = Transaction::new_signed_with_payer(
+            &[system_instruction::transfer(
+                &context.payer.pubkey(),
+                &self.pubkey(),
+                lamports,
+            )],
+            Some(&context.payer.pubkey()),
+            &[&context.payer],
+            context.last_blockhash,
+        );
+
+        context.banks_client.process_transaction(tx).await
     }
 }

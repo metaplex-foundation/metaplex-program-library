@@ -9,6 +9,7 @@ mod freeze;
 mod metadata;
 mod state;
 mod uses;
+mod verification;
 
 use borsh::{BorshDeserialize, BorshSerialize};
 pub use bubblegum::*;
@@ -26,6 +27,7 @@ use shank::ShankInstruction;
 use solana_program::account_info::AccountInfo;
 pub use state::*;
 pub use uses::*;
+pub use verification::*;
 
 #[allow(deprecated)]
 pub use crate::deprecated_instruction::{
@@ -501,17 +503,44 @@ pub enum MetadataInstruction {
 
     /// Burns an asset, closing associated accounts.
     /// 
-    /// The configurable `authorization_rules` only apply to `ProgrammableNonFungible` assets and
-    /// it may require additional accounts to validate the rules.
-    #[account(0, writable, name="metadata", desc="Metadata (pda of ['metadata', program id, mint id])")]
-    #[account(1, signer, writable, name="owner", desc="Asset owner")]
-    #[account(2, writable, name="mint", desc="Mint of token asset")]
-    #[account(3, writable, name="token_account", desc="Token account to close")]
-    #[account(4, writable, name="master_edition_account", desc="MasterEdition of the asset")]
-    #[account(5, name="spl_token_program", desc="SPL Token Program")]
-    #[account(6, optional, writable, name="collection_metadata", desc="Metadata of the Collection")]
-    #[account(7, optional, name="authorization_rules", desc="Token Authorization Rules account")]
-    #[account(8, optional, name="authorization_rules_program", desc="Token Authorization Rules Program")]
+    /// Supports burning the following asset types:
+    /// - ProgrammableNonFungible
+    /// - NonFungible
+    /// - NonFungigbleEdition
+    /// - Fungible
+    /// - FungibleAsset
+    ///
+    /// Parent accounts only required for burning print editions are the accounts for the master edition
+    /// associated with the print edition.
+    /// The Token Record account is required for burning a ProgrammableNonFungible asset.
+    ///
+    /// This handler closes the following accounts:
+    ///
+    /// For ProgrammableNonFungible assets:
+    /// - Metadata, Edition, Token, TokenRecord
+    ///
+    /// For NonFungible assets:
+    /// - Metadata, Edition, Token
+    ///
+    /// For NonFungibleEdition assets:
+    /// - Metadata, Edition, Token, and the EditionMarker, if all prints for it are burned.
+    ///
+    /// For Fungible assets:
+    /// - Only the token account, if all tokens are burned.
+    #[account(0, signer, writable, name="authority", desc="Asset owner or Utility delegate")]
+    #[account(1, optional, writable, name="collection_metadata", desc="Metadata of the Collection")]
+    #[account(2, writable, name="metadata", desc="Metadata (pda of ['metadata', program id, mint id])")]
+    #[account(3, optional, writable, name="edition", desc="Edition of the asset")]
+    #[account(4, writable, name="mint", desc="Mint of token asset")]
+    #[account(5, writable, name="token", desc="Token account to close")]
+    #[account(6, optional, writable, name="master_edition", desc="Master edition account")]
+    #[account(7, optional, name="master_edition_mint", desc="Master edition mint of the asset")]
+    #[account(8, optional, name="master_edition_token", desc="Master edition token account")]
+    #[account(9, optional, writable, name="edition_marker", desc="Edition marker account")]
+    #[account(10, optional, writable, name="token_record", desc="Token record account")]
+    #[account(11, name="system_program", desc="System program")]
+    #[account(12, name="sysvar_instructions", desc="Instructions sysvar account")]
+    #[account(13, name="spl_token_program", desc="SPL Token Program")]
     #[default_optional_accounts]
     Burn(BurnArgs),
 
@@ -726,20 +755,34 @@ pub enum MetadataInstruction {
     #[default_optional_accounts]
     Use(UseArgs),
 
-    /// Verifies that an asset belongs in an specified collection.
-    /// 
-    /// The configurable `authorization_rules` only apply to `ProgrammableNonFungible` assets and
-    /// it may require additional accounts to validate the rules.
-    /// 
+    /// Verifies that an asset was created by a specific creator or belongs in an specified collection.
+    ///
     /// Depending on the type of verification (e.g., creator or collection), additional accounts
     /// are required.
-    #[account(0, writable, name="metadata", desc="Metadata account")]
-    #[account(1, signer, writable, name="collection_authority", desc="Collection Update authority")]
-    #[account(2, signer, writable, name="payer", desc="payer")]
-    #[account(3, optional, name="authorization_rules", desc="Token Authorization Rules account")]
-    #[account(4, optional, name="authorization_rules_program", desc="Token Authorization Rules Program")]
+    #[account(0, signer, name="authority", desc="Creator to verify, collection update authority or delegate")]
+    #[account(1, optional, name="delegate_record", desc="Delegate record PDA")]
+    #[account(2, writable, name="metadata", desc="Metadata account")]
+    #[account(3, optional, name="collection_mint", desc="Mint of the Collection")]
+    #[account(4, optional, writable, name="collection_metadata", desc="Metadata Account of the Collection")]
+    #[account(5, optional, name="collection_master_edition", desc="Master Edition Account of the Collection Token")]
+    #[account(6, name="system_program", desc="System program")]
+    #[account(7, name="sysvar_instructions", desc="Instructions sysvar account")]
     #[default_optional_accounts]
-    Verify(VerifyArgs),
+    Verify(VerificationArgs),
+
+    /// Unverifies that an asset was created by a specific creator or belongs in an specified collection.
+    ///
+    /// Depending on the type of verification (e.g., creator or collection), additional accounts
+    /// are required.
+    #[account(0, signer, name="authority", desc="Creator to verify, collection (or metadata if parent burned) update authority or delegate")]
+    #[account(1, optional, name="delegate_record", desc="Delegate record PDA")]
+    #[account(2, writable, name="metadata", desc="Metadata account")]
+    #[account(3, optional, name="collection_mint", desc="Mint of the Collection")]
+    #[account(4, optional, writable, name="collection_metadata", desc="Metadata Account of the Collection")]
+    #[account(5, name="system_program", desc="System program")]
+    #[account(6, name="sysvar_instructions", desc="Instructions sysvar account")]
+    #[default_optional_accounts]
+    Unverify(VerificationArgs),
 }
 
 pub struct Context<'a, T> {

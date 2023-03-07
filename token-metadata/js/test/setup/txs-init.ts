@@ -54,6 +54,15 @@ import {
   UnlockInstructionArgs,
   createUnlockInstruction,
   TransferArgs,
+  BurnInstructionAccounts,
+  BurnInstructionArgs,
+  createBurnInstruction,
+  VerifyInstructionAccounts,
+  VerifyInstructionArgs,
+  createVerifyInstruction,
+  UnverifyInstructionAccounts,
+  UnverifyInstructionArgs,
+  createUnverifyInstruction,
 } from '../../src/generated';
 import { Test } from 'tape';
 import { amman } from '.';
@@ -110,6 +119,117 @@ export class InitTransactions {
       connection,
       authority,
       authorityPair,
+    };
+  }
+
+  async burn(
+    handler: PayerTransactionHandler,
+    authority: Keypair,
+    mint: PublicKey,
+    metadata: PublicKey,
+    token: PublicKey,
+    amount: number,
+    edition: PublicKey | null = null,
+    tokenRecord: PublicKey | null = null,
+    masterEdition: PublicKey | null = null,
+    masterEditionMint: PublicKey | null = null,
+    masterEditionToken: PublicKey | null = null,
+    editionMarker: PublicKey | null = null,
+  ): Promise<{ tx: ConfirmedTransactionAssertablePromise }> {
+    amman.addr.addLabel('Mint Account', mint);
+    amman.addr.addLabel('Metadata Account', metadata);
+    if (edition != null) {
+      amman.addr.addLabel('Edition Account', edition);
+    }
+
+    const burnAccounts: BurnInstructionAccounts = {
+      authority: authority.publicKey,
+      metadata,
+      edition,
+      mint,
+      token,
+      tokenRecord,
+      masterEdition,
+      masterEditionMint,
+      masterEditionToken,
+      editionMarker,
+      systemProgram: SystemProgram.programId,
+      sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
+      splTokenProgram: splToken.TOKEN_PROGRAM_ID,
+    };
+
+    const burnArgs: BurnInstructionArgs = {
+      burnArgs: {
+        __kind: 'V1',
+        amount,
+      },
+    };
+
+    const burnIx = createBurnInstruction(burnAccounts, burnArgs);
+    const tx = new Transaction().add(burnIx);
+
+    return {
+      tx: handler.sendAndConfirmTransaction(tx, [authority], 'tx: Burn'),
+    };
+  }
+
+  async verify(
+    handler: PayerTransactionHandler,
+    authority: Keypair,
+    delegateRecord: PublicKey | null = null,
+    metadata: PublicKey,
+    collectionMint: PublicKey | null = null,
+    collectionMetadata: PublicKey | null = null,
+    collectionMasterEdition: PublicKey | null = null,
+    args: VerifyInstructionArgs,
+  ): Promise<{ tx: ConfirmedTransactionAssertablePromise }> {
+    amman.addr.addLabel('Metadata Account', metadata);
+
+    const verifyAccounts: VerifyInstructionAccounts = {
+      authority: authority.publicKey,
+      delegateRecord,
+      metadata,
+      collectionMint,
+      collectionMetadata,
+      collectionMasterEdition,
+      systemProgram: SystemProgram.programId,
+      sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
+    };
+
+    const verifyIx = createVerifyInstruction(verifyAccounts, args);
+    const tx = new Transaction().add(verifyIx);
+
+    return {
+      tx: handler.sendAndConfirmTransaction(tx, [authority], 'tx: Verify'),
+    };
+  }
+
+  async unverify(
+    handler: PayerTransactionHandler,
+    authority: Keypair,
+    delegateRecord: PublicKey | null = null,
+    metadata: PublicKey,
+    collectionMint: PublicKey | null = null,
+    collectionMetadata: PublicKey | null = null,
+    args: UnverifyInstructionArgs,
+  ): Promise<{ tx: ConfirmedTransactionAssertablePromise }> {
+    amman.addr.addLabel('Metadata Account', metadata);
+
+    const unverifyAccounts: UnverifyInstructionAccounts = {
+      authority: authority.publicKey,
+      delegateRecord,
+      metadata,
+      collectionMint,
+      collectionMetadata,
+      systemProgram: SystemProgram.programId,
+      sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
+    };
+
+    const unverifyIx = createUnverifyInstruction(unverifyAccounts, args);
+    const tx = new Transaction().add(unverifyIx);
+
+    return {
+      tx: handler.sendAndConfirmTransaction(tx, [authority], 'tx: Verify'),
     };
   }
 

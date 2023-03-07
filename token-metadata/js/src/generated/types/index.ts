@@ -52,4 +52,4 @@ export * from './UseMethod';
 export * from './Uses';
 export * from './UsesToggle';
 export * from './UtilizeArgs';
-export * from './VerifyArgs';
+export * from './VerificationArgs';

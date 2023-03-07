@@ -5,7 +5,6 @@ mod set_and_verify_sized_collection_item;
 mod set_collection_size;
 mod unverify_collection;
 mod unverify_sized_collection_item;
-mod verify;
 mod verify_collection;
 mod verify_sized_collection_item;
 
@@ -16,6 +15,5 @@ pub use set_and_verify_sized_collection_item::*;
 pub use set_collection_size::*;
 pub use unverify_collection::*;
 pub use unverify_sized_collection_item::*;
-pub use verify::*;
 pub use verify_collection::*;
 pub use verify_sized_collection_item::*;

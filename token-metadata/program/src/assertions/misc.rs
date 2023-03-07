@@ -97,7 +97,7 @@ pub fn assert_delegated_tokens(
     }
 
     if token_account.amount < 1 {
-        return Err(MetadataError::NotEnoughTokens.into());
+        return Err(MetadataError::InsufficientTokenBalance.into());
     }
 
     if token_account.delegate == COption::None
