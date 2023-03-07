@@ -2032,6 +2032,8 @@ dependencies = [
  "mpl-testing-utils",
  "mpl-token-auth-rules",
  "mpl-token-metadata",
+ "rmp-serde",
+ "serde",
  "serde_json",
  "shellexpand",
  "solana-program",

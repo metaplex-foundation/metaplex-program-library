@@ -21,15 +21,31 @@ use mpl_auction_house::{
 use mpl_testing_utils::{solana::airdrop, utils::Metadata};
 use std::result::Result as StdResult;
 
-use mpl_token_auth_rules::pda::find_rule_set_address;
-use mpl_token_metadata::pda::{find_metadata_account, find_token_record_account};
+use mpl_token_metadata::{
+    pda::{find_metadata_account, find_token_record_account},
+    processor::{AuthorizationData, DelegateScenario, TransferScenario},
+    state::{Operation, TokenDelegateRole},
+};
+
+use mpl_token_auth_rules::{
+    instruction::{builders::CreateOrUpdateBuilder, CreateOrUpdateArgs, InstructionBuilder},
+    payload::Payload,
+    pda::find_rule_set_address,
+    state::{Rule, RuleSetV1},
+};
+
+use rmp_serde::Serializer;
+use serde::Serialize;
 use solana_program_test::*;
-use solana_sdk::{instruction::Instruction, transaction::Transaction};
+use solana_sdk::{
+    compute_budget::ComputeBudgetInstruction, instruction::Instruction, transaction::Transaction,
+};
 use spl_associated_token_account::get_associated_token_address;
 
 pub fn auction_house_program_test() -> ProgramTest {
     let mut program = ProgramTest::new("mpl_auction_house", mpl_auction_house::id(), None);
     program.add_program("mpl_token_metadata", mpl_token_metadata::id(), None);
+    program.add_program("mpl_token_auth_rules", mpl_token_auth_rules::ID, None);
     program.set_compute_max_units(u64::MAX);
     program
 }
@@ -1009,6 +1025,7 @@ pub fn sell_pnft(
     ahkey: &Pubkey,
     ah: &AuctionHouse,
     test_metadata: &Metadata,
+    auth_rules: &Pubkey,
     sale_price: u64,
     token_size: u64,
 ) -> (
@@ -1059,7 +1076,6 @@ pub fn sell_pnft(
     };
 
     let (delegate_record, _) = find_token_record_account(&test_metadata.mint.pubkey(), &pas_token);
-    let (auth_rules, _) = find_rule_set_address(mpl_auction_house::id(), "".to_string());
 
     let p_nft_accounts = mpl_auction_house::accounts::SellRemainingAccounts {
         metadata_program: mpl_token_metadata::id(),
@@ -1068,7 +1084,7 @@ pub fn sell_pnft(
         token_mint: test_metadata.mint.pubkey(),
         edition: test_metadata.master_edition,
         auth_rules_program: mpl_token_auth_rules::id(),
-        auth_rules,
+        auth_rules: *auth_rules,
         sysvar_instructions: sysvar::instructions::id(),
     };
 
@@ -1130,6 +1146,7 @@ pub fn auctioneer_sell_pnft(
     ah: &AuctionHouse,
     test_metadata: &Metadata,
     auctioneer_authority: &Keypair,
+    auth_rules: &Pubkey,
 ) -> (mpl_auction_house::accounts::AuctioneerSell, Transaction) {
     let program_id = mpl_auction_house::id();
     let ata = test_metadata.ata;
@@ -1173,7 +1190,6 @@ pub fn auctioneer_sell_pnft(
     };
 
     let (delegate_record, _) = find_token_record_account(&test_metadata.mint.pubkey(), &pas_token);
-    let (auth_rules, _) = find_rule_set_address(mpl_auction_house::id(), "".to_string());
 
     let p_nft_accounts = mpl_auction_house::accounts::SellRemainingAccounts {
         metadata_program: mpl_token_metadata::id(),
@@ -1182,7 +1198,7 @@ pub fn auctioneer_sell_pnft(
         token_mint: test_metadata.mint.pubkey(),
         edition: test_metadata.master_edition,
         auth_rules_program: mpl_token_auth_rules::id(),
-        auth_rules,
+        auth_rules: *auth_rules,
         sysvar_instructions: sysvar::instructions::id(),
     };
 
@@ -1502,4 +1518,64 @@ pub async fn existing_auction_house_test_context(
     let auction_house_data = AuctionHouse::try_deserialize(&mut auction_house_acc.data.as_ref())
         .map_err(|e| BanksClientError::Io(io::Error::new(io::ErrorKind::InvalidData, e)))?;
     Ok((auction_house_data, auction_house_address, authority))
+}
+
+pub async fn create_sale_delegate_rule_set(
+    context: &mut ProgramTestContext,
+    creator: Keypair,
+) -> (Pubkey, AuthorizationData) {
+    let name = String::from("AH");
+    let (ruleset_addr, _ruleset_bump) = find_rule_set_address(creator.pubkey(), name.clone());
+
+    let pass_rule = Rule::Pass;
+
+    let sale_delegate_operation = Operation::Transfer {
+        scenario: TransferScenario::SaleDelegate,
+    };
+
+    let delegate_sale_operation = Operation::Delegate {
+        scenario: DelegateScenario::Token(TokenDelegateRole::Sale),
+    };
+
+    let mut rule_set = RuleSetV1::new(name.clone(), creator.pubkey());
+    rule_set
+        .add(sale_delegate_operation.to_string(), pass_rule.clone())
+        .unwrap();
+    rule_set
+        .add(delegate_sale_operation.to_string(), pass_rule.clone())
+        .unwrap();
+
+    let mut serialized_rule_set = Vec::new();
+    rule_set
+        .serialize(&mut Serializer::new(&mut serialized_rule_set))
+        .unwrap();
+
+    let create_ix = CreateOrUpdateBuilder::new()
+        .rule_set_pda(ruleset_addr)
+        .payer(creator.pubkey())
+        .build(CreateOrUpdateArgs::V1 {
+            serialized_rule_set: serialized_rule_set,
+        })
+        .unwrap()
+        .instruction();
+
+    let compute_ix = ComputeBudgetInstruction::set_compute_unit_limit(400_000);
+
+    let create_tx = Transaction::new_signed_with_payer(
+        &[compute_ix, create_ix],
+        Some(&creator.pubkey()),
+        &[&creator],
+        context.last_blockhash,
+    );
+
+    context
+        .banks_client
+        .process_transaction(create_tx)
+        .await
+        .expect("creation should succeed");
+
+    let payload = Payload::new();
+    let auth_data = AuthorizationData { payload };
+
+    (ruleset_addr, auth_data)
 }

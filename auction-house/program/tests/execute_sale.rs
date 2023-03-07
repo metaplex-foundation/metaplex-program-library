@@ -7,6 +7,7 @@ use common::*;
 use utils::{
     helpers::{
         assert_error_ignoring_io_error_in_ci, default_scopes, unwrap_ignoring_io_error_in_ci,
+        DirtyClone,
     },
     setup_functions::*,
 };
@@ -30,7 +31,6 @@ use mpl_auction_house::{
     pda::{find_escrow_payment_address, find_program_as_signer_address, find_trade_state_address},
     receipt::{BidReceipt, ListingReceipt, PurchaseReceipt},
 };
-use mpl_token_auth_rules::pda::find_rule_set_address;
 use solana_program::program_pack::Pack;
 use solana_sdk::{
     signature::Keypair,
@@ -200,10 +200,16 @@ async fn auctioneer_execute_sale_pnft_success() {
     let (ah, ahkey, ah_auth) = existing_auction_house_test_context(&mut context)
         .await
         .unwrap();
+
+    let payer = context.payer.dirty_clone();
+
+    let (rule_set, auth_data) = create_sale_delegate_rule_set(&mut context, payer).await;
+
     let test_metadata = Metadata::new();
     airdrop(&mut context, &test_metadata.token.pubkey(), 10_000_000_000)
         .await
         .unwrap();
+
     test_metadata
         .create_via_builder(
             &mut context,
@@ -218,7 +224,7 @@ async fn auctioneer_execute_sale_pnft_success() {
             true,
             TokenStandard::ProgrammableNonFungible,
             None,
-            None,
+            Some(rule_set),
             Some(0),
             Some(PrintSupply::Zero),
         )
@@ -226,7 +232,7 @@ async fn auctioneer_execute_sale_pnft_success() {
         .unwrap();
 
     test_metadata
-        .mint_via_builder(&mut context, 1, None)
+        .mint_via_builder(&mut context, 1, Some(auth_data))
         .await
         .unwrap();
 
@@ -255,6 +261,7 @@ async fn auctioneer_execute_sale_pnft_success() {
         &ah,
         &test_metadata,
         &auctioneer_authority,
+        &rule_set,
     );
     context
         .banks_client
@@ -314,7 +321,6 @@ async fn auctioneer_execute_sale_pnft_success() {
 
     let (destination_tr, _) =
         find_token_record_account(&test_metadata.mint.pubkey(), &buyer_token_account);
-    let (auth_rules, _) = find_rule_set_address(mpl_auction_house::id(), "".to_string());
 
     let remaining_accounts = mpl_auction_house::accounts::ExecuteSaleRemainingAccounts {
         metadata_program: mpl_token_metadata::id(),
@@ -322,7 +328,7 @@ async fn auctioneer_execute_sale_pnft_success() {
         owner_tr: test_metadata.token_record,
         destination_tr,
         auth_rules_program: mpl_token_auth_rules::id(),
-        auth_rules,
+        auth_rules: rule_set,
         sysvar_instructions: sysvar::instructions::id(),
     };
 
@@ -414,10 +420,16 @@ async fn execute_sale_pnft_existing_token_account_success() {
     let (ah, ahkey, authority) = existing_auction_house_test_context(&mut context)
         .await
         .unwrap();
+
+    let payer = context.payer.dirty_clone();
+
+    let (rule_set, auth_data) = create_sale_delegate_rule_set(&mut context, payer).await;
+
     let test_metadata = Metadata::new();
     airdrop(&mut context, &test_metadata.token.pubkey(), 10_000_000_000)
         .await
         .unwrap();
+
     test_metadata
         .create_via_builder(
             &mut context,
@@ -432,7 +444,7 @@ async fn execute_sale_pnft_existing_token_account_success() {
             true,
             TokenStandard::ProgrammableNonFungible,
             None,
-            None,
+            Some(rule_set),
             Some(0),
             Some(PrintSupply::Zero),
         )
@@ -440,12 +452,19 @@ async fn execute_sale_pnft_existing_token_account_success() {
         .unwrap();
 
     test_metadata
-        .mint_via_builder(&mut context, 1, None)
+        .mint_via_builder(&mut context, 1, Some(auth_data))
         .await
         .unwrap();
 
-    let ((sell_acc, _), sell_tx) =
-        sell_pnft(&mut context, &ahkey, &ah, &test_metadata, 100_000_000, 1); // <-- .1 solana
+    let ((sell_acc, _), sell_tx) = sell_pnft(
+        &mut context,
+        &ahkey,
+        &ah,
+        &test_metadata,
+        &rule_set,
+        100_000_000,
+        1,
+    );
     context
         .banks_client
         .process_transaction(sell_tx)
@@ -503,7 +522,6 @@ async fn execute_sale_pnft_existing_token_account_success() {
 
     let (destination_tr, _) =
         find_token_record_account(&test_metadata.mint.pubkey(), &buyer_token_account);
-    let (auth_rules, _) = find_rule_set_address(mpl_auction_house::id(), "".to_string());
 
     let remaining_accounts = mpl_auction_house::accounts::ExecuteSaleRemainingAccounts {
         metadata_program: mpl_token_metadata::id(),
@@ -511,7 +529,7 @@ async fn execute_sale_pnft_existing_token_account_success() {
         owner_tr: test_metadata.token_record,
         destination_tr,
         auth_rules_program: mpl_token_auth_rules::id(),
-        auth_rules,
+        auth_rules: rule_set,
         sysvar_instructions: sysvar::instructions::id(),
     };
 

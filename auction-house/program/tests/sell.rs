@@ -5,7 +5,10 @@ pub mod utils;
 use anchor_lang::AccountDeserialize;
 use common::*;
 use mpl_token_metadata::state::{PrintSupply, TokenDelegateRole, TokenRecord, TokenStandard};
-use utils::{helpers::default_scopes, setup_functions::*};
+use utils::{
+    helpers::{default_scopes, DirtyClone},
+    setup_functions::*,
+};
 
 use mpl_auction_house::{pda::find_program_as_signer_address, receipt::ListingReceipt};
 use mpl_testing_utils::{solana::airdrop, utils::Metadata};
@@ -88,6 +91,11 @@ async fn sell_pnft_success() {
     let (ah, ahkey, _) = existing_auction_house_test_context(&mut context)
         .await
         .unwrap();
+
+    let payer = context.payer.dirty_clone();
+
+    let (rule_set, auth_data) = create_sale_delegate_rule_set(&mut context, payer).await;
+
     let test_metadata = Metadata::new();
     let owner_pubkey = &test_metadata.token.pubkey();
     airdrop(&mut context, owner_pubkey, TEN_SOL).await.unwrap();
@@ -105,7 +113,7 @@ async fn sell_pnft_success() {
             true,
             TokenStandard::ProgrammableNonFungible,
             None,
-            None,
+            Some(rule_set),
             Some(0),
             Some(PrintSupply::Zero),
         )
@@ -113,12 +121,12 @@ async fn sell_pnft_success() {
         .unwrap();
 
     test_metadata
-        .mint_via_builder(&mut context, 1, None)
+        .mint_via_builder(&mut context, 1, Some(auth_data))
         .await
         .unwrap();
 
     let ((acc, listing_receipt_acc), sell_pnft_tx) =
-        sell_pnft(&mut context, &ahkey, &ah, &test_metadata, 1, 1);
+        sell_pnft(&mut context, &ahkey, &ah, &test_metadata, &rule_set, 1, 1);
 
     context
         .banks_client
