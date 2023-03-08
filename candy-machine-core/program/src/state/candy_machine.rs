@@ -30,6 +30,9 @@ pub struct CandyMachine {
     // - (item_available / 8) + 1 bit mask to keep track of which ConfigLines
     //   have been added
     // - (u32 * items_available) mint indices
+    // - for pNFT:
+    //   (u8) indicates whether to use a custom rule set
+    //   (Pubkey) custom rule set
 }
 
 /// Config line struct for storing asset (NFT) data pre-mint.

@@ -39,6 +39,7 @@ export const setTokenStandardStruct = new beet.BeetArgsStruct<
  * @property [**signer**] authority
  * @property [_writable_] authorityPda
  * @property [**signer**] payer
+ * @property [] ruleSet (optional)
  * @property [_writable_] collectionDelegateRecord
  * @property [] collectionMint
  * @property [_writable_] collectionMetadata
@@ -57,6 +58,7 @@ export type SetTokenStandardInstructionAccounts = {
   authority: web3.PublicKey;
   authorityPda: web3.PublicKey;
   payer: web3.PublicKey;
+  ruleSet?: web3.PublicKey;
   collectionDelegateRecord: web3.PublicKey;
   collectionMint: web3.PublicKey;
   collectionMetadata: web3.PublicKey;
@@ -114,6 +116,11 @@ export function createSetTokenStandardInstruction(
       pubkey: accounts.payer,
       isWritable: false,
       isSigner: true,
+    },
+    {
+      pubkey: accounts.ruleSet ?? programId,
+      isWritable: false,
+      isSigner: false,
     },
     {
       pubkey: accounts.collectionDelegateRecord,

@@ -15,7 +15,7 @@ use mpl_token_metadata::{
 use solana_program::{program::invoke_signed, sysvar};
 
 use crate::{
-    constants::{AUTHORITY_SEED, EMPTY_STR, HIDDEN_SECTION, NULL_STRING},
+    constants::{AUTHORITY_SEED, EMPTY_STR, HIDDEN_SECTION, NULL_STRING, RULE_SET_LENGTH, SET},
     utils::*,
     AccountVersion, CandyError, CandyMachine, ConfigLine,
 };
@@ -24,6 +24,7 @@ use crate::{
 pub(crate) struct MintAccounts<'info> {
     pub(crate) authority_pda: AccountInfo<'info>,
     pub(crate) payer: AccountInfo<'info>,
+    pub(crate) nft_owner: AccountInfo<'info>,
     pub(crate) nft_mint: AccountInfo<'info>,
     pub(crate) nft_mint_authority: AccountInfo<'info>,
     pub(crate) nft_metadata: AccountInfo<'info>,
@@ -56,6 +57,7 @@ pub fn mint_v2<'info>(ctx: Context<'_, '_, '_, 'info, MintV2<'info>>) -> Result<
         collection_metadata: ctx.accounts.collection_metadata.to_account_info(),
         collection_mint: ctx.accounts.collection_mint.to_account_info(),
         collection_update_authority: ctx.accounts.collection_update_authority.to_account_info(),
+        nft_owner: ctx.accounts.nft_owner.to_account_info(),
         nft_master_edition: ctx.accounts.nft_master_edition.to_account_info(),
         nft_metadata: ctx.accounts.nft_metadata.to_account_info(),
         nft_mint: ctx.accounts.nft_mint.to_account_info(),
@@ -377,7 +379,7 @@ fn create_and_mint<'info>(
                     .ok_or(CandyError::MissingTokenRecord)?,
             )
         } else {
-            accounts.token_record.as_ref()
+            None
         };
     let spl_ata_program_info = accounts
         .spl_ata_program
@@ -387,7 +389,7 @@ fn create_and_mint<'info>(
     let mut mint_builder = MintBuilder::new();
     mint_builder
         .token(token_info.key())
-        .token_owner(accounts.nft_mint_authority.key())
+        .token_owner(accounts.nft_owner.key())
         .metadata(accounts.nft_metadata.key())
         .master_edition(accounts.nft_master_edition.key())
         .mint(accounts.nft_mint.key())
@@ -396,7 +398,7 @@ fn create_and_mint<'info>(
 
     let mut mint_infos = vec![
         token_info.to_account_info(),
-        accounts.nft_mint_authority.to_account_info(),
+        accounts.nft_owner.to_account_info(),
         accounts.nft_metadata.to_account_info(),
         accounts.nft_master_edition.to_account_info(),
         accounts.nft_mint.to_account_info(),
@@ -433,15 +435,32 @@ fn create_and_mint<'info>(
     } = &mut update_args;
     // set the update authority to the authority of the candy machine
     *new_update_authority = Some(candy_machine.authority);
-    // set the rule set to be the same as the parent collection
-    *rule_set = if let Some(ProgrammableConfig::V1 {
-        rule_set: Some(rule_set),
-    }) = collection_metadata.programmable_config
-    {
-        RuleSetToggle::Set(rule_set)
-    } else {
-        RuleSetToggle::None
-    };
+
+    if candy_machine.token_standard == TokenStandard::ProgrammableNonFungible as u8 {
+        let required_length = candy_machine.data.get_space_for_candy()?;
+        let candy_machine_info = candy_machine.to_account_info();
+        let account_data = candy_machine_info.data.borrow_mut();
+
+        // the rule set for a newly minted pNFT is determined by:
+        //   1. check if there is a rule set stored on the account; otherwise
+        //   2. use the rule set from the collection metadata
+        *rule_set = if account_data[required_length] == SET {
+            let index = required_length + 1;
+            RuleSetToggle::Set(Pubkey::from(*array_ref![
+                account_data,
+                index,
+                RULE_SET_LENGTH
+            ]))
+        } else if let Some(ProgrammableConfig::V1 {
+            rule_set: Some(rule_set),
+        }) = collection_metadata.programmable_config
+        {
+            // set the rule set to be the same as the parent collection
+            RuleSetToggle::Set(rule_set)
+        } else {
+            RuleSetToggle::None
+        };
+    }
 
     let update_ix = UpdateBuilder::new()
         .authority(accounts.authority_pda.key())
@@ -656,6 +675,11 @@ pub struct MintV2<'info> {
     /// Payer for the transaction and account allocation (rent).
     #[account(mut)]
     payer: Signer<'info>,
+
+    /// NFT account owner.
+    ///
+    /// CHECK: account not written or read from
+    nft_owner: UncheckedAccount<'info>,
 
     /// Mint account of the NFT. The account will be initialized if necessary.
     ///

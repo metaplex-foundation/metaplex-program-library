@@ -235,6 +235,16 @@
           ]
         },
         {
+          "name": "ruleSet",
+          "isMut": false,
+          "isSigner": false,
+          "isOptional": true,
+          "docs": [
+            "Authorization rule set to be used by minted NFTs.",
+            ""
+          ]
+        },
+        {
           "name": "collectionMetadata",
           "isMut": true,
           "isSigner": false,
@@ -587,6 +597,15 @@
           "isSigner": true,
           "docs": [
             "Payer for the transaction and account allocation (rent)."
+          ]
+        },
+        {
+          "name": "nftOwner",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "NFT account owner.",
+            ""
           ]
         },
         {
@@ -1235,6 +1254,16 @@
           "isSigner": true,
           "docs": [
             "Payer of the transaction."
+          ]
+        },
+        {
+          "name": "ruleSet",
+          "isMut": false,
+          "isSigner": false,
+          "isOptional": true,
+          "docs": [
+            "Authorization rule set to be used by minted NFTs.",
+            ""
           ]
         },
         {

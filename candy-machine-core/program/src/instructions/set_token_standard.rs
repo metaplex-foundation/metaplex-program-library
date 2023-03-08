@@ -1,8 +1,10 @@
 use anchor_lang::{prelude::*, solana_program::sysvar};
-use mpl_token_metadata::state::{Metadata, TokenMetadataAccount};
+use mpl_token_auth_rules::utils::resize_or_reallocate_account_raw;
+use mpl_token_metadata::state::{Metadata, TokenMetadataAccount, TokenStandard};
 
 use crate::{
-    approve_metadata_delegate, assert_token_standard, cmp_pubkeys, constants::AUTHORITY_SEED,
+    approve_metadata_delegate, assert_token_standard, cmp_pubkeys,
+    constants::{AUTHORITY_SEED, RULE_SET_LENGTH, SET, UNSET},
     revoke_collection_authority_helper, AccountVersion, ApproveMetadataDelegateHelperAccounts,
     CandyError, CandyMachine, RevokeCollectionAuthorityHelperAccounts,
 };
@@ -76,6 +78,49 @@ pub fn set_token_standard(ctx: Context<SetTokenStandard>, token_standard: u8) ->
 
     candy_machine.token_standard = token_standard;
 
+    let required_length = candy_machine.data.get_space_for_candy()?;
+    let candy_machine_info = candy_machine.to_account_info();
+
+    if token_standard == TokenStandard::ProgrammableNonFungible as u8 {
+        // make sure we have space in the account to store the rule set
+        if candy_machine_info.data_len() < (required_length + RULE_SET_LENGTH + 1) {
+            msg!("Allocating space to store the rule set");
+
+            resize_or_reallocate_account_raw(
+                &candy_machine_info,
+                &accounts.payer.to_account_info(),
+                &accounts.system_program.to_account_info(),
+                required_length + (1 + RULE_SET_LENGTH),
+            )?;
+        }
+
+        let mut account_data = candy_machine_info.data.borrow_mut();
+
+        if let Some(rule_set_info) = &accounts.rule_set {
+            let rule_set = rule_set_info.key();
+            account_data[required_length] = SET;
+
+            msg!("Storing rule set pubkey");
+
+            let index = required_length + 1;
+            let mut storage = &mut account_data[index..index + RULE_SET_LENGTH];
+            rule_set.serialize(&mut storage)?;
+        } else {
+            // clears the rule set
+            account_data[required_length] = UNSET;
+            let index = required_length + 1;
+            account_data[index..index + RULE_SET_LENGTH].fill(0);
+
+            msg!("Rule set cleared");
+        }
+    } else if required_length < candy_machine_info.data_len() {
+        let end_index = candy_machine_info.data_len();
+        let mut account_data = candy_machine_info.data.borrow_mut();
+        account_data[required_length..end_index].fill(0);
+
+        msg!("Remaining account bytes cleared");
+    }
+
     Ok(())
 }
 
@@ -101,6 +146,12 @@ pub struct SetTokenStandard<'info> {
 
     /// Payer of the transaction.
     payer: Signer<'info>,
+
+    /// Authorization rule set to be used by minted NFTs.
+    ///
+    /// CHECK: must be ownwed by mpl_token_auth_rules
+    #[account(owner = mpl_token_auth_rules::id())]
+    rule_set: Option<UncheckedAccount<'info>>,
 
     /// Collection metadata delegate record.
     ///

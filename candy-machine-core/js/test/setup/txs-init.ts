@@ -174,6 +174,7 @@ export class InitTransactions {
     tokenStandard: TokenStandard,
     handler: PayerTransactionHandler,
     connection: Connection,
+    ruleSet: PublicKey | null = null,
   ): Promise<{ tx: ConfirmedTransactionAssertablePromise; candyMachine: PublicKey }> {
     // creates a collection nft
     const metaplex = Metaplex.make(connection).use(keypairIdentity(payer));
@@ -216,6 +217,7 @@ export class InitTransactions {
       candyMachine: candyMachine.publicKey,
       authority: payer.publicKey,
       payer: payer.publicKey,
+      ruleSet,
       collectionMetadata,
       collectionMint: collection.address,
       collectionMasterEdition,
@@ -502,6 +504,7 @@ export class InitTransactions {
       authorityPda,
       mintAuthority: candyMachineObject.mintAuthority,
       payer: payer.publicKey,
+      nftOwner: payer.publicKey,
       nftMint,
       nftMintAuthority: payer.publicKey,
       nftMetadata,
@@ -649,6 +652,7 @@ export class InitTransactions {
     tokenStandard: TokenStandard,
     handler: PayerTransactionHandler,
     connection: Connection,
+    ruleSet: PublicKey | null = null,
   ): Promise<{ tx: ConfirmedTransactionAssertablePromise }> {
     const metaplex = Metaplex.make(connection).use(keypairIdentity(payer));
 
@@ -684,6 +688,7 @@ export class InitTransactions {
       candyMachine: candyMachine,
       authority: payer.publicKey,
       payer: payer.publicKey,
+      ruleSet,
       collectionAuthorityRecord,
       collectionDelegateRecord,
       collectionMetadata,

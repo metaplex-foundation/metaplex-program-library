@@ -23,6 +23,7 @@ export const mintV2Struct = new beet.BeetArgsStruct<{
  * @property [_writable_] authorityPda
  * @property [**signer**] mintAuthority
  * @property [_writable_, **signer**] payer
+ * @property [] nftOwner
  * @property [_writable_] nftMint
  * @property [**signer**] nftMintAuthority
  * @property [_writable_] nftMetadata
@@ -50,6 +51,7 @@ export type MintV2InstructionAccounts = {
   authorityPda: web3.PublicKey;
   mintAuthority: web3.PublicKey;
   payer: web3.PublicKey;
+  nftOwner: web3.PublicKey;
   nftMint: web3.PublicKey;
   nftMintAuthority: web3.PublicKey;
   nftMetadata: web3.PublicKey;
@@ -112,6 +114,11 @@ export function createMintV2Instruction(
       pubkey: accounts.payer,
       isWritable: true,
       isSigner: true,
+    },
+    {
+      pubkey: accounts.nftOwner,
+      isWritable: false,
+      isSigner: false,
     },
     {
       pubkey: accounts.nftMint,

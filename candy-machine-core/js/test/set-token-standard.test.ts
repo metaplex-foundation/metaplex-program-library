@@ -1,5 +1,5 @@
 import test from 'tape';
-import { InitTransactions, killStuckProcess } from './setup';
+import { InitTransactions, killStuckProcess, METAPLEX_RULE_SET } from './setup';
 import { AccountVersion, CandyMachine, CandyMachineData } from '../src/generated';
 import { TokenStandard } from '@metaplex-foundation/mpl-token-metadata';
 import spok from 'spok';
@@ -121,6 +121,7 @@ test('set token standard: NFT -> pNFT -> NFT', async (t) => {
     TokenStandard.ProgrammableNonFungible,
     fstTxHandler,
     connection,
+    METAPLEX_RULE_SET,
   );
   await txpNft.assertSuccess(t);
 

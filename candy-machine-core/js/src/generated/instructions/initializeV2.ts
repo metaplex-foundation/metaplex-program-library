@@ -42,6 +42,7 @@ export const initializeV2Struct = new beet.FixableBeetArgsStruct<
  * @property [_writable_] authorityPda
  * @property [] authority
  * @property [**signer**] payer
+ * @property [] ruleSet (optional)
  * @property [_writable_] collectionMetadata
  * @property [] collectionMint
  * @property [] collectionMasterEdition
@@ -60,6 +61,7 @@ export type InitializeV2InstructionAccounts = {
   authorityPda: web3.PublicKey;
   authority: web3.PublicKey;
   payer: web3.PublicKey;
+  ruleSet?: web3.PublicKey;
   collectionMetadata: web3.PublicKey;
   collectionMint: web3.PublicKey;
   collectionMasterEdition: web3.PublicKey;
@@ -117,6 +119,11 @@ export function createInitializeV2Instruction(
       pubkey: accounts.payer,
       isWritable: false,
       isSigner: true,
+    },
+    {
+      pubkey: accounts.ruleSet ?? programId,
+      isWritable: false,
+      isSigner: false,
     },
     {
       pubkey: accounts.collectionMetadata,

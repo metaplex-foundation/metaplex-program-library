@@ -1,9 +1,12 @@
 use anchor_lang::{prelude::*, solana_program::sysvar, Discriminator};
-use mpl_token_metadata::state::MAX_SYMBOL_LENGTH;
+use mpl_token_metadata::{
+    state::{TokenStandard, MAX_SYMBOL_LENGTH},
+    utils::resize_or_reallocate_account_raw,
+};
 
 use crate::{
     approve_metadata_delegate, assert_token_standard,
-    constants::{AUTHORITY_SEED, HIDDEN_SECTION},
+    constants::{AUTHORITY_SEED, HIDDEN_SECTION, RULE_SET_LENGTH, SET},
     state::{CandyMachine, CandyMachineData},
     utils::fixed_length_string,
     AccountVersion, ApproveMetadataDelegateHelperAccounts,
@@ -14,9 +17,25 @@ pub fn initialize_v2(
     data: CandyMachineData,
     token_standard: u8,
 ) -> Result<()> {
-    let candy_machine_account = &mut ctx.accounts.candy_machine;
-
+    // make sure we got a valid token standard
     assert_token_standard(token_standard)?;
+
+    let required_length = data.get_space_for_candy()?;
+
+    if token_standard == TokenStandard::ProgrammableNonFungible as u8
+        && ctx.accounts.candy_machine.data_len() < (required_length + RULE_SET_LENGTH + 1)
+    {
+        msg!("Allocating space to store the rule set");
+
+        resize_or_reallocate_account_raw(
+            &ctx.accounts.candy_machine.to_account_info(),
+            &ctx.accounts.payer.to_account_info(),
+            &ctx.accounts.system_program.to_account_info(),
+            required_length + (1 + RULE_SET_LENGTH),
+        )?;
+    }
+
+    let candy_machine_account = &mut ctx.accounts.candy_machine;
 
     let mut candy_machine = CandyMachine {
         data,
@@ -42,6 +61,19 @@ pub fn initialize_v2(
     if candy_machine.data.hidden_settings.is_none() {
         // set the initial number of config lines
         account_data[HIDDEN_SECTION..HIDDEN_SECTION + 4].copy_from_slice(&u32::MIN.to_le_bytes());
+    }
+
+    if token_standard == TokenStandard::ProgrammableNonFungible as u8 {
+        if let Some(rule_set_info) = &ctx.accounts.rule_set {
+            msg!("Storing rule set pubkey");
+
+            let rule_set = rule_set_info.key();
+            account_data[required_length] = SET;
+
+            let index = required_length + 1;
+            let mut storage = &mut account_data[index..index + RULE_SET_LENGTH];
+            rule_set.serialize(&mut storage)?;
+        }
     }
 
     // approves the metadata delegate so the candy machine can verify minted NFTs
@@ -101,6 +133,12 @@ pub struct InitializeV2<'info> {
 
     /// Payer of the transaction.
     payer: Signer<'info>,
+
+    /// Authorization rule set to be used by minted NFTs.
+    ///
+    /// CHECK: must be ownwed by mpl_token_auth_rules
+    #[account(owner = mpl_token_auth_rules::id())]
+    rule_set: Option<UncheckedAccount<'info>>,
 
     /// Metadata account of the collection.
     ///

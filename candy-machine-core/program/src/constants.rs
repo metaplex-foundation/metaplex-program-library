@@ -49,3 +49,10 @@ pub const HIDDEN_SECTION: usize = 8           // discriminator
     + 4 + MAX_NAME_LENGTH                     // u32 + max name length
     + 4 + MAX_URI_LENGTH                      // u32 + max uri length
     + 32; // hash
+
+// Size of the rule set pubkey.
+pub const RULE_SET_LENGTH: usize = 32;
+
+pub const SET: u8 = 1;
+
+pub const UNSET: u8 = 0;

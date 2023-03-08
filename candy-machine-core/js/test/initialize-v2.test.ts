@@ -1,6 +1,6 @@
 import test from 'tape';
 import spok from 'spok';
-import { InitTransactions, killStuckProcess } from './setup';
+import { InitTransactions, killStuckProcess, METAPLEX_RULE_SET } from './setup';
 import { AccountVersion, CandyMachine, CandyMachineData } from '../src/generated';
 import { spokSameBignum, spokSamePubkey } from './utils';
 import { TokenStandard } from '@metaplex-foundation/mpl-token-metadata';
@@ -42,6 +42,7 @@ test('initialize: new candy machine (pNFT)', async (t) => {
     TokenStandard.ProgrammableNonFungible,
     fstTxHandler,
     connection,
+    METAPLEX_RULE_SET,
   );
   // executes the transaction
   await transaction.assertSuccess(t);
