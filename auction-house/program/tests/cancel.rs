@@ -10,7 +10,6 @@ use utils::{
 };
 
 use mpl_auction_house::{pda::find_program_as_signer_address, receipt::ListingReceipt};
-use mpl_token_auth_rules::pda::find_rule_set_address;
 use mpl_token_metadata::{
     pda::find_token_record_account,
     state::{PrintSupply, TokenStandard},
@@ -185,7 +184,6 @@ async fn cancel_pnft_success() {
     .to_account_metas(None);
 
     let (delegate_record, _) = find_token_record_account(&test_metadata.mint.pubkey(), &pas_token);
-    let (auth_rules, _) = find_rule_set_address(mpl_auction_house::id(), "".to_string());
 
     let remaining_accounts = mpl_auction_house::accounts::CancelRemainingAccounts {
         metadata_program: mpl_token_metadata::id(),
@@ -196,7 +194,7 @@ async fn cancel_pnft_success() {
         token_record: test_metadata.token_record,
         token_mint: test_metadata.mint.pubkey(),
         auth_rules_program: mpl_token_auth_rules::id(),
-        auth_rules,
+        auth_rules: rule_set,
         sysvar_instructions: sysvar::instructions::id(),
         system_program: solana_program::system_program::id(),
     };
