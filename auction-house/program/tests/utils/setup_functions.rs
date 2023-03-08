@@ -21,14 +21,31 @@ use mpl_auction_house::{
 use mpl_testing_utils::{solana::airdrop, utils::Metadata};
 use std::result::Result as StdResult;
 
-use mpl_token_metadata::pda::find_metadata_account;
+use mpl_token_metadata::{
+    pda::{find_metadata_account, find_token_record_account},
+    processor::{AuthorizationData, DelegateScenario, TransferScenario},
+    state::{Operation, TokenDelegateRole},
+};
+
+use mpl_token_auth_rules::{
+    instruction::{builders::CreateOrUpdateBuilder, CreateOrUpdateArgs, InstructionBuilder},
+    payload::Payload,
+    pda::find_rule_set_address,
+    state::{Rule, RuleSetV1},
+};
+
+use rmp_serde::Serializer;
+use serde::Serialize;
 use solana_program_test::*;
-use solana_sdk::{instruction::Instruction, transaction::Transaction};
+use solana_sdk::{
+    compute_budget::ComputeBudgetInstruction, instruction::Instruction, transaction::Transaction,
+};
 use spl_associated_token_account::get_associated_token_address;
 
 pub fn auction_house_program_test() -> ProgramTest {
     let mut program = ProgramTest::new("mpl_auction_house", mpl_auction_house::id(), None);
     program.add_program("mpl_token_metadata", mpl_token_metadata::id(), None);
+    program.add_program("mpl_token_auth_rules", mpl_token_auth_rules::ID, None);
     program.set_compute_max_units(u64::MAX);
     program
 }
@@ -1003,6 +1020,225 @@ pub fn sell(
     )
 }
 
+pub fn sell_pnft(
+    context: &mut ProgramTestContext,
+    ahkey: &Pubkey,
+    ah: &AuctionHouse,
+    test_metadata: &Metadata,
+    auth_rules: &Pubkey,
+    sale_price: u64,
+    token_size: u64,
+) -> (
+    (
+        mpl_auction_house::accounts::Sell,
+        mpl_auction_house::accounts::PrintListingReceipt,
+    ),
+    Transaction,
+) {
+    let program_id = mpl_auction_house::id();
+    let ata = test_metadata.ata;
+    let (seller_trade_state, sts_bump) = find_trade_state_address(
+        &test_metadata.token.pubkey(),
+        ahkey,
+        &ata,
+        &ah.treasury_mint,
+        &test_metadata.mint.pubkey(),
+        sale_price,
+        token_size,
+    );
+    let (listing_receipt, receipt_bump) = find_listing_receipt_address(&seller_trade_state);
+
+    let (free_seller_trade_state, free_sts_bump) = find_trade_state_address(
+        &test_metadata.token.pubkey(),
+        ahkey,
+        &ata,
+        &ah.treasury_mint,
+        &test_metadata.mint.pubkey(),
+        0,
+        token_size,
+    );
+    let (pas, pas_bump) = find_program_as_signer_address();
+    let pas_token = get_associated_token_address(&pas, &test_metadata.mint.pubkey());
+
+    let accounts = mpl_auction_house::accounts::Sell {
+        wallet: test_metadata.token.pubkey(),
+        token_account: ata,
+        metadata: test_metadata.pubkey,
+        authority: ah.authority,
+        auction_house: *ahkey,
+        auction_house_fee_account: ah.auction_house_fee_account,
+        seller_trade_state,
+        free_seller_trade_state,
+        token_program: spl_token::id(),
+        system_program: solana_program::system_program::id(),
+        program_as_signer: pas,
+        rent: sysvar::rent::id(),
+    };
+
+    let (delegate_record, _) = find_token_record_account(&test_metadata.mint.pubkey(), &pas_token);
+
+    let p_nft_accounts = mpl_auction_house::accounts::SellRemainingAccounts {
+        metadata_program: mpl_token_metadata::id(),
+        delegate_record,
+        token_record: test_metadata.token_record,
+        token_mint: test_metadata.mint.pubkey(),
+        edition: test_metadata.master_edition,
+        auth_rules_program: mpl_token_auth_rules::id(),
+        auth_rules: *auth_rules,
+        sysvar_instructions: sysvar::instructions::id(),
+    };
+
+    let mut account_metas = accounts.to_account_metas(None);
+
+    account_metas.append(&mut p_nft_accounts.to_account_metas(None));
+
+    //@TODO: remove later
+    if let Some(md_ix) = account_metas
+        .iter()
+        .position(|x| x.pubkey == test_metadata.pubkey)
+    {
+        account_metas[md_ix].is_writable = true;
+    }
+
+    let data = mpl_auction_house::instruction::Sell {
+        trade_state_bump: sts_bump,
+        free_trade_state_bump: free_sts_bump,
+        program_as_signer_bump: pas_bump,
+        token_size,
+        buyer_price: sale_price,
+    }
+    .data();
+
+    let instruction = Instruction {
+        program_id,
+        data,
+        accounts: account_metas,
+    };
+
+    let listing_receipt_accounts = mpl_auction_house::accounts::PrintListingReceipt {
+        receipt: listing_receipt,
+        bookkeeper: test_metadata.token.pubkey(),
+        system_program: system_program::id(),
+        rent: sysvar::rent::id(),
+        instruction: sysvar::instructions::id(),
+    };
+
+    let print_receipt_instruction = Instruction {
+        program_id,
+        data: mpl_auction_house::instruction::PrintListingReceipt { receipt_bump }.data(),
+        accounts: listing_receipt_accounts.to_account_metas(None),
+    };
+
+    (
+        (accounts, listing_receipt_accounts),
+        Transaction::new_signed_with_payer(
+            &[instruction, print_receipt_instruction],
+            Some(&test_metadata.token.pubkey()),
+            &[&test_metadata.token],
+            context.last_blockhash,
+        ),
+    )
+}
+
+pub fn auctioneer_sell_pnft(
+    context: &mut ProgramTestContext,
+    ahkey: &Pubkey,
+    ah: &AuctionHouse,
+    test_metadata: &Metadata,
+    auctioneer_authority: &Keypair,
+    auth_rules: &Pubkey,
+) -> (mpl_auction_house::accounts::AuctioneerSell, Transaction) {
+    let program_id = mpl_auction_house::id();
+    let ata = test_metadata.ata;
+    let (seller_trade_state, sts_bump) = find_auctioneer_trade_state_address(
+        &test_metadata.token.pubkey(),
+        ahkey,
+        &ata,
+        &ah.treasury_mint,
+        &test_metadata.mint.pubkey(),
+        1,
+    );
+
+    let (free_seller_trade_state, free_sts_bump) = find_trade_state_address(
+        &test_metadata.token.pubkey(),
+        ahkey,
+        &ata,
+        &ah.treasury_mint,
+        &test_metadata.mint.pubkey(),
+        0,
+        1,
+    );
+    let (pas, pas_bump) = find_program_as_signer_address();
+    let pas_token = get_associated_token_address(&pas, &test_metadata.mint.pubkey());
+    let (auctioneer_pda, _) = find_auctioneer_pda(ahkey, &auctioneer_authority.pubkey());
+
+    let accounts = mpl_auction_house::accounts::AuctioneerSell {
+        wallet: test_metadata.token.pubkey(),
+        token_account: ata,
+        metadata: test_metadata.pubkey,
+        authority: ah.authority,
+        auctioneer_authority: auctioneer_authority.pubkey(),
+        auction_house: *ahkey,
+        auction_house_fee_account: ah.auction_house_fee_account,
+        seller_trade_state,
+        free_seller_trade_state,
+        ah_auctioneer_pda: auctioneer_pda,
+        token_program: spl_token::id(),
+        system_program: solana_program::system_program::id(),
+        program_as_signer: pas,
+        rent: sysvar::rent::id(),
+    };
+
+    let (delegate_record, _) = find_token_record_account(&test_metadata.mint.pubkey(), &pas_token);
+
+    let p_nft_accounts = mpl_auction_house::accounts::SellRemainingAccounts {
+        metadata_program: mpl_token_metadata::id(),
+        delegate_record,
+        token_record: test_metadata.token_record,
+        token_mint: test_metadata.mint.pubkey(),
+        edition: test_metadata.master_edition,
+        auth_rules_program: mpl_token_auth_rules::id(),
+        auth_rules: *auth_rules,
+        sysvar_instructions: sysvar::instructions::id(),
+    };
+
+    let mut account_metas = accounts.to_account_metas(None);
+
+    account_metas.append(&mut p_nft_accounts.to_account_metas(None));
+
+    //@TODO: remove later
+    if let Some(md_ix) = account_metas
+        .iter()
+        .position(|x| x.pubkey == test_metadata.pubkey)
+    {
+        account_metas[md_ix].is_writable = true;
+    }
+
+    let data = mpl_auction_house::instruction::AuctioneerSell {
+        trade_state_bump: sts_bump,
+        free_trade_state_bump: free_sts_bump,
+        program_as_signer_bump: pas_bump,
+        token_size: 1,
+    }
+    .data();
+
+    let instruction = Instruction {
+        program_id,
+        data,
+        accounts: account_metas,
+    };
+
+    (
+        accounts,
+        Transaction::new_signed_with_payer(
+            &[instruction],
+            Some(&test_metadata.token.pubkey()),
+            &[&test_metadata.token, auctioneer_authority],
+            context.last_blockhash,
+        ),
+    )
+}
+
 pub fn auctioneer_sell(
     context: &mut ProgramTestContext,
     ahkey: &Pubkey,
@@ -1282,4 +1518,64 @@ pub async fn existing_auction_house_test_context(
     let auction_house_data = AuctionHouse::try_deserialize(&mut auction_house_acc.data.as_ref())
         .map_err(|e| BanksClientError::Io(io::Error::new(io::ErrorKind::InvalidData, e)))?;
     Ok((auction_house_data, auction_house_address, authority))
+}
+
+pub async fn create_sale_delegate_rule_set(
+    context: &mut ProgramTestContext,
+    creator: Keypair,
+) -> (Pubkey, AuthorizationData) {
+    let name = String::from("AH");
+    let (ruleset_addr, _ruleset_bump) = find_rule_set_address(creator.pubkey(), name.clone());
+
+    let pass_rule = Rule::Pass;
+
+    let sale_delegate_operation = Operation::Transfer {
+        scenario: TransferScenario::SaleDelegate,
+    };
+
+    let delegate_sale_operation = Operation::Delegate {
+        scenario: DelegateScenario::Token(TokenDelegateRole::Sale),
+    };
+
+    let mut rule_set = RuleSetV1::new(name.clone(), creator.pubkey());
+    rule_set
+        .add(sale_delegate_operation.to_string(), pass_rule.clone())
+        .unwrap();
+    rule_set
+        .add(delegate_sale_operation.to_string(), pass_rule.clone())
+        .unwrap();
+
+    let mut serialized_rule_set = Vec::new();
+    rule_set
+        .serialize(&mut Serializer::new(&mut serialized_rule_set))
+        .unwrap();
+
+    let create_ix = CreateOrUpdateBuilder::new()
+        .rule_set_pda(ruleset_addr)
+        .payer(creator.pubkey())
+        .build(CreateOrUpdateArgs::V1 {
+            serialized_rule_set: serialized_rule_set,
+        })
+        .unwrap()
+        .instruction();
+
+    let compute_ix = ComputeBudgetInstruction::set_compute_unit_limit(400_000);
+
+    let create_tx = Transaction::new_signed_with_payer(
+        &[compute_ix, create_ix],
+        Some(&creator.pubkey()),
+        &[&creator],
+        context.last_blockhash,
+    );
+
+    context
+        .banks_client
+        .process_transaction(create_tx)
+        .await
+        .expect("creation should succeed");
+
+    let payload = Payload::new();
+    let auth_data = AuthorizationData { payload };
+
+    (ruleset_addr, auth_data)
 }

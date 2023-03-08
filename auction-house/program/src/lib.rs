@@ -646,6 +646,27 @@ pub mod auction_house {
     ) -> Result<()> {
         receipt::print_purchase_receipt(ctx, purchase_receipt_bump)
     }
+
+    #[doc(hidden)]
+    pub fn sell_remaining_accounts<'info>(
+        _ctx: Context<'_, '_, '_, 'info, SellRemainingAccounts<'info>>,
+    ) -> Result<()> {
+        unreachable!();
+    }
+
+    #[doc(hidden)]
+    pub fn cancel_remaining_accounts<'info>(
+        _ctx: Context<'_, '_, '_, 'info, CancelRemainingAccounts<'info>>,
+    ) -> Result<()> {
+        unreachable!();
+    }
+
+    #[doc(hidden)]
+    pub fn execute_sale_remaining_accounts<'info>(
+        _ctx: Context<'_, '_, '_, 'info, ExecuteSaleRemainingAccounts<'info>>,
+    ) -> Result<()> {
+        unreachable!();
+    }
 }
 
 /// Accounts for the [`create_auction_house` handler](auction_house/fn.create_auction_house.html).
