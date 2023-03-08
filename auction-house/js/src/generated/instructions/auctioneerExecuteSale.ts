@@ -138,7 +138,7 @@ export function createAuctioneerExecuteSaleInstruction(
     },
     {
       pubkey: accounts.metadata,
-      isWritable: true,
+      isWritable: false,
       isSigner: false,
     },
     {
