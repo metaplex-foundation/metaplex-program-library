@@ -9,6 +9,7 @@ mod freeze;
 mod metadata;
 mod state;
 mod uses;
+mod verification;
 
 use borsh::{BorshDeserialize, BorshSerialize};
 pub use bubblegum::*;
@@ -30,6 +31,7 @@ use solana_program::{
 };
 pub use state::*;
 pub use uses::*;
+pub use verification::*;
 
 use crate::{
     deprecated_processor::{
@@ -134,7 +136,11 @@ pub fn process_instruction<'a>(
         }
         MetadataInstruction::Verify(args) => {
             msg!("IX: Verify");
-            collection::verify(program_id, accounts, args)
+            verification::verify(program_id, accounts, args)
+        }
+        MetadataInstruction::Unverify(args) => {
+            msg!("IX: Unverify");
+            verification::unverify(program_id, accounts, args)
         }
         _ => {
             // pNFT accounts can only be used by the "new" API; before forwarding
