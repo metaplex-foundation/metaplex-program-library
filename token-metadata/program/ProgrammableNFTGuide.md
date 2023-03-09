@@ -27,7 +27,7 @@ In order to support assets that can have customizable behavior, a new asset clas
 * [x] [`Unlock`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/token-metadata/program/src/instruction/mod.rs#L627-L645) <span style="font-family:'Lucida Console', monospace; font-size: 6pt">([TypeScript](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/token-metadata/js/test/unlock.test.ts) | [Rust](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/token-metadata/program/tests/unlock.rs))</span>
 * [x] [`Update`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/token-metadata/program/src/instruction/mod.rs#L690-L706) <span style="font-family:'Lucida Console', monospace; font-size: 6pt">([TypeScript](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/token-metadata/js/test/update.test.ts) | [Rust](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/token-metadata/program/tests/update.rs))</span>
 * [ ] `Use`
-* [ ] `Verify`
+* [x] [`Verify`](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/token-metadata/program/src/instruction/mod.rs#L758-L771) <span style="font-family:'Lucida Console', monospace; font-size: 6pt">([TypeScript](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/token-metadata/js/test/verification.test.ts) | Rust [verify](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/token-metadata/program/tests/verify.rs) and [unverify](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/token-metadata/program/tests/unverify.rs))</span>
 
 These lifecycle rules will be configured by creators – e.g., creators may choose to include rules for transfer restrictions (e.g., for royalties enforcement) or only allow updates with an additional signer present in the transaction.
 
@@ -170,11 +170,15 @@ Each of these instructions will use versioned `*Args` structs to facilitate futu
     * [x] Unlock Fungible Assets
     * [x] Unlock Fungibles
 
+- `Unverify`
+    * [x] Unverify collection items
+    * [x] Unverify creators
+
 - `Use`
 
 - `Verify`
-    * [ ] Verify collection items
-    * [ ] Verify creators
+    * [x] Verify collection items
+    * [x] Verify creators
 
 ## 🏗️  Positional Optional Accounts
 
