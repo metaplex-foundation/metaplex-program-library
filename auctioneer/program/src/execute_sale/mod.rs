@@ -211,6 +211,9 @@ pub fn auctioneer_execute_sale<'info>(
 
     cpi_account_metas.append(&mut ctx.remaining_accounts.to_vec().to_account_metas(None));
 
+    let mut cpi_account_infos: Vec<AccountInfo> = cpi_accounts.to_account_infos();
+    cpi_account_infos.append(&mut ctx.remaining_accounts.to_vec());
+
     let ix = solana_program::instruction::Instruction {
         program_id: cpi_program.key(),
         accounts: cpi_account_metas,
@@ -228,7 +231,7 @@ pub fn auctioneer_execute_sale<'info>(
         &[auctioneer_authority_bump],
     ];
 
-    invoke_signed(&ix, &cpi_accounts.to_account_infos(), &[&auctioneer_seeds])?;
+    invoke_signed(&ix, &cpi_account_infos, &[&auctioneer_seeds])?;
 
     // Close the Listing Config account.
     let listing_config = &ctx.accounts.listing_config.to_account_info();
