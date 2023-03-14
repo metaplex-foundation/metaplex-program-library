@@ -423,9 +423,9 @@ pub fn try_get_optional_account_info<'a>(
 ///
 /// We need to determine if we are dealing with a pNFT metadata or not
 /// so we can restrict the available instructions.
-fn has_programmable_metadata<'a>(
+fn has_programmable_metadata(
     program_id: &Pubkey,
-    accounts: &'a [AccountInfo],
+    accounts: &[AccountInfo],
 ) -> Result<bool, ProgramError> {
     for account_info in accounts {
         // checks the account is owned by Token Metadata and it has data
@@ -449,7 +449,7 @@ fn has_programmable_metadata<'a>(
 }
 
 /// Checks if the instruction's accounts contain a locked pNFT.
-fn is_locked<'a>(program_id: &Pubkey, accounts: &'a [AccountInfo]) -> bool {
+fn is_locked(program_id: &Pubkey, accounts: &[AccountInfo]) -> bool {
     for account_info in accounts {
         // checks the account is owned by Token Metadata and it has data
         if account_info.owner == program_id && !account_info.data_is_empty() {

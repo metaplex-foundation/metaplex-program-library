@@ -7,8 +7,8 @@ use crate::{error::MetadataError, state::ProgrammableConfig};
 ///   1. authorization rules and data
 ///   2. edition account
 ///   3. rule_set passed in by the user to match that stored in the metadata
-pub(crate) fn assert_valid_authorization<'info>(
-    authorization_rules: Option<&AccountInfo<'info>>,
+pub(crate) fn assert_valid_authorization(
+    authorization_rules: Option<&AccountInfo>,
     config: &ProgrammableConfig,
 ) -> ProgramResult {
     let rules = match authorization_rules {

@@ -737,6 +737,10 @@ pub enum MetadataError {
     /// 186
     #[error("Missing collection master edition account")]
     MissingCollectionMasterEdition,
+
+    /// 187
+    #[error("Invalid token record account")]
+    InvalidTokenRecord,
 }
 
 impl PrintProgramError for MetadataError {
