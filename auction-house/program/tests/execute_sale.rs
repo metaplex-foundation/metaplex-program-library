@@ -14,11 +14,14 @@ use utils::{
 
 use anchor_lang::{AccountDeserialize, InstructionData, ToAccountMetas};
 use mpl_auction_house::pda::find_auctioneer_pda;
+use mpl_token_metadata::state::Creator;
 use mpl_testing_utils::{
     solana::{airdrop, create_associated_token_account, transfer},
     utils::Metadata,
 };
-use solana_sdk::{commitment_config::CommitmentLevel, signer::Signer};
+use solana_sdk::{
+    account::Account as SolanaAccount, commitment_config::CommitmentLevel, signer::Signer,
+};
 
 use std::assert_eq;
 
@@ -3806,6 +3809,230 @@ async fn execute_sale_pre_partial_bid() {
     .unwrap();
     let fee_minus: u64 = 100_000_000 - ((ah.seller_fee_basis_points as u64 * 100_000_000) / 10000);
     assert_eq!(seller_before.lamports + fee_minus, seller_after.lamports);
+    assert!(seller_before.lamports < seller_after.lamports);
+    assert_eq!(buyer_token_after.amount, 1);
+}
+
+#[tokio::test]
+async fn execute_sale_creator_zero_balance() {
+    execute_sale_with_creators(vec![(Pubkey::new_unique(), 100, false)]).await;
+}
+
+#[tokio::test]
+async fn execute_sale_creator_mixed_funded() {
+    execute_sale_with_creators(vec![
+        (Pubkey::new_unique(), 25, false),
+        (Pubkey::new_unique(), 75, true),
+    ])
+    .await;
+}
+
+async fn execute_sale_with_creators(metadata_creators: Vec<(Pubkey, u8, bool)>) {
+    let mut context = auction_house_program_test().start_with_context().await;
+    // Payer Wallet
+    let (ah, ahkey, authority) = existing_auction_house_test_context(&mut context)
+        .await
+        .unwrap();
+    let test_metadata = Metadata::new();
+    airdrop(&mut context, &test_metadata.token.pubkey(), 10_000_000_000)
+        .await
+        .unwrap();
+    for (pubkey, _, fund_creator) in &metadata_creators {
+        if *fund_creator {
+            airdrop(&mut context, pubkey, 100_000_000).await.unwrap();
+        }
+    }
+
+    test_metadata
+        .create(
+            &mut context,
+            "Test".to_string(),
+            "TST".to_string(),
+            "uri".to_string(),
+            Some(
+                metadata_creators
+                    .clone()
+                    .iter()
+                    .map(|(address, share, _)| Creator {
+                        address: *address,
+                        verified: false,
+                        share: *share,
+                    })
+                    .collect(),
+            ),
+            10,
+            false,
+            1,
+        )
+        .await
+        .unwrap();
+    let ((sell_acc, _), sell_tx) = sell(&mut context, &ahkey, &ah, &test_metadata, 100_000_000, 1);
+    context
+        .banks_client
+        .process_transaction(sell_tx)
+        .await
+        .unwrap();
+    let buyer = Keypair::new();
+    airdrop(&mut context, &buyer.pubkey(), 10_000_000_000)
+        .await
+        .unwrap();
+    let ((bid_acc, _), buy_tx) = buy(
+        &mut context,
+        &ahkey,
+        &ah,
+        &test_metadata,
+        &test_metadata.token.pubkey(),
+        &buyer,
+        100_000_000,
+        1,
+    );
+    context
+        .banks_client
+        .process_transaction(buy_tx)
+        .await
+        .unwrap();
+    let buyer_token_account =
+        get_associated_token_address(&buyer.pubkey(), &test_metadata.mint.pubkey());
+
+    let mut accounts = mpl_auction_house::accounts::ExecuteSale {
+        buyer: buyer.pubkey(),
+        seller: test_metadata.token.pubkey(),
+        auction_house: ahkey,
+        metadata: test_metadata.pubkey,
+        token_account: sell_acc.token_account,
+        authority: ah.authority,
+        seller_trade_state: sell_acc.seller_trade_state,
+        buyer_trade_state: bid_acc.buyer_trade_state,
+        token_program: spl_token::id(),
+        free_trade_state: sell_acc.free_seller_trade_state,
+        seller_payment_receipt_account: test_metadata.token.pubkey(),
+        buyer_receipt_token_account: buyer_token_account,
+        escrow_payment_account: bid_acc.escrow_payment_account,
+        token_mint: test_metadata.mint.pubkey(),
+        auction_house_fee_account: ah.auction_house_fee_account,
+        auction_house_treasury: ah.auction_house_treasury,
+        treasury_mint: ah.treasury_mint,
+        program_as_signer: sell_acc.program_as_signer,
+        system_program: system_program::id(),
+        ata_program: spl_associated_token_account::id(),
+        rent: sysvar::rent::id(),
+    }
+    .to_account_metas(None);
+    for (pubkey, _, _) in &metadata_creators {
+        accounts.push(AccountMeta {
+            pubkey: *pubkey,
+            is_signer: false,
+            is_writable: true,
+        });
+    }
+
+    let (_, free_sts_bump) = find_trade_state_address(
+        &test_metadata.token.pubkey(),
+        &ahkey,
+        &sell_acc.token_account,
+        &ah.treasury_mint,
+        &test_metadata.mint.pubkey(),
+        0,
+        1,
+    );
+    let (_, escrow_bump) = find_escrow_payment_address(&ahkey, &buyer.pubkey());
+    let (_, pas_bump) = find_program_as_signer_address();
+
+    let instruction = Instruction {
+        program_id: mpl_auction_house::id(),
+        data: mpl_auction_house::instruction::ExecuteSale {
+            escrow_payment_bump: escrow_bump,
+            _free_trade_state_bump: free_sts_bump,
+            program_as_signer_bump: pas_bump,
+            token_size: 1,
+            buyer_price: 100_000_000,
+        }
+        .data(),
+        accounts,
+    };
+    airdrop(&mut context, &ah.auction_house_fee_account, 10_000_000_000)
+        .await
+        .unwrap();
+
+    let tx = Transaction::new_signed_with_payer(
+        &[instruction],
+        Some(&authority.pubkey()),
+        &[&authority],
+        context.last_blockhash,
+    );
+    let seller_before = context
+        .banks_client
+        .get_account(test_metadata.token.pubkey())
+        .await
+        .unwrap()
+        .unwrap();
+    let mut metadata_creators_before: Vec<Option<SolanaAccount>> = Vec::new();
+    for (creator, _, _) in &metadata_creators {
+        metadata_creators_before.push(context.banks_client.get_account(*creator).await.unwrap());
+    }
+    let buyer_token_before = &context
+        .banks_client
+        .get_account(buyer_token_account)
+        .await
+        .unwrap();
+    assert!(buyer_token_before.is_none());
+    context.banks_client.process_transaction(tx).await.unwrap();
+
+    let seller_after = context
+        .banks_client
+        .get_account(test_metadata.token.pubkey())
+        .await
+        .unwrap()
+        .unwrap();
+    let mut metadata_creators_after: Vec<Option<SolanaAccount>> = Vec::new();
+    for (creator, _, _) in &metadata_creators {
+        metadata_creators_after.push(context.banks_client.get_account(*creator).await.unwrap());
+    }
+    let buyer_token_after = Account::unpack_from_slice(
+        context
+            .banks_client
+            .get_account(buyer_token_account)
+            .await
+            .unwrap()
+            .unwrap()
+            .data
+            .as_slice(),
+    )
+    .unwrap();
+
+    let _seller_ts_after = context
+        .banks_client
+        .get_account(sell_acc.seller_trade_state)
+        .await
+        .unwrap()
+        .is_none();
+    let _buyer_ts_after = context
+        .banks_client
+        .get_account(bid_acc.buyer_trade_state)
+        .await
+        .unwrap()
+        .is_none();
+    let _free_ts_after = context
+        .banks_client
+        .get_account(sell_acc.free_seller_trade_state)
+        .await
+        .unwrap()
+        .is_none();
+
+    for (creator_before, creator_after) in metadata_creators_before
+        .iter()
+        .zip(metadata_creators_after.iter())
+    {
+        if creator_before.is_none() {
+            assert_eq!(creator_before.is_none(), creator_after.is_none());
+        } else {
+            assert!(
+                creator_before.as_ref().unwrap().lamports
+                    < creator_after.as_ref().unwrap().lamports
+            );
+        }
+    }
+
     assert!(seller_before.lamports < seller_after.lamports);
     assert_eq!(buyer_token_after.amount, 1);
 }
