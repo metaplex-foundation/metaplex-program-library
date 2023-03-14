@@ -1,5 +1,5 @@
 {
-  "version": "1.9.0",
+  "version": "1.9.1",
   "name": "mpl_token_metadata",
   "instructions": [
     {
@@ -6419,6 +6419,11 @@
       "code": 186,
       "name": "MissingCollectionMasterEdition",
       "msg": "Missing collection master edition account"
+    },
+    {
+      "code": 187,
+      "name": "InvalidTokenRecord",
+      "msg": "Invalid token record account"
     }
   ],
   "metadata": {
