@@ -17,15 +17,6 @@ pub const EMPTY_STR: &str = "";
 // Seed used to derive the authority PDA address.
 pub const AUTHORITY_SEED: &str = "candy_machine";
 
-// Indicates whether the account has support for different NFT types or not.
-// If the bit on this position is set to 1, the candy machine supports minting
-// both NFT and pNFTs.
-pub const NFT_TYPE_FEATURE: u64 = 1 << (std::mem::size_of::<u64>() - 1);
-
-// Indicates whether the account has pNFT support or not. If the bit
-// on this position is set to 1, the candy machine mints pNFTs.
-pub const PNFT_FEATURE: u64 = 1 << (std::mem::size_of::<u64>() - 2);
-
 // Determine the start of the account hidden section.
 pub const HIDDEN_SECTION: usize = 8           // discriminator
     + 8                                       // features
