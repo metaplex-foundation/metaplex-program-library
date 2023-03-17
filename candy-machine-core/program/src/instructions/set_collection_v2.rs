@@ -100,6 +100,7 @@ pub struct SetCollectionV2<'info> {
     authority_pda: UncheckedAccount<'info>,
 
     /// Payer of the transaction.
+    #[account(mut)]
     payer: Signer<'info>,
 
     /// Update authority of the collection.

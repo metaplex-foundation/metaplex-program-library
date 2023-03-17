@@ -38,7 +38,7 @@ export const mintV2Struct = new beet.BeetArgsStruct<{
  * @property [] tokenMetadataProgram
  * @property [] splTokenProgram
  * @property [] splAtaProgram (optional)
- * @property [] sysvarInstructions (optional)
+ * @property [] sysvarInstructions
  * @property [] recentSlothashes
  * @property [] authorizationRulesProgram (optional)
  * @property [] authorizationRules (optional)
@@ -67,7 +67,7 @@ export type MintV2InstructionAccounts = {
   splTokenProgram: web3.PublicKey;
   splAtaProgram?: web3.PublicKey;
   systemProgram?: web3.PublicKey;
-  sysvarInstructions?: web3.PublicKey;
+  sysvarInstructions: web3.PublicKey;
   recentSlothashes: web3.PublicKey;
   authorizationRulesProgram?: web3.PublicKey;
   authorizationRules?: web3.PublicKey;
@@ -196,7 +196,7 @@ export function createMintV2Instruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.sysvarInstructions ?? programId,
+      pubkey: accounts.sysvarInstructions,
       isWritable: false,
       isSigner: false,
     },

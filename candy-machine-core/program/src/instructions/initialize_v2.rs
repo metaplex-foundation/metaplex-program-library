@@ -132,6 +132,7 @@ pub struct InitializeV2<'info> {
     authority: UncheckedAccount<'info>,
 
     /// Payer of the transaction.
+    #[account(mut)]
     payer: Signer<'info>,
 
     /// Authorization rule set to be used by minted NFTs.

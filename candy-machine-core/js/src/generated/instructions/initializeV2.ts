@@ -41,7 +41,7 @@ export const initializeV2Struct = new beet.FixableBeetArgsStruct<
  * @property [_writable_] candyMachine
  * @property [_writable_] authorityPda
  * @property [] authority
- * @property [**signer**] payer
+ * @property [_writable_, **signer**] payer
  * @property [] ruleSet (optional)
  * @property [_writable_] collectionMetadata
  * @property [] collectionMint
@@ -117,7 +117,7 @@ export function createInitializeV2Instruction(
     },
     {
       pubkey: accounts.payer,
-      isWritable: false,
+      isWritable: true,
       isSigner: true,
     },
     {

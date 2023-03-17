@@ -145,6 +145,7 @@ pub struct SetTokenStandard<'info> {
     authority_pda: UncheckedAccount<'info>,
 
     /// Payer of the transaction.
+    #[account(mut)]
     payer: Signer<'info>,
 
     /// Authorization rule set to be used by minted NFTs.

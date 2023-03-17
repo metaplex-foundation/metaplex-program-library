@@ -1,8 +1,5 @@
 # Metaplex Candy Machine Core (a.k.a. Candy Machine V3)
 
-> ⚠️ **Candy Machine V3 is currently experimental and has not been formally audited. Use in production
-> at your own risk.**
-
 ## Overview
 
 The Metaplex Protocol's `Candy Machine` is the leading minting and distribution program for fair NFT
@@ -63,7 +60,9 @@ and
 | Field                       | Offset | Size | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | --------------------------- | ------ | ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | &mdash;                     | 0      | 8    | Anchor account discriminator.                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| `features`                  | 8      | 8    | `u64` field to be used as a binary flag to support future features while maintaing backwards compatibility.                                                                                                                                                                                                                                                                                                                                                                            |
+| `account_version`                  | 8      | 1    | [`AccountVersion`](https://github.com/metaplex-foundation/metaplex-program-library/blob/febo/candy-machine-core/candy-machine-core/program/src/state/candy_machine.rs)
+| `token_standard`                  | 9      | 1    | `u8` indicating the token standard of minted NFTs (`0 = NFT` and `4 = pNFT`)
+| `features`                  | 10      | 6    | `[u8; 6]` field to be used as a binary flag to support future features while maintaing backwards compatibility.                                                                                                                                                                                                                                                                                                                                                                            |
 | `authority`                 | 16     | 32   | `PubKey` of the authority address that controls the candy machine.                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | `mint_authority`            | 48     | 32   | `PubKey` of the address allowed to mint from the candy machine.                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | `collection_mint`           | 80     | 32   | `PubKey` of the collection NFT; each NFT minted from the candy machine will be part of this collection.                                                                                                                                                                                                                                                                                                                                                                                |
@@ -89,12 +88,17 @@ and
 | -- `uri`                    | ~      | 204  | `uri` for the metadata of NFTs.                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | -- `hash`                   | ~      | 32   | `string` representing the hash value of the file that contain the mapping of (mint index, NFT metadata).                                                                                                                                                                                                                                                                                                                                                                               |
 | _hidden section_            | 850    | ~    | (optional) Hidden data section to avoid unnecessary deserialisation. This section of the account is not represented by structs and data is store/retrieved using byte offsets. The hidden data section is not present when `hiddenSettings` are used, since there is no need to store config line settings.                                                                                                                                                                            |
-| - _items_</div>             | 850    | 4    | Number of NFTs (items) added to the candy machine; eventually this will be the same as `items_available`.                                                                                                                                                                                                                                                                                                                                                                              |
-| - _config lines_</div>      | 854    | ~    | A sequence of name and uri pairs representing each NFT; the length of these are determined by `name_length + uri_length`; there will `items_available * (name + uri)` pairs in total.                                                                                                                                                                                                                                                                                                  |
-| - _byte mask_</div>         | ~      | ~    | A byte section of length equal to `(items_available / 8) + 1` with binary flags to indicate which config lines have been added.                                                                                                                                                                                                                                                                                                                                                        |
-| - _mint indices_</div>      | ~      | ~    | A sequence of `u32` values representing the available mint indices; the usable indices are determined by: valid indices start at the mint number (`items_redeemed`) if `is_sequential` is `true`; otherwise, valid mint indices start from offset 0 until the offset determined by `items_available - items_redeemed`.                                                                                                                                                                 |
+| - _items_             | 850    | 4    | Number of NFTs (items) added to the candy machine; eventually this will be the same as `items_available`.                                                                                                                                                                                                                                                                                                                                                                              |
+| - _config lines_      | 854    | ~    | A sequence of name and uri pairs representing each NFT; the length of these are determined by `name_length + uri_length`; there will `items_available * (name + uri)` pairs in total.                                                                                                                                                                                                                                                                                                  |
+| - _byte mask_         | ~      | ~    | A byte section of length equal to `(items_available / 8) + 1` with binary flags to indicate which config lines have been added.                                                                                                                                                                                                                                                                                                                                                        |
+| - _mint indices_      | ~      | ~    | A sequence of `u32` values representing the available mint indices; the usable indices are determined by: valid indices start at the mint number (`items_redeemed`) if `is_sequential` is `true`; otherwise, valid mint indices start from offset 0 until the offset determined by `items_available - items_redeemed`.                                                                                                                                                                 |
+| - _rule set flag_     | ~      | 1     | (optional) A bit to indicate if the account contains a rule set (only applicable to `pNFT`).
+| - _rule set_          | ~      | 32    | (optional) Pubkey of the rule set; this rule set will be added to newly minted `pNFT`s.
 
 ## Instructions
+
+> **Note**
+> The instructions make use of Anchor v0.26 support for positional optional accounts.
 
 ### 📄 `add_config_lines`
 
@@ -120,7 +124,7 @@ the candy machine has `config_line_settings`.
 | `config_lines`                | 4      | ~    | Array of [`ConfigLine`](https://github.com/metaplex-foundation/metaplex-program-library/blob/febo/candy-machine-core/candy-machine-core/program/src/state/candy_machine.rs#L33) objects representing the lines to be added. |
 </details>
 
-### 📄 `initialize`
+### 📄 `initialize` (deprecated)
 
 This instruction creates and initializes a new `CandyMachine` account. It requires that the
 CandyMachine account has been created with the expected size before executing this instruction.
@@ -141,7 +145,6 @@ CandyMachine account has been created with the expected size before executing th
 | `collection_authority_record` |    ✅    |        | Authority Record PDA of the collection.                              |
 | `token_metadata_program`      |          |        | Metaplex `TokenMetadata` program ID.                                 |
 | `system_program`              |          |        | `SystemProgram` account.                                             |
-| `rent`                        |          |        | `Rent` account.                                                      |
 
 </details>
 
@@ -153,7 +156,45 @@ CandyMachine account has been created with the expected size before executing th
 | `data`                        | 0      | ~    | `CandyMachineData` object. |
 </details>
 
-### 📄 `mint`
+### 📄 `initialize_v2`
+
+This instruction creates and initializes a new `CandyMachine` account that support multiple token standard. It requires that the
+CandyMachine account has been created with the expected size before executing this instruction. A Candy Machine created through this
+instruction will have its `AccountVersion` set to `V2`.
+
+<details>
+  <summary>Accounts</summary>
+
+| Name                          | Writable | Signer | Description                                                          |
+| ----------------------------- | :------: | :----: | -------------------------------------------------------------------- |
+| `candy_machine`               |    ✅    |        | The `CandyMachine` account.                                          |
+| `authority_pda`               |    ✅    |        | Authority PDA key (seeds `["candy_machine", candy_machine pubkey]`). |
+| `authority`                   |          |        | Public key of the candy machine authority.                           |
+| `payer`                       |          |   ✅   | Payer of the transaction.                                            |
+| `rule_set`                    |          |        | (optional) Rule set to be added to newly minted NFTs.                |
+| `collection_metadata`         |          |        | Metadata account of the collection.                                  |
+| `collection_mint`             |          |        | Mint account of the collection.                                      |
+| `collection_master_edition`   |          |        | Master Edition account of the collection.                            |
+| `collection_update_authority` |    ✅    |   ✅   | Update authority of the collection.                                  |
+| `collection_delegate_record`  |    ✅    |        | Token Metadata collection delegate record                            |
+| `token_metadata_program`      |          |        | Metaplex `TokenMetadata` program ID.                                 |
+| `system_program`              |          |        | `SystemProgram` account.                                             |
+| `sysvar_instructions`         |          |        | `sysvar::instructions` account.                                      |
+| `authorization_rules_program` |          |        | Token Authorization Rules program.                                   |
+| `authorization_rules`         |          |        | Token Authorization Rules account.                                   |
+
+</details>
+
+<details>
+  <summary>Arguments</summary>
+
+| Argument                      | Offset | Size | Description               |
+| ----------------------------- | ------ | ---- | ------------------------- |
+| `data`                        | 0      | ~    | `CandyMachineData` object. |
+| `token_standard`              | ~      | 1    | `u8` indicating the token standard (`0 = NFT` and `4 = pNFT`). |
+</details>
+
+### 📄 `mint` (deprecated)
 
 This instruction mints an NFT from the Candy Machine. Only the mint authority is able to mint from
 the Candy Machine.
@@ -179,7 +220,50 @@ the Candy Machine.
 | `token_metadata_program`      |          |        | Metaplex `TokenMetadata` program ID.                                                      |
 | `token_program`               |          |        | `spl-token` program ID.                                                                   |
 | `system_program`              |          |        | `SystemProgram` account.                                                                  |
-| `rent`                        |          |        | `Rent` account.                                                                           |
+| `recent_slothashes`           |          |        | SlotHashes sysvar cluster data.                                   |account.                                                                           |
+
+</details>
+
+<details>
+  <summary>Arguments</summary>
+
+None.
+</details>
+
+### 📄 `mint_v2`
+
+This instruction mints both `NFT` or `pNFT` from the Candy Machine. Only the mint authority is able to mint from
+the Candy Machine.
+
+<details>
+  <summary>Accounts</summary>
+
+| Name                          | Writable | Signer | Description                                                                               |
+| ----------------------------- | :------: | :----: | ----------------------------------------------------------------------------------------- |
+| `candy_machine`               |    ✅    |        | The `CandyMachine` account.                                                               |
+| `authority_pda`               |    ✅    |        | Authority PDA key (seeds `["candy_machine", candy_machine pubkey]`).                      |
+| `mint_authority`              |          |   ✅   | Public key of the candy machine mint authority.                                           |
+| `payer`                       |    ✅    |   ✅   | Payer of the transaction.                                                                 |
+| `nft_owner`                   |          |       | NFT token account owner.                                                            |
+| `nft_mint`                    |    ✅    |        | Mint account for the NFT. The account should be created before executing the instruction. |
+| `nft_mint_authority`          |          |   ✅   | Mint authority of the NFT.                                                                |
+| `nft_metadata`                |    ✅    |        | Metadata account of the NFT.                                                              |
+| `nft_master_edition`          |    ✅    |        | Master Edition account of the NFT.                                                        |
+| `token`                       |    ✅    |       | (optional) NFT token account.                                                 |
+| `token_record`                |    ✅    |       | (optional) Metadata `TokenRecord` account (required for `pNFT`)               |
+| `collection_delegate_record`  |          |        | Authority Record PDA of the collection (for `AccountVersion::V1`); Metadata collection delegate (for `AccountVersion::V2`).|
+| `collection_mint`             |          |        | Mint account of the collection.                                                           |
+| `collection_metadata`         |    ✅    |        | Metadata account of the collection.                                                       |
+| `collection_master_edition`   |          |        | Master Edition account of the collection.                                                 |
+| `collection_update_authority` |          |        | Update authority of the collection.                                                       |
+| `token_metadata_program`      |          |        | Metaplex `TokenMetadata` program ID.                                                      |
+| `spl_token_program`           |          |        | `spl-token` program.                                                                   |
+| `spl_ata_program`             |          |        | (optional) `spl` associated token program.            |
+| `system_program`              |          |        | `SystemProgram` account.                                                                  |
+| `sysvar_instructions`         |          |        | `sysvar::instructions` account.                                      |
+| `recent_slothashes`           |          |        | SlotHashes sysvar cluster data.                                      |
+| `authorization_rules_program` |          |        | (optional) Token Authorization Rules program.                                   |
+| `authorization_rules`         |          |        | (optional) Token Authorization Rules account.                                   |
 
 </details>
 
@@ -213,7 +297,7 @@ the right to operate it.
 | `new_authority`               | 0      | 32    | Public key of the new authority. |
 </details>
 
-### 📄 `set_collection`
+### 📄 `set_collection` (deprecated)
 
 This instruction sets the collection to be used by the Candy Machine. The collection can only be
 changed if no NFTs have been minted.
@@ -237,7 +321,43 @@ changed if no NFTs have been minted.
 | `new_collection_authority_record` |    ✅    |        | Authority Record PDA of the new collection.                          |
 | `token_metadata_program`          |          |        | Metaplex `TokenMetadata` program ID.                                 |
 | `system_program`                  |          |        | `SystemProgram` account.                                             |
-| `rent`                            |          |        | `Rent` account.                                                      |
+
+</details>
+
+<details>
+  <summary>Arguments</summary>
+
+None.
+</details>
+
+### 📄 `set_collection_v2`
+
+This instruction sets the collection to be used by Candy Machine's `AccountVersion::V1` or `AccountVersion::V2`. The collection can only be
+changed if no (p)NFTs have been minted.
+
+<details>
+  <summary>Accounts</summary>
+
+| Name                              | Writable | Signer | Description                                                          |
+| --------------------------------- | :------: | :----: | -------------------------------------------------------------------- |
+| `candy_machine`                   |    ✅    |        | The `CandyMachine` account.                                          |
+| `authority`                       |          |   ✅   | Public key of the candy machine authority.                           |
+| `authority_pda`                   |    ✅    |        | Authority PDA key (seeds `["candy_machine", candy_machine pubkey]`). |
+| `payer`                           |          |   ✅   | Payer of the transaction.                                            |
+| `collection_update_authority`     |          |        | Update authority account of the current collection.                  |
+| `collection_mint`                 |          |        | Mint account of the current collection.                              |
+| `collection_metadata`             |          |        | Metadata account of the current collection.                          |
+| `collection_delegate_record`      |    ✅    |        | Metadata Delegate Record of the current collection.                  |
+| `new_collection_update_authority` |    ✅    |   ✅   | Authority Record PDA of the new collection.                          |
+| `new_collection_mint`             |          |        | Mint account of the new collection.                                  |
+| `new_collection_metadata`         |          |        | Metadata account of the new collection.                              |
+| `new_collection_master_edition`   |          |        | Master Edition account of the new collection.                        |
+| `new_collection_delegate_record`  |    ✅    |        | Metadata Delegate Record of the new collection.                      |
+| `token_metadata_program`          |          |        | Metaplex `TokenMetadata` program ID.                                 |
+| `system_program`                  |          |        | `SystemProgram` account.                                             |
+| `sysvar_instructions`             |          |        | `sysvar::instructions` account.                                      |
+| `authorization_rules_program`     |          |        | (optional) Token Authorization Rules program.                                   |
+| `authorization_rules`             |          |        | (optional) Token Authorization Rules account.                                   |
 
 </details>
 
@@ -268,6 +388,41 @@ will lose the right to mint from the Candy Machine.
   <summary>Arguments</summary>
 
 None.
+</details>
+
+### 📄 `set_token_standard`
+
+This instruction sets the token standard and (optional) rule set to be used by the Candy Machine. It will also update the version of the Candy Machine account to `V2` and set a Medatada Collection delegate (instead of the Authority Record PDA).
+
+<details>
+  <summary>Accounts</summary>
+
+| Name                              | Writable | Signer | Description                                                          |
+| --------------------------------- | :------: | :----: | -------------------------------------------------------------------- |
+| `candy_machine`                   |    ✅    |        | The `CandyMachine` account.                                          |
+| `authority`                       |          |   ✅   | Public key of the candy machine authority.                           |
+| `authority_pda`                   |    ✅    |        | Authority PDA key (seeds `["candy_machine", candy_machine pubkey]`). |
+| `payer`                           |    ✅    |   ✅   | Payer of the transaction.                                            |
+| `rule_set`                        |          |        | (optional) Rule set to be added to newly minted NFTs.                |
+| `collection_delegate_record`      |    ✅    |        | Metadata Delegate Record of the current collection.                  |
+| `collection_mint`                 |          |        | Mint account of the current collection.                              |
+| `collection_metadata`             |          |        | Metadata account of the current collection.                          |
+| `collection_authority_record`     |    ✅    |        | (optional) Authority Record PDA of the current collection.           |
+| `collection_update_authority`     |          |        | Update authority account of the current collection.                  |
+| `token_metadata_program`          |          |        | Metaplex `TokenMetadata` program ID.                                 |
+| `system_program`                  |          |        | `SystemProgram` account.                                             |
+| `sysvar_instructions`             |          |        | `sysvar::instructions` account.                                      |
+| `authorization_rules_program`     |          |        | (optional) Token Authorization Rules program.                                   |
+| `authorization_rules`             |          |        | (optional) Token Authorization Rules account.                                   |
+
+</details>
+
+<details>
+  <summary>Arguments</summary>
+
+| Argument                      | Offset | Size | Description               |
+| ----------------------------- | ------ | ---- | ------------------------- |
+| `token_standard`              | 0      | 1    | `u8` indicating the token standard (`0 = NFT` and `4 = pNFT`). |
 </details>
 
 ### 📄 `update`

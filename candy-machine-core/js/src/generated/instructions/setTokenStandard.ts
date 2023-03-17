@@ -38,7 +38,7 @@ export const setTokenStandardStruct = new beet.BeetArgsStruct<
  * @property [_writable_] candyMachine
  * @property [**signer**] authority
  * @property [_writable_] authorityPda
- * @property [**signer**] payer
+ * @property [_writable_, **signer**] payer
  * @property [] ruleSet (optional)
  * @property [_writable_] collectionDelegateRecord
  * @property [] collectionMint
@@ -114,7 +114,7 @@ export function createSetTokenStandardInstruction(
     },
     {
       pubkey: accounts.payer,
-      isWritable: false,
+      isWritable: true,
       isSigner: true,
     },
     {

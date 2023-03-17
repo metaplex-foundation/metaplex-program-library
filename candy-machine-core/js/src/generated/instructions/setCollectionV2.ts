@@ -25,7 +25,7 @@ export const setCollectionV2Struct = new beet.BeetArgsStruct<{
  * @property [_writable_] candyMachine
  * @property [**signer**] authority
  * @property [] authorityPda
- * @property [**signer**] payer
+ * @property [_writable_, **signer**] payer
  * @property [] collectionUpdateAuthority
  * @property [] collectionMint
  * @property [] collectionMetadata
@@ -103,7 +103,7 @@ export function createSetCollectionV2Instruction(
     },
     {
       pubkey: accounts.payer,
-      isWritable: false,
+      isWritable: true,
       isSigner: true,
     },
     {

@@ -228,7 +228,7 @@
         },
         {
           "name": "payer",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true,
           "docs": [
             "Payer of the transaction."
@@ -746,7 +746,6 @@
           "name": "sysvarInstructions",
           "isMut": false,
           "isSigner": false,
-          "isOptional": true,
           "docs": [
             "Instructions sysvar account.",
             ""
@@ -1024,7 +1023,7 @@
         },
         {
           "name": "payer",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true,
           "docs": [
             "Payer of the transaction."
@@ -1250,7 +1249,7 @@
         },
         {
           "name": "payer",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true,
           "docs": [
             "Payer of the transaction."
