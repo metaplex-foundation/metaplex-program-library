@@ -1,6 +1,7 @@
 use super::*;
 
 use crate::{
+    pda::find_token_record_account,
     processor::burn::{fungible::burn_fungible, nonfungible_edition::burn_nonfungible_edition},
     state::{AuthorityRequest, AuthorityType, TokenDelegateRole, TokenRecord, TokenState},
     utils::{check_token_standard, thaw},
@@ -168,12 +169,22 @@ fn burn_v1(program_id: &Pubkey, ctx: Context<Burn>, args: BurnArgs) -> ProgramRe
         }
         TokenStandard::ProgrammableNonFungible => {
             // All the checks are the same as burning a NonFungible token
-            // except we also have to check the token state.
-            let token_record = ctx
-                .accounts
-                .token_record_info
-                .ok_or_else(|| MetadataError::MissingTokenRecord.into())
-                .and_then(TokenRecord::from_account_info)?;
+            // except we also have to check the token state and derivation.
+            let token_record = match ctx.accounts.token_record_info {
+                Some(token_record_info) => {
+                    let (pda_key, _) = find_token_record_account(
+                        ctx.accounts.mint_info.key,
+                        ctx.accounts.token_info.key,
+                    );
+
+                    if pda_key != *token_record_info.key {
+                        return Err(MetadataError::InvalidTokenRecord.into());
+                    }
+
+                    TokenRecord::from_account_info(token_record_info)?
+                }
+                None => return Err(MetadataError::MissingTokenRecord.into()),
+            };
 
             // Locked and Listed states cannot be burned.
             if token_record.state != TokenState::Unlocked {

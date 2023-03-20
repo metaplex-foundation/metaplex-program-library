@@ -4010,6 +4010,26 @@ createErrorFromNameLookup.set(
 );
 
 /**
+ * InvalidTokenRecord: 'Invalid token record account'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidTokenRecordError extends Error {
+  readonly code: number = 0xbb;
+  readonly name: string = 'InvalidTokenRecord';
+  constructor() {
+    super('Invalid token record account');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidTokenRecordError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xbb, () => new InvalidTokenRecordError());
+createErrorFromNameLookup.set('InvalidTokenRecord', () => new InvalidTokenRecordError());
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

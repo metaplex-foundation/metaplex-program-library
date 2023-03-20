@@ -3,6 +3,12 @@ use spl_token::instruction::approve;
 
 use crate::{constants::*, errors::*, utils::*, AuctionHouse, AuthorityScope, *};
 
+use mpl_token_auth_rules::payload::{Payload, PayloadType, SeedsVec};
+use mpl_token_metadata::{
+    instruction::{builders::DelegateBuilder, DelegateArgs, InstructionBuilder},
+    processor::AuthorizationData,
+};
+
 /// Accounts for the [`sell` handler](auction_house/fn.sell.html).
 #[derive(Accounts)]
 #[instruction(
@@ -23,6 +29,7 @@ pub struct Sell<'info> {
 
     /// CHECK: Verified through CPI
     /// Metaplex metadata account decorating SPL mint account.
+    //@TODO: remove #[account(mut)]
     pub metadata: UncheckedAccount<'info>,
 
     /// CHECK: Verified through CPI
@@ -99,6 +106,31 @@ pub struct Sell<'info> {
     pub program_as_signer: UncheckedAccount<'info>,
 
     pub rent: Sysvar<'info, Rent>,
+    // we are at stack limit, but if we weren't, it'd look something like this:
+    // ...SellRemainingAccounts
+}
+
+// This isn't for an ix, only to help gather the account_metas and contexts
+#[derive(Accounts)]
+pub struct SellRemainingAccounts<'info> {
+    ///CHECK: checked in sell function
+    pub metadata_program: UncheckedAccount<'info>,
+    ///CHECK: checked in cpi
+    #[account(mut)]
+    pub delegate_record: UncheckedAccount<'info>,
+    ///CHECK: checked in cpi
+    #[account(mut)]
+    pub token_record: UncheckedAccount<'info>,
+    ///CHECK: checked in cpi
+    pub token_mint: UncheckedAccount<'info>,
+    ///CHECK: checked in cpi
+    pub edition: UncheckedAccount<'info>,
+    ///CHECK: checked in cpi
+    pub auth_rules_program: UncheckedAccount<'info>,
+    ///CHECK: checked in cpi
+    pub auth_rules: UncheckedAccount<'info>,
+    ///CHECK: checked in cpi
+    pub sysvar_instructions: UncheckedAccount<'info>,
 }
 
 impl<'info> From<AuctioneerSell<'info>> for Sell<'info> {
@@ -140,6 +172,7 @@ pub struct AuctioneerSell<'info> {
 
     /// CHECK: Validated by assert_metadata_valid.
     /// Metaplex metadata account decorating SPL mint account.
+    //@TODO: remove #[account(mut)]
     pub metadata: UncheckedAccount<'info>,
 
     /// CHECK: Verified through CPI
@@ -270,6 +303,7 @@ pub fn sell<'info>(
 
     sell_logic(
         ctx.accounts,
+        ctx.remaining_accounts,
         ctx.program_id,
         trade_state_bump,
         free_trade_state_bump,
@@ -326,6 +360,7 @@ pub fn auctioneer_sell<'info>(
 
     sell_logic(
         &mut accounts,
+        ctx.remaining_accounts,
         ctx.program_id,
         trade_state_bump,
         free_trade_state_bump,
@@ -336,8 +371,9 @@ pub fn auctioneer_sell<'info>(
 }
 
 /// Create a sell bid by creating a `seller_trade_state` account and approving the program as the token delegate.
-fn sell_logic<'info>(
+fn sell_logic<'c, 'info>(
     accounts: &mut Sell<'info>,
+    remaining_accounts: &'c [AccountInfo<'info>],
     program_id: &Pubkey,
     trade_state_bump: u8,
     _free_trade_state_bump: u8,
@@ -403,24 +439,102 @@ fn sell_logic<'info>(
         return Err(AuctionHouseError::InvalidTokenAmount.into());
     }
 
+    let remaining_accounts = &mut remaining_accounts.iter();
+
     if wallet.is_signer {
-        invoke(
-            &approve(
-                &token_program.key(),
-                &token_account.key(),
-                &program_as_signer.key(),
-                &wallet.key(),
-                &[],
-                token_size,
-            )
-            .unwrap(),
-            &[
-                token_program.to_account_info(),
-                token_account.to_account_info(),
-                program_as_signer.to_account_info(),
-                wallet.to_account_info(),
-            ],
-        )?;
+        match next_account_info(remaining_accounts) {
+            Ok(metadata_program) => {
+                require!(
+                    metadata_program.key() == mpl_token_metadata::ID,
+                    AuctionHouseError::PublicKeyMismatch
+                );
+
+                let delegate_record = next_account_info(remaining_accounts)?;
+                let token_record = next_account_info(remaining_accounts)?;
+                let token_mint = next_account_info(remaining_accounts)?;
+                let edition = next_account_info(remaining_accounts)?;
+                let auth_rules_program = next_account_info(remaining_accounts)?;
+                let auth_rules = next_account_info(remaining_accounts)?;
+                let sysvar_instructions = next_account_info(remaining_accounts)?;
+
+                let delegate = DelegateBuilder::new()
+                    .delegate_record(delegate_record.key())
+                    .delegate(program_as_signer.key())
+                    .metadata(metadata.key())
+                    .master_edition(edition.key())
+                    .token_record(token_record.key())
+                    .mint(token_mint.key())
+                    .token(token_account.key())
+                    .authority(wallet.key())
+                    .payer(wallet.key())
+                    .system_program(system_program.key())
+                    .sysvar_instructions(sysvar_instructions.key())
+                    .spl_token_program(token_program.key())
+                    .authorization_rules_program(auth_rules_program.key())
+                    .authorization_rules(auth_rules.key())
+                    .build(DelegateArgs::SaleV1 {
+                        amount: token_size,
+                        authorization_data: Some(AuthorizationData {
+                            payload: Payload::from([
+                                ("Amount".to_string(), PayloadType::Number(token_size)),
+                                (
+                                    "Delegate".to_string(),
+                                    PayloadType::Pubkey(*program_as_signer.key),
+                                ),
+                                (
+                                    "DelegateSeeds".to_string(),
+                                    PayloadType::Seeds(SeedsVec {
+                                        seeds: vec![
+                                            PREFIX.as_bytes().to_vec(),
+                                            SIGNER.as_bytes().to_vec(),
+                                        ],
+                                    }),
+                                ),
+                            ]),
+                        }),
+                    })
+                    .unwrap()
+                    .instruction();
+
+                let delegate_accounts = [
+                    wallet.to_account_info(),
+                    metadata_program.to_account_info(),
+                    delegate_record.to_account_info(),
+                    token_record.to_account_info(),
+                    token_account.to_account_info(),
+                    token_mint.to_account_info(),
+                    metadata.to_account_info(),
+                    edition.to_account_info(),
+                    program_as_signer.to_account_info(),
+                    system_program.to_account_info(),
+                    token_program.to_account_info(),
+                    auth_rules_program.to_account_info(),
+                    auth_rules.to_account_info(),
+                    sysvar_instructions.to_account_info(),
+                ];
+
+                invoke(&delegate, &delegate_accounts)?;
+            }
+            Err(_) => {
+                invoke(
+                    &approve(
+                        &token_program.key(),
+                        &token_account.key(),
+                        &program_as_signer.key(),
+                        &wallet.key(),
+                        &[],
+                        token_size,
+                    )
+                    .unwrap(),
+                    &[
+                        token_program.to_account_info(),
+                        token_account.to_account_info(),
+                        program_as_signer.to_account_info(),
+                        wallet.to_account_info(),
+                    ],
+                )?;
+            }
+        }
     }
 
     let ts_info = seller_trade_state.to_account_info();

@@ -8,7 +8,18 @@ use mpl_auction_house::{
 use mpl_testing_utils::assert_error;
 use solana_program::instruction::InstructionError;
 use solana_program_test::BanksClientError;
+use solana_sdk::signer::keypair::Keypair;
 use solana_sdk::transaction::TransactionError;
+
+pub trait DirtyClone {
+    fn dirty_clone(&self) -> Self;
+}
+
+impl DirtyClone for Keypair {
+    fn dirty_clone(&self) -> Self {
+        Keypair::from_bytes(&self.to_bytes()).unwrap()
+    }
+}
 
 pub fn default_scopes() -> Vec<AuthorityScope> {
     vec![

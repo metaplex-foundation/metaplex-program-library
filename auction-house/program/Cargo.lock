@@ -2022,7 +2022,7 @@ dependencies = [
 
 [[package]]
 name = "mpl-auction-house"
-version = "1.3.5"
+version = "1.4.0"
 dependencies = [
  "anchor-client",
  "anchor-lang",
@@ -2030,7 +2030,10 @@ dependencies = [
  "arrayref",
  "env_logger",
  "mpl-testing-utils",
+ "mpl-token-auth-rules",
  "mpl-token-metadata",
+ "rmp-serde",
+ "serde",
  "serde_json",
  "shellexpand",
  "solana-program",
@@ -2064,9 +2067,9 @@ dependencies = [
 
 [[package]]
 name = "mpl-token-auth-rules"
-version = "1.0.0"
+version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a14e1ac5350734fd07f17d7eab733d27b7b45ca963642c565ec34ab015d9ceda"
+checksum = "a69803fbfbc4bb0327de86f49d2639692c7c60276cb87d6cced84bb8189f2000"
 dependencies = [
  "borsh",
  "mpl-token-metadata-context-derive",
@@ -2082,9 +2085,9 @@ dependencies = [
 
 [[package]]
 name = "mpl-token-metadata"
-version = "1.7.0"
+version = "1.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5accdfde5c18465c65bd664169845a185f8a00d973d5c15396fef858dd2e52d9"
+checksum = "c8831a402e72f24052d019a83d72b70c38673caaf198e6e345575a77f98166b1"
 dependencies = [
  "arrayref",
  "borsh",
@@ -2127,9 +2130,9 @@ dependencies = [
 
 [[package]]
 name = "mpl-utils"
-version = "0.0.6"
+version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d6195ce98b92f1d0ea06d0cc9b2392d81673e02b8fb063589926fa73ee6b071a"
+checksum = "7fc48e64c50dba956acb46eec86d6968ef0401ef37031426da479f1f2b592066"
 dependencies = [
  "arrayref",
  "borsh",

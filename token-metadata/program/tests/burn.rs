@@ -863,6 +863,88 @@ mod pnft {
 
         assert_custom_error!(err, MetadataError::DerivedKeyInvalid);
     }
+
+    #[tokio::test]
+    async fn owner_burn_token_record_must_match() {
+        // The token record must match the token.
+        let mut context = program_test().start_with_context().await;
+
+        let update_authority = context.payer.dirty_clone();
+        let owner = Keypair::new();
+        owner.airdrop(&mut context, 1_000_000).await.unwrap();
+
+        let mut da = DigitalAsset::new();
+        da.create_and_mint(
+            &mut context,
+            TokenStandard::ProgrammableNonFungible,
+            None,
+            None,
+            1,
+        )
+        .await
+        .unwrap();
+
+        // Create a second pNFT.
+        let mut da_other = DigitalAsset::new();
+        da_other
+            .create_and_mint(
+                &mut context,
+                TokenStandard::ProgrammableNonFungible,
+                None,
+                None,
+                1,
+            )
+            .await
+            .unwrap();
+
+        // Transfer to a new owner so the update authority is separate.
+        let args = TransferArgs::V1 {
+            authorization_data: None,
+            amount: 1,
+        };
+
+        da.transfer(TransferParams {
+            context: &mut context,
+            authority: &update_authority,
+            source_owner: &update_authority.pubkey(),
+            destination_owner: owner.pubkey(),
+            destination_token: None, // fn will create the ATA
+            payer: &update_authority,
+            authorization_rules: None,
+            args,
+        })
+        .await
+        .unwrap();
+
+        // Try to burn the wrong Token Record.
+        let args = BurnArgs::V1 { amount: 1 };
+
+        let mut builder = BurnBuilder::new();
+        builder
+            .authority(owner.pubkey())
+            .metadata(da.metadata)
+            .edition(da.edition.unwrap())
+            .mint(da.mint.pubkey())
+            .token(da.token.unwrap())
+            .token_record(da_other.token_record.unwrap());
+
+        let burn_ix = builder.build(args).unwrap().instruction();
+
+        let transaction = Transaction::new_signed_with_payer(
+            &[burn_ix],
+            Some(&context.payer.pubkey()),
+            &[&context.payer, &owner],
+            context.last_blockhash,
+        );
+
+        let err = context
+            .banks_client
+            .process_transaction(transaction)
+            .await
+            .unwrap_err();
+
+        assert_custom_error!(err, MetadataError::InvalidTokenRecord);
+    }
 }
 
 mod nft {
