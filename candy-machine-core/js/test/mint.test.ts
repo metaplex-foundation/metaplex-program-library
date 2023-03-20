@@ -6,7 +6,7 @@ import { CandyMachineData, ConfigLine } from '../src/generated';
 
 killStuckProcess();
 
-test('mint (authority)', async (t) => {
+test('mint: authority', async (t) => {
   const API = new InitTransactions();
   const { fstTxHandler, payerPair, connection } = await API.payer();
   const items = 10;
@@ -64,7 +64,7 @@ test('mint (authority)', async (t) => {
   await mintTransaction.assertSuccess(t);
 });
 
-test('mint (sequential)', async (t) => {
+test('mint: sequential', async (t) => {
   const API = new InitTransactions();
   const { fstTxHandler, payerPair, connection } = await API.payer();
   const items = 10;
@@ -128,7 +128,7 @@ test('mint (sequential)', async (t) => {
   await mintTransaction.assertError(t, /Candy machine is empty/i);
 });
 
-test('mint (random)', async (t) => {
+test('mint: random', async (t) => {
   const API = new InitTransactions();
   const { fstTxHandler, payerPair, connection } = await API.payer();
   const items = 10;
@@ -197,7 +197,7 @@ test('mint (random)', async (t) => {
   await mintTransaction.assertError(t, /Candy machine is empty/i);
 });
 
-test('mint (hidden settings)', async (t) => {
+test('mint: hidden settings', async (t) => {
   const API = new InitTransactions();
   const { fstTxHandler, payerPair, connection } = await API.payer();
   const items = 10;

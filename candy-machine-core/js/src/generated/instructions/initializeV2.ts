@@ -11,79 +11,92 @@ import { CandyMachineData, candyMachineDataBeet } from '../types/CandyMachineDat
 
 /**
  * @category Instructions
- * @category Initialize
+ * @category InitializeV2
  * @category generated
  */
-export type InitializeInstructionArgs = {
+export type InitializeV2InstructionArgs = {
   data: CandyMachineData;
+  tokenStandard: number;
 };
 /**
  * @category Instructions
- * @category Initialize
+ * @category InitializeV2
  * @category generated
  */
-export const initializeStruct = new beet.FixableBeetArgsStruct<
-  InitializeInstructionArgs & {
+export const initializeV2Struct = new beet.FixableBeetArgsStruct<
+  InitializeV2InstructionArgs & {
     instructionDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
     ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
     ['data', candyMachineDataBeet],
+    ['tokenStandard', beet.u8],
   ],
-  'InitializeInstructionArgs',
+  'InitializeV2InstructionArgs',
 );
 /**
- * Accounts required by the _initialize_ instruction
+ * Accounts required by the _initializeV2_ instruction
  *
  * @property [_writable_] candyMachine
  * @property [_writable_] authorityPda
  * @property [] authority
- * @property [**signer**] payer
- * @property [] collectionMetadata
+ * @property [_writable_, **signer**] payer
+ * @property [] ruleSet (optional)
+ * @property [_writable_] collectionMetadata
  * @property [] collectionMint
  * @property [] collectionMasterEdition
  * @property [_writable_, **signer**] collectionUpdateAuthority
- * @property [_writable_] collectionAuthorityRecord
+ * @property [_writable_] collectionDelegateRecord
  * @property [] tokenMetadataProgram
+ * @property [] sysvarInstructions
+ * @property [] authorizationRulesProgram (optional)
+ * @property [] authorizationRules (optional)
  * @category Instructions
- * @category Initialize
+ * @category InitializeV2
  * @category generated
  */
-export type InitializeInstructionAccounts = {
+export type InitializeV2InstructionAccounts = {
   candyMachine: web3.PublicKey;
   authorityPda: web3.PublicKey;
   authority: web3.PublicKey;
   payer: web3.PublicKey;
+  ruleSet?: web3.PublicKey;
   collectionMetadata: web3.PublicKey;
   collectionMint: web3.PublicKey;
   collectionMasterEdition: web3.PublicKey;
   collectionUpdateAuthority: web3.PublicKey;
-  collectionAuthorityRecord: web3.PublicKey;
+  collectionDelegateRecord: web3.PublicKey;
   tokenMetadataProgram: web3.PublicKey;
   systemProgram?: web3.PublicKey;
+  sysvarInstructions: web3.PublicKey;
+  authorizationRulesProgram?: web3.PublicKey;
+  authorizationRules?: web3.PublicKey;
   anchorRemainingAccounts?: web3.AccountMeta[];
 };
 
-export const initializeInstructionDiscriminator = [175, 175, 109, 31, 13, 152, 155, 237];
+export const initializeV2InstructionDiscriminator = [67, 153, 175, 39, 218, 16, 38, 32];
 
 /**
- * Creates a _Initialize_ instruction.
+ * Creates a _InitializeV2_ instruction.
+ *
+ * Optional accounts that are not provided default to the program ID since
+ * this was indicated in the IDL from which this instruction was generated.
  *
  * @param accounts that will be accessed while the instruction is processed
  * @param args to provide as instruction data to the program
  *
  * @category Instructions
- * @category Initialize
+ * @category InitializeV2
  * @category generated
  */
-export function createInitializeInstruction(
-  accounts: InitializeInstructionAccounts,
-  args: InitializeInstructionArgs,
+export function createInitializeV2Instruction(
+  accounts: InitializeV2InstructionAccounts,
+  args: InitializeV2InstructionArgs,
   programId = new web3.PublicKey('CndyV3LdqHUfDLmE5naZjVN8rBZz4tqhdefbAnjHG3JR'),
 ) {
-  const [data] = initializeStruct.serialize({
-    instructionDiscriminator: initializeInstructionDiscriminator,
+  const [data] = initializeV2Struct.serialize({
+    instructionDiscriminator: initializeV2InstructionDiscriminator,
     ...args,
   });
   const keys: web3.AccountMeta[] = [
@@ -104,12 +117,17 @@ export function createInitializeInstruction(
     },
     {
       pubkey: accounts.payer,
-      isWritable: false,
+      isWritable: true,
       isSigner: true,
     },
     {
-      pubkey: accounts.collectionMetadata,
+      pubkey: accounts.ruleSet ?? programId,
       isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.collectionMetadata,
+      isWritable: true,
       isSigner: false,
     },
     {
@@ -128,7 +146,7 @@ export function createInitializeInstruction(
       isSigner: true,
     },
     {
-      pubkey: accounts.collectionAuthorityRecord,
+      pubkey: accounts.collectionDelegateRecord,
       isWritable: true,
       isSigner: false,
     },
@@ -139,6 +157,21 @@ export function createInitializeInstruction(
     },
     {
       pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.sysvarInstructions,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.authorizationRulesProgram ?? programId,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.authorizationRules ?? programId,
       isWritable: false,
       isSigner: false,
     },

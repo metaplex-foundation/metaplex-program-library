@@ -4,6 +4,7 @@ target/
 **/.DS_Store
 .anchor/
 .crates/
+.amman/
 
 node_modules/
 **/*.rs.bk
@@ -32,4 +33,3 @@ yarn-error.log*
 
 test-programs/*
 *-keypair.json
-

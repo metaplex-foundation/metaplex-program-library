@@ -45,6 +45,7 @@ export const updateStruct = new beet.FixableBeetArgsStruct<
 export type UpdateInstructionAccounts = {
   candyMachine: web3.PublicKey;
   authority: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
 };
 
 export const updateInstructionDiscriminator = [219, 200, 88, 176, 158, 63, 253, 127];
@@ -80,6 +81,12 @@ export function createUpdateInstruction(
       isSigner: true,
     },
   ];
+
+  if (accounts.anchorRemainingAccounts != null) {
+    for (const acc of accounts.anchorRemainingAccounts) {
+      keys.push(acc);
+    }
+  }
 
   const ix = new web3.TransactionInstruction({
     programId,

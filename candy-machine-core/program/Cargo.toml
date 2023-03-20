@@ -1,6 +1,6 @@
 [package]
 name = "mpl-candy-machine-core"
-version = "0.1.4"
+version = "1.0.0"
 description = "NFT Candy Machine Core: programmatic and trustless NFT drops."
 authors = ["Metaplex Developers <dev@metaplex.com>"]
 repository = "https://github.com/metaplex-foundation/metaplex-program-library"
@@ -20,8 +20,9 @@ default = []
 [dependencies]
 anchor-lang = "0.26.0"
 arrayref = "0.3.6"
-mpl-token-metadata = { version = "1.8.4", features = ["no-entrypoint"] }
-solana-program = "1.14"
+mpl-token-auth-rules = { version = "1.2.0", features = ["no-entrypoint"] }
+mpl-token-metadata = { version = "1.9.0", features = ["no-entrypoint"] }
+solana-program = "~1.14.14"
 spl-associated-token-account = { version = "1.1.1", features = ["no-entrypoint"] }
 spl-token = { version = "3.5.0", features = ["no-entrypoint"] }
 

@@ -5,9 +5,10 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet';
 import * as web3 from '@solana/web3.js';
+import * as beet from '@metaplex-foundation/beet';
 import * as beetSolana from '@metaplex-foundation/beet-solana';
+import { AccountVersion, accountVersionBeet } from '../types/AccountVersion';
 import { CandyMachineData, candyMachineDataBeet } from '../types/CandyMachineData';
 
 /**
@@ -16,7 +17,9 @@ import { CandyMachineData, candyMachineDataBeet } from '../types/CandyMachineDat
  * @category generated
  */
 export type CandyMachineArgs = {
-  features: beet.bignum;
+  version: AccountVersion;
+  tokenStandard: number;
+  features: number[] /* size: 6 */;
   authority: web3.PublicKey;
   mintAuthority: web3.PublicKey;
   collectionMint: web3.PublicKey;
@@ -34,7 +37,9 @@ export const candyMachineDiscriminator = [51, 173, 177, 113, 25, 241, 109, 189];
  */
 export class CandyMachine implements CandyMachineArgs {
   private constructor(
-    readonly features: beet.bignum,
+    readonly version: AccountVersion,
+    readonly tokenStandard: number,
+    readonly features: number[] /* size: 6 */,
     readonly authority: web3.PublicKey,
     readonly mintAuthority: web3.PublicKey,
     readonly collectionMint: web3.PublicKey,
@@ -47,6 +52,8 @@ export class CandyMachine implements CandyMachineArgs {
    */
   static fromArgs(args: CandyMachineArgs) {
     return new CandyMachine(
+      args.version,
+      args.tokenStandard,
       args.features,
       args.authority,
       args.mintAuthority,
@@ -76,8 +83,9 @@ export class CandyMachine implements CandyMachineArgs {
   static async fromAccountAddress(
     connection: web3.Connection,
     address: web3.PublicKey,
+    commitmentOrConfig?: web3.Commitment | web3.GetAccountInfoConfig,
   ): Promise<CandyMachine> {
-    const accountInfo = await connection.getAccountInfo(address);
+    const accountInfo = await connection.getAccountInfo(address, commitmentOrConfig);
     if (accountInfo == null) {
       throw new Error(`Unable to find CandyMachine account at ${address}`);
     }
@@ -152,17 +160,9 @@ export class CandyMachine implements CandyMachineArgs {
    */
   pretty() {
     return {
-      features: (() => {
-        const x = <{ toNumber: () => number }>this.features;
-        if (typeof x.toNumber === 'function') {
-          try {
-            return x.toNumber();
-          } catch (_) {
-            return x;
-          }
-        }
-        return x;
-      })(),
+      version: 'AccountVersion.' + AccountVersion[this.version],
+      tokenStandard: this.tokenStandard,
+      features: this.features,
       authority: this.authority.toBase58(),
       mintAuthority: this.mintAuthority.toBase58(),
       collectionMint: this.collectionMint.toBase58(),
@@ -194,7 +194,9 @@ export const candyMachineBeet = new beet.FixableBeetStruct<
 >(
   [
     ['accountDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
-    ['features', beet.u64],
+    ['version', accountVersionBeet],
+    ['tokenStandard', beet.u8],
+    ['features', beet.uniformFixedSizeArray(beet.u8, 6)],
     ['authority', beetSolana.publicKey],
     ['mintAuthority', beetSolana.publicKey],
     ['collectionMint', beetSolana.publicKey],
