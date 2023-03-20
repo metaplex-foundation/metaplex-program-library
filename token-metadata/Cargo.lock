@@ -1859,23 +1859,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "metaplex-token-metadata-test-client"
-version = "0.1.0"
-dependencies = [
- "bincode",
- "borsh",
- "clap 2.34.0",
- "mpl-token-metadata 1.9.0",
- "solana-clap-utils",
- "solana-cli-config",
- "solana-client",
- "solana-program",
- "solana-sdk",
- "spl-associated-token-account",
- "spl-token",
-]
-
-[[package]]
 name = "mime"
 version = "0.3.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"

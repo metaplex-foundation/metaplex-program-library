@@ -1,8 +1,7 @@
 [workspace]
 members=[
   "macro",
-  "program",
-  "cli"
+  "program"
 ]
 
 [profile.release]
