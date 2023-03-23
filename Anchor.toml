@@ -1,3 +1,6 @@
+[features]
+seeds = true
+
 [registry]
 url = "https://anchor.projectserum.com"
 
