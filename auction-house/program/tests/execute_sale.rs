@@ -14,11 +14,11 @@ use utils::{
 
 use anchor_lang::{AccountDeserialize, InstructionData, ToAccountMetas};
 use mpl_auction_house::pda::find_auctioneer_pda;
-use mpl_token_metadata::state::Creator;
 use mpl_testing_utils::{
     solana::{airdrop, create_associated_token_account, transfer},
     utils::Metadata,
 };
+use mpl_token_metadata::state::Creator;
 use solana_sdk::{
     account::Account as SolanaAccount, commitment_config::CommitmentLevel, signer::Signer,
 };
