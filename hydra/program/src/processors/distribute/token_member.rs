@@ -16,15 +16,6 @@ pub struct DistributeTokenMember<'info> {
     #[account(mut)]
     /// CHECK: Optional Account
     pub member: UncheckedAccount<'info>,
-    #[
-    account(
-    mut,
-    constraint = membership_mint_token_account.delegate.is_none(),
-    constraint = membership_mint_token_account.close_authority.is_none(),
-    constraint = membership_mint_token_account.mint == membership_mint.key(),
-    constraint = membership_mint_token_account.owner == member.key()
-    )]
-    pub membership_mint_token_account: Account<'info, TokenAccount>,
     #[account(
     mut,
     seeds = [b"fanout-membership", fanout.key().as_ref(), member.key().as_ref()],
