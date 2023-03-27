@@ -64,7 +64,7 @@ pub const DISCRIMINATOR_INDEX: usize = 0;
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, Copy, FromPrimitive)]
 pub enum TokenStandard {
     NonFungible,             // This is a master edition
-    FungibleAsset,           // A token with metadata that can also have attrributes
+    FungibleAsset,           // A token with metadata that can also have attributes
     Fungible,                // A token with simple metadata
     NonFungibleEdition,      // This is a limited edition
     ProgrammableNonFungible, // NonFungible with programmable configuration
