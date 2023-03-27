@@ -812,7 +812,7 @@ async fn execute_sale_with_creators(metadata_creators: Vec<(Pubkey, u8)>) {
 
     for (creator, _) in &metadata_creators {
         // airdrop 0.1 sol to ensure rent-exempt minimum
-        airdrop(&mut context, &creator, 100_000_000).await.unwrap();
+        airdrop(&mut context, creator, 100_000_000).await.unwrap();
     }
     test_metadata
         .create(
