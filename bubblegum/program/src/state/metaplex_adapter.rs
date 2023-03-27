@@ -27,7 +27,7 @@ impl Creator {
 #[derive(AnchorSerialize, AnchorDeserialize, PartialEq, Eq, Debug, Clone)]
 pub enum TokenStandard {
     NonFungible,        // This is a master edition
-    FungibleAsset,      // A token with metadata that can also have attrributes
+    FungibleAsset,      // A token with metadata that can also have attributes
     Fungible,           // A token with simple metadata
     NonFungibleEdition, // This is a limited edition
 }
