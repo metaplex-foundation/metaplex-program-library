@@ -699,11 +699,8 @@ pub fn close_account<'a>(
         .checked_add(current_lamports)
         .ok_or(AuctionHouseError::NumericalOverflow)?;
 
-    sol_memset(
-        &mut *source_account.try_borrow_mut_data()?,
-        0,
-        account_data_size,
-    );
+    #[allow(clippy::explicit_auto_deref)]
+    sol_memset(*source_account.try_borrow_mut_data()?, 0, account_data_size);
 
     Ok(())
 }

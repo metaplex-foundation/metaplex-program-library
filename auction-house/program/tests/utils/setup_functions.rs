@@ -1554,7 +1554,7 @@ pub async fn create_sale_delegate_rule_set(
         .rule_set_pda(ruleset_addr)
         .payer(creator.pubkey())
         .build(CreateOrUpdateArgs::V1 {
-            serialized_rule_set: serialized_rule_set,
+            serialized_rule_set,
         })
         .unwrap()
         .instruction();

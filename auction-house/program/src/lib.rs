@@ -3,6 +3,8 @@
 //!
 //! Full docs can be found [here](https://docs.metaplex.com/auction-house/definition).
 
+#![allow(clippy::result_large_err)]
+
 pub mod auctioneer;
 pub mod bid;
 pub mod cancel;
