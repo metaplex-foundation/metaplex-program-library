@@ -46,13 +46,13 @@ Programmable Non-Fungibles (`pNFT`) are represented as a new asset class on the 
 pub enum TokenStandard {
     /// This is a master edition.
     NonFungible,
-    /// A token with metadata that can also have attrributes.
+    /// A token with metadata that can also have attributes.
     FungibleAsset,
     /// A token with simple metadata.
     Fungible,
     /// This is a limited edition.
     NonFungibleEdition,
-    /// [NEW] An NFT with customizale behaviour for lifecycle events
+    /// [NEW] An NFT with customizable behaviour for lifecycle events
     /// (e.g. transfers, updates, etc.).
     ProgrammableNonFungible,
 }
