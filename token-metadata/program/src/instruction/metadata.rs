@@ -72,8 +72,8 @@ pub enum TransferArgs {
 /// Struct representing the values to be updated for an `update` instructions.
 ///
 /// Values that are set to 'None' are not changed; any value set to `Some(_)` will
-/// have its value updated. There are properties that have three valid states, which
-/// allow the value to remaing the same, to be cleared or to set a new value.
+/// have its value updated. There are properties that have three valid states, and
+/// use a "toggle" type that allows the value to be set, cleared, or remain the same.
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
