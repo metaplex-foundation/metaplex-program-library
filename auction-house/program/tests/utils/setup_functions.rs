@@ -1020,6 +1020,110 @@ pub fn sell(
     )
 }
 
+pub fn sell_multiple_signers(
+    context: &mut ProgramTestContext,
+    ahkey: &Pubkey,
+    ah: &AuctionHouse,
+    test_metadata: &Metadata,
+    signer: &Keypair,
+    authority: Keypair,
+    sale_price: u64,
+    token_size: u64,
+) -> (
+    (
+        mpl_auction_house::accounts::Sell,
+        mpl_auction_house::accounts::PrintListingReceipt,
+    ),
+    Transaction,
+) {
+    let program_id = mpl_auction_house::id();
+
+    let token = get_associated_token_address(&signer.pubkey(), &test_metadata.mint.pubkey());
+
+    let (seller_trade_state, sts_bump) = find_trade_state_address(
+        &signer.pubkey(),
+        ahkey,
+        &token,
+        &ah.treasury_mint,
+        &test_metadata.mint.pubkey(),
+        sale_price,
+        token_size,
+    );
+    let (listing_receipt, receipt_bump) = find_listing_receipt_address(&seller_trade_state);
+
+    let (free_seller_trade_state, free_sts_bump) = find_trade_state_address(
+        &signer.pubkey(),
+        ahkey,
+        &token,
+        &ah.treasury_mint,
+        &test_metadata.mint.pubkey(),
+        0,
+        token_size,
+    );
+    let (pas, pas_bump) = find_program_as_signer_address();
+
+    let accounts = mpl_auction_house::accounts::Sell {
+        wallet: signer.pubkey(),
+        token_account: token,
+        metadata: test_metadata.pubkey,
+        authority: ah.authority,
+        auction_house: *ahkey,
+        auction_house_fee_account: ah.auction_house_fee_account,
+        seller_trade_state,
+        free_seller_trade_state,
+        token_program: spl_token::id(),
+        system_program: solana_program::system_program::id(),
+        program_as_signer: pas,
+        rent: sysvar::rent::id(),
+    };
+    let mut account_metas = accounts.to_account_metas(None);
+
+    for account in account_metas.iter_mut() {
+        if account.pubkey == ah.authority {
+            account.is_signer = true;
+        }
+    }
+
+    let data = mpl_auction_house::instruction::Sell {
+        trade_state_bump: sts_bump,
+        free_trade_state_bump: free_sts_bump,
+        program_as_signer_bump: pas_bump,
+        token_size,
+        buyer_price: sale_price,
+    }
+    .data();
+
+    let instruction = Instruction {
+        program_id,
+        data,
+        accounts: account_metas,
+    };
+
+    let listing_receipt_accounts = mpl_auction_house::accounts::PrintListingReceipt {
+        receipt: listing_receipt,
+        bookkeeper: signer.pubkey(),
+        system_program: system_program::id(),
+        rent: sysvar::rent::id(),
+        instruction: sysvar::instructions::id(),
+    };
+
+    let print_receipt_instruction = Instruction {
+        program_id,
+        data: mpl_auction_house::instruction::PrintListingReceipt { receipt_bump }.data(),
+        accounts: listing_receipt_accounts.to_account_metas(None),
+    };
+
+    (
+        (accounts, listing_receipt_accounts),
+        Transaction::new_signed_with_payer(
+            &[instruction, print_receipt_instruction],
+            Some(&signer.pubkey()),
+            &[signer, &authority],
+            context.last_blockhash,
+        ),
+    )
+}
+
 pub fn sell_pnft(
     context: &mut ProgramTestContext,
     ahkey: &Pubkey,
@@ -1479,8 +1583,10 @@ pub async fn existing_auction_house_test_context(
     let t_mint_key = spl_token::native_mint::id();
     let tdw_ata = twd_key;
     let seller_fee_basis_points: u16 = 100;
+
     let authority = Keypair::new();
     airdrop(context, &authority.pubkey(), 10_000_000_000).await?;
+
     // Derive Auction House Key
     let (auction_house_address, bump) =
         find_auction_house_address(&authority.pubkey(), &t_mint_key);
@@ -1489,6 +1595,7 @@ pub async fn existing_auction_house_test_context(
     // Derive Auction House Treasury Key
     let (auction_house_treasury_key, treasury_bump) =
         find_auction_house_treasury_address(&auction_house_address);
+
     let auction_house = create_auction_house(
         context,
         &authority,
