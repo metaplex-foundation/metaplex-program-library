@@ -164,7 +164,10 @@ pub(crate) fn unverify_collection_v1(program_id: &Pubkey, ctx: Context<Unverify>
         // or an update delegate for the item.  This call fails if no valid authority is present.
         auth_request.mint = &metadata.mint;
         auth_request.update_authority = &metadata.update_authority;
-        auth_request.metadata_delegate_roles = vec![MetadataDelegateRole::Update];
+        auth_request.metadata_delegate_roles = vec![
+            MetadataDelegateRole::Collection,
+            MetadataDelegateRole::CollectionItem,
+        ];
         AuthorityType::get_authority_type(auth_request)
     } else {
         // If the parent is not burned, we need to ensure the collection metadata account is owned

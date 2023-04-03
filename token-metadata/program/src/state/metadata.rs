@@ -91,17 +91,49 @@ impl Metadata {
         authority_type: AuthorityType,
         delegate_role: Option<MetadataDelegateRole>,
     ) -> ProgramResult {
-        let UpdateArgs::V1 {
+        // Destructure args.
+        let (
+            new_update_authority,
             data,
             primary_sale_happened,
             is_mutable,
             collection,
-            uses,
-            new_update_authority,
-            rule_set,
             collection_details,
-            ..
-        } = args;
+            uses,
+            rule_set,
+        ) = match args {
+            UpdateArgs::V1 {
+                new_update_authority,
+                data,
+                primary_sale_happened,
+                is_mutable,
+                collection,
+                collection_details,
+                uses,
+                rule_set,
+                ..
+            }
+            | UpdateArgs::V2 {
+                new_update_authority,
+                data,
+                primary_sale_happened,
+                is_mutable,
+                collection,
+                collection_details,
+                uses,
+                rule_set,
+                ..
+            } => (
+                new_update_authority,
+                data,
+                primary_sale_happened,
+                is_mutable,
+                collection,
+                collection_details,
+                uses,
+                rule_set,
+            ),
+        };
 
         // updates the token standard only if the current value is None
         let token_standard = match self.token_standard {
@@ -116,7 +148,9 @@ impl Metadata {
             }
         };
 
-        if matches!(authority_type, AuthorityType::Metadata) {
+        if matches!(authority_type, AuthorityType::Metadata)
+            || matches!(delegate_role, Some(MetadataDelegateRole::Data))
+        {
             if let Some(data) = data {
                 if !self.is_mutable {
                     return Err(MetadataError::DataIsImmutable.into());
@@ -131,7 +165,14 @@ impl Metadata {
                 )?;
                 self.data = data;
             }
+        }
 
+        if matches!(authority_type, AuthorityType::Metadata)
+            || matches!(
+                delegate_role,
+                Some(MetadataDelegateRole::Collection | MetadataDelegateRole::CollectionItem)
+            )
+        {
             // if the Collection data is 'Set', only allow updating if it is unverified
             // or if it exactly matches the existing collection info; if the Collection data
             // is 'Clear', then only set to 'None' if it is unverified.
@@ -153,7 +194,9 @@ impl Metadata {
                 }
                 CollectionToggle::None => { /* nothing to do */ }
             }
+        }
 
+        if matches!(authority_type, AuthorityType::Metadata) {
             if uses.is_some() {
                 let uses_option = uses.to_option();
                 // If already None leave it as None.
@@ -161,6 +204,19 @@ impl Metadata {
                 self.uses = uses_option;
             }
 
+            if let CollectionDetailsToggle::Set(collection_details) = collection_details {
+                // only unsized collections can have the size set, and only once.
+                if self.collection_details.is_some() {
+                    return Err(MetadataError::SizedCollection.into());
+                }
+
+                self.collection_details = Some(collection_details);
+            }
+        }
+
+        if matches!(authority_type, AuthorityType::Metadata)
+            || matches!(delegate_role, Some(MetadataDelegateRole::Authority))
+        {
             if let Some(authority) = new_update_authority {
                 self.update_authority = authority;
             }
@@ -182,21 +238,15 @@ impl Metadata {
                     return Err(MetadataError::IsMutableCanOnlyBeFlippedToFalse.into());
                 }
             }
-
-            if let CollectionDetailsToggle::Set(collection_details) = collection_details {
-                // only unsized collections can have the size set, and only once.
-                if self.collection_details.is_some() {
-                    return Err(MetadataError::SizedCollection.into());
-                }
-
-                self.collection_details = Some(collection_details);
-            }
         }
 
         if matches!(authority_type, AuthorityType::Metadata)
             || matches!(
                 delegate_role,
-                Some(MetadataDelegateRole::ProgrammableConfig)
+                Some(
+                    MetadataDelegateRole::ProgrammableConfig
+                        | MetadataDelegateRole::ProgrammableConfigItem
+                )
             )
         {
             // if the rule_set data is either 'Set' or 'Clear', only allow updating if the

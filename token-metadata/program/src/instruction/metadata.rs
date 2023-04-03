@@ -15,7 +15,7 @@ use crate::{
     processor::AuthorizationData,
     state::{
         AssetData, Collection, CollectionDetails, Creator, Data, DataV2, MigrationType,
-        PrintSupply, Uses,
+        PrintSupply, TokenStandard, Uses,
     },
 };
 
@@ -100,20 +100,45 @@ pub enum UpdateArgs {
         /// Required authorization data to validate the request.
         authorization_data: Option<AuthorizationData>,
     },
+    V2 {
+        /// The new update authority.
+        new_update_authority: Option<Pubkey>,
+        /// The metadata details.
+        data: Option<Data>,
+        /// Indicates whether the primary sale has happened or not (once set to `true`, it cannot be
+        /// changed back).
+        primary_sale_happened: Option<bool>,
+        // Indicates Whether the data struct is mutable or not (once set to `true`, it cannot be
+        /// changed back).
+        is_mutable: Option<bool>,
+        /// Collection information.
+        collection: CollectionToggle,
+        /// Additional details of the collection.
+        collection_details: CollectionDetailsToggle,
+        /// Uses information.
+        uses: UsesToggle,
+        // Programmable rule set configuration (only applicable to `Programmable` asset types).
+        rule_set: RuleSetToggle,
+        /// Token standard.
+        token_standard: Option<TokenStandard>,
+        /// Required authorization data to validate the request.
+        authorization_data: Option<AuthorizationData>,
+    },
 }
 
 impl Default for UpdateArgs {
     fn default() -> Self {
-        Self::V1 {
-            authorization_data: None,
+        Self::V2 {
             new_update_authority: None,
             data: None,
             primary_sale_happened: None,
             is_mutable: None,
             collection: CollectionToggle::None,
-            uses: UsesToggle::None,
             collection_details: CollectionDetailsToggle::None,
+            uses: UsesToggle::None,
             rule_set: RuleSetToggle::None,
+            token_standard: None,
+            authorization_data: None,
         }
     }
 }
