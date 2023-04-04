@@ -587,6 +587,6 @@ mod delegate {
 
         // asserts
 
-        assert_custom_error_ix!(1, error, RuleSetError::ProgramOwnedListCheckFailed);
+        assert_custom_error_ix!(1, error, RuleSetError::DataIsEmpty);
     }
 }

@@ -125,7 +125,6 @@ pub fn delegate<'a>(
         DelegateArgs::DataV1 { authorization_data } => {
             Some((MetadataDelegateRole::Data, authorization_data))
         }
-
         DelegateArgs::CollectionV1 { authorization_data } => {
             Some((MetadataDelegateRole::Collection, authorization_data))
         }
