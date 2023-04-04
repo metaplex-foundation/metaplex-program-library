@@ -2,6 +2,7 @@
 pub mod utils;
 
 use mpl_token_metadata::{
+    get_update_args_fields,
     instruction::{builders::UpdateBuilder, InstructionBuilder},
     state::{MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH},
     utils::puffed_out_string,
@@ -67,10 +68,8 @@ mod update {
         };
 
         let mut update_args = UpdateArgs::default();
-        let UpdateArgs::V1 {
-            data: current_data, ..
-        } = &mut update_args;
-        *current_data = Some(data);
+        let current_data = get_update_args_fields!(&mut update_args, data);
+        *current_data.0 = Some(data);
 
         let mut builder = UpdateBuilder::new();
         builder
@@ -139,9 +138,10 @@ mod update {
         }
 
         let mut update_args = UpdateArgs::default();
-        let UpdateArgs::V1 { rule_set, .. } = &mut update_args;
+        let rule_set = get_update_args_fields!(&mut update_args, rule_set);
+
         // remove the rule set
-        *rule_set = RuleSetToggle::Clear;
+        *rule_set.0 = RuleSetToggle::Clear;
 
         let mut builder = UpdateBuilder::new();
         builder
@@ -213,8 +213,8 @@ mod update {
         }
 
         let mut update_args = UpdateArgs::default();
-        let UpdateArgs::V1 { rule_set, .. } = &mut update_args;
-        *rule_set = RuleSetToggle::Set(invalid_rule_set);
+        let rule_set = get_update_args_fields!(&mut update_args, rule_set);
+        *rule_set.0 = RuleSetToggle::Set(invalid_rule_set);
 
         let mut builder = UpdateBuilder::new();
         builder
@@ -285,8 +285,8 @@ mod update {
 
         // Finally, try to update with the valid rule set, and it should succeed.
         let mut update_args = UpdateArgs::default();
-        let UpdateArgs::V1 { rule_set, .. } = &mut update_args;
-        *rule_set = RuleSetToggle::Set(authorization_rules);
+        let rule_set = get_update_args_fields!(&mut update_args, rule_set);
+        *rule_set.0 = RuleSetToggle::Set(authorization_rules);
 
         let mut builder = UpdateBuilder::new();
         builder
@@ -382,9 +382,10 @@ mod update {
 
         // Try to clear the rule set.
         let mut update_args = UpdateArgs::default();
-        let UpdateArgs::V1 { rule_set, .. } = &mut update_args;
+        let rule_set = get_update_args_fields!(&mut update_args, rule_set);
+
         // remove the rule set
-        *rule_set = RuleSetToggle::Clear;
+        *rule_set.0 = RuleSetToggle::Clear;
 
         let mut builder = UpdateBuilder::new();
         builder
@@ -418,11 +419,9 @@ mod update {
 
         // Try to update the rule set.
         let mut update_args = UpdateArgs::default();
-        let UpdateArgs::V1 {
-            rule_set,
-            authorization_data,
-            ..
-        } = &mut update_args;
+        let (rule_set, authorization_data) =
+            get_update_args_fields!(&mut update_args, rule_set, authorization_data);
+
         // update the rule set
         *rule_set = RuleSetToggle::Set(new_auth_rules);
         *authorization_data = Some(new_auth_data);
@@ -500,10 +499,8 @@ mod update {
         };
 
         let mut update_args = UpdateArgs::default();
-        let UpdateArgs::V1 {
-            data: current_data, ..
-        } = &mut update_args;
-        *current_data = Some(data);
+        let current_data = get_update_args_fields!(&mut update_args, data);
+        *current_data.0 = Some(data);
 
         let err = da
             .update(context, update_authority.dirty_clone(), update_args)
@@ -558,10 +555,8 @@ mod update {
         };
 
         let mut update_args = UpdateArgs::default();
-        let UpdateArgs::V1 {
-            data: current_data, ..
-        } = &mut update_args;
-        *current_data = Some(data);
+        let current_data = get_update_args_fields!(&mut update_args, data);
+        *current_data.0 = Some(data);
 
         da.update(context, update_authority.dirty_clone(), update_args)
             .await
@@ -582,10 +577,8 @@ mod update {
         };
 
         let mut update_args = UpdateArgs::default();
-        let UpdateArgs::V1 {
-            data: current_data, ..
-        } = &mut update_args;
-        *current_data = Some(data);
+        let current_data = get_update_args_fields!(&mut update_args, data);
+        *current_data.0 = Some(data);
 
         da.update(context, update_authority.dirty_clone(), update_args)
             .await

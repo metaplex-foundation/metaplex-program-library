@@ -143,6 +143,16 @@ impl Default for UpdateArgs {
     }
 }
 
+#[macro_export]
+macro_rules! get_update_args_fields {
+    ($args:expr, $($field:ident),+) => {
+        match $args {
+            UpdateArgs::V1 { $($field,)+ .. } => ($($field,)+),
+            UpdateArgs::V2 { $($field,)+ .. } => ($($field,)+),
+        }
+    };
+}
+
 //-- Toggle implementations
 
 #[repr(C)]

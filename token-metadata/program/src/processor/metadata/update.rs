@@ -10,6 +10,7 @@ use spl_token::state::Account;
 use crate::{
     assertions::{assert_owned_by, programmable::assert_valid_authorization},
     error::MetadataError,
+    get_update_args_fields,
     instruction::{Context, MetadataDelegateRole, Update, UpdateArgs},
     pda::{EDITION, PREFIX},
     state::{
@@ -167,18 +168,27 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
         ..Default::default()
     })?;
 
+    // Check if caller passed in a desired token standard.
+    let desired_token_standard = match args {
+        UpdateArgs::V1 { .. } => None,
+        UpdateArgs::V2 { token_standard, .. } => token_standard,
+    };
+
+    // Validate that authority has permission to update the fields that have been specified in the
+    // update args.
+    validate_update(
+        &args,
+        &authority_type,
+        metadata_delegate_role,
+        desired_token_standard,
+    )?;
+
     // Find existing token standard from metadata or infer it.
     let existing_or_inferred_token_standard = if let Some(token_standard) = metadata.token_standard
     {
         token_standard
     } else {
         check_token_standard(ctx.accounts.mint_info, ctx.accounts.edition_info)?
-    };
-
-    // Check if caller passed in a desired token standard.
-    let desired_token_standard = match args {
-        UpdateArgs::V1 { .. } => None,
-        UpdateArgs::V2 { token_standard, .. } => token_standard,
     };
 
     // If there is a desired token standard, use it if it passes the check.  If there is not a
@@ -208,10 +218,6 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
         }
     }
 
-    // Validate that authority has permission to update the fields that have been specified in the
-    // update args.
-    validate_update(&args, &authority_type, metadata_delegate_role)?;
-
     // If we reach here without errors we have validated that the authority is allowed to
     // perform an update.
     metadata.update_v1(
@@ -233,6 +239,7 @@ fn validate_update(
     args: &UpdateArgs,
     authority_type: &AuthorityType,
     metadata_delegate_role: Option<MetadataDelegateRole>,
+    desired_token_standard: Option<TokenStandard>,
 ) -> ProgramResult {
     // validate the authority type
     match authority_type {
@@ -264,52 +271,17 @@ fn validate_update(
         collection_details,
         uses,
         rule_set,
-        token_standard,
-    ) = match args {
-        UpdateArgs::V1 {
-            new_update_authority,
-            data,
-            primary_sale_happened,
-            is_mutable,
-            collection,
-            collection_details,
-            uses,
-            rule_set,
-            ..
-        } => (
-            new_update_authority,
-            data,
-            primary_sale_happened,
-            is_mutable,
-            collection,
-            collection_details,
-            uses,
-            rule_set,
-            &None,
-        ),
-        UpdateArgs::V2 {
-            new_update_authority,
-            data,
-            primary_sale_happened,
-            is_mutable,
-            collection,
-            collection_details,
-            uses,
-            rule_set,
-            token_standard,
-            ..
-        } => (
-            new_update_authority,
-            data,
-            primary_sale_happened,
-            is_mutable,
-            collection,
-            collection_details,
-            uses,
-            rule_set,
-            token_standard,
-        ),
-    };
+    ) = get_update_args_fields!(
+        args,
+        new_update_authority,
+        data,
+        primary_sale_happened,
+        is_mutable,
+        collection,
+        collection_details,
+        uses,
+        rule_set
+    );
 
     // validate the delegate role: this consist in checking that
     // the delegate is only updating fields that it has access to
@@ -340,7 +312,7 @@ fn validate_update(
                     || collection_details.is_some()
                     || uses.is_some()
                     || rule_set.is_some()
-                    || token_standard.is_some()
+                    || desired_token_standard.is_some()
                 {
                     return Err(MetadataError::InvalidUpdateArgs.into());
                 }
@@ -356,7 +328,7 @@ fn validate_update(
                     || collection_details.is_some()
                     || uses.is_some()
                     || rule_set.is_some()
-                    || token_standard.is_some()
+                    || desired_token_standard.is_some()
                 {
                     return Err(MetadataError::InvalidUpdateArgs.into());
                 }
@@ -372,7 +344,7 @@ fn validate_update(
                     || collection.is_some()
                     || collection_details.is_some()
                     || uses.is_some()
-                    || token_standard.is_some()
+                    || desired_token_standard.is_some()
                 {
                     return Err(MetadataError::InvalidUpdateArgs.into());
                 }

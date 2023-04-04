@@ -4,6 +4,7 @@ use crate::{
         collection::assert_collection_update_is_valid, metadata::assert_data_valid,
         uses::assert_valid_use,
     },
+    get_update_args_fields,
     instruction::{
         CollectionDetailsToggle, CollectionToggle, MetadataDelegateRole, RuleSetToggle, UpdateArgs,
     },
@@ -101,39 +102,17 @@ impl Metadata {
             collection_details,
             uses,
             rule_set,
-        ) = match args {
-            UpdateArgs::V1 {
-                new_update_authority,
-                data,
-                primary_sale_happened,
-                is_mutable,
-                collection,
-                collection_details,
-                uses,
-                rule_set,
-                ..
-            }
-            | UpdateArgs::V2 {
-                new_update_authority,
-                data,
-                primary_sale_happened,
-                is_mutable,
-                collection,
-                collection_details,
-                uses,
-                rule_set,
-                ..
-            } => (
-                new_update_authority,
-                data,
-                primary_sale_happened,
-                is_mutable,
-                collection,
-                collection_details,
-                uses,
-                rule_set,
-            ),
-        };
+        ) = get_update_args_fields!(
+            args,
+            new_update_authority,
+            data,
+            primary_sale_happened,
+            is_mutable,
+            collection,
+            collection_details,
+            uses,
+            rule_set
+        );
 
         // updates the token standard only if the current value is None
         let token_standard = match self.token_standard {
