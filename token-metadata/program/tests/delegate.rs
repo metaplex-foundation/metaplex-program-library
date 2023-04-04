@@ -270,8 +270,11 @@ mod delegate {
             assert_eq!(token_account.delegate, COption::Some(user_pubkey));
             assert_eq!(token_account.delegated_amount, 1);
 
-            // Utilty Delegate should also have the Close Authority so it can burn.
-            assert_eq!(token_account.close_authority, COption::Some(user_pubkey));
+            // Close Authority should be set to the asset's Master Edition key.
+            assert_eq!(
+                token_account.close_authority,
+                COption::Some(asset.edition.unwrap())
+            );
         } else {
             panic!("Missing token account");
         }

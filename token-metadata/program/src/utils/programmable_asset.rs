@@ -5,12 +5,16 @@ use mpl_token_auth_rules::{
 use mpl_utils::{create_or_allocate_account_raw, token::TokenTransferParams};
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, msg, program::invoke_signed,
-    program_error::ProgramError, pubkey::Pubkey,
+    program_error::ProgramError, program_option::COption, pubkey::Pubkey,
 };
-use spl_token::instruction::{freeze_account, thaw_account};
+use spl_token::{
+    instruction::{freeze_account, thaw_account, AuthorityType as SplAuthorityType},
+    state::Account,
+};
 
 use crate::{
     assertions::{assert_derivation, programmable::assert_valid_authorization},
+    edition_seeds,
     error::MetadataError,
     pda::{EDITION, PREFIX},
     processor::{AuthorizationData, TransferScenario},
@@ -329,6 +333,55 @@ pub fn frozen_transfer<'a, 'b>(
         master_edition_info.clone(),
         token_program_info.clone(),
     )?;
+
+    Ok(())
+}
+
+pub(crate) struct ClearCloseAuthorityParams<'a> {
+    pub token: Account,
+    pub mint_info: &'a AccountInfo<'a>,
+    pub token_info: &'a AccountInfo<'a>,
+    pub master_edition_info: &'a AccountInfo<'a>,
+    pub authority_info: &'a AccountInfo<'a>,
+    pub spl_token_program_info: &'a AccountInfo<'a>,
+}
+
+pub(crate) fn clear_close_authority(params: ClearCloseAuthorityParams) -> ProgramResult {
+    let ClearCloseAuthorityParams {
+        token,
+        mint_info,
+        token_info,
+        master_edition_info,
+        authority_info,
+        spl_token_program_info,
+    } = params;
+
+    // If there's an existing close authority that is not the metadata account,
+    // it willl need to be revoked by the original UtilityDelegate.
+    if let COption::Some(close_authority) = token.close_authority {
+        msg!("Existing close authority: {:?}", close_authority);
+        msg!("Master edition: {:?}", master_edition_info.key);
+        if &close_authority != master_edition_info.key {
+            return Err(MetadataError::InvalidCloseAuthority.into());
+        }
+        msg!("Clearing close authority");
+        let seeds = edition_seeds!(mint_info.key);
+
+        invoke_signed(
+            &spl_token::instruction::set_authority(
+                spl_token_program_info.key,
+                token_info.key,
+                None,
+                SplAuthorityType::CloseAccount,
+                authority_info.key,
+                &[],
+            )?,
+            &[token_info.clone(), authority_info.clone()],
+            &[seeds.as_slice()],
+        )?;
+    } else {
+        msg!("No close authority");
+    }
 
     Ok(())
 }

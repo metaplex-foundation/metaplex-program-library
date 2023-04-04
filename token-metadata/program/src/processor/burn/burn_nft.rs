@@ -99,6 +99,6 @@ pub fn process_burn_nft<'a>(program_id: &Pubkey, accounts: &'a [AccountInfo<'a>]
         remaining_accounts: vec![],
     };
 
-    let args = BurnNonFungibleArgs { metadata };
+    let args = BurnNonFungibleArgs { metadata, token };
     burn_nonfungible(&context, args)
 }

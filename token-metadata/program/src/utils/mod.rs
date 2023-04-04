@@ -288,3 +288,83 @@ mod tests {
         assert_eq!(metadata, expected_metadata);
     }
 }
+
+#[macro_export]
+macro_rules! unwrap_or_error(
+    ($option:expr, $err:expr) => {
+        match $option {
+            Ok(val) => val,
+            Err(_) => return Err($err),
+        }
+    };
+);
+
+#[macro_export]
+macro_rules! set_close_authority {
+    ($role:expr, $token:expr, $ctx:expr) => {
+        if matches!($role, TokenDelegateRole::Utility) {
+            // If there's an existing close authority that is not the metadata account,
+            // it willl need to be revoked by the original UtilityDelegate.
+            if let COption::Some(close_authority) = $token.close_authority {
+                if &close_authority != $ctx.accounts.metadata_info.key {
+                    return Err(MetadataError::InvalidCloseAuthority.into());
+                }
+            } else {
+                let master_edition_info = $ctx
+                    .accounts
+                    .master_edition_info
+                    .ok_or(MetadataError::MissingEditionAccount)?;
+
+                invoke(
+                    &spl_token::instruction::set_authority(
+                        $ctx.accounts.spl_token_program_info.unwrap().key,
+                        $ctx.accounts.token_info.unwrap().key,
+                        Some(master_edition_info.key),
+                        SplAuthorityType::CloseAccount,
+                        $ctx.accounts.authority_info.key,
+                        &[],
+                    )?,
+                    &[
+                        $ctx.accounts.token_info.unwrap().clone(),
+                        $ctx.accounts.delegate_info.clone(),
+                        $ctx.accounts.authority_info.clone(),
+                    ],
+                )?;
+            }
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! clear_close_authority {
+    ($role:expr, $token:expr, $ctx:expr) => {
+        if matches!($role, TokenDelegateRole::Utility) {
+            // If there's an existing close authority that is not the metadata account,
+            // it willl need to be revoked by the original UtilityDelegate.
+            if let COption::Some(close_authority) = $token.close_authority {
+                if &close_authority != $ctx.accounts.metadata_info.key {
+                    return Err(MetadataError::InvalidCloseAuthority.into());
+                }
+            } else {
+                let seeds = edition_seeds!($ctx.accounts.mint_info.key);
+
+                invoke_signed(
+                    &spl_token::instruction::set_authority(
+                        $ctx.accounts.spl_token_program_info.unwrap().key,
+                        $ctx.accounts.token_info.unwrap().key,
+                        None,
+                        SplAuthorityType::CloseAccount,
+                        $ctx.accounts.authority_info.key,
+                        &[],
+                    )?,
+                    &[
+                        $ctx.accounts.token_info.unwrap().clone(),
+                        $ctx.accounts.delegate_info.clone(),
+                        $ctx.accounts.authority_info.clone(),
+                    ],
+                    &[seeds.as_slice()],
+                )?;
+            }
+        }
+    };
+}

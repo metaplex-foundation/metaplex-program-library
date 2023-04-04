@@ -1,14 +1,20 @@
 use mpl_utils::{assert_signer, close_account_raw, cmp_pubkeys};
 use solana_program::{
-    account_info::AccountInfo, entrypoint::ProgramResult, program::invoke, program_option::COption,
-    program_pack::Pack, pubkey::Pubkey, system_program, sysvar,
+    account_info::AccountInfo,
+    entrypoint::ProgramResult,
+    program::{invoke, invoke_signed},
+    program_option::COption,
+    program_pack::Pack,
+    pubkey::Pubkey,
+    system_program, sysvar,
 };
-use spl_token::state::Account;
+use spl_token::{instruction::AuthorityType as SplAuthorityType, state::Account};
 
 use crate::{
     assertions::{
         assert_keys_equal, assert_owned_by, metadata::assert_update_authority_is_correct,
     },
+    clear_close_authority, edition_seeds,
     error::MetadataError,
     instruction::{Context, MetadataDelegateRole, Revoke, RevokeArgs},
     pda::{find_metadata_delegate_record_account, find_token_record_account},
@@ -204,6 +210,46 @@ fn revoke_persistent_delegate_v1(
     } else {
         return Err(MetadataError::DelegateNotFound.into());
     }
+
+    clear_close_authority!(role, token, ctx);
+
+    // if matches!(role, TokenDelegateRole::Utility) {
+    //     // If there's an existing close authority that is not the master edition account,
+    //     // it willl need to be revoked by the original UtilityDelegate.
+    //     if let COption::Some(close_authority) = token.close_authority {
+    //         if &close_authority != ctx.accounts.metadata_info.key {
+    //             return Err(MetadataError::InvalidCloseAuthority.into());
+    //         } else {
+    //             let master_edition_info = ctx
+    //                 .accounts
+    //                 .master_edition_info
+    //                 .ok_or(MetadataError::MissingEditionAccount)?;
+
+    //             // Clear the close authority using the Master Edition PDA as the signer.
+    //             let ix = spl_token::instruction::set_authority(
+    //                 spl_token_program_info.key,
+    //                 token_info.key,
+    //                 None,
+    //                 spl_token::instruction::AuthorityType::CloseAccount,
+    //                 master_edition_info.key,
+    //                 &[],
+    //             )
+    //             .unwrap();
+
+    //             let seeds = edition_seeds!(ctx.accounts.mint_info.key);
+
+    //             invoke_signed(
+    //                 &ix,
+    //                 &[
+    //                     token_info.clone(),
+    //                     ctx.accounts.metadata_info.clone(),
+    //                     spl_token_program_info.clone(),
+    //                 ],
+    //                 &[seeds.as_slice()],
+    //             )?;
+    //         }
+    //     }
+    // }
 
     // process the revoke
 

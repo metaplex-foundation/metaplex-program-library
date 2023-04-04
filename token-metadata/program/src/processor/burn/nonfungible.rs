@@ -1,5 +1,3 @@
-use crate::utils::decrement_collection_size;
-
 use super::*;
 
 pub(crate) struct BurnNonFungibleArgs {
@@ -71,14 +69,14 @@ pub(crate) fn burn_nonfungible(ctx: &Context<Burn>, args: BurnNonFungibleArgs) -
     };
     spl_token_burn(params)?;
 
-    let params = TokenCloseParams {
-        token_program: ctx.accounts.spl_token_program_info.clone(),
+    let close_params = TokenCloseParams {
         account: ctx.accounts.token_info.clone(),
         destination: ctx.accounts.authority_info.clone(),
         owner: ctx.accounts.authority_info.clone(),
         authority_signer_seeds: None,
+        token_program: ctx.accounts.spl_token_program_info.clone(),
     };
-    spl_token_close(params)?;
+    mpl_utils::token::spl_token_close(close_params).unwrap();
 
     close_program_account(ctx.accounts.metadata_info, ctx.accounts.authority_info)?;
     close_program_account(edition_info, ctx.accounts.authority_info)?;

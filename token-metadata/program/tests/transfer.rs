@@ -543,6 +543,8 @@ mod auth_rules_transfer {
             amount: transfer_amount,
         };
 
+        let source_token_record = nft.token_record.unwrap();
+
         let params = TransferParams {
             context: &mut context,
             authority: &authority,
@@ -556,18 +558,24 @@ mod auth_rules_transfer {
 
         nft.transfer(params).await.unwrap();
 
-        let destination_token =
-            get_associated_token_address(&rooster_manager.pda(), &nft.mint.pubkey());
+        // Nft.token is updated by transfer to be the new token account where the asset currently
         let dest_token_account = spl_token::state::Account::unpack(
-            get_account(&mut context, &destination_token)
+            get_account(&mut context, &nft.token.unwrap())
                 .await
                 .data
                 .as_slice(),
         )
         .unwrap();
 
-        // Destination now has the token.
+        let source_token_record = context
+            .banks_client
+            .get_account(source_token_record)
+            .await
+            .unwrap();
+
+        // Destination now has the token, and source accounts are closed.
         assert_eq!(dest_token_account.amount, 1);
+        assert!(source_token_record.is_none());
 
         // Update auth data payload with the seeds of the PDA we're
         // transferring from.
@@ -582,6 +590,9 @@ mod auth_rules_transfer {
             PayloadKey::SourceSeeds.to_string(),
             PayloadType::Seeds(seeds),
         );
+
+        // Set the source to the current value.
+        let source_token_record = nft.token_record.unwrap();
 
         // Now we withdraw from Rooster to test the pda-to-system-wallet transfer.
         rooster_manager
@@ -607,7 +618,17 @@ mod auth_rules_transfer {
         )
         .unwrap();
 
+        let source_token_record = context
+            .banks_client
+            .get_account(source_token_record)
+            .await
+            .unwrap();
+
+        // Destination account for the withdraw now has the token.
         assert_eq!(authority_ata_account.amount, 1);
+
+        // Rooster token record account closed.
+        assert!(source_token_record.is_none());
     }
 
     #[tokio::test]
