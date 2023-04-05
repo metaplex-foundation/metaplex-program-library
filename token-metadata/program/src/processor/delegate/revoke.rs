@@ -205,22 +205,6 @@ fn revoke_persistent_delegate_v1(
         return Err(MetadataError::DelegateNotFound.into());
     }
 
-    let master_edition_info = ctx
-        .accounts
-        .master_edition_info
-        .ok_or(MetadataError::MissingEditionAccount)?;
-
-    if matches!(role, TokenDelegateRole::Utility) {
-        clear_close_authority(ClearCloseAuthorityParams {
-            token_info,
-            mint_info: ctx.accounts.mint_info,
-            token,
-            master_edition_info,
-            authority_info: master_edition_info,
-            spl_token_program_info,
-        })?;
-    }
-
     // process the revoke
 
     // programmables assets can have delegates from any role apart from `Standard`
@@ -274,6 +258,18 @@ fn revoke_persistent_delegate_v1(
                     master_edition_info.clone(),
                     spl_token_program_info.clone(),
                 )?;
+
+                // Clear the close authority if it's a Utility Delegate.
+                if matches!(role, TokenDelegateRole::Utility) {
+                    clear_close_authority(ClearCloseAuthorityParams {
+                        token_info,
+                        mint_info: ctx.accounts.mint_info,
+                        token,
+                        master_edition_info,
+                        authority_info: master_edition_info,
+                        spl_token_program_info,
+                    })?;
+                }
             } else {
                 return Err(MetadataError::MissingEditionAccount.into());
             }

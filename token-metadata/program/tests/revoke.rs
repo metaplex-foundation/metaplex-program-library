@@ -518,4 +518,154 @@ mod revoke {
             panic!("Missing token account");
         }
     }
+
+    #[tokio::test]
+    async fn revoke_utility_delegate_programmable_nonfungible() {
+        let mut context = program_test().start_with_context().await;
+
+        // asset
+
+        let mut asset = DigitalAsset::default();
+        asset
+            .create_and_mint(
+                &mut context,
+                TokenStandard::ProgrammableNonFungible,
+                None,
+                None,
+                1,
+            )
+            .await
+            .unwrap();
+
+        assert!(asset.token.is_some());
+
+        let user = Keypair::new();
+        let user_pubkey = user.pubkey();
+        let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+
+        asset
+            .delegate(
+                &mut context,
+                payer,
+                user_pubkey,
+                DelegateArgs::UtilityV1 {
+                    amount: 1,
+                    authorization_data: None,
+                },
+            )
+            .await
+            .unwrap();
+
+        // checks that the delegate exists
+
+        let (pda_key, _) = find_token_record_account(&asset.mint.pubkey(), &asset.token.unwrap());
+
+        let pda = get_account(&mut context, &pda_key).await;
+        let token_record: TokenRecord = try_from_slice_unchecked(&pda.data).unwrap();
+
+        assert_eq!(token_record.delegate, Some(user_pubkey));
+
+        let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+        let approver = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+
+        // revokes the delegate
+        asset
+            .revoke(
+                &mut context,
+                payer,
+                approver,
+                user_pubkey,
+                RevokeArgs::UtilityV1,
+            )
+            .await
+            .unwrap();
+
+        // asserts
+
+        let pda = get_account(&mut context, &pda_key).await;
+        let token_record: TokenRecord = try_from_slice_unchecked(&pda.data).unwrap();
+
+        assert_eq!(token_record.delegate, None);
+
+        if let Some(token) = asset.token {
+            let account = get_account(&mut context, &token).await;
+            let token_account = Account::unpack(&account.data).unwrap();
+
+            assert!(token_account.is_frozen());
+            assert_eq!(token_account.delegate, COption::None);
+        } else {
+            panic!("Missing token account");
+        }
+    }
+
+    #[tokio::test]
+    async fn invalid_close_authority_fails() {
+        let mut context = program_test().start_with_context().await;
+
+        // asset
+
+        let mut asset = DigitalAsset::default();
+        asset
+            .create_and_mint(
+                &mut context,
+                TokenStandard::ProgrammableNonFungible,
+                None,
+                None,
+                1,
+            )
+            .await
+            .unwrap();
+
+        assert!(asset.token.is_some());
+
+        let user = Keypair::new();
+        let user_pubkey = user.pubkey();
+        let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+
+        asset
+            .delegate(
+                &mut context,
+                payer,
+                user_pubkey,
+                DelegateArgs::UtilityV1 {
+                    amount: 1,
+                    authorization_data: None,
+                },
+            )
+            .await
+            .unwrap();
+
+        // To simulate the state where the close authority is set delegate instead of
+        // the asset's master edition account, we need to inject modified token account state.
+        let mut token_account = get_account(&mut context, &asset.token.unwrap()).await;
+        let mut token = Account::unpack(&token_account.data).unwrap();
+
+        token.close_authority = COption::Some(user_pubkey);
+        let mut data = vec![0u8; Account::LEN];
+        let buffer = &mut data[..Account::LEN];
+        Account::pack(token, buffer).unwrap();
+        token_account.data = buffer.to_vec();
+
+        let token_account_shared_data: AccountSharedData = token_account.into();
+        context.set_account(&asset.token.unwrap(), &token_account_shared_data);
+
+        let payer = context.payer.dirty_clone();
+        let approver = context.payer.dirty_clone();
+
+        // Now we call revoke, expecting to get an error since neither the owner nor Token Metadata
+        // have the authority to clear the close authority.
+        // revokes the delegate
+        let err = asset
+            .revoke(
+                &mut context,
+                payer,
+                approver,
+                user_pubkey,
+                RevokeArgs::UtilityV1,
+            )
+            .await
+            .unwrap_err();
+
+        assert_custom_error!(err, MetadataError::InvalidCloseAuthority);
+    }
 }
