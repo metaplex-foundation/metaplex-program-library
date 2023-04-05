@@ -359,12 +359,9 @@ pub(crate) fn clear_close_authority(params: ClearCloseAuthorityParams) -> Progra
     // If there's an existing close authority that is not the metadata account,
     // it willl need to be revoked by the original UtilityDelegate.
     if let COption::Some(close_authority) = token.close_authority {
-        msg!("Existing close authority: {:?}", close_authority);
-        msg!("Master edition: {:?}", master_edition_info.key);
         if &close_authority != master_edition_info.key {
             return Err(MetadataError::InvalidCloseAuthority.into());
         }
-        msg!("Clearing close authority");
         let seeds = edition_seeds!(mint_info.key);
 
         invoke_signed(
@@ -379,8 +376,6 @@ pub(crate) fn clear_close_authority(params: ClearCloseAuthorityParams) -> Progra
             &[token_info.clone(), authority_info.clone()],
             &[seeds.as_slice()],
         )?;
-    } else {
-        msg!("No close authority");
     }
 
     Ok(())
