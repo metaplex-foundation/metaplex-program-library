@@ -6,18 +6,12 @@ pub mod signing;
 pub mod stake;
 pub mod transfer_shares;
 
-pub use self::add_member::arg::*;
-pub use self::add_member::nft::*;
-pub use self::add_member::wallet::*;
-pub use self::distribute::nft_member::*;
-pub use self::distribute::token_member::*;
-pub use self::distribute::wallet_member::*;
-pub use self::init::init_for_mint::*;
-pub use self::init::init_parent::*;
-pub use self::remove_member::process_remove_member::*;
-pub use self::remove_member::process_remove_member::*;
-pub use self::signing::sign_metadata::*;
-pub use self::stake::set::*;
-pub use self::stake::set_for::*;
-pub use self::stake::unstake::*;
-pub use self::transfer_shares::process_transfer_shares::*;
+pub use self::{
+    add_member::{arg::*, nft::*, wallet::*},
+    distribute::{nft_member::*, token_member::*, wallet_member::*},
+    init::{init_for_mint::*, init_parent::*},
+    remove_member::process_remove_member::*,
+    signing::sign_metadata::*,
+    stake::{set::*, set_for::*, unstake::*},
+    transfer_shares::process_transfer_shares::*,
+};

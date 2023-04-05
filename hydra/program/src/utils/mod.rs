@@ -1,12 +1,15 @@
 pub mod logic;
 pub mod validation;
 
-use crate::error::HydraError;
-use crate::state::{FanoutMembershipMintVoucher, FanoutMint, FANOUT_MINT_MEMBERSHIP_VOUCHER_SIZE};
-use crate::utils::validation::{assert_derivation, assert_owned_by};
-use anchor_lang::prelude::*;
-use anchor_lang::solana_program::program::invoke_signed;
-use anchor_lang::solana_program::system_instruction;
+use crate::{
+    error::HydraError,
+    state::{FanoutMembershipMintVoucher, FanoutMint, FANOUT_MINT_MEMBERSHIP_VOUCHER_SIZE},
+    utils::validation::{assert_derivation, assert_owned_by},
+};
+use anchor_lang::{
+    prelude::*,
+    solana_program::{program::invoke_signed, system_instruction},
+};
 use anchor_spl::token::TokenAccount;
 use std::convert::TryInto;
 

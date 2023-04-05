@@ -2,20 +2,20 @@ use crate::error::HydraError;
 
 use crate::state::{Fanout, FanoutMembershipVoucher, MembershipModel};
 
-use crate::utils::logic::calculation::{calculate_payer_rewards};
-use crate::utils::logic::transfer::{transfer_from_mint_holding, transfer_native};
-use crate::state::FanoutMembershipMintVoucher;
-use crate::utils::logic::distribution::{distribute_mint, distribute_native};
+use crate::{
+    state::FanoutMembershipMintVoucher,
+    utils::logic::{
+        calculation::calculate_payer_rewards,
+        distribution::{distribute_mint, distribute_native},
+        transfer::{transfer_from_mint_holding, transfer_native},
+    },
+};
 
 use crate::utils::validation::*;
 
-use { 
-    clockwork_sdk::{
-        state::{Thread, ThreadAccount, ThreadResponse},
-    }
-};
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount};
+use clockwork_sdk::state::{Thread, ThreadAccount, ThreadResponse};
 
 #[derive(Accounts)]
 #[instruction(distribute_for_mint: bool)]
@@ -57,15 +57,15 @@ pub struct DistributeClockTokenMember<'info> {
     /// CHECK: Could be native or Token Account
     pub holding_account: UncheckedAccount<'info>,
     #[account(mut)]
-   /// CHECK: Optional Account
-   pub fanout_for_mint:  UncheckedAccount<'info>,
-   #[account(mut)]
-   /// CHECK: Optional Account
-   pub fanout_for_mint_membership_voucher: UncheckedAccount<'info>,
-   pub fanout_mint: Box<Account<'info, Mint>>,
-   #[account(mut)]
-   /// CHECK: Optional Account
-   pub fanout_mint_member_token_account: UncheckedAccount<'info>,
+    /// CHECK: Optional Account
+    pub fanout_for_mint: UncheckedAccount<'info>,
+    #[account(mut)]
+    /// CHECK: Optional Account
+    pub fanout_for_mint_membership_voucher: UncheckedAccount<'info>,
+    pub fanout_mint: Box<Account<'info, Mint>>,
+    #[account(mut)]
+    /// CHECK: Optional Account
+    pub fanout_mint_member_token_account: UncheckedAccount<'info>,
     pub system_program: Program<'info, System>,
     pub rent: Sysvar<'info, Rent>,
     pub token_program: Program<'info, Token>,
@@ -84,8 +84,6 @@ pub struct DistributeClockTokenMember<'info> {
     #[account(mut)]
     pub payer_token_account: Box<Account<'info, TokenAccount>>,
 }
-
-
 
 pub fn distribute_clock_for_token(
     ctx: Context<DistributeClockTokenMember>,
@@ -112,30 +110,29 @@ pub fn distribute_clock_for_token(
     assert_owned_by(&member.to_account_info(), &System::id())?;
     assert_owned_by(&authority.to_account_info(), &System::id())?;
     assert_owned_by(&payer.to_account_info(), &System::id())?;
-    assert_owned_by(&payer_token_account.to_account_info(), &ctx.accounts.token_program.key())?;
+    assert_owned_by(
+        &payer_token_account.to_account_info(),
+        &ctx.accounts.token_program.key(),
+    )?;
     assert_membership_model(fanout, MembershipModel::Token)?;
     assert_shares_distributed(fanout)?;
     let rewards: u64 = fanout.payer_reward_basis_points | 666;
 
     let payer_rewards = calculate_payer_rewards(fanout.total_inflow, rewards)?;
-    
-   
+
     if distribute_for_mint {
         if payer_rewards > 0 as u64 {
-
             transfer_from_mint_holding(
                 &fanout,
                 authority.to_account_info(),
                 ctx.accounts.token_program.to_account_info(),
                 ctx.accounts.holding_account.to_account_info(),
                 payer_token_account.to_account_info(),
-                payer_rewards
+                payer_rewards,
             )?;
-            
-            
         }
         distribute_mint(
-       *ctx.accounts.fanout_mint.to_owned(),
+            *ctx.accounts.fanout_mint.to_owned(),
             &mut ctx.accounts.fanout_for_mint,
             &mut ctx.accounts.fanout_for_mint_membership_voucher,
             &mut ctx.accounts.fanout_mint_member_token_account,
@@ -150,7 +147,6 @@ pub fn distribute_clock_for_token(
             &ctx.accounts.member.key(),
         )?;
     } else {
-
         if payer_rewards > 0 {
             let current_snapshot = &mut ctx.accounts.holding_account.lamports();
             transfer_native(
@@ -198,15 +194,15 @@ pub struct DistributeTokenMember<'info> {
     /// CHECK: Could be native or Token Account
     pub holding_account: UncheckedAccount<'info>,
     #[account(mut)]
-   /// CHECK: Optional Account
-   pub fanout_for_mint:  UncheckedAccount<'info>,
-   #[account(mut)]
-   /// CHECK: Optional Account
-   pub fanout_for_mint_membership_voucher: UncheckedAccount<'info>,
-   pub fanout_mint: Box<Account<'info, Mint>>,
-   #[account(mut)]
-   /// CHECK: Optional Account
-   pub fanout_mint_member_token_account: UncheckedAccount<'info>,
+    /// CHECK: Optional Account
+    pub fanout_for_mint: UncheckedAccount<'info>,
+    #[account(mut)]
+    /// CHECK: Optional Account
+    pub fanout_for_mint_membership_voucher: UncheckedAccount<'info>,
+    pub fanout_mint: Box<Account<'info, Mint>>,
+    #[account(mut)]
+    /// CHECK: Optional Account
+    pub fanout_mint_member_token_account: UncheckedAccount<'info>,
     pub system_program: Program<'info, System>,
     pub rent: Sysvar<'info, Rent>,
     pub token_program: Program<'info, Token>,
@@ -221,7 +217,7 @@ pub struct DistributeTokenMember<'info> {
     constraint = member_stake_account.mint == membership_mint.key(),
     constraint = member_stake_account.amount > 0
     )]
-    pub member_stake_account: Box<Account<'info, TokenAccount>>
+    pub member_stake_account: Box<Account<'info, TokenAccount>>,
 }
 pub fn distribute_for_token(
     ctx: Context<DistributeTokenMember>,

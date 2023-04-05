@@ -1,18 +1,17 @@
-use crate::state::{Fanout, FanoutMembershipVoucher, MembershipModel};
-use crate::error::HydraError;
+use crate::{
+    error::HydraError,
+    state::{Fanout, FanoutMembershipVoucher, MembershipModel},
+};
 
-use crate::utils::logic::calculation::{calculate_payer_rewards};
-use crate::utils::logic::transfer::{transfer_from_mint_holding, transfer_native};
+use crate::utils::logic::{
+    calculation::calculate_payer_rewards,
+    transfer::{transfer_from_mint_holding, transfer_native},
+};
 
 use crate::utils::logic::distribution::{distribute_mint, distribute_native};
 
-use crate::utils::validation::*;
-use crate::state::FanoutMembershipMintVoucher;
-use { 
-    clockwork_sdk::{
-        state::{Thread, ThreadAccount, ThreadResponse},
-    }
-};
+use crate::{state::FanoutMembershipMintVoucher, utils::validation::*};
+use clockwork_sdk::state::{Thread, ThreadAccount, ThreadResponse};
 
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount};
@@ -66,7 +65,7 @@ pub struct DistributeClockNftMember<'info> {
     pub holding_account: UncheckedAccount<'info>,
     #[account(mut)]
     /// CHECK: Optional Account
-    pub fanout_for_mint:  UncheckedAccount<'info>,
+    pub fanout_for_mint: UncheckedAccount<'info>,
     #[account(mut)]
     /// CHECK: Optional Account
     pub fanout_for_mint_membership_voucher: UncheckedAccount<'info>,
@@ -100,7 +99,10 @@ pub fn distribute_clock_for_nft(
     assert_owned_by(&member.to_account_info(), &System::id())?;
     assert_owned_by(&authority.to_account_info(), &System::id())?;
     assert_owned_by(&payer.to_account_info(), &System::id())?;
-    assert_owned_by(&payer_token_account.to_account_info(), &ctx.accounts.token_program.key())?;
+    assert_owned_by(
+        &payer_token_account.to_account_info(),
+        &ctx.accounts.token_program.key(),
+    )?;
     assert_membership_model(fanout, MembershipModel::NFT)?;
     assert_shares_distributed(fanout)?;
     assert_holding(
@@ -111,21 +113,17 @@ pub fn distribute_clock_for_nft(
     let rewards: u64 = fanout.payer_reward_basis_points | 666;
 
     let payer_rewards = calculate_payer_rewards(fanout.total_inflow, rewards)?;
-    
-   
+
     if distribute_for_mint {
         if payer_rewards > 0 as u64 {
-
             transfer_from_mint_holding(
                 &ctx.accounts.fanout,
                 authority.to_account_info(),
                 ctx.accounts.token_program.to_account_info(),
-        ctx.accounts.holding_account.to_account_info(),
+                ctx.accounts.holding_account.to_account_info(),
                 payer_token_account.to_account_info(),
-                payer_rewards
+                payer_rewards,
             )?;
-        
-            
         }
         distribute_mint(
             *ctx.accounts.fanout_mint.to_owned(),
@@ -143,7 +141,6 @@ pub fn distribute_clock_for_nft(
             &ctx.accounts.membership_key.key(),
         )?;
     } else {
-
         if payer_rewards > 0 {
             let current_snapshot = &mut ctx.accounts.holding_account.lamports();
             transfer_native(
@@ -200,15 +197,15 @@ pub struct DistributeNftMember<'info> {
     /// CHECK: Could be a native or Token Account
     pub holding_account: UncheckedAccount<'info>,
     #[account(mut)]
-   /// CHECK: Optional Account
-   pub fanout_for_mint:  UncheckedAccount<'info>,
-   #[account(mut)]
-   /// CHECK: Optional Account
-   pub fanout_for_mint_membership_voucher: UncheckedAccount<'info>,
-   pub fanout_mint: Box<Account<'info, Mint>>,
-   #[account(mut)]
-   /// CHECK: Optional Account
-   pub fanout_mint_member_token_account: UncheckedAccount<'info>,
+    /// CHECK: Optional Account
+    pub fanout_for_mint: UncheckedAccount<'info>,
+    #[account(mut)]
+    /// CHECK: Optional Account
+    pub fanout_for_mint_membership_voucher: UncheckedAccount<'info>,
+    pub fanout_mint: Box<Account<'info, Mint>>,
+    #[account(mut)]
+    /// CHECK: Optional Account
+    pub fanout_mint_member_token_account: UncheckedAccount<'info>,
     pub system_program: Program<'info, System>,
     pub rent: Sysvar<'info, Rent>,
     pub token_program: Program<'info, Token>,

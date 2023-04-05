@@ -57,7 +57,6 @@ pub mod hydra {
         set_for_token_member_stake(ctx, shares)
     }
 
-
     pub fn process_clock_distribute_nft(
         ctx: Context<DistributeClockNftMember>,
         distribute_for_mint: bool,

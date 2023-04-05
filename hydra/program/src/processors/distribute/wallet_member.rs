@@ -1,20 +1,19 @@
-use crate::MembershipModel;
+use crate::{
+    error::HydraError,
+    state::{Fanout, FanoutMembershipMintVoucher, FanoutMembershipVoucher},
+    utils::{
+        logic::transfer::{transfer_from_mint_holding, transfer_native},
+        validation::*,
+    },
+    MembershipModel,
+};
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount};
-use crate::error::HydraError;
-use crate::state::FanoutMembershipMintVoucher;
-use crate::state::{Fanout, FanoutMembershipVoucher};
-use crate::utils::validation::*;
-use crate::utils::logic::transfer::{transfer_from_mint_holding, transfer_native};
 
-use crate::utils::logic::calculation::{calculate_payer_rewards};
+use crate::utils::logic::calculation::calculate_payer_rewards;
 
-use { 
-    clockwork_sdk::{
-        state::{Thread, ThreadAccount, ThreadResponse},
-    }
-};
 use crate::utils::logic::distribution::{distribute_mint, distribute_native};
+use clockwork_sdk::state::{Thread, ThreadAccount, ThreadResponse};
 
 #[derive(Accounts)]
 #[instruction(distribute_for_mint: bool)]
@@ -36,7 +35,7 @@ pub struct DistributeClockWalletMember<'info> {
         mut,
         address = fanout.authority
         )]
-        /// CHECK: Restricted to fanout
+    /// CHECK: Restricted to fanout
     pub authority: UncheckedAccount<'info>,
     #[account(
     mut,
@@ -50,25 +49,25 @@ pub struct DistributeClockWalletMember<'info> {
     seeds = [b"fanout-config", fanout.name.as_bytes()],
     bump = fanout.bump_seed,
     )]
-    pub fanout:  Box<Account<'info, Fanout>>,
+    pub fanout: Box<Account<'info, Fanout>>,
     #[account(mut)]
     /// CHECK: Could be native or Token Account
     pub holding_account: UncheckedAccount<'info>,
     #[account(mut)]
-   /// CHECK: Optional Account
-   pub fanout_for_mint:  UncheckedAccount<'info>,
-   #[account(mut)]
-   /// CHECK: Optional Account
-   pub fanout_for_mint_membership_voucher: UncheckedAccount<'info>,
-   pub fanout_mint: Box<Account<'info, Mint>>,
-   #[account(mut)]
-   /// CHECK: Optional Account
-   pub fanout_mint_member_token_account: UncheckedAccount<'info>,
+    /// CHECK: Optional Account
+    pub fanout_for_mint: UncheckedAccount<'info>,
+    #[account(mut)]
+    /// CHECK: Optional Account
+    pub fanout_for_mint_membership_voucher: UncheckedAccount<'info>,
+    pub fanout_mint: Box<Account<'info, Mint>>,
+    #[account(mut)]
+    /// CHECK: Optional Account
+    pub fanout_mint_member_token_account: UncheckedAccount<'info>,
     pub system_program: Program<'info, System>,
     pub rent: Sysvar<'info, Rent>,
     pub token_program: Program<'info, Token>,
     #[account(mut)]
-    pub payer_token_account:  Box<Account<'info, TokenAccount>>,
+    pub payer_token_account: Box<Account<'info, TokenAccount>>,
 }
 pub fn distribute_clock_for_wallet(
     ctx: Context<DistributeClockWalletMember>,
@@ -89,28 +88,26 @@ pub fn distribute_clock_for_wallet(
     assert_owned_by(&authority.to_account_info(), &System::id())?;
 
     assert_owned_by(&payer.to_account_info(), &System::id())?;
-    assert_owned_by(&payer_token_account.to_account_info(), &ctx.accounts.token_program.key())?;
+    assert_owned_by(
+        &payer_token_account.to_account_info(),
+        &ctx.accounts.token_program.key(),
+    )?;
     assert_membership_model(fanout, MembershipModel::Wallet)?;
     assert_shares_distributed(fanout)?;
     let rewards: u64 = fanout.payer_reward_basis_points | 666;
 
     let payer_rewards = calculate_payer_rewards(fanout.total_inflow, rewards)?;
-    
-   
+
     if distribute_for_mint {
         if payer_rewards > 0 as u64 {
-
             transfer_from_mint_holding(
                 &ctx.accounts.fanout,
                 authority.to_account_info(),
                 ctx.accounts.token_program.to_account_info(),
                 ctx.accounts.holding_account.to_account_info(),
                 payer_token_account.to_account_info(),
-                payer_rewards
+                payer_rewards,
             )?;
-        
-        
-            
         }
 
         let membership_key = &ctx.accounts.member.key().clone();
@@ -131,7 +128,6 @@ pub fn distribute_clock_for_wallet(
             membership_key,
         )?;
     } else {
-
         if payer_rewards > 0 {
             let current_snapshot = &mut ctx.accounts.holding_account.lamports();
             transfer_native(
@@ -174,13 +170,13 @@ pub struct DistributeWalletMember<'info> {
     seeds = [b"fanout-config", fanout.name.as_bytes()],
     bump = fanout.bump_seed,
     )]
-    pub fanout:  Box<Account<'info, Fanout>>,
+    pub fanout: Box<Account<'info, Fanout>>,
     #[account(mut)]
     /// CHECK: Could be native or Token Account
     pub holding_account: UncheckedAccount<'info>,
     #[account(mut)]
     /// CHECK: Optional Account
-    pub fanout_for_mint:  UncheckedAccount<'info>,
+    pub fanout_for_mint: UncheckedAccount<'info>,
     #[account(mut)]
     /// CHECK: Optional Account
     pub fanout_for_mint_membership_voucher: UncheckedAccount<'info>,
