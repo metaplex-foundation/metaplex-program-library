@@ -12,7 +12,6 @@ body:
         - auctioneer
         - bubblegum
         - candy-machine
-        - candy-machine-core
         - core
         - fixed-price-sale
         - gumdrop
