@@ -2,15 +2,17 @@ use borsh::BorshSerialize;
 use mpl_token_metadata::{
     id,
     instruction::{
-        self, builders::BurnBuilder, BurnArgs, InstructionBuilder, MetadataInstruction,
-        MintNewEditionFromMasterEditionViaTokenArgs,
+        self,
+        builders::{BurnBuilder, PrintBuilder},
+        BurnArgs, InstructionBuilder, MetadataInstruction,
+        MintNewEditionFromMasterEditionViaTokenArgs, PrintArgs,
     },
     state::{EDITION, EDITION_MARKER_BIT_SIZE, PREFIX},
 };
 use solana_program::{
     borsh::try_from_slice_unchecked,
     instruction::{AccountMeta, Instruction},
-    sysvar,
+    system_program, sysvar,
 };
 use solana_program_test::BanksClientError;
 use solana_sdk::{
@@ -110,6 +112,54 @@ impl EditionMarker {
         }
     }
 
+    pub fn new_from_asset(
+        asset: &DigitalAsset,
+        master_edition: &MasterEditionV2,
+        edition: u64,
+    ) -> Self {
+        let mint = Keypair::new();
+        let mint_pubkey = mint.pubkey();
+        let metadata_mint_pubkey = asset.mint.pubkey();
+        let program_id = id();
+
+        let edition_number = edition.checked_div(EDITION_MARKER_BIT_SIZE).unwrap();
+        let as_string = edition_number.to_string();
+        let (pubkey, _) = Pubkey::find_program_address(
+            &[
+                PREFIX.as_bytes(),
+                program_id.as_ref(),
+                metadata_mint_pubkey.as_ref(),
+                EDITION.as_bytes(),
+                as_string.as_bytes(),
+            ],
+            &program_id,
+        );
+
+        let metadata_seeds = &[PREFIX.as_bytes(), program_id.as_ref(), mint_pubkey.as_ref()];
+        let (new_metadata_pubkey, _) = Pubkey::find_program_address(metadata_seeds, &id());
+
+        let master_edition_seeds = &[
+            PREFIX.as_bytes(),
+            program_id.as_ref(),
+            mint_pubkey.as_ref(),
+            EDITION.as_bytes(),
+        ];
+        let (new_edition_pubkey, _) = Pubkey::find_program_address(master_edition_seeds, &id());
+
+        EditionMarker {
+            pubkey,
+            edition,
+            mint,
+            metadata_mint_pubkey,
+            metadata_pubkey: asset.metadata,
+            master_edition_pubkey: master_edition.pubkey,
+            new_metadata_pubkey,
+            new_edition_pubkey,
+            metadata_token_pubkey: asset.token.unwrap(),
+            token: Keypair::new(),
+        }
+    }
+
     pub async fn get_data(
         &self,
         context: &mut ProgramTestContext,
@@ -160,6 +210,139 @@ impl EditionMarker {
                 self.metadata_mint_pubkey,
                 self.edition,
             )],
+            Some(&context.payer.pubkey()),
+            &[&context.payer, &context.payer],
+            context.last_blockhash,
+        );
+
+        context
+            .banks_client
+            .process_transaction_with_commitment(
+                tx,
+                solana_sdk::commitment_config::CommitmentLevel::Confirmed,
+            )
+            .await
+    }
+
+    pub async fn create_from_asset(
+        &self,
+        context: &mut ProgramTestContext,
+    ) -> Result<(), BanksClientError> {
+        create_mint(
+            context,
+            &self.mint,
+            &context.payer.pubkey(),
+            Some(&context.payer.pubkey()),
+            0,
+        )
+        .await?;
+        create_token_account(
+            context,
+            &self.token,
+            &self.mint.pubkey(),
+            &context.payer.pubkey(),
+        )
+        .await?;
+        mint_tokens(
+            context,
+            &self.mint.pubkey(),
+            &self.token.pubkey(),
+            1,
+            &context.payer.pubkey(),
+            None,
+        )
+        .await?;
+
+        let print_args = PrintArgs::V1 {
+            metadata_mint: self.metadata_mint_pubkey,
+            edition: self.edition,
+        };
+        let mut builder = PrintBuilder::new();
+        builder
+            .new_metadata(self.new_metadata_pubkey)
+            .new_edition(self.new_edition_pubkey)
+            .master_edition(self.master_edition_pubkey)
+            .new_mint(self.mint.pubkey())
+            .new_mint_authority(context.payer.pubkey())
+            .payer(context.payer.pubkey())
+            .token_account_owner(context.payer.pubkey())
+            .token_account(self.metadata_token_pubkey)
+            .new_metadata_update_authority(context.payer.pubkey())
+            .metadata(self.metadata_pubkey)
+            .token_program(spl_token::ID)
+            .system_program(system_program::ID)
+            // Not used
+            .edition_mark_pda(mpl_token_metadata::ID);
+
+        let tx = Transaction::new_signed_with_payer(
+            &[builder.build(print_args).unwrap().instruction()],
+            Some(&context.payer.pubkey()),
+            &[&context.payer, &context.payer],
+            context.last_blockhash,
+        );
+
+        context
+            .banks_client
+            .process_transaction_with_commitment(
+                tx,
+                solana_sdk::commitment_config::CommitmentLevel::Confirmed,
+            )
+            .await
+    }
+
+    pub async fn create_from_asset_with_invalid_token_program(
+        &self,
+        context: &mut ProgramTestContext,
+    ) -> Result<(), BanksClientError> {
+        let fake_token_program = Keypair::new();
+        create_mint(
+            context,
+            &self.mint,
+            &context.payer.pubkey(),
+            Some(&context.payer.pubkey()),
+            0,
+        )
+        .await?;
+        create_token_account(
+            context,
+            &self.token,
+            &self.mint.pubkey(),
+            &context.payer.pubkey(),
+        )
+        .await?;
+        mint_tokens(
+            context,
+            &self.mint.pubkey(),
+            &self.token.pubkey(),
+            1,
+            &context.payer.pubkey(),
+            None,
+        )
+        .await?;
+
+        let print_args = PrintArgs::V1 {
+            metadata_mint: self.metadata_mint_pubkey,
+            edition: 1,
+        };
+        let mut builder = PrintBuilder::new();
+        builder
+            .new_metadata(self.new_metadata_pubkey)
+            .new_edition(self.new_edition_pubkey)
+            .master_edition(self.master_edition_pubkey)
+            .new_mint(self.mint.pubkey())
+            .new_mint_authority(context.payer.pubkey())
+            .payer(context.payer.pubkey())
+            .token_account_owner(context.payer.pubkey())
+            .token_account(self.metadata_token_pubkey)
+            .new_metadata_update_authority(context.payer.pubkey())
+            .metadata(self.metadata_pubkey)
+            .token_program(fake_token_program.pubkey())
+            .system_program(system_program::ID)
+            // Not used
+            .edition_mark_pda(mpl_token_metadata::ID);
+
+        let tx = Transaction::new_signed_with_payer(
+            &[builder.build(print_args).unwrap().instruction()],
             Some(&context.payer.pubkey()),
             &[&context.payer, &context.payer],
             context.last_blockhash,

@@ -16,7 +16,7 @@ use mpl_token_metadata::{
     },
     processor::AuthorizationData,
     state::{
-        AssetData, Collection, CollectionDetails, Creator, Metadata, PrintSupply,
+        AssetData, Collection, CollectionDetails, Creator, MasterEditionV2, Metadata, PrintSupply,
         ProgrammableConfig, TokenDelegateRole, TokenMetadataAccount, TokenRecord, TokenStandard,
         EDITION, EDITION_MARKER_BIT_SIZE, PREFIX,
     },
@@ -420,6 +420,43 @@ impl DigitalAsset {
         self.create(context, token_standard, authorization_rules)
             .await
             .unwrap();
+        // mints tokens
+        self.mint(context, authorization_rules, authorization_data, amount)
+            .await
+    }
+
+    pub async fn create_and_mint_with_supply(
+        &mut self,
+        context: &mut ProgramTestContext,
+        token_standard: TokenStandard,
+        authorization_rules: Option<Pubkey>,
+        authorization_data: Option<AuthorizationData>,
+        amount: u64,
+        print_supply: PrintSupply,
+    ) -> Result<(), BanksClientError> {
+        // creates the metadata
+
+        let creators = Some(vec![Creator {
+            address: context.payer.pubkey(),
+            share: 100,
+            verified: true,
+        }]);
+
+        self.create_advanced(
+            context,
+            token_standard,
+            String::from(DEFAULT_NAME),
+            String::from(DEFAULT_SYMBOL),
+            String::from(DEFAULT_URI),
+            500,
+            creators,
+            None,
+            None,
+            authorization_rules,
+            print_supply,
+        )
+        .await?;
+
         // mints tokens
         self.mint(context, authorization_rules, authorization_data, amount)
             .await
@@ -1067,6 +1104,17 @@ impl DigitalAsset {
         } else {
             None
         }
+    }
+
+    pub async fn get_master_edition(&self, context: &mut ProgramTestContext) -> MasterEditionV2 {
+        let master_edition_account = context
+            .banks_client
+            .get_account(self.edition.unwrap())
+            .await
+            .unwrap()
+            .unwrap();
+
+        MasterEditionV2::safe_deserialize(&master_edition_account.data).unwrap()
     }
 
     pub async fn is_pnft(&self, context: &mut ProgramTestContext) -> bool {

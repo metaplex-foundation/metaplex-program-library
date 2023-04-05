@@ -783,6 +783,24 @@ pub enum MetadataInstruction {
     #[account(6, name="sysvar_instructions", desc="Instructions sysvar account")]
     #[default_optional_accounts]
     Unverify(VerificationArgs),
+
+    /// Given a token account containing the master edition token to prove authority, and a brand new non-metadata-ed mint with one token
+    /// make a new Metadata + Edition that is a child of the master edition denoted by this authority token.
+    #[account(0, writable, name="new_metadata", desc="New Metadata key (pda of ['metadata', program id, mint id])")]
+    #[account(1, writable, name="new_edition", desc="New Edition (pda of ['metadata', program id, mint id, 'edition'])")]
+    #[account(2, writable, name="master_edition", desc="Master Record Edition V2 (pda of ['metadata', program id, master metadata mint id, 'edition'])")]
+    #[account(3, writable, name="new_mint", desc="Mint of new token - THIS WILL TRANSFER AUTHORITY AWAY FROM THIS KEY")]
+    #[account(4, writable, name="edition_mark_pda", desc="Edition pda to mark creation - will be checked for pre-existence. (pda of ['metadata', program id, master metadata mint id, 'edition', edition_number]) where edition_number is NOT the edition number you pass in args but actually edition_number = floor(edition/EDITION_MARKER_BIT_SIZE).")]
+    #[account(5, signer, name="new_mint_authority", desc="Mint authority of new mint")]
+    #[account(6, signer, writable, name="payer", desc="payer")]
+    #[account(7, signer, name="token_account_owner", desc="owner of token account containing master token (#8)")]
+    #[account(8, name="token_account", desc="token account containing token from master metadata mint")]
+    #[account(9, name="new_metadata_update_authority", desc="Update authority info for new metadata")]
+    #[account(10, name="metadata", desc="Master record metadata account")]
+    #[account(11, name="token_program", desc="Token program")]
+    #[account(12, name="system_program", desc="System program")]
+    #[default_optional_accounts]
+    Print(PrintArgs),
 }
 
 pub struct Context<'a, T> {

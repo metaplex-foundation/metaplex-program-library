@@ -44,6 +44,25 @@ impl MasterEditionV2 {
         }
     }
 
+    pub fn new_from_asset(asset: &DigitalAsset) -> Self {
+        let program_id = id();
+        let mint_pubkey = asset.mint.pubkey();
+
+        let master_edition_seeds = &[
+            PREFIX.as_bytes(),
+            program_id.as_ref(),
+            mint_pubkey.as_ref(),
+            EDITION.as_bytes(),
+        ];
+        let (pubkey, _) = Pubkey::find_program_address(master_edition_seeds, &id());
+
+        MasterEditionV2 {
+            pubkey,
+            metadata_pubkey: asset.metadata,
+            mint_pubkey,
+        }
+    }
+
     pub async fn get_data(
         &self,
         context: &mut ProgramTestContext,

@@ -12,10 +12,11 @@ use {
 use super::InstructionBuilder;
 use crate::{
     instruction::MetadataInstruction,
+    pda::{EDITION, PREFIX},
     processor::AuthorizationData,
     state::{
         AssetData, Collection, CollectionDetails, Creator, Data, DataV2, MigrationType,
-        PrintSupply, Uses,
+        PrintSupply, Uses, EDITION_MARKER_BIT_SIZE,
     },
 };
 
@@ -288,6 +289,13 @@ pub struct UpdateMetadataAccountArgsV2 {
     pub update_authority: Option<Pubkey>,
     pub primary_sale_happened: Option<bool>,
     pub is_mutable: Option<bool>,
+}
+
+#[repr(C)]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+pub enum PrintArgs {
+    V1 { metadata_mint: Pubkey, edition: u64 },
 }
 
 //----------------------+
@@ -758,6 +766,71 @@ impl InstructionBuilder for super::builders::Update {
             program_id: crate::ID,
             accounts,
             data: MetadataInstruction::Update(self.args.clone())
+                .try_to_vec()
+                .unwrap(),
+        }
+    }
+}
+
+/// Prints an edition from a master edition.
+///
+/// # Accounts:
+///
+///   0. `[writable]` New Metadata
+///   1. `[writable]` New Edition
+///   2. `[writable]` Master Edition
+///   3. `[writable]` New Mint
+///   4. `[writable]` Edition Marker PDA
+///   5. `[signer]`, New Mint Authority
+///   6. `[signer, writable]` Payer
+///   7. `[signer]`, Token Account Owner
+///   8. `[]` Token Account
+///   9. `[]` New Metadata Update Authority
+///   10. `[]` Metadata
+///   11. `[]` Token Program
+///   12. `[]` System Program
+
+impl InstructionBuilder for super::builders::Print {
+    fn instruction(&self) -> solana_program::instruction::Instruction {
+        let (metadata_mint, edition) = match self.args.clone() {
+            PrintArgs::V1 {
+                metadata_mint,
+                edition,
+            } => (metadata_mint, edition),
+        };
+        let edition_number = edition.checked_div(EDITION_MARKER_BIT_SIZE).unwrap();
+        let as_string = edition_number.to_string();
+        let (edition_mark_pda, _) = Pubkey::find_program_address(
+            &[
+                PREFIX.as_bytes(),
+                crate::ID.as_ref(),
+                metadata_mint.as_ref(),
+                EDITION.as_bytes(),
+                as_string.as_bytes(),
+            ],
+            &crate::ID,
+        );
+
+        let accounts = vec![
+            AccountMeta::new(self.new_metadata, false),
+            AccountMeta::new(self.new_edition, false),
+            AccountMeta::new(self.master_edition, false),
+            AccountMeta::new(self.new_mint, false),
+            AccountMeta::new(edition_mark_pda, false),
+            AccountMeta::new_readonly(self.new_mint_authority, true),
+            AccountMeta::new(self.payer, true),
+            AccountMeta::new_readonly(self.token_account_owner, true),
+            AccountMeta::new_readonly(self.token_account, false),
+            AccountMeta::new_readonly(self.new_metadata_update_authority, false),
+            AccountMeta::new_readonly(self.metadata, false),
+            AccountMeta::new_readonly(self.token_program, false),
+            AccountMeta::new_readonly(self.system_program, false),
+        ];
+
+        Instruction {
+            program_id: crate::ID,
+            accounts,
+            data: MetadataInstruction::Print(self.args.clone())
                 .try_to_vec()
                 .unwrap(),
         }
