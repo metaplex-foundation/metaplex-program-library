@@ -21,9 +21,12 @@ use mpl_token_metadata::{
         EDITION, EDITION_MARKER_BIT_SIZE, PREFIX,
     },
 };
-use solana_program::{borsh::try_from_slice_unchecked, pubkey::Pubkey};
+use solana_program::{
+    borsh::try_from_slice_unchecked, program_option::COption, program_pack::Pack, pubkey::Pubkey,
+};
 use solana_program_test::{BanksClientError, ProgramTestContext};
 use solana_sdk::{
+    account::AccountSharedData,
     compute_budget::ComputeBudgetInstruction,
     signature::{Keypair, Signer},
     transaction::Transaction,
@@ -31,6 +34,7 @@ use solana_sdk::{
 use spl_associated_token_account::{
     get_associated_token_address, instruction::create_associated_token_account,
 };
+use spl_token::state::Account;
 
 use super::{create_mint, create_token_account, get_account, mint_tokens};
 
@@ -1086,6 +1090,26 @@ impl DigitalAsset {
         false
     }
 
+    pub async fn inject_close_authority(
+        &self,
+        context: &mut ProgramTestContext,
+        close_authority: &Pubkey,
+    ) {
+        // To simulate the state where the close authority is set delegate instead of
+        // the asset's master edition account, we need to inject modified token account state.
+        let mut token_account = get_account(context, &self.token.unwrap()).await;
+        let mut token = Account::unpack(&token_account.data).unwrap();
+
+        token.close_authority = COption::Some(*close_authority);
+        let mut data = vec![0u8; Account::LEN];
+        let buffer = &mut data[..Account::LEN];
+        Account::pack(token, buffer).unwrap();
+        token_account.data = buffer.to_vec();
+
+        let token_account_shared_data: AccountSharedData = token_account.into();
+        context.set_account(&self.token.unwrap(), &token_account_shared_data);
+    }
+
     pub async fn assert_creators_matches_on_chain(
         &self,
         context: &mut ProgramTestContext,
@@ -1166,6 +1190,23 @@ impl DigitalAsset {
         let token_record_account = context
             .banks_client
             .get_account(self.token_record.unwrap())
+            .await?;
+
+        assert!(token_record_account.is_none());
+
+        Ok(())
+    }
+
+    pub async fn assert_token_record_closed(
+        &self,
+        context: &mut ProgramTestContext,
+        token: &Pubkey,
+    ) -> Result<(), BanksClientError> {
+        let (token_record_pubkey, _) = find_token_record_account(&self.mint.pubkey(), token);
+
+        let token_record_account = context
+            .banks_client
+            .get_account(token_record_pubkey)
             .await?;
 
         assert!(token_record_account.is_none());

@@ -121,6 +121,10 @@ pub async fn create_default_metaplex_rule_set(
         scenario: DelegateScenario::Token(TokenDelegateRole::Transfer),
     };
 
+    let delegate_utility_operation = Operation::Delegate {
+        scenario: DelegateScenario::Token(TokenDelegateRole::Utility),
+    };
+
     let mut royalty_rule_set = RuleSetV1::new(name, creator.pubkey());
     royalty_rule_set
         .add(owner_operation.to_string(), transfer_rule.clone())
@@ -146,7 +150,13 @@ pub async fn create_default_metaplex_rule_set(
             )
             .unwrap();
         royalty_rule_set
-            .add(delegate_transfer_operation.to_string(), delegate_rule)
+            .add(
+                delegate_transfer_operation.to_string(),
+                delegate_rule.clone(),
+            )
+            .unwrap();
+        royalty_rule_set
+            .add(delegate_utility_operation.to_string(), delegate_rule)
             .unwrap();
     } else {
         royalty_rule_set
@@ -160,6 +170,9 @@ pub async fn create_default_metaplex_rule_set(
             .unwrap();
         royalty_rule_set
             .add(delegate_transfer_operation.to_string(), Rule::Pass.clone())
+            .unwrap();
+        royalty_rule_set
+            .add(delegate_utility_operation.to_string(), Rule::Pass)
             .unwrap();
     }
 

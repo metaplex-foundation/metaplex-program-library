@@ -590,6 +590,52 @@ mod delegate {
 
         // asserts
 
-        assert_custom_error_ix!(1, error, RuleSetError::ProgramOwnedListCheckFailed);
+        assert_custom_error_ix!(1, error, RuleSetError::DataIsEmpty);
+    }
+
+    #[tokio::test]
+    async fn invalid_close_authority_fails() {
+        let mut context = program_test().start_with_context().await;
+
+        // asset
+
+        let mut asset = DigitalAsset::default();
+        asset
+            .create_and_mint(
+                &mut context,
+                TokenStandard::ProgrammableNonFungible,
+                None,
+                None,
+                1,
+            )
+            .await
+            .unwrap();
+
+        assert!(asset.token.is_some());
+
+        let delegate = Keypair::new();
+        let delegate_pubkey = delegate.pubkey();
+        // delegate.airdrop(&mut context, 1_000_000).await.unwrap();
+
+        let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+
+        asset
+            .inject_close_authority(&mut context, &delegate_pubkey)
+            .await;
+
+        let err = asset
+            .delegate(
+                &mut context,
+                payer,
+                delegate_pubkey,
+                DelegateArgs::UtilityV1 {
+                    amount: 1,
+                    authorization_data: None,
+                },
+            )
+            .await
+            .unwrap_err();
+
+        assert_custom_error_ix!(1, err, MetadataError::InvalidCloseAuthority);
     }
 }

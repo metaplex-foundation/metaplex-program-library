@@ -618,15 +618,16 @@ mod revoke {
 
         assert!(asset.token.is_some());
 
-        let user = Keypair::new();
-        let user_pubkey = user.pubkey();
+        let delegate = Keypair::new();
+        let delegate_pubkey = delegate.pubkey();
+
         let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
 
         asset
             .delegate(
                 &mut context,
                 payer,
-                user_pubkey,
+                delegate_pubkey,
                 DelegateArgs::UtilityV1 {
                     amount: 1,
                     authorization_data: None,
@@ -635,19 +636,11 @@ mod revoke {
             .await
             .unwrap();
 
-        // To simulate the state where the close authority is set delegate instead of
+        // To simulate the state where the close authority is set to the delegate instead of
         // the asset's master edition account, we need to inject modified token account state.
-        let mut token_account = get_account(&mut context, &asset.token.unwrap()).await;
-        let mut token = Account::unpack(&token_account.data).unwrap();
-
-        token.close_authority = COption::Some(user_pubkey);
-        let mut data = vec![0u8; Account::LEN];
-        let buffer = &mut data[..Account::LEN];
-        Account::pack(token, buffer).unwrap();
-        token_account.data = buffer.to_vec();
-
-        let token_account_shared_data: AccountSharedData = token_account.into();
-        context.set_account(&asset.token.unwrap(), &token_account_shared_data);
+        asset
+            .inject_close_authority(&mut context, &delegate_pubkey)
+            .await;
 
         let payer = context.payer.dirty_clone();
         let approver = context.payer.dirty_clone();
@@ -660,7 +653,7 @@ mod revoke {
                 &mut context,
                 payer,
                 approver,
-                user_pubkey,
+                delegate_pubkey,
                 RevokeArgs::UtilityV1,
             )
             .await
