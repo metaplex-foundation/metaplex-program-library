@@ -752,6 +752,8 @@ pub fn bid_logic<'info>(
                 ],
             )?;
         }
+
+        #[allow(clippy::explicit_auto_deref)]
         sol_memset(
             *ts_info.try_borrow_mut_data()?,
             trade_state_bump,
@@ -954,6 +956,7 @@ pub fn auctioneer_bid_logic<'info>(
                 ],
             )?;
         }
+        #[allow(clippy::explicit_auto_deref)]
         sol_memset(
             *ts_info.try_borrow_mut_data()?,
             trade_state_bump,

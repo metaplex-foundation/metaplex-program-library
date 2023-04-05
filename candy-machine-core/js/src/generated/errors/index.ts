@@ -464,6 +464,198 @@ createErrorFromCodeLookup.set(0x1784, () => new NotFullyLoadedError());
 createErrorFromNameLookup.set('NotFullyLoaded', () => new NotFullyLoadedError());
 
 /**
+ * InstructionBuilderFailed: 'Instruction could not be created'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InstructionBuilderFailedError extends Error {
+  readonly code: number = 0x1785;
+  readonly name: string = 'InstructionBuilderFailed';
+  constructor() {
+    super('Instruction could not be created');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InstructionBuilderFailedError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1785, () => new InstructionBuilderFailedError());
+createErrorFromNameLookup.set(
+  'InstructionBuilderFailed',
+  () => new InstructionBuilderFailedError(),
+);
+
+/**
+ * MissingCollectionAuthorityRecord: 'Missing collection authority record'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MissingCollectionAuthorityRecordError extends Error {
+  readonly code: number = 0x1786;
+  readonly name: string = 'MissingCollectionAuthorityRecord';
+  constructor() {
+    super('Missing collection authority record');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MissingCollectionAuthorityRecordError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1786, () => new MissingCollectionAuthorityRecordError());
+createErrorFromNameLookup.set(
+  'MissingCollectionAuthorityRecord',
+  () => new MissingCollectionAuthorityRecordError(),
+);
+
+/**
+ * MissingMetadataDelegateRecord: 'Missing metadata delegate record'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MissingMetadataDelegateRecordError extends Error {
+  readonly code: number = 0x1787;
+  readonly name: string = 'MissingMetadataDelegateRecord';
+  constructor() {
+    super('Missing metadata delegate record');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MissingMetadataDelegateRecordError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1787, () => new MissingMetadataDelegateRecordError());
+createErrorFromNameLookup.set(
+  'MissingMetadataDelegateRecord',
+  () => new MissingMetadataDelegateRecordError(),
+);
+
+/**
+ * InvalidTokenStandard: 'Invalid token standard'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidTokenStandardError extends Error {
+  readonly code: number = 0x1788;
+  readonly name: string = 'InvalidTokenStandard';
+  constructor() {
+    super('Invalid token standard');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidTokenStandardError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1788, () => new InvalidTokenStandardError());
+createErrorFromNameLookup.set('InvalidTokenStandard', () => new InvalidTokenStandardError());
+
+/**
+ * MissingTokenAccount: 'Missing token account'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MissingTokenAccountError extends Error {
+  readonly code: number = 0x1789;
+  readonly name: string = 'MissingTokenAccount';
+  constructor() {
+    super('Missing token account');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MissingTokenAccountError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1789, () => new MissingTokenAccountError());
+createErrorFromNameLookup.set('MissingTokenAccount', () => new MissingTokenAccountError());
+
+/**
+ * MissingTokenRecord: 'Missing token record'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MissingTokenRecordError extends Error {
+  readonly code: number = 0x178a;
+  readonly name: string = 'MissingTokenRecord';
+  constructor() {
+    super('Missing token record');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MissingTokenRecordError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x178a, () => new MissingTokenRecordError());
+createErrorFromNameLookup.set('MissingTokenRecord', () => new MissingTokenRecordError());
+
+/**
+ * MissingInstructionsSysvar: 'Missing instructions sysvar account'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MissingInstructionsSysvarError extends Error {
+  readonly code: number = 0x178b;
+  readonly name: string = 'MissingInstructionsSysvar';
+  constructor() {
+    super('Missing instructions sysvar account');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MissingInstructionsSysvarError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x178b, () => new MissingInstructionsSysvarError());
+createErrorFromNameLookup.set(
+  'MissingInstructionsSysvar',
+  () => new MissingInstructionsSysvarError(),
+);
+
+/**
+ * MissingSplAtaProgram: 'Missing SPL ATA program'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MissingSplAtaProgramError extends Error {
+  readonly code: number = 0x178c;
+  readonly name: string = 'MissingSplAtaProgram';
+  constructor() {
+    super('Missing SPL ATA program');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MissingSplAtaProgramError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x178c, () => new MissingSplAtaProgramError());
+createErrorFromNameLookup.set('MissingSplAtaProgram', () => new MissingSplAtaProgramError());
+
+/**
+ * InvalidAccountVersion: 'Invalid account version'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidAccountVersionError extends Error {
+  readonly code: number = 0x178d;
+  readonly name: string = 'InvalidAccountVersion';
+  constructor() {
+    super('Invalid account version');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidAccountVersionError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x178d, () => new InvalidAccountVersionError());
+createErrorFromNameLookup.set('InvalidAccountVersion', () => new InvalidAccountVersionError());
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

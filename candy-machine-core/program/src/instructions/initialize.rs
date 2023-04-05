@@ -1,20 +1,24 @@
 use anchor_lang::{prelude::*, Discriminator};
-use mpl_token_metadata::state::MAX_SYMBOL_LENGTH;
+use mpl_token_metadata::state::{TokenStandard, MAX_SYMBOL_LENGTH};
 
 use crate::{
     approve_collection_authority_helper,
     constants::{AUTHORITY_SEED, HIDDEN_SECTION},
     state::{CandyMachine, CandyMachineData},
     utils::fixed_length_string,
-    ApproveCollectionAuthorityHelperAccounts,
+    AccountVersion, ApproveCollectionAuthorityHelperAccounts,
 };
 
 pub fn initialize(ctx: Context<Initialize>, data: CandyMachineData) -> Result<()> {
+    msg!("(Deprecated as of 0.2.0) Use InitializeV2 instead");
+
     let candy_machine_account = &mut ctx.accounts.candy_machine;
 
     let mut candy_machine = CandyMachine {
         data,
-        features: 0,
+        version: AccountVersion::V1,
+        token_standard: TokenStandard::NonFungible as u8,
+        features: [0u8; 6],
         authority: ctx.accounts.authority.key(),
         mint_authority: ctx.accounts.authority.key(),
         collection_mint: ctx.accounts.collection_mint.key(),
@@ -41,7 +45,6 @@ pub fn initialize(ctx: Context<Initialize>, data: CandyMachineData) -> Result<()
         authority_pda: ctx.accounts.authority_pda.to_account_info(),
         collection_mint: ctx.accounts.collection_mint.to_account_info(),
         collection_metadata: ctx.accounts.collection_metadata.to_account_info(),
-        collection_master_edition: ctx.accounts.collection_master_edition.to_account_info(),
         collection_authority_record: ctx.accounts.collection_authority_record.to_account_info(),
         token_metadata_program: ctx.accounts.token_metadata_program.to_account_info(),
         system_program: ctx.accounts.system_program.to_account_info(),
@@ -53,10 +56,13 @@ pub fn initialize(ctx: Context<Initialize>, data: CandyMachineData) -> Result<()
     Ok(())
 }
 
-/// Create a new candy machine.
+/// Initializes a new candy machine.
 #[derive(Accounts)]
 #[instruction(data: CandyMachineData)]
 pub struct Initialize<'info> {
+    /// Candy Machine account. The account space must be allocated to allow accounts larger
+    /// than 10kb.
+    ///
     /// CHECK: account constraints checked in account trait
     #[account(
         zero,
@@ -64,6 +70,9 @@ pub struct Initialize<'info> {
         constraint = candy_machine.to_account_info().owner == program_id && candy_machine.to_account_info().data_len() >= data.get_space_for_candy()?
     )]
     candy_machine: UncheckedAccount<'info>,
+
+    /// Authority PDA used to verify minted NFTs to the collection.
+    ///
     /// CHECK: account checked in seeds constraint
     #[account(
         mut,
@@ -71,23 +80,47 @@ pub struct Initialize<'info> {
         bump
     )]
     authority_pda: UncheckedAccount<'info>,
+
+    /// Candy Machine authority. This is the address that controls the upate of the candy machine.
+    ///
     /// CHECK: authority can be any account and is not written to or read
     authority: UncheckedAccount<'info>,
-    // payer of the transaction
+
+    /// Payer of the transaction.
     payer: Signer<'info>,
+
+    /// Metadata account of the collection.
+    ///
     /// CHECK: account checked in CPI
     collection_metadata: UncheckedAccount<'info>,
+
+    /// Mint account of the collection.
+    ///
     /// CHECK: account checked in CPI
     collection_mint: UncheckedAccount<'info>,
+
+    /// Master Edition account of the collection.
+    ///
     /// CHECK: account checked in CPI
     collection_master_edition: UncheckedAccount<'info>,
+
+    /// Update authority of the collection. This needs to be a signer so the candy
+    /// machine can approve a delegate to verify minted NFTs to the collection.
     #[account(mut)]
     collection_update_authority: Signer<'info>,
+
+    /// Collection authority record. The delegate is used to verify NFTs.
+    ///
     /// CHECK: account checked in CPI
     #[account(mut)]
     collection_authority_record: UncheckedAccount<'info>,
-    /// CHECK: account checked in CPI
+
+    /// Token Metadata program.
+    ///
+    /// CHECK: account constraint checked in account trait
     #[account(address = mpl_token_metadata::id())]
     token_metadata_program: UncheckedAccount<'info>,
+
+    /// System program.
     system_program: Program<'info, System>,
 }

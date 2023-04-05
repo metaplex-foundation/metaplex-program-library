@@ -360,6 +360,8 @@ fn cancel_logic<'c, 'info>(
         .lamports()
         .checked_add(curr_lamp)
         .ok_or(AuctionHouseError::NumericalOverflow)?;
+
+    #[allow(clippy::explicit_auto_deref)]
     sol_memset(*trade_state.try_borrow_mut_data()?, 0, TRADE_STATE_SIZE);
 
     Ok(())

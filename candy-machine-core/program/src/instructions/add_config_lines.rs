@@ -147,11 +147,13 @@ pub fn add_config_lines(
     Ok(())
 }
 
-/// Add multiple config lines to the candy machine.
+/// Add multiple config lines to a candy machine.
 #[derive(Accounts)]
 pub struct AddConfigLines<'info> {
+    /// Candy Machine account.
     #[account(mut, has_one = authority)]
     candy_machine: Account<'info, CandyMachine>,
-    // autority of the candy machine
+
+    /// Autority of the candy machine.
     authority: Signer<'info>,
 }

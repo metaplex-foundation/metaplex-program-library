@@ -399,10 +399,24 @@ pub fn pay_creator_fees<'a>(
                         .ok_or(AuctionHouseError::NumericalOverflow)?
                         .checked_div(100)
                         .ok_or(AuctionHouseError::NumericalOverflow)? as u64;
+                let current_creator_info = next_account_info(remaining_accounts)?;
+                let creator_rent_minimum =
+                    Rent::get()?.minimum_balance(current_creator_info.data.borrow().len());
+                if is_native
+                    && ((creator_fee + **current_creator_info.lamports.borrow())
+                        < creator_rent_minimum)
+                {
+                    msg!(
+                        "cannot pay creator {} {} lamports since balance violates rent exempt minimum",
+                        current_creator_info.key,
+                        creator_fee
+                    );
+                    continue;
+                }
+
                 remaining_fee = remaining_fee
                     .checked_sub(creator_fee)
                     .ok_or(AuctionHouseError::NumericalOverflow)?;
-                let current_creator_info = next_account_info(remaining_accounts)?;
                 assert_keys_equal(creator.address, *current_creator_info.key)?;
                 if !is_native {
                     let current_creator_token_account_info = next_account_info(remaining_accounts)?;
@@ -699,11 +713,8 @@ pub fn close_account<'a>(
         .checked_add(current_lamports)
         .ok_or(AuctionHouseError::NumericalOverflow)?;
 
-    sol_memset(
-        &mut *source_account.try_borrow_mut_data()?,
-        0,
-        account_data_size,
-    );
+    #[allow(clippy::explicit_auto_deref)]
+    sol_memset(*source_account.try_borrow_mut_data()?, 0, account_data_size);
 
     Ok(())
 }
