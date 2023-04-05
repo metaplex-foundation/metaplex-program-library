@@ -1057,12 +1057,9 @@ test('Transfer: ProgrammableNonFungible (rule set revision)', async (t) => {
     'token amount after transfer equal to 0',
   );
 
-  // revision on the source token must be null
-  pda = await TokenRecord.fromAccountAddress(connection, ownerTokenRecord);
-
-  spok(t, pda, {
-    ruleSetRevision: null,
-  });
+  // Sourec token record is close after transfer.
+  const info = await connection.getAccountInfo(ownerTokenRecord, 'confirmed');
+  t.true(info === null);
 
   // revision on the destination token must be null
   pda = await TokenRecord.fromAccountAddress(connection, destinationTokenRecord);
