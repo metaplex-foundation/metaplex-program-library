@@ -399,23 +399,9 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
                 spl_token_program_info: ctx.accounts.spl_token_program_info,
             })?;
 
-            // let edition_seeds = edition_seeds!(ctx.accounts.mint_info.key);
-
-            // let (owner, authority_signer_seeds) =
-            //     if let COption::Some(close_authority) = token.close_authority {
-            //         if &close_authority != master_edition_info.key {
-            //             return Err(MetadataError::InvalidCloseAuthority.into());
-            //         }
-            //         (master_edition_info.clone(), Some(edition_seeds.as_slice()))
-            //     } else {
-            //         (ctx.accounts.token_owner_info.clone(), None)
-            //     };
-
             // If the token record account for the destination owner doesn't exist,
             // we create it.
             if destination_token_record_info.data_is_empty() {
-                msg!("Init new token record");
-
                 create_token_record_account(
                     program_id,
                     destination_token_record_info,

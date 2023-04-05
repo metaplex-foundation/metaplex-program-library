@@ -216,14 +216,10 @@ fn burn_v1(program_id: &Pubkey, ctx: Context<Burn>, args: BurnArgs) -> ProgramRe
             // Utility Delegate is the only delegate that can burn an asset.
             if let Some(TokenDelegateRole::Utility) = token_record.delegate_role {
                 if let COption::Some(close_authority) = token.close_authority {
-                    msg!("Existing close authority: {:?}", close_authority);
-                    msg!("Master edition: {:?}", edition_info.key);
                     if &close_authority != edition_info.key {
                         return Err(MetadataError::InvalidCloseAuthority.into());
                     }
                     args.me_close_authority = true;
-                } else {
-                    msg!("No close authority found");
                 }
             }
 
