@@ -429,17 +429,6 @@ impl DigitalAsset {
         // mints tokens
         self.mint(context, authorization_rules, authorization_data, amount)
             .await
-            .unwrap();
-
-        if matches!(
-            token_standard,
-            TokenStandard::NonFungible
-                | TokenStandard::ProgrammableNonFungible
-                | TokenStandard::NonFungibleEdition
-        ) {
-            self.set_edition();
-        }
-        Ok(())
     }
 
     pub async fn create_and_mint_with_creators(
@@ -471,18 +460,6 @@ impl DigitalAsset {
         // mints tokens
         self.mint(context, authorization_rules, authorization_data, amount)
             .await
-            .unwrap();
-
-        if matches!(
-            token_standard,
-            TokenStandard::NonFungible
-                | TokenStandard::ProgrammableNonFungible
-                | TokenStandard::NonFungibleEdition
-        ) {
-            self.set_edition();
-        }
-
-        Ok(())
     }
 
     pub async fn create_and_mint_item_with_collection(
@@ -514,18 +491,6 @@ impl DigitalAsset {
         // mints tokens
         self.mint(context, authorization_rules, authorization_data, amount)
             .await
-            .unwrap();
-
-        if matches!(
-            token_standard,
-            TokenStandard::NonFungible
-                | TokenStandard::ProgrammableNonFungible
-                | TokenStandard::NonFungibleEdition
-        ) {
-            self.set_edition();
-        }
-
-        Ok(())
     }
 
     pub async fn create_and_mint_collection_parent(
@@ -557,18 +522,6 @@ impl DigitalAsset {
         // mints tokens
         self.mint(context, authorization_rules, authorization_data, amount)
             .await
-            .unwrap();
-
-        if matches!(
-            token_standard,
-            TokenStandard::NonFungible
-                | TokenStandard::ProgrammableNonFungible
-                | TokenStandard::NonFungibleEdition
-        ) {
-            self.set_edition();
-        }
-
-        Ok(())
     }
 
     pub async fn create_and_mint_nonfungible(
@@ -594,11 +547,7 @@ impl DigitalAsset {
         .unwrap();
 
         // mints tokens
-        self.mint(context, None, None, 1).await.unwrap();
-
-        self.set_edition();
-
-        Ok(())
+        self.mint(context, None, None, 1).await
     }
 
     pub async fn delegate(

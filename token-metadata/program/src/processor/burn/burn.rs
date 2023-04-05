@@ -1,10 +1,12 @@
+use solana_program::program_option::COption;
+
 use super::*;
 
 use crate::{
     pda::find_token_record_account,
     processor::burn::{fungible::burn_fungible, nonfungible_edition::burn_nonfungible_edition},
     state::{AuthorityRequest, AuthorityType, TokenDelegateRole, TokenRecord, TokenState},
-    utils::{check_token_standard, clear_close_authority, thaw, ClearCloseAuthorityParams},
+    utils::{check_token_standard, thaw},
 };
 
 /// Burn an asset, closing associated accounts.
@@ -160,7 +162,10 @@ fn burn_v1(program_id: &Pubkey, ctx: Context<Burn>, args: BurnArgs) -> ProgramRe
 
     match token_standard {
         TokenStandard::NonFungible => {
-            let args = BurnNonFungibleArgs { metadata, token };
+            let args = BurnNonFungibleArgs {
+                metadata,
+                me_close_authority: false,
+            };
 
             burn_nonfungible(&ctx, args)?;
         }
@@ -203,17 +208,24 @@ fn burn_v1(program_id: &Pubkey, ctx: Context<Burn>, args: BurnArgs) -> ProgramRe
                 .edition_info
                 .ok_or(MetadataError::MissingEditionAccount)?;
 
-            
-            clear_close_authority(ClearCloseAuthorityParams {
-                token_info: ctx.accounts.token_info,
-                mint_info: ctx.accounts.mint_info,
-                token,
-                master_edition_info: edition_info,
-                authority_info: edition_info,
-                spl_token_program_info: ctx.accounts.spl_token_program_info,
-            })?;
+            let mut args = BurnNonFungibleArgs {
+                metadata,
+                me_close_authority: false,
+            };
 
-            let args = BurnNonFungibleArgs { metadata, token };
+            // Utility Delegate is the only delegate that can burn an asset.
+            if let Some(TokenDelegateRole::Utility) = token_record.delegate_role {
+                if let COption::Some(close_authority) = token.close_authority {
+                    msg!("Existing close authority: {:?}", close_authority);
+                    msg!("Master edition: {:?}", edition_info.key);
+                    if &close_authority != edition_info.key {
+                        return Err(MetadataError::InvalidCloseAuthority.into());
+                    }
+                    args.me_close_authority = true;
+                } else {
+                    msg!("No close authority found");
+                }
+            }
 
             burn_nonfungible(&ctx, args)?;
 

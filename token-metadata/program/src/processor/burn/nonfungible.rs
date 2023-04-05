@@ -2,6 +2,7 @@ use super::*;
 
 pub(crate) struct BurnNonFungibleArgs {
     pub(crate) metadata: Metadata,
+    pub(crate) me_close_authority: bool,
 }
 
 pub(crate) fn burn_nonfungible(ctx: &Context<Burn>, args: BurnNonFungibleArgs) -> ProgramResult {
@@ -56,7 +57,15 @@ pub(crate) fn burn_nonfungible(ctx: &Context<Burn>, args: BurnNonFungibleArgs) -
         ctx.accounts.mint_info.key.as_ref(),
         EDITION.as_bytes(),
     ]);
-    assert_derivation(&crate::ID, edition_info, &edition_info_path)?;
+    let bump = assert_derivation(&crate::ID, edition_info, &edition_info_path)?;
+
+    let edition_seeds = &[
+        PREFIX.as_bytes(),
+        crate::ID.as_ref(),
+        ctx.accounts.mint_info.key.as_ref(),
+        EDITION.as_bytes(),
+        &[bump],
+    ];
 
     // Burn the SPL token
     let params = TokenBurnParams {
@@ -72,8 +81,16 @@ pub(crate) fn burn_nonfungible(ctx: &Context<Burn>, args: BurnNonFungibleArgs) -
     let close_params = TokenCloseParams {
         account: ctx.accounts.token_info.clone(),
         destination: ctx.accounts.authority_info.clone(),
-        owner: ctx.accounts.authority_info.clone(),
-        authority_signer_seeds: None,
+        owner: if args.me_close_authority {
+            edition_info.clone()
+        } else {
+            ctx.accounts.authority_info.clone()
+        },
+        authority_signer_seeds: if args.me_close_authority {
+            Some(edition_seeds.as_slice())
+        } else {
+            None
+        },
         token_program: ctx.accounts.spl_token_program_info.clone(),
     };
     mpl_utils::token::spl_token_close(close_params).unwrap();
