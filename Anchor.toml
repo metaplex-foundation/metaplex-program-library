@@ -38,10 +38,5 @@ program = "target/deploy/mpl_hydra.so"
 
 [workspace]
 members = [
-  "token-entangler/program",
-  "token-metadata/program",
-  "auction-house/program",
-  "fixed-price-sale/program",
   "hydra/program",
-  "bubblegum/program",
 ]
