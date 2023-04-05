@@ -1,5 +1,4 @@
 use crate::{
-    error::HydraError,
     state::{Fanout, FanoutMembershipVoucher, MembershipModel},
 };
 
@@ -10,7 +9,7 @@ use crate::utils::logic::{
 
 use crate::utils::logic::distribution::{distribute_mint, distribute_native};
 
-use crate::{state::FanoutMembershipMintVoucher, utils::validation::*};
+use crate::{utils::validation::*};
 use clockwork_sdk::state::{Thread, ThreadAccount, ThreadResponse};
 
 use anchor_lang::prelude::*;
@@ -148,7 +147,7 @@ pub fn distribute_clock_for_nft(
                 payer.to_account_info(),
                 *current_snapshot,
                 payer_rewards,
-            );
+            )?;
         }
         distribute_native(
             &mut ctx.accounts.holding_account,

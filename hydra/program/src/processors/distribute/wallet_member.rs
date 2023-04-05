@@ -1,6 +1,5 @@
 use crate::{
-    error::HydraError,
-    state::{Fanout, FanoutMembershipMintVoucher, FanoutMembershipVoucher},
+    state::{Fanout, FanoutMembershipVoucher},
     utils::{
         logic::transfer::{transfer_from_mint_holding, transfer_native},
         validation::*,
@@ -135,7 +134,7 @@ pub fn distribute_clock_for_wallet(
                 payer.to_account_info(),
                 *current_snapshot,
                 payer_rewards,
-            );
+            )?;
         }
         distribute_native(
             &mut ctx.accounts.holding_account,

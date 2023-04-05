@@ -3,7 +3,6 @@ use crate::error::HydraError;
 use crate::state::{Fanout, FanoutMembershipVoucher, MembershipModel};
 
 use crate::{
-    state::FanoutMembershipMintVoucher,
     utils::logic::{
         calculation::calculate_payer_rewards,
         distribution::{distribute_mint, distribute_native},
@@ -154,7 +153,7 @@ pub fn distribute_clock_for_token(
                 payer.to_account_info(),
                 *current_snapshot,
                 payer_rewards,
-            );
+            )?;
         }
         distribute_native(
             &mut ctx.accounts.holding_account,
