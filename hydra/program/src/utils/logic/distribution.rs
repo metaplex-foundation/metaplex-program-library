@@ -18,7 +18,6 @@ pub fn distribute_native<'info>(
     if holding_account.key() != fanout.account_key {
         return Err(HydraError::InvalidHoldingAccount.into());
     }
-
     let fanout_snapshot = fanout.to_account_info().lamports();
     let fanout_snapshot_less_min = current_lamports(&rent, FANOUT_ACCOUNT_SIZE, fanout_snapshot)?;
     let fanout_transfer = transfer_native(
@@ -30,6 +29,7 @@ pub fn distribute_native<'info>(
     if fanout_transfer.is_err() {
         return Err(HydraError::BadArtithmetic.into());
     }
+
 
     let current_snapshot = holding_account.lamports();
     let current_snapshot_less_min =
@@ -70,9 +70,8 @@ pub fn distribute_mint<'info>(
     let mint = &fanout_mint;
     let fanout_for_mint_membership_voucher_unchecked = fanout_for_mint_membership_voucher;
     let fanout_mint_member_token_account_info = fanout_mint_member_token_account.to_account_info();
-    let fanout_for_mint = fanout_for_mint;
     let total_shares = fanout.total_shares as u64;
-    assert_owned_by(fanout_for_mint, &crate::ID)?;
+    assert_owned_by(&fanout_for_mint, &crate::ID)?;
     assert_owned_by(&fanout_mint_member_token_account_info, &Token::id())?;
     assert_owned_by(holding_account, &anchor_spl::token::Token::id())?;
     assert_ata(

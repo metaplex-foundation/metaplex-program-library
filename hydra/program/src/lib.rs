@@ -57,6 +57,28 @@ pub mod hydra {
         set_for_token_member_stake(ctx, shares)
     }
 
+
+    pub fn process_clock_distribute_nft(
+        ctx: Context<DistributeClockNftMember>,
+        distribute_for_mint: bool,
+    ) -> Result<clockwork_sdk::state::ThreadResponse> {
+        distribute_clock_for_nft(ctx, distribute_for_mint)
+    }
+
+    pub fn process_clock_distribute_wallet(
+        ctx: Context<DistributeClockWalletMember>,
+        distribute_for_mint: bool,
+    ) -> Result<clockwork_sdk::state::ThreadResponse> {
+        distribute_clock_for_wallet(ctx, distribute_for_mint)
+    }
+
+    pub fn process_clock_distribute_token(
+        ctx: Context<DistributeClockTokenMember>,
+        distribute_for_mint: bool,
+    ) -> Result<clockwork_sdk::state::ThreadResponse> {
+        distribute_clock_for_token(ctx, distribute_for_mint)
+    }
+
     pub fn process_distribute_nft(
         ctx: Context<DistributeNftMember>,
         distribute_for_mint: bool,

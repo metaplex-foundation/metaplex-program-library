@@ -19,6 +19,7 @@ cpi = ["no-entrypoint"]
 default = []
 
 [dependencies]
+clockwork-sdk = "1.4.2"
 anchor-lang = "0.26.0"
 anchor-spl = "0.26.0"
 spl-token = {version="3.5.0", features = [ "no-entrypoint" ]}

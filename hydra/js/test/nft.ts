@@ -33,10 +33,10 @@ describe('fanout', async () => {
   beforeEach(async () => {
     authorityWallet = Keypair.generate();
     let signature = await connection.requestAirdrop(authorityWallet.publicKey, 1000000000);
-    await connection.confirmTransaction(signature);
+    //await connection.confirmTransaction(signature);
     fanoutSdk = new FanoutClient(connection, new Wallet(authorityWallet));
     signature = await connection.requestAirdrop(authorityWallet.publicKey, 1000000000);
-    await connection.confirmTransaction(signature);
+    //await connection.confirmTransaction(signature);
   });
 
   describe('NFT membership model', () => {

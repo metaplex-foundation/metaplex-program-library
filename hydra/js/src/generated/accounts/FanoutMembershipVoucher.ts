@@ -23,7 +23,7 @@ export type FanoutMembershipVoucherArgs = {
   shares: beet.bignum;
 };
 
-const fanoutMembershipVoucherDiscriminator = [185, 62, 74, 60, 105, 158, 178, 125];
+export const fanoutMembershipVoucherDiscriminator = [185, 62, 74, 60, 105, 158, 178, 125];
 /**
  * Holds the data for the {@link FanoutMembershipVoucher} Account and provides de/serialization
  * functionality for that data
@@ -75,12 +75,25 @@ export class FanoutMembershipVoucher implements FanoutMembershipVoucherArgs {
   static async fromAccountAddress(
     connection: web3.Connection,
     address: web3.PublicKey,
+    commitmentOrConfig?: web3.Commitment | web3.GetAccountInfoConfig,
   ): Promise<FanoutMembershipVoucher> {
-    const accountInfo = await connection.getAccountInfo(address);
+    const accountInfo = await connection.getAccountInfo(address, commitmentOrConfig);
     if (accountInfo == null) {
       throw new Error(`Unable to find FanoutMembershipVoucher account at ${address}`);
     }
     return FanoutMembershipVoucher.fromAccountInfo(accountInfo, 0)[0];
+  }
+
+  /**
+   * Provides a {@link web3.Connection.getProgramAccounts} config builder,
+   * to fetch accounts matching filters that can be specified via that builder.
+   *
+   * @param programId - the program that owns the accounts we are filtering
+   */
+  static gpaBuilder(
+    programId: web3.PublicKey = new web3.PublicKey('hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg'),
+  ) {
+    return beetSolana.GpaBuilder.fromStruct(programId, fanoutMembershipVoucherBeet);
   }
 
   /**

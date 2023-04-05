@@ -537,7 +537,7 @@
         },
         {
           "name": "payer",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -619,7 +619,8 @@
         {
           "name": "fanoutForMintMembershipVoucher",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "isOptional": true
         },
         {
           "name": "fanoutMint",
@@ -629,7 +630,8 @@
         {
           "name": "fanoutMintMemberTokenAccount",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "isOptional": true
         },
         {
           "name": "systemProgram",
@@ -648,7 +650,7 @@
         },
         {
           "name": "payerTokenAccount",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         }
       ],
@@ -672,12 +674,12 @@
         },
         {
           "name": "payer",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
           "name": "member",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -743,7 +745,8 @@
         {
           "name": "fanoutForMintMembershipVoucher",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "isOptional": true
         },
         {
           "name": "fanoutMint",
@@ -753,7 +756,8 @@
         {
           "name": "fanoutMintMemberTokenAccount",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "isOptional": true
         },
         {
           "name": "systemProgram",
@@ -772,7 +776,7 @@
         },
         {
           "name": "payerTokenAccount",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         }
       ],
@@ -796,12 +800,12 @@
         },
         {
           "name": "payer",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
           "name": "member",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -867,7 +871,8 @@
         {
           "name": "fanoutForMintMembershipVoucher",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "isOptional": true
         },
         {
           "name": "fanoutMint",
@@ -877,7 +882,8 @@
         {
           "name": "fanoutMintMemberTokenAccount",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "isOptional": true
         },
         {
           "name": "systemProgram",
@@ -906,7 +912,7 @@
         },
         {
           "name": "payerTokenAccount",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         }
       ],
@@ -1002,7 +1008,8 @@
         {
           "name": "fanoutForMintMembershipVoucher",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "isOptional": true
         },
         {
           "name": "fanoutMint",
@@ -1012,7 +1019,8 @@
         {
           "name": "fanoutMintMemberTokenAccount",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "isOptional": true
         },
         {
           "name": "systemProgram",
@@ -1108,7 +1116,8 @@
         {
           "name": "fanoutForMintMembershipVoucher",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "isOptional": true
         },
         {
           "name": "fanoutMint",
@@ -1118,7 +1127,8 @@
         {
           "name": "fanoutMintMemberTokenAccount",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "isOptional": true
         },
         {
           "name": "systemProgram",
@@ -1214,7 +1224,8 @@
         {
           "name": "fanoutForMintMembershipVoucher",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "isOptional": true
         },
         {
           "name": "fanoutMint",
@@ -1224,7 +1235,8 @@
         {
           "name": "fanoutMintMemberTokenAccount",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "isOptional": true
         },
         {
           "name": "systemProgram",
@@ -1924,11 +1936,5 @@
       "name": "PayerATANotSupplied",
       "msg": "Payer ATA Not Supplied"
     }
-  ],
-  "metadata": {
-    "address": "hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg",
-    "origin": "anchor",
-    "binaryVersion": "0.26.0",
-    "libVersion": "0.26.0"
-  }
+  ]
 }

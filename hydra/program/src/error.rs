@@ -94,4 +94,6 @@ pub enum HydraError {
 
     #[msg("Sending Sol to a SPL token destination will render the sol unusable")]
     InvalidCloseAccountDestination,
+    #[msg("Payer ATA Not Supplied")]
+    PayerATANotSupplied,
 }

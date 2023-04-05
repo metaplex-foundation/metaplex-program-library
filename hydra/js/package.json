@@ -49,7 +49,8 @@
     "@solana/spl-token": "^0.3.6",
     "@solana/web3.js": "^1.50.1",
     "bn.js": "^5.2.0",
-    "debug": "^4.3.3"
+    "debug": "^4.3.3",
+    "short-uuid": "^4.2.2"
   },
   "devDependencies": {
     "@metaplex-foundation/amman": "^0.12.0",
