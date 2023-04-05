@@ -1,19 +1,16 @@
-use crate::{
-    state::{Fanout, FanoutMembershipVoucher},
-    utils::{
-        logic::transfer::{transfer_from_mint_holding, transfer_native},
-        validation::*,
-    },
-    MembershipModel,
-};
+use crate::MembershipModel;
 use anchor_lang::prelude::*;
-use anchor_spl::token::{Mint, Token, TokenAccount};
 
-use crate::utils::logic::calculation::calculate_payer_rewards;
+use crate::state::{Fanout, FanoutMembershipVoucher};
+use crate::utils::validation::*;
 
 use crate::utils::logic::distribution::{distribute_mint, distribute_native};
-use clockwork_sdk::state::{Thread, ThreadAccount, ThreadResponse};
+use anchor_spl::token::{Mint, Token};
 
+use clockwork_sdk::state::{Thread, ThreadAccount, ThreadResponse};
+use crate::utils::logic::transfer::{transfer_native, transfer_from_mint_holding};
+use crate::utils::logic::calculation::calculate_payer_rewards;
+use anchor_spl::token::TokenAccount;
 #[derive(Accounts)]
 #[instruction(distribute_for_mint: bool)]
 pub struct DistributeClockWalletMember<'info> {

@@ -1,19 +1,15 @@
-use crate::{
-    state::{Fanout, FanoutMembershipVoucher, MembershipModel},
-};
-
-use crate::utils::logic::{
-    calculation::calculate_payer_rewards,
-    transfer::{transfer_from_mint_holding, transfer_native},
-};
+use crate::state::{Fanout, FanoutMembershipVoucher, MembershipModel};
 
 use crate::utils::logic::distribution::{distribute_mint, distribute_native};
 
-use crate::{utils::validation::*};
-use clockwork_sdk::state::{Thread, ThreadAccount, ThreadResponse};
+use crate::utils::validation::*;
 
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount};
+
+use clockwork_sdk::state::{Thread, ThreadAccount, ThreadResponse};
+use crate::utils::logic::transfer::{transfer_native, transfer_from_mint_holding};
+use crate::utils::logic::calculation::calculate_payer_rewards;
 
 #[derive(Accounts)]
 #[instruction(distribute_for_mint: bool)]
