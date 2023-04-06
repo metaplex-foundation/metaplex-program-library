@@ -14,6 +14,7 @@ import { CollectionDetailsToggle, collectionDetailsToggleBeet } from './Collecti
 import { UsesToggle, usesToggleBeet } from './UsesToggle';
 import { RuleSetToggle, ruleSetToggleBeet } from './RuleSetToggle';
 import { AuthorizationData, authorizationDataBeet } from './AuthorizationData';
+import { TokenStandard, tokenStandardBeet } from './TokenStandard';
 /**
  * This type is used to derive the {@link UpdateArgs} type as well as the de/serializer.
  * However don't refer to it in your code but use the {@link UpdateArgs} type instead.
@@ -35,6 +36,18 @@ export type UpdateArgsRecord = {
     ruleSet: RuleSetToggle;
     authorizationData: beet.COption<AuthorizationData>;
   };
+  V2: {
+    newUpdateAuthority: beet.COption<web3.PublicKey>;
+    data: beet.COption<Data>;
+    primarySaleHappened: beet.COption<boolean>;
+    isMutable: beet.COption<boolean>;
+    collection: CollectionToggle;
+    collectionDetails: CollectionDetailsToggle;
+    uses: UsesToggle;
+    ruleSet: RuleSetToggle;
+    tokenStandard: beet.COption<TokenStandard>;
+    authorizationData: beet.COption<AuthorizationData>;
+  };
 };
 
 /**
@@ -52,6 +65,8 @@ export type UpdateArgs = beet.DataEnumKeyAsKind<UpdateArgsRecord>;
 
 export const isUpdateArgsV1 = (x: UpdateArgs): x is UpdateArgs & { __kind: 'V1' } =>
   x.__kind === 'V1';
+export const isUpdateArgsV2 = (x: UpdateArgs): x is UpdateArgs & { __kind: 'V2' } =>
+  x.__kind === 'V2';
 
 /**
  * @category userTypes
@@ -73,6 +88,25 @@ export const updateArgsBeet = beet.dataEnum<UpdateArgsRecord>([
         ['authorizationData', beet.coption(authorizationDataBeet)],
       ],
       'UpdateArgsRecord["V1"]',
+    ),
+  ],
+
+  [
+    'V2',
+    new beet.FixableBeetArgsStruct<UpdateArgsRecord['V2']>(
+      [
+        ['newUpdateAuthority', beet.coption(beetSolana.publicKey)],
+        ['data', beet.coption(dataBeet)],
+        ['primarySaleHappened', beet.coption(beet.bool)],
+        ['isMutable', beet.coption(beet.bool)],
+        ['collection', collectionToggleBeet],
+        ['collectionDetails', collectionDetailsToggleBeet],
+        ['uses', usesToggleBeet],
+        ['ruleSet', ruleSetToggleBeet],
+        ['tokenStandard', beet.coption(tokenStandardBeet)],
+        ['authorizationData', beet.coption(authorizationDataBeet)],
+      ],
+      'UpdateArgsRecord["V2"]',
     ),
   ],
 ]) as beet.FixableBeet<UpdateArgs, UpdateArgs>;

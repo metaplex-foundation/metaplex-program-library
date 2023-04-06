@@ -14,8 +14,10 @@ export enum MetadataDelegateRole {
   Authority,
   Collection,
   Use,
-  Update,
+  Data,
   ProgrammableConfig,
+  CollectionItem,
+  ProgrammableConfigItem,
 }
 
 /**
