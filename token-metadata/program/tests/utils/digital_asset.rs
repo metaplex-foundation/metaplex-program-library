@@ -550,7 +550,7 @@ impl DigitalAsset {
         payer: Keypair,
         delegate: Pubkey,
         args: DelegateArgs,
-    ) -> Result<(), BanksClientError> {
+    ) -> Result<Option<Pubkey>, BanksClientError> {
         let mut builder = DelegateBuilder::new();
         builder
             .delegate(delegate)
@@ -559,6 +559,8 @@ impl DigitalAsset {
             .payer(payer.pubkey())
             .authority(payer.pubkey())
             .spl_token_program(spl_token::ID);
+
+        let mut delegate_or_token_record = None;
 
         match args {
             // Token delegates.
@@ -570,6 +572,7 @@ impl DigitalAsset {
                 let (token_record, _) =
                     find_token_record_account(&self.mint.pubkey(), &self.token.unwrap());
                 builder.token_record(token_record);
+                delegate_or_token_record = Some(token_record);
             }
             DelegateArgs::StandardV1 { .. } => { /* nothing to add */ }
 
@@ -582,6 +585,7 @@ impl DigitalAsset {
                     &delegate,
                 );
                 builder.delegate_record(delegate_record);
+                delegate_or_token_record = Some(delegate_record);
             }
             DelegateArgs::DataV1 { .. } => {
                 let (delegate_record, _) = find_metadata_delegate_record_account(
@@ -591,6 +595,7 @@ impl DigitalAsset {
                     &delegate,
                 );
                 builder.delegate_record(delegate_record);
+                delegate_or_token_record = Some(delegate_record);
             }
             DelegateArgs::ProgrammableConfigV1 { .. } => {
                 let (delegate_record, _) = find_metadata_delegate_record_account(
@@ -600,6 +605,7 @@ impl DigitalAsset {
                     &delegate,
                 );
                 builder.delegate_record(delegate_record);
+                delegate_or_token_record = Some(delegate_record);
             }
             DelegateArgs::AuthorityV1 { .. } => {
                 let (delegate_record, _) = find_metadata_delegate_record_account(
@@ -609,6 +615,7 @@ impl DigitalAsset {
                     &delegate,
                 );
                 builder.delegate_record(delegate_record);
+                delegate_or_token_record = Some(delegate_record);
             }
             DelegateArgs::CollectionItemV1 { .. } => {
                 let (delegate_record, _) = find_metadata_delegate_record_account(
@@ -618,6 +625,7 @@ impl DigitalAsset {
                     &delegate,
                 );
                 builder.delegate_record(delegate_record);
+                delegate_or_token_record = Some(delegate_record);
             }
             DelegateArgs::ProgrammableConfigItemV1 { .. } => {
                 let (delegate_record, _) = find_metadata_delegate_record_account(
@@ -627,6 +635,7 @@ impl DigitalAsset {
                     &delegate,
                 );
                 builder.delegate_record(delegate_record);
+                delegate_or_token_record = Some(delegate_record);
             }
         }
 
@@ -661,7 +670,8 @@ impl DigitalAsset {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await
+        context.banks_client.process_transaction(tx).await?;
+        Ok(delegate_or_token_record)
     }
 
     pub async fn migrate(
