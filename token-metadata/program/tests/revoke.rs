@@ -17,7 +17,7 @@ mod revoke {
         instruction::{DelegateArgs, MetadataDelegateRole, RevokeArgs},
         pda::{find_metadata_delegate_record_account, find_token_record_account},
         state::{
-            Key, Metadata, MetadataDelegateRecord, TokenDelegateRole, TokenRecord, TokenStandard,
+            Key, Metadata, MetadataDelegateRecordV2, TokenDelegateRole, TokenRecord, TokenStandard,
             TOKEN_RECORD_SIZE,
         },
     };
@@ -163,8 +163,24 @@ mod revoke {
         );
 
         let pda = get_account(&mut context, &pda_key).await;
-        let delegate_record = MetadataDelegateRecord::from_bytes(&pda.data).unwrap();
-        assert_eq!(delegate_record.key, Key::MetadataDelegate);
+        let delegate_record = MetadataDelegateRecordV2::from_bytes(&pda.data).unwrap();
+        assert_eq!(delegate_record.key, Key::MetadataDelegateV2);
+
+        // let pda = get_account(&mut context, &pda_key).await;
+        // let key_byte = pda.data.first().unwrap();
+        // let account_key = FromPrimitive::from_u8(*key_byte).unwrap();
+
+        // match account_key {
+        //     Key::MetadataDelegate => {
+        //         let delegate_record = MetadataDelegateRecord::from_bytes(&pda.data).unwrap();
+        //         assert_eq!(delegate_record.key, Key::MetadataDelegate);
+        //     }
+        //     Key::MetadataDelegateV2 => {
+        //         let delegate_record = MetadataDelegateRecordV2::from_bytes(&pda.data).unwrap();
+        //         assert_eq!(delegate_record.key, Key::MetadataDelegateV2);
+        //     }
+        //     _ => panic!("Unexpected key"),
+        // }
 
         // revokes the delegate
         let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();

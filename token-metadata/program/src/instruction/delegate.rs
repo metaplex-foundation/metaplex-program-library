@@ -120,6 +120,26 @@ impl fmt::Display for MetadataDelegateRole {
     }
 }
 
+pub trait MetadataDelegateExpiration {
+    fn expiration_time_secs(&self) -> i64;
+}
+
+impl MetadataDelegateExpiration for MetadataDelegateRole {
+    fn expiration_time_secs(&self) -> i64 {
+        let one_week: i64 = 3600 * 24 * 7;
+        let four_weeks = one_week * 4;
+        match self {
+            Self::Authority => one_week,
+            Self::Collection => four_weeks,
+            Self::Use => four_weeks,
+            Self::Data => four_weeks,
+            Self::ProgrammableConfig => four_weeks,
+            Self::CollectionItem => four_weeks,
+            Self::ProgrammableConfigItem => four_weeks,
+        }
+    }
+}
+
 /// Delegates an action over an asset to a specific account.
 ///
 /// # Accounts:

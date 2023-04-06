@@ -4,8 +4,13 @@ use borsh::BorshSerialize;
 use mpl_token_auth_rules::utils::get_latest_revision;
 use mpl_utils::{assert_signer, create_or_allocate_account_raw};
 use solana_program::{
-    account_info::AccountInfo, entrypoint::ProgramResult, program::invoke, program_pack::Pack,
-    pubkey::Pubkey, system_program, sysvar,
+    account_info::AccountInfo,
+    entrypoint::ProgramResult,
+    program::invoke,
+    program_pack::Pack,
+    pubkey::Pubkey,
+    system_program,
+    sysvar::{self, Sysvar},
 };
 use spl_token::{instruction::AuthorityType as SplAuthorityType, state::Account};
 
@@ -19,7 +24,7 @@ use crate::{
     pda::{find_token_record_account, PREFIX},
     processor::AuthorizationData,
     state::{
-        Metadata, MetadataDelegateRecord, Operation, ProgrammableConfig, Resizable,
+        Metadata, MetadataDelegateRecordV2, Operation, ProgrammableConfig, Resizable,
         TokenDelegateRole, TokenMetadataAccount, TokenRecord, TokenStandard, TokenState,
     },
     utils::{auth_rules_validate, freeze, thaw, AuthRulesValidateParams},
@@ -500,15 +505,19 @@ fn create_pda_account<'a>(
         delegate_record_info,
         system_program_info,
         payer_info,
-        MetadataDelegateRecord::size(),
+        MetadataDelegateRecordV2::size(),
         &signer_seeds,
     )?;
 
-    let pda = MetadataDelegateRecord {
+    // Get the current time.
+    let current_time = solana_program::clock::Clock::get()?;
+
+    let pda = MetadataDelegateRecordV2 {
         bump: bump[0],
         mint: *mint_info.key,
         delegate: *delegate_info.key,
         update_authority: *authority_info.key,
+        creation_time: current_time.unix_timestamp,
         ..Default::default()
     };
     pda.serialize(&mut *delegate_record_info.try_borrow_mut_data()?)?;
