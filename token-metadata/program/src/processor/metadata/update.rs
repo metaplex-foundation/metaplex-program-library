@@ -188,6 +188,7 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
     {
         token_standard
     } else {
+        // TODO: What if they have an edition account but choose not to pass it in?
         check_token_standard(ctx.accounts.mint_info, ctx.accounts.edition_info)?
     };
 
@@ -225,7 +226,7 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
         ctx.accounts.authority_info,
         ctx.accounts.metadata_info,
         token,
-        Some(token_standard),
+        token_standard,
         authority_type,
         metadata_delegate_role,
     )?;
@@ -256,9 +257,7 @@ fn validate_update(
             // support for delegate update
             msg!("Auth type: Delegate");
         }
-        _ => {
-            return Err(MetadataError::InvalidAuthorityType.into());
-        }
+        _ => return Err(MetadataError::InvalidAuthorityType.into()),
     }
 
     // Destructure args.
@@ -302,13 +301,13 @@ fn validate_update(
                     return Err(MetadataError::InvalidUpdateArgs.into());
                 }
             }
-            MetadataDelegateRole::Data => {
-                // Fields allowed for `Data`:
-                // `data`
+            MetadataDelegateRole::Collection | MetadataDelegateRole::CollectionItem => {
+                // Fields allowed for `Collection` and `CollectionItem`:
+                // `collection`
                 if new_update_authority.is_some()
+                    || data.is_some()
                     || primary_sale_happened.is_some()
                     || is_mutable.is_some()
-                    || collection.is_some()
                     || collection_details.is_some()
                     || uses.is_some()
                     || rule_set.is_some()
@@ -317,14 +316,13 @@ fn validate_update(
                     return Err(MetadataError::InvalidUpdateArgs.into());
                 }
             }
-
-            MetadataDelegateRole::Collection | MetadataDelegateRole::CollectionItem => {
-                // Fields allowed for `Collection` and `CollectionItem`:
-                // `collection`
+            MetadataDelegateRole::Data => {
+                // Fields allowed for `Data`:
+                // `data`
                 if new_update_authority.is_some()
-                    || data.is_some()
                     || primary_sale_happened.is_some()
                     || is_mutable.is_some()
+                    || collection.is_some()
                     || collection_details.is_some()
                     || uses.is_some()
                     || rule_set.is_some()
@@ -361,8 +359,8 @@ fn check_desired_token_standard(
     existing_or_inferred_token_standard: TokenStandard,
     desired_token_standard: TokenStandard,
 ) -> ProgramResult {
-    // This code only allows switching between Fungible and FungibleAsset, and only when
-    // mint decimals is zero.
+    // This function only allows switching between Fungible and FungibleAsset.  Mint decimals must
+    // be zero.
     if !mint_decimals_is_zero {
         return Err(MetadataError::InvalidTokenStandard.into());
     }

@@ -16,27 +16,7 @@ use crate::{instruction::MetadataInstruction, processor::AuthorizationData};
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub enum DelegateArgs {
-    AuthorityV1 {
-        /// Required authorization data to validate the request.
-        authorization_data: Option<AuthorizationData>,
-    },
-    DataV1 {
-        /// Required authorization data to validate the request.
-        authorization_data: Option<AuthorizationData>,
-    },
     CollectionV1 {
-        /// Required authorization data to validate the request.
-        authorization_data: Option<AuthorizationData>,
-    },
-    CollectionItemV1 {
-        /// Required authorization data to validate the request.
-        authorization_data: Option<AuthorizationData>,
-    },
-    ProgrammableConfigV1 {
-        /// Required authorization data to validate the request.
-        authorization_data: Option<AuthorizationData>,
-    },
-    ProgrammableConfigItemV1 {
         /// Required authorization data to validate the request.
         authorization_data: Option<AuthorizationData>,
     },
@@ -47,6 +27,10 @@ pub enum DelegateArgs {
     },
     TransferV1 {
         amount: u64,
+        /// Required authorization data to validate the request.
+        authorization_data: Option<AuthorizationData>,
+    },
+    DataV1 {
         /// Required authorization data to validate the request.
         authorization_data: Option<AuthorizationData>,
     },
@@ -70,25 +54,41 @@ pub enum DelegateArgs {
         /// Required authorization data to validate the request.
         authorization_data: Option<AuthorizationData>,
     },
+    ProgrammableConfigV1 {
+        /// Required authorization data to validate the request.
+        authorization_data: Option<AuthorizationData>,
+    },
+    AuthorityV1 {
+        /// Required authorization data to validate the request.
+        authorization_data: Option<AuthorizationData>,
+    },
+    CollectionItemV1 {
+        /// Required authorization data to validate the request.
+        authorization_data: Option<AuthorizationData>,
+    },
+    ProgrammableConfigItemV1 {
+        /// Required authorization data to validate the request.
+        authorization_data: Option<AuthorizationData>,
+    },
 }
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub enum RevokeArgs {
-    AuthorityV1,
-    DataV1,
     CollectionV1,
-    CollectionItemV1,
-    ProgrammableConfigV1,
-    ProgrammableConfigItemV1,
     SaleV1,
     TransferV1,
+    DataV1,
     UtilityV1,
     StakingV1,
     StandardV1,
     LockedTransferV1,
+    ProgrammableConfigV1,
     MigrationV1,
+    AuthorityV1,
+    CollectionItemV1,
+    ProgrammableConfigItemV1,
 }
 
 #[repr(C)]
@@ -96,11 +96,11 @@ pub enum RevokeArgs {
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, Copy)]
 pub enum MetadataDelegateRole {
     Authority,
-    Data,
-    Use,
     Collection,
-    CollectionItem,
+    Use,
+    Data,
     ProgrammableConfig,
+    CollectionItem,
     ProgrammableConfigItem,
 }
 
@@ -108,11 +108,11 @@ impl fmt::Display for MetadataDelegateRole {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let message = match self {
             Self::Authority => "authority_delegate".to_string(),
-            Self::Data => "data_delegate".to_string(),
-            Self::Use => "use_delegate".to_string(),
             Self::Collection => "collection_delegate".to_string(),
-            Self::CollectionItem => "collection_item_delegate".to_string(),
+            Self::Use => "use_delegate".to_string(),
+            Self::Data => "data_delegate".to_string(),
             Self::ProgrammableConfig => "programmable_config_delegate".to_string(),
+            Self::CollectionItem => "collection_item_delegate".to_string(),
             Self::ProgrammableConfigItem => "prog_config_item_delegate".to_string(),
         };
 

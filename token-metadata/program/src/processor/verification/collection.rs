@@ -160,8 +160,9 @@ pub(crate) fn unverify_collection_v1(program_id: &Pubkey, ctx: Context<Unverify>
 
     let authority_response = if parent_burned {
         // If the collection parent is burned, we need to use an authority for the item rather than
-        // the collection.  The required authority is either the item's metadata update authority,
-        // or an update delegate for the item.  This call fails if no valid authority is present.
+        // the collection.  The required authority is either the item's metadata update authority
+        // or a delegate for the item that can update the item's collection field.  This call fails
+        // if no valid authority is present.
         auth_request.mint = &metadata.mint;
         auth_request.update_authority = &metadata.update_authority;
         auth_request.metadata_delegate_roles = vec![
@@ -185,6 +186,10 @@ pub(crate) fn unverify_collection_v1(program_id: &Pubkey, ctx: Context<Unverify>
         // If the collection parent is not burned, the required authority is either the collection
         // parent's metadata update authority, or a collection delegate for the collection parent.
         // This call fails if no valid authority is present.
+        //
+        // Note that this is sending the delegate in the `metadata_delegate_roles` vec and NOT the
+        // `collection_metadata_delegate_roles` vec because in this case we are authorizing using
+        // the collection parent's update authority.
         auth_request.mint = collection_mint_info.key;
         auth_request.update_authority = &collection_metadata.update_authority;
         auth_request.metadata_delegate_roles = vec![MetadataDelegateRole::Collection];

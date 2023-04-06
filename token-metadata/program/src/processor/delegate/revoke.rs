@@ -54,11 +54,11 @@ pub fn revoke<'a>(
 
     // checks if it is a MetadataDelegate creation
     let metadata_delegate = match &args {
-        RevokeArgs::AuthorityV1 => Some(MetadataDelegateRole::Authority),
-        RevokeArgs::DataV1 => Some(MetadataDelegateRole::Data),
         RevokeArgs::CollectionV1 => Some(MetadataDelegateRole::Collection),
-        RevokeArgs::CollectionItemV1 => Some(MetadataDelegateRole::CollectionItem),
+        RevokeArgs::DataV1 => Some(MetadataDelegateRole::Data),
         RevokeArgs::ProgrammableConfigV1 => Some(MetadataDelegateRole::ProgrammableConfig),
+        RevokeArgs::AuthorityV1 => Some(MetadataDelegateRole::Authority),
+        RevokeArgs::CollectionItemV1 => Some(MetadataDelegateRole::CollectionItem),
         RevokeArgs::ProgrammableConfigItemV1 => Some(MetadataDelegateRole::ProgrammableConfigItem),
         // we don't need to fail if did not find a match at this point
         _ => None,
