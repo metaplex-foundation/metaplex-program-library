@@ -1201,7 +1201,8 @@ test('Update: Delegate Authority Type Not Supported', async (t) => {
   amman.addr.addLabel('Delegate Record', delegateRecord);
 
   const args: DelegateArgs = {
-    __kind: 'UpdateV1',
+    __kind: 'SaleV1',
+    amount: 1,
     authorizationData: null,
   };
 
