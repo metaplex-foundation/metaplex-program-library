@@ -178,7 +178,24 @@ mod update {
     }
 
     #[tokio::test]
-    async fn success_update_by_collection_delegate() {
+    async fn success_update_by_items_collection_delegate() {
+        let args = DelegateArgs::CollectionItemV1 {
+            authorization_data: None,
+        };
+
+        success_update_collection_by_items_delegate(args).await;
+    }
+
+    #[tokio::test]
+    async fn success_update_by_items_collection_item_delegate() {
+        let args = DelegateArgs::CollectionItemV1 {
+            authorization_data: None,
+        };
+
+        success_update_collection_by_items_delegate(args).await;
+    }
+
+    async fn success_update_collection_by_items_delegate(delegate_args: DelegateArgs) {
         let context = &mut program_test().start_with_context().await;
 
         let update_authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
@@ -195,14 +212,7 @@ mod update {
         let delegate = Keypair::new();
         delegate.airdrop(context, 1_000_000_000).await.unwrap();
         let delegate_record = da
-            .delegate(
-                context,
-                update_authority,
-                delegate.pubkey(),
-                DelegateArgs::CollectionV1 {
-                    authorization_data: None,
-                },
-            )
+            .delegate(context, update_authority, delegate.pubkey(), delegate_args)
             .await
             .unwrap()
             .unwrap();
