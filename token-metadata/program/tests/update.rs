@@ -654,6 +654,155 @@ mod update {
     }
 
     #[tokio::test]
+    async fn fail_update_by_items_persistent_delegate() {
+        let mut program_test = ProgramTest::new("mpl_token_metadata", mpl_token_metadata::ID, None);
+        program_test.add_program("mpl_token_auth_rules", mpl_token_auth_rules::ID, None);
+        let context = &mut program_test.start_with_context().await;
+
+        let update_authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+
+        let mut da = DigitalAsset::new();
+        da.create_and_mint(
+            context,
+            TokenStandard::ProgrammableNonFungible,
+            None,
+            None,
+            1,
+        )
+        .await
+        .unwrap();
+
+        let metadata = da.get_metadata(context).await;
+        assert_eq!(metadata.uses, None);
+
+        // Create `TokenDelegate` type of delegate.
+        let delegate = Keypair::new();
+        delegate.airdrop(context, 1_000_000_000).await.unwrap();
+        let delegate_args = DelegateArgs::UtilityV1 {
+            amount: 1,
+            authorization_data: None,
+        };
+        let delegate_record = da
+            .delegate(context, update_authority, delegate.pubkey(), delegate_args)
+            .await
+            .unwrap()
+            .unwrap();
+
+        // Change a value that no delegates are allowed to change.
+        let mut update_args = UpdateArgs::default();
+        let uses = get_update_args_fields!(&mut update_args, uses);
+
+        // remove the rule set
+        *uses.0 = UsesToggle::Set(Uses {
+            use_method: UseMethod::Multiple,
+            remaining: 333,
+            total: 333,
+        });
+
+        let mut builder = UpdateBuilder::new();
+        builder
+            .authority(delegate.pubkey())
+            .delegate_record(delegate_record)
+            .metadata(da.metadata)
+            .mint(da.mint.pubkey())
+            .token(da.token.unwrap())
+            .payer(delegate.pubkey());
+
+        if let Some(edition) = da.edition {
+            builder.edition(edition);
+        }
+
+        let update_ix = builder.build(update_args).unwrap().instruction();
+
+        let tx = Transaction::new_signed_with_payer(
+            &[update_ix],
+            Some(&delegate.pubkey()),
+            &[&delegate],
+            context.last_blockhash,
+        );
+
+        let err = context
+            .banks_client
+            .process_transaction(tx)
+            .await
+            .unwrap_err();
+
+        assert_custom_error!(err, MetadataError::InvalidAuthorityType);
+
+        // checks the created metadata values
+        let metadata = da.get_metadata(context).await;
+
+        assert_eq!(metadata.uses, None);
+    }
+
+    #[tokio::test]
+    async fn success_update_token_standard() {
+        let context = &mut program_test().start_with_context().await;
+
+        let update_authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+
+        let mut da = DigitalAsset::new();
+        // This creates with update authority as a verified creator.
+        da.create_and_mint(context, TokenStandard::FungibleAsset, None, None, 1)
+            .await
+            .unwrap();
+
+        let metadata = da.get_metadata(context).await;
+        assert_eq!(metadata.token_standard, Some(TokenStandard::FungibleAsset));
+
+        // Update token standard
+        let mut update_args = UpdateArgs::default();
+        let token_standard = match &mut update_args {
+            UpdateArgs::V2 { token_standard, .. } => token_standard,
+            _ => panic!("Incompatible update args version"),
+        };
+
+        *token_standard = Some(TokenStandard::Fungible);
+
+        da.update(context, update_authority.dirty_clone(), update_args)
+            .await
+            .unwrap();
+
+        let metadata = da.get_metadata(context).await;
+        assert_eq!(metadata.token_standard, Some(TokenStandard::Fungible));
+    }
+
+    #[tokio::test]
+    async fn fail_invalid_update_token_standard() {
+        let context = &mut program_test().start_with_context().await;
+
+        let update_authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+
+        let mut da = DigitalAsset::new();
+        // This creates with update authority as a verified creator.
+        da.create_and_mint(context, TokenStandard::FungibleAsset, None, None, 1)
+            .await
+            .unwrap();
+
+        let metadata = da.get_metadata(context).await;
+        assert_eq!(metadata.token_standard, Some(TokenStandard::FungibleAsset));
+
+        // Update token standard
+        let mut update_args = UpdateArgs::default();
+        let token_standard = match &mut update_args {
+            UpdateArgs::V2 { token_standard, .. } => token_standard,
+            _ => panic!("Incompatible update args version"),
+        };
+
+        *token_standard = Some(TokenStandard::NonFungible);
+
+        let err = da
+            .update(context, update_authority.dirty_clone(), update_args)
+            .await
+            .unwrap_err();
+
+        assert_custom_error!(err, MetadataError::InvalidTokenStandard);
+
+        let metadata = da.get_metadata(context).await;
+        assert_eq!(metadata.token_standard, Some(TokenStandard::FungibleAsset));
+    }
+
+    #[tokio::test]
     async fn update_invalid_rule_set() {
         // Currently users can add an invalid rule set to their pNFT which will effectively
         // prevent it from being updated again because it either won't be owned by the mpl-token-auth rules
