@@ -20,8 +20,8 @@ mod update {
 
     use mpl_token_metadata::{
         error::MetadataError,
-        instruction::{CollectionToggle, DelegateArgs, RuleSetToggle, UpdateArgs},
-        state::{Collection, Creator, Data, ProgrammableConfig, TokenStandard},
+        instruction::{CollectionToggle, DelegateArgs, RuleSetToggle, UpdateArgs, UsesToggle},
+        state::{Collection, Creator, Data, ProgrammableConfig, TokenStandard, UseMethod, Uses},
     };
     use solana_program::pubkey::Pubkey;
     use solana_sdk::signature::Keypair;
@@ -513,6 +513,144 @@ mod update {
         let metadata = da.get_metadata(context).await;
 
         assert_eq!(metadata.programmable_config, None);
+    }
+
+    #[tokio::test]
+    async fn fail_update_by_items_authority_delegate() {
+        let args = DelegateArgs::AuthorityV1 {
+            authorization_data: None,
+        };
+
+        fail_update_by_items_delegate(args).await;
+    }
+
+    #[tokio::test]
+    async fn fail_update_by_items_collection_delegate() {
+        let args = DelegateArgs::CollectionV1 {
+            authorization_data: None,
+        };
+
+        fail_update_by_items_delegate(args).await;
+    }
+
+    #[tokio::test]
+    async fn fail_update_by_items_data_delegate() {
+        let args = DelegateArgs::DataV1 {
+            authorization_data: None,
+        };
+
+        fail_update_by_items_delegate(args).await;
+    }
+
+    #[tokio::test]
+    async fn fail_update_by_items_programmable_config_delegate() {
+        let args = DelegateArgs::ProgrammableConfigV1 {
+            authorization_data: None,
+        };
+
+        fail_update_by_items_delegate(args).await;
+    }
+
+    #[tokio::test]
+    async fn fail_update_by_items_collection_item_delegate() {
+        let args = DelegateArgs::CollectionItemV1 {
+            authorization_data: None,
+        };
+
+        fail_update_by_items_delegate(args).await;
+    }
+
+    #[tokio::test]
+    async fn fail_update_by_items_programmable_config_item_delegate() {
+        let args = DelegateArgs::ProgrammableConfigItemV1 {
+            authorization_data: None,
+        };
+
+        fail_update_by_items_delegate(args).await;
+    }
+
+    async fn fail_update_by_items_delegate(delegate_args: DelegateArgs) {
+        let mut program_test = ProgramTest::new("mpl_token_metadata", mpl_token_metadata::ID, None);
+        program_test.add_program("mpl_token_auth_rules", mpl_token_auth_rules::ID, None);
+        let context = &mut program_test.start_with_context().await;
+
+        let authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+
+        // Create rule-set for the transfer
+        let (authorization_rules, auth_data) =
+            create_default_metaplex_rule_set(context, authority, false).await;
+
+        let update_authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+
+        let mut da = DigitalAsset::new();
+        da.create_and_mint(
+            context,
+            TokenStandard::ProgrammableNonFungible,
+            Some(authorization_rules),
+            Some(auth_data),
+            1,
+        )
+        .await
+        .unwrap();
+
+        let metadata = da.get_metadata(context).await;
+        assert_eq!(metadata.uses, None);
+
+        // Create metadata delegate.
+        let delegate = Keypair::new();
+        delegate.airdrop(context, 1_000_000_000).await.unwrap();
+        let delegate_record = da
+            .delegate(context, update_authority, delegate.pubkey(), delegate_args)
+            .await
+            .unwrap()
+            .unwrap();
+
+        // Change a value that no delegates are allowed to change.
+        let mut update_args = UpdateArgs::default();
+        let uses = get_update_args_fields!(&mut update_args, uses);
+
+        // remove the rule set
+        *uses.0 = UsesToggle::Set(Uses {
+            use_method: UseMethod::Multiple,
+            remaining: 333,
+            total: 333,
+        });
+
+        let mut builder = UpdateBuilder::new();
+        builder
+            .authority(delegate.pubkey())
+            .delegate_record(delegate_record)
+            .metadata(da.metadata)
+            .mint(da.mint.pubkey())
+            .token(da.token.unwrap())
+            .authorization_rules(authorization_rules)
+            .payer(delegate.pubkey());
+
+        if let Some(edition) = da.edition {
+            builder.edition(edition);
+        }
+
+        let update_ix = builder.build(update_args).unwrap().instruction();
+
+        let tx = Transaction::new_signed_with_payer(
+            &[update_ix],
+            Some(&delegate.pubkey()),
+            &[&delegate],
+            context.last_blockhash,
+        );
+
+        let err = context
+            .banks_client
+            .process_transaction(tx)
+            .await
+            .unwrap_err();
+
+        assert_custom_error!(err, MetadataError::InvalidUpdateArgs);
+
+        // checks the created metadata values
+        let metadata = da.get_metadata(context).await;
+
+        assert_eq!(metadata.uses, None);
     }
 
     #[tokio::test]
