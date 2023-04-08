@@ -407,20 +407,20 @@ fn create_persistent_delegate_v1(
 
     // For Utility Delegates we request Close Authority as well so that the
     // token can be closed by the delegate on Burn. We assign CloseAuthority to
-    // the metadata PDA so we can close it on Transfer and revoke it in Revoke.
+    // the master edition PDA so we can close it on Transfer and revoke it in Revoke.
     if matches!(role, TokenDelegateRole::Utility) {
         // If there's an existing close authority that is not the metadata account,
-        // it willl need to be revoked by the original UtilityDelegate.
+        // it will need to be revoked by the original UtilityDelegate.
+        let master_edition_info = ctx
+            .accounts
+            .master_edition_info
+            .ok_or(MetadataError::MissingEditionAccount)?;
+
         if let COption::Some(close_authority) = token.close_authority {
-            if &close_authority != ctx.accounts.metadata_info.key {
+            if &close_authority != master_edition_info.key {
                 return Err(MetadataError::InvalidCloseAuthority.into());
             }
         } else {
-            let master_edition_info = ctx
-                .accounts
-                .master_edition_info
-                .ok_or(MetadataError::MissingEditionAccount)?;
-
             invoke(
                 &spl_token::instruction::set_authority(
                     spl_token_program_info.key,

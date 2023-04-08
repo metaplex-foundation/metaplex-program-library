@@ -330,7 +330,7 @@ fn process_legacy_instruction<'a>(
             set_and_verify_sized_collection_item(program_id, accounts)
         }
         MetadataInstruction::UnverifySizedCollectionItem => {
-            msg!("IX: Unverify Collection");
+            msg!("IX: Unverify Sized Collection");
             unverify_sized_collection_item(program_id, accounts)
         }
         MetadataInstruction::SetCollectionSize(args) => {

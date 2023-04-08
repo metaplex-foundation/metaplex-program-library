@@ -412,10 +412,13 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
                 )?;
             }
 
-            // Close the source Token Record account, but do it after the CPI calls
-            // so as to avoid Unbalanced Accounts errors due to the CPI context not knowing
-            // about the manual lamport math done here.
-            close_program_account(owner_token_record_info, ctx.accounts.payer_info)?;
+            // Don't close token record if it's a self transfer.
+            if owner_token_record_info.key != destination_token_record_info.key {
+                // Close the source Token Record account, but do it after the CPI calls
+                // so as to avoid Unbalanced Accounts errors due to the CPI context not knowing
+                // about the manual lamport math done here.
+                close_program_account(owner_token_record_info, ctx.accounts.payer_info)?;
+            }
         }
         _ => mpl_utils::token::spl_token_transfer(token_transfer_params).unwrap(),
     }
