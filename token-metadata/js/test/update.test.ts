@@ -1177,82 +1177,81 @@ test('Update: Invalid Update Authority Fails', async (t) => {
   await updateTx.assertError(t, /Invalid authority type/);
 });
 
-// test('Update: Delegate Authority Type Not Supported', async (t) => {
-//   const API = new InitTransactions();
-//   const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
+test('Update: Delegate Authority Role Not Allowed to Update Data', async (t) => {
+  const API = new InitTransactions();
+  const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
 
-//   const daManager = await createDefaultAsset(t, connection, API, handler, payer);
+  const daManager = await createDefaultAsset(t, connection, API, handler, payer);
 
-//   // creates a delegate
+  // creates a delegate
 
-//   const [, delegate] = await API.getKeypair('Delegate');
-//   // delegate PDA
-//   const [delegateRecord] = PublicKey.findProgramAddressSync(
-//     [
-//       Buffer.from('metadata'),
-//       PROGRAM_ID.toBuffer(),
-//       daManager.mint.toBuffer(),
-//       Buffer.from('update_delegate'),
-//       payer.publicKey.toBuffer(),
-//       delegate.publicKey.toBuffer(),
-//     ],
-//     PROGRAM_ID,
-//   );
-//   amman.addr.addLabel('Delegate Record', delegateRecord);
+  const [, delegate] = await API.getKeypair('Delegate');
+  // delegate PDA
+  const [delegateRecord] = PublicKey.findProgramAddressSync(
+    [
+      Buffer.from('metadata'),
+      PROGRAM_ID.toBuffer(),
+      daManager.mint.toBuffer(),
+      Buffer.from('collection_item_delegate'),
+      payer.publicKey.toBuffer(),
+      delegate.publicKey.toBuffer(),
+    ],
+    PROGRAM_ID,
+  );
+  amman.addr.addLabel('Delegate Record', delegateRecord);
 
-//   const args: DelegateArgs = {
-//     __kind: 'UpdateV1',
-//     amount: 1,
-//     authorizationData: null,
-//   };
+  const args: DelegateArgs = {
+    __kind: 'CollectionItemV1',
+    authorizationData: null,
+  };
 
-//   const { tx: delegateTx } = await API.delegate(
-//     delegate.publicKey,
-//     daManager.mint,
-//     daManager.metadata,
-//     payer.publicKey,
-//     payer,
-//     args,
-//     handler,
-//     delegateRecord,
-//     daManager.masterEdition,
-//   );
-//   await delegateTx.assertSuccess(t);
+  const { tx: delegateTx } = await API.delegate(
+    delegate.publicKey,
+    daManager.mint,
+    daManager.metadata,
+    payer.publicKey,
+    payer,
+    args,
+    handler,
+    delegateRecord,
+    daManager.masterEdition,
+  );
+  await delegateTx.assertSuccess(t);
 
-//   const assetData = await daManager.getAssetData(connection);
-//   const authority = delegate;
+  const assetData = await daManager.getAssetData(connection);
+  const authority = delegate;
 
-//   // Change some values and run update.
-//   const data: Data = {
-//     name: 'DigitalAsset2',
-//     symbol: 'DA2',
-//     uri: 'uri2',
-//     sellerFeeBasisPoints: 10,
-//     creators: assetData.creators,
-//   };
-//   const authorizationData = daManager.emptyAuthorizationData();
+  // Change some values and run update.
+  const data: Data = {
+    name: 'DigitalAsset2',
+    symbol: 'DA2',
+    uri: 'uri2',
+    sellerFeeBasisPoints: 10,
+    creators: assetData.creators,
+  };
+  const authorizationData = daManager.emptyAuthorizationData();
 
-//   const updateData = new UpdateTestData();
-//   updateData.data = data;
-//   updateData.authorizationData = authorizationData;
+  const updateData = new UpdateTestData();
+  updateData.data = data;
+  updateData.authorizationData = authorizationData;
 
-//   const { tx: updateTx } = await API.update(
-//     t,
-//     handler,
-//     daManager.mint,
-//     daManager.metadata,
-//     authority,
-//     updateData,
-//     delegateRecord,
-//     daManager.masterEdition,
-//   );
-//   updateTx.then((x) =>
-//     x.assertLogs(t, [/Invalid authority type/i], {
-//       txLabel: 'tx: Update',
-//     }),
-//   );
-//   await updateTx.assertError(t);
-// });
+  const { tx: updateTx } = await API.update(
+    t,
+    handler,
+    daManager.mint,
+    daManager.metadata,
+    authority,
+    updateData,
+    delegateRecord,
+    daManager.masterEdition,
+  );
+  updateTx.then((x) =>
+    x.assertLogs(t, [/Authority cannot apply all update args/i], {
+      txLabel: 'tx: Update',
+    }),
+  );
+  await updateTx.assertError(t);
+});
 
 test('Update: Holder Authority Type Not Supported', async (t) => {
   const API = new InitTransactions();
