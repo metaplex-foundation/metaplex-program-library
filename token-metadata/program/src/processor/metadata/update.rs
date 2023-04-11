@@ -57,6 +57,7 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
     // This account should always be a signer regardless of the authority type,
     // because at least one signer is required to update the metadata.
     assert_signer(ctx.accounts.authority_info)?;
+    // Note that payer is not checked because it is not used.
 
     // Assert program ownership
 
@@ -97,14 +98,15 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
     }
 
     // If the current rule set is passed in, also require the mpl-token-auth-rules program
-    // to be passed in.
+    // to be passed in.  Note that we do NOT check the ownership of authorization rules
+    // here as this allows `Update` to be used to correct a previously invalid `RuleSet`.
     if ctx.accounts.authorization_rules_info.is_some() {
-        if let Some(authorization_rules_program) = ctx.accounts.authorization_rules_program_info {
-            if authorization_rules_program.key != &mpl_token_auth_rules::ID {
-                return Err(ProgramError::IncorrectProgramId);
-            }
-        } else {
-            return Err(MetadataError::MissingAuthorizationRulesProgram.into());
+        let authorization_rules_program = ctx
+            .accounts
+            .authorization_rules_program_info
+            .ok_or(MetadataError::MissingAuthorizationRulesProgram)?;
+        if authorization_rules_program.key != &mpl_token_auth_rules::ID {
+            return Err(ProgramError::IncorrectProgramId);
         }
     }
 
