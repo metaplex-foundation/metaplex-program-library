@@ -26,8 +26,6 @@ jobs:
         node:
           - name: "auction-house"
           - name: "candy-machine"
-          - name: "candy-machine-core"
-            skip_test: true
           - name: "fixed-price-sale"
             skip_test: true
           - name: "gumdrop"
