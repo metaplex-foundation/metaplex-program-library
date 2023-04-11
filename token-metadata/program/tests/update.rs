@@ -2,30 +2,28 @@
 pub mod utils;
 
 use mpl_token_metadata::{
+    error::MetadataError,
     get_update_args_fields,
-    instruction::{builders::UpdateBuilder, InstructionBuilder},
+    instruction::{
+        builders::UpdateBuilder, CollectionToggle, DelegateArgs, InstructionBuilder, RuleSetToggle,
+        UpdateArgs, UsesToggle,
+    },
+    state::{Collection, Creator, Data, ProgrammableConfig, TokenStandard, UseMethod, Uses},
     state::{MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH},
     utils::puffed_out_string,
 };
 use num_traits::FromPrimitive;
+use solana_program::pubkey::Pubkey;
 use solana_program_test::*;
 use solana_sdk::{
     instruction::InstructionError,
+    signature::Keypair,
     signature::Signer,
     transaction::{Transaction, TransactionError},
 };
 use utils::{DigitalAsset, *};
 
 mod update {
-
-    use mpl_token_metadata::{
-        error::MetadataError,
-        instruction::{CollectionToggle, DelegateArgs, RuleSetToggle, UpdateArgs, UsesToggle},
-        state::{Collection, Creator, Data, ProgrammableConfig, TokenStandard, UseMethod, Uses},
-    };
-    use solana_program::pubkey::Pubkey;
-    use solana_sdk::signature::Keypair;
-
     use super::*;
 
     #[tokio::test]
