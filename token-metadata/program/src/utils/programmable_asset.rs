@@ -357,7 +357,7 @@ pub(crate) fn clear_close_authority(params: ClearCloseAuthorityParams) -> Progra
     } = params;
 
     // If there's an existing close authority that is not the metadata account,
-    // it willl need to be revoked by the original UtilityDelegate.
+    // it will need to be revoked by the original UtilityDelegate.
     if let COption::Some(close_authority) = token.close_authority {
         if &close_authority != master_edition_info.key {
             return Err(MetadataError::InvalidCloseAuthority.into());
