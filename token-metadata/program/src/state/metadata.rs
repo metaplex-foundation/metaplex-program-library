@@ -114,7 +114,7 @@ impl Metadata {
             rule_set
         );
 
-        // Update the token standard.
+        // Update the token standard if it is changed.
         self.token_standard = Some(token_standard);
 
         if matches!(authority_type, AuthorityType::Metadata)

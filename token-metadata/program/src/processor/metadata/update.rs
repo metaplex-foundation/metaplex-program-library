@@ -11,7 +11,7 @@ use crate::{
     assertions::{assert_owned_by, programmable::assert_valid_authorization},
     error::MetadataError,
     get_update_args_fields,
-    instruction::{Context, MetadataDelegateRole, Update, UpdateArgs},
+    instruction::{CollectionToggle, Context, MetadataDelegateRole, Update, UpdateArgs},
     pda::{EDITION, PREFIX},
     state::{
         AuthorityRequest, AuthorityResponse, AuthorityType, Collection, Metadata,
@@ -127,10 +127,19 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
 
     // there is a special case for collection-level delegates, where the
     // validation should use the collection key as the mint parameter
-    let collection_mint = if let Some(Collection { key, .. }) = &metadata.collection {
-        Some(key)
-    } else {
-        None
+    let existing_collection_mint = metadata
+        .collection
+        .as_ref()
+        .map(|Collection { key, .. }| key);
+
+    // Check if caller passed in a collection and if so use that.  Note that if the
+    // delegate role from `get_authority_type` comes back as something other than
+    // `MetadataDelegateRole::Collection` or `MetadataDelegateRole::CollectionItem`,
+    // then it will fail in `validate_update` because those are the only roles that
+    // can change collection.
+    let collection_mint = match get_update_args_fields!(&args, collection).0 {
+        CollectionToggle::Set(Collection { key, .. }) => Some(key),
+        _ => existing_collection_mint,
     };
 
     // Determines if we have a valid authority to perform the update. This must
