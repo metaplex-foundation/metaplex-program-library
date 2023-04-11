@@ -1005,6 +1005,91 @@ mod update {
     }
 
     #[tokio::test]
+    async fn fail_update_collection_by_collections_programmable_config_delegate() {
+        let context = &mut program_test().start_with_context().await;
+
+        let update_authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+
+        // Create a collection parent NFT or pNFT with the CollectionDetails struct populated.
+        let mut collection_parent_da = DigitalAsset::new();
+        collection_parent_da
+            .create_and_mint_collection_parent(
+                context,
+                TokenStandard::ProgrammableNonFungible,
+                None,
+                None,
+                1,
+                DEFAULT_COLLECTION_DETAILS,
+            )
+            .await
+            .unwrap();
+
+        // Create metadata delegate on the collection.
+        let delegate = Keypair::new();
+        delegate.airdrop(context, 1_000_000_000).await.unwrap();
+        let delegate_args = DelegateArgs::ProgrammableConfigV1 {
+            authorization_data: None,
+        };
+        let delegate_record = collection_parent_da
+            .delegate(context, update_authority, delegate.pubkey(), delegate_args)
+            .await
+            .unwrap()
+            .unwrap();
+
+        // Create and mint item.
+        let mut da = DigitalAsset::new();
+        da.create_and_mint(context, TokenStandard::NonFungible, None, None, 1)
+            .await
+            .unwrap();
+
+        let metadata = da.get_metadata(context).await;
+        assert_eq!(metadata.collection, None);
+
+        // Change collection.
+        let mut update_args = UpdateArgs::default();
+        let collection_toggle = get_update_args_fields!(&mut update_args, collection);
+        let collection = Collection {
+            key: collection_parent_da.mint.pubkey(),
+            verified: false,
+        };
+
+        *collection_toggle.0 = CollectionToggle::Set(collection.clone());
+
+        let mut builder = UpdateBuilder::new();
+        builder
+            .authority(delegate.pubkey())
+            .delegate_record(delegate_record)
+            .metadata(da.metadata)
+            .mint(da.mint.pubkey())
+            .payer(delegate.pubkey());
+
+        if let Some(edition) = da.edition {
+            builder.edition(edition);
+        }
+
+        let update_ix = builder.build(update_args).unwrap().instruction();
+
+        let tx = Transaction::new_signed_with_payer(
+            &[update_ix],
+            Some(&delegate.pubkey()),
+            &[&delegate],
+            context.last_blockhash,
+        );
+
+        let err = context
+            .banks_client
+            .process_transaction(tx)
+            .await
+            .unwrap_err();
+
+        assert_custom_error!(err, MetadataError::InvalidUpdateArgs);
+
+        // Check that collection not changed.
+        let metadata = da.get_metadata(context).await;
+        assert_eq!(metadata.collection, None);
+    }
+
+    #[tokio::test]
     async fn update_invalid_rule_set() {
         // Currently users can add an invalid rule set to their pNFT which will effectively
         // prevent it from being updated again because it either won't be owned by the mpl-token-auth rules
