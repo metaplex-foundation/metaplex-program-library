@@ -137,6 +137,7 @@ pub enum Key {
     TokenOwnedEscrow,
     TokenRecord,
     MetadataDelegate,
+    MetadataDelegateV2,
 }
 
 #[cfg(feature = "serde-feature")]

@@ -741,6 +741,14 @@ pub enum MetadataError {
     /// 187
     #[error("Invalid token record account")]
     InvalidTokenRecord,
+
+    /// 188
+    #[error("Invalid metadata delegate record account")]
+    InvalidDelegateRecord,
+
+    /// 189
+    #[error("Delegate has expired")]
+    DelegateExpired,
 }
 
 impl PrintProgramError for MetadataError {

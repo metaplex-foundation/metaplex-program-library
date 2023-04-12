@@ -338,11 +338,34 @@ impl AuthorityType {
                             );
 
                             if cmp_pubkeys(&pda_key, metadata_delegate_record_info.key) {
-                                let delegate_record = MetadataDelegateRecord::from_account_info(
-                                    metadata_delegate_record_info,
-                                )?;
+                                // let delegate_record = MetadataDelegateRecord::from_account_info(
+                                //     metadata_delegate_record_info,
+                                // )?;
 
-                                if delegate_record.delegate == *request.authority {
+                                let data = metadata_delegate_record_info.data.borrow();
+
+                                let key_byte =
+                                    data.first().ok_or(MetadataError::InvalidDelegateRecord)?;
+                                let account_key = FromPrimitive::from_u8(*key_byte)
+                                    .ok_or(MetadataError::InvalidDelegateRecord)?;
+
+                                let delegate = match account_key {
+                                    Key::MetadataDelegate => {
+                                        let delegate_record =
+                                            MetadataDelegateRecord::from_bytes(&data)?;
+                                        delegate_record.delegate
+                                    }
+                                    Key::MetadataDelegateV2 => {
+                                        let delegate_record =
+                                            MetadataDelegateRecordV2::from_bytes(&data)?;
+
+                                        delegate_record.check_expiration(*role)?;
+                                        delegate_record.delegate
+                                    }
+                                    _ => return Err(MetadataError::InvalidDelegateRecord.into()),
+                                };
+
+                                if delegate == *request.authority {
                                     return Ok(AuthorityResponse {
                                         authority_type: AuthorityType::MetadataDelegate,
                                         metadata_delegate_role: Some(*role),
@@ -364,12 +387,37 @@ impl AuthorityType {
                                 );
 
                                 if cmp_pubkeys(&pda_key, metadata_delegate_record_info.key) {
-                                    let delegate_record =
-                                        MetadataDelegateRecord::from_account_info(
-                                            metadata_delegate_record_info,
-                                        )?;
+                                    // let delegate_record =
+                                    //     MetadataDelegateRecord::from_account_info(
+                                    //         metadata_delegate_record_info,
+                                    //     )?;
 
-                                    if delegate_record.delegate == *request.authority {
+                                    let data = metadata_delegate_record_info.data.borrow();
+
+                                    let key_byte =
+                                        data.first().ok_or(MetadataError::InvalidDelegateRecord)?;
+                                    let account_key = FromPrimitive::from_u8(*key_byte)
+                                        .ok_or(MetadataError::InvalidDelegateRecord)?;
+
+                                    let delegate = match account_key {
+                                        Key::MetadataDelegate => {
+                                            let delegate_record =
+                                                MetadataDelegateRecord::from_bytes(&data)?;
+                                            delegate_record.delegate
+                                        }
+                                        Key::MetadataDelegateV2 => {
+                                            let delegate_record =
+                                                MetadataDelegateRecordV2::from_bytes(&data)?;
+
+                                            delegate_record.check_expiration(*role)?;
+                                            delegate_record.delegate
+                                        }
+                                        _ => {
+                                            return Err(MetadataError::InvalidDelegateRecord.into())
+                                        }
+                                    };
+
+                                    if delegate == *request.authority {
                                         return Ok(AuthorityResponse {
                                             authority_type: AuthorityType::MetadataDelegate,
                                             metadata_delegate_role: Some(*role),
