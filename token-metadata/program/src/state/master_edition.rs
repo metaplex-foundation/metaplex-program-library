@@ -37,6 +37,26 @@ pub fn get_master_edition(account: &AccountInfo) -> Result<Box<dyn MasterEdition
     master_edition_result
 }
 
+#[macro_export]
+macro_rules! edition_seeds {
+    ($mint:expr) => {{
+        let path = vec![
+            "metadata".as_bytes(),
+            $crate::ID.as_ref(),
+            $mint.as_ref(),
+            "edition".as_bytes(),
+        ];
+        let (_, bump) = Pubkey::find_program_address(&path, &$crate::ID);
+        &[
+            "metadata".as_bytes(),
+            $crate::ID.as_ref(),
+            $mint.as_ref(),
+            "edition".as_bytes(),
+            &[bump],
+        ]
+    }};
+}
+
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(Clone, Debug, PartialEq, Eq, BorshSerialize, BorshDeserialize, ShankAccount)]

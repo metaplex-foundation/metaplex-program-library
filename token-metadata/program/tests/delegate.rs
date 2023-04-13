@@ -270,8 +270,11 @@ mod delegate {
             assert_eq!(token_account.delegate, COption::Some(user_pubkey));
             assert_eq!(token_account.delegated_amount, 1);
 
-            // Utilty Delegate should also have the Close Authority so it can burn.
-            assert_eq!(token_account.close_authority, COption::Some(user_pubkey));
+            // Close Authority should be set to the asset's Master Edition key.
+            assert_eq!(
+                token_account.close_authority,
+                COption::Some(asset.edition.unwrap())
+            );
         } else {
             panic!("Missing token account");
         }
@@ -588,5 +591,50 @@ mod delegate {
         // asserts
 
         assert_custom_error_ix!(1, error, RuleSetError::DataIsEmpty);
+    }
+
+    #[tokio::test]
+    async fn invalid_close_authority_fails() {
+        let mut context = program_test().start_with_context().await;
+
+        // asset
+
+        let mut asset = DigitalAsset::default();
+        asset
+            .create_and_mint(
+                &mut context,
+                TokenStandard::ProgrammableNonFungible,
+                None,
+                None,
+                1,
+            )
+            .await
+            .unwrap();
+
+        assert!(asset.token.is_some());
+
+        let delegate = Keypair::new();
+        let delegate_pubkey = delegate.pubkey();
+
+        let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+
+        asset
+            .inject_close_authority(&mut context, &delegate_pubkey)
+            .await;
+
+        let err = asset
+            .delegate(
+                &mut context,
+                payer,
+                delegate_pubkey,
+                DelegateArgs::UtilityV1 {
+                    amount: 1,
+                    authorization_data: None,
+                },
+            )
+            .await
+            .unwrap_err();
+
+        assert_custom_error_ix!(1, err, MetadataError::InvalidCloseAuthority);
     }
 }

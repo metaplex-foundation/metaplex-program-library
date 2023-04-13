@@ -25,12 +25,13 @@ use crate::{
     instruction::{Context, Transfer, TransferArgs},
     pda::find_token_record_account,
     state::{
-        AuthorityRequest, AuthorityResponse, AuthorityType, Metadata, Operation, Resizable,
-        TokenDelegateRole, TokenMetadataAccount, TokenRecord, TokenStandard,
+        AuthorityRequest, AuthorityResponse, AuthorityType, Metadata, Operation, TokenDelegateRole,
+        TokenMetadataAccount, TokenRecord, TokenStandard,
     },
     utils::{
-        assert_derivation, auth_rules_validate, create_token_record_account, frozen_transfer,
-        AuthRulesValidateParams,
+        assert_derivation, auth_rules_validate, clear_close_authority, close_program_account,
+        create_token_record_account, frozen_transfer, AuthRulesValidateParams,
+        ClearCloseAuthorityParams,
     },
 };
 
@@ -317,7 +318,7 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
             // validates the derivation
             assert_keys_equal(&new_pda_key, destination_token_record_info.key)?;
 
-            let mut owner_token_record = TokenRecord::from_account_info(owner_token_record_info)?;
+            let owner_token_record = TokenRecord::from_account_info(owner_token_record_info)?;
 
             msg!("checking if sale delegate");
             let is_sale_delegate = owner_token_record
@@ -384,18 +385,23 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
             auth_rules_validate(auth_rules_validate_params)?;
             frozen_transfer(token_transfer_params, ctx.accounts.edition_info)?;
 
-            owner_token_record.reset();
-            owner_token_record.save(
-                owner_token_record_info,
-                ctx.accounts.payer_info,
-                ctx.accounts.system_program_info,
-            )?;
+            let master_edition_info = ctx
+                .accounts
+                .edition_info
+                .ok_or(MetadataError::MissingEditionAccount)?;
+
+            clear_close_authority(ClearCloseAuthorityParams {
+                token_info: ctx.accounts.token_info,
+                mint_info: ctx.accounts.mint_info,
+                token,
+                master_edition_info,
+                authority_info: master_edition_info,
+                spl_token_program_info: ctx.accounts.spl_token_program_info,
+            })?;
 
             // If the token record account for the destination owner doesn't exist,
             // we create it.
             if destination_token_record_info.data_is_empty() {
-                msg!("Init new token record");
-
                 create_token_record_account(
                     program_id,
                     destination_token_record_info,
@@ -404,6 +410,14 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
                     ctx.accounts.payer_info,
                     ctx.accounts.system_program_info,
                 )?;
+            }
+
+            // Don't close token record if it's a self transfer.
+            if owner_token_record_info.key != destination_token_record_info.key {
+                // Close the source Token Record account, but do it after the CPI calls
+                // so as to avoid Unbalanced Accounts errors due to the CPI context not knowing
+                // about the manual lamport math done here.
+                close_program_account(owner_token_record_info, ctx.accounts.payer_info)?;
             }
         }
         _ => mpl_utils::token::spl_token_transfer(token_transfer_params).unwrap(),

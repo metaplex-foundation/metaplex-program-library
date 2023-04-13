@@ -24,8 +24,8 @@ use crate::{
     },
     utils::{
         assert_derivation, assert_initialized, assert_owned_by,
-        assert_verified_member_of_collection, close_program_account, is_master_edition,
-        is_print_edition,
+        assert_verified_member_of_collection, close_program_account, decrement_collection_size,
+        is_master_edition, is_print_edition,
     },
 };
 

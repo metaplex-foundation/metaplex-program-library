@@ -16,7 +16,7 @@ use crate::{
         Metadata, MetadataDelegateRecord, Resizable, TokenDelegateRole, TokenMetadataAccount,
         TokenRecord, TokenStandard,
     },
-    utils::{freeze, thaw},
+    utils::{clear_close_authority, freeze, thaw, ClearCloseAuthorityParams},
 };
 
 /// Revoke a delegation of the token.
@@ -261,6 +261,18 @@ fn revoke_persistent_delegate_v1(
                     master_edition_info.clone(),
                     spl_token_program_info.clone(),
                 )?;
+
+                // Clear the close authority if it's a Utility Delegate.
+                if matches!(role, TokenDelegateRole::Utility) {
+                    clear_close_authority(ClearCloseAuthorityParams {
+                        token_info,
+                        mint_info: ctx.accounts.mint_info,
+                        token,
+                        master_edition_info,
+                        authority_info: master_edition_info,
+                        spl_token_program_info,
+                    })?;
+                }
             } else {
                 return Err(MetadataError::MissingEditionAccount.into());
             }
