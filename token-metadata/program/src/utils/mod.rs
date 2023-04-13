@@ -288,13 +288,3 @@ mod tests {
         assert_eq!(metadata, expected_metadata);
     }
 }
-
-#[macro_export]
-macro_rules! unwrap_or_error(
-    ($option:expr, $err:expr) => {
-        match $option {
-            Ok(val) => val,
-            Err(_) => return Err($err),
-        }
-    };
-);

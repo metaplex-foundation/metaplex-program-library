@@ -592,7 +592,8 @@ mod revoke {
             let token_account = Account::unpack(&account.data).unwrap();
 
             assert!(token_account.is_frozen());
-            assert_eq!(token_account.delegate, COption::None);
+            assert!(token_account.delegate.is_none());
+            assert!(token_account.close_authority.is_none());
         } else {
             panic!("Missing token account");
         }

@@ -615,7 +615,6 @@ mod delegate {
 
         let delegate = Keypair::new();
         let delegate_pubkey = delegate.pubkey();
-        // delegate.airdrop(&mut context, 1_000_000).await.unwrap();
 
         let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
 

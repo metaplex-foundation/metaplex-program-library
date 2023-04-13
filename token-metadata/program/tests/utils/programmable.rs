@@ -160,16 +160,13 @@ pub async fn create_default_metaplex_rule_set(
             .unwrap();
     } else {
         royalty_rule_set
-            .add(delegate_sale_operation.to_string(), Rule::Pass.clone())
+            .add(delegate_sale_operation.to_string(), Rule::Pass)
             .unwrap();
         royalty_rule_set
-            .add(
-                delegate_lockedtransfer_operation.to_string(),
-                Rule::Pass.clone(),
-            )
+            .add(delegate_lockedtransfer_operation.to_string(), Rule::Pass)
             .unwrap();
         royalty_rule_set
-            .add(delegate_transfer_operation.to_string(), Rule::Pass.clone())
+            .add(delegate_transfer_operation.to_string(), Rule::Pass)
             .unwrap();
         royalty_rule_set
             .add(delegate_utility_operation.to_string(), Rule::Pass)

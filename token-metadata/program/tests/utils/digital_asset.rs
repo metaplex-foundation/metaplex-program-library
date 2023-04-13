@@ -1102,9 +1102,8 @@ impl DigitalAsset {
 
         token.close_authority = COption::Some(*close_authority);
         let mut data = vec![0u8; Account::LEN];
-        let buffer = &mut data[..Account::LEN];
-        Account::pack(token, buffer).unwrap();
-        token_account.data = buffer.to_vec();
+        Account::pack(token, &mut data).unwrap();
+        token_account.data = data;
 
         let token_account_shared_data: AccountSharedData = token_account.into();
         context.set_account(&self.token.unwrap(), &token_account_shared_data);

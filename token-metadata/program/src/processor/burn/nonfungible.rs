@@ -93,6 +93,7 @@ pub(crate) fn burn_nonfungible(ctx: &Context<Burn>, args: BurnNonFungibleArgs) -
         },
         token_program: ctx.accounts.spl_token_program_info.clone(),
     };
+    // CPIs panic if there's an error so unwrapping is fine here.
     mpl_utils::token::spl_token_close(close_params).unwrap();
 
     close_program_account(ctx.accounts.metadata_info, ctx.accounts.authority_info)?;
