@@ -1,3 +1,5 @@
+use solana_program::program_option::COption;
+
 use super::*;
 
 use crate::{
@@ -160,7 +162,10 @@ fn burn_v1(program_id: &Pubkey, ctx: Context<Burn>, args: BurnArgs) -> ProgramRe
 
     match token_standard {
         TokenStandard::NonFungible => {
-            let args = BurnNonFungibleArgs { metadata };
+            let args = BurnNonFungibleArgs {
+                metadata,
+                me_close_authority: false,
+            };
 
             burn_nonfungible(&ctx, args)?;
         }
@@ -198,7 +203,25 @@ fn burn_v1(program_id: &Pubkey, ctx: Context<Burn>, args: BurnArgs) -> ProgramRe
                 ctx.accounts.spl_token_program_info.clone(),
             )?;
 
-            let args = BurnNonFungibleArgs { metadata };
+            let edition_info = ctx
+                .accounts
+                .edition_info
+                .ok_or(MetadataError::MissingEditionAccount)?;
+
+            let mut args = BurnNonFungibleArgs {
+                metadata,
+                me_close_authority: false,
+            };
+
+            // Utility Delegate is the only delegate that can burn an asset.
+            if let Some(TokenDelegateRole::Utility) = token_record.delegate_role {
+                if let COption::Some(close_authority) = token.close_authority {
+                    if &close_authority != edition_info.key {
+                        return Err(MetadataError::InvalidCloseAuthority.into());
+                    }
+                    args.me_close_authority = true;
+                }
+            }
 
             burn_nonfungible(&ctx, args)?;
 

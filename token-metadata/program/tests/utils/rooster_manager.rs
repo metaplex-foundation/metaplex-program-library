@@ -44,7 +44,7 @@ impl RoosterManager {
     }
 
     pub async fn withdraw(
-        self,
+        &self,
         context: &mut ProgramTestContext,
         authority: &Keypair,
         destination_owner: Pubkey,

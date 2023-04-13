@@ -41,6 +41,20 @@ pub const MAX_DATA_SIZE: usize = 4
     + 4
     + MAX_CREATOR_LIMIT * MAX_CREATOR_LEN;
 
+#[macro_export]
+macro_rules! metadata_seeds {
+    ($mint:expr) => {{
+        let path = vec!["metadata".as_bytes(), $crate::ID.as_ref(), $mint.as_ref()];
+        let (_, bump) = Pubkey::find_program_address(&path, &$crate::ID);
+        &[
+            "metadata".as_bytes(),
+            $crate::ID.as_ref(),
+            $mint.as_ref(),
+            &[bump],
+        ]
+    }};
+}
+
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(Clone, BorshSerialize, Debug, PartialEq, Eq, ShankAccount)]

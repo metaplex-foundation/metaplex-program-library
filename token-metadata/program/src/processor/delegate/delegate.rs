@@ -4,8 +4,8 @@ use borsh::BorshSerialize;
 use mpl_token_auth_rules::utils::get_latest_revision;
 use mpl_utils::{assert_signer, create_or_allocate_account_raw};
 use solana_program::{
-    account_info::AccountInfo, entrypoint::ProgramResult, program::invoke, program_pack::Pack,
-    pubkey::Pubkey, system_program, sysvar,
+    account_info::AccountInfo, entrypoint::ProgramResult, program::invoke, program_option::COption,
+    program_pack::Pack, pubkey::Pubkey, system_program, sysvar,
 };
 use spl_token::{instruction::AuthorityType as SplAuthorityType, state::Account};
 
@@ -406,23 +406,37 @@ fn create_persistent_delegate_v1(
     )?;
 
     // For Utility Delegates we request Close Authority as well so that the
-    // token can be closed by the delegate on Burn.
+    // token can be closed by the delegate on Burn. We assign CloseAuthority to
+    // the master edition PDA so we can close it on Transfer and revoke it in Revoke.
     if matches!(role, TokenDelegateRole::Utility) {
-        invoke(
-            &spl_token::instruction::set_authority(
-                spl_token_program_info.key,
-                token_info.key,
-                Some(ctx.accounts.delegate_info.key),
-                SplAuthorityType::CloseAccount,
-                ctx.accounts.authority_info.key,
-                &[],
-            )?,
-            &[
-                token_info.clone(),
-                ctx.accounts.delegate_info.clone(),
-                ctx.accounts.authority_info.clone(),
-            ],
-        )?;
+        // If there's an existing close authority that is not the metadata account,
+        // it will need to be revoked by the original UtilityDelegate.
+        let master_edition_info = ctx
+            .accounts
+            .master_edition_info
+            .ok_or(MetadataError::MissingEditionAccount)?;
+
+        if let COption::Some(close_authority) = token.close_authority {
+            if &close_authority != master_edition_info.key {
+                return Err(MetadataError::InvalidCloseAuthority.into());
+            }
+        } else {
+            invoke(
+                &spl_token::instruction::set_authority(
+                    spl_token_program_info.key,
+                    token_info.key,
+                    Some(master_edition_info.key),
+                    SplAuthorityType::CloseAccount,
+                    ctx.accounts.authority_info.key,
+                    &[],
+                )?,
+                &[
+                    token_info.clone(),
+                    ctx.accounts.delegate_info.clone(),
+                    ctx.accounts.authority_info.clone(),
+                ],
+            )?;
+        }
     }
 
     if matches!(

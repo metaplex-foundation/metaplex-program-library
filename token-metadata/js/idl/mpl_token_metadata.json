@@ -6413,7 +6413,7 @@
     {
       "code": 185,
       "name": "MissingCollectionMint",
-      "msg": "Missing collection mint account"
+      "msg": "Missing collection account"
     },
     {
       "code": 186,
@@ -6424,6 +6424,11 @@
       "code": 187,
       "name": "InvalidTokenRecord",
       "msg": "Invalid token record account"
+    },
+    {
+      "code": 188,
+      "name": "InvalidCloseAuthority",
+      "msg": "The close authority needs to be revoked by the Utility Delegate"
     }
   ],
   "metadata": {
