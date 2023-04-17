@@ -6,6 +6,7 @@ use solana_program::{
 
 use crate::{
     instruction::PrintArgs,
+    state::TokenStandard,
     utils::{
         process_mint_new_edition_from_master_edition_via_token_logic,
         MintNewEditionFromMasterEditionViaTokenLogicArgs,
@@ -59,5 +60,6 @@ pub fn print<'a>(
         },
         edition,
         false,
+        TokenStandard::ProgrammableNonFungibleEdition,
     )
 }

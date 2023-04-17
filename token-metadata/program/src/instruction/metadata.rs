@@ -12,11 +12,11 @@ use {
 use super::InstructionBuilder;
 use crate::{
     instruction::MetadataInstruction,
-    pda::{EDITION, PREFIX},
+    pda::{EDITION, MARKER, PREFIX},
     processor::AuthorizationData,
     state::{
         AssetData, Collection, CollectionDetails, Creator, Data, DataV2, MigrationType,
-        PrintSupply, Uses, EDITION_MARKER_BIT_SIZE,
+        PrintSupply, Uses,
     },
 };
 
@@ -792,21 +792,19 @@ impl InstructionBuilder for super::builders::Update {
 
 impl InstructionBuilder for super::builders::Print {
     fn instruction(&self) -> solana_program::instruction::Instruction {
-        let (metadata_mint, edition) = match self.args.clone() {
+        let (metadata_mint, _edition) = match self.args.clone() {
             PrintArgs::V1 {
                 metadata_mint,
                 edition,
             } => (metadata_mint, edition),
         };
-        let edition_number = edition.checked_div(EDITION_MARKER_BIT_SIZE).unwrap();
-        let as_string = edition_number.to_string();
         let (edition_mark_pda, _) = Pubkey::find_program_address(
             &[
                 PREFIX.as_bytes(),
                 crate::ID.as_ref(),
                 metadata_mint.as_ref(),
                 EDITION.as_bytes(),
-                as_string.as_bytes(),
+                MARKER.as_bytes(),
             ],
             &crate::ID,
         );

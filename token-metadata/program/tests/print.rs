@@ -4,8 +4,7 @@ pub mod utils;
 use borsh::BorshSerialize;
 use mpl_token_metadata::{
     error::MetadataError,
-    id, instruction,
-    state::{Collection, Creator, Key, MAX_MASTER_EDITION_LEN},
+    state::{Key, MAX_MASTER_EDITION_LEN},
 };
 use num_traits::FromPrimitive;
 use solana_program_test::*;
@@ -25,7 +24,7 @@ mod print {
         instruction::{builders::PrintBuilder, InstructionBuilder, PrintArgs},
         state::{PrintSupply, TokenStandard},
     };
-    use solana_program::{native_token::LAMPORTS_PER_SOL, system_program};
+    use solana_program::system_program;
 
     use super::*;
     #[tokio::test]
@@ -59,10 +58,10 @@ mod print {
             .await
             .unwrap();
 
-        let edition_marker = test_edition_marker.get_data(&mut context).await;
+        let edition_marker = test_edition_marker.get_data_v2(&mut context).await;
 
         assert_eq!(edition_marker.ledger[0], 64);
-        assert_eq!(edition_marker.key, Key::EditionMarker);
+        assert_eq!(edition_marker.key, Key::EditionMarkerV2);
     }
 
     // #[tokio::test]
@@ -273,7 +272,7 @@ mod print {
             .token_program(spl_token::ID)
             .system_program(system_program::ID)
             // Not used
-            .edition_mark_pda(mpl_token_metadata::ID);
+            .edition_marker_pda(mpl_token_metadata::ID);
 
         let tx = Transaction::new_signed_with_payer(
             &[builder.build(print_args).unwrap().instruction()],

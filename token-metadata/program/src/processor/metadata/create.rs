@@ -44,12 +44,14 @@ fn create_v1(program_id: &Pubkey, ctx: Context<Create>, args: CreateArgs) -> Pro
     } = args;
 
     // cannot create non-fungible editions on this instruction
-    if matches!(asset_data.token_standard, TokenStandard::NonFungibleEdition) {
+    if matches!(
+        asset_data.token_standard,
+        TokenStandard::NonFungibleEdition | TokenStandard::ProgrammableNonFungibleEdition
+    ) {
         return Err(MetadataError::InvalidTokenStandard.into());
     }
 
     // if the account does not exist, we will allocate a new mint
-
     if ctx.accounts.mint_info.data_is_empty() {
         // mint account must be a signer in the transaction
         if !ctx.accounts.mint_info.is_signer {

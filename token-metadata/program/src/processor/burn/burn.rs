@@ -146,6 +146,7 @@ fn burn_v1(program_id: &Pubkey, ctx: Context<Burn>, args: BurnArgs) -> ProgramRe
         TokenStandard::NonFungibleEdition
             | TokenStandard::NonFungible
             | TokenStandard::ProgrammableNonFungible
+            | TokenStandard::ProgrammableNonFungibleEdition
     ) {
         if amount != 1 {
             return Err(MetadataError::InvalidAmount.into());
@@ -201,6 +202,47 @@ fn burn_v1(program_id: &Pubkey, ctx: Context<Burn>, args: BurnArgs) -> ProgramRe
             let args = BurnNonFungibleArgs { metadata };
 
             burn_nonfungible(&ctx, args)?;
+
+            // Also close the token_record account.
+            close_program_account(
+                &ctx.accounts.token_record_info.unwrap().clone(),
+                &ctx.accounts.authority_info.clone(),
+            )?;
+        }
+        TokenStandard::ProgrammableNonFungibleEdition => {
+            // All the checks are the same as burning a NonFungible token
+            // except we also have to check the token state and derivation.
+            let token_record = match ctx.accounts.token_record_info {
+                Some(token_record_info) => {
+                    let (pda_key, _) = find_token_record_account(
+                        ctx.accounts.mint_info.key,
+                        ctx.accounts.token_info.key,
+                    );
+
+                    if pda_key != *token_record_info.key {
+                        return Err(MetadataError::InvalidTokenRecord.into());
+                    }
+
+                    TokenRecord::from_account_info(token_record_info)?
+                }
+                None => return Err(MetadataError::MissingTokenRecord.into()),
+            };
+
+            // Locked and Listed states cannot be burned.
+            if token_record.state != TokenState::Unlocked {
+                return Err(MetadataError::IncorrectTokenState.into());
+            }
+
+            thaw(
+                ctx.accounts.mint_info.clone(),
+                ctx.accounts.token_info.clone(),
+                ctx.accounts.edition_info.unwrap().clone(),
+                ctx.accounts.spl_token_program_info.clone(),
+            )?;
+
+            let _args = BurnNonFungibleArgs { metadata };
+
+            burn_nonfungible_edition(&ctx)?;
 
             // Also close the token_record account.
             close_program_account(

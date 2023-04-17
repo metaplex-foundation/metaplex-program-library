@@ -7,6 +7,7 @@ use mpl_token_metadata::{
         BurnArgs, InstructionBuilder, MetadataInstruction,
         MintNewEditionFromMasterEditionViaTokenArgs, PrintArgs,
     },
+    pda::MARKER,
     state::{EDITION, EDITION_MARKER_BIT_SIZE, PREFIX},
 };
 use solana_program::{
@@ -122,15 +123,13 @@ impl EditionMarker {
         let metadata_mint_pubkey = asset.mint.pubkey();
         let program_id = id();
 
-        let edition_number = edition.checked_div(EDITION_MARKER_BIT_SIZE).unwrap();
-        let as_string = edition_number.to_string();
         let (pubkey, _) = Pubkey::find_program_address(
             &[
                 PREFIX.as_bytes(),
                 program_id.as_ref(),
                 metadata_mint_pubkey.as_ref(),
                 EDITION.as_bytes(),
-                as_string.as_bytes(),
+                MARKER.as_bytes(),
             ],
             &program_id,
         );
@@ -164,6 +163,14 @@ impl EditionMarker {
         &self,
         context: &mut ProgramTestContext,
     ) -> mpl_token_metadata::state::EditionMarker {
+        let account = get_account(context, &self.pubkey).await;
+        try_from_slice_unchecked(&account.data).unwrap()
+    }
+
+    pub async fn get_data_v2(
+        &self,
+        context: &mut ProgramTestContext,
+    ) -> mpl_token_metadata::state::EditionMarkerV2 {
         let account = get_account(context, &self.pubkey).await;
         try_from_slice_unchecked(&account.data).unwrap()
     }
@@ -253,6 +260,17 @@ impl EditionMarker {
         )
         .await?;
 
+        let edition_marker_pda = Pubkey::find_program_address(
+            &[
+                PREFIX.as_bytes(),
+                mpl_token_metadata::ID.as_ref(),
+                self.metadata_mint_pubkey.as_ref(),
+                EDITION.as_bytes(),
+                MARKER.as_bytes(),
+            ],
+            &mpl_token_metadata::ID,
+        );
+
         let print_args = PrintArgs::V1 {
             metadata_mint: self.metadata_mint_pubkey,
             edition: self.edition,
@@ -272,7 +290,7 @@ impl EditionMarker {
             .token_program(spl_token::ID)
             .system_program(system_program::ID)
             // Not used
-            .edition_mark_pda(mpl_token_metadata::ID);
+            .edition_marker_pda(edition_marker_pda.0);
 
         let tx = Transaction::new_signed_with_payer(
             &[builder.build(print_args).unwrap().instruction()],
@@ -339,7 +357,7 @@ impl EditionMarker {
             .token_program(fake_token_program.pubkey())
             .system_program(system_program::ID)
             // Not used
-            .edition_mark_pda(mpl_token_metadata::ID);
+            .edition_marker_pda(mpl_token_metadata::ID);
 
         let tx = Transaction::new_signed_with_payer(
             &[builder.build(print_args).unwrap().instruction()],
