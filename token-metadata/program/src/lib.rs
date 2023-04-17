@@ -6,12 +6,6 @@ pub mod assertions;
 
 // (Re-)Declare modules to maintain API compatibility.
 
-pub mod deprecated_processor {
-    pub use crate::processor::deprecated::*;
-}
-pub mod deprecated_instruction {
-    pub use crate::instruction::deprecated::*;
-}
 pub mod escrow {
     pub use crate::{instruction::escrow::*, processor::escrow::*};
 }
