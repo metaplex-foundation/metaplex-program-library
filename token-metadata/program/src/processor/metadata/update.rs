@@ -17,7 +17,7 @@ use crate::{
         AuthorityRequest, AuthorityResponse, AuthorityType, Collection, Metadata,
         ProgrammableConfig, TokenMetadataAccount, TokenStandard,
     },
-    utils::{assert_derivation, check_token_standard, mint_decimals_is_zero},
+    utils::{assert_derivation, check_token_standard},
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -199,7 +199,6 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
     {
         token_standard
     } else {
-        // TODO: What if they have an edition account but choose not to pass it in?
         check_token_standard(ctx.accounts.mint_info, ctx.accounts.edition_info)?
     };
 
@@ -208,7 +207,6 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
     let token_standard = match desired_token_standard {
         Some(desired_token_standard) => {
             check_desired_token_standard(
-                mint_decimals_is_zero(ctx.accounts.mint_info)?,
                 existing_or_inferred_token_standard,
                 desired_token_standard,
             )?;
@@ -366,16 +364,11 @@ fn validate_update(
 }
 
 fn check_desired_token_standard(
-    mint_decimals_is_zero: bool,
     existing_or_inferred_token_standard: TokenStandard,
     desired_token_standard: TokenStandard,
 ) -> ProgramResult {
     // This function only allows switching between Fungible and FungibleAsset.  Mint decimals must
     // be zero.
-    if !mint_decimals_is_zero {
-        return Err(MetadataError::InvalidTokenStandard.into());
-    }
-
     match existing_or_inferred_token_standard {
         TokenStandard::Fungible | TokenStandard::FungibleAsset => match desired_token_standard {
             TokenStandard::Fungible | TokenStandard::FungibleAsset => Ok(()),

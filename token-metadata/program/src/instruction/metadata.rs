@@ -71,7 +71,7 @@ pub enum TransferArgs {
 
 /// Struct representing the values to be updated for an `update` instructions.
 ///
-/// Values that are set to 'None' are not changed; any value set to `Some(_)` will
+/// Values that are set to `None` are not changed.  Any value set to `Some(...)` will
 /// have its value updated. There are properties that have three valid states, and
 /// use a "toggle" type that allows the value to be set, cleared, or remain the same.
 #[repr(C)]
