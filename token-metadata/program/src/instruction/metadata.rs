@@ -100,7 +100,7 @@ pub enum UpdateArgs {
         /// Required authorization data to validate the request.
         authorization_data: Option<AuthorizationData>,
     },
-    UpdateAuthorityV1 {
+    UpdateAuthorityV2 {
         /// The new update authority.
         new_update_authority: Option<Pubkey>,
         /// The metadata details.
@@ -124,7 +124,7 @@ pub enum UpdateArgs {
         /// Required authorization data to validate the request.
         authorization_data: Option<AuthorizationData>,
     },
-    AuthorityItemDelegateV1 {
+    AuthorityItemDelegateV2 {
         /// The new update authority.
         new_update_authority: Option<Pubkey>,
         /// Indicates whether the primary sale has happened or not (once set to `true`, it cannot be
@@ -136,27 +136,27 @@ pub enum UpdateArgs {
         /// Token standard.
         token_standard: Option<TokenStandard>,
     },
-    CollectionDelegateV1 {
+    CollectionDelegateV2 {
         /// Collection information.
         collection: CollectionToggle,
     },
-    DataDelegateV1 {
+    DataDelegateV2 {
         /// The metadata details.
         data: Option<Data>,
     },
-    ProgConfigDelegateV1 {
+    ProgConfigDelegateV2 {
         // Programmable rule set configuration (only applicable to `Programmable` asset types).
         rule_set: RuleSetToggle,
     },
-    DataItemDelegateV1 {
+    DataItemDelegateV2 {
         /// The metadata details.
         data: Option<Data>,
     },
-    CollectionItemDelegateV1 {
+    CollectionItemDelegateV2 {
         /// Collection information.
         collection: CollectionToggle,
     },
-    ProgConfigItemDelegateV1 {
+    ProgConfigItemDelegateV2 {
         // Programmable rule set configuration (only applicable to `Programmable` asset types).
         rule_set: RuleSetToggle,
     },
@@ -164,7 +164,7 @@ pub enum UpdateArgs {
 
 impl Default for UpdateArgs {
     fn default() -> Self {
-        Self::UpdateAuthorityV1 {
+        Self::UpdateAuthorityV2 {
             new_update_authority: None,
             data: None,
             primary_sale_happened: None,
@@ -202,6 +202,22 @@ pub(crate) struct InternalUpdateArgs {
     pub token_standard: Option<TokenStandard>,
 }
 
+impl Default for InternalUpdateArgs {
+    fn default() -> Self {
+        Self {
+            new_update_authority: None,
+            data: None,
+            primary_sale_happened: None,
+            is_mutable: None,
+            collection: CollectionToggle::None,
+            collection_details: CollectionDetailsToggle::None,
+            uses: UsesToggle::None,
+            rule_set: RuleSetToggle::None,
+            token_standard: None,
+        }
+    }
+}
+
 impl From<UpdateArgs> for InternalUpdateArgs {
     fn from(args: UpdateArgs) -> Self {
         match args {
@@ -226,7 +242,7 @@ impl From<UpdateArgs> for InternalUpdateArgs {
                 rule_set,
                 token_standard: None,
             },
-            UpdateArgs::UpdateAuthorityV1 {
+            UpdateArgs::UpdateAuthorityV2 {
                 new_update_authority,
                 data,
                 primary_sale_happened,
@@ -248,7 +264,7 @@ impl From<UpdateArgs> for InternalUpdateArgs {
                 rule_set,
                 token_standard,
             },
-            UpdateArgs::AuthorityItemDelegateV1 {
+            UpdateArgs::AuthorityItemDelegateV2 {
                 new_update_authority,
                 primary_sale_happened,
                 is_mutable,
@@ -256,50 +272,25 @@ impl From<UpdateArgs> for InternalUpdateArgs {
                 ..
             } => Self {
                 new_update_authority,
-                data: None,
                 primary_sale_happened,
                 is_mutable,
-                collection: CollectionToggle::None,
-                collection_details: CollectionDetailsToggle::None,
-                uses: UsesToggle::None,
-                rule_set: RuleSetToggle::None,
                 token_standard,
+                ..Default::default()
             },
-            UpdateArgs::CollectionDelegateV1 { collection, .. }
-            | UpdateArgs::CollectionItemDelegateV1 { collection, .. } => Self {
-                new_update_authority: None,
-                data: None,
-                primary_sale_happened: None,
-                is_mutable: None,
+            UpdateArgs::CollectionDelegateV2 { collection, .. }
+            | UpdateArgs::CollectionItemDelegateV2 { collection, .. } => Self {
                 collection,
-                collection_details: CollectionDetailsToggle::None,
-                uses: UsesToggle::None,
-                rule_set: RuleSetToggle::None,
-                token_standard: None,
+                ..Default::default()
             },
-            UpdateArgs::DataDelegateV1 { data, .. }
-            | UpdateArgs::DataItemDelegateV1 { data, .. } => Self {
-                new_update_authority: None,
+            UpdateArgs::DataDelegateV2 { data, .. }
+            | UpdateArgs::DataItemDelegateV2 { data, .. } => Self {
                 data,
-                primary_sale_happened: None,
-                is_mutable: None,
-                collection: CollectionToggle::None,
-                collection_details: CollectionDetailsToggle::None,
-                uses: UsesToggle::None,
-                rule_set: RuleSetToggle::None,
-                token_standard: None,
+                ..Default::default()
             },
-            UpdateArgs::ProgConfigDelegateV1 { rule_set, .. }
-            | UpdateArgs::ProgConfigItemDelegateV1 { rule_set, .. } => Self {
-                new_update_authority: None,
-                data: None,
-                primary_sale_happened: None,
-                is_mutable: None,
-                collection: CollectionToggle::None,
-                collection_details: CollectionDetailsToggle::None,
-                uses: UsesToggle::None,
+            UpdateArgs::ProgConfigDelegateV2 { rule_set, .. }
+            | UpdateArgs::ProgConfigItemDelegateV2 { rule_set, .. } => Self {
                 rule_set,
-                token_standard: None,
+                ..Default::default()
             },
         }
     }

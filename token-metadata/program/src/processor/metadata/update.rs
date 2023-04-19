@@ -260,31 +260,31 @@ fn validate_update(
     if let Some(metadata_delegate_role) = metadata_delegate_role {
         match metadata_delegate_role {
             MetadataDelegateRole::AuthorityItem => match args {
-                UpdateArgs::AuthorityItemDelegateV1 { .. } => (),
+                UpdateArgs::AuthorityItemDelegateV2 { .. } => (),
                 _ => return Err(MetadataError::InvalidUpdateArgs.into()),
             },
             MetadataDelegateRole::Data => match args {
-                UpdateArgs::DataDelegateV1 { .. } => (),
+                UpdateArgs::DataDelegateV2 { .. } => (),
                 _ => return Err(MetadataError::InvalidUpdateArgs.into()),
             },
             MetadataDelegateRole::DataItem => match args {
-                UpdateArgs::DataItemDelegateV1 { .. } => (),
+                UpdateArgs::DataItemDelegateV2 { .. } => (),
                 _ => return Err(MetadataError::InvalidUpdateArgs.into()),
             },
             MetadataDelegateRole::Collection => match args {
-                UpdateArgs::CollectionDelegateV1 { .. } => (),
+                UpdateArgs::CollectionDelegateV2 { .. } => (),
                 _ => return Err(MetadataError::InvalidUpdateArgs.into()),
             },
             MetadataDelegateRole::CollectionItem => match args {
-                UpdateArgs::CollectionItemDelegateV1 { .. } => (),
+                UpdateArgs::CollectionItemDelegateV2 { .. } => (),
                 _ => return Err(MetadataError::InvalidUpdateArgs.into()),
             },
             MetadataDelegateRole::ProgrammableConfig => match args {
-                UpdateArgs::ProgConfigDelegateV1 { .. } => (),
+                UpdateArgs::ProgConfigDelegateV2 { .. } => (),
                 _ => return Err(MetadataError::InvalidUpdateArgs.into()),
             },
             MetadataDelegateRole::ProgrammableConfigItem => match args {
-                UpdateArgs::ProgConfigItemDelegateV1 { .. } => (),
+                UpdateArgs::ProgConfigItemDelegateV2 { .. } => (),
                 _ => return Err(MetadataError::InvalidUpdateArgs.into()),
             },
             _ => return Err(MetadataError::InvalidAuthorityType.into()),
