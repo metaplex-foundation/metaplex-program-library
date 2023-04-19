@@ -10,8 +10,9 @@ use spl_token::state::Account;
 use crate::{
     assertions::{assert_owned_by, programmable::assert_valid_authorization},
     error::MetadataError,
-    get_update_args_fields,
-    instruction::{CollectionToggle, Context, MetadataDelegateRole, Update, UpdateArgs},
+    instruction::{
+        CollectionToggle, Context, InternalUpdateArgs, MetadataDelegateRole, Update, UpdateArgs,
+    },
     pda::{EDITION, PREFIX},
     state::{
         AuthorityRequest, AuthorityResponse, AuthorityType, Collection, Metadata,
@@ -44,10 +45,7 @@ pub fn update<'a>(
 ) -> ProgramResult {
     let context = Update::to_context(accounts)?;
 
-    match args {
-        UpdateArgs::V1 { .. } => update_v1(program_id, context, args),
-        UpdateArgs::V2 { .. } => update_v1(program_id, context, args),
-    }
+    update_v1(program_id, context, args)
 }
 
 fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> ProgramResult {
@@ -127,6 +125,9 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
         (None, None)
     };
 
+    // Copy the args into a struct that contains all available fields.
+    let internal_args = InternalUpdateArgs::from(args.clone());
+
     // there is a special case for collection-level delegates, where the
     // validation should use the collection key as the mint parameter
     let existing_collection_mint = metadata
@@ -139,7 +140,7 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
     // `MetadataDelegateRole::Collection` or `MetadataDelegateRole::CollectionItem`,
     // then it will fail in `validate_update` because those are the only roles that
     // can change collection.
-    let collection_mint = match get_update_args_fields!(&args, collection).0 {
+    let collection_mint = match &internal_args.collection {
         CollectionToggle::Set(Collection { key, .. }) => Some(key),
         _ => existing_collection_mint,
     };
@@ -181,24 +182,11 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
         ..Default::default()
     })?;
 
-    // Check if caller passed in a desired token standard.
-    let desired_token_standard = match args {
-        UpdateArgs::V1 { .. } => None,
-        UpdateArgs::V2 { token_standard, .. } => token_standard,
-    };
-
-    // Validate that authority has permission to update the fields that have been specified in the
-    // update args.
-    validate_update(
-        &args,
-        &authority_type,
-        metadata_delegate_role,
-        desired_token_standard,
-    )?;
+    // Validate that authority has permission to use the update args that were provided.
+    validate_update(&args, &authority_type, metadata_delegate_role)?;
 
     // Find existing token standard from metadata or infer it.
-    let existing_or_inferred_token_standard = if let Some(token_standard) = metadata.token_standard
-    {
+    let existing_or_inferred_token_std = if let Some(token_standard) = metadata.token_standard {
         token_standard
     } else {
         check_token_standard(ctx.accounts.mint_info, ctx.accounts.edition_info)?
@@ -206,15 +194,12 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
 
     // If there is a desired token standard, use it if it passes the check.  If there is not a
     // desired token standard, use the existing or inferred token standard.
-    let token_standard = match desired_token_standard {
+    let token_standard = match internal_args.token_standard {
         Some(desired_token_standard) => {
-            check_desired_token_standard(
-                existing_or_inferred_token_standard,
-                desired_token_standard,
-            )?;
+            check_desired_token_standard(existing_or_inferred_token_std, desired_token_standard)?;
             desired_token_standard
         }
-        None => existing_or_inferred_token_standard,
+        None => existing_or_inferred_token_std,
     };
 
     // For pNFTs, we need to validate the authorization rules.
@@ -251,7 +236,6 @@ fn validate_update(
     args: &UpdateArgs,
     authority_type: &AuthorityType,
     metadata_delegate_role: Option<MetadataDelegateRole>,
-    desired_token_standard: Option<TokenStandard>,
 ) -> ProgramResult {
     // validate the authority type
     match authority_type {
@@ -271,93 +255,38 @@ fn validate_update(
         _ => return Err(MetadataError::InvalidAuthorityType.into()),
     }
 
-    // Destructure args.
-    let (
-        new_update_authority,
-        data,
-        primary_sale_happened,
-        is_mutable,
-        collection,
-        collection_details,
-        uses,
-        rule_set,
-    ) = get_update_args_fields!(
-        args,
-        new_update_authority,
-        data,
-        primary_sale_happened,
-        is_mutable,
-        collection,
-        collection_details,
-        uses,
-        rule_set
-    );
-
     // validate the delegate role: this consist in checking that
     // the delegate is only updating fields that it has access to
     if let Some(metadata_delegate_role) = metadata_delegate_role {
         match metadata_delegate_role {
-            MetadataDelegateRole::AuthorityItem => {
-                // Fields allowed for `Authority`:
-                // `new_update_authority`
-                // `primary_sale_happened`
-                // `is_mutable`
-                // `token_standard`
-                if data.is_some()
-                    || collection.is_some()
-                    || collection_details.is_some()
-                    || uses.is_some()
-                    || rule_set.is_some()
-                {
-                    return Err(MetadataError::InvalidUpdateArgs.into());
-                }
-            }
-            MetadataDelegateRole::Data | MetadataDelegateRole::DataItem => {
-                // Fields allowed for `Data`:
-                // `data`
-                if new_update_authority.is_some()
-                    || primary_sale_happened.is_some()
-                    || is_mutable.is_some()
-                    || collection.is_some()
-                    || collection_details.is_some()
-                    || uses.is_some()
-                    || rule_set.is_some()
-                    || desired_token_standard.is_some()
-                {
-                    return Err(MetadataError::InvalidUpdateArgs.into());
-                }
-            }
-            MetadataDelegateRole::Collection | MetadataDelegateRole::CollectionItem => {
-                // Fields allowed for `Collection` and `CollectionItem`:
-                // `collection`
-                if new_update_authority.is_some()
-                    || data.is_some()
-                    || primary_sale_happened.is_some()
-                    || is_mutable.is_some()
-                    || collection_details.is_some()
-                    || uses.is_some()
-                    || rule_set.is_some()
-                    || desired_token_standard.is_some()
-                {
-                    return Err(MetadataError::InvalidUpdateArgs.into());
-                }
-            }
-            MetadataDelegateRole::ProgrammableConfig
-            | MetadataDelegateRole::ProgrammableConfigItem => {
-                // Fields allowed for `ProgrammableConfig` and `ProgrammableConfigItem`:
-                // `rule_set`
-                if new_update_authority.is_some()
-                    || data.is_some()
-                    || primary_sale_happened.is_some()
-                    || is_mutable.is_some()
-                    || collection.is_some()
-                    || collection_details.is_some()
-                    || uses.is_some()
-                    || desired_token_standard.is_some()
-                {
-                    return Err(MetadataError::InvalidUpdateArgs.into());
-                }
-            }
+            MetadataDelegateRole::AuthorityItem => match args {
+                UpdateArgs::AuthorityItemDelegateV2 { .. } => (),
+                _ => return Err(MetadataError::InvalidUpdateArgs.into()),
+            },
+            MetadataDelegateRole::Data => match args {
+                UpdateArgs::DataDelegateV2 { .. } => (),
+                _ => return Err(MetadataError::InvalidUpdateArgs.into()),
+            },
+            MetadataDelegateRole::DataItem => match args {
+                UpdateArgs::DataItemDelegateV2 { .. } => (),
+                _ => return Err(MetadataError::InvalidUpdateArgs.into()),
+            },
+            MetadataDelegateRole::Collection => match args {
+                UpdateArgs::CollectionDelegateV2 { .. } => (),
+                _ => return Err(MetadataError::InvalidUpdateArgs.into()),
+            },
+            MetadataDelegateRole::CollectionItem => match args {
+                UpdateArgs::CollectionItemDelegateV2 { .. } => (),
+                _ => return Err(MetadataError::InvalidUpdateArgs.into()),
+            },
+            MetadataDelegateRole::ProgrammableConfig => match args {
+                UpdateArgs::ProgConfigDelegateV2 { .. } => (),
+                _ => return Err(MetadataError::InvalidUpdateArgs.into()),
+            },
+            MetadataDelegateRole::ProgrammableConfigItem => match args {
+                UpdateArgs::ProgConfigItemDelegateV2 { .. } => (),
+                _ => return Err(MetadataError::InvalidUpdateArgs.into()),
+            },
             _ => return Err(MetadataError::InvalidAuthorityType.into()),
         }
     }
@@ -366,12 +295,12 @@ fn validate_update(
 }
 
 fn check_desired_token_standard(
-    existing_or_inferred_token_standard: TokenStandard,
+    existing_or_inferred_token_std: TokenStandard,
     desired_token_standard: TokenStandard,
 ) -> ProgramResult {
     // This function only allows switching between Fungible and FungibleAsset.  Mint decimals must
     // be zero.
-    match existing_or_inferred_token_standard {
+    match existing_or_inferred_token_std {
         TokenStandard::Fungible | TokenStandard::FungibleAsset => match desired_token_standard {
             TokenStandard::Fungible | TokenStandard::FungibleAsset => Ok(()),
             _ => Err(MetadataError::InvalidTokenStandard.into()),

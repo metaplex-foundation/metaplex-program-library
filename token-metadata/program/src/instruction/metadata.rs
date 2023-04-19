@@ -100,7 +100,7 @@ pub enum UpdateArgs {
         /// Required authorization data to validate the request.
         authorization_data: Option<AuthorizationData>,
     },
-    V2 {
+    UpdateAuthorityV2 {
         /// The new update authority.
         new_update_authority: Option<Pubkey>,
         /// The metadata details.
@@ -124,11 +124,47 @@ pub enum UpdateArgs {
         /// Required authorization data to validate the request.
         authorization_data: Option<AuthorizationData>,
     },
+    AuthorityItemDelegateV2 {
+        /// The new update authority.
+        new_update_authority: Option<Pubkey>,
+        /// Indicates whether the primary sale has happened or not (once set to `true`, it cannot be
+        /// changed back).
+        primary_sale_happened: Option<bool>,
+        // Indicates Whether the data struct is mutable or not (once set to `true`, it cannot be
+        /// changed back).
+        is_mutable: Option<bool>,
+        /// Token standard.
+        token_standard: Option<TokenStandard>,
+    },
+    CollectionDelegateV2 {
+        /// Collection information.
+        collection: CollectionToggle,
+    },
+    DataDelegateV2 {
+        /// The metadata details.
+        data: Option<Data>,
+    },
+    ProgConfigDelegateV2 {
+        // Programmable rule set configuration (only applicable to `Programmable` asset types).
+        rule_set: RuleSetToggle,
+    },
+    DataItemDelegateV2 {
+        /// The metadata details.
+        data: Option<Data>,
+    },
+    CollectionItemDelegateV2 {
+        /// Collection information.
+        collection: CollectionToggle,
+    },
+    ProgConfigItemDelegateV2 {
+        // Programmable rule set configuration (only applicable to `Programmable` asset types).
+        rule_set: RuleSetToggle,
+    },
 }
 
 impl Default for UpdateArgs {
     fn default() -> Self {
-        Self::V2 {
+        Self::UpdateAuthorityV2 {
             new_update_authority: None,
             data: None,
             primary_sale_happened: None,
@@ -143,14 +179,121 @@ impl Default for UpdateArgs {
     }
 }
 
-#[macro_export]
-macro_rules! get_update_args_fields {
-    ($args:expr, $($field:ident),+) => {
-        match $args {
-            UpdateArgs::V1 { $($field,)+ .. } => ($($field,)+),
-            UpdateArgs::V2 { $($field,)+ .. } => ($($field,)+),
+pub(crate) struct InternalUpdateArgs {
+    /// The new update authority.
+    pub new_update_authority: Option<Pubkey>,
+    /// The metadata details.
+    pub data: Option<Data>,
+    /// Indicates whether the primary sale has happened or not (once set to `true`, it cannot be
+    /// changed back).
+    pub primary_sale_happened: Option<bool>,
+    // Indicates Whether the data struct is mutable or not (once set to `true`, it cannot be
+    /// changed back).
+    pub is_mutable: Option<bool>,
+    /// Collection information.
+    pub collection: CollectionToggle,
+    /// Additional details of the collection.
+    pub collection_details: CollectionDetailsToggle,
+    /// Uses information.
+    pub uses: UsesToggle,
+    // Programmable rule set configuration (only applicable to `Programmable` asset types).
+    pub rule_set: RuleSetToggle,
+    /// Token standard.
+    pub token_standard: Option<TokenStandard>,
+}
+
+impl Default for InternalUpdateArgs {
+    fn default() -> Self {
+        Self {
+            new_update_authority: None,
+            data: None,
+            primary_sale_happened: None,
+            is_mutable: None,
+            collection: CollectionToggle::None,
+            collection_details: CollectionDetailsToggle::None,
+            uses: UsesToggle::None,
+            rule_set: RuleSetToggle::None,
+            token_standard: None,
         }
-    };
+    }
+}
+
+impl From<UpdateArgs> for InternalUpdateArgs {
+    fn from(args: UpdateArgs) -> Self {
+        match args {
+            UpdateArgs::V1 {
+                new_update_authority,
+                data,
+                primary_sale_happened,
+                is_mutable,
+                collection,
+                collection_details,
+                uses,
+                rule_set,
+                ..
+            } => Self {
+                new_update_authority,
+                data,
+                primary_sale_happened,
+                is_mutable,
+                collection,
+                collection_details,
+                uses,
+                rule_set,
+                token_standard: None,
+            },
+            UpdateArgs::UpdateAuthorityV2 {
+                new_update_authority,
+                data,
+                primary_sale_happened,
+                is_mutable,
+                collection,
+                collection_details,
+                uses,
+                rule_set,
+                token_standard,
+                ..
+            } => Self {
+                new_update_authority,
+                data,
+                primary_sale_happened,
+                is_mutable,
+                collection,
+                collection_details,
+                uses,
+                rule_set,
+                token_standard,
+            },
+            UpdateArgs::AuthorityItemDelegateV2 {
+                new_update_authority,
+                primary_sale_happened,
+                is_mutable,
+                token_standard,
+                ..
+            } => Self {
+                new_update_authority,
+                primary_sale_happened,
+                is_mutable,
+                token_standard,
+                ..Default::default()
+            },
+            UpdateArgs::CollectionDelegateV2 { collection, .. }
+            | UpdateArgs::CollectionItemDelegateV2 { collection, .. } => Self {
+                collection,
+                ..Default::default()
+            },
+            UpdateArgs::DataDelegateV2 { data, .. }
+            | UpdateArgs::DataItemDelegateV2 { data, .. } => Self {
+                data,
+                ..Default::default()
+            },
+            UpdateArgs::ProgConfigDelegateV2 { rule_set, .. }
+            | UpdateArgs::ProgConfigItemDelegateV2 { rule_set, .. } => Self {
+                rule_set,
+                ..Default::default()
+            },
+        }
+    }
 }
 
 //-- Toggle implementations
