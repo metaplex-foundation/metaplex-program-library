@@ -57,7 +57,8 @@ pub fn revoke<'a>(
         RevokeArgs::CollectionV1 => Some(MetadataDelegateRole::Collection),
         RevokeArgs::DataV1 => Some(MetadataDelegateRole::Data),
         RevokeArgs::ProgrammableConfigV1 => Some(MetadataDelegateRole::ProgrammableConfig),
-        RevokeArgs::AuthorityV1 => Some(MetadataDelegateRole::Authority),
+        RevokeArgs::AuthorityItemV1 => Some(MetadataDelegateRole::AuthorityItem),
+        RevokeArgs::DataItemV1 => Some(MetadataDelegateRole::DataItem),
         RevokeArgs::CollectionItemV1 => Some(MetadataDelegateRole::CollectionItem),
         RevokeArgs::ProgrammableConfigItemV1 => Some(MetadataDelegateRole::ProgrammableConfigItem),
         // we don't need to fail if did not find a match at this point

@@ -131,8 +131,58 @@ impl Metadata {
         // Update the token standard if it is changed.
         self.token_standard = Some(token_standard);
 
+        // Update the Update Authority only sections.
+        if matches!(authority_type, AuthorityType::Metadata) {
+            if uses.is_some() {
+                let uses_option = uses.to_option();
+                // If already None leave it as None.
+                assert_valid_use(&uses_option, &self.uses)?;
+                self.uses = uses_option;
+            }
+
+            if let CollectionDetailsToggle::Set(collection_details) = collection_details {
+                // only unsized collections can have the size set, and only once.
+                if self.collection_details.is_some() {
+                    return Err(MetadataError::SizedCollection.into());
+                }
+
+                self.collection_details = Some(collection_details);
+            }
+        }
+
+        // Update Authority sections.
         if matches!(authority_type, AuthorityType::Metadata)
-            || matches!(delegate_role, Some(MetadataDelegateRole::Data))
+            || matches!(delegate_role, Some(MetadataDelegateRole::AuthorityItem))
+        {
+            if let Some(authority) = new_update_authority {
+                self.update_authority = authority;
+            }
+
+            if let Some(primary_sale) = primary_sale_happened {
+                // If received primary_sale is true, flip to true.
+                if primary_sale || !self.primary_sale_happened {
+                    self.primary_sale_happened = primary_sale
+                } else {
+                    return Err(MetadataError::PrimarySaleCanOnlyBeFlippedToTrue.into());
+                }
+            }
+
+            if let Some(mutable) = is_mutable {
+                // If received value is false, flip to false.
+                if !mutable || self.is_mutable {
+                    self.is_mutable = mutable
+                } else {
+                    return Err(MetadataError::IsMutableCanOnlyBeFlippedToFalse.into());
+                }
+            }
+        }
+
+        // Update Data section.
+        if matches!(authority_type, AuthorityType::Metadata)
+            || matches!(
+                delegate_role,
+                Some(MetadataDelegateRole::Data | MetadataDelegateRole::DataItem)
+            )
         {
             if let Some(data) = data {
                 if !self.is_mutable {
@@ -150,6 +200,7 @@ impl Metadata {
             }
         }
 
+        // Update Collection section.
         if matches!(authority_type, AuthorityType::Metadata)
             || matches!(
                 delegate_role,
@@ -179,50 +230,7 @@ impl Metadata {
             }
         }
 
-        if matches!(authority_type, AuthorityType::Metadata) {
-            if uses.is_some() {
-                let uses_option = uses.to_option();
-                // If already None leave it as None.
-                assert_valid_use(&uses_option, &self.uses)?;
-                self.uses = uses_option;
-            }
-
-            if let CollectionDetailsToggle::Set(collection_details) = collection_details {
-                // only unsized collections can have the size set, and only once.
-                if self.collection_details.is_some() {
-                    return Err(MetadataError::SizedCollection.into());
-                }
-
-                self.collection_details = Some(collection_details);
-            }
-        }
-
-        if matches!(authority_type, AuthorityType::Metadata)
-            || matches!(delegate_role, Some(MetadataDelegateRole::Authority))
-        {
-            if let Some(authority) = new_update_authority {
-                self.update_authority = authority;
-            }
-
-            if let Some(primary_sale) = primary_sale_happened {
-                // If received primary_sale is true, flip to true.
-                if primary_sale || !self.primary_sale_happened {
-                    self.primary_sale_happened = primary_sale
-                } else {
-                    return Err(MetadataError::PrimarySaleCanOnlyBeFlippedToTrue.into());
-                }
-            }
-
-            if let Some(mutable) = is_mutable {
-                // If received value is false, flip to false.
-                if !mutable || self.is_mutable {
-                    self.is_mutable = mutable
-                } else {
-                    return Err(MetadataError::IsMutableCanOnlyBeFlippedToFalse.into());
-                }
-            }
-        }
-
+        // Update Programmable Config section.
         if matches!(authority_type, AuthorityType::Metadata)
             || matches!(
                 delegate_role,
@@ -254,10 +262,9 @@ impl Metadata {
             }
         }
 
+        // Re-serialize metadata.
         puff_out_data_fields(self);
-        clean_write_metadata(self, metadata)?;
-
-        Ok(())
+        clean_write_metadata(self, metadata)
     }
 
     pub fn into_asset_data(self) -> AssetData {

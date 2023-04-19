@@ -160,14 +160,16 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
         token_account: token.as_ref(),
         metadata_delegate_record_info: ctx.accounts.delegate_record_info,
         metadata_delegate_roles: vec![
-            MetadataDelegateRole::Authority,
+            MetadataDelegateRole::AuthorityItem,
             MetadataDelegateRole::Data,
+            MetadataDelegateRole::DataItem,
             MetadataDelegateRole::Collection,
             MetadataDelegateRole::CollectionItem,
             MetadataDelegateRole::ProgrammableConfig,
             MetadataDelegateRole::ProgrammableConfigItem,
         ],
         collection_metadata_delegate_roles: vec![
+            MetadataDelegateRole::Data,
             MetadataDelegateRole::Collection,
             MetadataDelegateRole::ProgrammableConfig,
         ],
@@ -295,7 +297,7 @@ fn validate_update(
     // the delegate is only updating fields that it has access to
     if let Some(metadata_delegate_role) = metadata_delegate_role {
         match metadata_delegate_role {
-            MetadataDelegateRole::Authority => {
+            MetadataDelegateRole::AuthorityItem => {
                 // Fields allowed for `Authority`:
                 // `new_update_authority`
                 // `primary_sale_happened`
@@ -310,13 +312,13 @@ fn validate_update(
                     return Err(MetadataError::InvalidUpdateArgs.into());
                 }
             }
-            MetadataDelegateRole::Collection | MetadataDelegateRole::CollectionItem => {
-                // Fields allowed for `Collection` and `CollectionItem`:
-                // `collection`
+            MetadataDelegateRole::Data | MetadataDelegateRole::DataItem => {
+                // Fields allowed for `Data`:
+                // `data`
                 if new_update_authority.is_some()
-                    || data.is_some()
                     || primary_sale_happened.is_some()
                     || is_mutable.is_some()
+                    || collection.is_some()
                     || collection_details.is_some()
                     || uses.is_some()
                     || rule_set.is_some()
@@ -325,13 +327,13 @@ fn validate_update(
                     return Err(MetadataError::InvalidUpdateArgs.into());
                 }
             }
-            MetadataDelegateRole::Data => {
-                // Fields allowed for `Data`:
-                // `data`
+            MetadataDelegateRole::Collection | MetadataDelegateRole::CollectionItem => {
+                // Fields allowed for `Collection` and `CollectionItem`:
+                // `collection`
                 if new_update_authority.is_some()
+                    || data.is_some()
                     || primary_sale_happened.is_some()
                     || is_mutable.is_some()
-                    || collection.is_some()
                     || collection_details.is_some()
                     || uses.is_some()
                     || rule_set.is_some()

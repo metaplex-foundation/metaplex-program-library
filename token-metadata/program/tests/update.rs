@@ -100,7 +100,7 @@ mod update {
     }
 
     #[tokio::test]
-    async fn success_update_by_authority_delegate() {
+    async fn success_update_by_authority_item_delegate() {
         let context = &mut program_test().start_with_context().await;
 
         let update_authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
@@ -123,7 +123,7 @@ mod update {
                 context,
                 update_authority,
                 delegate.pubkey(),
-                DelegateArgs::AuthorityV1 {
+                DelegateArgs::AuthorityItemV1 {
                     authorization_data: None,
                 },
             )
@@ -254,6 +254,23 @@ mod update {
 
     #[tokio::test]
     async fn success_update_by_items_data_delegate() {
+        let args = DelegateArgs::DataV1 {
+            authorization_data: None,
+        };
+
+        success_update_data_by_items_delegate(args).await;
+    }
+
+    #[tokio::test]
+    async fn success_update_by_items_data_item_delegate() {
+        let args = DelegateArgs::DataItemV1 {
+            authorization_data: None,
+        };
+
+        success_update_data_by_items_delegate(args).await;
+    }
+
+    async fn success_update_data_by_items_delegate(delegate_args: DelegateArgs) {
         let context = &mut program_test().start_with_context().await;
 
         let update_authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
@@ -282,14 +299,7 @@ mod update {
         let delegate = Keypair::new();
         delegate.airdrop(context, 1_000_000_000).await.unwrap();
         let delegate_record = da
-            .delegate(
-                context,
-                update_authority,
-                delegate.pubkey(),
-                DelegateArgs::DataV1 {
-                    authorization_data: None,
-                },
-            )
+            .delegate(context, update_authority, delegate.pubkey(), delegate_args)
             .await
             .unwrap()
             .unwrap();
@@ -515,7 +525,7 @@ mod update {
 
     #[tokio::test]
     async fn fail_update_by_items_authority_delegate() {
-        let args = DelegateArgs::AuthorityV1 {
+        let args = DelegateArgs::AuthorityItemV1 {
             authorization_data: None,
         };
 
@@ -543,6 +553,15 @@ mod update {
     #[tokio::test]
     async fn fail_update_by_items_programmable_config_delegate() {
         let args = DelegateArgs::ProgrammableConfigV1 {
+            authorization_data: None,
+        };
+
+        fail_update_by_items_delegate(args).await;
+    }
+
+    #[tokio::test]
+    async fn fail_update_by_items_data_item_delegate() {
+        let args = DelegateArgs::DataItemV1 {
             authorization_data: None,
         };
 

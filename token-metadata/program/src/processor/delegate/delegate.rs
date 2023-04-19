@@ -35,11 +35,12 @@ impl Display for DelegateScenario {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let message = match self {
             Self::Metadata(role) => match role {
-                MetadataDelegateRole::Authority => "Authority".to_string(),
+                MetadataDelegateRole::AuthorityItem => "AuthorityItem".to_string(),
                 MetadataDelegateRole::Collection => "Collection".to_string(),
                 MetadataDelegateRole::Use => "Use".to_string(),
                 MetadataDelegateRole::Data => "Data".to_string(),
                 MetadataDelegateRole::ProgrammableConfig => "ProgrammableConfig".to_string(),
+                MetadataDelegateRole::DataItem => "DataItem".to_string(),
                 MetadataDelegateRole::CollectionItem => "CollectionItem".to_string(),
                 MetadataDelegateRole::ProgrammableConfigItem => {
                     "ProgrammableConfigItem".to_string()
@@ -129,8 +130,11 @@ pub fn delegate<'a>(
         DelegateArgs::ProgrammableConfigV1 { authorization_data } => {
             Some((MetadataDelegateRole::ProgrammableConfig, authorization_data))
         }
-        DelegateArgs::AuthorityV1 { authorization_data } => {
-            Some((MetadataDelegateRole::Authority, authorization_data))
+        DelegateArgs::AuthorityItemV1 { authorization_data } => {
+            Some((MetadataDelegateRole::AuthorityItem, authorization_data))
+        }
+        DelegateArgs::DataItemV1 { authorization_data } => {
+            Some((MetadataDelegateRole::DataItem, authorization_data))
         }
         DelegateArgs::CollectionItemV1 { authorization_data } => {
             Some((MetadataDelegateRole::CollectionItem, authorization_data))
