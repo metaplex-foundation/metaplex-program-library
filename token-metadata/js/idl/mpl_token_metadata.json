@@ -4761,7 +4761,20 @@
             ]
           },
           {
-            "name": "AuthorityV1",
+            "name": "AuthorityItemV1",
+            "fields": [
+              {
+                "name": "authorization_data",
+                "type": {
+                  "option": {
+                    "defined": "AuthorizationData"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "name": "DataItemV1",
             "fields": [
               {
                 "name": "authorization_data",
@@ -4838,7 +4851,10 @@
             "name": "MigrationV1"
           },
           {
-            "name": "AuthorityV1"
+            "name": "AuthorityItemV1"
+          },
+          {
+            "name": "DataItemV1"
           },
           {
             "name": "CollectionItemV1"
@@ -4855,7 +4871,7 @@
         "kind": "enum",
         "variants": [
           {
-            "name": "Authority"
+            "name": "AuthorityItem"
           },
           {
             "name": "Collection"
@@ -4868,6 +4884,9 @@
           },
           {
             "name": "ProgrammableConfig"
+          },
+          {
+            "name": "DataItem"
           },
           {
             "name": "CollectionItem"
