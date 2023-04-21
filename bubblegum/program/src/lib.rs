@@ -1558,7 +1558,11 @@ pub mod bubblegum {
                 metadata.seller_fee_basis_points,
                 true,
                 metadata.is_mutable,
-                metadata.collection.map(|c| c.adapt()),
+                metadata.collection.map(|c| {
+                    let mut collection = c.adapt();
+                    collection.verified = false;
+                    collection
+                }),
                 metadata.uses.map(|u| u.adapt()),
                 None,
             ),
