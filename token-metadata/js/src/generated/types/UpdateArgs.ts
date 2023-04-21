@@ -36,7 +36,7 @@ export type UpdateArgsRecord = {
     ruleSet: RuleSetToggle;
     authorizationData: beet.COption<AuthorizationData>;
   };
-  V2: {
+  UpdateAuthorityV2: {
     newUpdateAuthority: beet.COption<web3.PublicKey>;
     data: beet.COption<Data>;
     primarySaleHappened: beet.COption<boolean>;
@@ -46,6 +46,34 @@ export type UpdateArgsRecord = {
     uses: UsesToggle;
     ruleSet: RuleSetToggle;
     tokenStandard: beet.COption<TokenStandard>;
+    authorizationData: beet.COption<AuthorizationData>;
+  };
+  AuthorityItemDelegateV2: {
+    newUpdateAuthority: beet.COption<web3.PublicKey>;
+    primarySaleHappened: beet.COption<boolean>;
+    isMutable: beet.COption<boolean>;
+    tokenStandard: beet.COption<TokenStandard>;
+    authorizationData: beet.COption<AuthorizationData>;
+  };
+  CollectionDelegateV2: {
+    collection: CollectionToggle;
+    authorizationData: beet.COption<AuthorizationData>;
+  };
+  DataDelegateV2: { data: beet.COption<Data>; authorizationData: beet.COption<AuthorizationData> };
+  ProgConfigDelegateV2: {
+    ruleSet: RuleSetToggle;
+    authorizationData: beet.COption<AuthorizationData>;
+  };
+  DataItemDelegateV2: {
+    data: beet.COption<Data>;
+    authorizationData: beet.COption<AuthorizationData>;
+  };
+  CollectionItemDelegateV2: {
+    collection: CollectionToggle;
+    authorizationData: beet.COption<AuthorizationData>;
+  };
+  ProgConfigItemDelegateV2: {
+    ruleSet: RuleSetToggle;
     authorizationData: beet.COption<AuthorizationData>;
   };
 };
@@ -65,8 +93,33 @@ export type UpdateArgs = beet.DataEnumKeyAsKind<UpdateArgsRecord>;
 
 export const isUpdateArgsV1 = (x: UpdateArgs): x is UpdateArgs & { __kind: 'V1' } =>
   x.__kind === 'V1';
-export const isUpdateArgsV2 = (x: UpdateArgs): x is UpdateArgs & { __kind: 'V2' } =>
-  x.__kind === 'V2';
+export const isUpdateArgsUpdateAuthorityV2 = (
+  x: UpdateArgs,
+): x is UpdateArgs & { __kind: 'UpdateAuthorityV2' } => x.__kind === 'UpdateAuthorityV2';
+export const isUpdateArgsAuthorityItemDelegateV2 = (
+  x: UpdateArgs,
+): x is UpdateArgs & { __kind: 'AuthorityItemDelegateV2' } =>
+  x.__kind === 'AuthorityItemDelegateV2';
+export const isUpdateArgsCollectionDelegateV2 = (
+  x: UpdateArgs,
+): x is UpdateArgs & { __kind: 'CollectionDelegateV2' } => x.__kind === 'CollectionDelegateV2';
+export const isUpdateArgsDataDelegateV2 = (
+  x: UpdateArgs,
+): x is UpdateArgs & { __kind: 'DataDelegateV2' } => x.__kind === 'DataDelegateV2';
+export const isUpdateArgsProgConfigDelegateV2 = (
+  x: UpdateArgs,
+): x is UpdateArgs & { __kind: 'ProgConfigDelegateV2' } => x.__kind === 'ProgConfigDelegateV2';
+export const isUpdateArgsDataItemDelegateV2 = (
+  x: UpdateArgs,
+): x is UpdateArgs & { __kind: 'DataItemDelegateV2' } => x.__kind === 'DataItemDelegateV2';
+export const isUpdateArgsCollectionItemDelegateV2 = (
+  x: UpdateArgs,
+): x is UpdateArgs & { __kind: 'CollectionItemDelegateV2' } =>
+  x.__kind === 'CollectionItemDelegateV2';
+export const isUpdateArgsProgConfigItemDelegateV2 = (
+  x: UpdateArgs,
+): x is UpdateArgs & { __kind: 'ProgConfigItemDelegateV2' } =>
+  x.__kind === 'ProgConfigItemDelegateV2';
 
 /**
  * @category userTypes
@@ -92,8 +145,8 @@ export const updateArgsBeet = beet.dataEnum<UpdateArgsRecord>([
   ],
 
   [
-    'V2',
-    new beet.FixableBeetArgsStruct<UpdateArgsRecord['V2']>(
+    'UpdateAuthorityV2',
+    new beet.FixableBeetArgsStruct<UpdateArgsRecord['UpdateAuthorityV2']>(
       [
         ['newUpdateAuthority', beet.coption(beetSolana.publicKey)],
         ['data', beet.coption(dataBeet)],
@@ -106,7 +159,87 @@ export const updateArgsBeet = beet.dataEnum<UpdateArgsRecord>([
         ['tokenStandard', beet.coption(tokenStandardBeet)],
         ['authorizationData', beet.coption(authorizationDataBeet)],
       ],
-      'UpdateArgsRecord["V2"]',
+      'UpdateArgsRecord["UpdateAuthorityV2"]',
+    ),
+  ],
+
+  [
+    'AuthorityItemDelegateV2',
+    new beet.FixableBeetArgsStruct<UpdateArgsRecord['AuthorityItemDelegateV2']>(
+      [
+        ['newUpdateAuthority', beet.coption(beetSolana.publicKey)],
+        ['primarySaleHappened', beet.coption(beet.bool)],
+        ['isMutable', beet.coption(beet.bool)],
+        ['tokenStandard', beet.coption(tokenStandardBeet)],
+        ['authorizationData', beet.coption(authorizationDataBeet)],
+      ],
+      'UpdateArgsRecord["AuthorityItemDelegateV2"]',
+    ),
+  ],
+
+  [
+    'CollectionDelegateV2',
+    new beet.FixableBeetArgsStruct<UpdateArgsRecord['CollectionDelegateV2']>(
+      [
+        ['collection', collectionToggleBeet],
+        ['authorizationData', beet.coption(authorizationDataBeet)],
+      ],
+      'UpdateArgsRecord["CollectionDelegateV2"]',
+    ),
+  ],
+
+  [
+    'DataDelegateV2',
+    new beet.FixableBeetArgsStruct<UpdateArgsRecord['DataDelegateV2']>(
+      [
+        ['data', beet.coption(dataBeet)],
+        ['authorizationData', beet.coption(authorizationDataBeet)],
+      ],
+      'UpdateArgsRecord["DataDelegateV2"]',
+    ),
+  ],
+
+  [
+    'ProgConfigDelegateV2',
+    new beet.FixableBeetArgsStruct<UpdateArgsRecord['ProgConfigDelegateV2']>(
+      [
+        ['ruleSet', ruleSetToggleBeet],
+        ['authorizationData', beet.coption(authorizationDataBeet)],
+      ],
+      'UpdateArgsRecord["ProgConfigDelegateV2"]',
+    ),
+  ],
+
+  [
+    'DataItemDelegateV2',
+    new beet.FixableBeetArgsStruct<UpdateArgsRecord['DataItemDelegateV2']>(
+      [
+        ['data', beet.coption(dataBeet)],
+        ['authorizationData', beet.coption(authorizationDataBeet)],
+      ],
+      'UpdateArgsRecord["DataItemDelegateV2"]',
+    ),
+  ],
+
+  [
+    'CollectionItemDelegateV2',
+    new beet.FixableBeetArgsStruct<UpdateArgsRecord['CollectionItemDelegateV2']>(
+      [
+        ['collection', collectionToggleBeet],
+        ['authorizationData', beet.coption(authorizationDataBeet)],
+      ],
+      'UpdateArgsRecord["CollectionItemDelegateV2"]',
+    ),
+  ],
+
+  [
+    'ProgConfigItemDelegateV2',
+    new beet.FixableBeetArgsStruct<UpdateArgsRecord['ProgConfigItemDelegateV2']>(
+      [
+        ['ruleSet', ruleSetToggleBeet],
+        ['authorizationData', beet.coption(authorizationDataBeet)],
+      ],
+      'UpdateArgsRecord["ProgConfigItemDelegateV2"]',
     ),
   ],
 ]) as beet.FixableBeet<UpdateArgs, UpdateArgs>;
