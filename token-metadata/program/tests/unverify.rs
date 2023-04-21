@@ -4,7 +4,6 @@ pub mod utils;
 
 use mpl_token_metadata::{
     error::MetadataError,
-    get_update_args_fields,
     instruction::{BurnArgs, DelegateArgs, MetadataDelegateRole, UpdateArgs, VerificationArgs},
     pda::{find_metadata_delegate_record_account, find_token_record_account},
     state::{Collection, CollectionDetails, Creator, TokenStandard},
@@ -1909,9 +1908,14 @@ mod unverify_collection {
         .await
         .unwrap();
 
-        let mut args = UpdateArgs::default();
-        let new_update_authority = get_update_args_fields!(&mut args, new_update_authority);
-        *new_update_authority.0 = Some(new_collection_update_authority.pubkey());
+        let mut args = UpdateArgs::default_update_authority();
+        match &mut args {
+            UpdateArgs::UpdateAuthorityV2 {
+                new_update_authority,
+                ..
+            } => *new_update_authority = Some(new_collection_update_authority.pubkey()),
+            _ => panic!("Unexpected enum variant"),
+        }
 
         let payer = context.payer.dirty_clone();
         test_items
@@ -1980,9 +1984,14 @@ mod unverify_collection {
         // Change the collection to have a different update authority.
         let new_collection_update_authority = Keypair::new();
 
-        let mut args = UpdateArgs::default();
-        let new_update_authority = get_update_args_fields!(&mut args, new_update_authority);
-        *new_update_authority.0 = Some(new_collection_update_authority.pubkey());
+        let mut args = UpdateArgs::default_update_authority();
+        match &mut args {
+            UpdateArgs::UpdateAuthorityV2 {
+                new_update_authority,
+                ..
+            } => *new_update_authority = Some(new_collection_update_authority.pubkey()),
+            _ => panic!("Unexpected enum variant"),
+        }
 
         let payer = context.payer.dirty_clone();
         test_items

@@ -280,6 +280,30 @@ fn validate_update(
                 _ => return Err(MetadataError::InvalidUpdateArgs.into()),
             },
             MetadataDelegateRole::ProgrammableConfig => match args {
+                // V1 supported Programmable config, leaving here for backwards
+                // compatibility.
+                UpdateArgs::V1 {
+                    data,
+                    primary_sale_happened,
+                    is_mutable,
+                    collection,
+                    uses,
+                    new_update_authority,
+                    collection_details,
+                    ..
+                } => {
+                    // can only update the programmable config
+                    if data.is_some()
+                        || primary_sale_happened.is_some()
+                        || is_mutable.is_some()
+                        || collection.is_some()
+                        || uses.is_some()
+                        || new_update_authority.is_some()
+                        || collection_details.is_some()
+                    {
+                        return Err(MetadataError::InvalidUpdateArgs.into());
+                    }
+                }
                 UpdateArgs::ProgConfigDelegateV2 { .. } => (),
                 _ => return Err(MetadataError::InvalidUpdateArgs.into()),
             },

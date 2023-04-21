@@ -135,45 +135,125 @@ pub enum UpdateArgs {
         is_mutable: Option<bool>,
         /// Token standard.
         token_standard: Option<TokenStandard>,
+        /// Required authorization data to validate the request.
+        authorization_data: Option<AuthorizationData>,
     },
     CollectionDelegateV2 {
         /// Collection information.
         collection: CollectionToggle,
+        /// Required authorization data to validate the request.
+        authorization_data: Option<AuthorizationData>,
     },
     DataDelegateV2 {
         /// The metadata details.
         data: Option<Data>,
+        /// Required authorization data to validate the request.
+        authorization_data: Option<AuthorizationData>,
     },
     ProgConfigDelegateV2 {
         // Programmable rule set configuration (only applicable to `Programmable` asset types).
         rule_set: RuleSetToggle,
+        /// Required authorization data to validate the request.
+        authorization_data: Option<AuthorizationData>,
     },
     DataItemDelegateV2 {
         /// The metadata details.
         data: Option<Data>,
+        /// Required authorization data to validate the request.
+        authorization_data: Option<AuthorizationData>,
     },
     CollectionItemDelegateV2 {
         /// Collection information.
         collection: CollectionToggle,
+        /// Required authorization data to validate the request.
+        authorization_data: Option<AuthorizationData>,
     },
     ProgConfigItemDelegateV2 {
         // Programmable rule set configuration (only applicable to `Programmable` asset types).
         rule_set: RuleSetToggle,
+        /// Required authorization data to validate the request.
+        authorization_data: Option<AuthorizationData>,
     },
 }
 
-impl Default for UpdateArgs {
-    fn default() -> Self {
+impl UpdateArgs {
+    pub fn default_v1() -> Self {
+        Self::V1 {
+            new_update_authority: None,
+            data: None,
+            primary_sale_happened: None,
+            is_mutable: None,
+            collection: CollectionToggle::default(),
+            collection_details: CollectionDetailsToggle::default(),
+            uses: UsesToggle::default(),
+            rule_set: RuleSetToggle::default(),
+            authorization_data: None,
+        }
+    }
+
+    pub fn default_update_authority() -> Self {
         Self::UpdateAuthorityV2 {
             new_update_authority: None,
             data: None,
             primary_sale_happened: None,
             is_mutable: None,
-            collection: CollectionToggle::None,
-            collection_details: CollectionDetailsToggle::None,
-            uses: UsesToggle::None,
-            rule_set: RuleSetToggle::None,
+            collection: CollectionToggle::default(),
+            collection_details: CollectionDetailsToggle::default(),
+            uses: UsesToggle::default(),
+            rule_set: RuleSetToggle::default(),
             token_standard: None,
+            authorization_data: None,
+        }
+    }
+
+    pub fn default_authority_item_delegate() -> Self {
+        Self::AuthorityItemDelegateV2 {
+            new_update_authority: None,
+            primary_sale_happened: None,
+            is_mutable: None,
+            token_standard: None,
+            authorization_data: None,
+        }
+    }
+
+    pub fn default_collection_delegate() -> Self {
+        Self::CollectionDelegateV2 {
+            collection: CollectionToggle::default(),
+            authorization_data: None,
+        }
+    }
+
+    pub fn default_data_delegate() -> Self {
+        Self::DataDelegateV2 {
+            data: None,
+            authorization_data: None,
+        }
+    }
+
+    pub fn default_prog_config_delegate() -> Self {
+        Self::ProgConfigDelegateV2 {
+            rule_set: RuleSetToggle::default(),
+            authorization_data: None,
+        }
+    }
+
+    pub fn default_data_item_delegate() -> Self {
+        Self::DataItemDelegateV2 {
+            data: None,
+            authorization_data: None,
+        }
+    }
+
+    pub fn default_collection_item_delegate() -> Self {
+        Self::CollectionItemDelegateV2 {
+            collection: CollectionToggle::default(),
+            authorization_data: None,
+        }
+    }
+
+    pub fn default_prog_config_item_delegate() -> Self {
+        Self::ProgConfigItemDelegateV2 {
+            rule_set: RuleSetToggle::default(),
             authorization_data: None,
         }
     }
@@ -240,7 +320,7 @@ impl From<UpdateArgs> for InternalUpdateArgs {
                 collection_details,
                 uses,
                 rule_set,
-                token_standard: None,
+                ..Default::default()
             },
             UpdateArgs::UpdateAuthorityV2 {
                 new_update_authority,
@@ -300,8 +380,9 @@ impl From<UpdateArgs> for InternalUpdateArgs {
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, Default)]
 pub enum CollectionToggle {
+    #[default]
     None,
     Clear,
     Set(Collection),
@@ -335,8 +416,9 @@ impl CollectionToggle {
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, Default)]
 pub enum UsesToggle {
+    #[default]
     None,
     Clear,
     Set(Uses),
@@ -370,8 +452,9 @@ impl UsesToggle {
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, Default)]
 pub enum CollectionDetailsToggle {
+    #[default]
     None,
     Clear,
     Set(CollectionDetails),
@@ -408,8 +491,9 @@ impl CollectionDetailsToggle {
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, Default)]
 pub enum RuleSetToggle {
+    #[default]
     None,
     Clear,
     Set(Pubkey),

@@ -3,12 +3,11 @@ pub mod utils;
 
 use mpl_token_metadata::{
     error::MetadataError,
-    get_update_args_fields,
     instruction::{
         builders::UpdateBuilder, CollectionToggle, DelegateArgs, InstructionBuilder, RuleSetToggle,
-        UpdateArgs, UsesToggle,
+        UpdateArgs,
     },
-    state::{Collection, Creator, Data, ProgrammableConfig, TokenStandard, UseMethod, Uses},
+    state::{Collection, Creator, Data, ProgrammableConfig, TokenStandard},
     state::{MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH},
     utils::puffed_out_string,
 };
@@ -65,9 +64,13 @@ mod update {
             seller_fee_basis_points: 0,
         };
 
-        let mut update_args = UpdateArgs::default();
-        let current_data = get_update_args_fields!(&mut update_args, data);
-        *current_data.0 = Some(data);
+        let mut args = UpdateArgs::default_update_authority();
+        match &mut args {
+            UpdateArgs::UpdateAuthorityV2 {
+                data: current_data, ..
+            } => *current_data = Some(data),
+            _ => panic!("Unexpected enum variant"),
+        }
 
         let mut builder = UpdateBuilder::new();
         builder
@@ -80,7 +83,7 @@ mod update {
             builder.edition(edition);
         }
 
-        let update_ix = builder.build(update_args).unwrap().instruction();
+        let update_ix = builder.build(args).unwrap().instruction();
 
         let tx = Transaction::new_signed_with_payer(
             &[update_ix],
@@ -132,16 +135,21 @@ mod update {
             .unwrap();
 
         // Change a few values that this delegate is allowed to change.
-        let mut update_args = UpdateArgs::default();
-        let (new_update_authority, primary_sale_happened, is_mutable) = get_update_args_fields!(
-            &mut update_args,
-            new_update_authority,
-            primary_sale_happened,
-            is_mutable
-        );
-        *new_update_authority = Some(delegate.pubkey());
-        *primary_sale_happened = Some(true);
-        *is_mutable = Some(false);
+        let mut args = UpdateArgs::default_authority_item_delegate();
+
+        match &mut args {
+            UpdateArgs::AuthorityItemDelegateV2 {
+                new_update_authority,
+                primary_sale_happened,
+                is_mutable,
+                ..
+            } => {
+                *new_update_authority = Some(delegate.pubkey());
+                *primary_sale_happened = Some(true);
+                *is_mutable = Some(false);
+            }
+            _ => panic!("Unexpected enum variant"),
+        }
 
         let mut builder = UpdateBuilder::new();
         builder
@@ -155,7 +163,7 @@ mod update {
             builder.edition(edition);
         }
 
-        let update_ix = builder.build(update_args).unwrap().instruction();
+        let update_ix = builder.build(args).unwrap().instruction();
 
         let tx = Transaction::new_signed_with_payer(
             &[update_ix],
@@ -176,23 +184,55 @@ mod update {
 
     #[tokio::test]
     async fn success_update_by_items_collection_delegate() {
-        let args = DelegateArgs::CollectionV1 {
+        let delegate_args = DelegateArgs::CollectionV1 {
             authorization_data: None,
         };
 
-        success_update_collection_by_items_delegate(args).await;
+        let new_collection = Collection {
+            verified: false,
+            key: Keypair::new().pubkey(),
+        };
+
+        let mut update_args = UpdateArgs::default_collection_delegate();
+        match &mut update_args {
+            UpdateArgs::CollectionDelegateV2 { collection, .. } => {
+                *collection = CollectionToggle::Set(new_collection.clone())
+            }
+            _ => panic!("Unexpected enum variant"),
+        }
+
+        success_update_collection_by_items_delegate(delegate_args, new_collection, update_args)
+            .await;
     }
 
     #[tokio::test]
     async fn success_update_by_items_collection_item_delegate() {
-        let args = DelegateArgs::CollectionItemV1 {
+        let delegate_args = DelegateArgs::CollectionItemV1 {
             authorization_data: None,
         };
 
-        success_update_collection_by_items_delegate(args).await;
+        let new_collection = Collection {
+            verified: false,
+            key: Keypair::new().pubkey(),
+        };
+
+        let mut update_args = UpdateArgs::default_collection_item_delegate();
+        match &mut update_args {
+            UpdateArgs::CollectionItemDelegateV2 { collection, .. } => {
+                *collection = CollectionToggle::Set(new_collection.clone())
+            }
+            _ => panic!("Unexpected enum variant"),
+        }
+
+        success_update_collection_by_items_delegate(delegate_args, new_collection, update_args)
+            .await;
     }
 
-    async fn success_update_collection_by_items_delegate(delegate_args: DelegateArgs) {
+    async fn success_update_collection_by_items_delegate(
+        delegate_args: DelegateArgs,
+        collection: Collection,
+        update_args: UpdateArgs,
+    ) {
         let context = &mut program_test().start_with_context().await;
 
         let update_authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
@@ -214,15 +254,7 @@ mod update {
             .unwrap()
             .unwrap();
 
-        // Change a value that this delegate is allowed to change.
-        let mut update_args = UpdateArgs::default();
-        let collection_toggle = get_update_args_fields!(&mut update_args, collection);
-        let new_collection = Collection {
-            verified: false,
-            key: Keypair::new().pubkey(),
-        };
-        *collection_toggle.0 = CollectionToggle::Set(new_collection.clone());
-
+        // Change the collection.
         let mut builder = UpdateBuilder::new();
         builder
             .authority(delegate.pubkey())
@@ -249,28 +281,36 @@ mod update {
         // checks the created metadata values
         let metadata = da.get_metadata(context).await;
 
-        assert_eq!(metadata.collection, Some(new_collection));
+        assert_eq!(metadata.collection, Some(collection));
     }
 
     #[tokio::test]
     async fn success_update_by_items_data_delegate() {
-        let args = DelegateArgs::DataV1 {
+        let delegate_args = DelegateArgs::DataV1 {
             authorization_data: None,
         };
 
-        success_update_data_by_items_delegate(args).await;
+        success_update_data_by_items_delegate(delegate_args, UpdateArgs::default_data_delegate())
+            .await;
     }
 
     #[tokio::test]
     async fn success_update_by_items_data_item_delegate() {
-        let args = DelegateArgs::DataItemV1 {
+        let delegate_args = DelegateArgs::DataItemV1 {
             authorization_data: None,
         };
 
-        success_update_data_by_items_delegate(args).await;
+        success_update_data_by_items_delegate(
+            delegate_args,
+            UpdateArgs::default_data_item_delegate(),
+        )
+        .await;
     }
 
-    async fn success_update_data_by_items_delegate(delegate_args: DelegateArgs) {
+    async fn success_update_data_by_items_delegate(
+        delegate_args: DelegateArgs,
+        mut update_args: UpdateArgs,
+    ) {
         let context = &mut program_test().start_with_context().await;
 
         let update_authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
@@ -316,9 +356,15 @@ mod update {
             seller_fee_basis_points: 0,
         };
 
-        let mut update_args = UpdateArgs::default();
-        let current_data = get_update_args_fields!(&mut update_args, data);
-        *current_data.0 = Some(data);
+        match &mut update_args {
+            UpdateArgs::DataDelegateV2 {
+                data: current_data, ..
+            } => *current_data = Some(data),
+            UpdateArgs::DataItemDelegateV2 {
+                data: current_data, ..
+            } => *current_data = Some(data),
+            _ => panic!("Unexpected enum variant"),
+        };
 
         let mut builder = UpdateBuilder::new();
         builder
@@ -387,11 +433,12 @@ mod update {
             panic!("Missing rule set programmable config");
         }
 
-        let mut update_args = UpdateArgs::default();
-        let rule_set = get_update_args_fields!(&mut update_args, rule_set);
-
         // remove the rule set
-        *rule_set.0 = RuleSetToggle::Clear;
+        let mut args = UpdateArgs::default_update_authority();
+        match &mut args {
+            UpdateArgs::UpdateAuthorityV2 { rule_set, .. } => *rule_set = RuleSetToggle::Clear,
+            _ => panic!("Unexpected enum variant"),
+        }
 
         let mut builder = UpdateBuilder::new();
         builder
@@ -406,7 +453,7 @@ mod update {
             builder.edition(edition);
         }
 
-        let update_ix = builder.build(update_args).unwrap().instruction();
+        let update_ix = builder.build(args).unwrap().instruction();
 
         let tx = Transaction::new_signed_with_payer(
             &[update_ix],
@@ -425,23 +472,40 @@ mod update {
 
     #[tokio::test]
     async fn success_update_pnft_by_items_programmable_config_delegate() {
-        let args = DelegateArgs::ProgrammableConfigV1 {
+        let delegate_args = DelegateArgs::ProgrammableConfigV1 {
             authorization_data: None,
         };
 
-        success_update_pnft_by_items_delegate(args).await;
+        let mut update_args = UpdateArgs::default_prog_config_delegate();
+        match &mut update_args {
+            UpdateArgs::ProgConfigDelegateV2 { rule_set, .. } => *rule_set = RuleSetToggle::Clear,
+            _ => panic!("Unexpected enum variant"),
+        }
+
+        success_update_pnft_by_items_delegate(delegate_args, update_args).await;
     }
 
     #[tokio::test]
     async fn success_update_pnft_by_items_programmable_config_item_delegate() {
-        let args = DelegateArgs::ProgrammableConfigItemV1 {
+        let delegate_args = DelegateArgs::ProgrammableConfigItemV1 {
             authorization_data: None,
         };
 
-        success_update_pnft_by_items_delegate(args).await;
+        let mut update_args = UpdateArgs::default_prog_config_item_delegate();
+        match &mut update_args {
+            UpdateArgs::ProgConfigItemDelegateV2 { rule_set, .. } => {
+                *rule_set = RuleSetToggle::Clear
+            }
+            _ => panic!("Unexpected enum variant"),
+        }
+
+        success_update_pnft_by_items_delegate(delegate_args, update_args).await;
     }
 
-    async fn success_update_pnft_by_items_delegate(delegate_args: DelegateArgs) {
+    async fn success_update_pnft_by_items_delegate(
+        delegate_args: DelegateArgs,
+        update_args: UpdateArgs,
+    ) {
         let mut program_test = ProgramTest::new("mpl_token_metadata", mpl_token_metadata::ID, None);
         program_test.add_program("mpl_token_auth_rules", mpl_token_auth_rules::ID, None);
         let context = &mut program_test.start_with_context().await;
@@ -486,12 +550,6 @@ mod update {
             .unwrap();
 
         // Change a value that this delegate is allowed to change.
-        let mut update_args = UpdateArgs::default();
-        let rule_set = get_update_args_fields!(&mut update_args, rule_set);
-
-        // remove the rule set
-        *rule_set.0 = RuleSetToggle::Clear;
-
         let mut builder = UpdateBuilder::new();
         builder
             .authority(delegate.pubkey())
@@ -519,7 +577,6 @@ mod update {
 
         // checks the created metadata values
         let metadata = da.get_metadata(context).await;
-
         assert_eq!(metadata.programmable_config, None);
     }
 
@@ -610,9 +667,6 @@ mod update {
         .await
         .unwrap();
 
-        let metadata = da.get_metadata(context).await;
-        assert_eq!(metadata.uses, None);
-
         // Create metadata delegate.
         let delegate = Keypair::new();
         delegate.airdrop(context, 1_000_000_000).await.unwrap();
@@ -622,16 +676,12 @@ mod update {
             .unwrap()
             .unwrap();
 
-        // Change a value that no delegates are allowed to change.
-        let mut update_args = UpdateArgs::default();
-        let uses = get_update_args_fields!(&mut update_args, uses);
-
-        // remove the rule set
-        *uses.0 = UsesToggle::Set(Uses {
-            use_method: UseMethod::Multiple,
-            remaining: 333,
-            total: 333,
-        });
+        // Use update args variant that no delegates are allowed to use.
+        let update_args = UpdateArgs::default_update_authority();
+        match update_args {
+            UpdateArgs::UpdateAuthorityV2 { .. } => (),
+            _ => panic!("Unexpected enum variant"),
+        }
 
         let mut builder = UpdateBuilder::new();
         builder
@@ -663,11 +713,6 @@ mod update {
             .unwrap_err();
 
         assert_custom_error!(err, MetadataError::InvalidUpdateArgs);
-
-        // checks the created metadata values
-        let metadata = da.get_metadata(context).await;
-
-        assert_eq!(metadata.uses, None);
     }
 
     #[tokio::test]
@@ -689,9 +734,6 @@ mod update {
         .await
         .unwrap();
 
-        let metadata = da.get_metadata(context).await;
-        assert_eq!(metadata.uses, None);
-
         // Create `TokenDelegate` type of delegate.
         let delegate = Keypair::new();
         delegate.airdrop(context, 1_000_000_000).await.unwrap();
@@ -705,16 +747,12 @@ mod update {
             .unwrap()
             .unwrap();
 
-        // Change a value that no delegates are allowed to change.
-        let mut update_args = UpdateArgs::default();
-        let uses = get_update_args_fields!(&mut update_args, uses);
-
-        // remove the rule set
-        *uses.0 = UsesToggle::Set(Uses {
-            use_method: UseMethod::Multiple,
-            remaining: 333,
-            total: 333,
-        });
+        // Use update args variant that no delegates are allowed to use.
+        let update_args = UpdateArgs::default_update_authority();
+        match update_args {
+            UpdateArgs::UpdateAuthorityV2 { .. } => (),
+            _ => panic!("Unexpected enum variant"),
+        }
 
         let mut builder = UpdateBuilder::new();
         builder
@@ -745,11 +783,6 @@ mod update {
             .unwrap_err();
 
         assert_custom_error!(err, MetadataError::InvalidAuthorityType);
-
-        // checks the created metadata values
-        let metadata = da.get_metadata(context).await;
-
-        assert_eq!(metadata.uses, None);
     }
 
     #[tokio::test]
@@ -768,15 +801,15 @@ mod update {
         assert_eq!(metadata.token_standard, Some(TokenStandard::FungibleAsset));
 
         // Update token standard
-        let mut update_args = UpdateArgs::default();
-        let token_standard = match &mut update_args {
-            UpdateArgs::V2 { token_standard, .. } => token_standard,
-            _ => panic!("Incompatible update args version"),
-        };
+        let mut args = UpdateArgs::default_update_authority();
+        match &mut args {
+            UpdateArgs::UpdateAuthorityV2 { token_standard, .. } => {
+                *token_standard = Some(TokenStandard::Fungible)
+            }
+            _ => panic!("Unexpected enum variant"),
+        }
 
-        *token_standard = Some(TokenStandard::Fungible);
-
-        da.update(context, update_authority.dirty_clone(), update_args)
+        da.update(context, update_authority.dirty_clone(), args)
             .await
             .unwrap();
 
@@ -800,16 +833,16 @@ mod update {
         assert_eq!(metadata.token_standard, Some(TokenStandard::FungibleAsset));
 
         // Update token standard
-        let mut update_args = UpdateArgs::default();
-        let token_standard = match &mut update_args {
-            UpdateArgs::V2 { token_standard, .. } => token_standard,
-            _ => panic!("Incompatible update args version"),
-        };
-
-        *token_standard = Some(TokenStandard::NonFungible);
+        let mut args = UpdateArgs::default_update_authority();
+        match &mut args {
+            UpdateArgs::UpdateAuthorityV2 { token_standard, .. } => {
+                *token_standard = Some(TokenStandard::NonFungible)
+            }
+            _ => panic!("Unexpected enum variant"),
+        }
 
         let err = da
-            .update(context, update_authority.dirty_clone(), update_args)
+            .update(context, update_authority.dirty_clone(), args)
             .await
             .unwrap_err();
 
@@ -835,16 +868,21 @@ mod update {
         assert_eq!(metadata.collection, None);
 
         // Set collection to a value with verified set to true.
-        let mut update_args = UpdateArgs::default();
-        let collection_toggle = get_update_args_fields!(&mut update_args, collection);
         let new_collection = Collection {
             verified: true,
             key: Keypair::new().pubkey(),
         };
-        *collection_toggle.0 = CollectionToggle::Set(new_collection.clone());
+
+        let mut args = UpdateArgs::default_update_authority();
+        match &mut args {
+            UpdateArgs::UpdateAuthorityV2 { collection, .. } => {
+                *collection = CollectionToggle::Set(new_collection.clone())
+            }
+            _ => panic!("Unexpected enum variant"),
+        }
 
         let err = da
-            .update(context, update_authority.dirty_clone(), update_args)
+            .update(context, update_authority.dirty_clone(), args)
             .await
             .unwrap_err();
 
@@ -899,14 +937,18 @@ mod update {
         assert_eq!(metadata.collection, None);
 
         // Change collection.
-        let mut update_args = UpdateArgs::default();
-        let collection_toggle = get_update_args_fields!(&mut update_args, collection);
-        let collection = Collection {
+        let new_collection = Collection {
             key: collection_parent_da.mint.pubkey(),
             verified: false,
         };
 
-        *collection_toggle.0 = CollectionToggle::Set(collection.clone());
+        let mut args = UpdateArgs::default_collection_delegate();
+        match &mut args {
+            UpdateArgs::CollectionDelegateV2 { collection, .. } => {
+                *collection = CollectionToggle::Set(new_collection.clone())
+            }
+            _ => panic!("Unexpected enum variant"),
+        }
 
         let mut builder = UpdateBuilder::new();
         builder
@@ -920,7 +962,7 @@ mod update {
             builder.edition(edition);
         }
 
-        let update_ix = builder.build(update_args).unwrap().instruction();
+        let update_ix = builder.build(args).unwrap().instruction();
 
         let tx = Transaction::new_signed_with_payer(
             &[update_ix],
@@ -933,7 +975,7 @@ mod update {
 
         // Check that collection changed.
         let metadata = da.get_metadata(context).await;
-        assert_eq!(metadata.collection, Some(collection));
+        assert_eq!(metadata.collection, Some(new_collection));
     }
 
     #[tokio::test]
@@ -978,14 +1020,18 @@ mod update {
         assert_eq!(metadata.collection, None);
 
         // Change collection.
-        let mut update_args = UpdateArgs::default();
-        let collection_toggle = get_update_args_fields!(&mut update_args, collection);
-        let collection = Collection {
+        let new_collection = Collection {
             key: collection_parent_da.mint.pubkey(),
             verified: false,
         };
 
-        *collection_toggle.0 = CollectionToggle::Set(collection.clone());
+        let mut args = UpdateArgs::default_collection_item_delegate();
+        match &mut args {
+            UpdateArgs::CollectionItemDelegateV2 { collection, .. } => {
+                *collection = CollectionToggle::Set(new_collection.clone())
+            }
+            _ => panic!("Unexpected enum variant"),
+        }
 
         let mut builder = UpdateBuilder::new();
         builder
@@ -999,7 +1045,7 @@ mod update {
             builder.edition(edition);
         }
 
-        let update_ix = builder.build(update_args).unwrap().instruction();
+        let update_ix = builder.build(args).unwrap().instruction();
 
         let tx = Transaction::new_signed_with_payer(
             &[update_ix],
@@ -1063,14 +1109,18 @@ mod update {
         assert_eq!(metadata.collection, None);
 
         // Change collection.
-        let mut update_args = UpdateArgs::default();
-        let collection_toggle = get_update_args_fields!(&mut update_args, collection);
-        let collection = Collection {
+        let new_collection = Collection {
             key: collection_parent_da.mint.pubkey(),
             verified: false,
         };
 
-        *collection_toggle.0 = CollectionToggle::Set(collection.clone());
+        let mut args = UpdateArgs::default_collection_delegate();
+        match &mut args {
+            UpdateArgs::CollectionDelegateV2 { collection, .. } => {
+                *collection = CollectionToggle::Set(new_collection.clone())
+            }
+            _ => panic!("Unexpected enum variant"),
+        }
 
         let mut builder = UpdateBuilder::new();
         builder
@@ -1084,7 +1134,7 @@ mod update {
             builder.edition(edition);
         }
 
-        let update_ix = builder.build(update_args).unwrap().instruction();
+        let update_ix = builder.build(args).unwrap().instruction();
 
         let tx = Transaction::new_signed_with_payer(
             &[update_ix],
@@ -1104,6 +1154,359 @@ mod update {
         // Check that collection not changed.
         let metadata = da.get_metadata(context).await;
         assert_eq!(metadata.collection, None);
+    }
+
+    #[tokio::test]
+    async fn success_update_prog_config_by_collections_prog_config_delegate_v2_args() {
+        // Change programmable config, removing the RuleSet.
+        let mut args = UpdateArgs::default_prog_config_delegate();
+        match &mut args {
+            UpdateArgs::ProgConfigDelegateV2 { rule_set, .. } => *rule_set = RuleSetToggle::Clear,
+            _ => panic!("Unexpected enum variant"),
+        }
+
+        success_update_prog_config_by_collections_prog_config_delegate(args).await
+    }
+
+    #[tokio::test]
+    async fn success_update_prog_config_by_collections_prog_config_delegate_v1_args() {
+        // Change programmable config, removing the RuleSet.
+        let mut args = UpdateArgs::default_v1();
+        match &mut args {
+            UpdateArgs::V1 { rule_set, .. } => *rule_set = RuleSetToggle::Clear,
+            _ => panic!("Unexpected enum variant"),
+        }
+
+        success_update_prog_config_by_collections_prog_config_delegate(args).await
+    }
+
+    async fn success_update_prog_config_by_collections_prog_config_delegate(
+        update_args: UpdateArgs,
+    ) {
+        let mut program_test = ProgramTest::new("mpl_token_metadata", mpl_token_metadata::ID, None);
+        program_test.add_program("mpl_token_auth_rules", mpl_token_auth_rules::ID, None);
+        let context = &mut program_test.start_with_context().await;
+
+        // Create a collection parent NFT or pNFT with the CollectionDetails struct populated.
+        let mut collection_parent_da = DigitalAsset::new();
+        collection_parent_da
+            .create_and_mint_collection_parent(
+                context,
+                TokenStandard::ProgrammableNonFungible,
+                None,
+                None,
+                1,
+                DEFAULT_COLLECTION_DETAILS,
+            )
+            .await
+            .unwrap();
+
+        // Create metadata delegate on the collection.
+        let delegate = Keypair::new();
+        delegate.airdrop(context, 1_000_000_000).await.unwrap();
+        let delegate_args = DelegateArgs::ProgrammableConfigV1 {
+            authorization_data: None,
+        };
+        let update_authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+        let delegate_record = collection_parent_da
+            .delegate(context, update_authority, delegate.pubkey(), delegate_args)
+            .await
+            .unwrap()
+            .unwrap();
+
+        // Create rule-set for the transfer
+        let authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+        let (authorization_rules, auth_data) =
+            create_default_metaplex_rule_set(context, authority, false).await;
+
+        // Create and mint item with a collection.  THIS IS NEEDED so that the collection-level
+        // delegate is authorized for this item.
+        let collection = Some(Collection {
+            key: collection_parent_da.mint.pubkey(),
+            verified: false,
+        });
+
+        let mut da = DigitalAsset::new();
+        da.create_and_mint_item_with_collection(
+            context,
+            TokenStandard::ProgrammableNonFungible,
+            Some(authorization_rules),
+            Some(auth_data),
+            1,
+            collection.clone(),
+        )
+        .await
+        .unwrap();
+
+        let metadata = da.get_metadata(context).await;
+
+        // Check collection.
+        assert_eq!(metadata.collection, collection);
+
+        // Check programmable config.
+        if let Some(ProgrammableConfig::V1 {
+            rule_set: Some(rule_set),
+        }) = metadata.programmable_config
+        {
+            assert_eq!(rule_set, authorization_rules);
+        } else {
+            panic!("Missing rule set programmable config");
+        }
+
+        let mut builder = UpdateBuilder::new();
+        builder
+            .authority(delegate.pubkey())
+            .delegate_record(delegate_record)
+            .metadata(da.metadata)
+            .mint(da.mint.pubkey())
+            .token(da.token.unwrap())
+            .authorization_rules(authorization_rules)
+            .payer(delegate.pubkey());
+
+        if let Some(edition) = da.edition {
+            builder.edition(edition);
+        }
+
+        let update_ix = builder.build(update_args).unwrap().instruction();
+
+        let tx = Transaction::new_signed_with_payer(
+            &[update_ix],
+            Some(&delegate.pubkey()),
+            &[&delegate],
+            context.last_blockhash,
+        );
+
+        context.banks_client.process_transaction(tx).await.unwrap();
+
+        // checks the created metadata values
+        let metadata = da.get_metadata(context).await;
+        assert_eq!(metadata.programmable_config, None);
+    }
+
+    #[tokio::test]
+    async fn fail_update_prog_config_by_col_prog_config_delegate_wrong_v1_args() {
+        let mut program_test = ProgramTest::new("mpl_token_metadata", mpl_token_metadata::ID, None);
+        program_test.add_program("mpl_token_auth_rules", mpl_token_auth_rules::ID, None);
+        let context = &mut program_test.start_with_context().await;
+
+        // Create a collection parent NFT or pNFT with the CollectionDetails struct populated.
+        let mut collection_parent_da = DigitalAsset::new();
+        collection_parent_da
+            .create_and_mint_collection_parent(
+                context,
+                TokenStandard::ProgrammableNonFungible,
+                None,
+                None,
+                1,
+                DEFAULT_COLLECTION_DETAILS,
+            )
+            .await
+            .unwrap();
+
+        // Create metadata delegate on the collection.
+        let delegate = Keypair::new();
+        delegate.airdrop(context, 1_000_000_000).await.unwrap();
+        let delegate_args = DelegateArgs::ProgrammableConfigV1 {
+            authorization_data: None,
+        };
+        let update_authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+        let delegate_record = collection_parent_da
+            .delegate(context, update_authority, delegate.pubkey(), delegate_args)
+            .await
+            .unwrap()
+            .unwrap();
+
+        // Create rule-set for the transfer
+        let authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+        let (authorization_rules, auth_data) =
+            create_default_metaplex_rule_set(context, authority, false).await;
+
+        // Create and mint item with a collection.  THIS IS NEEDED so that the collection-level
+        // delegate is authorized for this item.
+        let collection = Some(Collection {
+            key: collection_parent_da.mint.pubkey(),
+            verified: false,
+        });
+
+        let mut da = DigitalAsset::new();
+        da.create_and_mint_item_with_collection(
+            context,
+            TokenStandard::ProgrammableNonFungible,
+            Some(authorization_rules),
+            Some(auth_data),
+            1,
+            collection.clone(),
+        )
+        .await
+        .unwrap();
+
+        // Check collection.
+        let metadata = da.get_metadata(context).await;
+        assert_eq!(metadata.collection, collection);
+
+        // Check primary sale.
+        let metadata = da.get_metadata(context).await;
+        assert!(!metadata.primary_sale_happened);
+
+        // Collection-level programmable config delegate is allowed to use V1 args for backwards
+        // compatibility.  But RuleSet is the only allowed field this delegate can change.
+        let mut args = UpdateArgs::default_v1();
+        match &mut args {
+            UpdateArgs::V1 {
+                primary_sale_happened,
+                ..
+            } => *primary_sale_happened = Some(true),
+            _ => panic!("Unexpected enum variant"),
+        }
+
+        let mut builder = UpdateBuilder::new();
+        builder
+            .authority(delegate.pubkey())
+            .delegate_record(delegate_record)
+            .metadata(da.metadata)
+            .mint(da.mint.pubkey())
+            .token(da.token.unwrap())
+            .authorization_rules(authorization_rules)
+            .payer(delegate.pubkey());
+
+        if let Some(edition) = da.edition {
+            builder.edition(edition);
+        }
+
+        let update_ix = builder.build(args).unwrap().instruction();
+
+        let tx = Transaction::new_signed_with_payer(
+            &[update_ix],
+            Some(&delegate.pubkey()),
+            &[&delegate],
+            context.last_blockhash,
+        );
+
+        let err = context
+            .banks_client
+            .process_transaction(tx)
+            .await
+            .unwrap_err();
+
+        assert_custom_error!(err, MetadataError::InvalidUpdateArgs);
+
+        // Check that metadata not changed.
+        let metadata = da.get_metadata(context).await;
+        assert!(!metadata.primary_sale_happened);
+    }
+
+    #[tokio::test]
+    async fn fail_update_by_col_prog_config_delegate_using_new_collection_in_v1_args() {
+        let mut program_test = ProgramTest::new("mpl_token_metadata", mpl_token_metadata::ID, None);
+        program_test.add_program("mpl_token_auth_rules", mpl_token_auth_rules::ID, None);
+        let context = &mut program_test.start_with_context().await;
+
+        // Create a collection parent NFT or pNFT with the CollectionDetails struct populated.
+        let mut collection_parent_da = DigitalAsset::new();
+        collection_parent_da
+            .create_and_mint_collection_parent(
+                context,
+                TokenStandard::ProgrammableNonFungible,
+                None,
+                None,
+                1,
+                DEFAULT_COLLECTION_DETAILS,
+            )
+            .await
+            .unwrap();
+
+        // Create metadata delegate on the collection.
+        let delegate = Keypair::new();
+        delegate.airdrop(context, 1_000_000_000).await.unwrap();
+        let delegate_args = DelegateArgs::ProgrammableConfigV1 {
+            authorization_data: None,
+        };
+        let update_authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+        let delegate_record = collection_parent_da
+            .delegate(context, update_authority, delegate.pubkey(), delegate_args)
+            .await
+            .unwrap()
+            .unwrap();
+
+        // Create rule-set for the transfer
+        let authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+        let (authorization_rules, auth_data) =
+            create_default_metaplex_rule_set(context, authority, false).await;
+
+        // Create and mint item with a collection.  THIS IS NEEDED so that the collection-level
+        // delegate is authorized for this item.
+        let collection = Some(Collection {
+            key: collection_parent_da.mint.pubkey(),
+            verified: false,
+        });
+
+        let mut da = DigitalAsset::new();
+        da.create_and_mint_item_with_collection(
+            context,
+            TokenStandard::ProgrammableNonFungible,
+            Some(authorization_rules),
+            Some(auth_data),
+            1,
+            collection.clone(),
+        )
+        .await
+        .unwrap();
+
+        // Check collection.
+        let metadata = da.get_metadata(context).await;
+        assert_eq!(metadata.collection, collection);
+
+        let new_collection = Collection {
+            key: Keypair::new().pubkey(),
+            verified: false,
+        };
+
+        // Collection-level programmable config delegate is allowed to use V1 args for backwards
+        // compatibility.  But RuleSet is the only allowed field this delegate can change.  But it
+        // won't get to that point in the code because it will not be authorized as a collection-
+        // level delegate based on the new collection it sent in.
+        let mut args = UpdateArgs::default_v1();
+        match &mut args {
+            UpdateArgs::V1 { collection, .. } => {
+                *collection = CollectionToggle::Set(new_collection.clone())
+            }
+            _ => panic!("Unexpected enum variant"),
+        }
+
+        let mut builder = UpdateBuilder::new();
+        builder
+            .authority(delegate.pubkey())
+            .delegate_record(delegate_record)
+            .metadata(da.metadata)
+            .mint(da.mint.pubkey())
+            .token(da.token.unwrap())
+            .authorization_rules(authorization_rules)
+            .payer(delegate.pubkey());
+
+        if let Some(edition) = da.edition {
+            builder.edition(edition);
+        }
+
+        let update_ix = builder.build(args).unwrap().instruction();
+
+        let tx = Transaction::new_signed_with_payer(
+            &[update_ix],
+            Some(&delegate.pubkey()),
+            &[&delegate],
+            context.last_blockhash,
+        );
+
+        let err = context
+            .banks_client
+            .process_transaction(tx)
+            .await
+            .unwrap_err();
+
+        assert_custom_error!(err, MetadataError::InvalidAuthorityType);
+
+        // Check that collection not changed.
+        let metadata = da.get_metadata(context).await;
+        assert_eq!(metadata.collection, collection);
     }
 
     #[tokio::test]
@@ -1145,9 +1548,13 @@ mod update {
             panic!("Missing rule set programmable config");
         }
 
-        let mut update_args = UpdateArgs::default();
-        let rule_set = get_update_args_fields!(&mut update_args, rule_set);
-        *rule_set.0 = RuleSetToggle::Set(invalid_rule_set);
+        let mut args = UpdateArgs::default_update_authority();
+        match &mut args {
+            UpdateArgs::UpdateAuthorityV2 { rule_set, .. } => {
+                *rule_set = RuleSetToggle::Set(invalid_rule_set)
+            }
+            _ => panic!("Unexpected enum variant"),
+        }
 
         let mut builder = UpdateBuilder::new();
         builder
@@ -1161,7 +1568,7 @@ mod update {
             builder.edition(edition);
         }
 
-        let update_ix = builder.build(update_args.clone()).unwrap().instruction();
+        let update_ix = builder.build(args.clone()).unwrap().instruction();
 
         let tx = Transaction::new_signed_with_payer(
             &[update_ix],
@@ -1199,7 +1606,7 @@ mod update {
             builder.edition(edition);
         }
 
-        let update_ix = builder.build(update_args).unwrap().instruction();
+        let update_ix = builder.build(args).unwrap().instruction();
 
         let tx = Transaction::new_signed_with_payer(
             &[update_ix],
@@ -1217,9 +1624,13 @@ mod update {
         assert_custom_error!(err, MetadataError::InvalidAuthorizationRules);
 
         // Finally, try to update with the valid rule set, and it should succeed.
-        let mut update_args = UpdateArgs::default();
-        let rule_set = get_update_args_fields!(&mut update_args, rule_set);
-        *rule_set.0 = RuleSetToggle::Set(authorization_rules);
+        let mut args = UpdateArgs::default_update_authority();
+        match &mut args {
+            UpdateArgs::UpdateAuthorityV2 { rule_set, .. } => {
+                *rule_set = RuleSetToggle::Set(authorization_rules)
+            }
+            _ => panic!("Unexpected enum variant"),
+        }
 
         let mut builder = UpdateBuilder::new();
         builder
@@ -1234,7 +1645,7 @@ mod update {
             builder.edition(edition);
         }
 
-        let update_ix = builder.build(update_args).unwrap().instruction();
+        let update_ix = builder.build(args).unwrap().instruction();
 
         let tx = Transaction::new_signed_with_payer(
             &[update_ix],
@@ -1271,7 +1682,7 @@ mod update {
         let (authorization_rules, auth_data) =
             create_default_metaplex_rule_set(context, authority.dirty_clone(), false).await;
 
-        let (new_auth_rules, new_auth_data) =
+        let (new_auth_rules, _) =
             create_default_metaplex_rule_set(context, authority.dirty_clone(), false).await;
 
         let update_authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
@@ -1314,11 +1725,11 @@ mod update {
         .unwrap();
 
         // Try to clear the rule set.
-        let mut update_args = UpdateArgs::default();
-        let rule_set = get_update_args_fields!(&mut update_args, rule_set);
-
-        // remove the rule set
-        *rule_set.0 = RuleSetToggle::Clear;
+        let mut args = UpdateArgs::default_update_authority();
+        match &mut args {
+            UpdateArgs::UpdateAuthorityV2 { rule_set, .. } => *rule_set = RuleSetToggle::Clear,
+            _ => panic!("Unexpected enum variant"),
+        }
 
         let mut builder = UpdateBuilder::new();
         builder
@@ -1333,7 +1744,7 @@ mod update {
             builder.edition(edition);
         }
 
-        let update_ix = builder.build(update_args).unwrap().instruction();
+        let update_ix = builder.build(args).unwrap().instruction();
 
         let tx = Transaction::new_signed_with_payer(
             &[update_ix],
@@ -1351,13 +1762,13 @@ mod update {
         assert_custom_error!(err, MetadataError::CannotUpdateAssetWithDelegate);
 
         // Try to update the rule set.
-        let mut update_args = UpdateArgs::default();
-        let (rule_set, authorization_data) =
-            get_update_args_fields!(&mut update_args, rule_set, authorization_data);
-
-        // update the rule set
-        *rule_set = RuleSetToggle::Set(new_auth_rules);
-        *authorization_data = Some(new_auth_data);
+        let mut args = UpdateArgs::default_update_authority();
+        match &mut args {
+            UpdateArgs::UpdateAuthorityV2 { rule_set, .. } => {
+                *rule_set = RuleSetToggle::Set(new_auth_rules)
+            }
+            _ => panic!("Unexpected enum variant"),
+        }
 
         let mut builder = UpdateBuilder::new();
         builder
@@ -1372,7 +1783,7 @@ mod update {
             builder.edition(edition);
         }
 
-        let update_ix = builder.build(update_args).unwrap().instruction();
+        let update_ix = builder.build(args).unwrap().instruction();
 
         let tx = Transaction::new_signed_with_payer(
             &[update_ix],
@@ -1431,12 +1842,16 @@ mod update {
             seller_fee_basis_points: 0,
         };
 
-        let mut update_args = UpdateArgs::default();
-        let current_data = get_update_args_fields!(&mut update_args, data);
-        *current_data.0 = Some(data);
+        let mut args = UpdateArgs::default_update_authority();
+        match &mut args {
+            UpdateArgs::UpdateAuthorityV2 {
+                data: current_data, ..
+            } => *current_data = Some(data),
+            _ => panic!("Unexpected enum variant"),
+        }
 
         let err = da
-            .update(context, update_authority.dirty_clone(), update_args)
+            .update(context, update_authority.dirty_clone(), args)
             .await
             .unwrap_err();
 
@@ -1487,11 +1902,15 @@ mod update {
             seller_fee_basis_points: metadata.data.seller_fee_basis_points,
         };
 
-        let mut update_args = UpdateArgs::default();
-        let current_data = get_update_args_fields!(&mut update_args, data);
-        *current_data.0 = Some(data);
+        let mut args = UpdateArgs::default_update_authority();
+        match &mut args {
+            UpdateArgs::UpdateAuthorityV2 {
+                data: current_data, ..
+            } => *current_data = Some(data),
+            _ => panic!("Unexpected enum variant"),
+        }
 
-        da.update(context, update_authority.dirty_clone(), update_args)
+        da.update(context, update_authority.dirty_clone(), args)
             .await
             .unwrap();
 
@@ -1509,11 +1928,15 @@ mod update {
             seller_fee_basis_points: metadata.data.seller_fee_basis_points,
         };
 
-        let mut update_args = UpdateArgs::default();
-        let current_data = get_update_args_fields!(&mut update_args, data);
-        *current_data.0 = Some(data);
+        let mut args = UpdateArgs::default_update_authority();
+        match &mut args {
+            UpdateArgs::UpdateAuthorityV2 {
+                data: current_data, ..
+            } => *current_data = Some(data),
+            _ => panic!("Unexpected enum variant"),
+        }
 
-        da.update(context, update_authority.dirty_clone(), update_args)
+        da.update(context, update_authority.dirty_clone(), args)
             .await
             .unwrap();
 
