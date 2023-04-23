@@ -1,4 +1,4 @@
-use mpl_utils::assert_initialized;
+use mpl_utils::{assert_initialized, create_or_allocate_account_raw};
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, msg, program::invoke, program_pack::Pack,
     pubkey::Pubkey, rent::Rent, system_instruction, sysvar::Sysvar,
@@ -8,12 +8,14 @@ use spl_token::{native_mint::DECIMALS, state::Mint};
 use crate::{
     error::MetadataError,
     instruction::{Context, Create, CreateArgs},
+    pda::{EDITION, PREFIX},
     state::{
-        Metadata, ProgrammableConfig, TokenMetadataAccount, TokenStandard, MAX_MASTER_EDITION_LEN,
-        TOKEN_STANDARD_INDEX,
+        Key, MasterEdition, MasterEditionV2, Metadata, ProgrammableConfig, TokenMetadataAccount,
+        TokenStandard, MAX_MASTER_EDITION_LEN, TOKEN_STANDARD_INDEX,
     },
     utils::{
-        create_master_edition, process_create_metadata_accounts_logic,
+        assert_mint_authority_matches_mint, assert_owned_by, assert_token_program_matches_package,
+        process_create_metadata_accounts_logic, transfer_mint_authority,
         CreateMetadataAccountsLogicArgs,
     },
 };
@@ -48,15 +50,15 @@ fn create_v1(program_id: &Pubkey, ctx: Context<Create>, args: CreateArgs) -> Pro
         return Err(MetadataError::InvalidTokenStandard.into());
     }
 
-    // if the account does not exist, we will allocate a new mint
+    assert_token_program_matches_package(ctx.accounts.spl_token_program_info)?;
+
+    // if the mint account does not exist, we will allocate a new mint
 
     if ctx.accounts.mint_info.data_is_empty() {
         // mint account must be a signer in the transaction
         if !ctx.accounts.mint_info.is_signer {
             return Err(MetadataError::MintIsNotSigner.into());
         }
-
-        msg!("Init mint");
 
         invoke(
             &system_instruction::create_account(
@@ -105,7 +107,10 @@ fn create_v1(program_id: &Pubkey, ctx: Context<Create>, args: CreateArgs) -> Pro
     } else {
         // validates the existing mint account
 
+        assert_owned_by(ctx.accounts.mint_info, &spl_token::id())?;
         let mint: Mint = assert_initialized(ctx.accounts.mint_info, MetadataError::Uninitialized)?;
+        assert_mint_authority_matches_mint(&mint.mint_authority, ctx.accounts.authority_info)?;
+
         // NonFungible assets must have decimals == 0 and supply no greater than 1
         if matches!(
             asset_data.token_standard,
@@ -144,6 +149,10 @@ fn create_v1(program_id: &Pubkey, ctx: Context<Create>, args: CreateArgs) -> Pro
         asset_data.collection_details.clone(),
     )?;
 
+    let mut metadata = Metadata::from_account_info(ctx.accounts.metadata_info)?;
+    metadata.token_standard = Some(asset_data.token_standard);
+    metadata.primary_sale_happened = asset_data.primary_sale_happened;
+
     // creates the master edition account (only for NonFungible assets)
 
     if matches!(
@@ -153,21 +162,46 @@ fn create_v1(program_id: &Pubkey, ctx: Context<Create>, args: CreateArgs) -> Pro
         let print_supply = print_supply.ok_or(MetadataError::MissingPrintSupply)?;
 
         if let Some(master_edition) = ctx.accounts.master_edition_info {
-            create_master_edition(
-                program_id,
+            let edition_authority_seeds = &[
+                PREFIX.as_bytes(),
+                program_id.as_ref(),
+                ctx.accounts.mint_info.key.as_ref(),
+                EDITION.as_bytes(),
+                &[metadata
+                    .edition_nonce
+                    .ok_or(MetadataError::NotAMasterEdition)?],
+            ];
+            let edition_key = Pubkey::create_program_address(edition_authority_seeds, program_id)?;
+
+            if *master_edition.key != edition_key {
+                return Err(MetadataError::DerivedKeyInvalid.into());
+            }
+
+            create_or_allocate_account_raw(
+                *program_id,
                 master_edition,
-                ctx.accounts.mint_info,
-                ctx.accounts.update_authority_info,
-                ctx.accounts.authority_info,
-                ctx.accounts.payer_info,
-                ctx.accounts.metadata_info,
-                ctx.accounts.spl_token_program_info,
                 ctx.accounts.system_program_info,
-                print_supply.to_option(),
+                ctx.accounts.payer_info,
+                MAX_MASTER_EDITION_LEN,
+                edition_authority_seeds,
             )?;
 
-            // for pNFTs, we store the token standard value at the end of the
-            // master edition account
+            let mut edition = MasterEditionV2::from_account_info(master_edition)?;
+            edition.key = Key::MasterEditionV2;
+            edition.supply = 0;
+            edition.max_supply = print_supply.to_option();
+            edition.save(master_edition)?;
+
+            // while you can't mint only mint 1 token from your master record, you can
+            // mint as many limited editions as you like within your max supply
+            transfer_mint_authority(
+                master_edition.key,
+                master_edition,
+                ctx.accounts.mint_info,
+                ctx.accounts.authority_info,
+                ctx.accounts.spl_token_program_info,
+            )?;
+
             if matches!(
                 asset_data.token_standard,
                 TokenStandard::ProgrammableNonFungible
@@ -177,8 +211,13 @@ fn create_v1(program_id: &Pubkey, ctx: Context<Create>, args: CreateArgs) -> Pro
                 if data.len() < MAX_MASTER_EDITION_LEN {
                     return Err(MetadataError::InvalidMasterEditionAccountLength.into());
                 }
-
+                // for pNFTs, we store the token standard value at the end of the
+                // master edition account
                 data[TOKEN_STANDARD_INDEX] = TokenStandard::ProgrammableNonFungible as u8;
+
+                metadata.programmable_config = Some(ProgrammableConfig::V1 {
+                    rule_set: asset_data.rule_set,
+                });
             }
         } else {
             return Err(MetadataError::MissingMasterEditionAccount.into());
@@ -187,21 +226,7 @@ fn create_v1(program_id: &Pubkey, ctx: Context<Create>, args: CreateArgs) -> Pro
         msg!("Ignoring print supply for selected token standard");
     }
 
-    let mut metadata = Metadata::from_account_info(ctx.accounts.metadata_info)?;
-    metadata.token_standard = Some(asset_data.token_standard);
-
-    // sets the programmable config for programmable assets
-
-    if matches!(
-        asset_data.token_standard,
-        TokenStandard::ProgrammableNonFungible
-    ) {
-        metadata.programmable_config = Some(ProgrammableConfig::V1 {
-            rule_set: asset_data.rule_set,
-        });
-    }
-
-    // saves the state
+    // saves the metadata state
     metadata.save(&mut ctx.accounts.metadata_info.try_borrow_mut_data()?)?;
 
     Ok(())
