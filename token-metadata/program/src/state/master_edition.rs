@@ -106,8 +106,12 @@ impl MasterEdition for MasterEditionV2 {
     }
 
     fn save(&self, account: &AccountInfo) -> ProgramResult {
-        let mut storage = &mut account.data.borrow_mut()[..TOKEN_STANDARD_INDEX];
-        BorshSerialize::serialize(self, &mut storage)?;
+        let mut bytes = Vec::with_capacity(TOKEN_STANDARD_INDEX);
+        BorshSerialize::serialize(&self, &mut bytes)?;
+
+        let data = &mut account.data.borrow_mut();
+        data[..bytes.len()].copy_from_slice(&bytes);
+
         Ok(())
     }
 }
