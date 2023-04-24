@@ -24,14 +24,13 @@ export function computeDataHash(metadata: MetadataArgs): Buffer {
 
 export function computeCreatorHash(creators: Creator[]): Buffer {
   let bufferOfCreatorData = Buffer.from([]);
-  let bufferOfCreatorShares = Buffer.from([]);
   for (const creator of creators) {
     bufferOfCreatorData = Buffer.concat([
       bufferOfCreatorData,
       creator.address.toBuffer(),
+      Buffer.from([creator.verified ? 1 : 0]),
       Buffer.from([creator.share]),
     ]);
-    bufferOfCreatorShares = Buffer.concat([bufferOfCreatorShares, Buffer.from([creator.verified ? 1 : 0]), Buffer.from([creator.share])]);
   }
   return Buffer.from(keccak_256.digest(bufferOfCreatorData));
 }
