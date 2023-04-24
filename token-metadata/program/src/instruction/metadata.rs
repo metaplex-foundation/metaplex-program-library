@@ -985,23 +985,11 @@ impl InstructionBuilder for super::builders::Update {
     fn instruction(&self) -> solana_program::instruction::Instruction {
         let mut accounts = vec![
             AccountMeta::new_readonly(self.authority, true),
-            if let Some(record) = self.delegate_record {
-                AccountMeta::new(record, false)
-            } else {
-                AccountMeta::new_readonly(crate::ID, false)
-            },
-            if let Some(token) = self.token {
-                AccountMeta::new(token, false)
-            } else {
-                AccountMeta::new_readonly(crate::ID, false)
-            },
+            AccountMeta::new_readonly(self.delegate_record.unwrap_or(crate::ID), false),
+            AccountMeta::new_readonly(self.token.unwrap_or(crate::ID), false),
             AccountMeta::new_readonly(self.mint, false),
             AccountMeta::new(self.metadata, false),
-            if let Some(edition) = self.edition {
-                AccountMeta::new(edition, false)
-            } else {
-                AccountMeta::new_readonly(crate::ID, false)
-            },
+            AccountMeta::new_readonly(self.edition.unwrap_or(crate::ID), false),
             AccountMeta::new(self.payer, true),
             AccountMeta::new_readonly(self.system_program, false),
             AccountMeta::new_readonly(self.sysvar_instructions, false),
