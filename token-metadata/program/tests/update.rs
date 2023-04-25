@@ -1069,6 +1069,145 @@ mod update {
     }
 
     #[tokio::test]
+    async fn fail_update_collection_delegate_update_authority_mismatch() {
+        let context = &mut program_test().start_with_context().await;
+
+        // Create a collection parent NFT or pNFT with the CollectionDetails struct populated.
+        let mut collection_parent_da = DigitalAsset::new();
+        collection_parent_da
+            .create_and_mint_collection_parent(
+                context,
+                TokenStandard::ProgrammableNonFungible,
+                None,
+                None,
+                1,
+                DEFAULT_COLLECTION_DETAILS,
+            )
+            .await
+            .unwrap();
+
+        // Change the collection to have a different update authority.
+        let new_collection_update_authority = Keypair::new();
+        new_collection_update_authority
+            .airdrop(context, 1_000_000_000)
+            .await
+            .unwrap();
+
+        let mut args = UpdateArgs::default_update_authority();
+        match &mut args {
+            UpdateArgs::UpdateAuthorityV2 {
+                new_update_authority,
+                ..
+            } => *new_update_authority = Some(new_collection_update_authority.pubkey()),
+            _ => panic!("Unexpected enum variant"),
+        }
+
+        let payer = context.payer.dirty_clone();
+        collection_parent_da
+            .update(context, payer, args)
+            .await
+            .unwrap();
+
+        // Verify update authority is changed.
+        let metadata = collection_parent_da.get_metadata(context).await;
+        assert_eq!(
+            metadata.update_authority,
+            new_collection_update_authority.pubkey()
+        );
+
+        // Verify cannot create metadata delegate on the collection using the old update authority.
+        let old_update_authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+        let fail_delegate = Keypair::new();
+        let delegate_args = DelegateArgs::CollectionV1 {
+            authorization_data: None,
+        };
+        let err = collection_parent_da
+            .delegate(
+                context,
+                old_update_authority,
+                fail_delegate.pubkey(),
+                delegate_args,
+            )
+            .await
+            .unwrap_err();
+
+        assert_custom_error_ix!(1, err, MetadataError::UpdateAuthorityIncorrect);
+
+        // Create metadata delegate on the collection using the new update authority.
+        let pass_delegate = Keypair::new();
+        pass_delegate.airdrop(context, 1_000_000_000).await.unwrap();
+        let delegate_args = DelegateArgs::CollectionV1 {
+            authorization_data: None,
+        };
+        let pass_delegate_record = collection_parent_da
+            .delegate(
+                context,
+                new_collection_update_authority,
+                pass_delegate.pubkey(),
+                delegate_args,
+            )
+            .await
+            .unwrap()
+            .unwrap();
+
+        // Create and mint item.
+        let mut da = DigitalAsset::new();
+        da.create_and_mint(context, TokenStandard::NonFungible, None, None, 1)
+            .await
+            .unwrap();
+
+        let metadata = da.get_metadata(context).await;
+        assert_eq!(metadata.collection, None);
+
+        // Change collection.
+        let new_collection = Collection {
+            key: collection_parent_da.mint.pubkey(),
+            verified: false,
+        };
+
+        let mut args = UpdateArgs::default_collection_delegate();
+        match &mut args {
+            UpdateArgs::CollectionDelegateV2 { collection, .. } => {
+                *collection = CollectionToggle::Set(new_collection.clone())
+            }
+            _ => panic!("Unexpected enum variant"),
+        }
+
+        let mut builder = UpdateBuilder::new();
+        builder
+            .authority(pass_delegate.pubkey())
+            .delegate_record(pass_delegate_record)
+            .metadata(da.metadata)
+            .mint(da.mint.pubkey())
+            .payer(pass_delegate.pubkey());
+
+        if let Some(edition) = da.edition {
+            builder.edition(edition);
+        }
+
+        let update_ix = builder.build(args).unwrap().instruction();
+
+        let tx = Transaction::new_signed_with_payer(
+            &[update_ix],
+            Some(&pass_delegate.pubkey()),
+            &[&pass_delegate],
+            context.last_blockhash,
+        );
+
+        let err = context
+            .banks_client
+            .process_transaction(tx)
+            .await
+            .unwrap_err();
+
+        assert_custom_error!(err, MetadataError::InvalidAuthorityType);
+
+        // Check that collection not changed.
+        let metadata = da.get_metadata(context).await;
+        assert_eq!(metadata.collection, None);
+    }
+
+    #[tokio::test]
     async fn fail_update_collection_by_collections_programmable_config_delegate() {
         let delegate_args = DelegateArgs::ProgrammableConfigV1 {
             authorization_data: None,
