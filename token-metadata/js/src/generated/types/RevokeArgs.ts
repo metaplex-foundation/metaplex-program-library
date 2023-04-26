@@ -21,7 +21,8 @@ export enum RevokeArgs {
   LockedTransferV1,
   ProgrammableConfigV1,
   MigrationV1,
-  AuthorityV1,
+  AuthorityItemV1,
+  DataItemV1,
   CollectionItemV1,
   ProgrammableConfigItemV1,
 }

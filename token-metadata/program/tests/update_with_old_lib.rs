@@ -1,19 +1,29 @@
 #![cfg(feature = "test-bpf")]
 
+use mpl_token_auth_rules::{
+    instruction::{
+        builders::CreateOrUpdateBuilder, CreateOrUpdateArgs,
+        InstructionBuilder as AuthRulesInstructionBuilder,
+    },
+    payload::Payload,
+    state::{CompareOp, Rule, RuleSetV1},
+};
 use old_token_metadata::{
     id,
-    instruction::{builders::UpdateBuilder, InstructionBuilder},
     instruction::{
-        builders::{CreateBuilder, DelegateBuilder},
-        CreateArgs, MetadataDelegateRole,
+        builders::{CreateBuilder, DelegateBuilder, MintBuilder, UpdateBuilder},
+        CreateArgs, DelegateArgs, InstructionBuilder, MetadataDelegateRole, MintArgs,
+        RuleSetToggle, UpdateArgs,
     },
-    instruction::{CollectionToggle, DelegateArgs, UpdateArgs},
     pda::{find_metadata_delegate_record_account, find_token_record_account},
+    processor::{AuthorizationData, TransferScenario},
     state::{
-        AssetData, CollectionDetails, Metadata, PrintSupply, TokenMetadataAccount, EDITION, PREFIX,
+        AssetData, Collection, CollectionDetails, Creator, Metadata, Operation, PayloadKey,
+        PrintSupply, ProgrammableConfig, TokenMetadataAccount, TokenStandard, EDITION, PREFIX,
     },
-    state::{Collection, Creator, ProgrammableConfig, TokenStandard},
 };
+use rmp_serde::Serializer;
+use serde::Serialize;
 use solana_program::{borsh::try_from_slice_unchecked, pubkey::Pubkey};
 use solana_program_test::*;
 use solana_sdk::{
@@ -35,46 +45,79 @@ mod update {
     use super::*;
 
     #[tokio::test]
-    async fn success_update_by_items_collection_item_delegate() {
-        let context = &mut ProgramTest::new("mpl_token_metadata", mpl_token_metadata::id(), None)
-            .start_with_context()
-            .await;
+    async fn old_lib_success_update_by_collections_programmable_config_delegate() {
+        let mut program_test = ProgramTest::new("mpl_token_metadata", mpl_token_metadata::ID, None);
+        program_test.add_program("mpl_token_auth_rules", mpl_token_auth_rules::ID, None);
+        let context = &mut program_test.start_with_context().await;
 
-        let update_authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
-
-        let mut da = OldDigitalAsset::new();
-        da.create(context, TokenStandard::NonFungible, None)
+        // Create a collection parent NFT or pNFT with the CollectionDetails struct populated.
+        let mut collection_parent_da = OldDigitalAsset::new();
+        collection_parent_da
+            .create_and_mint_collection_parent(
+                context,
+                TokenStandard::ProgrammableNonFungible,
+                None,
+                None,
+                1,
+                Some(CollectionDetails::V1 { size: 0 }),
+            )
             .await
             .unwrap();
 
-        let metadata = da.get_metadata(context).await;
-        assert_eq!(metadata.collection, None);
-
-        // Create metadata delegate.
+        // Create metadata delegate on the collection.
         let delegate = Keypair::new();
         airdrop(context, &delegate.pubkey(), 1_000_000_000)
             .await
             .unwrap();
-        let delegate_args = DelegateArgs::CollectionV1 {
+        let delegate_args = DelegateArgs::ProgrammableConfigV1 {
             authorization_data: None,
         };
-        let delegate_record = da
+        let update_authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+        let delegate_record = collection_parent_da
             .delegate(context, update_authority, delegate.pubkey(), delegate_args)
             .await
             .unwrap()
             .unwrap();
 
-        // Change a value that this delegate is allowed to change.
-        let mut update_args = UpdateArgs::default();
-        let UpdateArgs::V1 {
-            collection: collection_toggle,
-            ..
-        } = &mut update_args;
-        let new_collection = Collection {
+        // Create rule-set for the transfer
+        let authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+        let (authorization_rules, auth_data) = create_rule_set(context, authority).await;
+
+        // Create and mint item with a collection.  THIS IS NEEDED so that the collection-level
+        // delegate is authorized for this item.
+        let collection = Some(Collection {
+            key: collection_parent_da.mint.pubkey(),
             verified: false,
-            key: Keypair::new().pubkey(),
-        };
-        *collection_toggle = CollectionToggle::Set(new_collection.clone());
+        });
+
+        let mut da = OldDigitalAsset::new();
+        da.create_and_mint_item_with_collection(
+            context,
+            TokenStandard::ProgrammableNonFungible,
+            Some(authorization_rules),
+            Some(auth_data),
+            1,
+            collection,
+        )
+        .await
+        .unwrap();
+
+        // Check programmable config.
+        let metadata = da.get_metadata(context).await;
+        if let Some(ProgrammableConfig::V1 {
+            rule_set: Some(rule_set),
+        }) = metadata.programmable_config
+        {
+            assert_eq!(rule_set, authorization_rules);
+        } else {
+            panic!("Missing rule set programmable config");
+        }
+
+        // Change programmable config.
+        let mut update_args = UpdateArgs::default();
+        let UpdateArgs::V1 { rule_set, .. } = &mut update_args;
+        // remove the rule set
+        *rule_set = RuleSetToggle::Clear;
 
         let mut builder = UpdateBuilder::new();
         builder
@@ -82,6 +125,8 @@ mod update {
             .delegate_record(delegate_record)
             .metadata(da.metadata)
             .mint(da.mint.pubkey())
+            .token(da.token.unwrap())
+            .authorization_rules(authorization_rules)
             .payer(delegate.pubkey());
 
         if let Some(edition) = da.edition {
@@ -101,8 +146,7 @@ mod update {
 
         // checks the created metadata values
         let metadata = da.get_metadata(context).await;
-
-        assert_eq!(metadata.collection, Some(new_collection));
+        assert_eq!(metadata.programmable_config, None);
     }
 }
 
@@ -145,6 +189,7 @@ struct OldDigitalAsset {
     pub mint: Keypair,
     pub token: Option<Pubkey>,
     pub edition: Option<Pubkey>,
+    pub token_record: Option<Pubkey>,
     pub token_standard: Option<TokenStandard>,
 }
 
@@ -168,22 +213,21 @@ impl OldDigitalAsset {
             mint,
             token: None,
             edition: None,
+            token_record: None,
             token_standard: None,
         }
     }
 
-    async fn create(
+    async fn create_and_mint_item_with_collection(
         &mut self,
         context: &mut ProgramTestContext,
         token_standard: TokenStandard,
         authorization_rules: Option<Pubkey>,
+        authorization_data: Option<AuthorizationData>,
+        amount: u64,
+        collection: Option<Collection>,
     ) -> Result<(), BanksClientError> {
-        let creators = Some(vec![Creator {
-            address: context.payer.pubkey(),
-            share: 100,
-            verified: true,
-        }]);
-
+        // creates the metadata
         self.create_advanced(
             context,
             token_standard,
@@ -191,13 +235,49 @@ impl OldDigitalAsset {
             String::from("DA"),
             String::from("https://digital.asset.org"),
             500,
-            creators,
             None,
+            collection,
             None,
             authorization_rules,
             PrintSupply::Zero,
         )
         .await
+        .unwrap();
+
+        // mints tokens
+        self.mint(context, authorization_rules, authorization_data, amount)
+            .await
+    }
+
+    async fn create_and_mint_collection_parent(
+        &mut self,
+        context: &mut ProgramTestContext,
+        token_standard: TokenStandard,
+        authorization_rules: Option<Pubkey>,
+        authorization_data: Option<AuthorizationData>,
+        amount: u64,
+        collection_details: Option<CollectionDetails>,
+    ) -> Result<(), BanksClientError> {
+        // creates the metadata
+        self.create_advanced(
+            context,
+            token_standard,
+            String::from("Old Digital Asset"),
+            String::from("DA"),
+            String::from("https://digital.asset.org"),
+            500,
+            None,
+            None,
+            collection_details,
+            authorization_rules,
+            PrintSupply::Zero,
+        )
+        .await
+        .unwrap();
+
+        // mints tokens
+        self.mint(context, authorization_rules, authorization_data, amount)
+            .await
     }
 
     async fn create_advanced(
@@ -274,6 +354,72 @@ impl OldDigitalAsset {
         self.token_standard = Some(token_standard);
 
         context.banks_client.process_transaction(tx).await
+    }
+
+    async fn mint(
+        &mut self,
+        context: &mut ProgramTestContext,
+        authorization_rules: Option<Pubkey>,
+        authorization_data: Option<AuthorizationData>,
+        amount: u64,
+    ) -> Result<(), BanksClientError> {
+        let payer_pubkey = context.payer.pubkey();
+        let (token, _) = Pubkey::find_program_address(
+            &[
+                &payer_pubkey.to_bytes(),
+                &spl_token::id().to_bytes(),
+                &self.mint.pubkey().to_bytes(),
+            ],
+            &spl_associated_token_account::id(),
+        );
+
+        let (token_record, _) = find_token_record_account(&self.mint.pubkey(), &token);
+
+        let token_record_opt = if self.is_pnft(context).await {
+            Some(token_record)
+        } else {
+            None
+        };
+
+        let mut builder = MintBuilder::new();
+        builder
+            .token(token)
+            .token_record(token_record)
+            .token_owner(payer_pubkey)
+            .metadata(self.metadata)
+            .mint(self.mint.pubkey())
+            .payer(payer_pubkey)
+            .authority(payer_pubkey);
+
+        if let Some(edition) = self.edition {
+            builder.master_edition(edition);
+        }
+
+        if let Some(authorization_rules) = authorization_rules {
+            builder.authorization_rules(authorization_rules);
+        }
+
+        let mint_ix = builder
+            .build(MintArgs::V1 {
+                amount,
+                authorization_data,
+            })
+            .unwrap()
+            .instruction();
+
+        let compute_ix = ComputeBudgetInstruction::set_compute_unit_limit(800_000);
+
+        let tx = Transaction::new_signed_with_payer(
+            &[compute_ix, mint_ix],
+            Some(&context.payer.pubkey()),
+            &[&context.payer],
+            context.last_blockhash,
+        );
+
+        context.banks_client.process_transaction(tx).await.map(|_| {
+            self.token = Some(token);
+            self.token_record = token_record_opt;
+        })
     }
 
     async fn delegate(
@@ -386,4 +532,78 @@ impl OldDigitalAsset {
 
         Metadata::safe_deserialize(&metadata_account.data).unwrap()
     }
+
+    async fn is_pnft(&self, context: &mut ProgramTestContext) -> bool {
+        let md = self.get_metadata(context).await;
+        if let Some(standard) = md.token_standard {
+            if standard == TokenStandard::ProgrammableNonFungible {
+                return true;
+            }
+        }
+
+        false
+    }
+}
+
+async fn create_rule_set(
+    context: &mut ProgramTestContext,
+    creator: Keypair,
+) -> (Pubkey, AuthorizationData) {
+    let name = String::from("RuleSet");
+    let (ruleset_addr, _ruleset_bump) =
+        mpl_token_auth_rules::pda::find_rule_set_address(creator.pubkey(), name.clone());
+
+    let nft_amount = Rule::Amount {
+        field: PayloadKey::Amount.to_string(),
+        amount: 1,
+        operator: CompareOp::Eq,
+    };
+
+    let owner_operation = Operation::Transfer {
+        scenario: TransferScenario::Holder,
+    };
+
+    let mut rule_set = RuleSetV1::new(name, creator.pubkey());
+    rule_set
+        .add(owner_operation.to_string(), nft_amount)
+        .unwrap();
+
+    // Serialize the RuleSet using RMP serde.
+    let mut serialized_data = Vec::new();
+    rule_set
+        .serialize(&mut Serializer::new(&mut serialized_data))
+        .unwrap();
+
+    // Create a `create` instruction.
+    let create_ix = CreateOrUpdateBuilder::new()
+        .rule_set_pda(ruleset_addr)
+        .payer(creator.pubkey())
+        .build(CreateOrUpdateArgs::V1 {
+            serialized_rule_set: serialized_data,
+        })
+        .unwrap()
+        .instruction();
+
+    let compute_ix = ComputeBudgetInstruction::set_compute_unit_limit(400_000);
+
+    // Add it to a transaction.
+    let create_tx = Transaction::new_signed_with_payer(
+        &[compute_ix, create_ix],
+        Some(&creator.pubkey()),
+        &[&creator],
+        context.last_blockhash,
+    );
+
+    // Process the transaction.
+    context
+        .banks_client
+        .process_transaction(create_tx)
+        .await
+        .expect("creation should succeed");
+
+    // Client can add additional rules to the Payload but does not need to in this case.
+    let payload = Payload::new();
+    let auth_data = AuthorizationData { payload };
+
+    (ruleset_addr, auth_data)
 }

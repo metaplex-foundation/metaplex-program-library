@@ -58,7 +58,11 @@ pub enum DelegateArgs {
         /// Required authorization data to validate the request.
         authorization_data: Option<AuthorizationData>,
     },
-    AuthorityV1 {
+    AuthorityItemV1 {
+        /// Required authorization data to validate the request.
+        authorization_data: Option<AuthorizationData>,
+    },
+    DataItemV1 {
         /// Required authorization data to validate the request.
         authorization_data: Option<AuthorizationData>,
     },
@@ -86,7 +90,8 @@ pub enum RevokeArgs {
     LockedTransferV1,
     ProgrammableConfigV1,
     MigrationV1,
-    AuthorityV1,
+    AuthorityItemV1,
+    DataItemV1,
     CollectionItemV1,
     ProgrammableConfigItemV1,
 }
@@ -95,11 +100,12 @@ pub enum RevokeArgs {
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, Copy)]
 pub enum MetadataDelegateRole {
-    Authority,
+    AuthorityItem,
     Collection,
     Use,
     Data,
     ProgrammableConfig,
+    DataItem,
     CollectionItem,
     ProgrammableConfigItem,
 }
@@ -107,11 +113,12 @@ pub enum MetadataDelegateRole {
 impl fmt::Display for MetadataDelegateRole {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let message = match self {
-            Self::Authority => "authority_delegate".to_string(),
+            Self::AuthorityItem => "authority_item_delegate".to_string(),
             Self::Collection => "collection_delegate".to_string(),
             Self::Use => "use_delegate".to_string(),
             Self::Data => "data_delegate".to_string(),
             Self::ProgrammableConfig => "programmable_config_delegate".to_string(),
+            Self::DataItem => "data_item_delegate".to_string(),
             Self::CollectionItem => "collection_item_delegate".to_string(),
             Self::ProgrammableConfigItem => "prog_config_item_delegate".to_string(),
         };

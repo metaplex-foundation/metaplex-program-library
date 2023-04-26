@@ -32,7 +32,8 @@ export type DelegateArgsRecord = {
     authorizationData: beet.COption<AuthorizationData>;
   };
   ProgrammableConfigV1: { authorizationData: beet.COption<AuthorizationData> };
-  AuthorityV1: { authorizationData: beet.COption<AuthorizationData> };
+  AuthorityItemV1: { authorizationData: beet.COption<AuthorizationData> };
+  DataItemV1: { authorizationData: beet.COption<AuthorizationData> };
   CollectionItemV1: { authorizationData: beet.COption<AuthorizationData> };
   ProgrammableConfigItemV1: { authorizationData: beet.COption<AuthorizationData> };
 };
@@ -75,9 +76,12 @@ export const isDelegateArgsLockedTransferV1 = (
 export const isDelegateArgsProgrammableConfigV1 = (
   x: DelegateArgs,
 ): x is DelegateArgs & { __kind: 'ProgrammableConfigV1' } => x.__kind === 'ProgrammableConfigV1';
-export const isDelegateArgsAuthorityV1 = (
+export const isDelegateArgsAuthorityItemV1 = (
   x: DelegateArgs,
-): x is DelegateArgs & { __kind: 'AuthorityV1' } => x.__kind === 'AuthorityV1';
+): x is DelegateArgs & { __kind: 'AuthorityItemV1' } => x.__kind === 'AuthorityItemV1';
+export const isDelegateArgsDataItemV1 = (
+  x: DelegateArgs,
+): x is DelegateArgs & { __kind: 'DataItemV1' } => x.__kind === 'DataItemV1';
 export const isDelegateArgsCollectionItemV1 = (
   x: DelegateArgs,
 ): x is DelegateArgs & { __kind: 'CollectionItemV1' } => x.__kind === 'CollectionItemV1';
@@ -180,10 +184,18 @@ export const delegateArgsBeet = beet.dataEnum<DelegateArgsRecord>([
   ],
 
   [
-    'AuthorityV1',
-    new beet.FixableBeetArgsStruct<DelegateArgsRecord['AuthorityV1']>(
+    'AuthorityItemV1',
+    new beet.FixableBeetArgsStruct<DelegateArgsRecord['AuthorityItemV1']>(
       [['authorizationData', beet.coption(authorizationDataBeet)]],
-      'DelegateArgsRecord["AuthorityV1"]',
+      'DelegateArgsRecord["AuthorityItemV1"]',
+    ),
+  ],
+
+  [
+    'DataItemV1',
+    new beet.FixableBeetArgsStruct<DelegateArgsRecord['DataItemV1']>(
+      [['authorizationData', beet.coption(authorizationDataBeet)]],
+      'DelegateArgsRecord["DataItemV1"]',
     ),
   ],
 

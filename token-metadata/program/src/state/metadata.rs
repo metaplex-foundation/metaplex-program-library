@@ -4,9 +4,9 @@ use crate::{
         collection::assert_collection_update_is_valid, metadata::assert_data_valid,
         uses::assert_valid_use,
     },
-    get_update_args_fields,
     instruction::{
-        CollectionDetailsToggle, CollectionToggle, MetadataDelegateRole, RuleSetToggle, UpdateArgs,
+        CollectionDetailsToggle, CollectionToggle, InternalUpdateArgs, MetadataDelegateRole,
+        RuleSetToggle, UpdateArgs,
     },
     utils::{clean_write_metadata, puff_out_data_fields},
 };
@@ -106,35 +106,66 @@ impl Metadata {
         authority_type: AuthorityType,
         delegate_role: Option<MetadataDelegateRole>,
     ) -> ProgramResult {
-        // Destructure args.
-        let (
-            new_update_authority,
-            data,
-            primary_sale_happened,
-            is_mutable,
-            collection,
-            collection_details,
-            uses,
-            rule_set,
-        ) = get_update_args_fields!(
-            args,
-            new_update_authority,
-            data,
-            primary_sale_happened,
-            is_mutable,
-            collection,
-            collection_details,
-            uses,
-            rule_set
-        );
+        // Convert the args into a struct that contains all available fields.
+        let args = InternalUpdateArgs::from(args);
 
         // Update the token standard if it is changed.
         self.token_standard = Some(token_standard);
 
+        // Update the Update Authority only sections.
+        if matches!(authority_type, AuthorityType::Metadata) {
+            if args.uses.is_some() {
+                let uses_option = args.uses.to_option();
+                // If already None leave it as None.
+                assert_valid_use(&uses_option, &self.uses)?;
+                self.uses = uses_option;
+            }
+
+            if let CollectionDetailsToggle::Set(collection_details) = args.collection_details {
+                // only unsized collections can have the size set, and only once.
+                if self.collection_details.is_some() {
+                    return Err(MetadataError::SizedCollection.into());
+                }
+
+                self.collection_details = Some(collection_details);
+            }
+        }
+
+        // Update Authority sections.
         if matches!(authority_type, AuthorityType::Metadata)
-            || matches!(delegate_role, Some(MetadataDelegateRole::Data))
+            || matches!(delegate_role, Some(MetadataDelegateRole::AuthorityItem))
         {
-            if let Some(data) = data {
+            if let Some(authority) = args.new_update_authority {
+                self.update_authority = authority;
+            }
+
+            if let Some(primary_sale) = args.primary_sale_happened {
+                // If received primary_sale is true, flip to true.
+                if primary_sale || !self.primary_sale_happened {
+                    self.primary_sale_happened = primary_sale
+                } else {
+                    return Err(MetadataError::PrimarySaleCanOnlyBeFlippedToTrue.into());
+                }
+            }
+
+            if let Some(mutable) = args.is_mutable {
+                // If received value is false, flip to false.
+                if !mutable || self.is_mutable {
+                    self.is_mutable = mutable
+                } else {
+                    return Err(MetadataError::IsMutableCanOnlyBeFlippedToFalse.into());
+                }
+            }
+        }
+
+        // Update Data section.
+        if matches!(authority_type, AuthorityType::Metadata)
+            || matches!(
+                delegate_role,
+                Some(MetadataDelegateRole::Data | MetadataDelegateRole::DataItem)
+            )
+        {
+            if let Some(data) = args.data {
                 if !self.is_mutable {
                     return Err(MetadataError::DataIsImmutable.into());
                 }
@@ -150,6 +181,7 @@ impl Metadata {
             }
         }
 
+        // Update Collection section.
         if matches!(authority_type, AuthorityType::Metadata)
             || matches!(
                 delegate_role,
@@ -159,9 +191,9 @@ impl Metadata {
             // if the Collection data is 'Set', only allow updating if it is unverified
             // or if it exactly matches the existing collection info; if the Collection data
             // is 'Clear', then only set to 'None' if it is unverified.
-            match collection {
+            match args.collection {
                 CollectionToggle::Set(_) => {
-                    let collection_option = collection.to_option();
+                    let collection_option = args.collection.to_option();
                     assert_collection_update_is_valid(false, &self.collection, &collection_option)?;
                     self.collection = collection_option;
                 }
@@ -179,50 +211,7 @@ impl Metadata {
             }
         }
 
-        if matches!(authority_type, AuthorityType::Metadata) {
-            if uses.is_some() {
-                let uses_option = uses.to_option();
-                // If already None leave it as None.
-                assert_valid_use(&uses_option, &self.uses)?;
-                self.uses = uses_option;
-            }
-
-            if let CollectionDetailsToggle::Set(collection_details) = collection_details {
-                // only unsized collections can have the size set, and only once.
-                if self.collection_details.is_some() {
-                    return Err(MetadataError::SizedCollection.into());
-                }
-
-                self.collection_details = Some(collection_details);
-            }
-        }
-
-        if matches!(authority_type, AuthorityType::Metadata)
-            || matches!(delegate_role, Some(MetadataDelegateRole::Authority))
-        {
-            if let Some(authority) = new_update_authority {
-                self.update_authority = authority;
-            }
-
-            if let Some(primary_sale) = primary_sale_happened {
-                // If received primary_sale is true, flip to true.
-                if primary_sale || !self.primary_sale_happened {
-                    self.primary_sale_happened = primary_sale
-                } else {
-                    return Err(MetadataError::PrimarySaleCanOnlyBeFlippedToTrue.into());
-                }
-            }
-
-            if let Some(mutable) = is_mutable {
-                // If received value is false, flip to false.
-                if !mutable || self.is_mutable {
-                    self.is_mutable = mutable
-                } else {
-                    return Err(MetadataError::IsMutableCanOnlyBeFlippedToFalse.into());
-                }
-            }
-        }
-
+        // Update Programmable Config section.
         if matches!(authority_type, AuthorityType::Metadata)
             || matches!(
                 delegate_role,
@@ -234,7 +223,7 @@ impl Metadata {
         {
             // if the rule_set data is either 'Set' or 'Clear', only allow updating if the
             // token standard is equal to `ProgrammableNonFungible` and no SPL delegate is set.
-            if matches!(rule_set, RuleSetToggle::Clear | RuleSetToggle::Set(_)) {
+            if matches!(args.rule_set, RuleSetToggle::Clear | RuleSetToggle::Set(_)) {
                 if token_standard != TokenStandard::ProgrammableNonFungible {
                     return Err(MetadataError::InvalidTokenStandard.into());
                 }
@@ -248,16 +237,17 @@ impl Metadata {
                 }
 
                 self.programmable_config =
-                    rule_set.to_option().map(|rule_set| ProgrammableConfig::V1 {
-                        rule_set: Some(rule_set),
-                    });
+                    args.rule_set
+                        .to_option()
+                        .map(|rule_set| ProgrammableConfig::V1 {
+                            rule_set: Some(rule_set),
+                        });
             }
         }
 
+        // Re-serialize metadata.
         puff_out_data_fields(self);
-        clean_write_metadata(self, metadata)?;
-
-        Ok(())
+        clean_write_metadata(self, metadata)
     }
 
     pub fn into_asset_data(self) -> AssetData {
