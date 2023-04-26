@@ -3332,7 +3332,7 @@
         },
         {
           "name": "edition",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false,
           "desc": "Edition account",
           "optional": true
@@ -5049,7 +5049,7 @@
             ]
           },
           {
-            "name": "UpdateAuthorityV2",
+            "name": "AsUpdateAuthorityV2",
             "fields": [
               {
                 "name": "new_update_authority",
@@ -5120,7 +5120,7 @@
             ]
           },
           {
-            "name": "AuthorityItemDelegateV2",
+            "name": "AsAuthorityItemDelegateV2",
             "fields": [
               {
                 "name": "new_update_authority",
@@ -5159,7 +5159,7 @@
             ]
           },
           {
-            "name": "CollectionDelegateV2",
+            "name": "AsCollectionDelegateV2",
             "fields": [
               {
                 "name": "collection",
@@ -5178,7 +5178,7 @@
             ]
           },
           {
-            "name": "DataDelegateV2",
+            "name": "AsDataDelegateV2",
             "fields": [
               {
                 "name": "data",
@@ -5199,7 +5199,7 @@
             ]
           },
           {
-            "name": "ProgConfigDelegateV2",
+            "name": "AsProgConfigDelegateV2",
             "fields": [
               {
                 "name": "rule_set",
@@ -5218,7 +5218,7 @@
             ]
           },
           {
-            "name": "DataItemDelegateV2",
+            "name": "AsDataItemDelegateV2",
             "fields": [
               {
                 "name": "data",
@@ -5239,7 +5239,7 @@
             ]
           },
           {
-            "name": "CollectionItemDelegateV2",
+            "name": "AsCollectionItemDelegateV2",
             "fields": [
               {
                 "name": "collection",
@@ -5258,7 +5258,7 @@
             ]
           },
           {
-            "name": "ProgConfigItemDelegateV2",
+            "name": "AsProgrammableConfigItemDelegateV2",
             "fields": [
               {
                 "name": "rule_set",
