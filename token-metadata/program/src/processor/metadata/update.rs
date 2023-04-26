@@ -260,23 +260,23 @@ fn validate_update(
     if let Some(metadata_delegate_role) = metadata_delegate_role {
         match metadata_delegate_role {
             MetadataDelegateRole::AuthorityItem => match args {
-                UpdateArgs::AuthorityItemDelegateV2 { .. } => (),
+                UpdateArgs::AsAuthorityItemDelegateV2 { .. } => (),
                 _ => return Err(MetadataError::InvalidUpdateArgs.into()),
             },
             MetadataDelegateRole::Data => match args {
-                UpdateArgs::DataDelegateV2 { .. } => (),
+                UpdateArgs::AsDataDelegateV2 { .. } => (),
                 _ => return Err(MetadataError::InvalidUpdateArgs.into()),
             },
             MetadataDelegateRole::DataItem => match args {
-                UpdateArgs::DataItemDelegateV2 { .. } => (),
+                UpdateArgs::AsDataItemDelegateV2 { .. } => (),
                 _ => return Err(MetadataError::InvalidUpdateArgs.into()),
             },
             MetadataDelegateRole::Collection => match args {
-                UpdateArgs::CollectionDelegateV2 { .. } => (),
+                UpdateArgs::AsCollectionDelegateV2 { .. } => (),
                 _ => return Err(MetadataError::InvalidUpdateArgs.into()),
             },
             MetadataDelegateRole::CollectionItem => match args {
-                UpdateArgs::CollectionItemDelegateV2 { .. } => (),
+                UpdateArgs::AsCollectionItemDelegateV2 { .. } => (),
                 _ => return Err(MetadataError::InvalidUpdateArgs.into()),
             },
             MetadataDelegateRole::ProgrammableConfig => match args {
@@ -304,11 +304,11 @@ fn validate_update(
                         return Err(MetadataError::InvalidUpdateArgs.into());
                     }
                 }
-                UpdateArgs::ProgConfigDelegateV2 { .. } => (),
+                UpdateArgs::AsProgConfigDelegateV2 { .. } => (),
                 _ => return Err(MetadataError::InvalidUpdateArgs.into()),
             },
             MetadataDelegateRole::ProgrammableConfigItem => match args {
-                UpdateArgs::ProgConfigItemDelegateV2 { .. } => (),
+                UpdateArgs::AsProgrammableConfigItemDelegateV2 { .. } => (),
                 _ => return Err(MetadataError::InvalidUpdateArgs.into()),
             },
             _ => return Err(MetadataError::InvalidAuthorityType.into()),

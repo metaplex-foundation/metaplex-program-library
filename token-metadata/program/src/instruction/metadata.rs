@@ -100,7 +100,7 @@ pub enum UpdateArgs {
         /// Required authorization data to validate the request.
         authorization_data: Option<AuthorizationData>,
     },
-    UpdateAuthorityV2 {
+    AsUpdateAuthorityV2 {
         /// The new update authority.
         new_update_authority: Option<Pubkey>,
         /// The metadata details.
@@ -124,7 +124,7 @@ pub enum UpdateArgs {
         /// Required authorization data to validate the request.
         authorization_data: Option<AuthorizationData>,
     },
-    AuthorityItemDelegateV2 {
+    AsAuthorityItemDelegateV2 {
         /// The new update authority.
         new_update_authority: Option<Pubkey>,
         /// Indicates whether the primary sale has happened or not (once set to `true`, it cannot be
@@ -138,37 +138,37 @@ pub enum UpdateArgs {
         /// Required authorization data to validate the request.
         authorization_data: Option<AuthorizationData>,
     },
-    CollectionDelegateV2 {
+    AsCollectionDelegateV2 {
         /// Collection information.
         collection: CollectionToggle,
         /// Required authorization data to validate the request.
         authorization_data: Option<AuthorizationData>,
     },
-    DataDelegateV2 {
+    AsDataDelegateV2 {
         /// The metadata details.
         data: Option<Data>,
         /// Required authorization data to validate the request.
         authorization_data: Option<AuthorizationData>,
     },
-    ProgConfigDelegateV2 {
+    AsProgConfigDelegateV2 {
         // Programmable rule set configuration (only applicable to `Programmable` asset types).
         rule_set: RuleSetToggle,
         /// Required authorization data to validate the request.
         authorization_data: Option<AuthorizationData>,
     },
-    DataItemDelegateV2 {
+    AsDataItemDelegateV2 {
         /// The metadata details.
         data: Option<Data>,
         /// Required authorization data to validate the request.
         authorization_data: Option<AuthorizationData>,
     },
-    CollectionItemDelegateV2 {
+    AsCollectionItemDelegateV2 {
         /// Collection information.
         collection: CollectionToggle,
         /// Required authorization data to validate the request.
         authorization_data: Option<AuthorizationData>,
     },
-    ProgConfigItemDelegateV2 {
+    AsProgrammableConfigItemDelegateV2 {
         // Programmable rule set configuration (only applicable to `Programmable` asset types).
         rule_set: RuleSetToggle,
         /// Required authorization data to validate the request.
@@ -191,8 +191,8 @@ impl UpdateArgs {
         }
     }
 
-    pub fn default_update_authority() -> Self {
-        Self::UpdateAuthorityV2 {
+    pub fn default_as_update_authority() -> Self {
+        Self::AsUpdateAuthorityV2 {
             new_update_authority: None,
             data: None,
             primary_sale_happened: None,
@@ -206,8 +206,8 @@ impl UpdateArgs {
         }
     }
 
-    pub fn default_authority_item_delegate() -> Self {
-        Self::AuthorityItemDelegateV2 {
+    pub fn default_as_authority_item_delegate() -> Self {
+        Self::AsAuthorityItemDelegateV2 {
             new_update_authority: None,
             primary_sale_happened: None,
             is_mutable: None,
@@ -216,43 +216,43 @@ impl UpdateArgs {
         }
     }
 
-    pub fn default_collection_delegate() -> Self {
-        Self::CollectionDelegateV2 {
+    pub fn default_as_collection_delegate() -> Self {
+        Self::AsCollectionDelegateV2 {
             collection: CollectionToggle::default(),
             authorization_data: None,
         }
     }
 
-    pub fn default_data_delegate() -> Self {
-        Self::DataDelegateV2 {
+    pub fn default_as_data_delegate() -> Self {
+        Self::AsDataDelegateV2 {
             data: None,
             authorization_data: None,
         }
     }
 
-    pub fn default_prog_config_delegate() -> Self {
-        Self::ProgConfigDelegateV2 {
+    pub fn default_as_programmable_config_delegate() -> Self {
+        Self::AsProgConfigDelegateV2 {
             rule_set: RuleSetToggle::default(),
             authorization_data: None,
         }
     }
 
-    pub fn default_data_item_delegate() -> Self {
-        Self::DataItemDelegateV2 {
+    pub fn default_as_data_item_delegate() -> Self {
+        Self::AsDataItemDelegateV2 {
             data: None,
             authorization_data: None,
         }
     }
 
-    pub fn default_collection_item_delegate() -> Self {
-        Self::CollectionItemDelegateV2 {
+    pub fn default_as_collection_item_delegate() -> Self {
+        Self::AsCollectionItemDelegateV2 {
             collection: CollectionToggle::default(),
             authorization_data: None,
         }
     }
 
-    pub fn default_prog_config_item_delegate() -> Self {
-        Self::ProgConfigItemDelegateV2 {
+    pub fn default_as_programmable_config_item_delegate() -> Self {
+        Self::AsProgrammableConfigItemDelegateV2 {
             rule_set: RuleSetToggle::default(),
             authorization_data: None,
         }
@@ -322,7 +322,7 @@ impl From<UpdateArgs> for InternalUpdateArgs {
                 rule_set,
                 ..Default::default()
             },
-            UpdateArgs::UpdateAuthorityV2 {
+            UpdateArgs::AsUpdateAuthorityV2 {
                 new_update_authority,
                 data,
                 primary_sale_happened,
@@ -344,7 +344,7 @@ impl From<UpdateArgs> for InternalUpdateArgs {
                 rule_set,
                 token_standard,
             },
-            UpdateArgs::AuthorityItemDelegateV2 {
+            UpdateArgs::AsAuthorityItemDelegateV2 {
                 new_update_authority,
                 primary_sale_happened,
                 is_mutable,
@@ -357,18 +357,18 @@ impl From<UpdateArgs> for InternalUpdateArgs {
                 token_standard,
                 ..Default::default()
             },
-            UpdateArgs::CollectionDelegateV2 { collection, .. }
-            | UpdateArgs::CollectionItemDelegateV2 { collection, .. } => Self {
+            UpdateArgs::AsCollectionDelegateV2 { collection, .. }
+            | UpdateArgs::AsCollectionItemDelegateV2 { collection, .. } => Self {
                 collection,
                 ..Default::default()
             },
-            UpdateArgs::DataDelegateV2 { data, .. }
-            | UpdateArgs::DataItemDelegateV2 { data, .. } => Self {
+            UpdateArgs::AsDataDelegateV2 { data, .. }
+            | UpdateArgs::AsDataItemDelegateV2 { data, .. } => Self {
                 data,
                 ..Default::default()
             },
-            UpdateArgs::ProgConfigDelegateV2 { rule_set, .. }
-            | UpdateArgs::ProgConfigItemDelegateV2 { rule_set, .. } => Self {
+            UpdateArgs::AsProgConfigDelegateV2 { rule_set, .. }
+            | UpdateArgs::AsProgrammableConfigItemDelegateV2 { rule_set, .. } => Self {
                 rule_set,
                 ..Default::default()
             },

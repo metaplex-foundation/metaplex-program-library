@@ -1908,9 +1908,9 @@ mod unverify_collection {
         .await
         .unwrap();
 
-        let mut args = UpdateArgs::default_update_authority();
+        let mut args = UpdateArgs::default_as_update_authority();
         match &mut args {
-            UpdateArgs::UpdateAuthorityV2 {
+            UpdateArgs::AsUpdateAuthorityV2 {
                 new_update_authority,
                 ..
             } => *new_update_authority = Some(new_collection_update_authority.pubkey()),
@@ -1984,9 +1984,9 @@ mod unverify_collection {
         // Change the collection to have a different update authority.
         let new_collection_update_authority = Keypair::new();
 
-        let mut args = UpdateArgs::default_update_authority();
+        let mut args = UpdateArgs::default_as_update_authority();
         match &mut args {
-            UpdateArgs::UpdateAuthorityV2 {
+            UpdateArgs::AsUpdateAuthorityV2 {
                 new_update_authority,
                 ..
             } => *new_update_authority = Some(new_collection_update_authority.pubkey()),

@@ -64,9 +64,9 @@ mod update {
             seller_fee_basis_points: 0,
         };
 
-        let mut args = UpdateArgs::default_update_authority();
+        let mut args = UpdateArgs::default_as_update_authority();
         match &mut args {
-            UpdateArgs::UpdateAuthorityV2 {
+            UpdateArgs::AsUpdateAuthorityV2 {
                 data: current_data, ..
             } => *current_data = Some(data),
             _ => panic!("Unexpected enum variant"),
@@ -135,10 +135,10 @@ mod update {
             .unwrap();
 
         // Change a few values that this delegate is allowed to change.
-        let mut args = UpdateArgs::default_authority_item_delegate();
+        let mut args = UpdateArgs::default_as_authority_item_delegate();
 
         match &mut args {
-            UpdateArgs::AuthorityItemDelegateV2 {
+            UpdateArgs::AsAuthorityItemDelegateV2 {
                 new_update_authority,
                 primary_sale_happened,
                 is_mutable,
@@ -193,9 +193,9 @@ mod update {
             key: Keypair::new().pubkey(),
         };
 
-        let mut update_args = UpdateArgs::default_collection_delegate();
+        let mut update_args = UpdateArgs::default_as_collection_delegate();
         match &mut update_args {
-            UpdateArgs::CollectionDelegateV2 { collection, .. } => {
+            UpdateArgs::AsCollectionDelegateV2 { collection, .. } => {
                 *collection = CollectionToggle::Set(new_collection.clone())
             }
             _ => panic!("Unexpected enum variant"),
@@ -216,9 +216,9 @@ mod update {
             key: Keypair::new().pubkey(),
         };
 
-        let mut update_args = UpdateArgs::default_collection_item_delegate();
+        let mut update_args = UpdateArgs::default_as_collection_item_delegate();
         match &mut update_args {
-            UpdateArgs::CollectionItemDelegateV2 { collection, .. } => {
+            UpdateArgs::AsCollectionItemDelegateV2 { collection, .. } => {
                 *collection = CollectionToggle::Set(new_collection.clone())
             }
             _ => panic!("Unexpected enum variant"),
@@ -290,8 +290,11 @@ mod update {
             authorization_data: None,
         };
 
-        success_update_data_by_items_delegate(delegate_args, UpdateArgs::default_data_delegate())
-            .await;
+        success_update_data_by_items_delegate(
+            delegate_args,
+            UpdateArgs::default_as_data_delegate(),
+        )
+        .await;
     }
 
     #[tokio::test]
@@ -302,7 +305,7 @@ mod update {
 
         success_update_data_by_items_delegate(
             delegate_args,
-            UpdateArgs::default_data_item_delegate(),
+            UpdateArgs::default_as_data_item_delegate(),
         )
         .await;
     }
@@ -358,10 +361,10 @@ mod update {
         };
 
         match &mut update_args {
-            UpdateArgs::DataDelegateV2 {
+            UpdateArgs::AsDataDelegateV2 {
                 data: current_data, ..
             } => *current_data = Some(data),
-            UpdateArgs::DataItemDelegateV2 {
+            UpdateArgs::AsDataItemDelegateV2 {
                 data: current_data, ..
             } => *current_data = Some(data),
             _ => panic!("Unexpected enum variant"),
@@ -435,9 +438,9 @@ mod update {
         }
 
         // remove the rule set
-        let mut args = UpdateArgs::default_update_authority();
+        let mut args = UpdateArgs::default_as_update_authority();
         match &mut args {
-            UpdateArgs::UpdateAuthorityV2 { rule_set, .. } => *rule_set = RuleSetToggle::Clear,
+            UpdateArgs::AsUpdateAuthorityV2 { rule_set, .. } => *rule_set = RuleSetToggle::Clear,
             _ => panic!("Unexpected enum variant"),
         }
 
@@ -477,9 +480,9 @@ mod update {
             authorization_data: None,
         };
 
-        let mut update_args = UpdateArgs::default_prog_config_delegate();
+        let mut update_args = UpdateArgs::default_as_programmable_config_delegate();
         match &mut update_args {
-            UpdateArgs::ProgConfigDelegateV2 { rule_set, .. } => *rule_set = RuleSetToggle::Clear,
+            UpdateArgs::AsProgConfigDelegateV2 { rule_set, .. } => *rule_set = RuleSetToggle::Clear,
             _ => panic!("Unexpected enum variant"),
         }
 
@@ -492,9 +495,9 @@ mod update {
             authorization_data: None,
         };
 
-        let mut update_args = UpdateArgs::default_prog_config_item_delegate();
+        let mut update_args = UpdateArgs::default_as_programmable_config_item_delegate();
         match &mut update_args {
-            UpdateArgs::ProgConfigItemDelegateV2 { rule_set, .. } => {
+            UpdateArgs::AsProgrammableConfigItemDelegateV2 { rule_set, .. } => {
                 *rule_set = RuleSetToggle::Clear
             }
             _ => panic!("Unexpected enum variant"),
@@ -678,9 +681,9 @@ mod update {
             .unwrap();
 
         // Use update args variant that no delegates are allowed to use.
-        let update_args = UpdateArgs::default_update_authority();
+        let update_args = UpdateArgs::default_as_update_authority();
         match update_args {
-            UpdateArgs::UpdateAuthorityV2 { .. } => (),
+            UpdateArgs::AsUpdateAuthorityV2 { .. } => (),
             _ => panic!("Unexpected enum variant"),
         }
 
@@ -749,9 +752,9 @@ mod update {
             .unwrap();
 
         // Use update args variant that no delegates are allowed to use.
-        let update_args = UpdateArgs::default_update_authority();
+        let update_args = UpdateArgs::default_as_update_authority();
         match update_args {
-            UpdateArgs::UpdateAuthorityV2 { .. } => (),
+            UpdateArgs::AsUpdateAuthorityV2 { .. } => (),
             _ => panic!("Unexpected enum variant"),
         }
 
@@ -802,9 +805,9 @@ mod update {
         assert_eq!(metadata.token_standard, Some(TokenStandard::FungibleAsset));
 
         // Update token standard
-        let mut args = UpdateArgs::default_update_authority();
+        let mut args = UpdateArgs::default_as_update_authority();
         match &mut args {
-            UpdateArgs::UpdateAuthorityV2 { token_standard, .. } => {
+            UpdateArgs::AsUpdateAuthorityV2 { token_standard, .. } => {
                 *token_standard = Some(TokenStandard::Fungible)
             }
             _ => panic!("Unexpected enum variant"),
@@ -834,9 +837,9 @@ mod update {
         assert_eq!(metadata.token_standard, Some(TokenStandard::FungibleAsset));
 
         // Update token standard
-        let mut args = UpdateArgs::default_update_authority();
+        let mut args = UpdateArgs::default_as_update_authority();
         match &mut args {
-            UpdateArgs::UpdateAuthorityV2 { token_standard, .. } => {
+            UpdateArgs::AsUpdateAuthorityV2 { token_standard, .. } => {
                 *token_standard = Some(TokenStandard::NonFungible)
             }
             _ => panic!("Unexpected enum variant"),
@@ -874,9 +877,9 @@ mod update {
             key: Keypair::new().pubkey(),
         };
 
-        let mut args = UpdateArgs::default_update_authority();
+        let mut args = UpdateArgs::default_as_update_authority();
         match &mut args {
-            UpdateArgs::UpdateAuthorityV2 { collection, .. } => {
+            UpdateArgs::AsUpdateAuthorityV2 { collection, .. } => {
                 *collection = CollectionToggle::Set(new_collection.clone())
             }
             _ => panic!("Unexpected enum variant"),
@@ -943,9 +946,9 @@ mod update {
             verified: false,
         };
 
-        let mut args = UpdateArgs::default_collection_delegate();
+        let mut args = UpdateArgs::default_as_collection_delegate();
         match &mut args {
-            UpdateArgs::CollectionDelegateV2 { collection, .. } => {
+            UpdateArgs::AsCollectionDelegateV2 { collection, .. } => {
                 *collection = CollectionToggle::Set(new_collection.clone())
             }
             _ => panic!("Unexpected enum variant"),
@@ -1026,9 +1029,9 @@ mod update {
             verified: false,
         };
 
-        let mut args = UpdateArgs::default_collection_item_delegate();
+        let mut args = UpdateArgs::default_as_collection_item_delegate();
         match &mut args {
-            UpdateArgs::CollectionItemDelegateV2 { collection, .. } => {
+            UpdateArgs::AsCollectionItemDelegateV2 { collection, .. } => {
                 *collection = CollectionToggle::Set(new_collection.clone())
             }
             _ => panic!("Unexpected enum variant"),
@@ -1093,9 +1096,9 @@ mod update {
             .await
             .unwrap();
 
-        let mut args = UpdateArgs::default_update_authority();
+        let mut args = UpdateArgs::default_as_update_authority();
         match &mut args {
-            UpdateArgs::UpdateAuthorityV2 {
+            UpdateArgs::AsUpdateAuthorityV2 {
                 new_update_authority,
                 ..
             } => *new_update_authority = Some(new_collection_update_authority.pubkey()),
@@ -1165,9 +1168,9 @@ mod update {
             verified: false,
         };
 
-        let mut args = UpdateArgs::default_collection_delegate();
+        let mut args = UpdateArgs::default_as_collection_delegate();
         match &mut args {
-            UpdateArgs::CollectionDelegateV2 { collection, .. } => {
+            UpdateArgs::AsCollectionDelegateV2 { collection, .. } => {
                 *collection = CollectionToggle::Set(new_collection.clone())
             }
             _ => panic!("Unexpected enum variant"),
@@ -1268,9 +1271,9 @@ mod update {
             verified: false,
         };
 
-        let mut args = UpdateArgs::default_collection_delegate();
+        let mut args = UpdateArgs::default_as_collection_delegate();
         match &mut args {
-            UpdateArgs::CollectionDelegateV2 { collection, .. } => {
+            UpdateArgs::AsCollectionDelegateV2 { collection, .. } => {
                 *collection = CollectionToggle::Set(new_collection.clone())
             }
             _ => panic!("Unexpected enum variant"),
@@ -1313,9 +1316,9 @@ mod update {
     #[tokio::test]
     async fn success_update_prog_config_by_collections_prog_config_delegate_v2_args() {
         // Change programmable config, removing the RuleSet.
-        let mut args = UpdateArgs::default_prog_config_delegate();
+        let mut args = UpdateArgs::default_as_programmable_config_delegate();
         match &mut args {
-            UpdateArgs::ProgConfigDelegateV2 { rule_set, .. } => *rule_set = RuleSetToggle::Clear,
+            UpdateArgs::AsProgConfigDelegateV2 { rule_set, .. } => *rule_set = RuleSetToggle::Clear,
             _ => panic!("Unexpected enum variant"),
         }
 
@@ -1527,9 +1530,9 @@ mod update {
             seller_fee_basis_points: 0,
         };
 
-        let mut args = UpdateArgs::default_data_delegate();
+        let mut args = UpdateArgs::default_as_data_delegate();
         match &mut args {
-            UpdateArgs::DataDelegateV2 {
+            UpdateArgs::AsDataDelegateV2 {
                 data: current_data, ..
             } => *current_data = Some(data),
             _ => panic!("Unexpected enum variant"),
@@ -1833,9 +1836,9 @@ mod update {
             panic!("Missing rule set programmable config");
         }
 
-        let mut args = UpdateArgs::default_update_authority();
+        let mut args = UpdateArgs::default_as_update_authority();
         match &mut args {
-            UpdateArgs::UpdateAuthorityV2 { rule_set, .. } => {
+            UpdateArgs::AsUpdateAuthorityV2 { rule_set, .. } => {
                 *rule_set = RuleSetToggle::Set(invalid_rule_set)
             }
             _ => panic!("Unexpected enum variant"),
@@ -1909,9 +1912,9 @@ mod update {
         assert_custom_error!(err, MetadataError::InvalidAuthorizationRules);
 
         // Finally, try to update with the valid rule set, and it should succeed.
-        let mut args = UpdateArgs::default_update_authority();
+        let mut args = UpdateArgs::default_as_update_authority();
         match &mut args {
-            UpdateArgs::UpdateAuthorityV2 { rule_set, .. } => {
+            UpdateArgs::AsUpdateAuthorityV2 { rule_set, .. } => {
                 *rule_set = RuleSetToggle::Set(authorization_rules)
             }
             _ => panic!("Unexpected enum variant"),
@@ -2010,9 +2013,9 @@ mod update {
         .unwrap();
 
         // Try to clear the rule set.
-        let mut args = UpdateArgs::default_update_authority();
+        let mut args = UpdateArgs::default_as_update_authority();
         match &mut args {
-            UpdateArgs::UpdateAuthorityV2 { rule_set, .. } => *rule_set = RuleSetToggle::Clear,
+            UpdateArgs::AsUpdateAuthorityV2 { rule_set, .. } => *rule_set = RuleSetToggle::Clear,
             _ => panic!("Unexpected enum variant"),
         }
 
@@ -2047,9 +2050,9 @@ mod update {
         assert_custom_error!(err, MetadataError::CannotUpdateAssetWithDelegate);
 
         // Try to update the rule set.
-        let mut args = UpdateArgs::default_update_authority();
+        let mut args = UpdateArgs::default_as_update_authority();
         match &mut args {
-            UpdateArgs::UpdateAuthorityV2 { rule_set, .. } => {
+            UpdateArgs::AsUpdateAuthorityV2 { rule_set, .. } => {
                 *rule_set = RuleSetToggle::Set(new_auth_rules)
             }
             _ => panic!("Unexpected enum variant"),
@@ -2127,9 +2130,9 @@ mod update {
             seller_fee_basis_points: 0,
         };
 
-        let mut args = UpdateArgs::default_update_authority();
+        let mut args = UpdateArgs::default_as_update_authority();
         match &mut args {
-            UpdateArgs::UpdateAuthorityV2 {
+            UpdateArgs::AsUpdateAuthorityV2 {
                 data: current_data, ..
             } => *current_data = Some(data),
             _ => panic!("Unexpected enum variant"),
@@ -2187,9 +2190,9 @@ mod update {
             seller_fee_basis_points: metadata.data.seller_fee_basis_points,
         };
 
-        let mut args = UpdateArgs::default_update_authority();
+        let mut args = UpdateArgs::default_as_update_authority();
         match &mut args {
-            UpdateArgs::UpdateAuthorityV2 {
+            UpdateArgs::AsUpdateAuthorityV2 {
                 data: current_data, ..
             } => *current_data = Some(data),
             _ => panic!("Unexpected enum variant"),
@@ -2213,9 +2216,9 @@ mod update {
             seller_fee_basis_points: metadata.data.seller_fee_basis_points,
         };
 
-        let mut args = UpdateArgs::default_update_authority();
+        let mut args = UpdateArgs::default_as_update_authority();
         match &mut args {
-            UpdateArgs::UpdateAuthorityV2 {
+            UpdateArgs::AsUpdateAuthorityV2 {
                 data: current_data, ..
             } => *current_data = Some(data),
             _ => panic!("Unexpected enum variant"),
