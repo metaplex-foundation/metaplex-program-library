@@ -44,7 +44,7 @@ export const transferStruct = new beet.BeetArgsStruct<
  * Accounts required by the _transfer_ instruction
  *
  * @property [] treeAuthority
- * @property [] leafOwner
+ * @property [**signer**] leafOwner
  * @property [] leafDelegate
  * @property [] newLeafOwner
  * @property [_writable_] merkleTree
@@ -96,7 +96,7 @@ export function createTransferInstruction(
     {
       pubkey: accounts.leafOwner,
       isWritable: false,
-      isSigner: false,
+      isSigner: true,
     },
     {
       pubkey: accounts.leafDelegate,

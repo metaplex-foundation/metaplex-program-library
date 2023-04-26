@@ -216,7 +216,7 @@ pub struct Transfer<'info> {
     /// CHECK: This account is neither written to nor read from.
     pub tree_authority: Account<'info, TreeConfig>,
     /// CHECK: This account is checked in the instruction
-    pub leaf_owner: UncheckedAccount<'info>,
+    pub leaf_owner: Signer<'info>,
     /// CHECK: This account is chekced in the instruction
     pub leaf_delegate: UncheckedAccount<'info>,
     /// CHECK: This account is neither written to nor read from.

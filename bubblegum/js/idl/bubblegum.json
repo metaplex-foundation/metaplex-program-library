@@ -1,5 +1,5 @@
 {
-  "version": "0.6.0",
+  "version": "0.7.0",
   "name": "bubblegum",
   "instructions": [
     {
@@ -8,7 +8,16 @@
         {
           "name": "treeAuthority",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "path": "merkle_tree"
+              }
+            ]
+          }
         },
         {
           "name": "merkleTree",
@@ -64,7 +73,19 @@
         {
           "name": "treeAuthority",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "path": "merkle_tree"
+              }
+            ]
+          },
+          "relations": [
+            "tree_creator"
+          ]
         },
         {
           "name": "treeCreator",
@@ -95,7 +116,16 @@
         {
           "name": "treeAuthority",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "path": "merkle_tree"
+              }
+            ]
+          }
         },
         {
           "name": "leafOwner",
@@ -153,7 +183,16 @@
         {
           "name": "treeAuthority",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "path": "merkle_tree"
+              }
+            ]
+          }
         },
         {
           "name": "leafOwner",
@@ -212,7 +251,16 @@
         {
           "name": "bubblegumSigner",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "type": "string",
+                "value": "collection_cpi"
+              }
+            ]
+          }
         },
         {
           "name": "logWrapper",
@@ -250,7 +298,16 @@
         {
           "name": "treeAuthority",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "path": "merkle_tree"
+              }
+            ]
+          }
         },
         {
           "name": "leafOwner",
@@ -343,7 +400,16 @@
         {
           "name": "treeAuthority",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "path": "merkle_tree"
+              }
+            ]
+          }
         },
         {
           "name": "leafOwner",
@@ -436,7 +502,16 @@
         {
           "name": "treeAuthority",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "path": "merkle_tree"
+              }
+            ]
+          }
         },
         {
           "name": "leafOwner",
@@ -499,7 +574,16 @@
         {
           "name": "bubblegumSigner",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "type": "string",
+                "value": "collection_cpi"
+              }
+            ]
+          }
         },
         {
           "name": "logWrapper",
@@ -572,7 +656,16 @@
         {
           "name": "treeAuthority",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "path": "merkle_tree"
+              }
+            ]
+          }
         },
         {
           "name": "leafOwner",
@@ -635,7 +728,16 @@
         {
           "name": "bubblegumSigner",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "type": "string",
+                "value": "collection_cpi"
+              }
+            ]
+          }
         },
         {
           "name": "logWrapper",
@@ -708,7 +810,16 @@
         {
           "name": "treeAuthority",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "path": "merkle_tree"
+              }
+            ]
+          }
         },
         {
           "name": "leafOwner",
@@ -771,7 +882,16 @@
         {
           "name": "bubblegumSigner",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "type": "string",
+                "value": "collection_cpi"
+              }
+            ]
+          }
         },
         {
           "name": "logWrapper",
@@ -848,12 +968,21 @@
         {
           "name": "treeAuthority",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "path": "merkle_tree"
+              }
+            ]
+          }
         },
         {
           "name": "leafOwner",
           "isMut": false,
-          "isSigner": false
+          "isSigner": true
         },
         {
           "name": "leafDelegate",
@@ -930,7 +1059,16 @@
         {
           "name": "treeAuthority",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "path": "merkle_tree"
+              }
+            ]
+          }
         },
         {
           "name": "leafOwner",
@@ -1012,7 +1150,16 @@
         {
           "name": "treeAuthority",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "path": "merkle_tree"
+              }
+            ]
+          }
         },
         {
           "name": "leafOwner",
@@ -1089,7 +1236,16 @@
         {
           "name": "treeAuthority",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "path": "merkle_tree"
+              }
+            ]
+          }
         },
         {
           "name": "leafOwner",
@@ -1109,7 +1265,26 @@
         {
           "name": "voucher",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "type": "string",
+                "value": "voucher"
+              },
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "path": "merkle_tree"
+              },
+              {
+                "kind": "arg",
+                "type": "u64",
+                "path": "nonce"
+              }
+            ]
+          }
         },
         {
           "name": "logWrapper",
@@ -1171,7 +1346,16 @@
         {
           "name": "treeAuthority",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "path": "merkle_tree"
+              }
+            ]
+          }
         },
         {
           "name": "leafOwner",
@@ -1186,7 +1370,29 @@
         {
           "name": "voucher",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "type": "string",
+                "value": "voucher"
+              },
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "path": "merkle_tree"
+              },
+              {
+                "kind": "account",
+                "type": {
+                  "defined": "LeafSchema"
+                },
+                "account": "Voucher",
+                "path": "voucher.leaf_schema"
+              }
+            ]
+          }
         },
         {
           "name": "logWrapper",
@@ -1222,7 +1428,30 @@
         {
           "name": "voucher",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "type": "string",
+                "value": "voucher"
+              },
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "account": "Voucher",
+                "path": "voucher.merkle_tree"
+              },
+              {
+                "kind": "account",
+                "type": {
+                  "defined": "LeafSchema"
+                },
+                "account": "Voucher",
+                "path": "voucher.leaf_schema"
+              }
+            ]
+          }
         },
         {
           "name": "leafOwner",
@@ -1237,12 +1466,44 @@
         {
           "name": "mint",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "type": "string",
+                "value": "asset"
+              },
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "account": "Voucher",
+                "path": "voucher.merkle_tree"
+              },
+              {
+                "kind": "account",
+                "type": {
+                  "defined": "LeafSchema"
+                },
+                "account": "Voucher",
+                "path": "voucher.leaf_schema"
+              }
+            ]
+          }
         },
         {
           "name": "mintAuthority",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "path": "mint"
+              }
+            ]
+          }
         },
         {
           "name": "metadata",
@@ -1300,7 +1561,16 @@
         {
           "name": "treeAuthority",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "path": "merkle_tree"
+              }
+            ]
+          }
         },
         {
           "name": "leafOwner",
