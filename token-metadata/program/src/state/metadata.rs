@@ -4,10 +4,7 @@ use crate::{
         collection::assert_collection_update_is_valid, metadata::assert_data_valid,
         uses::assert_valid_use,
     },
-    instruction::{
-        CollectionDetailsToggle, CollectionToggle, InternalUpdateArgs, MetadataDelegateRole,
-        RuleSetToggle, UpdateArgs,
-    },
+    instruction::{CollectionDetailsToggle, CollectionToggle, RuleSetToggle, UpdateArgs},
     utils::{clean_write_metadata, puff_out_data_fields},
 };
 
@@ -103,97 +100,121 @@ impl Metadata {
         metadata: &AccountInfo<'a>,
         token: Option<TokenAccount>,
         token_standard: TokenStandard,
-        authority_type: AuthorityType,
-        delegate_role: Option<MetadataDelegateRole>,
     ) -> ProgramResult {
-        // Convert the args into a struct that contains all available fields.
-        let args = InternalUpdateArgs::from(args);
-
         // Update the token standard if it is changed.
         self.token_standard = Some(token_standard);
 
-        // Update the Update Authority only sections.
-        if matches!(authority_type, AuthorityType::Metadata) {
-            if args.uses.is_some() {
-                let uses_option = args.uses.to_option();
-                // If already None leave it as None.
-                assert_valid_use(&uses_option, &self.uses)?;
-                self.uses = uses_option;
+        // Only the Update Authority can update this section.
+        match &args {
+            UpdateArgs::V1 {
+                uses,
+                collection_details,
+                ..
             }
-
-            if let CollectionDetailsToggle::Set(collection_details) = args.collection_details {
-                // only unsized collections can have the size set, and only once.
-                if self.collection_details.is_some() {
-                    return Err(MetadataError::SizedCollection.into());
+            | UpdateArgs::AsUpdateAuthorityV2 {
+                uses,
+                collection_details,
+                ..
+            } => {
+                if uses.is_some() {
+                    let uses_option = uses.clone().to_option();
+                    // If already None leave it as None.
+                    assert_valid_use(&uses_option, &self.uses)?;
+                    self.uses = uses_option;
                 }
 
-                self.collection_details = Some(collection_details);
+                if let CollectionDetailsToggle::Set(collection_details) = collection_details {
+                    // only unsized collections can have the size set, and only once.
+                    if self.collection_details.is_some() {
+                        return Err(MetadataError::SizedCollection.into());
+                    }
+
+                    self.collection_details = Some(collection_details.clone());
+                }
             }
+            _ => (),
         }
 
-        // Update Authority sections.
-        if matches!(authority_type, AuthorityType::Metadata)
-            || matches!(delegate_role, Some(MetadataDelegateRole::AuthorityItem))
-        {
-            if let Some(authority) = args.new_update_authority {
-                self.update_authority = authority;
+        // Update Authority or Authority Item Delegate can update this section.
+        match &args {
+            UpdateArgs::V1 {
+                new_update_authority,
+                primary_sale_happened,
+                is_mutable,
+                ..
             }
+            | UpdateArgs::AsUpdateAuthorityV2 {
+                new_update_authority,
+                primary_sale_happened,
+                is_mutable,
+                ..
+            }
+            | UpdateArgs::AsAuthorityItemDelegateV2 {
+                new_update_authority,
+                primary_sale_happened,
+                is_mutable,
+                ..
+            } => {
+                if let Some(authority) = new_update_authority {
+                    self.update_authority = *authority;
+                }
 
-            if let Some(primary_sale) = args.primary_sale_happened {
-                // If received primary_sale is true, flip to true.
-                if primary_sale || !self.primary_sale_happened {
-                    self.primary_sale_happened = primary_sale
-                } else {
-                    return Err(MetadataError::PrimarySaleCanOnlyBeFlippedToTrue.into());
+                if let Some(primary_sale) = primary_sale_happened {
+                    // If received primary_sale is true, flip to true.
+                    if *primary_sale || !self.primary_sale_happened {
+                        self.primary_sale_happened = *primary_sale
+                    } else {
+                        return Err(MetadataError::PrimarySaleCanOnlyBeFlippedToTrue.into());
+                    }
+                }
+
+                if let Some(mutable) = is_mutable {
+                    // If received value is false, flip to false.
+                    if !mutable || self.is_mutable {
+                        self.is_mutable = *mutable
+                    } else {
+                        return Err(MetadataError::IsMutableCanOnlyBeFlippedToFalse.into());
+                    }
                 }
             }
-
-            if let Some(mutable) = args.is_mutable {
-                // If received value is false, flip to false.
-                if !mutable || self.is_mutable {
-                    self.is_mutable = mutable
-                } else {
-                    return Err(MetadataError::IsMutableCanOnlyBeFlippedToFalse.into());
-                }
-            }
+            _ => (),
         }
 
-        // Update Data section.
-        if matches!(authority_type, AuthorityType::Metadata)
-            || matches!(
-                delegate_role,
-                Some(MetadataDelegateRole::Data | MetadataDelegateRole::DataItem)
-            )
-        {
-            if let Some(data) = args.data {
-                if !self.is_mutable {
-                    return Err(MetadataError::DataIsImmutable.into());
-                }
+        // Update Authority or Data Delegates can update this section.
+        match &args {
+            UpdateArgs::V1 { data, .. }
+            | UpdateArgs::AsUpdateAuthorityV2 { data, .. }
+            | UpdateArgs::AsDataDelegateV2 { data, .. }
+            | UpdateArgs::AsDataItemDelegateV2 { data, .. } => {
+                if let Some(data) = data {
+                    if !self.is_mutable {
+                        return Err(MetadataError::DataIsImmutable.into());
+                    }
 
-                assert_data_valid(
-                    &data,
-                    update_authority.key,
-                    self,
-                    false,
-                    update_authority.is_signer,
-                )?;
-                self.data = data;
+                    assert_data_valid(
+                        data,
+                        update_authority.key,
+                        self,
+                        false,
+                        update_authority.is_signer,
+                    )?;
+                    self.data = data.clone();
+                }
             }
+            _ => (),
         }
 
-        // Update Collection section.
-        if matches!(authority_type, AuthorityType::Metadata)
-            || matches!(
-                delegate_role,
-                Some(MetadataDelegateRole::Collection | MetadataDelegateRole::CollectionItem)
-            )
-        {
-            // if the Collection data is 'Set', only allow updating if it is unverified
-            // or if it exactly matches the existing collection info; if the Collection data
-            // is 'Clear', then only set to 'None' if it is unverified.
-            match args.collection {
+        // Update Authority or Collection Delegates can update this section.
+        match &args {
+            UpdateArgs::V1 { collection, .. }
+            | UpdateArgs::AsUpdateAuthorityV2 { collection, .. }
+            | UpdateArgs::AsCollectionDelegateV2 { collection, .. }
+            | UpdateArgs::AsCollectionItemDelegateV2 { collection, .. } => match collection {
+                // if the Collection data is 'Set', only allow updating if it is unverified
+                // or if it exactly matches the existing collection info; if the Collection data
+                // is 'Clear', then only set to 'None' if it is unverified.
                 CollectionToggle::Set(_) => {
-                    let collection_option = args.collection.to_option();
+                    let collection_option = collection.clone().to_option();
                     assert_collection_update_is_valid(false, &self.collection, &collection_option)?;
                     self.collection = collection_option;
                 }
@@ -208,42 +229,42 @@ impl Metadata {
                     }
                 }
                 CollectionToggle::None => { /* nothing to do */ }
-            }
-        }
+            },
+            _ => (),
+        };
 
-        // Update Programmable Config section.
-        if matches!(authority_type, AuthorityType::Metadata)
-            || matches!(
-                delegate_role,
-                Some(
-                    MetadataDelegateRole::ProgrammableConfig
-                        | MetadataDelegateRole::ProgrammableConfigItem
-                )
-            )
-        {
-            // if the rule_set data is either 'Set' or 'Clear', only allow updating if the
-            // token standard is equal to `ProgrammableNonFungible` and no SPL delegate is set.
-            if matches!(args.rule_set, RuleSetToggle::Clear | RuleSetToggle::Set(_)) {
-                if token_standard != TokenStandard::ProgrammableNonFungible {
-                    return Err(MetadataError::InvalidTokenStandard.into());
+        // Update Authority or Programmable Config Delegates can update this section.
+        match &args {
+            UpdateArgs::V1 { rule_set, .. }
+            | UpdateArgs::AsUpdateAuthorityV2 { rule_set, .. }
+            | UpdateArgs::AsProgConfigDelegateV2 { rule_set, .. }
+            | UpdateArgs::AsProgrammableConfigItemDelegateV2 { rule_set, .. } => {
+                // if the rule_set data is either 'Set' or 'Clear', only allow updating if the
+                // token standard is equal to `ProgrammableNonFungible` and no SPL delegate is set.
+                if matches!(rule_set, RuleSetToggle::Clear | RuleSetToggle::Set(_)) {
+                    if token_standard != TokenStandard::ProgrammableNonFungible {
+                        return Err(MetadataError::InvalidTokenStandard.into());
+                    }
+
+                    // Require the token so we can check if it has a token delegate.
+                    let token = token.ok_or(MetadataError::MissingTokenAccount)?;
+
+                    // If the token has a delegate, we cannot update the rule set.
+                    if token.delegate.is_some() {
+                        return Err(MetadataError::CannotUpdateAssetWithDelegate.into());
+                    }
+
+                    self.programmable_config =
+                        rule_set
+                            .clone()
+                            .to_option()
+                            .map(|rule_set| ProgrammableConfig::V1 {
+                                rule_set: Some(rule_set),
+                            });
                 }
-
-                // Require the token so we can check if it has a token delegate.
-                let token = token.ok_or(MetadataError::MissingTokenAccount)?;
-
-                // If the token has a delegate, we cannot update the rule set.
-                if token.delegate.is_some() {
-                    return Err(MetadataError::CannotUpdateAssetWithDelegate.into());
-                }
-
-                self.programmable_config =
-                    args.rule_set
-                        .to_option()
-                        .map(|rule_set| ProgrammableConfig::V1 {
-                            rule_set: Some(rule_set),
-                        });
             }
-        }
+            _ => (),
+        };
 
         // Re-serialize metadata.
         puff_out_data_fields(self);
