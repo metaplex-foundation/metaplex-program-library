@@ -10,7 +10,10 @@ use spl_token::state::Account;
 use crate::{
     assertions::{assert_owned_by, programmable::assert_valid_authorization},
     error::MetadataError,
-    instruction::{CollectionToggle, Context, MetadataDelegateRole, Update, UpdateArgs},
+    instruction::{
+        CollectionDetailsToggle, CollectionToggle, Context, MetadataDelegateRole, Update,
+        UpdateArgs, UsesToggle,
+    },
     pda::{EDITION, PREFIX},
     state::{
         AuthorityRequest, AuthorityResponse, AuthorityType, Collection, Metadata,
@@ -109,16 +112,20 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
     // Validate relationships
 
     let mut metadata = Metadata::from_account_info(ctx.accounts.metadata_info)?;
-    // Mint must match metadata mint
+    // Metadata mint must match mint account key.
     if metadata.mint != *ctx.accounts.mint_info.key {
         return Err(MetadataError::MintMismatch.into());
     }
 
     let (token_pubkey, token) = if let Some(token_info) = ctx.accounts.token_info {
-        (
-            Some(token_info.key),
-            Some(Account::unpack(&token_info.try_borrow_data()?)?),
-        )
+        let token = Account::unpack(&token_info.try_borrow_data()?)?;
+
+        // Token mint must match mint account key.
+        if token.mint != *ctx.accounts.mint_info.key {
+            return Err(MetadataError::MintMismatch.into());
+        }
+
+        (Some(token_info.key), Some(token))
     } else {
         (None, None)
     };
@@ -262,60 +269,45 @@ fn validate_update(
     // validate the delegate role: this consist in checking that
     // the delegate is only updating fields that it has access to
     if let Some(metadata_delegate_role) = metadata_delegate_role {
-        match metadata_delegate_role {
-            MetadataDelegateRole::AuthorityItem => match args {
-                UpdateArgs::AsAuthorityItemDelegateV2 { .. } => (),
-                _ => return Err(MetadataError::InvalidUpdateArgs.into()),
-            },
-            MetadataDelegateRole::Data => match args {
-                UpdateArgs::AsDataDelegateV2 { .. } => (),
-                _ => return Err(MetadataError::InvalidUpdateArgs.into()),
-            },
-            MetadataDelegateRole::DataItem => match args {
-                UpdateArgs::AsDataItemDelegateV2 { .. } => (),
-                _ => return Err(MetadataError::InvalidUpdateArgs.into()),
-            },
-            MetadataDelegateRole::Collection => match args {
-                UpdateArgs::AsCollectionDelegateV2 { .. } => (),
-                _ => return Err(MetadataError::InvalidUpdateArgs.into()),
-            },
-            MetadataDelegateRole::CollectionItem => match args {
-                UpdateArgs::AsCollectionItemDelegateV2 { .. } => (),
-                _ => return Err(MetadataError::InvalidUpdateArgs.into()),
-            },
-            MetadataDelegateRole::ProgrammableConfig => match args {
+        let valid_delegate_update = match (metadata_delegate_role, args) {
+            (MetadataDelegateRole::AuthorityItem, UpdateArgs::AsAuthorityItemDelegateV2 { .. }) => {
+                true
+            }
+            (MetadataDelegateRole::Data, UpdateArgs::AsDataDelegateV2 { .. }) => true,
+            (MetadataDelegateRole::DataItem, UpdateArgs::AsDataItemDelegateV2 { .. }) => true,
+            (MetadataDelegateRole::Collection, UpdateArgs::AsCollectionDelegateV2 { .. }) => true,
+            (
+                MetadataDelegateRole::CollectionItem,
+                UpdateArgs::AsCollectionItemDelegateV2 { .. },
+            ) => true,
+            (
                 // V1 supported Programmable config, leaving here for backwards
                 // compatibility.
+                MetadataDelegateRole::ProgrammableConfig,
                 UpdateArgs::V1 {
-                    data,
-                    primary_sale_happened,
-                    is_mutable,
-                    collection,
-                    uses,
-                    new_update_authority,
-                    collection_details,
+                    new_update_authority: None,
+                    data: None,
+                    primary_sale_happened: None,
+                    is_mutable: None,
+                    collection: CollectionToggle::None,
+                    collection_details: CollectionDetailsToggle::None,
+                    uses: UsesToggle::None,
                     ..
-                } => {
-                    // can only update the programmable config
-                    if data.is_some()
-                        || primary_sale_happened.is_some()
-                        || is_mutable.is_some()
-                        || collection.is_some()
-                        || uses.is_some()
-                        || new_update_authority.is_some()
-                        || collection_details.is_some()
-                    {
-                        return Err(MetadataError::InvalidUpdateArgs.into());
-                    }
-                }
-                UpdateArgs::AsProgConfigDelegateV2 { .. } => (),
-                _ => return Err(MetadataError::InvalidUpdateArgs.into()),
-            },
-            MetadataDelegateRole::ProgrammableConfigItem => match args {
-                UpdateArgs::AsProgrammableConfigItemDelegateV2 { .. } => (),
-                _ => return Err(MetadataError::InvalidUpdateArgs.into()),
-            },
-            _ => return Err(MetadataError::InvalidAuthorityType.into()),
+                },
+            ) => true,
+            (
+                MetadataDelegateRole::ProgrammableConfig,
+                UpdateArgs::AsProgConfigDelegateV2 { .. },
+            ) => true,
+            (
+                MetadataDelegateRole::ProgrammableConfigItem,
+                UpdateArgs::AsProgrammableConfigItemDelegateV2 { .. },
+            ) => true,
+            _ => false,
+        };
+
+        if !valid_delegate_update {
+            return Err(MetadataError::InvalidUpdateArgs.into());
         }
     }
 
@@ -326,13 +318,12 @@ fn check_desired_token_standard(
     existing_or_inferred_token_std: TokenStandard,
     desired_token_standard: TokenStandard,
 ) -> ProgramResult {
-    // This function only allows switching between Fungible and FungibleAsset.  Mint decimals must
-    // be zero.
-    match existing_or_inferred_token_std {
-        TokenStandard::Fungible | TokenStandard::FungibleAsset => match desired_token_standard {
-            TokenStandard::Fungible | TokenStandard::FungibleAsset => Ok(()),
-            _ => Err(MetadataError::InvalidTokenStandard.into()),
-        },
+    match (existing_or_inferred_token_std, desired_token_standard) {
+        (
+            TokenStandard::Fungible | TokenStandard::FungibleAsset,
+            TokenStandard::Fungible | TokenStandard::FungibleAsset,
+        ) => Ok(()),
+        (existing, desired) if existing == desired => Ok(()),
         _ => Err(MetadataError::InvalidTokenStandard.into()),
     }
 }
