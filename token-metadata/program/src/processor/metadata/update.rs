@@ -52,7 +52,7 @@ pub fn update<'a>(
 fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> ProgramResult {
     // Assert signers
 
-    // This account should always be a signer regardless of the authority type,
+    // Authority should always be a signer regardless of the authority type,
     // because at least one signer is required to update the metadata.
     assert_signer(ctx.accounts.authority_info)?;
     assert_signer(ctx.accounts.payer_info)?;
@@ -89,7 +89,7 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
     }
 
     // If the current rule set is passed in, also require the mpl-token-auth-rules program
-    // to be passed in.
+    // to be passed in (and check its program ID).
     if ctx.accounts.authorization_rules_info.is_some() {
         let authorization_rules_program = ctx
             .accounts
@@ -138,6 +138,8 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
             ],
         )?;
     }
+
+    // Check authority.
 
     // There is a special case for collection-level delegates, where the
     // validation should use the collection key as the mint parameter.
