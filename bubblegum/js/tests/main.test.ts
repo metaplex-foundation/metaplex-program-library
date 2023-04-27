@@ -153,7 +153,19 @@ describe('Bubblegum tests', () => {
 
   describe('Unit test compressed NFT instructions', () => {
     let merkleTree: PublicKey;
-    const originalCompressedNFT = makeCompressedNFT('test', 'TST');
+    let creators: Creator[] = [
+      {
+        address: payer,
+        share: 55,
+        verified: false,
+      },
+      {
+        address: new Keypair().publicKey,
+        share: 45,
+        verified: false,
+      },
+    ]
+    const originalCompressedNFT = makeCompressedNFT('test', 'TST', creators);
     beforeEach(async () => {
       await connection.requestAirdrop(payer, LAMPORTS_PER_SOL);
       const result = await setupTreeWithCompressedNFT(
