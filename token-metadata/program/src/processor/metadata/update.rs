@@ -50,42 +50,34 @@ pub fn update<'a>(
 }
 
 fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> ProgramResult {
-    //** Account Validation **/
     // Assert signers
 
     // This account should always be a signer regardless of the authority type,
     // because at least one signer is required to update the metadata.
     assert_signer(ctx.accounts.authority_info)?;
-    // Note that payer is not checked because it is not used.
+    assert_signer(ctx.accounts.payer_info)?;
 
     // Assert program ownership
 
-    assert_owned_by(ctx.accounts.metadata_info, program_id)?;
-    assert_owned_by(ctx.accounts.mint_info, &spl_token::ID)?;
-
-    if let Some(edition) = ctx.accounts.edition_info {
-        assert_owned_by(edition, program_id)?;
-        // checks that we got the correct edition account
-        assert_derivation(
-            program_id,
-            edition,
-            &[
-                PREFIX.as_bytes(),
-                program_id.as_ref(),
-                ctx.accounts.mint_info.key.as_ref(),
-                EDITION.as_bytes(),
-            ],
-        )?;
-    }
-
-    // token owner
-    if let Some(holder_token_account) = ctx.accounts.token_info {
-        assert_owned_by(holder_token_account, &spl_token::ID)?;
-    }
-    // delegate
     if let Some(delegate_record_info) = ctx.accounts.delegate_record_info {
         assert_owned_by(delegate_record_info, &crate::ID)?;
     }
+
+    if let Some(token_info) = ctx.accounts.token_info {
+        assert_owned_by(token_info, &spl_token::ID)?;
+    }
+
+    assert_owned_by(ctx.accounts.mint_info, &spl_token::ID)?;
+    assert_owned_by(ctx.accounts.metadata_info, program_id)?;
+
+    if let Some(edition) = ctx.accounts.edition_info {
+        assert_owned_by(edition, program_id)?;
+    }
+
+    // Note that we do NOT check the ownership of authorization rules account here as this allows
+    // `Update` to be used to correct a previously invalid `RuleSet`.  In practice the ownership of
+    // authorization rules is checked by the Auth Rules program each time the program is invoked to
+    // validate rules.
 
     // Check program IDs
 
@@ -97,13 +89,13 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
     }
 
     // If the current rule set is passed in, also require the mpl-token-auth-rules program
-    // to be passed in.  Note that we do NOT check the ownership of authorization rules
-    // here as this allows `Update` to be used to correct a previously invalid `RuleSet`.
+    // to be passed in.
     if ctx.accounts.authorization_rules_info.is_some() {
         let authorization_rules_program = ctx
             .accounts
             .authorization_rules_program_info
             .ok_or(MetadataError::MissingAuthorizationRulesProgram)?;
+
         if authorization_rules_program.key != &mpl_token_auth_rules::ID {
             return Err(ProgramError::IncorrectProgramId);
         }
@@ -111,12 +103,7 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
 
     // Validate relationships
 
-    let mut metadata = Metadata::from_account_info(ctx.accounts.metadata_info)?;
-    // Metadata mint must match mint account key.
-    if metadata.mint != *ctx.accounts.mint_info.key {
-        return Err(MetadataError::MintMismatch.into());
-    }
-
+    // Token
     let (token_pubkey, token) = if let Some(token_info) = ctx.accounts.token_info {
         let token = Account::unpack(&token_info.try_borrow_data()?)?;
 
@@ -129,6 +116,28 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
     } else {
         (None, None)
     };
+
+    // Metadata
+    let mut metadata = Metadata::from_account_info(ctx.accounts.metadata_info)?;
+    // Metadata mint must match mint account key.
+    if metadata.mint != *ctx.accounts.mint_info.key {
+        return Err(MetadataError::MintMismatch.into());
+    }
+
+    // Edition
+    if let Some(edition) = ctx.accounts.edition_info {
+        // checks that we got the correct edition account
+        assert_derivation(
+            program_id,
+            edition,
+            &[
+                PREFIX.as_bytes(),
+                program_id.as_ref(),
+                ctx.accounts.mint_info.key.as_ref(),
+                EDITION.as_bytes(),
+            ],
+        )?;
+    }
 
     // There is a special case for collection-level delegates, where the
     // validation should use the collection key as the mint parameter.
