@@ -3353,7 +3353,7 @@
           "name": "sysvarInstructions",
           "isMut": false,
           "isSigner": false,
-          "desc": "System program"
+          "desc": "Instructions sysvar account"
         },
         {
           "name": "authorizationRulesProgram",
