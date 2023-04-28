@@ -11,8 +11,8 @@ use crate::{
     assertions::{assert_owned_by, programmable::assert_valid_authorization},
     error::MetadataError,
     instruction::{
-        CollectionDetailsToggle, CollectionToggle, Context, MetadataDelegateRole, Update,
-        UpdateArgs, UsesToggle,
+        CollectionDetailsToggle, CollectionToggle, Context, InternalUpdateArgs,
+        MetadataDelegateRole, Update, UpdateArgs, UsesToggle,
     },
     pda::{EDITION, PREFIX},
     state::{
@@ -200,14 +200,7 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
     })?;
 
     // Validate that authority has permission to use the update args that were provided.
-    validate_update(&args, &authority_type, metadata_delegate_role)?;
-
-    // See if caller passed in a desired token standard.
-    let desired_token_standard = match args {
-        UpdateArgs::AsUpdateAuthorityV2 { token_standard, .. }
-        | UpdateArgs::AsAuthorityItemDelegateV2 { token_standard, .. } => token_standard,
-        _ => None,
-    };
+    let internal_update_args = validate_update(args, &authority_type, metadata_delegate_role)?;
 
     // Find existing token standard from metadata or infer it.
     let existing_or_inferred_token_std = if let Some(token_standard) = metadata.token_standard {
@@ -216,9 +209,9 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
         check_token_standard(ctx.accounts.mint_info, ctx.accounts.edition_info)?
     };
 
-    // If there is a desired token standard, use it if it passes the check.  If there is not a
-    // desired token standard, use the existing or inferred token standard.
-    let token_standard = match desired_token_standard {
+    // If the caller passed in a token standard, use it if it passes the check.  If the user did
+    // not pass in a token standard, use the existing or inferred token standard.
+    let token_standard = match internal_update_args.token_standard {
         Some(desired_token_standard) => {
             check_desired_token_standard(existing_or_inferred_token_std, desired_token_standard)?;
             desired_token_standard
@@ -242,7 +235,7 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
     // If we reach here without errors we have validated that the authority is allowed to
     // perform an update.
     metadata.update_v1(
-        args,
+        internal_update_args,
         ctx.accounts.authority_info,
         ctx.accounts.metadata_info,
         token,
@@ -255,15 +248,66 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
 /// Validates that the authority is only updating metadata fields
 /// that it has access to.
 fn validate_update(
-    args: &UpdateArgs,
+    args: UpdateArgs,
     authority_type: &AuthorityType,
     metadata_delegate_role: Option<MetadataDelegateRole>,
-) -> ProgramResult {
+) -> Result<InternalUpdateArgs, ProgramError> {
+    let mut internal_update_args = InternalUpdateArgs::default();
+
     // validate the authority type
     match authority_type {
         AuthorityType::Metadata => {
             // metadata authority is the paramount (update) authority
             msg!("Auth type: Metadata");
+
+            match args {
+                UpdateArgs::V1 {
+                    new_update_authority,
+                    data,
+                    primary_sale_happened,
+                    is_mutable,
+                    collection,
+                    collection_details,
+                    uses,
+                    rule_set,
+                    ..
+                } => {
+                    internal_update_args.new_update_authority = new_update_authority;
+                    internal_update_args.data = data;
+                    internal_update_args.primary_sale_happened = primary_sale_happened;
+                    internal_update_args.is_mutable = is_mutable;
+                    internal_update_args.collection = collection;
+                    internal_update_args.collection_details = collection_details;
+                    internal_update_args.uses = uses;
+                    internal_update_args.rule_set = rule_set;
+                    internal_update_args.token_standard = None;
+                }
+                UpdateArgs::AsUpdateAuthorityV2 {
+                    new_update_authority,
+                    data,
+                    primary_sale_happened,
+                    is_mutable,
+                    collection,
+                    collection_details,
+                    uses,
+                    rule_set,
+                    token_standard,
+                    ..
+                } => {
+                    internal_update_args.new_update_authority = new_update_authority;
+                    internal_update_args.data = data;
+                    internal_update_args.primary_sale_happened = primary_sale_happened;
+                    internal_update_args.is_mutable = is_mutable;
+                    internal_update_args.collection = collection;
+                    internal_update_args.collection_details = collection_details;
+                    internal_update_args.uses = uses;
+                    internal_update_args.rule_set = rule_set;
+                    internal_update_args.token_standard = token_standard;
+                }
+                _ => return Err(MetadataError::InvalidUpdateArgs.into()),
+            }
+
+            return Ok(internal_update_args);
         }
         AuthorityType::Holder => {
             // support for holder update
@@ -280,17 +324,40 @@ fn validate_update(
     // validate the delegate role: this consist in checking that
     // the delegate is only updating fields that it has access to
     if let Some(metadata_delegate_role) = metadata_delegate_role {
-        let valid_delegate_update = match (metadata_delegate_role, args) {
-            (MetadataDelegateRole::AuthorityItem, UpdateArgs::AsAuthorityItemDelegateV2 { .. }) => {
-                true
+        match (metadata_delegate_role, args) {
+            (
+                MetadataDelegateRole::AuthorityItem,
+                UpdateArgs::AsAuthorityItemDelegateV2 {
+                    new_update_authority,
+                    primary_sale_happened,
+                    is_mutable,
+                    token_standard,
+                    ..
+                },
+            ) => {
+                internal_update_args.new_update_authority = new_update_authority;
+                internal_update_args.primary_sale_happened = primary_sale_happened;
+                internal_update_args.is_mutable = is_mutable;
+                internal_update_args.token_standard = token_standard;
             }
-            (MetadataDelegateRole::Data, UpdateArgs::AsDataDelegateV2 { .. }) => true,
-            (MetadataDelegateRole::DataItem, UpdateArgs::AsDataItemDelegateV2 { .. }) => true,
-            (MetadataDelegateRole::Collection, UpdateArgs::AsCollectionDelegateV2 { .. }) => true,
+            (MetadataDelegateRole::Data, UpdateArgs::AsDataDelegateV2 { data, .. }) => {
+                internal_update_args.data = data;
+            }
+            (MetadataDelegateRole::DataItem, UpdateArgs::AsDataItemDelegateV2 { data, .. }) => {
+                internal_update_args.data = data;
+            }
+            (
+                MetadataDelegateRole::Collection,
+                UpdateArgs::AsCollectionDelegateV2 { collection, .. },
+            ) => {
+                internal_update_args.collection = collection;
+            }
             (
                 MetadataDelegateRole::CollectionItem,
-                UpdateArgs::AsCollectionItemDelegateV2 { .. },
-            ) => true,
+                UpdateArgs::AsCollectionItemDelegateV2 { collection, .. },
+            ) => {
+                internal_update_args.collection = collection;
+            }
             (
                 // V1 supported Programmable config, leaving here for backwards
                 // compatibility.
@@ -303,26 +370,29 @@ fn validate_update(
                     collection: CollectionToggle::None,
                     collection_details: CollectionDetailsToggle::None,
                     uses: UsesToggle::None,
+                    rule_set,
                     ..
                 },
-            ) => true,
+            ) => {
+                internal_update_args.rule_set = rule_set;
+            }
             (
                 MetadataDelegateRole::ProgrammableConfig,
-                UpdateArgs::AsProgConfigDelegateV2 { .. },
-            ) => true,
+                UpdateArgs::AsProgConfigDelegateV2 { rule_set, .. },
+            ) => {
+                internal_update_args.rule_set = rule_set;
+            }
             (
                 MetadataDelegateRole::ProgrammableConfigItem,
-                UpdateArgs::AsProgrammableConfigItemDelegateV2 { .. },
-            ) => true,
-            _ => false,
+                UpdateArgs::AsProgrammableConfigItemDelegateV2 { rule_set, .. },
+            ) => {
+                internal_update_args.rule_set = rule_set;
+            }
+            _ => return Err(MetadataError::InvalidUpdateArgs.into()),
         };
-
-        if !valid_delegate_update {
-            return Err(MetadataError::InvalidUpdateArgs.into());
-        }
     }
 
-    Ok(())
+    Ok(internal_update_args)
 }
 
 fn check_desired_token_standard(
