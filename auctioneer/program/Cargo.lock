@@ -2010,7 +2010,7 @@ dependencies = [
 
 [[package]]
 name = "mpl-auction-house"
-version = "1.4.0"
+version = "1.4.1"
 dependencies = [
  "anchor-lang",
  "anchor-spl",
