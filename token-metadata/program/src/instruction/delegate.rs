@@ -11,6 +11,7 @@ use solana_program::{
 use super::InstructionBuilder;
 use crate::{instruction::MetadataInstruction, processor::AuthorizationData};
 
+/// Delegate args can specify Metadata delegates and Token delegates.
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
@@ -29,7 +30,7 @@ pub enum DelegateArgs {
         /// Required authorization data to validate the request.
         authorization_data: Option<AuthorizationData>,
     },
-    UpdateV1 {
+    DataV1 {
         /// Required authorization data to validate the request.
         authorization_data: Option<AuthorizationData>,
     },
@@ -57,6 +58,22 @@ pub enum DelegateArgs {
         /// Required authorization data to validate the request.
         authorization_data: Option<AuthorizationData>,
     },
+    AuthorityItemV1 {
+        /// Required authorization data to validate the request.
+        authorization_data: Option<AuthorizationData>,
+    },
+    DataItemV1 {
+        /// Required authorization data to validate the request.
+        authorization_data: Option<AuthorizationData>,
+    },
+    CollectionItemV1 {
+        /// Required authorization data to validate the request.
+        authorization_data: Option<AuthorizationData>,
+    },
+    ProgrammableConfigItemV1 {
+        /// Required authorization data to validate the request.
+        authorization_data: Option<AuthorizationData>,
+    },
 }
 
 #[repr(C)]
@@ -66,34 +83,44 @@ pub enum RevokeArgs {
     CollectionV1,
     SaleV1,
     TransferV1,
-    UpdateV1,
+    DataV1,
     UtilityV1,
     StakingV1,
     StandardV1,
     LockedTransferV1,
     ProgrammableConfigV1,
     MigrationV1,
+    AuthorityItemV1,
+    DataItemV1,
+    CollectionItemV1,
+    ProgrammableConfigItemV1,
 }
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, Copy)]
 pub enum MetadataDelegateRole {
-    Authority,
+    AuthorityItem,
     Collection,
     Use,
-    Update,
+    Data,
     ProgrammableConfig,
+    DataItem,
+    CollectionItem,
+    ProgrammableConfigItem,
 }
 
 impl fmt::Display for MetadataDelegateRole {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let message = match self {
-            Self::Authority => "authority_delegate".to_string(),
+            Self::AuthorityItem => "authority_item_delegate".to_string(),
             Self::Collection => "collection_delegate".to_string(),
             Self::Use => "use_delegate".to_string(),
-            Self::Update => "update_delegate".to_string(),
+            Self::Data => "data_delegate".to_string(),
             Self::ProgrammableConfig => "programmable_config_delegate".to_string(),
+            Self::DataItem => "data_item_delegate".to_string(),
+            Self::CollectionItem => "collection_item_delegate".to_string(),
+            Self::ProgrammableConfigItem => "prog_config_item_delegate".to_string(),
         };
 
         write!(f, "{message}")

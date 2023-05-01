@@ -1177,7 +1177,7 @@ test('Update: Invalid Update Authority Fails', async (t) => {
   await updateTx.assertError(t, /Invalid authority type/);
 });
 
-test('Update: Delegate Authority Type Not Supported', async (t) => {
+test('Update: Delegate Authority Role Not Allowed to Update Data', async (t) => {
   const API = new InitTransactions();
   const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
 
@@ -1192,7 +1192,7 @@ test('Update: Delegate Authority Type Not Supported', async (t) => {
       Buffer.from('metadata'),
       PROGRAM_ID.toBuffer(),
       daManager.mint.toBuffer(),
-      Buffer.from('update_delegate'),
+      Buffer.from('collection_item_delegate'),
       payer.publicKey.toBuffer(),
       delegate.publicKey.toBuffer(),
     ],
@@ -1201,7 +1201,7 @@ test('Update: Delegate Authority Type Not Supported', async (t) => {
   amman.addr.addLabel('Delegate Record', delegateRecord);
 
   const args: DelegateArgs = {
-    __kind: 'UpdateV1',
+    __kind: 'CollectionItemV1',
     authorizationData: null,
   };
 
@@ -1246,7 +1246,7 @@ test('Update: Delegate Authority Type Not Supported', async (t) => {
     daManager.masterEdition,
   );
   updateTx.then((x) =>
-    x.assertLogs(t, [/Invalid authority type/i], {
+    x.assertLogs(t, [/Authority cannot apply all update args/i], {
       txLabel: 'tx: Update',
     }),
   );

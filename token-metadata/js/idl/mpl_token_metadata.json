@@ -3332,7 +3332,7 @@
         },
         {
           "name": "edition",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false,
           "desc": "Edition account",
           "optional": true
@@ -3353,7 +3353,7 @@
           "name": "sysvarInstructions",
           "isMut": false,
           "isSigner": false,
-          "desc": "System program"
+          "desc": "Instructions sysvar account"
         },
         {
           "name": "authorizationRulesProgram",
@@ -4671,7 +4671,7 @@
             ]
           },
           {
-            "name": "UpdateV1",
+            "name": "DataV1",
             "fields": [
               {
                 "name": "authorization_data",
@@ -4759,6 +4759,58 @@
                 }
               }
             ]
+          },
+          {
+            "name": "AuthorityItemV1",
+            "fields": [
+              {
+                "name": "authorization_data",
+                "type": {
+                  "option": {
+                    "defined": "AuthorizationData"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "name": "DataItemV1",
+            "fields": [
+              {
+                "name": "authorization_data",
+                "type": {
+                  "option": {
+                    "defined": "AuthorizationData"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "name": "CollectionItemV1",
+            "fields": [
+              {
+                "name": "authorization_data",
+                "type": {
+                  "option": {
+                    "defined": "AuthorizationData"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "name": "ProgrammableConfigItemV1",
+            "fields": [
+              {
+                "name": "authorization_data",
+                "type": {
+                  "option": {
+                    "defined": "AuthorizationData"
+                  }
+                }
+              }
+            ]
           }
         ]
       }
@@ -4778,7 +4830,7 @@
             "name": "TransferV1"
           },
           {
-            "name": "UpdateV1"
+            "name": "DataV1"
           },
           {
             "name": "UtilityV1"
@@ -4797,6 +4849,18 @@
           },
           {
             "name": "MigrationV1"
+          },
+          {
+            "name": "AuthorityItemV1"
+          },
+          {
+            "name": "DataItemV1"
+          },
+          {
+            "name": "CollectionItemV1"
+          },
+          {
+            "name": "ProgrammableConfigItemV1"
           }
         ]
       }
@@ -4807,7 +4871,7 @@
         "kind": "enum",
         "variants": [
           {
-            "name": "Authority"
+            "name": "AuthorityItem"
           },
           {
             "name": "Collection"
@@ -4816,10 +4880,19 @@
             "name": "Use"
           },
           {
-            "name": "Update"
+            "name": "Data"
           },
           {
             "name": "ProgrammableConfig"
+          },
+          {
+            "name": "DataItem"
+          },
+          {
+            "name": "CollectionItem"
+          },
+          {
+            "name": "ProgrammableConfigItem"
           }
         ]
       }
@@ -4959,6 +5032,234 @@
                   "defined": "UsesToggle"
                 }
               },
+              {
+                "name": "rule_set",
+                "type": {
+                  "defined": "RuleSetToggle"
+                }
+              },
+              {
+                "name": "authorization_data",
+                "type": {
+                  "option": {
+                    "defined": "AuthorizationData"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "name": "AsUpdateAuthorityV2",
+            "fields": [
+              {
+                "name": "new_update_authority",
+                "type": {
+                  "option": "publicKey"
+                }
+              },
+              {
+                "name": "data",
+                "type": {
+                  "option": {
+                    "defined": "Data"
+                  }
+                }
+              },
+              {
+                "name": "primary_sale_happened",
+                "type": {
+                  "option": "bool"
+                }
+              },
+              {
+                "name": "is_mutable",
+                "type": {
+                  "option": "bool"
+                }
+              },
+              {
+                "name": "collection",
+                "type": {
+                  "defined": "CollectionToggle"
+                }
+              },
+              {
+                "name": "collection_details",
+                "type": {
+                  "defined": "CollectionDetailsToggle"
+                }
+              },
+              {
+                "name": "uses",
+                "type": {
+                  "defined": "UsesToggle"
+                }
+              },
+              {
+                "name": "rule_set",
+                "type": {
+                  "defined": "RuleSetToggle"
+                }
+              },
+              {
+                "name": "token_standard",
+                "type": {
+                  "option": {
+                    "defined": "TokenStandard"
+                  }
+                }
+              },
+              {
+                "name": "authorization_data",
+                "type": {
+                  "option": {
+                    "defined": "AuthorizationData"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "name": "AsAuthorityItemDelegateV2",
+            "fields": [
+              {
+                "name": "new_update_authority",
+                "type": {
+                  "option": "publicKey"
+                }
+              },
+              {
+                "name": "primary_sale_happened",
+                "type": {
+                  "option": "bool"
+                }
+              },
+              {
+                "name": "is_mutable",
+                "type": {
+                  "option": "bool"
+                }
+              },
+              {
+                "name": "token_standard",
+                "type": {
+                  "option": {
+                    "defined": "TokenStandard"
+                  }
+                }
+              },
+              {
+                "name": "authorization_data",
+                "type": {
+                  "option": {
+                    "defined": "AuthorizationData"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "name": "AsCollectionDelegateV2",
+            "fields": [
+              {
+                "name": "collection",
+                "type": {
+                  "defined": "CollectionToggle"
+                }
+              },
+              {
+                "name": "authorization_data",
+                "type": {
+                  "option": {
+                    "defined": "AuthorizationData"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "name": "AsDataDelegateV2",
+            "fields": [
+              {
+                "name": "data",
+                "type": {
+                  "option": {
+                    "defined": "Data"
+                  }
+                }
+              },
+              {
+                "name": "authorization_data",
+                "type": {
+                  "option": {
+                    "defined": "AuthorizationData"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "name": "AsProgConfigDelegateV2",
+            "fields": [
+              {
+                "name": "rule_set",
+                "type": {
+                  "defined": "RuleSetToggle"
+                }
+              },
+              {
+                "name": "authorization_data",
+                "type": {
+                  "option": {
+                    "defined": "AuthorizationData"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "name": "AsDataItemDelegateV2",
+            "fields": [
+              {
+                "name": "data",
+                "type": {
+                  "option": {
+                    "defined": "Data"
+                  }
+                }
+              },
+              {
+                "name": "authorization_data",
+                "type": {
+                  "option": {
+                    "defined": "AuthorizationData"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "name": "AsCollectionItemDelegateV2",
+            "fields": [
+              {
+                "name": "collection",
+                "type": {
+                  "defined": "CollectionToggle"
+                }
+              },
+              {
+                "name": "authorization_data",
+                "type": {
+                  "option": {
+                    "defined": "AuthorizationData"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "name": "AsProgrammableConfigItemDelegateV2",
+            "fields": [
               {
                 "name": "rule_set",
                 "type": {
