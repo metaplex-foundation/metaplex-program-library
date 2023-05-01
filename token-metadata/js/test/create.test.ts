@@ -32,7 +32,7 @@ test('Create: ProgrammableNonFungible', async (t) => {
         verified: false,
       },
     ],
-    primarySaleHappened: false,
+    primarySaleHappened: true,
     isMutable: true,
     tokenStandard: TokenStandard.ProgrammableNonFungible,
     collection: null,
@@ -51,7 +51,7 @@ test('Create: ProgrammableNonFungible', async (t) => {
     data: {
       sellerFeeBasisPoints: 0,
     },
-    primarySaleHappened: false,
+    primarySaleHappened: true,
     isMutable: true,
     tokenStandard: TokenStandard.ProgrammableNonFungible,
   });

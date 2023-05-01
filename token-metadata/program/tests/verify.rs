@@ -2027,12 +2027,12 @@ mod verify_collection {
     }
 
     #[tokio::test]
-    async fn collections_update_delegate_cannot_verify() {
-        let delegate_args = DelegateArgs::DataV1 {
+    async fn collections_collection_item_delegate_cannot_verify() {
+        let delegate_args = DelegateArgs::CollectionItemV1 {
             authorization_data: None,
         };
 
-        let delegate_role = MetadataDelegateRole::Data;
+        let delegate_role = MetadataDelegateRole::CollectionItem;
 
         other_metadata_delegates_cannot_verify(
             AssetToDelegate::CollectionParent,
@@ -2071,12 +2071,12 @@ mod verify_collection {
     }
 
     #[tokio::test]
-    async fn items_update_delegate_cannot_verify() {
-        let delegate_args = DelegateArgs::DataV1 {
+    async fn items_collection_item_delegate_cannot_verify() {
+        let delegate_args = DelegateArgs::CollectionItemV1 {
             authorization_data: None,
         };
 
-        let delegate_role = MetadataDelegateRole::Data;
+        let delegate_role = MetadataDelegateRole::CollectionItem;
 
         other_metadata_delegates_cannot_verify(AssetToDelegate::Item, delegate_args, delegate_role)
             .await;

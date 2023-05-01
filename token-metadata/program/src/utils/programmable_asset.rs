@@ -4,7 +4,7 @@ use mpl_token_auth_rules::{
 };
 use mpl_utils::{create_or_allocate_account_raw, token::TokenTransferParams};
 use solana_program::{
-    account_info::AccountInfo, entrypoint::ProgramResult, msg, program::invoke_signed,
+    account_info::AccountInfo, entrypoint::ProgramResult, program::invoke_signed,
     program_error::ProgramError, program_option::COption, pubkey::Pubkey,
 };
 use spl_token::{
@@ -197,7 +197,6 @@ pub fn auth_rules_validate(params: AuthRulesValidateParams) -> ProgramResult {
     } = params;
 
     if is_wallet_to_wallet {
-        msg!("Wallet to wallet");
         return Ok(());
     }
 
@@ -211,8 +210,6 @@ pub fn auth_rules_validate(params: AuthRulesValidateParams) -> ProgramResult {
 
     if let Some(ref config) = programmable_config {
         if let ProgrammableConfig::V1 { rule_set: Some(_) } = config {
-            msg!("Programmable config exists");
-
             assert_valid_authorization(auth_rules_info, config)?;
 
             // We can safely unwrap here because they were all checked for existence

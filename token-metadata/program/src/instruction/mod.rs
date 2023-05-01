@@ -719,7 +719,7 @@ pub enum MetadataInstruction {
     #[account(5, optional, name="edition", desc="Edition account")]
     #[account(6, signer, writable, name="payer", desc="Payer")]
     #[account(7, name="system_program", desc="System program")]
-    #[account(8, name="sysvar_instructions", desc="System program")]
+    #[account(8, name="sysvar_instructions", desc="Instructions sysvar account")]
     #[account(9, optional, name="authorization_rules_program", desc="Token Authorization Rules Program")]
     #[account(10, optional, name="authorization_rules", desc="Token Authorization Rules account")]
     #[default_optional_accounts]

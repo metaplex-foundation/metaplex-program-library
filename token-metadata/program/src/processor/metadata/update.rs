@@ -11,7 +11,8 @@ use crate::{
     assertions::{assert_owned_by, programmable::assert_valid_authorization},
     error::MetadataError,
     instruction::{
-        CollectionToggle, Context, InternalUpdateArgs, MetadataDelegateRole, Update, UpdateArgs,
+        CollectionDetailsToggle, CollectionToggle, Context, MetadataDelegateRole, Update,
+        UpdateArgs, UsesToggle,
     },
     pda::{EDITION, PREFIX},
     state::{
@@ -49,21 +50,82 @@ pub fn update<'a>(
 }
 
 fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> ProgramResult {
-    //** Account Validation **/
     // Assert signers
 
-    // This account should always be a signer regardless of the authority type,
+    // Authority should always be a signer regardless of the authority type,
     // because at least one signer is required to update the metadata.
     assert_signer(ctx.accounts.authority_info)?;
-    // Note that payer is not checked because it is not used.
+    assert_signer(ctx.accounts.payer_info)?;
 
     // Assert program ownership
 
-    assert_owned_by(ctx.accounts.metadata_info, program_id)?;
+    if let Some(delegate_record_info) = ctx.accounts.delegate_record_info {
+        assert_owned_by(delegate_record_info, &crate::ID)?;
+    }
+
+    if let Some(token_info) = ctx.accounts.token_info {
+        assert_owned_by(token_info, &spl_token::ID)?;
+    }
+
     assert_owned_by(ctx.accounts.mint_info, &spl_token::ID)?;
+    assert_owned_by(ctx.accounts.metadata_info, program_id)?;
 
     if let Some(edition) = ctx.accounts.edition_info {
         assert_owned_by(edition, program_id)?;
+    }
+
+    // Note that we do NOT check the ownership of authorization rules account here as this allows
+    // `Update` to be used to correct a previously invalid `RuleSet`.  In practice the ownership of
+    // authorization rules is checked by the Auth Rules program each time the program is invoked to
+    // validate rules.
+
+    // Check program IDs
+
+    if ctx.accounts.system_program_info.key != &solana_program::system_program::ID {
+        return Err(ProgramError::IncorrectProgramId);
+    }
+    if ctx.accounts.sysvar_instructions_info.key != &sysvar::instructions::ID {
+        return Err(ProgramError::IncorrectProgramId);
+    }
+
+    // If the current rule set is passed in, also require the mpl-token-auth-rules program
+    // to be passed in (and check its program ID).
+    if ctx.accounts.authorization_rules_info.is_some() {
+        let authorization_rules_program = ctx
+            .accounts
+            .authorization_rules_program_info
+            .ok_or(MetadataError::MissingAuthorizationRulesProgram)?;
+
+        if authorization_rules_program.key != &mpl_token_auth_rules::ID {
+            return Err(ProgramError::IncorrectProgramId);
+        }
+    }
+
+    // Validate relationships
+
+    // Token
+    let (token_pubkey, token) = if let Some(token_info) = ctx.accounts.token_info {
+        let token = Account::unpack(&token_info.try_borrow_data()?)?;
+
+        // Token mint must match mint account key.
+        if token.mint != *ctx.accounts.mint_info.key {
+            return Err(MetadataError::MintMismatch.into());
+        }
+
+        (Some(token_info.key), Some(token))
+    } else {
+        (None, None)
+    };
+
+    // Metadata
+    let mut metadata = Metadata::from_account_info(ctx.accounts.metadata_info)?;
+    // Metadata mint must match mint account key.
+    if metadata.mint != *ctx.accounts.mint_info.key {
+        return Err(MetadataError::MintMismatch.into());
+    }
+
+    // Edition
+    if let Some(edition) = ctx.accounts.edition_info {
         // checks that we got the correct edition account
         assert_derivation(
             program_id,
@@ -77,71 +139,26 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
         )?;
     }
 
-    // token owner
-    if let Some(holder_token_account) = ctx.accounts.token_info {
-        assert_owned_by(holder_token_account, &spl_token::ID)?;
-    }
-    // delegate
-    if let Some(delegate_record_info) = ctx.accounts.delegate_record_info {
-        assert_owned_by(delegate_record_info, &crate::ID)?;
-    }
+    // Check authority.
 
-    // Check program IDs
-
-    if ctx.accounts.system_program_info.key != &solana_program::system_program::ID {
-        return Err(ProgramError::IncorrectProgramId);
-    }
-    if ctx.accounts.sysvar_instructions_info.key != &sysvar::instructions::ID {
-        return Err(ProgramError::IncorrectProgramId);
-    }
-
-    // If the current rule set is passed in, also require the mpl-token-auth-rules program
-    // to be passed in.  Note that we do NOT check the ownership of authorization rules
-    // here as this allows `Update` to be used to correct a previously invalid `RuleSet`.
-    if ctx.accounts.authorization_rules_info.is_some() {
-        let authorization_rules_program = ctx
-            .accounts
-            .authorization_rules_program_info
-            .ok_or(MetadataError::MissingAuthorizationRulesProgram)?;
-        if authorization_rules_program.key != &mpl_token_auth_rules::ID {
-            return Err(ProgramError::IncorrectProgramId);
-        }
-    }
-
-    // Validate relationships
-
-    let mut metadata = Metadata::from_account_info(ctx.accounts.metadata_info)?;
-    // Mint must match metadata mint
-    if metadata.mint != *ctx.accounts.mint_info.key {
-        return Err(MetadataError::MintMismatch.into());
-    }
-
-    let (token_pubkey, token) = if let Some(token_info) = ctx.accounts.token_info {
-        (
-            Some(token_info.key),
-            Some(Account::unpack(&token_info.try_borrow_data()?)?),
-        )
-    } else {
-        (None, None)
-    };
-
-    // Copy the args into a struct that contains all available fields.
-    let internal_args = InternalUpdateArgs::from(args.clone());
-
-    // there is a special case for collection-level delegates, where the
-    // validation should use the collection key as the mint parameter
+    // There is a special case for collection-level delegates, where the
+    // validation should use the collection key as the mint parameter.
     let existing_collection_mint = metadata
         .collection
         .as_ref()
         .map(|Collection { key, .. }| key);
 
-    // Check if caller passed in a collection and if so use that.  Note that if the
-    // delegate role from `get_authority_type` comes back as something other than
-    // `MetadataDelegateRole::Collection` or `MetadataDelegateRole::CollectionItem`,
-    // then it will fail in `validate_update` because those are the only roles that
-    // can change collection.
-    let collection_mint = match &internal_args.collection {
-        CollectionToggle::Set(Collection { key, .. }) => Some(key),
+    // Check if caller passed in a collection and if so use that.  Note that
+    // `validate_update` checks that the authority has permission to pass in
+    // a new collection value.
+    let collection_mint = match &args {
+        UpdateArgs::V1 { collection, .. }
+        | UpdateArgs::AsUpdateAuthorityV2 { collection, .. }
+        | UpdateArgs::AsCollectionDelegateV2 { collection, .. }
+        | UpdateArgs::AsCollectionItemDelegateV2 { collection, .. } => match collection {
+            CollectionToggle::Set(Collection { key, .. }) => Some(key),
+            _ => existing_collection_mint,
+        },
         _ => existing_collection_mint,
     };
 
@@ -185,6 +202,13 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
     // Validate that authority has permission to use the update args that were provided.
     validate_update(&args, &authority_type, metadata_delegate_role)?;
 
+    // See if caller passed in a desired token standard.
+    let desired_token_standard = match args {
+        UpdateArgs::AsUpdateAuthorityV2 { token_standard, .. }
+        | UpdateArgs::AsAuthorityItemDelegateV2 { token_standard, .. } => token_standard,
+        _ => None,
+    };
+
     // Find existing token standard from metadata or infer it.
     let existing_or_inferred_token_std = if let Some(token_standard) = metadata.token_standard {
         token_standard
@@ -194,7 +218,7 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
 
     // If there is a desired token standard, use it if it passes the check.  If there is not a
     // desired token standard, use the existing or inferred token standard.
-    let token_standard = match internal_args.token_standard {
+    let token_standard = match desired_token_standard {
         Some(desired_token_standard) => {
             check_desired_token_standard(existing_or_inferred_token_std, desired_token_standard)?;
             desired_token_standard
@@ -223,8 +247,6 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
         ctx.accounts.metadata_info,
         token,
         token_standard,
-        authority_type,
-        metadata_delegate_role,
     )?;
 
     Ok(())
@@ -258,60 +280,45 @@ fn validate_update(
     // validate the delegate role: this consist in checking that
     // the delegate is only updating fields that it has access to
     if let Some(metadata_delegate_role) = metadata_delegate_role {
-        match metadata_delegate_role {
-            MetadataDelegateRole::AuthorityItem => match args {
-                UpdateArgs::AsAuthorityItemDelegateV2 { .. } => (),
-                _ => return Err(MetadataError::InvalidUpdateArgs.into()),
-            },
-            MetadataDelegateRole::Data => match args {
-                UpdateArgs::AsDataDelegateV2 { .. } => (),
-                _ => return Err(MetadataError::InvalidUpdateArgs.into()),
-            },
-            MetadataDelegateRole::DataItem => match args {
-                UpdateArgs::AsDataItemDelegateV2 { .. } => (),
-                _ => return Err(MetadataError::InvalidUpdateArgs.into()),
-            },
-            MetadataDelegateRole::Collection => match args {
-                UpdateArgs::AsCollectionDelegateV2 { .. } => (),
-                _ => return Err(MetadataError::InvalidUpdateArgs.into()),
-            },
-            MetadataDelegateRole::CollectionItem => match args {
-                UpdateArgs::AsCollectionItemDelegateV2 { .. } => (),
-                _ => return Err(MetadataError::InvalidUpdateArgs.into()),
-            },
-            MetadataDelegateRole::ProgrammableConfig => match args {
+        let valid_delegate_update = match (metadata_delegate_role, args) {
+            (MetadataDelegateRole::AuthorityItem, UpdateArgs::AsAuthorityItemDelegateV2 { .. }) => {
+                true
+            }
+            (MetadataDelegateRole::Data, UpdateArgs::AsDataDelegateV2 { .. }) => true,
+            (MetadataDelegateRole::DataItem, UpdateArgs::AsDataItemDelegateV2 { .. }) => true,
+            (MetadataDelegateRole::Collection, UpdateArgs::AsCollectionDelegateV2 { .. }) => true,
+            (
+                MetadataDelegateRole::CollectionItem,
+                UpdateArgs::AsCollectionItemDelegateV2 { .. },
+            ) => true,
+            (
                 // V1 supported Programmable config, leaving here for backwards
                 // compatibility.
+                MetadataDelegateRole::ProgrammableConfig,
                 UpdateArgs::V1 {
-                    data,
-                    primary_sale_happened,
-                    is_mutable,
-                    collection,
-                    uses,
-                    new_update_authority,
-                    collection_details,
+                    new_update_authority: None,
+                    data: None,
+                    primary_sale_happened: None,
+                    is_mutable: None,
+                    collection: CollectionToggle::None,
+                    collection_details: CollectionDetailsToggle::None,
+                    uses: UsesToggle::None,
                     ..
-                } => {
-                    // can only update the programmable config
-                    if data.is_some()
-                        || primary_sale_happened.is_some()
-                        || is_mutable.is_some()
-                        || collection.is_some()
-                        || uses.is_some()
-                        || new_update_authority.is_some()
-                        || collection_details.is_some()
-                    {
-                        return Err(MetadataError::InvalidUpdateArgs.into());
-                    }
-                }
-                UpdateArgs::AsProgConfigDelegateV2 { .. } => (),
-                _ => return Err(MetadataError::InvalidUpdateArgs.into()),
-            },
-            MetadataDelegateRole::ProgrammableConfigItem => match args {
-                UpdateArgs::AsProgrammableConfigItemDelegateV2 { .. } => (),
-                _ => return Err(MetadataError::InvalidUpdateArgs.into()),
-            },
-            _ => return Err(MetadataError::InvalidAuthorityType.into()),
+                },
+            ) => true,
+            (
+                MetadataDelegateRole::ProgrammableConfig,
+                UpdateArgs::AsProgConfigDelegateV2 { .. },
+            ) => true,
+            (
+                MetadataDelegateRole::ProgrammableConfigItem,
+                UpdateArgs::AsProgrammableConfigItemDelegateV2 { .. },
+            ) => true,
+            _ => false,
+        };
+
+        if !valid_delegate_update {
+            return Err(MetadataError::InvalidUpdateArgs.into());
         }
     }
 
@@ -322,13 +329,12 @@ fn check_desired_token_standard(
     existing_or_inferred_token_std: TokenStandard,
     desired_token_standard: TokenStandard,
 ) -> ProgramResult {
-    // This function only allows switching between Fungible and FungibleAsset.  Mint decimals must
-    // be zero.
-    match existing_or_inferred_token_std {
-        TokenStandard::Fungible | TokenStandard::FungibleAsset => match desired_token_standard {
-            TokenStandard::Fungible | TokenStandard::FungibleAsset => Ok(()),
-            _ => Err(MetadataError::InvalidTokenStandard.into()),
-        },
+    match (existing_or_inferred_token_std, desired_token_standard) {
+        (
+            TokenStandard::Fungible | TokenStandard::FungibleAsset,
+            TokenStandard::Fungible | TokenStandard::FungibleAsset,
+        ) => Ok(()),
+        (existing, desired) if existing == desired => Ok(()),
         _ => Err(MetadataError::InvalidTokenStandard.into()),
     }
 }
