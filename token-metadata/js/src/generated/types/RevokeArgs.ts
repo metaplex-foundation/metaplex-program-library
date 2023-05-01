@@ -14,13 +14,17 @@ export enum RevokeArgs {
   CollectionV1,
   SaleV1,
   TransferV1,
-  UpdateV1,
+  DataV1,
   UtilityV1,
   StakingV1,
   StandardV1,
   LockedTransferV1,
   ProgrammableConfigV1,
   MigrationV1,
+  AuthorityItemV1,
+  DataItemV1,
+  CollectionItemV1,
+  ProgrammableConfigItemV1,
 }
 
 /**

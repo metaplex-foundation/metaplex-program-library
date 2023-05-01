@@ -15,7 +15,7 @@ use crate::{
     processor::AuthorizationData,
     state::{
         AssetData, Collection, CollectionDetails, Creator, Data, DataV2, MigrationType,
-        PrintSupply, Uses,
+        PrintSupply, TokenStandard, Uses,
     },
 };
 
@@ -71,9 +71,9 @@ pub enum TransferArgs {
 
 /// Struct representing the values to be updated for an `update` instructions.
 ///
-/// Values that are set to 'None' are not changed; any value set to `Some(_)` will
-/// have its value updated. There are properties that have three valid states, which
-/// allow the value to remaing the same, to be cleared or to set a new value.
+/// Values that are set to `None` are not changed.  Any value set to `Some(...)` will
+/// have its value updated. There are properties that have three valid states, and
+/// use a "toggle" type that allows the value to be set, cleared, or remain the same.
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
@@ -100,20 +100,161 @@ pub enum UpdateArgs {
         /// Required authorization data to validate the request.
         authorization_data: Option<AuthorizationData>,
     },
+    AsUpdateAuthorityV2 {
+        /// The new update authority.
+        new_update_authority: Option<Pubkey>,
+        /// The metadata details.
+        data: Option<Data>,
+        /// Indicates whether the primary sale has happened or not (once set to `true`, it cannot be
+        /// changed back).
+        primary_sale_happened: Option<bool>,
+        // Indicates Whether the data struct is mutable or not (once set to `true`, it cannot be
+        /// changed back).
+        is_mutable: Option<bool>,
+        /// Collection information.
+        collection: CollectionToggle,
+        /// Additional details of the collection.
+        collection_details: CollectionDetailsToggle,
+        /// Uses information.
+        uses: UsesToggle,
+        // Programmable rule set configuration (only applicable to `Programmable` asset types).
+        rule_set: RuleSetToggle,
+        /// Token standard.
+        token_standard: Option<TokenStandard>,
+        /// Required authorization data to validate the request.
+        authorization_data: Option<AuthorizationData>,
+    },
+    AsAuthorityItemDelegateV2 {
+        /// The new update authority.
+        new_update_authority: Option<Pubkey>,
+        /// Indicates whether the primary sale has happened or not (once set to `true`, it cannot be
+        /// changed back).
+        primary_sale_happened: Option<bool>,
+        // Indicates Whether the data struct is mutable or not (once set to `true`, it cannot be
+        /// changed back).
+        is_mutable: Option<bool>,
+        /// Token standard.
+        token_standard: Option<TokenStandard>,
+        /// Required authorization data to validate the request.
+        authorization_data: Option<AuthorizationData>,
+    },
+    AsCollectionDelegateV2 {
+        /// Collection information.
+        collection: CollectionToggle,
+        /// Required authorization data to validate the request.
+        authorization_data: Option<AuthorizationData>,
+    },
+    AsDataDelegateV2 {
+        /// The metadata details.
+        data: Option<Data>,
+        /// Required authorization data to validate the request.
+        authorization_data: Option<AuthorizationData>,
+    },
+    AsProgConfigDelegateV2 {
+        // Programmable rule set configuration (only applicable to `Programmable` asset types).
+        rule_set: RuleSetToggle,
+        /// Required authorization data to validate the request.
+        authorization_data: Option<AuthorizationData>,
+    },
+    AsDataItemDelegateV2 {
+        /// The metadata details.
+        data: Option<Data>,
+        /// Required authorization data to validate the request.
+        authorization_data: Option<AuthorizationData>,
+    },
+    AsCollectionItemDelegateV2 {
+        /// Collection information.
+        collection: CollectionToggle,
+        /// Required authorization data to validate the request.
+        authorization_data: Option<AuthorizationData>,
+    },
+    AsProgrammableConfigItemDelegateV2 {
+        // Programmable rule set configuration (only applicable to `Programmable` asset types).
+        rule_set: RuleSetToggle,
+        /// Required authorization data to validate the request.
+        authorization_data: Option<AuthorizationData>,
+    },
 }
 
-impl Default for UpdateArgs {
-    fn default() -> Self {
+impl UpdateArgs {
+    pub fn default_v1() -> Self {
         Self::V1 {
-            authorization_data: None,
             new_update_authority: None,
             data: None,
             primary_sale_happened: None,
             is_mutable: None,
-            collection: CollectionToggle::None,
-            uses: UsesToggle::None,
-            collection_details: CollectionDetailsToggle::None,
-            rule_set: RuleSetToggle::None,
+            collection: CollectionToggle::default(),
+            collection_details: CollectionDetailsToggle::default(),
+            uses: UsesToggle::default(),
+            rule_set: RuleSetToggle::default(),
+            authorization_data: None,
+        }
+    }
+
+    pub fn default_as_update_authority() -> Self {
+        Self::AsUpdateAuthorityV2 {
+            new_update_authority: None,
+            data: None,
+            primary_sale_happened: None,
+            is_mutable: None,
+            collection: CollectionToggle::default(),
+            collection_details: CollectionDetailsToggle::default(),
+            uses: UsesToggle::default(),
+            rule_set: RuleSetToggle::default(),
+            token_standard: None,
+            authorization_data: None,
+        }
+    }
+
+    pub fn default_as_authority_item_delegate() -> Self {
+        Self::AsAuthorityItemDelegateV2 {
+            new_update_authority: None,
+            primary_sale_happened: None,
+            is_mutable: None,
+            token_standard: None,
+            authorization_data: None,
+        }
+    }
+
+    pub fn default_as_collection_delegate() -> Self {
+        Self::AsCollectionDelegateV2 {
+            collection: CollectionToggle::default(),
+            authorization_data: None,
+        }
+    }
+
+    pub fn default_as_data_delegate() -> Self {
+        Self::AsDataDelegateV2 {
+            data: None,
+            authorization_data: None,
+        }
+    }
+
+    pub fn default_as_programmable_config_delegate() -> Self {
+        Self::AsProgConfigDelegateV2 {
+            rule_set: RuleSetToggle::default(),
+            authorization_data: None,
+        }
+    }
+
+    pub fn default_as_data_item_delegate() -> Self {
+        Self::AsDataItemDelegateV2 {
+            data: None,
+            authorization_data: None,
+        }
+    }
+
+    pub fn default_as_collection_item_delegate() -> Self {
+        Self::AsCollectionItemDelegateV2 {
+            collection: CollectionToggle::default(),
+            authorization_data: None,
+        }
+    }
+
+    pub fn default_as_programmable_config_item_delegate() -> Self {
+        Self::AsProgrammableConfigItemDelegateV2 {
+            rule_set: RuleSetToggle::default(),
+            authorization_data: None,
         }
     }
 }
@@ -122,8 +263,9 @@ impl Default for UpdateArgs {
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, Default)]
 pub enum CollectionToggle {
+    #[default]
     None,
     Clear,
     Set(Collection),
@@ -157,8 +299,9 @@ impl CollectionToggle {
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, Default)]
 pub enum UsesToggle {
+    #[default]
     None,
     Clear,
     Set(Uses),
@@ -192,8 +335,9 @@ impl UsesToggle {
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, Default)]
 pub enum CollectionDetailsToggle {
+    #[default]
     None,
     Clear,
     Set(CollectionDetails),
@@ -230,8 +374,9 @@ impl CollectionDetailsToggle {
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, Default)]
 pub enum RuleSetToggle {
+    #[default]
     None,
     Clear,
     Set(Pubkey),
@@ -723,23 +868,11 @@ impl InstructionBuilder for super::builders::Update {
     fn instruction(&self) -> solana_program::instruction::Instruction {
         let mut accounts = vec![
             AccountMeta::new_readonly(self.authority, true),
-            if let Some(record) = self.delegate_record {
-                AccountMeta::new(record, false)
-            } else {
-                AccountMeta::new_readonly(crate::ID, false)
-            },
-            if let Some(token) = self.token {
-                AccountMeta::new(token, false)
-            } else {
-                AccountMeta::new_readonly(crate::ID, false)
-            },
+            AccountMeta::new_readonly(self.delegate_record.unwrap_or(crate::ID), false),
+            AccountMeta::new_readonly(self.token.unwrap_or(crate::ID), false),
             AccountMeta::new_readonly(self.mint, false),
             AccountMeta::new(self.metadata, false),
-            if let Some(edition) = self.edition {
-                AccountMeta::new(edition, false)
-            } else {
-                AccountMeta::new_readonly(crate::ID, false)
-            },
+            AccountMeta::new_readonly(self.edition.unwrap_or(crate::ID), false),
             AccountMeta::new(self.payer, true),
             AccountMeta::new_readonly(self.system_program, false),
             AccountMeta::new_readonly(self.sysvar_instructions, false),

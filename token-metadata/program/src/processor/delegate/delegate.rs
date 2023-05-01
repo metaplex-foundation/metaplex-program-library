@@ -35,18 +35,23 @@ impl Display for DelegateScenario {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let message = match self {
             Self::Metadata(role) => match role {
-                MetadataDelegateRole::Authority => "Authority".to_string(),
+                MetadataDelegateRole::AuthorityItem => "AuthorityItem".to_string(),
                 MetadataDelegateRole::Collection => "Collection".to_string(),
                 MetadataDelegateRole::Use => "Use".to_string(),
-                MetadataDelegateRole::Update => "Update".to_string(),
+                MetadataDelegateRole::Data => "Data".to_string(),
                 MetadataDelegateRole::ProgrammableConfig => "ProgrammableConfig".to_string(),
+                MetadataDelegateRole::DataItem => "DataItem".to_string(),
+                MetadataDelegateRole::CollectionItem => "CollectionItem".to_string(),
+                MetadataDelegateRole::ProgrammableConfigItem => {
+                    "ProgrammableConfigItem".to_string()
+                }
             },
             Self::Token(role) => match role {
                 TokenDelegateRole::Sale => "Sale".to_string(),
                 TokenDelegateRole::Transfer => "Transfer".to_string(),
-                TokenDelegateRole::LockedTransfer => "LockedTransfer".to_string(),
                 TokenDelegateRole::Utility => "Utility".to_string(),
                 TokenDelegateRole::Staking => "Staking".to_string(),
+                TokenDelegateRole::LockedTransfer => "LockedTransfer".to_string(),
                 _ => panic!("Invalid delegate role"),
             },
         };
@@ -75,16 +80,6 @@ pub fn delegate<'a>(
             amount,
             authorization_data,
         } => Some((TokenDelegateRole::Transfer, amount, authorization_data)),
-        // LockedTransfer
-        DelegateArgs::LockedTransferV1 {
-            amount,
-            authorization_data,
-            ..
-        } => Some((
-            TokenDelegateRole::LockedTransfer,
-            amount,
-            authorization_data,
-        )),
         // Utility
         DelegateArgs::UtilityV1 {
             amount,
@@ -97,6 +92,17 @@ pub fn delegate<'a>(
         } => Some((TokenDelegateRole::Staking, amount, authorization_data)),
         // Standard
         DelegateArgs::StandardV1 { amount } => Some((TokenDelegateRole::Standard, amount, &None)),
+        // LockedTransfer
+        DelegateArgs::LockedTransferV1 {
+            amount,
+            authorization_data,
+            ..
+        } => Some((
+            TokenDelegateRole::LockedTransfer,
+            amount,
+            authorization_data,
+        )),
+
         // we don't need to fail if did not find a match at this point
         _ => None,
     };
@@ -118,12 +124,26 @@ pub fn delegate<'a>(
         DelegateArgs::CollectionV1 { authorization_data } => {
             Some((MetadataDelegateRole::Collection, authorization_data))
         }
-        DelegateArgs::UpdateV1 { authorization_data } => {
-            Some((MetadataDelegateRole::Update, authorization_data))
+        DelegateArgs::DataV1 { authorization_data } => {
+            Some((MetadataDelegateRole::Data, authorization_data))
         }
         DelegateArgs::ProgrammableConfigV1 { authorization_data } => {
             Some((MetadataDelegateRole::ProgrammableConfig, authorization_data))
         }
+        DelegateArgs::AuthorityItemV1 { authorization_data } => {
+            Some((MetadataDelegateRole::AuthorityItem, authorization_data))
+        }
+        DelegateArgs::DataItemV1 { authorization_data } => {
+            Some((MetadataDelegateRole::DataItem, authorization_data))
+        }
+        DelegateArgs::CollectionItemV1 { authorization_data } => {
+            Some((MetadataDelegateRole::CollectionItem, authorization_data))
+        }
+        DelegateArgs::ProgrammableConfigItemV1 { authorization_data } => Some((
+            MetadataDelegateRole::ProgrammableConfigItem,
+            authorization_data,
+        )),
+
         // we don't need to fail if did not find a match at this point
         _ => None,
     };
