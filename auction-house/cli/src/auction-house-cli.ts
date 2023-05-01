@@ -9,17 +9,20 @@ import {
   getAuctionHouseProgramAsSigner,
   getAuctionHouseTradeState,
   getAuctionHouseTreasuryAcct,
+  getMasterEdition,
   getMetadata,
   getTokenAmount,
+  getTokenRecord,
   loadAuctionHouseProgram,
   loadWalletKey,
 } from './helpers/accounts';
 import { BN, web3 } from '@project-serum/anchor';
-import { TOKEN_PROGRAM_ID, WRAPPED_SOL_MINT } from './helpers/constants';
+import { METAPLEX_RULE_SET_ID, TOKEN_AUTH_RULES_PROGRAM_ID, TOKEN_METADATA_PROGRAM_ID, TOKEN_PROGRAM_ID, WRAPPED_SOL_MINT } from './helpers/constants';
 import { ASSOCIATED_TOKEN_PROGRAM_ID, Token } from '@solana/spl-token';
 import { getPriceWithMantissa } from './helpers/various';
 import { sendTransactionWithRetryWithKeypair } from './helpers/transactions';
 import { decodeMetadata, Metadata } from './helpers/schema';
+import { AccountMeta, SYSVAR_INSTRUCTIONS_PUBKEY } from '@solana/web3.js';
 
 program.version('0.0.1');
 log.setLevel('info');
@@ -285,6 +288,60 @@ programCommand('sell')
 
     const signers = [];
 
+    // remaining accounts
+    const tokenRecord = (
+      await getTokenRecord(mintKey, tokenAccountKey)
+    )[0];
+    const pasToken = (
+      await getAtaForMint(mintKey, programAsSigner)
+    )[0];
+    const delegateRecord = (
+      await getTokenRecord(mintKey, pasToken)
+    )[0];
+    const edition = await getMasterEdition(mintKey);
+
+    const remainingAccounts: AccountMeta[] = [];
+    remainingAccounts.push({
+      pubkey: TOKEN_METADATA_PROGRAM_ID,
+      isWritable: false,
+      isSigner: false,
+    });
+    remainingAccounts.push({
+      pubkey: delegateRecord,
+      isWritable: true,
+      isSigner: false,
+    });
+    remainingAccounts.push({
+      pubkey: tokenRecord,
+      isWritable: true,
+      isSigner: false,
+    });
+    remainingAccounts.push({
+      pubkey: mintKey,
+      isWritable: false,
+      isSigner: false,
+    });
+    remainingAccounts.push({
+      pubkey: edition,
+      isWritable: false,
+      isSigner: false,
+    });
+    remainingAccounts.push({
+      pubkey: TOKEN_AUTH_RULES_PROGRAM_ID,
+      isWritable: false,
+      isSigner: false,
+    });
+    remainingAccounts.push({
+      pubkey: METAPLEX_RULE_SET_ID,
+      isWritable: false,
+      isSigner: false,
+    });
+    remainingAccounts.push({
+      pubkey: SYSVAR_INSTRUCTIONS_PUBKEY,
+      isWritable: false,
+      isSigner: false,
+    });
+
     const instruction = await anchorProgram.instruction.sell(
       tradeBump,
       freeTradeBump,
@@ -308,6 +365,7 @@ programCommand('sell')
           programAsSigner,
           rent: web3.SYSVAR_RENT_PUBKEY,
         },
+        remainingAccounts,
         signers,
       },
     );

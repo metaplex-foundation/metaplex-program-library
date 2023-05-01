@@ -31,6 +31,7 @@ import log from 'loglevel';
 import { AccountLayout, u64 } from '@solana/spl-token';
 import { getCluster } from './various';
 import { bs58 } from '@project-serum/anchor/dist/cjs/utils/bytes';
+import { MetadataProgram } from '@metaplex-foundation/mpl-token-metadata';
 export type AccountAndPubkey = {
   pubkey: string;
   account: AccountInfo<Buffer>;
@@ -278,6 +279,22 @@ export const getAtaForMint = async (
   return await anchor.web3.PublicKey.findProgramAddress(
     [buyer.toBuffer(), TOKEN_PROGRAM_ID.toBuffer(), mint.toBuffer()],
     SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID,
+  );
+};
+
+export const getTokenRecord = async (
+  mint: anchor.web3.PublicKey,
+  pasToken: anchor.web3.PublicKey,
+): Promise<[anchor.web3.PublicKey, number]> => {
+  return await anchor.web3.PublicKey.findProgramAddress(
+    [
+      Buffer.from('metadata'), 
+      TOKEN_METADATA_PROGRAM_ID.toBuffer(), 
+      mint.toBuffer(), 
+      Buffer.from('token_record'),
+      pasToken.toBuffer(),
+    ],
+    TOKEN_METADATA_PROGRAM_ID,
   );
 };
 
