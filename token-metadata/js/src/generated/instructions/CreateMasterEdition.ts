@@ -8,35 +8,15 @@
 import * as splToken from '@solana/spl-token';
 import * as beet from '@metaplex-foundation/beet';
 import * as web3 from '@solana/web3.js';
-import {
-  CreateMasterEditionArgs,
-  createMasterEditionArgsBeet,
-} from '../types/CreateMasterEditionArgs';
 
 /**
  * @category Instructions
  * @category CreateMasterEdition
  * @category generated
  */
-export type CreateMasterEditionInstructionArgs = {
-  createMasterEditionArgs: CreateMasterEditionArgs;
-};
-/**
- * @category Instructions
- * @category CreateMasterEdition
- * @category generated
- */
-export const CreateMasterEditionStruct = new beet.FixableBeetArgsStruct<
-  CreateMasterEditionInstructionArgs & {
-    instructionDiscriminator: number;
-  }
->(
-  [
-    ['instructionDiscriminator', beet.u8],
-    ['createMasterEditionArgs', createMasterEditionArgsBeet],
-  ],
-  'CreateMasterEditionInstructionArgs',
-);
+export const CreateMasterEditionStruct = new beet.BeetArgsStruct<{
+  instructionDiscriminator: number;
+}>([['instructionDiscriminator', beet.u8]], 'CreateMasterEditionInstructionArgs');
 /**
  * Accounts required by the _CreateMasterEdition_ instruction
  *
@@ -68,20 +48,16 @@ export const createMasterEditionInstructionDiscriminator = 10;
  * Creates a _CreateMasterEdition_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
- * @param args to provide as instruction data to the program
- *
  * @category Instructions
  * @category CreateMasterEdition
  * @category generated
  */
 export function createCreateMasterEditionInstruction(
   accounts: CreateMasterEditionInstructionAccounts,
-  args: CreateMasterEditionInstructionArgs,
   programId = new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
 ) {
   const [data] = CreateMasterEditionStruct.serialize({
     instructionDiscriminator: createMasterEditionInstructionDiscriminator,
-    ...args,
   });
   const keys: web3.AccountMeta[] = [
     {
