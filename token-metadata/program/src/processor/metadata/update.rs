@@ -310,7 +310,7 @@ fn validate_update(
             ) => true,
             (
                 MetadataDelegateRole::ProgrammableConfig,
-                UpdateArgs::AsProgConfigDelegateV2 { .. },
+                UpdateArgs::AsProgrammableConfigDelegateV2 { .. },
             ) => true,
             (
                 MetadataDelegateRole::ProgrammableConfigItem,

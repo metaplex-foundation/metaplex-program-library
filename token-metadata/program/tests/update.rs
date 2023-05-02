@@ -902,7 +902,9 @@ mod update {
 
         let mut update_args = UpdateArgs::default_as_programmable_config_delegate();
         match &mut update_args {
-            UpdateArgs::AsProgConfigDelegateV2 { rule_set, .. } => *rule_set = RuleSetToggle::Clear,
+            UpdateArgs::AsProgrammableConfigDelegateV2 { rule_set, .. } => {
+                *rule_set = RuleSetToggle::Clear
+            }
             _ => panic!("Unexpected enum variant"),
         }
 
@@ -2143,7 +2145,9 @@ mod update {
         // Change programmable config, removing the RuleSet.
         let mut args = UpdateArgs::default_as_programmable_config_delegate();
         match &mut args {
-            UpdateArgs::AsProgConfigDelegateV2 { rule_set, .. } => *rule_set = RuleSetToggle::Clear,
+            UpdateArgs::AsProgrammableConfigDelegateV2 { rule_set, .. } => {
+                *rule_set = RuleSetToggle::Clear
+            }
             _ => panic!("Unexpected enum variant"),
         }
 
