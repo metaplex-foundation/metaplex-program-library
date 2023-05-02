@@ -12,7 +12,7 @@ use mpl_token_metadata::{
     utils::puffed_out_string,
 };
 use num_traits::FromPrimitive;
-use solana_program::pubkey::Pubkey;
+use solana_program::{program_pack::Pack, pubkey::Pubkey};
 use solana_program_test::*;
 use solana_sdk::{
     instruction::InstructionError,
@@ -20,6 +20,7 @@ use solana_sdk::{
     signature::Signer,
     transaction::{Transaction, TransactionError},
 };
+use spl_token::state::Account;
 use utils::{DigitalAsset, *};
 
 mod update {
@@ -472,6 +473,125 @@ mod update {
         let metadata = da.get_metadata(context).await;
 
         assert_eq!(metadata.programmable_config, None);
+    }
+
+    #[tokio::test]
+    async fn fail_update_pfnt_config_no_token_in_account() {
+        let mut program_test = ProgramTest::new("mpl_token_metadata", mpl_token_metadata::ID, None);
+        program_test.add_program("mpl_token_auth_rules", mpl_token_auth_rules::ID, None);
+        let context = &mut program_test.start_with_context().await;
+
+        let authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+
+        // Create rule-set for the transfer
+        let (authorization_rules, auth_data) =
+            create_default_metaplex_rule_set(context, authority, false).await;
+
+        let update_authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+
+        let mut da = DigitalAsset::new();
+        da.create_and_mint(
+            context,
+            TokenStandard::ProgrammableNonFungible,
+            Some(authorization_rules),
+            Some(auth_data),
+            1,
+        )
+        .await
+        .unwrap();
+
+        // Save old token and transfer to a new holder.
+        let old_token_pubkey = da.token.unwrap();
+        let token_account = get_account(context, &old_token_pubkey).await;
+        let token = Account::unpack(&token_account.data).unwrap();
+        assert_eq!(token.amount, 1);
+
+        let holder = Keypair::new();
+        holder.airdrop(context, 1_000_000_000).await.unwrap();
+
+        let args = TransferArgs::V1 {
+            authorization_data: None,
+            amount: 1,
+        };
+
+        da.transfer(TransferParams {
+            context,
+            authority: &update_authority,
+            source_owner: &update_authority.pubkey(),
+            destination_owner: holder.pubkey(),
+            destination_token: None, // fn will create the ATA
+            payer: &update_authority,
+            authorization_rules: None,
+            args,
+        })
+        .await
+        .unwrap();
+
+        // Check that old token is empty.
+        let token_account = get_account(context, &old_token_pubkey).await;
+        let token = Account::unpack(&token_account.data).unwrap();
+        assert_eq!(token.amount, 0);
+
+        // Check metadata.
+        let metadata = da.get_metadata(context).await;
+
+        if let Some(ProgrammableConfig::V1 {
+            rule_set: Some(rule_set),
+        }) = metadata.programmable_config
+        {
+            assert_eq!(rule_set, authorization_rules);
+        } else {
+            panic!("Missing rule set programmable config");
+        }
+
+        // remove the rule set
+        let mut args = UpdateArgs::default_as_update_authority();
+        match &mut args {
+            UpdateArgs::AsUpdateAuthorityV2 { rule_set, .. } => *rule_set = RuleSetToggle::Clear,
+            _ => panic!("Unexpected enum variant"),
+        }
+
+        let mut builder = UpdateBuilder::new();
+        builder
+            .authority(update_authority.pubkey())
+            .metadata(da.metadata)
+            .mint(da.mint.pubkey())
+            .token(old_token_pubkey)
+            .authorization_rules(authorization_rules)
+            .payer(update_authority.pubkey());
+
+        if let Some(edition) = da.edition {
+            builder.edition(edition);
+        }
+
+        let update_ix = builder.build(args).unwrap().instruction();
+
+        let tx = Transaction::new_signed_with_payer(
+            &[update_ix],
+            Some(&update_authority.pubkey()),
+            &[&update_authority],
+            context.last_blockhash,
+        );
+
+        let err = context
+            .banks_client
+            .process_transaction(tx)
+            .await
+            .unwrap_err();
+
+        assert_custom_error!(err, MetadataError::AmountMustBeGreaterThanZero);
+
+        // `RuleSet` should not have changed.
+        let metadata = da.get_metadata(context).await;
+
+        if let Some(ProgrammableConfig::V1 {
+            rule_set: Some(rule_set),
+        }) = metadata.programmable_config
+        {
+            assert_eq!(rule_set, authorization_rules);
+        } else {
+            panic!("Missing rule set programmable config");
+        }
     }
 
     #[tokio::test]
@@ -1311,7 +1431,7 @@ mod update {
     }
 
     #[tokio::test]
-    async fn success_update_collection_by_collections_collection_delegate() {
+    async fn success_set_collection_by_collections_collection_delegate() {
         let context = &mut program_test().start_with_context().await;
 
         let update_authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
@@ -1394,7 +1514,198 @@ mod update {
     }
 
     #[tokio::test]
-    async fn fail_update_collection_by_collections_collection_item_delegate() {
+    async fn success_clear_existing_collection_by_collections_collection_delegate() {
+        let context = &mut program_test().start_with_context().await;
+
+        let update_authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+
+        // Create a collection parent NFT or pNFT with the CollectionDetails struct populated.
+        let mut collection_parent_da = DigitalAsset::new();
+        collection_parent_da
+            .create_and_mint_collection_parent(
+                context,
+                TokenStandard::ProgrammableNonFungible,
+                None,
+                None,
+                1,
+                DEFAULT_COLLECTION_DETAILS,
+            )
+            .await
+            .unwrap();
+
+        // Create metadata delegate on the collection.
+        let delegate = Keypair::new();
+        delegate.airdrop(context, 1_000_000_000).await.unwrap();
+        let delegate_args = DelegateArgs::CollectionV1 {
+            authorization_data: None,
+        };
+        let delegate_record = collection_parent_da
+            .delegate(context, update_authority, delegate.pubkey(), delegate_args)
+            .await
+            .unwrap()
+            .unwrap();
+
+        // Create and mint item with a collection.  The collection-level delegate will be
+        // authorized for this item.
+        let collection = Some(Collection {
+            key: collection_parent_da.mint.pubkey(),
+            verified: false,
+        });
+
+        let mut da = DigitalAsset::new();
+        da.create_and_mint_item_with_collection(
+            context,
+            TokenStandard::ProgrammableNonFungible,
+            None,
+            None,
+            1,
+            collection.clone(),
+        )
+        .await
+        .unwrap();
+
+        let metadata = da.get_metadata(context).await;
+
+        // Check collection.
+        assert_eq!(metadata.collection, collection);
+
+        // Clear collection.
+        let mut args = UpdateArgs::default_as_collection_delegate();
+        match &mut args {
+            UpdateArgs::AsCollectionDelegateV2 { collection, .. } => {
+                *collection = CollectionToggle::Clear
+            }
+            _ => panic!("Unexpected enum variant"),
+        }
+
+        let mut builder = UpdateBuilder::new();
+        builder
+            .authority(delegate.pubkey())
+            .delegate_record(delegate_record)
+            .metadata(da.metadata)
+            .mint(da.mint.pubkey())
+            .payer(delegate.pubkey());
+
+        if let Some(edition) = da.edition {
+            builder.edition(edition);
+        }
+
+        let update_ix = builder.build(args).unwrap().instruction();
+
+        let tx = Transaction::new_signed_with_payer(
+            &[update_ix],
+            Some(&delegate.pubkey()),
+            &[&delegate],
+            context.last_blockhash,
+        );
+
+        context.banks_client.process_transaction(tx).await.unwrap();
+
+        // Check that collection changed.
+        let metadata = da.get_metadata(context).await;
+        assert_eq!(metadata.collection, None);
+    }
+
+    #[tokio::test]
+    async fn success_update_existing_collection_by_collections_collection_delegate() {
+        let context = &mut program_test().start_with_context().await;
+
+        let update_authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+
+        // Create a collection parent NFT or pNFT with the CollectionDetails struct populated.
+        let mut collection_parent_da = DigitalAsset::new();
+        collection_parent_da
+            .create_and_mint_collection_parent(
+                context,
+                TokenStandard::ProgrammableNonFungible,
+                None,
+                None,
+                1,
+                DEFAULT_COLLECTION_DETAILS,
+            )
+            .await
+            .unwrap();
+
+        // Create metadata delegate on the collection.
+        let delegate = Keypair::new();
+        delegate.airdrop(context, 1_000_000_000).await.unwrap();
+        let delegate_args = DelegateArgs::CollectionV1 {
+            authorization_data: None,
+        };
+        let delegate_record = collection_parent_da
+            .delegate(context, update_authority, delegate.pubkey(), delegate_args)
+            .await
+            .unwrap()
+            .unwrap();
+
+        // Create and mint item with a random pubkey as a collection.
+        let initial_collection = Some(Collection {
+            key: Keypair::new().pubkey(),
+            verified: false,
+        });
+
+        let mut da = DigitalAsset::new();
+        da.create_and_mint_item_with_collection(
+            context,
+            TokenStandard::ProgrammableNonFungible,
+            None,
+            None,
+            1,
+            initial_collection.clone(),
+        )
+        .await
+        .unwrap();
+
+        let metadata = da.get_metadata(context).await;
+
+        // Check collection.
+        assert_eq!(metadata.collection, initial_collection);
+
+        // Set to new collection.  The collection-level delegate will be authorized for this
+        // collection.
+        let new_collection = Collection {
+            key: collection_parent_da.mint.pubkey(),
+            verified: false,
+        };
+
+        let mut args = UpdateArgs::default_as_collection_delegate();
+        match &mut args {
+            UpdateArgs::AsCollectionDelegateV2 { collection, .. } => {
+                *collection = CollectionToggle::Set(new_collection.clone())
+            }
+            _ => panic!("Unexpected enum variant"),
+        }
+
+        let mut builder = UpdateBuilder::new();
+        builder
+            .authority(delegate.pubkey())
+            .delegate_record(delegate_record)
+            .metadata(da.metadata)
+            .mint(da.mint.pubkey())
+            .payer(delegate.pubkey());
+
+        if let Some(edition) = da.edition {
+            builder.edition(edition);
+        }
+
+        let update_ix = builder.build(args).unwrap().instruction();
+
+        let tx = Transaction::new_signed_with_payer(
+            &[update_ix],
+            Some(&delegate.pubkey()),
+            &[&delegate],
+            context.last_blockhash,
+        );
+
+        context.banks_client.process_transaction(tx).await.unwrap();
+
+        // Check that collection changed.
+        let metadata = da.get_metadata(context).await;
+        assert_eq!(metadata.collection, Some(new_collection));
+    }
+
+    #[tokio::test]
+    async fn fail_set_collection_by_collections_collection_item_delegate() {
         let context = &mut program_test().start_with_context().await;
 
         let update_authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
@@ -1483,7 +1794,7 @@ mod update {
     }
 
     #[tokio::test]
-    async fn fail_update_collection_delegate_update_authority_mismatch() {
+    async fn fail_set_collection_delegate_update_authority_mismatch() {
         let context = &mut program_test().start_with_context().await;
 
         // Create a collection parent NFT or pNFT with the CollectionDetails struct populated.
@@ -1622,24 +1933,24 @@ mod update {
     }
 
     #[tokio::test]
-    async fn fail_update_collection_by_collections_programmable_config_delegate() {
+    async fn fail_set_collection_by_collections_programmable_config_delegate() {
         let delegate_args = DelegateArgs::ProgrammableConfigV1 {
             authorization_data: None,
         };
 
-        fail_update_collection_by_collections_delegate(delegate_args).await
+        fail_set_collection_by_collections_delegate(delegate_args).await
     }
 
     #[tokio::test]
-    async fn fail_update_collection_by_collections_data_delegate() {
+    async fn fail_set_collection_by_collections_data_delegate() {
         let delegate_args = DelegateArgs::DataV1 {
             authorization_data: None,
         };
 
-        fail_update_collection_by_collections_delegate(delegate_args).await
+        fail_set_collection_by_collections_delegate(delegate_args).await
     }
 
-    async fn fail_update_collection_by_collections_delegate(delegate_args: DelegateArgs) {
+    async fn fail_set_collection_by_collections_delegate(delegate_args: DelegateArgs) {
         let context = &mut program_test().start_with_context().await;
 
         let update_authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
@@ -1725,24 +2036,24 @@ mod update {
     }
 
     #[tokio::test]
-    async fn fail_update_collection_by_collections_programmable_config_item_delegate() {
+    async fn fail_set_collection_by_collections_programmable_config_item_delegate() {
         let delegate_args = DelegateArgs::ProgrammableConfigItemV1 {
             authorization_data: None,
         };
 
-        fail_update_collection_by_collections_item_delegate(delegate_args).await
+        fail_set_collection_by_collections_item_delegate(delegate_args).await
     }
 
     #[tokio::test]
-    async fn fail_update_collection_by_collections_data_item_delegate() {
+    async fn fail_set_collection_by_collections_data_item_delegate() {
         let delegate_args = DelegateArgs::DataItemV1 {
             authorization_data: None,
         };
 
-        fail_update_collection_by_collections_item_delegate(delegate_args).await
+        fail_set_collection_by_collections_item_delegate(delegate_args).await
     }
 
-    async fn fail_update_collection_by_collections_item_delegate(delegate_args: DelegateArgs) {
+    async fn fail_set_collection_by_collections_item_delegate(delegate_args: DelegateArgs) {
         let context = &mut program_test().start_with_context().await;
 
         let update_authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
