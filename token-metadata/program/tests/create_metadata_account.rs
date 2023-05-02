@@ -19,6 +19,8 @@ use utils::*;
 
 mod create_meta_accounts {
 
+    use mpl_token_metadata::state::TokenStandard;
+
     use super::*;
     #[tokio::test]
     async fn success() {
@@ -33,7 +35,24 @@ mod create_meta_accounts {
         let puffed_uri = puffed_out_string(&uri, MAX_URI_LENGTH);
 
         test_metadata
-            .create(&mut context, name, symbol, uri, None, 10, false, 0)
+            .create_v3(
+                &mut context,
+                name,
+                symbol,
+                uri,
+                None,
+                10,
+                false,
+                None,
+                None,
+                None,
+            )
+            .await
+            .unwrap();
+
+        let master_edition = MasterEditionV2::new(&test_metadata);
+        master_edition
+            .create_v3(&mut context, Some(0))
             .await
             .unwrap();
 
@@ -51,7 +70,7 @@ mod create_meta_accounts {
         assert_eq!(metadata.update_authority, context.payer.pubkey());
         assert_eq!(metadata.key, Key::MetadataV1);
 
-        assert_eq!(metadata.token_standard, None);
+        assert_eq!(metadata.token_standard, Some(TokenStandard::NonFungible));
         assert_eq!(metadata.collection, None);
         assert_eq!(metadata.uses, None);
     }
@@ -74,7 +93,7 @@ mod create_meta_accounts {
             use_method: UseMethod::Single,
         });
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 name,
                 symbol,
@@ -84,6 +103,7 @@ mod create_meta_accounts {
                 false,
                 None,
                 uses.to_owned(),
+                None,
             )
             .await
             .unwrap();
@@ -134,7 +154,7 @@ mod create_meta_accounts {
         .await
         .unwrap();
 
-        let ix = instruction::create_metadata_accounts(
+        let ix = instruction::create_metadata_accounts_v3(
             id(),
             test_metadata.pubkey,
             test_metadata.mint.pubkey(),
@@ -148,6 +168,9 @@ mod create_meta_accounts {
             10,
             false,
             false,
+            None,
+            None,
+            None,
         );
 
         let tx = Transaction::new_signed_with_payer(
@@ -165,7 +188,7 @@ mod create_meta_accounts {
 
         assert_custom_error!(result, MetadataError::InvalidMintAuthority);
 
-        let ix2 = instruction::create_metadata_accounts_v2(
+        let ix2 = instruction::create_metadata_accounts_v3(
             id(),
             test_metadata.pubkey,
             test_metadata.mint.pubkey(),
@@ -185,6 +208,7 @@ mod create_meta_accounts {
                 total: 10,
                 use_method: UseMethod::Multiple,
             }),
+            None,
         );
 
         let tx2 = Transaction::new_signed_with_payer(
@@ -210,7 +234,7 @@ mod create_meta_accounts {
         test_metadata.pubkey = Pubkey::new_unique();
 
         let result = test_metadata
-            .create(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -218,7 +242,9 @@ mod create_meta_accounts {
                 None,
                 10,
                 false,
-                0,
+                None,
+                None,
+                None,
             )
             .await
             .unwrap_err();
@@ -234,7 +260,7 @@ mod create_meta_accounts {
         creators: Vec<Creator>,
     ) -> BanksClientError {
         Metadata::new()
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -242,6 +268,7 @@ mod create_meta_accounts {
                 Some(creators),
                 10,
                 false,
+                None,
                 None,
                 None,
             )
@@ -364,7 +391,7 @@ mod create_meta_accounts {
     async fn pass_creators(mut context: ProgramTestContext, creators: Vec<Creator>) {
         let test_metadata = Metadata::new();
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -372,6 +399,7 @@ mod create_meta_accounts {
                 Some(creators.clone()),
                 10,
                 false,
+                None,
                 None,
                 None,
             )
@@ -445,7 +473,7 @@ mod create_meta_accounts {
     async fn fail_uses(uses: Uses) {
         let mut context = program_test().start_with_context().await;
         let res = Metadata::new()
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -455,6 +483,7 @@ mod create_meta_accounts {
                 false,
                 None,
                 Some(uses),
+                None,
             )
             .await
             .unwrap_err();
@@ -518,7 +547,7 @@ mod create_meta_accounts {
         let mut context = program_test().start_with_context().await;
         let test_metadata = Metadata::new();
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -528,6 +557,7 @@ mod create_meta_accounts {
                 false,
                 None,
                 Some(uses.clone()),
+                None,
             )
             .await
             .unwrap();

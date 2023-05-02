@@ -745,6 +745,10 @@ pub enum MetadataError {
     /// 188
     #[error("The close authority needs to be revoked by the Utility Delegate")]
     InvalidCloseAuthority,
+
+    /// 189
+    #[error("Invalid or removed instruction")]
+    InvalidInstruction,
 }
 
 impl PrintProgramError for MetadataError {

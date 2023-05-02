@@ -33,7 +33,7 @@ mod verify_collection {
 
         let test_collection = Metadata::new();
         test_collection
-            .create_v2_default(&mut context)
+            .create_v3_default(&mut context)
             .await
             .unwrap();
         let collection_master_edition_account = MasterEditionV2::new(&test_collection);
@@ -57,7 +57,7 @@ mod verify_collection {
             use_method: UseMethod::Single,
         });
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 name,
                 symbol,
@@ -70,6 +70,7 @@ mod verify_collection {
                     verified: false,
                 }),
                 uses.to_owned(),
+                None,
             )
             .await
             .unwrap();
@@ -122,7 +123,7 @@ mod verify_collection {
 
         let test_collection = Metadata::new();
         test_collection
-            .create_v2_default(&mut context)
+            .create_v3_default(&mut context)
             .await
             .unwrap();
 
@@ -134,7 +135,7 @@ mod verify_collection {
 
         let test_collection2 = Metadata::new();
         test_collection2
-            .create_v2_default(&mut context)
+            .create_v3_default(&mut context)
             .await
             .unwrap();
 
@@ -159,7 +160,7 @@ mod verify_collection {
             use_method: UseMethod::Single,
         });
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 name,
                 symbol,
@@ -172,6 +173,7 @@ mod verify_collection {
                     verified: false,
                 }),
                 uses.to_owned(),
+                None,
             )
             .await
             .unwrap();
@@ -213,83 +215,18 @@ mod verify_collection {
     }
 
     #[tokio::test]
-    async fn fail_no_collection_nft_token_standard() {
-        let mut context = program_test().start_with_context().await;
-
-        let test_collection = Metadata::new();
-        test_collection
-            .create_v2_default(&mut context)
-            .await
-            .unwrap();
-
-        let collection_master_edition_account = MasterEditionV2::new(&test_collection);
-        collection_master_edition_account
-            .create(&mut context, Some(0))
-            .await
-            .unwrap();
-
-        let name = "Test".to_string();
-        let symbol = "TST".to_string();
-        let uri = "uri".to_string();
-        let test_metadata = Metadata::new();
-        let uses = Some(Uses {
-            total: 1,
-            remaining: 1,
-            use_method: UseMethod::Single,
-        });
-        test_metadata
-            .create_v2(
-                &mut context,
-                name,
-                symbol,
-                uri,
-                None,
-                10,
-                false,
-                Some(Collection {
-                    key: test_collection.mint.pubkey(),
-                    verified: false,
-                }),
-                uses.to_owned(),
-            )
-            .await
-            .unwrap();
-
-        let kpbytes = &context.payer;
-        let kp = Keypair::from_bytes(&kpbytes.to_bytes()).unwrap();
-        let err = test_metadata
-            .verify_collection(
-                &mut context,
-                test_collection.pubkey,
-                &kp,
-                test_collection.mint.pubkey(),
-                collection_master_edition_account.pubkey,
-                None,
-            )
-            .await
-            .unwrap_err();
-        assert_custom_error!(err, MetadataError::CollectionMustBeAUniqueMasterEdition);
-        let metadata_after = test_metadata.get_data(&mut context).await;
-        assert_eq!(
-            metadata_after.collection.to_owned().unwrap().key,
-            test_collection.mint.pubkey()
-        );
-        assert!(!metadata_after.collection.unwrap().verified);
-    }
-
-    #[tokio::test]
     async fn fail_non_unique_master_edition() {
         let mut context = program_test().start_with_context().await;
 
         let test_collection = Metadata::new();
         test_collection
-            .create_v2_default(&mut context)
+            .create_v3_default(&mut context)
             .await
             .unwrap();
 
         let collection_master_edition_account = MasterEditionV2::new(&test_collection);
         collection_master_edition_account
-            .create(&mut context, Some(1))
+            .create_v3(&mut context, Some(1))
             .await
             .unwrap();
 
@@ -303,7 +240,7 @@ mod verify_collection {
             use_method: UseMethod::Single,
         });
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 name,
                 symbol,
@@ -316,6 +253,7 @@ mod verify_collection {
                     verified: false,
                 }),
                 uses.to_owned(),
+                None,
             )
             .await
             .unwrap();
@@ -348,7 +286,7 @@ mod verify_collection {
 
         let test_collection = Metadata::new();
         test_collection
-            .create_v2_default(&mut context)
+            .create_v3_default(&mut context)
             .await
             .unwrap();
 
@@ -363,7 +301,7 @@ mod verify_collection {
             use_method: UseMethod::Single,
         });
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 name,
                 symbol,
@@ -376,6 +314,7 @@ mod verify_collection {
                     verified: false,
                 }),
                 uses.to_owned(),
+                None,
             )
             .await
             .unwrap();
@@ -409,7 +348,7 @@ mod verify_collection {
 
         let test_collection = Metadata::new();
         test_collection
-            .create_v2_default(&mut context)
+            .create_v3_default(&mut context)
             .await
             .unwrap();
 
@@ -430,7 +369,7 @@ mod verify_collection {
             use_method: UseMethod::Single,
         });
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 name,
                 symbol,
@@ -443,6 +382,7 @@ mod verify_collection {
                     verified: false,
                 }),
                 uses.to_owned(),
+                None,
             )
             .await
             .unwrap();
@@ -473,7 +413,7 @@ mod verify_collection {
 
         let test_collection = Metadata::new();
         test_collection
-            .create_v2_default(&mut context)
+            .create_v3_default(&mut context)
             .await
             .unwrap();
 
@@ -498,7 +438,7 @@ mod verify_collection {
             use_method: UseMethod::Single,
         });
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 name,
                 symbol,
@@ -511,6 +451,7 @@ mod verify_collection {
                     verified: false,
                 }),
                 uses.to_owned(),
+                None,
             )
             .await
             .unwrap();
@@ -563,7 +504,7 @@ mod verify_collection {
         let new_collection_authority = Keypair::new();
         let test_collection = Metadata::new();
         test_collection
-            .create_v2_default(&mut context)
+            .create_v3_default(&mut context)
             .await
             .unwrap();
 
@@ -578,7 +519,7 @@ mod verify_collection {
         let uri = "uri".to_string();
         let test_metadata = Metadata::new();
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 name,
                 symbol,
@@ -590,6 +531,7 @@ mod verify_collection {
                     key: test_collection.mint.pubkey(),
                     verified: false,
                 }),
+                None,
                 None,
             )
             .await
@@ -669,7 +611,7 @@ mod verify_collection {
         let new_collection_authority = Keypair::new();
         let test_collection = Metadata::new();
         test_collection
-            .create_v2_default(&mut context)
+            .create_v3_default(&mut context)
             .await
             .unwrap();
 
@@ -680,7 +622,7 @@ mod verify_collection {
             .unwrap();
 
         let test_metadata = Metadata::new();
-        test_metadata.create_v2_default(&mut context).await.unwrap();
+        test_metadata.create_v3_default(&mut context).await.unwrap();
 
         let metadata = test_metadata.get_data(&mut context).await;
         assert!(metadata.collection.is_none());
@@ -758,7 +700,7 @@ mod verify_collection {
 
         let test_collection = Metadata::new();
         test_collection
-            .create_v2_default(&mut context)
+            .create_v3_default(&mut context)
             .await
             .unwrap();
 
@@ -769,7 +711,7 @@ mod verify_collection {
             .unwrap();
 
         let test_metadata = Metadata::new();
-        test_metadata.create_v2_default(&mut context).await.unwrap();
+        test_metadata.create_v3_default(&mut context).await.unwrap();
 
         let metadata = test_metadata.get_data(&mut context).await;
         assert!(metadata.collection.is_none());
@@ -851,7 +793,7 @@ mod verify_collection {
         let new_collection_authority = Keypair::new();
         let test_collection = Metadata::new();
         test_collection
-            .create_v2_default(&mut context)
+            .create_v3_default(&mut context)
             .await
             .unwrap();
 
@@ -871,7 +813,7 @@ mod verify_collection {
             use_method: UseMethod::Single,
         });
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 name,
                 symbol,
@@ -884,6 +826,7 @@ mod verify_collection {
                     verified: false,
                 }),
                 uses.to_owned(),
+                None,
             )
             .await
             .unwrap();
@@ -983,7 +926,7 @@ mod verify_collection {
 
         let test_collection = Metadata::new();
         test_collection
-            .create_v2_default(&mut context)
+            .create_v3_default(&mut context)
             .await
             .unwrap();
 
@@ -994,7 +937,7 @@ mod verify_collection {
             .unwrap();
 
         let test_metadata = Metadata::new();
-        test_metadata.create_v2_default(&mut context).await.unwrap();
+        test_metadata.create_v3_default(&mut context).await.unwrap();
         let metadata = test_metadata.get_data(&mut context).await;
         assert!(metadata.collection.is_none());
         let update_authority = context.payer.pubkey();
@@ -1092,7 +1035,7 @@ async fn fail_verify_collection_invalid_owner() {
 
     let test_collection = Metadata::new();
     test_collection
-        .create_v2_default(&mut context)
+        .create_v3_default(&mut context)
         .await
         .unwrap();
 
@@ -1114,7 +1057,7 @@ async fn fail_verify_collection_invalid_owner() {
     });
 
     test_metadata
-        .create_v2(
+        .create_v3(
             &mut context,
             name,
             symbol,
@@ -1127,6 +1070,7 @@ async fn fail_verify_collection_invalid_owner() {
                 verified: false,
             }),
             uses.to_owned(),
+            None,
         )
         .await
         .unwrap();
@@ -1155,13 +1099,13 @@ async fn fail_verify_collection_negative_cases() {
 
     let test_collection = Metadata::new();
     test_collection
-        .create_v2_default(&mut context)
+        .create_v3_default(&mut context)
         .await
         .unwrap();
 
     let test_collection_fake = Metadata::new();
     test_collection_fake
-        .create_v2_default(&mut context)
+        .create_v3_default(&mut context)
         .await
         .unwrap();
 
@@ -1183,7 +1127,7 @@ async fn fail_verify_collection_negative_cases() {
     });
 
     test_metadata
-        .create_v2(
+        .create_v3(
             &mut context,
             name,
             symbol,
@@ -1196,6 +1140,7 @@ async fn fail_verify_collection_negative_cases() {
                 verified: false,
             }),
             uses.to_owned(),
+            None,
         )
         .await
         .unwrap();
@@ -1252,7 +1197,7 @@ async fn fail_invalid_collection_update_authority() {
 
     let test_collection = Metadata::new();
     test_collection
-        .create_v2_default(&mut context)
+        .create_v3_default(&mut context)
         .await
         .unwrap();
 
@@ -1263,7 +1208,7 @@ async fn fail_invalid_collection_update_authority() {
         .unwrap();
 
     let user_nft = Metadata::new();
-    user_nft.create_v2_default(&mut context).await.unwrap();
+    user_nft.create_v3_default(&mut context).await.unwrap();
 
     let user_master_edition_account = MasterEditionV2::new(&user_nft);
     user_master_edition_account
@@ -1331,7 +1276,7 @@ async fn success_collection_authority_delegate_revoke() {
 
     let test_collection = Metadata::new();
     test_collection
-        .create_v2_default(&mut context)
+        .create_v3_default(&mut context)
         .await
         .unwrap();
 
@@ -1342,7 +1287,7 @@ async fn success_collection_authority_delegate_revoke() {
         .unwrap();
 
     let user_nft = Metadata::new();
-    user_nft.create_v2_default(&mut context).await.unwrap();
+    user_nft.create_v3_default(&mut context).await.unwrap();
 
     let user_master_edition_account = MasterEditionV2::new(&user_nft);
     user_master_edition_account

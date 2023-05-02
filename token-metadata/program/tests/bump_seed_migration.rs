@@ -38,7 +38,7 @@ mod bump_seed_migration {
             use_method: UseMethod::Single,
         });
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 name,
                 symbol,
@@ -48,6 +48,7 @@ mod bump_seed_migration {
                 false,
                 None,
                 uses.to_owned(),
+                None,
             )
             .await
             .unwrap();

@@ -22,7 +22,7 @@ mod create_master_edition {
         let test_master_edition = MasterEditionV2::new(&test_metadata);
 
         test_metadata
-            .create(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -30,7 +30,9 @@ mod create_master_edition {
                 None,
                 10,
                 false,
-                0,
+                None,
+                None,
+                None,
             )
             .await
             .unwrap();
@@ -39,7 +41,7 @@ mod create_master_edition {
         let old_authority = mint.mint_authority.unwrap();
 
         test_master_edition
-            .create(&mut context, Some(10))
+            .create_v3(&mut context, Some(10))
             .await
             .unwrap();
 
@@ -62,7 +64,7 @@ mod create_master_edition {
         let test_master_edition = MasterEditionV2::new(&test_metadata);
 
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -70,6 +72,7 @@ mod create_master_edition {
                 None,
                 10,
                 false,
+                None,
                 None,
                 None,
             )
@@ -105,7 +108,7 @@ mod create_master_edition {
         let fake_mint_authority = Keypair::new();
 
         test_metadata
-            .create(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -113,13 +116,15 @@ mod create_master_edition {
                 None,
                 10,
                 false,
-                0,
+                None,
+                None,
+                None,
             )
             .await
             .unwrap();
 
         let tx = Transaction::new_signed_with_payer(
-            &[instruction::create_master_edition(
+            &[instruction::create_master_edition_v3(
                 id(),
                 test_master_edition.pubkey,
                 test_master_edition.mint_pubkey,
@@ -150,7 +155,7 @@ mod create_master_edition {
         let test_master_edition = MasterEditionV2::new(&test_metadata);
 
         test_metadata
-            .create(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -158,7 +163,9 @@ mod create_master_edition {
                 None,
                 10,
                 false,
-                0,
+                None,
+                None,
+                None,
             )
             .await
             .unwrap();
@@ -167,6 +174,7 @@ mod create_master_edition {
             .create_with_invalid_token_program(&mut context, Some(10))
             .await
             .unwrap_err();
+
         assert_custom_error!(result, MetadataError::InvalidTokenProgram);
     }
 
@@ -180,7 +188,7 @@ mod create_master_edition {
         let payer_pubkey = context.payer.pubkey();
 
         test_metadata
-            .create(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -188,7 +196,9 @@ mod create_master_edition {
                 None,
                 10,
                 false,
-                0,
+                None,
+                None,
+                None,
             )
             .await
             .unwrap();
@@ -222,7 +232,7 @@ mod create_master_edition {
         });
 
         let result = test_master_edition
-            .create(&mut context, Some(10))
+            .create_v3(&mut context, Some(10))
             .await
             .unwrap_err();
 
@@ -238,7 +248,7 @@ mod create_master_edition {
         let fake_update_authority = Keypair::new();
 
         test_metadata
-            .create(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -246,13 +256,15 @@ mod create_master_edition {
                 None,
                 10,
                 false,
-                0,
+                None,
+                None,
+                None,
             )
             .await
             .unwrap();
 
         let tx = Transaction::new_signed_with_payer(
-            &[instruction::create_master_edition(
+            &[instruction::create_master_edition_v3(
                 id(),
                 test_master_edition.pubkey,
                 test_master_edition.mint_pubkey,
@@ -284,7 +296,7 @@ mod create_master_edition {
         let fake_update_authority = Keypair::new();
 
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -292,6 +304,7 @@ mod create_master_edition {
                 None,
                 10,
                 false,
+                None,
                 None,
                 None,
             )
@@ -333,7 +346,7 @@ mod create_master_edition {
         let payer_pubkey = context.payer.pubkey();
 
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -341,6 +354,7 @@ mod create_master_edition {
                 None,
                 10,
                 false,
+                None,
                 None,
                 None,
             )

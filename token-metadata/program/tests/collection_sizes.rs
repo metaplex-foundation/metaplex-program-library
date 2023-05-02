@@ -258,7 +258,7 @@ mod sized_collection_handlers {
         // Create a Collection Parent NFT without the CollectionDetails struct populated
         let collection_parent_nft = Metadata::new();
         collection_parent_nft
-            .create_v2_default(&mut context)
+            .create_v3_default(&mut context)
             .await
             .unwrap();
 
@@ -275,7 +275,7 @@ mod sized_collection_handlers {
 
         let collection_item_nft = Metadata::new();
         collection_item_nft
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -284,6 +284,7 @@ mod sized_collection_handlers {
                 10,
                 false,
                 Some(collection),
+                None,
                 None,
             )
             .await
@@ -320,7 +321,7 @@ mod sized_collection_handlers {
         // Create a Collection Parent NFT without the CollectionDetails field populated
         let collection_parent_nft = Metadata::new();
         collection_parent_nft
-            .create_v2_default(&mut context)
+            .create_v3_default(&mut context)
             .await
             .unwrap();
 
@@ -337,7 +338,7 @@ mod sized_collection_handlers {
 
         let collection_item_nft = Metadata::new();
         collection_item_nft
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -346,6 +347,7 @@ mod sized_collection_handlers {
                 10,
                 false,
                 Some(collection),
+                None,
                 None,
             )
             .await
@@ -394,7 +396,7 @@ mod sized_collection_handlers {
         // Create a Collection Parent NFT without the CollectionDetails field populated
         let collection_parent_nft = Metadata::new();
         collection_parent_nft
-            .create_v2_default(&mut context)
+            .create_v3_default(&mut context)
             .await
             .unwrap();
         let parent_master_edition_account = MasterEditionV2::new(&collection_parent_nft);
@@ -408,7 +410,7 @@ mod sized_collection_handlers {
 
         let collection_item_nft = Metadata::new();
         collection_item_nft
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -416,6 +418,7 @@ mod sized_collection_handlers {
                 None,
                 10,
                 false,
+                None,
                 None,
                 None,
             )

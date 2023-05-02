@@ -302,8 +302,8 @@ pub fn auth_rules_validate(params: AuthRulesValidateParams) -> ProgramResult {
     Ok(())
 }
 
-pub fn frozen_transfer<'a, 'b>(
-    params: TokenTransferParams<'a, 'b>,
+pub fn frozen_transfer<'a>(
+    params: TokenTransferParams<'a, '_>,
     edition_opt_info: Option<&'a AccountInfo<'a>>,
 ) -> ProgramResult {
     if edition_opt_info.is_none() {

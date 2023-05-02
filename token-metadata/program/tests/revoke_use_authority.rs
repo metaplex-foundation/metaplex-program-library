@@ -23,7 +23,7 @@ mod revoke_use_authority {
 
         let test_meta = Metadata::new();
         test_meta
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -37,6 +37,7 @@ mod revoke_use_authority {
                     total: 1,
                     remaining: 1,
                 }),
+                None,
             )
             .await
             .unwrap();
