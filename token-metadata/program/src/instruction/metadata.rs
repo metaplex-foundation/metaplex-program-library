@@ -150,7 +150,7 @@ pub enum UpdateArgs {
         /// Required authorization data to validate the request.
         authorization_data: Option<AuthorizationData>,
     },
-    AsProgConfigDelegateV2 {
+    AsProgrammableConfigDelegateV2 {
         // Programmable rule set configuration (only applicable to `Programmable` asset types).
         rule_set: RuleSetToggle,
         /// Required authorization data to validate the request.
@@ -231,7 +231,7 @@ impl UpdateArgs {
     }
 
     pub fn default_as_programmable_config_delegate() -> Self {
-        Self::AsProgConfigDelegateV2 {
+        Self::AsProgrammableConfigDelegateV2 {
             rule_set: RuleSetToggle::default(),
             authorization_data: None,
         }

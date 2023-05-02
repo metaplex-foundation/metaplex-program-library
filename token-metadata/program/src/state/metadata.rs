@@ -237,7 +237,7 @@ impl Metadata {
         match &args {
             UpdateArgs::V1 { rule_set, .. }
             | UpdateArgs::AsUpdateAuthorityV2 { rule_set, .. }
-            | UpdateArgs::AsProgConfigDelegateV2 { rule_set, .. }
+            | UpdateArgs::AsProgrammableConfigDelegateV2 { rule_set, .. }
             | UpdateArgs::AsProgrammableConfigItemDelegateV2 { rule_set, .. } => {
                 // if the rule_set data is either 'Set' or 'Clear', only allow updating if the
                 // token standard is equal to `ProgrammableNonFungible` and no SPL delegate is set.
