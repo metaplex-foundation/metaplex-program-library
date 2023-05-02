@@ -107,9 +107,11 @@ fn update_v1(program_id: &Pubkey, ctx: Context<Update>, args: UpdateArgs) -> Pro
     let (token_pubkey, token) = if let Some(token_info) = ctx.accounts.token_info {
         let token = Account::unpack(&token_info.try_borrow_data()?)?;
 
-        // Token mint must match mint account key.
+        // Token mint must match mint account key.  Token amount must be greater than 0.
         if token.mint != *ctx.accounts.mint_info.key {
             return Err(MetadataError::MintMismatch.into());
+        } else if token.amount == 0 {
+            return Err(MetadataError::AmountMustBeGreaterThanZero.into());
         }
 
         (Some(token_info.key), Some(token))
