@@ -35,13 +35,21 @@ export const FAIR_LAUNCH_PROGRAM_ID = new PublicKey(
   'faircnAB9k59Y4TXmLabBULeuTLgV7TkGMGNkjnA15j',
 );
 export const AUCTION_HOUSE_PROGRAM_ID = new PublicKey(
-  'hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk',
+  '3B62xC9sdfT5i8bejPcGkBiDjxqqTgqNFPsMu5NztgcM',
 );
 export const TOKEN_ENTANGLEMENT_PROGRAM_ID = new PublicKey(
   'qntmGodpGkrM42mN68VCZHXnKqDCT8rdY23wFcXCLPd',
 );
 export const WRAPPED_SOL_MINT = new PublicKey(
   'So11111111111111111111111111111111111111112',
+);
+
+export const TOKEN_AUTH_RULES_PROGRAM_ID = new PublicKey(
+  'auth9SigNpDKz4sJJ1DfCTuZrZNSAgh9sFD3rboVmgg',
+);
+
+export const METAPLEX_RULE_SET_ID = new PublicKey(
+  'eBJLFYPxJmMGKuFwpDWkzxZeUrad92kZRC5BJLpzyT9'
 );
 
 export const CONFIG_ARRAY_START =
