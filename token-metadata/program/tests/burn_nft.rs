@@ -22,7 +22,7 @@ mod burn_nft {
         let mut context = program_test().start_with_context().await;
 
         let test_metadata = Metadata::new();
-        test_metadata.create_v2_default(&mut context).await.unwrap();
+        test_metadata.create_v3_default(&mut context).await.unwrap();
 
         let master_edition = MasterEditionV2::new(&test_metadata);
         master_edition
@@ -93,7 +93,7 @@ mod burn_nft {
         let mut context = program_test().start_with_context().await;
 
         let original_nft = Metadata::new();
-        original_nft.create_v2_default(&mut context).await.unwrap();
+        original_nft.create_v3_default(&mut context).await.unwrap();
 
         let master_edition = MasterEditionV2::new(&original_nft);
         master_edition
@@ -148,7 +148,7 @@ mod burn_nft {
         let mut context = program_test().start_with_context().await;
 
         let original_nft = Metadata::new();
-        original_nft.create_v2_default(&mut context).await.unwrap();
+        original_nft.create_v3_default(&mut context).await.unwrap();
 
         let master_edition = MasterEditionV2::new(&original_nft);
         master_edition
@@ -448,7 +448,7 @@ mod burn_nft {
         // Create a Collection Parent NFT without the CollectionDetails struct
         let collection_parent_nft = Metadata::new();
         collection_parent_nft
-            .create_v2_default(&mut context)
+            .create_v3_default(&mut context)
             .await
             .unwrap();
 
@@ -465,7 +465,7 @@ mod burn_nft {
 
         let collection_item_nft = Metadata::new();
         collection_item_nft
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -474,6 +474,7 @@ mod burn_nft {
                 10,
                 false,
                 Some(collection),
+                None,
                 None,
             )
             .await
@@ -522,7 +523,7 @@ mod burn_nft {
         // Create a Collection Parent NFT without the CollectionDetails struct
         let collection_parent_nft = Metadata::new();
         collection_parent_nft
-            .create_v2_default(&mut context)
+            .create_v3_default(&mut context)
             .await
             .unwrap();
 
@@ -539,7 +540,7 @@ mod burn_nft {
 
         let collection_item_nft = Metadata::new();
         collection_item_nft
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -548,6 +549,7 @@ mod burn_nft {
                 10,
                 false,
                 Some(collection),
+                None,
                 None,
             )
             .await
@@ -622,7 +624,7 @@ mod burn_nft {
         let mut context = program_test().start_with_context().await;
 
         let test_metadata = Metadata::new();
-        test_metadata.create_v2_default(&mut context).await.unwrap();
+        test_metadata.create_v3_default(&mut context).await.unwrap();
 
         let master_edition = MasterEditionV2::new(&test_metadata);
         master_edition
@@ -686,7 +688,7 @@ mod burn_nft {
 
         let test_metadata = Metadata::new();
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 name.clone(),
                 symbol.clone(),
@@ -696,6 +698,7 @@ mod burn_nft {
                 is_mutable,
                 collection.clone(),
                 uses.clone(),
+                None,
             )
             .await
             .unwrap();

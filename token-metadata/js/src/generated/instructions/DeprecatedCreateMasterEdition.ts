@@ -8,35 +8,15 @@
 import * as splToken from '@solana/spl-token';
 import * as beet from '@metaplex-foundation/beet';
 import * as web3 from '@solana/web3.js';
-import {
-  CreateMasterEditionArgs,
-  createMasterEditionArgsBeet,
-} from '../types/CreateMasterEditionArgs';
 
 /**
  * @category Instructions
  * @category DeprecatedCreateMasterEdition
  * @category generated
  */
-export type DeprecatedCreateMasterEditionInstructionArgs = {
-  createMasterEditionArgs: CreateMasterEditionArgs;
-};
-/**
- * @category Instructions
- * @category DeprecatedCreateMasterEdition
- * @category generated
- */
-export const DeprecatedCreateMasterEditionStruct = new beet.FixableBeetArgsStruct<
-  DeprecatedCreateMasterEditionInstructionArgs & {
-    instructionDiscriminator: number;
-  }
->(
-  [
-    ['instructionDiscriminator', beet.u8],
-    ['createMasterEditionArgs', createMasterEditionArgsBeet],
-  ],
-  'DeprecatedCreateMasterEditionInstructionArgs',
-);
+export const DeprecatedCreateMasterEditionStruct = new beet.BeetArgsStruct<{
+  instructionDiscriminator: number;
+}>([['instructionDiscriminator', beet.u8]], 'DeprecatedCreateMasterEditionInstructionArgs');
 /**
  * Accounts required by the _DeprecatedCreateMasterEdition_ instruction
  *
@@ -76,20 +56,16 @@ export const deprecatedCreateMasterEditionInstructionDiscriminator = 2;
  * Creates a _DeprecatedCreateMasterEdition_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
- * @param args to provide as instruction data to the program
- *
  * @category Instructions
  * @category DeprecatedCreateMasterEdition
  * @category generated
  */
 export function createDeprecatedCreateMasterEditionInstruction(
   accounts: DeprecatedCreateMasterEditionInstructionAccounts,
-  args: DeprecatedCreateMasterEditionInstructionArgs,
   programId = new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
 ) {
   const [data] = DeprecatedCreateMasterEditionStruct.serialize({
     instructionDiscriminator: deprecatedCreateMasterEditionInstructionDiscriminator,
-    ...args,
   });
   const keys: web3.AccountMeta[] = [
     {

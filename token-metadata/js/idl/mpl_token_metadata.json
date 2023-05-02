@@ -48,14 +48,7 @@
           "desc": "Rent info"
         }
       ],
-      "args": [
-        {
-          "name": "createMetadataAccountArgs",
-          "type": {
-            "defined": "CreateMetadataAccountArgs"
-          }
-        }
-      ],
+      "args": [],
       "discriminant": {
         "type": "u8",
         "value": 0
@@ -77,14 +70,7 @@
           "desc": "Update authority key"
         }
       ],
-      "args": [
-        {
-          "name": "updateMetadataAccountArgs",
-          "type": {
-            "defined": "UpdateMetadataAccountArgs"
-          }
-        }
-      ],
+      "args": [],
       "discriminant": {
         "type": "u8",
         "value": 1
@@ -172,14 +158,7 @@
           "desc": "One time authorization printing mint authority - must be provided if using max supply. THIS WILL TRANSFER AUTHORITY AWAY FROM THIS KEY."
         }
       ],
-      "args": [
-        {
-          "name": "createMasterEditionArgs",
-          "type": {
-            "defined": "CreateMasterEditionArgs"
-          }
-        }
-      ],
+      "args": [],
       "discriminant": {
         "type": "u8",
         "value": 2
@@ -342,14 +321,7 @@
           "desc": "The resource you tied the reservation list too"
         }
       ],
-      "args": [
-        {
-          "name": "setReservationListArgs",
-          "type": {
-            "defined": "SetReservationListArgs"
-          }
-        }
-      ],
+      "args": [],
       "discriminant": {
         "type": "u8",
         "value": 5
@@ -493,14 +465,7 @@
           "desc": "Rent"
         }
       ],
-      "args": [
-        {
-          "name": "mintPrintingTokensViaTokenArgs",
-          "type": {
-            "defined": "MintPrintingTokensViaTokenArgs"
-          }
-        }
-      ],
+      "args": [],
       "discriminant": {
         "type": "u8",
         "value": 8
@@ -552,14 +517,7 @@
           "desc": "Rent"
         }
       ],
-      "args": [
-        {
-          "name": "mintPrintingTokensViaTokenArgs",
-          "type": {
-            "defined": "MintPrintingTokensViaTokenArgs"
-          }
-        }
-      ],
+      "args": [],
       "discriminant": {
         "type": "u8",
         "value": 9
@@ -623,14 +581,7 @@
           "desc": "Rent info"
         }
       ],
-      "args": [
-        {
-          "name": "createMasterEditionArgs",
-          "type": {
-            "defined": "CreateMasterEditionArgs"
-          }
-        }
-      ],
+      "args": [],
       "discriminant": {
         "type": "u8",
         "value": 10
@@ -978,14 +929,7 @@
           "optional": true
         }
       ],
-      "args": [
-        {
-          "name": "createMetadataAccountArgsV2",
-          "type": {
-            "defined": "CreateMetadataAccountArgsV2"
-          }
-        }
-      ],
+      "args": [],
       "discriminant": {
         "type": "u8",
         "value": 16
@@ -4039,112 +3983,6 @@
       }
     },
     {
-      "name": "CreateMetadataAccountArgsV2",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "data",
-            "type": {
-              "defined": "DataV2"
-            }
-          },
-          {
-            "name": "isMutable",
-            "type": "bool"
-          }
-        ]
-      }
-    },
-    {
-      "name": "CreateMetadataAccountArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "data",
-            "type": {
-              "defined": "Data"
-            }
-          },
-          {
-            "name": "isMutable",
-            "type": "bool"
-          }
-        ]
-      }
-    },
-    {
-      "name": "UpdateMetadataAccountArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "data",
-            "type": {
-              "option": {
-                "defined": "Data"
-              }
-            }
-          },
-          {
-            "name": "updateAuthority",
-            "type": {
-              "option": "publicKey"
-            }
-          },
-          {
-            "name": "primarySaleHappened",
-            "type": {
-              "option": "bool"
-            }
-          }
-        ]
-      }
-    },
-    {
-      "name": "MintPrintingTokensViaTokenArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "supply",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "SetReservationListArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "reservations",
-            "type": {
-              "vec": {
-                "defined": "Reservation"
-              }
-            }
-          },
-          {
-            "name": "totalReservationSpots",
-            "type": {
-              "option": "u64"
-            }
-          },
-          {
-            "name": "offset",
-            "type": "u64"
-          },
-          {
-            "name": "totalSpotOffset",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
       "name": "CreateMasterEditionArgs",
       "type": {
         "kind": "struct",
@@ -6730,6 +6568,11 @@
       "code": 188,
       "name": "InvalidCloseAuthority",
       "msg": "The close authority needs to be revoked by the Utility Delegate"
+    },
+    {
+      "code": 189,
+      "name": "InvalidInstruction",
+      "msg": "Invalid or removed instruction"
     }
   ],
   "metadata": {

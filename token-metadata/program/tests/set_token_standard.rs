@@ -5,7 +5,7 @@ use borsh::{BorshDeserialize, BorshSerialize};
 use mpl_token_metadata::{
     error::MetadataError,
     instruction::set_token_standard,
-    state::{Creator, Metadata as ProgramMetadata, TokenStandard},
+    state::{Metadata as ProgramMetadata, TokenStandard},
     ID as PROGRAM_ID,
 };
 use num_traits::FromPrimitive;
@@ -25,28 +25,18 @@ async fn successfully_update_nonfungible() {
 
     // Create an old version NFT with no token standard set.
     let test_nft = Metadata::new();
-    test_nft
-        .create(
-            &mut context,
-            "Test".to_string(),
-            "TST".to_string(),
-            "uri".to_string(),
-            None,
-            10,
-            false,
-            0,
-        )
-        .await
-        .unwrap();
+    test_nft.create_v3_default(&mut context).await.unwrap();
 
     let master_edition = MasterEditionV2::new(&test_nft);
-    master_edition.create(&mut context, Some(0)).await.unwrap();
+    master_edition
+        .create_v3(&mut context, Some(0))
+        .await
+        .unwrap();
 
     let md_account = get_account(&mut context, &test_nft.pubkey).await;
     let metadata = ProgramMetadata::deserialize(&mut md_account.data.as_slice()).unwrap();
 
-    // Check that token standard is not set.
-    assert_eq!(metadata.token_standard, None);
+    assert_eq!(metadata.token_standard, Some(TokenStandard::NonFungible));
 
     let ix = set_token_standard(
         PROGRAM_ID,
@@ -74,30 +64,15 @@ async fn successfully_update_nonfungible() {
 async fn successfully_update_nonfungible_edition() {
     let mut context = program_test().start_with_context().await;
 
-    let creator = Creator {
-        address: context.payer.pubkey(),
-        verified: false,
-        share: 100,
-    };
-
     // Create an old version NFT with no token standard set.
     let test_nft = Metadata::new();
-    test_nft
-        .create(
-            &mut context,
-            "Test".to_string(),
-            "TST".to_string(),
-            "uri".to_string(),
-            Some(vec![creator]),
-            10,
-            false,
-            0,
-        )
-        .await
-        .unwrap();
+    test_nft.create_v3_default(&mut context).await.unwrap();
 
     let master_edition = MasterEditionV2::new(&test_nft);
-    master_edition.create(&mut context, Some(10)).await.unwrap();
+    master_edition
+        .create_v3(&mut context, Some(10))
+        .await
+        .unwrap();
 
     let edition = EditionMarker::new(&test_nft, &master_edition, 1);
     edition.create(&mut context).await.unwrap();
@@ -118,7 +93,6 @@ async fn successfully_update_nonfungible_edition() {
     let new_md_account = get_account(&mut context, &edition.new_metadata_pubkey).await;
     let new_metadata = ProgramMetadata::deserialize(&mut new_md_account.data.as_slice()).unwrap();
 
-    // Check that token standard is not set.
     assert_eq!(new_metadata.token_standard, None);
 
     let ix = set_token_standard(
@@ -151,25 +125,12 @@ async fn successfully_update_fungible_asset() {
     let mut context = program_test().start_with_context().await;
 
     let test_nft = Metadata::new();
-    test_nft
-        .create(
-            &mut context,
-            "Test".to_string(),
-            "TST".to_string(),
-            "uri".to_string(),
-            None,
-            0,
-            false,
-            0,
-        )
-        .await
-        .unwrap();
+    test_nft.create_v3_default(&mut context).await.unwrap();
 
     let md_account = get_account(&mut context, &test_nft.pubkey).await;
     let metadata = ProgramMetadata::deserialize(&mut md_account.data.as_slice()).unwrap();
 
-    // Check that token standard is not set.
-    assert_eq!(metadata.token_standard, None);
+    assert_eq!(metadata.token_standard, Some(TokenStandard::FungibleAsset));
 
     let ix = set_token_standard(
         PROGRAM_ID,
@@ -198,25 +159,12 @@ async fn successfully_update_fungible() {
     let mut context = program_test().start_with_context().await;
 
     let test_nft = Metadata::new();
-    test_nft
-        .create(
-            &mut context,
-            "Test".to_string(),
-            "TST".to_string(),
-            "uri".to_string(),
-            None,
-            0,
-            false,
-            9,
-        )
-        .await
-        .unwrap();
+    test_nft.create_v3_default(&mut context).await.unwrap();
 
     let md_account = get_account(&mut context, &test_nft.pubkey).await;
     let metadata = ProgramMetadata::deserialize(&mut md_account.data.as_slice()).unwrap();
 
-    // Check that token standard is not set.
-    assert_eq!(metadata.token_standard, None);
+    assert_eq!(metadata.token_standard, Some(TokenStandard::FungibleAsset));
 
     let ix = set_token_standard(
         PROGRAM_ID,
@@ -236,8 +184,7 @@ async fn successfully_update_fungible() {
     let md_account = get_account(&mut context, &test_nft.pubkey).await;
     let metadata = ProgramMetadata::deserialize(&mut md_account.data.as_slice()).unwrap();
 
-    // Check that token standard has been updated successfully.
-    assert_eq!(metadata.token_standard, Some(TokenStandard::Fungible));
+    assert_eq!(metadata.token_standard, Some(TokenStandard::FungibleAsset));
 }
 
 #[tokio::test]
@@ -246,28 +193,13 @@ async fn updating_without_authority_fails() {
 
     // Create an old version NFT with no token standard set.
     let test_nft = Metadata::new();
-    test_nft
-        .create(
-            &mut context,
-            "Test".to_string(),
-            "TST".to_string(),
-            "uri".to_string(),
-            None,
-            10,
-            false,
-            0,
-        )
-        .await
-        .unwrap();
+    test_nft.create_v3_default(&mut context).await.unwrap();
 
     let master_edition = MasterEditionV2::new(&test_nft);
-    master_edition.create(&mut context, Some(0)).await.unwrap();
-
-    let md_account = get_account(&mut context, &test_nft.pubkey).await;
-    let metadata = ProgramMetadata::deserialize(&mut md_account.data.as_slice()).unwrap();
-
-    // Check that token standard is not set.
-    assert_eq!(metadata.token_standard, None);
+    master_edition
+        .create_v3(&mut context, Some(0))
+        .await
+        .unwrap();
 
     let fake_authority = Keypair::new();
 
@@ -299,28 +231,18 @@ async fn mint_matches_metadata() {
 
     // Create an old version NFT with no token standard set.
     let test_nft = Metadata::new();
-    test_nft
-        .create(
-            &mut context,
-            "Test".to_string(),
-            "TST".to_string(),
-            "uri".to_string(),
-            None,
-            10,
-            false,
-            0,
-        )
-        .await
-        .unwrap();
+    test_nft.create_v3_default(&mut context).await.unwrap();
 
     let master_edition = MasterEditionV2::new(&test_nft);
-    master_edition.create(&mut context, Some(0)).await.unwrap();
+    master_edition
+        .create_v3(&mut context, Some(0))
+        .await
+        .unwrap();
 
     let mut md_account = get_account(&mut context, &test_nft.pubkey).await;
     let mut metadata = ProgramMetadata::deserialize(&mut md_account.data.as_slice()).unwrap();
 
-    // Check that token standard is not set.
-    assert_eq!(metadata.token_standard, None);
+    assert_eq!(metadata.token_standard, Some(TokenStandard::NonFungible));
 
     let invalid_mint = Keypair::new();
 
@@ -363,48 +285,23 @@ async fn incorrect_edition_fails() {
 
     // Create an old version NFT with no token standard set.
     let test_nft = Metadata::new();
-    test_nft
-        .create(
-            &mut context,
-            "Test".to_string(),
-            "TST".to_string(),
-            "uri".to_string(),
-            None,
-            10,
-            false,
-            0,
-        )
-        .await
-        .unwrap();
+    test_nft.create_v3_default(&mut context).await.unwrap();
 
     // Other NFT so we can create a valid, but incorrect edition account.
     // This one won't match the mint passed in.
     let test_nft2 = Metadata::new();
-    test_nft2
-        .create(
-            &mut context,
-            "Test".to_string(),
-            "TST".to_string(),
-            "uri".to_string(),
-            None,
-            10,
-            false,
-            0,
-        )
-        .await
-        .unwrap();
+    test_nft2.create_v3_default(&mut context).await.unwrap();
 
     let wrong_master_edition = MasterEditionV2::new(&test_nft2);
     wrong_master_edition
-        .create(&mut context, Some(0))
+        .create_v3(&mut context, Some(0))
         .await
         .unwrap();
 
     let md_account = get_account(&mut context, &test_nft.pubkey).await;
     let metadata = ProgramMetadata::deserialize(&mut md_account.data.as_slice()).unwrap();
 
-    // Check that token standard is not set.
-    assert_eq!(metadata.token_standard, None);
+    assert_eq!(metadata.token_standard, Some(TokenStandard::FungibleAsset));
 
     let ix = set_token_standard(
         PROGRAM_ID,
@@ -434,27 +331,14 @@ async fn invalid_edition_fails() {
 
     // Create an old version NFT with no token standard set.
     let test_nft = Metadata::new();
-    test_nft
-        .create(
-            &mut context,
-            "Test".to_string(),
-            "TST".to_string(),
-            "uri".to_string(),
-            None,
-            10,
-            false,
-            0,
-        )
-        .await
-        .unwrap();
+    test_nft.create_v3_default(&mut context).await.unwrap();
 
     let invalid_edition = Keypair::new().pubkey();
 
     let md_account = get_account(&mut context, &test_nft.pubkey).await;
     let metadata = ProgramMetadata::deserialize(&mut md_account.data.as_slice()).unwrap();
 
-    // Check that token standard is not set.
-    assert_eq!(metadata.token_standard, None);
+    assert_eq!(metadata.token_standard, Some(TokenStandard::FungibleAsset));
 
     let ix = set_token_standard(
         PROGRAM_ID,
@@ -484,28 +368,18 @@ async fn updating_nonfungible_without_edition_fails() {
 
     // Create an old version NFT with no token standard set.
     let test_nft = Metadata::new();
-    test_nft
-        .create(
-            &mut context,
-            "Test".to_string(),
-            "TST".to_string(),
-            "uri".to_string(),
-            None,
-            10,
-            false,
-            0,
-        )
-        .await
-        .unwrap();
+    test_nft.create_v3_default(&mut context).await.unwrap();
 
     let master_edition = MasterEditionV2::new(&test_nft);
-    master_edition.create(&mut context, Some(0)).await.unwrap();
+    master_edition
+        .create_v3(&mut context, Some(0))
+        .await
+        .unwrap();
 
     let md_account = get_account(&mut context, &test_nft.pubkey).await;
     let metadata = ProgramMetadata::deserialize(&mut md_account.data.as_slice()).unwrap();
 
-    // Check that token standard is not set.
-    assert_eq!(metadata.token_standard, None);
+    assert_eq!(metadata.token_standard, Some(TokenStandard::NonFungible));
 
     let ix = set_token_standard(
         PROGRAM_ID,

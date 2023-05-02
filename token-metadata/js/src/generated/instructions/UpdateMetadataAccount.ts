@@ -7,35 +7,15 @@
 
 import * as beet from '@metaplex-foundation/beet';
 import * as web3 from '@solana/web3.js';
-import {
-  UpdateMetadataAccountArgs,
-  updateMetadataAccountArgsBeet,
-} from '../types/UpdateMetadataAccountArgs';
 
 /**
  * @category Instructions
  * @category UpdateMetadataAccount
  * @category generated
  */
-export type UpdateMetadataAccountInstructionArgs = {
-  updateMetadataAccountArgs: UpdateMetadataAccountArgs;
-};
-/**
- * @category Instructions
- * @category UpdateMetadataAccount
- * @category generated
- */
-export const UpdateMetadataAccountStruct = new beet.FixableBeetArgsStruct<
-  UpdateMetadataAccountInstructionArgs & {
-    instructionDiscriminator: number;
-  }
->(
-  [
-    ['instructionDiscriminator', beet.u8],
-    ['updateMetadataAccountArgs', updateMetadataAccountArgsBeet],
-  ],
-  'UpdateMetadataAccountInstructionArgs',
-);
+export const UpdateMetadataAccountStruct = new beet.BeetArgsStruct<{
+  instructionDiscriminator: number;
+}>([['instructionDiscriminator', beet.u8]], 'UpdateMetadataAccountInstructionArgs');
 /**
  * Accounts required by the _UpdateMetadataAccount_ instruction
  *
@@ -56,20 +36,16 @@ export const updateMetadataAccountInstructionDiscriminator = 1;
  * Creates a _UpdateMetadataAccount_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
- * @param args to provide as instruction data to the program
- *
  * @category Instructions
  * @category UpdateMetadataAccount
  * @category generated
  */
 export function createUpdateMetadataAccountInstruction(
   accounts: UpdateMetadataAccountInstructionAccounts,
-  args: UpdateMetadataAccountInstructionArgs,
   programId = new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
 ) {
   const [data] = UpdateMetadataAccountStruct.serialize({
     instructionDiscriminator: updateMetadataAccountInstructionDiscriminator,
-    ...args,
   });
   const keys: web3.AccountMeta[] = [
     {

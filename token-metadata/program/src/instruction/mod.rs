@@ -2,7 +2,6 @@ mod bubblegum;
 mod burn;
 mod collection;
 mod delegate;
-pub(crate) mod deprecated;
 mod edition;
 pub(crate) mod escrow;
 mod freeze;
@@ -29,14 +28,6 @@ pub use state::*;
 pub use uses::*;
 pub use verification::*;
 
-#[allow(deprecated)]
-pub use crate::deprecated_instruction::{
-    create_master_edition, create_metadata_accounts, create_metadata_accounts_v2,
-    mint_edition_from_master_edition_via_vault_proxy, update_metadata_accounts,
-    CreateMetadataAccountArgs, CreateMetadataAccountArgsV2, UpdateMetadataAccountArgs,
-};
-use crate::deprecated_instruction::{MintPrintingTokensViaTokenArgs, SetReservationListArgs};
-
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 /// Instructions supported by the Metadata program.
@@ -51,12 +42,12 @@ pub enum MetadataInstruction {
     #[account(4, name="update_authority", desc="update authority info")]
     #[account(5, name="system_program", desc="System program")]
     #[account(6, name="rent", desc="Rent info")]
-    CreateMetadataAccount(CreateMetadataAccountArgs),
+    CreateMetadataAccount,
 
     /// Update a Metadata
     #[account(0, writable, name="metadata", desc="Metadata account")]
     #[account(1, signer, name="update_authority", desc="Update authority key")]
-    UpdateMetadataAccount(UpdateMetadataAccountArgs),
+    UpdateMetadataAccount,
 
     /// Register a Metadata as a Master Edition V1, which means Editions can be minted.
     /// Henceforth, no further tokens will be mintable from this primary mint. Will throw an error if more than one
@@ -74,7 +65,7 @@ pub enum MetadataInstruction {
     #[account(10, name="system_program", desc="System program")]
     #[account(11, name="rent", desc="Rent info")]
     #[account(12, signer, name="one_time_printing_authorization_mint_authority", desc="One time authorization printing mint authority - must be provided if using max supply. THIS WILL TRANSFER AUTHORITY AWAY FROM THIS KEY.")]
-    DeprecatedCreateMasterEdition(CreateMasterEditionArgs),
+    DeprecatedCreateMasterEdition,
 
     /// Given an authority token minted by the Printing mint of a master edition, and a brand new non-metadata-ed mint with one token
     /// make a new Metadata + Edition that is a child of the master edition denoted by this authority token.
@@ -120,7 +111,7 @@ pub enum MetadataInstruction {
     #[account(0, writable, name="master_edition", desc="Master Edition V1 key (pda of ['metadata', program id, mint id, 'edition'])")]
     #[account(1, writable, name="reservation_list", desc="PDA for ReservationList of ['metadata', program id, master edition key, 'reservation', resource-key]")]
     #[account(2, signer, name="resource", desc="The resource you tied the reservation list too")]
-    DeprecatedSetReservationList(SetReservationListArgs),
+    DeprecatedSetReservationList,
 
     /// Create an empty reservation list for a resource who can come back later as a signer and fill the reservation list
     /// with reservations to ensure that people who come to get editions get the number they expect. See SetReservationList for more.
@@ -150,7 +141,7 @@ pub enum MetadataInstruction {
     #[account(6, name="master_edition", desc="Master Edition V1 key (pda of ['metadata', program id, mint id, 'edition'])")]
     #[account(7, name="token_program", desc="Token program")]
     #[account(8, name="rent", desc="Rent")]
-    DeprecatedMintPrintingTokensViaToken(MintPrintingTokensViaTokenArgs),
+    DeprecatedMintPrintingTokensViaToken,
 
     /// Using your update authority, mint printing tokens for your master edition.
     #[account(0, writable, name="destination", desc="Destination account")]
@@ -160,7 +151,7 @@ pub enum MetadataInstruction {
     #[account(4, name="master_edition", desc="Master Edition V1 key (pda of ['metadata', program id, mint id, 'edition'])")]
     #[account(5, name="token_program", desc="Token program")]
     #[account(6, name="rent", desc="Rent")]
-    DeprecatedMintPrintingTokens(MintPrintingTokensViaTokenArgs),
+    DeprecatedMintPrintingTokens,
 
     /// Register a Metadata as a Master Edition V2, which means Edition V2s can be minted.
     /// Henceforth, no further tokens will be mintable from this primary mint. Will throw an error if more than one
@@ -174,7 +165,7 @@ pub enum MetadataInstruction {
     #[account(6, name="token_program", desc="Token program")]
     #[account(7, name="system_program", desc="System program")]
     #[account(8, name="rent", desc="Rent info")]
-    CreateMasterEdition(CreateMasterEditionArgs),
+    CreateMasterEdition,
 
     /// Given a token account containing the master edition token to prove authority, and a brand new non-metadata-ed mint with one token
     /// make a new Metadata + Edition that is a child of the master edition denoted by this authority token.
@@ -240,7 +231,7 @@ pub enum MetadataInstruction {
     #[account(4, name="update_authority", desc="update authority info")]
     #[account(5, name="system_program", desc="System program")]
     #[account(6, optional, name="rent", desc="Rent info")]
-    CreateMetadataAccountV2(CreateMetadataAccountArgsV2),
+    CreateMetadataAccountV2,
 
     /// Register a Metadata as a Master Edition V2, which means Edition V2s can be minted.
     /// Henceforth, no further tokens will be mintable from this primary mint. Will throw an error if more than one

@@ -4050,6 +4050,26 @@ createErrorFromCodeLookup.set(0xbc, () => new InvalidCloseAuthorityError());
 createErrorFromNameLookup.set('InvalidCloseAuthority', () => new InvalidCloseAuthorityError());
 
 /**
+ * InvalidInstruction: 'Invalid or removed instruction'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidInstructionError extends Error {
+  readonly code: number = 0xbd;
+  readonly name: string = 'InvalidInstruction';
+  constructor() {
+    super('Invalid or removed instruction');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidInstructionError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xbd, () => new InvalidInstructionError());
+createErrorFromNameLookup.set('InvalidInstruction', () => new InvalidInstructionError());
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated
