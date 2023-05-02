@@ -5037,7 +5037,7 @@
             ]
           },
           {
-            "name": "AsProgConfigDelegateV2",
+            "name": "AsProgrammableConfigDelegateV2",
             "fields": [
               {
                 "name": "rule_set",
