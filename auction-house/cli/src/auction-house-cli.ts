@@ -22,7 +22,12 @@ import { ASSOCIATED_TOKEN_PROGRAM_ID, Token } from '@solana/spl-token';
 import { getPriceWithMantissa } from './helpers/various';
 import { sendTransactionWithRetryWithKeypair } from './helpers/transactions';
 import { decodeMetadata, Metadata } from './helpers/schema';
-import { AccountMeta, SYSVAR_INSTRUCTIONS_PUBKEY } from '@solana/web3.js';
+import { 
+  ComputeBudgetProgram, 
+  AccountMeta,
+  SYSVAR_INSTRUCTIONS_PUBKEY, 
+  SystemProgram
+} from '@solana/web3.js';
 
 program.version('0.0.1');
 log.setLevel('info');
@@ -262,7 +267,6 @@ programCommand('sell')
 
     const [programAsSigner, programAsSignerBump] =
       await getAuctionHouseProgramAsSigner();
-    // const metadata = await getMetadata(mintKey);
 
     const [tradeState, tradeBump] = await getAuctionHouseTradeState(
       auctionHouseKey,
@@ -288,6 +292,7 @@ programCommand('sell')
 
     const signers = [];
 
+    const metaData = await getMetadata(mintKey);
     // remaining accounts
     const tokenRecord = (
       await getTokenRecord(mintKey, tokenAccountKey)
@@ -351,7 +356,7 @@ programCommand('sell')
       {
         accounts: {
           wallet: walletKeyPair.publicKey,
-          metadata: await getMetadata(mintKey),
+          metadata: metaData,
           tokenAccount: tokenAccountKey,
           //@ts-ignore
           authority: auctionHouseObj.authority,
@@ -384,13 +389,21 @@ programCommand('sell')
         .map(k => (k.isSigner = true));
     }
 
+    instruction.keys
+      .filter(k => k.pubkey.equals(metaData))
+      .map(k => (k.isWritable = true));
+
+    const modifyComputeUnits = ComputeBudgetProgram.setComputeUnitLimit({
+      units: 400_000,
+    });
     await sendTransactionWithRetryWithKeypair(
       anchorProgram.provider.connection,
       auctionHouseSigns ? auctionHouseKeypairLoaded : walletKeyPair,
-      [instruction],
+      [modifyComputeUnits, instruction],
       signers,
       'max',
     );
+    
 
     log.info(
       'Set',
@@ -658,7 +671,81 @@ programCommand('cancel')
     )[0];
 
     const signers = [];
+    const programAsSigner = (
+      await getAuctionHouseProgramAsSigner()
+    )[0];
 
+    const metaData = await getMetadata(mintKey);
+    // remaining accounts
+    const tokenRecord = (
+      await getTokenRecord(mintKey, tokenAccountKey)
+    )[0];
+
+    const pasToken = (
+      await getAtaForMint(mintKey, programAsSigner)
+    )[0];
+    const delegateRecord = (
+      await getTokenRecord(mintKey, pasToken)
+    )[0];
+    const edition = await getMasterEdition(mintKey);
+
+    const remainingAccounts: AccountMeta[] = [];
+    remainingAccounts.push({
+      pubkey: TOKEN_METADATA_PROGRAM_ID,
+      isWritable: false,
+      isSigner: false,
+    });
+    remainingAccounts.push({
+      pubkey: delegateRecord,
+      isWritable: true,
+      isSigner: false,
+    });
+    remainingAccounts.push({
+      pubkey: programAsSigner,
+      isWritable: false,
+      isSigner: false,
+    });
+    remainingAccounts.push({
+      pubkey: metaData,
+      isWritable: true,
+      isSigner: false,
+    });
+    remainingAccounts.push({
+      pubkey: edition,
+      isWritable: false,
+      isSigner: false,
+    });
+    remainingAccounts.push({
+      pubkey: tokenRecord,
+      isWritable: true,
+      isSigner: false,
+    });
+    remainingAccounts.push({
+      pubkey: mintKey,
+      isWritable: false,
+      isSigner: false,
+    });
+
+    remainingAccounts.push({
+      pubkey: TOKEN_AUTH_RULES_PROGRAM_ID,
+      isWritable: false,
+      isSigner: false,
+    });
+    remainingAccounts.push({
+      pubkey: METAPLEX_RULE_SET_ID,
+      isWritable: false,
+      isSigner: false,
+    });
+    remainingAccounts.push({
+      pubkey: SYSVAR_INSTRUCTIONS_PUBKEY,
+      isWritable: false,
+      isSigner: false,
+    });
+    remainingAccounts.push({
+      pubkey: SystemProgram.programId,
+      isWritable: false,
+      isSigner: false,
+    });
     const instruction = await anchorProgram.instruction.cancel(
       buyPriceAdjusted,
       tokenSizeAdjusted,
@@ -675,6 +762,7 @@ programCommand('cancel')
           tradeState,
           tokenProgram: TOKEN_PROGRAM_ID,
         },
+        remainingAccounts,
         signers,
       },
     );
@@ -824,8 +912,9 @@ programCommand('execute_sale')
       auctionHouseKey,
       buyerWalletKey,
     );
-    const [programAsSigner, programAsSignerBump] =
+    const [programAsSigner, programAsSignerBump] = 
       await getAuctionHouseProgramAsSigner();
+
     const metadata = await getMetadata(mintKey);
 
     const metadataObj = await anchorProgram.provider.connection.getAccountInfo(
@@ -857,6 +946,59 @@ programCommand('execute_sale')
         });
       }
     }
+    const edition = await getMasterEdition(mintKey);
+    remainingAccounts.push({
+      pubkey: TOKEN_METADATA_PROGRAM_ID,
+      isWritable: false,
+      isSigner: false,
+    });
+    remainingAccounts.push({
+      pubkey: edition,
+      isWritable: false,
+      isSigner: false,
+    });
+
+    const ownerTokenAccountKey = (
+      await getAtaForMint(mintKey, sellerWalletKey)
+    )[0];
+    const ownerTokenRecord = (
+      await getTokenRecord(mintKey, ownerTokenAccountKey)
+    )[0];
+    remainingAccounts.push({
+      pubkey: ownerTokenRecord,
+      isWritable: true,
+      isSigner: false,
+    });
+
+    const destinationTokenAccountKey = (
+      await getAtaForMint(mintKey, buyerWalletKey)
+    )[0];
+    const destinationTokenRecord = (
+      await getTokenRecord(mintKey, destinationTokenAccountKey)
+    )[0];
+    remainingAccounts.push({
+      pubkey: destinationTokenRecord,
+      isWritable: true,
+      isSigner: false,
+    });
+
+    remainingAccounts.push({
+      pubkey: TOKEN_AUTH_RULES_PROGRAM_ID,
+      isWritable: false,
+      isSigner: false,
+    });
+    remainingAccounts.push({
+      pubkey: METAPLEX_RULE_SET_ID,
+      isWritable: false,
+      isSigner: false,
+    });
+    remainingAccounts.push({
+      pubkey: SYSVAR_INSTRUCTIONS_PUBKEY,
+      isWritable: false,
+      isSigner: false,
+    });
+
+    //
     const signers = [];
     //@ts-ignore
     const tMint: web3.PublicKey = auctionHouseObj.treasuryMint;
@@ -871,10 +1013,10 @@ programCommand('execute_sale')
         accounts: {
           buyer: buyerWalletKey,
           seller: sellerWalletKey,
-          metadata,
+          metadata: metadata,
           tokenAccount: tokenAccountKey,
           tokenMint: mintKey,
-          escrowPaymentAccount,
+          escrowPaymentAccount: escrowPaymentAccount,
           treasuryMint: tMint,
           sellerPaymentReceiptAccount: isNative
             ? sellerWalletKey
@@ -891,12 +1033,12 @@ programCommand('execute_sale')
           auctionHouseFeeAccount: auctionHouseObj.auctionHouseFeeAccount,
           //@ts-ignore
           auctionHouseTreasury: auctionHouseObj.auctionHouseTreasury,
-          sellerTradeState,
-          buyerTradeState,
+          sellerTradeState: sellerTradeState,
+          buyerTradeState: buyerTradeState,
           tokenProgram: TOKEN_PROGRAM_ID,
           systemProgram: web3.SystemProgram.programId,
           ataProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-          programAsSigner,
+          programAsSigner: programAsSigner,
           rent: web3.SYSVAR_RENT_PUBKEY,
           freeTradeState,
         },
@@ -919,10 +1061,17 @@ programCommand('execute_sale')
         .map(k => (k.isSigner = true));
     }
 
+    instruction.keys
+      .filter(k => k.pubkey.equals(metadata))
+      .map(k => (k.isWritable = true));
+    
+    const modifyComputeUnits = ComputeBudgetProgram.setComputeUnitLimit({
+        units: 400_000,
+    });
     await sendTransactionWithRetryWithKeypair(
       anchorProgram.provider.connection,
       auctionHouseSigns ? auctionHouseKeypairLoaded : walletKeyPair,
-      [instruction],
+      [modifyComputeUnits, instruction],
       signers,
       'max',
     );
@@ -1049,7 +1198,7 @@ programCommand('buy')
             : transferAuthority.publicKey,
           metadata: await getMetadata(mintKey),
           tokenAccount: tokenAccountKey,
-          escrowPaymentAccount,
+          escrowPaymentAccount: escrowPaymentAccount,
           //@ts-ignore
           treasuryMint: auctionHouseObj.treasuryMint,
           //@ts-ignore
