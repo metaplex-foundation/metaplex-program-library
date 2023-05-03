@@ -9,6 +9,8 @@ pub const PREFIX: &str = "metadata";
 
 pub const EDITION: &str = "edition";
 
+pub const MARKER: &str = "marker";
+
 pub const USER: &str = "user";
 
 pub const BURN: &str = "burn";
