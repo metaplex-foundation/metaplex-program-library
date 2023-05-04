@@ -117,8 +117,8 @@ pub fn process_create_metadata_accounts_logic(
 
     // This allows the Bubblegum program to create metadata with verified creators since they were
     // verified already by the Bubblegum program.
-    let allow_direct_creator_writes =
-        allow_direct_creator_writes || is_decompression(mint_info, mint_authority_info);
+    let is_decompression = is_decompression(mint_info, mint_authority_info);
+    let allow_direct_creator_writes = allow_direct_creator_writes || is_decompression;
 
     assert_data_valid(
         &compatible_data,
@@ -139,7 +139,7 @@ pub fn process_create_metadata_accounts_logic(
     assert_valid_use(&data.uses, &None)?;
     metadata.uses = data.uses;
 
-    assert_collection_update_is_valid(is_edition, &None, &data.collection)?;
+    assert_collection_update_is_valid(is_edition || is_decompression, &None, &data.collection)?;
     metadata.collection = data.collection;
 
     // We want to create new collections with a size of zero but we use the
