@@ -560,7 +560,7 @@ impl DigitalAsset {
         payer: Keypair,
         delegate: Pubkey,
         args: DelegateArgs,
-    ) -> Result<(), BanksClientError> {
+    ) -> Result<Option<Pubkey>, BanksClientError> {
         let mut builder = DelegateBuilder::new();
         builder
             .delegate(delegate)
@@ -570,16 +570,10 @@ impl DigitalAsset {
             .authority(payer.pubkey())
             .spl_token_program(spl_token::ID);
 
+        let mut delegate_or_token_record = None;
+
         match args {
-            DelegateArgs::CollectionV1 { .. } => {
-                let (delegate_record, _) = find_metadata_delegate_record_account(
-                    &self.mint.pubkey(),
-                    MetadataDelegateRole::Collection,
-                    &payer.pubkey(),
-                    &delegate,
-                );
-                builder.delegate_record(delegate_record);
-            }
+            // Token delegates.
             DelegateArgs::SaleV1 { .. }
             | DelegateArgs::TransferV1 { .. }
             | DelegateArgs::UtilityV1 { .. }
@@ -588,15 +582,30 @@ impl DigitalAsset {
                 let (token_record, _) =
                     find_token_record_account(&self.mint.pubkey(), &self.token.unwrap());
                 builder.token_record(token_record);
+                delegate_or_token_record = Some(token_record);
             }
-            DelegateArgs::UpdateV1 { .. } => {
+            DelegateArgs::StandardV1 { .. } => { /* nothing to add */ }
+
+            // Metadata delegates.
+            DelegateArgs::CollectionV1 { .. } => {
                 let (delegate_record, _) = find_metadata_delegate_record_account(
                     &self.mint.pubkey(),
-                    MetadataDelegateRole::Update,
+                    MetadataDelegateRole::Collection,
                     &payer.pubkey(),
                     &delegate,
                 );
                 builder.delegate_record(delegate_record);
+                delegate_or_token_record = Some(delegate_record);
+            }
+            DelegateArgs::DataV1 { .. } => {
+                let (delegate_record, _) = find_metadata_delegate_record_account(
+                    &self.mint.pubkey(),
+                    MetadataDelegateRole::Data,
+                    &payer.pubkey(),
+                    &delegate,
+                );
+                builder.delegate_record(delegate_record);
+                delegate_or_token_record = Some(delegate_record);
             }
             DelegateArgs::ProgrammableConfigV1 { .. } => {
                 let (delegate_record, _) = find_metadata_delegate_record_account(
@@ -606,8 +615,48 @@ impl DigitalAsset {
                     &delegate,
                 );
                 builder.delegate_record(delegate_record);
+                delegate_or_token_record = Some(delegate_record);
             }
-            DelegateArgs::StandardV1 { .. } => { /* nothing to add */ }
+            DelegateArgs::AuthorityItemV1 { .. } => {
+                let (delegate_record, _) = find_metadata_delegate_record_account(
+                    &self.mint.pubkey(),
+                    MetadataDelegateRole::AuthorityItem,
+                    &payer.pubkey(),
+                    &delegate,
+                );
+                builder.delegate_record(delegate_record);
+                delegate_or_token_record = Some(delegate_record);
+            }
+            DelegateArgs::DataItemV1 { .. } => {
+                let (delegate_record, _) = find_metadata_delegate_record_account(
+                    &self.mint.pubkey(),
+                    MetadataDelegateRole::DataItem,
+                    &payer.pubkey(),
+                    &delegate,
+                );
+                builder.delegate_record(delegate_record);
+                delegate_or_token_record = Some(delegate_record);
+            }
+            DelegateArgs::CollectionItemV1 { .. } => {
+                let (delegate_record, _) = find_metadata_delegate_record_account(
+                    &self.mint.pubkey(),
+                    MetadataDelegateRole::CollectionItem,
+                    &payer.pubkey(),
+                    &delegate,
+                );
+                builder.delegate_record(delegate_record);
+                delegate_or_token_record = Some(delegate_record);
+            }
+            DelegateArgs::ProgrammableConfigItemV1 { .. } => {
+                let (delegate_record, _) = find_metadata_delegate_record_account(
+                    &self.mint.pubkey(),
+                    MetadataDelegateRole::ProgrammableConfigItem,
+                    &payer.pubkey(),
+                    &delegate,
+                );
+                builder.delegate_record(delegate_record);
+                delegate_or_token_record = Some(delegate_record);
+            }
         }
 
         if let Some(edition) = self.edition {
@@ -641,7 +690,8 @@ impl DigitalAsset {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await
+        context.banks_client.process_transaction(tx).await?;
+        Ok(delegate_or_token_record)
     }
 
     pub async fn migrate(
@@ -772,15 +822,7 @@ impl DigitalAsset {
             .spl_token_program(spl_token::ID);
 
         match args {
-            RevokeArgs::CollectionV1 => {
-                let (delegate_record, _) = find_metadata_delegate_record_account(
-                    &self.mint.pubkey(),
-                    MetadataDelegateRole::Collection,
-                    &payer.pubkey(),
-                    &delegate,
-                );
-                builder.delegate_record(delegate_record);
-            }
+            // Token delegates.
             RevokeArgs::SaleV1
             | RevokeArgs::TransferV1
             | RevokeArgs::UtilityV1
@@ -791,10 +833,22 @@ impl DigitalAsset {
                     find_token_record_account(&self.mint.pubkey(), &self.token.unwrap());
                 builder.token_record(token_record);
             }
-            RevokeArgs::UpdateV1 => {
+            RevokeArgs::StandardV1 { .. } => { /* nothing to add */ }
+
+            // Metadata delegates.
+            RevokeArgs::CollectionV1 => {
                 let (delegate_record, _) = find_metadata_delegate_record_account(
                     &self.mint.pubkey(),
-                    MetadataDelegateRole::Update,
+                    MetadataDelegateRole::Collection,
+                    &payer.pubkey(),
+                    &delegate,
+                );
+                builder.delegate_record(delegate_record);
+            }
+            RevokeArgs::DataV1 => {
+                let (delegate_record, _) = find_metadata_delegate_record_account(
+                    &self.mint.pubkey(),
+                    MetadataDelegateRole::Data,
                     &payer.pubkey(),
                     &delegate,
                 );
@@ -809,7 +863,43 @@ impl DigitalAsset {
                 );
                 builder.delegate_record(delegate_record);
             }
-            RevokeArgs::StandardV1 { .. } => { /* nothing to add */ }
+            RevokeArgs::AuthorityItemV1 => {
+                let (delegate_record, _) = find_metadata_delegate_record_account(
+                    &self.mint.pubkey(),
+                    MetadataDelegateRole::AuthorityItem,
+                    &payer.pubkey(),
+                    &delegate,
+                );
+                builder.delegate_record(delegate_record);
+            }
+            RevokeArgs::DataItemV1 => {
+                let (delegate_record, _) = find_metadata_delegate_record_account(
+                    &self.mint.pubkey(),
+                    MetadataDelegateRole::DataItem,
+                    &payer.pubkey(),
+                    &delegate,
+                );
+                builder.delegate_record(delegate_record);
+            }
+            RevokeArgs::CollectionItemV1 => {
+                let (delegate_record, _) = find_metadata_delegate_record_account(
+                    &self.mint.pubkey(),
+                    MetadataDelegateRole::CollectionItem,
+                    &payer.pubkey(),
+                    &delegate,
+                );
+                builder.delegate_record(delegate_record);
+            }
+
+            RevokeArgs::ProgrammableConfigItemV1 => {
+                let (delegate_record, _) = find_metadata_delegate_record_account(
+                    &self.mint.pubkey(),
+                    MetadataDelegateRole::ProgrammableConfigItem,
+                    &payer.pubkey(),
+                    &delegate,
+                );
+                builder.delegate_record(delegate_record);
+            }
         }
 
         if let Some(edition) = self.edition {

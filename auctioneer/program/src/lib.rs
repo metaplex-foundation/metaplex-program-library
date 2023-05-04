@@ -1,3 +1,4 @@
+#![allow(clippy::result_large_err)]
 pub mod authorize;
 pub mod bid;
 pub mod cancel;

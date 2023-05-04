@@ -1,6 +1,6 @@
 [package]
 name = "mpl-token-metadata"
-version = "1.10.0"
+version = "1.11.0"
 description = "Metaplex Metadata"
 authors = ["Metaplex Developers <dev@metaplex.com>"]
 repository = "https://github.com/metaplex-foundation/metaplex-program-library"
@@ -36,6 +36,7 @@ solana-sdk = "1.14"
 solana-program-test = "1.14"
 serde = { version = "1.0.147", features = ["derive"]}
 async-trait = "0.1.64"
+old-token-metadata = { package = "mpl-token-metadata", version = "=1.10.0", features = ["no-entrypoint"] }
 
 [lib]
 crate-type = ["cdylib", "lib"]

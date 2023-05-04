@@ -11,11 +11,14 @@ import * as beet from '@metaplex-foundation/beet';
  * @category generated
  */
 export enum MetadataDelegateRole {
-  Authority,
+  AuthorityItem,
   Collection,
   Use,
-  Update,
+  Data,
   ProgrammableConfig,
+  DataItem,
+  CollectionItem,
+  ProgrammableConfigItem,
 }
 
 /**

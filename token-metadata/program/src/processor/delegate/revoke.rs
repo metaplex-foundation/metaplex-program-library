@@ -33,16 +33,16 @@ pub fn revoke<'a>(
         RevokeArgs::SaleV1 => Some(TokenDelegateRole::Sale),
         // Transfer
         RevokeArgs::TransferV1 => Some(TokenDelegateRole::Transfer),
-        // LockedTransfer
-        RevokeArgs::LockedTransferV1 => Some(TokenDelegateRole::LockedTransfer),
         // Utility
         RevokeArgs::UtilityV1 => Some(TokenDelegateRole::Utility),
         // Staking
         RevokeArgs::StakingV1 => Some(TokenDelegateRole::Staking),
-        // Migration
-        RevokeArgs::MigrationV1 => Some(TokenDelegateRole::Migration),
         // Standard
         RevokeArgs::StandardV1 => Some(TokenDelegateRole::Standard),
+        // LockedTransfer
+        RevokeArgs::LockedTransferV1 => Some(TokenDelegateRole::LockedTransfer),
+        // Migration
+        RevokeArgs::MigrationV1 => Some(TokenDelegateRole::Migration),
         // we don't need to fail if did not find a match at this point
         _ => None,
     };
@@ -55,8 +55,12 @@ pub fn revoke<'a>(
     // checks if it is a MetadataDelegate creation
     let metadata_delegate = match &args {
         RevokeArgs::CollectionV1 => Some(MetadataDelegateRole::Collection),
-        RevokeArgs::UpdateV1 => Some(MetadataDelegateRole::Update),
+        RevokeArgs::DataV1 => Some(MetadataDelegateRole::Data),
         RevokeArgs::ProgrammableConfigV1 => Some(MetadataDelegateRole::ProgrammableConfig),
+        RevokeArgs::AuthorityItemV1 => Some(MetadataDelegateRole::AuthorityItem),
+        RevokeArgs::DataItemV1 => Some(MetadataDelegateRole::DataItem),
+        RevokeArgs::CollectionItemV1 => Some(MetadataDelegateRole::CollectionItem),
+        RevokeArgs::ProgrammableConfigItemV1 => Some(MetadataDelegateRole::ProgrammableConfigItem),
         // we don't need to fail if did not find a match at this point
         _ => None,
     };

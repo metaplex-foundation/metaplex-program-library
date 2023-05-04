@@ -1,7 +1,7 @@
 {
   "name": "@metaplex-foundation/mpl-token-metadata",
-  "version": "2.10.0",
-  "contractVersion": "1.10.0",
+  "version": "2.11.0",
+  "contractVersion": "1.11.0",
   "description": "MPL Token Metadata JavaScript API.",
   "main": "dist/src/mpl-token-metadata.js",
   "types": "dist/src/mpl-token-metadata.d.ts",

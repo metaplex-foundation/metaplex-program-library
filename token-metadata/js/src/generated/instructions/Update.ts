@@ -41,9 +41,9 @@ export const UpdateStruct = new beet.FixableBeetArgsStruct<
  * @property [] token (optional) Token account
  * @property [] mint Mint account
  * @property [_writable_] metadata Metadata account
- * @property [_writable_] edition (optional) Edition account
+ * @property [] edition (optional) Edition account
  * @property [_writable_, **signer**] payer Payer
- * @property [] sysvarInstructions System program
+ * @property [] sysvarInstructions Instructions sysvar account
  * @property [] authorizationRulesProgram (optional) Token Authorization Rules Program
  * @property [] authorizationRules (optional) Token Authorization Rules account
  * @category Instructions
@@ -116,7 +116,7 @@ export function createUpdateInstruction(
     },
     {
       pubkey: accounts.edition ?? programId,
-      isWritable: accounts.edition != null,
+      isWritable: false,
       isSigner: false,
     },
     {

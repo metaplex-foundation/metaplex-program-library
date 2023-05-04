@@ -2,7 +2,6 @@ mod bubblegum;
 mod burn;
 mod collection;
 mod delegate;
-pub(crate) mod deprecated;
 mod edition;
 pub(crate) mod escrow;
 mod freeze;
@@ -16,7 +15,6 @@ pub use bubblegum::*;
 pub use burn::*;
 pub use collection::*;
 pub use delegate::*;
-use deprecated::process_create_metadata_accounts_v2;
 pub use edition::*;
 pub use escrow::*;
 pub use freeze::*;
@@ -34,9 +32,6 @@ pub use uses::*;
 pub use verification::*;
 
 use crate::{
-    deprecated_processor::{
-        process_deprecated_create_metadata_accounts, process_deprecated_update_metadata_accounts,
-    },
     error::MetadataError,
     instruction::MetadataInstruction,
     processor::{
@@ -162,29 +157,9 @@ fn process_legacy_instruction<'a>(
     instruction: MetadataInstruction,
 ) -> ProgramResult {
     match instruction {
-        MetadataInstruction::CreateMetadataAccount(args) => {
-            msg!("(Deprecated as of 1.1.0) IX: Create Metadata Accounts");
-            process_deprecated_create_metadata_accounts(
-                program_id,
-                accounts,
-                args.data,
-                args.is_mutable,
-            )
-        }
-        MetadataInstruction::UpdateMetadataAccount(args) => {
-            msg!("(Deprecated as of 1.1.0) IX: Update Metadata Accounts");
-            process_deprecated_update_metadata_accounts(
-                program_id,
-                accounts,
-                args.data,
-                args.update_authority,
-                args.primary_sale_happened,
-            )
-        }
-        MetadataInstruction::CreateMetadataAccountV2(args) => {
-            msg!("IX: Create Metadata Accounts v2");
-            process_create_metadata_accounts_v2(program_id, accounts, args.data, args.is_mutable)
-        }
+        MetadataInstruction::CreateMetadataAccount => Err(MetadataError::Removed.into()),
+        MetadataInstruction::UpdateMetadataAccount => Err(MetadataError::Removed.into()),
+        MetadataInstruction::CreateMetadataAccountV2 => Err(MetadataError::Removed.into()),
         MetadataInstruction::CreateMetadataAccountV3(args) => {
             msg!("IX: Create Metadata Accounts v3");
             process_create_metadata_accounts_v3(
@@ -206,26 +181,16 @@ fn process_legacy_instruction<'a>(
                 args.is_mutable,
             )
         }
-        MetadataInstruction::DeprecatedCreateMasterEdition(_args) => {
-            msg!("IX: Deprecated Create Master Edition, Removed in 1.1.0");
-            Err(MetadataError::Removed.into())
-        }
+        MetadataInstruction::DeprecatedCreateMasterEdition => Err(MetadataError::Removed.into()),
         MetadataInstruction::DeprecatedMintNewEditionFromMasterEditionViaPrintingToken => {
-            msg!("IX: Deprecated Mint New Edition from Master Edition Via Token, Removed in 1.1.0");
             Err(MetadataError::Removed.into())
         }
         MetadataInstruction::UpdatePrimarySaleHappenedViaToken => {
             msg!("IX: Update primary sale via token");
             process_update_primary_sale_happened_via_token(program_id, accounts)
         }
-        MetadataInstruction::DeprecatedSetReservationList(_args) => {
-            msg!("IX: Deprecated Set Reservation List, Removed in 1.1.0");
-            Err(MetadataError::Removed.into())
-        }
-        MetadataInstruction::DeprecatedCreateReservationList => {
-            msg!("IX: Deprecated Create Reservation List, Removed in 1.1.0");
-            Err(MetadataError::Removed.into())
-        }
+        MetadataInstruction::DeprecatedSetReservationList => Err(MetadataError::Removed.into()),
+        MetadataInstruction::DeprecatedCreateReservationList => Err(MetadataError::Removed.into()),
         MetadataInstruction::SignMetadata => {
             msg!("IX: Sign Metadata");
             process_sign_metadata(program_id, accounts)
@@ -234,18 +199,11 @@ fn process_legacy_instruction<'a>(
             msg!("IX: Remove Creator Verification");
             process_remove_creator_verification(program_id, accounts)
         }
-        MetadataInstruction::DeprecatedMintPrintingTokensViaToken(_args) => {
-            msg!("IX: Deprecated Mint Printing Tokens Via Token, Removed in 1.1.0");
+        MetadataInstruction::DeprecatedMintPrintingTokensViaToken => {
             Err(MetadataError::Removed.into())
         }
-        MetadataInstruction::DeprecatedMintPrintingTokens(_args) => {
-            msg!("IX: Deprecated Mint Printing Tokens, Removed in 1.1.0");
-            Err(MetadataError::Removed.into())
-        }
-        MetadataInstruction::CreateMasterEdition(args) => {
-            msg!("(Deprecated as of 1.1.0, please use V3 Create Master Edition)\n V2 Create Master Edition");
-            process_create_master_edition(program_id, accounts, args.max_supply)
-        }
+        MetadataInstruction::DeprecatedMintPrintingTokens => Err(MetadataError::Removed.into()),
+        MetadataInstruction::CreateMasterEdition => Err(MetadataError::Removed.into()),
         MetadataInstruction::CreateMasterEditionV3(args) => {
             msg!("V3 Create Master Edition");
             process_create_master_edition(program_id, accounts, args.max_supply)
@@ -264,9 +222,6 @@ fn process_legacy_instruction<'a>(
             process_convert_master_edition_v1_to_v2(program_id, accounts)
         }
         MetadataInstruction::MintNewEditionFromMasterEditionViaVaultProxy(_args) => {
-            msg!(
-                "IX: Mint New Edition from Master Edition Via Vault Proxy, deprecated as of 1.4.0."
-            );
             Err(MetadataError::Removed.into())
         }
         MetadataInstruction::PuffMetadata => {
@@ -357,7 +312,7 @@ fn process_legacy_instruction<'a>(
             msg!("IX: Transfer Out Of Escrow");
             process_transfer_out_of_escrow(program_id, accounts, args)
         }
-        _ => Err(ProgramError::InvalidInstructionData),
+        _ => Err(MetadataError::InvalidInstruction.into()),
     }
 }
 

@@ -1,7 +1,7 @@
 [workspace]
 [package]
 name = "mpl-auctioneer"
-version = "0.2.1"
+version = "0.2.2"
 edition = "2021"
 description = "Default Auctioneer implementation"
 authors = ["Metaplex Developers <dev@metaplex.com>"]

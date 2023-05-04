@@ -501,6 +501,7 @@ export class InitTransactions {
     metadata: PublicKey,
     authority: Keypair,
     updateTestData: UpdateTestData,
+    kind: string,
     delegateRecord: PublicKey | null = null,
     masterEdition: PublicKey | null = null,
     token: PublicKey | null = null,
@@ -527,20 +528,34 @@ export class InitTransactions {
       authorizationRules: ruleSetPda,
     };
 
-    const updateArgs: UpdateInstructionArgs = {
-      updateArgs: {
-        __kind: 'V1',
-        newUpdateAuthority: updateTestData.newUpdateAuthority,
-        data: updateTestData.data,
-        primarySaleHappened: updateTestData.primarySaleHappened,
-        isMutable: updateTestData.isMutable,
-        collection: updateTestData.collection,
-        uses: updateTestData.uses,
-        collectionDetails: updateTestData.collectionDetails,
-        ruleSet: updateTestData.ruleSet,
-        authorizationData,
-      },
-    };
+    const updateArgs: UpdateInstructionArgs = (function () {
+      switch (kind) {
+        case 'V1':
+          return {
+            updateArgs: {
+              __kind: 'V1',
+              newUpdateAuthority: updateTestData.newUpdateAuthority,
+              data: updateTestData.data,
+              primarySaleHappened: updateTestData.primarySaleHappened,
+              isMutable: updateTestData.isMutable,
+              collection: updateTestData.collection,
+              uses: updateTestData.uses,
+              collectionDetails: updateTestData.collectionDetails,
+              ruleSet: updateTestData.ruleSet,
+              authorizationData,
+            },
+          };
+        case 'AsProgrammableConfigDelegateV2':
+          return {
+            updateArgs: {
+              __kind: 'AsProgrammableConfigDelegateV2',
+              ruleSet: updateTestData.ruleSet,
+              authorizationData,
+            },
+          };
+      }
+      throw new Error('Unsupported variant in test');
+    })();
 
     const updateIx = createUpdateInstruction(updateAcccounts, updateArgs);
 
