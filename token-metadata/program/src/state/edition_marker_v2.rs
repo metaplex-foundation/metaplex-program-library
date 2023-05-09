@@ -82,7 +82,7 @@ impl EditionMarkerV2 {
 
         // If the ledger is smaller than the index, then we need to resize it.
         if self.ledger.len() <= index {
-            self.ledger.resize(index + 1, 0);
+            self.ledger.resize((index / 8) + 1, 0);
         }
 
         // bitwise or a 1 into our position in that position
