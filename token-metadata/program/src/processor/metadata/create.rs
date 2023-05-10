@@ -13,8 +13,8 @@ use crate::{
         TOKEN_STANDARD_INDEX,
     },
     utils::{
-        create_master_edition, process_create_metadata_accounts_logic,
-        CreateMetadataAccountsLogicArgs,
+        create_master_edition, levy, process_create_metadata_accounts_logic, set_fee_flag,
+        CreateMetadataAccountsLogicArgs, IxType, LevyArgs,
     },
 };
 
@@ -124,6 +124,13 @@ fn create_v1(program_id: &Pubkey, ctx: Context<Create>, args: CreateArgs) -> Pro
         }
     }
 
+    let ix_type = IxType::CreateMetadata;
+    levy(LevyArgs {
+        ix_type,
+        payer_account_info: ctx.accounts.payer_info,
+        token_metadata_pda_info: ctx.accounts.metadata_info,
+    })?;
+
     // creates the metadata account
 
     process_create_metadata_accounts_logic(
@@ -205,5 +212,5 @@ fn create_v1(program_id: &Pubkey, ctx: Context<Create>, args: CreateArgs) -> Pro
     // saves the metadata state
     metadata.save(&mut ctx.accounts.metadata_info.try_borrow_mut_data()?)?;
 
-    Ok(())
+    set_fee_flag(ctx.accounts.metadata_info, ix_type)
 }

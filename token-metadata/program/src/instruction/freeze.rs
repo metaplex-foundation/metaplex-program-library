@@ -2,6 +2,7 @@ use borsh::BorshSerialize;
 use solana_program::{
     instruction::{AccountMeta, Instruction},
     pubkey::Pubkey,
+    system_program, sysvar,
 };
 
 use crate::instruction::MetadataInstruction;
@@ -28,9 +29,11 @@ pub fn freeze_delegated_account(
         accounts: vec![
             AccountMeta::new(delegate, true),
             AccountMeta::new(token_account, false),
-            AccountMeta::new_readonly(edition, false),
+            AccountMeta::new(edition, false),
             AccountMeta::new_readonly(mint, false),
             AccountMeta::new_readonly(spl_token::id(), false),
+            AccountMeta::new_readonly(system_program::id(), false),
+            AccountMeta::new_readonly(sysvar::instructions::id(), false),
         ],
         data: MetadataInstruction::FreezeDelegatedAccount
             .try_to_vec()
@@ -60,9 +63,11 @@ pub fn thaw_delegated_account(
         accounts: vec![
             AccountMeta::new(delegate, true),
             AccountMeta::new(token_account, false),
-            AccountMeta::new_readonly(edition, false),
+            AccountMeta::new(edition, false),
             AccountMeta::new_readonly(mint, false),
             AccountMeta::new_readonly(spl_token::id(), false),
+            AccountMeta::new_readonly(system_program::id(), false),
+            AccountMeta::new_readonly(sysvar::instructions::id(), false),
         ],
         data: MetadataInstruction::ThawDelegatedAccount
             .try_to_vec()

@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 use solana_program::{
     instruction::{AccountMeta, Instruction},
     pubkey::Pubkey,
+    system_program, sysvar,
 };
 
 use super::InstructionBuilder;
@@ -49,6 +50,8 @@ pub fn burn_edition_nft(
         AccountMeta::new(print_edition, false),
         AccountMeta::new(edition_marker, false),
         AccountMeta::new_readonly(spl_token, false),
+        AccountMeta::new_readonly(system_program::id(), false),
+        AccountMeta::new_readonly(sysvar::instructions::id(), false),
     ];
 
     Instruction {
@@ -91,6 +94,9 @@ pub fn burn_nft(
     if let Some(collection_metadata) = collection_metadata {
         accounts.push(AccountMeta::new(collection_metadata, false));
     }
+
+    accounts.push(AccountMeta::new_readonly(system_program::id(), false));
+    accounts.push(AccountMeta::new_readonly(sysvar::instructions::id(), false));
 
     Instruction {
         program_id,

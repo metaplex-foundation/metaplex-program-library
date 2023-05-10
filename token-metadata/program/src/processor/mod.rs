@@ -4,6 +4,7 @@ mod collection;
 mod delegate;
 mod edition;
 pub(crate) mod escrow;
+mod fee;
 mod freeze;
 mod metadata;
 mod state;
@@ -137,6 +138,7 @@ pub fn process_instruction<'a>(
             msg!("IX: Unverify");
             verification::unverify(program_id, accounts, args)
         }
+        MetadataInstruction::Collect => fee::process_collect_fees(program_id, accounts),
         _ => {
             // pNFT accounts can only be used by the "new" API; before forwarding
             // the transaction to the "legacy" processor we determine whether we are

@@ -2,6 +2,7 @@ use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
     pubkey::Pubkey,
+    system_program,
 };
 
 use crate::{
@@ -19,13 +20,11 @@ pub fn set_collection_size(
 ) -> ProgramResult {
     let size = args.size;
 
-    let account_info_iter = &mut accounts.iter();
+    let account_info_iter = &mut accounts.iter().peekable();
 
     let parent_nft_metadata_account_info = next_account_info(account_info_iter)?;
     let collection_update_authority_account_info = next_account_info(account_info_iter)?;
     let collection_mint_account_info = next_account_info(account_info_iter)?;
-
-    let using_delegated_collection_authority = accounts.len() == 4;
 
     // Owned by token-metadata program.
     assert_owned_by(parent_nft_metadata_account_info, program_id)?;
@@ -40,13 +39,15 @@ pub fn set_collection_size(
         return Err(MetadataError::UpdateAuthorityIsNotSigner.into());
     }
 
-    if using_delegated_collection_authority {
-        let collection_authority_record = next_account_info(account_info_iter)?;
+    let delegated_collection_authority_opt =
+        account_info_iter.next_if(|info| info.key != &system_program::ID);
+
+    if let Some(record) = delegated_collection_authority_opt {
         assert_has_collection_authority(
             collection_update_authority_account_info,
             &metadata,
             collection_mint_account_info.key,
-            Some(collection_authority_record),
+            Some(record),
         )?;
     } else {
         assert_has_collection_authority(
@@ -65,5 +66,9 @@ pub fn set_collection_size(
     }
 
     clean_write_metadata(&mut metadata, parent_nft_metadata_account_info)?;
+
+    // System Program and Sysvar Instruction accounts will be read here after the
+    // optional account is read.
+
     Ok(())
 }

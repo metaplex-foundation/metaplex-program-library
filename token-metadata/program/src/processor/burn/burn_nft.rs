@@ -17,7 +17,7 @@ use crate::{
 use super::nonfungible::{burn_nonfungible, BurnNonFungibleArgs};
 
 pub fn process_burn_nft<'a>(program_id: &Pubkey, accounts: &'a [AccountInfo<'a>]) -> ProgramResult {
-    let account_info_iter = &mut accounts.iter();
+    let account_info_iter = &mut accounts.iter().peekable();
 
     let metadata_info = next_account_info(account_info_iter)?;
     let owner_info = next_account_info(account_info_iter)?;
@@ -26,12 +26,8 @@ pub fn process_burn_nft<'a>(program_id: &Pubkey, accounts: &'a [AccountInfo<'a>]
     let edition_info = next_account_info(account_info_iter)?;
     let spl_token_program_info = next_account_info(account_info_iter)?;
 
-    let collection_nft_provided = accounts.len() == 7;
-    let collection_metadata_info = if collection_nft_provided {
-        Some(next_account_info(account_info_iter)?)
-    } else {
-        None
-    };
+    let collection_metadata_info =
+        account_info_iter.next_if(|info| info.key != &system_program::ID);
 
     // Validate accounts
 

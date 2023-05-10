@@ -39,6 +39,10 @@ pub const MAX_DATA_SIZE: usize = 4
     + 4
     + MAX_CREATOR_LIMIT * MAX_CREATOR_LEN;
 
+// The last byte of the account contains the fee flag, indicating
+// if the account has fees available for retrieval.
+pub const METADATA_FLAGS_INDEX: usize = MAX_METADATA_LEN - 1;
+
 #[macro_export]
 macro_rules! metadata_seeds {
     ($mint:expr) => {{

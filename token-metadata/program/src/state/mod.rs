@@ -6,6 +6,7 @@ pub(crate) mod delegate;
 pub(crate) mod edition;
 pub(crate) mod edition_marker;
 pub(crate) mod escrow;
+pub(crate) mod fee;
 pub(crate) mod master_edition;
 pub(crate) mod metadata;
 pub(crate) mod migrate;
@@ -35,7 +36,7 @@ pub use programmable::*;
 pub use reservation::*;
 use shank::ShankAccount;
 use solana_program::{
-    account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
+    account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError, pubkey,
     pubkey::Pubkey,
 };
 use spl_token::state::Account as TokenAccount;

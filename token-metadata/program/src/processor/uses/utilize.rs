@@ -30,6 +30,7 @@ pub fn process_utilize(
     number_of_uses: u64,
 ) -> ProgramResult {
     let account_info_iter = &mut accounts.iter().peekable();
+
     let metadata_info = next_account_info(account_info_iter)?;
     let token_account_info = next_account_info(account_info_iter)?;
     let mint_info = next_account_info(account_info_iter)?;
@@ -37,20 +38,22 @@ pub fn process_utilize(
     let owner_info = next_account_info(account_info_iter)?;
     let token_program_account_info = next_account_info(account_info_iter)?;
     let _ata_program_account_info = next_account_info(account_info_iter)?;
-    let _system_account_info = next_account_info(account_info_iter)?;
+    let _system_program_account_info = next_account_info(account_info_iter)?;
+
     // consume the next account only if it is Rent
     let approved_authority_is_using = if account_info_iter
         .next_if(|info| info.key == &Rent::id())
         .is_some()
     {
         // rent was passed in
-        accounts.len() == 11
+        accounts.len() == 12
     } else {
         // necessary accounts is one less if rent isn't passed in.
-        accounts.len() == 10
+        accounts.len() == 11
     };
 
     let metadata: Metadata = Metadata::from_account_info(metadata_info)?;
+
     if metadata.uses.is_none() {
         return Err(MetadataError::Unusable.into());
     }
