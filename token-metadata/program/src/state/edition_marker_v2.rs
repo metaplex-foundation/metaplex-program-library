@@ -59,7 +59,7 @@ impl EditionMarkerV2 {
         let my_position_in_index_starting_from_right =
             EditionMarkerV2::get_offset_from_right(edition)?;
 
-        Ok((index, u8::pow(2, my_position_in_index_starting_from_right)))
+        Ok((index, 1u8 << my_position_in_index_starting_from_right))
     }
 
     pub fn edition_taken(&self, edition: u64) -> Result<bool, ProgramError> {
@@ -82,7 +82,7 @@ impl EditionMarkerV2 {
 
         // If the ledger is smaller than the index, then we need to resize it.
         if self.ledger.len() <= index {
-            self.ledger.resize((index / 8) + 1, 0);
+            self.ledger.resize(index + 1, 0);
         }
 
         // bitwise or a 1 into our position in that position
