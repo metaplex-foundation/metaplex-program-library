@@ -18,8 +18,9 @@ use mpl_token_metadata::{
     state::{
         AssetData, Collection, CollectionDetails, Creator, Metadata, PrintSupply,
         ProgrammableConfig, TokenDelegateRole, TokenMetadataAccount, TokenRecord, TokenStandard,
-        EDITION, EDITION_MARKER_BIT_SIZE, PREFIX,
+        EDITION, EDITION_MARKER_BIT_SIZE, METADATA_FLAGS_INDEX, PREFIX,
     },
+    utils::{IxType, MetadataFlags, CREATE_FEE},
 };
 use solana_program::{
     borsh::try_from_slice_unchecked, program_option::COption, program_pack::Pack, pubkey::Pubkey,
@@ -1299,6 +1300,29 @@ impl DigitalAsset {
             .await?;
 
         assert!(token_record_account.is_none());
+
+        Ok(())
+    }
+
+    pub async fn assert_create_fees_charged(
+        &self,
+        context: &mut ProgramTestContext,
+        ix_type: IxType,
+    ) -> Result<(), BanksClientError> {
+        let (pubkey, fee, fee_flag_index) = match ix_type {
+            IxType::CreateMetadata => (self.metadata, CREATE_FEE, METADATA_FLAGS_INDEX),
+            _ => panic!("Invalid ix type for assert_create_fees_charged"),
+        };
+
+        let account = get_account(context, &pubkey).await;
+
+        let rent = context.banks_client.get_rent().await.unwrap();
+        let rent_exempt = rent.minimum_balance(account.data.len());
+
+        let expected_lamports = rent_exempt + fee;
+
+        assert_eq!(account.lamports, expected_lamports);
+        assert_eq!(account.data[fee_flag_index], MetadataFlags::FEES.bits());
 
         Ok(())
     }

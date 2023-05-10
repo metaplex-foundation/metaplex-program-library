@@ -2,8 +2,9 @@ use mpl_token_metadata::{
     id, instruction,
     state::{
         Collection, CollectionDetails, Creator, DataV2, Metadata as TmMetadata,
-        TokenMetadataAccount, TokenStandard, Uses, PREFIX,
+        TokenMetadataAccount, TokenStandard, Uses, METADATA_FLAGS_INDEX, PREFIX,
     },
+    utils::{IxType, MetadataFlags, CREATE_FEE},
 };
 use solana_program::borsh::try_from_slice_unchecked;
 use solana_sdk::{
@@ -641,6 +642,29 @@ impl Metadata {
         );
 
         context.banks_client.process_transaction(tx).await
+    }
+
+    pub async fn assert_create_fees_charged(
+        &self,
+        context: &mut ProgramTestContext,
+        ix_type: IxType,
+    ) -> Result<(), BanksClientError> {
+        let (pubkey, fee, fee_flag_index) = match ix_type {
+            IxType::CreateMetadata => (self.pubkey, CREATE_FEE, METADATA_FLAGS_INDEX),
+            _ => panic!("Invalid ix type for assert_create_fees_charged"),
+        };
+
+        let account = get_account(context, &pubkey).await;
+
+        let rent = context.banks_client.get_rent().await.unwrap();
+        let rent_exempt = rent.minimum_balance(account.data.len());
+
+        let expected_lamports = rent_exempt + fee;
+
+        assert_eq!(account.lamports, expected_lamports);
+        assert_eq!(account.data[fee_flag_index], MetadataFlags::FEES.bits());
+
+        Ok(())
     }
 }
 
