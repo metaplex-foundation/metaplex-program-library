@@ -7,6 +7,7 @@ use mpl_bubblegum::{
 };
 use solana_program::{
     instruction::{AccountMeta, Instruction},
+    pubkey,
     pubkey::Pubkey,
     rent::Rent,
     system_instruction, system_program, sysvar,
@@ -32,9 +33,10 @@ use std::{
 use super::{
     clone_keypair, compute_metadata_hashes,
     tx_builder::{
-        BurnBuilder, CancelRedeemBuilder, CreateBuilder, CreatorVerificationInner, DelegateBuilder,
-        DelegateInner, MintV1Builder, RedeemBuilder, SetTreeDelegateBuilder, TransferBuilder,
-        TransferInner, TxBuilder, UnverifyCreatorBuilder, VerifyCreatorBuilder,
+        BurnBuilder, CancelRedeemBuilder, CollectionVerificationInner, CreateBuilder,
+        CreatorVerificationInner, DelegateBuilder, DelegateInner, MintV1Builder, RedeemBuilder,
+        SetTreeDelegateBuilder, TransferBuilder, TransferInner, TxBuilder, UnverifyCreatorBuilder,
+        VerifyCollectionBuilder, VerifyCreatorBuilder,
     },
     Error, LeafArgs, Result,
 };
@@ -492,6 +494,85 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             .await?
             .execute()
             .await
+    }
+
+    pub async fn verify_collection_tx<'a>(
+        &'a self,
+        args: &'a mut LeafArgs,
+        collection_authority: &Keypair,
+        collection_mint: Pubkey,
+        collection_metadata: Pubkey,
+        edition_account: Pubkey,
+    ) -> Result<VerifyCollectionBuilder<MAX_DEPTH, MAX_BUFFER_SIZE>> {
+        let root = self.decode_root().await?;
+        let (data_hash, creator_hash) = compute_metadata_hashes(&args.metadata)?;
+
+        let accounts = mpl_bubblegum::accounts::CollectionVerification {
+            tree_authority: self.authority(),
+            leaf_owner: args.owner.pubkey(),
+            leaf_delegate: args.delegate.pubkey(),
+            merkle_tree: self.tree_pubkey(),
+            payer: collection_authority.pubkey(),
+            tree_delegate: self.tree_creator.pubkey(),
+            collection_authority: collection_authority.pubkey(),
+            collection_authority_record_pda: mpl_bubblegum::id(),
+            collection_mint,
+            collection_metadata,
+            edition_account,
+            bubblegum_signer: pubkey!("4ewWZC5gT6TGpm5LZNDs9wVonfUT2q5PP5sc9kVbwMAK"),
+            log_wrapper: spl_noop::id(),
+            compression_program: spl_account_compression::id(),
+            token_metadata_program: mpl_token_metadata::id(),
+            system_program: system_program::id(),
+        };
+
+        let data = mpl_bubblegum::instruction::VerifyCollection {
+            root,
+            data_hash,
+            creator_hash,
+            nonce: args.nonce,
+            index: args.index,
+            message: args.metadata.clone(),
+        };
+
+        let need_proof = Some(args.index);
+
+        let inner = CollectionVerificationInner {
+            args,
+            collection_authority: collection_authority.pubkey(),
+            collection_mint,
+            collection_metadata,
+            edition_account,
+        };
+
+        Ok(self.tx_builder(
+            accounts,
+            data,
+            need_proof,
+            inner,
+            collection_authority.pubkey(),
+            &[collection_authority],
+        ))
+    }
+
+    pub async fn verify_collection(
+        &self,
+        args: &mut LeafArgs,
+        collection_authority: &Keypair,
+        collection_mint: Pubkey,
+        collection_metadata: Pubkey,
+        edition_account: Pubkey,
+    ) -> Result<()> {
+        self.verify_collection_tx(
+            args,
+            collection_authority,
+            collection_mint,
+            collection_metadata,
+            edition_account,
+        )
+        .await?
+        .execute()
+        .await
     }
 
     pub async fn transfer_tx<'a>(

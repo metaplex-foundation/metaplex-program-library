@@ -674,7 +674,7 @@ fn process_creator_verification<'info>(
 }
 
 fn process_collection_verification_mpl_only<'info>(
-    collection_metadata: &Box<Account<'info, TokenMetadata>>,
+    collection_metadata: &Account<'info, TokenMetadata>,
     collection_mint: &AccountInfo<'info>,
     collection_authority: &AccountInfo<'info>,
     collection_authority_record_pda: &AccountInfo<'info>,
@@ -820,6 +820,14 @@ fn process_collection_verification<'info>(
     let bubblegum_signer = ctx.accounts.bubblegum_signer.to_account_info();
     let token_metadata_program = ctx.accounts.token_metadata_program.to_account_info();
 
+    // User-provided metadata must result in same user-provided data hash.
+    let incoming_data_hash = hash_metadata(&message)?;
+    if data_hash != incoming_data_hash {
+        //HERE
+        return Err(BubblegumError::DataHashMismatch.into());
+    }
+
+    // Note this call mutates message.
     process_collection_verification_mpl_only(
         collection_metadata,
         &collection_mint,
@@ -833,12 +841,6 @@ fn process_collection_verification<'info>(
         verify,
         new_collection,
     )?;
-
-    // User-provided metadata must result in same user-provided data hash.
-    let incoming_data_hash = hash_metadata(&message)?;
-    if data_hash != incoming_data_hash {
-        return Err(BubblegumError::DataHashMismatch.into());
-    }
 
     // Calculate new data hash.
     let updated_data_hash = hash_metadata(&message)?;

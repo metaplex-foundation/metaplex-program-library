@@ -95,6 +95,7 @@ where
             .map_err(Error::BanksClient)?;
 
         self.on_successful_execute()?;
+
         // Check the expected tree root matches on-chain state post tx.
         self.tree.check_expected_root().await
     }
@@ -364,5 +365,34 @@ impl<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExe
 {
     fn on_successful_execute(&mut self) -> Result<()> {
         Ok(())
+    }
+}
+
+#[derive(Debug)]
+pub struct CollectionVerificationInner<'a> {
+    pub args: &'a mut LeafArgs,
+    pub collection_authority: Pubkey,
+    pub collection_mint: Pubkey,
+    pub collection_metadata: Pubkey,
+    pub edition_account: Pubkey,
+}
+
+pub type VerifyCollectionBuilder<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> =
+    TxBuilder<
+        'a,
+        mpl_bubblegum::accounts::CollectionVerification,
+        mpl_bubblegum::instruction::VerifyCollection,
+        CollectionVerificationInner<'a>,
+        MAX_DEPTH,
+        MAX_BUFFER_SIZE,
+    >;
+
+impl<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExec
+    for VerifyCollectionBuilder<'a, MAX_DEPTH, MAX_BUFFER_SIZE>
+{
+    fn on_successful_execute(&mut self) -> Result<()> {
+        let collection = self.inner.args.metadata.collection.as_mut().unwrap();
+        collection.verified = true;
+        self.tree.update_leaf(self.inner.args)
     }
 }
