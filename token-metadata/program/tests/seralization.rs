@@ -16,23 +16,14 @@ mod serialization {
         let test_metadata = Metadata::new();
         let test_master_edition = MasterEditionV2::new(&test_metadata);
 
-        test_metadata
-            .create(
-                context,
-                "Test".to_string(),
-                "TST".to_string(),
-                "uri".to_string(),
-                None,
-                10,
-                false,
-                0,
-            )
-            .await
-            .unwrap();
+        test_metadata.create_v3_default(context).await.unwrap();
 
         let _mint = get_mint(context, &test_master_edition.mint_pubkey).await;
 
-        test_master_edition.create(context, Some(10)).await.unwrap();
+        test_master_edition
+            .create_v3(context, Some(10))
+            .await
+            .unwrap();
 
         let account = get_account(context, &test_metadata.pubkey).await;
         let me_account = get_account(context, &test_master_edition.pubkey).await;

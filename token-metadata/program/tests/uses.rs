@@ -32,7 +32,7 @@ mod uses {
             .await
             .unwrap();
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -46,6 +46,7 @@ mod uses {
                     total: 1,
                     remaining: 1,
                 }),
+                None,
             )
             .await
             .unwrap();
@@ -91,7 +92,7 @@ mod uses {
         let mut context = program_test().start_with_context().await;
         let test_metadata = Metadata::new();
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -105,6 +106,7 @@ mod uses {
                     total: 1,
                     remaining: 1,
                 }),
+                None,
             )
             .await
             .unwrap();
@@ -146,7 +148,7 @@ mod uses {
         let mut context = program_test().start_with_context().await;
         let test_metadata = Metadata::new();
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -160,6 +162,7 @@ mod uses {
                     total: 1,
                     remaining: 1,
                 }),
+                None,
             )
             .await
             .unwrap();
@@ -202,7 +205,7 @@ mod uses {
 
         let test_metadata = Metadata::new();
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -216,6 +219,7 @@ mod uses {
                     total: 5,
                     remaining: 5,
                 }),
+                None,
             )
             .await
             .unwrap();
@@ -287,7 +291,7 @@ mod uses {
             .unwrap();
         let test_metadata = Metadata::new();
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -301,6 +305,7 @@ mod uses {
                     total: 5,
                     remaining: 5,
                 }),
+                None,
             )
             .await
             .unwrap();
@@ -419,7 +424,7 @@ mod uses {
 
         let test_meta = Metadata::new();
         test_meta
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -433,6 +438,7 @@ mod uses {
                     total: 1,
                     remaining: 1,
                 }),
+                None,
             )
             .await
             .unwrap();
@@ -509,7 +515,7 @@ mod uses {
 
         let test_meta = Metadata::new();
         test_meta
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -523,6 +529,7 @@ mod uses {
                     total: 1,
                     remaining: 1,
                 }),
+                None,
             )
             .await
             .unwrap();

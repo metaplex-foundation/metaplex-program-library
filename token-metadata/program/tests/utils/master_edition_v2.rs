@@ -99,38 +99,15 @@ impl MasterEditionV2 {
                 AccountMeta::new_readonly(solana_program::system_program::id(), false),
                 AccountMeta::new_readonly(sysvar::rent::id(), false),
             ],
-            data: MetadataInstruction::CreateMasterEdition(CreateMasterEditionArgs { max_supply })
-                .try_to_vec()
-                .unwrap(),
+            data: MetadataInstruction::CreateMasterEditionV3(CreateMasterEditionArgs {
+                max_supply,
+            })
+            .try_to_vec()
+            .unwrap(),
         };
 
         let tx = Transaction::new_signed_with_payer(
             &[fake_instruction],
-            Some(&context.payer.pubkey()),
-            &[&context.payer],
-            context.last_blockhash,
-        );
-
-        context.banks_client.process_transaction(tx).await
-    }
-
-    #[allow(deprecated)]
-    pub async fn create(
-        &self,
-        context: &mut ProgramTestContext,
-        max_supply: Option<u64>,
-    ) -> Result<(), BanksClientError> {
-        let tx = Transaction::new_signed_with_payer(
-            &[instruction::create_master_edition(
-                id(),
-                self.pubkey,
-                self.mint_pubkey,
-                context.payer.pubkey(),
-                context.payer.pubkey(),
-                self.metadata_pubkey,
-                context.payer.pubkey(),
-                max_supply,
-            )],
             Some(&context.payer.pubkey()),
             &[&context.payer],
             context.last_blockhash,

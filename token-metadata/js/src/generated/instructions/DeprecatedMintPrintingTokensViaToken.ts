@@ -8,35 +8,15 @@
 import * as splToken from '@solana/spl-token';
 import * as beet from '@metaplex-foundation/beet';
 import * as web3 from '@solana/web3.js';
-import {
-  MintPrintingTokensViaTokenArgs,
-  mintPrintingTokensViaTokenArgsBeet,
-} from '../types/MintPrintingTokensViaTokenArgs';
 
 /**
  * @category Instructions
  * @category DeprecatedMintPrintingTokensViaToken
  * @category generated
  */
-export type DeprecatedMintPrintingTokensViaTokenInstructionArgs = {
-  mintPrintingTokensViaTokenArgs: MintPrintingTokensViaTokenArgs;
-};
-/**
- * @category Instructions
- * @category DeprecatedMintPrintingTokensViaToken
- * @category generated
- */
-export const DeprecatedMintPrintingTokensViaTokenStruct = new beet.BeetArgsStruct<
-  DeprecatedMintPrintingTokensViaTokenInstructionArgs & {
-    instructionDiscriminator: number;
-  }
->(
-  [
-    ['instructionDiscriminator', beet.u8],
-    ['mintPrintingTokensViaTokenArgs', mintPrintingTokensViaTokenArgsBeet],
-  ],
-  'DeprecatedMintPrintingTokensViaTokenInstructionArgs',
-);
+export const DeprecatedMintPrintingTokensViaTokenStruct = new beet.BeetArgsStruct<{
+  instructionDiscriminator: number;
+}>([['instructionDiscriminator', beet.u8]], 'DeprecatedMintPrintingTokensViaTokenInstructionArgs');
 /**
  * Accounts required by the _DeprecatedMintPrintingTokensViaToken_ instruction
  *
@@ -69,20 +49,16 @@ export const deprecatedMintPrintingTokensViaTokenInstructionDiscriminator = 8;
  * Creates a _DeprecatedMintPrintingTokensViaToken_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
- * @param args to provide as instruction data to the program
- *
  * @category Instructions
  * @category DeprecatedMintPrintingTokensViaToken
  * @category generated
  */
 export function createDeprecatedMintPrintingTokensViaTokenInstruction(
   accounts: DeprecatedMintPrintingTokensViaTokenInstructionAccounts,
-  args: DeprecatedMintPrintingTokensViaTokenInstructionArgs,
   programId = new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
 ) {
   const [data] = DeprecatedMintPrintingTokensViaTokenStruct.serialize({
     instructionDiscriminator: deprecatedMintPrintingTokensViaTokenInstructionDiscriminator,
-    ...args,
   });
   const keys: web3.AccountMeta[] = [
     {

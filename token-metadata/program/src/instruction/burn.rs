@@ -121,7 +121,7 @@ pub enum BurnArgs {
 ///   4.   `[writable]` Mint of token account
 ///   5.   `[writable]` Token account to close
 ///   6.   `[optional, writable]` Master edition token account
-///   7.   `[optional]` Master edition mint of the assset
+///   7.   `[optional]` Master edition mint of the asset
 ///   8.   `[optional]` Master edition token account
 ///   9.   `[optional, writable]` Edition marker account
 ///  10.   `[optional, writable]` Token record account

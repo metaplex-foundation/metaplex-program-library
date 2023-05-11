@@ -7,35 +7,15 @@
 
 import * as beet from '@metaplex-foundation/beet';
 import * as web3 from '@solana/web3.js';
-import {
-  CreateMetadataAccountArgs,
-  createMetadataAccountArgsBeet,
-} from '../types/CreateMetadataAccountArgs';
 
 /**
  * @category Instructions
  * @category CreateMetadataAccount
  * @category generated
  */
-export type CreateMetadataAccountInstructionArgs = {
-  createMetadataAccountArgs: CreateMetadataAccountArgs;
-};
-/**
- * @category Instructions
- * @category CreateMetadataAccount
- * @category generated
- */
-export const CreateMetadataAccountStruct = new beet.FixableBeetArgsStruct<
-  CreateMetadataAccountInstructionArgs & {
-    instructionDiscriminator: number;
-  }
->(
-  [
-    ['instructionDiscriminator', beet.u8],
-    ['createMetadataAccountArgs', createMetadataAccountArgsBeet],
-  ],
-  'CreateMetadataAccountInstructionArgs',
-);
+export const CreateMetadataAccountStruct = new beet.BeetArgsStruct<{
+  instructionDiscriminator: number;
+}>([['instructionDiscriminator', beet.u8]], 'CreateMetadataAccountInstructionArgs');
 /**
  * Accounts required by the _CreateMetadataAccount_ instruction
  *
@@ -64,20 +44,16 @@ export const createMetadataAccountInstructionDiscriminator = 0;
  * Creates a _CreateMetadataAccount_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
- * @param args to provide as instruction data to the program
- *
  * @category Instructions
  * @category CreateMetadataAccount
  * @category generated
  */
 export function createCreateMetadataAccountInstruction(
   accounts: CreateMetadataAccountInstructionAccounts,
-  args: CreateMetadataAccountInstructionArgs,
   programId = new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
 ) {
   const [data] = CreateMetadataAccountStruct.serialize({
     instructionDiscriminator: createMetadataAccountInstructionDiscriminator,
-    ...args,
   });
   const keys: web3.AccountMeta[] = [
     {

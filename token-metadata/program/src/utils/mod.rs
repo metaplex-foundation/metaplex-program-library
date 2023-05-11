@@ -69,6 +69,11 @@ pub fn check_token_standard(
     }
 }
 
+pub fn mint_decimals_is_zero(mint_info: &AccountInfo) -> Result<bool, ProgramError> {
+    let mint_decimals = get_mint_decimals(mint_info)?;
+    Ok(mint_decimals == 0)
+}
+
 pub fn is_master_edition(
     edition_account_info: &AccountInfo,
     mint_decimals: u8,

@@ -21,7 +21,7 @@ mod freeze_delegated {
         // create metadata
         let test_metadata = Metadata::new();
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -29,6 +29,7 @@ mod freeze_delegated {
                 None,
                 10,
                 false,
+                None,
                 None,
                 None,
             )
@@ -115,7 +116,7 @@ mod freeze_delegated {
         // create metadata
         let test_metadata = Metadata::new();
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -123,6 +124,7 @@ mod freeze_delegated {
                 None,
                 10,
                 false,
+                None,
                 None,
                 None,
             )
@@ -172,7 +174,7 @@ mod freeze_delegated {
         // create metadata
         let test_metadata = Metadata::new();
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -180,6 +182,7 @@ mod freeze_delegated {
                 None,
                 10,
                 false,
+                None,
                 None,
                 None,
             )
@@ -226,7 +229,7 @@ mod freeze_delegated {
         // create metadata
         let test_metadata = Metadata::new();
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -234,6 +237,7 @@ mod freeze_delegated {
                 None,
                 10,
                 false,
+                None,
                 None,
                 None,
             )

@@ -3967,7 +3967,7 @@ createErrorFromNameLookup.set(
 );
 
 /**
- * MissingCollectionMint: 'Missing collection mint account'
+ * MissingCollectionMint: 'Missing collection account'
  *
  * @category Errors
  * @category generated
@@ -3976,7 +3976,7 @@ export class MissingCollectionMintError extends Error {
   readonly code: number = 0xb9;
   readonly name: string = 'MissingCollectionMint';
   constructor() {
-    super('Missing collection mint account');
+    super('Missing collection account');
     if (typeof Error.captureStackTrace === 'function') {
       Error.captureStackTrace(this, MissingCollectionMintError);
     }
@@ -4028,6 +4028,46 @@ export class InvalidTokenRecordError extends Error {
 
 createErrorFromCodeLookup.set(0xbb, () => new InvalidTokenRecordError());
 createErrorFromNameLookup.set('InvalidTokenRecord', () => new InvalidTokenRecordError());
+
+/**
+ * InvalidCloseAuthority: 'The close authority needs to be revoked by the Utility Delegate'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidCloseAuthorityError extends Error {
+  readonly code: number = 0xbc;
+  readonly name: string = 'InvalidCloseAuthority';
+  constructor() {
+    super('The close authority needs to be revoked by the Utility Delegate');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidCloseAuthorityError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xbc, () => new InvalidCloseAuthorityError());
+createErrorFromNameLookup.set('InvalidCloseAuthority', () => new InvalidCloseAuthorityError());
+
+/**
+ * InvalidInstruction: 'Invalid or removed instruction'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidInstructionError extends Error {
+  readonly code: number = 0xbd;
+  readonly name: string = 'InvalidInstruction';
+  constructor() {
+    super('Invalid or removed instruction');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidInstructionError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xbd, () => new InvalidInstructionError());
+createErrorFromNameLookup.set('InvalidInstruction', () => new InvalidInstructionError());
 
 /**
  * Attempts to resolve a custom program error from the provided error code.

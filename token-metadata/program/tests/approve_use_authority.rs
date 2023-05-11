@@ -28,7 +28,7 @@ mod approve_use_authority {
 
         let test_meta = Metadata::new();
         test_meta
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -42,6 +42,7 @@ mod approve_use_authority {
                     total: 1,
                     remaining: 1,
                 }),
+                None,
             )
             .await
             .unwrap();
@@ -86,7 +87,7 @@ mod approve_use_authority {
 
         let test_meta = Metadata::new();
         test_meta
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -100,6 +101,7 @@ mod approve_use_authority {
                     total: 1,
                     remaining: 1,
                 }),
+                None,
             )
             .await
             .unwrap();
@@ -143,7 +145,7 @@ mod approve_use_authority {
 
         let test_meta = Metadata::new();
         test_meta
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -151,6 +153,7 @@ mod approve_use_authority {
                 None,
                 10,
                 false,
+                None,
                 None,
                 None,
             )
@@ -206,7 +209,7 @@ mod approve_use_authority {
 
         let test_meta = Metadata::new();
         test_meta
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -220,6 +223,7 @@ mod approve_use_authority {
                     total: 1,
                     remaining: 1,
                 }),
+                None,
             )
             .await
             .unwrap();
@@ -295,7 +299,7 @@ mod approve_use_authority {
 
         let test_meta = Metadata::new();
         test_meta
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -309,6 +313,7 @@ mod approve_use_authority {
                     total: 1,
                     remaining: 1,
                 }),
+                None,
             )
             .await
             .unwrap();
@@ -363,7 +368,7 @@ mod approve_use_authority {
 
         let test_meta = Metadata::new();
         test_meta
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -377,6 +382,7 @@ mod approve_use_authority {
                     total: 1,
                     remaining: 1,
                 }),
+                None,
             )
             .await
             .unwrap();

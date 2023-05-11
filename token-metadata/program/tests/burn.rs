@@ -945,6 +945,58 @@ mod pnft {
 
         assert_custom_error!(err, MetadataError::InvalidTokenRecord);
     }
+    #[tokio::test]
+    async fn invalid_close_authority_fails() {
+        let mut context = program_test().start_with_context().await;
+
+        // asset
+
+        let mut asset = DigitalAsset::default();
+        asset
+            .create_and_mint(
+                &mut context,
+                TokenStandard::ProgrammableNonFungible,
+                None,
+                None,
+                1,
+            )
+            .await
+            .unwrap();
+
+        assert!(asset.token.is_some());
+
+        let delegate = Keypair::new();
+        let delegate_pubkey = delegate.pubkey();
+        delegate.airdrop(&mut context, 1_000_000).await.unwrap();
+
+        let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+
+        asset
+            .delegate(
+                &mut context,
+                payer,
+                delegate_pubkey,
+                DelegateArgs::UtilityV1 {
+                    amount: 1,
+                    authorization_data: None,
+                },
+            )
+            .await
+            .unwrap();
+
+        asset
+            .inject_close_authority(&mut context, &delegate_pubkey)
+            .await;
+
+        let args = BurnArgs::V1 { amount: 1 };
+
+        let err = asset
+            .burn(&mut context, delegate, args, None, None)
+            .await
+            .unwrap_err();
+
+        assert_custom_error!(err, MetadataError::InvalidCloseAuthority);
+    }
 }
 
 mod pnft_edition {
@@ -2371,7 +2423,7 @@ mod nft {
         let mut context = program_test().start_with_context().await;
 
         let test_metadata = Metadata::new();
-        test_metadata.create_v2_default(&mut context).await.unwrap();
+        test_metadata.create_v3_default(&mut context).await.unwrap();
 
         let master_edition = MasterEditionV2::new(&test_metadata);
         master_edition
@@ -2586,7 +2638,7 @@ mod nft_edition {
 
         let payer_key = context.payer.pubkey();
 
-        nft.create(
+        nft.create_v3(
             &mut context,
             "Test".to_string(),
             "TST".to_string(),
@@ -2598,13 +2650,15 @@ mod nft_edition {
             }]),
             10,
             false,
-            0,
+            None,
+            None,
+            None,
         )
         .await
         .unwrap();
 
         nft_master_edition
-            .create(&mut context, Some(10))
+            .create_v3(&mut context, Some(10))
             .await
             .unwrap();
 
@@ -2784,7 +2838,7 @@ mod nft_edition {
         let mut context = program_test().start_with_context().await;
 
         let original_nft = Metadata::new();
-        original_nft.create_v2_default(&mut context).await.unwrap();
+        original_nft.create_v3_default(&mut context).await.unwrap();
 
         let master_edition = MasterEditionV2::new(&original_nft);
         master_edition
@@ -2838,7 +2892,7 @@ mod nft_edition {
         let mut context = program_test().start_with_context().await;
 
         let original_nft = Metadata::new();
-        original_nft.create_v2_default(&mut context).await.unwrap();
+        original_nft.create_v3_default(&mut context).await.unwrap();
 
         let master_edition = MasterEditionV2::new(&original_nft);
         master_edition
@@ -2883,7 +2937,7 @@ mod nft_edition {
         let mut context = program_test().start_with_context().await;
 
         let original_nft = Metadata::new();
-        original_nft.create_v2_default(&mut context).await.unwrap();
+        original_nft.create_v3_default(&mut context).await.unwrap();
 
         let master_edition = MasterEditionV2::new(&original_nft);
         master_edition
@@ -3394,7 +3448,7 @@ mod nft_edition {
         other_print_edition.create(&mut context).await.unwrap();
 
         let our_nft = Metadata::new();
-        our_nft.create_v2_default(&mut context).await.unwrap();
+        our_nft.create_v3_default(&mut context).await.unwrap();
 
         let master_edition = MasterEditionV2::new(&our_nft);
         master_edition

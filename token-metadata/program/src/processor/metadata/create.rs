@@ -192,6 +192,7 @@ fn create_v1(program_id: &Pubkey, ctx: Context<Create>, args: CreateArgs) -> Pro
 
     let mut metadata = Metadata::from_account_info(ctx.accounts.metadata_info)?;
     metadata.token_standard = Some(asset_data.token_standard);
+    metadata.primary_sale_happened = asset_data.primary_sale_happened;
 
     // sets the programmable config for programmable assets
 
@@ -204,7 +205,7 @@ fn create_v1(program_id: &Pubkey, ctx: Context<Create>, args: CreateArgs) -> Pro
         });
     }
 
-    // saves the state
+    // saves the metadata state
     metadata.save(&mut ctx.accounts.metadata_info.try_borrow_mut_data()?)?;
 
     Ok(())
