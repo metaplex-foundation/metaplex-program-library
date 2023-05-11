@@ -196,7 +196,7 @@ fn create_delegate_v1(
     let delegate_record_info = match ctx.accounts.delegate_record_info {
         Some(delegate_record_info) => delegate_record_info,
         None => {
-            return Err(MetadataError::MissingTokenAccount.into());
+            return Err(MetadataError::MissingDelegateRecord.into());
         }
     };
 
