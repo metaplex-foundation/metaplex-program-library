@@ -79,6 +79,4 @@ async fn deserialize_removed_instruction() {
         .unwrap_err();
 
     assert_custom_error!(err, MetadataError::Removed);
-
-    
 }
