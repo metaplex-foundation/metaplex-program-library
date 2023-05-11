@@ -3,11 +3,11 @@ use mpl_token_metadata::{
     id,
     instruction::{
         self,
-        builders::{BurnBuilder, PrintBuilder},
+        builders::{BurnBuilder, PrintBuilder, TransferBuilder},
         BurnArgs, InstructionBuilder, MetadataInstruction,
-        MintNewEditionFromMasterEditionViaTokenArgs, PrintArgs,
+        MintNewEditionFromMasterEditionViaTokenArgs, PrintArgs, TransferArgs,
     },
-    pda::MARKER,
+    pda::{find_token_record_account, MARKER},
     state::{EDITION, EDITION_MARKER_BIT_SIZE, PREFIX},
 };
 use solana_program::{
@@ -271,26 +271,33 @@ impl EditionMarker {
             &mpl_token_metadata::ID,
         );
 
+        let edition_ata =
+            get_associated_token_address(&context.payer.pubkey(), &self.mint.pubkey());
+        let token_record_pda = find_token_record_account(&self.mint.pubkey(), &self.token.pubkey());
+
         let print_args = PrintArgs::V1 {
-            metadata_mint: self.metadata_mint_pubkey,
             edition: self.edition,
         };
         let mut builder = PrintBuilder::new();
         builder
-            .new_metadata(self.new_metadata_pubkey)
-            .new_edition(self.new_edition_pubkey)
+            .edition_metadata(self.new_metadata_pubkey)
+            .edition(self.new_edition_pubkey)
+            .edition_mint(self.mint.pubkey())
+            .edition_token_account_owner(context.payer.pubkey())
+            .edition_token_account(self.token.pubkey())
+            .edition_mint_authority(context.payer.pubkey())
+            .edition_token_record(token_record_pda.0)
             .master_edition(self.master_edition_pubkey)
-            .new_mint(self.mint.pubkey())
-            .new_mint_authority(context.payer.pubkey())
+            .edition_marker_pda(edition_marker_pda.0)
             .payer(context.payer.pubkey())
-            .token_account_owner(context.payer.pubkey())
-            .token_account(self.metadata_token_pubkey)
-            .new_metadata_update_authority(context.payer.pubkey())
-            .metadata(self.metadata_pubkey)
+            .master_token_account_owner(context.payer.pubkey())
+            .master_token_account(self.metadata_token_pubkey)
+            .master_metadata(self.metadata_pubkey)
+            .update_authority(context.payer.pubkey())
             .token_program(spl_token::ID)
-            .system_program(system_program::ID)
-            // Not used
-            .edition_marker_pda(edition_marker_pda.0);
+            .ata_program(spl_associated_token_account::ID)
+            .sysvar_instructions(sysvar::instructions::ID)
+            .system_program(system_program::ID);
 
         let tx = Transaction::new_signed_with_payer(
             &[builder.build(print_args).unwrap().instruction()],
@@ -338,26 +345,42 @@ impl EditionMarker {
         )
         .await?;
 
-        let print_args = PrintArgs::V1 {
-            metadata_mint: self.metadata_mint_pubkey,
-            edition: 1,
-        };
+        let edition_marker_pda = Pubkey::find_program_address(
+            &[
+                PREFIX.as_bytes(),
+                mpl_token_metadata::ID.as_ref(),
+                self.metadata_mint_pubkey.as_ref(),
+                EDITION.as_bytes(),
+                MARKER.as_bytes(),
+            ],
+            &mpl_token_metadata::ID,
+        );
+
+        let edition_ata =
+            get_associated_token_address(&context.payer.pubkey(), &self.mint.pubkey());
+        let token_record_pda = find_token_record_account(&self.mint.pubkey(), &edition_ata);
+
+        let print_args = PrintArgs::V1 { edition: 1 };
         let mut builder = PrintBuilder::new();
         builder
-            .new_metadata(self.new_metadata_pubkey)
-            .new_edition(self.new_edition_pubkey)
+            .edition_metadata(self.new_metadata_pubkey)
+            .edition(self.new_edition_pubkey)
+            .edition_mint(self.mint.pubkey())
+            .edition_token_account_owner(context.payer.pubkey())
+            .edition_token_account(edition_ata)
+            .edition_mint_authority(context.payer.pubkey())
+            .edition_token_record(token_record_pda.0)
             .master_edition(self.master_edition_pubkey)
-            .new_mint(self.mint.pubkey())
-            .new_mint_authority(context.payer.pubkey())
+            .edition_marker_pda(edition_marker_pda.0)
             .payer(context.payer.pubkey())
-            .token_account_owner(context.payer.pubkey())
-            .token_account(self.metadata_token_pubkey)
-            .new_metadata_update_authority(context.payer.pubkey())
-            .metadata(self.metadata_pubkey)
+            .master_token_account_owner(context.payer.pubkey())
+            .master_token_account(self.metadata_token_pubkey)
+            .master_metadata(self.metadata_pubkey)
+            .update_authority(context.payer.pubkey())
             .token_program(fake_token_program.pubkey())
-            .system_program(system_program::ID)
-            // Not used
-            .edition_marker_pda(mpl_token_metadata::ID);
+            .ata_program(spl_associated_token_account::ID)
+            .sysvar_instructions(sysvar::instructions::ID)
+            .system_program(system_program::ID);
 
         let tx = Transaction::new_signed_with_payer(
             &[builder.build(print_args).unwrap().instruction()],
@@ -467,6 +490,71 @@ impl EditionMarker {
         context.banks_client.process_transaction(transfer_tx).await
     }
 
+    pub async fn transfer_asset(
+        &mut self,
+        context: &mut ProgramTestContext,
+        new_owner: &Pubkey,
+    ) -> Result<(), BanksClientError> {
+        let new_owner_token_account = get_associated_token_address(new_owner, &self.mint.pubkey());
+        let create_token_account_ix = create_associated_token_account(
+            &context.payer.pubkey(),
+            new_owner,
+            &self.mint.pubkey(),
+            &spl_token::ID,
+        );
+
+        let owner_token_record_pda =
+            find_token_record_account(&self.mint.pubkey(), &self.token.pubkey());
+        let new_owner_token_record_pda =
+            find_token_record_account(&self.mint.pubkey(), &new_owner_token_account);
+
+        // let transfer_ix = spl_token::instruction::transfer(
+        //     &spl_token::id(),
+        //     &self.token.pubkey(),
+        //     &new_owner_token_account,
+        //     &context.payer.pubkey(),
+        //     &[],
+        //     1,
+        // )
+        // .unwrap();
+
+        // let transfer_tx = Transaction::new_signed_with_payer(
+        //     &[create_token_account_ix, transfer_ix],
+        //     Some(&context.payer.pubkey()),
+        //     &[&context.payer],
+        //     context.last_blockhash,
+        // );
+
+        let mut builder = TransferBuilder::new();
+        builder
+            .authority(context.payer.pubkey())
+            .token_owner(context.payer.pubkey())
+            .token(self.token.pubkey())
+            .destination_owner(*new_owner)
+            .destination(new_owner_token_account)
+            .metadata(self.new_metadata_pubkey)
+            .payer(context.payer.pubkey())
+            .mint(self.mint.pubkey())
+            .owner_token_record(owner_token_record_pda.0)
+            .destination_token_record(new_owner_token_record_pda.0)
+            .edition(self.new_edition_pubkey);
+
+        let args = TransferArgs::V1 {
+            amount: 1,
+            authorization_data: None,
+        };
+        let transfer_ix = builder.build(args).unwrap().instruction();
+        let instructions = vec![create_token_account_ix, transfer_ix];
+        let transfer_tx = Transaction::new_signed_with_payer(
+            &instructions,
+            Some(&context.payer.pubkey()),
+            &[&context.payer],
+            context.last_blockhash,
+        );
+
+        context.banks_client.process_transaction(transfer_tx).await
+    }
+
     pub async fn burn<'a>(
         &self,
         context: &mut ProgramTestContext,
@@ -491,6 +579,49 @@ impl EditionMarker {
             )
             .master_edition(args.master_edition.unwrap_or(self.master_edition_pubkey))
             .edition_marker(args.edition_marker.unwrap_or(self.pubkey));
+
+        let burn_ix = builder.build(burn_args).unwrap().instruction();
+
+        let transaction = Transaction::new_signed_with_payer(
+            &[burn_ix],
+            Some(&context.payer.pubkey()),
+            &[&context.payer, (args.authority)],
+            context.last_blockhash,
+        );
+
+        context.banks_client.process_transaction(transaction).await
+    }
+
+    pub async fn burn_asset<'a>(
+        &self,
+        context: &mut ProgramTestContext,
+        args: BurnPrintArgs<'a>,
+    ) -> Result<(), BanksClientError> {
+        let burn_args = BurnArgs::V1 { amount: 1 };
+
+        let token_record_pda = find_token_record_account(
+            &args.mint.unwrap_or_else(|| self.mint.pubkey()),
+            &args.token.unwrap_or_else(|| self.token.pubkey()),
+        );
+
+        let mut builder = BurnBuilder::new();
+        builder
+            .authority(args.authority.pubkey())
+            .metadata(args.metadata.unwrap_or(self.new_metadata_pubkey))
+            .edition(args.edition.unwrap_or(self.new_edition_pubkey))
+            .mint(args.mint.unwrap_or_else(|| self.mint.pubkey()))
+            .token(args.token.unwrap_or_else(|| self.token.pubkey()))
+            .master_edition_mint(
+                args.master_edition_mint
+                    .unwrap_or(self.metadata_mint_pubkey),
+            )
+            .master_edition_token(
+                args.master_edition_token
+                    .unwrap_or(self.metadata_token_pubkey),
+            )
+            .master_edition(args.master_edition.unwrap_or(self.master_edition_pubkey))
+            .edition_marker(args.edition_marker.unwrap_or(self.pubkey))
+            .token_record(token_record_pda.0);
 
         let burn_ix = builder.build(burn_args).unwrap().instruction();
 

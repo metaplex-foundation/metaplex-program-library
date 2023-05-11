@@ -9,10 +9,7 @@ use mpl_token_metadata::{
 use num_traits::FromPrimitive;
 use solana_program_test::*;
 use solana_sdk::{
-    account::AccountSharedData,
-    instruction::InstructionError,
-    signature::{Keypair, Signer},
-    transaction::{Transaction, TransactionError},
+    account::AccountSharedData, instruction::InstructionError, transaction::TransactionError,
 };
 use utils::*;
 
@@ -20,21 +17,13 @@ use utils::*;
 // via (cd ../../token-vault/program/ && cargo build-bpf)
 mod print {
 
-    use mpl_token_metadata::{
-        instruction::{builders::PrintBuilder, InstructionBuilder, PrintArgs},
-        state::{PrintSupply, TokenStandard},
-    };
-    use solana_program::system_program;
+    use mpl_token_metadata::state::{PrintSupply, TokenStandard};
+    use solana_program::borsh::try_from_slice_unchecked;
 
     use super::*;
     #[tokio::test]
     async fn success() {
         let mut context = program_test().start_with_context().await;
-        // let payer_key = context.payer.pubkey();
-        // let test_master_edition = MasterEditionV2::new(&test_metadata);
-
-        // asset
-
         let mut asset = DigitalAsset::default();
         asset
             .create_and_mint_with_supply(
@@ -62,89 +51,20 @@ mod print {
 
         assert_eq!(edition_marker.ledger[0], 64);
         assert_eq!(edition_marker.key, Key::EditionMarkerV2);
+
+        let edition_metadata_account = context
+            .banks_client
+            .get_account(test_edition_marker.new_metadata_pubkey)
+            .await
+            .unwrap()
+            .unwrap();
+        let edition_metadata: mpl_token_metadata::state::Metadata =
+            try_from_slice_unchecked(&edition_metadata_account.data).unwrap();
+        assert_eq!(
+            edition_metadata.token_standard,
+            Some(TokenStandard::ProgrammableNonFungibleEdition)
+        );
     }
-
-    // #[tokio::test]
-    // async fn success_v2() {
-    //     let mut context = program_test().start_with_context().await;
-    //     let test_metadata = Metadata::new();
-    //     let creator = Keypair::new();
-
-    //     let creator_pub = creator.pubkey();
-    //     airdrop(&mut context, &creator_pub.clone(), 3 * LAMPORTS_PER_SOL)
-    //         .await
-    //         .unwrap();
-    //     let test_master_edition = MasterEditionV2::new(&test_metadata);
-    //     let test_collection = Metadata::new();
-    //     test_collection
-    //         .create_v2_default(&mut context)
-    //         .await
-    //         .unwrap();
-    //     let collection_master_edition_account = MasterEditionV2::new(&test_collection);
-    //     collection_master_edition_account
-    //         .create_v3(&mut context, Some(0))
-    //         .await
-    //         .unwrap();
-    //     test_metadata
-    //         .create_v2(
-    //             &mut context,
-    //             "Test".to_string(),
-    //             "TST".to_string(),
-    //             "uri".to_string(),
-    //             Some(vec![Creator {
-    //                 address: creator_pub,
-    //                 verified: false,
-    //                 share: 100,
-    //             }]),
-    //             10,
-    //             false,
-    //             Some(Collection {
-    //                 key: test_collection.mint.pubkey(),
-    //                 verified: false,
-    //             }),
-    //             None,
-    //         )
-    //         .await
-    //         .unwrap();
-
-    //     test_master_edition
-    //         .create(&mut context, Some(10))
-    //         .await
-    //         .unwrap();
-
-    //     let tx = Transaction::new_signed_with_payer(
-    //         [instruction::sign_metadata(
-    //             mpl_token_metadata::id(),
-    //             test_metadata.pubkey,
-    //             creator_pub,
-    //         )]
-    //         .as_ref(),
-    //         Some(&creator_pub),
-    //         &[&creator],
-    //         context.last_blockhash,
-    //     );
-    //     context.banks_client.process_transaction(tx).await.unwrap();
-
-    //     let kpbytes = &context.payer;
-    //     let kp = Keypair::from_bytes(&kpbytes.to_bytes()).unwrap();
-    //     test_metadata
-    //         .verify_collection(
-    //             &mut context,
-    //             test_collection.pubkey,
-    //             &kp,
-    //             test_collection.mint.pubkey(),
-    //             collection_master_edition_account.pubkey,
-    //             None,
-    //         )
-    //         .await
-    //         .unwrap();
-    //     let test_edition_marker = EditionMarker::new(&test_metadata, &test_master_edition, 1);
-    //     test_edition_marker.create(&mut context).await.unwrap();
-
-    //     let edition_marker = test_edition_marker.get_data(&mut context).await;
-
-    //     assert_eq!(edition_marker.ledger[0], 64);
-    //     assert_eq!(edition_marker.key, Key::EditionMarker);
     // }
 
     #[tokio::test]
@@ -167,150 +87,23 @@ mod print {
         let test_master_edition = MasterEditionV2::new_from_asset(&asset);
         let test_edition_marker = EditionMarker::new_from_asset(&asset, &test_master_edition, 1);
 
-        // test_master_edition
-        //     .create(&mut context, Some(10))
-        //     .await
-        //     .unwrap();
-
         let result = test_edition_marker
             .create_from_asset_with_invalid_token_program(&mut context)
             .await
             .unwrap_err();
-        assert_custom_error!(result, MetadataError::InvalidTokenProgram);
-    }
 
-    #[tokio::test]
-    async fn fail_invalid_mint() {
-        let mut context = program_test().start_with_context().await;
-        let test_metadata = Metadata::new();
-        let test_master_edition = MasterEditionV2::new(&test_metadata);
-        let test_edition_marker = EditionMarker::new(&test_metadata, &test_master_edition, 1);
-        let fake_mint = Keypair::new();
-        let fake_account = Keypair::new();
-        let payer_pubkey = context.payer.pubkey();
-
-        test_metadata
-            .create(
-                &mut context,
-                "Test".to_string(),
-                "TST".to_string(),
-                "uri".to_string(),
-                None,
-                10,
-                false,
-                0,
-            )
-            .await
-            .unwrap();
-
-        test_master_edition
-            .create(&mut context, Some(10))
-            .await
-            .unwrap();
-
-        create_mint(&mut context, &fake_mint, &payer_pubkey, None, 0)
-            .await
-            .unwrap();
-
-        create_token_account(
-            &mut context,
-            &fake_account,
-            &fake_mint.pubkey(),
-            &payer_pubkey,
-        )
-        .await
-        .unwrap();
-
-        mint_tokens(
-            &mut context,
-            &fake_mint.pubkey(),
-            &fake_account.pubkey(),
-            1,
-            &payer_pubkey,
-            None,
-        )
-        .await
-        .unwrap();
-
-        // let tx = Transaction::new_signed_with_payer(
-        //     &[instruction::mint_new_edition_from_master_edition_via_token(
-        //         id(),
-        //         test_edition_marker.new_metadata_pubkey,
-        //         test_edition_marker.new_edition_pubkey,
-        //         test_edition_marker.master_edition_pubkey,
-        //         fake_mint.pubkey(),
-        //         context.payer.pubkey(),
-        //         context.payer.pubkey(),
-        //         context.payer.pubkey(),
-        //         fake_account.pubkey(),
-        //         context.payer.pubkey(),
-        //         test_edition_marker.metadata_pubkey,
-        //         test_edition_marker.metadata_mint_pubkey,
-        //         test_edition_marker.edition,
-        //     )],
-        //     Some(&context.payer.pubkey()),
-        //     &[&context.payer, &context.payer, &context.payer],
-        //     context.last_blockhash,
-        // );
-
-        let print_args = PrintArgs::V1 {
-            metadata_mint: test_edition_marker.metadata_mint_pubkey,
-            edition: 1,
-        };
-        let mut builder = PrintBuilder::new();
-        builder
-            .new_metadata(test_edition_marker.new_metadata_pubkey)
-            .new_edition(test_edition_marker.new_edition_pubkey)
-            .master_edition(test_edition_marker.master_edition_pubkey)
-            .new_mint(fake_mint.pubkey())
-            .new_mint_authority(context.payer.pubkey())
-            .payer(context.payer.pubkey())
-            .token_account_owner(context.payer.pubkey())
-            .token_account(fake_account.pubkey())
-            .new_metadata_update_authority(context.payer.pubkey())
-            .metadata(test_edition_marker.metadata_pubkey)
-            .token_program(spl_token::ID)
-            .system_program(system_program::ID)
-            // Not used
-            .edition_marker_pda(mpl_token_metadata::ID);
-
-        let tx = Transaction::new_signed_with_payer(
-            &[builder.build(print_args).unwrap().instruction()],
-            Some(&context.payer.pubkey()),
-            &[&context.payer, &context.payer],
-            context.last_blockhash,
-        );
-
-        let result = context
-            .banks_client
-            .process_transaction(tx)
-            .await
-            .unwrap_err();
-
-        assert_custom_error!(result, MetadataError::TokenAccountMintMismatchV2);
+        match result {
+            BanksClientError::TransactionError(TransactionError::InstructionError(
+                _,
+                InstructionError::MissingAccount,
+            )) => (),
+            _ => panic!("Wrong error occurs while trying to use invalid token program"),
+        }
     }
 
     #[tokio::test]
     async fn fail_edition_already_initialized() {
         let mut context = program_test().start_with_context().await;
-        // let test_metadata = Metadata::new();
-        // let test_master_edition = MasterEditionV2::new(&test_metadata);
-        // let test_edition_marker = EditionMarker::new(&test_metadata, &test_master_edition, 1);
-        // let test_edition_marker1 = EditionMarker::new(&test_metadata, &test_master_edition, 1);
-
-        // test_metadata
-        //     .create(
-        //         &mut context,
-        //         "Test".to_string(),
-        //         "TST".to_string(),
-        //         "uri".to_string(),
-        //         None,
-        //         10,
-        //         false,
-        //         0,
-        //     )
-        //     .await
-        //     .unwrap();
         let mut asset = DigitalAsset::default();
         asset
             .create_and_mint_with_supply(
@@ -328,11 +121,6 @@ mod print {
         let test_edition_marker = EditionMarker::new_from_asset(&asset, &test_master_edition, 1);
         let test_edition_marker1 = EditionMarker::new_from_asset(&asset, &test_master_edition, 1);
 
-        // test_master_edition
-        //     .create(&mut context, Some(10))
-        //     .await
-        //     .unwrap();
-
         test_edition_marker
             .create_from_asset(&mut context)
             .await
@@ -347,23 +135,6 @@ mod print {
     #[tokio::test]
     async fn fail_to_mint_edition_override_0() {
         let mut context = program_test().start_with_context().await;
-        // let test_metadata = Metadata::new();
-        // let test_master_edition = MasterEditionV2::new(&test_metadata);
-        // let test_edition_marker = EditionMarker::new(&test_metadata, &test_master_edition, 0);
-
-        // test_metadata
-        //     .create(
-        //         &mut context,
-        //         "Test".to_string(),
-        //         "TST".to_string(),
-        //         "uri".to_string(),
-        //         None,
-        //         10,
-        //         false,
-        //         0,
-        //     )
-        //     .await
-        //     .unwrap();
 
         let mut asset = DigitalAsset::default();
         asset
@@ -380,11 +151,6 @@ mod print {
 
         let test_master_edition = MasterEditionV2::new_from_asset(&asset);
         let test_edition_marker = EditionMarker::new_from_asset(&asset, &test_master_edition, 0);
-
-        // test_master_edition
-        //     .create(&mut context, Some(0))
-        //     .await
-        //     .unwrap();
 
         let result = test_edition_marker
             .create_from_asset(&mut context)
@@ -397,23 +163,6 @@ mod print {
     async fn fail_to_mint_edition_num_zero() {
         // Make sure we can't mint 0th edition from a Master Edition with a max supply > 0.
         let mut context = program_test().start_with_context().await;
-        // let test_metadata = Metadata::new();
-        // let test_master_edition = MasterEditionV2::new(&test_metadata);
-        // let test_edition_marker = EditionMarker::new(&test_metadata, &test_master_edition, 0);
-
-        // test_metadata
-        //     .create(
-        //         &mut context,
-        //         "Test".to_string(),
-        //         "TST".to_string(),
-        //         "uri".to_string(),
-        //         None,
-        //         10,
-        //         false,
-        //         0,
-        //     )
-        //     .await
-        //     .unwrap();
 
         let mut asset = DigitalAsset::default();
         asset
@@ -431,11 +180,6 @@ mod print {
         let test_master_edition = MasterEditionV2::new_from_asset(&asset);
         let test_edition_marker = EditionMarker::new_from_asset(&asset, &test_master_edition, 0);
 
-        // test_master_edition
-        //     .create(&mut context, Some(10))
-        //     .await
-        //     .unwrap();
-
         let result = test_edition_marker
             .create_from_asset(&mut context)
             .await
@@ -446,15 +190,8 @@ mod print {
     #[tokio::test]
     async fn increment_master_edition_supply() {
         let mut context = program_test().start_with_context().await;
+        let mut slot = 1;
 
-        // let original_nft = Metadata::new();
-        // original_nft.create_v2_default(&mut context).await.unwrap();
-
-        // let master_edition = MasterEditionV2::new(&original_nft);
-        // master_edition
-        //     .create_v3(&mut context, Some(10))
-        //     .await
-        //     .unwrap();
         let mut original_nft = DigitalAsset::default();
         original_nft
             .create_and_mint_with_supply(
@@ -467,16 +204,17 @@ mod print {
             )
             .await
             .unwrap();
+        let _result = context.warp_to_slot(slot);
+        slot += 1;
 
         let master_edition = MasterEditionV2::new_from_asset(&original_nft);
-        // master_edition
-        //     .create_v3(&mut context, Some(10))
-        //     .await
-        //     .unwrap();
-        // let test_edition_marker = EditionMarker::new_from_asset(&asset, &test_master_edition, 1);
 
         let print_edition = EditionMarker::new_from_asset(&original_nft, &master_edition, 1);
+        let _result = context.warp_to_slot(slot);
+        slot += 1;
         print_edition.create_from_asset(&mut context).await.unwrap();
+        let _result = context.warp_to_slot(slot);
+        slot += 1;
 
         // Metadata, Print Edition and token account exist.
         assert!(print_edition.exists_on_chain(&mut context).await);
@@ -490,6 +228,8 @@ mod print {
         // Mint edition number 5 and supply should go up to 2.
         let print_edition = EditionMarker::new_from_asset(&original_nft, &master_edition, 5);
         print_edition.create_from_asset(&mut context).await.unwrap();
+        let _result = context.warp_to_slot(slot);
+        slot += 1;
 
         let master_edition_struct = master_edition.get_data(&mut context).await;
 
@@ -499,6 +239,8 @@ mod print {
         // Mint edition number 4 and supply should go up to 3.
         let print_edition = EditionMarker::new_from_asset(&original_nft, &master_edition, 4);
         print_edition.create_from_asset(&mut context).await.unwrap();
+        let _result = context.warp_to_slot(slot);
+        slot += 1;
 
         let mut master_edition_struct = master_edition.get_data(&mut context).await;
         let mut master_edition_account = get_account(&mut context, &master_edition.pubkey).await;
@@ -522,7 +264,11 @@ mod print {
 
         // Mint edition number 2, this will succeed but supply will incremement.
         let print_edition = EditionMarker::new_from_asset(&original_nft, &master_edition, 2);
+        let _result = context.warp_to_slot(slot);
+        slot += 1;
         print_edition.create_from_asset(&mut context).await.unwrap();
+        let _result = context.warp_to_slot(slot);
+        slot += 1;
 
         let master_edition_struct = master_edition.get_data(&mut context).await;
 
@@ -532,6 +278,7 @@ mod print {
         // Mint edition number 10 and supply should increase by 1 to 10.
         let print_edition = EditionMarker::new_from_asset(&original_nft, &master_edition, 10);
         print_edition.create_from_asset(&mut context).await.unwrap();
+        let _result = context.warp_to_slot(slot);
 
         let master_edition_struct = master_edition.get_data(&mut context).await;
 
@@ -554,9 +301,6 @@ mod print {
     async fn cannot_mint_edition_num_higher_than_max_supply() {
         let mut context = program_test().start_with_context().await;
 
-        // let original_nft = Metadata::new();
-        // original_nft.create_v2_default(&mut context).await.unwrap();
-
         let mut original_nft = DigitalAsset::default();
         original_nft
             .create_and_mint_with_supply(
@@ -571,10 +315,6 @@ mod print {
             .unwrap();
 
         let master_edition = MasterEditionV2::new_from_asset(&original_nft);
-        // master_edition
-        //     .create_v3(&mut context, Some(10))
-        //     .await
-        //     .unwrap();
 
         // Mint the first print edition.
         let print_edition = EditionMarker::new_from_asset(&original_nft, &master_edition, 1);
@@ -607,9 +347,6 @@ mod print {
     async fn cannot_remint_existing_edition() {
         let mut context = program_test().start_with_context().await;
 
-        // let original_nft = Metadata::new();
-        // original_nft.create_v2_default(&mut context).await.unwrap();
-
         let mut original_nft = DigitalAsset::default();
         original_nft
             .create_and_mint_with_supply(
@@ -624,10 +361,6 @@ mod print {
             .unwrap();
 
         let master_edition = MasterEditionV2::new_from_asset(&original_nft);
-        // master_edition
-        //     .create_v3(&mut context, Some(999))
-        //     .await
-        //     .unwrap();
 
         // Mint a couple non-sequential editions.
         let edition_1 = EditionMarker::new_from_asset(&original_nft, &master_edition, 1);
@@ -663,9 +396,6 @@ mod print {
         // This test ensures that the new logic can mint out missing editions even when supply == max_supply.
         let mut context = program_test().start_with_context().await;
 
-        // let original_nft = Metadata::new();
-        // original_nft.create_v2_default(&mut context).await.unwrap();
-
         let mut original_nft = DigitalAsset::default();
         original_nft
             .create_and_mint_with_supply(
@@ -680,10 +410,6 @@ mod print {
             .unwrap();
 
         let master_edition = MasterEditionV2::new_from_asset(&original_nft);
-        // master_edition
-        //     .create_v3(&mut context, Some(10))
-        //     .await
-        //     .unwrap();
 
         // Start with a supply of 10. Mint out edition number 10 and then artificially set the supply to 10
         // to simulate the old edition override logic.

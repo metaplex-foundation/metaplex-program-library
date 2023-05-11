@@ -2,7 +2,10 @@ use super::*;
 
 use crate::{
     pda::find_token_record_account,
-    processor::burn::{fungible::burn_fungible, nonfungible_edition::burn_nonfungible_edition},
+    processor::burn::{
+        fungible::burn_fungible,
+        nonfungible_edition::{burn_nonfungible_edition, BurnNonFungibleEditionArgs},
+    },
     state::{AuthorityRequest, AuthorityType, TokenDelegateRole, TokenRecord, TokenState},
     utils::{check_token_standard, thaw},
 };
@@ -47,7 +50,6 @@ pub fn burn<'a>(
 
 // V1 implementation of the burn instruction.
 fn burn_v1(program_id: &Pubkey, ctx: Context<Burn>, args: BurnArgs) -> ProgramResult {
-    msg!("Burn V1");
     let BurnArgs::V1 { amount } = args;
 
     // Validate accounts
@@ -159,6 +161,7 @@ fn burn_v1(program_id: &Pubkey, ctx: Context<Burn>, args: BurnArgs) -> ProgramRe
         return Err(MetadataError::InvalidAmount.into());
     }
 
+    msg!("Token standard: {:?}", token_standard);
     match token_standard {
         TokenStandard::NonFungible => {
             let args = BurnNonFungibleArgs { metadata };
@@ -166,7 +169,9 @@ fn burn_v1(program_id: &Pubkey, ctx: Context<Burn>, args: BurnArgs) -> ProgramRe
             burn_nonfungible(&ctx, args)?;
         }
         TokenStandard::NonFungibleEdition => {
-            burn_nonfungible_edition(&ctx)?;
+            let args = BurnNonFungibleEditionArgs { is_pnft: false };
+
+            burn_nonfungible_edition(&ctx, args)?;
         }
         TokenStandard::ProgrammableNonFungible => {
             // All the checks are the same as burning a NonFungible token
@@ -210,6 +215,9 @@ fn burn_v1(program_id: &Pubkey, ctx: Context<Burn>, args: BurnArgs) -> ProgramRe
             )?;
         }
         TokenStandard::ProgrammableNonFungibleEdition => {
+            solana_program::msg!("Burn ProgrammableNonFungibleEdition");
+            let args = BurnNonFungibleEditionArgs { is_pnft: true };
+
             // All the checks are the same as burning a NonFungible token
             // except we also have to check the token state and derivation.
             let token_record = match ctx.accounts.token_record_info {
@@ -233,6 +241,7 @@ fn burn_v1(program_id: &Pubkey, ctx: Context<Burn>, args: BurnArgs) -> ProgramRe
                 return Err(MetadataError::IncorrectTokenState.into());
             }
 
+            solana_program::msg!("Thawing");
             thaw(
                 ctx.accounts.mint_info.clone(),
                 ctx.accounts.token_info.clone(),
@@ -240,9 +249,8 @@ fn burn_v1(program_id: &Pubkey, ctx: Context<Burn>, args: BurnArgs) -> ProgramRe
                 ctx.accounts.spl_token_program_info.clone(),
             )?;
 
-            let _args = BurnNonFungibleArgs { metadata };
-
-            burn_nonfungible_edition(&ctx)?;
+            solana_program::msg!("Thawed");
+            burn_nonfungible_edition(&ctx, args)?;
 
             // Also close the token_record account.
             close_program_account(

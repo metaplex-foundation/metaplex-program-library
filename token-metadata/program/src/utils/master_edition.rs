@@ -146,7 +146,6 @@ pub fn process_mint_new_edition_from_master_edition_via_token_logic<'a>(
             Ok::<(), ProgramError>(())
         }
         TokenStandard::ProgrammableNonFungibleEdition => {
-            msg!("ProgrammableNonFungibleEdition");
             let bump = assert_derivation(
                 program_id,
                 edition_marker_info,
@@ -158,10 +157,8 @@ pub fn process_mint_new_edition_from_master_edition_via_token_logic<'a>(
                     MARKER.as_bytes(),
                 ],
             )?;
-            msg!("bump {}", bump);
 
-            if edition_marker_info.data_is_empty() {
-                msg!("edition_marker_info.data_is_empty()");
+            let mut edition_marker = if edition_marker_info.data_is_empty() {
                 let seeds = &[
                     PREFIX.as_bytes(),
                     program_id.as_ref(),
@@ -171,30 +168,30 @@ pub fn process_mint_new_edition_from_master_edition_via_token_logic<'a>(
                     &[bump],
                 ];
 
-                msg!("creating or allocating account");
+                let marker = EditionMarkerV2::default();
+                let serialized_data = marker.try_to_vec()?;
+
                 create_or_allocate_account_raw(
                     *program_id,
                     edition_marker_info,
                     system_account_info,
                     payer_account_info,
-                    MAX_EDITION_MARKER_SIZE,
+                    serialized_data.len(),
                     seeds,
                 )?;
-                msg!("created or allocated account");
-            }
 
-            msg!("creating edition marker");
-            let mut edition_marker = EditionMarkerV2::from_account_info(edition_marker_info)?;
-            msg!("Init key");
+                marker
+            } else {
+                EditionMarkerV2::from_account_info(edition_marker_info)?
+            };
+
+            solana_program::msg!("Edition marker is {:?}", edition_marker);
             edition_marker.key = Key::EditionMarkerV2;
             if edition_marker.edition_taken(edition)? {
-                msg!("edition taken");
                 return Err(MetadataError::AlreadyInitialized.into());
             } else {
-                msg!("inserting edition");
                 edition_marker.insert_edition(edition)?
             }
-            msg!("serializing edition marker");
             edition_marker.save(edition_marker_info, payer_account_info, system_account_info)?;
             Ok::<(), ProgramError>(())
         }
@@ -460,6 +457,16 @@ pub fn mint_limited_edition<'a>(
     // create the metadata the normal way, except `allow_direct_creator_writes` is set to true
     // because we are directly copying from the Master Edition metadata.
 
+    // I hate this but can't think of a better way until we refactor setting
+    // token_standard everywhere.
+    let token_standard_override = match master_metadata.token_standard {
+        Some(TokenStandard::NonFungible) => Some(TokenStandard::NonFungibleEdition),
+        Some(TokenStandard::ProgrammableNonFungible) => {
+            Some(TokenStandard::ProgrammableNonFungibleEdition)
+        }
+        _ => None,
+    };
+
     process_create_metadata_accounts_logic(
         program_id,
         CreateMetadataAccountsLogicArgs {
@@ -476,6 +483,7 @@ pub fn mint_limited_edition<'a>(
         true,
         true,
         None, // Not a collection parent
+        token_standard_override,
     )?;
     let edition_authority_seeds = &[
         PREFIX.as_bytes(),

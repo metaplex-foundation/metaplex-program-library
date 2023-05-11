@@ -186,6 +186,7 @@ pub fn close_program_account<'a>(
     account_info: &AccountInfo<'a>,
     funds_dest_account_info: &AccountInfo<'a>,
 ) -> ProgramResult {
+    solana_program::msg!("Closing account: {:?}", account_info.key);
     // Transfer lamports from the account to the destination account.
     let dest_starting_lamports = funds_dest_account_info.lamports();
     **funds_dest_account_info.lamports.borrow_mut() = dest_starting_lamports

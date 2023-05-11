@@ -7,8 +7,9 @@ use mpl_token_metadata::{
             RevokeBuilder, TransferBuilder, UnlockBuilder, UnverifyBuilder, UpdateBuilder,
             VerifyBuilder,
         },
-        BurnArgs, CreateArgs, DelegateArgs, InstructionBuilder, LockArgs, MetadataDelegateRole,
-        MigrateArgs, MintArgs, RevokeArgs, TransferArgs, UnlockArgs, UpdateArgs, VerificationArgs,
+        BurnArgs, CollectionDetailsToggle, CollectionToggle, CreateArgs, DelegateArgs,
+        InstructionBuilder, LockArgs, MetadataDelegateRole, MigrateArgs, MintArgs, RevokeArgs,
+        RuleSetToggle, TransferArgs, UnlockArgs, Update, UpdateArgs, UsesToggle, VerificationArgs,
     },
     pda::{
         find_master_edition_account, find_metadata_account, find_metadata_delegate_record_account,
@@ -32,7 +33,7 @@ use spl_associated_token_account::{
     get_associated_token_address, instruction::create_associated_token_account,
 };
 
-use super::{create_mint, create_token_account, get_account, mint_tokens};
+use super::{airdrop, create_mint, create_token_account, get_account, mint_tokens};
 
 pub const DEFAULT_NAME: &str = "Digital Asset";
 pub const DEFAULT_SYMBOL: &str = "DA";
@@ -1213,6 +1214,50 @@ impl DigitalAsset {
         assert!(token_record_account.is_none());
 
         Ok(())
+    }
+
+    pub async fn change_update_authority(
+        &self,
+        context: &mut ProgramTestContext,
+        new_update_authority: Pubkey,
+    ) -> Result<(), BanksClientError> {
+        airdrop(context, &new_update_authority, 1_000_000_000)
+            .await
+            .unwrap();
+
+        let mut builder = UpdateBuilder::new();
+        builder
+            .authority(context.payer.pubkey())
+            .metadata(self.metadata)
+            .payer(context.payer.pubkey())
+            .mint(self.mint.pubkey());
+
+        if let Some(master_edition) = self.edition {
+            builder.edition(master_edition);
+        }
+
+        let mut update_args = UpdateArgs::V1 {
+            new_update_authority: Some(new_update_authority),
+            data: None,
+            primary_sale_happened: None,
+            is_mutable: None,
+            collection: CollectionToggle::None,
+            collection_details: CollectionDetailsToggle::None,
+            uses: UsesToggle::None,
+            rule_set: RuleSetToggle::None,
+            authorization_data: None,
+        };
+
+        let update_ix = builder.build(update_args).unwrap().instruction();
+
+        let tx = Transaction::new_signed_with_payer(
+            &[update_ix],
+            Some(&context.payer.pubkey()),
+            &[&context.payer],
+            context.last_blockhash,
+        );
+
+        context.banks_client.process_transaction(tx).await
     }
 }
 

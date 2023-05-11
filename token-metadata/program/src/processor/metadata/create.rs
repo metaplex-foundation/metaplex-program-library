@@ -144,6 +144,7 @@ fn create_v1(program_id: &Pubkey, ctx: Context<Create>, args: CreateArgs) -> Pro
         false,
         true,
         asset_data.collection_details.clone(),
+        None,
     )?;
 
     // creates the master edition account (only for NonFungible assets)

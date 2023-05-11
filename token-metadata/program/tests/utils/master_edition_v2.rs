@@ -168,16 +168,41 @@ impl MasterEditionV2 {
         context: &mut ProgramTestContext,
         nft: &Metadata,
         number: u64,
-    ) -> Result<Vec<EditionMarker>, BanksClientError> {
+        start_slot: u64,
+    ) -> Result<(Vec<EditionMarker>, u64), BanksClientError> {
         let mut editions = Vec::new();
+        let mut slot = start_slot;
 
         for i in 1..=number {
             let print_edition = EditionMarker::new(nft, self, i);
             print_edition.create(context).await?;
             editions.push(print_edition);
+            slot += 5;
+            context.warp_to_slot(slot).unwrap();
         }
 
-        Ok(editions)
+        Ok((editions, slot))
+    }
+
+    pub async fn mint_editions_from_asset(
+        &self,
+        context: &mut ProgramTestContext,
+        nft: &DigitalAsset,
+        number: u64,
+        start_slot: u64,
+    ) -> Result<(Vec<EditionMarker>, u64), BanksClientError> {
+        let mut editions = Vec::new();
+        let mut slot = start_slot;
+
+        for i in 1..=number {
+            let print_edition = EditionMarker::new_from_asset(nft, self, i);
+            print_edition.create(context).await?;
+            editions.push(print_edition);
+            slot += 5;
+            context.warp_to_slot(slot).unwrap();
+        }
+
+        Ok((editions, slot))
     }
 
     pub async fn get_supplies(&self, context: &mut ProgramTestContext) -> (u64, u64) {

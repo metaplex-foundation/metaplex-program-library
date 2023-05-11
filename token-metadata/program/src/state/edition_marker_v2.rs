@@ -59,11 +59,11 @@ impl EditionMarkerV2 {
         let my_position_in_index_starting_from_right =
             EditionMarkerV2::get_offset_from_right(edition)?;
 
-        Ok((index, u8::pow(2, my_position_in_index_starting_from_right)))
+        Ok((index, 1u8 << my_position_in_index_starting_from_right))
     }
 
     pub fn edition_taken(&self, edition: u64) -> Result<bool, ProgramError> {
-        let (index, mask) = EditionMarker::get_index_and_mask(edition)?;
+        let (index, mask) = EditionMarkerV2::get_index_and_mask(edition)?;
 
         // If the ledger is smaller than the index, then it's not taken.
         if self.ledger.len() <= index {

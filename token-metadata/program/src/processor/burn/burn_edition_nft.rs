@@ -14,7 +14,7 @@ use crate::{
     utils::assert_initialized,
 };
 
-use super::nonfungible_edition::burn_nonfungible_edition;
+use super::nonfungible_edition::{burn_nonfungible_edition, BurnNonFungibleEditionArgs};
 
 pub fn process_burn_edition_nft<'a>(
     program_id: &Pubkey,
@@ -97,5 +97,7 @@ pub fn process_burn_edition_nft<'a>(
         remaining_accounts: vec![],
     };
 
-    burn_nonfungible_edition(&context)
+    let args = BurnNonFungibleEditionArgs { is_pnft: false };
+
+    burn_nonfungible_edition(&context, args)
 }

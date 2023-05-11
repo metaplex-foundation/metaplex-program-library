@@ -86,13 +86,14 @@ pub trait TokenMetadataAccount: BorshDeserialize {
         let key: Option<Key> = Key::from_u8(data[0]);
         match key {
             Some(key) => {
-                // msg!(
-                //     "key: {:?}, data_type: {:?}, data_size: {}, data.len(): {}",
-                //     key,
-                //     data_type,
-                //     data_size,
-                //     data.len()
-                // );
+                #[cfg(all(target_arch = "bpf"))]
+                solana_program::msg!(
+                    "key: {:?}, data_type: {:?}, data_size: {}, data.len(): {}",
+                    key,
+                    data_type,
+                    data_size,
+                    data.len()
+                );
                 (key == data_type || key == Key::Uninitialized)
                     && (data.len() == data_size || data_size == 0)
             }

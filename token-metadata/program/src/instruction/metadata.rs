@@ -12,7 +12,6 @@ use {
 use super::InstructionBuilder;
 use crate::{
     instruction::MetadataInstruction,
-    pda::{EDITION, MARKER, PREFIX},
     processor::AuthorizationData,
     state::{
         AssetData, Collection, CollectionDetails, Creator, Data, DataV2, MigrationType,
@@ -295,7 +294,7 @@ pub struct UpdateMetadataAccountArgsV2 {
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub enum PrintArgs {
-    V1 { metadata_mint: Pubkey, edition: u64 },
+    V1 { edition: u64 },
 }
 
 //----------------------+
@@ -776,52 +775,49 @@ impl InstructionBuilder for super::builders::Update {
 ///
 /// # Accounts:
 ///
-///   0. `[writable]` New Metadata
-///   1. `[writable]` New Edition
-///   2. `[writable]` Master Edition
-///   3. `[writable]` New Mint
-///   4. `[writable]` Edition Marker PDA
-///   5. `[signer]`, New Mint Authority
-///   6. `[signer, writable]` Payer
-///   7. `[signer]`, Token Account Owner
-///   8. `[]` Token Account
-///   9. `[]` New Metadata Update Authority
-///   10. `[]` Metadata
-///   11. `[]` Token Program
-///   12. `[]` System Program
+///   0. `[writable]` Edition Metadata
+///   1. `[writable]` Edition
+///   2. `[writable]` Edition Mint
+///   3. `[writable]` Edition Token Account Owner
+///   4. `[writable]` Edition Token Account
+///   5. `[signer]` Edition Mint Authority
+///   6. `[writable]` Edition Token Record
+///   7. `[writable]`, Master Edition
+///   8. `[writable]`, Edition Marker
+///   9. `[signer, writable]` Payer
+///   10. `[signer]`, Master Token Account Owner
+///   11. `[]` Master Token Account
+///   12. `[]` Master Metadata
+///   12. `[]` Update Authority
+///   13. `[]` Token Program
+///   14. `[]` Associated Token Account Program
+///   15. `[]` Instructions System Variable
+///   16. `[]` System Program
 
 impl InstructionBuilder for super::builders::Print {
     fn instruction(&self) -> solana_program::instruction::Instruction {
-        let (metadata_mint, _edition) = match self.args.clone() {
-            PrintArgs::V1 {
-                metadata_mint,
-                edition,
-            } => (metadata_mint, edition),
-        };
-        let (edition_mark_pda, _) = Pubkey::find_program_address(
-            &[
-                PREFIX.as_bytes(),
-                crate::ID.as_ref(),
-                metadata_mint.as_ref(),
-                EDITION.as_bytes(),
-                MARKER.as_bytes(),
-            ],
-            &crate::ID,
-        );
-
         let accounts = vec![
-            AccountMeta::new(self.new_metadata, false),
-            AccountMeta::new(self.new_edition, false),
+            AccountMeta::new(self.edition_metadata, false),
+            AccountMeta::new(self.edition, false),
+            AccountMeta::new(self.edition_mint, false),
+            AccountMeta::new(self.edition_token_account_owner, false),
+            AccountMeta::new(self.edition_token_account, false),
+            AccountMeta::new_readonly(self.edition_mint_authority, true),
+            if let Some(edition_token_record) = self.edition_token_record {
+                AccountMeta::new(edition_token_record, false)
+            } else {
+                AccountMeta::new_readonly(crate::ID, false)
+            },
             AccountMeta::new(self.master_edition, false),
-            AccountMeta::new(self.new_mint, false),
-            AccountMeta::new(edition_mark_pda, false),
-            AccountMeta::new_readonly(self.new_mint_authority, true),
+            AccountMeta::new(self.edition_marker_pda, false),
             AccountMeta::new(self.payer, true),
-            AccountMeta::new_readonly(self.token_account_owner, true),
-            AccountMeta::new_readonly(self.token_account, false),
-            AccountMeta::new_readonly(self.new_metadata_update_authority, false),
-            AccountMeta::new_readonly(self.metadata, false),
+            AccountMeta::new_readonly(self.master_token_account_owner, true),
+            AccountMeta::new_readonly(self.master_token_account, false),
+            AccountMeta::new_readonly(self.master_metadata, false),
+            AccountMeta::new_readonly(self.update_authority, false),
             AccountMeta::new_readonly(self.token_program, false),
+            AccountMeta::new_readonly(self.ata_program, false),
+            AccountMeta::new_readonly(self.sysvar_instructions, false),
             AccountMeta::new_readonly(self.system_program, false),
         ];
 

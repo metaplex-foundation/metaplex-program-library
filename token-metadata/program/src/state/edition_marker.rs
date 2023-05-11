@@ -93,6 +93,7 @@ impl EditionMarker {
     }
 
     pub fn save(self, account_info: &AccountInfo) -> ProgramResult {
+        solana_program::msg!("Wrong save!");
         // Clear all data to ensure it is serialized cleanly.
         let mut edition_marker_data = account_info.try_borrow_mut_data()?;
         edition_marker_data[0..].fill(0);
