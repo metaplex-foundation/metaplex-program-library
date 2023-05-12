@@ -148,6 +148,7 @@ fn burn_v1(program_id: &Pubkey, ctx: Context<Burn>, args: BurnArgs) -> ProgramRe
         TokenStandard::NonFungibleEdition
             | TokenStandard::NonFungible
             | TokenStandard::ProgrammableNonFungible
+            | TokenStandard::ProgrammableNonFungibleEdition
     ) {
         if amount != 1 {
             return Err(MetadataError::InvalidAmount.into());
@@ -230,6 +231,8 @@ fn burn_v1(program_id: &Pubkey, ctx: Context<Burn>, args: BurnArgs) -> ProgramRe
                 &ctx.accounts.token_record_info.unwrap().clone(),
                 &ctx.accounts.authority_info.clone(),
             )?;
+        }
+        TokenStandard::ProgrammableNonFungibleEdition => {
         }
         TokenStandard::Fungible | TokenStandard::FungibleAsset => {
             burn_fungible(&ctx, amount)?;

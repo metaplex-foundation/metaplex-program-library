@@ -50,5 +50,6 @@ pub fn process_mint_new_edition_from_master_edition_via_token<'a>(
         },
         edition,
         ignore_owner_signer,
+        crate::state::TokenStandard::NonFungibleEdition,
     )
 }

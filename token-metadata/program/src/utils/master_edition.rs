@@ -18,8 +18,9 @@ use crate::{
         metadata::assert_update_authority_is_correct,
     },
     error::MetadataError,
+    pda::MARKER,
     state::{
-        get_reservation_list, DataV2, EditionMarker, Key, MasterEdition, Metadata,
+        get_reservation_list, DataV2, EditionMarker, EditionMarkerV2, Key, MasterEdition, Metadata,
         TokenMetadataAccount, Uses, EDITION, EDITION_MARKER_BIT_SIZE, MAX_EDITION_LEN,
         MAX_EDITION_MARKER_SIZE, MAX_MASTER_EDITION_LEN, PREFIX,
     },
@@ -46,6 +47,7 @@ pub fn process_mint_new_edition_from_master_edition_via_token_logic<'a>(
     accounts: MintNewEditionFromMasterEditionViaTokenLogicArgs<'a>,
     edition: u64,
     ignore_owner_signer: bool,
+    token_standard: TokenStandard,
 ) -> ProgramResult {
     let MintNewEditionFromMasterEditionViaTokenLogicArgs {
         new_metadata_account_info,
@@ -96,49 +98,105 @@ pub fn process_mint_new_edition_from_master_edition_via_token_logic<'a>(
         return Err(MetadataError::AlreadyInitialized.into());
     }
 
-    let edition_number = edition.checked_div(EDITION_MARKER_BIT_SIZE).unwrap();
-    let as_string = edition_number.to_string();
+    match token_standard {
+        TokenStandard::NonFungibleEdition => {
+            let edition_number = edition.checked_div(EDITION_MARKER_BIT_SIZE).unwrap();
+            let as_string = edition_number.to_string();
 
-    let bump = assert_derivation(
-        program_id,
-        edition_marker_info,
-        &[
-            PREFIX.as_bytes(),
-            program_id.as_ref(),
-            master_metadata.mint.as_ref(),
-            EDITION.as_bytes(),
-            as_string.as_bytes(),
-        ],
-    )?;
+            let bump = assert_derivation(
+                program_id,
+                edition_marker_info,
+                &[
+                    PREFIX.as_bytes(),
+                    program_id.as_ref(),
+                    master_metadata.mint.as_ref(),
+                    EDITION.as_bytes(),
+                    as_string.as_bytes(),
+                ],
+            )?;
 
-    if edition_marker_info.data_is_empty() {
-        let seeds = &[
-            PREFIX.as_bytes(),
-            program_id.as_ref(),
-            master_metadata.mint.as_ref(),
-            EDITION.as_bytes(),
-            as_string.as_bytes(),
-            &[bump],
-        ];
+            if edition_marker_info.data_is_empty() {
+                let seeds = &[
+                    PREFIX.as_bytes(),
+                    program_id.as_ref(),
+                    master_metadata.mint.as_ref(),
+                    EDITION.as_bytes(),
+                    as_string.as_bytes(),
+                    &[bump],
+                ];
 
-        create_or_allocate_account_raw(
-            *program_id,
-            edition_marker_info,
-            system_account_info,
-            payer_account_info,
-            MAX_EDITION_MARKER_SIZE,
-            seeds,
-        )?;
-    }
+                create_or_allocate_account_raw(
+                    *program_id,
+                    edition_marker_info,
+                    system_account_info,
+                    payer_account_info,
+                    MAX_EDITION_MARKER_SIZE,
+                    seeds,
+                )?;
+            }
 
-    let mut edition_marker = EditionMarker::from_account_info(edition_marker_info)?;
-    edition_marker.key = Key::EditionMarker;
-    if edition_marker.edition_taken(edition)? {
-        return Err(MetadataError::AlreadyInitialized.into());
-    } else {
-        edition_marker.insert_edition(edition)?
-    }
-    edition_marker.serialize(&mut *edition_marker_info.data.borrow_mut())?;
+            let mut edition_marker = EditionMarker::from_account_info(edition_marker_info)?;
+            edition_marker.key = Key::EditionMarker;
+            if edition_marker.edition_taken(edition)? {
+                return Err(MetadataError::AlreadyInitialized.into());
+            } else {
+                edition_marker.insert_edition(edition)?
+            }
+            edition_marker.serialize(&mut *edition_marker_info.data.borrow_mut())?;
+            Ok::<(), ProgramError>(())
+        }
+        TokenStandard::ProgrammableNonFungibleEdition => {
+            let bump = assert_derivation(
+                program_id,
+                edition_marker_info,
+                &[
+                    PREFIX.as_bytes(),
+                    program_id.as_ref(),
+                    master_metadata.mint.as_ref(),
+                    EDITION.as_bytes(),
+                    MARKER.as_bytes(),
+                ],
+            )?;
+
+            let mut edition_marker = if edition_marker_info.data_is_empty() {
+                let seeds = &[
+                    PREFIX.as_bytes(),
+                    program_id.as_ref(),
+                    master_metadata.mint.as_ref(),
+                    EDITION.as_bytes(),
+                    MARKER.as_bytes(),
+                    &[bump],
+                ];
+
+                let marker = EditionMarkerV2::default();
+                let serialized_data = marker.try_to_vec()?;
+
+                create_or_allocate_account_raw(
+                    *program_id,
+                    edition_marker_info,
+                    system_account_info,
+                    payer_account_info,
+                    serialized_data.len(),
+                    seeds,
+                )?;
+
+                marker
+            } else {
+                EditionMarkerV2::from_account_info(edition_marker_info)?
+            };
+
+            solana_program::msg!("Edition marker is {:?}", edition_marker);
+            edition_marker.key = Key::EditionMarkerV2;
+            if edition_marker.edition_taken(edition)? {
+                return Err(MetadataError::AlreadyInitialized.into());
+            } else {
+                edition_marker.insert_edition(edition)?
+            }
+            edition_marker.save(edition_marker_info, payer_account_info, system_account_info)?;
+            Ok::<(), ProgramError>(())
+        }
+        _ => Err(MetadataError::InvalidTokenStandard.into()),
+    }?;
 
     mint_limited_edition(
         program_id,
@@ -398,6 +456,16 @@ pub fn mint_limited_edition<'a>(
     // create the metadata the normal way, except `allow_direct_creator_writes` is set to true
     // because we are directly copying from the Master Edition metadata.
 
+    // I hate this but can't think of a better way until we refactor setting
+    // token_standard everywhere.
+    let token_standard_override = match master_metadata.token_standard {
+        Some(TokenStandard::NonFungible) => Some(TokenStandard::NonFungibleEdition),
+        Some(TokenStandard::ProgrammableNonFungible) => {
+            Some(TokenStandard::ProgrammableNonFungibleEdition)
+        }
+        _ => None,
+    };
+
     process_create_metadata_accounts_logic(
         program_id,
         CreateMetadataAccountsLogicArgs {
@@ -414,6 +482,7 @@ pub fn mint_limited_edition<'a>(
         true,
         true,
         None, // Not a collection parent
+        token_standard_override,
     )?;
     let edition_authority_seeds = &[
         PREFIX.as_bytes(),
