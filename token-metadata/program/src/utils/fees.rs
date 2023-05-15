@@ -24,7 +24,7 @@ pub const UPDATE_FEE: u64 = 2 * BASE_FEE;
 bitflags! {
     #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
     pub struct MetadataFlags: u8 {
-        const FEES = 0b00000001;
+        const FEES = 0b10000000;
     }
 }
 
