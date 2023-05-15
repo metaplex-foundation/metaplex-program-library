@@ -34,7 +34,7 @@ use crate::{
     },
 };
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum TransferScenario {
     Holder,
     TransferDelegate,
@@ -313,6 +313,25 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
             // validates the derivation
             assert_keys_equal(&new_pda_key, destination_token_record_info.key)?;
 
+            // We need to check whether the destination token account has a delegate set. If it does,
+            // we do not allow the transfer to proceed since we do not know the type of the delegate
+            // to complete the information on the token record.
+            let destination_token =
+                Account::unpack(&ctx.accounts.destination_info.try_borrow_data()?)?;
+
+            if let COption::Some(delegate) = destination_token.delegate {
+                if destination_token_record_info.data_is_empty() {
+                    return Err(MetadataError::DelegateAlreadyExists.into());
+                }
+
+                let destination_token_record =
+                    TokenRecord::from_account_info(destination_token_record_info)?;
+
+                if destination_token_record.delegate != Some(delegate) {
+                    return Err(MetadataError::DelegateAlreadyExists.into());
+                }
+            }
+
             let owner_token_record = TokenRecord::from_account_info(owner_token_record_info)?;
 
             let is_sale_delegate = owner_token_record
@@ -407,6 +426,26 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
 
             // Don't close token record if it's a self transfer.
             if owner_token_record_info.key != destination_token_record_info.key {
+                // If the transfer authority is the holder, we need to manually clear the
+                // token delegate since it does not get cleared by the SPL token program
+                // on transfer.
+                if matches!(scenario, TransferScenario::Holder)
+                    && owner_token_record.delegate.is_some()
+                {
+                    invoke(
+                        &spl_token::instruction::revoke(
+                            ctx.accounts.spl_token_program_info.key,
+                            ctx.accounts.token_info.key,
+                            ctx.accounts.authority_info.key,
+                            &[],
+                        )?,
+                        &[
+                            ctx.accounts.token_info.clone(),
+                            ctx.accounts.authority_info.clone(),
+                        ],
+                    )?;
+                }
+
                 // Close the source Token Record account, but do it after the CPI calls
                 // so as to avoid Unbalanced Accounts errors due to the CPI context not knowing
                 // about the manual lamport math done here.
