@@ -823,7 +823,6 @@ fn process_collection_verification<'info>(
     // User-provided metadata must result in same user-provided data hash.
     let incoming_data_hash = hash_metadata(&message)?;
     if data_hash != incoming_data_hash {
-        //HERE
         return Err(BubblegumError::DataHashMismatch.into());
     }
 
