@@ -48,7 +48,7 @@ pub fn revoke<'a>(
     };
 
     if let Some(role) = token_delegate {
-        // proceed with the delegate creation if we have a match
+        // proceed with the delegate revoke if we have a match
         return revoke_persistent_delegate_v1(program_id, context, role);
     }
 
@@ -240,7 +240,9 @@ fn revoke_persistent_delegate_v1(
             if let Some(delegate) = token_record.delegate {
                 assert_keys_equal(&delegate, ctx.accounts.delegate_info.key)?;
 
-                if token_record.delegate_role == Some(role) {
+                if token_record.delegate_role == Some(role)
+                    || token_record.delegate_role == Some(TokenDelegateRole::Migration)
+                {
                     // resets the token record (state, rule_set_revision and delegate info)
                     token_record.reset();
                     token_record.save(
