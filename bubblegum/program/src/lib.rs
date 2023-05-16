@@ -4,6 +4,7 @@ use crate::{
     error::BubblegumError,
     state::{
         leaf_schema::LeafSchema,
+        metadata_model::MetaplexMetadata,
         metaplex_adapter::{self, Creator, MetadataArgs, TokenProgramVersion},
         metaplex_anchor::{MasterEdition, MplTokenMetadata, TokenMetadata},
         TreeConfig, Voucher, ASSET_PREFIX, COLLECTION_CPI_PREFIX, TREE_AUTHORITY_SIZE,
@@ -518,47 +519,23 @@ fn process_mint_v1<'info>(
         }
     }
 
-    // @dev: seller_fee_basis points is encoded twice so that it can be passed to marketplace
-    // instructions, without passing the entire, un-hashed MetadataArgs struct
-    let metadata_args_hash = keccak::hashv(&[message.try_to_vec()?.as_slice()]);
-    let data_hash = keccak::hashv(&[
-        &metadata_args_hash.to_bytes(),
-        &message.seller_fee_basis_points.to_le_bytes(),
-    ]);
-
     // Use the metadata auth to check whether we can allow `verified` to be set to true in the
     // creator Vec.
-    let creator_data = message
-        .creators
-        .iter()
-        .map(|c| {
-            if c.verified && !metadata_auth.contains(&c.address) {
-                Err(BubblegumError::CreatorDidNotVerify.into())
-            } else {
-                Ok([c.address.as_ref(), &[c.verified as u8], &[c.share]].concat())
-            }
-        })
-        .collect::<Result<Vec<_>>>()?;
+    for creator in message.creators.iter() {
+        if creator.verified && !metadata_auth.contains(&creator.address) {
+            return Err(BubblegumError::CreatorDidNotVerify.into());
+        }
+    }
 
-    // Calculate creator hash.
-    let creator_hash = keccak::hashv(
-        creator_data
-            .iter()
-            .map(|c| c.as_slice())
-            .collect::<Vec<&[u8]>>()
-            .as_ref(),
-    );
-
-    let asset_id = get_asset_id(&merkle_tree.key(), authority.num_minted);
-    let leaf = LeafSchema::new_v0(
-        asset_id,
-        owner,
-        delegate,
+    let metadata = MetaplexMetadata::from_metadata_args(
+        &message,
+        &owner,
+        &delegate,
         authority.num_minted,
-        data_hash.to_bytes(),
-        creator_hash.to_bytes(),
-    );
-
+        &merkle_tree.key(),
+        &authority.get_metadata_auth_for_v0(),
+    )?;
+    let leaf: LeafSchema = metadata.to_leaf_schema_v0()?;
     wrap_application_data_v1(leaf.to_event().try_to_vec()?, wrapper)?;
 
     append_leaf(
