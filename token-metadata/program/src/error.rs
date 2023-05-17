@@ -749,6 +749,10 @@ pub enum MetadataError {
     /// 189
     #[error("Invalid or removed instruction")]
     InvalidInstruction,
+
+    /// 190
+    #[error("Missing delegate record")]
+    MissingDelegateRecord,
 }
 
 impl PrintProgramError for MetadataError {

@@ -149,7 +149,7 @@ async fn test_burn_passes() {
     // value via the inner `TxBuilder::execute` call.
 
     for leaf in leaves.iter() {
-        tree.burn(&leaf).await.unwrap();
+        tree.burn(leaf).await.unwrap();
     }
 }
 
@@ -200,6 +200,17 @@ async fn test_decompress_passes() {
         tree.verify_creator(leaf, &ctx.default_creators[0])
             .await
             .unwrap();
+
+        tree.verify_collection(
+            leaf,
+            &ctx.payer(),
+            ctx.default_collection.mint.pubkey(),
+            ctx.default_collection.metadata,
+            ctx.default_collection.edition.unwrap(),
+        )
+        .await
+        .unwrap();
+
         tree.redeem(leaf).await.unwrap();
         let voucher = tree.read_voucher(leaf.nonce).await.unwrap();
 
@@ -274,7 +285,7 @@ async fn test_decompress_passes() {
             },
             primary_sale_happened: false,
             is_mutable: false,
-            collection: None,
+            collection: leaf.metadata.collection.as_mut().map(|c| c.adapt()),
             uses: None,
             collection_details: None,
             // Simply copying this, since the expected value is not straightforward to predict.
@@ -330,7 +341,7 @@ async fn test_create_public_tree_and_mint_passes() {
     assert_eq!(cfg.tree_creator, payer.pubkey());
     assert_eq!(cfg.tree_delegate, payer.pubkey());
     assert_eq!(cfg.total_mint_capacity, 1 << MAX_DEPTH);
-    assert_eq!(cfg.is_public, true);
+    assert!(cfg.is_public);
 
     tree.mint_v1_non_owner(&minter, &mut args).await.unwrap();
     let cfg = tree.read_tree_config().await.unwrap();

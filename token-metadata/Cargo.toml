@@ -2,7 +2,6 @@
 members=[
   "macro",
   "program",
-  "cli"
 ]
 
 [profile.release]

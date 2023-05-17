@@ -1,4 +1,5 @@
 pub mod context;
+pub mod digital_asset;
 pub mod tree;
 pub mod tx_builder;
 
@@ -63,6 +64,7 @@ fn compute_metadata_hashes(metadata_args: &MetadataArgs) -> Result<([u8; 32], [u
     Ok((data_hash, creator_hash))
 }
 
+#[derive(Debug)]
 pub struct LeafArgs {
     pub owner: Keypair,
     pub delegate: Keypair,

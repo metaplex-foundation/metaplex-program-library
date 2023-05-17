@@ -23,7 +23,7 @@ default = []
 anchor-lang = "0.26.0"
 arrayref = "0.3.6"
 spl-token = { version = "3.5.0", features = ["no-entrypoint"] }
-mpl-token-metadata = { version = "1.7", features = ["no-entrypoint"] }
+mpl-token-metadata = { version = "1.11", features = ["no-entrypoint"] }
 spl-associated-token-account = { version = "1.1.1", features = [
   "no-entrypoint",
 ] }
