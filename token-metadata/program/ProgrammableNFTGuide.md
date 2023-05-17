@@ -400,7 +400,7 @@ More details of the Token Authorization Rules program, including examples, can b
 
 ### Token Metadata Operations subject to Authorization Rules
 
-Several operations involving `pNFT` on Token Metadata are subject to Token Authorization Rules – depending of the rule configured, the operation will be authorized or not. The creator (`update authority`) of an asset has the flexibility to manage these rules through the [`ProgrammableConfig`](https://github.com/metaplex-foundation/metaplex-program-library/blob/ad5f39c465676299951c91f8cf9216812b884531/token-metadata/program/src/state/metadata.rs#L364-L380) on a Metadata account.
+Several operations involving `pNFT` on Token Metadata are subject to Token Authorization Rules – depending on the rule configured, the operation will be authorized or not. The creator (`update authority`) of an asset has the flexibility to manage these rules through the [`ProgrammableConfig`](https://github.com/metaplex-foundation/metaplex-program-library/blob/ad5f39c465676299951c91f8cf9216812b884531/token-metadata/program/src/state/metadata.rs#L364-L380) on a Metadata account.
 
 The list of operations are:
 
