@@ -2,8 +2,8 @@
 
 ## Developer packages
 Token Metadata
-* :crab: Rust crate: [v1.9.0](https://crates.io/crates/mpl-token-metadata/1.9.0)
-* :package: NPM package: [v2.9.0](https://www.npmjs.com/package/@metaplex-foundation/mpl-token-metadata/v/2.9.0)
+* :crab: Rust crate: [v1.11.1](https://crates.io/crates/mpl-token-metadata/1.11.1)
+* :package: NPM package: [v2.11.1](https://www.npmjs.com/package/@metaplex-foundation/mpl-token-metadata/v/2.11.1)
 
 Token Authorization Rules
 * :crab: Rust crate: [v1.2.0](https://crates.io/crates/mpl-token-auth-rules/1.2.0)
