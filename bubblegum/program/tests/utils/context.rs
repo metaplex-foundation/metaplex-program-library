@@ -94,7 +94,7 @@ impl BubblegumTestContext {
             .banks_client
             .process_transaction(tx)
             .await
-            .map_err(Error::BanksClient)
+            .map_err(|err| Box::new(Error::BanksClient(err)))
     }
 
     pub fn payer(&self) -> Keypair {
@@ -150,7 +150,7 @@ impl BubblegumTestContext {
         &self,
     ) -> Result<Tree<MAX_DEPTH, MAX_BUFFER_SIZE>> {
         let payer = self.payer();
-        let tree = Tree::<MAX_DEPTH, MAX_BUFFER_SIZE>::with_creator(&payer, self.client());
+        let mut tree = Tree::<MAX_DEPTH, MAX_BUFFER_SIZE>::with_creator(&payer, self.client());
         tree.alloc(&payer).await?;
         tree.create(&payer).await?;
         Ok(tree)
@@ -160,7 +160,7 @@ impl BubblegumTestContext {
         &self,
     ) -> Result<Tree<MAX_DEPTH, MAX_BUFFER_SIZE>> {
         let payer = self.payer();
-        let tree = Tree::<MAX_DEPTH, MAX_BUFFER_SIZE>::with_creator(&payer, self.client());
+        let mut tree = Tree::<MAX_DEPTH, MAX_BUFFER_SIZE>::with_creator(&payer, self.client());
         tree.alloc(&payer).await?;
         tree.create_public(&payer).await?;
         Ok(tree)
@@ -171,7 +171,7 @@ impl BubblegumTestContext {
         &self,
         num_mints: u64,
     ) -> Result<(Tree<MAX_DEPTH, MAX_BUFFER_SIZE>, Vec<LeafArgs>)> {
-        let tree = self
+        let mut tree = self
             .default_create_tree::<MAX_DEPTH, MAX_BUFFER_SIZE>()
             .await?;
 
