@@ -12,7 +12,7 @@ use crate::{
 
 /// Checks whether the collection update is allowed or not based on the `verified` status.
 pub fn assert_collection_update_is_valid(
-    edition: bool,
+    allow_direct_collection_verified_writes: bool,
     existing: &Option<Collection>,
     incoming: &Option<Collection>,
 ) -> Result<(), ProgramError> {
@@ -36,8 +36,8 @@ pub fn assert_collection_update_is_valid(
         !is_existing_verified
     };
 
-    // overrule: if we are dealing with an edition
-    if !valid_update && !edition {
+    // overrule: if we are dealing with an edition or a Bubblegum decompression.
+    if !valid_update && !allow_direct_collection_verified_writes {
         return Err(MetadataError::CollectionCannotBeVerifiedInThisInstruction.into());
     }
 

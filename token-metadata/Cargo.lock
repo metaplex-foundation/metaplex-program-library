@@ -1859,23 +1859,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "metaplex-token-metadata-test-client"
-version = "0.1.0"
-dependencies = [
- "bincode",
- "borsh",
- "clap 2.34.0",
- "mpl-token-metadata 1.10.0",
- "solana-clap-utils",
- "solana-cli-config",
- "solana-client",
- "solana-program",
- "solana-sdk",
- "spl-associated-token-account",
- "spl-token",
-]
-
-[[package]]
 name = "mime"
 version = "0.3.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1960,32 +1943,6 @@ dependencies = [
 [[package]]
 name = "mpl-token-metadata"
 version = "1.10.0"
-dependencies = [
- "arrayref",
- "async-trait",
- "borsh",
- "mpl-token-auth-rules",
- "mpl-token-metadata 1.10.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "mpl-token-metadata-context-derive 0.2.1",
- "mpl-utils 0.2.0",
- "num-derive",
- "num-traits",
- "rmp-serde",
- "rooster",
- "serde",
- "serde_with",
- "shank 0.0.11",
- "solana-program",
- "solana-program-test",
- "solana-sdk",
- "spl-associated-token-account",
- "spl-token",
- "thiserror",
-]
-
-[[package]]
-name = "mpl-token-metadata"
-version = "1.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f1e674db8846d4a603454ce9c93233dd8d503d62f2afe1b9e6486ce81e431f89"
 dependencies = [
@@ -1998,6 +1955,32 @@ dependencies = [
  "num-traits",
  "shank 0.0.11",
  "solana-program",
+ "spl-associated-token-account",
+ "spl-token",
+ "thiserror",
+]
+
+[[package]]
+name = "mpl-token-metadata"
+version = "1.11.1"
+dependencies = [
+ "arrayref",
+ "async-trait",
+ "borsh",
+ "mpl-token-auth-rules",
+ "mpl-token-metadata 1.10.0",
+ "mpl-token-metadata-context-derive 0.2.1",
+ "mpl-utils 0.2.0",
+ "num-derive",
+ "num-traits",
+ "rmp-serde",
+ "rooster",
+ "serde",
+ "serde_with",
+ "shank 0.0.11",
+ "solana-program",
+ "solana-program-test",
+ "solana-sdk",
  "spl-associated-token-account",
  "spl-token",
  "thiserror",
@@ -2861,7 +2844,7 @@ version = "0.1.0"
 source = "git+https://github.com/metaplex-foundation/rooster#ca1221c98fb425096f97277031bfa4dd73fe3f29"
 dependencies = [
  "borsh",
- "mpl-token-metadata 1.10.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "mpl-token-metadata 1.10.0",
  "mpl-utils 0.0.5",
  "num-derive",
  "num-traits",
