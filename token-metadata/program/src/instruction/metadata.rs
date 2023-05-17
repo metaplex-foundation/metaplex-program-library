@@ -911,7 +911,7 @@ impl InstructionBuilder for super::builders::Update {
 ///   0. `[writable]` Edition Metadata
 ///   1. `[writable]` Edition
 ///   2. `[writable]` Edition Mint
-///   3. `[writable]` Edition Token Account Owner
+///   3. `[]` Edition Token Account Owner
 ///   4. `[writable]` Edition Token Account
 ///   5. `[signer]` Edition Mint Authority
 ///   6. `[writable]` Edition Token Record
@@ -933,7 +933,7 @@ impl InstructionBuilder for super::builders::Print {
             AccountMeta::new(self.edition_metadata, false),
             AccountMeta::new(self.edition, false),
             AccountMeta::new(self.edition_mint, false),
-            AccountMeta::new(self.edition_token_account_owner, false),
+            AccountMeta::new_readonly(self.edition_token_account_owner, false),
             AccountMeta::new(self.edition_token_account, false),
             AccountMeta::new_readonly(self.edition_mint_authority, true),
             if let Some(edition_token_record) = self.edition_token_record {
@@ -948,8 +948,8 @@ impl InstructionBuilder for super::builders::Print {
             AccountMeta::new_readonly(self.master_token_account, false),
             AccountMeta::new_readonly(self.master_metadata, false),
             AccountMeta::new_readonly(self.update_authority, false),
-            AccountMeta::new_readonly(self.token_program, false),
-            AccountMeta::new_readonly(self.ata_program, false),
+            AccountMeta::new_readonly(self.spl_token_program, false),
+            AccountMeta::new_readonly(self.spl_ata_program, false),
             AccountMeta::new_readonly(self.sysvar_instructions, false),
             AccountMeta::new_readonly(self.system_program, false),
         ];

@@ -233,6 +233,7 @@ fn burn_v1(program_id: &Pubkey, ctx: Context<Burn>, args: BurnArgs) -> ProgramRe
             )?;
         }
         TokenStandard::ProgrammableNonFungibleEdition => {
+            todo!()
         }
         TokenStandard::Fungible | TokenStandard::FungibleAsset => {
             burn_fungible(&ctx, amount)?;

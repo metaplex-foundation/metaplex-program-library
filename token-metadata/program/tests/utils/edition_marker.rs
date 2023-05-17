@@ -292,8 +292,8 @@ impl EditionMarker {
             .master_token_account(self.metadata_token_pubkey)
             .master_metadata(self.metadata_pubkey)
             .update_authority(context.payer.pubkey())
-            .token_program(spl_token::ID)
-            .ata_program(spl_associated_token_account::ID)
+            .spl_token_program(spl_token::ID)
+            .spl_ata_program(spl_associated_token_account::ID)
             .sysvar_instructions(sysvar::instructions::ID)
             .system_program(system_program::ID);
 
@@ -375,8 +375,8 @@ impl EditionMarker {
             .master_token_account(self.metadata_token_pubkey)
             .master_metadata(self.metadata_pubkey)
             .update_authority(context.payer.pubkey())
-            .token_program(fake_token_program.pubkey())
-            .ata_program(spl_associated_token_account::ID)
+            .spl_token_program(fake_token_program.pubkey())
+            .spl_ata_program(spl_associated_token_account::ID)
             .sysvar_instructions(sysvar::instructions::ID)
             .system_program(system_program::ID);
 
