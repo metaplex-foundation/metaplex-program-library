@@ -149,6 +149,11 @@ pub fn process_mint_new_edition_from_master_edition_via_token_logic<'a>(
             edition_marker.serialize(&mut *edition_marker_info.data.borrow_mut())?;
         }
         TokenStandard::ProgrammableNonFungible => {
+            // Check that the new update authority is the same as the master edition.
+            if update_authority_info.key != &master_metadata.update_authority {
+                return Err(MetadataError::UpdateAuthorityIncorrect.into());
+            }
+
             let bump = assert_derivation(
                 program_id,
                 edition_marker_info,
