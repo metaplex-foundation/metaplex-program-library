@@ -14,8 +14,8 @@ use crate::{
     instruction::MetadataInstruction,
     processor::AuthorizationData,
     state::{
-        AssetData, Collection, CollectionDetails, Creator, Data, DataV2, MigrationType,
-        PrintSupply, TokenStandard, Uses,
+        AssetData, Collection, CollectionDetails, Creator, Data, DataV2, PrintSupply,
+        TokenStandard, Uses,
     },
 };
 
@@ -413,16 +413,6 @@ impl RuleSetToggle {
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
-pub enum MigrateArgs {
-    V1 {
-        migration_type: MigrationType,
-        rule_set: Option<Pubkey>,
-    },
-}
-
-#[repr(C)]
-#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 /// Args for update call
 pub struct UpdateMetadataAccountArgsV2 {
     pub data: Option<DataV2>,
@@ -653,63 +643,6 @@ impl InstructionBuilder for super::builders::Create {
             program_id: crate::ID,
             accounts,
             data: MetadataInstruction::Create(self.args.clone())
-                .try_to_vec()
-                .unwrap(),
-        }
-    }
-}
-
-/// Migrates an asset to a ProgrammableAsset type.
-///
-/// # Accounts:
-///
-///
-///   0. `[writable]` Metadata account
-///   1. `[writable]` Edition account
-///   2. `[writable]` Token account
-///   3. `[]` Token account owner
-///   4. `[]` Mint account
-///   5. `[writable, signer]` Payer
-///   6. `[signer]` Update authority
-///   7. `[]` Collection metadata account
-///   8. `[]` Delegate record account
-///   9. `[writable]` Token record account
-///   10. `[]` System program
-///   11. `[]` Instruction sysvar account
-///   12. `[]` SPL Token Program
-///   13. `[optional]` Token Authorization Rules Program
-///   14. `[optional]` Token Authorization Rules account
-impl InstructionBuilder for super::builders::Migrate {
-    fn instruction(&self) -> solana_program::instruction::Instruction {
-        let mut accounts = vec![
-            AccountMeta::new(self.metadata, false),
-            AccountMeta::new(self.edition, false),
-            AccountMeta::new(self.token, false),
-            AccountMeta::new_readonly(self.token_owner, false),
-            AccountMeta::new_readonly(self.mint, false),
-            AccountMeta::new(self.payer, true),
-            AccountMeta::new_readonly(self.authority, true),
-            AccountMeta::new_readonly(self.collection_metadata, false),
-            AccountMeta::new_readonly(self.delegate_record, false),
-            AccountMeta::new(self.token_record, false),
-            AccountMeta::new_readonly(self.system_program, false),
-            AccountMeta::new_readonly(self.sysvar_instructions, false),
-            AccountMeta::new_readonly(self.spl_token_program, false),
-        ];
-
-        // Optional authorization rules accounts
-        if let Some(rules) = &self.authorization_rules {
-            accounts.push(AccountMeta::new_readonly(mpl_token_auth_rules::ID, false));
-            accounts.push(AccountMeta::new_readonly(*rules, false));
-        } else {
-            accounts.push(AccountMeta::new_readonly(crate::ID, false));
-            accounts.push(AccountMeta::new_readonly(crate::ID, false));
-        }
-
-        Instruction {
-            program_id: crate::ID,
-            accounts,
-            data: MetadataInstruction::Migrate(self.args.clone())
                 .try_to_vec()
                 .unwrap(),
         }
