@@ -116,10 +116,8 @@ fn print_v1(_program_id: &Pubkey, ctx: Context<Print>, args: PrintArgs) -> Progr
         TokenStandard::NonFungible => {}
         TokenStandard::ProgrammableNonFungible => {
             // Validate that the token record was passed in for pNFTs.
-            let token_record_info = match edition_token_record_info {
-                Some(token_record_info) => token_record_info,
-                None => return Err(MetadataError::MissingTokenRecord.into()),
-            };
+            let token_record_info =
+                edition_token_record_info.ok_or(MetadataError::MissingTokenRecord)?;
             let (pda_key, _) = find_token_record_account(
                 ctx.accounts.edition_mint_info.key,
                 ctx.accounts.edition_token_account_info.key,

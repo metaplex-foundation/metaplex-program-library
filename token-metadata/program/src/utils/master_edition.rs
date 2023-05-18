@@ -99,6 +99,13 @@ pub fn process_mint_new_edition_from_master_edition_via_token_logic<'a>(
         return Err(MetadataError::AlreadyInitialized.into());
     }
 
+    // Check that the edition we're printing from actually is a master edition.
+    // We're not passing in the master edition mint so we can't fetch the actual supply and decimals
+    // but we can safely assume that the account was only created if those checks passed.
+    if !is_master_edition(master_edition_account_info, 0, 1) {
+        return Err(MetadataError::InvalidMasterEdition.into());
+    };
+
     let token_standard = master_metadata
         .token_standard
         .unwrap_or(TokenStandard::NonFungible);
