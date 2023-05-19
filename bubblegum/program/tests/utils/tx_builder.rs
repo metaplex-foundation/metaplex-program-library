@@ -283,7 +283,7 @@ impl<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExe
     for SetTreeDelegateBuilder<'a, MAX_DEPTH, MAX_BUFFER_SIZE>
 {
     fn on_successful_execute(&mut self) -> Result<()> {
-        *self.tree.tree_delegate.borrow_mut() = clone_keypair(&self.inner);
+        self.tree.tree_delegate = clone_keypair(&self.inner);
         Ok(())
     }
 }
