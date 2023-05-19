@@ -22,7 +22,7 @@ pub enum Error {
     Signer(SignerError),
 }
 
-pub type Result<T> = result::Result<T, Error>;
+pub type Result<T> = result::Result<T, Box<Error>>;
 
 pub fn program_test() -> ProgramTest {
     let mut test = ProgramTest::new("mpl_bubblegum", mpl_bubblegum::id(), None);
