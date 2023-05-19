@@ -1,0 +1,957 @@
+[
+    {
+        "msg": "Failed to unpack instruction data",
+        "error": "InstructionUnpackError",
+        "number": "0x00"
+    },
+    {
+        "msg": "Failed to pack instruction data",
+        "error": "InstructionPackError",
+        "number": "0x01"
+    },
+    {
+        "msg": "Lamport balance below rent-exempt threshold",
+        "error": "NotRentExempt",
+        "number": "0x02"
+    },
+    {
+        "msg": "Already initialized",
+        "error": "AlreadyInitialized",
+        "number": "0x03"
+    },
+    {
+        "msg": "Uninitialized",
+        "error": "Uninitialized",
+        "number": "0x04"
+    },
+    {
+        "msg": "Metadata's key must match seed of ['metadata', program id, mint] provided",
+        "error": "InvalidMetadataKey",
+        "number": "0x05"
+    },
+    {
+        "msg": "Edition's key must match seed of ['metadata', program id, name, 'edition'] provided",
+        "error": "InvalidEditionKey",
+        "number": "0x06"
+    },
+    {
+        "msg": "Update Authority given does not match",
+        "error": "UpdateAuthorityIncorrect",
+        "number": "0x07"
+    },
+    {
+        "msg": "Update Authority needs to be signer to update metadata",
+        "error": "UpdateAuthorityIsNotSigner",
+        "number": "0x08"
+    },
+    {
+        "msg": "You must be the mint authority and signer on this transaction",
+        "error": "NotMintAuthority",
+        "number": "0x09"
+    },
+    {
+        "msg": "Mint authority provided does not match the authority on the mint",
+        "error": "InvalidMintAuthority",
+        "number": "0x0A"
+    },
+    {
+        "msg": "Name too long",
+        "error": "NameTooLong",
+        "number": "0x0B"
+    },
+    {
+        "msg": "Symbol too long",
+        "error": "SymbolTooLong",
+        "number": "0x0C"
+    },
+    {
+        "msg": "URI too long",
+        "error": "UriTooLong",
+        "number": "0x0D"
+    },
+    {
+        "msg": "Update authority must be equivalent to the metadata's authority and also signer of this transaction",
+        "error": "UpdateAuthorityMustBeEqualToMetadataAuthorityAndSigner",
+        "number": "0x0E"
+    },
+    {
+        "msg": "Mint given does not match mint on Metadata",
+        "error": "MintMismatch",
+        "number": "0x0F"
+    },
+    {
+        "msg": "Editions must have exactly one token",
+        "error": "EditionsMustHaveExactlyOneToken",
+        "number": "0x10"
+    },
+    {
+        "msg": "Maximum editions printed already",
+        "error": "MaxEditionsMintedAlready",
+        "number": "0x11"
+    },
+    {
+        "msg": "Token mint to failed",
+        "error": "TokenMintToFailed",
+        "number": "0x12"
+    },
+    {
+        "msg": "The master edition record passed must match the master record on the edition given",
+        "error": "MasterRecordMismatch",
+        "number": "0x13"
+    },
+    {
+        "msg": "The destination account does not have the right mint",
+        "error": "DestinationMintMismatch",
+        "number": "0x14"
+    },
+    {
+        "msg": "An edition can only mint one of its kind!",
+        "error": "EditionAlreadyMinted",
+        "number": "0x15"
+    },
+    {
+        "msg": "Printing mint decimals should be zero",
+        "error": "PrintingMintDecimalsShouldBeZero",
+        "number": "0x16"
+    },
+    {
+        "msg": "OneTimePrintingAuthorization mint decimals should be zero",
+        "error": "OneTimePrintingAuthorizationMintDecimalsShouldBeZero",
+        "number": "0x17"
+    },
+    {
+        "msg": "EditionMintDecimalsShouldBeZero",
+        "error": "EditionMintDecimalsShouldBeZero",
+        "number": "0x18"
+    },
+    {
+        "msg": "Token burn failed",
+        "error": "TokenBurnFailed",
+        "number": "0x19"
+    },
+    {
+        "msg": "The One Time authorization mint does not match that on the token account!",
+        "error": "TokenAccountOneTimeAuthMintMismatch",
+        "number": "0x1A"
+    },
+    {
+        "msg": "Derived key invalid",
+        "error": "DerivedKeyInvalid",
+        "number": "0x1B"
+    },
+    {
+        "msg": "The Printing mint does not match that on the master edition!",
+        "error": "PrintingMintMismatch",
+        "number": "0x1C"
+    },
+    {
+        "msg": "The One Time Printing Auth mint does not match that on the master edition!",
+        "error": "OneTimePrintingAuthMintMismatch",
+        "number": "0x1D"
+    },
+    {
+        "msg": "The mint of the token account does not match the Printing mint!",
+        "error": "TokenAccountMintMismatch",
+        "number": "0x1E"
+    },
+    {
+        "msg": "The mint of the token account does not match the master metadata mint!",
+        "error": "TokenAccountMintMismatchV2",
+        "number": "0x1F"
+    },
+    {
+        "msg": "Not enough tokens to mint a limited edition",
+        "error": "NotEnoughTokens",
+        "number": "0x20"
+    },
+    {
+        "msg": "The mint on your authorization token holding account does not match your Printing mint!",
+        "error": "PrintingMintAuthorizationAccountMismatch",
+        "number": "0x21"
+    },
+    {
+        "msg": "The authorization token account has a different owner than the update authority for the master edition!",
+        "error": "AuthorizationTokenAccountOwnerMismatch",
+        "number": "0x22"
+    },
+    {
+        "msg": "This feature is currently disabled.",
+        "error": "Disabled",
+        "number": "0x23"
+    },
+    {
+        "msg": "Creators list too long",
+        "error": "CreatorsTooLong",
+        "number": "0x24"
+    },
+    {
+        "msg": "Creators must be at least one if set",
+        "error": "CreatorsMustBeAtleastOne",
+        "number": "0x25"
+    },
+    {
+        "msg": "If using a creators array, you must be one of the creators listed",
+        "error": "MustBeOneOfCreators",
+        "number": "0x26"
+    },
+    {
+        "msg": "This metadata does not have creators",
+        "error": "NoCreatorsPresentOnMetadata",
+        "number": "0x27"
+    },
+    {
+        "msg": "This creator address was not found",
+        "error": "CreatorNotFound",
+        "number": "0x28"
+    },
+    {
+        "msg": "Basis points cannot be more than 10000",
+        "error": "InvalidBasisPoints",
+        "number": "0x29"
+    },
+    {
+        "msg": "Primary sale can only be flipped to true and is immutable",
+        "error": "PrimarySaleCanOnlyBeFlippedToTrue",
+        "number": "0x2A"
+    },
+    {
+        "msg": "Owner does not match that on the account given",
+        "error": "OwnerMismatch",
+        "number": "0x2B"
+    },
+    {
+        "msg": "This account has no tokens to be used for authorization",
+        "error": "NoBalanceInAccountForAuthorization",
+        "number": "0x2C"
+    },
+    {
+        "msg": "Share total must equal 100 for creator array",
+        "error": "ShareTotalMustBe100",
+        "number": "0x2D"
+    },
+    {
+        "msg": "This reservation list already exists!",
+        "error": "ReservationExists",
+        "number": "0x2E"
+    },
+    {
+        "msg": "This reservation list does not exist!",
+        "error": "ReservationDoesNotExist",
+        "number": "0x2F"
+    },
+    {
+        "msg": "This reservation list exists but was never set with reservations",
+        "error": "ReservationNotSet",
+        "number": "0x30"
+    },
+    {
+        "msg": "This reservation list has already been set!",
+        "error": "ReservationAlreadyMade",
+        "number": "0x31"
+    },
+    {
+        "msg": "Provided more addresses than max allowed in single reservation",
+        "error": "BeyondMaxAddressSize",
+        "number": "0x32"
+    },
+    {
+        "msg": "NumericalOverflowError",
+        "error": "NumericalOverflowError",
+        "number": "0x33"
+    },
+    {
+        "msg": "This reservation would go beyond the maximum supply of the master edition!",
+        "error": "ReservationBreachesMaximumSupply",
+        "number": "0x34"
+    },
+    {
+        "msg": "Address not in reservation!",
+        "error": "AddressNotInReservation",
+        "number": "0x35"
+    },
+    {
+        "msg": "You cannot unilaterally verify another creator, they must sign",
+        "error": "CannotVerifyAnotherCreator",
+        "number": "0x36"
+    },
+    {
+        "msg": "You cannot unilaterally unverify another creator",
+        "error": "CannotUnverifyAnotherCreator",
+        "number": "0x37"
+    },
+    {
+        "msg": "In initial reservation setting, spots remaining should equal total spots",
+        "error": "SpotMismatch",
+        "number": "0x38"
+    },
+    {
+        "msg": "Incorrect account owner",
+        "error": "IncorrectOwner",
+        "number": "0x39"
+    },
+    {
+        "msg": "printing these tokens would breach the maximum supply limit of the master edition",
+        "error": "PrintingWouldBreachMaximumSupply",
+        "number": "0x3A"
+    },
+    {
+        "msg": "Data is immutable",
+        "error": "DataIsImmutable",
+        "number": "0x3B"
+    },
+    {
+        "msg": "No duplicate creator addresses",
+        "error": "DuplicateCreatorAddress",
+        "number": "0x3C"
+    },
+    {
+        "msg": "Reservation spots remaining should match total spots when first being created",
+        "error": "ReservationSpotsRemainingShouldMatchTotalSpotsAtStart",
+        "number": "0x3D"
+    },
+    {
+        "msg": "Invalid token program",
+        "error": "InvalidTokenProgram",
+        "number": "0x3E"
+    },
+    {
+        "msg": "Data type mismatch",
+        "error": "DataTypeMismatch",
+        "number": "0x3F"
+    },
+    {
+        "msg": "Beyond alotted address size in reservation!",
+        "error": "BeyondAlottedAddressSize",
+        "number": "0x40"
+    },
+    {
+        "msg": "The reservation has only been partially alotted",
+        "error": "ReservationNotComplete",
+        "number": "0x41"
+    },
+    {
+        "msg": "You cannot splice over an existing reservation!",
+        "error": "TriedToReplaceAnExistingReservation",
+        "number": "0x42"
+    },
+    {
+        "msg": "Invalid operation",
+        "error": "InvalidOperation",
+        "number": "0x43"
+    },
+    {
+        "msg": "Invalid Owner",
+        "error": "InvalidOwner",
+        "number": "0x44"
+    },
+    {
+        "msg": "Printing mint supply must be zero for conversion",
+        "error": "PrintingMintSupplyMustBeZeroForConversion",
+        "number": "0x45"
+    },
+    {
+        "msg": "One Time Auth mint supply must be zero for conversion",
+        "error": "OneTimeAuthMintSupplyMustBeZeroForConversion",
+        "number": "0x46"
+    },
+    {
+        "msg": "You tried to insert one edition too many into an edition mark pda",
+        "error": "InvalidEditionIndex",
+        "number": "0x47"
+    },
+    {
+        "msg": "In the legacy system the reservation needs to be of size one for cpu limit reasons",
+        "error": "ReservationArrayShouldBeSizeOne",
+        "number": "0x48"
+    },
+    {
+        "msg": "Is Mutable can only be flipped to false",
+        "error": "IsMutableCanOnlyBeFlippedToFalse",
+        "number": "0x49"
+    },
+    {
+        "msg": "Collection cannot be verified in this instruction",
+        "error": "CollectionCannotBeVerifiedInThisInstruction",
+        "number": "0x4A"
+    },
+    {
+        "msg": "This instruction was deprecated in a previous release and is now removed",
+        "error": "Removed",
+        "number": "0x4B"
+    },
+    {
+        "msg": "This token use method is burn and there are no remaining uses, it must be burned",
+        "error": "MustBeBurned",
+        "number": "0x4C"
+    },
+    {
+        "msg": "This use method is invalid",
+        "error": "InvalidUseMethod",
+        "number": "0x4D"
+    },
+    {
+        "msg": "Cannot Change Use Method after the first use",
+        "error": "CannotChangeUseMethodAfterFirstUse",
+        "number": "0x4E"
+    },
+    {
+        "msg": "Cannot Change Remaining or Available uses after the first use",
+        "error": "CannotChangeUsesAfterFirstUse",
+        "number": "0x4F"
+    },
+    {
+        "msg": "Collection Not Found on Metadata",
+        "error": "CollectionNotFound",
+        "number": "0x50"
+    },
+    {
+        "msg": "Collection Update Authority is invalid",
+        "error": "InvalidCollectionUpdateAuthority",
+        "number": "0x51"
+    },
+    {
+        "msg": "Collection Must Be a Unique Master Edition v2",
+        "error": "CollectionMustBeAUniqueMasterEdition",
+        "number": "0x52"
+    },
+    {
+        "msg": "The Use Authority Record Already Exists, to modify it Revoke, then Approve",
+        "error": "UseAuthorityRecordAlreadyExists",
+        "number": "0x53"
+    },
+    {
+        "msg": "The Use Authority Record is empty or already revoked",
+        "error": "UseAuthorityRecordAlreadyRevoked",
+        "number": "0x54"
+    },
+    {
+        "msg": "This token has no uses",
+        "error": "Unusable",
+        "number": "0x55"
+    },
+    {
+        "msg": "There are not enough Uses left on this token.",
+        "error": "NotEnoughUses",
+        "number": "0x56"
+    },
+    {
+        "msg": "This Collection Authority Record Already Exists.",
+        "error": "CollectionAuthorityRecordAlreadyExists",
+        "number": "0x57"
+    },
+    {
+        "msg": "This Collection Authority Record Does Not Exist.",
+        "error": "CollectionAuthorityDoesNotExist",
+        "number": "0x58"
+    },
+    {
+        "msg": "This Use Authority Record is invalid.",
+        "error": "InvalidUseAuthorityRecord",
+        "number": "0x59"
+    },
+    {
+        "msg": "This Collection Authority Record is invalid.",
+        "error": "InvalidCollectionAuthorityRecord",
+        "number": "0x5A"
+    },
+    {
+        "msg": "Metadata does not match the freeze authority on the mint",
+        "error": "InvalidFreezeAuthority",
+        "number": "0x5B"
+    },
+    {
+        "msg": "All tokens in this account have not been delegated to this user.",
+        "error": "InvalidDelegate",
+        "number": "0x5C"
+    },
+    {
+        "msg": "Creator can not be adjusted once they are verified.",
+        "error": "CannotAdjustVerifiedCreator",
+        "number": "0x5D"
+    },
+    {
+        "msg": "Verified creators cannot be removed.",
+        "error": "CannotRemoveVerifiedCreator",
+        "number": "0x5E"
+    },
+    {
+        "msg": "Can not wipe verified creators.",
+        "error": "CannotWipeVerifiedCreators",
+        "number": "0x5F"
+    },
+    {
+        "msg": "Not allowed to change seller fee basis points.",
+        "error": "NotAllowedToChangeSellerFeeBasisPoints",
+        "number": "0x60"
+    },
+    {
+        "msg": "Edition override cannot be zero",
+        "error": "EditionOverrideCannotBeZero",
+        "number": "0x61"
+    },
+    {
+        "msg": "Invalid User",
+        "error": "InvalidUser",
+        "number": "0x62"
+    },
+    {
+        "msg": "Revoke Collection Authority signer is incorrect",
+        "error": "RevokeCollectionAuthoritySignerIncorrect",
+        "number": "0x63"
+    },
+    {
+        "msg": "Token close failed",
+        "error": "TokenCloseFailed",
+        "number": "0x64"
+    },
+    {
+        "msg": "Can't use this function on unsized collection",
+        "error": "UnsizedCollection",
+        "number": "0x65"
+    },
+    {
+        "msg": "Can't use this function on a sized collection",
+        "error": "SizedCollection",
+        "number": "0x66"
+    },
+    {
+        "msg": "Missing collection metadata account",
+        "error": "MissingCollectionMetadata",
+        "number": "0x67"
+    },
+    {
+        "msg": "This NFT is not a member of the specified collection.",
+        "error": "NotAMemberOfCollection",
+        "number": "0x68"
+    },
+    {
+        "msg": "This NFT is not a verified member of the specified collection.",
+        "error": "NotVerifiedMemberOfCollection",
+        "number": "0x69"
+    },
+    {
+        "msg": "This NFT is not a collection parent NFT.",
+        "error": "NotACollectionParent",
+        "number": "0x6A"
+    },
+    {
+        "msg": "Could not determine a TokenStandard type.",
+        "error": "CouldNotDetermineTokenStandard",
+        "number": "0x6B"
+    },
+    {
+        "msg": "This mint account has an edition but none was provided.",
+        "error": "MissingEditionAccount",
+        "number": "0x6C"
+    },
+    {
+        "msg": "This edition is not a Master Edition",
+        "error": "NotAMasterEdition",
+        "number": "0x6D"
+    },
+    {
+        "msg": "This Master Edition has existing prints",
+        "error": "MasterEditionHasPrints",
+        "number": "0x6E"
+    },
+    {
+        "msg": "Borsh Deserialization Error",
+        "error": "BorshDeserializationError",
+        "number": "0x6F"
+    },
+    {
+        "msg": "Cannot update a verified collection in this command",
+        "error": "CannotUpdateVerifiedCollection",
+        "number": "0x70"
+    },
+    {
+        "msg": "Edition account doesnt match collection ",
+        "error": "CollectionMasterEditionAccountInvalid",
+        "number": "0x71"
+    },
+    {
+        "msg": "Item is already verified.",
+        "error": "AlreadyVerified",
+        "number": "0x72"
+    },
+    {
+        "msg": "Item is already unverified.",
+        "error": "AlreadyUnverified",
+        "number": "0x73"
+    },
+    {
+        "msg": "This edition is not a Print Edition",
+        "error": "NotAPrintEdition",
+        "number": "0x74"
+    },
+    {
+        "msg": "Invalid Master Edition",
+        "error": "InvalidMasterEdition",
+        "number": "0x75"
+    },
+    {
+        "msg": "Invalid Print Edition",
+        "error": "InvalidPrintEdition",
+        "number": "0x76"
+    },
+    {
+        "msg": "Invalid Edition Marker",
+        "error": "InvalidEditionMarker",
+        "number": "0x77"
+    },
+    {
+        "msg": "Reservation List is Deprecated",
+        "error": "ReservationListDeprecated",
+        "number": "0x78"
+    },
+    {
+        "msg": "Print Edition does not match Master Edition",
+        "error": "PrintEditionDoesNotMatchMasterEdition",
+        "number": "0x79"
+    },
+    {
+        "msg": "Edition Number greater than max supply",
+        "error": "EditionNumberGreaterThanMaxSupply",
+        "number": "0x7A"
+    },
+    {
+        "msg": "Must unverify before migrating collections.",
+        "error": "MustUnverify",
+        "number": "0x7B"
+    },
+    {
+        "msg": "Invalid Escrow Account Bump Seed",
+        "error": "InvalidEscrowBumpSeed",
+        "number": "0x7C"
+    },
+    {
+        "msg": "Must Escrow Authority",
+        "error": "MustBeEscrowAuthority",
+        "number": "0x7D"
+    },
+    {
+        "msg": "Invalid System Program",
+        "error": "InvalidSystemProgram",
+        "number": "0x7E"
+    },
+    {
+        "msg": "Must be a Non Fungible Token",
+        "error": "MustBeNonFungible",
+        "number": "0x7F"
+    },
+    {
+        "msg": "Insufficient tokens for transfer",
+        "error": "InsufficientTokens",
+        "number": "0x80"
+    },
+    {
+        "msg": "Borsh Serialization Error",
+        "error": "BorshSerializationError",
+        "number": "0x81"
+    },
+    {
+        "msg": "Cannot create NFT with no Freeze Authority.",
+        "error": "NoFreezeAuthoritySet",
+        "number": "0x82"
+    },
+    {
+        "msg": "Invalid collection size change",
+        "error": "InvalidCollectionSizeChange",
+        "number": "0x83"
+    },
+    {
+        "msg": "Invalid bubblegum signer",
+        "error": "InvalidBubblegumSigner",
+        "number": "0x84"
+    },
+    {
+        "msg": "Escrow parent cannot have a delegate",
+        "error": "EscrowParentHasDelegate",
+        "number": "0x85"
+    },
+    {
+        "msg": "Mint needs to be signer to initialize the account",
+        "error": "MintIsNotSigner",
+        "number": "0x86"
+    },
+    {
+        "msg": "Invalid token standard",
+        "error": "InvalidTokenStandard",
+        "number": "0x87"
+    },
+    {
+        "msg": "Invalid mint account for specified token standard",
+        "error": "InvalidMintForTokenStandard",
+        "number": "0x88"
+    },
+    {
+        "msg": "Invalid authorization rules account",
+        "error": "InvalidAuthorizationRules",
+        "number": "0x89"
+    },
+    {
+        "msg": "Missing authorization rules account",
+        "error": "MissingAuthorizationRules",
+        "number": "0x8A"
+    },
+    {
+        "msg": "Missing programmable configuration",
+        "error": "MissingProgrammableConfig",
+        "number": "0x8B"
+    },
+    {
+        "msg": "Invalid programmable configuration",
+        "error": "InvalidProgrammableConfig",
+        "number": "0x8C"
+    },
+    {
+        "msg": "Delegate already exists",
+        "error": "DelegateAlreadyExists",
+        "number": "0x8D"
+    },
+    {
+        "msg": "Delegate not found",
+        "error": "DelegateNotFound",
+        "number": "0x8E"
+    },
+    {
+        "msg": "Required account not set in instruction builder",
+        "error": "MissingAccountInBuilder",
+        "number": "0x8F"
+    },
+    {
+        "msg": "Required argument not set in instruction builder",
+        "error": "MissingArgumentInBuilder",
+        "number": "0x90"
+    },
+    {
+        "msg": "Feature not supported currently",
+        "error": "FeatureNotSupported",
+        "number": "0x91"
+    },
+    {
+        "msg": "Invalid system wallet",
+        "error": "InvalidSystemWallet",
+        "number": "0x92"
+    },
+    {
+        "msg": "Only the sale delegate can transfer while its set",
+        "error": "OnlySaleDelegateCanTransfer",
+        "number": "0x93"
+    },
+    {
+        "msg": "Missing token account",
+        "error": "MissingTokenAccount",
+        "number": "0x94"
+    },
+    {
+        "msg": "Missing SPL token program",
+        "error": "MissingSplTokenProgram",
+        "number": "0x95"
+    },
+    {
+        "msg": "Missing authorization rules program",
+        "error": "MissingAuthorizationRulesProgram",
+        "number": "0x96"
+    },
+    {
+        "msg": "Invalid delegate role for transfer",
+        "error": "InvalidDelegateRoleForTransfer",
+        "number": "0x97"
+    },
+    {
+        "msg": "Invalid transfer authority",
+        "error": "InvalidTransferAuthority",
+        "number": "0x98"
+    },
+    {
+        "msg": "Instruction not supported for ProgrammableNonFungible assets",
+        "error": "InstructionNotSupported",
+        "number": "0x99"
+    },
+    {
+        "msg": "Public key does not match expected value",
+        "error": "KeyMismatch",
+        "number": "0x9A"
+    },
+    {
+        "msg": "Token is locked",
+        "error": "LockedToken",
+        "number": "0x9B"
+    },
+    {
+        "msg": "Token is unlocked",
+        "error": "UnlockedToken",
+        "number": "0x9C"
+    },
+    {
+        "msg": "Missing delegate role",
+        "error": "MissingDelegateRole",
+        "number": "0x9D"
+    },
+    {
+        "msg": "Invalid authority type",
+        "error": "InvalidAuthorityType",
+        "number": "0x9E"
+    },
+    {
+        "msg": "Missing token record account",
+        "error": "MissingTokenRecord",
+        "number": "0x9F"
+    },
+    {
+        "msg": "Mint supply must be zero for programmable assets",
+        "error": "MintSupplyMustBeZero",
+        "number": "0xA0"
+    },
+    {
+        "msg": "Data is empty or zeroed",
+        "error": "DataIsEmptyOrZeroed",
+        "number": "0xA1"
+    },
+    {
+        "msg": "Missing token owner account",
+        "error": "MissingTokenOwnerAccount",
+        "number": "0xA2"
+    },
+    {
+        "msg": "Master edition account has an invalid length",
+        "error": "InvalidMasterEditionAccountLength",
+        "number": "0xA3"
+    },
+    {
+        "msg": "Incorrect token state",
+        "error": "IncorrectTokenState",
+        "number": "0xA4"
+    },
+    {
+        "msg": "Invalid delegate role",
+        "error": "InvalidDelegateRole",
+        "number": "0xA5"
+    },
+    {
+        "msg": "Print supply is required for non-fungibles",
+        "error": "MissingPrintSupply",
+        "number": "0xA6"
+    },
+    {
+        "msg": "Missing master edition account",
+        "error": "MissingMasterEditionAccount",
+        "number": "0xA7"
+    },
+    {
+        "msg": "Amount must be greater than zero",
+        "error": "AmountMustBeGreaterThanZero",
+        "number": "0xA8"
+    },
+    {
+        "msg": "Invalid delegate args",
+        "error": "InvalidDelegateArgs",
+        "number": "0xA9"
+    },
+    {
+        "msg": "Missing address for locked transfer",
+        "error": "MissingLockedTransferAddress",
+        "number": "0xAA"
+    },
+    {
+        "msg": "Invalid destination address for locked transfer",
+        "error": "InvalidLockedTransferAddress",
+        "number": "0xAB"
+    },
+    {
+        "msg": "Exceeded account realloc increase limit",
+        "error": "DataIncrementLimitExceeded",
+        "number": "0xAC"
+    },
+    {
+        "msg": "Cannot update the rule set of a programmable asset that has a delegate",
+        "error": "CannotUpdateAssetWithDelegate",
+        "number": "0xAD"
+    },
+    {
+        "msg": "Invalid token amount for this operation or token standard",
+        "error": "InvalidAmount",
+        "number": "0xAE"
+    },
+    {
+        "msg": "Missing master edition mint account",
+        "error": "MissingMasterEditionMintAccount",
+        "number": "0xAF"
+    },
+    {
+        "msg": "Missing master edition token account",
+        "error": "MissingMasterEditionTokenAccount",
+        "number": "0xB0"
+    },
+    {
+        "msg": "Missing edition marker account",
+        "error": "MissingEditionMarkerAccount",
+        "number": "0xB1"
+    },
+    {
+        "msg": "Cannot burn while persistent delegate is set",
+        "error": "CannotBurnWithDelegate",
+        "number": "0xB2"
+    },
+    {
+        "msg": "Missing edition account",
+        "error": "MissingEdition",
+        "number": "0xB3"
+    },
+    {
+        "msg": "Invalid Associated Token Account Program",
+        "error": "InvalidAssociatedTokenAccountProgram",
+        "number": "0xB4"
+    },
+    {
+        "msg": "Invalid InstructionsSysvar",
+        "error": "InvalidInstructionsSysvar",
+        "number": "0xB5"
+    },
+    {
+        "msg": "Invalid or Unneeded parent accounts",
+        "error": "InvalidParentAccounts",
+        "number": "0xB6"
+    },
+    {
+        "msg": "Authority cannot apply all update args",
+        "error": "InvalidUpdateArgs",
+        "number": "0xB7"
+    },
+    {
+        "msg": "Token account does not have enough tokens",
+        "error": "InsufficientTokenBalance",
+        "number": "0xB8"
+    },
+    {
+        "msg": "Missing collection account",
+        "error": "MissingCollectionMint",
+        "number": "0xB9"
+    },
+    {
+        "msg": "Missing collection master edition account",
+        "error": "MissingCollectionMasterEdition",
+        "number": "0xBA"
+    },
+    {
+        "msg": "Invalid token record account",
+        "error": "InvalidTokenRecord",
+        "number": "0xBB"
+    },
+    {
+        "msg": "The close authority needs to be revoked by the Utility Delegate",
+        "error": "InvalidCloseAuthority",
+        "number": "0xBC"
+    },
+    {
+        "msg": "Invalid or removed instruction",
+        "error": "InvalidInstruction",
+        "number": "0xBD"
+    },
+    {
+        "msg": "Missing delegate record",
+        "error": "MissingDelegateRecord",
+        "number": "0xBE"
+    }
+]
