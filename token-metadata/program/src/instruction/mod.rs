@@ -22,6 +22,7 @@ pub use fee::collect_fees;
 pub use freeze::*;
 pub use metadata::*;
 use mpl_token_metadata_context_derive::AccountContext;
+
 #[cfg(feature = "serde-feature")]
 use serde::{Deserialize, Serialize};
 use shank::ShankInstruction;
@@ -29,6 +30,17 @@ use solana_program::account_info::AccountInfo;
 pub use state::*;
 pub use uses::*;
 pub use verification::*;
+
+// Deprecated Instructions
+pub const CREATE_METADATA_ACCOUNT: u8 = 0;
+pub const UPDATE_METADATA_ACCOUNT: u8 = 1;
+pub const DEPRECATED_CREATE_MASTER_EDITION: u8 = 2;
+pub const DEPRECATED_MINT_NEW_EDITION_FROM_MASTER_EDITION_VIA_PRINTING_TOKEN: u8 = 3;
+pub const DEPRECATED_SET_RESERVATION_LIST: u8 = 5;
+pub const DEPRECATED_CREATE_RESERVATION_LIST: u8 = 6;
+pub const DEPRECATED_MINT_PRINTING_TOKENS_VIA_TOKEN: u8 = 8;
+pub const DEPRECATED_MINT_PRINTING_TOKENS: u8 = 9;
+pub const CREATE_METADATA_ACCOUNT_V2: u8 = 16;
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]

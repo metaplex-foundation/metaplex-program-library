@@ -751,10 +751,14 @@ pub enum MetadataError {
     InvalidInstruction,
 
     /// 190
+    #[error("Missing delegate record")]
+    MissingDelegateRecord,
+
+    /// 191
     #[error("")]
     InvalidFeeAccount,
 
-    /// 191
+    /// 192
     #[error("")]
     InvalidMetadataFlags,
 }

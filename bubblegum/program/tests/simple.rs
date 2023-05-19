@@ -58,7 +58,7 @@ pub async fn context_tree_and_leaves() -> Result<(
 async fn test_create_tree_and_mint_passes() {
     // The mint operation implicitly called below also verifies that the on-chain tree
     // root matches the expected value as leaves are added.
-    let (context, tree, _) = context_tree_and_leaves().await.unwrap();
+    let (context, mut tree, _) = context_tree_and_leaves().await.unwrap();
 
     let payer = context.payer();
 
@@ -71,7 +71,7 @@ async fn test_create_tree_and_mint_passes() {
 
 #[tokio::test]
 async fn test_creator_verify_and_unverify_passes() {
-    let (context, tree, mut leaves) = context_tree_and_leaves().await.unwrap();
+    let (context, mut tree, mut leaves) = context_tree_and_leaves().await.unwrap();
 
     // `verify_creator` and `unverify_creator` also validate the on-chain tree root
     // always has the expected value via the inner `TxBuilder::execute` call.
@@ -91,7 +91,7 @@ async fn test_creator_verify_and_unverify_passes() {
 
 #[tokio::test]
 async fn test_delegate_passes() {
-    let (_, tree, mut leaves) = context_tree_and_leaves().await.unwrap();
+    let (_, mut tree, mut leaves) = context_tree_and_leaves().await.unwrap();
     let new_delegate = Keypair::new();
 
     // `delegate` also validates whether the on-chain tree root always has the expected
@@ -104,7 +104,7 @@ async fn test_delegate_passes() {
 
 #[tokio::test]
 async fn test_transfer_passes() {
-    let (_, tree, mut leaves) = context_tree_and_leaves().await.unwrap();
+    let (_, mut tree, mut leaves) = context_tree_and_leaves().await.unwrap();
     let new_owner = Keypair::new();
 
     // `transfer` also validates whether the on-chain tree root always has the expected
@@ -117,7 +117,7 @@ async fn test_transfer_passes() {
 
 #[tokio::test]
 async fn test_delegated_transfer_passes() {
-    let (mut context, tree, mut leaves) = context_tree_and_leaves().await.unwrap();
+    let (mut context, mut tree, mut leaves) = context_tree_and_leaves().await.unwrap();
     let delegate = Keypair::new();
     let new_owner = Keypair::new();
 
@@ -143,19 +143,19 @@ async fn test_delegated_transfer_passes() {
 
 #[tokio::test]
 async fn test_burn_passes() {
-    let (_, tree, leaves) = context_tree_and_leaves().await.unwrap();
+    let (_, mut tree, leaves) = context_tree_and_leaves().await.unwrap();
 
     // `burn` also validates whether the on-chain tree root always has the expected
     // value via the inner `TxBuilder::execute` call.
 
     for leaf in leaves.iter() {
-        tree.burn(&leaf).await.unwrap();
+        tree.burn(leaf).await.unwrap();
     }
 }
 
 #[tokio::test]
 async fn test_set_tree_delegate_passes() {
-    let (context, tree, _) = context_tree_and_leaves().await.unwrap();
+    let (context, mut tree, _) = context_tree_and_leaves().await.unwrap();
     let new_tree_delegate = Keypair::new();
 
     // `set_tree_delegate` also validates whether the on-chain tree root always has the expected
@@ -175,7 +175,7 @@ async fn test_set_tree_delegate_passes() {
 
 #[tokio::test]
 async fn test_reedem_and_cancel_passes() {
-    let (_, tree, leaves) = context_tree_and_leaves().await.unwrap();
+    let (_, mut tree, leaves) = context_tree_and_leaves().await.unwrap();
 
     // `redeem` and `cancel_redeem` also validate the on-chain tree root
     // always has the expected value via the inner `TxBuilder::execute` call.
@@ -194,12 +194,23 @@ async fn test_reedem_and_cancel_passes() {
 
 #[tokio::test]
 async fn test_decompress_passes() {
-    let (ctx, tree, mut leaves) = context_tree_and_leaves().await.unwrap();
+    let (ctx, mut tree, mut leaves) = context_tree_and_leaves().await.unwrap();
 
     for leaf in leaves.iter_mut() {
         tree.verify_creator(leaf, &ctx.default_creators[0])
             .await
             .unwrap();
+
+        tree.verify_collection(
+            leaf,
+            &ctx.payer(),
+            ctx.default_collection.mint.pubkey(),
+            ctx.default_collection.metadata,
+            ctx.default_collection.edition.unwrap(),
+        )
+        .await
+        .unwrap();
+
         tree.redeem(leaf).await.unwrap();
         let voucher = tree.read_voucher(leaf.nonce).await.unwrap();
 
@@ -274,7 +285,7 @@ async fn test_decompress_passes() {
             },
             primary_sale_happened: false,
             is_mutable: false,
-            collection: None,
+            collection: leaf.metadata.collection.as_mut().map(|c| c.adapt()),
             uses: None,
             collection_details: None,
             // Simply copying this, since the expected value is not straightforward to predict.
@@ -306,11 +317,11 @@ async fn test_create_public_tree_and_mint_passes() {
     // The mint operation implicitly called below also verifies that the on-chain tree
     // root matches the expected value as leaves are added.
     let mut context = BubblegumTestContext::new().await.unwrap();
-    let tree = context
+    let mut tree = context
         .create_public_tree::<MAX_DEPTH, MAX_BUF_SIZE>()
         .await
         .unwrap();
-    let tree_private = context
+    let mut tree_private = context
         .default_create_tree::<MAX_DEPTH, MAX_BUF_SIZE>()
         .await
         .unwrap();
@@ -330,19 +341,21 @@ async fn test_create_public_tree_and_mint_passes() {
     assert_eq!(cfg.tree_creator, payer.pubkey());
     assert_eq!(cfg.tree_delegate, payer.pubkey());
     assert_eq!(cfg.total_mint_capacity, 1 << MAX_DEPTH);
-    assert_eq!(cfg.is_public, true);
+    assert!(cfg.is_public);
 
     tree.mint_v1_non_owner(&minter, &mut args).await.unwrap();
     let cfg = tree.read_tree_config().await.unwrap();
     assert_eq!(cfg.num_minted, 1);
 
-    if let Err(BanksClient(BanksClientError::TransactionError(e))) =
-        tree_private.mint_v1_non_owner(&minter, &mut args).await
-    {
-        assert_eq!(
-            e,
-            TransactionError::InstructionError(0, InstructionError::Custom(6016),)
-        );
+    if let Err(err) = tree_private.mint_v1_non_owner(&minter, &mut args).await {
+        if let BanksClient(BanksClientError::TransactionError(e)) = *err {
+            assert_eq!(
+                e,
+                TransactionError::InstructionError(0, InstructionError::Custom(6016),)
+            );
+        } else {
+            panic!("Wrong variant");
+        }
     } else {
         panic!("Should have failed");
     }
