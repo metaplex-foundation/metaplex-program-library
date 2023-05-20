@@ -119,11 +119,11 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
         // if the token account is empty, we will initialize a new one but it must
         // be a ATA account
         assert_derivation(
-            &spl_associated_token_account::id(),
+            &spl_associated_token_account::ID,
             ctx.accounts.destination_info,
             &[
                 ctx.accounts.destination_owner_info.key.as_ref(),
-                spl_token::id().as_ref(),
+                spl_token::ID.as_ref(),
                 ctx.accounts.mint_info.key.as_ref(),
             ],
         )?;
@@ -134,7 +134,7 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
                 ctx.accounts.payer_info.key,
                 ctx.accounts.destination_owner_info.key,
                 ctx.accounts.mint_info.key,
-                &spl_token::id(),
+                &spl_token::ID,
             ),
             &[
                 ctx.accounts.payer_info.clone(),
@@ -144,7 +144,7 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
             ],
         )?;
     } else {
-        assert_owned_by(ctx.accounts.destination_info, &spl_token::id())?;
+        assert_owned_by(ctx.accounts.destination_info, &spl_token::ID)?;
         assert_token_matches_owner_and_mint(
             ctx.accounts.destination_info,
             ctx.accounts.destination_owner_info.key,

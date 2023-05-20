@@ -55,7 +55,7 @@ pub(crate) fn toggle_asset_state(
     // ownership
 
     assert_owned_by(accounts.metadata_info, program_id)?;
-    assert_owned_by(accounts.mint_info, &spl_token::id())?;
+    assert_owned_by(accounts.mint_info, &spl_token::ID)?;
 
     // key match
 

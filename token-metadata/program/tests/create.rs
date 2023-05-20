@@ -57,10 +57,10 @@ mod create {
         let mint = Keypair::new();
         let mint_pubkey = mint.pubkey();
 
-        let program_id = id();
+        let program_id = ID;
         // metadata PDA address
         let metadata_seeds = &[PREFIX.as_bytes(), program_id.as_ref(), mint_pubkey.as_ref()];
-        let (metadata, _) = Pubkey::find_program_address(metadata_seeds, &id());
+        let (metadata, _) = Pubkey::find_program_address(metadata_seeds, &ID);
         // master edition PDA address
         let master_edition_seeds = &[
             PREFIX.as_bytes(),
@@ -68,7 +68,7 @@ mod create {
             mint_pubkey.as_ref(),
             EDITION.as_bytes(),
         ];
-        let (master_edition, _) = Pubkey::find_program_address(master_edition_seeds, &id());
+        let (master_edition, _) = Pubkey::find_program_address(master_edition_seeds, &ID);
 
         let create_ix = CreateBuilder::new()
             .metadata(metadata)
@@ -167,10 +167,10 @@ mod create {
 
         // build the create metadata transaction
 
-        let program_id = id();
+        let program_id = ID;
         // metadata PDA address
         let metadata_seeds = &[PREFIX.as_bytes(), program_id.as_ref(), mint_pubkey.as_ref()];
-        let (metadata, _) = Pubkey::find_program_address(metadata_seeds, &id());
+        let (metadata, _) = Pubkey::find_program_address(metadata_seeds, &ID);
         // master edition PDA address
         let master_edition_seeds = &[
             PREFIX.as_bytes(),
@@ -178,7 +178,7 @@ mod create {
             mint_pubkey.as_ref(),
             EDITION.as_bytes(),
         ];
-        let (master_edition, _) = Pubkey::find_program_address(master_edition_seeds, &id());
+        let (master_edition, _) = Pubkey::find_program_address(master_edition_seeds, &ID);
 
         let create_ix = CreateBuilder::new()
             .metadata(metadata)
@@ -271,10 +271,10 @@ mod create {
 
         // build the create metadata transaction
 
-        let program_id = id();
+        let program_id = ID;
         // metadata PDA address
         let metadata_seeds = &[PREFIX.as_bytes(), program_id.as_ref(), mint_pubkey.as_ref()];
-        let (metadata, _) = Pubkey::find_program_address(metadata_seeds, &id());
+        let (metadata, _) = Pubkey::find_program_address(metadata_seeds, &ID);
         // master edition PDA address
         let master_edition_seeds = &[
             PREFIX.as_bytes(),
@@ -282,7 +282,7 @@ mod create {
             mint_pubkey.as_ref(),
             EDITION.as_bytes(),
         ];
-        let (master_edition, _) = Pubkey::find_program_address(master_edition_seeds, &id());
+        let (master_edition, _) = Pubkey::find_program_address(master_edition_seeds, &ID);
 
         let create_ix = CreateBuilder::new()
             .metadata(metadata)

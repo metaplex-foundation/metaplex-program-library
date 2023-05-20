@@ -44,10 +44,10 @@ pub fn process_burn_edition_nft<'a>(
     assert_owned_by(edition_marker_info, program_id)?;
 
     // Owned by spl-token program.
-    assert_owned_by(master_edition_mint_info, &spl_token::id())?;
-    assert_owned_by(master_edition_token_info, &spl_token::id())?;
-    assert_owned_by(print_edition_mint_info, &spl_token::id())?;
-    assert_owned_by(print_edition_token_info, &spl_token::id())?;
+    assert_owned_by(master_edition_mint_info, &spl_token::ID)?;
+    assert_owned_by(master_edition_token_info, &spl_token::ID)?;
+    assert_owned_by(print_edition_mint_info, &spl_token::ID)?;
+    assert_owned_by(print_edition_token_info, &spl_token::ID)?;
 
     let metadata = Metadata::from_account_info(metadata_info)?;
     let token: TokenAccount = assert_initialized(print_edition_token_info)?;

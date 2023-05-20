@@ -1805,10 +1805,10 @@ mod auth_rules_transfer {
                 &payer.pubkey(),
                 &destination_owner.pubkey(),
                 &nft.mint.pubkey(),
-                &spl_token::id(),
+                &spl_token::ID,
             ),
             approve(
-                &spl_token::id(),
+                &spl_token::ID,
                 &destination_token,
                 &delegate,
                 &destination_owner.pubkey(),

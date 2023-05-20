@@ -94,7 +94,7 @@ mod update_primary_sale_happened_via_token {
 
         let tx = Transaction::new_signed_with_payer(
             &[instruction::update_primary_sale_happened_via_token(
-                id(),
+                ID,
                 test_metadata.pubkey,
                 context.payer.pubkey(),
                 fake_token_account.pubkey(),

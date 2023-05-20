@@ -27,7 +27,7 @@ pub const DEFAULT_COLLECTION_DETAILS: Option<CollectionDetails> =
     Some(CollectionDetails::V1 { size: 0 });
 
 pub fn program_test() -> ProgramTest {
-    ProgramTest::new("mpl_token_metadata", mpl_token_metadata::id(), None)
+    ProgramTest::new("mpl_token_metadata", mpl_token_metadata::ID, None)
 }
 
 pub async fn get_account(context: &mut ProgramTestContext, pubkey: &Pubkey) -> Account {
@@ -145,7 +145,7 @@ pub async fn mint_tokens(
 
     let tx = Transaction::new_signed_with_payer(
         &[
-            spl_token::instruction::mint_to(&spl_token::id(), mint, account, owner, &[], amount)
+            spl_token::instruction::mint_to(&spl_token::ID, mint, account, owner, &[], amount)
                 .unwrap(),
         ],
         Some(&context.payer.pubkey()),
@@ -171,10 +171,10 @@ pub async fn create_token_account(
                 &account.pubkey(),
                 rent.minimum_balance(spl_token::state::Account::LEN),
                 spl_token::state::Account::LEN as u64,
-                &spl_token::id(),
+                &spl_token::ID,
             ),
             spl_token::instruction::initialize_account(
-                &spl_token::id(),
+                &spl_token::ID,
                 &account.pubkey(),
                 mint,
                 manager,
@@ -205,10 +205,10 @@ pub async fn create_mint(
                 &mint.pubkey(),
                 rent.minimum_balance(spl_token::state::Mint::LEN),
                 spl_token::state::Mint::LEN as u64,
-                &spl_token::id(),
+                &spl_token::ID,
             ),
             spl_token::instruction::initialize_mint(
-                &spl_token::id(),
+                &spl_token::ID,
                 &mint.pubkey(),
                 manager,
                 freeze_authority,

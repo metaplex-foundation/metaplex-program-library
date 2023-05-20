@@ -41,7 +41,7 @@ pub fn approve_collection_authority(
             AccountMeta::new(payer, true),
             AccountMeta::new_readonly(metadata, false),
             AccountMeta::new_readonly(mint, false),
-            AccountMeta::new_readonly(solana_program::system_program::id(), false),
+            AccountMeta::new_readonly(solana_program::system_program::ID, false),
         ],
         data: MetadataInstruction::ApproveCollectionAuthority
             .try_to_vec()
