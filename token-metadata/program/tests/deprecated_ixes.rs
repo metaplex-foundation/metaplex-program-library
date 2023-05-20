@@ -3,7 +3,7 @@ pub mod utils;
 
 use num_traits::FromPrimitive;
 #[allow(deprecated)]
-use old_token_metadata::{error::MetadataError, id, instruction::create_metadata_accounts_v2};
+use old_token_metadata::{error::MetadataError, instruction::create_metadata_accounts_v2, ID};
 use solana_program_test::*;
 
 use solana_sdk::{

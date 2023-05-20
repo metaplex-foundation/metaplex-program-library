@@ -1,9 +1,10 @@
 use mpl_token_metadata::{
-    id, instruction,
+    instruction,
     state::{
         Collection, CollectionDetails, Creator, DataV2, Metadata as TmMetadata,
         TokenMetadataAccount, TokenStandard, Uses, PREFIX,
     },
+    ID,
 };
 use solana_program::borsh::try_from_slice_unchecked;
 use solana_sdk::{

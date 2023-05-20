@@ -1,11 +1,11 @@
 use borsh::BorshSerialize;
 use mpl_token_metadata::{
-    id,
     instruction::{
         self, builders::BurnBuilder, BurnArgs, InstructionBuilder, MetadataInstruction,
         MintNewEditionFromMasterEditionViaTokenArgs,
     },
     state::{EDITION, EDITION_MARKER_BIT_SIZE, PREFIX},
+    ID,
 };
 use solana_program::{
     borsh::try_from_slice_unchecked,

@@ -2,9 +2,9 @@
 pub mod utils;
 
 use mpl_token_metadata::{
-    id,
     state::{Key, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH},
     utils::puffed_out_string,
+    ID,
 };
 use num_traits::FromPrimitive;
 use solana_program::pubkey::Pubkey;

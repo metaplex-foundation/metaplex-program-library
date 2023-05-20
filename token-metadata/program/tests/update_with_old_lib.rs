@@ -9,7 +9,6 @@ use mpl_token_auth_rules::{
     state::{CompareOp, Rule, RuleSetV1},
 };
 use old_token_metadata::{
-    id,
     instruction::{
         builders::{CreateBuilder, DelegateBuilder, MintBuilder, UpdateBuilder},
         CreateArgs, DelegateArgs, InstructionBuilder, MetadataDelegateRole, MintArgs,
@@ -21,6 +20,7 @@ use old_token_metadata::{
         AssetData, Collection, CollectionDetails, Creator, Metadata, Operation, PayloadKey,
         PrintSupply, ProgrammableConfig, TokenMetadataAccount, TokenStandard, EDITION, PREFIX,
     },
+    ID,
 };
 use rmp_serde::Serializer;
 use serde::Serialize;
