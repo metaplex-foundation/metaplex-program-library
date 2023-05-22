@@ -42,8 +42,8 @@ pub fn approve_collection_authority(
             AccountMeta::new(payer, true),
             AccountMeta::new(metadata, false),
             AccountMeta::new_readonly(mint, false),
-            AccountMeta::new_readonly(system_program::id(), false),
-            AccountMeta::new_readonly(sysvar::instructions::id(), false),
+            AccountMeta::new_readonly(system_program::ID, false),
+            AccountMeta::new_readonly(sysvar::instructions::ID, false),
         ],
         data: MetadataInstruction::ApproveCollectionAuthority
             .try_to_vec()
@@ -79,8 +79,8 @@ pub fn revoke_collection_authority(
             AccountMeta::new(revoke_authority, true),
             AccountMeta::new(metadata, false),
             AccountMeta::new_readonly(mint, false),
-            AccountMeta::new_readonly(system_program::id(), false),
-            AccountMeta::new_readonly(sysvar::instructions::id(), false),
+            AccountMeta::new_readonly(system_program::ID, false),
+            AccountMeta::new_readonly(sysvar::instructions::ID, false),
         ],
         data: MetadataInstruction::RevokeCollectionAuthority
             .try_to_vec()
@@ -132,8 +132,8 @@ pub fn set_and_verify_collection(
         ));
     }
 
-    accounts.push(AccountMeta::new_readonly(system_program::id(), false));
-    accounts.push(AccountMeta::new_readonly(sysvar::instructions::id(), false));
+    accounts.push(AccountMeta::new_readonly(system_program::ID, false));
+    accounts.push(AccountMeta::new_readonly(sysvar::instructions::ID, false));
 
     Instruction {
         program_id,
@@ -186,8 +186,8 @@ pub fn set_and_verify_sized_collection_item(
         ));
     }
 
-    accounts.push(AccountMeta::new_readonly(system_program::id(), false));
-    accounts.push(AccountMeta::new_readonly(sysvar::instructions::id(), false));
+    accounts.push(AccountMeta::new_readonly(system_program::ID, false));
+    accounts.push(AccountMeta::new_readonly(sysvar::instructions::ID, false));
 
     Instruction {
         program_id,
@@ -223,8 +223,8 @@ pub fn set_collection_size(
         accounts.push(AccountMeta::new_readonly(record, false));
     }
 
-    accounts.push(AccountMeta::new_readonly(system_program::id(), false));
-    accounts.push(AccountMeta::new_readonly(sysvar::instructions::id(), false));
+    accounts.push(AccountMeta::new_readonly(system_program::ID, false));
+    accounts.push(AccountMeta::new_readonly(sysvar::instructions::ID, false));
 
     Instruction {
         program_id,
@@ -272,8 +272,8 @@ pub fn unverify_collection(
         ));
     }
 
-    accounts.push(AccountMeta::new_readonly(system_program::id(), false));
-    accounts.push(AccountMeta::new_readonly(sysvar::instructions::id(), false));
+    accounts.push(AccountMeta::new_readonly(system_program::ID, false));
+    accounts.push(AccountMeta::new_readonly(sysvar::instructions::ID, false));
 
     Instruction {
         program_id,
@@ -323,8 +323,8 @@ pub fn unverify_sized_collection_item(
         ));
     }
 
-    accounts.push(AccountMeta::new_readonly(system_program::id(), false));
-    accounts.push(AccountMeta::new_readonly(sysvar::instructions::id(), false));
+    accounts.push(AccountMeta::new_readonly(system_program::ID, false));
+    accounts.push(AccountMeta::new_readonly(sysvar::instructions::ID, false));
 
     Instruction {
         program_id,
@@ -374,8 +374,8 @@ pub fn verify_collection(
         ));
     }
 
-    accounts.push(AccountMeta::new_readonly(system_program::id(), false));
-    accounts.push(AccountMeta::new_readonly(sysvar::instructions::id(), false));
+    accounts.push(AccountMeta::new_readonly(system_program::ID, false));
+    accounts.push(AccountMeta::new_readonly(sysvar::instructions::ID, false));
 
     Instruction {
         program_id,
@@ -420,8 +420,8 @@ pub fn verify_sized_collection_item(
         accounts.push(AccountMeta::new_readonly(record, false));
     }
 
-    accounts.push(AccountMeta::new_readonly(system_program::id(), false));
-    accounts.push(AccountMeta::new_readonly(sysvar::instructions::id(), false));
+    accounts.push(AccountMeta::new_readonly(system_program::ID, false));
+    accounts.push(AccountMeta::new_readonly(sysvar::instructions::ID, false));
 
     Instruction {
         program_id,

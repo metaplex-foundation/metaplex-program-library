@@ -44,7 +44,7 @@ mod freeze_delegated {
             .unwrap();
 
         let approve_ix = spl_token::instruction::approve(
-            &spl_token::id(),
+            &spl_token::ID,
             &test_metadata.token.pubkey(),
             &delegate.pubkey(),
             &context.payer.pubkey(),
@@ -67,7 +67,7 @@ mod freeze_delegated {
         // delegate freezes token
         let freeze_tx = Transaction::new_signed_with_payer(
             &[mpl_token_metadata::instruction::freeze_delegated_account(
-                mpl_token_metadata::id(),
+                mpl_token_metadata::ID,
                 delegate.pubkey(),
                 test_metadata.token.pubkey(),
                 test_master_edition.pubkey,
@@ -85,7 +85,7 @@ mod freeze_delegated {
 
         // transfer fails because frozen
         let transfer_ix = spl_token::instruction::transfer(
-            &spl_token::id(),
+            &spl_token::ID,
             &test_metadata.token.pubkey(),
             &test_metadata.token.pubkey(),
             &context.payer.pubkey(),
@@ -133,7 +133,7 @@ mod freeze_delegated {
 
         // delegate token to delegate
         spl_token::instruction::approve(
-            &spl_token::id(),
+            &spl_token::ID,
             &test_metadata.token.pubkey(),
             &delegate.pubkey(),
             &context.payer.pubkey(),
@@ -144,7 +144,7 @@ mod freeze_delegated {
 
         // delegate freezes token
         let freeze_ix = mpl_token_metadata::instruction::freeze_delegated_account(
-            mpl_token_metadata::id(),
+            mpl_token_metadata::ID,
             delegate.pubkey(),
             test_metadata.token.pubkey(),
             test_metadata.pubkey,
@@ -198,7 +198,7 @@ mod freeze_delegated {
 
         // attempt to freeze delegated account
         let freeze_ix = mpl_token_metadata::instruction::freeze_delegated_account(
-            mpl_token_metadata::id(),
+            mpl_token_metadata::ID,
             context.payer.pubkey(),
             test_metadata.token.pubkey(),
             test_master_edition.pubkey,
@@ -253,7 +253,7 @@ mod freeze_delegated {
 
         // delegate token to delegate
         spl_token::instruction::approve(
-            &spl_token::id(),
+            &spl_token::ID,
             &test_metadata.token.pubkey(),
             &delegate.pubkey(),
             &context.payer.pubkey(),
@@ -264,7 +264,7 @@ mod freeze_delegated {
 
         // delegate freezes token
         let freeze_ix = mpl_token_metadata::instruction::freeze_delegated_account(
-            mpl_token_metadata::id(),
+            mpl_token_metadata::ID,
             delegate.pubkey(),
             test_metadata.token.pubkey(),
             test_master_edition.pubkey,
@@ -279,7 +279,7 @@ mod freeze_delegated {
 
         // owner attempt to thaw account
         let thaw_ix = mpl_token_metadata::instruction::thaw_delegated_account(
-            mpl_token_metadata::id(),
+            mpl_token_metadata::ID,
             context.payer.pubkey(),
             test_metadata.token.pubkey(),
             test_master_edition.pubkey,

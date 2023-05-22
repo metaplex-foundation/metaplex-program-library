@@ -21,8 +21,8 @@ pub fn bubblegum_set_collection_size(
         AccountMeta::new_readonly(update_authority, true),
         AccountMeta::new_readonly(mint, false),
         AccountMeta::new_readonly(bubblegum_signer, true),
-        AccountMeta::new_readonly(system_program::id(), false),
-        AccountMeta::new_readonly(sysvar::instructions::id(), false),
+        AccountMeta::new_readonly(system_program::ID, false),
+        AccountMeta::new_readonly(sysvar::instructions::ID, false),
     ];
 
     if let Some(record) = collection_authority_record {

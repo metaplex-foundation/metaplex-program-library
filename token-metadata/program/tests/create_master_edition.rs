@@ -1,7 +1,7 @@
 #![cfg(feature = "test-bpf")]
 pub mod utils;
 
-use mpl_token_metadata::{error::MetadataError, id, instruction, state::Key};
+use mpl_token_metadata::{error::MetadataError, instruction, state::Key, ID};
 use num_traits::FromPrimitive;
 use solana_program_test::*;
 use solana_sdk::{
@@ -125,7 +125,7 @@ mod create_master_edition {
 
         let tx = Transaction::new_signed_with_payer(
             &[instruction::create_master_edition_v3(
-                id(),
+                ID,
                 test_master_edition.pubkey,
                 test_master_edition.mint_pubkey,
                 context.payer.pubkey(),
@@ -265,7 +265,7 @@ mod create_master_edition {
 
         let tx = Transaction::new_signed_with_payer(
             &[instruction::create_master_edition_v3(
-                id(),
+                ID,
                 test_master_edition.pubkey,
                 test_master_edition.mint_pubkey,
                 fake_update_authority.pubkey(),
@@ -313,7 +313,7 @@ mod create_master_edition {
 
         let tx = Transaction::new_signed_with_payer(
             &[instruction::create_master_edition_v3(
-                id(),
+                ID,
                 test_master_edition.pubkey,
                 test_master_edition.mint_pubkey,
                 fake_update_authority.pubkey(),

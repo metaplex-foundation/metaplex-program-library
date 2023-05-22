@@ -1186,7 +1186,7 @@ mod collection_migrations {
         );
 
         let ix1 = mpl_token_metadata::instruction::approve_collection_authority(
-            mpl_token_metadata::id(),
+            mpl_token_metadata::ID,
             record,
             delegate_keypair.pubkey(),
             update_authority,

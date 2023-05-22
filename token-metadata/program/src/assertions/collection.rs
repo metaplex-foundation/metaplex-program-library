@@ -115,11 +115,11 @@ pub fn assert_collection_verify_is_valid(
     }
 
     assert_derivation(
-        &crate::id(),
+        &crate::ID,
         edition_account_info,
         &[
             PREFIX.as_bytes(),
-            crate::id().as_ref(),
+            crate::ID.as_ref(),
             collection_metadata.mint.as_ref(),
             EDITION.as_bytes(),
         ],

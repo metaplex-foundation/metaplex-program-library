@@ -50,8 +50,8 @@ pub fn burn_edition_nft(
         AccountMeta::new(print_edition, false),
         AccountMeta::new(edition_marker, false),
         AccountMeta::new_readonly(spl_token, false),
-        AccountMeta::new_readonly(system_program::id(), false),
-        AccountMeta::new_readonly(sysvar::instructions::id(), false),
+        AccountMeta::new_readonly(system_program::ID, false),
+        AccountMeta::new_readonly(sysvar::instructions::ID, false),
     ];
 
     Instruction {
@@ -95,8 +95,8 @@ pub fn burn_nft(
         accounts.push(AccountMeta::new(collection_metadata, false));
     }
 
-    accounts.push(AccountMeta::new_readonly(system_program::id(), false));
-    accounts.push(AccountMeta::new_readonly(sysvar::instructions::id(), false));
+    accounts.push(AccountMeta::new_readonly(system_program::ID, false));
+    accounts.push(AccountMeta::new_readonly(sysvar::instructions::ID, false));
 
     Instruction {
         program_id,

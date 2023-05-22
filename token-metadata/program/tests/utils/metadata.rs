@@ -1,10 +1,11 @@
 use mpl_token_metadata::{
-    id, instruction,
+    instruction,
     state::{
         Collection, CollectionDetails, Creator, DataV2, Metadata as TmMetadata,
         TokenMetadataAccount, TokenStandard, Uses, METADATA_FLAGS_INDEX, PREFIX,
     },
     utils::{IxType, MetadataFlags, CREATE_FEE},
+    ID,
 };
 use solana_program::borsh::try_from_slice_unchecked;
 use solana_sdk::{
@@ -24,10 +25,10 @@ impl Metadata {
     pub fn new() -> Self {
         let mint = Keypair::new();
         let mint_pubkey = mint.pubkey();
-        let program_id = id();
+        let program_id = ID;
 
         let metadata_seeds = &[PREFIX.as_bytes(), program_id.as_ref(), mint_pubkey.as_ref()];
-        let (pubkey, _) = Pubkey::find_program_address(metadata_seeds, &id());
+        let (pubkey, _) = Pubkey::find_program_address(metadata_seeds, &ID);
 
         Metadata {
             mint,
@@ -130,7 +131,7 @@ impl Metadata {
 
         let tx = Transaction::new_signed_with_payer(
             &[instruction::create_metadata_accounts_v3(
-                id(),
+                ID,
                 self.pubkey,
                 self.mint.pubkey(),
                 context.payer.pubkey(),
@@ -195,7 +196,7 @@ impl Metadata {
         #[allow(deprecated)]
         let tx = Transaction::new_signed_with_payer(
             &[instruction::create_metadata_accounts_v3(
-                id(),
+                ID,
                 self.pubkey,
                 self.mint.pubkey(),
                 context.payer.pubkey(),
@@ -256,7 +257,7 @@ impl Metadata {
 
         let tx = Transaction::new_signed_with_payer(
             &[instruction::create_metadata_accounts_v3(
-                id(),
+                ID,
                 self.pubkey,
                 self.mint.pubkey(),
                 context.payer.pubkey(),
@@ -397,7 +398,7 @@ impl Metadata {
     ) -> Result<(), BanksClientError> {
         let tx = Transaction::new_signed_with_payer(
             &[instruction::update_primary_sale_happened_via_token(
-                id(),
+                ID,
                 self.pubkey,
                 context.payer.pubkey(),
                 self.token.pubkey(),
@@ -424,7 +425,7 @@ impl Metadata {
     ) -> Result<(), BanksClientError> {
         let tx = Transaction::new_signed_with_payer(
             &[instruction::update_metadata_accounts_v2(
-                id(),
+                ID,
                 self.pubkey,
                 context.payer.pubkey(),
                 None,
@@ -459,7 +460,7 @@ impl Metadata {
     ) -> Result<(), BanksClientError> {
         let tx = Transaction::new_signed_with_payer(
             &[instruction::verify_collection(
-                id(),
+                ID,
                 self.pubkey,
                 collection_authority.pubkey(),
                 context.payer.pubkey(),
@@ -487,7 +488,7 @@ impl Metadata {
     ) -> Result<(), BanksClientError> {
         let tx = Transaction::new_signed_with_payer(
             &[instruction::verify_sized_collection_item(
-                id(),
+                ID,
                 self.pubkey,
                 collection_authority.pubkey(),
                 context.payer.pubkey(),
@@ -516,7 +517,7 @@ impl Metadata {
     ) -> Result<(), BanksClientError> {
         let tx = Transaction::new_signed_with_payer(
             &[instruction::set_and_verify_collection(
-                id(),
+                ID,
                 self.pubkey,
                 collection_authority.pubkey(),
                 context.payer.pubkey(),
@@ -545,7 +546,7 @@ impl Metadata {
     ) -> Result<(), BanksClientError> {
         let tx = Transaction::new_signed_with_payer(
             &[instruction::set_and_verify_sized_collection_item(
-                id(),
+                ID,
                 self.pubkey,
                 collection_authority.pubkey(),
                 context.payer.pubkey(),
@@ -573,7 +574,7 @@ impl Metadata {
     ) -> Result<(), BanksClientError> {
         let tx = Transaction::new_signed_with_payer(
             &[instruction::unverify_collection(
-                id(),
+                ID,
                 self.pubkey,
                 collection_authority.pubkey(),
                 collection_mint,
@@ -600,7 +601,7 @@ impl Metadata {
     ) -> Result<(), BanksClientError> {
         let tx = Transaction::new_signed_with_payer(
             &[instruction::unverify_sized_collection_item(
-                id(),
+                ID,
                 self.pubkey,
                 collection_authority.pubkey(),
                 context.payer.pubkey(),
@@ -628,7 +629,7 @@ impl Metadata {
 
         let tx = Transaction::new_signed_with_payer(
             &[instruction::update_metadata_accounts_v2(
-                mpl_token_metadata::id(),
+                mpl_token_metadata::ID,
                 self.pubkey,
                 context.payer.pubkey(),
                 Some(new_update_authority),

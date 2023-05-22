@@ -64,7 +64,7 @@ fn create_v1(program_id: &Pubkey, ctx: Context<Create>, args: CreateArgs) -> Pro
                 ctx.accounts.mint_info.key,
                 Rent::get()?.minimum_balance(spl_token::state::Mint::LEN),
                 spl_token::state::Mint::LEN as u64,
-                &spl_token::id(),
+                &spl_token::ID,
             ),
             &[
                 ctx.accounts.payer_info.clone(),

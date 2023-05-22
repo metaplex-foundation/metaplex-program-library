@@ -17,7 +17,7 @@ pub fn collect_fees(recipient: Pubkey, fee_accounts: Vec<Pubkey>) -> Instruction
         accounts.push(AccountMeta::new(fee_account, false));
     }
     Instruction {
-        program_id: crate::id(),
+        program_id: crate::ID,
         accounts,
         data: MetadataInstruction::Collect.try_to_vec().unwrap(),
     }

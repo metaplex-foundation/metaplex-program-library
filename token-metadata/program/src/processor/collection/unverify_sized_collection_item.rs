@@ -33,7 +33,7 @@ pub fn unverify_sized_collection_item(
     assert_signer(payer_info)?;
 
     assert_owned_by(metadata_info, program_id)?;
-    assert_owned_by(collection_mint_info, &spl_token::id())?;
+    assert_owned_by(collection_mint_info, &spl_token::ID)?;
 
     let mut metadata = Metadata::from_account_info(metadata_info)?;
 
