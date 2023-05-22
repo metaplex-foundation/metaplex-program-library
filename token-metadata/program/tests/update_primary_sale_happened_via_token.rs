@@ -3,9 +3,10 @@ pub mod utils;
 
 use mpl_token_metadata::{
     error::MetadataError,
-    id, instruction,
+    instruction,
     state::{Key, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH},
     utils::puffed_out_string,
+    ID,
 };
 use num_traits::FromPrimitive;
 use solana_program_test::*;
@@ -94,7 +95,7 @@ mod update_primary_sale_happened_via_token {
 
         let tx = Transaction::new_signed_with_payer(
             &[instruction::update_primary_sale_happened_via_token(
-                id(),
+                ID,
                 test_metadata.pubkey,
                 context.payer.pubkey(),
                 fake_token_account.pubkey(),

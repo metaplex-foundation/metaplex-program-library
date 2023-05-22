@@ -65,7 +65,7 @@ mod bump_seed_migration {
         let mut account = Account {
             lamports: 1113600,
             data: vec![],
-            owner: mpl_token_metadata::id(),
+            owner: mpl_token_metadata::ID,
             executable: false,
             rent_epoch: 1,
         };
@@ -79,7 +79,7 @@ mod bump_seed_migration {
             .unwrap();
         let (burner, _) = find_program_as_burner_account();
         let utilize_with_use_authority = mpl_token_metadata::instruction::utilize(
-            mpl_token_metadata::id(),
+            mpl_token_metadata::ID,
             test_metadata.pubkey,
             test_metadata.token.pubkey(),
             test_metadata.mint.pubkey(),

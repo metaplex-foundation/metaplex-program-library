@@ -27,7 +27,7 @@ pub fn process_freeze_delegated_account(
     let mint_info = next_account_info(account_info_iter)?;
     let token_program_account_info = next_account_info(account_info_iter)?;
 
-    if *token_program_account_info.key != spl_token::id() {
+    if *token_program_account_info.key != spl_token::ID {
         return Err(MetadataError::InvalidTokenProgram.into());
     }
 

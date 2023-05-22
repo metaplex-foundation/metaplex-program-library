@@ -59,8 +59,8 @@ pub fn create_master_edition_v3(
         AccountMeta::new_readonly(mint_authority, true),
         AccountMeta::new(payer, true),
         AccountMeta::new(metadata, false),
-        AccountMeta::new_readonly(spl_token::id(), false),
-        AccountMeta::new_readonly(solana_program::system_program::id(), false),
+        AccountMeta::new_readonly(spl_token::ID, false),
+        AccountMeta::new_readonly(solana_program::system_program::ID, false),
     ];
 
     Instruction {
@@ -121,8 +121,8 @@ pub fn mint_new_edition_from_master_edition_via_token(
         AccountMeta::new_readonly(token_account, false),
         AccountMeta::new_readonly(new_metadata_update_authority, false),
         AccountMeta::new_readonly(metadata, false),
-        AccountMeta::new_readonly(spl_token::id(), false),
-        AccountMeta::new_readonly(solana_program::system_program::id(), false),
+        AccountMeta::new_readonly(spl_token::ID, false),
+        AccountMeta::new_readonly(solana_program::system_program::ID, false),
     ];
 
     Instruction {
