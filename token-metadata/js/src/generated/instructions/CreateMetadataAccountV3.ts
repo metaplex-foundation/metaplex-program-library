@@ -44,6 +44,7 @@ export const CreateMetadataAccountV3Struct = new beet.FixableBeetArgsStruct<
  * @property [**signer**] mintAuthority Mint authority
  * @property [_writable_, **signer**] payer payer
  * @property [] updateAuthority update authority info
+ * @property [] sysvarInstructions Instructions sysvar account
  * @category Instructions
  * @category CreateMetadataAccountV3
  * @category generated
@@ -56,6 +57,7 @@ export type CreateMetadataAccountV3InstructionAccounts = {
   updateAuthority: web3.PublicKey;
   systemProgram?: web3.PublicKey;
   rent?: web3.PublicKey;
+  sysvarInstructions: web3.PublicKey;
 };
 
 export const createMetadataAccountV3InstructionDiscriminator = 33;
@@ -124,6 +126,11 @@ export function createCreateMetadataAccountV3Instruction(
       isSigner: false,
     });
   }
+  keys.push({
+    pubkey: accounts.sysvarInstructions,
+    isWritable: false,
+    isSigner: false,
+  });
 
   const ix = new web3.TransactionInstruction({
     programId,

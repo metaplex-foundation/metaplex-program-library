@@ -26,6 +26,8 @@ export const VerifyCollectionStruct = new beet.BeetArgsStruct<{ instructionDiscr
  * @property [] collectionMint Mint of the Collection
  * @property [] collection Metadata Account of the Collection
  * @property [] collectionMasterEditionAccount MasterEdition2 Account of the Collection Token
+ * @property [] collectionAuthorityRecord (optional) Collection Authority Record PDA
+ * @property [] sysvarInstructions Instructions sysvar account
  * @category Instructions
  * @category VerifyCollection
  * @category generated
@@ -37,12 +39,20 @@ export type VerifyCollectionInstructionAccounts = {
   collectionMint: web3.PublicKey;
   collection: web3.PublicKey;
   collectionMasterEditionAccount: web3.PublicKey;
+  collectionAuthorityRecord?: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
+  sysvarInstructions: web3.PublicKey;
 };
 
 export const verifyCollectionInstructionDiscriminator = 18;
 
 /**
  * Creates a _VerifyCollection_ instruction.
+ *
+ * Optional accounts that are not provided will be omitted from the accounts
+ * array passed with the instruction.
+ * An optional account that is set cannot follow an optional account that is unset.
+ * Otherwise an Error is raised.
  *
  * @param accounts that will be accessed while the instruction is processed
  * @category Instructions
@@ -88,6 +98,24 @@ export function createVerifyCollectionInstruction(
       isSigner: false,
     },
   ];
+
+  if (accounts.collectionAuthorityRecord != null) {
+    keys.push({
+      pubkey: accounts.collectionAuthorityRecord,
+      isWritable: false,
+      isSigner: false,
+    });
+  }
+  keys.push({
+    pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
+    isWritable: false,
+    isSigner: false,
+  });
+  keys.push({
+    pubkey: accounts.sysvarInstructions,
+    isWritable: false,
+    isSigner: false,
+  });
 
   const ix = new web3.TransactionInstruction({
     programId,

@@ -24,6 +24,7 @@ export const SetTokenStandardStruct = new beet.BeetArgsStruct<{ instructionDiscr
  * @property [_writable_, **signer**] updateAuthority Metadata update authority
  * @property [] mint Mint account
  * @property [] edition (optional) Edition account
+ * @property [] sysvarInstructions Instructions sysvar account
  * @category Instructions
  * @category SetTokenStandard
  * @category generated
@@ -33,6 +34,8 @@ export type SetTokenStandardInstructionAccounts = {
   updateAuthority: web3.PublicKey;
   mint: web3.PublicKey;
   edition?: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
+  sysvarInstructions: web3.PublicKey;
 };
 
 export const setTokenStandardInstructionDiscriminator = 35;
@@ -82,6 +85,16 @@ export function createSetTokenStandardInstruction(
       isSigner: false,
     });
   }
+  keys.push({
+    pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
+    isWritable: false,
+    isSigner: false,
+  });
+  keys.push({
+    pubkey: accounts.sysvarInstructions,
+    isWritable: false,
+    isSigner: false,
+  });
 
   const ix = new web3.TransactionInstruction({
     programId,

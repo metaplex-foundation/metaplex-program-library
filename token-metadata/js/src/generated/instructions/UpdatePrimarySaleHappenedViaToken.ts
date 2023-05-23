@@ -22,6 +22,7 @@ export const UpdatePrimarySaleHappenedViaTokenStruct = new beet.BeetArgsStruct<{
  * @property [_writable_] metadata Metadata key (pda of ['metadata', program id, mint id])
  * @property [**signer**] owner Owner on the token account
  * @property [] token Account containing tokens from the metadata's mint
+ * @property [] sysvarInstructions Instructions sysvar account
  * @category Instructions
  * @category UpdatePrimarySaleHappenedViaToken
  * @category generated
@@ -30,6 +31,8 @@ export type UpdatePrimarySaleHappenedViaTokenInstructionAccounts = {
   metadata: web3.PublicKey;
   owner: web3.PublicKey;
   token: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
+  sysvarInstructions: web3.PublicKey;
 };
 
 export const updatePrimarySaleHappenedViaTokenInstructionDiscriminator = 4;
@@ -62,6 +65,16 @@ export function createUpdatePrimarySaleHappenedViaTokenInstruction(
     },
     {
       pubkey: accounts.token,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.sysvarInstructions,
       isWritable: false,
       isSigner: false,
     },

@@ -291,6 +291,18 @@
           "isMut": false,
           "isSigner": false,
           "desc": "Account containing tokens from the metadata's mint"
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "System program"
+        },
+        {
+          "name": "sysvarInstructions",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Instructions sysvar account"
         }
       ],
       "args": [],
@@ -399,6 +411,18 @@
           "isMut": false,
           "isSigner": true,
           "desc": "Creator"
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "System program"
+        },
+        {
+          "name": "sysvarInstructions",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Instructions sysvar account"
         }
       ],
       "args": [],
@@ -674,6 +698,12 @@
           "isSigner": false,
           "desc": "Rent info",
           "optional": true
+        },
+        {
+          "name": "sysvarInstructions",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Instructions sysvar account"
         }
       ],
       "args": [
@@ -709,6 +739,18 @@
           "isMut": true,
           "isSigner": false,
           "desc": "Printing mint"
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "System program"
+        },
+        {
+          "name": "sysvarInstructions",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Instructions sysvar account"
         }
       ],
       "args": [],
@@ -845,6 +887,18 @@
           "isMut": true,
           "isSigner": false,
           "desc": "Metadata account"
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "System program"
+        },
+        {
+          "name": "sysvarInstructions",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Instructions sysvar account"
         }
       ],
       "args": [],
@@ -867,6 +921,18 @@
           "isMut": false,
           "isSigner": true,
           "desc": "Update authority key"
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "System program"
+        },
+        {
+          "name": "sysvarInstructions",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Instructions sysvar account"
         }
       ],
       "args": [
@@ -992,6 +1058,12 @@
           "isSigner": false,
           "desc": "Rent info",
           "optional": true
+        },
+        {
+          "name": "sysvarInstructions",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Instructions sysvar account"
         }
       ],
       "args": [
@@ -1045,6 +1117,25 @@
           "isMut": false,
           "isSigner": false,
           "desc": "MasterEdition2 Account of the Collection Token"
+        },
+        {
+          "name": "collectionAuthorityRecord",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Collection Authority Record PDA",
+          "optional": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "System program"
+        },
+        {
+          "name": "sysvarInstructions",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Instructions sysvar account"
         }
       ],
       "args": [],
@@ -1123,6 +1214,12 @@
           "isSigner": false,
           "desc": "Program As Signer (Burner)",
           "optional": true
+        },
+        {
+          "name": "sysvarInstructions",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Instructions sysvar account"
         }
       ],
       "args": [
@@ -1207,6 +1304,12 @@
           "isSigner": false,
           "desc": "Rent info",
           "optional": true
+        },
+        {
+          "name": "sysvarInstructions",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Instructions sysvar account"
         }
       ],
       "args": [
@@ -1279,6 +1382,12 @@
           "isSigner": false,
           "desc": "Rent info",
           "optional": true
+        },
+        {
+          "name": "sysvarInstructions",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Instructions sysvar account"
         }
       ],
       "args": [],
@@ -1326,6 +1435,18 @@
           "isSigner": false,
           "desc": "Collection Authority Record PDA",
           "optional": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "System program"
+        },
+        {
+          "name": "sysvarInstructions",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Instructions sysvar account"
         }
       ],
       "args": [],
@@ -1385,6 +1506,12 @@
           "isSigner": false,
           "desc": "Rent info",
           "optional": true
+        },
+        {
+          "name": "sysvarInstructions",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Instructions sysvar account"
         }
       ],
       "args": [],
@@ -1425,6 +1552,18 @@
           "isMut": false,
           "isSigner": false,
           "desc": "Mint of Metadata"
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "System program"
+        },
+        {
+          "name": "sysvarInstructions",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Instructions sysvar account"
         }
       ],
       "args": [],
@@ -1484,6 +1623,18 @@
           "isSigner": false,
           "desc": "Collection Authority Record PDA",
           "optional": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "System program"
+        },
+        {
+          "name": "sysvarInstructions",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Instructions sysvar account"
         }
       ],
       "args": [],
@@ -1524,6 +1675,18 @@
           "isMut": false,
           "isSigner": false,
           "desc": "Token Program"
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "System program"
+        },
+        {
+          "name": "sysvarInstructions",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Instructions sysvar account"
         }
       ],
       "args": [],
@@ -1564,6 +1727,18 @@
           "isMut": false,
           "isSigner": false,
           "desc": "Token Program"
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "System program"
+        },
+        {
+          "name": "sysvarInstructions",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Instructions sysvar account"
         }
       ],
       "args": [],
@@ -1586,6 +1761,18 @@
           "isMut": false,
           "isSigner": true,
           "desc": "Creator"
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "System program"
+        },
+        {
+          "name": "sysvarInstructions",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Instructions sysvar account"
         }
       ],
       "args": [],
@@ -1639,6 +1826,18 @@
           "isSigner": false,
           "desc": "Metadata of the Collection",
           "optional": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "System program"
+        },
+        {
+          "name": "sysvarInstructions",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Instructions sysvar account"
         }
       ],
       "args": [],
@@ -1692,6 +1891,18 @@
           "isSigner": false,
           "desc": "Collection Authority Record PDA",
           "optional": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "System program"
+        },
+        {
+          "name": "sysvarInstructions",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Instructions sysvar account"
         }
       ],
       "args": [],
@@ -1745,6 +1956,18 @@
           "isSigner": false,
           "desc": "Collection Authority Record PDA",
           "optional": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "System program"
+        },
+        {
+          "name": "sysvarInstructions",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Instructions sysvar account"
         }
       ],
       "args": [],
@@ -1804,6 +2027,18 @@
           "isSigner": false,
           "desc": "Collection Authority Record PDA",
           "optional": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "System program"
+        },
+        {
+          "name": "sysvarInstructions",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Instructions sysvar account"
         }
       ],
       "args": [],
@@ -1857,6 +2092,12 @@
           "isSigner": false,
           "desc": "Rent info",
           "optional": true
+        },
+        {
+          "name": "sysvarInstructions",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Instructions sysvar account"
         }
       ],
       "args": [
@@ -1899,6 +2140,18 @@
           "isSigner": false,
           "desc": "Collection Authority Record PDA",
           "optional": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "System program"
+        },
+        {
+          "name": "sysvarInstructions",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Instructions sysvar account"
         }
       ],
       "args": [
@@ -1941,6 +2194,18 @@
           "isSigner": false,
           "desc": "Edition account",
           "optional": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "System program"
+        },
+        {
+          "name": "sysvarInstructions",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Instructions sysvar account"
         }
       ],
       "args": [],
@@ -1982,6 +2247,18 @@
           "isSigner": false,
           "desc": "Collection Authority Record PDA",
           "optional": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "System program"
+        },
+        {
+          "name": "sysvarInstructions",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Instructions sysvar account"
         }
       ],
       "args": [
@@ -2059,6 +2336,18 @@
           "isMut": false,
           "isSigner": false,
           "desc": "SPL Token Program"
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "System program"
+        },
+        {
+          "name": "sysvarInstructions",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Instructions sysvar account"
         }
       ],
       "args": [],
@@ -3555,6 +3844,28 @@
       "discriminant": {
         "type": "u8",
         "value": 53
+      }
+    },
+    {
+      "name": "Collect",
+      "accounts": [
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "Authority to collect fees"
+        },
+        {
+          "name": "pdaAccount",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "PDA to retrieve fees from"
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 54
       }
     }
   ],
@@ -6573,6 +6884,21 @@
       "code": 189,
       "name": "InvalidInstruction",
       "msg": "Invalid or removed instruction"
+    },
+    {
+      "code": 190,
+      "name": "MissingDelegateRecord",
+      "msg": "Missing delegate record"
+    },
+    {
+      "code": 191,
+      "name": "InvalidFeeAccount",
+      "msg": ""
+    },
+    {
+      "code": 192,
+      "name": "InvalidMetadataFlags",
+      "msg": ""
     }
   ],
   "metadata": {

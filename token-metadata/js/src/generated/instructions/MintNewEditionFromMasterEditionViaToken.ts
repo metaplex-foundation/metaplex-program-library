@@ -54,6 +54,7 @@ export const MintNewEditionFromMasterEditionViaTokenStruct = new beet.BeetArgsSt
  * @property [] tokenAccount token account containing token from master metadata mint
  * @property [] newMetadataUpdateAuthority Update authority info for new metadata
  * @property [] metadata Master record metadata account
+ * @property [] sysvarInstructions Instructions sysvar account
  * @category Instructions
  * @category MintNewEditionFromMasterEditionViaToken
  * @category generated
@@ -73,6 +74,7 @@ export type MintNewEditionFromMasterEditionViaTokenInstructionAccounts = {
   tokenProgram?: web3.PublicKey;
   systemProgram?: web3.PublicKey;
   rent?: web3.PublicKey;
+  sysvarInstructions: web3.PublicKey;
 };
 
 export const mintNewEditionFromMasterEditionViaTokenInstructionDiscriminator = 11;
@@ -176,6 +178,11 @@ export function createMintNewEditionFromMasterEditionViaTokenInstruction(
       isSigner: false,
     });
   }
+  keys.push({
+    pubkey: accounts.sysvarInstructions,
+    isWritable: false,
+    isSigner: false,
+  });
 
   const ix = new web3.TransactionInstruction({
     programId,

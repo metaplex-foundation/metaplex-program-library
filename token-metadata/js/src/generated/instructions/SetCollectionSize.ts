@@ -40,6 +40,7 @@ export const SetCollectionSizeStruct = new beet.BeetArgsStruct<
  * @property [_writable_, **signer**] collectionAuthority Collection Update authority
  * @property [] collectionMint Mint of the Collection
  * @property [] collectionAuthorityRecord (optional) Collection Authority Record PDA
+ * @property [] sysvarInstructions Instructions sysvar account
  * @category Instructions
  * @category SetCollectionSize
  * @category generated
@@ -49,6 +50,8 @@ export type SetCollectionSizeInstructionAccounts = {
   collectionAuthority: web3.PublicKey;
   collectionMint: web3.PublicKey;
   collectionAuthorityRecord?: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
+  sysvarInstructions: web3.PublicKey;
 };
 
 export const setCollectionSizeInstructionDiscriminator = 34;
@@ -102,6 +105,16 @@ export function createSetCollectionSizeInstruction(
       isSigner: false,
     });
   }
+  keys.push({
+    pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
+    isWritable: false,
+    isSigner: false,
+  });
+  keys.push({
+    pubkey: accounts.sysvarInstructions,
+    isWritable: false,
+    isSigner: false,
+  });
 
   const ix = new web3.TransactionInstruction({
     programId,

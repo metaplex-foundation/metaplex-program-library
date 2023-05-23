@@ -21,12 +21,15 @@ export const PuffMetadataStruct = new beet.BeetArgsStruct<{ instructionDiscrimin
  * Accounts required by the _PuffMetadata_ instruction
  *
  * @property [_writable_] metadata Metadata account
+ * @property [] sysvarInstructions Instructions sysvar account
  * @category Instructions
  * @category PuffMetadata
  * @category generated
  */
 export type PuffMetadataInstructionAccounts = {
   metadata: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
+  sysvarInstructions: web3.PublicKey;
 };
 
 export const puffMetadataInstructionDiscriminator = 14;
@@ -50,6 +53,16 @@ export function createPuffMetadataInstruction(
     {
       pubkey: accounts.metadata,
       isWritable: true,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.sysvarInstructions,
+      isWritable: false,
       isSigner: false,
     },
   ];

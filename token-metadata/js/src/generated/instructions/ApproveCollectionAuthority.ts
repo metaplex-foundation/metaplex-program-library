@@ -25,6 +25,7 @@ export const ApproveCollectionAuthorityStruct = new beet.BeetArgsStruct<{
  * @property [_writable_, **signer**] payer Payer
  * @property [] metadata Collection Metadata account
  * @property [] mint Mint of Collection Metadata
+ * @property [] sysvarInstructions Instructions sysvar account
  * @category Instructions
  * @category ApproveCollectionAuthority
  * @category generated
@@ -38,6 +39,7 @@ export type ApproveCollectionAuthorityInstructionAccounts = {
   mint: web3.PublicKey;
   systemProgram?: web3.PublicKey;
   rent?: web3.PublicKey;
+  sysvarInstructions: web3.PublicKey;
 };
 
 export const approveCollectionAuthorityInstructionDiscriminator = 23;
@@ -107,6 +109,11 @@ export function createApproveCollectionAuthorityInstruction(
       isSigner: false,
     });
   }
+  keys.push({
+    pubkey: accounts.sysvarInstructions,
+    isWritable: false,
+    isSigner: false,
+  });
 
   const ix = new web3.TransactionInstruction({
     programId,

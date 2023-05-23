@@ -27,6 +27,7 @@ export const SetAndVerifySizedCollectionItemStruct = new beet.BeetArgsStruct<{
  * @property [_writable_] collection Metadata Account of the Collection
  * @property [_writable_] collectionMasterEditionAccount MasterEdition2 Account of the Collection Token
  * @property [] collectionAuthorityRecord (optional) Collection Authority Record PDA
+ * @property [] sysvarInstructions Instructions sysvar account
  * @category Instructions
  * @category SetAndVerifySizedCollectionItem
  * @category generated
@@ -40,6 +41,8 @@ export type SetAndVerifySizedCollectionItemInstructionAccounts = {
   collection: web3.PublicKey;
   collectionMasterEditionAccount: web3.PublicKey;
   collectionAuthorityRecord?: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
+  sysvarInstructions: web3.PublicKey;
 };
 
 export const setAndVerifySizedCollectionItemInstructionDiscriminator = 32;
@@ -109,6 +112,16 @@ export function createSetAndVerifySizedCollectionItemInstruction(
       isSigner: false,
     });
   }
+  keys.push({
+    pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
+    isWritable: false,
+    isSigner: false,
+  });
+  keys.push({
+    pubkey: accounts.sysvarInstructions,
+    isWritable: false,
+    isSigner: false,
+  });
 
   const ix = new web3.TransactionInstruction({
     programId,
