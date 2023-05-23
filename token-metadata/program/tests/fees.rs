@@ -7,7 +7,8 @@ use utils::*;
 mod fees {
     use mpl_token_metadata::{
         instruction::collect_fees,
-        utils::{IxType, MetadataFlags, CREATE_FEE},
+        state::{CREATE_FEE, FEE_FLAG_SET, METADATA_FLAGS_INDEX},
+        utils::IxType,
     };
     use solana_program::{native_token::LAMPORTS_PER_SOL, pubkey::Pubkey};
     use solana_sdk::{
@@ -105,8 +106,7 @@ mod fees {
         for account in fee_accounts {
             let account = get_account(&mut context, &account).await;
 
-            let flags = MetadataFlags::from_bits(account.data[account.data.len() - 1]).unwrap();
-            assert!(!flags.contains(MetadataFlags::FEES));
+            assert_eq!(account.data[METADATA_FLAGS_INDEX], FEE_FLAG_SET);
         }
     }
 }

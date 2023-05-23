@@ -17,9 +17,9 @@ use mpl_token_metadata::{
     state::{
         AssetData, Collection, CollectionDetails, Creator, Metadata, PrintSupply,
         ProgrammableConfig, TokenDelegateRole, TokenMetadataAccount, TokenRecord, TokenStandard,
-        EDITION, EDITION_MARKER_BIT_SIZE, METADATA_FLAGS_INDEX, PREFIX,
+        CREATE_FEE, EDITION, EDITION_MARKER_BIT_SIZE, FEE_FLAG_SET, METADATA_FLAGS_INDEX, PREFIX,
     },
-    utils::{IxType, MetadataFlags, CREATE_FEE},
+    utils::IxType,
     ID,
 };
 use solana_program::{
@@ -1335,7 +1335,7 @@ impl DigitalAsset {
         let expected_lamports = rent_exempt + fee;
 
         assert_eq!(account.lamports, expected_lamports);
-        assert_eq!(account.data[fee_flag_index], MetadataFlags::FEES.bits());
+        assert_eq!(account.data[fee_flag_index], FEE_FLAG_SET);
 
         Ok(())
     }

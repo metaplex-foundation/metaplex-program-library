@@ -1,4 +1,3 @@
-use bitflags::bitflags;
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program::invoke, rent::Rent,
     sysvar::Sysvar,
@@ -7,26 +6,13 @@ use solana_program::{
 use crate::{
     error::MetadataError,
     state::{
+        fee::{CREATE_FEE, UPDATE_FEE},
         Key, Metadata, TokenMetadataAccount, MASTER_EDITION_FEE_FLAG_INDEX, METADATA_FLAGS_INDEX,
     },
 };
 
 #[cfg(feature = "serde-feature")]
 use serde::{Deserialize, Serialize};
-
-// base fee level, 0.001 SOL
-pub const BASE_FEE: u64 = 1_000_000;
-
-// create_metadata_accounts
-pub const CREATE_FEE: u64 = 10 * BASE_FEE;
-pub const UPDATE_FEE: u64 = 2 * BASE_FEE;
-
-bitflags! {
-    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-    pub struct MetadataFlags: u8 {
-        const FEES = 0b10000000;
-    }
-}
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
@@ -80,14 +66,7 @@ pub(crate) fn set_fee_flag(pda_account_info: &AccountInfo, ix_type: IxType) -> P
     };
 
     let mut data = pda_account_info.try_borrow_mut_data()?;
-    let flags_bits = data
-        .get(flags_index)
-        .ok_or(MetadataError::InvalidMetadataFlags)?;
-    let mut flags =
-        MetadataFlags::from_bits(*flags_bits).ok_or(MetadataError::InvalidMetadataFlags)?;
-
-    flags.set(MetadataFlags::FEES, true);
-    data[flags_index] = flags.bits();
+    data[flags_index] = 1;
 
     Ok(())
 }
@@ -100,14 +79,7 @@ pub(crate) fn clear_fee_flag(pda_account_info: &AccountInfo, key: Key) -> Progra
     };
 
     let mut data = pda_account_info.try_borrow_mut_data()?;
-    let flags_bits = data
-        .get(flags_index)
-        .ok_or(MetadataError::InvalidMetadataFlags)?;
-    let mut flags =
-        MetadataFlags::from_bits(*flags_bits).ok_or(MetadataError::InvalidMetadataFlags)?;
-
-    flags.set(MetadataFlags::FEES, false);
-    data[flags_index] = flags.bits();
+    data[flags_index] = 0;
 
     Ok(())
 }

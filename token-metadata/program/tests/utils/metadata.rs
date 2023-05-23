@@ -2,9 +2,10 @@ use mpl_token_metadata::{
     instruction,
     state::{
         Collection, CollectionDetails, Creator, DataV2, Metadata as TmMetadata,
-        TokenMetadataAccount, TokenStandard, Uses, METADATA_FLAGS_INDEX, PREFIX,
+        TokenMetadataAccount, TokenStandard, Uses, CREATE_FEE, FEE_FLAG_SET, METADATA_FLAGS_INDEX,
+        PREFIX,
     },
-    utils::{IxType, MetadataFlags, CREATE_FEE},
+    utils::IxType,
     ID,
 };
 use solana_program::borsh::try_from_slice_unchecked;
@@ -663,7 +664,7 @@ impl Metadata {
         let expected_lamports = rent_exempt + fee;
 
         assert_eq!(account.lamports, expected_lamports);
-        assert_eq!(account.data[fee_flag_index], MetadataFlags::FEES.bits());
+        assert_eq!(account.data[fee_flag_index], FEE_FLAG_SET);
 
         Ok(())
     }
