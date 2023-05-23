@@ -2,8 +2,8 @@ use mpl_token_metadata::{
     instruction,
     state::{
         Collection, CollectionDetails, Creator, DataV2, Metadata as TmMetadata,
-        TokenMetadataAccount, TokenStandard, Uses, CREATE_FEE, FEE_FLAG_SET, METADATA_FLAGS_INDEX,
-        PREFIX,
+        TokenMetadataAccount, TokenStandard, Uses, CREATE_FEE, FEE_FLAG_SET,
+        METADATA_FEE_FLAG_INDEX, PREFIX,
     },
     utils::IxType,
     ID,
@@ -652,7 +652,7 @@ impl Metadata {
         ix_type: IxType,
     ) -> Result<(), BanksClientError> {
         let (pubkey, fee, fee_flag_index) = match ix_type {
-            IxType::CreateMetadata => (self.pubkey, CREATE_FEE, METADATA_FLAGS_INDEX),
+            IxType::CreateMetadata => (self.pubkey, CREATE_FEE, METADATA_FEE_FLAG_INDEX),
             _ => panic!("Invalid ix type for assert_create_fees_charged"),
         };
 

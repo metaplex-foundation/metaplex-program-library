@@ -39,8 +39,8 @@ pub use crate::assertions::{
 use crate::{
     error::MetadataError,
     state::{
-        Edition, Key, MasterEditionV2, Metadata, TokenMetadataAccount, TokenStandard,
-        MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH,
+        Edition, Key, MasterEditionV2, Metadata, TokenMetadataAccount, TokenStandard, FEE_FLAG_SET,
+        MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH, METADATA_FEE_FLAG_INDEX,
     },
 };
 
@@ -201,21 +201,33 @@ pub fn close_program_account<'a>(
     // the actual rent lamport amount. This will need to be further modified if fees are added
     // to burn later.
 
-    let rent_lamports = match key {
-        Key::MetadataV1 => rent.minimum_balance(Metadata::size()),
-        _ => account_info.lamports(),
+    let (rent_lamports, has_fees) = match key {
+        Key::MetadataV1 => (
+            rent.minimum_balance(Metadata::size()),
+            account_info.data.borrow()[METADATA_FEE_FLAG_INDEX] == FEE_FLAG_SET,
+        ),
+        _ => (account_info.lamports(), false),
     };
 
-    // Remaining lamports will be the fee amount or the minimum rent exemption amount, whichever is greater.
-    let remaining_lamports = account_info
+    let mut remaining_lamports = account_info
         .lamports()
         .checked_sub(rent_lamports)
+        .ok_or(MetadataError::NumericalOverflowError)?;
+
+    // If the account contains fees, remaining lamports will be the fee amount or the minimum rent exemption amount, whichever is greater.
+    if has_fees {
+        remaining_lamports = remaining_lamports.max(rent.minimum_balance(0));
+    }
+
+    let redeem_lamports = account_info
+        .lamports()
+        .checked_sub(remaining_lamports)
         .ok_or(MetadataError::NumericalOverflowError)?;
 
     // Transfer lamports from the account to the destination account.
     let dest_starting_lamports = funds_dest_account_info.lamports();
     **funds_dest_account_info.lamports.borrow_mut() =
-        dest_starting_lamports.checked_add(rent_lamports).unwrap();
+        dest_starting_lamports.checked_add(redeem_lamports).unwrap();
     **account_info.lamports.borrow_mut() = remaining_lamports;
 
     // Realloc the account data size to 0 bytes. Only re-assign to the system program

@@ -17,7 +17,8 @@ use mpl_token_metadata::{
     state::{
         AssetData, Collection, CollectionDetails, Creator, Metadata, PrintSupply,
         ProgrammableConfig, TokenDelegateRole, TokenMetadataAccount, TokenRecord, TokenStandard,
-        CREATE_FEE, EDITION, EDITION_MARKER_BIT_SIZE, FEE_FLAG_SET, METADATA_FLAGS_INDEX, PREFIX,
+        CREATE_FEE, EDITION, EDITION_MARKER_BIT_SIZE, FEE_FLAG_SET, METADATA_FEE_FLAG_INDEX,
+        PREFIX,
     },
     utils::IxType,
     ID,
@@ -1323,7 +1324,7 @@ impl DigitalAsset {
         ix_type: IxType,
     ) -> Result<(), BanksClientError> {
         let (pubkey, fee, fee_flag_index) = match ix_type {
-            IxType::CreateMetadata => (self.metadata, CREATE_FEE, METADATA_FLAGS_INDEX),
+            IxType::CreateMetadata => (self.metadata, CREATE_FEE, METADATA_FEE_FLAG_INDEX),
             _ => panic!("Invalid ix type for assert_create_fees_charged"),
         };
 

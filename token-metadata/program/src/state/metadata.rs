@@ -41,7 +41,7 @@ pub const MAX_DATA_SIZE: usize = 4
 
 // The last byte of the account contains the fee flag, indicating
 // if the account has fees available for retrieval.
-pub const METADATA_FLAGS_INDEX: usize = MAX_METADATA_LEN - 1;
+pub const METADATA_FEE_FLAG_INDEX: usize = MAX_METADATA_LEN - 1;
 
 #[macro_export]
 macro_rules! metadata_seeds {

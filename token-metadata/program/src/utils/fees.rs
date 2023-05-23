@@ -7,7 +7,8 @@ use crate::{
     error::MetadataError,
     state::{
         fee::{CREATE_FEE, UPDATE_FEE},
-        Key, Metadata, TokenMetadataAccount, MASTER_EDITION_FEE_FLAG_INDEX, METADATA_FLAGS_INDEX,
+        Key, Metadata, TokenMetadataAccount, MASTER_EDITION_FEE_FLAG_INDEX,
+        METADATA_FEE_FLAG_INDEX,
     },
 };
 
@@ -62,7 +63,7 @@ pub(crate) fn levy(args: LevyArgs) -> ProgramResult {
 
 pub(crate) fn set_fee_flag(pda_account_info: &AccountInfo, ix_type: IxType) -> ProgramResult {
     let flags_index = match ix_type {
-        IxType::CreateMetadata | IxType::UpdateMetadata => METADATA_FLAGS_INDEX,
+        IxType::CreateMetadata | IxType::UpdateMetadata => METADATA_FEE_FLAG_INDEX,
     };
 
     let mut data = pda_account_info.try_borrow_mut_data()?;
@@ -73,7 +74,7 @@ pub(crate) fn set_fee_flag(pda_account_info: &AccountInfo, ix_type: IxType) -> P
 
 pub(crate) fn clear_fee_flag(pda_account_info: &AccountInfo, key: Key) -> ProgramResult {
     let flags_index = match key {
-        Key::Uninitialized | Key::MetadataV1 => METADATA_FLAGS_INDEX,
+        Key::Uninitialized | Key::MetadataV1 => METADATA_FEE_FLAG_INDEX,
         Key::MasterEditionV2 => MASTER_EDITION_FEE_FLAG_INDEX,
         _ => return Err(MetadataError::InvalidMetadataKey.into()),
     };
