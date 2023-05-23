@@ -10,8 +10,8 @@ use crate::{
     pda::find_token_record_account,
     state::{Metadata, TokenMetadataAccount, TokenStandard},
     utils::{
-        assert_derivation, assert_owned_by, create_token_record_account, freeze,
-        process_mint_new_edition_from_master_edition_via_token_logic,
+        assert_derivation, assert_initialized, assert_owned_by, create_token_record_account,
+        freeze, process_mint_new_edition_from_master_edition_via_token_logic,
         MintNewEditionFromMasterEditionViaTokenLogicArgs,
     },
 };
@@ -96,6 +96,8 @@ fn print_v1(_program_id: &Pubkey, ctx: Context<Print>, args: PrintArgs) -> Progr
         )?;
     } else {
         assert_owned_by(edition_token_account_info, &spl_token::id())?;
+        let _edition_token_account: spl_token::state::Account =
+            assert_initialized(edition_token_account_info)?;
     }
 
     if ata_program.key != &spl_associated_token_account::ID {
