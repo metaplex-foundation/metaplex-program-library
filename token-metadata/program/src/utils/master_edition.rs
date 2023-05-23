@@ -99,6 +99,11 @@ pub fn process_mint_new_edition_from_master_edition_via_token_logic<'a>(
         return Err(MetadataError::AlreadyInitialized.into());
     }
 
+    // Check that the new update authority is the same as the master edition.
+    if update_authority_info.key != &master_metadata.update_authority {
+        return Err(MetadataError::UpdateAuthorityIncorrect.into());
+    }
+
     // Check that the edition we're printing from actually is a master edition.
     // We're not passing in the master edition mint so we can't fetch the actual supply and decimals
     // but we can safely assume that the account was only created if those checks passed.
@@ -156,11 +161,6 @@ pub fn process_mint_new_edition_from_master_edition_via_token_logic<'a>(
             edition_marker.serialize(&mut *edition_marker_info.data.borrow_mut())?;
         }
         TokenStandard::ProgrammableNonFungible => {
-            // Check that the new update authority is the same as the master edition.
-            if update_authority_info.key != &master_metadata.update_authority {
-                return Err(MetadataError::UpdateAuthorityIncorrect.into());
-            }
-
             let bump = assert_derivation(
                 program_id,
                 edition_marker_info,
