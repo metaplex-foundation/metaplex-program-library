@@ -21,7 +21,8 @@ pub use mpl_utils::{
 pub use programmable_asset::*;
 use solana_program::{
     account_info::AccountInfo, borsh::try_from_slice_unchecked, entrypoint::ProgramResult,
-    program::invoke_signed, program_error::ProgramError, pubkey::Pubkey, system_program,
+    program::invoke_signed, program_error::ProgramError, pubkey::Pubkey, rent::Rent,
+    sysvar::Sysvar,
 };
 use spl_token::instruction::{set_authority, AuthorityType};
 
@@ -192,18 +193,38 @@ pub fn zero_account(s: &str, size: usize) -> String {
 pub fn close_program_account<'a>(
     account_info: &AccountInfo<'a>,
     funds_dest_account_info: &AccountInfo<'a>,
+    key: Key,
 ) -> ProgramResult {
+    let rent = Rent::get()?;
+
+    // Metadata and Edition accounts could have fees stored, so we only want to withdraw
+    // the actual rent lamport amount. This will need to be further modified if fees are added
+    // to burn later.
+
+    let rent_lamports = match key {
+        Key::MetadataV1 => rent.minimum_balance(Metadata::size()),
+        _ => account_info.lamports(),
+    };
+
+    // Remaining lamports will be the fee amount or the minimum rent exemption amount, whichever is greater.
+    let remaining_lamports = account_info
+        .lamports()
+        .checked_sub(rent_lamports)
+        .ok_or(MetadataError::NumericalOverflowError)?;
+
     // Transfer lamports from the account to the destination account.
     let dest_starting_lamports = funds_dest_account_info.lamports();
-    **funds_dest_account_info.lamports.borrow_mut() = dest_starting_lamports
-        .checked_add(account_info.lamports())
-        .unwrap();
-    **account_info.lamports.borrow_mut() = 0;
+    **funds_dest_account_info.lamports.borrow_mut() =
+        dest_starting_lamports.checked_add(rent_lamports).unwrap();
+    **account_info.lamports.borrow_mut() = remaining_lamports;
 
-    // Realloc the account data size to 0 bytes and teassign ownership of
-    // the account to the system program
+    // Realloc the account data size to 0 bytes. Only re-assign to the system program
+    // if it does not have fees on it.
     account_info.realloc(0, false)?;
-    account_info.assign(&system_program::ID);
+
+    if remaining_lamports == 0 {
+        account_info.assign(&solana_program::system_program::ID);
+    }
 
     Ok(())
 }

@@ -16,7 +16,7 @@ use crate::{
         },
     },
     error::MetadataError,
-    state::{Metadata, TokenMetadataAccount, UseAuthorityRecord, UseMethod},
+    state::{Key, Metadata, TokenMetadataAccount, UseAuthorityRecord, UseMethod},
     utils::close_program_account,
 };
 
@@ -83,5 +83,9 @@ pub fn process_revoke_use_authority(
     // Drop use_authority_record_info account data borrow.
     drop(data);
 
-    close_program_account(use_authority_record_info, owner_info)
+    close_program_account(
+        use_authority_record_info,
+        owner_info,
+        Key::UseAuthorityRecord,
+    )
 }

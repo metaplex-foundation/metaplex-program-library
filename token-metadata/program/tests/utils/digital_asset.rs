@@ -1263,9 +1263,19 @@ impl DigitalAsset {
             .get_account(self.edition.unwrap())
             .await?;
 
-        assert!(md_account.is_none());
+        // Token Metadata accounts may still be open because they are no longer being re-assigned
+        // to the system program immediately, but if they exist they should have a
+        // data length of 0.
+
+        if let Some(account) = md_account {
+            assert_eq!(account.data.len(), 0);
+        }
+
+        if let Some(account) = edition_account {
+            assert_eq!(account.data.len(), 0);
+        }
+
         assert!(token_account.is_none());
-        assert!(edition_account.is_none());
 
         Ok(())
     }
@@ -1276,13 +1286,15 @@ impl DigitalAsset {
     ) -> Result<(), BanksClientError> {
         self.non_fungigble_accounts_closed(context).await?;
 
-        // Token record is burned.
+        // Token record is burned. Account may still be open but data length should be 0.
         let token_record_account = context
             .banks_client
             .get_account(self.token_record.unwrap())
             .await?;
 
-        assert!(token_record_account.is_none());
+        if let Some(account) = token_record_account {
+            assert_eq!(account.data.len(), 0);
+        }
 
         Ok(())
     }
@@ -1299,8 +1311,9 @@ impl DigitalAsset {
             .get_account(token_record_pubkey)
             .await?;
 
-        assert!(token_record_account.is_none());
-
+        if let Some(account) = token_record_account {
+            assert_eq!(account.data.len(), 0);
+        }
         Ok(())
     }
 

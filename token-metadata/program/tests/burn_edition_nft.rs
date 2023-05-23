@@ -82,7 +82,9 @@ mod burn_edition_nft {
             .get_account(print_edition.pubkey)
             .await
             .unwrap();
-        assert!(edition_marker_account.is_none());
+        if let Some(account) = edition_marker_account {
+            assert_eq!(account.data.len(), 0);
+        }
 
         // Master Edition on original NFT still exists.
         let master_edition_account = context

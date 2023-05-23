@@ -83,9 +83,19 @@ mod burn_nft {
             .await
             .unwrap();
 
-        assert!(md_account.is_none());
+        // Token Metadata accounts may still be open because they are no longer being re-assigned
+        // to the system program immediately, but if they exist they should have a
+        // data length of 0.
+
+        if let Some(account) = md_account {
+            assert_eq!(account.data.len(), 0);
+        }
+
+        if let Some(account) = master_edition_account {
+            assert_eq!(account.data.len(), 0);
+        }
+
         assert!(token_account.is_none());
-        assert!(master_edition_account.is_none());
     }
 
     #[tokio::test]
