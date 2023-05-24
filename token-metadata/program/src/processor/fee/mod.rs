@@ -37,7 +37,9 @@ fn collect_fee_from_account(account_info: &AccountInfo, dest_info: &AccountInfo)
     // Scope refcell borrow
     let account_key = {
         let data = account_info.data.borrow();
-        let key_byte = data.first().ok_or(MetadataError::InvalidFeeAccount)?;
+
+        // Burned accounts with fees will have no data, so should be assigned the `Uninitialized` key.
+        let key_byte = data.first().unwrap_or(&0);
 
         FromPrimitive::from_u8(*key_byte).ok_or(MetadataError::InvalidFeeAccount)?
     };

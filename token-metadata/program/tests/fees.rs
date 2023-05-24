@@ -6,8 +6,8 @@ use utils::*;
 
 mod fees {
     use mpl_token_metadata::{
-        instruction::collect_fees,
-        state::{CREATE_FEE, FEE_FLAG_SET, METADATA_FEE_FLAG_INDEX},
+        instruction::{collect_fees, BurnArgs},
+        state::{CREATE_FEE, FEE_FLAG_CLEARED, METADATA_FEE_FLAG_INDEX},
         utils::IxType,
     };
     use solana_program::{native_token::LAMPORTS_PER_SOL, pubkey::Pubkey};
@@ -106,7 +106,62 @@ mod fees {
         for account in fee_accounts {
             let account = get_account(&mut context, &account).await;
 
-            assert_eq!(account.data[METADATA_FEE_FLAG_INDEX], FEE_FLAG_SET);
+            assert_eq!(account.data[METADATA_FEE_FLAG_INDEX], FEE_FLAG_CLEARED);
         }
+    }
+
+    #[tokio::test]
+    // Used for local QA testing and requires a keypair so excluded from CI.
+    #[ignore]
+    async fn collect_fees_burned_account() {
+        // Create NFTs and then collect the fees from the metadata accounts.
+        let mut context = program_test().start_with_context().await;
+
+        let nft_authority = context.payer.dirty_clone();
+
+        let fee_authority_funding = LAMPORTS_PER_SOL;
+
+        let fee_authority =
+            read_keypair_file("Levytx9LLPzAtDJJD7q813Zsm8zg9e1pb53mGxTKpD7.json").unwrap();
+        fee_authority
+            .airdrop(&mut context, fee_authority_funding)
+            .await
+            .unwrap();
+
+        let recipient = Keypair::new();
+
+        let mut nft = DigitalAsset::new();
+        nft.create_and_mint(
+            &mut context,
+            mpl_token_metadata::state::TokenStandard::NonFungible,
+            None,
+            None,
+            1,
+        )
+        .await
+        .unwrap();
+
+        let args = BurnArgs::V1 { amount: 1 };
+
+        nft.burn(&mut context, nft_authority, args, None, None)
+            .await
+            .unwrap();
+
+        let ix = collect_fees(recipient.pubkey(), vec![nft.metadata]);
+        let tx = Transaction::new_signed_with_payer(
+            &[ix],
+            Some(&fee_authority.pubkey()),
+            &[&fee_authority],
+            context.last_blockhash,
+        );
+        context.banks_client.process_transaction(tx).await.unwrap();
+
+        let expected_balance = CREATE_FEE;
+
+        let recipient_balance = get_account(&mut context, &recipient.pubkey())
+            .await
+            .lamports;
+
+        assert_eq!(recipient_balance, expected_balance);
     }
 }

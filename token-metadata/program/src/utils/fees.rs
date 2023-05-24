@@ -87,7 +87,10 @@ pub(crate) fn clear_fee_flag(pda_account_info: &AccountInfo, key: Key) -> Progra
     };
 
     let mut data = pda_account_info.try_borrow_mut_data()?;
-    data[flags_index] = 0;
+    // Clear the flag if the index exists.
+    if let Some(flag) = data.get_mut(flags_index) {
+        *flag = 0;
+    }
 
     Ok(())
 }
