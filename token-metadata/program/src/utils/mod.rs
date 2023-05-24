@@ -226,8 +226,9 @@ pub fn close_program_account<'a>(
 
     // Transfer lamports from the account to the destination account.
     let dest_starting_lamports = funds_dest_account_info.lamports();
-    **funds_dest_account_info.lamports.borrow_mut() =
-        dest_starting_lamports.checked_add(redeem_lamports).unwrap();
+    **funds_dest_account_info.lamports.borrow_mut() = dest_starting_lamports
+        .checked_add(redeem_lamports)
+        .ok_or(MetadataError::NumericalOverflowError)?;
     **account_info.lamports.borrow_mut() = remaining_lamports;
 
     // Realloc the account data size to 0 bytes. Only re-assign to the system program
