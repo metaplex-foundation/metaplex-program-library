@@ -4,7 +4,7 @@ use solana_program::{account_info::next_account_info, rent::Rent, system_program
 
 use crate::{
     state::{fee::FEE_AUTHORITY, MAX_MASTER_EDITION_LEN, MAX_METADATA_LEN},
-    utils::clear_fee_flag,
+    utils::fee::clear_fee_flag,
 };
 
 use super::*;

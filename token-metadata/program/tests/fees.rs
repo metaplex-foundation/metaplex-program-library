@@ -8,7 +8,6 @@ mod fees {
     use mpl_token_metadata::{
         instruction::{collect_fees, BurnArgs},
         state::{CREATE_FEE, FEE_FLAG_CLEARED, METADATA_FEE_FLAG_INDEX},
-        utils::IxType,
     };
     use solana_program::{native_token::LAMPORTS_PER_SOL, pubkey::Pubkey};
     use solana_sdk::{
@@ -26,9 +25,7 @@ mod fees {
         let md = Metadata::new();
         md.create_v3_default(&mut context).await.unwrap();
 
-        md.assert_create_fees_charged(&mut context, IxType::CreateMetadata)
-            .await
-            .unwrap();
+        md.assert_create_fees_charged(&mut context).await.unwrap();
     }
 
     #[tokio::test]
@@ -44,9 +41,7 @@ mod fees {
         .await
         .unwrap();
 
-        nft.assert_create_fees_charged(&mut context, IxType::CreateMetadata)
-            .await
-            .unwrap();
+        nft.assert_create_fees_charged(&mut context).await.unwrap();
     }
 
     #[tokio::test]

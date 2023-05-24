@@ -1,13 +1,12 @@
 pub(crate) mod collection;
 pub(crate) mod compression;
-pub(crate) mod fees;
+pub(crate) mod fee;
 pub(crate) mod master_edition;
 pub(crate) mod metadata;
 pub(crate) mod programmable_asset;
 
 pub use collection::*;
 pub use compression::*;
-pub use fees::*;
 pub use master_edition::*;
 pub use metadata::*;
 pub use mpl_utils::{

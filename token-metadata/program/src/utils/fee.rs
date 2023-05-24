@@ -6,46 +6,23 @@ use solana_program::{
 use crate::{
     error::MetadataError,
     state::{
-        fee::{CREATE_FEE, UPDATE_FEE},
-        Key, Metadata, TokenMetadataAccount, MASTER_EDITION_FEE_FLAG_INDEX,
+        fee::CREATE_FEE, Key, Metadata, TokenMetadataAccount, MASTER_EDITION_FEE_FLAG_INDEX,
         METADATA_FEE_FLAG_INDEX,
     },
 };
 
-#[cfg(feature = "serde-feature")]
-use serde::{Deserialize, Serialize};
-
-#[repr(C)]
-#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(PartialEq, Eq, Debug, Clone, Copy)]
-pub enum IxType {
-    CreateMetadata,
-    UpdateMetadata,
-}
-
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
 pub(crate) struct LevyArgs<'a> {
-    pub ix_type: IxType,
     pub payer_account_info: &'a AccountInfo<'a>,
     pub token_metadata_pda_info: &'a AccountInfo<'a>,
-    pub include_rent: bool,
 }
 
 pub(crate) fn levy(args: LevyArgs) -> ProgramResult {
     // Fund metadata account with rent + Metaplex fee.
     let rent = Rent::get()?;
 
-    let fee = match args.ix_type {
-        IxType::CreateMetadata => {
-            if args.include_rent {
-                CREATE_FEE + rent.minimum_balance(Metadata::size())
-            } else {
-                CREATE_FEE
-            }
-        }
-        IxType::UpdateMetadata => UPDATE_FEE,
-    };
+    let fee = CREATE_FEE + rent.minimum_balance(Metadata::size());
 
     invoke(
         &solana_program::system_instruction::transfer(
@@ -59,22 +36,12 @@ pub(crate) fn levy(args: LevyArgs) -> ProgramResult {
         ],
     )?;
 
-    // Create ixes must set the fee flag after the metadata account is populated, but
-    // levy() must be called before to fund the account with rent + fee.
-    if args.ix_type != IxType::CreateMetadata {
-        set_fee_flag(args.token_metadata_pda_info, args.ix_type)?;
-    }
-
     Ok(())
 }
 
-pub(crate) fn set_fee_flag(pda_account_info: &AccountInfo, ix_type: IxType) -> ProgramResult {
-    let flags_index = match ix_type {
-        IxType::CreateMetadata | IxType::UpdateMetadata => METADATA_FEE_FLAG_INDEX,
-    };
-
+pub(crate) fn set_fee_flag(pda_account_info: &AccountInfo) -> ProgramResult {
     let mut data = pda_account_info.try_borrow_mut_data()?;
-    data[flags_index] = 1;
+    data[METADATA_FEE_FLAG_INDEX] = 1;
 
     Ok(())
 }

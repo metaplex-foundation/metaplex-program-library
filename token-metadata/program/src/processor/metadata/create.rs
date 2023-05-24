@@ -13,8 +13,9 @@ use crate::{
         TOKEN_STANDARD_INDEX,
     },
     utils::{
-        create_master_edition, levy, process_create_metadata_accounts_logic, set_fee_flag,
-        CreateMetadataAccountsLogicArgs, IxType, LevyArgs,
+        create_master_edition,
+        fee::{levy, set_fee_flag, LevyArgs},
+        process_create_metadata_accounts_logic, CreateMetadataAccountsLogicArgs,
     },
 };
 
@@ -48,20 +49,15 @@ fn create_v1(program_id: &Pubkey, ctx: Context<Create>, args: CreateArgs) -> Pro
         return Err(MetadataError::InvalidTokenStandard.into());
     }
 
-    let ix_type = IxType::CreateMetadata;
-    let mut levy_args = LevyArgs {
-        ix_type,
+    // Levy fees first, to fund the metadata account with rent + fee amount.
+    levy(LevyArgs {
         payer_account_info: ctx.accounts.payer_info,
         token_metadata_pda_info: ctx.accounts.metadata_info,
-        include_rent: false,
-    };
+    })?;
 
     // if the account does not exist, we will allocate a new mint
 
     if ctx.accounts.mint_info.data_is_empty() {
-        // New account so need fee collection to include rent amount.
-        levy_args.include_rent = true;
-
         // mint account must be a signer in the transaction
         if !ctx.accounts.mint_info.is_signer {
             return Err(MetadataError::MintIsNotSigner.into());
@@ -134,8 +130,6 @@ fn create_v1(program_id: &Pubkey, ctx: Context<Create>, args: CreateArgs) -> Pro
             return Err(MetadataError::MintSupplyMustBeZero.into());
         }
     }
-
-    levy(levy_args)?;
 
     // creates the metadata account
 
@@ -218,5 +212,6 @@ fn create_v1(program_id: &Pubkey, ctx: Context<Create>, args: CreateArgs) -> Pro
     // saves the metadata state
     metadata.save(&mut ctx.accounts.metadata_info.try_borrow_mut_data()?)?;
 
-    set_fee_flag(ctx.accounts.metadata_info, ix_type)
+    // Set fee flag after metadata account is created.
+    set_fee_flag(ctx.accounts.metadata_info)
 }
