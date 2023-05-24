@@ -22,7 +22,7 @@ export const FreezeDelegatedAccountStruct = new beet.BeetArgsStruct<{
  *
  * @property [_writable_, **signer**] delegate Delegate
  * @property [_writable_] tokenAccount Token account to freeze
- * @property [] edition Edition
+ * @property [_writable_] edition Edition
  * @property [] mint Token mint
  * @property [] sysvarInstructions Instructions sysvar account
  * @category Instructions
@@ -69,7 +69,7 @@ export function createFreezeDelegatedAccountInstruction(
     },
     {
       pubkey: accounts.edition,
-      isWritable: false,
+      isWritable: true,
       isSigner: false,
     },
     {

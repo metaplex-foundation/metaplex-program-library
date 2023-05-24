@@ -48,9 +48,20 @@ fn create_v1(program_id: &Pubkey, ctx: Context<Create>, args: CreateArgs) -> Pro
         return Err(MetadataError::InvalidTokenStandard.into());
     }
 
+    let ix_type = IxType::CreateMetadata;
+    let mut levy_args = LevyArgs {
+        ix_type,
+        payer_account_info: ctx.accounts.payer_info,
+        token_metadata_pda_info: ctx.accounts.metadata_info,
+        include_rent: false,
+    };
+
     // if the account does not exist, we will allocate a new mint
 
     if ctx.accounts.mint_info.data_is_empty() {
+        // New account so need fee collection to include rent amount.
+        levy_args.include_rent = true;
+
         // mint account must be a signer in the transaction
         if !ctx.accounts.mint_info.is_signer {
             return Err(MetadataError::MintIsNotSigner.into());
@@ -124,12 +135,7 @@ fn create_v1(program_id: &Pubkey, ctx: Context<Create>, args: CreateArgs) -> Pro
         }
     }
 
-    let ix_type = IxType::CreateMetadata;
-    levy(LevyArgs {
-        ix_type,
-        payer_account_info: ctx.accounts.payer_info,
-        token_metadata_pda_info: ctx.accounts.metadata_info,
-    })?;
+    levy(levy_args)?;
 
     // creates the metadata account
 

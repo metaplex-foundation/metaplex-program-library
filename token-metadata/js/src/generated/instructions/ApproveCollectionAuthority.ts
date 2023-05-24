@@ -23,7 +23,7 @@ export const ApproveCollectionAuthorityStruct = new beet.BeetArgsStruct<{
  * @property [] newCollectionAuthority A Collection Authority
  * @property [_writable_, **signer**] updateAuthority Update Authority of Collection NFT
  * @property [_writable_, **signer**] payer Payer
- * @property [] metadata Collection Metadata account
+ * @property [_writable_] metadata Collection Metadata account
  * @property [] mint Mint of Collection Metadata
  * @property [] sysvarInstructions Instructions sysvar account
  * @category Instructions
@@ -87,7 +87,7 @@ export function createApproveCollectionAuthorityInstruction(
     },
     {
       pubkey: accounts.metadata,
-      isWritable: false,
+      isWritable: true,
       isSigner: false,
     },
     {

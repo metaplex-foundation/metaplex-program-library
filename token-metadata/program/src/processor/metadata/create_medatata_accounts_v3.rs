@@ -33,6 +33,7 @@ pub fn process_create_metadata_accounts_v3<'a>(
         ix_type,
         payer_account_info,
         token_metadata_pda_info: metadata_account_info,
+        include_rent: true,
     })?;
 
     process_create_metadata_accounts_logic(

@@ -29,6 +29,7 @@ pub(crate) struct LevyArgs<'a> {
     pub ix_type: IxType,
     pub payer_account_info: &'a AccountInfo<'a>,
     pub token_metadata_pda_info: &'a AccountInfo<'a>,
+    pub include_rent: bool,
 }
 
 pub(crate) fn levy(args: LevyArgs) -> ProgramResult {
@@ -36,7 +37,13 @@ pub(crate) fn levy(args: LevyArgs) -> ProgramResult {
     let rent = Rent::get()?;
 
     let fee = match args.ix_type {
-        IxType::CreateMetadata => CREATE_FEE + rent.minimum_balance(Metadata::size()),
+        IxType::CreateMetadata => {
+            if args.include_rent {
+                CREATE_FEE + rent.minimum_balance(Metadata::size())
+            } else {
+                CREATE_FEE
+            }
+        }
         IxType::UpdateMetadata => UPDATE_FEE,
     };
 
