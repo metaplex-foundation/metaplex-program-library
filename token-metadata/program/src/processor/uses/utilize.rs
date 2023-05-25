@@ -46,10 +46,10 @@ pub fn process_utilize(
         .is_some()
     {
         // rent was passed in
-        accounts.len() == 12
+        accounts.len() == 11
     } else {
         // necessary accounts is one less if rent isn't passed in.
-        accounts.len() == 11
+        accounts.len() == 10
     };
 
     let metadata: Metadata = Metadata::from_account_info(metadata_info)?;

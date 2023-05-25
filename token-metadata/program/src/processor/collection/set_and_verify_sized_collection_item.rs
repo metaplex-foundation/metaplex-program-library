@@ -3,7 +3,6 @@ use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
     pubkey::Pubkey,
-    system_program,
 };
 
 use crate::{
@@ -20,7 +19,7 @@ pub fn set_and_verify_sized_collection_item(
     program_id: &Pubkey,
     accounts: &[AccountInfo],
 ) -> ProgramResult {
-    let account_info_iter = &mut accounts.iter().peekable();
+    let account_info_iter = &mut accounts.iter();
 
     let metadata_info = next_account_info(account_info_iter)?;
     let collection_authority_info = next_account_info(account_info_iter)?;
@@ -54,8 +53,7 @@ pub fn set_and_verify_sized_collection_item(
         return Err(MetadataError::UpdateAuthorityIncorrect.into());
     }
 
-    let delegated_collection_authority_opt =
-        account_info_iter.next_if(|info| info.key != &system_program::ID);
+    let delegated_collection_authority_opt = account_info_iter.next();
 
     assert_has_collection_authority(
         collection_authority_info,
@@ -78,10 +76,5 @@ pub fn set_and_verify_sized_collection_item(
     // Update the collection size if this is a valid parent collection NFT.
     increment_collection_size(&mut collection_metadata, collection_info)?;
 
-    clean_write_metadata(&mut metadata, metadata_info)?;
-
-    // System Program and Sysvar Instruction accounts will be read here after the
-    // optional account is read.
-
-    Ok(())
+    clean_write_metadata(&mut metadata, metadata_info)
 }

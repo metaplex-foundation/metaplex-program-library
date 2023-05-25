@@ -2,7 +2,7 @@ use borsh::{BorshDeserialize, BorshSerialize};
 use solana_program::{
     instruction::{AccountMeta, Instruction},
     pubkey::Pubkey,
-    system_program, sysvar,
+    system_program,
 };
 #[cfg(feature = "serde-feature")]
 use {
@@ -483,7 +483,6 @@ pub fn create_metadata_accounts_v3(
             AccountMeta::new(payer, true),
             AccountMeta::new_readonly(update_authority, update_authority_is_signer),
             AccountMeta::new_readonly(system_program::ID, false),
-            AccountMeta::new_readonly(sysvar::instructions::ID, false),
         ],
         data: MetadataInstruction::CreateMetadataAccountV3(CreateMetadataAccountArgsV3 {
             data: DataV2 {
@@ -507,11 +506,7 @@ pub fn create_metadata_accounts_v3(
 pub fn puff_metadata_account(program_id: Pubkey, metadata_account: Pubkey) -> Instruction {
     Instruction {
         program_id,
-        accounts: vec![
-            AccountMeta::new(metadata_account, false),
-            AccountMeta::new_readonly(system_program::ID, false),
-            AccountMeta::new_readonly(sysvar::instructions::ID, false),
-        ],
+        accounts: vec![AccountMeta::new(metadata_account, false)],
         data: MetadataInstruction::PuffMetadata.try_to_vec().unwrap(),
     }
 }
@@ -528,8 +523,6 @@ pub fn remove_creator_verification(
         accounts: vec![
             AccountMeta::new(metadata, false),
             AccountMeta::new_readonly(creator, true),
-            AccountMeta::new_readonly(system_program::ID, false),
-            AccountMeta::new_readonly(sysvar::instructions::ID, false),
         ],
         data: MetadataInstruction::RemoveCreatorVerification
             .try_to_vec()
@@ -555,9 +548,6 @@ pub fn set_token_standard(
         accounts.push(AccountMeta::new_readonly(edition_account, false));
     }
 
-    accounts.push(AccountMeta::new_readonly(system_program::ID, false));
-    accounts.push(AccountMeta::new_readonly(sysvar::instructions::ID, false));
-
     Instruction {
         program_id,
         accounts,
@@ -573,8 +563,6 @@ pub fn sign_metadata(program_id: Pubkey, metadata: Pubkey, creator: Pubkey) -> I
         accounts: vec![
             AccountMeta::new(metadata, false),
             AccountMeta::new_readonly(creator, true),
-            AccountMeta::new_readonly(system_program::ID, false),
-            AccountMeta::new_readonly(sysvar::instructions::ID, false),
         ],
         data: MetadataInstruction::SignMetadata.try_to_vec().unwrap(),
     }
@@ -595,8 +583,6 @@ pub fn update_metadata_accounts_v2(
         accounts: vec![
             AccountMeta::new(metadata_account, false),
             AccountMeta::new_readonly(update_authority, true),
-            AccountMeta::new_readonly(system_program::ID, false),
-            AccountMeta::new_readonly(sysvar::instructions::ID, false),
         ],
         data: MetadataInstruction::UpdateMetadataAccountV2(UpdateMetadataAccountArgsV2 {
             data,
@@ -623,8 +609,6 @@ pub fn update_primary_sale_happened_via_token(
             AccountMeta::new(metadata, false),
             AccountMeta::new_readonly(owner, true),
             AccountMeta::new_readonly(token, false),
-            AccountMeta::new_readonly(system_program::ID, false),
-            AccountMeta::new_readonly(sysvar::instructions::ID, false),
         ],
         data: MetadataInstruction::UpdatePrimarySaleHappenedViaToken
             .try_to_vec()

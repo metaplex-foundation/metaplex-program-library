@@ -1,10 +1,8 @@
-use borsh::BorshSerialize;
 use mpl_utils::assert_signer;
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
     pubkey::Pubkey,
-    system_program,
 };
 
 use crate::{
@@ -14,10 +12,11 @@ use crate::{
     },
     error::MetadataError,
     state::{Metadata, TokenMetadataAccount},
+    utils::clean_write_metadata,
 };
 
 pub fn verify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
-    let account_info_iter = &mut accounts.iter().peekable();
+    let account_info_iter = &mut accounts.iter();
 
     let metadata_info = next_account_info(account_info_iter)?;
     let collection_authority_info = next_account_info(account_info_iter)?;
@@ -44,8 +43,7 @@ pub fn verify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progr
         edition_account_info,
     )?;
 
-    let delegated_collection_authority_opt =
-        account_info_iter.next_if(|info| info.key != &system_program::ID);
+    let delegated_collection_authority_opt = account_info_iter.next();
 
     assert_has_collection_authority(
         collection_authority_info,
@@ -62,11 +60,8 @@ pub fn verify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progr
     // If the NFT has collection data, we set it to be verified
     if let Some(collection) = &mut metadata.collection {
         collection.verified = true;
-        metadata.serialize(&mut *metadata_info.try_borrow_mut_data()?)?;
+        clean_write_metadata(&mut metadata, metadata_info)?;
     }
-
-    // System Program and Sysvar Instruction accounts will be read here after the
-    // optional account is read.
 
     Ok(())
 }

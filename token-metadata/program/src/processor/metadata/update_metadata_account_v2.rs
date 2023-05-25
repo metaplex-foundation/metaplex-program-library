@@ -90,6 +90,5 @@ pub fn process_update_metadata_accounts_v2(
     }
 
     puff_out_data_fields(&mut metadata);
-    clean_write_metadata(&mut metadata, metadata_account_info)?;
-    Ok(())
+    clean_write_metadata(&mut metadata, metadata_account_info)
 }

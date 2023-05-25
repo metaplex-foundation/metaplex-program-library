@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use solana_program::{
     instruction::{AccountMeta, Instruction},
     pubkey::Pubkey,
-    system_program, sysvar,
+    system_program,
 };
 
 use crate::instruction::MetadataInstruction;
@@ -40,10 +40,9 @@ pub fn approve_collection_authority(
             AccountMeta::new_readonly(new_collection_authority, false),
             AccountMeta::new(update_authority, true),
             AccountMeta::new(payer, true),
-            AccountMeta::new(metadata, false),
+            AccountMeta::new_readonly(metadata, false),
             AccountMeta::new_readonly(mint, false),
             AccountMeta::new_readonly(system_program::ID, false),
-            AccountMeta::new_readonly(sysvar::instructions::ID, false),
         ],
         data: MetadataInstruction::ApproveCollectionAuthority
             .try_to_vec()
@@ -77,10 +76,9 @@ pub fn revoke_collection_authority(
             AccountMeta::new(collection_authority_record, false),
             AccountMeta::new_readonly(delegate_authority, false),
             AccountMeta::new(revoke_authority, true),
-            AccountMeta::new(metadata, false),
+            AccountMeta::new_readonly(metadata, false),
             AccountMeta::new_readonly(mint, false),
             AccountMeta::new_readonly(system_program::ID, false),
-            AccountMeta::new_readonly(sysvar::instructions::ID, false),
         ],
         data: MetadataInstruction::RevokeCollectionAuthority
             .try_to_vec()
@@ -131,9 +129,6 @@ pub fn set_and_verify_collection(
             false,
         ));
     }
-
-    accounts.push(AccountMeta::new_readonly(system_program::ID, false));
-    accounts.push(AccountMeta::new_readonly(sysvar::instructions::ID, false));
 
     Instruction {
         program_id,
@@ -186,9 +181,6 @@ pub fn set_and_verify_sized_collection_item(
         ));
     }
 
-    accounts.push(AccountMeta::new_readonly(system_program::ID, false));
-    accounts.push(AccountMeta::new_readonly(sysvar::instructions::ID, false));
-
     Instruction {
         program_id,
         accounts,
@@ -222,9 +214,6 @@ pub fn set_collection_size(
     if let Some(record) = collection_authority_record {
         accounts.push(AccountMeta::new_readonly(record, false));
     }
-
-    accounts.push(AccountMeta::new_readonly(system_program::ID, false));
-    accounts.push(AccountMeta::new_readonly(sysvar::instructions::ID, false));
 
     Instruction {
         program_id,
@@ -271,9 +260,6 @@ pub fn unverify_collection(
             false,
         ));
     }
-
-    accounts.push(AccountMeta::new_readonly(system_program::ID, false));
-    accounts.push(AccountMeta::new_readonly(sysvar::instructions::ID, false));
 
     Instruction {
         program_id,
@@ -323,9 +309,6 @@ pub fn unverify_sized_collection_item(
         ));
     }
 
-    accounts.push(AccountMeta::new_readonly(system_program::ID, false));
-    accounts.push(AccountMeta::new_readonly(sysvar::instructions::ID, false));
-
     Instruction {
         program_id,
         accounts,
@@ -374,9 +357,6 @@ pub fn verify_collection(
         ));
     }
 
-    accounts.push(AccountMeta::new_readonly(system_program::ID, false));
-    accounts.push(AccountMeta::new_readonly(sysvar::instructions::ID, false));
-
     Instruction {
         program_id,
         accounts,
@@ -419,9 +399,6 @@ pub fn verify_sized_collection_item(
     if let Some(record) = collection_authority_record {
         accounts.push(AccountMeta::new_readonly(record, false));
     }
-
-    accounts.push(AccountMeta::new_readonly(system_program::ID, false));
-    accounts.push(AccountMeta::new_readonly(sysvar::instructions::ID, false));
 
     Instruction {
         program_id,

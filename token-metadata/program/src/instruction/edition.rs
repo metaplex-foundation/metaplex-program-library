@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use solana_program::{
     instruction::{AccountMeta, Instruction},
     pubkey::Pubkey,
-    system_program, sysvar,
+    system_program,
 };
 
 use crate::{
@@ -26,8 +26,6 @@ pub fn convert_master_edition_v1_to_v2(
             AccountMeta::new(master_edition, false),
             AccountMeta::new(one_time_auth, false),
             AccountMeta::new(printing_mint, false),
-            AccountMeta::new_readonly(system_program::ID, false),
-            AccountMeta::new_readonly(sysvar::instructions::ID, false),
         ],
         data: MetadataInstruction::ConvertMasterEditionV1ToV2
             .try_to_vec()
@@ -64,7 +62,6 @@ pub fn create_master_edition_v3(
         AccountMeta::new(metadata, false),
         AccountMeta::new_readonly(spl_token::ID, false),
         AccountMeta::new_readonly(system_program::ID, false),
-        AccountMeta::new_readonly(sysvar::instructions::ID, false),
     ];
 
     Instruction {
@@ -127,7 +124,6 @@ pub fn mint_new_edition_from_master_edition_via_token(
         AccountMeta::new_readonly(metadata, false),
         AccountMeta::new_readonly(spl_token::ID, false),
         AccountMeta::new_readonly(system_program::ID, false),
-        AccountMeta::new_readonly(sysvar::instructions::ID, false),
     ];
 
     Instruction {

@@ -2,7 +2,6 @@ use borsh::BorshSerialize;
 use solana_program::{
     instruction::{AccountMeta, Instruction},
     pubkey::Pubkey,
-    system_program, sysvar,
 };
 
 use crate::instruction::{MetadataInstruction, SetCollectionSizeArgs};
@@ -21,8 +20,6 @@ pub fn bubblegum_set_collection_size(
         AccountMeta::new_readonly(update_authority, true),
         AccountMeta::new_readonly(mint, false),
         AccountMeta::new_readonly(bubblegum_signer, true),
-        AccountMeta::new_readonly(system_program::ID, false),
-        AccountMeta::new_readonly(sysvar::instructions::ID, false),
     ];
 
     if let Some(record) = collection_authority_record {

@@ -3,7 +3,6 @@ use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
     pubkey::Pubkey,
-    system_program,
 };
 
 use crate::{
@@ -17,7 +16,7 @@ use crate::{
 };
 
 pub fn unverify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
-    let account_info_iter = &mut accounts.iter().peekable();
+    let account_info_iter = &mut accounts.iter();
 
     let metadata_info = next_account_info(account_info_iter)?;
     let collection_authority_info = next_account_info(account_info_iter)?;
@@ -86,8 +85,7 @@ pub fn unverify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) -> Pro
             return Err(MetadataError::SizedCollection.into());
         }
 
-        let delegated_collection_authority_opt =
-            account_info_iter.next_if(|info| info.key != &system_program::ID);
+        let delegated_collection_authority_opt = account_info_iter.next();
 
         assert_has_collection_authority(
             collection_authority_info,
@@ -99,10 +97,5 @@ pub fn unverify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) -> Pro
 
     // Unverify and update the metadata
     collection.verified = false;
-    clean_write_metadata(&mut metadata, metadata_info)?;
-
-    // System Program and Sysvar Instruction accounts will be read here after the
-    // optional account is read.
-
-    Ok(())
+    clean_write_metadata(&mut metadata, metadata_info)
 }

@@ -3,7 +3,6 @@ use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
     pubkey::Pubkey,
-    system_program,
 };
 
 use crate::{
@@ -20,7 +19,7 @@ pub fn verify_sized_collection_item(
     program_id: &Pubkey,
     accounts: &[AccountInfo],
 ) -> ProgramResult {
-    let account_info_iter = &mut accounts.iter().peekable();
+    let account_info_iter = &mut accounts.iter();
 
     let metadata_info = next_account_info(account_info_iter)?;
     let collection_authority_info = next_account_info(account_info_iter)?;
@@ -54,8 +53,7 @@ pub fn verify_sized_collection_item(
         edition_account_info,
     )?;
 
-    let delegated_collection_authority_opt =
-        account_info_iter.next_if(|info| info.key != &system_program::ID);
+    let delegated_collection_authority_opt = account_info_iter.next();
 
     assert_has_collection_authority(
         collection_authority_info,
@@ -74,9 +72,6 @@ pub fn verify_sized_collection_item(
     } else {
         return Err(MetadataError::CollectionNotFound.into());
     }
-
-    // System Program and Sysvar Instruction accounts will be read here after the
-    // optional account is read.
 
     Ok(())
 }

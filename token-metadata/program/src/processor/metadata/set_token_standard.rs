@@ -2,7 +2,6 @@ use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
     pubkey::Pubkey,
-    system_program,
 };
 
 use crate::{
@@ -15,7 +14,7 @@ use crate::{
 };
 
 pub fn process_set_token_standard(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
-    let account_info_iter = &mut accounts.iter().peekable();
+    let account_info_iter = &mut accounts.iter();
 
     let metadata_account_info = next_account_info(account_info_iter)?;
     let update_authority_account_info = next_account_info(account_info_iter)?;
@@ -33,7 +32,7 @@ pub fn process_set_token_standard(program_id: &Pubkey, accounts: &[AccountInfo])
     // Update authority is a signer and matches update authority on metadata.
     assert_update_authority_is_correct(&metadata, update_authority_account_info)?;
 
-    let edition_info_opt = account_info_iter.next_if(|info| info.key != &system_program::ID);
+    let edition_info_opt = account_info_iter.next();
 
     // Edition account provided.
     let token_standard = if let Some(edition_info) = edition_info_opt {
@@ -53,10 +52,5 @@ pub fn process_set_token_standard(program_id: &Pubkey, accounts: &[AccountInfo])
     };
 
     metadata.token_standard = Some(token_standard);
-    clean_write_metadata(&mut metadata, metadata_account_info)?;
-
-    // System Program and Sysvar Instruction accounts will be read here after the
-    // optional account is read.
-
-    Ok(())
+    clean_write_metadata(&mut metadata, metadata_account_info)
 }
