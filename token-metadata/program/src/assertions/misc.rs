@@ -86,11 +86,11 @@ pub fn assert_delegated_tokens(
     mint_info: &AccountInfo,
     token_account_info: &AccountInfo,
 ) -> ProgramResult {
-    assert_owned_by(mint_info, &spl_token::id())?;
+    assert_owned_by(mint_info, &spl_token::ID)?;
 
     let token_account: Account = assert_initialized(token_account_info)?;
 
-    assert_owned_by(token_account_info, &spl_token::id())?;
+    assert_owned_by(token_account_info, &spl_token::ID)?;
 
     if token_account.mint != *mint_info.key {
         return Err(MetadataError::MintMismatch.into());

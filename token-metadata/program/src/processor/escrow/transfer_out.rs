@@ -85,7 +85,7 @@ pub fn process_transfer_out_of_escrow(
     // Derive the seeds for PDA signing.
     let escrow_seeds = find_escrow_seeds(escrow_mint_info.key, &toe.authority);
 
-    let bump_seed = &[assert_derivation(&crate::id(), escrow_info, &escrow_seeds)?];
+    let bump_seed = &[assert_derivation(&crate::ID, escrow_info, &escrow_seeds)?];
     let escrow_authority_seeds = [escrow_seeds, vec![bump_seed]].concat();
 
     // Allocate the target ATA if it doesn't exist.
@@ -153,7 +153,7 @@ pub fn process_transfer_out_of_escrow(
 
     // Transfer the token out of the escrow to the destination ATA.
     let transfer_ix = spl_token::instruction::transfer(
-        &spl_token::id(),
+        &spl_token::ID,
         attribute_src_info.key,
         attribute_dst_info.key,
         escrow_info.key,
@@ -177,7 +177,7 @@ pub fn process_transfer_out_of_escrow(
     // Close the source ATA and return funds to the user.
     if attribute_src.amount == 0 {
         let close_ix = spl_token::instruction::close_account(
-            &spl_token::id(),
+            &spl_token::ID,
             attribute_src_info.key,
             payer_info.key,
             escrow_info.key,

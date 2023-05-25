@@ -52,7 +52,7 @@ mod approve_use_authority {
         let (burner, _) = find_program_as_burner_account();
 
         let ix = mpl_token_metadata::instruction::approve_use_authority(
-            mpl_token_metadata::id(),
+            mpl_token_metadata::ID,
             record,
             use_authority.pubkey(),
             context.payer.pubkey(),
@@ -111,7 +111,7 @@ mod approve_use_authority {
         let (burner, _) = find_program_as_burner_account();
 
         let ix = mpl_token_metadata::instruction::approve_use_authority(
-            mpl_token_metadata::id(),
+            mpl_token_metadata::ID,
             record,
             use_authority.pubkey(),
             context.payer.pubkey(),
@@ -174,7 +174,7 @@ mod approve_use_authority {
         println!("{:?}", Account::unpack_from_slice(&thing.data).unwrap());
 
         let ix = mpl_token_metadata::instruction::approve_use_authority(
-            mpl_token_metadata::id(),
+            mpl_token_metadata::ID,
             record,
             use_authority.pubkey(),
             context.payer.pubkey(),
@@ -243,7 +243,7 @@ mod approve_use_authority {
         println!("{:?}", Account::unpack_from_slice(&thing.data).unwrap());
 
         let ix = mpl_token_metadata::instruction::approve_use_authority(
-            mpl_token_metadata::id(),
+            mpl_token_metadata::ID,
             record,
             use_authority.pubkey(),
             context.payer.pubkey(),
@@ -264,7 +264,7 @@ mod approve_use_authority {
         context.banks_client.process_transaction(tx).await.unwrap();
 
         let ix2 = mpl_token_metadata::instruction::approve_use_authority(
-            mpl_token_metadata::id(),
+            mpl_token_metadata::ID,
             record,
             use_authority.pubkey(),
             context.payer.pubkey(),
@@ -333,7 +333,7 @@ mod approve_use_authority {
         println!("{:?}", Account::unpack_from_slice(&thing.data).unwrap());
 
         let ix = mpl_token_metadata::instruction::approve_use_authority(
-            mpl_token_metadata::id(),
+            mpl_token_metadata::ID,
             record,
             use_authority.pubkey(),
             context.payer.pubkey(),
@@ -393,7 +393,7 @@ mod approve_use_authority {
         let (burner, _) = find_program_as_burner_account();
 
         let ix = mpl_token_metadata::instruction::approve_use_authority(
-            mpl_token_metadata::id(),
+            mpl_token_metadata::ID,
             record,
             use_authority.pubkey(),
             wrong_owner.pubkey(),

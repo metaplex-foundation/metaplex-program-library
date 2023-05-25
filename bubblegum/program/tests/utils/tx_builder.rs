@@ -1,5 +1,3 @@
-use std::cell::{RefCell, RefMut};
-
 use anchor_lang::{self, InstructionData, ToAccountMetas};
 use solana_program::pubkey::Pubkey;
 use solana_program_test::BanksClient;
@@ -23,16 +21,11 @@ pub struct TxBuilder<'a, T, U, V, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE:
     pub data: U,
     // The currently configured payer for the tx.
     pub payer: Pubkey,
-    // Using `RefCell` to provide interior mutability and circumvent some
-    // annoyance with the borrow checker (i.e. provide helper methods that
-    // only need &self, vs &mut self); if we'll ever need to use this
-    // in a context with multiple threads, we can just replace the wrapper
-    // with a `Mutex`.
-    pub client: RefCell<BanksClient>,
+    pub client: BanksClient,
     // Currently configured signers for the tx. Using only `Keypair`s as
     // signers for now; can make this more generic if needed.
     pub signers: Vec<Keypair>,
-    pub tree: &'a Tree<MAX_DEPTH, MAX_BUFFER_SIZE>,
+    pub tree: &'a mut Tree<MAX_DEPTH, MAX_BUFFER_SIZE>,
     // When some, indicates that a proof for the specified leaf index should
     // be computed from the inner tree and attached in the form of additional
     // accounts (but only if `self.additional_accounts.len() == 0`, so we
@@ -54,16 +47,12 @@ where
     T: ToAccountMetas,
     U: InstructionData,
 {
-    fn client(&self) -> RefMut<BanksClient> {
-        self.client.borrow_mut()
-    }
-
     pub async fn execute(&mut self) -> Result<()>
     where
         Self: OnSuccessfulTxExec,
     {
         let recent_blockhash = self
-            .client()
+            .client
             .get_latest_blockhash()
             .await
             .map_err(Error::BanksClient)?;
@@ -89,12 +78,13 @@ where
         tx.try_partial_sign(&self.signers.iter().collect::<Vec<_>>(), recent_blockhash)
             .map_err(Error::Signer)?;
 
-        self.client()
+        self.client
             .process_transaction(tx)
             .await
             .map_err(Error::BanksClient)?;
 
         self.on_successful_execute()?;
+
         // Check the expected tree root matches on-chain state post tx.
         self.tree.check_expected_root().await
     }
@@ -293,7 +283,7 @@ impl<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExe
     for SetTreeDelegateBuilder<'a, MAX_DEPTH, MAX_BUFFER_SIZE>
 {
     fn on_successful_execute(&mut self) -> Result<()> {
-        *self.tree.tree_delegate.borrow_mut() = clone_keypair(&self.inner);
+        self.tree.tree_delegate = clone_keypair(&self.inner);
         Ok(())
     }
 }
@@ -364,5 +354,34 @@ impl<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExe
 {
     fn on_successful_execute(&mut self) -> Result<()> {
         Ok(())
+    }
+}
+
+#[derive(Debug)]
+pub struct CollectionVerificationInner<'a> {
+    pub args: &'a mut LeafArgs,
+    pub collection_authority: Pubkey,
+    pub collection_mint: Pubkey,
+    pub collection_metadata: Pubkey,
+    pub edition_account: Pubkey,
+}
+
+pub type VerifyCollectionBuilder<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> =
+    TxBuilder<
+        'a,
+        mpl_bubblegum::accounts::CollectionVerification,
+        mpl_bubblegum::instruction::VerifyCollection,
+        CollectionVerificationInner<'a>,
+        MAX_DEPTH,
+        MAX_BUFFER_SIZE,
+    >;
+
+impl<'a, const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> OnSuccessfulTxExec
+    for VerifyCollectionBuilder<'a, MAX_DEPTH, MAX_BUFFER_SIZE>
+{
+    fn on_successful_execute(&mut self) -> Result<()> {
+        let collection = self.inner.args.metadata.collection.as_mut().unwrap();
+        collection.verified = true;
+        self.tree.update_leaf(self.inner.args)
     }
 }

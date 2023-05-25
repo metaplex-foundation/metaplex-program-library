@@ -4,8 +4,9 @@ pub mod utils;
 use borsh::BorshSerialize;
 use mpl_token_metadata::{
     error::MetadataError,
-    id, instruction,
+    instruction,
     state::{Collection, Creator, Key, MAX_MASTER_EDITION_LEN},
+    ID,
 };
 use num_traits::FromPrimitive;
 use solana_program_test::*;
@@ -116,7 +117,7 @@ mod mint_new_edition_from_master_edition_via_token {
 
         let tx = Transaction::new_signed_with_payer(
             [instruction::sign_metadata(
-                mpl_token_metadata::id(),
+                mpl_token_metadata::ID,
                 test_metadata.pubkey,
                 creator_pub,
             )]
@@ -213,7 +214,7 @@ mod mint_new_edition_from_master_edition_via_token {
 
         let tx = Transaction::new_signed_with_payer(
             &[instruction::mint_new_edition_from_master_edition_via_token(
-                id(),
+                ID,
                 test_edition_marker.new_metadata_pubkey,
                 test_edition_marker.new_edition_pubkey,
                 test_edition_marker.master_edition_pubkey,

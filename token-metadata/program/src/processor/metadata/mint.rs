@@ -68,10 +68,10 @@ pub fn mint_v1(program_id: &Pubkey, ctx: Context<Mint>, args: MintArgs) -> Progr
         return Err(MetadataError::MintMismatch.into());
     }
 
-    assert_owned_by(ctx.accounts.mint_info, &spl_token::id())?;
+    assert_owned_by(ctx.accounts.mint_info, &spl_token::ID)?;
     let mint: MintAccount = assert_initialized(ctx.accounts.mint_info)?;
 
-    if !cmp_pubkeys(ctx.accounts.spl_token_program_info.key, &spl_token::id()) {
+    if !cmp_pubkeys(ctx.accounts.spl_token_program_info.key, &spl_token::ID) {
         return Err(ProgramError::IncorrectProgramId);
     }
 
@@ -124,11 +124,11 @@ pub fn mint_v1(program_id: &Pubkey, ctx: Context<Mint>, args: MintArgs) -> Progr
         // if the token account is empty, we will initialize a new one but it must
         // be an ATA account
         assert_derivation(
-            &spl_associated_token_account::id(),
+            &spl_associated_token_account::ID,
             ctx.accounts.token_info,
             &[
                 token_owner_info.key.as_ref(),
-                spl_token::id().as_ref(),
+                spl_token::ID.as_ref(),
                 ctx.accounts.mint_info.key.as_ref(),
             ],
         )?;
@@ -141,7 +141,7 @@ pub fn mint_v1(program_id: &Pubkey, ctx: Context<Mint>, args: MintArgs) -> Progr
                 ctx.accounts.payer_info.key,
                 token_owner_info.key,
                 ctx.accounts.mint_info.key,
-                &spl_token::id(),
+                &spl_token::ID,
             ),
             &[
                 ctx.accounts.payer_info.clone(),
@@ -151,7 +151,7 @@ pub fn mint_v1(program_id: &Pubkey, ctx: Context<Mint>, args: MintArgs) -> Progr
             ],
         )?;
     } else {
-        assert_owned_by(ctx.accounts.token_info, &spl_token::id())?;
+        assert_owned_by(ctx.accounts.token_info, &spl_token::ID)?;
     }
 
     let token: Account = assert_initialized(ctx.accounts.token_info)?;

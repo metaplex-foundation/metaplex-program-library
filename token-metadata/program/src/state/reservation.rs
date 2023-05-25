@@ -108,7 +108,7 @@ impl ReservationList for ReservationListV2 {
         let usize_offset = offset as usize;
         while self.reservations.len() < usize_offset {
             self.reservations.push(Reservation {
-                address: solana_program::system_program::id(),
+                address: solana_program::system_program::ID,
                 spots_remaining: 0,
                 total_spots: 0,
             })
@@ -125,7 +125,7 @@ impl ReservationList for ReservationListV2 {
                         .checked_sub(replaced_spots)
                         .ok_or(MetadataError::NumericalOverflowError)?,
                 );
-            } else if replaced_addr != solana_program::system_program::id() {
+            } else if replaced_addr != solana_program::system_program::ID {
                 return Err(MetadataError::TriedToReplaceAnExistingReservation.into());
             }
             self.reservations[usize_offset] = reservation;
@@ -134,7 +134,7 @@ impl ReservationList for ReservationListV2 {
         }
 
         if usize_offset != 0
-            && self.reservations[usize_offset - 1].address == solana_program::system_program::id()
+            && self.reservations[usize_offset - 1].address == solana_program::system_program::ID
         {
             // This becomes an anchor then for calculations... put total spot offset in here.
             self.reservations[usize_offset - 1].spots_remaining = total_spot_offset;

@@ -1,6 +1,5 @@
 use borsh::BorshSerialize;
 use mpl_token_metadata::{
-    id,
     instruction::{
         self,
         builders::{BurnBuilder, PrintBuilder, TransferBuilder},
@@ -9,6 +8,7 @@ use mpl_token_metadata::{
     },
     pda::{find_token_record_account, MARKER},
     state::{EDITION, EDITION_MARKER_BIT_SIZE, PREFIX},
+    ID,
 };
 use solana_program::{
     borsh::try_from_slice_unchecked,
@@ -73,7 +73,7 @@ impl EditionMarker {
         let mint = Keypair::new();
         let mint_pubkey = mint.pubkey();
         let metadata_mint_pubkey = metadata.mint.pubkey();
-        let program_id = id();
+        let program_id = ID;
 
         let edition_number = edition.checked_div(EDITION_MARKER_BIT_SIZE).unwrap();
         let as_string = edition_number.to_string();
@@ -89,7 +89,7 @@ impl EditionMarker {
         );
 
         let metadata_seeds = &[PREFIX.as_bytes(), program_id.as_ref(), mint_pubkey.as_ref()];
-        let (new_metadata_pubkey, _) = Pubkey::find_program_address(metadata_seeds, &id());
+        let (new_metadata_pubkey, _) = Pubkey::find_program_address(metadata_seeds, &ID);
 
         let master_edition_seeds = &[
             PREFIX.as_bytes(),
@@ -97,7 +97,7 @@ impl EditionMarker {
             mint_pubkey.as_ref(),
             EDITION.as_bytes(),
         ];
-        let (new_edition_pubkey, _) = Pubkey::find_program_address(master_edition_seeds, &id());
+        let (new_edition_pubkey, _) = Pubkey::find_program_address(master_edition_seeds, &ID);
 
         EditionMarker {
             pubkey,
@@ -203,7 +203,7 @@ impl EditionMarker {
 
         let tx = Transaction::new_signed_with_payer(
             &[instruction::mint_new_edition_from_master_edition_via_token(
-                id(),
+                ID,
                 self.new_metadata_pubkey,
                 self.new_edition_pubkey,
                 self.master_edition_pubkey,
@@ -403,7 +403,7 @@ impl EditionMarker {
         context: &mut ProgramTestContext,
     ) -> Result<(), BanksClientError> {
         let fake_token_program = Keypair::new();
-        let program_id = mpl_token_metadata::id();
+        let program_id = mpl_token_metadata::ID;
 
         let edition_number = self.edition.checked_div(EDITION_MARKER_BIT_SIZE).unwrap();
         let as_string = edition_number.to_string();
@@ -431,8 +431,8 @@ impl EditionMarker {
             AccountMeta::new_readonly(context.payer.pubkey(), false),
             AccountMeta::new_readonly(self.metadata_pubkey, false),
             AccountMeta::new_readonly(fake_token_program.pubkey(), false),
-            AccountMeta::new_readonly(solana_program::system_program::id(), false),
-            AccountMeta::new_readonly(sysvar::rent::id(), false),
+            AccountMeta::new_readonly(solana_program::system_program::ID, false),
+            AccountMeta::new_readonly(sysvar::rent::ID, false),
         ];
 
         let fake_instruction = Instruction {
@@ -471,7 +471,7 @@ impl EditionMarker {
         );
 
         let transfer_ix = spl_token::instruction::transfer(
-            &spl_token::id(),
+            &spl_token::ID,
             &self.token.pubkey(),
             &new_owner_token_account,
             &context.payer.pubkey(),

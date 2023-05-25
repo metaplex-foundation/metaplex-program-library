@@ -1,4 +1,5 @@
 use mpl_token_metadata::{
+    id,
     instruction::{
         self,
         builders::{
@@ -6,9 +7,8 @@ use mpl_token_metadata::{
             RevokeBuilder, TransferBuilder, UnlockBuilder, UnverifyBuilder, UpdateBuilder,
             VerifyBuilder,
         },
-        BurnArgs, CollectionDetailsToggle, CollectionToggle, CreateArgs, DelegateArgs,
-        InstructionBuilder, LockArgs, MetadataDelegateRole, MigrateArgs, MintArgs, RevokeArgs,
-        RuleSetToggle, TransferArgs, UnlockArgs, Update, UpdateArgs, UsesToggle, VerificationArgs,
+        BurnArgs, CreateArgs, DelegateArgs, InstructionBuilder, LockArgs, MetadataDelegateRole,
+        MigrateArgs, MintArgs, RevokeArgs, TransferArgs, UnlockArgs, UpdateArgs, VerificationArgs,
     },
     pda::{
         find_master_edition_account, find_metadata_account, find_metadata_delegate_record_account,
@@ -16,11 +16,10 @@ use mpl_token_metadata::{
     },
     processor::AuthorizationData,
     state::{
-        AssetData, Collection, CollectionDetails, Creator, MasterEditionV2, Metadata, PrintSupply,
+        AssetData, Collection, CollectionDetails, Creator, Metadata, PrintSupply,
         ProgrammableConfig, TokenDelegateRole, TokenMetadataAccount, TokenRecord, TokenStandard,
         EDITION, EDITION_MARKER_BIT_SIZE, PREFIX,
     },
-    ID,
 };
 use solana_program::{
     borsh::try_from_slice_unchecked, program_option::COption, program_pack::Pack, pubkey::Pubkey,
@@ -30,14 +29,12 @@ use solana_sdk::{
     account::AccountSharedData,
     compute_budget::ComputeBudgetInstruction,
     signature::{Keypair, Signer},
+    system_instruction,
     transaction::Transaction,
 };
 use spl_associated_token_account::{
     get_associated_token_address, instruction::create_associated_token_account,
 };
-use spl_token::state::Account;
-
-use super::{airdrop, create_mint, create_token_account, get_account, mint_tokens};
 
 pub const DEFAULT_NAME: &str = "Digital Asset";
 pub const DEFAULT_SYMBOL: &str = "DA";
@@ -68,7 +65,7 @@ impl DigitalAsset {
     pub fn new() -> Self {
         let mint = Keypair::new();
         let mint_pubkey = mint.pubkey();
-        let program_id = ID;
+        let program_id = id();
 
         let metadata_seeds = &[PREFIX.as_bytes(), program_id.as_ref(), mint_pubkey.as_ref()];
         let (metadata, _) = Pubkey::find_program_address(metadata_seeds, &program_id);
@@ -301,7 +298,7 @@ impl DigitalAsset {
         let payer_pubkey = context.payer.pubkey();
         let mint_pubkey = self.mint.pubkey();
 
-        let program_id = ID;
+        let program_id = id();
         let mut builder = CreateBuilder::new();
         builder
             .metadata(self.metadata)
@@ -321,7 +318,7 @@ impl DigitalAsset {
                     mint_pubkey.as_ref(),
                     EDITION.as_bytes(),
                 ];
-                let (edition, _) = Pubkey::find_program_address(edition_seeds, &ID);
+                let (edition, _) = Pubkey::find_program_address(edition_seeds, &id());
                 // sets the master edition to the builder
                 builder.master_edition(edition);
                 Some(edition)
@@ -364,10 +361,10 @@ impl DigitalAsset {
         let (token, _) = Pubkey::find_program_address(
             &[
                 &payer_pubkey.to_bytes(),
-                &spl_token::ID.to_bytes(),
+                &spl_token::id().to_bytes(),
                 &self.mint.pubkey().to_bytes(),
             ],
-            &spl_associated_token_account::ID,
+            &spl_associated_token_account::id(),
         );
 
         let (token_record, _) = find_token_record_account(&self.mint.pubkey(), &token);
@@ -431,43 +428,6 @@ impl DigitalAsset {
         self.create(context, token_standard, authorization_rules)
             .await
             .unwrap();
-        // mints tokens
-        self.mint(context, authorization_rules, authorization_data, amount)
-            .await
-    }
-
-    pub async fn create_and_mint_with_supply(
-        &mut self,
-        context: &mut ProgramTestContext,
-        token_standard: TokenStandard,
-        authorization_rules: Option<Pubkey>,
-        authorization_data: Option<AuthorizationData>,
-        amount: u64,
-        print_supply: PrintSupply,
-    ) -> Result<(), BanksClientError> {
-        // creates the metadata
-
-        let creators = Some(vec![Creator {
-            address: context.payer.pubkey(),
-            share: 100,
-            verified: true,
-        }]);
-
-        self.create_advanced(
-            context,
-            token_standard,
-            String::from(DEFAULT_NAME),
-            String::from(DEFAULT_SYMBOL),
-            String::from(DEFAULT_URI),
-            500,
-            creators,
-            None,
-            None,
-            authorization_rules,
-            print_supply,
-        )
-        .await?;
-
         // mints tokens
         self.mint(context, authorization_rules, authorization_data, amount)
             .await
@@ -803,7 +763,7 @@ impl DigitalAsset {
 
         let tx = Transaction::new_signed_with_payer(
             &[instruction::mint_new_edition_from_master_edition_via_token(
-                ID,
+                id(),
                 print_metadata,
                 print_edition,
                 self.edition.unwrap(),
@@ -985,7 +945,7 @@ impl DigitalAsset {
                 &authority.pubkey(),
                 &destination_owner,
                 &self.mint.pubkey(),
-                &spl_token::ID,
+                &spl_token::id(),
             ));
 
             get_associated_token_address(&destination_owner, &self.mint.pubkey())
@@ -1207,17 +1167,6 @@ impl DigitalAsset {
         }
     }
 
-    pub async fn get_master_edition(&self, context: &mut ProgramTestContext) -> MasterEditionV2 {
-        let master_edition_account = context
-            .banks_client
-            .get_account(self.edition.unwrap())
-            .await
-            .unwrap()
-            .unwrap();
-
-        MasterEditionV2::safe_deserialize(&master_edition_account.data).unwrap()
-    }
-
     pub async fn is_pnft(&self, context: &mut ProgramTestContext) -> bool {
         let md = self.get_metadata(context).await;
         if let Some(standard) = md.token_standard {
@@ -1237,11 +1186,11 @@ impl DigitalAsset {
         // To simulate the state where the close authority is set delegate instead of
         // the asset's master edition account, we need to inject modified token account state.
         let mut token_account = get_account(context, &self.token.unwrap()).await;
-        let mut token = Account::unpack(&token_account.data).unwrap();
+        let mut token = spl_token::state::Account::unpack(&token_account.data).unwrap();
 
         token.close_authority = COption::Some(*close_authority);
-        let mut data = vec![0u8; Account::LEN];
-        Account::pack(token, &mut data).unwrap();
+        let mut data = vec![0u8; spl_token::state::Account::LEN];
+        spl_token::state::Account::pack(token, &mut data).unwrap();
         token_account.data = data;
 
         let token_account_shared_data: AccountSharedData = token_account.into();
@@ -1335,50 +1284,6 @@ impl DigitalAsset {
         Ok(())
     }
 
-    pub async fn change_update_authority(
-        &self,
-        context: &mut ProgramTestContext,
-        new_update_authority: Pubkey,
-    ) -> Result<(), BanksClientError> {
-        airdrop(context, &new_update_authority, 1_000_000_000)
-            .await
-            .unwrap();
-
-        let mut builder = UpdateBuilder::new();
-        builder
-            .authority(context.payer.pubkey())
-            .metadata(self.metadata)
-            .payer(context.payer.pubkey())
-            .mint(self.mint.pubkey());
-
-        if let Some(master_edition) = self.edition {
-            builder.edition(master_edition);
-        }
-
-        let mut update_args = UpdateArgs::V1 {
-            new_update_authority: Some(new_update_authority),
-            data: None,
-            primary_sale_happened: None,
-            is_mutable: None,
-            collection: CollectionToggle::None,
-            collection_details: CollectionDetailsToggle::None,
-            uses: UsesToggle::None,
-            rule_set: RuleSetToggle::None,
-            authorization_data: None,
-        };
-
-        let update_ix = builder.build(update_args).unwrap().instruction();
-
-        let tx = Transaction::new_signed_with_payer(
-            &[update_ix],
-            Some(&context.payer.pubkey()),
-            &[&context.payer],
-            context.last_blockhash,
-        );
-
-        context.banks_client.process_transaction(tx).await
-    }
-
     pub async fn assert_token_record_closed(
         &self,
         context: &mut ProgramTestContext,
@@ -1406,4 +1311,110 @@ pub struct TransferParams<'a> {
     pub payer: &'a Keypair,
     pub authorization_rules: Option<Pubkey>,
     pub args: TransferArgs,
+}
+
+pub async fn mint_tokens(
+    context: &mut ProgramTestContext,
+    mint: &Pubkey,
+    account: &Pubkey,
+    amount: u64,
+    owner: &Pubkey,
+    additional_signer: Option<&Keypair>,
+) -> Result<(), BanksClientError> {
+    let mut signing_keypairs = vec![&context.payer];
+    if let Some(signer) = additional_signer {
+        signing_keypairs.push(signer);
+    }
+
+    let tx = Transaction::new_signed_with_payer(
+        &[
+            spl_token::instruction::mint_to(&spl_token::id(), mint, account, owner, &[], amount)
+                .unwrap(),
+        ],
+        Some(&context.payer.pubkey()),
+        &signing_keypairs,
+        context.last_blockhash,
+    );
+
+    context.banks_client.process_transaction(tx).await
+}
+
+pub async fn create_token_account(
+    context: &mut ProgramTestContext,
+    account: &Keypair,
+    mint: &Pubkey,
+    manager: &Pubkey,
+) -> Result<(), BanksClientError> {
+    let rent = context.banks_client.get_rent().await.unwrap();
+
+    let tx = Transaction::new_signed_with_payer(
+        &[
+            system_instruction::create_account(
+                &context.payer.pubkey(),
+                &account.pubkey(),
+                rent.minimum_balance(spl_token::state::Account::LEN),
+                spl_token::state::Account::LEN as u64,
+                &spl_token::id(),
+            ),
+            spl_token::instruction::initialize_account(
+                &spl_token::id(),
+                &account.pubkey(),
+                mint,
+                manager,
+            )
+            .unwrap(),
+        ],
+        Some(&context.payer.pubkey()),
+        &[&context.payer, account],
+        context.last_blockhash,
+    );
+
+    context.banks_client.process_transaction(tx).await
+}
+
+pub async fn create_mint(
+    context: &mut ProgramTestContext,
+    mint: &Keypair,
+    manager: &Pubkey,
+    freeze_authority: Option<&Pubkey>,
+    decimals: u8,
+) -> Result<(), BanksClientError> {
+    let rent = context.banks_client.get_rent().await.unwrap();
+
+    let tx = Transaction::new_signed_with_payer(
+        &[
+            system_instruction::create_account(
+                &context.payer.pubkey(),
+                &mint.pubkey(),
+                rent.minimum_balance(spl_token::state::Mint::LEN),
+                spl_token::state::Mint::LEN as u64,
+                &spl_token::id(),
+            ),
+            spl_token::instruction::initialize_mint(
+                &spl_token::id(),
+                &mint.pubkey(),
+                manager,
+                freeze_authority,
+                decimals,
+            )
+            .unwrap(),
+        ],
+        Some(&context.payer.pubkey()),
+        &[&context.payer, mint],
+        context.last_blockhash,
+    );
+
+    context.banks_client.process_transaction(tx).await
+}
+
+pub async fn get_account(
+    context: &mut ProgramTestContext,
+    pubkey: &Pubkey,
+) -> solana_sdk::account::Account {
+    context
+        .banks_client
+        .get_account(*pubkey)
+        .await
+        .expect("account not found")
+        .expect("account empty")
 }

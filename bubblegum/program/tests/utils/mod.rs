@@ -1,4 +1,5 @@
 pub mod context;
+pub mod digital_asset;
 pub mod tree;
 pub mod tx_builder;
 
@@ -21,7 +22,7 @@ pub enum Error {
     Signer(SignerError),
 }
 
-pub type Result<T> = result::Result<T, Error>;
+pub type Result<T> = result::Result<T, Box<Error>>;
 
 pub fn program_test() -> ProgramTest {
     let mut test = ProgramTest::new("mpl_bubblegum", mpl_bubblegum::id(), None);
@@ -63,6 +64,7 @@ fn compute_metadata_hashes(metadata_args: &MetadataArgs) -> Result<([u8; 32], [u
     Ok((data_hash, creator_hash))
 }
 
+#[derive(Debug)]
 pub struct LeafArgs {
     pub owner: Keypair,
     pub delegate: Keypair,

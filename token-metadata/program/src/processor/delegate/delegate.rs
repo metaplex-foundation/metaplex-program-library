@@ -173,7 +173,7 @@ fn create_delegate_v1(
     // ownership
 
     assert_owned_by(ctx.accounts.metadata_info, program_id)?;
-    assert_owned_by(ctx.accounts.mint_info, &spl_token::id())?;
+    assert_owned_by(ctx.accounts.mint_info, &spl_token::ID)?;
 
     // key match
 
@@ -196,7 +196,7 @@ fn create_delegate_v1(
     let delegate_record_info = match ctx.accounts.delegate_record_info {
         Some(delegate_record_info) => delegate_record_info,
         None => {
-            return Err(MetadataError::MissingTokenAccount.into());
+            return Err(MetadataError::MissingDelegateRecord.into());
         }
     };
 
@@ -253,8 +253,8 @@ fn create_persistent_delegate_v1(
     // ownership
 
     assert_owned_by(ctx.accounts.metadata_info, program_id)?;
-    assert_owned_by(ctx.accounts.mint_info, &spl_token::id())?;
-    assert_owned_by(token_info, &spl_token::id())?;
+    assert_owned_by(ctx.accounts.mint_info, &spl_token::ID)?;
+    assert_owned_by(token_info, &spl_token::ID)?;
 
     // key match
 

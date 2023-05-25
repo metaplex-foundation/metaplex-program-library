@@ -48,7 +48,7 @@ mod escrow {
         print!("\nEscrow Address: {:#?}\n", escrow_address);
 
         let ix0 = mpl_token_metadata::escrow::create_escrow_account(
-            mpl_token_metadata::id(),
+            mpl_token_metadata::ID,
             escrow_address.0,
             parent_test_metadata.pubkey,
             parent_test_metadata.mint.pubkey(),
@@ -111,7 +111,7 @@ mod escrow {
             &spl_token::ID,
         );
         let ix1 = spl_token::instruction::transfer(
-            &spl_token::id(),
+            &spl_token::ID,
             &attribute_test_metadata.token.pubkey(),
             &escrow_attribute_token_account,
             &context.payer.pubkey(),
@@ -167,7 +167,7 @@ mod escrow {
             );
 
         let ix2 = mpl_token_metadata::escrow::transfer_out_of_escrow(
-            mpl_token_metadata::id(),
+            mpl_token_metadata::ID,
             escrow_address.0,
             parent_test_metadata.pubkey,
             context.payer.pubkey(),
@@ -249,7 +249,7 @@ mod escrow {
         print!("\nEscrow Address: {:#?}\n", escrow_address);
 
         let ix0 = mpl_token_metadata::escrow::create_escrow_account(
-            mpl_token_metadata::id(),
+            mpl_token_metadata::ID,
             escrow_address.0,
             parent_test_metadata.pubkey,
             parent_test_metadata.mint.pubkey(),
@@ -306,7 +306,7 @@ mod escrow {
             &spl_token::ID,
         );
         let ix1 = spl_token::instruction::transfer(
-            &spl_token::id(),
+            &spl_token::ID,
             &attribute_test_metadata.token.pubkey(),
             &escrow_attribute_token_account,
             &context.payer.pubkey(),
@@ -362,7 +362,7 @@ mod escrow {
             );
 
         let ix2 = mpl_token_metadata::escrow::transfer_out_of_escrow(
-            mpl_token_metadata::id(),
+            mpl_token_metadata::ID,
             escrow_address.0,
             parent_test_metadata.pubkey,
             context.payer.pubkey(),
@@ -376,7 +376,7 @@ mod escrow {
         );
 
         let ix3 = mpl_token_metadata::escrow::transfer_out_of_escrow(
-            mpl_token_metadata::id(),
+            mpl_token_metadata::ID,
             escrow_address.0,
             parent_test_metadata.pubkey,
             context.payer.pubkey(),

@@ -82,11 +82,8 @@ pub fn freeze<'a>(
         mint.key.as_ref(),
         EDITION.as_bytes(),
     ]);
-    let edition_info_path_bump_seed = &[assert_derivation(
-        &crate::id(),
-        &edition,
-        &edition_info_path,
-    )?];
+    let edition_info_path_bump_seed =
+        &[assert_derivation(&crate::ID, &edition, &edition_info_path)?];
     let mut edition_info_seeds = edition_info_path.clone();
     edition_info_seeds.push(edition_info_path_bump_seed);
 
@@ -111,7 +108,7 @@ pub fn thaw<'a>(
         EDITION.as_bytes(),
     ]);
     let edition_info_path_bump_seed = &[assert_derivation(
-        &crate::id(),
+        &crate::ID,
         &edition_info,
         &edition_info_path,
     )?];
