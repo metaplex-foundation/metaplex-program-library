@@ -22,7 +22,7 @@ export const RevokeCollectionAuthorityStruct = new beet.BeetArgsStruct<{
  * @property [_writable_] collectionAuthorityRecord Collection Authority Record PDA
  * @property [_writable_] delegateAuthority Delegated Collection Authority
  * @property [_writable_, **signer**] revokeAuthority Update Authority, or Delegated Authority, of Collection NFT
- * @property [_writable_] metadata Metadata account
+ * @property [] metadata Metadata account
  * @property [] mint Mint of Metadata
  * @property [] sysvarInstructions Instructions sysvar account
  * @category Instructions
@@ -74,7 +74,7 @@ export function createRevokeCollectionAuthorityInstruction(
     },
     {
       pubkey: accounts.metadata,
-      isWritable: true,
+      isWritable: false,
       isSigner: false,
     },
     {

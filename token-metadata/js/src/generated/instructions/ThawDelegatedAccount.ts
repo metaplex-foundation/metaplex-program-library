@@ -22,7 +22,7 @@ export const ThawDelegatedAccountStruct = new beet.BeetArgsStruct<{
  *
  * @property [_writable_, **signer**] delegate Delegate
  * @property [_writable_] tokenAccount Token account to thaw
- * @property [_writable_] edition Edition
+ * @property [] edition Edition
  * @property [] mint Token mint
  * @property [] sysvarInstructions Instructions sysvar account
  * @category Instructions
@@ -69,7 +69,7 @@ export function createThawDelegatedAccountInstruction(
     },
     {
       pubkey: accounts.edition,
-      isWritable: true,
+      isWritable: false,
       isSigner: false,
     },
     {

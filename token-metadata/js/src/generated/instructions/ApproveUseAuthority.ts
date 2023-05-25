@@ -45,7 +45,7 @@ export const ApproveUseAuthorityStruct = new beet.BeetArgsStruct<
  * @property [_writable_, **signer**] payer Payer
  * @property [] user A Use Authority
  * @property [_writable_] ownerTokenAccount Owned Token Account Of Mint
- * @property [_writable_] metadata Metadata account
+ * @property [] metadata Metadata account
  * @property [] mint Mint of Metadata
  * @property [] burner Program As Signer (Burner)
  * @property [] sysvarInstructions Instructions sysvar account
@@ -122,7 +122,7 @@ export function createApproveUseAuthorityInstruction(
     },
     {
       pubkey: accounts.metadata,
-      isWritable: true,
+      isWritable: false,
       isSigner: false,
     },
     {

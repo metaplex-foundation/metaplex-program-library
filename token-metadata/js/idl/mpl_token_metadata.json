@@ -1270,7 +1270,7 @@
         },
         {
           "name": "metadata",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false,
           "desc": "Metadata account"
         },
@@ -1360,7 +1360,7 @@
         },
         {
           "name": "metadata",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false,
           "desc": "Metadata account"
         },
@@ -1484,7 +1484,7 @@
         },
         {
           "name": "metadata",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false,
           "desc": "Collection Metadata account"
         },
@@ -1543,7 +1543,7 @@
         },
         {
           "name": "metadata",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false,
           "desc": "Metadata account"
         },
@@ -1660,7 +1660,7 @@
         },
         {
           "name": "edition",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false,
           "desc": "Edition"
         },
@@ -1712,7 +1712,7 @@
         },
         {
           "name": "edition",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false,
           "desc": "Edition"
         },
