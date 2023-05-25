@@ -30,7 +30,6 @@ export const BurnEditionNftStruct = new beet.BeetArgsStruct<{ instructionDiscrim
  * @property [_writable_] printEditionAccount Print Edition account of the NFT
  * @property [_writable_] editionMarkerAccount Edition Marker PDA of the NFT
  * @property [] splTokenProgram SPL Token Program
- * @property [] sysvarInstructions Instructions sysvar account
  * @category Instructions
  * @category BurnEditionNft
  * @category generated
@@ -46,8 +45,6 @@ export type BurnEditionNftInstructionAccounts = {
   printEditionAccount: web3.PublicKey;
   editionMarkerAccount: web3.PublicKey;
   splTokenProgram: web3.PublicKey;
-  systemProgram?: web3.PublicKey;
-  sysvarInstructions: web3.PublicKey;
 };
 
 export const burnEditionNftInstructionDiscriminator = 37;
@@ -115,16 +112,6 @@ export function createBurnEditionNftInstruction(
     },
     {
       pubkey: accounts.splTokenProgram,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.sysvarInstructions,
       isWritable: false,
       isSigner: false,
     },

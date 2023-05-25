@@ -27,7 +27,6 @@ export const VerifyCollectionStruct = new beet.BeetArgsStruct<{ instructionDiscr
  * @property [] collection Metadata Account of the Collection
  * @property [] collectionMasterEditionAccount MasterEdition2 Account of the Collection Token
  * @property [] collectionAuthorityRecord (optional) Collection Authority Record PDA
- * @property [] sysvarInstructions Instructions sysvar account
  * @category Instructions
  * @category VerifyCollection
  * @category generated
@@ -40,8 +39,6 @@ export type VerifyCollectionInstructionAccounts = {
   collection: web3.PublicKey;
   collectionMasterEditionAccount: web3.PublicKey;
   collectionAuthorityRecord?: web3.PublicKey;
-  systemProgram?: web3.PublicKey;
-  sysvarInstructions: web3.PublicKey;
 };
 
 export const verifyCollectionInstructionDiscriminator = 18;
@@ -106,16 +103,6 @@ export function createVerifyCollectionInstruction(
       isSigner: false,
     });
   }
-  keys.push({
-    pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
-    isWritable: false,
-    isSigner: false,
-  });
-  keys.push({
-    pubkey: accounts.sysvarInstructions,
-    isWritable: false,
-    isSigner: false,
-  });
 
   const ix = new web3.TransactionInstruction({
     programId,

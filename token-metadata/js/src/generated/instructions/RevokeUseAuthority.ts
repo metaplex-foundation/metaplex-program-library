@@ -26,7 +26,6 @@ export const RevokeUseAuthorityStruct = new beet.BeetArgsStruct<{
  * @property [_writable_] ownerTokenAccount Owned Token Account Of Mint
  * @property [] mint Mint of Metadata
  * @property [] metadata Metadata account
- * @property [] sysvarInstructions Instructions sysvar account
  * @category Instructions
  * @category RevokeUseAuthority
  * @category generated
@@ -41,7 +40,6 @@ export type RevokeUseAuthorityInstructionAccounts = {
   tokenProgram?: web3.PublicKey;
   systemProgram?: web3.PublicKey;
   rent?: web3.PublicKey;
-  sysvarInstructions: web3.PublicKey;
 };
 
 export const revokeUseAuthorityInstructionDiscriminator = 21;
@@ -116,11 +114,6 @@ export function createRevokeUseAuthorityInstruction(
       isSigner: false,
     });
   }
-  keys.push({
-    pubkey: accounts.sysvarInstructions,
-    isWritable: false,
-    isSigner: false,
-  });
 
   const ix = new web3.TransactionInstruction({
     programId,

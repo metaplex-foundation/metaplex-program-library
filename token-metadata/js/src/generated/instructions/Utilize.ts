@@ -44,7 +44,6 @@ export const UtilizeStruct = new beet.BeetArgsStruct<
  * @property [] owner Owner
  * @property [_writable_] useAuthorityRecord (optional) Use Authority Record PDA If present the program Assumes a delegated use authority
  * @property [] burner (optional) Program As Signer (Burner)
- * @property [] sysvarInstructions Instructions sysvar account
  * @category Instructions
  * @category Utilize
  * @category generated
@@ -61,7 +60,6 @@ export type UtilizeInstructionAccounts = {
   rent?: web3.PublicKey;
   useAuthorityRecord?: web3.PublicKey;
   burner?: web3.PublicKey;
-  sysvarInstructions: web3.PublicKey;
 };
 
 export const utilizeInstructionDiscriminator = 19;
@@ -157,11 +155,6 @@ export function createUtilizeInstruction(
       isSigner: false,
     });
   }
-  keys.push({
-    pubkey: accounts.sysvarInstructions,
-    isWritable: false,
-    isSigner: false,
-  });
 
   const ix = new web3.TransactionInstruction({
     programId,

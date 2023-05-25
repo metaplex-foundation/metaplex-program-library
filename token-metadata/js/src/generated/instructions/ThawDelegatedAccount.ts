@@ -24,7 +24,6 @@ export const ThawDelegatedAccountStruct = new beet.BeetArgsStruct<{
  * @property [_writable_] tokenAccount Token account to thaw
  * @property [] edition Edition
  * @property [] mint Token mint
- * @property [] sysvarInstructions Instructions sysvar account
  * @category Instructions
  * @category ThawDelegatedAccount
  * @category generated
@@ -35,8 +34,6 @@ export type ThawDelegatedAccountInstructionAccounts = {
   edition: web3.PublicKey;
   mint: web3.PublicKey;
   tokenProgram?: web3.PublicKey;
-  systemProgram?: web3.PublicKey;
-  sysvarInstructions: web3.PublicKey;
 };
 
 export const thawDelegatedAccountInstructionDiscriminator = 27;
@@ -79,16 +76,6 @@ export function createThawDelegatedAccountInstruction(
     },
     {
       pubkey: accounts.tokenProgram ?? splToken.TOKEN_PROGRAM_ID,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.sysvarInstructions,
       isWritable: false,
       isSigner: false,
     },

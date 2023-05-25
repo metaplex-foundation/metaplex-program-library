@@ -21,7 +21,6 @@ export const RemoveCreatorVerificationStruct = new beet.BeetArgsStruct<{
  *
  * @property [_writable_] metadata Metadata (pda of ['metadata', program id, mint id])
  * @property [**signer**] creator Creator
- * @property [] sysvarInstructions Instructions sysvar account
  * @category Instructions
  * @category RemoveCreatorVerification
  * @category generated
@@ -29,8 +28,6 @@ export const RemoveCreatorVerificationStruct = new beet.BeetArgsStruct<{
 export type RemoveCreatorVerificationInstructionAccounts = {
   metadata: web3.PublicKey;
   creator: web3.PublicKey;
-  systemProgram?: web3.PublicKey;
-  sysvarInstructions: web3.PublicKey;
 };
 
 export const removeCreatorVerificationInstructionDiscriminator = 28;
@@ -60,16 +57,6 @@ export function createRemoveCreatorVerificationInstruction(
       pubkey: accounts.creator,
       isWritable: false,
       isSigner: true,
-    },
-    {
-      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.sysvarInstructions,
-      isWritable: false,
-      isSigner: false,
     },
   ];
 

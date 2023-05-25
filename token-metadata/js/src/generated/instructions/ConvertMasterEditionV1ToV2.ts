@@ -22,7 +22,6 @@ export const ConvertMasterEditionV1ToV2Struct = new beet.BeetArgsStruct<{
  * @property [_writable_] masterEdition Master Record Edition V1 (pda of ['metadata', program id, master metadata mint id, 'edition'])
  * @property [_writable_] oneTimeAuth One time authorization mint
  * @property [_writable_] printingMint Printing mint
- * @property [] sysvarInstructions Instructions sysvar account
  * @category Instructions
  * @category ConvertMasterEditionV1ToV2
  * @category generated
@@ -31,8 +30,6 @@ export type ConvertMasterEditionV1ToV2InstructionAccounts = {
   masterEdition: web3.PublicKey;
   oneTimeAuth: web3.PublicKey;
   printingMint: web3.PublicKey;
-  systemProgram?: web3.PublicKey;
-  sysvarInstructions: web3.PublicKey;
 };
 
 export const convertMasterEditionV1ToV2InstructionDiscriminator = 12;
@@ -66,16 +63,6 @@ export function createConvertMasterEditionV1ToV2Instruction(
     {
       pubkey: accounts.printingMint,
       isWritable: true,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.sysvarInstructions,
-      isWritable: false,
       isSigner: false,
     },
   ];

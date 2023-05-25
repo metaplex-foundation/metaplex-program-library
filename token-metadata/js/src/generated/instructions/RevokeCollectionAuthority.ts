@@ -24,7 +24,6 @@ export const RevokeCollectionAuthorityStruct = new beet.BeetArgsStruct<{
  * @property [_writable_, **signer**] revokeAuthority Update Authority, or Delegated Authority, of Collection NFT
  * @property [] metadata Metadata account
  * @property [] mint Mint of Metadata
- * @property [] sysvarInstructions Instructions sysvar account
  * @category Instructions
  * @category RevokeCollectionAuthority
  * @category generated
@@ -36,7 +35,6 @@ export type RevokeCollectionAuthorityInstructionAccounts = {
   metadata: web3.PublicKey;
   mint: web3.PublicKey;
   systemProgram?: web3.PublicKey;
-  sysvarInstructions: web3.PublicKey;
 };
 
 export const revokeCollectionAuthorityInstructionDiscriminator = 24;
@@ -84,11 +82,6 @@ export function createRevokeCollectionAuthorityInstruction(
     },
     {
       pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.sysvarInstructions,
       isWritable: false,
       isSigner: false,
     },

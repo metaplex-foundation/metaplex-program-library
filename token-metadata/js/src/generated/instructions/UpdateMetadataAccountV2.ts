@@ -41,7 +41,6 @@ export const UpdateMetadataAccountV2Struct = new beet.FixableBeetArgsStruct<
  *
  * @property [_writable_] metadata Metadata account
  * @property [**signer**] updateAuthority Update authority key
- * @property [] sysvarInstructions Instructions sysvar account
  * @category Instructions
  * @category UpdateMetadataAccountV2
  * @category generated
@@ -49,8 +48,6 @@ export const UpdateMetadataAccountV2Struct = new beet.FixableBeetArgsStruct<
 export type UpdateMetadataAccountV2InstructionAccounts = {
   metadata: web3.PublicKey;
   updateAuthority: web3.PublicKey;
-  systemProgram?: web3.PublicKey;
-  sysvarInstructions: web3.PublicKey;
 };
 
 export const updateMetadataAccountV2InstructionDiscriminator = 15;
@@ -84,16 +81,6 @@ export function createUpdateMetadataAccountV2Instruction(
       pubkey: accounts.updateAuthority,
       isWritable: false,
       isSigner: true,
-    },
-    {
-      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.sysvarInstructions,
-      isWritable: false,
-      isSigner: false,
     },
   ];
 

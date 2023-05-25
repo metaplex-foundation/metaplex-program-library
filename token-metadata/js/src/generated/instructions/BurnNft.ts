@@ -27,7 +27,6 @@ export const BurnNftStruct = new beet.BeetArgsStruct<{ instructionDiscriminator:
  * @property [_writable_] masterEditionAccount MasterEdition2 of the NFT
  * @property [] splTokenProgram SPL Token Program
  * @property [_writable_] collectionMetadata (optional) Metadata of the Collection
- * @property [] sysvarInstructions Instructions sysvar account
  * @category Instructions
  * @category BurnNft
  * @category generated
@@ -40,8 +39,6 @@ export type BurnNftInstructionAccounts = {
   masterEditionAccount: web3.PublicKey;
   splTokenProgram: web3.PublicKey;
   collectionMetadata?: web3.PublicKey;
-  systemProgram?: web3.PublicKey;
-  sysvarInstructions: web3.PublicKey;
 };
 
 export const burnNftInstructionDiscriminator = 29;
@@ -106,16 +103,6 @@ export function createBurnNftInstruction(
       isSigner: false,
     });
   }
-  keys.push({
-    pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
-    isWritable: false,
-    isSigner: false,
-  });
-  keys.push({
-    pubkey: accounts.sysvarInstructions,
-    isWritable: false,
-    isSigner: false,
-  });
 
   const ix = new web3.TransactionInstruction({
     programId,

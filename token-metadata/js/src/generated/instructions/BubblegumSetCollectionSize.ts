@@ -41,7 +41,6 @@ export const BubblegumSetCollectionSizeStruct = new beet.BeetArgsStruct<
  * @property [] collectionMint Mint of the Collection
  * @property [**signer**] bubblegumSigner Signing PDA of Bubblegum program
  * @property [] collectionAuthorityRecord (optional) Collection Authority Record PDA
- * @property [] sysvarInstructions Instructions sysvar account
  * @category Instructions
  * @category BubblegumSetCollectionSize
  * @category generated
@@ -52,8 +51,6 @@ export type BubblegumSetCollectionSizeInstructionAccounts = {
   collectionMint: web3.PublicKey;
   bubblegumSigner: web3.PublicKey;
   collectionAuthorityRecord?: web3.PublicKey;
-  systemProgram?: web3.PublicKey;
-  sysvarInstructions: web3.PublicKey;
 };
 
 export const bubblegumSetCollectionSizeInstructionDiscriminator = 36;
@@ -112,16 +109,6 @@ export function createBubblegumSetCollectionSizeInstruction(
       isSigner: false,
     });
   }
-  keys.push({
-    pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
-    isWritable: false,
-    isSigner: false,
-  });
-  keys.push({
-    pubkey: accounts.sysvarInstructions,
-    isWritable: false,
-    isSigner: false,
-  });
 
   const ix = new web3.TransactionInstruction({
     programId,
