@@ -64,8 +64,8 @@ pub fn process_mint_new_edition_from_master_edition_via_token_logic<'a>(
     } = accounts;
 
     assert_token_program_matches_package(token_program_account_info)?;
-    assert_owned_by(mint_info, &spl_token::id())?;
-    assert_owned_by(token_account_info, &spl_token::id())?;
+    assert_owned_by(mint_info, &spl_token::ID)?;
+    assert_owned_by(token_account_info, &spl_token::ID)?;
     assert_owned_by(master_edition_account_info, program_id)?;
     assert_owned_by(master_metadata_account_info, program_id)?;
     assert_signer(payer_account_info)?;
@@ -259,7 +259,7 @@ pub fn extract_edition_number_from_deprecated_reservation_list(
                 break;
             }
 
-            if reservation.address == solana_program::system_program::id() {
+            if reservation.address == solana_program::system_program::ID {
                 // This is an anchor point in the array...it means we reset our math to
                 // this offset because we may be missing information in between this point and
                 // the points before it.
@@ -578,7 +578,7 @@ pub fn create_master_edition<'a>(
     assert_token_program_matches_package(token_program_info)?;
     assert_mint_authority_matches_mint(&mint.mint_authority, mint_authority_info)?;
     assert_owned_by(metadata_account_info, program_id)?;
-    assert_owned_by(mint_info, &spl_token::id())?;
+    assert_owned_by(mint_info, &spl_token::ID)?;
 
     if metadata.mint != *mint_info.key {
         return Err(MetadataError::MintMismatch.into());

@@ -212,11 +212,11 @@ pub fn assert_holding_amount(
     amount: u64,
 ) -> ProgramResult {
     assert_owned_by(metadata_info, program_id)?;
-    assert_owned_by(mint_info, &spl_token::id())?;
+    assert_owned_by(mint_info, &spl_token::ID)?;
 
     let token_account: Account = assert_initialized(token_account_info)?;
 
-    assert_owned_by(token_account_info, &spl_token::id())?;
+    assert_owned_by(token_account_info, &spl_token::ID)?;
 
     if token_account.owner != *owner_info.key {
         return Err(MetadataError::InvalidOwner.into());

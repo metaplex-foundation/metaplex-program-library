@@ -3,7 +3,7 @@ pub mod utils;
 
 use num_traits::FromPrimitive;
 #[allow(deprecated)]
-use old_token_metadata::{error::MetadataError, id, instruction::create_metadata_accounts_v2};
+use old_token_metadata::{error::MetadataError, instruction::create_metadata_accounts_v2, ID};
 use solana_program_test::*;
 
 use solana_sdk::{
@@ -51,7 +51,7 @@ async fn deserialize_removed_instruction() {
     #[allow(deprecated)]
     let tx = Transaction::new_signed_with_payer(
         &[create_metadata_accounts_v2(
-            id(),
+            ID,
             test_metadata.pubkey,
             test_metadata.mint.pubkey(),
             payer,

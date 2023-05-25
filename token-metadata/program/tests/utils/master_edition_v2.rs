@@ -1,8 +1,8 @@
 use borsh::ser::BorshSerialize;
 use mpl_token_metadata::{
-    id,
     instruction::{self, CreateMasterEditionArgs, MetadataInstruction},
     state::{MasterEditionV2 as ProgramMasterEdition, TokenMetadataAccount, EDITION, PREFIX},
+    ID,
 };
 use solana_program::{
     borsh::try_from_slice_unchecked,
@@ -26,7 +26,7 @@ pub struct MasterEditionV2 {
 
 impl MasterEditionV2 {
     pub fn new(metadata: &Metadata) -> Self {
-        let program_id = id();
+        let program_id = ID;
         let mint_pubkey = metadata.mint.pubkey();
 
         let master_edition_seeds = &[
@@ -35,7 +35,7 @@ impl MasterEditionV2 {
             mint_pubkey.as_ref(),
             EDITION.as_bytes(),
         ];
-        let (pubkey, _) = Pubkey::find_program_address(master_edition_seeds, &id());
+        let (pubkey, _) = Pubkey::find_program_address(master_edition_seeds, &ID);
 
         MasterEditionV2 {
             pubkey,
@@ -87,7 +87,7 @@ impl MasterEditionV2 {
         let fake_token_program = Keypair::new();
 
         let fake_instruction = Instruction {
-            program_id: mpl_token_metadata::id(),
+            program_id: mpl_token_metadata::ID,
             accounts: vec![
                 AccountMeta::new(self.pubkey, false),
                 AccountMeta::new(self.mint_pubkey, false),
@@ -96,8 +96,8 @@ impl MasterEditionV2 {
                 AccountMeta::new_readonly(context.payer.pubkey(), true),
                 AccountMeta::new_readonly(self.metadata_pubkey, false),
                 AccountMeta::new_readonly(fake_token_program.pubkey(), false),
-                AccountMeta::new_readonly(solana_program::system_program::id(), false),
-                AccountMeta::new_readonly(sysvar::rent::id(), false),
+                AccountMeta::new_readonly(solana_program::system_program::ID, false),
+                AccountMeta::new_readonly(sysvar::rent::ID, false),
             ],
             data: MetadataInstruction::CreateMasterEditionV3(CreateMasterEditionArgs {
                 max_supply,
@@ -123,7 +123,7 @@ impl MasterEditionV2 {
     ) -> Result<(), BanksClientError> {
         let tx = Transaction::new_signed_with_payer(
             &[instruction::create_master_edition_v3(
-                id(),
+                ID,
                 self.pubkey,
                 self.mint_pubkey,
                 context.payer.pubkey(),

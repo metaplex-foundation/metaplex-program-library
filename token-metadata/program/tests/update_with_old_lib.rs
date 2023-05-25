@@ -9,7 +9,6 @@ use mpl_token_auth_rules::{
     state::{CompareOp, Rule, RuleSetV1},
 };
 use old_token_metadata::{
-    id,
     instruction::{
         builders::{CreateBuilder, DelegateBuilder, MintBuilder, UpdateBuilder},
         CreateArgs, DelegateArgs, InstructionBuilder, MetadataDelegateRole, MintArgs,
@@ -21,6 +20,7 @@ use old_token_metadata::{
         AssetData, Collection, CollectionDetails, Creator, Metadata, Operation, PayloadKey,
         PrintSupply, ProgrammableConfig, TokenMetadataAccount, TokenStandard, EDITION, PREFIX,
     },
+    ID,
 };
 use rmp_serde::Serializer;
 use serde::Serialize;
@@ -203,7 +203,7 @@ impl OldDigitalAsset {
     fn new() -> Self {
         let mint = Keypair::new();
         let mint_pubkey = mint.pubkey();
-        let program_id = id();
+        let program_id = ID;
 
         let metadata_seeds = &[PREFIX.as_bytes(), program_id.as_ref(), mint_pubkey.as_ref()];
         let (metadata, _) = Pubkey::find_program_address(metadata_seeds, &program_id);
@@ -304,7 +304,7 @@ impl OldDigitalAsset {
         let payer_pubkey = context.payer.pubkey();
         let mint_pubkey = self.mint.pubkey();
 
-        let program_id = id();
+        let program_id = ID;
         let mut builder = CreateBuilder::new();
         builder
             .metadata(self.metadata)
@@ -324,7 +324,7 @@ impl OldDigitalAsset {
                     mint_pubkey.as_ref(),
                     EDITION.as_bytes(),
                 ];
-                let (edition, _) = Pubkey::find_program_address(edition_seeds, &id());
+                let (edition, _) = Pubkey::find_program_address(edition_seeds, &ID);
                 // sets the master edition to the builder
                 builder.master_edition(edition);
                 Some(edition)
@@ -367,10 +367,10 @@ impl OldDigitalAsset {
         let (token, _) = Pubkey::find_program_address(
             &[
                 &payer_pubkey.to_bytes(),
-                &spl_token::id().to_bytes(),
+                &spl_token::ID.to_bytes(),
                 &self.mint.pubkey().to_bytes(),
             ],
-            &spl_associated_token_account::id(),
+            &spl_associated_token_account::ID,
         );
 
         let (token_record, _) = find_token_record_account(&self.mint.pubkey(), &token);

@@ -30,7 +30,7 @@ pub fn freeze_delegated_account(
             AccountMeta::new(token_account, false),
             AccountMeta::new_readonly(edition, false),
             AccountMeta::new_readonly(mint, false),
-            AccountMeta::new_readonly(spl_token::id(), false),
+            AccountMeta::new_readonly(spl_token::ID, false),
         ],
         data: MetadataInstruction::FreezeDelegatedAccount
             .try_to_vec()
@@ -62,7 +62,7 @@ pub fn thaw_delegated_account(
             AccountMeta::new(token_account, false),
             AccountMeta::new_readonly(edition, false),
             AccountMeta::new_readonly(mint, false),
-            AccountMeta::new_readonly(spl_token::id(), false),
+            AccountMeta::new_readonly(spl_token::ID, false),
         ],
         data: MetadataInstruction::ThawDelegatedAccount
             .try_to_vec()

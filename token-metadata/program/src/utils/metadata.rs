@@ -84,7 +84,7 @@ pub fn process_create_metadata_accounts_logic(
             }
         },
     )?;
-    assert_owned_by(mint_info, &spl_token::id())?;
+    assert_owned_by(mint_info, &spl_token::ID)?;
 
     let metadata_seeds = &[
         PREFIX.as_bytes(),

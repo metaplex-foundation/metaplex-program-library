@@ -3,12 +3,13 @@ pub mod utils;
 
 use mpl_token_metadata::{
     error::MetadataError,
-    id, instruction,
+    instruction,
     state::{
         Collection, Creator, Key, UseMethod, Uses, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH,
         MAX_URI_LENGTH,
     },
     utils::{puffed_out_string, BUBBLEGUM_PROGRAM_ADDRESS},
+    ID,
 };
 use num_traits::FromPrimitive;
 use solana_program::{pubkey::Pubkey, system_instruction::assign};
@@ -158,7 +159,7 @@ mod create_meta_accounts {
         .unwrap();
 
         let ix = instruction::create_metadata_accounts_v3(
-            id(),
+            ID,
             test_metadata.pubkey,
             test_metadata.mint.pubkey(),
             fake_mint_authority.pubkey(),
@@ -192,7 +193,7 @@ mod create_meta_accounts {
         assert_custom_error!(result, MetadataError::InvalidMintAuthority);
 
         let ix2 = instruction::create_metadata_accounts_v3(
-            id(),
+            ID,
             test_metadata.pubkey,
             test_metadata.mint.pubkey(),
             fake_mint_authority.pubkey(),
@@ -688,7 +689,7 @@ mod create_meta_accounts {
 
         let create_tx = Transaction::new_signed_with_payer(
             &[instruction::create_metadata_accounts_v3(
-                id(),
+                ID,
                 test_metadata.pubkey,
                 test_metadata.mint.pubkey(),
                 mint_authority.pubkey(),
@@ -792,7 +793,7 @@ mod create_meta_accounts {
         // Try to create with a verified collection.
         let create_tx = Transaction::new_signed_with_payer(
             &[instruction::create_metadata_accounts_v3(
-                id(),
+                ID,
                 test_metadata.pubkey,
                 test_metadata.mint.pubkey(),
                 mint_authority.pubkey(),

@@ -3,12 +3,13 @@ pub mod utils;
 
 use mpl_token_metadata::{
     error::MetadataError,
-    id, instruction,
+    instruction,
     state::{
         Collection, Creator, DataV2, Key, UseMethod, Uses, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH,
         MAX_URI_LENGTH,
     },
     utils::puffed_out_string,
+    ID,
 };
 use num_traits::FromPrimitive;
 use solana_program_test::*;
@@ -173,7 +174,7 @@ mod update_metadata_account_v2 {
             &new_collection_authority.pubkey(),
         );
         let ix = mpl_token_metadata::instruction::approve_collection_authority(
-            mpl_token_metadata::id(),
+            mpl_token_metadata::ID,
             record,
             new_collection_authority.pubkey(),
             update_authority,
@@ -215,7 +216,7 @@ mod update_metadata_account_v2 {
 
         let tx2 = Transaction::new_signed_with_payer(
             &[instruction::update_metadata_accounts_v2(
-                id(),
+                ID,
                 test_metadata.pubkey,
                 context.payer.pubkey(),
                 None,
@@ -261,7 +262,7 @@ mod update_metadata_account_v2 {
 
         let tx = Transaction::new_signed_with_payer(
             &[instruction::update_metadata_accounts_v2(
-                id(),
+                ID,
                 test_metadata.pubkey,
                 fake_update_authority.pubkey(),
                 None,
@@ -307,7 +308,7 @@ mod update_metadata_account_v2 {
         // Flip true.
         let tx = Transaction::new_signed_with_payer(
             &[instruction::update_metadata_accounts_v2(
-                id(),
+                ID,
                 test_metadata.pubkey,
                 context.payer.pubkey(),
                 None,
@@ -324,7 +325,7 @@ mod update_metadata_account_v2 {
         // Try to flip back to false; this should fail.
         let tx = Transaction::new_signed_with_payer(
             &[instruction::update_metadata_accounts_v2(
-                id(),
+                ID,
                 test_metadata.pubkey,
                 context.payer.pubkey(),
                 None,
@@ -371,7 +372,7 @@ mod update_metadata_account_v2 {
             .unwrap();
         let tx = Transaction::new_signed_with_payer(
             &[instruction::update_metadata_accounts_v2(
-                id(),
+                ID,
                 test_metadata.pubkey,
                 context.payer.pubkey(),
                 None,
@@ -432,7 +433,7 @@ mod update_metadata_account_v2 {
 
         let tx = Transaction::new_signed_with_payer(
             &[instruction::update_metadata_accounts_v2(
-                id(),
+                ID,
                 test_metadata.pubkey,
                 context.payer.pubkey(),
                 None,
@@ -493,7 +494,7 @@ mod update_metadata_account_v2 {
             &new_collection_authority.pubkey(),
         );
         let ix = mpl_token_metadata::instruction::approve_collection_authority(
-            mpl_token_metadata::id(),
+            mpl_token_metadata::ID,
             record,
             new_collection_authority.pubkey(),
             update_authority,
@@ -532,7 +533,7 @@ mod update_metadata_account_v2 {
         let fake_collection_pubkey = collection_master_edition_account.pubkey;
         let tx2 = Transaction::new_signed_with_payer(
             &[instruction::update_metadata_accounts_v2(
-                id(),
+                ID,
                 test_metadata.pubkey,
                 context.payer.pubkey(),
                 None,
@@ -618,7 +619,7 @@ mod update_metadata_account_v2 {
         // Setting existing, but unverified collection data to None.
         let tx = Transaction::new_signed_with_payer(
             &[instruction::update_metadata_accounts_v2(
-                id(),
+                ID,
                 test_metadata.pubkey,
                 context.payer.pubkey(),
                 None,
@@ -646,7 +647,7 @@ mod update_metadata_account_v2 {
         // Setting Collection data that's already None to None.
         let tx = Transaction::new_signed_with_payer(
             &[instruction::update_metadata_accounts_v2(
-                id(),
+                ID,
                 test_metadata.pubkey,
                 context.payer.pubkey(),
                 None,
@@ -786,7 +787,7 @@ mod update_metadata_account_v2 {
 
         let tx = Transaction::new_signed_with_payer(
             &[instruction::update_metadata_accounts_v2(
-                id(),
+                ID,
                 test_metadata.pubkey,
                 context.payer.pubkey(),
                 None,
@@ -832,7 +833,7 @@ mod update_metadata_account_v2 {
         let new_update_authority = Keypair::new();
         let tx = Transaction::new_signed_with_payer(
             &[instruction::update_metadata_accounts_v2(
-                id(),
+                ID,
                 test_metadata.pubkey,
                 context.payer.pubkey(),
                 Some(new_update_authority.pubkey()),
@@ -862,7 +863,7 @@ mod update_metadata_account_v2 {
 
         let tx = Transaction::new_signed_with_payer(
             &[instruction::update_metadata_accounts_v2(
-                id(),
+                ID,
                 test_metadata.pubkey,
                 new_update_authority.pubkey(),
                 None,
@@ -905,7 +906,7 @@ async fn fail_cannot_unverify_another_creator_by_removing_from_array() {
     let new_update_authority = Keypair::new();
     let tx = Transaction::new_signed_with_payer(
         &[instruction::update_metadata_accounts_v2(
-            id(),
+            ID,
             test_metadata.pubkey,
             context.payer.pubkey(),
             Some(new_update_authority.pubkey()),
@@ -928,7 +929,7 @@ async fn fail_cannot_unverify_another_creator_by_removing_from_array() {
 
     let tx = Transaction::new_signed_with_payer(
         &[instruction::update_metadata_accounts_v2(
-            id(),
+            ID,
             test_metadata.pubkey,
             new_update_authority.pubkey(),
             None,
@@ -970,7 +971,7 @@ async fn fail_cannot_unverify_creators_by_setting_to_none() {
     let new_update_authority = Keypair::new();
     let tx = Transaction::new_signed_with_payer(
         &[instruction::update_metadata_accounts_v2(
-            id(),
+            ID,
             test_metadata.pubkey,
             context.payer.pubkey(),
             Some(new_update_authority.pubkey()),
@@ -987,7 +988,7 @@ async fn fail_cannot_unverify_creators_by_setting_to_none() {
     // Try to update metadata by setting creators to None.
     let tx = Transaction::new_signed_with_payer(
         &[instruction::update_metadata_accounts_v2(
-            id(),
+            ID,
             test_metadata.pubkey,
             new_update_authority.pubkey(),
             None,
