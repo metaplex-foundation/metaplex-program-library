@@ -773,7 +773,6 @@ export class InitTransactions {
       collection: collectionMetadata,
       collectionMasterEditionAccount: collectionMasterEdition,
       payer: payer.publicKey,
-      sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
     };
 
     const verifyInstruction = createVerifyCollectionInstruction(verifyCollectionAcccounts);
@@ -798,7 +797,6 @@ export class InitTransactions {
     const signMetadataAcccounts: SignMetadataInstructionAccounts = {
       metadata,
       creator: creator.publicKey,
-      sysvarInstructions: SYSVAR_INSTRUCTIONS_PUBKEY,
     };
 
     const signMetadataInstruction = createSignMetadataInstruction(signMetadataAcccounts);
