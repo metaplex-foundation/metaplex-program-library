@@ -291,18 +291,6 @@
           "isMut": false,
           "isSigner": false,
           "desc": "Account containing tokens from the metadata's mint"
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "System program"
-        },
-        {
-          "name": "sysvarInstructions",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "Instructions sysvar account"
         }
       ],
       "args": [],
@@ -1444,12 +1432,6 @@
           "isMut": false,
           "isSigner": false,
           "desc": "Mint of Metadata"
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "System program"
         }
       ],
       "args": [],

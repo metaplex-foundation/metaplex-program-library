@@ -34,7 +34,6 @@ export type RevokeCollectionAuthorityInstructionAccounts = {
   revokeAuthority: web3.PublicKey;
   metadata: web3.PublicKey;
   mint: web3.PublicKey;
-  systemProgram?: web3.PublicKey;
 };
 
 export const revokeCollectionAuthorityInstructionDiscriminator = 24;
@@ -77,11 +76,6 @@ export function createRevokeCollectionAuthorityInstruction(
     },
     {
       pubkey: accounts.mint,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
       isWritable: false,
       isSigner: false,
     },
