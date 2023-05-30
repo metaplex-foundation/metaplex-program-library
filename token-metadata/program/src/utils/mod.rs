@@ -189,7 +189,7 @@ pub fn zero_account(s: &str, size: usize) -> String {
     s.to_owned() + std::str::from_utf8(&array_of_zeroes).unwrap()
 }
 
-pub fn close_program_account<'a>(
+pub(crate) fn close_program_account<'a>(
     account_info: &AccountInfo<'a>,
     funds_dest_account_info: &AccountInfo<'a>,
     key: Key,
