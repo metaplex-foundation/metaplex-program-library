@@ -108,8 +108,6 @@ pub enum MetadataInstruction {
     #[account(0, writable, name="metadata", desc="Metadata key (pda of ['metadata', program id, mint id])")]
     #[account(1, signer, name="owner", desc="Owner on the token account")]
     #[account(2, name="token", desc="Account containing tokens from the metadata's mint")]
-    #[account(3, name="system_program", desc="System program")]
-    #[account(4, name="sysvar_instructions", desc="Instructions sysvar account")]
     UpdatePrimarySaleHappenedViaToken,
 
     /// Reserve up to 200 editions in sequence for up to 200 addresses in an existing reservation PDA, which can then be used later by
@@ -342,7 +340,6 @@ pub enum MetadataInstruction {
     #[account(2, signer, writable, name="revoke_authority", desc="Update Authority, or Delegated Authority, of Collection NFT")]
     #[account(3, name="metadata", desc="Metadata account")]
     #[account(4, name="mint", desc="Mint of Metadata")]
-    #[account(5, name="system_program", desc="System program")]
     RevokeCollectionAuthority,
 
     /// Allows the same Update Authority (Or Delegated Authority) on an NFT and Collection to perform [update_metadata_accounts_v2] 

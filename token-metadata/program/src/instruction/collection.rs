@@ -78,7 +78,6 @@ pub fn revoke_collection_authority(
             AccountMeta::new(revoke_authority, true),
             AccountMeta::new_readonly(metadata, false),
             AccountMeta::new_readonly(mint, false),
-            AccountMeta::new_readonly(system_program::ID, false),
         ],
         data: MetadataInstruction::RevokeCollectionAuthority
             .try_to_vec()
