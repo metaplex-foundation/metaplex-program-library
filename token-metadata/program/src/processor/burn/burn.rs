@@ -229,6 +229,7 @@ fn burn_v1(program_id: &Pubkey, ctx: Context<Burn>, args: BurnArgs) -> ProgramRe
             close_program_account(
                 &ctx.accounts.token_record_info.unwrap().clone(),
                 &ctx.accounts.authority_info.clone(),
+                Key::TokenRecord,
             )?;
         }
         TokenStandard::Fungible | TokenStandard::FungibleAsset => {

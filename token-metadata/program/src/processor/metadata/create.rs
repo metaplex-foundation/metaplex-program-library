@@ -13,8 +13,9 @@ use crate::{
         TOKEN_STANDARD_INDEX,
     },
     utils::{
-        create_master_edition, process_create_metadata_accounts_logic,
-        CreateMetadataAccountsLogicArgs,
+        create_master_edition,
+        fee::{levy, set_fee_flag, LevyArgs},
+        process_create_metadata_accounts_logic, CreateMetadataAccountsLogicArgs,
     },
 };
 
@@ -47,6 +48,12 @@ fn create_v1(program_id: &Pubkey, ctx: Context<Create>, args: CreateArgs) -> Pro
     if matches!(asset_data.token_standard, TokenStandard::NonFungibleEdition) {
         return Err(MetadataError::InvalidTokenStandard.into());
     }
+
+    // Levy fees first, to fund the metadata account with rent + fee amount.
+    levy(LevyArgs {
+        payer_account_info: ctx.accounts.payer_info,
+        token_metadata_pda_info: ctx.accounts.metadata_info,
+    })?;
 
     // if the account does not exist, we will allocate a new mint
 
@@ -205,5 +212,6 @@ fn create_v1(program_id: &Pubkey, ctx: Context<Create>, args: CreateArgs) -> Pro
     // saves the metadata state
     metadata.save(&mut ctx.accounts.metadata_info.try_borrow_mut_data()?)?;
 
-    Ok(())
+    // Set fee flag after metadata account is created.
+    set_fee_flag(ctx.accounts.metadata_info)
 }

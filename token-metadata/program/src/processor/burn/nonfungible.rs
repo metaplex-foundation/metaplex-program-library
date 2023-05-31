@@ -96,8 +96,16 @@ pub(crate) fn burn_nonfungible(ctx: &Context<Burn>, args: BurnNonFungibleArgs) -
     // CPIs panic if there's an error so unwrapping is fine here.
     mpl_utils::token::spl_token_close(close_params).unwrap();
 
-    close_program_account(ctx.accounts.metadata_info, ctx.accounts.authority_info)?;
-    close_program_account(edition_info, ctx.accounts.authority_info)?;
+    close_program_account(
+        ctx.accounts.metadata_info,
+        ctx.accounts.authority_info,
+        Key::MetadataV1,
+    )?;
+    close_program_account(
+        edition_info,
+        ctx.accounts.authority_info,
+        Key::MasterEditionV2,
+    )?;
 
     if let Some(collection_metadata_info) = ctx.accounts.collection_metadata_info {
         if collection_metadata_info.data_is_empty() {

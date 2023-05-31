@@ -17,7 +17,8 @@ use mpl_token_metadata::{
     state::{
         AssetData, Collection, CollectionDetails, Creator, Metadata, PrintSupply,
         ProgrammableConfig, TokenDelegateRole, TokenMetadataAccount, TokenRecord, TokenStandard,
-        EDITION, EDITION_MARKER_BIT_SIZE, PREFIX,
+        CREATE_FEE, EDITION, EDITION_MARKER_BIT_SIZE, FEE_FLAG_SET, METADATA_FEE_FLAG_INDEX,
+        PREFIX,
     },
     ID,
 };
@@ -1262,9 +1263,16 @@ impl DigitalAsset {
             .get_account(self.edition.unwrap())
             .await?;
 
-        assert!(md_account.is_none());
-        assert!(token_account.is_none());
+        // The Metadata accounts may still be open because they are no longer being re-assigned
+        // to the system program immediately, but if they exist they should have a
+        // data length of 0.
+
+        if let Some(account) = md_account {
+            assert_eq!(account.data.len(), 0);
+        }
+
         assert!(edition_account.is_none());
+        assert!(token_account.is_none());
 
         Ok(())
     }
@@ -1298,7 +1306,25 @@ impl DigitalAsset {
             .get_account(token_record_pubkey)
             .await?;
 
-        assert!(token_record_account.is_none());
+        if let Some(account) = token_record_account {
+            assert_eq!(account.data.len(), 0);
+        }
+        Ok(())
+    }
+
+    pub async fn assert_create_fees_charged(
+        &self,
+        context: &mut ProgramTestContext,
+    ) -> Result<(), BanksClientError> {
+        let account = get_account(context, &self.metadata).await;
+
+        let rent = context.banks_client.get_rent().await.unwrap();
+        let rent_exempt = rent.minimum_balance(account.data.len());
+
+        let expected_lamports = rent_exempt + CREATE_FEE;
+
+        assert_eq!(account.lamports, expected_lamports);
+        assert_eq!(account.data[METADATA_FEE_FLAG_INDEX], FEE_FLAG_SET);
 
         Ok(())
     }

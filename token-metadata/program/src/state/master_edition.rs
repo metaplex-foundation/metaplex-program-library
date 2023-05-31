@@ -10,6 +10,10 @@ pub const MAX_MASTER_EDITION_LEN: usize = 1 + 9 + 8 + 264;
 // edition account.
 pub const TOKEN_STANDARD_INDEX: usize = MAX_MASTER_EDITION_LEN - 1;
 
+// The second to last byte of the account contains the fee flag, indicating
+// if the account has fees available for retrieval.
+pub const MASTER_EDITION_FEE_FLAG_INDEX: usize = MAX_MASTER_EDITION_LEN - 2;
+
 pub trait MasterEdition {
     fn key(&self) -> Key;
     fn supply(&self) -> u64;
@@ -106,7 +110,7 @@ impl MasterEdition for MasterEditionV2 {
     }
 
     fn save(&self, account: &AccountInfo) -> ProgramResult {
-        let mut storage = &mut account.data.borrow_mut()[..TOKEN_STANDARD_INDEX];
+        let mut storage = &mut account.data.borrow_mut()[..MASTER_EDITION_FEE_FLAG_INDEX];
         BorshSerialize::serialize(self, &mut storage)?;
         Ok(())
     }
@@ -166,7 +170,7 @@ impl MasterEdition for MasterEditionV1 {
     }
 
     fn save(&self, account: &AccountInfo) -> ProgramResult {
-        let mut storage = &mut account.data.borrow_mut()[..TOKEN_STANDARD_INDEX];
+        let mut storage = &mut account.data.borrow_mut()[..MASTER_EDITION_FEE_FLAG_INDEX];
         BorshSerialize::serialize(self, &mut storage)?;
         Ok(())
     }

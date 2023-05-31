@@ -17,13 +17,12 @@ use crate::{
 
 pub fn unverify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
     let account_info_iter = &mut accounts.iter();
+
     let metadata_info = next_account_info(account_info_iter)?;
     let collection_authority_info = next_account_info(account_info_iter)?;
     let collection_mint_info = next_account_info(account_info_iter)?;
     let collection_metadata_info = next_account_info(account_info_iter)?;
     let _edition_account_info = next_account_info(account_info_iter)?;
-
-    let using_delegated_collection_authority = accounts.len() == 6;
 
     // Account validation.
     assert_owned_by(metadata_info, program_id)?;
@@ -86,27 +85,17 @@ pub fn unverify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) -> Pro
             return Err(MetadataError::SizedCollection.into());
         }
 
-        if using_delegated_collection_authority {
-            let collection_authority_record = next_account_info(account_info_iter)?;
-            assert_has_collection_authority(
-                collection_authority_info,
-                &collection_metadata,
-                collection_mint_info.key,
-                Some(collection_authority_record),
-            )?;
-        } else {
-            assert_has_collection_authority(
-                collection_authority_info,
-                &collection_metadata,
-                collection_mint_info.key,
-                None,
-            )?;
-        }
+        let delegated_collection_authority_opt = account_info_iter.next();
+
+        assert_has_collection_authority(
+            collection_authority_info,
+            &collection_metadata,
+            collection_mint_info.key,
+            delegated_collection_authority_opt,
+        )?;
     }
 
     // Unverify and update the metadata
     collection.verified = false;
-    clean_write_metadata(&mut metadata, metadata_info)?;
-
-    Ok(())
+    clean_write_metadata(&mut metadata, metadata_info)
 }
