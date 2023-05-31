@@ -209,15 +209,10 @@ pub(crate) fn close_program_account<'a>(
         .checked_sub(rent_lamports)
         .ok_or(MetadataError::NumericalOverflowError)?;
 
-    let redeem_lamports = account_info
-        .lamports()
-        .checked_sub(remaining_lamports)
-        .ok_or(MetadataError::NumericalOverflowError)?;
-
     // Transfer lamports from the account to the destination account.
     let dest_starting_lamports = funds_dest_account_info.lamports();
     **funds_dest_account_info.lamports.borrow_mut() = dest_starting_lamports
-        .checked_add(redeem_lamports)
+        .checked_add(rent_lamports)
         .ok_or(MetadataError::NumericalOverflowError)?;
     **account_info.lamports.borrow_mut() = remaining_lamports;
 
