@@ -3,13 +3,7 @@ use solana_program::{
     sysvar::Sysvar,
 };
 
-use crate::{
-    error::MetadataError,
-    state::{
-        fee::CREATE_FEE, Key, Metadata, TokenMetadataAccount, MASTER_EDITION_FEE_FLAG_INDEX,
-        METADATA_FEE_FLAG_INDEX,
-    },
-};
+use crate::state::{fee::CREATE_FEE, Metadata, TokenMetadataAccount, METADATA_FEE_FLAG_INDEX};
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
@@ -46,16 +40,11 @@ pub(crate) fn set_fee_flag(pda_account_info: &AccountInfo) -> ProgramResult {
     Ok(())
 }
 
-pub(crate) fn clear_fee_flag(pda_account_info: &AccountInfo, key: Key) -> ProgramResult {
-    let flags_index = match key {
-        Key::Uninitialized | Key::MetadataV1 => METADATA_FEE_FLAG_INDEX,
-        Key::MasterEditionV2 => MASTER_EDITION_FEE_FLAG_INDEX,
-        _ => return Err(MetadataError::InvalidMetadataKey.into()),
-    };
-
+pub(crate) fn clear_fee_flag(pda_account_info: &AccountInfo) -> ProgramResult {
     let mut data = pda_account_info.try_borrow_mut_data()?;
+
     // Clear the flag if the index exists.
-    if let Some(flag) = data.get_mut(flags_index) {
+    if let Some(flag) = data.get_mut(METADATA_FEE_FLAG_INDEX) {
         *flag = 0;
     }
 

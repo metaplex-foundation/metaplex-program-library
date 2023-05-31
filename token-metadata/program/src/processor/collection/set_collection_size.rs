@@ -40,21 +40,12 @@ pub fn set_collection_size(
 
     let delegated_collection_authority_opt = account_info_iter.next();
 
-    if let Some(record) = delegated_collection_authority_opt {
-        assert_has_collection_authority(
-            collection_update_authority_account_info,
-            &metadata,
-            collection_mint_account_info.key,
-            Some(record),
-        )?;
-    } else {
-        assert_has_collection_authority(
-            collection_update_authority_account_info,
-            &metadata,
-            collection_mint_account_info.key,
-            None,
-        )?;
-    }
+    assert_has_collection_authority(
+        collection_update_authority_account_info,
+        &metadata,
+        collection_mint_account_info.key,
+        delegated_collection_authority_opt,
+    )?;
 
     // Only unsized collections can have the size set, and only once.
     if metadata.collection_details.is_some() {

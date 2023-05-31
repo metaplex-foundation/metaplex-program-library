@@ -3,7 +3,7 @@ use num_traits::FromPrimitive;
 use solana_program::{account_info::next_account_info, rent::Rent, system_program, sysvar::Sysvar};
 
 use crate::{
-    state::{fee::FEE_AUTHORITY, MAX_MASTER_EDITION_LEN, MAX_METADATA_LEN},
+    state::{fee::FEE_AUTHORITY, MAX_METADATA_LEN},
     utils::fee::clear_fee_flag,
 };
 
@@ -46,21 +46,12 @@ fn collect_fee_from_account(account_info: &AccountInfo, dest_info: &AccountInfo)
 
     let rent = Rent::get()?;
     let metadata_rent = rent.minimum_balance(MAX_METADATA_LEN);
-    let master_edition_rent = rent.minimum_balance(MAX_MASTER_EDITION_LEN);
 
     let (fee_amount, rent_amount) = match account_key {
         Key::Uninitialized => {
             account_info.assign(&system_program::ID);
 
             (account_info.lamports(), 0)
-        }
-        Key::MasterEditionV2 | Key::MasterEditionV1 => {
-            let fee_amount = account_info
-                .lamports()
-                .checked_sub(master_edition_rent)
-                .ok_or(MetadataError::NumericalOverflowError)?;
-
-            (fee_amount, master_edition_rent)
         }
         Key::MetadataV1 => {
             let fee_amount = account_info
@@ -80,7 +71,7 @@ fn collect_fee_from_account(account_info: &AccountInfo, dest_info: &AccountInfo)
     **account_info.lamports.borrow_mut() = rent_amount;
 
     // Clear fee flag.
-    clear_fee_flag(account_info, account_key)?;
+    clear_fee_flag(account_info)?;
 
     Ok(())
 }
