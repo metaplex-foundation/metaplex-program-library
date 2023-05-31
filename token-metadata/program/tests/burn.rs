@@ -1632,8 +1632,8 @@ mod pnft_edition {
             .unwrap()
             .unwrap();
 
-        // Ledger is the 31 bytes after the key.
-        let ledger = &edition_marker_account.data[1..];
+        // Ledger is the 31 bytes after the key and vec header.
+        let ledger = &edition_marker_account.data[5..];
 
         assert!(ledger[0] == 0b0111_1111);
         assert!(ledger[1] == 0b1110_0000);
@@ -1655,7 +1655,7 @@ mod pnft_edition {
             .unwrap();
 
         // Ledger is the 31 bytes after the key.
-        let ledger = &edition_marker_account.data[1..];
+        let ledger = &edition_marker_account.data[5..];
 
         // One bit flipped here
         assert!(ledger[0] == 0b0101_1111);
@@ -1677,7 +1677,7 @@ mod pnft_edition {
             .unwrap();
 
         // Ledger is the 31 bytes after the key.
-        let ledger = &edition_marker_account.data[1..];
+        let ledger = &edition_marker_account.data[5..];
 
         // Stays the same
         assert!(ledger[0] == 0b0101_1111);
