@@ -40,5 +40,6 @@ pub fn process_create_metadata_accounts_v3<'a>(
         false,
         true,
         collection_details,
+        None,
     )
 }

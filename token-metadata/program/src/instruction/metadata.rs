@@ -435,6 +435,13 @@ pub struct UpdateMetadataAccountArgsV2 {
     pub is_mutable: Option<bool>,
 }
 
+#[repr(C)]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+pub enum PrintArgs {
+    V1 { edition: u64 },
+}
+
 //----------------------+
 // Instruction builders |
 //----------------------+
@@ -891,6 +898,66 @@ impl InstructionBuilder for super::builders::Update {
             program_id: crate::ID,
             accounts,
             data: MetadataInstruction::Update(self.args.clone())
+                .try_to_vec()
+                .unwrap(),
+        }
+    }
+}
+
+/// Prints an edition from a master edition.
+///
+/// # Accounts:
+///
+///   0. `[writable]` Edition Metadata
+///   1. `[writable]` Edition
+///   2. `[writable]` Edition Mint
+///   3. `[]` Edition Token Account Owner
+///   4. `[writable]` Edition Token Account
+///   5. `[signer]` Edition Mint Authority
+///   6. `[writable]` Edition Token Record
+///   7. `[writable]`, Master Edition
+///   8. `[writable]`, Edition Marker
+///   9. `[signer, writable]` Payer
+///   10. `[signer]`, Master Token Account Owner
+///   11. `[]` Master Token Account
+///   12. `[]` Master Metadata
+///   12. `[]` Update Authority
+///   13. `[]` Token Program
+///   14. `[]` Associated Token Account Program
+///   15. `[]` Instructions System Variable
+///   16. `[]` System Program
+
+impl InstructionBuilder for super::builders::Print {
+    fn instruction(&self) -> solana_program::instruction::Instruction {
+        let accounts = vec![
+            AccountMeta::new(self.edition_metadata, false),
+            AccountMeta::new(self.edition, false),
+            AccountMeta::new(self.edition_mint, false),
+            AccountMeta::new_readonly(self.edition_token_account_owner, false),
+            AccountMeta::new(self.edition_token_account, false),
+            AccountMeta::new_readonly(self.edition_mint_authority, true),
+            if let Some(edition_token_record) = self.edition_token_record {
+                AccountMeta::new(edition_token_record, false)
+            } else {
+                AccountMeta::new_readonly(crate::ID, false)
+            },
+            AccountMeta::new(self.master_edition, false),
+            AccountMeta::new(self.edition_marker_pda, false),
+            AccountMeta::new(self.payer, true),
+            AccountMeta::new_readonly(self.master_token_account_owner, true),
+            AccountMeta::new_readonly(self.master_token_account, false),
+            AccountMeta::new_readonly(self.master_metadata, false),
+            AccountMeta::new_readonly(self.update_authority, false),
+            AccountMeta::new_readonly(self.spl_token_program, false),
+            AccountMeta::new_readonly(self.spl_ata_program, false),
+            AccountMeta::new_readonly(self.sysvar_instructions, false),
+            AccountMeta::new_readonly(self.system_program, false),
+        ];
+
+        Instruction {
+            program_id: crate::ID,
+            accounts,
+            data: MetadataInstruction::Print(self.args.clone())
                 .try_to_vec()
                 .unwrap(),
         }
