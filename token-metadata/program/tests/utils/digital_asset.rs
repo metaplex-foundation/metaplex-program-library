@@ -8,7 +8,7 @@ use mpl_token_metadata::{
         },
         BurnArgs, CollectionDetailsToggle, CollectionToggle, CreateArgs, DelegateArgs,
         InstructionBuilder, LockArgs, MetadataDelegateRole, MigrateArgs, MintArgs, RevokeArgs,
-        RuleSetToggle, TransferArgs, UnlockArgs, Update, UpdateArgs, UsesToggle, VerificationArgs,
+        RuleSetToggle, TransferArgs, UnlockArgs, UpdateArgs, UsesToggle, VerificationArgs,
     },
     pda::{
         find_master_edition_account, find_metadata_account, find_metadata_delegate_record_account,
@@ -1355,7 +1355,7 @@ impl DigitalAsset {
             builder.edition(master_edition);
         }
 
-        let mut update_args = UpdateArgs::V1 {
+        let update_args = UpdateArgs::V1 {
             new_update_authority: Some(new_update_authority),
             data: None,
             primary_sale_happened: None,

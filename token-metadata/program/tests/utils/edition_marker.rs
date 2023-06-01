@@ -7,7 +7,7 @@ use mpl_token_metadata::{
         MintNewEditionFromMasterEditionViaTokenArgs, PrintArgs, TransferArgs,
     },
     pda::{find_token_record_account, MARKER},
-    state::{EDITION, EDITION_MARKER_BIT_SIZE, PREFIX},
+    state::{TokenMetadataAccount, EDITION, EDITION_MARKER_BIT_SIZE, PREFIX},
     ID,
 };
 use solana_program::{
@@ -121,7 +121,7 @@ impl EditionMarker {
         let mint = Keypair::new();
         let mint_pubkey = mint.pubkey();
         let metadata_mint_pubkey = asset.mint.pubkey();
-        let program_id = id();
+        let program_id = ID;
 
         let (pubkey, _) = Pubkey::find_program_address(
             &[
@@ -135,7 +135,7 @@ impl EditionMarker {
         );
 
         let metadata_seeds = &[PREFIX.as_bytes(), program_id.as_ref(), mint_pubkey.as_ref()];
-        let (new_metadata_pubkey, _) = Pubkey::find_program_address(metadata_seeds, &id());
+        let (new_metadata_pubkey, _) = Pubkey::find_program_address(metadata_seeds, &ID);
 
         let master_edition_seeds = &[
             PREFIX.as_bytes(),
@@ -143,7 +143,7 @@ impl EditionMarker {
             mint_pubkey.as_ref(),
             EDITION.as_bytes(),
         ];
-        let (new_edition_pubkey, _) = Pubkey::find_program_address(master_edition_seeds, &id());
+        let (new_edition_pubkey, _) = Pubkey::find_program_address(master_edition_seeds, &ID);
 
         EditionMarker {
             pubkey,
@@ -271,9 +271,12 @@ impl EditionMarker {
             &mpl_token_metadata::ID,
         );
 
-        let edition_ata =
-            get_associated_token_address(&context.payer.pubkey(), &self.mint.pubkey());
         let token_record_pda = find_token_record_account(&self.mint.pubkey(), &self.token.pubkey());
+
+        let master_metadata = mpl_token_metadata::state::Metadata::safe_deserialize(
+            &get_account(context, &self.metadata_pubkey).await.data,
+        )
+        .unwrap();
 
         let print_args = PrintArgs::V1 {
             edition: self.edition,
@@ -293,9 +296,9 @@ impl EditionMarker {
             .master_token_account_owner(context.payer.pubkey())
             .master_token_account(self.metadata_token_pubkey)
             .master_metadata(self.metadata_pubkey)
-            .update_authority(context.payer.pubkey())
-            .token_program(spl_token::ID)
-            .ata_program(spl_associated_token_account::ID)
+            .update_authority(master_metadata.update_authority)
+            .spl_token_program(spl_token::ID)
+            .spl_ata_program(spl_associated_token_account::ID)
             .sysvar_instructions(sysvar::instructions::ID)
             .system_program(system_program::ID);
 
@@ -377,8 +380,8 @@ impl EditionMarker {
             .master_token_account(self.metadata_token_pubkey)
             .master_metadata(self.metadata_pubkey)
             .update_authority(context.payer.pubkey())
-            .token_program(fake_token_program.pubkey())
-            .ata_program(spl_associated_token_account::ID)
+            .spl_token_program(fake_token_program.pubkey())
+            .spl_ata_program(spl_associated_token_account::ID)
             .sysvar_instructions(sysvar::instructions::ID)
             .system_program(system_program::ID);
 
@@ -507,23 +510,6 @@ impl EditionMarker {
             find_token_record_account(&self.mint.pubkey(), &self.token.pubkey());
         let new_owner_token_record_pda =
             find_token_record_account(&self.mint.pubkey(), &new_owner_token_account);
-
-        // let transfer_ix = spl_token::instruction::transfer(
-        //     &spl_token::id(),
-        //     &self.token.pubkey(),
-        //     &new_owner_token_account,
-        //     &context.payer.pubkey(),
-        //     &[],
-        //     1,
-        // )
-        // .unwrap();
-
-        // let transfer_tx = Transaction::new_signed_with_payer(
-        //     &[create_token_account_ix, transfer_ix],
-        //     Some(&context.payer.pubkey()),
-        //     &[&context.payer],
-        //     context.last_blockhash,
-        // );
 
         let mut builder = TransferBuilder::new();
         builder

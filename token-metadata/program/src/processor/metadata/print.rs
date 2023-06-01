@@ -10,8 +10,8 @@ use crate::{
     pda::find_token_record_account,
     state::{Metadata, TokenMetadataAccount, TokenStandard},
     utils::{
-        assert_derivation, assert_owned_by, create_token_record_account, freeze,
-        process_mint_new_edition_from_master_edition_via_token_logic,
+        assert_derivation, assert_initialized, assert_owned_by, create_token_record_account,
+        freeze, process_mint_new_edition_from_master_edition_via_token_logic,
         MintNewEditionFromMasterEditionViaTokenLogicArgs,
     },
 };
@@ -31,22 +31,6 @@ pub fn print<'a>(
 fn print_v1(_program_id: &Pubkey, ctx: Context<Print>, args: PrintArgs) -> ProgramResult {
     // Get the args for the instruction
     let PrintArgs::V1 { edition } = args;
-    // let account_info_iter = &mut accounts.iter();
-
-    // let new_metadata_account_info = next_account_info(account_info_iter)?;
-    // let new_edition_account_info = next_account_info(account_info_iter)?;
-    // let master_edition_account_info = next_account_info(account_info_iter)?;
-    // let mint_info = next_account_info(account_info_iter)?;
-    // let token_record_info = next_account_info(account_info_iter)?;
-    // let edition_marker_info = next_account_info(account_info_iter)?;
-    // let mint_authority_info = next_account_info(account_info_iter)?;
-    // let payer_account_info = next_account_info(account_info_iter)?;
-    // let owner_account_info = next_account_info(account_info_iter)?;
-    // let token_account_info = next_account_info(account_info_iter)?;
-    // let update_authority_info = next_account_info(account_info_iter)?;
-    // let master_metadata_account_info = next_account_info(account_info_iter)?;
-    // let token_program_account_info = next_account_info(account_info_iter)?;
-    // let system_account_info = next_account_info(account_info_iter)?;
 
     // CHECK: Checked in process_mint_new_edition_from_master_edition_via_token_logic
     let edition_metadata_info = ctx.accounts.edition_metadata_info;
@@ -74,8 +58,8 @@ fn print_v1(_program_id: &Pubkey, ctx: Context<Print>, args: PrintArgs) -> Progr
     // CHECK: Checked in process_mint_new_edition_from_master_edition_via_token_logic
     let update_authority_info = ctx.accounts.update_authority_info;
     // CHECK: Checked in process_mint_new_edition_from_master_edition_via_token_logic
-    let token_program = ctx.accounts.token_program_info;
-    let ata_program = ctx.accounts.ata_program_info;
+    let token_program = ctx.accounts.spl_token_program_info;
+    let ata_program = ctx.accounts.spl_ata_program_info;
     let sysvar_instructions = ctx.accounts.sysvar_instructions_info;
     // CHECK: Checked in process_mint_new_edition_from_master_edition_via_token_logic
     let system_program = ctx.accounts.system_program_info;
@@ -112,6 +96,8 @@ fn print_v1(_program_id: &Pubkey, ctx: Context<Print>, args: PrintArgs) -> Progr
         )?;
     } else {
         assert_owned_by(edition_token_account_info, &spl_token::id())?;
+        let _edition_token_account: spl_token::state::Account =
+            assert_initialized(edition_token_account_info)?;
     }
 
     if ata_program.key != &spl_associated_token_account::ID {
@@ -132,10 +118,8 @@ fn print_v1(_program_id: &Pubkey, ctx: Context<Print>, args: PrintArgs) -> Progr
         TokenStandard::NonFungible => {}
         TokenStandard::ProgrammableNonFungible => {
             // Validate that the token record was passed in for pNFTs.
-            let token_record_info = match edition_token_record_info {
-                Some(token_record_info) => token_record_info,
-                None => return Err(MetadataError::MissingTokenRecord.into()),
-            };
+            let token_record_info =
+                edition_token_record_info.ok_or(MetadataError::MissingTokenRecord)?;
             let (pda_key, _) = find_token_record_account(
                 ctx.accounts.edition_mint_info.key,
                 ctx.accounts.edition_token_account_info.key,
@@ -177,8 +161,6 @@ fn print_v1(_program_id: &Pubkey, ctx: Context<Print>, args: PrintArgs) -> Progr
             system_account_info: system_program,
         },
         edition,
-        false,
-        TokenStandard::ProgrammableNonFungibleEdition,
     )?;
 
     if token_standard == TokenStandard::ProgrammableNonFungible {

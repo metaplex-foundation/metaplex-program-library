@@ -5,7 +5,7 @@ use mpl_utils::{
     token::{get_mint_authority, get_mint_supply},
 };
 use solana_program::{
-    account_info::AccountInfo, entrypoint::ProgramResult, msg, program_error::ProgramError,
+    account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
     pubkey::Pubkey,
 };
 use spl_token::state::{Account, Mint};
@@ -46,8 +46,6 @@ pub fn process_mint_new_edition_from_master_edition_via_token_logic<'a>(
     program_id: &'a Pubkey,
     accounts: MintNewEditionFromMasterEditionViaTokenLogicArgs<'a>,
     edition: u64,
-    ignore_owner_signer: bool,
-    token_standard: TokenStandard,
 ) -> ProgramResult {
     let MintNewEditionFromMasterEditionViaTokenLogicArgs {
         new_metadata_account_info,
@@ -70,16 +68,19 @@ pub fn process_mint_new_edition_from_master_edition_via_token_logic<'a>(
     assert_owned_by(token_account_info, &spl_token::ID)?;
     assert_owned_by(master_edition_account_info, program_id)?;
     assert_owned_by(master_metadata_account_info, program_id)?;
+    assert_signer(payer_account_info)?;
+
+    if system_account_info.key != &system_program::ID {
+        return Err(ProgramError::IncorrectProgramId);
+    }
 
     let master_metadata = Metadata::from_account_info(master_metadata_account_info)?;
     let token_account: Account = assert_initialized(token_account_info)?;
 
-    if !ignore_owner_signer {
-        assert_signer(owner_account_info)?;
+    assert_signer(owner_account_info)?;
 
-        if token_account.owner != *owner_account_info.key {
-            return Err(MetadataError::InvalidOwner.into());
-        }
+    if token_account.owner != *owner_account_info.key {
+        return Err(MetadataError::InvalidOwner.into());
     }
 
     if token_account.mint != master_metadata.mint {
@@ -98,8 +99,23 @@ pub fn process_mint_new_edition_from_master_edition_via_token_logic<'a>(
         return Err(MetadataError::AlreadyInitialized.into());
     }
 
+    // Check that the new update authority is the same as the master edition.
+    if update_authority_info.key != &master_metadata.update_authority {
+        return Err(MetadataError::UpdateAuthorityIncorrect.into());
+    }
+
+    // Check that the edition we're printing from actually is a master edition.
+    // We're not passing in the master edition mint so we can't fetch the actual supply and decimals
+    // but we can safely assume that the account was only created if those checks passed.
+    if !is_master_edition(master_edition_account_info, 0, 1) {
+        return Err(MetadataError::InvalidMasterEdition.into());
+    };
+
+    let token_standard = master_metadata
+        .token_standard
+        .unwrap_or(TokenStandard::NonFungible);
     match token_standard {
-        TokenStandard::NonFungibleEdition => {
+        TokenStandard::NonFungible => {
             let edition_number = edition.checked_div(EDITION_MARKER_BIT_SIZE).unwrap();
             let as_string = edition_number.to_string();
 
@@ -143,9 +159,8 @@ pub fn process_mint_new_edition_from_master_edition_via_token_logic<'a>(
                 edition_marker.insert_edition(edition)?
             }
             edition_marker.serialize(&mut *edition_marker_info.data.borrow_mut())?;
-            Ok::<(), ProgramError>(())
         }
-        TokenStandard::ProgrammableNonFungibleEdition => {
+        TokenStandard::ProgrammableNonFungible => {
             let bump = assert_derivation(
                 program_id,
                 edition_marker_info,
@@ -185,7 +200,6 @@ pub fn process_mint_new_edition_from_master_edition_via_token_logic<'a>(
                 EditionMarkerV2::from_account_info(edition_marker_info)?
             };
 
-            solana_program::msg!("Edition marker is {:?}", edition_marker);
             edition_marker.key = Key::EditionMarkerV2;
             if edition_marker.edition_taken(edition)? {
                 return Err(MetadataError::AlreadyInitialized.into());
@@ -193,10 +207,9 @@ pub fn process_mint_new_edition_from_master_edition_via_token_logic<'a>(
                 edition_marker.insert_edition(edition)?
             }
             edition_marker.save(edition_marker_info, payer_account_info, system_account_info)?;
-            Ok::<(), ProgramError>(())
         }
-        _ => Err(MetadataError::InvalidTokenStandard.into()),
-    }?;
+        _ => return Err(MetadataError::InvalidTokenStandard.into()),
+    };
 
     mint_limited_edition(
         program_id,
@@ -403,7 +416,6 @@ pub fn mint_limited_edition<'a>(
     // directing to a specific version, otherwise just pull off the top
     edition_override: Option<u64>,
 ) -> ProgramResult {
-    msg!("Minting limited edition");
     let me_supply = get_supply_off_master_edition(master_edition_account_info)?;
     let mint_authority = get_mint_authority(mint_info)?;
     let mint_supply = get_mint_supply(mint_info)?;

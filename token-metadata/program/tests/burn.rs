@@ -1129,8 +1129,8 @@ mod pnft_edition {
             .await
             .unwrap();
 
-        let kpbytes = &context.payer;
-        let payer = Keypair::from_bytes(&kpbytes.to_bytes()).unwrap();
+        // let kpbytes = &context.payer;
+        // let payer = Keypair::from_bytes(&kpbytes.to_bytes()).unwrap();
 
         // Old owner should not be able to burn.
 
@@ -1173,7 +1173,7 @@ mod pnft_edition {
 
         // We've passed in the correct token account associated with the old owner but
         // it has 0 tokens so we get this error.
-        assert_custom_error!(err, MetadataError::InsufficientTokenBalance);
+        assert_custom_error!(err, MetadataError::IncorrectOwner);
 
         let args = BurnArgs::V1 { amount: 1 };
 
@@ -1614,10 +1614,6 @@ mod pnft_edition {
         context.warp_to_slot(5).unwrap();
 
         let master_edition = MasterEditionV2::new_from_asset(&original_nft);
-        master_edition
-            .create_v3(&mut context, Some(10))
-            .await
-            .unwrap();
 
         context.warp_to_slot(10).unwrap();
 
@@ -1625,7 +1621,7 @@ mod pnft_edition {
             .mint_editions_from_asset(&mut context, &original_nft, 10, 10)
             .await
             .unwrap();
-        context.warp_to_slot(15).unwrap();
+        context.warp_to_slot(end_slot + 5).unwrap();
 
         let payer = &context.payer.dirty_clone();
 
@@ -1636,8 +1632,8 @@ mod pnft_edition {
             .unwrap()
             .unwrap();
 
-        // Ledger is the 31 bytes after the key.
-        let ledger = &edition_marker_account.data[1..];
+        // Ledger is the 31 bytes after the key and vec header.
+        let ledger = &edition_marker_account.data[5..];
 
         assert!(ledger[0] == 0b0111_1111);
         assert!(ledger[1] == 0b1110_0000);
@@ -1649,7 +1645,7 @@ mod pnft_edition {
             .burn_asset(&mut context, default_args.clone())
             .await
             .unwrap();
-        context.warp_to_slot(20).unwrap();
+        context.warp_to_slot(end_slot + 10).unwrap();
 
         let edition_marker_account = context
             .banks_client
@@ -1659,7 +1655,7 @@ mod pnft_edition {
             .unwrap();
 
         // Ledger is the 31 bytes after the key.
-        let ledger = &edition_marker_account.data[1..];
+        let ledger = &edition_marker_account.data[5..];
 
         // One bit flipped here
         assert!(ledger[0] == 0b0101_1111);
@@ -1671,7 +1667,7 @@ mod pnft_edition {
             .burn_asset(&mut context, default_args)
             .await
             .unwrap();
-        context.warp_to_slot(25).unwrap();
+        context.warp_to_slot(end_slot + 15).unwrap();
 
         let edition_marker_account = context
             .banks_client
@@ -1681,7 +1677,7 @@ mod pnft_edition {
             .unwrap();
 
         // Ledger is the 31 bytes after the key.
-        let ledger = &edition_marker_account.data[1..];
+        let ledger = &edition_marker_account.data[5..];
 
         // Stays the same
         assert!(ledger[0] == 0b0101_1111);
@@ -1695,21 +1691,31 @@ mod pnft_edition {
         // the master edition and print edition. Otherwise, it should fail.
         let mut context = program_test().start_with_context().await;
 
-        let original_nft = Metadata::new();
-        original_nft.create_v3_default(&mut context).await.unwrap();
-
-        let master_edition = MasterEditionV2::new(&original_nft);
-        master_edition
-            .create_v3(&mut context, Some(10))
+        let mut original_nft = DigitalAsset::default();
+        original_nft
+            .create_and_mint_with_supply(
+                &mut context,
+                TokenStandard::ProgrammableNonFungible,
+                None,
+                None,
+                1,
+                PrintSupply::Limited(10),
+            )
             .await
             .unwrap();
 
-        let print_edition = EditionMarker::new(&original_nft, &master_edition, 1);
-        print_edition.create(&mut context).await.unwrap();
+        let master_edition = MasterEditionV2::new_from_asset(&original_nft);
+
+        let print_edition = EditionMarker::new_from_asset(&original_nft, &master_edition, 1);
+        print_edition.create_from_asset(&mut context).await.unwrap();
 
         // Print a new edition and transfer to a user.
-        let mut user_print_edition = EditionMarker::new(&original_nft, &master_edition, 2);
-        user_print_edition.create(&mut context).await.unwrap();
+        let mut user_print_edition =
+            EditionMarker::new_from_asset(&original_nft, &master_edition, 2);
+        user_print_edition
+            .create_from_asset(&mut context)
+            .await
+            .unwrap();
 
         let user = Keypair::new();
         airdrop(&mut context, &user.pubkey(), 1_000_000_000)
@@ -1719,7 +1725,7 @@ mod pnft_edition {
         context.warp_to_slot(10).unwrap();
 
         user_print_edition
-            .transfer(&mut context, &user.pubkey())
+            .transfer_asset(&mut context, &user.pubkey())
             .await
             .unwrap();
         let new_owner_token_account =
@@ -1735,7 +1741,7 @@ mod pnft_edition {
 
         // Burn owner's edition.
         print_edition
-            .burn(&mut context, owner_burn_args)
+            .burn_asset(&mut context, owner_burn_args)
             .await
             .unwrap();
 
@@ -1748,7 +1754,7 @@ mod pnft_edition {
 
         // Burn owner's edition.
         user_print_edition
-            .burn(&mut context, user_burn_args)
+            .burn_asset(&mut context, user_burn_args)
             .await
             .unwrap();
 
@@ -1757,15 +1763,18 @@ mod pnft_edition {
         assert!(!user_print_edition.exists_on_chain(&mut context).await);
 
         // Reprint owner's burned edition
-        let print_edition = EditionMarker::new(&original_nft, &master_edition, 1);
-        print_edition.create(&mut context).await.unwrap();
+        let print_edition = EditionMarker::new_from_asset(&original_nft, &master_edition, 1);
+        print_edition.create_from_asset(&mut context).await.unwrap();
 
         // Metadata, Print Edition and token account exist.
         assert!(print_edition.exists_on_chain(&mut context).await);
 
         // Reprint user's burned edition: this should fail.
-        let user_print_edition = EditionMarker::new(&original_nft, &master_edition, 2);
-        let err = user_print_edition.create(&mut context).await.unwrap_err();
+        let user_print_edition = EditionMarker::new_from_asset(&original_nft, &master_edition, 2);
+        let err = user_print_edition
+            .create_from_asset(&mut context)
+            .await
+            .unwrap_err();
 
         assert_custom_error!(err, MetadataError::AlreadyInitialized);
     }
@@ -1775,14 +1784,20 @@ mod pnft_edition {
         let mut context = program_test().start_with_context().await;
 
         // Someone else's NFT
-        let other_nft = Metadata::new();
-        other_nft.create_v3_default(&mut context).await.unwrap();
-
-        let other_master_edition = MasterEditionV2::new(&other_nft);
-        other_master_edition
-            .create_v3(&mut context, Some(10))
+        let mut other_nft = DigitalAsset::default();
+        other_nft
+            .create_and_mint_with_supply(
+                &mut context,
+                TokenStandard::ProgrammableNonFungible,
+                None,
+                None,
+                1,
+                PrintSupply::Limited(10),
+            )
             .await
             .unwrap();
+
+        let other_master_edition = MasterEditionV2::new_from_asset(&other_nft);
 
         let new_update_authority = Keypair::new();
         other_nft
@@ -1790,27 +1805,37 @@ mod pnft_edition {
             .await
             .unwrap();
 
-        let other_print_edition = EditionMarker::new(&other_nft, &other_master_edition, 1);
-        other_print_edition.create(&mut context).await.unwrap();
-
-        let our_nft = Metadata::new();
-        our_nft.create_v2_default(&mut context).await.unwrap();
-
-        let master_edition = MasterEditionV2::new(&our_nft);
-        master_edition
-            .create_v3(&mut context, Some(10))
+        let other_print_edition =
+            EditionMarker::new_from_asset(&other_nft, &other_master_edition, 1);
+        other_print_edition
+            .create_from_asset(&mut context)
             .await
             .unwrap();
 
-        let print_edition = EditionMarker::new(&our_nft, &master_edition, 1);
-        print_edition.create(&mut context).await.unwrap();
+        let mut our_nft = DigitalAsset::default();
+        our_nft
+            .create_and_mint_with_supply(
+                &mut context,
+                TokenStandard::ProgrammableNonFungible,
+                None,
+                None,
+                1,
+                PrintSupply::Limited(10),
+            )
+            .await
+            .unwrap();
+
+        let master_edition = MasterEditionV2::new_from_asset(&our_nft);
+
+        let print_edition = EditionMarker::new_from_asset(&our_nft, &master_edition, 1);
+        print_edition.create_from_asset(&mut context).await.unwrap();
 
         let payer = &context.payer.dirty_clone();
 
         let mut owner_burn_args = BurnPrintArgs::default(payer);
 
         owner_burn_args = BurnPrintArgs {
-            master_edition_token: Some(other_nft.token.pubkey()),
+            master_edition_token: Some(other_nft.token.unwrap()),
             master_edition_mint: Some(other_nft.mint.pubkey()),
             master_edition: Some(other_master_edition.pubkey),
             edition_marker: Some(other_print_edition.pubkey),
@@ -1819,7 +1844,7 @@ mod pnft_edition {
 
         // We pass in our edition NFT and someone else's master edition and try to modify their supply.
         let err = print_edition
-            .burn(&mut context, owner_burn_args)
+            .burn_asset(&mut context, owner_burn_args)
             .await
             .unwrap_err();
 
@@ -1830,19 +1855,27 @@ mod pnft_edition {
     async fn mint_mismatches() {
         let mut context = program_test().start_with_context().await;
 
-        let nft = Metadata::new();
-        nft.create_v3_default(&mut context).await.unwrap();
+        let mut nft = DigitalAsset::default();
+        nft.create_and_mint_with_supply(
+            &mut context,
+            TokenStandard::ProgrammableNonFungible,
+            None,
+            None,
+            1,
+            PrintSupply::Limited(10),
+        )
+        .await
+        .unwrap();
 
-        let master_edition = MasterEditionV2::new(&nft);
-        master_edition
-            .create_v3(&mut context, Some(10))
+        let master_edition = MasterEditionV2::new_from_asset(&nft);
+
+        let print_edition = EditionMarker::new_from_asset(&nft, &master_edition, 1);
+        print_edition.create_from_asset(&mut context).await.unwrap();
+        let second_print_edition = EditionMarker::new_from_asset(&nft, &master_edition, 2);
+        second_print_edition
+            .create_from_asset(&mut context)
             .await
             .unwrap();
-
-        let print_edition = EditionMarker::new(&nft, &master_edition, 1);
-        print_edition.create(&mut context).await.unwrap();
-        let second_print_edition = EditionMarker::new(&nft, &master_edition, 2);
-        second_print_edition.create(&mut context).await.unwrap();
 
         let payer = &context.payer.dirty_clone();
 
@@ -1855,18 +1888,24 @@ mod pnft_edition {
         };
 
         let err = print_edition
-            .burn(&mut context, owner_burn_args)
+            .burn_asset(&mut context, owner_burn_args)
             .await
             .unwrap_err();
 
-        assert_custom_error!(err, MetadataError::MintMismatch);
+        // We fail with incorrect owner here instead of MintMismatch because the token record
+        // derivation is incorrect.
+        assert_custom_error!(err, MetadataError::IncorrectOwner);
 
-        let other_nft = Metadata::new();
-        other_nft.create_v3_default(&mut context).await.unwrap();
-
-        let other_master_edition = MasterEditionV2::new(&other_nft);
-        other_master_edition
-            .create_v3(&mut context, Some(10))
+        let mut other_nft = DigitalAsset::default();
+        other_nft
+            .create_and_mint_with_supply(
+                &mut context,
+                TokenStandard::ProgrammableNonFungible,
+                None,
+                None,
+                1,
+                PrintSupply::Limited(10),
+            )
             .await
             .unwrap();
 
@@ -1879,7 +1918,7 @@ mod pnft_edition {
         };
 
         let err = print_edition
-            .burn(&mut context, owner_burn_args)
+            .burn_asset(&mut context, owner_burn_args)
             .await
             .unwrap_err();
 

@@ -243,7 +243,6 @@ fn process_legacy_instruction<'a>(
                 program_id,
                 accounts,
                 args.edition,
-                false,
             )
         }
         MetadataInstruction::ConvertMasterEditionV1ToV2 => {

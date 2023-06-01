@@ -163,7 +163,6 @@ fn burn_v1(program_id: &Pubkey, ctx: Context<Burn>, args: BurnArgs) -> ProgramRe
         return Err(MetadataError::InvalidAmount.into());
     }
 
-    msg!("Token standard: {:?}", token_standard);
     match token_standard {
         TokenStandard::NonFungible => {
             let args = BurnNonFungibleArgs {

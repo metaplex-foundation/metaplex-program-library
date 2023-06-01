@@ -77,7 +77,6 @@ pub(crate) fn burn_nonfungible_edition(
         master_edition_mint_info.key.as_ref(),
         EDITION.as_bytes(),
     ]);
-    solana_program::msg!("Assert Master Edition PDA");
     assert_derivation(&crate::ID, master_edition_info, &master_edition_info_path)
         .map_err(|_| MetadataError::InvalidMasterEdition)?;
 
@@ -87,7 +86,6 @@ pub(crate) fn burn_nonfungible_edition(
         ctx.accounts.mint_info.key.as_ref(),
         EDITION.as_bytes(),
     ]);
-    solana_program::msg!("Assert Print Edition PDA");
     assert_derivation(&crate::ID, edition_info, &print_edition_info_path)
         .map_err(|_| MetadataError::InvalidPrintEdition)?;
 

@@ -13,8 +13,6 @@ use solana_sdk::{
 };
 use utils::*;
 
-// NOTE: these tests depend on the token-vault program having been compiled
-// via (cd ../../token-vault/program/ && cargo build-bpf)
 mod print {
 
     use mpl_token_metadata::state::{PrintSupply, TokenStandard};
@@ -65,7 +63,6 @@ mod print {
             Some(TokenStandard::ProgrammableNonFungibleEdition)
         );
     }
-    // }
 
     #[tokio::test]
     async fn fail_invalid_token_program() {

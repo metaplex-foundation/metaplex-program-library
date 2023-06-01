@@ -13,7 +13,6 @@ pub fn process_mint_new_edition_from_master_edition_via_token<'a>(
     program_id: &'a Pubkey,
     accounts: &'a [AccountInfo<'a>],
     edition: u64,
-    ignore_owner_signer: bool,
 ) -> ProgramResult {
     let account_info_iter = &mut accounts.iter();
 
@@ -49,7 +48,5 @@ pub fn process_mint_new_edition_from_master_edition_via_token<'a>(
             system_account_info,
         },
         edition,
-        ignore_owner_signer,
-        crate::state::TokenStandard::NonFungibleEdition,
     )
 }
