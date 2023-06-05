@@ -168,7 +168,11 @@ pub(crate) fn burn_nonfungible_edition(
         // Otherwise, serialize the new edition marker and update the account data.
         if edition_marker.ledger.iter().all(|i| *i == 0) {
             solana_program::msg!("Closing edition marker account");
-            close_program_account(edition_marker_info, ctx.accounts.authority_info)?;
+            close_program_account(
+                edition_marker_info,
+                ctx.accounts.authority_info,
+                Key::EditionMarkerV2,
+            )?;
         } else {
             solana_program::msg!("Saving edition marker account");
             edition_marker.save(
@@ -192,7 +196,11 @@ pub(crate) fn burn_nonfungible_edition(
         // If the entire edition marker is empty, then we can close the account.
         // Otherwise, serialize the new edition marker and update the account data.
         if edition_marker.ledger.iter().all(|i| *i == 0) {
-            close_program_account(edition_marker_info, ctx.accounts.authority_info)?;
+            close_program_account(
+                edition_marker_info,
+                ctx.accounts.authority_info,
+                Key::EditionMarker,
+            )?;
         } else {
             edition_marker.save(edition_marker_info)?;
         }
@@ -208,8 +216,12 @@ pub(crate) fn burn_nonfungible_edition(
 
     master_edition.save(master_edition_info)?;
 
-    close_program_account(ctx.accounts.metadata_info, ctx.accounts.authority_info)?;
-    close_program_account(edition_info, ctx.accounts.authority_info)?;
+    close_program_account(
+        ctx.accounts.metadata_info,
+        ctx.accounts.authority_info,
+        Key::MetadataV1,
+    )?;
+    close_program_account(edition_info, ctx.accounts.authority_info, Key::EditionV1)?;
 
     Ok(())
 }

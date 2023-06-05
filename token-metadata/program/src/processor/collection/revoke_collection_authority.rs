@@ -8,7 +8,7 @@ use solana_program::{
 use crate::{
     assertions::{assert_owned_by, collection::assert_is_collection_delegated_authority},
     error::MetadataError,
-    state::{Metadata, TokenMetadataAccount},
+    state::{Key, Metadata, TokenMetadataAccount},
     utils::close_program_account,
 };
 
@@ -48,5 +48,9 @@ pub fn process_revoke_collection_authority(
         mint_info.key,
     )?;
 
-    close_program_account(collection_authority_record, revoke_authority)
+    close_program_account(
+        collection_authority_record,
+        revoke_authority,
+        Key::CollectionAuthorityRecord,
+    )
 }

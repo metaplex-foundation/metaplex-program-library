@@ -1,4 +1,3 @@
-use borsh::BorshSerialize;
 use mpl_utils::assert_signer;
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
@@ -13,10 +12,12 @@ use crate::{
     },
     error::MetadataError,
     state::{Collection, Metadata, TokenMetadataAccount},
+    utils::clean_write_metadata,
 };
 
 pub fn set_and_verify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
     let account_info_iter = &mut accounts.iter();
+
     let metadata_info = next_account_info(account_info_iter)?;
     let collection_authority_info = next_account_info(account_info_iter)?;
     let payer_info = next_account_info(account_info_iter)?;
@@ -24,7 +25,6 @@ pub fn set_and_verify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) 
     let collection_mint = next_account_info(account_info_iter)?;
     let collection_info = next_account_info(account_info_iter)?;
     let edition_account_info = next_account_info(account_info_iter)?;
-    let using_delegated_collection_authority = accounts.len() == 8;
 
     assert_signer(collection_authority_info)?;
     assert_signer(payer_info)?;
@@ -50,22 +50,15 @@ pub fn set_and_verify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) 
         }
     }
 
-    if using_delegated_collection_authority {
-        let collection_authority_record = next_account_info(account_info_iter)?;
-        assert_has_collection_authority(
-            collection_authority_info,
-            &collection_data,
-            collection_mint.key,
-            Some(collection_authority_record),
-        )?;
-    } else {
-        assert_has_collection_authority(
-            collection_authority_info,
-            &collection_data,
-            collection_mint.key,
-            None,
-        )?;
-    }
+    let delegated_collection_authority_opt = account_info_iter.next();
+
+    assert_has_collection_authority(
+        collection_authority_info,
+        &collection_data,
+        collection_mint.key,
+        delegated_collection_authority_opt,
+    )?;
+
     metadata.collection = Some(Collection {
         key: *collection_mint.key,
         verified: true,
@@ -82,6 +75,5 @@ pub fn set_and_verify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) 
         return Err(MetadataError::SizedCollection.into());
     }
 
-    metadata.serialize(&mut *metadata_info.try_borrow_mut_data()?)?;
-    Ok(())
+    clean_write_metadata(&mut metadata, metadata_info)
 }

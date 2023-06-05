@@ -24,8 +24,8 @@ use crate::{
     instruction::{Context, Transfer, TransferArgs},
     pda::find_token_record_account,
     state::{
-        AuthorityRequest, AuthorityResponse, AuthorityType, Metadata, Operation, TokenDelegateRole,
-        TokenMetadataAccount, TokenRecord, TokenStandard,
+        AuthorityRequest, AuthorityResponse, AuthorityType, Key, Metadata, Operation,
+        TokenDelegateRole, TokenMetadataAccount, TokenRecord, TokenStandard,
     },
     utils::{
         assert_derivation, auth_rules_validate, clear_close_authority, close_program_account,
@@ -450,7 +450,11 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
                 // Close the source Token Record account, but do it after the CPI calls
                 // so as to avoid Unbalanced Accounts errors due to the CPI context not knowing
                 // about the manual lamport math done here.
-                close_program_account(owner_token_record_info, ctx.accounts.payer_info)?;
+                close_program_account(
+                    owner_token_record_info,
+                    ctx.accounts.payer_info,
+                    Key::TokenRecord,
+                )?;
             }
         }
         _ => mpl_utils::token::spl_token_transfer(token_transfer_params).unwrap(),

@@ -1,5 +1,5 @@
 {
-  "version": "1.11.1",
+  "version": "1.12.0",
   "name": "mpl_token_metadata",
   "instructions": [
     {
@@ -1045,6 +1045,13 @@
           "isMut": false,
           "isSigner": false,
           "desc": "MasterEdition2 Account of the Collection Token"
+        },
+        {
+          "name": "collectionAuthorityRecord",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Collection Authority Record PDA",
+          "optional": true
         }
       ],
       "args": [],
@@ -3555,6 +3562,28 @@
       "discriminant": {
         "type": "u8",
         "value": 53
+      }
+    },
+    {
+      "name": "Collect",
+      "accounts": [
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "Authority to collect fees"
+        },
+        {
+          "name": "pdaAccount",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "PDA to retrieve fees from"
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 54
       }
     }
   ],
@@ -6573,6 +6602,21 @@
       "code": 189,
       "name": "InvalidInstruction",
       "msg": "Invalid or removed instruction"
+    },
+    {
+      "code": 190,
+      "name": "MissingDelegateRecord",
+      "msg": "Missing delegate record"
+    },
+    {
+      "code": 191,
+      "name": "InvalidFeeAccount",
+      "msg": ""
+    },
+    {
+      "code": 192,
+      "name": "InvalidMetadataFlags",
+      "msg": ""
     }
   ],
   "metadata": {

@@ -25,8 +25,6 @@ pub fn set_collection_size(
     let collection_update_authority_account_info = next_account_info(account_info_iter)?;
     let collection_mint_account_info = next_account_info(account_info_iter)?;
 
-    let using_delegated_collection_authority = accounts.len() == 4;
-
     // Owned by token-metadata program.
     assert_owned_by(parent_nft_metadata_account_info, program_id)?;
 
@@ -40,22 +38,14 @@ pub fn set_collection_size(
         return Err(MetadataError::UpdateAuthorityIsNotSigner.into());
     }
 
-    if using_delegated_collection_authority {
-        let collection_authority_record = next_account_info(account_info_iter)?;
-        assert_has_collection_authority(
-            collection_update_authority_account_info,
-            &metadata,
-            collection_mint_account_info.key,
-            Some(collection_authority_record),
-        )?;
-    } else {
-        assert_has_collection_authority(
-            collection_update_authority_account_info,
-            &metadata,
-            collection_mint_account_info.key,
-            None,
-        )?;
-    }
+    let delegated_collection_authority_opt = account_info_iter.next();
+
+    assert_has_collection_authority(
+        collection_update_authority_account_info,
+        &metadata,
+        collection_mint_account_info.key,
+        delegated_collection_authority_opt,
+    )?;
 
     // Only unsized collections can have the size set, and only once.
     if metadata.collection_details.is_some() {
@@ -64,6 +54,5 @@ pub fn set_collection_size(
         metadata.collection_details = Some(CollectionDetails::V1 { size });
     }
 
-    clean_write_metadata(&mut metadata, parent_nft_metadata_account_info)?;
-    Ok(())
+    clean_write_metadata(&mut metadata, parent_nft_metadata_account_info)
 }
