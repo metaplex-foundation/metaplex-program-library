@@ -753,6 +753,14 @@ pub enum MetadataError {
     /// 190
     #[error("Missing delegate record")]
     MissingDelegateRecord,
+
+    /// 191
+    #[error("")]
+    InvalidFeeAccount,
+
+    /// 192
+    #[error("")]
+    InvalidMetadataFlags,
 }
 
 impl PrintProgramError for MetadataError {

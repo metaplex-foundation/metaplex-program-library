@@ -1,5 +1,6 @@
 pub(crate) mod collection;
 pub(crate) mod compression;
+pub(crate) mod fee;
 pub(crate) mod master_edition;
 pub(crate) mod metadata;
 pub(crate) mod programmable_asset;
@@ -19,7 +20,8 @@ pub use mpl_utils::{
 pub use programmable_asset::*;
 use solana_program::{
     account_info::AccountInfo, borsh::try_from_slice_unchecked, entrypoint::ProgramResult,
-    program::invoke_signed, program_error::ProgramError, pubkey::Pubkey, system_program,
+    program::invoke_signed, program_error::ProgramError, pubkey::Pubkey, rent::Rent,
+    sysvar::Sysvar,
 };
 use spl_token::instruction::{set_authority, AuthorityType};
 
@@ -187,21 +189,40 @@ pub fn zero_account(s: &str, size: usize) -> String {
     s.to_owned() + std::str::from_utf8(&array_of_zeroes).unwrap()
 }
 
-pub fn close_program_account<'a>(
+pub(crate) fn close_program_account<'a>(
     account_info: &AccountInfo<'a>,
     funds_dest_account_info: &AccountInfo<'a>,
+    key: Key,
 ) -> ProgramResult {
+    let rent = Rent::get()?;
+
+    let rent_lamports = match key {
+        // Metadata accounts could have fees stored, so we only want to withdraw
+        // the actual rent lamport amount.
+        Key::MetadataV1 => rent.minimum_balance(Metadata::size()),
+        // Other accounts the rent is just the current lamport balance.
+        _ => account_info.lamports(),
+    };
+
+    let remaining_lamports = account_info
+        .lamports()
+        .checked_sub(rent_lamports)
+        .ok_or(MetadataError::NumericalOverflowError)?;
+
     // Transfer lamports from the account to the destination account.
     let dest_starting_lamports = funds_dest_account_info.lamports();
     **funds_dest_account_info.lamports.borrow_mut() = dest_starting_lamports
-        .checked_add(account_info.lamports())
-        .unwrap();
-    **account_info.lamports.borrow_mut() = 0;
+        .checked_add(rent_lamports)
+        .ok_or(MetadataError::NumericalOverflowError)?;
+    **account_info.lamports.borrow_mut() = remaining_lamports;
 
-    // Realloc the account data size to 0 bytes and teassign ownership of
-    // the account to the system program
+    // Realloc the account data size to 0 bytes.
     account_info.realloc(0, false)?;
-    account_info.assign(&system_program::ID);
+
+    // Only re-assign to the system program if it does not have fees on it.
+    if remaining_lamports == 0 {
+        account_info.assign(&solana_program::system_program::ID);
+    }
 
     Ok(())
 }
