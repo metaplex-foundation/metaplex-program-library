@@ -272,7 +272,6 @@ impl EditionMarker {
         );
 
         let token_record_pda = find_token_record_account(&self.mint.pubkey(), &self.token.pubkey());
-
         let master_metadata = mpl_token_metadata::state::Metadata::safe_deserialize(
             &get_account(context, &self.metadata_pubkey).await.data,
         )

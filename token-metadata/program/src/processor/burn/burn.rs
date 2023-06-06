@@ -238,7 +238,6 @@ fn burn_v1(program_id: &Pubkey, ctx: Context<Burn>, args: BurnArgs) -> ProgramRe
             )?;
         }
         TokenStandard::ProgrammableNonFungibleEdition => {
-            solana_program::msg!("Burn ProgrammableNonFungibleEdition");
             let args = BurnNonFungibleEditionArgs { is_pnft: true };
 
             // All the checks are the same as burning a NonFungible token
