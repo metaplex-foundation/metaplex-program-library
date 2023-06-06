@@ -44,6 +44,25 @@ impl MasterEditionV2 {
         }
     }
 
+    pub fn new_from_asset(asset: &DigitalAsset) -> Self {
+        let program_id = id();
+        let mint_pubkey = asset.mint.pubkey();
+
+        let master_edition_seeds = &[
+            PREFIX.as_bytes(),
+            program_id.as_ref(),
+            mint_pubkey.as_ref(),
+            EDITION.as_bytes(),
+        ];
+        let (pubkey, _) = Pubkey::find_program_address(master_edition_seeds, &id());
+
+        MasterEditionV2 {
+            pubkey,
+            metadata_pubkey: asset.metadata,
+            mint_pubkey,
+        }
+    }
+
     pub async fn get_data(
         &self,
         context: &mut ProgramTestContext,
@@ -126,16 +145,41 @@ impl MasterEditionV2 {
         context: &mut ProgramTestContext,
         nft: &Metadata,
         number: u64,
-    ) -> Result<Vec<EditionMarker>, BanksClientError> {
+        start_slot: u64,
+    ) -> Result<(Vec<EditionMarker>, u64), BanksClientError> {
         let mut editions = Vec::new();
+        let mut slot = start_slot;
 
         for i in 1..=number {
             let print_edition = EditionMarker::new(nft, self, i);
             print_edition.create(context).await?;
             editions.push(print_edition);
+            slot += 5;
+            context.warp_to_slot(slot).unwrap();
         }
 
-        Ok(editions)
+        Ok((editions, slot))
+    }
+
+    pub async fn mint_editions_from_asset(
+        &self,
+        context: &mut ProgramTestContext,
+        nft: &DigitalAsset,
+        number: u64,
+        start_slot: u64,
+    ) -> Result<(Vec<EditionMarker>, u64), BanksClientError> {
+        let mut editions = Vec::new();
+        let mut slot = start_slot;
+
+        for i in 1..=number {
+            let print_edition = EditionMarker::new_from_asset(nft, self, i);
+            print_edition.create(context).await?;
+            editions.push(print_edition);
+            slot += 5;
+            context.warp_to_slot(slot).unwrap();
+        }
+
+        Ok((editions, slot))
     }
 
     pub async fn get_supplies(&self, context: &mut ProgramTestContext) -> (u64, u64) {

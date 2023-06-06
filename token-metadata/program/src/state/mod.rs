@@ -5,6 +5,7 @@ pub(crate) mod data;
 pub(crate) mod delegate;
 pub(crate) mod edition;
 pub(crate) mod edition_marker;
+pub(crate) mod edition_marker_v2;
 pub(crate) mod escrow;
 pub mod fee;
 pub(crate) mod master_edition;
@@ -25,6 +26,7 @@ pub use data::*;
 pub use delegate::*;
 pub use edition::*;
 pub use edition_marker::*;
+pub use edition_marker_v2::*;
 pub use escrow::*;
 pub use fee::*;
 pub use master_edition::*;
@@ -65,11 +67,12 @@ pub const DISCRIMINATOR_INDEX: usize = 0;
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, Copy, FromPrimitive)]
 pub enum TokenStandard {
-    NonFungible,             // This is a master edition
-    FungibleAsset,           // A token with metadata that can also have attributes
-    Fungible,                // A token with simple metadata
-    NonFungibleEdition,      // This is a limited edition
-    ProgrammableNonFungible, // NonFungible with programmable configuration
+    NonFungible,                    // This is a master edition
+    FungibleAsset,                  // A token with metadata that can also have attributes
+    Fungible,                       // A token with simple metadata
+    NonFungibleEdition,             // This is a limited edition
+    ProgrammableNonFungible,        // NonFungible with programmable configuration
+    ProgrammableNonFungibleEdition, // NonFungible with programmable configuration
 }
 
 pub trait TokenMetadataAccount: BorshDeserialize {
@@ -85,7 +88,8 @@ pub trait TokenMetadataAccount: BorshDeserialize {
         let key: Option<Key> = Key::from_u8(data[0]);
         match key {
             Some(key) => {
-                (key == data_type || key == Key::Uninitialized) && (data.len() == data_size)
+                (key == data_type || key == Key::Uninitialized)
+                    && (data.len() == data_size || data_size == 0)
             }
             None => false,
         }
@@ -139,6 +143,7 @@ pub enum Key {
     TokenOwnedEscrow,
     TokenRecord,
     MetadataDelegate,
+    EditionMarkerV2,
 }
 
 #[cfg(feature = "serde-feature")]

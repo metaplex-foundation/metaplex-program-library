@@ -174,6 +174,10 @@ pub fn process_instruction<'a>(
                 Err(MetadataError::InstructionNotSupported.into())
             }
         }
+        MetadataInstruction::Print(args) => {
+            msg!("IX: Print");
+            metadata::print(program_id, accounts, args)
+        }
     }
 }
 
@@ -241,7 +245,6 @@ fn process_legacy_instruction<'a>(
                 program_id,
                 accounts,
                 args.edition,
-                false,
             )
         }
         MetadataInstruction::ConvertMasterEditionV1ToV2 => {
