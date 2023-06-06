@@ -548,7 +548,7 @@ mod verify_collection {
             &new_collection_authority.pubkey(),
         );
         let ix = mpl_token_metadata::instruction::approve_collection_authority(
-            mpl_token_metadata::id(),
+            mpl_token_metadata::ID,
             record,
             new_collection_authority.pubkey(),
             context.payer.pubkey(),
@@ -632,7 +632,7 @@ mod verify_collection {
             &new_collection_authority.pubkey(),
         );
         let ix = mpl_token_metadata::instruction::approve_collection_authority(
-            mpl_token_metadata::id(),
+            mpl_token_metadata::ID,
             record,
             new_collection_authority.pubkey(),
             update_authority,
@@ -721,7 +721,7 @@ mod verify_collection {
             &new_collection_authority.pubkey(),
         );
         let ix = mpl_token_metadata::instruction::approve_collection_authority(
-            mpl_token_metadata::id(),
+            mpl_token_metadata::ID,
             record,
             new_collection_authority.pubkey(),
             update_authority,
@@ -765,7 +765,7 @@ mod verify_collection {
         assert!(metadata_after.collection.unwrap().verified);
 
         let ix_revoke = mpl_token_metadata::instruction::revoke_collection_authority(
-            mpl_token_metadata::id(),
+            mpl_token_metadata::ID,
             record,
             new_collection_authority.pubkey(),
             new_collection_authority.pubkey(),
@@ -842,7 +842,7 @@ mod verify_collection {
             &new_collection_authority.pubkey(),
         );
         let ix = mpl_token_metadata::instruction::approve_collection_authority(
-            mpl_token_metadata::id(),
+            mpl_token_metadata::ID,
             record,
             new_collection_authority.pubkey(),
             context.payer.pubkey(),
@@ -869,7 +869,7 @@ mod verify_collection {
         assert_eq!(account_before.data.len(), COLLECTION_AUTHORITY_RECORD_SIZE);
 
         let ixrevoke = mpl_token_metadata::instruction::revoke_collection_authority(
-            mpl_token_metadata::id(),
+            mpl_token_metadata::ID,
             record,
             new_collection_authority.pubkey(),
             context.payer.pubkey(),
@@ -946,7 +946,7 @@ mod verify_collection {
             &new_collection_authority.pubkey(),
         );
         let ix = mpl_token_metadata::instruction::approve_collection_authority(
-            mpl_token_metadata::id(),
+            mpl_token_metadata::ID,
             record,
             new_collection_authority.pubkey(),
             update_authority,
@@ -1004,7 +1004,7 @@ mod verify_collection {
         assert!(!metadata_after_unverify.collection.unwrap().verified);
 
         let ix_revoke = mpl_token_metadata::instruction::revoke_collection_authority(
-            mpl_token_metadata::id(),
+            mpl_token_metadata::ID,
             record,
             new_collection_authority.pubkey(),
             incorrect_revoke_authority.pubkey(),
@@ -1231,7 +1231,7 @@ async fn fail_invalid_collection_update_authority() {
     );
 
     let ix1 = mpl_token_metadata::instruction::approve_collection_authority(
-        mpl_token_metadata::id(),
+        mpl_token_metadata::ID,
         record,
         delegate_keypair.pubkey(),
         update_authority,
@@ -1320,7 +1320,7 @@ async fn success_collection_authority_delegate_revoke() {
     let payer = context.payer.pubkey();
 
     let ix_revoke = mpl_token_metadata::instruction::revoke_collection_authority(
-        mpl_token_metadata::id(),
+        mpl_token_metadata::ID,
         record,
         delegate_keypair.pubkey(),
         payer,
@@ -1342,7 +1342,7 @@ async fn success_collection_authority_delegate_revoke() {
         .unwrap();
 
     let ix = mpl_token_metadata::instruction::approve_collection_authority(
-        mpl_token_metadata::id(),
+        mpl_token_metadata::ID,
         record,
         delegate_keypair.pubkey(),
         payer,

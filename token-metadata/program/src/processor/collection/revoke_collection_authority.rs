@@ -8,7 +8,7 @@ use solana_program::{
 use crate::{
     assertions::{assert_owned_by, collection::assert_is_collection_delegated_authority},
     error::MetadataError,
-    state::{Metadata, TokenMetadataAccount},
+    state::{Key, Metadata, TokenMetadataAccount},
     utils::close_program_account,
 };
 
@@ -25,7 +25,7 @@ pub fn process_revoke_collection_authority(
     let metadata = Metadata::from_account_info(metadata_info)?;
 
     assert_owned_by(metadata_info, program_id)?;
-    assert_owned_by(mint_info, &spl_token::id())?;
+    assert_owned_by(mint_info, &spl_token::ID)?;
     assert_signer(revoke_authority)?;
 
     if metadata.update_authority != *revoke_authority.key
@@ -48,5 +48,9 @@ pub fn process_revoke_collection_authority(
         mint_info.key,
     )?;
 
-    close_program_account(collection_authority_record, revoke_authority)
+    close_program_account(
+        collection_authority_record,
+        revoke_authority,
+        Key::CollectionAuthorityRecord,
+    )
 }

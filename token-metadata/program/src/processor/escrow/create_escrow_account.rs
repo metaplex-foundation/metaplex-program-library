@@ -34,10 +34,10 @@ pub fn process_create_escrow_account(
     assert_owned_by(metadata_account_info, &crate::ID)?;
 
     let mint_account_info = next_account_info(account_info_iter)?;
-    assert_owned_by(mint_account_info, &spl_token::id())?;
+    assert_owned_by(mint_account_info, &spl_token::ID)?;
 
     let token_account_info = next_account_info(account_info_iter)?;
-    assert_owned_by(token_account_info, &spl_token::id())?;
+    assert_owned_by(token_account_info, &spl_token::ID)?;
 
     let edition_account_info = next_account_info(account_info_iter)?;
     assert_owned_by(edition_account_info, &crate::ID)?;
@@ -46,7 +46,7 @@ pub fn process_create_escrow_account(
     assert_signer(payer_account_info)?;
 
     let system_account_info = next_account_info(account_info_iter)?;
-    if *system_account_info.key != system_program::id() {
+    if *system_account_info.key != system_program::ID {
         return Err(MetadataError::InvalidSystemProgram.into());
     }
 
@@ -83,7 +83,7 @@ pub fn process_create_escrow_account(
         edition_account_info,
         &[
             PREFIX.as_bytes(),
-            crate::id().as_ref(),
+            crate::ID.as_ref(),
             mint_account_info.key.as_ref(),
             EDITION.as_bytes(),
         ],

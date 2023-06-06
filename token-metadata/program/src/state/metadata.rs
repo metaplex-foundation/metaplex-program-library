@@ -39,6 +39,10 @@ pub const MAX_DATA_SIZE: usize = 4
     + 4
     + MAX_CREATOR_LIMIT * MAX_CREATOR_LEN;
 
+// The last byte of the account contains the fee flag, indicating
+// if the account has fees available for retrieval.
+pub const METADATA_FEE_FLAG_INDEX: usize = MAX_METADATA_LEN - 1;
+
 #[macro_export]
 macro_rules! metadata_seeds {
     ($mint:expr) => {{
@@ -135,6 +139,32 @@ impl Metadata {
             _ => (),
         }
 
+        // Update Authority or Data Delegates can update this section.  Note this section is before
+        // the section that updates `is_mutable` so that both `data` and `is_mutable` can be updated
+        // in the same instruction.
+        match &args {
+            UpdateArgs::V1 { data, .. }
+            | UpdateArgs::AsUpdateAuthorityV2 { data, .. }
+            | UpdateArgs::AsDataDelegateV2 { data, .. }
+            | UpdateArgs::AsDataItemDelegateV2 { data, .. } => {
+                if let Some(data) = data {
+                    if !self.is_mutable {
+                        return Err(MetadataError::DataIsImmutable.into());
+                    }
+
+                    assert_data_valid(
+                        data,
+                        update_authority.key,
+                        self,
+                        false,
+                        update_authority.is_signer,
+                    )?;
+                    self.data = data.clone();
+                }
+            }
+            _ => (),
+        }
+
         // Update Authority or Authority Item Delegate can update this section.
         match &args {
             UpdateArgs::V1 {
@@ -175,30 +205,6 @@ impl Metadata {
                     } else {
                         return Err(MetadataError::IsMutableCanOnlyBeFlippedToFalse.into());
                     }
-                }
-            }
-            _ => (),
-        }
-
-        // Update Authority or Data Delegates can update this section.
-        match &args {
-            UpdateArgs::V1 { data, .. }
-            | UpdateArgs::AsUpdateAuthorityV2 { data, .. }
-            | UpdateArgs::AsDataDelegateV2 { data, .. }
-            | UpdateArgs::AsDataItemDelegateV2 { data, .. } => {
-                if let Some(data) = data {
-                    if !self.is_mutable {
-                        return Err(MetadataError::DataIsImmutable.into());
-                    }
-
-                    assert_data_valid(
-                        data,
-                        update_authority.key,
-                        self,
-                        false,
-                        update_authority.is_signer,
-                    )?;
-                    self.data = data.clone();
                 }
             }
             _ => (),

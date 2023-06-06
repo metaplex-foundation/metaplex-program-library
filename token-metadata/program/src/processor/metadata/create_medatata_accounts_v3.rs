@@ -6,7 +6,10 @@ use solana_program::{
 
 use crate::{
     state::{CollectionDetails, DataV2},
-    utils::{process_create_metadata_accounts_logic, CreateMetadataAccountsLogicArgs},
+    utils::{
+        fee::{levy, set_fee_flag, LevyArgs},
+        process_create_metadata_accounts_logic, CreateMetadataAccountsLogicArgs,
+    },
 };
 
 pub fn process_create_metadata_accounts_v3<'a>(
@@ -24,6 +27,12 @@ pub fn process_create_metadata_accounts_v3<'a>(
     let update_authority_info = next_account_info(account_info_iter)?;
     let system_account_info = next_account_info(account_info_iter)?;
 
+    // Levy fees first, to fund the metadata account with rent + fee amount.
+    levy(LevyArgs {
+        payer_account_info,
+        token_metadata_pda_info: metadata_account_info,
+    })?;
+
     process_create_metadata_accounts_logic(
         program_id,
         CreateMetadataAccountsLogicArgs {
@@ -40,5 +49,8 @@ pub fn process_create_metadata_accounts_v3<'a>(
         false,
         true,
         collection_details,
-    )
+    )?;
+
+    // Set fee flag after metadata account is created.
+    set_fee_flag(metadata_account_info)
 }

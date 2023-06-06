@@ -1,5 +1,4 @@
 use mpl_token_metadata::{
-    id,
     instruction::{
         self,
         builders::{
@@ -18,8 +17,10 @@ use mpl_token_metadata::{
     state::{
         AssetData, Collection, CollectionDetails, Creator, Metadata, PrintSupply,
         ProgrammableConfig, TokenDelegateRole, TokenMetadataAccount, TokenRecord, TokenStandard,
-        EDITION, EDITION_MARKER_BIT_SIZE, PREFIX,
+        CREATE_FEE, EDITION, EDITION_MARKER_BIT_SIZE, FEE_FLAG_SET, METADATA_FEE_FLAG_INDEX,
+        PREFIX,
     },
+    ID,
 };
 use solana_program::{
     borsh::try_from_slice_unchecked, program_option::COption, program_pack::Pack, pubkey::Pubkey,
@@ -67,7 +68,7 @@ impl DigitalAsset {
     pub fn new() -> Self {
         let mint = Keypair::new();
         let mint_pubkey = mint.pubkey();
-        let program_id = id();
+        let program_id = ID;
 
         let metadata_seeds = &[PREFIX.as_bytes(), program_id.as_ref(), mint_pubkey.as_ref()];
         let (metadata, _) = Pubkey::find_program_address(metadata_seeds, &program_id);
@@ -300,7 +301,7 @@ impl DigitalAsset {
         let payer_pubkey = context.payer.pubkey();
         let mint_pubkey = self.mint.pubkey();
 
-        let program_id = id();
+        let program_id = ID;
         let mut builder = CreateBuilder::new();
         builder
             .metadata(self.metadata)
@@ -320,7 +321,7 @@ impl DigitalAsset {
                     mint_pubkey.as_ref(),
                     EDITION.as_bytes(),
                 ];
-                let (edition, _) = Pubkey::find_program_address(edition_seeds, &id());
+                let (edition, _) = Pubkey::find_program_address(edition_seeds, &ID);
                 // sets the master edition to the builder
                 builder.master_edition(edition);
                 Some(edition)
@@ -363,10 +364,10 @@ impl DigitalAsset {
         let (token, _) = Pubkey::find_program_address(
             &[
                 &payer_pubkey.to_bytes(),
-                &spl_token::id().to_bytes(),
+                &spl_token::ID.to_bytes(),
                 &self.mint.pubkey().to_bytes(),
             ],
-            &spl_associated_token_account::id(),
+            &spl_associated_token_account::ID,
         );
 
         let (token_record, _) = find_token_record_account(&self.mint.pubkey(), &token);
@@ -765,7 +766,7 @@ impl DigitalAsset {
 
         let tx = Transaction::new_signed_with_payer(
             &[instruction::mint_new_edition_from_master_edition_via_token(
-                id(),
+                ID,
                 print_metadata,
                 print_edition,
                 self.edition.unwrap(),
@@ -947,7 +948,7 @@ impl DigitalAsset {
                 &authority.pubkey(),
                 &destination_owner,
                 &self.mint.pubkey(),
-                &spl_token::id(),
+                &spl_token::ID,
             ));
 
             get_associated_token_address(&destination_owner, &self.mint.pubkey())
@@ -1262,9 +1263,16 @@ impl DigitalAsset {
             .get_account(self.edition.unwrap())
             .await?;
 
-        assert!(md_account.is_none());
-        assert!(token_account.is_none());
+        // The Metadata accounts may still be open because they are no longer being re-assigned
+        // to the system program immediately, but if they exist they should have a
+        // data length of 0.
+
+        if let Some(account) = md_account {
+            assert_eq!(account.data.len(), 0);
+        }
+
         assert!(edition_account.is_none());
+        assert!(token_account.is_none());
 
         Ok(())
     }
@@ -1298,7 +1306,25 @@ impl DigitalAsset {
             .get_account(token_record_pubkey)
             .await?;
 
-        assert!(token_record_account.is_none());
+        if let Some(account) = token_record_account {
+            assert_eq!(account.data.len(), 0);
+        }
+        Ok(())
+    }
+
+    pub async fn assert_create_fees_charged(
+        &self,
+        context: &mut ProgramTestContext,
+    ) -> Result<(), BanksClientError> {
+        let account = get_account(context, &self.metadata).await;
+
+        let rent = context.banks_client.get_rent().await.unwrap();
+        let rent_exempt = rent.minimum_balance(account.data.len());
+
+        let expected_lamports = rent_exempt + CREATE_FEE;
+
+        assert_eq!(account.lamports, expected_lamports);
+        assert_eq!(account.data[METADATA_FEE_FLAG_INDEX], FEE_FLAG_SET);
 
         Ok(())
     }

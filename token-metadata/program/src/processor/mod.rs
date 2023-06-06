@@ -4,6 +4,7 @@ mod collection;
 mod delegate;
 mod edition;
 pub(crate) mod escrow;
+mod fee;
 mod freeze;
 mod metadata;
 mod state;
@@ -33,7 +34,13 @@ pub use verification::*;
 
 use crate::{
     error::MetadataError,
-    instruction::MetadataInstruction,
+    instruction::{
+        MetadataInstruction, CREATE_METADATA_ACCOUNT, CREATE_METADATA_ACCOUNT_V2,
+        DEPRECATED_CREATE_MASTER_EDITION, DEPRECATED_CREATE_RESERVATION_LIST,
+        DEPRECATED_MINT_NEW_EDITION_FROM_MASTER_EDITION_VIA_PRINTING_TOKEN,
+        DEPRECATED_MINT_PRINTING_TOKENS, DEPRECATED_MINT_PRINTING_TOKENS_VIA_TOKEN,
+        DEPRECATED_SET_RESERVATION_LIST, UPDATE_METADATA_ACCOUNT,
+    },
     processor::{
         edition::{
             process_convert_master_edition_v1_to_v2, process_create_master_edition,
@@ -77,7 +84,26 @@ pub fn process_instruction<'a>(
     accounts: &'a [AccountInfo<'a>],
     input: &[u8],
 ) -> ProgramResult {
-    let instruction = MetadataInstruction::try_from_slice(input)?;
+    let (variant, _args) = input
+        .split_first()
+        .ok_or(MetadataError::InvalidInstruction)?;
+
+    let instruction = match MetadataInstruction::try_from_slice(input) {
+        Ok(instruction) => Ok(instruction),
+        // Check if the instruction is a deprecated instruction.
+        Err(_) => match *variant {
+            CREATE_METADATA_ACCOUNT
+            | UPDATE_METADATA_ACCOUNT
+            | DEPRECATED_CREATE_MASTER_EDITION
+            | DEPRECATED_MINT_NEW_EDITION_FROM_MASTER_EDITION_VIA_PRINTING_TOKEN
+            | DEPRECATED_SET_RESERVATION_LIST
+            | DEPRECATED_CREATE_RESERVATION_LIST
+            | DEPRECATED_MINT_PRINTING_TOKENS_VIA_TOKEN
+            | DEPRECATED_MINT_PRINTING_TOKENS
+            | CREATE_METADATA_ACCOUNT_V2 => Err(MetadataError::Removed.into()),
+            _ => Err(ProgramError::InvalidInstructionData),
+        },
+    }?;
 
     // checks if there is a locked token; this will block any instruction that
     // requires the token record account when the token is locked – 'Update' is
@@ -137,6 +163,7 @@ pub fn process_instruction<'a>(
             msg!("IX: Unverify");
             verification::unverify(program_id, accounts, args)
         }
+        MetadataInstruction::Collect => fee::process_collect_fees(program_id, accounts),
         _ => {
             // pNFT accounts can only be used by the "new" API; before forwarding
             // the transaction to the "legacy" processor we determine whether we are
@@ -312,14 +339,14 @@ fn process_legacy_instruction<'a>(
             msg!("IX: Transfer Out Of Escrow");
             process_transfer_out_of_escrow(program_id, accounts, args)
         }
-        _ => Err(MetadataError::InvalidInstruction.into()),
+        _ => Err(ProgramError::InvalidInstructionData),
     }
 }
 
 /// Convenience function for accessing the next item in an [`AccountInfo`]
 /// iterator and validating whether the account is present or not.
 ///
-/// This relies on the client setting the `crate::id()` as the pubkey for
+/// This relies on the client setting the `crate::ID` as the pubkey for
 /// accounts that are not set, which effectively allows us to use positional
 /// optional accounts.
 pub fn next_optional_account_info<'a, 'b, I: Iterator<Item = &'a AccountInfo<'b>>>(
@@ -327,7 +354,7 @@ pub fn next_optional_account_info<'a, 'b, I: Iterator<Item = &'a AccountInfo<'b>
 ) -> Result<Option<I::Item>, ProgramError> {
     let account_info = iter.next().ok_or(ProgramError::NotEnoughAccountKeys)?;
 
-    Ok(if cmp_pubkeys(account_info.key, &crate::id()) {
+    Ok(if cmp_pubkeys(account_info.key, &crate::ID) {
         None
     } else {
         Some(account_info)
@@ -337,7 +364,7 @@ pub fn next_optional_account_info<'a, 'b, I: Iterator<Item = &'a AccountInfo<'b>
 /// Convenience function for accessing an [`AccountInfo`] by index
 /// and validating whether the account is present or not.
 ///
-/// This relies on the client setting the `crate::id()` as the pubkey for
+/// This relies on the client setting the `crate::ID` as the pubkey for
 /// accounts that are not set, which effectively allows us to use positional
 /// optional accounts.
 pub fn try_get_account_info<'a>(
@@ -356,7 +383,7 @@ pub fn try_get_account_info<'a>(
 /// Convenience function for accessing an [`AccountInfo`] by index
 /// and validating whether the account is present or not.
 ///
-/// This relies on the client setting the `crate::id()` as the pubkey for
+/// This relies on the client setting the `crate::ID` as the pubkey for
 /// accounts that are not set, which effectively allows us to use positional
 /// optional accounts.
 pub fn try_get_optional_account_info<'a>(
@@ -364,7 +391,7 @@ pub fn try_get_optional_account_info<'a>(
     index: usize,
 ) -> Result<Option<&'a AccountInfo<'a>>, ProgramError> {
     if index < accounts.len() {
-        Ok(if cmp_pubkeys(accounts[index].key, &crate::id()) {
+        Ok(if cmp_pubkeys(accounts[index].key, &crate::ID) {
             None
         } else {
             Some(&accounts[index])

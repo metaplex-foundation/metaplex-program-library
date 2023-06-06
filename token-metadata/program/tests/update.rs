@@ -52,11 +52,11 @@ mod update {
         );
         assert_eq!(metadata.update_authority, update_authority.pubkey());
 
+        // Change some data.
         let new_name = puffed_out_string("New Name", MAX_NAME_LENGTH);
         let new_symbol = puffed_out_string("NEW", MAX_SYMBOL_LENGTH);
         let new_uri = puffed_out_string("https://new.digital.asset.org", MAX_URI_LENGTH);
 
-        // Change a few values and update the metadata.
         let data = Data {
             name: new_name.clone(),
             symbol: new_symbol.clone(),
@@ -3060,5 +3060,552 @@ mod update {
         let metadata = da.get_metadata(context).await;
 
         assert_eq!(metadata.data.creators, None);
+    }
+
+    #[tokio::test]
+    async fn cannot_set_primary_sale_back_to_false() {
+        let context = &mut program_test().start_with_context().await;
+
+        let update_authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+
+        let mut da = DigitalAsset::new();
+        da.create(context, TokenStandard::NonFungible, None)
+            .await
+            .unwrap();
+
+        let metadata = da.get_metadata(context).await;
+        assert_eq!(metadata.update_authority, update_authority.pubkey());
+        assert!(!metadata.primary_sale_happened);
+
+        // Change `primary_sale_happened`.
+        let mut args = UpdateArgs::default_as_update_authority();
+
+        match &mut args {
+            UpdateArgs::AsUpdateAuthorityV2 {
+                primary_sale_happened,
+                ..
+            } => {
+                *primary_sale_happened = Some(true);
+            }
+            _ => panic!("Unexpected enum variant"),
+        }
+
+        let mut builder = UpdateBuilder::new();
+        builder
+            .authority(update_authority.pubkey())
+            .metadata(da.metadata)
+            .mint(da.mint.pubkey())
+            .payer(update_authority.pubkey());
+
+        if let Some(edition) = da.edition {
+            builder.edition(edition);
+        }
+
+        let update_ix = builder.build(args).unwrap().instruction();
+
+        let tx = Transaction::new_signed_with_payer(
+            &[update_ix],
+            Some(&update_authority.pubkey()),
+            &[&update_authority],
+            context.last_blockhash,
+        );
+
+        context.banks_client.process_transaction(tx).await.unwrap();
+
+        // checks the created metadata values
+        let metadata = da.get_metadata(context).await;
+        assert!(metadata.primary_sale_happened);
+
+        // Try to change it back.
+        let mut args = UpdateArgs::default_as_update_authority();
+
+        match &mut args {
+            UpdateArgs::AsUpdateAuthorityV2 {
+                primary_sale_happened,
+                ..
+            } => {
+                *primary_sale_happened = Some(false);
+            }
+            _ => panic!("Unexpected enum variant"),
+        }
+
+        let mut builder = UpdateBuilder::new();
+        builder
+            .authority(update_authority.pubkey())
+            .metadata(da.metadata)
+            .mint(da.mint.pubkey())
+            .payer(update_authority.pubkey());
+
+        if let Some(edition) = da.edition {
+            builder.edition(edition);
+        }
+
+        let update_ix = builder.build(args).unwrap().instruction();
+
+        let tx = Transaction::new_signed_with_payer(
+            &[update_ix],
+            Some(&update_authority.pubkey()),
+            &[&update_authority],
+            context.last_blockhash,
+        );
+
+        let err = context
+            .banks_client
+            .process_transaction(tx)
+            .await
+            .unwrap_err();
+
+        assert_custom_error!(err, MetadataError::PrimarySaleCanOnlyBeFlippedToTrue);
+
+        // checks value stayed the same.
+        let metadata = da.get_metadata(context).await;
+        assert!(metadata.primary_sale_happened);
+    }
+
+    #[tokio::test]
+    async fn can_update_data_and_is_mutable_same_instruction() {
+        let context = &mut program_test().start_with_context().await;
+
+        let update_authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+
+        let mut da = DigitalAsset::new();
+        da.create(context, TokenStandard::NonFungible, None)
+            .await
+            .unwrap();
+
+        // Check metadata.
+        let metadata = da.get_metadata(context).await;
+        assert_eq!(
+            metadata.data.name,
+            puffed_out_string(DEFAULT_NAME, MAX_NAME_LENGTH)
+        );
+        assert_eq!(
+            metadata.data.symbol,
+            puffed_out_string(DEFAULT_SYMBOL, MAX_SYMBOL_LENGTH)
+        );
+        assert_eq!(
+            metadata.data.uri,
+            puffed_out_string(DEFAULT_URI, MAX_URI_LENGTH)
+        );
+        assert!(metadata.is_mutable);
+
+        // Change data and `is_mutable` and update the metadata.
+        let new_name = puffed_out_string("New Name", MAX_NAME_LENGTH);
+        let new_symbol = puffed_out_string("NEW", MAX_SYMBOL_LENGTH);
+        let new_uri = puffed_out_string("https://new.digital.asset.org", MAX_URI_LENGTH);
+
+        let data = Data {
+            name: new_name.clone(),
+            symbol: new_symbol.clone(),
+            uri: new_uri.clone(),
+            creators: metadata.data.creators, // keep the same creators
+            seller_fee_basis_points: 0,
+        };
+
+        let mut args = UpdateArgs::default_as_update_authority();
+        match &mut args {
+            UpdateArgs::AsUpdateAuthorityV2 {
+                data: current_data,
+                is_mutable,
+                ..
+            } => {
+                *current_data = Some(data);
+                *is_mutable = Some(false);
+            }
+            _ => panic!("Unexpected enum variant"),
+        }
+
+        let mut builder = UpdateBuilder::new();
+        builder
+            .authority(update_authority.pubkey())
+            .metadata(da.metadata)
+            .mint(da.mint.pubkey())
+            .payer(update_authority.pubkey());
+
+        if let Some(edition) = da.edition {
+            builder.edition(edition);
+        }
+
+        let update_ix = builder.build(args).unwrap().instruction();
+
+        let tx = Transaction::new_signed_with_payer(
+            &[update_ix],
+            Some(&update_authority.pubkey()),
+            &[&update_authority],
+            context.last_blockhash,
+        );
+
+        context.banks_client.process_transaction(tx).await.unwrap();
+
+        // checks that both data was changed and asset is immutable.
+        let metadata = da.get_metadata(context).await;
+        assert_eq!(metadata.data.name, new_name);
+        assert_eq!(metadata.data.symbol, new_symbol);
+        assert_eq!(metadata.data.uri, new_uri);
+        assert!(!metadata.is_mutable);
+    }
+
+    #[tokio::test]
+    async fn cannot_set_is_mutable_back_to_true() {
+        let context = &mut program_test().start_with_context().await;
+
+        let update_authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+
+        let mut da = DigitalAsset::new();
+        da.create(context, TokenStandard::NonFungible, None)
+            .await
+            .unwrap();
+
+        let metadata = da.get_metadata(context).await;
+        assert!(metadata.is_mutable);
+
+        // Change `is_mutable`.
+        let mut args = UpdateArgs::default_as_update_authority();
+
+        match &mut args {
+            UpdateArgs::AsUpdateAuthorityV2 { is_mutable, .. } => {
+                *is_mutable = Some(false);
+            }
+            _ => panic!("Unexpected enum variant"),
+        }
+
+        let mut builder = UpdateBuilder::new();
+        builder
+            .authority(update_authority.pubkey())
+            .metadata(da.metadata)
+            .mint(da.mint.pubkey())
+            .payer(update_authority.pubkey());
+
+        if let Some(edition) = da.edition {
+            builder.edition(edition);
+        }
+
+        let update_ix = builder.build(args).unwrap().instruction();
+
+        let tx = Transaction::new_signed_with_payer(
+            &[update_ix],
+            Some(&update_authority.pubkey()),
+            &[&update_authority],
+            context.last_blockhash,
+        );
+
+        context.banks_client.process_transaction(tx).await.unwrap();
+
+        // checks that asset is immutable.
+        let metadata = da.get_metadata(context).await;
+        assert!(!metadata.is_mutable);
+
+        // Try to change it back.
+        let mut args = UpdateArgs::default_as_update_authority();
+
+        match &mut args {
+            UpdateArgs::AsUpdateAuthorityV2 { is_mutable, .. } => {
+                *is_mutable = Some(true);
+            }
+            _ => panic!("Unexpected enum variant"),
+        }
+
+        let mut builder = UpdateBuilder::new();
+        builder
+            .authority(update_authority.pubkey())
+            .metadata(da.metadata)
+            .mint(da.mint.pubkey())
+            .payer(update_authority.pubkey());
+
+        if let Some(edition) = da.edition {
+            builder.edition(edition);
+        }
+
+        let update_ix = builder.build(args).unwrap().instruction();
+
+        let tx = Transaction::new_signed_with_payer(
+            &[update_ix],
+            Some(&update_authority.pubkey()),
+            &[&update_authority],
+            context.last_blockhash,
+        );
+
+        let err = context
+            .banks_client
+            .process_transaction(tx)
+            .await
+            .unwrap_err();
+
+        assert_custom_error!(err, MetadataError::IsMutableCanOnlyBeFlippedToFalse);
+
+        // checks that asset is immutable.
+        let metadata = da.get_metadata(context).await;
+        assert!(!metadata.is_mutable);
+    }
+
+    #[tokio::test]
+    async fn fail_update_data_by_collections_collection_delegate() {
+        let mut program_test = ProgramTest::new("mpl_token_metadata", mpl_token_metadata::ID, None);
+        program_test.add_program("mpl_token_auth_rules", mpl_token_auth_rules::ID, None);
+        let context = &mut program_test.start_with_context().await;
+
+        // Create a collection parent NFT or pNFT with the CollectionDetails struct populated.
+        let mut collection_parent_da = DigitalAsset::new();
+        collection_parent_da
+            .create_and_mint_collection_parent(
+                context,
+                TokenStandard::ProgrammableNonFungible,
+                None,
+                None,
+                1,
+                DEFAULT_COLLECTION_DETAILS,
+            )
+            .await
+            .unwrap();
+
+        // Create metadata delegate on the collection.
+        let delegate = Keypair::new();
+        delegate.airdrop(context, 1_000_000_000).await.unwrap();
+        let delegate_args = DelegateArgs::CollectionV1 {
+            authorization_data: None,
+        };
+        let update_authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+        let delegate_record = collection_parent_da
+            .delegate(context, update_authority, delegate.pubkey(), delegate_args)
+            .await
+            .unwrap()
+            .unwrap();
+
+        // Create rule-set for the transfer
+        let authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+        let (authorization_rules, auth_data) =
+            create_default_metaplex_rule_set(context, authority, false).await;
+
+        // Create and mint item with a collection.  THIS IS NEEDED so that the collection-level
+        // delegate is authorized for this item.
+        let collection = Some(Collection {
+            key: collection_parent_da.mint.pubkey(),
+            verified: false,
+        });
+
+        let mut da = DigitalAsset::new();
+        da.create_and_mint_item_with_collection(
+            context,
+            TokenStandard::ProgrammableNonFungible,
+            Some(authorization_rules),
+            Some(auth_data),
+            1,
+            collection.clone(),
+        )
+        .await
+        .unwrap();
+
+        let metadata = da.get_metadata(context).await;
+
+        // Check collection.
+        assert_eq!(metadata.collection, collection);
+
+        // Check data and update authority.
+        let metadata = da.get_metadata(context).await;
+        assert_eq!(
+            metadata.data.name,
+            puffed_out_string(DEFAULT_NAME, MAX_NAME_LENGTH)
+        );
+        assert_eq!(
+            metadata.data.symbol,
+            puffed_out_string(DEFAULT_SYMBOL, MAX_SYMBOL_LENGTH)
+        );
+        assert_eq!(
+            metadata.data.uri,
+            puffed_out_string(DEFAULT_URI, MAX_URI_LENGTH)
+        );
+        assert_eq!(metadata.update_authority, context.payer.pubkey());
+
+        // Change some data.
+        let new_name = puffed_out_string("New Name", MAX_NAME_LENGTH);
+        let new_symbol = puffed_out_string("NEW", MAX_SYMBOL_LENGTH);
+        let new_uri = puffed_out_string("https://new.digital.asset.org", MAX_URI_LENGTH);
+        let data = Data {
+            name: new_name.clone(),
+            symbol: new_symbol.clone(),
+            uri: new_uri.clone(),
+            creators: metadata.data.creators, // keep the same creators
+            seller_fee_basis_points: 0,
+        };
+
+        let mut args = UpdateArgs::default_as_data_delegate();
+        match &mut args {
+            UpdateArgs::AsDataDelegateV2 {
+                data: current_data, ..
+            } => *current_data = Some(data),
+            _ => panic!("Unexpected enum variant"),
+        }
+
+        let mut builder = UpdateBuilder::new();
+        builder
+            .authority(delegate.pubkey())
+            .delegate_record(delegate_record)
+            .metadata(da.metadata)
+            .mint(da.mint.pubkey())
+            .token(da.token.unwrap())
+            .authorization_rules(authorization_rules)
+            .payer(delegate.pubkey());
+
+        if let Some(edition) = da.edition {
+            builder.edition(edition);
+        }
+
+        let update_ix = builder.build(args).unwrap().instruction();
+
+        let tx = Transaction::new_signed_with_payer(
+            &[update_ix],
+            Some(&delegate.pubkey()),
+            &[&delegate],
+            context.last_blockhash,
+        );
+
+        let err = context
+            .banks_client
+            .process_transaction(tx)
+            .await
+            .unwrap_err();
+
+        assert_custom_error!(err, MetadataError::InvalidUpdateArgs);
+
+        // Check data stayed the same.
+        let metadata = da.get_metadata(context).await;
+
+        assert_eq!(
+            metadata.data.name,
+            puffed_out_string(DEFAULT_NAME, MAX_NAME_LENGTH)
+        );
+        assert_eq!(
+            metadata.data.symbol,
+            puffed_out_string(DEFAULT_SYMBOL, MAX_SYMBOL_LENGTH)
+        );
+        assert_eq!(
+            metadata.data.uri,
+            puffed_out_string(DEFAULT_URI, MAX_URI_LENGTH)
+        );
+    }
+
+    #[tokio::test]
+    async fn fail_update_prog_config_by_collections_collection_delegate() {
+        let mut program_test = ProgramTest::new("mpl_token_metadata", mpl_token_metadata::ID, None);
+        program_test.add_program("mpl_token_auth_rules", mpl_token_auth_rules::ID, None);
+        let context = &mut program_test.start_with_context().await;
+
+        // Create a collection parent NFT or pNFT with the CollectionDetails struct populated.
+        let mut collection_parent_da = DigitalAsset::new();
+        collection_parent_da
+            .create_and_mint_collection_parent(
+                context,
+                TokenStandard::ProgrammableNonFungible,
+                None,
+                None,
+                1,
+                DEFAULT_COLLECTION_DETAILS,
+            )
+            .await
+            .unwrap();
+
+        // Create metadata delegate on the collection.
+        let delegate = Keypair::new();
+        delegate.airdrop(context, 1_000_000_000).await.unwrap();
+        let delegate_args = DelegateArgs::CollectionV1 {
+            authorization_data: None,
+        };
+        let update_authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+        let delegate_record = collection_parent_da
+            .delegate(context, update_authority, delegate.pubkey(), delegate_args)
+            .await
+            .unwrap()
+            .unwrap();
+
+        // Create rule-set for the transfer
+        let authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+        let (authorization_rules, auth_data) =
+            create_default_metaplex_rule_set(context, authority, false).await;
+
+        // Create and mint item with a collection.  THIS IS NEEDED so that the collection-level
+        // delegate is authorized for this item.
+        let collection = Some(Collection {
+            key: collection_parent_da.mint.pubkey(),
+            verified: false,
+        });
+
+        let mut da = DigitalAsset::new();
+        da.create_and_mint_item_with_collection(
+            context,
+            TokenStandard::ProgrammableNonFungible,
+            Some(authorization_rules),
+            Some(auth_data),
+            1,
+            collection.clone(),
+        )
+        .await
+        .unwrap();
+
+        let metadata = da.get_metadata(context).await;
+
+        // Check collection.
+        assert_eq!(metadata.collection, collection);
+
+        // Check programmable config.
+        if let Some(ProgrammableConfig::V1 {
+            rule_set: Some(rule_set),
+        }) = metadata.programmable_config
+        {
+            assert_eq!(rule_set, authorization_rules);
+        } else {
+            panic!("Missing rule set programmable config");
+        }
+
+        // Change programmable config, removing the RuleSet.
+        let mut args = UpdateArgs::default_as_programmable_config_delegate();
+        match &mut args {
+            UpdateArgs::AsProgrammableConfigDelegateV2 { rule_set, .. } => {
+                *rule_set = RuleSetToggle::Clear
+            }
+            _ => panic!("Unexpected enum variant"),
+        }
+
+        let mut builder = UpdateBuilder::new();
+        builder
+            .authority(delegate.pubkey())
+            .delegate_record(delegate_record)
+            .metadata(da.metadata)
+            .mint(da.mint.pubkey())
+            .token(da.token.unwrap())
+            .authorization_rules(authorization_rules)
+            .payer(delegate.pubkey());
+
+        if let Some(edition) = da.edition {
+            builder.edition(edition);
+        }
+
+        let update_ix = builder.build(args).unwrap().instruction();
+
+        let tx = Transaction::new_signed_with_payer(
+            &[update_ix],
+            Some(&delegate.pubkey()),
+            &[&delegate],
+            context.last_blockhash,
+        );
+
+        let err = context
+            .banks_client
+            .process_transaction(tx)
+            .await
+            .unwrap_err();
+
+        assert_custom_error!(err, MetadataError::InvalidUpdateArgs);
+
+        // Check programmable config.
+        let metadata = da.get_metadata(context).await;
+
+        if let Some(ProgrammableConfig::V1 {
+            rule_set: Some(rule_set),
+        }) = metadata.programmable_config
+        {
+            assert_eq!(rule_set, authorization_rules);
+        } else {
+            panic!("Missing rule set programmable config");
+        }
     }
 }

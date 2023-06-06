@@ -4,6 +4,7 @@ mod collection;
 mod delegate;
 mod edition;
 pub(crate) mod escrow;
+mod fee;
 mod freeze;
 mod metadata;
 mod state;
@@ -17,9 +18,11 @@ pub use collection::*;
 pub use delegate::*;
 pub use edition::*;
 pub use escrow::*;
+pub use fee::collect_fees;
 pub use freeze::*;
 pub use metadata::*;
 use mpl_token_metadata_context_derive::AccountContext;
+
 #[cfg(feature = "serde-feature")]
 use serde::{Deserialize, Serialize};
 use shank::ShankInstruction;
@@ -27,6 +30,17 @@ use solana_program::account_info::AccountInfo;
 pub use state::*;
 pub use uses::*;
 pub use verification::*;
+
+// Deprecated Instructions
+pub const CREATE_METADATA_ACCOUNT: u8 = 0;
+pub const UPDATE_METADATA_ACCOUNT: u8 = 1;
+pub const DEPRECATED_CREATE_MASTER_EDITION: u8 = 2;
+pub const DEPRECATED_MINT_NEW_EDITION_FROM_MASTER_EDITION_VIA_PRINTING_TOKEN: u8 = 3;
+pub const DEPRECATED_SET_RESERVATION_LIST: u8 = 5;
+pub const DEPRECATED_CREATE_RESERVATION_LIST: u8 = 6;
+pub const DEPRECATED_MINT_PRINTING_TOKENS_VIA_TOKEN: u8 = 8;
+pub const DEPRECATED_MINT_PRINTING_TOKENS: u8 = 9;
+pub const CREATE_METADATA_ACCOUNT_V2: u8 = 16;
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
@@ -254,6 +268,7 @@ pub enum MetadataInstruction {
     #[account(3, name="collection_mint", desc="Mint of the Collection")]
     #[account(4, name="collection", desc="Metadata Account of the Collection")]
     #[account(5, name="collection_master_edition_account", desc="MasterEdition2 Account of the Collection Token")]
+    #[account(6, optional, name="collection_authority_record", desc="Collection Authority Record PDA")]
     VerifyCollection,
 
     /// Utilize or Use an NFT , burns the NFT and returns the lamports to the update authority if the use method is burn and its out of uses.
@@ -774,6 +789,11 @@ pub enum MetadataInstruction {
     #[account(6, name="sysvar_instructions", desc="Instructions sysvar account")]
     #[default_optional_accounts]
     Unverify(VerificationArgs),
+
+    /// Collect fees stored on PDA accounts.
+    #[account(0, signer, name="authority", desc="Authority to collect fees")]
+    #[account(1, name="pda_account", desc="PDA to retrieve fees from")]
+    Collect,
 }
 
 pub struct Context<'a, T> {

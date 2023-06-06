@@ -1,6 +1,12 @@
 use std::fmt::Display;
 
-use mpl_bubblegum::state::metaplex_adapter::{Creator, MetadataArgs, TokenProgramVersion};
+use super::{
+    clone_keypair, digital_asset::DigitalAsset, program_test, tree::Tree, Error, LeafArgs, Result,
+};
+use mpl_bubblegum::state::metaplex_adapter::{
+    Collection, Creator, MetadataArgs, TokenProgramVersion,
+};
+use mpl_token_metadata::state::{CollectionDetails, TokenStandard};
 use solana_program::pubkey::Pubkey;
 use solana_program_test::{BanksClient, ProgramTestContext};
 use solana_sdk::{
@@ -9,11 +15,10 @@ use solana_sdk::{
     transaction::Transaction,
 };
 
-use super::{clone_keypair, program_test, tree::Tree, Error, LeafArgs, Result};
-
 pub struct BubblegumTestContext {
     program_context: ProgramTestContext,
     pub default_creators: Vec<Keypair>,
+    pub default_collection: DigitalAsset,
 }
 
 pub const DEFAULT_LAMPORTS_FUND_AMOUNT: u64 = 1_000_000_000;
@@ -29,6 +34,7 @@ impl BubblegumTestContext {
         let mut ctx = BubblegumTestContext {
             program_context,
             default_creators: Vec::new(),
+            default_collection: DigitalAsset::new(),
         };
 
         let default_creators = vec![
@@ -44,6 +50,18 @@ impl BubblegumTestContext {
         }
 
         ctx.default_creators = default_creators;
+
+        ctx.default_collection
+            .create_and_mint_collection_parent(
+                &mut ctx.program_context,
+                TokenStandard::NonFungible,
+                None,
+                None,
+                1,
+                Some(CollectionDetails::V1 { size: 0 }),
+            )
+            .await
+            .map_err(Error::BanksClient)?;
 
         Ok(ctx)
     }
@@ -76,7 +94,7 @@ impl BubblegumTestContext {
             .banks_client
             .process_transaction(tx)
             .await
-            .map_err(Error::BanksClient)
+            .map_err(|err| Box::new(Error::BanksClient(err)))
     }
 
     pub fn payer(&self) -> Keypair {
@@ -91,14 +109,17 @@ impl BubblegumTestContext {
         MetadataArgs {
             name: name.to_string(),
             symbol: symbol.to_string(),
-            uri: "www.solana.pos".to_owned(),
+            uri: "https://www.bubblegum-nfts.com/".to_owned(),
             seller_fee_basis_points: 0,
             primary_sale_happened: false,
             is_mutable: false,
             edition_nonce: None,
             token_standard: None,
             token_program_version: TokenProgramVersion::Original,
-            collection: None,
+            collection: Some(Collection {
+                verified: false,
+                key: self.default_collection.mint.pubkey(),
+            }),
             uses: None,
             creators: vec![
                 Creator {
@@ -129,7 +150,7 @@ impl BubblegumTestContext {
         &self,
     ) -> Result<Tree<MAX_DEPTH, MAX_BUFFER_SIZE>> {
         let payer = self.payer();
-        let tree = Tree::<MAX_DEPTH, MAX_BUFFER_SIZE>::with_creator(&payer, self.client());
+        let mut tree = Tree::<MAX_DEPTH, MAX_BUFFER_SIZE>::with_creator(&payer, self.client());
         tree.alloc(&payer).await?;
         tree.create(&payer).await?;
         Ok(tree)
@@ -139,7 +160,7 @@ impl BubblegumTestContext {
         &self,
     ) -> Result<Tree<MAX_DEPTH, MAX_BUFFER_SIZE>> {
         let payer = self.payer();
-        let tree = Tree::<MAX_DEPTH, MAX_BUFFER_SIZE>::with_creator(&payer, self.client());
+        let mut tree = Tree::<MAX_DEPTH, MAX_BUFFER_SIZE>::with_creator(&payer, self.client());
         tree.alloc(&payer).await?;
         tree.create_public(&payer).await?;
         Ok(tree)
@@ -150,7 +171,7 @@ impl BubblegumTestContext {
         &self,
         num_mints: u64,
     ) -> Result<(Tree<MAX_DEPTH, MAX_BUFFER_SIZE>, Vec<LeafArgs>)> {
-        let tree = self
+        let mut tree = self
             .default_create_tree::<MAX_DEPTH, MAX_BUFFER_SIZE>()
             .await?;
 
