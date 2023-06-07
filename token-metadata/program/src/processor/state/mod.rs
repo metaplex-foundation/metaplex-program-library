@@ -79,8 +79,8 @@ pub(crate) fn toggle_asset_state(
     if token.mint != *accounts.mint_info.key {
         return Err(MetadataError::MintMismatch.into());
     }
-    // and must have balance greater than 0
-    if token.amount == 0 {
+    // and must have balance greater than 0 if we are locking
+    if matches!(to, TokenState::Locked) && token.amount == 0 {
         return Err(MetadataError::InsufficientTokenBalance.into());
     }
 
