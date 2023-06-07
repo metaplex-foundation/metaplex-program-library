@@ -402,9 +402,9 @@ More details of the Token Authorization Rules program, including examples, can b
 
 Several operations involving `pNFT` on Token Metadata are subject to Token Authorization Rules – depending on the rule configured, the operation will be authorized or not. The creator (`update authority`) of an asset has the flexibility to manage these rules through the [`ProgrammableConfig`](https://github.com/metaplex-foundation/metaplex-program-library/blob/ad5f39c465676299951c91f8cf9216812b884531/token-metadata/program/src/state/metadata.rs#L364-L380) on a Metadata account.
 
-The definition of a operation follow a pattern `Operation:Scenario`, where `Operation` is the top-level action being performed and `Scenario` is a sub-categorization of the operation type. For example, in the case of `Transfer:Owner`, the top-level action is a `Transfer` being performed by the `Owner`.
+The definition of an operation follow a pattern `Operation:Scenario`, where `Operation` is the top-level action being performed and `Scenario` is a sub-categorization of the operation type. For example, in the case of `Transfer:Owner`, the top-level action is a `Transfer` being performed by the `Owner`.
 
-The list of operations using in Token Metadata are:
+The list of operations used in Token Metadata are:
 
 - `Transfer:WalletToWallet`: operation representing a transfer between wallets (currently not in use)
 - `Transfer:Owner`: operation representing a transfer initiated by the owner of the asset
