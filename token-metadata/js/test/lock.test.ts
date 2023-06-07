@@ -1,4 +1,4 @@
-import { getAccount } from '@solana/spl-token';
+import { getAccount, getOrCreateAssociatedTokenAccount } from '@solana/spl-token';
 import { PublicKey } from '@solana/web3.js';
 import { BN } from 'bn.js';
 import spok from 'spok';
@@ -15,6 +15,7 @@ import { amman, InitTransactions, killStuckProcess } from './setup';
 import { spokSameBigint } from './utils';
 import { createAndMintDefaultAsset } from './utils/digital-asset-manager';
 import { findTokenRecordPda } from './utils/programmable';
+import { createDefaultAsset } from './utils/digital-asset-manager';
 
 killStuckProcess();
 
@@ -736,4 +737,45 @@ test('Lock: LockedTransfer delegate lock ProgrammableNonFungible asset', async (
     delegateRole: TokenDelegateRole.LockedTransfer,
     lockedTransfer: PublicKey.default,
   });
+});
+
+test('Lock: lock Fungible asset with empty token account', async (t) => {
+  const API = new InitTransactions();
+  const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
+
+  // creates a fungible asset
+
+  const manager = await createDefaultAsset(
+    t,
+    connection,
+    API,
+    handler,
+    payer,
+    TokenStandard.Fungible,
+  );
+
+  // creates an empty token account
+
+  const emptyTokenAccount = await getOrCreateAssociatedTokenAccount(
+    connection,
+    payer,
+    manager.mint,
+    payer.publicKey,
+  );
+
+  // lock asset with delegate (should fail since the account is empty)
+
+  const { tx: lockTx } = await API.lock(
+    payer,
+    manager.mint,
+    manager.metadata,
+    emptyTokenAccount.address,
+    payer,
+    handler,
+    null,
+    null,
+    manager.masterEdition,
+  );
+
+  await lockTx.assertError(t, /Token account does not have enough tokens/);
 });
