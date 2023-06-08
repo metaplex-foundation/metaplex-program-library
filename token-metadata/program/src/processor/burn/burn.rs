@@ -4,10 +4,7 @@ use super::*;
 
 use crate::{
     pda::find_token_record_account,
-    processor::burn::{
-        fungible::burn_fungible,
-        nonfungible_edition::{burn_nonfungible_edition, BurnNonFungibleEditionArgs},
-    },
+    processor::burn::{fungible::burn_fungible, nonfungible_edition::burn_nonfungible_edition},
     state::{AuthorityRequest, AuthorityType, TokenDelegateRole, TokenRecord, TokenState},
     utils::{check_token_standard, thaw},
 };
@@ -173,45 +170,41 @@ fn burn_v1(program_id: &Pubkey, ctx: Context<Burn>, args: BurnArgs) -> ProgramRe
             burn_nonfungible(&ctx, args)?;
         }
         TokenStandard::NonFungibleEdition => {
-            let args = BurnNonFungibleEditionArgs { is_pnft: false };
-
-            burn_nonfungible_edition(&ctx, args)?;
+            burn_nonfungible_edition(&ctx, &TokenStandard::NonFungibleEdition)?;
         }
         TokenStandard::ProgrammableNonFungible => {
+            let token_record_info = ctx
+                .accounts
+                .token_record_info
+                .ok_or(MetadataError::MissingTokenRecord)?;
+
             // All the checks are the same as burning a NonFungible token
             // except we also have to check the token state and derivation.
-            let token_record = match ctx.accounts.token_record_info {
-                Some(token_record_info) => {
-                    let (pda_key, _) = find_token_record_account(
-                        ctx.accounts.mint_info.key,
-                        ctx.accounts.token_info.key,
-                    );
+            let (pda_key, _) =
+                find_token_record_account(ctx.accounts.mint_info.key, ctx.accounts.token_info.key);
 
-                    if pda_key != *token_record_info.key {
-                        return Err(MetadataError::InvalidTokenRecord.into());
-                    }
+            if pda_key != *token_record_info.key {
+                return Err(MetadataError::InvalidTokenRecord.into());
+            }
 
-                    TokenRecord::from_account_info(token_record_info)?
-                }
-                None => return Err(MetadataError::MissingTokenRecord.into()),
-            };
+            let token_record = TokenRecord::from_account_info(token_record_info)?;
 
             // Locked and Listed states cannot be burned.
             if token_record.state != TokenState::Unlocked {
                 return Err(MetadataError::IncorrectTokenState.into());
             }
 
-            thaw(
-                ctx.accounts.mint_info.clone(),
-                ctx.accounts.token_info.clone(),
-                ctx.accounts.edition_info.unwrap().clone(),
-                ctx.accounts.spl_token_program_info.clone(),
-            )?;
-
             let edition_info = ctx
                 .accounts
                 .edition_info
                 .ok_or(MetadataError::MissingEditionAccount)?;
+
+            thaw(
+                ctx.accounts.mint_info.clone(),
+                ctx.accounts.token_info.clone(),
+                edition_info.clone(),
+                ctx.accounts.spl_token_program_info.clone(),
+            )?;
 
             let mut args = BurnNonFungibleArgs {
                 metadata,
@@ -232,52 +225,52 @@ fn burn_v1(program_id: &Pubkey, ctx: Context<Burn>, args: BurnArgs) -> ProgramRe
 
             // Also close the token_record account.
             close_program_account(
-                &ctx.accounts.token_record_info.unwrap().clone(),
+                &token_record_info.clone(),
                 &ctx.accounts.authority_info.clone(),
                 Key::TokenRecord,
             )?;
         }
         TokenStandard::ProgrammableNonFungibleEdition => {
-            let args = BurnNonFungibleEditionArgs { is_pnft: true };
+            let token_record_info = ctx
+                .accounts
+                .token_record_info
+                .ok_or(MetadataError::MissingTokenRecord)?;
 
             // All the checks are the same as burning a NonFungible token
             // except we also have to check the token state and derivation.
-            let token_record = match ctx.accounts.token_record_info {
-                Some(token_record_info) => {
-                    let (pda_key, _) = find_token_record_account(
-                        ctx.accounts.mint_info.key,
-                        ctx.accounts.token_info.key,
-                    );
+            let (pda_key, _) =
+                find_token_record_account(ctx.accounts.mint_info.key, ctx.accounts.token_info.key);
 
-                    if pda_key != *token_record_info.key {
-                        return Err(MetadataError::InvalidTokenRecord.into());
-                    }
+            if pda_key != *token_record_info.key {
+                return Err(MetadataError::InvalidTokenRecord.into());
+            }
 
-                    TokenRecord::from_account_info(token_record_info)?
-                }
-                None => return Err(MetadataError::MissingTokenRecord.into()),
-            };
+            let token_record = TokenRecord::from_account_info(token_record_info)?;
 
             // Locked and Listed states cannot be burned.
             if token_record.state != TokenState::Unlocked {
                 return Err(MetadataError::IncorrectTokenState.into());
             }
 
-            solana_program::msg!("Thawing");
+            let edition_info = ctx
+                .accounts
+                .edition_info
+                .ok_or(MetadataError::MissingEditionAccount)?;
+
             thaw(
                 ctx.accounts.mint_info.clone(),
                 ctx.accounts.token_info.clone(),
-                ctx.accounts.edition_info.unwrap().clone(),
+                edition_info.clone(),
                 ctx.accounts.spl_token_program_info.clone(),
             )?;
 
-            solana_program::msg!("Thawed");
-            burn_nonfungible_edition(&ctx, args)?;
+            burn_nonfungible_edition(&ctx, &TokenStandard::ProgrammableNonFungibleEdition)?;
 
             // Also close the token_record account.
             close_program_account(
-                &ctx.accounts.token_record_info.unwrap().clone(),
+                &token_record_info.clone(),
                 &ctx.accounts.authority_info.clone(),
+                Key::TokenRecord,
             )?;
         }
         TokenStandard::Fungible | TokenStandard::FungibleAsset => {

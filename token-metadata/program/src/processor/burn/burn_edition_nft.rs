@@ -10,11 +10,11 @@ use crate::{
     assertions::assert_owned_by,
     error::MetadataError,
     instruction::{Burn, Context},
-    state::{Metadata, TokenMetadataAccount},
+    state::{Metadata, TokenMetadataAccount, TokenStandard},
     utils::assert_initialized,
 };
 
-use super::nonfungible_edition::{burn_nonfungible_edition, BurnNonFungibleEditionArgs};
+use super::nonfungible_edition::burn_nonfungible_edition;
 
 pub fn process_burn_edition_nft<'a>(
     program_id: &Pubkey,
@@ -97,7 +97,5 @@ pub fn process_burn_edition_nft<'a>(
         remaining_accounts: vec![],
     };
 
-    let args = BurnNonFungibleEditionArgs { is_pnft: false };
-
-    burn_nonfungible_edition(&context, args)
+    burn_nonfungible_edition(&context, &TokenStandard::NonFungibleEdition)
 }

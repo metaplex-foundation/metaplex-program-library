@@ -5,13 +5,9 @@ use crate::{
 
 use super::*;
 
-pub(crate) struct BurnNonFungibleEditionArgs {
-    pub(crate) is_pnft: bool,
-}
-
 pub(crate) fn burn_nonfungible_edition(
     ctx: &Context<Burn>,
-    args: BurnNonFungibleEditionArgs,
+    token_standard: &TokenStandard,
 ) -> ProgramResult {
     let edition_info = ctx.accounts.edition_info.unwrap();
 
@@ -96,7 +92,7 @@ pub(crate) fn burn_nonfungible_edition(
         return Err(MetadataError::PrintEditionDoesNotMatchMasterEdition.into());
     }
 
-    if args.is_pnft {
+    if token_standard == &TokenStandard::ProgrammableNonFungibleEdition {
         // Ensure we were passed the correct edition marker PDA.
         let edition_marker_info_path = Vec::from([
             PREFIX.as_bytes(),
@@ -105,7 +101,6 @@ pub(crate) fn burn_nonfungible_edition(
             EDITION.as_bytes(),
             MARKER.as_bytes(),
         ]);
-        solana_program::msg!("Assert Edition Marker PDA");
         assert_derivation(&crate::ID, edition_marker_info, &edition_marker_info_path)
             .map_err(|_| MetadataError::InvalidEditionMarker)?;
     } else {
@@ -152,7 +147,7 @@ pub(crate) fn burn_nonfungible_edition(
     // Set the particular bit for this edition to 0 to allow reprinting,
     // IF the print edition owner is also the master edition owner.
     // Otherwise leave the bit set to 1 to disallow reprinting.
-    if args.is_pnft {
+    if token_standard == &TokenStandard::ProgrammableNonFungibleEdition {
         let mut edition_marker: EditionMarkerV2 =
             EditionMarkerV2::from_account_info(edition_marker_info)?;
 
@@ -167,14 +162,12 @@ pub(crate) fn burn_nonfungible_edition(
         // If the entire edition marker is empty, then we can close the account.
         // Otherwise, serialize the new edition marker and update the account data.
         if edition_marker.ledger.iter().all(|i| *i == 0) {
-            solana_program::msg!("Closing edition marker account");
             close_program_account(
                 edition_marker_info,
                 ctx.accounts.authority_info,
                 Key::EditionMarkerV2,
             )?;
         } else {
-            solana_program::msg!("Saving edition marker account");
             edition_marker.save(
                 edition_marker_info,
                 ctx.accounts.authority_info,
