@@ -1328,6 +1328,17 @@ impl DigitalAsset {
 
         Ok(())
     }
+
+    pub async fn assert_fee_flag_set(
+        &self,
+        context: &mut ProgramTestContext,
+    ) -> Result<(), BanksClientError> {
+        let account = get_account(context, &self.metadata).await;
+
+        assert_eq!(account.data[METADATA_FEE_FLAG_INDEX], FEE_FLAG_SET);
+
+        Ok(())
+    }
 }
 
 pub struct TransferParams<'a> {

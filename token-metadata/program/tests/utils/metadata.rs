@@ -661,6 +661,17 @@ impl Metadata {
 
         Ok(())
     }
+
+    pub async fn assert_fee_flag_set(
+        &self,
+        context: &mut ProgramTestContext,
+    ) -> Result<(), BanksClientError> {
+        let account = get_account(context, &self.pubkey).await;
+
+        assert_eq!(account.data[METADATA_FEE_FLAG_INDEX], FEE_FLAG_SET);
+
+        Ok(())
+    }
 }
 
 impl Default for Metadata {
