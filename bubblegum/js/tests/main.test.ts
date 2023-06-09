@@ -20,13 +20,15 @@ import {
 import {
   createCreateTreeInstruction,
   createMintV1Instruction,
+  createTransferInstruction,
+  createBurnInstruction,
   MetadataArgs,
   PROGRAM_ID as BUBBLEGUM_PROGRAM_ID,
   TokenProgramVersion,
   TokenStandard,
   Creator,
 } from '../src/generated';
-import { getLeafAssetId, computeCompressedNFTHash } from '../src/mpl-bubblegum';
+import { getLeafAssetId, computeDataHash, computeCreatorHash, computeCompressedNFTHash } from '../src/mpl-bubblegum';
 import { BN } from 'bn.js';
 
 function keypairFromSeed(seed: string) {
@@ -202,6 +204,72 @@ describe('Bubblegum tests', () => {
         skipPreflight: true,
       });
       console.log('Verified NFT existence:', txId);
+    });
+
+    it('Can transfer and burn a compressed NFT', async () => {
+      const accountInfo = await connection.getAccountInfo(merkleTree, { commitment: 'confirmed' });
+      const account = ConcurrentMerkleTreeAccount.fromBuffer(accountInfo!.data!);
+      const [treeAuthority, _bump] = await PublicKey.findProgramAddress(
+        [merkleTree.toBuffer()],
+        BUBBLEGUM_PROGRAM_ID,
+      );
+      const newLeafOwnerKeypair = new Keypair();
+      const newLeafOwner = newLeafOwnerKeypair.publicKey;
+
+      const transferIx = createTransferInstruction(
+        {
+          treeAuthority,
+          leafOwner: payer,
+          leafDelegate: payer,
+          newLeafOwner,
+          merkleTree,
+          logWrapper: SPL_NOOP_PROGRAM_ID,
+          compressionProgram: SPL_ACCOUNT_COMPRESSION_PROGRAM_ID,
+        },
+        {
+          root: Array.from(account.getCurrentRoot()),
+          dataHash: Array.from(computeDataHash(originalCompressedNFT)),
+          creatorHash: Array.from(computeCreatorHash(originalCompressedNFT.creators)),
+          nonce: 0,
+          index: 0
+        },
+      );
+
+      const transferTx = new Transaction().add(transferIx);
+      transferTx.feePayer = payer;
+      const transferTxId = await sendAndConfirmTransaction(connection, transferTx, [payerKeypair], {
+        commitment: 'confirmed',
+        skipPreflight: true,
+      });
+
+      console.log('Verified NFT transfer:', transferTxId);
+
+      const burnIx = createBurnInstruction(
+        {
+          treeAuthority,
+          leafOwner: newLeafOwner,
+          leafDelegate: newLeafOwner,
+          merkleTree,
+          logWrapper: SPL_NOOP_PROGRAM_ID,
+          compressionProgram: SPL_ACCOUNT_COMPRESSION_PROGRAM_ID,
+        },
+        {
+          root: Array.from(account.getCurrentRoot()),
+          dataHash: Array.from(computeDataHash(originalCompressedNFT)),
+          creatorHash: Array.from(computeCreatorHash(originalCompressedNFT.creators)),
+          nonce: 0,
+          index: 0
+        },
+      );
+
+      const burnTx = new Transaction().add(burnIx);
+      burnTx.feePayer = payer;
+      const burnTxId = await sendAndConfirmTransaction(connection, burnTx, [payerKeypair, newLeafOwnerKeypair], {
+        commitment: 'confirmed',
+        skipPreflight: true,
+      });
+
+      console.log('Verified NFT burn:', burnTxId);
     });
 
     // TODO(@metaplex): add collection tests here
