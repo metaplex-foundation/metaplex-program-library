@@ -1,4 +1,4 @@
-use borsh::{maybestd::io::Error as BorshError, BorshDeserialize, BorshSerialize};
+use borsh::{maybestd::io::Error as BorshError, BorshDeserialize};
 use mpl_utils::{create_or_allocate_account_raw, token::get_mint_authority};
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program_option::COption, pubkey::Pubkey,
@@ -264,7 +264,7 @@ pub fn clean_write_metadata(
     let mut metadata_account_info_data = metadata_account_info.try_borrow_mut_data()?;
     metadata_account_info_data[0..].fill(0);
 
-    metadata.serialize(&mut *metadata_account_info_data)?;
+    metadata.save(&mut metadata_account_info_data)?;
 
     Ok(())
 }

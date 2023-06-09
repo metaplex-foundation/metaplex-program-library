@@ -109,7 +109,7 @@ pub fn process_utilize(
     } else if user_info.key != owner_info.key {
         return Err(MetadataError::InvalidUser.into());
     }
-    metadata.serialize(&mut *metadata_info.try_borrow_mut_data()?)?;
+    metadata.save(&mut metadata_info.try_borrow_mut_data()?)?;
     if remaining_uses == 0 && must_burn {
         if approved_authority_is_using {
             let burn_authority_info = next_account_info(account_info_iter)?;
