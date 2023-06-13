@@ -2,8 +2,8 @@
 
 ## Developer packages
 Token Metadata
-* :crab: Rust crate: [v1.9.0](https://crates.io/crates/mpl-token-metadata/1.9.0)
-* :package: NPM package: [v2.9.0](https://www.npmjs.com/package/@metaplex-foundation/mpl-token-metadata/v/2.9.0)
+* :crab: Rust crate: [v1.11.1](https://crates.io/crates/mpl-token-metadata/1.11.1)
+* :package: NPM package: [v2.11.1](https://www.npmjs.com/package/@metaplex-foundation/mpl-token-metadata/v/2.11.1)
 
 Token Authorization Rules
 * :crab: Rust crate: [v1.2.0](https://crates.io/crates/mpl-token-auth-rules/1.2.0)
@@ -385,7 +385,7 @@ The latest release of the [Metaplex JS SDK v0.18.0](https://github.com/metaplex-
 
 ## 🏛️  Token Authorization Rules
 
-There will be a separate Token Authorization Rules program that provides the ability to create and execute rules to restrict the token operations discussed above.
+There is a separate Token Authorization Rules program that provides the ability to create and execute rules to restrict the token operations discussed above.
 
 ### Overview
 
@@ -397,6 +397,28 @@ There are **Primitive Rules** and **Composed Rules** that are created by combini
 - **Composed Rules:** return a `true` or `false` based on whether any or all of the primitive rules return `true`.  Composed rules can then be combined into higher-level composed rules that implement more complex boolean logic.  Because of the recursive definition of the `Rule` enum, calling `validate()` on a top-level composed rule will start at the top and validate at every level, down to the component primitive rules.
 
 More details of the Token Authorization Rules program, including examples, can be found [here](https://github.com/metaplex-foundation/mpl-token-auth-rules/blob/main/README.md).
+
+### Token Metadata Operations subject to Authorization Rules
+
+Several operations involving `pNFT` on Token Metadata are subject to Token Authorization Rules – depending on the rule configured, the operation will be authorized or not. The creator (`update authority`) of an asset has the flexibility to manage these rules through the [`ProgrammableConfig`](https://github.com/metaplex-foundation/metaplex-program-library/blob/ad5f39c465676299951c91f8cf9216812b884531/token-metadata/program/src/state/metadata.rs#L364-L380) on a Metadata account.
+
+The definition of an operation follow a pattern `Operation:Scenario`, where `Operation` is the top-level action being performed and `Scenario` is a sub-categorization of the operation type. For example, in the case of `Transfer:Owner`, the top-level action is a `Transfer` being performed by the `Owner`.
+
+The list of operations used in Token Metadata are:
+
+- `Transfer:WalletToWallet`: operation representing a transfer between wallets (currently not in use)
+- `Transfer:Owner`: operation representing a transfer initiated by the owner of the asset
+- `Transfer:MigrationDelegate`: operation representing a transfer initiated by a `Migration` delegate
+- `Transfer:SaleDelegate`: operation representing a transfer initiated by a `Sale` delegate
+- `Transfer:TransferDelegate`: operation representing a transfer initiated by a `Transfer` delegate
+- `Delegate:LockedTransfer`: operation representing the request to approve a `LockedTransfer` delegate, a delegate that can locked and transfer an asset to a predefined address
+- `Delegate:Transfer`: operation representing the request to approve a `Transfer` delegate, a delegate that can transfer an asset
+- `Delegate:Utility`: operation representing the request to approve a `Utility` delegate, a delegate that can lock and burn an asset
+- `Delegate:Staking`: operation representing the request to approve a `Staking` delegate, a delegate that can lock an asset
+- `Delegate:Sale`: operation representing the request to approve a `Sale` delegate, a delegate that can transfer an asset and disable transfers by the owner while the delegate is in place
+
+> **Note:**
+> When creating a custom rule set, it is important to include the operations above so Token Metadata functionality is not restricted. An operation that is not included in the rule set will always be denied.
 
 ## 🎬  Local Setup for Testing
 
