@@ -755,9 +755,9 @@ mod update_metadata_account_v2 {
         let data = get_account(&mut context, &test_metadata.pubkey).await.data;
 
         let padding_index = 1 + 32 + 32 + 36 + 14 + 204 + 7 + 34 + 1 + 1 + 2 + 2 + 1 + 1;
-        let zeros_len = data.len() - padding_index;
+        let zeros_len = data.len() - padding_index - 1; // Fee flag at end
         let zeros = vec![0u8; zeros_len];
-        assert_eq!(data[padding_index..], zeros[..]);
+        assert_eq!(data[padding_index..data.len() - 1], zeros[..]);
     }
 
     #[tokio::test]
