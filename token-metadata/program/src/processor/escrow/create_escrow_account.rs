@@ -70,12 +70,14 @@ pub fn process_create_escrow_account(
         return Err(MetadataError::MintMismatch.into());
     }
 
-    // Only non-fungible tokens (i.e. unique) can have escrow accounts.
-    if check_token_standard(mint_account_info, Some(edition_account_info))?
-        != TokenStandard::NonFungible
-    {
+    // Only standard or programmable non-fungible tokens (i.e. unique) can have escrow accounts.
+    let token_standard = check_token_standard(mint_account_info, Some(edition_account_info))?;
+    if !matches!(
+        token_standard,
+        TokenStandard::NonFungible | TokenStandard::ProgrammableNonFungible
+    ) {
         return Err(MetadataError::MustBeNonFungible.into());
-    };
+    }
 
     // Check that the edition account is for this mint.
     let _edition_bump = assert_derivation(

@@ -6,7 +6,7 @@ use utils::*;
 
 mod fees {
     use mpl_token_metadata::{
-        instruction::{collect_fees, BurnArgs},
+        instruction::{collect_fees, BurnArgs, UpdateArgs},
         state::{CREATE_FEE, FEE_FLAG_CLEARED, METADATA_FEE_FLAG_INDEX},
     };
     use solana_program::{native_token::LAMPORTS_PER_SOL, pubkey::Pubkey};
@@ -25,6 +25,7 @@ mod fees {
         let md = Metadata::new();
         md.create_v3_default(&mut context).await.unwrap();
 
+        md.assert_fee_flag_set(&mut context).await.unwrap();
         md.assert_create_fees_charged(&mut context).await.unwrap();
     }
 
@@ -41,6 +42,38 @@ mod fees {
         .await
         .unwrap();
 
+        nft.assert_fee_flag_set(&mut context).await.unwrap();
+        nft.assert_create_fees_charged(&mut context).await.unwrap();
+    }
+
+    #[tokio::test]
+    async fn update_does_not_overwrite_flag() {
+        let mut context = program_test().start_with_context().await;
+
+        let update_authority = context.payer.dirty_clone();
+
+        let mut nft = DigitalAsset::new();
+        nft.create(
+            &mut context,
+            mpl_token_metadata::state::TokenStandard::NonFungible,
+            None,
+        )
+        .await
+        .unwrap();
+
+        let mut args = UpdateArgs::default_as_update_authority();
+        match &mut args {
+            UpdateArgs::AsUpdateAuthorityV2 { is_mutable, .. } => {
+                *is_mutable = Some(false);
+            }
+            _ => panic!("Unexpected enum variant"),
+        }
+
+        nft.update(&mut context, update_authority, args)
+            .await
+            .unwrap();
+
+        nft.assert_fee_flag_set(&mut context).await.unwrap();
         nft.assert_create_fees_charged(&mut context).await.unwrap();
     }
 
@@ -54,7 +87,8 @@ mod fees {
         let authority_funding = 10 * LAMPORTS_PER_SOL;
 
         let authority =
-            read_keypair_file("Levytx9LLPzAtDJJD7q813Zsm8zg9e1pb53mGxTKpD7.json").unwrap();
+            read_keypair_file("/media/veracrypt1/Levytx9LLPzAtDJJD7q813Zsm8zg9e1pb53mGxTKpD7.json")
+                .unwrap();
         authority
             .airdrop(&mut context, authority_funding)
             .await
@@ -117,7 +151,8 @@ mod fees {
         let fee_authority_funding = LAMPORTS_PER_SOL;
 
         let fee_authority =
-            read_keypair_file("Levytx9LLPzAtDJJD7q813Zsm8zg9e1pb53mGxTKpD7.json").unwrap();
+            read_keypair_file("/media/veracrypt1/Levytx9LLPzAtDJJD7q813Zsm8zg9e1pb53mGxTKpD7.json")
+                .unwrap();
         fee_authority
             .airdrop(&mut context, fee_authority_funding)
             .await

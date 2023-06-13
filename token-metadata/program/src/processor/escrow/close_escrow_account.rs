@@ -11,8 +11,7 @@ use crate::{
     assertions::{assert_derivation, assert_initialized, assert_keys_equal, assert_owned_by},
     error::MetadataError,
     pda::{EDITION, PREFIX},
-    state::{EscrowAuthority, Metadata, TokenMetadataAccount, TokenOwnedEscrow, TokenStandard},
-    utils::check_token_standard,
+    state::{EscrowAuthority, Metadata, TokenMetadataAccount, TokenOwnedEscrow},
 };
 
 pub fn process_close_escrow_account(
@@ -50,12 +49,6 @@ pub fn process_close_escrow_account(
     if &metadata.mint != mint_account_info.key {
         return Err(MetadataError::MintMismatch.into());
     }
-
-    if check_token_standard(mint_account_info, Some(edition_account_info))?
-        != TokenStandard::NonFungible
-    {
-        return Err(MetadataError::MustBeNonFungible.into());
-    };
 
     // Check that the edition account is for this mint.
     let _edition_bump = assert_derivation(

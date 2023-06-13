@@ -1,4 +1,3 @@
-use borsh::BorshSerialize;
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
@@ -46,7 +45,7 @@ pub fn process_update_primary_sale_happened_via_token(
     }
 
     metadata.primary_sale_happened = true;
-    metadata.serialize(&mut *metadata_account_info.try_borrow_mut_data()?)?;
+    metadata.save(&mut metadata_account_info.try_borrow_mut_data()?)?;
 
     Ok(())
 }
