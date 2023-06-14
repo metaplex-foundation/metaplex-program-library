@@ -999,6 +999,933 @@ mod pnft {
     }
 }
 
+mod pnft_edition {
+    use mpl_token_metadata::pda::find_token_record_account;
+
+    use super::*;
+
+    #[tokio::test]
+    async fn burn_nonfungible_edition() {
+        let mut context = program_test().start_with_context().await;
+        let mut nft = DigitalAsset::default();
+
+        nft.create_and_mint_with_supply(
+            &mut context,
+            TokenStandard::ProgrammableNonFungible,
+            None,
+            None,
+            1,
+            PrintSupply::Unlimited,
+        )
+        .await
+        .unwrap();
+
+        assert!(nft.token.is_some());
+
+        let nft_master_edition = MasterEditionV2::new_from_asset(&nft);
+        let nft_edition_marker = EditionMarker::new_from_asset(&nft, &nft_master_edition, 1);
+        nft_edition_marker
+            .create_from_asset(&mut context)
+            .await
+            .unwrap();
+
+        let edition_marker = nft_edition_marker.get_data_v2(&mut context).await;
+        let print_edition = get_account(&mut context, &nft_edition_marker.new_edition_pubkey).await;
+        let token_record_pda = find_token_record_account(
+            &nft_edition_marker.mint.pubkey(),
+            &nft_edition_marker.token.pubkey(),
+        );
+
+        assert_eq!(edition_marker.ledger[0], 64);
+        assert_eq!(edition_marker.key, Key::EditionMarkerV2);
+        assert_eq!(print_edition.data[0], 1);
+
+        let args = BurnArgs::V1 { amount: 1 };
+
+        let mut builder = BurnBuilder::new();
+        builder
+            .authority(context.payer.pubkey())
+            .metadata(nft_edition_marker.new_metadata_pubkey)
+            .edition(nft_edition_marker.new_edition_pubkey)
+            .mint(nft_edition_marker.mint.pubkey())
+            .token_record(token_record_pda.0)
+            .token(nft_edition_marker.token.pubkey())
+            .master_edition_mint(nft.mint.pubkey())
+            .master_edition_token(nft.token.unwrap())
+            .master_edition(nft_master_edition.pubkey)
+            .edition_marker(nft_edition_marker.pubkey);
+
+        let burn_ix = builder.build(args).unwrap().instruction();
+
+        let transaction = Transaction::new_signed_with_payer(
+            &[burn_ix],
+            Some(&context.payer.pubkey()),
+            &[&context.payer],
+            context.last_blockhash,
+        );
+
+        context
+            .banks_client
+            .process_transaction(transaction)
+            .await
+            .unwrap();
+
+        // Metadata, and token account are burned.
+        let print_md = context
+            .banks_client
+            .get_account(nft_edition_marker.new_metadata_pubkey)
+            .await
+            .unwrap();
+        let token_account = context
+            .banks_client
+            .get_account(nft_edition_marker.token.pubkey())
+            .await
+            .unwrap();
+        let print_edition_account = context
+            .banks_client
+            .get_account(nft_edition_marker.new_edition_pubkey)
+            .await
+            .unwrap();
+
+        assert!(print_md.is_none());
+        assert!(token_account.is_none());
+        assert!(print_edition_account.is_none());
+    }
+
+    #[tokio::test]
+    async fn burn_edition_nft_in_separate_wallet() {
+        // Burn a print edition that is in a separate wallet, so owned by a different account
+        // than the master edition nft.
+        let mut context = program_test().start_with_context().await;
+        let mut original_nft = DigitalAsset::default();
+
+        original_nft
+            .create_and_mint_with_supply(
+                &mut context,
+                TokenStandard::ProgrammableNonFungible,
+                None,
+                None,
+                1,
+                PrintSupply::Unlimited,
+            )
+            .await
+            .unwrap();
+
+        let master_edition = MasterEditionV2::new_from_asset(&original_nft);
+        let mut print_edition = EditionMarker::new_from_asset(&original_nft, &master_edition, 1);
+        print_edition.create_from_asset(&mut context).await.unwrap();
+
+        // Transfer to new owner.
+        let new_owner = Keypair::new();
+        let new_owner_pubkey = new_owner.pubkey();
+        airdrop(&mut context, &new_owner_pubkey, 1_000_000_000)
+            .await
+            .unwrap();
+
+        context.warp_to_slot(10).unwrap();
+
+        print_edition
+            .transfer_asset(&mut context, &new_owner_pubkey)
+            .await
+            .unwrap();
+
+        // let kpbytes = &context.payer;
+        // let payer = Keypair::from_bytes(&kpbytes.to_bytes()).unwrap();
+
+        // Old owner should not be able to burn.
+
+        let new_owner_token_account =
+            get_associated_token_address(&new_owner_pubkey, &print_edition.mint.pubkey());
+        let owner_token_record_pda =
+            find_token_record_account(&print_edition.mint.pubkey(), &print_edition.token.pubkey());
+        let new_owner_token_record_pda =
+            find_token_record_account(&print_edition.mint.pubkey(), &new_owner_token_account);
+
+        let args = BurnArgs::V1 { amount: 1 };
+
+        let mut builder = BurnBuilder::new();
+        builder
+            .authority(context.payer.pubkey())
+            .metadata(print_edition.new_metadata_pubkey)
+            .edition(print_edition.new_edition_pubkey)
+            .mint(print_edition.mint.pubkey())
+            .token(print_edition.token.pubkey())
+            .master_edition_mint(original_nft.mint.pubkey())
+            .master_edition_token(original_nft.token.unwrap())
+            .master_edition(master_edition.pubkey)
+            .edition_marker(print_edition.pubkey)
+            .token_record(owner_token_record_pda.0);
+
+        let burn_ix = builder.build(args).unwrap().instruction();
+
+        let transaction = Transaction::new_signed_with_payer(
+            &[burn_ix],
+            Some(&context.payer.pubkey()),
+            &[&context.payer],
+            context.last_blockhash,
+        );
+
+        let err = context
+            .banks_client
+            .process_transaction(transaction)
+            .await
+            .unwrap_err();
+
+        // We've passed in the correct token account associated with the old owner but
+        // it has 0 tokens so we get this error.
+        assert_custom_error!(err, MetadataError::IncorrectOwner);
+
+        let args = BurnArgs::V1 { amount: 1 };
+
+        // Old owner should not be able to burn even if we pass in the new token
+        // account associated with the new owner.
+        let mut builder = BurnBuilder::new();
+        builder
+            .authority(context.payer.pubkey())
+            .metadata(print_edition.new_metadata_pubkey)
+            .edition(print_edition.new_edition_pubkey)
+            .mint(print_edition.mint.pubkey())
+            .token(new_owner_token_account)
+            .master_edition_mint(original_nft.mint.pubkey())
+            .master_edition_token(original_nft.token.unwrap())
+            .master_edition(master_edition.pubkey)
+            .edition_marker(print_edition.pubkey)
+            .token_record(new_owner_token_record_pda.0);
+
+        let burn_ix = builder.build(args).unwrap().instruction();
+
+        let transaction = Transaction::new_signed_with_payer(
+            &[burn_ix],
+            Some(&context.payer.pubkey()),
+            &[&context.payer],
+            context.last_blockhash,
+        );
+
+        let err = context
+            .banks_client
+            .process_transaction(transaction)
+            .await
+            .unwrap_err();
+
+        // We've passed in the correct token account associated with the old owner but
+        // the authority is not the new owner
+        assert_custom_error!(err, MetadataError::InvalidAuthorityType);
+
+        assert!(print_edition.exists_on_chain(&mut context).await);
+    }
+
+    #[tokio::test]
+    async fn only_owner_can_burn_edition() {
+        let mut context = program_test().start_with_context().await;
+
+        let mut original_nft = DigitalAsset::default();
+
+        original_nft
+            .create_and_mint_with_supply(
+                &mut context,
+                TokenStandard::ProgrammableNonFungible,
+                None,
+                None,
+                1,
+                PrintSupply::Unlimited,
+            )
+            .await
+            .unwrap();
+
+        let master_edition = MasterEditionV2::new_from_asset(&original_nft);
+        let print_edition = EditionMarker::new_from_asset(&original_nft, &master_edition, 1);
+        print_edition.create_from_asset(&mut context).await.unwrap();
+
+        // Metadata, Print Edition and token account exist.
+        assert!(print_edition.exists_on_chain(&mut context).await);
+
+        let not_owner = Keypair::new();
+        airdrop(&mut context, &not_owner.pubkey(), 1_000_000_000)
+            .await
+            .unwrap();
+
+        let mut builder = BurnBuilder::new();
+        builder
+            .authority(not_owner.pubkey())
+            .metadata(print_edition.new_metadata_pubkey)
+            .edition(print_edition.new_edition_pubkey)
+            .mint(print_edition.mint.pubkey())
+            .token(print_edition.token.pubkey())
+            .master_edition_mint(original_nft.mint.pubkey())
+            .master_edition_token(original_nft.token.unwrap())
+            .master_edition(master_edition.pubkey)
+            .edition_marker(print_edition.pubkey);
+
+        let default_args = BurnPrintArgs::default(&not_owner);
+
+        let args = BurnPrintArgs {
+            metadata: Some(print_edition.new_metadata_pubkey),
+            edition: Some(print_edition.new_edition_pubkey),
+            mint: Some(print_edition.mint.pubkey()),
+            token: Some(print_edition.token.pubkey()),
+            master_edition_mint: Some(original_nft.mint.pubkey()),
+            master_edition_token: Some(original_nft.token.unwrap()),
+            master_edition: Some(master_edition.pubkey),
+            edition_marker: Some(print_edition.pubkey),
+            ..default_args
+        };
+
+        let err = print_edition.burn(&mut context, args).await.unwrap_err();
+
+        assert_custom_error!(err, MetadataError::InvalidAuthorityType);
+    }
+
+    #[tokio::test]
+    async fn update_authority_cannot_burn_edition() {
+        let mut context = program_test().start_with_context().await;
+
+        let mut original_nft = DigitalAsset::default();
+        original_nft
+            .create_and_mint_with_supply(
+                &mut context,
+                TokenStandard::ProgrammableNonFungible,
+                None,
+                None,
+                1,
+                PrintSupply::Unlimited,
+            )
+            .await
+            .unwrap();
+
+        let master_edition = MasterEditionV2::new_from_asset(&original_nft);
+
+        // NFT is created with context payer as the update authority so we need to update this before
+        // creating the print edition, so it gets a copy of this new update authority.
+        let new_update_authority = Keypair::new();
+
+        original_nft
+            .change_update_authority(&mut context, new_update_authority.pubkey())
+            .await
+            .unwrap();
+
+        let print_edition = EditionMarker::new_from_asset(&original_nft, &master_edition, 1);
+        print_edition.create_from_asset(&mut context).await.unwrap();
+
+        // Metadata, Print Edition and token account exist.
+        assert!(print_edition.exists_on_chain(&mut context).await);
+
+        let default_args = BurnPrintArgs::default(&new_update_authority);
+
+        let args = BurnPrintArgs {
+            metadata: Some(print_edition.new_metadata_pubkey),
+            token: Some(print_edition.token.pubkey()),
+            master_edition_mint: Some(original_nft.mint.pubkey()),
+            master_edition_token: Some(original_nft.token.unwrap()),
+            master_edition: Some(master_edition.pubkey),
+            edition_marker: Some(print_edition.pubkey),
+            ..default_args
+        };
+
+        let err = print_edition.burn(&mut context, args).await.unwrap_err();
+
+        assert_custom_error!(err, MetadataError::InvalidAuthorityType);
+    }
+
+    #[tokio::test]
+    pub async fn invalid_print_edition() {
+        let mut context = program_test().start_with_context().await;
+
+        let mut original_nft = DigitalAsset::default();
+        original_nft
+            .create_and_mint_with_supply(
+                &mut context,
+                TokenStandard::ProgrammableNonFungible,
+                None,
+                None,
+                1,
+                PrintSupply::Unlimited,
+            )
+            .await
+            .unwrap();
+
+        let master_edition = MasterEditionV2::new_from_asset(&original_nft);
+
+        let print_edition = EditionMarker::new_from_asset(&original_nft, &master_edition, 1);
+        print_edition.create_from_asset(&mut context).await.unwrap();
+
+        let payer = &context.payer.dirty_clone();
+
+        let args = BurnPrintArgs {
+            authority: payer,
+            metadata: Some(print_edition.new_metadata_pubkey),
+            edition: Some(Pubkey::new_unique()),
+            mint: Some(print_edition.mint.pubkey()),
+            token: Some(print_edition.token.pubkey()),
+            master_edition_mint: Some(original_nft.mint.pubkey()),
+            master_edition_token: Some(original_nft.token.unwrap()),
+            master_edition: Some(master_edition.pubkey),
+            edition_marker: Some(print_edition.pubkey),
+        };
+
+        let err = print_edition
+            .burn_asset(&mut context, args)
+            .await
+            .unwrap_err();
+
+        // The random pubkey will have a data len of zero so is not a Print Edition.
+        assert_custom_error!(err, MetadataError::IncorrectOwner);
+
+        // Create a second print edition to try to pass off as the correct one. It's owned by token metadata
+        // and has the right data length, so will pass those checks, but will fail with InvalidPrintEdition
+        // because the derivation will be incorrect.
+
+        let second_print_edition = EditionMarker::new_from_asset(&original_nft, &master_edition, 2);
+        second_print_edition
+            .create_from_asset(&mut context)
+            .await
+            .unwrap();
+
+        let args = BurnPrintArgs {
+            authority: payer,
+            metadata: Some(print_edition.new_metadata_pubkey),
+            edition: Some(second_print_edition.new_edition_pubkey),
+            mint: Some(print_edition.mint.pubkey()),
+            token: Some(print_edition.token.pubkey()),
+            master_edition_mint: Some(original_nft.mint.pubkey()),
+            master_edition_token: Some(original_nft.token.unwrap()),
+            master_edition: Some(master_edition.pubkey),
+            edition_marker: Some(print_edition.pubkey),
+        };
+
+        let err = print_edition
+            .burn_asset(&mut context, args)
+            .await
+            .unwrap_err();
+
+        // We fail to derive the edition PDA to thaw the token.
+        assert_custom_error!(err, MetadataError::DerivedKeyInvalid);
+    }
+
+    #[tokio::test]
+    pub async fn invalid_edition_marker() {
+        let mut context = program_test().start_with_context().await;
+
+        let mut original_nft = DigitalAsset::default();
+        original_nft
+            .create_and_mint_with_supply(
+                &mut context,
+                TokenStandard::ProgrammableNonFungible,
+                None,
+                None,
+                1,
+                PrintSupply::Unlimited,
+            )
+            .await
+            .unwrap();
+
+        let master_edition = MasterEditionV2::new_from_asset(&original_nft);
+
+        let print_edition = EditionMarker::new_from_asset(&original_nft, &master_edition, 1);
+        print_edition.create_from_asset(&mut context).await.unwrap();
+
+        let payer = &context.payer.dirty_clone();
+
+        let args = BurnPrintArgs {
+            authority: payer,
+            metadata: Some(print_edition.new_metadata_pubkey),
+            edition: Some(print_edition.new_edition_pubkey),
+            mint: Some(print_edition.mint.pubkey()),
+            token: Some(print_edition.token.pubkey()),
+            master_edition_mint: Some(original_nft.mint.pubkey()),
+            master_edition_token: Some(original_nft.token.unwrap()),
+            master_edition: Some(master_edition.pubkey),
+            edition_marker: Some(Pubkey::new_unique()),
+        };
+
+        let err = print_edition
+            .burn_asset(&mut context, args)
+            .await
+            .unwrap_err();
+
+        // The error will be IncorrectOwner since the random pubkey we generated is not a PDA owned
+        // by the token metadata program.
+        assert_custom_error!(err, MetadataError::IncorrectOwner);
+
+        // Create a second print edition to try to pass off as the edition marker. It's owned by token metadata
+        // so will pass that check but will fail with IncorrectEditionMarker.
+
+        let second_print_edition = EditionMarker::new_from_asset(&original_nft, &master_edition, 2);
+        second_print_edition
+            .create_from_asset(&mut context)
+            .await
+            .unwrap();
+
+        let args = BurnPrintArgs {
+            authority: payer,
+            metadata: Some(print_edition.new_metadata_pubkey),
+            edition: Some(print_edition.new_edition_pubkey),
+            mint: Some(print_edition.mint.pubkey()),
+            token: Some(print_edition.token.pubkey()),
+            master_edition_mint: Some(original_nft.mint.pubkey()),
+            master_edition_token: Some(original_nft.token.unwrap()),
+            master_edition: Some(master_edition.pubkey),
+            edition_marker: Some(second_print_edition.new_edition_pubkey),
+        };
+
+        let err = print_edition
+            .burn_asset(&mut context, args)
+            .await
+            .unwrap_err();
+
+        assert_custom_error!(err, MetadataError::InvalidEditionMarker);
+    }
+
+    #[tokio::test]
+    pub async fn master_supply_is_decremented() {
+        let mut context = program_test().start_with_context().await;
+
+        let mut original_nft = DigitalAsset::default();
+        original_nft
+            .create_and_mint_with_supply(
+                &mut context,
+                TokenStandard::ProgrammableNonFungible,
+                None,
+                None,
+                1,
+                PrintSupply::Limited(10),
+            )
+            .await
+            .unwrap();
+
+        let master_edition = MasterEditionV2::new_from_asset(&original_nft);
+
+        let print_edition = EditionMarker::new_from_asset(&original_nft, &master_edition, 1);
+        print_edition.create_from_asset(&mut context).await.unwrap();
+
+        let master_edition_account = context
+            .banks_client
+            .get_account(master_edition.pubkey)
+            .await
+            .unwrap()
+            .unwrap();
+
+        let master_edition_struct: ProgramMasterEditionV2 =
+            ProgramMasterEditionV2::safe_deserialize(&master_edition_account.data).unwrap();
+
+        assert!(master_edition_struct.supply == 1);
+        assert!(master_edition_struct.max_supply == Some(10));
+
+        let mut second_print_edition =
+            EditionMarker::new_from_asset(&original_nft, &master_edition, 2);
+        second_print_edition
+            .create_from_asset(&mut context)
+            .await
+            .unwrap();
+
+        let master_edition_account = context
+            .banks_client
+            .get_account(master_edition.pubkey)
+            .await
+            .unwrap()
+            .unwrap();
+
+        let master_edition_struct =
+            ProgramMasterEditionV2::safe_deserialize(&master_edition_account.data).unwrap();
+
+        assert!(master_edition_struct.supply == 2);
+
+        // Transfer second edition to a different owner.
+        let user = Keypair::new();
+        airdrop(&mut context, &user.pubkey(), 1_000_000_000)
+            .await
+            .unwrap();
+
+        context.warp_to_slot(10).unwrap();
+
+        second_print_edition
+            .transfer_asset(&mut context, &user.pubkey())
+            .await
+            .unwrap();
+        let new_owner_token_account =
+            get_associated_token_address(&user.pubkey(), &second_print_edition.mint.pubkey());
+
+        let payer = &context.payer.dirty_clone();
+
+        let burn_print_args = BurnPrintArgs::default(payer);
+
+        // Master edition owner burning.
+        print_edition
+            .burn_asset(&mut context, burn_print_args)
+            .await
+            .unwrap();
+
+        let master_edition_account = context
+            .banks_client
+            .get_account(master_edition.pubkey)
+            .await
+            .unwrap()
+            .unwrap();
+
+        let master_edition_struct =
+            ProgramMasterEditionV2::safe_deserialize(&master_edition_account.data).unwrap();
+
+        // Master edition owner burning should decrement the supply.
+        assert!(master_edition_struct.supply == 1);
+        assert!(master_edition_struct.max_supply == Some(10));
+
+        let default_args = BurnPrintArgs::default(&user);
+
+        let burn_print_args = BurnPrintArgs {
+            token: Some(new_owner_token_account),
+            ..default_args
+        };
+
+        // Second owner burning.
+        second_print_edition
+            .burn_asset(&mut context, burn_print_args)
+            .await
+            .unwrap();
+
+        let master_edition_account = context
+            .banks_client
+            .get_account(master_edition.pubkey)
+            .await
+            .unwrap()
+            .unwrap();
+
+        let master_edition_struct =
+            ProgramMasterEditionV2::safe_deserialize(&master_edition_account.data).unwrap();
+
+        // Second owner burning should decrement the supply.
+        assert!(master_edition_struct.supply == 0);
+    }
+
+    #[tokio::test]
+    pub async fn edition_mask_changed_correctly() {
+        let mut context = program_test().start_with_context().await;
+
+        let mut original_nft = DigitalAsset::default();
+        original_nft
+            .create_and_mint_with_supply(
+                &mut context,
+                TokenStandard::ProgrammableNonFungible,
+                None,
+                None,
+                1,
+                PrintSupply::Limited(10),
+            )
+            .await
+            .unwrap();
+        context.warp_to_slot(5).unwrap();
+
+        let master_edition = MasterEditionV2::new_from_asset(&original_nft);
+
+        context.warp_to_slot(10).unwrap();
+
+        let (print_editions, end_slot) = master_edition
+            .mint_editions_from_asset(&mut context, &original_nft, 10, 10)
+            .await
+            .unwrap();
+        context.warp_to_slot(end_slot + 5).unwrap();
+
+        let payer = &context.payer.dirty_clone();
+
+        let edition_marker_account = context
+            .banks_client
+            .get_account(print_editions[1].pubkey)
+            .await
+            .unwrap()
+            .unwrap();
+
+        // Ledger is the 31 bytes after the key and vec header.
+        let ledger = &edition_marker_account.data[5..];
+
+        assert!(ledger[0] == 0b0111_1111);
+        assert!(ledger[1] == 0b1110_0000);
+
+        let default_args = BurnPrintArgs::default(payer);
+
+        // Burn the second one
+        print_editions[1]
+            .burn_asset(&mut context, default_args.clone())
+            .await
+            .unwrap();
+        context.warp_to_slot(end_slot + 10).unwrap();
+
+        let edition_marker_account = context
+            .banks_client
+            .get_account(print_editions[1].pubkey)
+            .await
+            .unwrap()
+            .unwrap();
+
+        // Ledger is the 31 bytes after the key.
+        let ledger = &edition_marker_account.data[5..];
+
+        // One bit flipped here
+        assert!(ledger[0] == 0b0101_1111);
+        // None here
+        assert!(ledger[1] == 0b1110_0000);
+
+        // Burn the last one
+        print_editions[9]
+            .burn_asset(&mut context, default_args)
+            .await
+            .unwrap();
+        context.warp_to_slot(end_slot + 15).unwrap();
+
+        let edition_marker_account = context
+            .banks_client
+            .get_account(print_editions[1].pubkey)
+            .await
+            .unwrap()
+            .unwrap();
+
+        // Ledger is the 31 bytes after the key.
+        let ledger = &edition_marker_account.data[5..];
+
+        // Stays the same
+        assert!(ledger[0] == 0b0101_1111);
+        // One bit flipped
+        assert!(ledger[1] == 0b1100_0000);
+    }
+
+    #[tokio::test]
+    pub async fn reprint_burned_edition() {
+        // Reprinting a burned edition should work when the owner is the same for
+        // the master edition and print edition. Otherwise, it should fail.
+        let mut context = program_test().start_with_context().await;
+
+        let mut original_nft = DigitalAsset::default();
+        original_nft
+            .create_and_mint_with_supply(
+                &mut context,
+                TokenStandard::ProgrammableNonFungible,
+                None,
+                None,
+                1,
+                PrintSupply::Limited(10),
+            )
+            .await
+            .unwrap();
+
+        let master_edition = MasterEditionV2::new_from_asset(&original_nft);
+
+        let print_edition = EditionMarker::new_from_asset(&original_nft, &master_edition, 1);
+        print_edition.create_from_asset(&mut context).await.unwrap();
+
+        // Print a new edition and transfer to a user.
+        let mut user_print_edition =
+            EditionMarker::new_from_asset(&original_nft, &master_edition, 2);
+        user_print_edition
+            .create_from_asset(&mut context)
+            .await
+            .unwrap();
+
+        let user = Keypair::new();
+        airdrop(&mut context, &user.pubkey(), 1_000_000_000)
+            .await
+            .unwrap();
+
+        context.warp_to_slot(10).unwrap();
+
+        user_print_edition
+            .transfer_asset(&mut context, &user.pubkey())
+            .await
+            .unwrap();
+        let new_owner_token_account =
+            get_associated_token_address(&user.pubkey(), &user_print_edition.mint.pubkey());
+
+        // Metadata, Print Edition and token account exist.
+        assert!(print_edition.exists_on_chain(&mut context).await);
+        assert!(user_print_edition.exists_on_chain(&mut context).await);
+
+        let payer = &context.payer.dirty_clone();
+
+        let owner_burn_args = BurnPrintArgs::default(payer);
+
+        // Burn owner's edition.
+        print_edition
+            .burn_asset(&mut context, owner_burn_args)
+            .await
+            .unwrap();
+
+        let mut user_burn_args = BurnPrintArgs::default(&user);
+
+        user_burn_args = BurnPrintArgs {
+            token: Some(new_owner_token_account),
+            ..user_burn_args
+        };
+
+        // Burn owner's edition.
+        user_print_edition
+            .burn_asset(&mut context, user_burn_args)
+            .await
+            .unwrap();
+
+        // Metadata, Print Edition and token account do not exist.
+        assert!(!print_edition.exists_on_chain(&mut context).await);
+        assert!(!user_print_edition.exists_on_chain(&mut context).await);
+
+        // Reprint owner's burned edition
+        let print_edition = EditionMarker::new_from_asset(&original_nft, &master_edition, 1);
+        print_edition.create_from_asset(&mut context).await.unwrap();
+
+        // Metadata, Print Edition and token account exist.
+        assert!(print_edition.exists_on_chain(&mut context).await);
+
+        // Reprint user's burned edition: this should fail.
+        let user_print_edition = EditionMarker::new_from_asset(&original_nft, &master_edition, 2);
+        let err = user_print_edition
+            .create_from_asset(&mut context)
+            .await
+            .unwrap_err();
+
+        assert_custom_error!(err, MetadataError::AlreadyInitialized);
+    }
+
+    #[tokio::test]
+    async fn cannot_modify_wrong_master_edition() {
+        let mut context = program_test().start_with_context().await;
+
+        // Someone else's NFT
+        let mut other_nft = DigitalAsset::default();
+        other_nft
+            .create_and_mint_with_supply(
+                &mut context,
+                TokenStandard::ProgrammableNonFungible,
+                None,
+                None,
+                1,
+                PrintSupply::Limited(10),
+            )
+            .await
+            .unwrap();
+
+        let other_master_edition = MasterEditionV2::new_from_asset(&other_nft);
+
+        let new_update_authority = Keypair::new();
+        other_nft
+            .change_update_authority(&mut context, new_update_authority.pubkey())
+            .await
+            .unwrap();
+
+        let other_print_edition =
+            EditionMarker::new_from_asset(&other_nft, &other_master_edition, 1);
+        other_print_edition
+            .create_from_asset(&mut context)
+            .await
+            .unwrap();
+
+        let mut our_nft = DigitalAsset::default();
+        our_nft
+            .create_and_mint_with_supply(
+                &mut context,
+                TokenStandard::ProgrammableNonFungible,
+                None,
+                None,
+                1,
+                PrintSupply::Limited(10),
+            )
+            .await
+            .unwrap();
+
+        let master_edition = MasterEditionV2::new_from_asset(&our_nft);
+
+        let print_edition = EditionMarker::new_from_asset(&our_nft, &master_edition, 1);
+        print_edition.create_from_asset(&mut context).await.unwrap();
+
+        let payer = &context.payer.dirty_clone();
+
+        let mut owner_burn_args = BurnPrintArgs::default(payer);
+
+        owner_burn_args = BurnPrintArgs {
+            master_edition_token: Some(other_nft.token.unwrap()),
+            master_edition_mint: Some(other_nft.mint.pubkey()),
+            master_edition: Some(other_master_edition.pubkey),
+            edition_marker: Some(other_print_edition.pubkey),
+            ..owner_burn_args
+        };
+
+        // We pass in our edition NFT and someone else's master edition and try to modify their supply.
+        let err = print_edition
+            .burn_asset(&mut context, owner_burn_args)
+            .await
+            .unwrap_err();
+
+        assert_custom_error!(err, MetadataError::PrintEditionDoesNotMatchMasterEdition);
+    }
+
+    #[tokio::test]
+    async fn mint_mismatches() {
+        let mut context = program_test().start_with_context().await;
+
+        let mut nft = DigitalAsset::default();
+        nft.create_and_mint_with_supply(
+            &mut context,
+            TokenStandard::ProgrammableNonFungible,
+            None,
+            None,
+            1,
+            PrintSupply::Limited(10),
+        )
+        .await
+        .unwrap();
+
+        let master_edition = MasterEditionV2::new_from_asset(&nft);
+
+        let print_edition = EditionMarker::new_from_asset(&nft, &master_edition, 1);
+        print_edition.create_from_asset(&mut context).await.unwrap();
+        let second_print_edition = EditionMarker::new_from_asset(&nft, &master_edition, 2);
+        second_print_edition
+            .create_from_asset(&mut context)
+            .await
+            .unwrap();
+
+        let payer = &context.payer.dirty_clone();
+
+        let mut owner_burn_args = BurnPrintArgs::default(payer);
+
+        // Wrong print edition mint account.
+        owner_burn_args = BurnPrintArgs {
+            mint: Some(second_print_edition.mint.pubkey()),
+            ..owner_burn_args
+        };
+
+        let err = print_edition
+            .burn_asset(&mut context, owner_burn_args)
+            .await
+            .unwrap_err();
+
+        // We fail with incorrect owner here instead of MintMismatch because the token record
+        // derivation is incorrect.
+        assert_custom_error!(err, MetadataError::IncorrectOwner);
+
+        let mut other_nft = DigitalAsset::default();
+        other_nft
+            .create_and_mint_with_supply(
+                &mut context,
+                TokenStandard::ProgrammableNonFungible,
+                None,
+                None,
+                1,
+                PrintSupply::Limited(10),
+            )
+            .await
+            .unwrap();
+
+        let mut owner_burn_args = BurnPrintArgs::default(payer);
+
+        // Wrong master edition mint account.
+        owner_burn_args = BurnPrintArgs {
+            master_edition_mint: Some(other_nft.mint.pubkey()),
+            ..owner_burn_args
+        };
+
+        let err = print_edition
+            .burn_asset(&mut context, owner_burn_args)
+            .await
+            .unwrap_err();
+
+        assert_custom_error!(err, MetadataError::MintMismatch);
+    }
+}
+
 mod nft {
     use super::*;
 
@@ -2390,8 +3317,8 @@ mod nft_edition {
 
         context.warp_to_slot(10).unwrap();
 
-        let print_editions = master_edition
-            .mint_editions(&mut context, &original_nft, 10)
+        let (print_editions, _end_slot) = master_edition
+            .mint_editions(&mut context, &original_nft, 10, 10)
             .await
             .unwrap();
 
