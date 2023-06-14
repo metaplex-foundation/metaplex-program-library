@@ -11,6 +11,7 @@ use crate::{
     state::{Metadata, TokenMetadataAccount, TokenStandard},
     utils::{
         assert_derivation, assert_initialized, assert_owned_by, create_token_record_account,
+        fee::{levy, set_fee_flag, LevyArgs},
         freeze, process_mint_new_edition_from_master_edition_via_token_logic,
         MintNewEditionFromMasterEditionViaTokenLogicArgs,
     },
@@ -63,6 +64,12 @@ fn print_v1(_program_id: &Pubkey, ctx: Context<Print>, args: PrintArgs) -> Progr
     let sysvar_instructions = ctx.accounts.sysvar_instructions_info;
     // CHECK: Checked in process_mint_new_edition_from_master_edition_via_token_logic
     let system_program = ctx.accounts.system_program_info;
+
+    // Levy fees first, to fund the metadata account with rent + fee amount.
+    levy(LevyArgs {
+        payer_account_info: payer_info,
+        token_metadata_pda_info: edition_metadata_info,
+    })?;
 
     // If the edition token account isn't already initialized, create it.
     // If it does exist, validate it.
@@ -172,5 +179,6 @@ fn print_v1(_program_id: &Pubkey, ctx: Context<Print>, args: PrintArgs) -> Progr
         )?;
     }
 
-    Ok(())
+    // Set fee flag after metadata account is created.
+    set_fee_flag(edition_metadata_info)
 }

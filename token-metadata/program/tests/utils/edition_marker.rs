@@ -121,7 +121,7 @@ impl EditionMarker {
         let mint = Keypair::new();
         let mint_pubkey = mint.pubkey();
         let metadata_mint_pubkey = asset.mint.pubkey();
-        let program_id = id();
+        let program_id = ID;
 
         let (pubkey, _) = Pubkey::find_program_address(
             &[
@@ -135,7 +135,7 @@ impl EditionMarker {
         );
 
         let metadata_seeds = &[PREFIX.as_bytes(), program_id.as_ref(), mint_pubkey.as_ref()];
-        let (new_metadata_pubkey, _) = Pubkey::find_program_address(metadata_seeds, &id());
+        let (new_metadata_pubkey, _) = Pubkey::find_program_address(metadata_seeds, &ID);
 
         let master_edition_seeds = &[
             PREFIX.as_bytes(),
@@ -143,7 +143,7 @@ impl EditionMarker {
             mint_pubkey.as_ref(),
             EDITION.as_bytes(),
         ];
-        let (new_edition_pubkey, _) = Pubkey::find_program_address(master_edition_seeds, &id());
+        let (new_edition_pubkey, _) = Pubkey::find_program_address(master_edition_seeds, &ID);
 
         EditionMarker {
             pubkey,

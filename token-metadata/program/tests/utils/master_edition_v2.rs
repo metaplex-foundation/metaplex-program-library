@@ -45,7 +45,7 @@ impl MasterEditionV2 {
     }
 
     pub fn new_from_asset(asset: &DigitalAsset) -> Self {
-        let program_id = id();
+        let program_id = ID;
         let mint_pubkey = asset.mint.pubkey();
 
         let master_edition_seeds = &[
@@ -54,7 +54,7 @@ impl MasterEditionV2 {
             mint_pubkey.as_ref(),
             EDITION.as_bytes(),
         ];
-        let (pubkey, _) = Pubkey::find_program_address(master_edition_seeds, &id());
+        let (pubkey, _) = Pubkey::find_program_address(master_edition_seeds, &ID);
 
         MasterEditionV2 {
             pubkey,
