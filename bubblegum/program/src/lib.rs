@@ -1322,6 +1322,11 @@ pub mod bubblegum {
             creator_hash,
         );
 
+        wrap_application_data_v1(
+            previous_leaf.to_event().try_to_vec()?,
+            &ctx.accounts.log_wrapper,
+        )?;
+
         let new_leaf = Node::default();
 
         replace_leaf(
@@ -1353,6 +1358,11 @@ pub mod bubblegum {
         let asset_id = get_asset_id(&merkle_tree.key(), nonce);
         let previous_leaf =
             LeafSchema::new_v0(asset_id, owner, delegate, nonce, data_hash, creator_hash);
+
+        wrap_application_data_v1(
+            previous_leaf.to_event().try_to_vec()?,
+            &ctx.accounts.log_wrapper,
+        )?;
 
         let new_leaf = Node::default();
 
@@ -1427,6 +1437,12 @@ pub mod bubblegum {
         }
 
         let voucher = &ctx.accounts.voucher;
+
+        wrap_application_data_v1(
+            voucher.leaf_schema.to_event().try_to_vec()?,
+            &ctx.accounts.log_wrapper,
+        )?;
+
         match metadata.token_program_version {
             TokenProgramVersion::Original => {
                 if ctx.accounts.mint.data_is_empty() {
