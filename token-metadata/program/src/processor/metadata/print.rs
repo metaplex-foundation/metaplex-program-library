@@ -8,9 +8,13 @@ use crate::{
     error::MetadataError,
     instruction::{Context, Print, PrintArgs},
     pda::find_token_record_account,
-    state::{Metadata, TokenMetadataAccount, TokenStandard},
+    state::{
+        Metadata, TokenMetadataAccount, TokenStandard, MAX_EDITION_LEN,
+        TOKEN_STANDARD_INDEX_EDITION,
+    },
     utils::{
         assert_derivation, assert_initialized, assert_owned_by, create_token_record_account,
+        fee::{levy, set_fee_flag, LevyArgs},
         freeze, process_mint_new_edition_from_master_edition_via_token_logic,
         MintNewEditionFromMasterEditionViaTokenLogicArgs,
     },
@@ -63,6 +67,12 @@ fn print_v1(_program_id: &Pubkey, ctx: Context<Print>, args: PrintArgs) -> Progr
     let sysvar_instructions = ctx.accounts.sysvar_instructions_info;
     // CHECK: Checked in process_mint_new_edition_from_master_edition_via_token_logic
     let system_program = ctx.accounts.system_program_info;
+
+    // Levy fees first, to fund the metadata account with rent + fee amount.
+    levy(LevyArgs {
+        payer_account_info: payer_info,
+        token_metadata_pda_info: edition_metadata_info,
+    })?;
 
     // If the edition token account isn't already initialized, create it.
     // If it does exist, validate it.
@@ -170,7 +180,18 @@ fn print_v1(_program_id: &Pubkey, ctx: Context<Print>, args: PrintArgs) -> Progr
             edition_account_info.clone(),
             token_program.clone(),
         )?;
+
+        // for pNFTs, we store the token standard value at the end of the
+        // master edition account
+        let mut data = edition_account_info.data.borrow_mut();
+
+        if data.len() < MAX_EDITION_LEN {
+            return Err(MetadataError::InvalidMasterEditionAccountLength.into());
+        }
+
+        data[TOKEN_STANDARD_INDEX_EDITION] = TokenStandard::ProgrammableNonFungible as u8;
     }
 
-    Ok(())
+    // Set fee flag after metadata account is created.
+    set_fee_flag(edition_metadata_info)
 }
