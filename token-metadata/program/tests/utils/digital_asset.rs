@@ -2,12 +2,11 @@ use mpl_token_metadata::{
     instruction::{
         self,
         builders::{
-            BurnBuilder, CreateBuilder, DelegateBuilder, LockBuilder, MigrateBuilder, MintBuilder,
-            RevokeBuilder, TransferBuilder, UnlockBuilder, UnverifyBuilder, UpdateBuilder,
-            VerifyBuilder,
+            BurnBuilder, CreateBuilder, DelegateBuilder, LockBuilder, MintBuilder, RevokeBuilder,
+            TransferBuilder, UnlockBuilder, UnverifyBuilder, UpdateBuilder, VerifyBuilder,
         },
         BurnArgs, CreateArgs, DelegateArgs, InstructionBuilder, LockArgs, MetadataDelegateRole,
-        MigrateArgs, MintArgs, RevokeArgs, TransferArgs, UnlockArgs, UpdateArgs, VerificationArgs,
+        MintArgs, RevokeArgs, TransferArgs, UnlockArgs, UpdateArgs, VerificationArgs,
     },
     pda::{
         find_master_edition_account, find_metadata_account, find_metadata_delegate_record_account,
@@ -693,40 +692,6 @@ impl DigitalAsset {
 
         context.banks_client.process_transaction(tx).await?;
         Ok(delegate_or_token_record)
-    }
-
-    pub async fn migrate(
-        &mut self,
-        context: &mut ProgramTestContext,
-        authority: Keypair,
-        collection_metadata: Pubkey,
-        args: MigrateArgs,
-    ) -> Result<(), BanksClientError> {
-        let mut builder = MigrateBuilder::new();
-        builder
-            .mint(self.mint.pubkey())
-            .metadata(self.metadata)
-            .edition(self.edition.unwrap())
-            .token(self.token.unwrap())
-            .payer(authority.pubkey())
-            .collection_metadata(collection_metadata)
-            .authority(authority.pubkey());
-
-        let migrate_ix = builder.build(args.clone()).unwrap().instruction();
-
-        let tx = Transaction::new_signed_with_payer(
-            &[migrate_ix],
-            Some(&authority.pubkey()),
-            &[&authority],
-            context.last_blockhash,
-        );
-
-        context.banks_client.process_transaction(tx).await.unwrap();
-
-        let md = self.get_metadata(context).await;
-        self.token_standard = md.token_standard;
-
-        Ok(())
     }
 
     pub async fn print_edition(
