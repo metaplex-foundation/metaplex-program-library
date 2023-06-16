@@ -230,6 +230,36 @@ pub struct Transfer<'info> {
 }
 
 #[derive(Accounts)]
+pub struct UpdateMetadata<'info> {
+    #[account(
+        seeds = [merkle_tree.key().as_ref()],
+        bump,
+    )]
+    /// CHECK: This account is neither written to nor read from.
+    pub tree_authority: Account<'info, TreeConfig>,
+    pub tree_delegate: Signer<'info>,
+    /// CHECK: This account is checked in the instruction
+    pub collection_authority: UncheckedAccount<'info>,
+    /// CHECK: This account is checked in the instruction
+    pub collection_mint: UncheckedAccount<'info>,
+    pub collection_metadata: Box<Account<'info, TokenMetadata>>,
+    /// CHECK: This account is checked in the instruction
+    pub collection_authority_record_pda: UncheckedAccount<'info>,
+    /// CHECK: This account is checked in the instruction
+    pub leaf_owner: UncheckedAccount<'info>,
+    /// CHECK: This account is chekced in the instruction
+    pub leaf_delegate: UncheckedAccount<'info>,
+    pub payer: Signer<'info>,
+    #[account(mut)]
+    /// CHECK: This account is modified in the downstream program
+    pub merkle_tree: UncheckedAccount<'info>,
+    pub log_wrapper: Program<'info, Noop>,
+    pub compression_program: Program<'info, SplAccountCompression>,
+    pub token_metadata_program: Program<'info, MplTokenMetadata>,
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
 pub struct Delegate<'info> {
     #[account(
         seeds = [merkle_tree.key().as_ref()],
@@ -516,15 +546,9 @@ fn process_mint_v1<'info>(
                 return Err(BubblegumError::CollectionCannotBeVerifiedInThisInstruction.into());
             }
         }
-    }
+    } 
 
-    // @dev: seller_fee_basis points is encoded twice so that it can be passed to marketplace
-    // instructions, without passing the entire, un-hashed MetadataArgs struct
-    let metadata_args_hash = keccak::hashv(&[message.try_to_vec()?.as_slice()]);
-    let data_hash = keccak::hashv(&[
-        &metadata_args_hash.to_bytes(),
-        &message.seller_fee_basis_points.to_le_bytes(),
-    ]);
+    let data_hash = hash_metadata(&message)?;   
 
     // Use the metadata auth to check whether we can allow `verified` to be set to true in the
     // creator Vec.
@@ -555,7 +579,7 @@ fn process_mint_v1<'info>(
         owner,
         delegate,
         authority.num_minted,
-        data_hash.to_bytes(),
+        data_hash,
         creator_hash.to_bytes(),
     );
 
@@ -671,6 +695,41 @@ fn process_creator_verification<'info>(
         new_leaf.to_node(),
         index,
     )
+}
+
+// TODO sorend: simplify with the function below
+fn assert_signed_by_collection_authority<'info>(
+    collection_metadata: &Account<'info, TokenMetadata>,
+    collection_mint: &AccountInfo<'info>,
+    collection_authority: &AccountInfo<'info>,
+    collection_authority_record_pda: &AccountInfo<'info>,
+    token_metadata_program: &AccountInfo<'info>,
+) -> Result<()> {
+     // See if a collection authority record PDA was provided.
+     let collection_authority_record = if collection_authority_record_pda.key() == crate::id() {
+        None
+    } else {
+        Some(collection_authority_record_pda)
+    };
+
+    // Verify correct account ownerships.
+    require!(
+        *collection_metadata.to_account_info().owner == token_metadata_program.key(),
+        BubblegumError::IncorrectOwner
+    );
+    require!(
+        *collection_mint.owner == spl_token::id(),
+        BubblegumError::IncorrectOwner
+    );
+
+    // Collection authority assert from token-metadata.
+    assert_has_collection_authority(
+        collection_authority,
+        collection_metadata,
+        collection_mint.key,
+        collection_authority_record,
+    )?;
+    Ok(())
 }
 
 fn process_collection_verification_mpl_only<'info>(
@@ -1189,6 +1248,129 @@ pub mod bubblegum {
             message,
             true,
             Some(collection),
+        )
+    }
+
+    pub fn update_metadata<'info>(
+        ctx: Context<'_, '_, '_, 'info, UpdateMetadata<'info>>,
+        root: [u8; 32],
+        old_metadata: MetadataArgs,
+        new_name: Option<String>,
+        new_symbol: Option<String>,
+        new_uri: Option<String>,
+        new_seller_fee_basis_points: Option<u16>,
+        new_primary_sale_happened: Option<bool>,
+        new_is_mutable: Option<bool>,
+        nonce: u64,
+        index: u32,
+    ) -> Result<()> {
+        let merkle_tree = ctx.accounts.merkle_tree.to_account_info();
+        let owner = ctx.accounts.leaf_owner.to_account_info();
+        let delegate = ctx.accounts.leaf_delegate.to_account_info();
+        let incoming_tree_delegate = ctx.accounts.tree_delegate.key();
+        let authority = &mut ctx.accounts.tree_authority;
+        let tree_creator = authority.tree_creator;
+        let tree_delegate = authority.tree_delegate;
+        if !authority.is_public {
+            require!(
+                incoming_tree_delegate == tree_creator || incoming_tree_delegate == tree_delegate,
+                BubblegumError::TreeAuthorityIncorrect,
+            );
+        }
+        // Old metadata must be mutable to allow metadata update
+        require!(old_metadata.is_mutable, BubblegumError::MetadataImmutable);
+
+        // If the metadata of the NFT is verified with a collection, then ensure a collection authority
+        // has signed the tx to confirm the metadata update.
+        if let Some(collection) = &old_metadata.collection {
+            if collection.verified {
+                // Verified collection must match key passed to instruction
+                require!(ctx.accounts.collection_mint.key() == collection.key, BubblegumError::CollectionMismatch);
+                let collection_metadata = &ctx.accounts.collection_metadata;
+                let collection_mint = ctx.accounts.collection_mint.to_account_info();
+                let collection_authority = ctx.accounts.collection_authority.to_account_info();
+                let collection_authority_record_pda = ctx.accounts.collection_authority_record_pda.to_account_info();
+                let token_metadata_program = ctx.accounts.token_metadata_program.to_account_info();
+                assert_signed_by_collection_authority(
+                    collection_metadata, 
+                    &collection_mint,
+                    &collection_authority,
+                    &collection_authority_record_pda,
+                    &token_metadata_program
+                )?;
+            }
+        }
+
+        let old_data_hash = hash_metadata(&old_metadata)?;
+        let creator_hash = hash_creators(&old_metadata.creators)?;
+        
+        // Create new metadata args
+        let mut new_metadata = old_metadata;
+        match new_name {
+            None => {},
+            Some(name) => new_metadata.name = name,
+        };
+        match new_symbol {
+            None => {},
+            Some(symbol) => new_metadata.symbol = symbol,
+        };
+        match new_uri {
+            None => {},
+            Some(uri) => new_metadata.uri = uri,
+        };
+        match new_seller_fee_basis_points {
+            None => {},
+            Some(seller_fee_basis_points) => new_metadata.seller_fee_basis_points = seller_fee_basis_points,
+        };
+        match new_primary_sale_happened {
+            None => {},
+            Some(primary_sale_happened) => {
+                if !new_metadata.primary_sale_happened {
+                    new_metadata.primary_sale_happened = primary_sale_happened
+                }
+            }
+        };
+        match new_is_mutable {
+            None => {},
+            Some(is_mutable) => new_metadata.is_mutable = is_mutable,
+        };
+
+        // ensure new metadata is mpl_compatible
+        assert_metadata_is_mpl_compatible(&new_metadata)?;
+        let new_data_hash = hash_metadata(&new_metadata)?;
+
+        let asset_id = get_asset_id(&merkle_tree.key(), nonce);
+        let previous_leaf = LeafSchema::new_v0(
+            asset_id,
+            owner.key(),
+            delegate.key(),
+            nonce,
+            old_data_hash,
+            creator_hash,
+        );
+        let new_leaf = LeafSchema::new_v0(
+            asset_id,
+            owner.key(),
+            delegate.key(),
+            nonce,
+            new_data_hash,
+            creator_hash,
+        );
+
+        wrap_application_data_v1(new_leaf.to_event().try_to_vec()?, &ctx.accounts.log_wrapper)?;
+
+        replace_leaf(
+            &merkle_tree.key(),
+            *ctx.bumps.get("tree_authority").unwrap(),
+            &ctx.accounts.compression_program.to_account_info(),
+            &ctx.accounts.tree_authority.to_account_info(),
+            &ctx.accounts.merkle_tree.to_account_info(),
+            &ctx.accounts.log_wrapper.to_account_info(),
+            ctx.remaining_accounts,
+            root,
+            previous_leaf.to_node(),
+            new_leaf.to_node(),
+            index,
         )
     }
 
