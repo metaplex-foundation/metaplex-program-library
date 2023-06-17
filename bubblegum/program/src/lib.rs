@@ -498,6 +498,7 @@ pub enum InstructionName {
     UnverifyCollection,
     SetAndVerifyCollection,
     MintToCollectionV1,
+    UpdateMetadata
 }
 
 pub fn get_instruction_type(full_bytes: &[u8]) -> InstructionName {
@@ -522,6 +523,7 @@ pub fn get_instruction_type(full_bytes: &[u8]) -> InstructionName {
         [56, 113, 101, 253, 79, 55, 122, 169] => InstructionName::VerifyCollection,
         [250, 251, 42, 106, 41, 137, 186, 168] => InstructionName::UnverifyCollection,
         [235, 242, 121, 216, 158, 234, 180, 234] => InstructionName::SetAndVerifyCollection,
+        [170, 182, 43, 239, 97, 78, 225, 186] => InstructionName::UpdateMetadata,
 
         _ => InstructionName::Unknown,
     }
@@ -1303,8 +1305,8 @@ pub mod bubblegum {
 
         let old_data_hash = hash_metadata(&old_metadata)?;
         let creator_hash = hash_creators(&old_metadata.creators)?;
-        
-        // Create new metadata args
+
+        // Update metadata
         let mut new_metadata = old_metadata;
         match new_name {
             None => {},
