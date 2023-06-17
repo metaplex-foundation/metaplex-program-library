@@ -498,7 +498,7 @@ pub enum InstructionName {
     UnverifyCollection,
     SetAndVerifyCollection,
     MintToCollectionV1,
-    UpdateMetadata
+    UpdateMetadata,
 }
 
 pub fn get_instruction_type(full_bytes: &[u8]) -> InstructionName {
@@ -548,9 +548,9 @@ fn process_mint_v1<'info>(
                 return Err(BubblegumError::CollectionCannotBeVerifiedInThisInstruction.into());
             }
         }
-    } 
+    }
 
-    let data_hash = hash_metadata(&message)?;   
+    let data_hash = hash_metadata(&message)?;
 
     // Use the metadata auth to check whether we can allow `verified` to be set to true in the
     // creator Vec.
@@ -707,8 +707,8 @@ fn assert_signed_by_collection_authority<'info>(
     collection_authority_record_pda: &AccountInfo<'info>,
     token_metadata_program: &AccountInfo<'info>,
 ) -> Result<()> {
-     // See if a collection authority record PDA was provided.
-     let collection_authority_record = if collection_authority_record_pda.key() == crate::id() {
+    // See if a collection authority record PDA was provided.
+    let collection_authority_record = if collection_authority_record_pda.key() == crate::id() {
         None
     } else {
         Some(collection_authority_record_pda)
@@ -1287,18 +1287,24 @@ pub mod bubblegum {
         if let Some(collection) = &old_metadata.collection {
             if collection.verified {
                 // Verified collection must match key passed to instruction
-                require!(ctx.accounts.collection_mint.key() == collection.key, BubblegumError::CollectionMismatch);
+                require!(
+                    ctx.accounts.collection_mint.key() == collection.key,
+                    BubblegumError::CollectionMismatch
+                );
                 let collection_metadata = &ctx.accounts.collection_metadata;
                 let collection_mint = ctx.accounts.collection_mint.to_account_info();
                 let collection_authority = ctx.accounts.collection_authority.to_account_info();
-                let collection_authority_record_pda = ctx.accounts.collection_authority_record_pda.to_account_info();
+                let collection_authority_record_pda = ctx
+                    .accounts
+                    .collection_authority_record_pda
+                    .to_account_info();
                 let token_metadata_program = ctx.accounts.token_metadata_program.to_account_info();
                 assert_signed_by_collection_authority(
-                    collection_metadata, 
+                    collection_metadata,
                     &collection_mint,
                     &collection_authority,
                     &collection_authority_record_pda,
-                    &token_metadata_program
+                    &token_metadata_program,
                 )?;
             }
         }
@@ -1309,23 +1315,25 @@ pub mod bubblegum {
         // Update metadata
         let mut new_metadata = old_metadata;
         match new_name {
-            None => {},
+            None => {}
             Some(name) => new_metadata.name = name,
         };
         match new_symbol {
-            None => {},
+            None => {}
             Some(symbol) => new_metadata.symbol = symbol,
         };
         match new_uri {
-            None => {},
+            None => {}
             Some(uri) => new_metadata.uri = uri,
         };
         match new_seller_fee_basis_points {
-            None => {},
-            Some(seller_fee_basis_points) => new_metadata.seller_fee_basis_points = seller_fee_basis_points,
+            None => {}
+            Some(seller_fee_basis_points) => {
+                new_metadata.seller_fee_basis_points = seller_fee_basis_points
+            }
         };
         match new_primary_sale_happened {
-            None => {},
+            None => {}
             Some(primary_sale_happened) => {
                 if !new_metadata.primary_sale_happened {
                     new_metadata.primary_sale_happened = primary_sale_happened
@@ -1333,7 +1341,7 @@ pub mod bubblegum {
             }
         };
         match new_is_mutable {
-            None => {},
+            None => {}
             Some(is_mutable) => new_metadata.is_mutable = is_mutable,
         };
 
