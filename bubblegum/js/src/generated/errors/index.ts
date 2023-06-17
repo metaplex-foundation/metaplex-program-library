@@ -570,6 +570,46 @@ createErrorFromCodeLookup.set(0x178a, () => new CollectionMustBeSizedError());
 createErrorFromNameLookup.set('CollectionMustBeSized', () => new CollectionMustBeSizedError());
 
 /**
+ * MetadataImmutable: 'Metadata Not Mutable'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MetadataImmutableError extends Error {
+  readonly code: number = 0x178b;
+  readonly name: string = 'MetadataImmutable';
+  constructor() {
+    super('Metadata Not Mutable');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MetadataImmutableError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x178b, () => new MetadataImmutableError());
+createErrorFromNameLookup.set('MetadataImmutable', () => new MetadataImmutableError());
+
+/**
+ * CollectionMismatch: 'Collection mismatch'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class CollectionMismatchError extends Error {
+  readonly code: number = 0x178c;
+  readonly name: string = 'CollectionMismatch';
+  constructor() {
+    super('Collection mismatch');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, CollectionMismatchError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x178c, () => new CollectionMismatchError());
+createErrorFromNameLookup.set('CollectionMismatch', () => new CollectionMismatchError());
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated
