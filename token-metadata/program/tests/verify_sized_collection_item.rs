@@ -134,7 +134,7 @@ mod verify_sized_collection_item {
 
         let test_collection = Metadata::new();
         test_collection
-            .create_v2_default(&mut context)
+            .create_v3_default(&mut context)
             .await
             .unwrap();
 
@@ -146,7 +146,7 @@ mod verify_sized_collection_item {
 
         let test_collection2 = Metadata::new();
         test_collection2
-            .create_v2_default(&mut context)
+            .create_v3_default(&mut context)
             .await
             .unwrap();
 
@@ -171,7 +171,7 @@ mod verify_sized_collection_item {
             use_method: UseMethod::Single,
         });
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 name,
                 symbol,
@@ -184,6 +184,7 @@ mod verify_sized_collection_item {
                     verified: false,
                 }),
                 uses.to_owned(),
+                None,
             )
             .await
             .unwrap();
@@ -225,83 +226,18 @@ mod verify_sized_collection_item {
     }
 
     #[tokio::test]
-    async fn fail_no_collection_nft_token_standard() {
-        let mut context = program_test().start_with_context().await;
-
-        let test_collection = Metadata::new();
-        test_collection
-            .create_v2_default(&mut context)
-            .await
-            .unwrap();
-
-        let collection_master_edition_account = MasterEditionV2::new(&test_collection);
-        collection_master_edition_account
-            .create(&mut context, Some(0))
-            .await
-            .unwrap();
-
-        let name = "Test".to_string();
-        let symbol = "TST".to_string();
-        let uri = "uri".to_string();
-        let test_metadata = Metadata::new();
-        let uses = Some(Uses {
-            total: 1,
-            remaining: 1,
-            use_method: UseMethod::Single,
-        });
-        test_metadata
-            .create_v2(
-                &mut context,
-                name,
-                symbol,
-                uri,
-                None,
-                10,
-                false,
-                Some(Collection {
-                    key: test_collection.mint.pubkey(),
-                    verified: false,
-                }),
-                uses.to_owned(),
-            )
-            .await
-            .unwrap();
-
-        let kpbytes = &context.payer;
-        let kp = Keypair::from_bytes(&kpbytes.to_bytes()).unwrap();
-        let err = test_metadata
-            .verify_sized_collection_item(
-                &mut context,
-                test_collection.pubkey,
-                &kp,
-                test_collection.mint.pubkey(),
-                collection_master_edition_account.pubkey,
-                None,
-            )
-            .await
-            .unwrap_err();
-        assert_custom_error!(err, MetadataError::CollectionMustBeAUniqueMasterEdition);
-        let metadata_after = test_metadata.get_data(&mut context).await;
-        assert_eq!(
-            metadata_after.collection.to_owned().unwrap().key,
-            test_collection.mint.pubkey()
-        );
-        assert!(!metadata_after.collection.unwrap().verified);
-    }
-
-    #[tokio::test]
     async fn fail_non_unique_master_edition() {
         let mut context = program_test().start_with_context().await;
 
         let test_collection = Metadata::new();
         test_collection
-            .create_v2_default(&mut context)
+            .create_v3_default(&mut context)
             .await
             .unwrap();
 
         let collection_master_edition_account = MasterEditionV2::new(&test_collection);
         collection_master_edition_account
-            .create(&mut context, Some(1))
+            .create_v3(&mut context, Some(1))
             .await
             .unwrap();
 
@@ -315,7 +251,7 @@ mod verify_sized_collection_item {
             use_method: UseMethod::Single,
         });
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 name,
                 symbol,
@@ -328,6 +264,7 @@ mod verify_sized_collection_item {
                     verified: false,
                 }),
                 uses.to_owned(),
+                None,
             )
             .await
             .unwrap();
@@ -360,7 +297,7 @@ mod verify_sized_collection_item {
 
         let test_collection = Metadata::new();
         test_collection
-            .create_v2_default(&mut context)
+            .create_v3_default(&mut context)
             .await
             .unwrap();
 
@@ -375,7 +312,7 @@ mod verify_sized_collection_item {
             use_method: UseMethod::Single,
         });
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 name,
                 symbol,
@@ -388,6 +325,7 @@ mod verify_sized_collection_item {
                     verified: false,
                 }),
                 uses.to_owned(),
+                None,
             )
             .await
             .unwrap();
@@ -421,7 +359,7 @@ mod verify_sized_collection_item {
 
         let test_collection = Metadata::new();
         test_collection
-            .create_v2_default(&mut context)
+            .create_v3_default(&mut context)
             .await
             .unwrap();
 
@@ -442,7 +380,7 @@ mod verify_sized_collection_item {
             use_method: UseMethod::Single,
         });
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 name,
                 symbol,
@@ -455,6 +393,7 @@ mod verify_sized_collection_item {
                     verified: false,
                 }),
                 uses.to_owned(),
+                None,
             )
             .await
             .unwrap();
@@ -520,7 +459,7 @@ mod verify_sized_collection_item {
             use_method: UseMethod::Single,
         });
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 name,
                 symbol,
@@ -533,6 +472,7 @@ mod verify_sized_collection_item {
                     verified: false,
                 }),
                 uses.to_owned(),
+                None,
             )
             .await
             .unwrap();
@@ -611,7 +551,7 @@ mod verify_sized_collection_item {
         let uri = "uri".to_string();
         let test_metadata = Metadata::new();
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 name,
                 symbol,
@@ -623,6 +563,7 @@ mod verify_sized_collection_item {
                     key: test_collection.mint.pubkey(),
                     verified: false,
                 }),
+                None,
                 None,
             )
             .await
@@ -639,7 +580,7 @@ mod verify_sized_collection_item {
             &new_collection_authority.pubkey(),
         );
         let ix = mpl_token_metadata::instruction::approve_collection_authority(
-            mpl_token_metadata::id(),
+            mpl_token_metadata::ID,
             record,
             new_collection_authority.pubkey(),
             context.payer.pubkey(),
@@ -724,7 +665,7 @@ mod verify_sized_collection_item {
             .unwrap();
 
         let test_metadata = Metadata::new();
-        test_metadata.create_v2_default(&mut context).await.unwrap();
+        test_metadata.create_v3_default(&mut context).await.unwrap();
 
         let metadata = test_metadata.get_data(&mut context).await;
         assert!(metadata.collection.is_none());
@@ -734,7 +675,7 @@ mod verify_sized_collection_item {
             &new_collection_authority.pubkey(),
         );
         let ix = mpl_token_metadata::instruction::approve_collection_authority(
-            mpl_token_metadata::id(),
+            mpl_token_metadata::ID,
             record,
             new_collection_authority.pubkey(),
             update_authority,
@@ -823,7 +764,7 @@ mod verify_sized_collection_item {
             .unwrap();
 
         let test_metadata = Metadata::new();
-        test_metadata.create_v2_default(&mut context).await.unwrap();
+        test_metadata.create_v3_default(&mut context).await.unwrap();
 
         let metadata = test_metadata.get_data(&mut context).await;
         assert!(metadata.collection.is_none());
@@ -833,7 +774,7 @@ mod verify_sized_collection_item {
             &new_collection_authority.pubkey(),
         );
         let ix = mpl_token_metadata::instruction::approve_collection_authority(
-            mpl_token_metadata::id(),
+            mpl_token_metadata::ID,
             record,
             new_collection_authority.pubkey(),
             update_authority,
@@ -877,7 +818,7 @@ mod verify_sized_collection_item {
         assert!(metadata_after.collection.unwrap().verified);
 
         let ix_revoke = mpl_token_metadata::instruction::revoke_collection_authority(
-            mpl_token_metadata::id(),
+            mpl_token_metadata::ID,
             record,
             new_collection_authority.pubkey(),
             new_collection_authority.pubkey(),
@@ -905,7 +846,7 @@ mod verify_sized_collection_item {
         let new_collection_authority = Keypair::new();
         let test_collection = Metadata::new();
         test_collection
-            .create_v2_default(&mut context)
+            .create_v3_default(&mut context)
             .await
             .unwrap();
 
@@ -925,7 +866,7 @@ mod verify_sized_collection_item {
             use_method: UseMethod::Single,
         });
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 name,
                 symbol,
@@ -938,6 +879,7 @@ mod verify_sized_collection_item {
                     verified: false,
                 }),
                 uses.to_owned(),
+                None,
             )
             .await
             .unwrap();
@@ -953,7 +895,7 @@ mod verify_sized_collection_item {
             &new_collection_authority.pubkey(),
         );
         let ix = mpl_token_metadata::instruction::approve_collection_authority(
-            mpl_token_metadata::id(),
+            mpl_token_metadata::ID,
             record,
             new_collection_authority.pubkey(),
             context.payer.pubkey(),
@@ -980,7 +922,7 @@ mod verify_sized_collection_item {
         assert_eq!(account_before.data.len(), COLLECTION_AUTHORITY_RECORD_SIZE);
 
         let ixrevoke = mpl_token_metadata::instruction::revoke_collection_authority(
-            mpl_token_metadata::id(),
+            mpl_token_metadata::ID,
             record,
             new_collection_authority.pubkey(),
             context.payer.pubkey(),
@@ -1058,7 +1000,7 @@ mod verify_sized_collection_item {
             .unwrap();
 
         let test_metadata = Metadata::new();
-        test_metadata.create_v2_default(&mut context).await.unwrap();
+        test_metadata.create_v3_default(&mut context).await.unwrap();
 
         let metadata = test_metadata.get_data(&mut context).await;
         assert!(metadata.collection.is_none());
@@ -1068,7 +1010,7 @@ mod verify_sized_collection_item {
             &new_collection_authority.pubkey(),
         );
         let ix = mpl_token_metadata::instruction::approve_collection_authority(
-            mpl_token_metadata::id(),
+            mpl_token_metadata::ID,
             record,
             new_collection_authority.pubkey(),
             update_authority,
@@ -1126,7 +1068,7 @@ mod verify_sized_collection_item {
         assert!(!metadata_after_unverify.collection.unwrap().verified);
 
         let ix_revoke = mpl_token_metadata::instruction::revoke_collection_authority(
-            mpl_token_metadata::id(),
+            mpl_token_metadata::ID,
             record,
             new_collection_authority.pubkey(),
             incorrect_revoke_authority.pubkey(),
@@ -1184,7 +1126,7 @@ async fn fail_verify_already_verified() {
     let uri = "uri".to_string();
     let test_metadata = Metadata::new();
     test_metadata
-        .create_v2(
+        .create_v3(
             &mut context,
             name,
             symbol,
@@ -1196,6 +1138,7 @@ async fn fail_verify_already_verified() {
                 key: test_collection.mint.pubkey(),
                 verified: false,
             }),
+            None,
             None,
         )
         .await
@@ -1297,7 +1240,7 @@ async fn fail_unverify_already_unverified() {
     let uri = "uri".to_string();
     let test_metadata = Metadata::new();
     test_metadata
-        .create_v2(
+        .create_v3(
             &mut context,
             name,
             symbol,
@@ -1309,6 +1252,7 @@ async fn fail_unverify_already_unverified() {
                 key: test_collection.mint.pubkey(),
                 verified: false,
             }),
+            None,
             None,
         )
         .await
@@ -1428,7 +1372,7 @@ async fn fail_set_and_verify_already_verified() {
     let uri = "uri".to_string();
     let test_metadata = Metadata::new();
     test_metadata
-        .create_v2(
+        .create_v3(
             &mut context,
             name,
             symbol,
@@ -1440,6 +1384,7 @@ async fn fail_set_and_verify_already_verified() {
                 key: test_collection.mint.pubkey(),
                 verified: false,
             }),
+            None,
             None,
         )
         .await

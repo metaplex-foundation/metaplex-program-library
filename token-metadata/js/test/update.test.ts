@@ -54,6 +54,7 @@ test('Update: NonFungible asset', async (t) => {
     metadata,
     authority,
     updateData,
+    'V1',
     null,
     masterEdition,
   );
@@ -102,6 +103,7 @@ test('Update: Fungible Token', async (t) => {
     metadata,
     authority,
     updateData,
+    'V1',
     null,
     masterEdition,
   );
@@ -150,6 +152,7 @@ test('Update: Fungible Asset', async (t) => {
     metadata,
     authority,
     updateData,
+    'V1',
     null,
     masterEdition,
   );
@@ -176,6 +179,7 @@ test('Update: Cannot Flip IsMutable to True', async (t) => {
     metadata,
     authority,
     updateData,
+    'V1',
     null,
     masterEdition,
   );
@@ -197,6 +201,7 @@ test('Update: Cannot Flip IsMutable to True', async (t) => {
     metadata,
     authority,
     updateData,
+    'V1',
     null,
     masterEdition,
   );
@@ -223,6 +228,7 @@ test('Update: Cannot Flip PrimarySaleHappened to False', async (t) => {
     metadata,
     authority,
     updateData,
+    'V1',
     null,
     masterEdition,
   );
@@ -244,6 +250,7 @@ test('Update: Cannot Flip PrimarySaleHappened to False', async (t) => {
     metadata,
     authority,
     updateData,
+    'V1',
     null,
     masterEdition,
   );
@@ -271,6 +278,7 @@ test('Update: Set New Update Authority', async (t) => {
     metadata,
     authority,
     updateData,
+    'V1',
     null,
     masterEdition,
   );
@@ -303,6 +311,7 @@ test('Update: Cannot Update Immutable Data', async (t) => {
     metadata,
     authority,
     updateData,
+    'V1',
     null,
     masterEdition,
   );
@@ -324,6 +333,7 @@ test('Update: Cannot Update Immutable Data', async (t) => {
     metadata,
     authority,
     updateData,
+    'V1',
     null,
     masterEdition,
   );
@@ -355,6 +365,7 @@ test('Update: Name Cannot Exceed 32 Bytes', async (t) => {
     metadata,
     authority,
     updateData,
+    'V1',
     null,
     masterEdition,
   );
@@ -386,6 +397,7 @@ test('Update: Symbol Cannot Exceed 10 Bytes', async (t) => {
     metadata,
     authority,
     updateData,
+    'V1',
     null,
     masterEdition,
   );
@@ -417,6 +429,7 @@ test('Update: URI Cannot Exceed 200 Bytes', async (t) => {
     metadata,
     authority,
     updateData,
+    'V1',
     null,
     masterEdition,
   );
@@ -448,6 +461,7 @@ test('Update: SellerFeeBasisPoints Cannot Exceed 10_000', async (t) => {
     metadata,
     authority,
     updateData,
+    'V1',
     null,
     masterEdition,
   );
@@ -489,6 +503,7 @@ test('Update: Creators Array Cannot Exceed Five Items', async (t) => {
     metadata,
     authority,
     updateData,
+    'V1',
     null,
     masterEdition,
   );
@@ -530,6 +545,7 @@ test('Update: No Duplicate Creator Addresses', async (t) => {
     metadata,
     authority,
     updateData,
+    'V1',
     null,
     masterEdition,
   );
@@ -569,6 +585,7 @@ test('Update: Creator Shares Must Equal 100', async (t) => {
     metadata,
     authority,
     updateData,
+    'V1',
     null,
     masterEdition,
   );
@@ -617,6 +634,7 @@ test('Update: Cannot Unverify Another Creator', async (t) => {
     metadata,
     authority,
     updateData,
+    'V1',
     null,
     masterEdition,
   );
@@ -654,6 +672,7 @@ test('Update: Cannot Unverify Another Creator', async (t) => {
     metadata,
     authority,
     updateData,
+    'V1',
     null,
     masterEdition,
   );
@@ -697,6 +716,7 @@ test('Update: Cannot Verify Another Creator', async (t) => {
     metadata,
     authority,
     updateData,
+    'V1',
     null,
     masterEdition,
   );
@@ -732,6 +752,7 @@ test('Update: Cannot Verify Another Creator', async (t) => {
     metadata,
     authority,
     updateData2,
+    'V1',
     null,
     masterEdition,
   );
@@ -808,6 +829,7 @@ test('Update: Update Unverified Collection Key', async (t) => {
     metadata,
     authority,
     updateData,
+    'V1',
     null,
     masterEdition,
   );
@@ -889,6 +911,7 @@ test('Update: Fail to Verify an Unverified Collection', async (t) => {
     metadata,
     authority,
     updateData,
+    'V1',
     null,
     masterEdition,
   );
@@ -983,6 +1006,7 @@ test('Update: Fail to Update a Verified Collection', async (t) => {
     metadata,
     authority,
     updateData,
+    'V1',
     null,
     masterEdition,
   );
@@ -1020,6 +1044,7 @@ test('Update: Update pNFT Config', async (t) => {
     metadata,
     authority,
     updateData,
+    'V1',
     null,
     masterEdition,
     token,
@@ -1064,6 +1089,7 @@ test('Update: Fail to update rule set on NFT', async (t) => {
     metadata,
     authority,
     updateData,
+    'V1',
     null,
     masterEdition,
     token,
@@ -1133,6 +1159,7 @@ test('Update: Update existing pNFT rule set config to None', async (t) => {
     metadata,
     authority,
     updateData,
+    'V1',
     null,
     masterEdition,
     token,
@@ -1171,13 +1198,14 @@ test('Update: Invalid Update Authority Fails', async (t) => {
     metadata,
     invalidUpdateAuthority,
     updateData,
+    'V1',
     null,
     masterEdition,
   );
   await updateTx.assertError(t, /Invalid authority type/);
 });
 
-test('Update: Delegate Authority Type Not Supported', async (t) => {
+test('Update: Delegate Authority Role Not Allowed to Update Data', async (t) => {
   const API = new InitTransactions();
   const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
 
@@ -1192,7 +1220,7 @@ test('Update: Delegate Authority Type Not Supported', async (t) => {
       Buffer.from('metadata'),
       PROGRAM_ID.toBuffer(),
       daManager.mint.toBuffer(),
-      Buffer.from('update_delegate'),
+      Buffer.from('collection_item_delegate'),
       payer.publicKey.toBuffer(),
       delegate.publicKey.toBuffer(),
     ],
@@ -1201,7 +1229,7 @@ test('Update: Delegate Authority Type Not Supported', async (t) => {
   amman.addr.addLabel('Delegate Record', delegateRecord);
 
   const args: DelegateArgs = {
-    __kind: 'UpdateV1',
+    __kind: 'CollectionItemV1',
     authorizationData: null,
   };
 
@@ -1242,11 +1270,12 @@ test('Update: Delegate Authority Type Not Supported', async (t) => {
     daManager.metadata,
     authority,
     updateData,
+    'V1',
     delegateRecord,
     daManager.masterEdition,
   );
   updateTx.then((x) =>
-    x.assertLogs(t, [/Invalid authority type/i], {
+    x.assertLogs(t, [/Authority cannot apply all update args/i], {
       txLabel: 'tx: Update',
     }),
   );
@@ -1315,6 +1344,7 @@ test('Update: Holder Authority Type Not Supported', async (t) => {
     metadata,
     holder,
     updateData,
+    'V1',
     null,
     masterEdition,
     token,
@@ -1412,6 +1442,7 @@ test('Update: Cannot Update pNFT Config with locked token', async (t) => {
     metadata,
     authority,
     updateData,
+    'V1',
     null,
     masterEdition,
     token,
@@ -1514,6 +1545,114 @@ test('Update: rule set update with programmable config delegate', async (t) => {
     nft.metadata,
     delegate,
     updateData,
+    'V1',
+    delegateRecord,
+    nft.masterEdition,
+    nft.token,
+  );
+  await updateTx.assertSuccess(t);
+
+  metadata = await Metadata.fromAccountAddress(connection, nft.metadata);
+
+  spok(t, metadata, {
+    tokenStandard: TokenStandard.ProgrammableNonFungible,
+    programmableConfig: { __kind: 'V1', ruleSet: spokSamePubkey(dummyRuleSet) },
+  });
+});
+
+test('Update: rule set update with programmable config delegate V2 args', async (t) => {
+  const API = new InitTransactions();
+  const { fstTxHandler: handler, payerPair: payer, connection } = await API.payer();
+
+  const collection = await createAndMintDefaultAsset(
+    t,
+    connection,
+    API,
+    handler,
+    payer,
+    TokenStandard.ProgrammableNonFungible,
+  );
+
+  const nft = await createAndMintDefaultAsset(
+    t,
+    connection,
+    API,
+    handler,
+    payer,
+    TokenStandard.ProgrammableNonFungible,
+    null,
+    1,
+    collection.mint,
+  );
+
+  let metadata = await Metadata.fromAccountAddress(connection, nft.metadata);
+
+  spok(t, metadata, {
+    tokenStandard: TokenStandard.ProgrammableNonFungible,
+    programmableConfig: { __kind: 'V1', ruleSet: null },
+  });
+
+  // creates a delegate
+
+  const [, delegate] = await API.getKeypair('Delegate');
+  // delegate PDA
+  const [delegateRecord] = PublicKey.findProgramAddressSync(
+    [
+      Buffer.from('metadata'),
+      PROGRAM_ID.toBuffer(),
+      collection.mint.toBuffer(),
+      Buffer.from('programmable_config_delegate'),
+      payer.publicKey.toBuffer(),
+      delegate.publicKey.toBuffer(),
+    ],
+    PROGRAM_ID,
+  );
+  amman.addr.addLabel('Metadata Delegate Record', delegateRecord);
+
+  const args: DelegateArgs = {
+    __kind: 'ProgrammableConfigV1',
+    authorizationData: null,
+  };
+
+  const { tx: delegateTx } = await API.delegate(
+    delegate.publicKey,
+    collection.mint,
+    collection.metadata,
+    payer.publicKey,
+    payer,
+    args,
+    handler,
+    delegateRecord,
+    collection.masterEdition,
+  );
+
+  await delegateTx.assertSuccess(t);
+
+  const pda = await MetadataDelegateRecord.fromAccountAddress(connection, delegateRecord);
+
+  spok(t, pda, {
+    delegate: spokSamePubkey(delegate.publicKey),
+    mint: spokSamePubkey(collection.mint),
+  });
+
+  // update the nft via the delegate
+
+  const dummyRuleSet = Keypair.generate().publicKey;
+
+  const updateData = new UpdateTestData();
+  updateData.ruleSet = {
+    __kind: 'Set',
+    fields: [dummyRuleSet],
+  };
+
+  const { tx: updateTx } = await API.update(
+    t,
+    handler,
+    nft.mint,
+    nft.metadata,
+    delegate,
+    updateData,
+    'AsProgrammableConfigDelegateV2',
     delegateRecord,
     nft.masterEdition,
     nft.token,
@@ -1630,6 +1769,7 @@ test('Update: fail to update metadata with programmable config delegate', async 
     nft.metadata,
     delegate,
     updateData,
+    'V1',
     delegateRecord,
     nft.masterEdition,
     nft.token,

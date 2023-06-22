@@ -16,7 +16,7 @@ use crate::{
         },
     },
     error::MetadataError,
-    state::{Metadata, TokenMetadataAccount, UseAuthorityRecord, UseMethod},
+    state::{Key, Metadata, TokenMetadataAccount, UseAuthorityRecord, UseMethod},
     utils::close_program_account,
 };
 
@@ -36,7 +36,7 @@ pub fn process_revoke_use_authority(
     if metadata.uses.is_none() {
         return Err(MetadataError::Unusable.into());
     }
-    if *token_program_account_info.key != spl_token::id() {
+    if *token_program_account_info.key != spl_token::ID {
         return Err(MetadataError::InvalidTokenProgram.into());
     }
     assert_signer(owner_info)?;
@@ -83,5 +83,9 @@ pub fn process_revoke_use_authority(
     // Drop use_authority_record_info account data borrow.
     drop(data);
 
-    close_program_account(use_authority_record_info, owner_info)
+    close_program_account(
+        use_authority_record_info,
+        owner_info,
+        Key::UseAuthorityRecord,
+    )
 }

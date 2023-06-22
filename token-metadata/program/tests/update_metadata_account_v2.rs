@@ -3,12 +3,13 @@ pub mod utils;
 
 use mpl_token_metadata::{
     error::MetadataError,
-    id, instruction,
+    instruction,
     state::{
         Collection, Creator, DataV2, Key, UseMethod, Uses, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH,
         MAX_URI_LENGTH,
     },
     utils::puffed_out_string,
+    ID,
 };
 use num_traits::FromPrimitive;
 use solana_program_test::*;
@@ -28,29 +29,22 @@ mod update_metadata_account_v2 {
     async fn success_compatible() {
         let mut context = program_test().start_with_context().await;
         let test_metadata = Metadata::new();
-        let name = "Test".to_string();
         let symbol = "TST".to_string();
         let uri = "uri".to_string();
 
         let puffed_symbol = puffed_out_string(&symbol, MAX_SYMBOL_LENGTH);
         let puffed_uri = puffed_out_string(&uri, MAX_URI_LENGTH);
 
-        test_metadata
-            .create(
-                &mut context,
-                name,
-                symbol.clone(),
-                uri.clone(),
-                None,
-                10,
-                true,
-                0,
-            )
-            .await
-            .unwrap();
+        test_metadata.create_v3_default(&mut context).await.unwrap();
 
         let updated_name = "New Name".to_string();
         let puffed_updated_name = puffed_out_string(&updated_name, MAX_NAME_LENGTH);
+
+        let creators = Some(vec![Creator {
+            address: context.payer.pubkey(),
+            verified: true,
+            share: 100,
+        }]);
 
         test_metadata
             .update_v2(
@@ -58,7 +52,7 @@ mod update_metadata_account_v2 {
                 updated_name,
                 symbol,
                 uri,
-                None,
+                creators.clone(),
                 10,
                 false,
                 Some(Collection {
@@ -80,7 +74,7 @@ mod update_metadata_account_v2 {
         assert_eq!(metadata.data.symbol, puffed_symbol);
         assert_eq!(metadata.data.uri, puffed_uri);
         assert_eq!(metadata.data.seller_fee_basis_points, 10);
-        assert_eq!(metadata.data.creators, None);
+        assert_eq!(metadata.data.creators, creators);
 
         assert!(!metadata.primary_sale_happened);
         assert!(!metadata.is_mutable);
@@ -95,27 +89,19 @@ mod update_metadata_account_v2 {
     async fn success() {
         let mut context = program_test().start_with_context().await;
         let test_metadata = Metadata::new();
-        let name = "Test".to_string();
         let symbol = "TST".to_string();
         let uri = "uri".to_string();
+
+        let creators = Some(vec![Creator {
+            address: context.payer.pubkey(),
+            verified: true,
+            share: 100,
+        }]);
 
         let puffed_symbol = puffed_out_string(&symbol, MAX_SYMBOL_LENGTH);
         let puffed_uri = puffed_out_string(&uri, MAX_URI_LENGTH);
 
-        test_metadata
-            .create_v2(
-                &mut context,
-                name,
-                symbol.clone(),
-                uri.clone(),
-                None,
-                10,
-                true,
-                None,
-                None,
-            )
-            .await
-            .unwrap();
+        test_metadata.create_v3_default(&mut context).await.unwrap();
 
         let updated_name = "New Name".to_string();
         let puffed_updated_name = puffed_out_string(&updated_name, MAX_NAME_LENGTH);
@@ -126,7 +112,7 @@ mod update_metadata_account_v2 {
                 updated_name,
                 symbol,
                 uri,
-                None,
+                creators.clone(),
                 10,
                 false,
                 Some(Collection {
@@ -149,7 +135,7 @@ mod update_metadata_account_v2 {
         assert_eq!(metadata.data.symbol, puffed_symbol);
         assert_eq!(metadata.data.uri, puffed_uri);
         assert_eq!(metadata.data.seller_fee_basis_points, 10);
-        assert_eq!(metadata.data.creators, None);
+        assert_eq!(metadata.data.creators, creators);
 
         assert!(!metadata.primary_sale_happened);
         assert!(!metadata.is_mutable);
@@ -165,29 +151,15 @@ mod update_metadata_account_v2 {
     async fn fail_update_metadata_when_collection_is_verified() {
         let mut context = program_test().start_with_context().await;
         let test_metadata = Metadata::new();
-        let name = "Test".to_string();
         let symbol = "TST".to_string();
         let uri = "uri".to_string();
 
-        test_metadata
-            .create_v2(
-                &mut context,
-                name,
-                symbol.clone(),
-                uri.clone(),
-                None,
-                10,
-                true,
-                None,
-                None,
-            )
-            .await
-            .unwrap();
+        test_metadata.create_v3_default(&mut context).await.unwrap();
 
         let new_collection_authority = Keypair::new();
         let test_collection = Metadata::new();
         test_collection
-            .create_v2_default(&mut context)
+            .create_v3_default(&mut context)
             .await
             .unwrap();
         let collection_master_edition_account = MasterEditionV2::new(&test_collection);
@@ -202,7 +174,7 @@ mod update_metadata_account_v2 {
             &new_collection_authority.pubkey(),
         );
         let ix = mpl_token_metadata::instruction::approve_collection_authority(
-            mpl_token_metadata::id(),
+            mpl_token_metadata::ID,
             record,
             new_collection_authority.pubkey(),
             update_authority,
@@ -236,9 +208,15 @@ mod update_metadata_account_v2 {
 
         let incoming_collection = Keypair::new();
 
+        let creators = Some(vec![Creator {
+            address: context.payer.pubkey(),
+            verified: true,
+            share: 100,
+        }]);
+
         let tx2 = Transaction::new_signed_with_payer(
             &[instruction::update_metadata_accounts_v2(
-                id(),
+                ID,
                 test_metadata.pubkey,
                 context.payer.pubkey(),
                 None,
@@ -246,7 +224,7 @@ mod update_metadata_account_v2 {
                     name: updated_name,
                     symbol: symbol.clone(),
                     uri: uri.clone(),
-                    creators: None,
+                    creators,
                     seller_fee_basis_points: 10,
                     collection: Some(Collection {
                         key: incoming_collection.pubkey(),
@@ -280,23 +258,11 @@ mod update_metadata_account_v2 {
         let test_metadata = Metadata::new();
         let fake_update_authority = Keypair::new();
 
-        test_metadata
-            .create(
-                &mut context,
-                "Test".to_string(),
-                "TST".to_string(),
-                "uri".to_string(),
-                None,
-                10,
-                true,
-                0,
-            )
-            .await
-            .unwrap();
+        test_metadata.create_v3_default(&mut context).await.unwrap();
 
         let tx = Transaction::new_signed_with_payer(
             &[instruction::update_metadata_accounts_v2(
-                id(),
+                ID,
                 test_metadata.pubkey,
                 fake_update_authority.pubkey(),
                 None,
@@ -322,29 +288,27 @@ mod update_metadata_account_v2 {
     async fn cannot_flip_primary_sale_happened_from_true_to_false() {
         let mut context = program_test().start_with_context().await;
         let test_metadata = Metadata::new();
-        let name = "Test".to_string();
-        let symbol = "TST".to_string();
-        let uri = "uri".to_string();
 
         // Primary sale happened created as false by default.
         test_metadata
-            .create(
+            .create_v3(
                 &mut context,
-                name,
-                symbol.clone(),
-                uri.clone(),
+                "Test Col".to_string(),
+                "TSTCOL".to_string(),
+                "uricol".to_string(),
                 None,
                 10,
                 true,
-                0,
+                None,
+                None,
+                None,
             )
             .await
             .unwrap();
-
         // Flip true.
         let tx = Transaction::new_signed_with_payer(
             &[instruction::update_metadata_accounts_v2(
-                id(),
+                ID,
                 test_metadata.pubkey,
                 context.payer.pubkey(),
                 None,
@@ -361,7 +325,7 @@ mod update_metadata_account_v2 {
         // Try to flip back to false; this should fail.
         let tx = Transaction::new_signed_with_payer(
             &[instruction::update_metadata_accounts_v2(
-                id(),
+                ID,
                 test_metadata.pubkey,
                 context.payer.pubkey(),
                 None,
@@ -387,30 +351,28 @@ mod update_metadata_account_v2 {
     async fn cannot_flip_is_mutable_from_false_to_true() {
         let mut context = program_test().start_with_context().await;
         let test_metadata = Metadata::new();
-        let name = "Test".to_string();
-        let symbol = "TST".to_string();
-        let uri = "uri".to_string();
 
         // Start with NFT immutable.
         let is_mutable = false;
 
         test_metadata
-            .create(
+            .create_v3(
                 &mut context,
-                name,
-                symbol.clone(),
-                uri.clone(),
+                "Test Col".to_string(),
+                "TSTCOL".to_string(),
+                "uricol".to_string(),
                 None,
                 10,
                 is_mutable,
-                0,
+                None,
+                None,
+                None,
             )
             .await
             .unwrap();
-
         let tx = Transaction::new_signed_with_payer(
             &[instruction::update_metadata_accounts_v2(
-                id(),
+                ID,
                 test_metadata.pubkey,
                 context.payer.pubkey(),
                 None,
@@ -439,31 +401,19 @@ mod update_metadata_account_v2 {
         let mut context = program_test().start_with_context().await;
         let test_metadata = Metadata::new();
 
-        test_metadata
-            .create_v2(
-                &mut context,
-                "Test".to_string(),
-                "TST".to_string(),
-                "uri".to_string(),
-                None,
-                10,
-                true,
-                None,
-                None,
-            )
-            .await
-            .unwrap();
+        test_metadata.create_v3_default(&mut context).await.unwrap();
 
         let test_collection = Metadata::new();
         test_collection
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test Col".to_string(),
                 "TSTCOL".to_string(),
                 "uricol".to_string(),
                 None,
                 10,
-                false,
+                true,
+                None,
                 None,
                 None,
             )
@@ -475,9 +425,15 @@ mod update_metadata_account_v2 {
             .await
             .unwrap();
 
+        let creators = Some(vec![Creator {
+            address: context.payer.pubkey(),
+            verified: true,
+            share: 100,
+        }]);
+
         let tx = Transaction::new_signed_with_payer(
             &[instruction::update_metadata_accounts_v2(
-                id(),
+                ID,
                 test_metadata.pubkey,
                 context.payer.pubkey(),
                 None,
@@ -485,7 +441,7 @@ mod update_metadata_account_v2 {
                     name: "Test".to_string(),
                     symbol: "TST".to_string(),
                     uri: "uri".to_string(),
-                    creators: None,
+                    creators,
                     seller_fee_basis_points: 10,
                     collection: Some(Collection {
                         key: test_collection.pubkey,
@@ -517,27 +473,15 @@ mod update_metadata_account_v2 {
     async fn fail_cannot_change_collection_key_when_verified() {
         let mut context = program_test().start_with_context().await;
         let test_metadata = Metadata::new();
-        test_metadata
-            .create_v2(
-                &mut context,
-                "Test".to_string(),
-                "TST".to_string(),
-                "uri".to_string(),
-                None,
-                10,
-                true,
-                None,
-                None,
-            )
-            .await
-            .unwrap();
+        test_metadata.create_v3_default(&mut context).await.unwrap();
 
         let new_collection_authority = Keypair::new();
         let test_collection = Metadata::new();
         test_collection
-            .create_v2_default(&mut context)
+            .create_v3_default(&mut context)
             .await
             .unwrap();
+
         let collection_master_edition_account = MasterEditionV2::new(&test_collection);
         collection_master_edition_account
             .create_v3(&mut context, Some(0))
@@ -550,7 +494,7 @@ mod update_metadata_account_v2 {
             &new_collection_authority.pubkey(),
         );
         let ix = mpl_token_metadata::instruction::approve_collection_authority(
-            mpl_token_metadata::id(),
+            mpl_token_metadata::ID,
             record,
             new_collection_authority.pubkey(),
             update_authority,
@@ -580,10 +524,16 @@ mod update_metadata_account_v2 {
             .await
             .unwrap();
 
+        let creators = Some(vec![Creator {
+            address: context.payer.pubkey(),
+            verified: true,
+            share: 100,
+        }]);
+
         let fake_collection_pubkey = collection_master_edition_account.pubkey;
         let tx2 = Transaction::new_signed_with_payer(
             &[instruction::update_metadata_accounts_v2(
-                id(),
+                ID,
                 test_metadata.pubkey,
                 context.payer.pubkey(),
                 None,
@@ -591,7 +541,7 @@ mod update_metadata_account_v2 {
                     name: "Test".to_string(),
                     symbol: "TST".to_string(),
                     uri: "uri".to_string(),
-                    creators: None,
+                    creators,
                     seller_fee_basis_points: 10,
                     collection: Some(Collection {
                         key: fake_collection_pubkey,
@@ -625,14 +575,15 @@ mod update_metadata_account_v2 {
 
         let test_collection = Metadata::new();
         test_collection
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test Col".to_string(),
                 "TSTCOL".to_string(),
                 "uricol".to_string(),
                 None,
                 10,
-                false,
+                true,
+                None,
                 None,
                 None,
             )
@@ -647,7 +598,7 @@ mod update_metadata_account_v2 {
 
         let test_metadata = Metadata::new();
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -660,6 +611,7 @@ mod update_metadata_account_v2 {
                     verified: false,
                 }),
                 None,
+                None,
             )
             .await
             .unwrap();
@@ -667,7 +619,7 @@ mod update_metadata_account_v2 {
         // Setting existing, but unverified collection data to None.
         let tx = Transaction::new_signed_with_payer(
             &[instruction::update_metadata_accounts_v2(
-                id(),
+                ID,
                 test_metadata.pubkey,
                 context.payer.pubkey(),
                 None,
@@ -695,7 +647,7 @@ mod update_metadata_account_v2 {
         // Setting Collection data that's already None to None.
         let tx = Transaction::new_signed_with_payer(
             &[instruction::update_metadata_accounts_v2(
-                id(),
+                ID,
                 test_metadata.pubkey,
                 context.payer.pubkey(),
                 None,
@@ -766,14 +718,15 @@ mod update_metadata_account_v2 {
 
         let test_metadata = Metadata::new();
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
-                "Test".to_string(),
-                "TST".to_string(),
-                "uri".to_string(),
+                "Test Col".to_string(),
+                "TSTCOL".to_string(),
+                "uricol".to_string(),
                 Some(creators),
                 10,
                 true,
+                None,
                 None,
                 None,
             )
@@ -802,9 +755,9 @@ mod update_metadata_account_v2 {
         let data = get_account(&mut context, &test_metadata.pubkey).await.data;
 
         let padding_index = 1 + 32 + 32 + 36 + 14 + 204 + 7 + 34 + 1 + 1 + 2 + 2 + 1 + 1;
-        let zeros_len = data.len() - padding_index;
+        let zeros_len = data.len() - padding_index - 1; // Fee flag at end
         let zeros = vec![0u8; zeros_len];
-        assert_eq!(data[padding_index..], zeros[..]);
+        assert_eq!(data[padding_index..data.len() - 1], zeros[..]);
     }
 
     #[tokio::test]
@@ -813,7 +766,7 @@ mod update_metadata_account_v2 {
         let test_metadata = Metadata::new();
 
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -827,13 +780,14 @@ mod update_metadata_account_v2 {
                     remaining: 1,
                     total: 1,
                 }),
+                None,
             )
             .await
             .unwrap();
 
         let tx = Transaction::new_signed_with_payer(
             &[instruction::update_metadata_accounts_v2(
-                id(),
+                ID,
                 test_metadata.pubkey,
                 context.payer.pubkey(),
                 None,
@@ -870,34 +824,16 @@ mod update_metadata_account_v2 {
     #[tokio::test]
     async fn fail_cannot_unverify_another_creator_by_changing_array() {
         let mut context = program_test().start_with_context().await;
-        let creators = vec![Creator {
-            address: context.payer.pubkey(),
-            verified: true,
-            share: 100,
-        }];
 
         // Create metadata with one verified creator.
         let test_metadata = Metadata::new();
-        test_metadata
-            .create_v2(
-                &mut context,
-                "Test".to_string(),
-                "TST".to_string(),
-                "uri".to_string(),
-                Some(creators),
-                10,
-                true,
-                None,
-                None,
-            )
-            .await
-            .unwrap();
+        test_metadata.create_v3_default(&mut context).await.unwrap();
 
         // Update authority.
         let new_update_authority = Keypair::new();
         let tx = Transaction::new_signed_with_payer(
             &[instruction::update_metadata_accounts_v2(
-                id(),
+                ID,
                 test_metadata.pubkey,
                 context.payer.pubkey(),
                 Some(new_update_authority.pubkey()),
@@ -927,7 +863,7 @@ mod update_metadata_account_v2 {
 
         let tx = Transaction::new_signed_with_payer(
             &[instruction::update_metadata_accounts_v2(
-                id(),
+                ID,
                 test_metadata.pubkey,
                 new_update_authority.pubkey(),
                 None,
@@ -961,34 +897,16 @@ mod update_metadata_account_v2 {
 #[tokio::test]
 async fn fail_cannot_unverify_another_creator_by_removing_from_array() {
     let mut context = program_test().start_with_context().await;
-    let creators = vec![Creator {
-        address: context.payer.pubkey(),
-        verified: true,
-        share: 100,
-    }];
 
     // Create metadata with one verified creator.
     let test_metadata = Metadata::new();
-    test_metadata
-        .create_v2(
-            &mut context,
-            "Test".to_string(),
-            "TST".to_string(),
-            "uri".to_string(),
-            Some(creators),
-            10,
-            true,
-            None,
-            None,
-        )
-        .await
-        .unwrap();
+    test_metadata.create_v3_default(&mut context).await.unwrap();
 
     // Update authority.
     let new_update_authority = Keypair::new();
     let tx = Transaction::new_signed_with_payer(
         &[instruction::update_metadata_accounts_v2(
-            id(),
+            ID,
             test_metadata.pubkey,
             context.payer.pubkey(),
             Some(new_update_authority.pubkey()),
@@ -1011,7 +929,7 @@ async fn fail_cannot_unverify_another_creator_by_removing_from_array() {
 
     let tx = Transaction::new_signed_with_payer(
         &[instruction::update_metadata_accounts_v2(
-            id(),
+            ID,
             test_metadata.pubkey,
             new_update_authority.pubkey(),
             None,
@@ -1044,34 +962,16 @@ async fn fail_cannot_unverify_another_creator_by_removing_from_array() {
 #[tokio::test]
 async fn fail_cannot_unverify_creators_by_setting_to_none() {
     let mut context = program_test().start_with_context().await;
-    let creators = vec![Creator {
-        address: context.payer.pubkey(),
-        verified: true,
-        share: 100,
-    }];
 
     // Create metadata with one verified creator.
     let test_metadata = Metadata::new();
-    test_metadata
-        .create_v2(
-            &mut context,
-            "Test".to_string(),
-            "TST".to_string(),
-            "uri".to_string(),
-            Some(creators),
-            10,
-            true,
-            None,
-            None,
-        )
-        .await
-        .unwrap();
+    test_metadata.create_v3_default(&mut context).await.unwrap();
 
     // Update authority.
     let new_update_authority = Keypair::new();
     let tx = Transaction::new_signed_with_payer(
         &[instruction::update_metadata_accounts_v2(
-            id(),
+            ID,
             test_metadata.pubkey,
             context.payer.pubkey(),
             Some(new_update_authority.pubkey()),
@@ -1088,7 +988,7 @@ async fn fail_cannot_unverify_creators_by_setting_to_none() {
     // Try to update metadata by setting creators to None.
     let tx = Transaction::new_signed_with_payer(
         &[instruction::update_metadata_accounts_v2(
-            id(),
+            ID,
             test_metadata.pubkey,
             new_update_authority.pubkey(),
             None,

@@ -2,9 +2,9 @@ mod bubblegum;
 mod burn;
 mod collection;
 mod delegate;
-pub(crate) mod deprecated;
 mod edition;
 pub(crate) mod escrow;
+mod fee;
 mod freeze;
 mod metadata;
 mod state;
@@ -16,7 +16,6 @@ pub use bubblegum::*;
 pub use burn::*;
 pub use collection::*;
 pub use delegate::*;
-use deprecated::process_create_metadata_accounts_v2;
 pub use edition::*;
 pub use escrow::*;
 pub use freeze::*;
@@ -34,11 +33,14 @@ pub use uses::*;
 pub use verification::*;
 
 use crate::{
-    deprecated_processor::{
-        process_deprecated_create_metadata_accounts, process_deprecated_update_metadata_accounts,
-    },
     error::MetadataError,
-    instruction::MetadataInstruction,
+    instruction::{
+        MetadataInstruction, CREATE_METADATA_ACCOUNT, CREATE_METADATA_ACCOUNT_V2,
+        DEPRECATED_CREATE_MASTER_EDITION, DEPRECATED_CREATE_RESERVATION_LIST,
+        DEPRECATED_MINT_NEW_EDITION_FROM_MASTER_EDITION_VIA_PRINTING_TOKEN,
+        DEPRECATED_MINT_PRINTING_TOKENS, DEPRECATED_MINT_PRINTING_TOKENS_VIA_TOKEN,
+        DEPRECATED_SET_RESERVATION_LIST, MIGRATE, UPDATE_METADATA_ACCOUNT,
+    },
     processor::{
         edition::{
             process_convert_master_edition_v1_to_v2, process_create_master_edition,
@@ -82,7 +84,27 @@ pub fn process_instruction<'a>(
     accounts: &'a [AccountInfo<'a>],
     input: &[u8],
 ) -> ProgramResult {
-    let instruction = MetadataInstruction::try_from_slice(input)?;
+    let (variant, _args) = input
+        .split_first()
+        .ok_or(MetadataError::InvalidInstruction)?;
+
+    let instruction = match MetadataInstruction::try_from_slice(input) {
+        Ok(instruction) => Ok(instruction),
+        // Check if the instruction is a deprecated instruction.
+        Err(_) => match *variant {
+            CREATE_METADATA_ACCOUNT
+            | UPDATE_METADATA_ACCOUNT
+            | DEPRECATED_CREATE_MASTER_EDITION
+            | DEPRECATED_MINT_NEW_EDITION_FROM_MASTER_EDITION_VIA_PRINTING_TOKEN
+            | DEPRECATED_SET_RESERVATION_LIST
+            | DEPRECATED_CREATE_RESERVATION_LIST
+            | DEPRECATED_MINT_PRINTING_TOKENS_VIA_TOKEN
+            | DEPRECATED_MINT_PRINTING_TOKENS
+            | CREATE_METADATA_ACCOUNT_V2
+            | MIGRATE => Err(MetadataError::Removed.into()),
+            _ => Err(ProgramError::InvalidInstructionData),
+        },
+    }?;
 
     // checks if there is a locked token; this will block any instruction that
     // requires the token record account when the token is locked – 'Update' is
@@ -122,10 +144,7 @@ pub fn process_instruction<'a>(
             msg!("IX: Unlock");
             state::unlock(program_id, accounts, args)
         }
-        MetadataInstruction::Migrate(args) => {
-            msg!("IX: Migrate");
-            metadata::migrate(program_id, accounts, args)
-        }
+        MetadataInstruction::Migrate => Err(MetadataError::Removed.into()),
         MetadataInstruction::Transfer(args) => {
             msg!("IX: Transfer");
             metadata::transfer(program_id, accounts, args)
@@ -142,6 +161,7 @@ pub fn process_instruction<'a>(
             msg!("IX: Unverify");
             verification::unverify(program_id, accounts, args)
         }
+        MetadataInstruction::Collect => fee::process_collect_fees(program_id, accounts),
         _ => {
             // pNFT accounts can only be used by the "new" API; before forwarding
             // the transaction to the "legacy" processor we determine whether we are
@@ -162,29 +182,9 @@ fn process_legacy_instruction<'a>(
     instruction: MetadataInstruction,
 ) -> ProgramResult {
     match instruction {
-        MetadataInstruction::CreateMetadataAccount(args) => {
-            msg!("(Deprecated as of 1.1.0) IX: Create Metadata Accounts");
-            process_deprecated_create_metadata_accounts(
-                program_id,
-                accounts,
-                args.data,
-                args.is_mutable,
-            )
-        }
-        MetadataInstruction::UpdateMetadataAccount(args) => {
-            msg!("(Deprecated as of 1.1.0) IX: Update Metadata Accounts");
-            process_deprecated_update_metadata_accounts(
-                program_id,
-                accounts,
-                args.data,
-                args.update_authority,
-                args.primary_sale_happened,
-            )
-        }
-        MetadataInstruction::CreateMetadataAccountV2(args) => {
-            msg!("IX: Create Metadata Accounts v2");
-            process_create_metadata_accounts_v2(program_id, accounts, args.data, args.is_mutable)
-        }
+        MetadataInstruction::CreateMetadataAccount => Err(MetadataError::Removed.into()),
+        MetadataInstruction::UpdateMetadataAccount => Err(MetadataError::Removed.into()),
+        MetadataInstruction::CreateMetadataAccountV2 => Err(MetadataError::Removed.into()),
         MetadataInstruction::CreateMetadataAccountV3(args) => {
             msg!("IX: Create Metadata Accounts v3");
             process_create_metadata_accounts_v3(
@@ -206,26 +206,16 @@ fn process_legacy_instruction<'a>(
                 args.is_mutable,
             )
         }
-        MetadataInstruction::DeprecatedCreateMasterEdition(_args) => {
-            msg!("IX: Deprecated Create Master Edition, Removed in 1.1.0");
-            Err(MetadataError::Removed.into())
-        }
+        MetadataInstruction::DeprecatedCreateMasterEdition => Err(MetadataError::Removed.into()),
         MetadataInstruction::DeprecatedMintNewEditionFromMasterEditionViaPrintingToken => {
-            msg!("IX: Deprecated Mint New Edition from Master Edition Via Token, Removed in 1.1.0");
             Err(MetadataError::Removed.into())
         }
         MetadataInstruction::UpdatePrimarySaleHappenedViaToken => {
             msg!("IX: Update primary sale via token");
             process_update_primary_sale_happened_via_token(program_id, accounts)
         }
-        MetadataInstruction::DeprecatedSetReservationList(_args) => {
-            msg!("IX: Deprecated Set Reservation List, Removed in 1.1.0");
-            Err(MetadataError::Removed.into())
-        }
-        MetadataInstruction::DeprecatedCreateReservationList => {
-            msg!("IX: Deprecated Create Reservation List, Removed in 1.1.0");
-            Err(MetadataError::Removed.into())
-        }
+        MetadataInstruction::DeprecatedSetReservationList => Err(MetadataError::Removed.into()),
+        MetadataInstruction::DeprecatedCreateReservationList => Err(MetadataError::Removed.into()),
         MetadataInstruction::SignMetadata => {
             msg!("IX: Sign Metadata");
             process_sign_metadata(program_id, accounts)
@@ -234,18 +224,11 @@ fn process_legacy_instruction<'a>(
             msg!("IX: Remove Creator Verification");
             process_remove_creator_verification(program_id, accounts)
         }
-        MetadataInstruction::DeprecatedMintPrintingTokensViaToken(_args) => {
-            msg!("IX: Deprecated Mint Printing Tokens Via Token, Removed in 1.1.0");
+        MetadataInstruction::DeprecatedMintPrintingTokensViaToken => {
             Err(MetadataError::Removed.into())
         }
-        MetadataInstruction::DeprecatedMintPrintingTokens(_args) => {
-            msg!("IX: Deprecated Mint Printing Tokens, Removed in 1.1.0");
-            Err(MetadataError::Removed.into())
-        }
-        MetadataInstruction::CreateMasterEdition(args) => {
-            msg!("(Deprecated as of 1.1.0, please use V3 Create Master Edition)\n V2 Create Master Edition");
-            process_create_master_edition(program_id, accounts, args.max_supply)
-        }
+        MetadataInstruction::DeprecatedMintPrintingTokens => Err(MetadataError::Removed.into()),
+        MetadataInstruction::CreateMasterEdition => Err(MetadataError::Removed.into()),
         MetadataInstruction::CreateMasterEditionV3(args) => {
             msg!("V3 Create Master Edition");
             process_create_master_edition(program_id, accounts, args.max_supply)
@@ -264,9 +247,6 @@ fn process_legacy_instruction<'a>(
             process_convert_master_edition_v1_to_v2(program_id, accounts)
         }
         MetadataInstruction::MintNewEditionFromMasterEditionViaVaultProxy(_args) => {
-            msg!(
-                "IX: Mint New Edition from Master Edition Via Vault Proxy, deprecated as of 1.4.0."
-            );
             Err(MetadataError::Removed.into())
         }
         MetadataInstruction::PuffMetadata => {
@@ -364,7 +344,7 @@ fn process_legacy_instruction<'a>(
 /// Convenience function for accessing the next item in an [`AccountInfo`]
 /// iterator and validating whether the account is present or not.
 ///
-/// This relies on the client setting the `crate::id()` as the pubkey for
+/// This relies on the client setting the `crate::ID` as the pubkey for
 /// accounts that are not set, which effectively allows us to use positional
 /// optional accounts.
 pub fn next_optional_account_info<'a, 'b, I: Iterator<Item = &'a AccountInfo<'b>>>(
@@ -372,7 +352,7 @@ pub fn next_optional_account_info<'a, 'b, I: Iterator<Item = &'a AccountInfo<'b>
 ) -> Result<Option<I::Item>, ProgramError> {
     let account_info = iter.next().ok_or(ProgramError::NotEnoughAccountKeys)?;
 
-    Ok(if cmp_pubkeys(account_info.key, &crate::id()) {
+    Ok(if cmp_pubkeys(account_info.key, &crate::ID) {
         None
     } else {
         Some(account_info)
@@ -382,7 +362,7 @@ pub fn next_optional_account_info<'a, 'b, I: Iterator<Item = &'a AccountInfo<'b>
 /// Convenience function for accessing an [`AccountInfo`] by index
 /// and validating whether the account is present or not.
 ///
-/// This relies on the client setting the `crate::id()` as the pubkey for
+/// This relies on the client setting the `crate::ID` as the pubkey for
 /// accounts that are not set, which effectively allows us to use positional
 /// optional accounts.
 pub fn try_get_account_info<'a>(
@@ -401,7 +381,7 @@ pub fn try_get_account_info<'a>(
 /// Convenience function for accessing an [`AccountInfo`] by index
 /// and validating whether the account is present or not.
 ///
-/// This relies on the client setting the `crate::id()` as the pubkey for
+/// This relies on the client setting the `crate::ID` as the pubkey for
 /// accounts that are not set, which effectively allows us to use positional
 /// optional accounts.
 pub fn try_get_optional_account_info<'a>(
@@ -409,7 +389,7 @@ pub fn try_get_optional_account_info<'a>(
     index: usize,
 ) -> Result<Option<&'a AccountInfo<'a>>, ProgramError> {
     if index < accounts.len() {
-        Ok(if cmp_pubkeys(accounts[index].key, &crate::id()) {
+        Ok(if cmp_pubkeys(accounts[index].key, &crate::ID) {
             None
         } else {
             Some(&accounts[index])

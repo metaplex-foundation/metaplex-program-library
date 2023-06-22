@@ -53,7 +53,11 @@ Beyond verifying creators at the time of mint, there are `verify_creator` and `u
 
 ### Collection verification
 
-Note that there is no such thing as compressed Verified Collections.  Collections are still NFTs created in the realm of Metadata and Master Edition `token-metadata` accounts.  Also note that a collection cannot be set to verified at the time of minting.  Instead, there are instructions to `verify_collection` and `unverify_collection`, as well as a `set_and_verify_collection` instruction for the case where the collection was set during the mint.  All of these require either the true Collection Authority to be a a signer, or a delegated Collection Authority to be a signer along with providing a Collection Authority Record PDA.  See the Metaplex documentation on [`Certified Collections`](https://docs.metaplex.com/programs/token-metadata/certified-collections) for more information on verifying collections.
+Note that there is no such thing as compressed Verified Collections.  Collections are still NFTs created in the realm of Metadata and Master Edition `token-metadata` accounts. There are instructions to `verify_collection` and `unverify_collection`, as well as a `set_and_verify_collection` instruction for the case where the collection was set during the mint.  All of these require either the true Collection Authority to be a a signer, or a legacy `token-metadata` delegated Collection Authority to be a signer along with providing the Collection Authority Record PDA.
+
+`mint_to_collection_v1` is an instruction that can be used to mint a compressed NFT and verify collection at the same time.  Also note that `decompress_v1` is now able to decompress assets with verified collection.
+
+See the Metaplex documentation on [`Certified Collections`](https://docs.metaplex.com/programs/token-metadata/certified-collections) for more information on verifying collections.
 
 ### Transfer ownership, delegate authority, and burn an NFT.
 

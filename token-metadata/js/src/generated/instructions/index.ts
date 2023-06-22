@@ -5,6 +5,7 @@ export * from './Burn';
 export * from './BurnEditionNft';
 export * from './BurnNft';
 export * from './CloseEscrowAccount';
+export * from './Collect';
 export * from './ConvertMasterEditionV1ToV2';
 export * from './Create';
 export * from './CreateEscrowAccount';

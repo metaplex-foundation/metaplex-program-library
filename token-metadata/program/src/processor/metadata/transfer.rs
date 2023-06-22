@@ -1,11 +1,9 @@
 use std::fmt::Display;
 
-use mpl_token_auth_rules::processor::cmp_pubkeys;
-use mpl_utils::{assert_signer, token::TokenTransferParams};
+use mpl_utils::{assert_signer, cmp_pubkeys, token::TokenTransferParams};
 use solana_program::{
     account_info::AccountInfo,
     entrypoint::ProgramResult,
-    msg,
     program::invoke,
     program_error::ProgramError,
     program_option::COption,
@@ -25,8 +23,8 @@ use crate::{
     instruction::{Context, Transfer, TransferArgs},
     pda::find_token_record_account,
     state::{
-        AuthorityRequest, AuthorityResponse, AuthorityType, Metadata, Operation, TokenDelegateRole,
-        TokenMetadataAccount, TokenRecord, TokenStandard,
+        AuthorityRequest, AuthorityResponse, AuthorityType, Key, Metadata, Operation,
+        TokenDelegateRole, TokenMetadataAccount, TokenRecord, TokenStandard,
     },
     utils::{
         assert_derivation, auth_rules_validate, clear_close_authority, close_program_account,
@@ -35,7 +33,7 @@ use crate::{
     },
 };
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum TransferScenario {
     Holder,
     TransferDelegate,
@@ -120,11 +118,11 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
         // if the token account is empty, we will initialize a new one but it must
         // be a ATA account
         assert_derivation(
-            &spl_associated_token_account::id(),
+            &spl_associated_token_account::ID,
             ctx.accounts.destination_info,
             &[
                 ctx.accounts.destination_owner_info.key.as_ref(),
-                spl_token::id().as_ref(),
+                spl_token::ID.as_ref(),
                 ctx.accounts.mint_info.key.as_ref(),
             ],
         )?;
@@ -135,7 +133,7 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
                 ctx.accounts.payer_info.key,
                 ctx.accounts.destination_owner_info.key,
                 ctx.accounts.mint_info.key,
-                &spl_token::id(),
+                &spl_token::ID,
             ),
             &[
                 ctx.accounts.payer_info.clone(),
@@ -145,7 +143,7 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
             ],
         )?;
     } else {
-        assert_owned_by(ctx.accounts.destination_info, &spl_token::id())?;
+        assert_owned_by(ctx.accounts.destination_info, &spl_token::ID)?;
         assert_token_matches_owner_and_mint(
             ctx.accounts.destination_info,
             ctx.accounts.destination_owner_info.key,
@@ -207,7 +205,6 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
     let token_standard = metadata.token_standard;
     let token = Account::unpack(&ctx.accounts.token_info.try_borrow_data()?)?;
 
-    msg!("getting authority type");
     let AuthorityResponse { authority_type, .. } =
         AuthorityType::get_authority_type(AuthorityRequest {
             authority: ctx.accounts.authority_info.key,
@@ -227,8 +224,6 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
 
     match authority_type {
         AuthorityType::Holder => {
-            msg!("Owner transfer");
-
             // Wallet-to-wallet are currently exempt from auth rules so we need to check this and pass it into
             // the auth rules validator function.
             //
@@ -289,7 +284,6 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
 
     match token_standard {
         Some(TokenStandard::ProgrammableNonFungible) => {
-            msg!("pNFT");
             // All pNFTs should have a token record passed in and existing.
             // The token delegate role may not be populated, however.
             let owner_token_record_info =
@@ -318,9 +312,27 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
             // validates the derivation
             assert_keys_equal(&new_pda_key, destination_token_record_info.key)?;
 
+            // We need to check whether the destination token account has a delegate set. If it does,
+            // we do not allow the transfer to proceed since we do not know the type of the delegate
+            // to complete the information on the token record.
+            let destination_token =
+                Account::unpack(&ctx.accounts.destination_info.try_borrow_data()?)?;
+
+            if let COption::Some(delegate) = destination_token.delegate {
+                if destination_token_record_info.data_is_empty() {
+                    return Err(MetadataError::DelegateAlreadyExists.into());
+                }
+
+                let destination_token_record =
+                    TokenRecord::from_account_info(destination_token_record_info)?;
+
+                if destination_token_record.delegate != Some(delegate) {
+                    return Err(MetadataError::DelegateAlreadyExists.into());
+                }
+            }
+
             let owner_token_record = TokenRecord::from_account_info(owner_token_record_info)?;
 
-            msg!("checking if sale delegate");
             let is_sale_delegate = owner_token_record
                 .delegate_role
                 .map(|role| role == TokenDelegateRole::Sale)
@@ -331,7 +343,6 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
                 .map(|role| role == TokenDelegateRole::LockedTransfer)
                 .unwrap_or(false);
 
-            msg!("determining scenario");
             let scenario = match authority_type {
                 AuthorityType::Holder => {
                     if is_sale_delegate {
@@ -414,10 +425,34 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
 
             // Don't close token record if it's a self transfer.
             if owner_token_record_info.key != destination_token_record_info.key {
+                // If the transfer authority is the holder, we need to manually clear the
+                // token delegate since it does not get cleared by the SPL token program
+                // on transfer.
+                if matches!(scenario, TransferScenario::Holder)
+                    && owner_token_record.delegate.is_some()
+                {
+                    invoke(
+                        &spl_token::instruction::revoke(
+                            ctx.accounts.spl_token_program_info.key,
+                            ctx.accounts.token_info.key,
+                            ctx.accounts.authority_info.key,
+                            &[],
+                        )?,
+                        &[
+                            ctx.accounts.token_info.clone(),
+                            ctx.accounts.authority_info.clone(),
+                        ],
+                    )?;
+                }
+
                 // Close the source Token Record account, but do it after the CPI calls
                 // so as to avoid Unbalanced Accounts errors due to the CPI context not knowing
                 // about the manual lamport math done here.
-                close_program_account(owner_token_record_info, ctx.accounts.payer_info)?;
+                close_program_account(
+                    owner_token_record_info,
+                    ctx.accounts.payer_info,
+                    Key::TokenRecord,
+                )?;
             }
         }
         _ => mpl_utils::token::spl_token_transfer(token_transfer_params).unwrap(),

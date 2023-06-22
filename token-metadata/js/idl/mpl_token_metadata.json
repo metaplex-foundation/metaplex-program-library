@@ -1,5 +1,5 @@
 {
-  "version": "1.10.0",
+  "version": "1.12.0",
   "name": "mpl_token_metadata",
   "instructions": [
     {
@@ -48,14 +48,7 @@
           "desc": "Rent info"
         }
       ],
-      "args": [
-        {
-          "name": "createMetadataAccountArgs",
-          "type": {
-            "defined": "CreateMetadataAccountArgs"
-          }
-        }
-      ],
+      "args": [],
       "discriminant": {
         "type": "u8",
         "value": 0
@@ -77,14 +70,7 @@
           "desc": "Update authority key"
         }
       ],
-      "args": [
-        {
-          "name": "updateMetadataAccountArgs",
-          "type": {
-            "defined": "UpdateMetadataAccountArgs"
-          }
-        }
-      ],
+      "args": [],
       "discriminant": {
         "type": "u8",
         "value": 1
@@ -172,14 +158,7 @@
           "desc": "One time authorization printing mint authority - must be provided if using max supply. THIS WILL TRANSFER AUTHORITY AWAY FROM THIS KEY."
         }
       ],
-      "args": [
-        {
-          "name": "createMasterEditionArgs",
-          "type": {
-            "defined": "CreateMasterEditionArgs"
-          }
-        }
-      ],
+      "args": [],
       "discriminant": {
         "type": "u8",
         "value": 2
@@ -342,14 +321,7 @@
           "desc": "The resource you tied the reservation list too"
         }
       ],
-      "args": [
-        {
-          "name": "setReservationListArgs",
-          "type": {
-            "defined": "SetReservationListArgs"
-          }
-        }
-      ],
+      "args": [],
       "discriminant": {
         "type": "u8",
         "value": 5
@@ -493,14 +465,7 @@
           "desc": "Rent"
         }
       ],
-      "args": [
-        {
-          "name": "mintPrintingTokensViaTokenArgs",
-          "type": {
-            "defined": "MintPrintingTokensViaTokenArgs"
-          }
-        }
-      ],
+      "args": [],
       "discriminant": {
         "type": "u8",
         "value": 8
@@ -552,14 +517,7 @@
           "desc": "Rent"
         }
       ],
-      "args": [
-        {
-          "name": "mintPrintingTokensViaTokenArgs",
-          "type": {
-            "defined": "MintPrintingTokensViaTokenArgs"
-          }
-        }
-      ],
+      "args": [],
       "discriminant": {
         "type": "u8",
         "value": 9
@@ -623,14 +581,7 @@
           "desc": "Rent info"
         }
       ],
-      "args": [
-        {
-          "name": "createMasterEditionArgs",
-          "type": {
-            "defined": "CreateMasterEditionArgs"
-          }
-        }
-      ],
+      "args": [],
       "discriminant": {
         "type": "u8",
         "value": 10
@@ -978,14 +929,7 @@
           "optional": true
         }
       ],
-      "args": [
-        {
-          "name": "createMetadataAccountArgsV2",
-          "type": {
-            "defined": "CreateMetadataAccountArgsV2"
-          }
-        }
-      ],
+      "args": [],
       "discriminant": {
         "type": "u8",
         "value": 16
@@ -1101,6 +1045,13 @@
           "isMut": false,
           "isSigner": false,
           "desc": "MasterEdition2 Account of the Collection Token"
+        },
+        {
+          "name": "collectionAuthorityRecord",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Collection Authority Record PDA",
+          "optional": true
         }
       ],
       "args": [],
@@ -3156,14 +3107,7 @@
           "optional": true
         }
       ],
-      "args": [
-        {
-          "name": "migrateArgs",
-          "type": {
-            "defined": "MigrateArgs"
-          }
-        }
-      ],
+      "args": [],
       "defaultOptionalAccounts": true,
       "discriminant": {
         "type": "u8",
@@ -3332,7 +3276,7 @@
         },
         {
           "name": "edition",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false,
           "desc": "Edition account",
           "optional": true
@@ -3353,7 +3297,7 @@
           "name": "sysvarInstructions",
           "isMut": false,
           "isSigner": false,
-          "desc": "System program"
+          "desc": "Instructions sysvar account"
         },
         {
           "name": "authorizationRulesProgram",
@@ -3611,6 +3555,28 @@
       "discriminant": {
         "type": "u8",
         "value": 53
+      }
+    },
+    {
+      "name": "Collect",
+      "accounts": [
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "Authority to collect fees"
+        },
+        {
+          "name": "pdaAccount",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "PDA to retrieve fees from"
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 54
       }
     }
   ],
@@ -4033,112 +3999,6 @@
         "fields": [
           {
             "name": "size",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "CreateMetadataAccountArgsV2",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "data",
-            "type": {
-              "defined": "DataV2"
-            }
-          },
-          {
-            "name": "isMutable",
-            "type": "bool"
-          }
-        ]
-      }
-    },
-    {
-      "name": "CreateMetadataAccountArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "data",
-            "type": {
-              "defined": "Data"
-            }
-          },
-          {
-            "name": "isMutable",
-            "type": "bool"
-          }
-        ]
-      }
-    },
-    {
-      "name": "UpdateMetadataAccountArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "data",
-            "type": {
-              "option": {
-                "defined": "Data"
-              }
-            }
-          },
-          {
-            "name": "updateAuthority",
-            "type": {
-              "option": "publicKey"
-            }
-          },
-          {
-            "name": "primarySaleHappened",
-            "type": {
-              "option": "bool"
-            }
-          }
-        ]
-      }
-    },
-    {
-      "name": "MintPrintingTokensViaTokenArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "supply",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "SetReservationListArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "reservations",
-            "type": {
-              "vec": {
-                "defined": "Reservation"
-              }
-            }
-          },
-          {
-            "name": "totalReservationSpots",
-            "type": {
-              "option": "u64"
-            }
-          },
-          {
-            "name": "offset",
-            "type": "u64"
-          },
-          {
-            "name": "totalSpotOffset",
             "type": "u64"
           }
         ]
@@ -4671,7 +4531,7 @@
             ]
           },
           {
-            "name": "UpdateV1",
+            "name": "DataV1",
             "fields": [
               {
                 "name": "authorization_data",
@@ -4759,6 +4619,58 @@
                 }
               }
             ]
+          },
+          {
+            "name": "AuthorityItemV1",
+            "fields": [
+              {
+                "name": "authorization_data",
+                "type": {
+                  "option": {
+                    "defined": "AuthorizationData"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "name": "DataItemV1",
+            "fields": [
+              {
+                "name": "authorization_data",
+                "type": {
+                  "option": {
+                    "defined": "AuthorizationData"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "name": "CollectionItemV1",
+            "fields": [
+              {
+                "name": "authorization_data",
+                "type": {
+                  "option": {
+                    "defined": "AuthorizationData"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "name": "ProgrammableConfigItemV1",
+            "fields": [
+              {
+                "name": "authorization_data",
+                "type": {
+                  "option": {
+                    "defined": "AuthorizationData"
+                  }
+                }
+              }
+            ]
           }
         ]
       }
@@ -4778,7 +4690,7 @@
             "name": "TransferV1"
           },
           {
-            "name": "UpdateV1"
+            "name": "DataV1"
           },
           {
             "name": "UtilityV1"
@@ -4797,6 +4709,18 @@
           },
           {
             "name": "MigrationV1"
+          },
+          {
+            "name": "AuthorityItemV1"
+          },
+          {
+            "name": "DataItemV1"
+          },
+          {
+            "name": "CollectionItemV1"
+          },
+          {
+            "name": "ProgrammableConfigItemV1"
           }
         ]
       }
@@ -4807,7 +4731,7 @@
         "kind": "enum",
         "variants": [
           {
-            "name": "Authority"
+            "name": "AuthorityItem"
           },
           {
             "name": "Collection"
@@ -4816,10 +4740,19 @@
             "name": "Use"
           },
           {
-            "name": "Update"
+            "name": "Data"
           },
           {
             "name": "ProgrammableConfig"
+          },
+          {
+            "name": "DataItem"
+          },
+          {
+            "name": "CollectionItem"
+          },
+          {
+            "name": "ProgrammableConfigItem"
           }
         ]
       }
@@ -4974,6 +4907,234 @@
                 }
               }
             ]
+          },
+          {
+            "name": "AsUpdateAuthorityV2",
+            "fields": [
+              {
+                "name": "new_update_authority",
+                "type": {
+                  "option": "publicKey"
+                }
+              },
+              {
+                "name": "data",
+                "type": {
+                  "option": {
+                    "defined": "Data"
+                  }
+                }
+              },
+              {
+                "name": "primary_sale_happened",
+                "type": {
+                  "option": "bool"
+                }
+              },
+              {
+                "name": "is_mutable",
+                "type": {
+                  "option": "bool"
+                }
+              },
+              {
+                "name": "collection",
+                "type": {
+                  "defined": "CollectionToggle"
+                }
+              },
+              {
+                "name": "collection_details",
+                "type": {
+                  "defined": "CollectionDetailsToggle"
+                }
+              },
+              {
+                "name": "uses",
+                "type": {
+                  "defined": "UsesToggle"
+                }
+              },
+              {
+                "name": "rule_set",
+                "type": {
+                  "defined": "RuleSetToggle"
+                }
+              },
+              {
+                "name": "token_standard",
+                "type": {
+                  "option": {
+                    "defined": "TokenStandard"
+                  }
+                }
+              },
+              {
+                "name": "authorization_data",
+                "type": {
+                  "option": {
+                    "defined": "AuthorizationData"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "name": "AsAuthorityItemDelegateV2",
+            "fields": [
+              {
+                "name": "new_update_authority",
+                "type": {
+                  "option": "publicKey"
+                }
+              },
+              {
+                "name": "primary_sale_happened",
+                "type": {
+                  "option": "bool"
+                }
+              },
+              {
+                "name": "is_mutable",
+                "type": {
+                  "option": "bool"
+                }
+              },
+              {
+                "name": "token_standard",
+                "type": {
+                  "option": {
+                    "defined": "TokenStandard"
+                  }
+                }
+              },
+              {
+                "name": "authorization_data",
+                "type": {
+                  "option": {
+                    "defined": "AuthorizationData"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "name": "AsCollectionDelegateV2",
+            "fields": [
+              {
+                "name": "collection",
+                "type": {
+                  "defined": "CollectionToggle"
+                }
+              },
+              {
+                "name": "authorization_data",
+                "type": {
+                  "option": {
+                    "defined": "AuthorizationData"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "name": "AsDataDelegateV2",
+            "fields": [
+              {
+                "name": "data",
+                "type": {
+                  "option": {
+                    "defined": "Data"
+                  }
+                }
+              },
+              {
+                "name": "authorization_data",
+                "type": {
+                  "option": {
+                    "defined": "AuthorizationData"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "name": "AsProgrammableConfigDelegateV2",
+            "fields": [
+              {
+                "name": "rule_set",
+                "type": {
+                  "defined": "RuleSetToggle"
+                }
+              },
+              {
+                "name": "authorization_data",
+                "type": {
+                  "option": {
+                    "defined": "AuthorizationData"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "name": "AsDataItemDelegateV2",
+            "fields": [
+              {
+                "name": "data",
+                "type": {
+                  "option": {
+                    "defined": "Data"
+                  }
+                }
+              },
+              {
+                "name": "authorization_data",
+                "type": {
+                  "option": {
+                    "defined": "AuthorizationData"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "name": "AsCollectionItemDelegateV2",
+            "fields": [
+              {
+                "name": "collection",
+                "type": {
+                  "defined": "CollectionToggle"
+                }
+              },
+              {
+                "name": "authorization_data",
+                "type": {
+                  "option": {
+                    "defined": "AuthorizationData"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "name": "AsProgrammableConfigItemDelegateV2",
+            "fields": [
+              {
+                "name": "rule_set",
+                "type": {
+                  "defined": "RuleSetToggle"
+                }
+              },
+              {
+                "name": "authorization_data",
+                "type": {
+                  "option": {
+                    "defined": "AuthorizationData"
+                  }
+                }
+              }
+            ]
           }
         ]
       }
@@ -5059,31 +5220,6 @@
             "name": "Set",
             "fields": [
               "publicKey"
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "name": "MigrateArgs",
-      "type": {
-        "kind": "enum",
-        "variants": [
-          {
-            "name": "V1",
-            "fields": [
-              {
-                "name": "migration_type",
-                "type": {
-                  "defined": "MigrationType"
-                }
-              },
-              {
-                "name": "rule_set",
-                "type": {
-                  "option": "publicKey"
-                }
-              }
             ]
           }
         ]
@@ -6429,6 +6565,26 @@
       "code": 188,
       "name": "InvalidCloseAuthority",
       "msg": "The close authority needs to be revoked by the Utility Delegate"
+    },
+    {
+      "code": 189,
+      "name": "InvalidInstruction",
+      "msg": "Invalid or removed instruction"
+    },
+    {
+      "code": 190,
+      "name": "MissingDelegateRecord",
+      "msg": "Missing delegate record"
+    },
+    {
+      "code": 191,
+      "name": "InvalidFeeAccount",
+      "msg": ""
+    },
+    {
+      "code": 192,
+      "name": "InvalidMetadataFlags",
+      "msg": ""
     }
   ],
   "metadata": {

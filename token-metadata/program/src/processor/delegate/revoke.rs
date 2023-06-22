@@ -33,30 +33,34 @@ pub fn revoke<'a>(
         RevokeArgs::SaleV1 => Some(TokenDelegateRole::Sale),
         // Transfer
         RevokeArgs::TransferV1 => Some(TokenDelegateRole::Transfer),
-        // LockedTransfer
-        RevokeArgs::LockedTransferV1 => Some(TokenDelegateRole::LockedTransfer),
         // Utility
         RevokeArgs::UtilityV1 => Some(TokenDelegateRole::Utility),
         // Staking
         RevokeArgs::StakingV1 => Some(TokenDelegateRole::Staking),
-        // Migration
-        RevokeArgs::MigrationV1 => Some(TokenDelegateRole::Migration),
         // Standard
         RevokeArgs::StandardV1 => Some(TokenDelegateRole::Standard),
+        // LockedTransfer
+        RevokeArgs::LockedTransferV1 => Some(TokenDelegateRole::LockedTransfer),
+        // Migration
+        RevokeArgs::MigrationV1 => Some(TokenDelegateRole::Migration),
         // we don't need to fail if did not find a match at this point
         _ => None,
     };
 
     if let Some(role) = token_delegate {
-        // proceed with the delegate creation if we have a match
+        // proceed with the delegate revoke if we have a match
         return revoke_persistent_delegate_v1(program_id, context, role);
     }
 
     // checks if it is a MetadataDelegate creation
     let metadata_delegate = match &args {
         RevokeArgs::CollectionV1 => Some(MetadataDelegateRole::Collection),
-        RevokeArgs::UpdateV1 => Some(MetadataDelegateRole::Update),
+        RevokeArgs::DataV1 => Some(MetadataDelegateRole::Data),
         RevokeArgs::ProgrammableConfigV1 => Some(MetadataDelegateRole::ProgrammableConfig),
+        RevokeArgs::AuthorityItemV1 => Some(MetadataDelegateRole::AuthorityItem),
+        RevokeArgs::DataItemV1 => Some(MetadataDelegateRole::DataItem),
+        RevokeArgs::CollectionItemV1 => Some(MetadataDelegateRole::CollectionItem),
+        RevokeArgs::ProgrammableConfigItemV1 => Some(MetadataDelegateRole::ProgrammableConfigItem),
         // we don't need to fail if did not find a match at this point
         _ => None,
     };
@@ -82,7 +86,7 @@ fn revoke_delegate_v1(
     // ownership
 
     assert_owned_by(ctx.accounts.metadata_info, program_id)?;
-    assert_owned_by(ctx.accounts.mint_info, &spl_token::id())?;
+    assert_owned_by(ctx.accounts.mint_info, &spl_token::ID)?;
 
     // key match
 
@@ -97,7 +101,7 @@ fn revoke_delegate_v1(
     let delegate_record_info = match ctx.accounts.delegate_record_info {
         Some(delegate_record_info) => delegate_record_info,
         None => {
-            return Err(MetadataError::MissingTokenAccount.into());
+            return Err(MetadataError::MissingDelegateRecord.into());
         }
     };
 
@@ -171,8 +175,8 @@ fn revoke_persistent_delegate_v1(
     // ownership
 
     assert_owned_by(ctx.accounts.metadata_info, program_id)?;
-    assert_owned_by(ctx.accounts.mint_info, &spl_token::id())?;
-    assert_owned_by(token_info, &spl_token::id())?;
+    assert_owned_by(ctx.accounts.mint_info, &spl_token::ID)?;
+    assert_owned_by(token_info, &spl_token::ID)?;
 
     // key match
 
@@ -236,7 +240,9 @@ fn revoke_persistent_delegate_v1(
             if let Some(delegate) = token_record.delegate {
                 assert_keys_equal(&delegate, ctx.accounts.delegate_info.key)?;
 
-                if token_record.delegate_role == Some(role) {
+                if token_record.delegate_role == Some(role)
+                    || token_record.delegate_role == Some(TokenDelegateRole::Migration)
+                {
                     // resets the token record (state, rule_set_revision and delegate info)
                     token_record.reset();
                     token_record.save(
@@ -289,11 +295,7 @@ fn revoke_persistent_delegate_v1(
             ctx.accounts.authority_info.key,
             &[],
         )?,
-        &[
-            token_info.clone(),
-            ctx.accounts.delegate_info.clone(),
-            ctx.accounts.authority_info.clone(),
-        ],
+        &[token_info.clone(), ctx.accounts.authority_info.clone()],
     )?;
 
     if matches!(

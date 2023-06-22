@@ -16,5 +16,5 @@ pub fn find_escrow_seeds<'a>(mint: &'a Pubkey, authority: &'a EscrowAuthority) -
 
 pub fn find_escrow_account(mint: &Pubkey, authority: &EscrowAuthority) -> (Pubkey, u8) {
     let seeds = find_escrow_seeds(mint, authority);
-    Pubkey::find_program_address(&seeds, &crate::id())
+    Pubkey::find_program_address(&seeds, &crate::ID)
 }

@@ -23,7 +23,7 @@ mod revoke_use_authority {
 
         let test_meta = Metadata::new();
         test_meta
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -37,6 +37,7 @@ mod revoke_use_authority {
                     total: 1,
                     remaining: 1,
                 }),
+                None,
             )
             .await
             .unwrap();
@@ -46,7 +47,7 @@ mod revoke_use_authority {
         let (burner, _) = find_program_as_burner_account();
 
         let approve_ix = mpl_token_metadata::instruction::approve_use_authority(
-            mpl_token_metadata::id(),
+            mpl_token_metadata::ID,
             record,
             use_authority.pubkey(),
             context.payer.pubkey(),
@@ -77,7 +78,7 @@ mod revoke_use_authority {
         assert_eq!(record_acct.allowed_uses, 1);
 
         let revoke_ix = mpl_token_metadata::instruction::revoke_use_authority(
-            mpl_token_metadata::id(),
+            mpl_token_metadata::ID,
             record,
             use_authority.pubkey(),
             context.payer.pubkey(),

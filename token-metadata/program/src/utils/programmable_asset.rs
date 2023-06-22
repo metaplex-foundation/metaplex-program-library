@@ -4,7 +4,7 @@ use mpl_token_auth_rules::{
 };
 use mpl_utils::{create_or_allocate_account_raw, token::TokenTransferParams};
 use solana_program::{
-    account_info::AccountInfo, entrypoint::ProgramResult, msg, program::invoke_signed,
+    account_info::AccountInfo, entrypoint::ProgramResult, program::invoke_signed,
     program_error::ProgramError, program_option::COption, pubkey::Pubkey,
 };
 use spl_token::{
@@ -82,11 +82,8 @@ pub fn freeze<'a>(
         mint.key.as_ref(),
         EDITION.as_bytes(),
     ]);
-    let edition_info_path_bump_seed = &[assert_derivation(
-        &crate::id(),
-        &edition,
-        &edition_info_path,
-    )?];
+    let edition_info_path_bump_seed =
+        &[assert_derivation(&crate::ID, &edition, &edition_info_path)?];
     let mut edition_info_seeds = edition_info_path.clone();
     edition_info_seeds.push(edition_info_path_bump_seed);
 
@@ -111,7 +108,7 @@ pub fn thaw<'a>(
         EDITION.as_bytes(),
     ]);
     let edition_info_path_bump_seed = &[assert_derivation(
-        &crate::id(),
+        &crate::ID,
         &edition_info,
         &edition_info_path,
     )?];
@@ -197,7 +194,6 @@ pub fn auth_rules_validate(params: AuthRulesValidateParams) -> ProgramResult {
     } = params;
 
     if is_wallet_to_wallet {
-        msg!("Wallet to wallet");
         return Ok(());
     }
 
@@ -211,8 +207,6 @@ pub fn auth_rules_validate(params: AuthRulesValidateParams) -> ProgramResult {
 
     if let Some(ref config) = programmable_config {
         if let ProgrammableConfig::V1 { rule_set: Some(_) } = config {
-            msg!("Programmable config exists");
-
             assert_valid_authorization(auth_rules_info, config)?;
 
             // We can safely unwrap here because they were all checked for existence
@@ -305,8 +299,8 @@ pub fn auth_rules_validate(params: AuthRulesValidateParams) -> ProgramResult {
     Ok(())
 }
 
-pub fn frozen_transfer<'a, 'b>(
-    params: TokenTransferParams<'a, 'b>,
+pub fn frozen_transfer<'a>(
+    params: TokenTransferParams<'a, '_>,
     edition_opt_info: Option<&'a AccountInfo<'a>>,
 ) -> ProgramResult {
     if edition_opt_info.is_none() {

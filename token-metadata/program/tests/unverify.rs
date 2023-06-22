@@ -1262,12 +1262,12 @@ mod unverify_collection {
     }
 
     #[tokio::test]
-    async fn collections_update_delegate_cannot_unverify() {
-        let delegate_args = DelegateArgs::UpdateV1 {
+    async fn collections_collection_item_delegate_cannot_unverify() {
+        let delegate_args = DelegateArgs::CollectionItemV1 {
             authorization_data: None,
         };
 
-        let delegate_role = MetadataDelegateRole::Update;
+        let delegate_role = MetadataDelegateRole::CollectionItem;
 
         other_metadata_delegates_cannot_unverify(
             AssetToDelegate::CollectionParent,
@@ -1310,12 +1310,12 @@ mod unverify_collection {
     }
 
     #[tokio::test]
-    async fn items_update_delegate_cannot_unverify() {
-        let delegate_args = DelegateArgs::UpdateV1 {
+    async fn items_collection_item_delegate_cannot_unverify() {
+        let delegate_args = DelegateArgs::CollectionItemV1 {
             authorization_data: None,
         };
 
-        let delegate_role = MetadataDelegateRole::Update;
+        let delegate_role = MetadataDelegateRole::CollectionItem;
 
         other_metadata_delegates_cannot_unverify(
             AssetToDelegate::Item,
@@ -1908,12 +1908,14 @@ mod unverify_collection {
         .await
         .unwrap();
 
-        let mut args = UpdateArgs::default();
-        let UpdateArgs::V1 {
-            new_update_authority,
-            ..
-        } = &mut args;
-        *new_update_authority = Some(new_collection_update_authority.pubkey());
+        let mut args = UpdateArgs::default_as_update_authority();
+        match &mut args {
+            UpdateArgs::AsUpdateAuthorityV2 {
+                new_update_authority,
+                ..
+            } => *new_update_authority = Some(new_collection_update_authority.pubkey()),
+            _ => panic!("Unexpected enum variant"),
+        }
 
         let payer = context.payer.dirty_clone();
         test_items
@@ -1982,12 +1984,14 @@ mod unverify_collection {
         // Change the collection to have a different update authority.
         let new_collection_update_authority = Keypair::new();
 
-        let mut args = UpdateArgs::default();
-        let UpdateArgs::V1 {
-            new_update_authority,
-            ..
-        } = &mut args;
-        *new_update_authority = Some(new_collection_update_authority.pubkey());
+        let mut args = UpdateArgs::default_as_update_authority();
+        match &mut args {
+            UpdateArgs::AsUpdateAuthorityV2 {
+                new_update_authority,
+                ..
+            } => *new_update_authority = Some(new_collection_update_authority.pubkey()),
+            _ => panic!("Unexpected enum variant"),
+        }
 
         let payer = context.payer.dirty_clone();
         test_items
@@ -2036,7 +2040,7 @@ mod unverify_collection {
     }
 
     #[tokio::test]
-    async fn pass_unverify_burned_pnft_parent_using_item_update_delegate() {
+    async fn pass_unverify_burned_pnft_parent_using_item_collection_delegate() {
         let mut context = program_test().start_with_context().await;
 
         let mut test_items = create_mint_verify_collection_check(
@@ -2071,7 +2075,7 @@ mod unverify_collection {
 
         let payer = context.payer.dirty_clone();
         let payer_pubkey = payer.pubkey();
-        let delegate_args = DelegateArgs::UpdateV1 {
+        let delegate_args = DelegateArgs::CollectionV1 {
             authorization_data: None,
         };
         test_items
@@ -2083,7 +2087,82 @@ mod unverify_collection {
         // Find delegate record PDA.
         let (delegate_record, _) = find_metadata_delegate_record_account(
             &test_items.da.mint.pubkey(),
-            MetadataDelegateRole::Update,
+            MetadataDelegateRole::Collection,
+            &payer_pubkey,
+            &delegate.pubkey(),
+        );
+
+        // Unverify.
+        let args = VerificationArgs::CollectionV1;
+        test_items
+            .da
+            .unverify(
+                &mut context,
+                delegate,
+                args,
+                None,
+                Some(delegate_record),
+                Some(test_items.collection_parent_da.mint.pubkey()),
+                Some(test_items.collection_parent_da.metadata),
+            )
+            .await
+            .unwrap();
+
+        test_items
+            .da
+            .assert_item_collection_matches_on_chain(&mut context, &test_items.collection)
+            .await;
+    }
+
+    #[tokio::test]
+    async fn pass_unverify_burned_pnft_parent_using_item_collection_item_delegate() {
+        let mut context = program_test().start_with_context().await;
+
+        let mut test_items = create_mint_verify_collection_check(
+            &mut context,
+            DEFAULT_COLLECTION_DETAILS,
+            TokenStandard::ProgrammableNonFungible,
+            TokenStandard::ProgrammableNonFungible,
+        )
+        .await;
+
+        // Burn collection parent.
+        let args = BurnArgs::V1 { amount: 1 };
+        let payer = context.payer.dirty_clone();
+        test_items
+            .collection_parent_da
+            .burn(&mut context, payer, args, None, None)
+            .await
+            .unwrap();
+
+        // Assert that metadata, edition, token and token record accounts are closed.
+        test_items
+            .collection_parent_da
+            .assert_burned(&mut context)
+            .await
+            .unwrap();
+
+        // Create a metadata update delegate for the item.
+        let delegate = Keypair::new();
+        airdrop(&mut context, &delegate.pubkey(), LAMPORTS_PER_SOL)
+            .await
+            .unwrap();
+
+        let payer = context.payer.dirty_clone();
+        let payer_pubkey = payer.pubkey();
+        let delegate_args = DelegateArgs::CollectionItemV1 {
+            authorization_data: None,
+        };
+        test_items
+            .da
+            .delegate(&mut context, payer, delegate.pubkey(), delegate_args)
+            .await
+            .unwrap();
+
+        // Find delegate record PDA.
+        let (delegate_record, _) = find_metadata_delegate_record_account(
+            &test_items.da.mint.pubkey(),
+            MetadataDelegateRole::CollectionItem,
             &payer_pubkey,
             &delegate.pubkey(),
         );
@@ -2127,12 +2206,12 @@ mod unverify_collection {
     }
 
     #[tokio::test]
-    async fn collections_update_delegate_cannot_unverify_burned_pnft_parent() {
-        let delegate_args = DelegateArgs::UpdateV1 {
+    async fn collections_collection_item_delegate_cannot_unverify_burned_pnft_parent() {
+        let delegate_args = DelegateArgs::CollectionItemV1 {
             authorization_data: None,
         };
 
-        let delegate_role = MetadataDelegateRole::Update;
+        let delegate_role = MetadataDelegateRole::CollectionItem;
 
         other_metadata_delegates_cannot_unverify_burned_pnft_parent(
             AssetToDelegate::CollectionParent,
@@ -2152,22 +2231,6 @@ mod unverify_collection {
 
         other_metadata_delegates_cannot_unverify_burned_pnft_parent(
             AssetToDelegate::CollectionParent,
-            delegate_args,
-            delegate_role,
-        )
-        .await;
-    }
-
-    #[tokio::test]
-    async fn items_collection_delegate_cannot_unverify_burned_pnft_parent() {
-        let delegate_args = DelegateArgs::CollectionV1 {
-            authorization_data: None,
-        };
-
-        let delegate_role = MetadataDelegateRole::Collection;
-
-        other_metadata_delegates_cannot_unverify_burned_pnft_parent(
-            AssetToDelegate::Item,
             delegate_args,
             delegate_role,
         )

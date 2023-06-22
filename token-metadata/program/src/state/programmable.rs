@@ -219,6 +219,8 @@ pub struct AuthorityRequest<'a, 'b> {
     pub metadata_delegate_record_info: Option<&'a AccountInfo<'a>>,
     /// Expected `MetadataDelegateRole` for the request.
     pub metadata_delegate_roles: Vec<MetadataDelegateRole>,
+    /// Expected collection-level `MetadataDelegateRole` for the request.
+    pub collection_metadata_delegate_roles: Vec<MetadataDelegateRole>,
     /// `TokenRecord` account.
     pub token_record_info: Option<&'a AccountInfo<'a>>,
     /// Expected `TokenDelegateRole` for the request.
@@ -242,6 +244,7 @@ impl<'a, 'b> Default for AuthorityRequest<'a, 'b> {
             token_account: None,
             metadata_delegate_record_info: None,
             metadata_delegate_roles: Vec::with_capacity(0),
+            collection_metadata_delegate_roles: Vec::with_capacity(0),
             token_record_info: None,
             token_delegate_roles: Vec::with_capacity(0),
         }
@@ -347,12 +350,14 @@ impl AuthorityType {
                                     });
                                 }
                             }
+                        }
 
-                            // looking up the delegate on the collection mint (this is for
-                            // collection-level delegates)
-                            if let Some(mint) = request.collection_mint {
+                        // looking up the delegate on the collection mint (this is for
+                        // collection-level delegates)
+                        if let Some(collection_mint) = request.collection_mint {
+                            for role in &request.collection_metadata_delegate_roles {
                                 let (pda_key, _) = find_metadata_delegate_record_account(
-                                    mint,
+                                    collection_mint,
                                     *role,
                                     request.update_authority,
                                     request.authority,

@@ -13,8 +13,9 @@ use crate::{
         TOKEN_STANDARD_INDEX,
     },
     utils::{
-        create_master_edition, process_create_metadata_accounts_logic,
-        CreateMetadataAccountsLogicArgs,
+        create_master_edition,
+        fee::{levy, set_fee_flag, LevyArgs},
+        process_create_metadata_accounts_logic, CreateMetadataAccountsLogicArgs,
     },
 };
 
@@ -48,6 +49,12 @@ fn create_v1(program_id: &Pubkey, ctx: Context<Create>, args: CreateArgs) -> Pro
         return Err(MetadataError::InvalidTokenStandard.into());
     }
 
+    // Levy fees first, to fund the metadata account with rent + fee amount.
+    levy(LevyArgs {
+        payer_account_info: ctx.accounts.payer_info,
+        token_metadata_pda_info: ctx.accounts.metadata_info,
+    })?;
+
     // if the account does not exist, we will allocate a new mint
 
     if ctx.accounts.mint_info.data_is_empty() {
@@ -64,7 +71,7 @@ fn create_v1(program_id: &Pubkey, ctx: Context<Create>, args: CreateArgs) -> Pro
                 ctx.accounts.mint_info.key,
                 Rent::get()?.minimum_balance(spl_token::state::Mint::LEN),
                 spl_token::state::Mint::LEN as u64,
-                &spl_token::id(),
+                &spl_token::ID,
             ),
             &[
                 ctx.accounts.payer_info.clone(),
@@ -189,6 +196,7 @@ fn create_v1(program_id: &Pubkey, ctx: Context<Create>, args: CreateArgs) -> Pro
 
     let mut metadata = Metadata::from_account_info(ctx.accounts.metadata_info)?;
     metadata.token_standard = Some(asset_data.token_standard);
+    metadata.primary_sale_happened = asset_data.primary_sale_happened;
 
     // sets the programmable config for programmable assets
 
@@ -201,8 +209,9 @@ fn create_v1(program_id: &Pubkey, ctx: Context<Create>, args: CreateArgs) -> Pro
         });
     }
 
-    // saves the state
+    // saves the metadata state
     metadata.save(&mut ctx.accounts.metadata_info.try_borrow_mut_data()?)?;
 
-    Ok(())
+    // Set fee flag after metadata account is created.
+    set_fee_flag(ctx.accounts.metadata_info)
 }

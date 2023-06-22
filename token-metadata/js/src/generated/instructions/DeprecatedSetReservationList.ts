@@ -7,35 +7,15 @@
 
 import * as beet from '@metaplex-foundation/beet';
 import * as web3 from '@solana/web3.js';
-import {
-  SetReservationListArgs,
-  setReservationListArgsBeet,
-} from '../types/SetReservationListArgs';
 
 /**
  * @category Instructions
  * @category DeprecatedSetReservationList
  * @category generated
  */
-export type DeprecatedSetReservationListInstructionArgs = {
-  setReservationListArgs: SetReservationListArgs;
-};
-/**
- * @category Instructions
- * @category DeprecatedSetReservationList
- * @category generated
- */
-export const DeprecatedSetReservationListStruct = new beet.FixableBeetArgsStruct<
-  DeprecatedSetReservationListInstructionArgs & {
-    instructionDiscriminator: number;
-  }
->(
-  [
-    ['instructionDiscriminator', beet.u8],
-    ['setReservationListArgs', setReservationListArgsBeet],
-  ],
-  'DeprecatedSetReservationListInstructionArgs',
-);
+export const DeprecatedSetReservationListStruct = new beet.BeetArgsStruct<{
+  instructionDiscriminator: number;
+}>([['instructionDiscriminator', beet.u8]], 'DeprecatedSetReservationListInstructionArgs');
 /**
  * Accounts required by the _DeprecatedSetReservationList_ instruction
  *
@@ -58,20 +38,16 @@ export const deprecatedSetReservationListInstructionDiscriminator = 5;
  * Creates a _DeprecatedSetReservationList_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
- * @param args to provide as instruction data to the program
- *
  * @category Instructions
  * @category DeprecatedSetReservationList
  * @category generated
  */
 export function createDeprecatedSetReservationListInstruction(
   accounts: DeprecatedSetReservationListInstructionAccounts,
-  args: DeprecatedSetReservationListInstructionArgs,
   programId = new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
 ) {
   const [data] = DeprecatedSetReservationListStruct.serialize({
     instructionDiscriminator: deprecatedSetReservationListInstructionDiscriminator,
-    ...args,
   });
   const keys: web3.AccountMeta[] = [
     {

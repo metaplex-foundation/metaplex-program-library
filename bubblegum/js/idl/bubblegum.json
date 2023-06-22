@@ -1,5 +1,5 @@
 {
-  "version": "0.6.0",
+  "version": "0.8.0",
   "name": "bubblegum",
   "instructions": [
     {
@@ -188,11 +188,7 @@
         {
           "name": "collectionAuthorityRecordPda",
           "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "If there is no collecton authority record PDA then",
-            "this must be the Bubblegum program address."
-          ]
+          "isSigner": false
         },
         {
           "name": "collectionMint",
@@ -461,11 +457,7 @@
         {
           "name": "treeDelegate",
           "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "the case of `set_and_verify_collection` where",
-            "we are actually changing the NFT metadata."
-          ]
+          "isSigner": false
         },
         {
           "name": "collectionAuthority",
@@ -475,11 +467,7 @@
         {
           "name": "collectionAuthorityRecordPda",
           "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "If there is no collecton authority record PDA then",
-            "this must be the Bubblegum program address."
-          ]
+          "isSigner": false
         },
         {
           "name": "collectionMint",
@@ -597,11 +585,7 @@
         {
           "name": "treeDelegate",
           "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "the case of `set_and_verify_collection` where",
-            "we are actually changing the NFT metadata."
-          ]
+          "isSigner": false
         },
         {
           "name": "collectionAuthority",
@@ -611,11 +595,7 @@
         {
           "name": "collectionAuthorityRecordPda",
           "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "If there is no collecton authority record PDA then",
-            "this must be the Bubblegum program address."
-          ]
+          "isSigner": false
         },
         {
           "name": "collectionMint",
@@ -733,11 +713,7 @@
         {
           "name": "treeDelegate",
           "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "the case of `set_and_verify_collection` where",
-            "we are actually changing the NFT metadata."
-          ]
+          "isSigner": false
         },
         {
           "name": "collectionAuthority",
@@ -747,11 +723,7 @@
         {
           "name": "collectionAuthorityRecordPda",
           "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "If there is no collecton authority record PDA then",
-            "this must be the Bubblegum program address."
-          ]
+          "isSigner": false
         },
         {
           "name": "collectionMint",
@@ -1489,30 +1461,18 @@
         "fields": [
           {
             "name": "name",
-            "docs": [
-              "The name of the asset"
-            ],
             "type": "string"
           },
           {
             "name": "symbol",
-            "docs": [
-              "The symbol for the asset"
-            ],
             "type": "string"
           },
           {
             "name": "uri",
-            "docs": [
-              "URI pointing to JSON representing the asset"
-            ],
             "type": "string"
           },
           {
             "name": "sellerFeeBasisPoints",
-            "docs": [
-              "Royalty basis points that goes to creators in secondary sales (0-10000)"
-            ],
             "type": "u16"
           },
           {
@@ -1525,18 +1485,12 @@
           },
           {
             "name": "editionNonce",
-            "docs": [
-              "nonce for easy calculation of editions, if present"
-            ],
             "type": {
               "option": "u8"
             }
           },
           {
             "name": "tokenStandard",
-            "docs": [
-              "Since we cannot easily change Metadata, we add the new DataV2 fields here at the end."
-            ],
             "type": {
               "option": {
                 "defined": "TokenStandard"
@@ -1545,9 +1499,6 @@
           },
           {
             "name": "collection",
-            "docs": [
-              "Collection"
-            ],
             "type": {
               "option": {
                 "defined": "Collection"
@@ -1556,9 +1507,6 @@
           },
           {
             "name": "uses",
-            "docs": [
-              "Uses"
-            ],
             "type": {
               "option": {
                 "defined": "Uses"

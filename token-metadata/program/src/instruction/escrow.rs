@@ -25,8 +25,8 @@ pub fn close_escrow_account(
         AccountMeta::new_readonly(token_account, false),
         AccountMeta::new_readonly(edition_account, false),
         AccountMeta::new(payer_account, true),
-        AccountMeta::new_readonly(system_program::id(), false),
-        AccountMeta::new_readonly(sysvar::instructions::id(), false),
+        AccountMeta::new_readonly(system_program::ID, false),
+        AccountMeta::new_readonly(sysvar::instructions::ID, false),
     ];
     let data = MetadataInstruction::CloseEscrowAccount
         .try_to_vec()
@@ -56,8 +56,8 @@ pub fn create_escrow_account(
         AccountMeta::new_readonly(token_account, false),
         AccountMeta::new_readonly(edition_account, false),
         AccountMeta::new(payer_account, true),
-        AccountMeta::new_readonly(solana_program::system_program::id(), false),
-        AccountMeta::new_readonly(sysvar::instructions::id(), false),
+        AccountMeta::new_readonly(solana_program::system_program::ID, false),
+        AccountMeta::new_readonly(sysvar::instructions::ID, false),
     ];
 
     if let Some(authority) = authority {
@@ -104,10 +104,10 @@ pub fn transfer_out_of_escrow(
         AccountMeta::new(attribute_dst, false),
         AccountMeta::new_readonly(escrow_mint, false),
         AccountMeta::new_readonly(escrow_account, false),
-        AccountMeta::new_readonly(solana_program::system_program::id(), false),
-        AccountMeta::new_readonly(spl_associated_token_account::id(), false),
-        AccountMeta::new_readonly(spl_token::id(), false),
-        AccountMeta::new_readonly(sysvar::instructions::id(), false),
+        AccountMeta::new_readonly(solana_program::system_program::ID, false),
+        AccountMeta::new_readonly(spl_associated_token_account::ID, false),
+        AccountMeta::new_readonly(spl_token::ID, false),
+        AccountMeta::new_readonly(sysvar::instructions::ID, false),
     ];
 
     if let Some(authority) = authority {

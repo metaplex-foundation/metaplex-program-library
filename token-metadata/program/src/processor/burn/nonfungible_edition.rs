@@ -124,8 +124,12 @@ pub(crate) fn burn_nonfungible_edition(ctx: &Context<Burn>) -> ProgramResult {
     };
     spl_token_close(params)?;
 
-    close_program_account(ctx.accounts.metadata_info, ctx.accounts.authority_info)?;
-    close_program_account(edition_info, ctx.accounts.authority_info)?;
+    close_program_account(
+        ctx.accounts.metadata_info,
+        ctx.accounts.authority_info,
+        Key::MetadataV1,
+    )?;
+    close_program_account(edition_info, ctx.accounts.authority_info, Key::EditionV1)?;
 
     //       **EDITION HOUSEKEEPING**
     // Set the particular bit for this edition to 0 to allow reprinting,
@@ -143,7 +147,11 @@ pub(crate) fn burn_nonfungible_edition(ctx: &Context<Burn>) -> ProgramResult {
     // If the entire edition marker is empty, then we can close the account.
     // Otherwise, serialize the new edition marker and update the account data.
     if edition_marker.ledger.iter().all(|i| *i == 0) {
-        close_program_account(edition_marker_info, ctx.accounts.authority_info)?;
+        close_program_account(
+            edition_marker_info,
+            ctx.accounts.authority_info,
+            Key::EditionMarker,
+        )?;
     } else {
         edition_marker.save(edition_marker_info)?;
     }

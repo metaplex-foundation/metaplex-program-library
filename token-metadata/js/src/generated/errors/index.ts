@@ -4050,6 +4050,86 @@ createErrorFromCodeLookup.set(0xbc, () => new InvalidCloseAuthorityError());
 createErrorFromNameLookup.set('InvalidCloseAuthority', () => new InvalidCloseAuthorityError());
 
 /**
+ * InvalidInstruction: 'Invalid or removed instruction'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidInstructionError extends Error {
+  readonly code: number = 0xbd;
+  readonly name: string = 'InvalidInstruction';
+  constructor() {
+    super('Invalid or removed instruction');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidInstructionError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xbd, () => new InvalidInstructionError());
+createErrorFromNameLookup.set('InvalidInstruction', () => new InvalidInstructionError());
+
+/**
+ * MissingDelegateRecord: 'Missing delegate record'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MissingDelegateRecordError extends Error {
+  readonly code: number = 0xbe;
+  readonly name: string = 'MissingDelegateRecord';
+  constructor() {
+    super('Missing delegate record');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MissingDelegateRecordError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xbe, () => new MissingDelegateRecordError());
+createErrorFromNameLookup.set('MissingDelegateRecord', () => new MissingDelegateRecordError());
+
+/**
+ * InvalidFeeAccount: ''
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidFeeAccountError extends Error {
+  readonly code: number = 0xbf;
+  readonly name: string = 'InvalidFeeAccount';
+  constructor() {
+    super('');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidFeeAccountError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xbf, () => new InvalidFeeAccountError());
+createErrorFromNameLookup.set('InvalidFeeAccount', () => new InvalidFeeAccountError());
+
+/**
+ * InvalidMetadataFlags: ''
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidMetadataFlagsError extends Error {
+  readonly code: number = 0xc0;
+  readonly name: string = 'InvalidMetadataFlags';
+  constructor() {
+    super('');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidMetadataFlagsError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xc0, () => new InvalidMetadataFlagsError());
+createErrorFromNameLookup.set('InvalidMetadataFlags', () => new InvalidMetadataFlagsError());
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

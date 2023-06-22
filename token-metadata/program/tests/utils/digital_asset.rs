@@ -1,14 +1,12 @@
 use mpl_token_metadata::{
-    id,
     instruction::{
         self,
         builders::{
-            BurnBuilder, CreateBuilder, DelegateBuilder, LockBuilder, MigrateBuilder, MintBuilder,
-            RevokeBuilder, TransferBuilder, UnlockBuilder, UnverifyBuilder, UpdateBuilder,
-            VerifyBuilder,
+            BurnBuilder, CreateBuilder, DelegateBuilder, LockBuilder, MintBuilder, RevokeBuilder,
+            TransferBuilder, UnlockBuilder, UnverifyBuilder, UpdateBuilder, VerifyBuilder,
         },
         BurnArgs, CreateArgs, DelegateArgs, InstructionBuilder, LockArgs, MetadataDelegateRole,
-        MigrateArgs, MintArgs, RevokeArgs, TransferArgs, UnlockArgs, UpdateArgs, VerificationArgs,
+        MintArgs, RevokeArgs, TransferArgs, UnlockArgs, UpdateArgs, VerificationArgs,
     },
     pda::{
         find_master_edition_account, find_metadata_account, find_metadata_delegate_record_account,
@@ -18,8 +16,10 @@ use mpl_token_metadata::{
     state::{
         AssetData, Collection, CollectionDetails, Creator, Metadata, PrintSupply,
         ProgrammableConfig, TokenDelegateRole, TokenMetadataAccount, TokenRecord, TokenStandard,
-        EDITION, EDITION_MARKER_BIT_SIZE, PREFIX,
+        CREATE_FEE, EDITION, EDITION_MARKER_BIT_SIZE, FEE_FLAG_SET, METADATA_FEE_FLAG_INDEX,
+        PREFIX,
     },
+    ID,
 };
 use solana_program::{
     borsh::try_from_slice_unchecked, program_option::COption, program_pack::Pack, pubkey::Pubkey,
@@ -67,7 +67,7 @@ impl DigitalAsset {
     pub fn new() -> Self {
         let mint = Keypair::new();
         let mint_pubkey = mint.pubkey();
-        let program_id = id();
+        let program_id = ID;
 
         let metadata_seeds = &[PREFIX.as_bytes(), program_id.as_ref(), mint_pubkey.as_ref()];
         let (metadata, _) = Pubkey::find_program_address(metadata_seeds, &program_id);
@@ -300,7 +300,7 @@ impl DigitalAsset {
         let payer_pubkey = context.payer.pubkey();
         let mint_pubkey = self.mint.pubkey();
 
-        let program_id = id();
+        let program_id = ID;
         let mut builder = CreateBuilder::new();
         builder
             .metadata(self.metadata)
@@ -320,7 +320,7 @@ impl DigitalAsset {
                     mint_pubkey.as_ref(),
                     EDITION.as_bytes(),
                 ];
-                let (edition, _) = Pubkey::find_program_address(edition_seeds, &id());
+                let (edition, _) = Pubkey::find_program_address(edition_seeds, &ID);
                 // sets the master edition to the builder
                 builder.master_edition(edition);
                 Some(edition)
@@ -363,10 +363,10 @@ impl DigitalAsset {
         let (token, _) = Pubkey::find_program_address(
             &[
                 &payer_pubkey.to_bytes(),
-                &spl_token::id().to_bytes(),
+                &spl_token::ID.to_bytes(),
                 &self.mint.pubkey().to_bytes(),
             ],
-            &spl_associated_token_account::id(),
+            &spl_associated_token_account::ID,
         );
 
         let (token_record, _) = find_token_record_account(&self.mint.pubkey(), &token);
@@ -560,7 +560,7 @@ impl DigitalAsset {
         payer: Keypair,
         delegate: Pubkey,
         args: DelegateArgs,
-    ) -> Result<(), BanksClientError> {
+    ) -> Result<Option<Pubkey>, BanksClientError> {
         let mut builder = DelegateBuilder::new();
         builder
             .delegate(delegate)
@@ -570,16 +570,10 @@ impl DigitalAsset {
             .authority(payer.pubkey())
             .spl_token_program(spl_token::ID);
 
+        let mut delegate_or_token_record = None;
+
         match args {
-            DelegateArgs::CollectionV1 { .. } => {
-                let (delegate_record, _) = find_metadata_delegate_record_account(
-                    &self.mint.pubkey(),
-                    MetadataDelegateRole::Collection,
-                    &payer.pubkey(),
-                    &delegate,
-                );
-                builder.delegate_record(delegate_record);
-            }
+            // Token delegates.
             DelegateArgs::SaleV1 { .. }
             | DelegateArgs::TransferV1 { .. }
             | DelegateArgs::UtilityV1 { .. }
@@ -588,15 +582,30 @@ impl DigitalAsset {
                 let (token_record, _) =
                     find_token_record_account(&self.mint.pubkey(), &self.token.unwrap());
                 builder.token_record(token_record);
+                delegate_or_token_record = Some(token_record);
             }
-            DelegateArgs::UpdateV1 { .. } => {
+            DelegateArgs::StandardV1 { .. } => { /* nothing to add */ }
+
+            // Metadata delegates.
+            DelegateArgs::CollectionV1 { .. } => {
                 let (delegate_record, _) = find_metadata_delegate_record_account(
                     &self.mint.pubkey(),
-                    MetadataDelegateRole::Update,
+                    MetadataDelegateRole::Collection,
                     &payer.pubkey(),
                     &delegate,
                 );
                 builder.delegate_record(delegate_record);
+                delegate_or_token_record = Some(delegate_record);
+            }
+            DelegateArgs::DataV1 { .. } => {
+                let (delegate_record, _) = find_metadata_delegate_record_account(
+                    &self.mint.pubkey(),
+                    MetadataDelegateRole::Data,
+                    &payer.pubkey(),
+                    &delegate,
+                );
+                builder.delegate_record(delegate_record);
+                delegate_or_token_record = Some(delegate_record);
             }
             DelegateArgs::ProgrammableConfigV1 { .. } => {
                 let (delegate_record, _) = find_metadata_delegate_record_account(
@@ -606,8 +615,48 @@ impl DigitalAsset {
                     &delegate,
                 );
                 builder.delegate_record(delegate_record);
+                delegate_or_token_record = Some(delegate_record);
             }
-            DelegateArgs::StandardV1 { .. } => { /* nothing to add */ }
+            DelegateArgs::AuthorityItemV1 { .. } => {
+                let (delegate_record, _) = find_metadata_delegate_record_account(
+                    &self.mint.pubkey(),
+                    MetadataDelegateRole::AuthorityItem,
+                    &payer.pubkey(),
+                    &delegate,
+                );
+                builder.delegate_record(delegate_record);
+                delegate_or_token_record = Some(delegate_record);
+            }
+            DelegateArgs::DataItemV1 { .. } => {
+                let (delegate_record, _) = find_metadata_delegate_record_account(
+                    &self.mint.pubkey(),
+                    MetadataDelegateRole::DataItem,
+                    &payer.pubkey(),
+                    &delegate,
+                );
+                builder.delegate_record(delegate_record);
+                delegate_or_token_record = Some(delegate_record);
+            }
+            DelegateArgs::CollectionItemV1 { .. } => {
+                let (delegate_record, _) = find_metadata_delegate_record_account(
+                    &self.mint.pubkey(),
+                    MetadataDelegateRole::CollectionItem,
+                    &payer.pubkey(),
+                    &delegate,
+                );
+                builder.delegate_record(delegate_record);
+                delegate_or_token_record = Some(delegate_record);
+            }
+            DelegateArgs::ProgrammableConfigItemV1 { .. } => {
+                let (delegate_record, _) = find_metadata_delegate_record_account(
+                    &self.mint.pubkey(),
+                    MetadataDelegateRole::ProgrammableConfigItem,
+                    &payer.pubkey(),
+                    &delegate,
+                );
+                builder.delegate_record(delegate_record);
+                delegate_or_token_record = Some(delegate_record);
+            }
         }
 
         if let Some(edition) = self.edition {
@@ -641,41 +690,8 @@ impl DigitalAsset {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await
-    }
-
-    pub async fn migrate(
-        &mut self,
-        context: &mut ProgramTestContext,
-        authority: Keypair,
-        collection_metadata: Pubkey,
-        args: MigrateArgs,
-    ) -> Result<(), BanksClientError> {
-        let mut builder = MigrateBuilder::new();
-        builder
-            .mint(self.mint.pubkey())
-            .metadata(self.metadata)
-            .edition(self.edition.unwrap())
-            .token(self.token.unwrap())
-            .payer(authority.pubkey())
-            .collection_metadata(collection_metadata)
-            .authority(authority.pubkey());
-
-        let migrate_ix = builder.build(args.clone()).unwrap().instruction();
-
-        let tx = Transaction::new_signed_with_payer(
-            &[migrate_ix],
-            Some(&authority.pubkey()),
-            &[&authority],
-            context.last_blockhash,
-        );
-
-        context.banks_client.process_transaction(tx).await.unwrap();
-
-        let md = self.get_metadata(context).await;
-        self.token_standard = md.token_standard;
-
-        Ok(())
+        context.banks_client.process_transaction(tx).await?;
+        Ok(delegate_or_token_record)
     }
 
     pub async fn print_edition(
@@ -715,7 +731,7 @@ impl DigitalAsset {
 
         let tx = Transaction::new_signed_with_payer(
             &[instruction::mint_new_edition_from_master_edition_via_token(
-                id(),
+                ID,
                 print_metadata,
                 print_edition,
                 self.edition.unwrap(),
@@ -772,15 +788,7 @@ impl DigitalAsset {
             .spl_token_program(spl_token::ID);
 
         match args {
-            RevokeArgs::CollectionV1 => {
-                let (delegate_record, _) = find_metadata_delegate_record_account(
-                    &self.mint.pubkey(),
-                    MetadataDelegateRole::Collection,
-                    &payer.pubkey(),
-                    &delegate,
-                );
-                builder.delegate_record(delegate_record);
-            }
+            // Token delegates.
             RevokeArgs::SaleV1
             | RevokeArgs::TransferV1
             | RevokeArgs::UtilityV1
@@ -791,10 +799,22 @@ impl DigitalAsset {
                     find_token_record_account(&self.mint.pubkey(), &self.token.unwrap());
                 builder.token_record(token_record);
             }
-            RevokeArgs::UpdateV1 => {
+            RevokeArgs::StandardV1 { .. } => { /* nothing to add */ }
+
+            // Metadata delegates.
+            RevokeArgs::CollectionV1 => {
                 let (delegate_record, _) = find_metadata_delegate_record_account(
                     &self.mint.pubkey(),
-                    MetadataDelegateRole::Update,
+                    MetadataDelegateRole::Collection,
+                    &payer.pubkey(),
+                    &delegate,
+                );
+                builder.delegate_record(delegate_record);
+            }
+            RevokeArgs::DataV1 => {
+                let (delegate_record, _) = find_metadata_delegate_record_account(
+                    &self.mint.pubkey(),
+                    MetadataDelegateRole::Data,
                     &payer.pubkey(),
                     &delegate,
                 );
@@ -809,7 +829,43 @@ impl DigitalAsset {
                 );
                 builder.delegate_record(delegate_record);
             }
-            RevokeArgs::StandardV1 { .. } => { /* nothing to add */ }
+            RevokeArgs::AuthorityItemV1 => {
+                let (delegate_record, _) = find_metadata_delegate_record_account(
+                    &self.mint.pubkey(),
+                    MetadataDelegateRole::AuthorityItem,
+                    &payer.pubkey(),
+                    &delegate,
+                );
+                builder.delegate_record(delegate_record);
+            }
+            RevokeArgs::DataItemV1 => {
+                let (delegate_record, _) = find_metadata_delegate_record_account(
+                    &self.mint.pubkey(),
+                    MetadataDelegateRole::DataItem,
+                    &payer.pubkey(),
+                    &delegate,
+                );
+                builder.delegate_record(delegate_record);
+            }
+            RevokeArgs::CollectionItemV1 => {
+                let (delegate_record, _) = find_metadata_delegate_record_account(
+                    &self.mint.pubkey(),
+                    MetadataDelegateRole::CollectionItem,
+                    &payer.pubkey(),
+                    &delegate,
+                );
+                builder.delegate_record(delegate_record);
+            }
+
+            RevokeArgs::ProgrammableConfigItemV1 => {
+                let (delegate_record, _) = find_metadata_delegate_record_account(
+                    &self.mint.pubkey(),
+                    MetadataDelegateRole::ProgrammableConfigItem,
+                    &payer.pubkey(),
+                    &delegate,
+                );
+                builder.delegate_record(delegate_record);
+            }
         }
 
         if let Some(edition) = self.edition {
@@ -857,7 +913,7 @@ impl DigitalAsset {
                 &authority.pubkey(),
                 &destination_owner,
                 &self.mint.pubkey(),
-                &spl_token::id(),
+                &spl_token::ID,
             ));
 
             get_associated_token_address(&destination_owner, &self.mint.pubkey())
@@ -1172,9 +1228,16 @@ impl DigitalAsset {
             .get_account(self.edition.unwrap())
             .await?;
 
-        assert!(md_account.is_none());
-        assert!(token_account.is_none());
+        // The Metadata accounts may still be open because they are no longer being re-assigned
+        // to the system program immediately, but if they exist they should have a
+        // data length of 0.
+
+        if let Some(account) = md_account {
+            assert_eq!(account.data.len(), 0);
+        }
+
         assert!(edition_account.is_none());
+        assert!(token_account.is_none());
 
         Ok(())
     }
@@ -1208,7 +1271,36 @@ impl DigitalAsset {
             .get_account(token_record_pubkey)
             .await?;
 
-        assert!(token_record_account.is_none());
+        if let Some(account) = token_record_account {
+            assert_eq!(account.data.len(), 0);
+        }
+        Ok(())
+    }
+
+    pub async fn assert_create_fees_charged(
+        &self,
+        context: &mut ProgramTestContext,
+    ) -> Result<(), BanksClientError> {
+        let account = get_account(context, &self.metadata).await;
+
+        let rent = context.banks_client.get_rent().await.unwrap();
+        let rent_exempt = rent.minimum_balance(account.data.len());
+
+        let expected_lamports = rent_exempt + CREATE_FEE;
+
+        assert_eq!(account.lamports, expected_lamports);
+        assert_eq!(account.data[METADATA_FEE_FLAG_INDEX], FEE_FLAG_SET);
+
+        Ok(())
+    }
+
+    pub async fn assert_fee_flag_set(
+        &self,
+        context: &mut ProgramTestContext,
+    ) -> Result<(), BanksClientError> {
+        let account = get_account(context, &self.metadata).await;
+
+        assert_eq!(account.data[METADATA_FEE_FLAG_INDEX], FEE_FLAG_SET);
 
         Ok(())
     }

@@ -1,9 +1,11 @@
 use mpl_token_metadata::{
-    id, instruction,
+    instruction,
     state::{
-        Collection, CollectionDetails, Creator, Data, DataV2, Metadata as TmMetadata,
-        TokenMetadataAccount, TokenStandard, Uses, PREFIX,
+        Collection, CollectionDetails, Creator, DataV2, Metadata as TmMetadata,
+        TokenMetadataAccount, TokenStandard, Uses, CREATE_FEE, FEE_FLAG_SET,
+        METADATA_FEE_FLAG_INDEX, PREFIX,
     },
+    ID,
 };
 use solana_program::borsh::try_from_slice_unchecked;
 use solana_sdk::{
@@ -23,10 +25,10 @@ impl Metadata {
     pub fn new() -> Self {
         let mint = Keypair::new();
         let mint_pubkey = mint.pubkey();
-        let program_id = id();
+        let program_id = ID;
 
         let metadata_seeds = &[PREFIX.as_bytes(), program_id.as_ref(), mint_pubkey.as_ref()];
-        let (pubkey, _) = Pubkey::find_program_address(metadata_seeds, &id());
+        let (pubkey, _) = Pubkey::find_program_address(metadata_seeds, &ID);
 
         Metadata {
             mint,
@@ -89,213 +91,6 @@ impl Metadata {
         TmMetadata::safe_deserialize(&metadata_account.data).unwrap()
     }
 
-    #[allow(deprecated)]
-    pub async fn create(
-        &self,
-        context: &mut ProgramTestContext,
-        name: String,
-        symbol: String,
-        uri: String,
-        creators: Option<Vec<Creator>>,
-        seller_fee_basis_points: u16,
-        is_mutable: bool,
-        decimals: u8,
-    ) -> Result<(), BanksClientError> {
-        create_mint(
-            context,
-            &self.mint,
-            &context.payer.pubkey(),
-            Some(&context.payer.pubkey()),
-            decimals,
-        )
-        .await?;
-        create_token_account(
-            context,
-            &self.token,
-            &self.mint.pubkey(),
-            &context.payer.pubkey(),
-        )
-        .await?;
-        mint_tokens(
-            context,
-            &self.mint.pubkey(),
-            &self.token.pubkey(),
-            1,
-            &context.payer.pubkey(),
-            None,
-        )
-        .await?;
-
-        let tx = Transaction::new_signed_with_payer(
-            &[instruction::create_metadata_accounts(
-                id(),
-                self.pubkey,
-                self.mint.pubkey(),
-                context.payer.pubkey(),
-                context.payer.pubkey(),
-                context.payer.pubkey(),
-                name,
-                symbol,
-                uri,
-                creators,
-                seller_fee_basis_points,
-                false,
-                is_mutable,
-            )],
-            Some(&context.payer.pubkey()),
-            &[&context.payer],
-            context.last_blockhash,
-        );
-
-        context.banks_client.process_transaction(tx).await
-    }
-
-    #[allow(deprecated)]
-    pub async fn create_v2(
-        &self,
-        context: &mut ProgramTestContext,
-        name: String,
-        symbol: String,
-        uri: String,
-        creators: Option<Vec<Creator>>,
-        seller_fee_basis_points: u16,
-        is_mutable: bool,
-        collection: Option<Collection>,
-        uses: Option<Uses>,
-    ) -> Result<(), BanksClientError> {
-        create_mint(
-            context,
-            &self.mint,
-            &context.payer.pubkey(),
-            Some(&context.payer.pubkey()),
-            0,
-        )
-        .await?;
-        create_token_account(
-            context,
-            &self.token,
-            &self.mint.pubkey(),
-            &context.payer.pubkey(),
-        )
-        .await?;
-        mint_tokens(
-            context,
-            &self.mint.pubkey(),
-            &self.token.pubkey(),
-            1,
-            &context.payer.pubkey(),
-            None,
-        )
-        .await?;
-
-        let tx = Transaction::new_signed_with_payer(
-            &[instruction::create_metadata_accounts_v2(
-                id(),
-                self.pubkey,
-                self.mint.pubkey(),
-                context.payer.pubkey(),
-                context.payer.pubkey(),
-                context.payer.pubkey(),
-                name,
-                symbol,
-                uri,
-                creators,
-                seller_fee_basis_points,
-                false,
-                is_mutable,
-                collection,
-                uses,
-            )],
-            Some(&context.payer.pubkey()),
-            &[&context.payer],
-            context.last_blockhash,
-        );
-
-        context.banks_client.process_transaction(tx).await
-    }
-
-    pub async fn create_fungible_v2(
-        &self,
-        context: &mut ProgramTestContext,
-        name: String,
-        symbol: String,
-        uri: String,
-        creators: Option<Vec<Creator>>,
-        seller_fee_basis_points: u16,
-        is_mutable: bool,
-        collection: Option<Collection>,
-        uses: Option<Uses>,
-    ) -> Result<(), BanksClientError> {
-        create_mint(
-            context,
-            &self.mint,
-            &context.payer.pubkey(),
-            Some(&context.payer.pubkey()),
-            0,
-        )
-        .await?;
-        create_token_account(
-            context,
-            &self.token,
-            &self.mint.pubkey(),
-            &context.payer.pubkey(),
-        )
-        .await?;
-        mint_tokens(
-            context,
-            &self.mint.pubkey(),
-            &self.token.pubkey(),
-            10,
-            &context.payer.pubkey(),
-            None,
-        )
-        .await?;
-
-        #[allow(deprecated)]
-        let tx = Transaction::new_signed_with_payer(
-            &[instruction::create_metadata_accounts_v2(
-                id(),
-                self.pubkey,
-                self.mint.pubkey(),
-                context.payer.pubkey(),
-                context.payer.pubkey(),
-                context.payer.pubkey(),
-                name,
-                symbol,
-                uri,
-                creators,
-                seller_fee_basis_points,
-                false,
-                is_mutable,
-                collection,
-                uses,
-            )],
-            Some(&context.payer.pubkey()),
-            &[&context.payer],
-            context.last_blockhash,
-        );
-
-        context.banks_client.process_transaction(tx).await
-    }
-
-    pub async fn create_v2_default(
-        &self,
-        context: &mut ProgramTestContext,
-    ) -> Result<(), BanksClientError> {
-        self.create_v2(
-            context,
-            "name".to_string(),
-            "symbol".to_string(),
-            "uri".to_string(),
-            None,
-            0,
-            false,
-            None,
-            None,
-        )
-        .await
-    }
-
     pub async fn create_v3(
         &self,
         context: &mut ProgramTestContext,
@@ -336,7 +131,7 @@ impl Metadata {
 
         let tx = Transaction::new_signed_with_payer(
             &[instruction::create_metadata_accounts_v3(
-                id(),
+                ID,
                 self.pubkey,
                 self.mint.pubkey(),
                 context.payer.pubkey(),
@@ -352,6 +147,71 @@ impl Metadata {
                 collection,
                 uses,
                 collection_details,
+            )],
+            Some(&context.payer.pubkey()),
+            &[&context.payer],
+            context.last_blockhash,
+        );
+
+        context.banks_client.process_transaction(tx).await
+    }
+
+    pub async fn create_fungible_v3(
+        &self,
+        context: &mut ProgramTestContext,
+        name: String,
+        symbol: String,
+        uri: String,
+        creators: Option<Vec<Creator>>,
+        seller_fee_basis_points: u16,
+        is_mutable: bool,
+        collection: Option<Collection>,
+        uses: Option<Uses>,
+    ) -> Result<(), BanksClientError> {
+        create_mint(
+            context,
+            &self.mint,
+            &context.payer.pubkey(),
+            Some(&context.payer.pubkey()),
+            0,
+        )
+        .await?;
+        create_token_account(
+            context,
+            &self.token,
+            &self.mint.pubkey(),
+            &context.payer.pubkey(),
+        )
+        .await?;
+        mint_tokens(
+            context,
+            &self.mint.pubkey(),
+            &self.token.pubkey(),
+            10,
+            &context.payer.pubkey(),
+            None,
+        )
+        .await?;
+
+        #[allow(deprecated)]
+        let tx = Transaction::new_signed_with_payer(
+            &[instruction::create_metadata_accounts_v3(
+                ID,
+                self.pubkey,
+                self.mint.pubkey(),
+                context.payer.pubkey(),
+                context.payer.pubkey(),
+                context.payer.pubkey(),
+                name,
+                symbol,
+                uri,
+                creators,
+                seller_fee_basis_points,
+                false,
+                is_mutable,
+                collection,
+                uses,
+                None,
             )],
             Some(&context.payer.pubkey()),
             &[&context.payer],
@@ -397,7 +257,7 @@ impl Metadata {
 
         let tx = Transaction::new_signed_with_payer(
             &[instruction::create_metadata_accounts_v3(
-                id(),
+                ID,
                 self.pubkey,
                 self.mint.pubkey(),
                 context.payer.pubkey(),
@@ -426,14 +286,20 @@ impl Metadata {
         &self,
         context: &mut ProgramTestContext,
     ) -> Result<(), BanksClientError> {
+        let creators = vec![Creator {
+            address: context.payer.pubkey(),
+            verified: true,
+            share: 100,
+        }];
+
         self.create_v3(
             context,
             "name".to_string(),
             "symbol".to_string(),
             "uri".to_string(),
-            None,
+            Some(creators),
             0,
-            false,
+            true,
             None,
             None,
             None,
@@ -532,43 +398,10 @@ impl Metadata {
     ) -> Result<(), BanksClientError> {
         let tx = Transaction::new_signed_with_payer(
             &[instruction::update_primary_sale_happened_via_token(
-                id(),
+                ID,
                 self.pubkey,
                 context.payer.pubkey(),
                 self.token.pubkey(),
-            )],
-            Some(&context.payer.pubkey()),
-            &[&context.payer],
-            context.last_blockhash,
-        );
-
-        context.banks_client.process_transaction(tx).await
-    }
-
-    #[allow(deprecated)]
-    pub async fn update(
-        &self,
-        context: &mut ProgramTestContext,
-        name: String,
-        symbol: String,
-        uri: String,
-        creators: Option<Vec<Creator>>,
-        seller_fee_basis_points: u16,
-    ) -> Result<(), BanksClientError> {
-        let tx = Transaction::new_signed_with_payer(
-            &[instruction::update_metadata_accounts(
-                id(),
-                self.pubkey,
-                context.payer.pubkey(),
-                None,
-                Some(Data {
-                    name,
-                    symbol,
-                    uri,
-                    creators,
-                    seller_fee_basis_points,
-                }),
-                None,
             )],
             Some(&context.payer.pubkey()),
             &[&context.payer],
@@ -592,7 +425,7 @@ impl Metadata {
     ) -> Result<(), BanksClientError> {
         let tx = Transaction::new_signed_with_payer(
             &[instruction::update_metadata_accounts_v2(
-                id(),
+                ID,
                 self.pubkey,
                 context.payer.pubkey(),
                 None,
@@ -627,7 +460,7 @@ impl Metadata {
     ) -> Result<(), BanksClientError> {
         let tx = Transaction::new_signed_with_payer(
             &[instruction::verify_collection(
-                id(),
+                ID,
                 self.pubkey,
                 collection_authority.pubkey(),
                 context.payer.pubkey(),
@@ -655,7 +488,7 @@ impl Metadata {
     ) -> Result<(), BanksClientError> {
         let tx = Transaction::new_signed_with_payer(
             &[instruction::verify_sized_collection_item(
-                id(),
+                ID,
                 self.pubkey,
                 collection_authority.pubkey(),
                 context.payer.pubkey(),
@@ -684,7 +517,7 @@ impl Metadata {
     ) -> Result<(), BanksClientError> {
         let tx = Transaction::new_signed_with_payer(
             &[instruction::set_and_verify_collection(
-                id(),
+                ID,
                 self.pubkey,
                 collection_authority.pubkey(),
                 context.payer.pubkey(),
@@ -713,7 +546,7 @@ impl Metadata {
     ) -> Result<(), BanksClientError> {
         let tx = Transaction::new_signed_with_payer(
             &[instruction::set_and_verify_sized_collection_item(
-                id(),
+                ID,
                 self.pubkey,
                 collection_authority.pubkey(),
                 context.payer.pubkey(),
@@ -741,7 +574,7 @@ impl Metadata {
     ) -> Result<(), BanksClientError> {
         let tx = Transaction::new_signed_with_payer(
             &[instruction::unverify_collection(
-                id(),
+                ID,
                 self.pubkey,
                 collection_authority.pubkey(),
                 collection_mint,
@@ -768,7 +601,7 @@ impl Metadata {
     ) -> Result<(), BanksClientError> {
         let tx = Transaction::new_signed_with_payer(
             &[instruction::unverify_sized_collection_item(
-                id(),
+                ID,
                 self.pubkey,
                 collection_authority.pubkey(),
                 context.payer.pubkey(),
@@ -796,7 +629,7 @@ impl Metadata {
 
         let tx = Transaction::new_signed_with_payer(
             &[instruction::update_metadata_accounts_v2(
-                mpl_token_metadata::id(),
+                mpl_token_metadata::ID,
                 self.pubkey,
                 context.payer.pubkey(),
                 Some(new_update_authority),
@@ -810,6 +643,34 @@ impl Metadata {
         );
 
         context.banks_client.process_transaction(tx).await
+    }
+
+    pub async fn assert_create_fees_charged(
+        &self,
+        context: &mut ProgramTestContext,
+    ) -> Result<(), BanksClientError> {
+        let account = get_account(context, &self.pubkey).await;
+
+        let rent = context.banks_client.get_rent().await.unwrap();
+        let rent_exempt = rent.minimum_balance(account.data.len());
+
+        let expected_lamports = rent_exempt + CREATE_FEE;
+
+        assert_eq!(account.lamports, expected_lamports);
+        assert_eq!(account.data[METADATA_FEE_FLAG_INDEX], FEE_FLAG_SET);
+
+        Ok(())
+    }
+
+    pub async fn assert_fee_flag_set(
+        &self,
+        context: &mut ProgramTestContext,
+    ) -> Result<(), BanksClientError> {
+        let account = get_account(context, &self.pubkey).await;
+
+        assert_eq!(account.data[METADATA_FEE_FLAG_INDEX], FEE_FLAG_SET);
+
+        Ok(())
     }
 }
 

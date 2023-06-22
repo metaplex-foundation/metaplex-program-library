@@ -38,7 +38,7 @@ mod bump_seed_migration {
             use_method: UseMethod::Single,
         });
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 name,
                 symbol,
@@ -48,6 +48,7 @@ mod bump_seed_migration {
                 false,
                 None,
                 uses.to_owned(),
+                None,
             )
             .await
             .unwrap();
@@ -64,7 +65,7 @@ mod bump_seed_migration {
         let mut account = Account {
             lamports: 1113600,
             data: vec![],
-            owner: mpl_token_metadata::id(),
+            owner: mpl_token_metadata::ID,
             executable: false,
             rent_epoch: 1,
         };
@@ -78,7 +79,7 @@ mod bump_seed_migration {
             .unwrap();
         let (burner, _) = find_program_as_burner_account();
         let utilize_with_use_authority = mpl_token_metadata::instruction::utilize(
-            mpl_token_metadata::id(),
+            mpl_token_metadata::ID,
             test_metadata.pubkey,
             test_metadata.token.pubkey(),
             test_metadata.mint.pubkey(),

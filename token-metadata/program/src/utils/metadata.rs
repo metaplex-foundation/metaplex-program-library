@@ -1,4 +1,4 @@
-use borsh::{maybestd::io::Error as BorshError, BorshDeserialize, BorshSerialize};
+use borsh::{maybestd::io::Error as BorshError, BorshDeserialize};
 use mpl_utils::{create_or_allocate_account_raw, token::get_mint_authority};
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program_option::COption, pubkey::Pubkey,
@@ -13,7 +13,7 @@ use crate::{
     },
     state::{
         Collection, CollectionDetails, Data, DataV2, Key, Metadata, ProgrammableConfig,
-        TokenStandard, Uses, EDITION, MAX_METADATA_LEN, PREFIX,
+        TokenStandard, Uses, EDITION, MAX_METADATA_LEN, METADATA_FEE_FLAG_INDEX, PREFIX,
     },
 };
 
@@ -83,7 +83,7 @@ pub fn process_create_metadata_accounts_logic(
             }
         },
     )?;
-    assert_owned_by(mint_info, &spl_token::id())?;
+    assert_owned_by(mint_info, &spl_token::ID)?;
 
     let metadata_seeds = &[
         PREFIX.as_bytes(),
@@ -117,8 +117,8 @@ pub fn process_create_metadata_accounts_logic(
 
     // This allows the Bubblegum program to create metadata with verified creators since they were
     // verified already by the Bubblegum program.
-    let allow_direct_creator_writes =
-        allow_direct_creator_writes || is_decompression(mint_info, mint_authority_info);
+    let is_decompression = is_decompression(mint_info, mint_authority_info);
+    let allow_direct_creator_writes = allow_direct_creator_writes || is_decompression;
 
     assert_data_valid(
         &compatible_data,
@@ -139,7 +139,13 @@ pub fn process_create_metadata_accounts_logic(
     assert_valid_use(&data.uses, &None)?;
     metadata.uses = data.uses;
 
-    assert_collection_update_is_valid(is_edition, &None, &data.collection)?;
+    // This allows for either print editions or the Bubblegum program to create metadata with verified collection.
+    let allow_direct_collection_verified_writes = is_edition || is_decompression;
+    assert_collection_update_is_valid(
+        allow_direct_collection_verified_writes,
+        &None,
+        &data.collection,
+    )?;
     metadata.collection = data.collection;
 
     // We want to create new collections with a size of zero but we use the
@@ -256,9 +262,10 @@ pub fn clean_write_metadata(
 ) -> ProgramResult {
     // Clear all data to ensure it is serialized cleanly with no trailing data due to creators array resizing.
     let mut metadata_account_info_data = metadata_account_info.try_borrow_mut_data()?;
-    metadata_account_info_data[0..].fill(0);
+    // Don't overwrite fee flag.
+    metadata_account_info_data[0..METADATA_FEE_FLAG_INDEX].fill(0);
 
-    metadata.serialize(&mut *metadata_account_info_data)?;
+    metadata.save(&mut metadata_account_info_data)?;
 
     Ok(())
 }

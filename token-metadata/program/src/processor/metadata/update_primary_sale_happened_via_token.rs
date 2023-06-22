@@ -1,4 +1,3 @@
-use borsh::BorshSerialize;
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
@@ -27,7 +26,7 @@ pub fn process_update_primary_sale_happened_via_token(
     let mut metadata = Metadata::from_account_info(metadata_account_info)?;
 
     assert_owned_by(metadata_account_info, program_id)?;
-    assert_owned_by(token_account_info, &spl_token::id())?;
+    assert_owned_by(token_account_info, &spl_token::ID)?;
 
     if !owner_info.is_signer {
         return Err(ProgramError::MissingRequiredSignature);
@@ -46,7 +45,7 @@ pub fn process_update_primary_sale_happened_via_token(
     }
 
     metadata.primary_sale_happened = true;
-    metadata.serialize(&mut *metadata_account_info.try_borrow_mut_data()?)?;
+    metadata.save(&mut metadata_account_info.try_borrow_mut_data()?)?;
 
     Ok(())
 }

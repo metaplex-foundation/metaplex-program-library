@@ -32,7 +32,7 @@ mod uses {
             .await
             .unwrap();
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -46,12 +46,13 @@ mod uses {
                     total: 1,
                     remaining: 1,
                 }),
+                None,
             )
             .await
             .unwrap();
 
         let ix = mpl_token_metadata::instruction::utilize(
-            mpl_token_metadata::id(),
+            mpl_token_metadata::ID,
             test_metadata.pubkey,
             test_metadata.token.pubkey(),
             test_metadata.mint.pubkey(),
@@ -91,7 +92,7 @@ mod uses {
         let mut context = program_test().start_with_context().await;
         let test_metadata = Metadata::new();
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -105,12 +106,13 @@ mod uses {
                     total: 1,
                     remaining: 1,
                 }),
+                None,
             )
             .await
             .unwrap();
 
         let ix = mpl_token_metadata::instruction::utilize(
-            mpl_token_metadata::id(),
+            mpl_token_metadata::ID,
             test_metadata.pubkey,
             test_metadata.token.pubkey(),
             test_metadata.mint.pubkey(),
@@ -146,7 +148,7 @@ mod uses {
         let mut context = program_test().start_with_context().await;
         let test_metadata = Metadata::new();
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -160,12 +162,13 @@ mod uses {
                     total: 1,
                     remaining: 1,
                 }),
+                None,
             )
             .await
             .unwrap();
 
         let ix = mpl_token_metadata::instruction::utilize(
-            mpl_token_metadata::id(),
+            mpl_token_metadata::ID,
             test_metadata.pubkey,
             test_metadata.token.pubkey(),
             test_metadata.mint.pubkey(),
@@ -202,7 +205,7 @@ mod uses {
 
         let test_metadata = Metadata::new();
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -216,6 +219,7 @@ mod uses {
                     total: 5,
                     remaining: 5,
                 }),
+                None,
             )
             .await
             .unwrap();
@@ -225,7 +229,7 @@ mod uses {
         let (burner, _) = find_program_as_burner_account();
 
         let add_use_authority = mpl_token_metadata::instruction::approve_use_authority(
-            mpl_token_metadata::id(),
+            mpl_token_metadata::ID,
             record,
             use_authority.pubkey(),
             context.payer.pubkey(),
@@ -251,7 +255,7 @@ mod uses {
             .unwrap();
 
         let utilize_with_use_authority = mpl_token_metadata::instruction::utilize(
-            mpl_token_metadata::id(),
+            mpl_token_metadata::ID,
             test_metadata.pubkey,
             test_metadata.token.pubkey(),
             test_metadata.mint.pubkey(),
@@ -287,7 +291,7 @@ mod uses {
             .unwrap();
         let test_metadata = Metadata::new();
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -301,6 +305,7 @@ mod uses {
                     total: 5,
                     remaining: 5,
                 }),
+                None,
             )
             .await
             .unwrap();
@@ -310,7 +315,7 @@ mod uses {
         let (burner, _) = find_program_as_burner_account();
 
         let add_use_authority = mpl_token_metadata::instruction::approve_use_authority(
-            mpl_token_metadata::id(),
+            mpl_token_metadata::ID,
             record,
             use_authority.pubkey(),
             context.payer.pubkey(),
@@ -336,7 +341,7 @@ mod uses {
             .unwrap();
 
         let utilize_with_use_authority = mpl_token_metadata::instruction::utilize(
-            mpl_token_metadata::id(),
+            mpl_token_metadata::ID,
             test_metadata.pubkey,
             test_metadata.token.pubkey(),
             test_metadata.mint.pubkey(),
@@ -361,7 +366,7 @@ mod uses {
             .unwrap();
 
         let revoke_use_authority = mpl_token_metadata::instruction::revoke_use_authority(
-            mpl_token_metadata::id(),
+            mpl_token_metadata::ID,
             record,
             use_authority.pubkey(),
             context.payer.pubkey(),
@@ -385,7 +390,7 @@ mod uses {
 
         context.warp_to_slot(100).unwrap();
         let utilize_with_use_authority_fail = mpl_token_metadata::instruction::utilize(
-            mpl_token_metadata::id(),
+            mpl_token_metadata::ID,
             test_metadata.pubkey,
             test_metadata.token.pubkey(),
             test_metadata.mint.pubkey(),
@@ -419,7 +424,7 @@ mod uses {
 
         let test_meta = Metadata::new();
         test_meta
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -433,6 +438,7 @@ mod uses {
                     total: 1,
                     remaining: 1,
                 }),
+                None,
             )
             .await
             .unwrap();
@@ -447,7 +453,7 @@ mod uses {
             find_use_authority_account(&test_meta.mint.pubkey(), &use_authority.pubkey());
         let (burner, _) = find_program_as_burner_account();
         let approveix = mpl_token_metadata::instruction::approve_use_authority(
-            mpl_token_metadata::id(),
+            mpl_token_metadata::ID,
             record,
             use_authority.pubkey(),
             context.payer.pubkey(),
@@ -475,7 +481,7 @@ mod uses {
         assert_eq!(record_acct.allowed_uses, 1);
 
         let utilize_ix = mpl_token_metadata::instruction::utilize(
-            mpl_token_metadata::id(),
+            mpl_token_metadata::ID,
             test_meta.pubkey,
             test_meta.token.pubkey(),
             test_meta.mint.pubkey(),
@@ -509,7 +515,7 @@ mod uses {
 
         let test_meta = Metadata::new();
         test_meta
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -523,6 +529,7 @@ mod uses {
                     total: 1,
                     remaining: 1,
                 }),
+                None,
             )
             .await
             .unwrap();
@@ -532,7 +539,7 @@ mod uses {
             .unwrap();
 
         let utilize_ix = mpl_token_metadata::instruction::utilize(
-            mpl_token_metadata::id(),
+            mpl_token_metadata::ID,
             test_meta.pubkey,
             test_meta.token.pubkey(),
             test_meta.mint.pubkey(),

@@ -23,7 +23,7 @@ pub fn assert_metadata_is_mpl_compatible(metadata: &MetadataArgs) -> Result<()> 
         return Err(BubblegumError::MetadataBasisPointsTooHigh.into());
     }
     if !metadata.creators.is_empty() {
-        if metadata.creators.len() > mpl_token_metadata::state::MAX_CREATOR_LIMIT - 1 {
+        if metadata.creators.len() > mpl_token_metadata::state::MAX_CREATOR_LIMIT {
             return Err(BubblegumError::CreatorsTooLong.into());
         }
 

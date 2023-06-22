@@ -3,9 +3,13 @@ pub mod utils;
 
 use mpl_token_metadata::{
     error::MetadataError,
-    id, instruction,
-    state::{Creator, Key, UseMethod, Uses, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH},
+    instruction,
+    state::{
+        Collection, Creator, Key, UseMethod, Uses, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH,
+        MAX_URI_LENGTH,
+    },
     utils::{puffed_out_string, BUBBLEGUM_PROGRAM_ADDRESS},
+    ID,
 };
 use num_traits::FromPrimitive;
 use solana_program::{pubkey::Pubkey, system_instruction::assign};
@@ -18,6 +22,8 @@ use solana_sdk::{
 use utils::*;
 
 mod create_meta_accounts {
+
+    use mpl_token_metadata::state::TokenStandard;
 
     use super::*;
     #[tokio::test]
@@ -33,7 +39,24 @@ mod create_meta_accounts {
         let puffed_uri = puffed_out_string(&uri, MAX_URI_LENGTH);
 
         test_metadata
-            .create(&mut context, name, symbol, uri, None, 10, false, 0)
+            .create_v3(
+                &mut context,
+                name,
+                symbol,
+                uri,
+                None,
+                10,
+                false,
+                None,
+                None,
+                None,
+            )
+            .await
+            .unwrap();
+
+        let master_edition = MasterEditionV2::new(&test_metadata);
+        master_edition
+            .create_v3(&mut context, Some(0))
             .await
             .unwrap();
 
@@ -51,7 +74,7 @@ mod create_meta_accounts {
         assert_eq!(metadata.update_authority, context.payer.pubkey());
         assert_eq!(metadata.key, Key::MetadataV1);
 
-        assert_eq!(metadata.token_standard, None);
+        assert_eq!(metadata.token_standard, Some(TokenStandard::NonFungible));
         assert_eq!(metadata.collection, None);
         assert_eq!(metadata.uses, None);
     }
@@ -74,7 +97,7 @@ mod create_meta_accounts {
             use_method: UseMethod::Single,
         });
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 name,
                 symbol,
@@ -84,6 +107,7 @@ mod create_meta_accounts {
                 false,
                 None,
                 uses.to_owned(),
+                None,
             )
             .await
             .unwrap();
@@ -134,8 +158,8 @@ mod create_meta_accounts {
         .await
         .unwrap();
 
-        let ix = instruction::create_metadata_accounts(
-            id(),
+        let ix = instruction::create_metadata_accounts_v3(
+            ID,
             test_metadata.pubkey,
             test_metadata.mint.pubkey(),
             fake_mint_authority.pubkey(),
@@ -148,6 +172,9 @@ mod create_meta_accounts {
             10,
             false,
             false,
+            None,
+            None,
+            None,
         );
 
         let tx = Transaction::new_signed_with_payer(
@@ -165,8 +192,8 @@ mod create_meta_accounts {
 
         assert_custom_error!(result, MetadataError::InvalidMintAuthority);
 
-        let ix2 = instruction::create_metadata_accounts_v2(
-            id(),
+        let ix2 = instruction::create_metadata_accounts_v3(
+            ID,
             test_metadata.pubkey,
             test_metadata.mint.pubkey(),
             fake_mint_authority.pubkey(),
@@ -185,6 +212,7 @@ mod create_meta_accounts {
                 total: 10,
                 use_method: UseMethod::Multiple,
             }),
+            None,
         );
 
         let tx2 = Transaction::new_signed_with_payer(
@@ -210,7 +238,7 @@ mod create_meta_accounts {
         test_metadata.pubkey = Pubkey::new_unique();
 
         let result = test_metadata
-            .create(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -218,7 +246,9 @@ mod create_meta_accounts {
                 None,
                 10,
                 false,
-                0,
+                None,
+                None,
+                None,
             )
             .await
             .unwrap_err();
@@ -234,7 +264,7 @@ mod create_meta_accounts {
         creators: Vec<Creator>,
     ) -> BanksClientError {
         Metadata::new()
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -242,6 +272,7 @@ mod create_meta_accounts {
                 Some(creators),
                 10,
                 false,
+                None,
                 None,
                 None,
             )
@@ -364,7 +395,7 @@ mod create_meta_accounts {
     async fn pass_creators(mut context: ProgramTestContext, creators: Vec<Creator>) {
         let test_metadata = Metadata::new();
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -372,6 +403,7 @@ mod create_meta_accounts {
                 Some(creators.clone()),
                 10,
                 false,
+                None,
                 None,
                 None,
             )
@@ -445,7 +477,7 @@ mod create_meta_accounts {
     async fn fail_uses(uses: Uses) {
         let mut context = program_test().start_with_context().await;
         let res = Metadata::new()
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -455,6 +487,7 @@ mod create_meta_accounts {
                 false,
                 None,
                 Some(uses),
+                None,
             )
             .await
             .unwrap_err();
@@ -518,7 +551,7 @@ mod create_meta_accounts {
         let mut context = program_test().start_with_context().await;
         let test_metadata = Metadata::new();
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -528,6 +561,7 @@ mod create_meta_accounts {
                 false,
                 None,
                 Some(uses.clone()),
+                None,
             )
             .await
             .unwrap();
@@ -576,8 +610,7 @@ mod create_meta_accounts {
     }
 
     #[tokio::test]
-    #[allow(deprecated)]
-    async fn fail_bubblegum_owner() {
+    async fn fail_bubblegum_owner_verified_creator() {
         let context = &mut program_test().start_with_context().await;
         let test_metadata = Metadata::new();
         let name = "Test".to_string();
@@ -656,7 +689,7 @@ mod create_meta_accounts {
 
         let create_tx = Transaction::new_signed_with_payer(
             &[instruction::create_metadata_accounts_v3(
-                id(),
+                ID,
                 test_metadata.pubkey,
                 test_metadata.mint.pubkey(),
                 mint_authority.pubkey(),
@@ -683,5 +716,116 @@ mod create_meta_accounts {
             .await
             .unwrap_err();
         assert_custom_error!(error, MetadataError::CannotVerifyAnotherCreator);
+    }
+
+    #[tokio::test]
+    async fn fail_bubblegum_owner_verified_collection() {
+        let context = &mut program_test().start_with_context().await;
+        let test_metadata = Metadata::new();
+        let name = "Test".to_string();
+        let symbol = "TST".to_string();
+        let uri = "uri".to_string();
+        let mint_authority = Keypair::new();
+
+        airdrop(context, &mint_authority.pubkey(), 1_000_000)
+            .await
+            .unwrap();
+        let uses = Some(Uses {
+            total: 1,
+            remaining: 1,
+            use_method: UseMethod::Single,
+        });
+
+        create_mint(
+            context,
+            &test_metadata.mint,
+            &mint_authority.pubkey(),
+            Some(&context.payer.pubkey()),
+            0,
+        )
+        .await
+        .unwrap();
+
+        create_token_account(
+            context,
+            &test_metadata.token,
+            &test_metadata.mint.pubkey(),
+            &context.payer.pubkey(),
+        )
+        .await
+        .unwrap();
+
+        mint_tokens(
+            context,
+            &test_metadata.mint.pubkey(),
+            &test_metadata.token.pubkey(),
+            1,
+            &mint_authority.pubkey(),
+            Some(&mint_authority),
+            // None
+        )
+        .await
+        .unwrap();
+
+        // Assign to bubblegum program and stuff
+        let assign_ix = assign(&mint_authority.pubkey(), &BUBBLEGUM_PROGRAM_ADDRESS);
+        let assign_tx = Transaction::new_signed_with_payer(
+            &[assign_ix],
+            Some(&context.payer.pubkey()),
+            &[&context.payer, &mint_authority],
+            context.last_blockhash,
+        );
+
+        context
+            .banks_client
+            .process_transaction(assign_tx)
+            .await
+            .unwrap();
+
+        let mint_authority_account = get_account(context, &mint_authority.pubkey()).await;
+        assert_eq!(mint_authority_account.owner, BUBBLEGUM_PROGRAM_ADDRESS);
+        let mint_account = get_mint(context, &test_metadata.mint.pubkey()).await;
+        assert_eq!(
+            mint_account.mint_authority.unwrap(),
+            mint_authority.pubkey()
+        );
+
+        // Try to create with a verified collection.
+        let create_tx = Transaction::new_signed_with_payer(
+            &[instruction::create_metadata_accounts_v3(
+                ID,
+                test_metadata.pubkey,
+                test_metadata.mint.pubkey(),
+                mint_authority.pubkey(),
+                context.payer.pubkey(),
+                context.payer.pubkey(),
+                name,
+                symbol,
+                uri,
+                None,
+                10,
+                true,
+                true,
+                Some(Collection {
+                    key: Keypair::new().pubkey(),
+                    verified: true,
+                }),
+                uses.to_owned(),
+                None,
+            )],
+            Some(&context.payer.pubkey()),
+            &[&context.payer, &mint_authority],
+            context.last_blockhash,
+        );
+        let error = context
+            .banks_client
+            .process_transaction(create_tx)
+            .await
+            .unwrap_err();
+
+        assert_custom_error!(
+            error,
+            MetadataError::CollectionCannotBeVerifiedInThisInstruction
+        );
     }
 }
