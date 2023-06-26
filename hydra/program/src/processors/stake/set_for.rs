@@ -1,8 +1,9 @@
-use crate::error::{HydraError, OrArithError};
-use crate::state::{Fanout, FanoutMembershipVoucher, FANOUT_MEMBERSHIP_VOUCHER_SIZE};
+use crate::{
+    error::{HydraError, OrArithError},
+    state::{Fanout, FanoutMembershipVoucher, FANOUT_MEMBERSHIP_VOUCHER_SIZE},
+};
 
-use crate::utils::validation::*;
-use crate::MembershipModel;
+use crate::{utils::validation::*, MembershipModel};
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount};
 #[derive(Accounts)]

@@ -1017,7 +1017,7 @@ dependencies = [
 
 [[package]]
 name = "mpl-hydra"
-version = "0.3.0"
+version = "0.4.1"
 dependencies = [
  "anchor-lang",
  "anchor-spl",

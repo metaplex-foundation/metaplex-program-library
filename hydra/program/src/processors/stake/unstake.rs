@@ -1,10 +1,13 @@
-use crate::error::OrArithError;
-use crate::state::{Fanout, FanoutMembershipVoucher};
+use crate::{
+    error::OrArithError,
+    state::{Fanout, FanoutMembershipVoucher},
+};
 
 use crate::utils::validation::*;
-use anchor_lang::prelude::*;
-use anchor_lang::solana_program::sysvar;
-use anchor_lang::solana_program::sysvar::instructions::get_instruction_relative;
+use anchor_lang::{
+    prelude::*,
+    solana_program::{sysvar, sysvar::instructions::get_instruction_relative},
+};
 use anchor_spl::token::{Mint, Token, TokenAccount};
 
 #[derive(Accounts)]
