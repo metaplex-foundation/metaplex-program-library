@@ -3107,14 +3107,7 @@
           "optional": true
         }
       ],
-      "args": [
-        {
-          "name": "migrateArgs",
-          "type": {
-            "defined": "MigrateArgs"
-          }
-        }
-      ],
+      "args": [],
       "defaultOptionalAccounts": true,
       "discriminant": {
         "type": "u8",
@@ -5227,31 +5220,6 @@
             "name": "Set",
             "fields": [
               "publicKey"
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "name": "MigrateArgs",
-      "type": {
-        "kind": "enum",
-        "variants": [
-          {
-            "name": "V1",
-            "fields": [
-              {
-                "name": "migration_type",
-                "type": {
-                  "defined": "MigrationType"
-                }
-              },
-              {
-                "name": "rule_set",
-                "type": {
-                  "option": "publicKey"
-                }
-              }
             ]
           }
         ]

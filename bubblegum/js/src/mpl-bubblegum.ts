@@ -30,7 +30,7 @@ export function computeCreatorHash(creators: Creator[]) {
         Buffer.from([creator.verified ? 1 : 0]),
         Buffer.from([creator.share]),
       ]);
-    })
+    }),
   );
   return Buffer.from(keccak_256.digest(bufferOfCreatorData));
 }

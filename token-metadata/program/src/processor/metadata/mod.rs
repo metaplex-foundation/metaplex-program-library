@@ -1,6 +1,5 @@
 mod create;
 mod create_medatata_accounts_v3;
-mod migrate;
 mod mint;
 mod puff_metadata;
 mod remove_creator_verification;
@@ -13,7 +12,6 @@ mod update_primary_sale_happened_via_token;
 
 pub use create::*;
 pub use create_medatata_accounts_v3::*;
-pub use migrate::*;
 pub use mint::*;
 pub use puff_metadata::*;
 pub use remove_creator_verification::*;
