@@ -56,7 +56,7 @@ impl<'info> Buy<'info> {
             if let Some((index, bit)) = find_first_zero_bit(marker.ledger, is_first_marker) {
                 ((index * 8) + bit as usize) as u64
             } else {
-                return Err(ErrorCode::WrongEditionMarker.into());
+                return Err(ErrorCode::EditionMarkerFull.into());
             }
         };
 
