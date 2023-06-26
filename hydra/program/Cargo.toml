@@ -21,6 +21,7 @@ default = []
 [dependencies]
 anchor-lang = "0.26.0"
 anchor-spl = "0.26.0"
+solana-zk-token-sdk = "~1.14.13"
 spl-token = {version="3.5.0", features = [ "no-entrypoint" ]}
 mpl-token-metadata = {version="1.7.0", features = [ "no-entrypoint" ]}
 
