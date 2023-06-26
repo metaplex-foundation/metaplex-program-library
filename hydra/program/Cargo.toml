@@ -1,6 +1,6 @@
 [package]
 name = "mpl-hydra"
-version = "0.4.1"
+version = "0.4.2"
 edition = "2021"
 description = "Collective account pooling, fan out wallet, dao treasury, all of the things you need to FAN OUT"
 authors = ["Metaplex Developers <dev@metaplex.com>"]
