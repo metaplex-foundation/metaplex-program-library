@@ -13,4 +13,5 @@ module.exports = {
   sdkDir,
   binaryInstallDir,
   programDir,
+  rustbin: { locked: true }
 };

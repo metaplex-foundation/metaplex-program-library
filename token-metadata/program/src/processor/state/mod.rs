@@ -5,8 +5,8 @@ use borsh::BorshSerialize;
 pub use lock::*;
 use mpl_utils::assert_signer;
 use solana_program::{
-    account_info::AccountInfo, entrypoint::ProgramResult, program::invoke, program_pack::Pack,
-    pubkey::Pubkey, system_program, sysvar,
+    account_info::AccountInfo, entrypoint::ProgramResult, program::invoke,
+    program_error::ProgramError, program_pack::Pack, pubkey::Pubkey, system_program, sysvar,
 };
 use spl_token::{
     instruction::{freeze_account, thaw_account},
@@ -56,6 +56,7 @@ pub(crate) fn toggle_asset_state(
 
     assert_owned_by(accounts.metadata_info, program_id)?;
     assert_owned_by(accounts.mint_info, &spl_token::ID)?;
+    assert_owned_by(accounts.token_info, &spl_token::ID)?;
 
     // key match
 
@@ -74,9 +75,13 @@ pub(crate) fn toggle_asset_state(
     }
 
     let token = Account::unpack(&accounts.token_info.try_borrow_data()?)?;
-    // mint must match mint account key
+    // token mint must match mint account key
     if token.mint != *accounts.mint_info.key {
         return Err(MetadataError::MintMismatch.into());
+    }
+    // and must have balance greater than 0 if we are locking
+    if matches!(to, TokenState::Locked) && token.amount == 0 {
+        return Err(MetadataError::InsufficientTokenBalance.into());
     }
 
     // authority – this can be either:
@@ -161,7 +166,14 @@ pub(crate) fn toggle_asset_state(
                 accounts.mint_info,
                 accounts.token_info,
             )
-            .map_err(|_| MetadataError::InvalidAuthorityType)?;
+            .map_err(|error| {
+                let custom: ProgramError = MetadataError::InvalidDelegate.into();
+                if error == custom {
+                    MetadataError::InvalidAuthorityType.into()
+                } else {
+                    error
+                }
+            })?;
 
             match to {
                 TokenState::Locked => {
