@@ -45,5 +45,7 @@ pub fn add_member_wallet(ctx: Context<AddMemberWallet>, args: AddMemberArgs) -> 
     membership_account.shares = args.shares;
     membership_account.bump_seed = *ctx.bumps.get("membership_account").unwrap();
     membership_account.fanout = fanout.key();
+    membership_account.stake_time = Clock::get()?.unix_timestamp;
+
     Ok(())
 }

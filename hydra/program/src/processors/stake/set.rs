@@ -62,6 +62,7 @@ pub fn set_token_member_stake(ctx: Context<SetTokenMemberStake>, shares: u64) ->
         &membership_mint.key(),
         Some(HydraError::InvalidStakeAta.into()),
     )?;
+    membership_voucher.stake_time = Clock::get()?.unix_timestamp;
     membership_voucher.fanout = fanout.key();
     membership_voucher.membership_key = member.key();
     fanout.total_staked_shares = fanout

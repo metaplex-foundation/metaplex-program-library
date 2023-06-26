@@ -99,6 +99,8 @@ pub fn parse_mint_membership_voucher<'info>(
     fanout_for_mint: &Pubkey,
     fanout_mint: &Pubkey,
     fanout: &Pubkey,
+    stake_time: i64,
+    total_inflow: u64,
 ) -> Result<FanoutMembershipMintVoucher> {
     let account_info = fanout_for_mint_membership_voucher.to_account_info();
     let mint_membership_voucher_bump = assert_derivation(
@@ -134,18 +136,25 @@ pub fn parse_mint_membership_voucher<'info>(
         FanoutMembershipMintVoucher {
             fanout: *fanout,
             fanout_mint: *fanout_mint,
-            last_inflow: 0,
+            last_inflow: total_inflow,
             bump_seed: mint_membership_voucher_bump,
+            stake_time: stake_time
         }
     } else {
         let mut membership_data: &[u8] =
             &fanout_for_mint_membership_voucher.try_borrow_mut_data()?;
         assert_owned_by(fanout_for_mint_membership_voucher, &crate::ID)?;
-        let membership = FanoutMembershipMintVoucher::try_deserialize(&mut membership_data)?;
+        let mut membership = FanoutMembershipMintVoucher::try_deserialize(&mut membership_data)?;
         if membership.bump_seed != mint_membership_voucher_bump {
             msg!("Mint Membership Bump Doesnt match");
             return Err(HydraError::InvalidMembershipVoucher.into());
         }
+        // If this account was staked before at a different time, clear it out.
+        if stake_time != membership.stake_time {
+          membership.last_inflow = total_inflow;
+          membership.stake_time = stake_time;
+        } 
+        
         membership
     })
 }
