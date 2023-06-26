@@ -1,7 +1,8 @@
-use crate::state::{Fanout, FanoutMembershipVoucher};
-use crate::utils::logic::calculation::*;
-use crate::utils::validation::assert_owned_by;
-use crate::MembershipModel;
+use crate::{
+    state::{Fanout, FanoutMembershipVoucher},
+    utils::{logic::calculation::*, validation::assert_owned_by},
+    MembershipModel,
+};
 use anchor_lang::prelude::*;
 
 use crate::error::HydraError;

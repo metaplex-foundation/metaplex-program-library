@@ -1,6 +1,4 @@
-use crate::error::HydraError;
-use crate::state::Fanout;
-use crate::utils::validation::assert_owned_by;
+use crate::{error::HydraError, state::Fanout, utils::validation::assert_owned_by};
 use anchor_lang::prelude::*;
 
 use spl_token::solana_program::program::invoke_signed;
