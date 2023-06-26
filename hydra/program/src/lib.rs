@@ -93,4 +93,11 @@ pub mod hydra {
     pub fn process_remove_member(ctx: Context<RemoveMember>) -> Result<()> {
         remove_member(ctx)
     }
+
+    pub fn process_set_saturation(
+        ctx: Context<SetSaturation>,
+        saturation_limit: u64,
+    ) -> Result<()> {
+        set_saturation(ctx, saturation_limit)
+    }
 }

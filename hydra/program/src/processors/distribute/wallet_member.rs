@@ -59,6 +59,7 @@ pub fn distribute_for_wallet(
     assert_owned_by_one(&member.to_account_info(), vec![&System::id(), &crate::id()])?;
     assert_membership_model(fanout, MembershipModel::Wallet)?;
     assert_shares_distributed(fanout)?;
+    assert_no_saturation(fanout)?;
     if distribute_for_mint {
         let membership_key = &ctx.accounts.member.key().clone();
         let member = ctx.accounts.member.to_owned();

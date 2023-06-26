@@ -701,6 +701,37 @@
         }
       ],
       "args": []
+    },
+    {
+      "name": "processSetSaturation",
+      "accounts": [
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "member",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "fanout",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "membershipAccount",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "saturationLimit",
+          "type": "u64"
+        }
+      ]
     }
   ],
   "accounts": [
@@ -766,6 +797,14 @@
             "type": {
               "option": "u64"
             }
+          },
+          {
+            "name": "saturated",
+            "type": "bool"
+          },
+          {
+            "name": "saturatedMember",
+            "type": "publicKey"
           }
         ]
       }
@@ -829,6 +868,10 @@
           },
           {
             "name": "shares",
+            "type": "u64"
+          },
+          {
+            "name": "saturationLimit",
             "type": "u64"
           }
         ]
@@ -1033,6 +1076,16 @@
       "code": 6024,
       "name": "InvalidCloseAccountDestination",
       "msg": "Sending Sol to a SPL token destination will render the sol unusable"
+    },
+    {
+      "code": 6025,
+      "name": "SaturationNotSupported",
+      "msg": "Saturation not supported on this membership model"
+    },
+    {
+      "code": 6026,
+      "name": "SaturatedMember",
+      "msg": "Unable to distribute shares with member at saturation limit. Redistribute shares to proceed."
     }
   ],
   "metadata": {

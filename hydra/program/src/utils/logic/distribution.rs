@@ -38,6 +38,15 @@ pub fn distribute_native<'info>(
     let inflow_diff = calculate_inflow_change(fanout.total_inflow, membership_voucher.last_inflow)?;
     let shares = membership_voucher.shares as u64;
     let dif_dist = calculate_dist_amount(shares, inflow_diff, total_shares)?;
+    let (saturated, dif_dist) = check_saturation(
+        fanout.total_inflow,
+        membership_voucher.saturation_limit,
+        dif_dist,
+    )?;
+    fanout.saturated = saturated;
+    if saturated {
+        fanout.saturated_member = membership_voucher.key();
+    }
     update_snapshot(fanout, membership_voucher, dif_dist)?;
     membership_voucher.total_inflow = membership_voucher
         .total_inflow

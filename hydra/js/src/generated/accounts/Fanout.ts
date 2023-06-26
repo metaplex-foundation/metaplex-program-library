@@ -29,6 +29,8 @@ export type FanoutArgs = {
   membershipModel: MembershipModel;
   membershipMint: beet.COption<web3.PublicKey>;
   totalStakedShares: beet.COption<beet.bignum>;
+  saturated: boolean;
+  saturatedMember: web3.PublicKey;
 };
 
 const fanoutDiscriminator = [164, 101, 210, 92, 222, 14, 75, 156];
@@ -54,6 +56,8 @@ export class Fanout implements FanoutArgs {
     readonly membershipModel: MembershipModel,
     readonly membershipMint: beet.COption<web3.PublicKey>,
     readonly totalStakedShares: beet.COption<beet.bignum>,
+    readonly saturated: boolean,
+    readonly saturatedMember: web3.PublicKey,
   ) {}
 
   /**
@@ -74,6 +78,8 @@ export class Fanout implements FanoutArgs {
       args.membershipModel,
       args.membershipMint,
       args.totalStakedShares,
+      args.saturated,
+      args.saturatedMember,
     );
   }
 
@@ -221,6 +227,8 @@ export class Fanout implements FanoutArgs {
       membershipModel: 'MembershipModel.' + MembershipModel[this.membershipModel],
       membershipMint: this.membershipMint,
       totalStakedShares: this.totalStakedShares,
+      saturated: this.saturated,
+      saturatedMember: this.saturatedMember.toBase58(),
     };
   }
 }
@@ -250,6 +258,8 @@ export const fanoutBeet = new beet.FixableBeetStruct<
     ['membershipModel', membershipModelBeet],
     ['membershipMint', beet.coption(beetSolana.publicKey)],
     ['totalStakedShares', beet.coption(beet.u64)],
+    ['saturated', beet.bool],
+    ['saturatedMember', beetSolana.publicKey],
   ],
   Fanout.fromArgs,
   'Fanout',

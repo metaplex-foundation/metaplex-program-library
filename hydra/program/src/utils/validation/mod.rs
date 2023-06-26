@@ -132,6 +132,13 @@ pub fn assert_owned_by_one(account: &AccountInfo, owners: Vec<&Pubkey>) -> Resul
     Err(HydraError::IncorrectOwner.into())
 }
 
+pub fn assert_no_saturation(fanout: &Account<Fanout>) -> Result<()> {
+    if fanout.saturated {
+        return Err(HydraError::SaturatedMember.into());
+    }
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     // Note this useful idiom: importing names from outer (for mod tests) scope.
