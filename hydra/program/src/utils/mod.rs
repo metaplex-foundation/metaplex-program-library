@@ -1,12 +1,15 @@
 pub mod logic;
 pub mod validation;
 
-use crate::error::HydraError;
-use crate::state::{FanoutMembershipMintVoucher, FanoutMint, FANOUT_MINT_MEMBERSHIP_VOUCHER_SIZE};
-use crate::utils::validation::{assert_derivation, assert_owned_by};
-use anchor_lang::prelude::*;
-use anchor_lang::solana_program::program::invoke_signed;
-use anchor_lang::solana_program::system_instruction;
+use crate::{
+    error::HydraError,
+    state::{FanoutMembershipMintVoucher, FanoutMint, FANOUT_MINT_MEMBERSHIP_VOUCHER_SIZE},
+    utils::validation::{assert_derivation, assert_owned_by},
+};
+use anchor_lang::{
+    prelude::*,
+    solana_program::{program::invoke_signed, system_instruction},
+};
 use anchor_spl::token::TokenAccount;
 use std::convert::TryInto;
 
@@ -138,7 +141,7 @@ pub fn parse_mint_membership_voucher<'info>(
             fanout_mint: *fanout_mint,
             last_inflow: total_inflow,
             bump_seed: mint_membership_voucher_bump,
-            stake_time: stake_time
+            stake_time,
         }
     } else {
         let mut membership_data: &[u8] =
@@ -151,10 +154,10 @@ pub fn parse_mint_membership_voucher<'info>(
         }
         // If this account was staked before at a different time, clear it out.
         if stake_time != membership.stake_time {
-          membership.last_inflow = total_inflow;
-          membership.stake_time = stake_time;
-        } 
-        
+            membership.last_inflow = total_inflow;
+            membership.stake_time = stake_time;
+        }
+
         membership
     })
 }

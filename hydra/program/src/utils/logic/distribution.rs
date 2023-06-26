@@ -1,9 +1,15 @@
-use crate::state::{Fanout, FanoutMembershipVoucher, FANOUT_ACCOUNT_SIZE, HOLDING_ACCOUNT_SIZE};
-use crate::utils::logic::calculation::*;
-use crate::utils::logic::transfer::{transfer_from_mint_holding, transfer_native};
-use crate::utils::parse_fanout_mint;
-use crate::utils::validation::*;
-use crate::utils::*;
+use crate::{
+    state::{Fanout, FanoutMembershipVoucher, FANOUT_ACCOUNT_SIZE, HOLDING_ACCOUNT_SIZE},
+    utils::{
+        logic::{
+            calculation::*,
+            transfer::{transfer_from_mint_holding, transfer_native},
+        },
+        parse_fanout_mint,
+        validation::*,
+        *,
+    },
+};
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token};
 

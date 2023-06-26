@@ -1,5 +1,7 @@
-use crate::error::HydraError;
-use crate::state::{Fanout, MembershipModel};
+use crate::{
+    error::HydraError,
+    state::{Fanout, MembershipModel},
+};
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token};
 

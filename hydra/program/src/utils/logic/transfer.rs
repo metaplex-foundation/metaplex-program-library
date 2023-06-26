@@ -1,5 +1,4 @@
-use crate::error::HydraError;
-use crate::state::Fanout;
+use crate::{error::HydraError, state::Fanout};
 use anchor_lang::prelude::*;
 
 pub fn transfer_from_mint_holding<'info>(

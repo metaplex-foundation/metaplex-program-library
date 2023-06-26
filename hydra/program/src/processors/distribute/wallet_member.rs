@@ -1,8 +1,10 @@
 use crate::MembershipModel;
 use anchor_lang::prelude::*;
 
-use crate::state::{Fanout, FanoutMembershipVoucher};
-use crate::utils::validation::*;
+use crate::{
+    state::{Fanout, FanoutMembershipVoucher},
+    utils::validation::*,
+};
 
 use crate::utils::logic::distribution::{distribute_mint, distribute_native};
 use anchor_spl::token::{Mint, Token};
