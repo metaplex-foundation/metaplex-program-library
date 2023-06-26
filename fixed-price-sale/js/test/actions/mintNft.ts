@@ -4,7 +4,7 @@ import {
   createCreateMasterEditionV3Instruction,
   Creator,
   DataV2,
-  createCreateMetadataAccountV2Instruction,
+  createCreateMetadataAccountV3Instruction,
 } from '@metaplex-foundation/mpl-token-metadata';
 import { createMintToInstruction } from '@solana/spl-token';
 import { strict as assert } from 'assert';
@@ -66,7 +66,7 @@ export async function mintNFT({
   const pdas = metaplex.nfts().pdas();
   const metadata = pdas.metadata({ mint: mint.publicKey });
 
-  const createMetadataInstruction = createCreateMetadataAccountV2Instruction(
+  const createMetadataInstruction = createCreateMetadataAccountV3Instruction(
     {
       metadata,
       mint: mint.publicKey,
@@ -74,7 +74,7 @@ export async function mintNFT({
       mintAuthority: payer.publicKey,
       payer: payer.publicKey,
     },
-    { createMetadataAccountArgsV2: { isMutable: true, data } },
+    { createMetadataAccountArgsV3: { isMutable: true, data, collectionDetails: null } },
   );
 
   createTokenTx.add(createMetadataInstruction);

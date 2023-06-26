@@ -43,15 +43,30 @@ impl<'info> Buy<'info> {
 
         let metadata_mint = selling_resource.resource;
 
+        // First Edition marker skips the first bit because editions start at 1.
+        let is_first_marker =
+            find_edition_marker_pda(&metadata_mint, "0").0 == *edition_marker_info.key;
+
         // Find the first available edition number in this edition marker.
         let edition = if edition_marker_info.data_is_empty() {
-            1
+            if is_first_marker {
+                1
+            } else {
+                let mut edition = 248;
+
+                loop {
+                    let pda = find_edition_marker_pda(&metadata_mint, &edition.to_string()).0;
+
+                    if pda == *edition_marker_info.key {
+                        break;
+                    }
+
+                    edition += 248;
+                }
+                edition
+            }
         } else {
             let marker = EditionMarker::from_account_info(edition_marker_info)?;
-
-            // First Edition marker skips the first bit because editions start at 1.
-            let is_first_marker =
-                find_edition_marker_pda(&metadata_mint, "0").0 == *edition_marker_info.key;
 
             if let Some((index, bit)) = find_first_zero_bit(marker.ledger, is_first_marker) {
                 ((index * 8) + bit as usize) as u64
