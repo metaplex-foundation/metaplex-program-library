@@ -12,10 +12,7 @@ use anchor_lang::{
     system_program::System,
 };
 use anchor_spl::token;
-use mpl_token_metadata::{
-    state::{Metadata, TokenMetadataAccount},
-    utils::get_supply_off_master_edition,
-};
+use mpl_token_metadata::state::{EditionMarker, Metadata, TokenMetadataAccount};
 
 impl<'info> Buy<'info> {
     pub fn process(
@@ -45,10 +42,23 @@ impl<'info> Buy<'info> {
         let system_program = &self.system_program;
 
         let metadata_mint = selling_resource.resource;
-        // do supply +1 to increase master edition supply
-        let edition = get_supply_off_master_edition(&master_edition.to_account_info())?
-            .checked_add(1)
-            .ok_or(ErrorCode::MathOverflow)?;
+
+        // Find the first available edition number in this edition marker.
+        let edition = if edition_marker_info.data_is_empty() {
+            1
+        } else {
+            let marker = EditionMarker::from_account_info(edition_marker_info)?;
+
+            // First Edition marker skips the first bit because editions start at 1.
+            let is_first_marker =
+                find_edition_marker_pda(&metadata_mint, "0").0 == *edition_marker_info.key;
+
+            if let Some((index, bit)) = find_first_zero_bit(marker.ledger, is_first_marker) {
+                ((index * 8) + bit as usize) as u64
+            } else {
+                return Err(ErrorCode::WrongEditionMarker.into());
+            }
+        };
 
         // Check, that `Market` is not in `Suspended` state
         if market.state == MarketState::Suspended {

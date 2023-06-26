@@ -136,4 +136,7 @@ pub enum ErrorCode {
     // 6043
     #[msg("Wrong gating token")]
     WrongGatingToken,
+    // 6044
+    #[msg("Wrong edition marker")]
+    WrongEditionMarker,
 }

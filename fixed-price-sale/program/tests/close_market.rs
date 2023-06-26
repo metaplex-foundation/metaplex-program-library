@@ -39,6 +39,7 @@ mod close_market {
             None,
             true,
             false,
+            1,
         )
         .await;
 
@@ -186,6 +187,7 @@ mod close_market {
             None,
             true,
             false,
+            1,
         )
         .await;
 

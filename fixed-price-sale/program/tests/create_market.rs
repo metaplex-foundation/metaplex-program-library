@@ -35,6 +35,7 @@ mod create_market {
             None,
             true,
             false,
+            1,
         )
         .await;
 
@@ -170,6 +171,7 @@ mod create_market {
             None,
             true,
             false,
+            1,
         )
         .await;
 
@@ -213,6 +215,7 @@ mod create_market {
             None,
             true,
             false,
+            1,
         )
         .await;
 
@@ -324,6 +327,7 @@ mod create_market {
             None,
             true,
             false,
+            1,
         )
         .await;
 
@@ -438,6 +442,7 @@ mod create_market {
             None,
             true,
             false,
+            1,
         )
         .await;
 
@@ -539,6 +544,7 @@ mod create_market {
             None,
             true,
             false,
+            1,
         )
         .await;
 
@@ -651,6 +657,7 @@ mod create_market {
             None,
             true,
             false,
+            1,
         )
         .await;
 
@@ -749,6 +756,7 @@ mod create_market {
             None,
             true,
             false,
+            1,
         )
         .await;
 
@@ -854,6 +862,7 @@ mod create_market {
             None,
             true,
             false,
+            1,
         )
         .await;
 

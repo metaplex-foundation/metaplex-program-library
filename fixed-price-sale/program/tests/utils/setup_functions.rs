@@ -9,6 +9,7 @@ use mpl_fixed_price_sale::{
     accounts as mpl_fixed_price_sale_accounts, instruction as mpl_fixed_price_sale_instruction,
     utils::{find_treasury_owner_address, find_vault_owner_address},
 };
+use solana_program::pubkey::Pubkey;
 use solana_program_test::ProgramTestContext;
 use solana_sdk::{
     commitment_config::CommitmentLevel,
@@ -90,6 +91,7 @@ pub async fn setup_selling_resource(
     creators: Option<Vec<mpl_token_metadata::state::Creator>>,
     selling_resource_owner_creator: bool,
     is_mutable: bool,
+    max_supply: u64,
 ) -> (Keypair, Keypair, Keypair) {
     let selling_resource_keypair = Keypair::new();
     let selling_resource_owner_keypair = Keypair::new();
@@ -169,7 +171,7 @@ pub async fn setup_selling_resource(
         &actual_update_authority,
         admin_wallet,
         &metadata,
-        Some(1),
+        Some(max_supply),
     )
     .await;
 
@@ -200,7 +202,7 @@ pub async fn setup_selling_resource(
     let data = mpl_fixed_price_sale_instruction::InitSellingResource {
         master_edition_bump,
         vault_owner_bump,
-        max_supply: Some(1),
+        max_supply: Some(max_supply),
     }
     .data();
 

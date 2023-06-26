@@ -39,6 +39,7 @@ mod suspend_market {
             None,
             true,
             false,
+            1,
         )
         .await;
 
@@ -186,6 +187,7 @@ mod suspend_market {
             None,
             true,
             false,
+            1,
         )
         .await;
 
@@ -330,6 +332,7 @@ mod suspend_market {
             None,
             true,
             false,
+            1,
         )
         .await;
 
@@ -506,6 +509,7 @@ mod suspend_market {
             None,
             true,
             false,
+            1,
         )
         .await;
 
@@ -679,6 +683,7 @@ mod suspend_market {
             None,
             true,
             false,
+            1,
         )
         .await;
 

@@ -288,3 +288,35 @@ pub fn calculate_secondary_shares_for_market_owner(
         )
         .ok_or(ErrorCode::MathOverflow)?)
 }
+
+pub(crate) fn find_first_zero_bit(arr: [u8; 31], first_marker: bool) -> Option<(usize, u8)> {
+    // First edition marker starts at 1 so first bit is zero and needs to be skipped.
+
+    for (i, &byte) in arr.iter().enumerate() {
+        if byte != 0xff {
+            // There's at least one zero bit in this byte
+            for bit in (0..8).rev() {
+                if (byte & (1 << bit)) == 0 {
+                    if first_marker && i == 0 && bit == 7 {
+                        continue;
+                    }
+                    return Some((i, 7 - bit));
+                }
+            }
+        }
+    }
+    None
+}
+
+pub(crate) fn find_edition_marker_pda(mint: &Pubkey, edition_num: &str) -> (Pubkey, u8) {
+    Pubkey::find_program_address(
+        &[
+            "metadata".as_bytes(),
+            mpl_token_metadata::ID.as_ref(),
+            mint.as_ref(),
+            "edition".as_bytes(),
+            edition_num.as_bytes(),
+        ],
+        &mpl_token_metadata::ID,
+    )
+}
