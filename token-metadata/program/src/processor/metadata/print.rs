@@ -106,8 +106,11 @@ fn print_v1(_program_id: &Pubkey, ctx: Context<Print>, args: PrintArgs) -> Progr
         )?;
     } else {
         assert_owned_by(edition_token_account_info, &spl_token::id())?;
-        let _edition_token_account: spl_token::state::Account =
+        let edition_token_account: spl_token::state::Account =
             assert_initialized(edition_token_account_info)?;
+        if edition_token_account.amount < 1 {
+            return Err(MetadataError::NotEnoughTokens.into());
+        }
     }
 
     if ata_program.key != &spl_associated_token_account::ID {

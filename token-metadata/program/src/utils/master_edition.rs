@@ -419,6 +419,7 @@ pub fn mint_limited_edition<'a>(
     let me_supply = get_supply_off_master_edition(master_edition_account_info)?;
     let mint_authority = get_mint_authority(mint_info)?;
     let mint_supply = get_mint_supply(mint_info)?;
+    let mint_decimals = get_mint_decimals(mint_info)?;
     assert_mint_authority_matches_mint(&mint_authority, mint_authority_info)?;
 
     assert_edition_valid(
@@ -450,6 +451,9 @@ pub fn mint_limited_edition<'a>(
 
     if mint_supply != 1 {
         return Err(MetadataError::EditionsMustHaveExactlyOneToken.into());
+    }
+    if mint_decimals != 0 {
+        return Err(MetadataError::EditionMintDecimalsShouldBeZero.into());
     }
     let master_data = master_metadata.data;
     // bundle data into v2
