@@ -2,12 +2,12 @@ use borsh::BorshSerialize;
 use mpl_token_metadata::{
     instruction::{
         self,
-        builders::{BurnBuilder, PrintBuilder, TransferBuilder},
-        BurnArgs, InstructionBuilder, MetadataInstruction,
+        builders::{BurnBuilder, DelegateBuilder, PrintBuilder, TransferBuilder},
+        BurnArgs, DelegateArgs, InstructionBuilder, MetadataDelegateRole, MetadataInstruction,
         MintNewEditionFromMasterEditionViaTokenArgs, PrintArgs, TransferArgs,
     },
-    pda::{find_token_record_account, MARKER},
-    state::{TokenMetadataAccount, EDITION, EDITION_MARKER_BIT_SIZE, PREFIX},
+    pda::{find_metadata_delegate_record_account, find_token_record_account, MARKER},
+    state::{ProgrammableConfig, TokenMetadataAccount, EDITION, EDITION_MARKER_BIT_SIZE, PREFIX},
     ID,
 };
 use solana_program::{
@@ -17,7 +17,8 @@ use solana_program::{
 };
 use solana_program_test::BanksClientError;
 use solana_sdk::{
-    pubkey::Pubkey, signature::Signer, signer::keypair::Keypair, transaction::Transaction,
+    compute_budget::ComputeBudgetInstruction, pubkey::Pubkey, signature::Signer,
+    signer::keypair::Keypair, transaction::Transaction,
 };
 use spl_associated_token_account::{
     get_associated_token_address, instruction::create_associated_token_account,
@@ -639,5 +640,140 @@ impl EditionMarker {
             .unwrap();
 
         md_account.is_some() && token_account.is_some() && print_edition_account.is_some()
+    }
+
+    pub async fn delegate_asset(
+        &mut self,
+        context: &mut ProgramTestContext,
+        payer: Keypair,
+        delegate: Pubkey,
+        args: DelegateArgs,
+    ) -> Result<Option<Pubkey>, BanksClientError> {
+        let mut builder = DelegateBuilder::new();
+        builder
+            .delegate(delegate)
+            .mint(self.mint.pubkey())
+            .metadata(self.new_metadata_pubkey)
+            .payer(payer.pubkey())
+            .authority(payer.pubkey())
+            .spl_token_program(spl_token::ID)
+            .master_edition(self.new_edition_pubkey)
+            .token(self.token.pubkey());
+
+        let mut delegate_or_token_record = None;
+
+        match args {
+            // Token delegates.
+            DelegateArgs::SaleV1 { .. }
+            | DelegateArgs::TransferV1 { .. }
+            | DelegateArgs::UtilityV1 { .. }
+            | DelegateArgs::StakingV1 { .. }
+            | DelegateArgs::LockedTransferV1 { .. } => {
+                let (token_record, _) =
+                    find_token_record_account(&self.mint.pubkey(), &self.token.pubkey());
+                builder.token_record(token_record);
+                delegate_or_token_record = Some(token_record);
+            }
+            DelegateArgs::StandardV1 { .. } => { /* nothing to add */ }
+
+            // Metadata delegates.
+            DelegateArgs::CollectionV1 { .. } => {
+                let (delegate_record, _) = find_metadata_delegate_record_account(
+                    &self.mint.pubkey(),
+                    MetadataDelegateRole::Collection,
+                    &payer.pubkey(),
+                    &delegate,
+                );
+                builder.delegate_record(delegate_record);
+                delegate_or_token_record = Some(delegate_record);
+            }
+            DelegateArgs::DataV1 { .. } => {
+                let (delegate_record, _) = find_metadata_delegate_record_account(
+                    &self.mint.pubkey(),
+                    MetadataDelegateRole::Data,
+                    &payer.pubkey(),
+                    &delegate,
+                );
+                builder.delegate_record(delegate_record);
+                delegate_or_token_record = Some(delegate_record);
+            }
+            DelegateArgs::ProgrammableConfigV1 { .. } => {
+                let (delegate_record, _) = find_metadata_delegate_record_account(
+                    &self.mint.pubkey(),
+                    MetadataDelegateRole::ProgrammableConfig,
+                    &payer.pubkey(),
+                    &delegate,
+                );
+                builder.delegate_record(delegate_record);
+                delegate_or_token_record = Some(delegate_record);
+            }
+            DelegateArgs::AuthorityItemV1 { .. } => {
+                let (delegate_record, _) = find_metadata_delegate_record_account(
+                    &self.mint.pubkey(),
+                    MetadataDelegateRole::AuthorityItem,
+                    &payer.pubkey(),
+                    &delegate,
+                );
+                builder.delegate_record(delegate_record);
+                delegate_or_token_record = Some(delegate_record);
+            }
+            DelegateArgs::DataItemV1 { .. } => {
+                let (delegate_record, _) = find_metadata_delegate_record_account(
+                    &self.mint.pubkey(),
+                    MetadataDelegateRole::DataItem,
+                    &payer.pubkey(),
+                    &delegate,
+                );
+                builder.delegate_record(delegate_record);
+                delegate_or_token_record = Some(delegate_record);
+            }
+            DelegateArgs::CollectionItemV1 { .. } => {
+                let (delegate_record, _) = find_metadata_delegate_record_account(
+                    &self.mint.pubkey(),
+                    MetadataDelegateRole::CollectionItem,
+                    &payer.pubkey(),
+                    &delegate,
+                );
+                builder.delegate_record(delegate_record);
+                delegate_or_token_record = Some(delegate_record);
+            }
+            DelegateArgs::ProgrammableConfigItemV1 { .. } => {
+                let (delegate_record, _) = find_metadata_delegate_record_account(
+                    &self.mint.pubkey(),
+                    MetadataDelegateRole::ProgrammableConfigItem,
+                    &payer.pubkey(),
+                    &delegate,
+                );
+                builder.delegate_record(delegate_record);
+                delegate_or_token_record = Some(delegate_record);
+            }
+        }
+
+        // determines if we need to set the rule set
+        let metadata_account = get_account(context, &self.metadata_pubkey).await;
+        let metadata: mpl_token_metadata::state::Metadata =
+            try_from_slice_unchecked(&metadata_account.data).unwrap();
+
+        if let Some(ProgrammableConfig::V1 {
+            rule_set: Some(rule_set),
+        }) = metadata.programmable_config
+        {
+            builder.authorization_rules(rule_set);
+            builder.authorization_rules_program(mpl_token_auth_rules::ID);
+        }
+
+        let compute_ix = ComputeBudgetInstruction::set_compute_unit_limit(400_000);
+
+        let delegate_ix = builder.build(args.clone()).unwrap().instruction();
+
+        let tx = Transaction::new_signed_with_payer(
+            &[compute_ix, delegate_ix],
+            Some(&payer.pubkey()),
+            &[&payer],
+            context.last_blockhash,
+        );
+
+        context.banks_client.process_transaction(tx).await?;
+        Ok(delegate_or_token_record)
     }
 }

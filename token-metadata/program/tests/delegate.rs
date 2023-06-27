@@ -17,7 +17,8 @@ mod delegate {
         instruction::{DelegateArgs, MetadataDelegateRole},
         pda::{find_metadata_delegate_record_account, find_token_record_account},
         state::{
-            Key, Metadata, MetadataDelegateRecord, TokenDelegateRole, TokenRecord, TokenStandard,
+            Key, Metadata, MetadataDelegateRecord, PrintSupply, TokenDelegateRole, TokenRecord,
+            TokenStandard,
         },
     };
     use num_traits::FromPrimitive;
@@ -91,6 +92,80 @@ mod delegate {
         } else {
             panic!("Missing token account");
         }
+    }
+
+    #[tokio::test]
+    async fn set_transfer_delegate_programmable_nonfungible_edition() {
+        let mut context = program_test().start_with_context().await;
+
+        // asset
+
+        let mut master_asset = DigitalAsset::default();
+        master_asset
+            .create_and_mint_with_supply(
+                &mut context,
+                TokenStandard::ProgrammableNonFungible,
+                None,
+                None,
+                1,
+                PrintSupply::Unlimited,
+            )
+            .await
+            .unwrap();
+
+        assert!(master_asset.token.is_some());
+
+        let test_master_edition = MasterEditionV2::new_from_asset(&master_asset);
+        let mut test_edition_marker =
+            EditionMarker::new_from_asset(&master_asset, &test_master_edition, 1);
+
+        test_edition_marker
+            .create_from_asset(&mut context)
+            .await
+            .unwrap();
+
+        // delegates the asset for transfer
+
+        let user = Keypair::new();
+        let user_pubkey = user.pubkey();
+        let payer = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+
+        test_edition_marker
+            .delegate_asset(
+                &mut context,
+                payer,
+                user_pubkey,
+                DelegateArgs::TransferV1 {
+                    amount: 1,
+                    authorization_data: None,
+                },
+            )
+            .await
+            .unwrap();
+
+        // asserts
+
+        let (pda_key, _) = find_token_record_account(
+            &test_edition_marker.mint.pubkey(),
+            &test_edition_marker.token.pubkey(),
+        );
+
+        let pda = get_account(&mut context, &pda_key).await;
+        let token_record: TokenRecord = try_from_slice_unchecked(&pda.data).unwrap();
+
+        assert_eq!(token_record.key, Key::TokenRecord);
+        assert_eq!(token_record.delegate, Some(user_pubkey));
+        assert_eq!(
+            token_record.delegate_role,
+            Some(TokenDelegateRole::Transfer)
+        );
+
+        let account = get_account(&mut context, &test_edition_marker.token.pubkey()).await;
+        let token_account = Account::unpack(&account.data).unwrap();
+
+        assert!(token_account.is_frozen());
+        assert_eq!(token_account.delegate, COption::Some(user_pubkey));
+        assert_eq!(token_account.delegated_amount, 1);
     }
 
     #[tokio::test]
