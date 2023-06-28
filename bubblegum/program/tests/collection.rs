@@ -1,14 +1,13 @@
 #![cfg(feature = "test-bpf")]
 pub mod utils;
 
-use anchor_lang::accounts::program;
 use solana_program::native_token::LAMPORTS_PER_SOL;
 use solana_program_test::tokio;
 
 use solana_sdk::{signature::Keypair, signer::Signer};
 use utils::context::BubblegumTestContext;
 
-use crate::utils::Airdrop;
+use crate::utils::{Airdrop, DirtyClone};
 
 // Test for multiple combinations?
 const MAX_DEPTH: usize = 14;
@@ -91,7 +90,7 @@ async fn verify_collection_with_new_delegate() {
         .await
         .unwrap();
 
-    let payer = context.payer();
+    let payer = context.payer().dirty_clone();
 
     // Set up our old delegate record: collection_authority_record.
     let delegate = Keypair::new();
@@ -100,20 +99,23 @@ async fn verify_collection_with_new_delegate() {
         .await
         .unwrap();
 
-    let collection_asset = context.default_collection;
-    let program_context = context.mut_test_context();
+    let mut collection_asset = context.default_collection.dirty_clone();
+    let mut program_context = context.owned_test_context();
 
-    collection_asset
-        .delegate(program_context, payer, delegate.pubkey(), args)
+    let args = mpl_token_metadata::instruction::DelegateArgs::CollectionV1 {
+        authorization_data: None,
+    };
+
+    let record = collection_asset
+        .delegate(
+            &mut program_context,
+            payer.dirty_clone(),
+            delegate.pubkey(),
+            args,
+        )
         .await
+        .unwrap()
         .unwrap();
-
-    let record = context
-        .set_collection_authority_delegate(payer, delegate.pubkey())
-        .await
-        .unwrap();
-
-    let collection_asset = context.default_collection;
 
     // Get the first leaf and try to verify it with the delegate as the authority.
     let leaf = leaves.first_mut().unwrap();

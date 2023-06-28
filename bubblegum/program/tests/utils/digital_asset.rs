@@ -36,6 +36,8 @@ use spl_associated_token_account::{
     get_associated_token_address, instruction::create_associated_token_account,
 };
 
+use super::DirtyClone;
+
 pub const DEFAULT_NAME: &str = "Digital Asset";
 pub const DEFAULT_SYMBOL: &str = "DA";
 pub const DEFAULT_URI: &str = "https://digital.asset.org";
@@ -45,6 +47,7 @@ pub const DEFAULT_URI: &str = "https://digital.asset.org";
 // Digital Asset. Since different asset types have different accounts, care
 // should be taken that appropriate handlers update appropriate accounts, such as when
 // transferring a DigitalAsset, the token account should be updated.
+#[derive(Debug)]
 pub struct DigitalAsset {
     pub metadata: Pubkey,
     pub mint: Keypair,
@@ -53,6 +56,20 @@ pub struct DigitalAsset {
     pub token_record: Option<Pubkey>,
     pub token_standard: Option<TokenStandard>,
     pub edition_num: Option<u64>,
+}
+
+impl DirtyClone for DigitalAsset {
+    fn dirty_clone(&self) -> Self {
+        Self {
+            metadata: self.metadata,
+            mint: self.mint.dirty_clone(),
+            token: self.token,
+            edition: self.edition,
+            token_record: self.token_record,
+            token_standard: self.token_standard,
+            edition_num: self.edition_num,
+        }
+    }
 }
 
 impl Default for DigitalAsset {
