@@ -529,7 +529,7 @@ pub fn set_token_standard(
 ) -> Instruction {
     let mut accounts = vec![
         AccountMeta::new(metadata_account, false),
-        AccountMeta::new(update_authority, true),
+        AccountMeta::new_readonly(update_authority, true),
         AccountMeta::new_readonly(mint_account, false),
     ];
     let data = MetadataInstruction::SetTokenStandard.try_to_vec().unwrap();
