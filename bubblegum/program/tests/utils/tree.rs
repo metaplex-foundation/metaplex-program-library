@@ -495,6 +495,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
         collection_mint: Pubkey,
         collection_metadata: Pubkey,
         edition_account: Pubkey,
+        collection_record: Option<Pubkey>,
     ) -> Result<VerifyCollectionBuilder<MAX_DEPTH, MAX_BUFFER_SIZE>> {
         let root = self.decode_root().await?;
         let (data_hash, creator_hash) = compute_metadata_hashes(&args.metadata)?;
@@ -507,7 +508,7 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             payer: collection_authority.pubkey(),
             tree_delegate: self.tree_creator.pubkey(),
             collection_authority: collection_authority.pubkey(),
-            collection_authority_record_pda: mpl_bubblegum::id(),
+            collection_authority_record_pda: collection_record.unwrap_or(mpl_bubblegum::ID),
             collection_mint,
             collection_metadata,
             edition_account,
@@ -561,6 +562,29 @@ impl<const MAX_DEPTH: usize, const MAX_BUFFER_SIZE: usize> Tree<MAX_DEPTH, MAX_B
             collection_mint,
             collection_metadata,
             edition_account,
+            None,
+        )
+        .await?
+        .execute()
+        .await
+    }
+
+    pub async fn delegate_verify_collection(
+        &mut self,
+        args: &mut LeafArgs,
+        collection_authority: &Keypair,
+        collection_mint: Pubkey,
+        collection_metadata: Pubkey,
+        edition_account: Pubkey,
+        collection_record: Pubkey,
+    ) -> Result<()> {
+        self.verify_collection_tx(
+            args,
+            collection_authority,
+            collection_mint,
+            collection_metadata,
+            edition_account,
+            Some(collection_record),
         )
         .await?
         .execute()

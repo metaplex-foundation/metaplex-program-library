@@ -4,11 +4,16 @@ pub mod tree;
 pub mod tx_builder;
 
 use anchor_lang::{self, InstructionData, ToAccountMetas};
+use async_trait::async_trait;
 use bytemuck::PodCastError;
 use mpl_bubblegum::{hash_creators, hash_metadata, state::metaplex_adapter::MetadataArgs};
-use solana_program::{instruction::Instruction, pubkey::Pubkey};
-use solana_program_test::{BanksClientError, ProgramTest};
-use solana_sdk::signature::{Keypair, SignerError};
+use solana_program::{instruction::Instruction, pubkey::Pubkey, system_instruction};
+use solana_program_test::{BanksClientError, ProgramTest, ProgramTestContext};
+use solana_sdk::{
+    signature::{Keypair, SignerError},
+    signer::Signer,
+    transaction::Transaction,
+};
 use std::result;
 
 #[derive(Debug)]
@@ -23,6 +28,7 @@ pub enum Error {
 }
 
 pub type Result<T> = result::Result<T, Box<Error>>;
+pub type BanksResult<T> = std::result::Result<T, BanksClientError>;
 
 pub fn program_test() -> ProgramTest {
     let mut test = ProgramTest::new("mpl_bubblegum", mpl_bubblegum::id(), None);
@@ -95,5 +101,38 @@ impl LeafArgs {
             nonce: 0,
             index: 0,
         }
+    }
+}
+
+pub trait DirtyClone {
+    fn dirty_clone(&self) -> Self;
+}
+
+impl DirtyClone for Keypair {
+    fn dirty_clone(&self) -> Self {
+        Keypair::from_bytes(&self.to_bytes()).unwrap()
+    }
+}
+
+#[async_trait]
+pub trait Airdrop {
+    async fn airdrop(&self, context: &mut ProgramTestContext, lamports: u64) -> BanksResult<()>;
+}
+
+#[async_trait]
+impl Airdrop for Keypair {
+    async fn airdrop(&self, context: &mut ProgramTestContext, lamports: u64) -> BanksResult<()> {
+        let tx = Transaction::new_signed_with_payer(
+            &[system_instruction::transfer(
+                &context.payer.pubkey(),
+                &self.pubkey(),
+                lamports,
+            )],
+            Some(&context.payer.pubkey()),
+            &[&context.payer],
+            context.last_blockhash,
+        );
+
+        context.banks_client.process_transaction(tx).await
     }
 }

@@ -1,12 +1,16 @@
 use std::fmt::Display;
 
 use super::{
-    clone_keypair, digital_asset::DigitalAsset, program_test, tree::Tree, Error, LeafArgs, Result,
+    clone_keypair, digital_asset::DigitalAsset, program_test, tree::Tree, BanksResult, DirtyClone,
+    Error, LeafArgs, Result,
 };
 use mpl_bubblegum::state::metaplex_adapter::{
     Collection, Creator, MetadataArgs, TokenProgramVersion,
 };
-use mpl_token_metadata::state::{CollectionDetails, TokenStandard};
+use mpl_token_metadata::{
+    pda::find_collection_authority_account,
+    state::{CollectionDetails, TokenStandard},
+};
 use solana_program::pubkey::Pubkey;
 use solana_program_test::{BanksClient, ProgramTestContext};
 use solana_sdk::{
@@ -26,6 +30,14 @@ pub const DEFAULT_LAMPORTS_FUND_AMOUNT: u64 = 1_000_000_000;
 impl BubblegumTestContext {
     pub fn test_context(&self) -> &ProgramTestContext {
         &self.program_context
+    }
+
+    pub fn mut_test_context(&mut self) -> &mut ProgramTestContext {
+        &mut self.program_context
+    }
+
+    pub fn owned_test_context(self) -> ProgramTestContext {
+        self.program_context
     }
 
     pub async fn new() -> Result<Self> {
@@ -192,5 +204,43 @@ impl BubblegumTestContext {
         }
 
         Ok((tree, leaves))
+    }
+
+    pub async fn set_collection_authority_delegate(
+        &mut self,
+        authority: Keypair,
+        delegate: Pubkey,
+    ) -> BanksResult<Pubkey> {
+        let payer = self.payer().dirty_clone();
+
+        let collection_asset = &self.default_collection;
+
+        let (record, _) =
+            find_collection_authority_account(&collection_asset.mint.pubkey(), &delegate);
+
+        let ix = mpl_token_metadata::instruction::approve_collection_authority(
+            mpl_token_metadata::ID,
+            record,
+            delegate,
+            authority.pubkey(),
+            payer.pubkey(),
+            collection_asset.metadata,
+            collection_asset.mint.pubkey(),
+        );
+
+        let tx = Transaction::new_signed_with_payer(
+            &[ix],
+            Some(&payer.pubkey()),
+            &[&payer],
+            self.program_context.last_blockhash,
+        );
+
+        self.program_context
+            .banks_client
+            .process_transaction(tx)
+            .await
+            .unwrap();
+
+        Ok(record)
     }
 }
