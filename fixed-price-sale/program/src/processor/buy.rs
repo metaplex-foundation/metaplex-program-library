@@ -62,8 +62,6 @@ impl<'info> Buy<'info> {
             // First Edition marker skips the first bit because editions start at 1.
             if is_first_marker {
                 edition = 1
-            } else {
-                edition = 248;
             }
         } else {
             let marker = EditionMarker::from_account_info(edition_marker_info)?;
