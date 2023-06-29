@@ -100,11 +100,13 @@ pub enum MetadataError {
     EditionAlreadyMinted,
 
     /// Printing mint decimals should be zero
-    #[error("Printing mint decimals should be zero")]
+    /// This error is unused, but kept for backwards compatibility
+    #[error("")]
     PrintingMintDecimalsShouldBeZero,
 
     /// OneTimePrintingAuthorizationMint mint decimals should be zero
-    #[error("OneTimePrintingAuthorization mint decimals should be zero")]
+    /// This error is unused, but kept for backwards compatibility
+    #[error("")]
     OneTimePrintingAuthorizationMintDecimalsShouldBeZero,
 
     /// Edition mint decimals should be zero
