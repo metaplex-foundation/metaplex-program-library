@@ -27,6 +27,7 @@ export * from './Migrate';
 export * from './Mint';
 export * from './MintNewEditionFromMasterEditionViaToken';
 export * from './MintNewEditionFromMasterEditionViaVaultProxy';
+export * from './Print';
 export * from './PuffMetadata';
 export * from './RemoveCreatorVerification';
 export * from './Revoke';

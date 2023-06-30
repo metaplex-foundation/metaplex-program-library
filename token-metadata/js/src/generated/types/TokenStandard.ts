@@ -16,6 +16,7 @@ export enum TokenStandard {
   Fungible,
   NonFungibleEdition,
   ProgrammableNonFungible,
+  ProgrammableNonFungibleEdition,
 }
 
 /**

@@ -26,6 +26,7 @@ export * from './MintNewEditionFromMasterEditionViaTokenArgs';
 export * from './Payload';
 export * from './PayloadKey';
 export * from './PayloadType';
+export * from './PrintArgs';
 export * from './PrintSupply';
 export * from './ProgrammableConfig';
 export * from './Reservation';

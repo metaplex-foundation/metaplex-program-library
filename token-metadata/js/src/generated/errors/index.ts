@@ -472,7 +472,7 @@ createErrorFromCodeLookup.set(0x15, () => new EditionAlreadyMintedError());
 createErrorFromNameLookup.set('EditionAlreadyMinted', () => new EditionAlreadyMintedError());
 
 /**
- * PrintingMintDecimalsShouldBeZero: 'Printing mint decimals should be zero'
+ * PrintingMintDecimalsShouldBeZero: ''
  *
  * @category Errors
  * @category generated
@@ -481,7 +481,7 @@ export class PrintingMintDecimalsShouldBeZeroError extends Error {
   readonly code: number = 0x16;
   readonly name: string = 'PrintingMintDecimalsShouldBeZero';
   constructor() {
-    super('Printing mint decimals should be zero');
+    super('');
     if (typeof Error.captureStackTrace === 'function') {
       Error.captureStackTrace(this, PrintingMintDecimalsShouldBeZeroError);
     }
@@ -495,7 +495,7 @@ createErrorFromNameLookup.set(
 );
 
 /**
- * OneTimePrintingAuthorizationMintDecimalsShouldBeZero: 'OneTimePrintingAuthorization mint decimals should be zero'
+ * OneTimePrintingAuthorizationMintDecimalsShouldBeZero: ''
  *
  * @category Errors
  * @category generated
@@ -504,7 +504,7 @@ export class OneTimePrintingAuthorizationMintDecimalsShouldBeZeroError extends E
   readonly code: number = 0x17;
   readonly name: string = 'OneTimePrintingAuthorizationMintDecimalsShouldBeZero';
   constructor() {
-    super('OneTimePrintingAuthorization mint decimals should be zero');
+    super('');
     if (typeof Error.captureStackTrace === 'function') {
       Error.captureStackTrace(this, OneTimePrintingAuthorizationMintDecimalsShouldBeZeroError);
     }

@@ -63,6 +63,7 @@ import {
   UnverifyInstructionAccounts,
   UnverifyInstructionArgs,
   createUnverifyInstruction,
+  PrintInstructionAccounts,
 } from '../../src/generated';
 import { Test } from 'tape';
 import { amman } from '.';
@@ -744,6 +745,44 @@ export class InitTransactions {
 
     return {
       tx: handler.sendAndConfirmTransaction(tx, [payer, delegate], 'tx: Unlock'),
+    };
+  }
+
+  async print(
+    editionMetadata: PublicKey,
+    edition: PublicKey,
+    editionMint: PublicKey,
+    editionTokenAccountOwner: PublicKey,
+    editionTokenAccount: PublicKey,
+    editionMintAuthority: PublicKey,
+    masterEdition: PublicKey,
+    editionMarkerPda: PublicKey,
+    payer: PublicKey,
+    masterTokenAccountOwner: PublicKey,
+    masterTokenAccount: PublicKey,
+    masterMetadata: PublicKey,
+    updateAuthority: PublicKey,
+    splTokenProgram: PublicKey,
+    splAtaProgram: PublicKey,
+    sysvarInstructions: PublicKey,
+  ): Promise<{ tx: ConfirmedTransactionAssertablePromise }> {
+    const printAccounts: PrintInstructionAccounts = {
+      editionMetadata: new PublicKey(),
+      edition: new PublicKey(),
+      editionMint: new PublicKey(),
+      editionTokenAccountOwner: new PublicKey(),
+      editionTokenAccount: new PublicKey(),
+      editionMintAuthority: new PublicKey(),
+      masterEdition: new PublicKey(),
+      editionMarkerPda: new PublicKey(),
+      payer: new PublicKey(),
+      masterTokenAccountOwner: new PublicKey(),
+      masterTokenAccount: new PublicKey(),
+      masterMetadata: new PublicKey(),
+      updateAuthority: new PublicKey(),
+      splTokenProgram: new PublicKey(),
+      splAtaProgram: new PublicKey(),
+      sysvarInstructions: new PublicKey(),
     };
   }
 
