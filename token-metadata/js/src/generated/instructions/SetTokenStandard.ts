@@ -21,7 +21,7 @@ export const SetTokenStandardStruct = new beet.BeetArgsStruct<{ instructionDiscr
  * Accounts required by the _SetTokenStandard_ instruction
  *
  * @property [_writable_] metadata Metadata account
- * @property [_writable_, **signer**] updateAuthority Metadata update authority
+ * @property [**signer**] updateAuthority Metadata update authority
  * @property [] mint Mint account
  * @property [] edition (optional) Edition account
  * @category Instructions
@@ -65,7 +65,7 @@ export function createSetTokenStandardInstruction(
     },
     {
       pubkey: accounts.updateAuthority,
-      isWritable: true,
+      isWritable: false,
       isSigner: true,
     },
     {
