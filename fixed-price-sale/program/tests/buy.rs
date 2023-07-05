@@ -6,8 +6,8 @@ mod buy {
         setup_context,
         utils::{
             helpers::{
-                airdrop, create_collection, create_master_nft, create_mint, create_token_account,
-                mint_to, unwrap_ignoring_io_error_in_ci,
+                airdrop, buy_one, buy_setup, create_collection, create_master_nft, create_mint,
+                create_token_account, mint_to, unwrap_ignoring_io_error_in_ci, BuyManager,
             },
             setup_functions::{setup_selling_resource, setup_store},
         },
@@ -4044,7 +4044,7 @@ mod buy {
                     ERROR_CODE_OFFSET + ErrorCode::WrongGatingToken as u32
                 );
             }
-            _ => assert!(false),
+            _ => panic!("Wrong error code"),
         }
     }
 
@@ -4500,5 +4500,193 @@ mod buy {
             .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
             .await
             .unwrap();
+    }
+
+    #[tokio::test]
+    async fn multiple_marker_pdas() {
+        setup_context!(context, mpl_fixed_price_sale, mpl_token_metadata);
+        let (admin_wallet, store_keypair) = setup_store(&mut context).await;
+
+        let edition_mint_amount = 10_000;
+        let max_supply = 2 * edition_mint_amount;
+
+        let (selling_resource_keypair, selling_resource_owner_keypair, _vault) =
+            setup_selling_resource(
+                &mut context,
+                &admin_wallet,
+                &store_keypair,
+                100,
+                None,
+                true,
+                false,
+                max_supply,
+            )
+            .await;
+
+        airdrop(
+            &mut context,
+            &selling_resource_owner_keypair.pubkey(),
+            10_000_000_000_000,
+        )
+        .await;
+
+        let market_keypair = Keypair::new();
+
+        let treasury_mint_keypair = Keypair::new();
+        create_mint(
+            &mut context,
+            &treasury_mint_keypair,
+            &admin_wallet.pubkey(),
+            0,
+        )
+        .await;
+
+        let (treasury_owner, treasyry_owner_bump) = find_treasury_owner_address(
+            &treasury_mint_keypair.pubkey(),
+            &selling_resource_keypair.pubkey(),
+        );
+
+        let treasury_holder_keypair = Keypair::new();
+        create_token_account(
+            &mut context,
+            &treasury_holder_keypair,
+            &treasury_mint_keypair.pubkey(),
+            &treasury_owner,
+        )
+        .await;
+
+        let start_date = context
+            .banks_client
+            .get_sysvar::<Clock>()
+            .await
+            .unwrap()
+            .unix_timestamp
+            + 1;
+
+        let name = "Marktname".to_string();
+        let description = "Marktbeschreibung".to_string();
+        let mutable = true;
+        let price = 1_000;
+        let pieces_in_one_wallet = Some(edition_mint_amount);
+
+        // CreateMarket
+        let accounts = mpl_fixed_price_sale_accounts::CreateMarket {
+            market: market_keypair.pubkey(),
+            store: store_keypair.pubkey(),
+            selling_resource_owner: selling_resource_owner_keypair.pubkey(),
+            selling_resource: selling_resource_keypair.pubkey(),
+            mint: treasury_mint_keypair.pubkey(),
+            treasury_holder: treasury_holder_keypair.pubkey(),
+            owner: treasury_owner,
+            system_program: system_program::id(),
+        }
+        .to_account_metas(None);
+
+        let data = mpl_fixed_price_sale_instruction::CreateMarket {
+            _treasury_owner_bump: treasyry_owner_bump,
+            name: name.to_owned(),
+            description: description.to_owned(),
+            mutable,
+            price,
+            pieces_in_one_wallet,
+            start_date: start_date as u64,
+            end_date: None,
+            gating_config: None,
+        }
+        .data();
+
+        let instruction = Instruction {
+            program_id: mpl_fixed_price_sale::id(),
+            data,
+            accounts,
+        };
+
+        let tx = Transaction::new_signed_with_payer(
+            &[instruction],
+            Some(&context.payer.pubkey()),
+            &[
+                &context.payer,
+                &market_keypair,
+                &selling_resource_owner_keypair,
+            ],
+            context.last_blockhash,
+        );
+
+        context
+            .banks_client
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+            .await
+            .unwrap();
+
+        let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
+        context.warp_to_slot(clock.slot + 1500).unwrap();
+
+        // Buy setup
+        let mut buy_manager = BuyManager {
+            context: &mut context,
+            selling_resource_keypair,
+            selling_resource: None,
+            market_keypair,
+            treasury_mint_keypair,
+            treasury_holder_keypair,
+            admin_wallet,
+            user_token_account: None,
+            trade_history: None,
+            trade_history_bump: None,
+            vault_owner_bump: None,
+            vault_owner: None,
+        };
+
+        buy_setup(&mut buy_manager).await.unwrap();
+
+        for i in 1..=edition_mint_amount {
+            buy_one(&mut buy_manager).await.unwrap();
+            if i % 10 == 0 {
+                let slot = buy_manager
+                    .context
+                    .banks_client
+                    .get_root_slot()
+                    .await
+                    .unwrap();
+                buy_manager.context.warp_to_slot(slot + 100).unwrap();
+            }
+        }
+
+        let clock = buy_manager
+            .context
+            .banks_client
+            .get_sysvar::<Clock>()
+            .await
+            .unwrap();
+        buy_manager.context.warp_to_slot(clock.slot + 3).unwrap();
+
+        // Checks
+        let selling_resource_acc = buy_manager
+            .context
+            .banks_client
+            .get_account(buy_manager.selling_resource_keypair.pubkey())
+            .await
+            .unwrap()
+            .unwrap();
+        let selling_resource_data =
+            SellingResource::try_deserialize(&mut selling_resource_acc.data.as_ref()).unwrap();
+
+        let (trade_history, _) = find_trade_history_address(
+            &buy_manager.context.payer.pubkey(),
+            &buy_manager.market_keypair.pubkey(),
+        );
+
+        let trade_history_acc = buy_manager
+            .context
+            .banks_client
+            .get_account(trade_history)
+            .await
+            .unwrap()
+            .unwrap();
+        let trade_history_data =
+            TradeHistory::try_deserialize(&mut trade_history_acc.data.as_ref()).unwrap();
+
+        assert_eq!(selling_resource_data.supply, edition_mint_amount);
+        assert_eq!(trade_history_data.already_bought, edition_mint_amount);
     }
 }

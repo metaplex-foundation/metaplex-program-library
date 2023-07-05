@@ -39,7 +39,7 @@ pub async fn setup_store(context: &mut ProgramTestContext) -> (Keypair, Keypair)
     let admin_wallet = Keypair::new();
     let store_keypair = Keypair::new();
 
-    airdrop(context, &admin_wallet.pubkey(), 10_000_000_000).await;
+    airdrop(context, &admin_wallet.pubkey(), 1_000_000_000_000).await;
 
     let name = "Test store".to_string();
     let description = "Just a test store".to_string();
@@ -178,7 +178,7 @@ pub async fn setup_selling_resource(
     airdrop(
         context,
         &selling_resource_owner_keypair.pubkey(),
-        10_000_000_000,
+        1_000_000_000_000,
     )
     .await;
 
@@ -241,6 +241,7 @@ pub async fn setup_market(
     store_keypair: &Keypair,
     selling_resource_keypair: &Keypair,
     selling_resource_owner_keypair: &Keypair,
+    user_limit: Option<u64>,
 ) -> Keypair {
     let market_keypair = Keypair::new();
 
@@ -273,7 +274,6 @@ pub async fn setup_market(
     let description = "Marktbeschreibung".to_string();
     let mutable = true;
     let price = 1_000_000;
-    let pieces_in_one_wallet = Some(1);
 
     let accounts = mpl_fixed_price_sale_accounts::CreateMarket {
         market: market_keypair.pubkey(),
@@ -293,7 +293,7 @@ pub async fn setup_market(
         description: description.to_owned(),
         mutable,
         price,
-        pieces_in_one_wallet,
+        pieces_in_one_wallet: user_limit,
         start_date: start_date as u64,
         end_date: None,
         gating_config: None,

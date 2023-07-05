@@ -46,7 +46,7 @@ impl<'info> Buy<'info> {
         let mut edition = 0;
 
         loop {
-            let pda = find_edition_marker_pda(&metadata_mint, &edition.to_string()).0;
+            let pda = find_edition_marker_pda(&metadata_mint, edition).0;
 
             if pda == *edition_marker_info.key {
                 break;

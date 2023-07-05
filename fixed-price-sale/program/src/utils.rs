@@ -5,6 +5,7 @@ use anchor_lang::{
     prelude::*,
     solana_program::{program::invoke_signed, system_instruction},
 };
+use mpl_token_metadata::state::EDITION_MARKER_BIT_SIZE;
 
 pub const NAME_MAX_LEN: usize = 40; // max len of a string buffer in bytes
 pub const NAME_DEFAULT_SIZE: usize = 4 + NAME_MAX_LEN; // max lenght of serialized string (str_len + <buffer>)
@@ -308,14 +309,17 @@ pub(crate) fn find_first_zero_bit(arr: [u8; 31], first_marker: bool) -> Option<(
     None
 }
 
-pub(crate) fn find_edition_marker_pda(mint: &Pubkey, edition_num: &str) -> (Pubkey, u8) {
+pub fn find_edition_marker_pda(mint: &Pubkey, edition_num: u64) -> (Pubkey, u8) {
+    let edition_marker_number = edition_num.checked_div(EDITION_MARKER_BIT_SIZE).unwrap();
+    let edition_marker_number_str = edition_marker_number.to_string();
+
     Pubkey::find_program_address(
         &[
             "metadata".as_bytes(),
             mpl_token_metadata::ID.as_ref(),
             mint.as_ref(),
             "edition".as_bytes(),
-            edition_num.as_bytes(),
+            edition_marker_number_str.as_bytes(),
         ],
         &mpl_token_metadata::ID,
     )
