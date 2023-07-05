@@ -48,6 +48,7 @@ pub fn bubblegum_set_collection_size(
     let mut metadata = Metadata::from_account_info(parent_nft_metadata_account_info)?;
 
     // Check that the update authority or delegate is a signer.
+    // Collection authority is validated in the bubblegum program in the assert_has_collection_authority call.
     if !collection_update_authority_account_info.is_signer {
         return Err(MetadataError::UpdateAuthorityIsNotSigner.into());
     }
