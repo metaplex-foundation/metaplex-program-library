@@ -56,4 +56,10 @@ pub enum BubblegumError {
     LeafAuthorityMustSign,
     #[msg("Collection Not Compatable with Compression, Must be Sized")]
     CollectionMustBeSized,
+    #[msg("Metadata mint does not match collection mint")]
+    MetadataMintMismatch,
+    #[msg("Invalid collection authority")]
+    InvalidCollectionAuthority,
+    #[msg("Invalid delegate record pda derivation")]
+    InvalidDelegateRecord,
 }
