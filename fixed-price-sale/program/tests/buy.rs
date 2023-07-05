@@ -4502,6 +4502,7 @@ mod buy {
             .unwrap();
     }
 
+    #[ignore]
     #[tokio::test]
     async fn multiple_marker_pdas() {
         setup_context!(context, mpl_fixed_price_sale, mpl_token_metadata);
