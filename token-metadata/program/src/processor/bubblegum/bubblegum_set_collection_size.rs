@@ -8,7 +8,7 @@ use solana_program::{
 };
 
 use crate::{
-    assertions::{assert_owned_by, collection::assert_has_collection_authority},
+    assertions::assert_owned_by,
     error::MetadataError,
     instruction::SetCollectionSizeArgs,
     state::{CollectionDetails, Metadata, TokenMetadataAccount},
@@ -28,12 +28,6 @@ pub fn bubblegum_set_collection_size(
     let collection_update_authority_account_info = next_account_info(account_info_iter)?;
     let collection_mint_account_info = next_account_info(account_info_iter)?;
     let bubblegum_signer_info = next_account_info(account_info_iter)?;
-
-    let delegated_collection_auth_opt = if accounts.len() == 5 {
-        Some(next_account_info(account_info_iter)?)
-    } else {
-        None
-    };
 
     if !BUBBLEGUM_ACTIVATED {
         return Err(MetadataError::InvalidOperation.into());
@@ -57,13 +51,6 @@ pub fn bubblegum_set_collection_size(
     if !collection_update_authority_account_info.is_signer {
         return Err(MetadataError::UpdateAuthorityIsNotSigner.into());
     }
-
-    assert_has_collection_authority(
-        collection_update_authority_account_info,
-        &metadata,
-        collection_mint_account_info.key,
-        delegated_collection_auth_opt,
-    )?;
 
     // Ensure new size is + or - 1 of the current size.
     let current_size = if let Some(details) = metadata.collection_details {
