@@ -7,6 +7,7 @@ use super::*;
 
 pub(crate) fn burn_nonfungible_edition(
     ctx: &Context<Burn>,
+    edition_close_authority: bool,
     token_standard: &TokenStandard,
 ) -> ProgramResult {
     let edition_info = ctx.accounts.edition_info.unwrap();
@@ -82,8 +83,16 @@ pub(crate) fn burn_nonfungible_edition(
         ctx.accounts.mint_info.key.as_ref(),
         EDITION.as_bytes(),
     ]);
-    assert_derivation(&crate::ID, edition_info, &print_edition_info_path)
+    let bump = assert_derivation(&crate::ID, edition_info, &print_edition_info_path)
         .map_err(|_| MetadataError::InvalidPrintEdition)?;
+
+    let edition_seeds = &[
+        PREFIX.as_bytes(),
+        crate::ID.as_ref(),
+        ctx.accounts.mint_info.key.as_ref(),
+        EDITION.as_bytes(),
+        &[bump],
+    ];
 
     let print_edition = Edition::from_account_info(edition_info)?;
 
@@ -138,8 +147,16 @@ pub(crate) fn burn_nonfungible_edition(
         token_program: ctx.accounts.spl_token_program_info.clone(),
         account: ctx.accounts.token_info.clone(),
         destination: ctx.accounts.authority_info.clone(),
-        owner: ctx.accounts.authority_info.clone(),
-        authority_signer_seeds: None,
+        owner: if edition_close_authority {
+            edition_info.clone()
+        } else {
+            ctx.accounts.authority_info.clone()
+        },
+        authority_signer_seeds: if edition_close_authority {
+            Some(edition_seeds.as_slice())
+        } else {
+            None
+        },
     };
     spl_token_close(params)?;
 

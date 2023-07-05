@@ -97,5 +97,5 @@ pub fn process_burn_edition_nft<'a>(
         remaining_accounts: vec![],
     };
 
-    burn_nonfungible_edition(&context, &TokenStandard::NonFungibleEdition)
+    burn_nonfungible_edition(&context, false, &TokenStandard::NonFungibleEdition)
 }
