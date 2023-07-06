@@ -1355,6 +1355,11 @@
       "code": 6044,
       "name": "EditionMarkerFull",
       "msg": "No available editions in edition marker"
+    },
+    {
+      "code": 6045,
+      "name": "InvalidEditionMarkerAccount",
+      "msg": "Invalid edition marker"
     }
   ],
   "metadata": {

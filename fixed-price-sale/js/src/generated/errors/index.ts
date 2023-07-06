@@ -951,6 +951,29 @@ createErrorFromCodeLookup.set(0x179c, () => new EditionMarkerFullError());
 createErrorFromNameLookup.set('EditionMarkerFull', () => new EditionMarkerFullError());
 
 /**
+ * InvalidEditionMarkerAccount: 'Invalid edition marker'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidEditionMarkerAccountError extends Error {
+  readonly code: number = 0x179d;
+  readonly name: string = 'InvalidEditionMarkerAccount';
+  constructor() {
+    super('Invalid edition marker');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidEditionMarkerAccountError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x179d, () => new InvalidEditionMarkerAccountError());
+createErrorFromNameLookup.set(
+  'InvalidEditionMarkerAccount',
+  () => new InvalidEditionMarkerAccountError(),
+);
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated
