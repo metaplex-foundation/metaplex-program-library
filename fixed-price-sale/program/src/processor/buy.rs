@@ -53,6 +53,12 @@ impl<'info> Buy<'info> {
             }
 
             edition += 248;
+
+            if let Some(max_supply) = selling_resource.max_supply {
+                if edition > max_supply {
+                    return Err(ErrorCode::InvalidEditionMarkerAccount.into());
+                }
+            }
         }
 
         let is_first_marker = edition == 0;

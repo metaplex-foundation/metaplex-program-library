@@ -139,4 +139,7 @@ pub enum ErrorCode {
     // 6044
     #[msg("No available editions in edition marker")]
     EditionMarkerFull,
+    // 6045
+    #[msg("Invalid edition marker")]
+    InvalidEditionMarkerAccount,
 }
