@@ -13,7 +13,7 @@
     "postpublish": "git push origin && git push origin --tags",
     "build:docs": "typedoc",
     "build": "rimraf dist && tsc -p tsconfig.json",
-    "start-validator": "solana-test-validator -ud --quiet --reset -c cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK -c 4VTQredsAmr1yzRJugLV6Mt6eu6XMeCwdkZ73wwVMWHv -c noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV -c 3RHkdjCwWyK2firrwFQGvXCxbUpBky1GTmb9EDK9hUnX -c metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s --bpf-program BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY ../program/target/deploy/mpl_bubblegum.so",
+    "start-validator": "solana-test-validator -ud --quiet --reset -c cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK -c 4VTQredsAmr1yzRJugLV6Mt6eu6XMeCwdkZ73wwVMWHv -c noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV -c 3RHkdjCwWyK2firrwFQGvXCxbUpBky1GTmb9EDK9hUnX -c metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s -c PwDiXFxQsGra4sFFTT8r1QWRMd4vfumiWC1jfWNfdYT -c TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA -c ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL --bpf-program BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY ../program/target/deploy/mpl_bubblegum.so",
     "run-tests": "jest tests --detectOpenHandles",
     "test": "start-server-and-test start-validator http://localhost:8899/health run-tests",
     "api:gen": "DEBUG='(solita|rustbin):(info|error)' solita",

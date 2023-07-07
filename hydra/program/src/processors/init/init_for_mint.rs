@@ -1,6 +1,8 @@
-use crate::error::HydraError;
-use crate::state::{Fanout, FanoutMint};
-use crate::utils::validation::assert_ata;
+use crate::{
+    error::HydraError,
+    state::{Fanout, FanoutMint},
+    utils::validation::assert_ata,
+};
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, TokenAccount};
 

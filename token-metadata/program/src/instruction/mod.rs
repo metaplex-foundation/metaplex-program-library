@@ -41,6 +41,7 @@ pub const DEPRECATED_CREATE_RESERVATION_LIST: u8 = 6;
 pub const DEPRECATED_MINT_PRINTING_TOKENS_VIA_TOKEN: u8 = 8;
 pub const DEPRECATED_MINT_PRINTING_TOKENS: u8 = 9;
 pub const CREATE_METADATA_ACCOUNT_V2: u8 = 16;
+pub const MIGRATE: u8 = 48;
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
@@ -439,7 +440,7 @@ pub enum MetadataInstruction {
 
     /// Set the token standard of the asset.
     #[account(0, writable, name="metadata", desc="Metadata account")]
-    #[account(1, signer, writable, name="update_authority", desc="Metadata update authority")]
+    #[account(1, signer, name="update_authority", desc="Metadata update authority")]
     #[account(2, name="mint", desc="Mint account")]
     #[account(3, optional, name="edition", desc="Edition account")]
     SetTokenStandard,
@@ -696,7 +697,7 @@ pub enum MetadataInstruction {
     #[account(13, optional, name="authorization_rules_program", desc="Token Authorization Rules Program")]
     #[account(14, optional, name="authorization_rules", desc="Token Authorization Rules account")]
     #[default_optional_accounts]
-    Migrate(MigrateArgs),
+    Migrate,
 
     /// Transfer an asset.
     /// 

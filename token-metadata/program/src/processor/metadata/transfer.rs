@@ -1,7 +1,6 @@
 use std::fmt::Display;
 
-use mpl_token_auth_rules::processor::cmp_pubkeys;
-use mpl_utils::{assert_signer, token::TokenTransferParams};
+use mpl_utils::{assert_signer, cmp_pubkeys, token::TokenTransferParams};
 use solana_program::{
     account_info::AccountInfo,
     entrypoint::ProgramResult,

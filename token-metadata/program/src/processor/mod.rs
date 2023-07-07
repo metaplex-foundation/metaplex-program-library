@@ -39,7 +39,7 @@ use crate::{
         DEPRECATED_CREATE_MASTER_EDITION, DEPRECATED_CREATE_RESERVATION_LIST,
         DEPRECATED_MINT_NEW_EDITION_FROM_MASTER_EDITION_VIA_PRINTING_TOKEN,
         DEPRECATED_MINT_PRINTING_TOKENS, DEPRECATED_MINT_PRINTING_TOKENS_VIA_TOKEN,
-        DEPRECATED_SET_RESERVATION_LIST, UPDATE_METADATA_ACCOUNT,
+        DEPRECATED_SET_RESERVATION_LIST, MIGRATE, UPDATE_METADATA_ACCOUNT,
     },
     processor::{
         edition::{
@@ -100,7 +100,8 @@ pub fn process_instruction<'a>(
             | DEPRECATED_CREATE_RESERVATION_LIST
             | DEPRECATED_MINT_PRINTING_TOKENS_VIA_TOKEN
             | DEPRECATED_MINT_PRINTING_TOKENS
-            | CREATE_METADATA_ACCOUNT_V2 => Err(MetadataError::Removed.into()),
+            | CREATE_METADATA_ACCOUNT_V2
+            | MIGRATE => Err(MetadataError::Removed.into()),
             _ => Err(ProgramError::InvalidInstructionData),
         },
     }?;
@@ -143,10 +144,7 @@ pub fn process_instruction<'a>(
             msg!("IX: Unlock");
             state::unlock(program_id, accounts, args)
         }
-        MetadataInstruction::Migrate(args) => {
-            msg!("IX: Migrate");
-            metadata::migrate(program_id, accounts, args)
-        }
+        MetadataInstruction::Migrate => Err(MetadataError::Removed.into()),
         MetadataInstruction::Transfer(args) => {
             msg!("IX: Transfer");
             metadata::transfer(program_id, accounts, args)

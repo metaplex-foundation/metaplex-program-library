@@ -19,7 +19,6 @@ export * from './Key';
 export * from './LeafInfo';
 export * from './LockArgs';
 export * from './MetadataDelegateRole';
-export * from './MigrateArgs';
 export * from './MigrationType';
 export * from './MintArgs';
 export * from './MintNewEditionFromMasterEditionViaTokenArgs';
