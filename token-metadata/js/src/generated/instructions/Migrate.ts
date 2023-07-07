@@ -7,30 +7,14 @@
 
 import * as beet from '@metaplex-foundation/beet';
 import * as web3 from '@solana/web3.js';
-import { MigrateArgs, migrateArgsBeet } from '../types/MigrateArgs';
 
 /**
  * @category Instructions
  * @category Migrate
  * @category generated
  */
-export type MigrateInstructionArgs = {
-  migrateArgs: MigrateArgs;
-};
-/**
- * @category Instructions
- * @category Migrate
- * @category generated
- */
-export const MigrateStruct = new beet.FixableBeetArgsStruct<
-  MigrateInstructionArgs & {
-    instructionDiscriminator: number;
-  }
->(
-  [
-    ['instructionDiscriminator', beet.u8],
-    ['migrateArgs', migrateArgsBeet],
-  ],
+export const MigrateStruct = new beet.BeetArgsStruct<{ instructionDiscriminator: number }>(
+  [['instructionDiscriminator', beet.u8]],
   'MigrateInstructionArgs',
 );
 /**
@@ -81,20 +65,16 @@ export const migrateInstructionDiscriminator = 48;
  * this was indicated in the IDL from which this instruction was generated.
  *
  * @param accounts that will be accessed while the instruction is processed
- * @param args to provide as instruction data to the program
- *
  * @category Instructions
  * @category Migrate
  * @category generated
  */
 export function createMigrateInstruction(
   accounts: MigrateInstructionAccounts,
-  args: MigrateInstructionArgs,
   programId = new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
 ) {
   const [data] = MigrateStruct.serialize({
     instructionDiscriminator: migrateInstructionDiscriminator,
-    ...args,
   });
   const keys: web3.AccountMeta[] = [
     {

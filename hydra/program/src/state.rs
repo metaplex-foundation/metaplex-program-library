@@ -47,7 +47,7 @@ pub struct FanoutMint {
                                    // +50 padding
 }
 
-pub const FANOUT_MEMBERSHIP_VOUCHER_SIZE: usize = 32 + 8 + 8 + 1 + 32 + 8 + 64;
+pub const FANOUT_MEMBERSHIP_VOUCHER_SIZE: usize = 32 + 8 + 8 + 1 + 32 + 8 + 8 + 56;
 #[account]
 #[derive(Default, Debug)]
 pub struct FanoutMembershipVoucher {
@@ -57,9 +57,10 @@ pub struct FanoutMembershipVoucher {
     pub bump_seed: u8,
     pub membership_key: Pubkey,
     pub shares: u64,
+    pub stake_time: i64,
 }
 
-pub const FANOUT_MINT_MEMBERSHIP_VOUCHER_SIZE: usize = 32 + 32 + 8 + 1 + 32;
+pub const FANOUT_MINT_MEMBERSHIP_VOUCHER_SIZE: usize = 32 + 32 + 8 + 1 + 8 + 24;
 #[account]
 #[derive(Default)]
 pub struct FanoutMembershipMintVoucher {
@@ -67,4 +68,5 @@ pub struct FanoutMembershipMintVoucher {
     pub fanout_mint: Pubkey,
     pub last_inflow: u64,
     pub bump_seed: u8,
+    pub stake_time: i64,
 }

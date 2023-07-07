@@ -1,5 +1,7 @@
-use crate::error::{HydraError, OrArithError};
-use crate::state::{Fanout, FanoutMembershipMintVoucher, FanoutMembershipVoucher, FanoutMint};
+use crate::{
+    error::{HydraError, OrArithError},
+    state::{Fanout, FanoutMembershipMintVoucher, FanoutMembershipVoucher, FanoutMint},
+};
 use anchor_lang::prelude::*;
 
 pub fn calculate_inflow_change(total_inflow: u64, last_inflow: u64) -> Result<u64> {

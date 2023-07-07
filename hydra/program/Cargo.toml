@@ -1,6 +1,6 @@
 [package]
 name = "mpl-hydra"
-version = "0.3.0"
+version = "0.4.2"
 edition = "2021"
 description = "Collective account pooling, fan out wallet, dao treasury, all of the things you need to FAN OUT"
 authors = ["Metaplex Developers <dev@metaplex.com>"]
@@ -21,6 +21,7 @@ default = []
 [dependencies]
 anchor-lang = "0.26.0"
 anchor-spl = "0.26.0"
+solana-zk-token-sdk = "~1.14.13"
 spl-token = {version="3.5.0", features = [ "no-entrypoint" ]}
 mpl-token-metadata = {version="1.7.0", features = [ "no-entrypoint" ]}
 

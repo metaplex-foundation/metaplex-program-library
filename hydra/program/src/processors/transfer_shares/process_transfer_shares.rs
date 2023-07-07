@@ -1,5 +1,7 @@
-use crate::error::HydraError;
-use crate::state::{Fanout, FanoutMembershipVoucher};
+use crate::{
+    error::HydraError,
+    state::{Fanout, FanoutMembershipVoucher},
+};
 
 use crate::MembershipModel;
 use anchor_lang::prelude::*;

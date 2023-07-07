@@ -296,11 +296,7 @@ fn revoke_persistent_delegate_v1(
             ctx.accounts.authority_info.key,
             &[],
         )?,
-        &[
-            token_info.clone(),
-            ctx.accounts.delegate_info.clone(),
-            ctx.accounts.authority_info.clone(),
-        ],
+        &[token_info.clone(), ctx.accounts.authority_info.clone()],
     )?;
 
     if matches!(
