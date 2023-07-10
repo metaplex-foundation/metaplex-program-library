@@ -5624,12 +5624,12 @@
     {
       "code": 0,
       "name": "InstructionUnpackError",
-      "msg": "Failed to unpack instruction data"
+      "msg": ""
     },
     {
       "code": 1,
       "name": "InstructionPackError",
-      "msg": "Failed to pack instruction data"
+      "msg": ""
     },
     {
       "code": 2,
@@ -5694,7 +5694,7 @@
     {
       "code": 14,
       "name": "UpdateAuthorityMustBeEqualToMetadataAuthorityAndSigner",
-      "msg": "Update authority must be equivalent to the metadata's authority and also signer of this transaction"
+      "msg": ""
     },
     {
       "code": 15,
@@ -5709,37 +5709,37 @@
     {
       "code": 17,
       "name": "MaxEditionsMintedAlready",
-      "msg": "Maximum editions printed already"
+      "msg": ""
     },
     {
       "code": 18,
       "name": "TokenMintToFailed",
-      "msg": "Token mint to failed"
+      "msg": ""
     },
     {
       "code": 19,
       "name": "MasterRecordMismatch",
-      "msg": "The master edition record passed must match the master record on the edition given"
+      "msg": ""
     },
     {
       "code": 20,
       "name": "DestinationMintMismatch",
-      "msg": "The destination account does not have the right mint"
+      "msg": ""
     },
     {
       "code": 21,
       "name": "EditionAlreadyMinted",
-      "msg": "An edition can only mint one of its kind!"
+      "msg": ""
     },
     {
       "code": 22,
       "name": "PrintingMintDecimalsShouldBeZero",
-      "msg": "Printing mint decimals should be zero"
+      "msg": ""
     },
     {
       "code": 23,
       "name": "OneTimePrintingAuthorizationMintDecimalsShouldBeZero",
-      "msg": "OneTimePrintingAuthorization mint decimals should be zero"
+      "msg": ""
     },
     {
       "code": 24,
@@ -5749,12 +5749,12 @@
     {
       "code": 25,
       "name": "TokenBurnFailed",
-      "msg": "Token burn failed"
+      "msg": ""
     },
     {
       "code": 26,
       "name": "TokenAccountOneTimeAuthMintMismatch",
-      "msg": "The One Time authorization mint does not match that on the token account!"
+      "msg": ""
     },
     {
       "code": 27,
@@ -5789,17 +5789,17 @@
     {
       "code": 33,
       "name": "PrintingMintAuthorizationAccountMismatch",
-      "msg": "The mint on your authorization token holding account does not match your Printing mint!"
+      "msg": ""
     },
     {
       "code": 34,
       "name": "AuthorizationTokenAccountOwnerMismatch",
-      "msg": "The authorization token account has a different owner than the update authority for the master edition!"
+      "msg": ""
     },
     {
       "code": 35,
       "name": "Disabled",
-      "msg": "This feature is currently disabled."
+      "msg": ""
     },
     {
       "code": 36,
@@ -5814,7 +5814,7 @@
     {
       "code": 38,
       "name": "MustBeOneOfCreators",
-      "msg": "If using a creators array, you must be one of the creators listed"
+      "msg": ""
     },
     {
       "code": 39,
@@ -5854,27 +5854,27 @@
     {
       "code": 46,
       "name": "ReservationExists",
-      "msg": "This reservation list already exists!"
+      "msg": ""
     },
     {
       "code": 47,
       "name": "ReservationDoesNotExist",
-      "msg": "This reservation list does not exist!"
+      "msg": ""
     },
     {
       "code": 48,
       "name": "ReservationNotSet",
-      "msg": "This reservation list exists but was never set with reservations"
+      "msg": ""
     },
     {
       "code": 49,
       "name": "ReservationAlreadyMade",
-      "msg": "This reservation list has already been set!"
+      "msg": ""
     },
     {
       "code": 50,
       "name": "BeyondMaxAddressSize",
-      "msg": "Provided more addresses than max allowed in single reservation"
+      "msg": ""
     },
     {
       "code": 51,
@@ -5884,12 +5884,12 @@
     {
       "code": 52,
       "name": "ReservationBreachesMaximumSupply",
-      "msg": "This reservation would go beyond the maximum supply of the master edition!"
+      "msg": ""
     },
     {
       "code": 53,
       "name": "AddressNotInReservation",
-      "msg": "Address not in reservation!"
+      "msg": ""
     },
     {
       "code": 54,
@@ -5904,7 +5904,7 @@
     {
       "code": 56,
       "name": "SpotMismatch",
-      "msg": "In initial reservation setting, spots remaining should equal total spots"
+      "msg": ""
     },
     {
       "code": 57,
@@ -5914,7 +5914,7 @@
     {
       "code": 58,
       "name": "PrintingWouldBreachMaximumSupply",
-      "msg": "printing these tokens would breach the maximum supply limit of the master edition"
+      "msg": ""
     },
     {
       "code": 59,
@@ -5929,7 +5929,7 @@
     {
       "code": 61,
       "name": "ReservationSpotsRemainingShouldMatchTotalSpotsAtStart",
-      "msg": "Reservation spots remaining should match total spots when first being created"
+      "msg": ""
     },
     {
       "code": 62,
@@ -5944,17 +5944,17 @@
     {
       "code": 64,
       "name": "BeyondAlottedAddressSize",
-      "msg": "Beyond alotted address size in reservation!"
+      "msg": ""
     },
     {
       "code": 65,
       "name": "ReservationNotComplete",
-      "msg": "The reservation has only been partially alotted"
+      "msg": ""
     },
     {
       "code": 66,
       "name": "TriedToReplaceAnExistingReservation",
-      "msg": "You cannot splice over an existing reservation!"
+      "msg": ""
     },
     {
       "code": 67,
@@ -5984,7 +5984,7 @@
     {
       "code": 72,
       "name": "ReservationArrayShouldBeSizeOne",
-      "msg": "In the legacy system the reservation needs to be of size one for cpu limit reasons"
+      "msg": ""
     },
     {
       "code": 73,
@@ -6004,7 +6004,7 @@
     {
       "code": 76,
       "name": "MustBeBurned",
-      "msg": "This token use method is burn and there are no remaining uses, it must be burned"
+      "msg": ""
     },
     {
       "code": 77,
@@ -6074,7 +6074,7 @@
     {
       "code": 90,
       "name": "InvalidCollectionAuthorityRecord",
-      "msg": "This Collection Authority Record is invalid."
+      "msg": ""
     },
     {
       "code": 91,
@@ -6089,7 +6089,7 @@
     {
       "code": 93,
       "name": "CannotAdjustVerifiedCreator",
-      "msg": "Creator can not be adjusted once they are verified."
+      "msg": ""
     },
     {
       "code": 94,
@@ -6099,12 +6099,12 @@
     {
       "code": 95,
       "name": "CannotWipeVerifiedCreators",
-      "msg": "Can not wipe verified creators."
+      "msg": ""
     },
     {
       "code": 96,
       "name": "NotAllowedToChangeSellerFeeBasisPoints",
-      "msg": "Not allowed to change seller fee basis points."
+      "msg": ""
     },
     {
       "code": 97,
@@ -6124,7 +6124,7 @@
     {
       "code": 100,
       "name": "TokenCloseFailed",
-      "msg": "Token close failed"
+      "msg": ""
     },
     {
       "code": 101,
@@ -6179,7 +6179,7 @@
     {
       "code": 111,
       "name": "BorshDeserializationError",
-      "msg": "Borsh Deserialization Error"
+      "msg": ""
     },
     {
       "code": 112,
@@ -6199,7 +6199,7 @@
     {
       "code": 115,
       "name": "AlreadyUnverified",
-      "msg": "Item is already unverified."
+      "msg": ""
     },
     {
       "code": 116,
