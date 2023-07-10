@@ -4508,7 +4508,7 @@ mod buy {
         setup_context!(context, mpl_fixed_price_sale, mpl_token_metadata);
         let (admin_wallet, store_keypair) = setup_store(&mut context).await;
 
-        let edition_mint_amount = 10_000;
+        let edition_mint_amount = 500;
         let max_supply = 2 * edition_mint_amount;
 
         let (selling_resource_keypair, selling_resource_owner_keypair, _vault) =

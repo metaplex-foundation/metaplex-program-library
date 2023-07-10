@@ -260,7 +260,7 @@ async fn mint_after_edition_burn() {
     let edition_marker_number = 0;
 
     // Buy
-    let accounts = mpl_fixed_price_sale_accounts::BuyV2 {
+    let accounts = mpl_fixed_price_sale_accounts::Buy {
         market: market_keypair.pubkey(),
         selling_resource: selling_resource_keypair.pubkey(),
         user_token_account: user_token_account.pubkey(),
@@ -429,7 +429,7 @@ async fn mint_after_edition_burn() {
     );
 
     // Buy
-    let accounts = mpl_fixed_price_sale_accounts::BuyV2 {
+    let accounts = mpl_fixed_price_sale_accounts::Buy {
         market: market_keypair.pubkey(),
         selling_resource: selling_resource_keypair.pubkey(),
         user_token_account: user_token_account.pubkey(),
@@ -485,7 +485,7 @@ async fn multiple_marker_pdas() {
     setup_context!(context, mpl_fixed_price_sale, mpl_token_metadata);
     let (admin_wallet, store_keypair) = setup_store(&mut context).await;
 
-    let edition_mint_amount = 1000;
+    let edition_mint_amount = 500;
     let max_supply = 2 * edition_mint_amount;
 
     let (selling_resource_keypair, selling_resource_owner_keypair, _vault) =

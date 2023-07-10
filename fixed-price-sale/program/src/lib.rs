@@ -48,23 +48,19 @@ pub mod fixed_price_sale {
         _trade_history_bump: u8,
         vault_owner_bump: u8,
     ) -> Result<()> {
-        ctx.accounts.process(
-            _trade_history_bump,
-            vault_owner_bump,
-            ctx.remaining_accounts,
-        )
+        ctx.accounts
+            .process(vault_owner_bump, None, ctx.remaining_accounts)
     }
 
     pub fn buy_v2<'info>(
-        ctx: Context<'_, '_, '_, 'info, BuyV2<'info>>,
+        ctx: Context<'_, '_, '_, 'info, Buy<'info>>,
         _trade_history_bump: u8,
         vault_owner_bump: u8,
         edition_marker_number: u64,
     ) -> Result<()> {
         ctx.accounts.process(
-            _trade_history_bump,
             vault_owner_bump,
-            edition_marker_number,
+            Some(edition_marker_number),
             ctx.remaining_accounts,
         )
     }

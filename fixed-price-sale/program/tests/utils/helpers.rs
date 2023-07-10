@@ -768,7 +768,7 @@ pub async fn buy_one_v2<'a>(
     );
 
     // Buy
-    let accounts = mpl_fixed_price_sale_accounts::BuyV2 {
+    let accounts = mpl_fixed_price_sale_accounts::Buy {
         market: manager.market_keypair.pubkey(),
         selling_resource: manager.selling_resource_keypair.pubkey(),
         user_token_account: manager.user_token_account.as_ref().unwrap().pubkey(),
