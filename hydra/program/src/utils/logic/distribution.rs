@@ -1,9 +1,15 @@
-use crate::state::{Fanout, FanoutMembershipVoucher, FANOUT_ACCOUNT_SIZE, HOLDING_ACCOUNT_SIZE};
-use crate::utils::logic::calculation::*;
-use crate::utils::logic::transfer::{transfer_from_mint_holding, transfer_native};
-use crate::utils::parse_fanout_mint;
-use crate::utils::validation::*;
-use crate::utils::*;
+use crate::{
+    state::{Fanout, FanoutMembershipVoucher, FANOUT_ACCOUNT_SIZE, HOLDING_ACCOUNT_SIZE},
+    utils::{
+        logic::{
+            calculation::*,
+            transfer::{transfer_from_mint_holding, transfer_native},
+        },
+        parse_fanout_mint,
+        validation::*,
+        *,
+    },
+};
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token};
 
@@ -67,6 +73,10 @@ pub fn distribute_mint<'info>(
     membership_key: &Pubkey,
 ) -> Result<()> {
     msg!("Distribute For Mint");
+    if membership_voucher.stake_time == 0 {
+        membership_voucher.stake_time = Clock::get()?.unix_timestamp;
+    }
+
     let mint = &fanout_mint;
     let fanout_for_mint_membership_voucher_unchecked = fanout_for_mint_membership_voucher;
     let fanout_mint_member_token_account_info = fanout_mint_member_token_account.to_account_info();
@@ -98,6 +108,8 @@ pub fn distribute_mint<'info>(
         &fanout_for_mint.key(),
         &mint.key(),
         &fanout.key(),
+        membership_voucher.stake_time,
+        fanout_for_mint_object.total_inflow,
     )?;
     let holding_account_ata = parse_token_account(holding_account, &fanout.key())?;
     parse_token_account(&fanout_mint_member_token_account_info, &member.key())?;

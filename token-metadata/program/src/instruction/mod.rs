@@ -440,7 +440,7 @@ pub enum MetadataInstruction {
 
     /// Set the token standard of the asset.
     #[account(0, writable, name="metadata", desc="Metadata account")]
-    #[account(1, signer, writable, name="update_authority", desc="Metadata update authority")]
+    #[account(1, signer, name="update_authority", desc="Metadata update authority")]
     #[account(2, name="mint", desc="Mint account")]
     #[account(3, optional, name="edition", desc="Edition account")]
     SetTokenStandard,

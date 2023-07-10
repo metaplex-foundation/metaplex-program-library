@@ -1932,7 +1932,7 @@
         },
         {
           "name": "updateAuthority",
-          "isMut": true,
+          "isMut": false,
           "isSigner": true,
           "desc": "Metadata update authority"
         },
