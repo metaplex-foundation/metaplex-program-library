@@ -19,14 +19,14 @@ mod buy {
         accounts as mpl_fixed_price_sale_accounts,
         error::ErrorCode,
         instruction as mpl_fixed_price_sale_instruction,
-        state::{GatingConfig, Market, SellingResource, TradeHistory},
+        state::{GatingConfig, SellingResource, TradeHistory},
         utils::{
             find_trade_history_address, find_treasury_owner_address, find_vault_owner_address,
         },
     };
     use mpl_token_metadata::{
         instruction::burn_edition_nft,
-        state::{EditionMarker, MasterEditionV2, TokenMetadataAccount},
+        state::{MasterEditionV2, TokenMetadataAccount},
     };
     use solana_program::{clock::Clock, instruction::AccountMeta};
     use solana_program_test::*;
@@ -4252,8 +4252,6 @@ mod buy {
             &mpl_token_metadata::id(),
         );
 
-        println!("Edition marker: {:?}", edition_marker);
-
         let (new_metadata, _) = Pubkey::find_program_address(
             &[
                 mpl_token_metadata::state::PREFIX.as_bytes(),
@@ -4272,16 +4270,6 @@ mod buy {
             ],
             &mpl_token_metadata::id(),
         );
-
-        let market_account = context
-            .banks_client
-            .get_account(market_keypair.pubkey())
-            .await
-            .unwrap()
-            .unwrap();
-        let market: Market = Market::try_deserialize(&mut market_account.data.as_ref()).unwrap();
-        println!("{:?}", market.end_date);
-        println!("Market status: {:?}", market.state);
 
         // Buy
         let accounts = mpl_fixed_price_sale_accounts::Buy {
@@ -4333,14 +4321,6 @@ mod buy {
             .await
             .unwrap();
 
-        let marker_account = context
-            .banks_client
-            .get_account(edition_marker)
-            .await
-            .unwrap()
-            .unwrap();
-        let marker = EditionMarker::safe_deserialize(&marker_account.data).unwrap();
-
         let master_edition_account = context
             .banks_client
             .get_account(master_edition)
@@ -4350,8 +4330,6 @@ mod buy {
         let master_edition_struct =
             MasterEditionV2::safe_deserialize(&master_edition_account.data).unwrap();
 
-        println!("{:?}", marker);
-        println!("{:?}", master_edition_struct);
         assert_eq!(master_edition_struct.supply, 1);
 
         /* Burn the edition */
@@ -4378,14 +4356,6 @@ mod buy {
 
         context.banks_client.process_transaction(tx).await.unwrap();
 
-        let marker_account = context
-            .banks_client
-            .get_account(edition_marker)
-            .await
-            .unwrap()
-            .unwrap();
-        let marker = EditionMarker::safe_deserialize(&marker_account.data).unwrap();
-
         let master_edition_account = context
             .banks_client
             .get_account(master_edition)
@@ -4395,20 +4365,10 @@ mod buy {
         let master_edition_struct =
             MasterEditionV2::safe_deserialize(&master_edition_account.data).unwrap();
 
-        println!("{:?}", marker);
         assert_eq!(master_edition_struct.supply, 0);
         /* BURN ENDED */
 
         /* Buy Another */
-        let market_account = context
-            .banks_client
-            .get_account(market_keypair.pubkey())
-            .await
-            .unwrap()
-            .unwrap();
-        let market: Market = Market::try_deserialize(&mut market_account.data.as_ref()).unwrap();
-        println!("{:?}", market.end_date);
-        println!("Market status: {:?}", market.state);
 
         let new_mint_keypair = Keypair::new();
         create_mint(&mut context, &new_mint_keypair, &payer_pubkey, 0).await;
@@ -4508,7 +4468,7 @@ mod buy {
         setup_context!(context, mpl_fixed_price_sale, mpl_token_metadata);
         let (admin_wallet, store_keypair) = setup_store(&mut context).await;
 
-        let edition_mint_amount = 500;
+        let edition_mint_amount = 1000;
         let max_supply = 2 * edition_mint_amount;
 
         let (selling_resource_keypair, selling_resource_owner_keypair, _vault) =
@@ -4642,7 +4602,7 @@ mod buy {
 
         for i in 1..=edition_mint_amount {
             buy_one(&mut buy_manager).await.unwrap();
-            if i % 10 == 0 {
+            if i % 5 == 0 {
                 let slot = buy_manager
                     .context
                     .banks_client
