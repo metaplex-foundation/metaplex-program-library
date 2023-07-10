@@ -88,6 +88,7 @@ mod set_collection_size {
         let metadata = ProgramMetadata::deserialize(&mut md_account.data.as_slice()).unwrap();
         let retrieved_size = if let Some(details) = metadata.collection_details {
             match details {
+                #[allow(deprecated)]
                 CollectionDetails::V1 { size } => size,
             }
         } else {
@@ -190,6 +191,7 @@ mod set_collection_size {
         let metadata = ProgramMetadata::deserialize(&mut md_account.data.as_slice()).unwrap();
         let retrieved_size = if let Some(details) = metadata.collection_details {
             match details {
+                #[allow(deprecated)]
                 CollectionDetails::V1 { size } => size,
             }
         } else {
@@ -384,6 +386,7 @@ mod set_collection_size {
         let metadata = ProgramMetadata::deserialize(&mut md_account.data.as_slice()).unwrap();
         let retrieved_size = if let Some(details) = metadata.collection_details {
             match details {
+                #[allow(deprecated)]
                 CollectionDetails::V1 { size } => size,
             }
         } else {
@@ -451,6 +454,7 @@ mod set_collection_size {
         let metadata = ProgramMetadata::deserialize(&mut md_account.data.as_slice()).unwrap();
         let retrieved_size = if let Some(details) = metadata.collection_details {
             match details {
+                #[allow(deprecated)]
                 CollectionDetails::V1 { size } => size,
             }
         } else {

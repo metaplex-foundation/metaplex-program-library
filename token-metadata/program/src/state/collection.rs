@@ -55,6 +55,10 @@ impl CollectionAuthorityRecord {
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub enum CollectionDetails {
+    #[deprecated(
+        since = "1.13.0",
+        note = "The collection size tracking feature is deprecated and will soon be removed."
+    )]
     V1 { size: u64 },
 }
 

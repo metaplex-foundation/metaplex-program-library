@@ -9,6 +9,7 @@ pub fn increment_collection_size(
 ) -> ProgramResult {
     if let Some(ref details) = metadata.collection_details {
         match details {
+            #[allow(deprecated)]
             CollectionDetails::V1 { size } => {
                 metadata.collection_details = Some(CollectionDetails::V1 {
                     size: size
@@ -32,6 +33,7 @@ pub fn decrement_collection_size(
 ) -> ProgramResult {
     if let Some(ref details) = metadata.collection_details {
         match details {
+            #[allow(deprecated)]
             CollectionDetails::V1 { size } => {
                 metadata.collection_details = Some(CollectionDetails::V1 {
                     size: size

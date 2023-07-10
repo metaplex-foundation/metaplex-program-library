@@ -1090,6 +1090,7 @@ mod nft {
 
         if let Some(details) = parent_metadata.collection_details {
             match details {
+                #[allow(deprecated)]
                 CollectionDetails::V1 { size } => {
                     assert_eq!(size, 0);
                 }
@@ -1118,6 +1119,7 @@ mod nft {
 
         if let Some(details) = parent_metadata.collection_details {
             match details {
+                #[allow(deprecated)]
                 CollectionDetails::V1 { size } => {
                     assert_eq!(size, 1);
                 }
@@ -1147,6 +1149,7 @@ mod nft {
 
         if let Some(details) = parent_metadata.collection_details {
             match details {
+                #[allow(deprecated)]
                 CollectionDetails::V1 { size } => {
                     assert_eq!(size, 0);
                 }
@@ -1482,6 +1485,7 @@ mod nft {
 
         if let Some(details) = parent_metadata.collection_details {
             match details {
+                #[allow(deprecated)]
                 CollectionDetails::V1 { size } => {
                     assert_eq!(size, 0);
                 }
@@ -1509,6 +1513,7 @@ mod nft {
 
         if let Some(details) = parent_metadata.collection_details {
             match details {
+                #[allow(deprecated)]
                 CollectionDetails::V1 { size } => {
                     assert_eq!(size, 1);
                 }

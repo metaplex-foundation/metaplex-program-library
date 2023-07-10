@@ -1176,6 +1176,7 @@ async fn fail_verify_already_verified() {
     let collection_md = test_collection.get_data(&mut context).await;
     let size = if let Some(details) = collection_md.collection_details {
         match details {
+            #[allow(deprecated)]
             CollectionDetails::V1 { size } => size,
         }
     } else {
@@ -1209,6 +1210,7 @@ async fn fail_verify_already_verified() {
     let collection_md = test_collection.get_data(&mut context).await;
     let size = if let Some(details) = collection_md.collection_details {
         match details {
+            #[allow(deprecated)]
             CollectionDetails::V1 { size } => size,
         }
     } else {
@@ -1423,6 +1425,7 @@ async fn fail_set_and_verify_already_verified() {
     let collection_md = test_collection.get_data(&mut context).await;
     let size = if let Some(details) = collection_md.collection_details {
         match details {
+            #[allow(deprecated)]
             CollectionDetails::V1 { size } => size,
         }
     } else {
@@ -1451,6 +1454,7 @@ async fn fail_set_and_verify_already_verified() {
     let collection_md = test_collection.get_data(&mut context).await;
     let size = if let Some(details) = collection_md.collection_details {
         match details {
+            #[allow(deprecated)]
             CollectionDetails::V1 { size } => size,
         }
     } else {

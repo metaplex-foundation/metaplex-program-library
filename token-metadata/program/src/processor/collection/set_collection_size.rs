@@ -51,7 +51,10 @@ pub fn set_collection_size(
     if metadata.collection_details.is_some() {
         return Err(MetadataError::SizedCollection.into());
     } else {
-        metadata.collection_details = Some(CollectionDetails::V1 { size });
+        metadata.collection_details = {
+            #[allow(deprecated)]
+            Some(CollectionDetails::V1 { size })
+        };
     }
 
     clean_write_metadata(&mut metadata, parent_nft_metadata_account_info)

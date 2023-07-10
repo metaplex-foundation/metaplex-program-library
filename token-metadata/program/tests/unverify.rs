@@ -840,6 +840,7 @@ mod unverify_collection {
 
         // Check collection details.  If sized collection, size should be updated.
         let verified_collection_details = DEFAULT_COLLECTION_DETAILS.map(|details| match details {
+            #[allow(deprecated)]
             CollectionDetails::V1 { size } => CollectionDetails::V1 { size: size + 1 },
         });
 
@@ -944,6 +945,7 @@ mod unverify_collection {
 
         // Check collection details.  If sized collection, size should be updated.
         let verified_collection_details = DEFAULT_COLLECTION_DETAILS.map(|details| match details {
+            #[allow(deprecated)]
             CollectionDetails::V1 { size } => CollectionDetails::V1 { size: size + 1 },
         });
 
@@ -1712,6 +1714,7 @@ mod unverify_collection {
 
         // Check collection details.  If sized collection, size should be updated.
         let verified_collection_details = DEFAULT_COLLECTION_DETAILS.map(|details| match details {
+            #[allow(deprecated)]
             CollectionDetails::V1 { size } => CollectionDetails::V1 { size: size + 1 },
         });
 
@@ -1832,6 +1835,7 @@ mod unverify_collection {
 
         // Check collection details.  If sized collection, size should be updated.
         let verified_collection_details = DEFAULT_COLLECTION_DETAILS.map(|details| match details {
+            #[allow(deprecated)]
             CollectionDetails::V1 { size } => CollectionDetails::V1 { size: size + 1 },
         });
 
@@ -2619,6 +2623,7 @@ mod unverify_collection {
 
         // Collection size should be updated.
         let verified_collection_details = collection_details.clone().map(|details| match details {
+            #[allow(deprecated)]
             CollectionDetails::V1 { size } => CollectionDetails::V1 { size: size + 1 },
         });
 

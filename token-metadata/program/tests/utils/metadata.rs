@@ -336,6 +336,7 @@ impl Metadata {
         context: &mut ProgramTestContext,
     ) -> Result<(Metadata, MasterEditionV2), BanksClientError> {
         let nft = Metadata::new();
+        #[allow(deprecated)]
         nft.create_v3(
             context,
             "Test".to_string(),
@@ -368,6 +369,7 @@ impl Metadata {
         max_supply: u64,
     ) -> Result<(Metadata, MasterEditionV2), BanksClientError> {
         let nft = Metadata::new();
+        #[allow(deprecated)]
         nft.create_v3(
             context,
             "Test".to_string(),
@@ -688,6 +690,7 @@ pub async fn assert_collection_size(
     let collection_md = collection_metadata.get_data(context).await;
     let retrieved_size = if let Some(details) = collection_md.collection_details {
         match details {
+            #[allow(deprecated)]
             CollectionDetails::V1 { size } => size,
         }
     } else {

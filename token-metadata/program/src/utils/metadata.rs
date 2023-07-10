@@ -152,6 +152,7 @@ pub fn process_create_metadata_accounts_logic(
     // collection details enum for forward compatibility.
     if let Some(details) = collection_details {
         match details {
+            #[allow(deprecated)]
             CollectionDetails::V1 { size: _size } => {
                 metadata.collection_details = Some(CollectionDetails::V1 { size: 0 });
             }

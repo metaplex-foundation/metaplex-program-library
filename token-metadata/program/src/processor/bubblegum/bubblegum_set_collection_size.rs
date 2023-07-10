@@ -68,6 +68,7 @@ pub fn bubblegum_set_collection_size(
     // Ensure new size is + or - 1 of the current size.
     let current_size = if let Some(details) = metadata.collection_details {
         match details {
+            #[allow(deprecated)]
             CollectionDetails::V1 { size } => size,
         }
     } else {
@@ -83,7 +84,10 @@ pub fn bubblegum_set_collection_size(
     }
 
     // The Bubblegum program has authority to manage the collection details.
-    metadata.collection_details = Some(CollectionDetails::V1 { size });
+    metadata.collection_details = {
+        #[allow(deprecated)]
+        Some(CollectionDetails::V1 { size })
+    };
 
     clean_write_metadata(&mut metadata, parent_nft_metadata_account_info)?;
     Ok(())

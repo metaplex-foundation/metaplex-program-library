@@ -1389,6 +1389,7 @@ mod verify_collection {
 
         // Check collection details.  If sized collection, size should be updated.
         let verified_collection_details = collection_details.map(|details| match details {
+            #[allow(deprecated)]
             CollectionDetails::V1 { size } => CollectionDetails::V1 { size: size + 1 },
         });
 
@@ -1669,6 +1670,7 @@ mod verify_collection {
 
         // Check collection details.  If sized collection, size should be updated.
         let verified_collection_details = collection_details.clone().map(|details| match details {
+            #[allow(deprecated)]
             CollectionDetails::V1 { size } => CollectionDetails::V1 { size: size + 1 },
         });
 
@@ -1831,6 +1833,7 @@ mod verify_collection {
 
         // Check collection details.  If sized collection, size should be updated.
         let verified_collection_details = collection_details.map(|details| match details {
+            #[allow(deprecated)]
             CollectionDetails::V1 { size } => CollectionDetails::V1 { size: size + 1 },
         });
 
@@ -2018,6 +2021,7 @@ mod verify_collection {
 
         // Check collection details.  If sized collection, size should be updated.
         let verified_collection_details = collection_details.map(|details| match details {
+            #[allow(deprecated)]
             CollectionDetails::V1 { size } => CollectionDetails::V1 { size: size + 1 },
         });
 
