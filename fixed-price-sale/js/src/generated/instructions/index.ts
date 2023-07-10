@@ -1,4 +1,5 @@
 export * from './buy';
+export * from './buyV2';
 export * from './changeMarket';
 export * from './claimResource';
 export * from './closeMarket';
