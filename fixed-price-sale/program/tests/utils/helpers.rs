@@ -675,3 +675,149 @@ pub async fn buy_one<'a>(manager: &mut BuyManager<'_>) -> Result<(), BanksClient
 
     Ok(())
 }
+
+pub async fn buy_one_v2<'a>(
+    manager: &mut BuyManager<'_>,
+    edition_marker_number: u64,
+) -> Result<(), BanksClientError> {
+    let payer_pubkey = manager.context.payer.pubkey();
+
+    mint_to(
+        manager.context,
+        &manager.treasury_mint_keypair.pubkey(),
+        &manager.user_token_account.as_ref().unwrap().pubkey(),
+        &manager.admin_wallet,
+        1_000_000,
+    )
+    .await;
+
+    let new_mint_keypair = Keypair::new();
+    create_mint(manager.context, &new_mint_keypair, &payer_pubkey, 0).await;
+
+    let new_mint_token_account = Keypair::new();
+    create_token_account(
+        manager.context,
+        &new_mint_token_account,
+        &new_mint_keypair.pubkey(),
+        &payer_pubkey,
+    )
+    .await;
+
+    let payer_keypair = Keypair::from_bytes(&manager.context.payer.to_bytes()).unwrap();
+    mint_to(
+        manager.context,
+        &new_mint_keypair.pubkey(),
+        &new_mint_token_account.pubkey(),
+        &payer_keypair,
+        1,
+    )
+    .await;
+
+    let (master_edition_metadata, _) = Pubkey::find_program_address(
+        &[
+            mpl_token_metadata::state::PREFIX.as_bytes(),
+            mpl_token_metadata::id().as_ref(),
+            manager.selling_resource.as_ref().unwrap().resource.as_ref(),
+        ],
+        &mpl_token_metadata::id(),
+    );
+
+    let (master_edition, _) = Pubkey::find_program_address(
+        &[
+            mpl_token_metadata::state::PREFIX.as_bytes(),
+            mpl_token_metadata::id().as_ref(),
+            manager.selling_resource.as_ref().unwrap().resource.as_ref(),
+            mpl_token_metadata::state::EDITION.as_bytes(),
+        ],
+        &mpl_token_metadata::id(),
+    );
+
+    let selling_resource_data = manager
+        .context
+        .banks_client
+        .get_account(manager.selling_resource_keypair.pubkey())
+        .await
+        .unwrap()
+        .unwrap()
+        .data;
+    let selling_resource =
+        SellingResource::try_deserialize(&mut selling_resource_data.as_ref()).unwrap();
+
+    let supply = selling_resource.supply + 1;
+
+    let (edition_marker, _) =
+        find_edition_marker_pda(&manager.selling_resource.as_ref().unwrap().resource, supply);
+
+    let (new_metadata, _) = Pubkey::find_program_address(
+        &[
+            mpl_token_metadata::state::PREFIX.as_bytes(),
+            mpl_token_metadata::id().as_ref(),
+            new_mint_keypair.pubkey().as_ref(),
+        ],
+        &mpl_token_metadata::id(),
+    );
+
+    let (new_edition, _) = Pubkey::find_program_address(
+        &[
+            mpl_token_metadata::state::PREFIX.as_bytes(),
+            mpl_token_metadata::id().as_ref(),
+            new_mint_keypair.pubkey().as_ref(),
+            mpl_token_metadata::state::EDITION.as_bytes(),
+        ],
+        &mpl_token_metadata::id(),
+    );
+
+    // Buy
+    let accounts = mpl_fixed_price_sale_accounts::BuyV2 {
+        market: manager.market_keypair.pubkey(),
+        selling_resource: manager.selling_resource_keypair.pubkey(),
+        user_token_account: manager.user_token_account.as_ref().unwrap().pubkey(),
+        user_wallet: manager.context.payer.pubkey(),
+        trade_history: manager.trade_history.unwrap(),
+        treasury_holder: manager.treasury_holder_keypair.pubkey(),
+        new_metadata,
+        new_edition,
+        master_edition,
+        new_mint: new_mint_keypair.pubkey(),
+        edition_marker,
+        vault: manager.selling_resource.as_ref().unwrap().vault,
+        owner: manager.vault_owner.unwrap(),
+        new_token_account: new_mint_token_account.pubkey(),
+        master_edition_metadata,
+        clock: sysvar::clock::ID,
+        rent: sysvar::rent::ID,
+        token_metadata_program: mpl_token_metadata::ID,
+        token_program: spl_token::ID,
+        system_program: system_program::ID,
+    }
+    .to_account_metas(None);
+
+    let data = mpl_fixed_price_sale_instruction::BuyV2 {
+        _trade_history_bump: manager.trade_history_bump.unwrap(),
+        vault_owner_bump: manager.vault_owner_bump.unwrap(),
+        edition_marker_number,
+    }
+    .data();
+
+    let instruction = Instruction {
+        program_id: mpl_fixed_price_sale::id(),
+        data,
+        accounts,
+    };
+
+    let tx = Transaction::new_signed_with_payer(
+        &[instruction],
+        Some(&manager.context.payer.pubkey()),
+        &[&manager.context.payer],
+        manager.context.last_blockhash,
+    );
+
+    manager
+        .context
+        .banks_client
+        .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+        .await
+        .unwrap();
+
+    Ok(())
+}
