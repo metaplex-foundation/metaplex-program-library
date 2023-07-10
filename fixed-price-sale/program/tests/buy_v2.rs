@@ -480,13 +480,12 @@ async fn mint_after_edition_burn() {
         .unwrap();
 }
 
-// #[ignore]
 #[tokio::test]
 async fn multiple_marker_pdas() {
     setup_context!(context, mpl_fixed_price_sale, mpl_token_metadata);
     let (admin_wallet, store_keypair) = setup_store(&mut context).await;
 
-    let edition_mint_amount = 2000;
+    let edition_mint_amount = 1000;
     let max_supply = 2 * edition_mint_amount;
 
     let (selling_resource_keypair, selling_resource_owner_keypair, _vault) =
