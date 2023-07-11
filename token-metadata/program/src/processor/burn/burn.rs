@@ -264,7 +264,22 @@ fn burn_v1(program_id: &Pubkey, ctx: Context<Burn>, args: BurnArgs) -> ProgramRe
                 ctx.accounts.spl_token_program_info.clone(),
             )?;
 
-            burn_nonfungible_edition(&ctx, true, &TokenStandard::ProgrammableNonFungibleEdition)?;
+            let mut is_close_auth = false;
+            // Utility Delegate is the only delegate that can burn an asset.
+            if let Some(TokenDelegateRole::Utility) = token_record.delegate_role {
+                if let COption::Some(close_authority) = token.close_authority {
+                    if &close_authority != edition_info.key {
+                        return Err(MetadataError::InvalidCloseAuthority.into());
+                    }
+                    is_close_auth = true;
+                }
+            }
+
+            burn_nonfungible_edition(
+                &ctx,
+                is_close_auth,
+                &TokenStandard::ProgrammableNonFungibleEdition,
+            )?;
 
             // Also close the token_record account.
             close_program_account(
