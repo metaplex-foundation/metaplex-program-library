@@ -170,7 +170,7 @@ fn burn_v1(program_id: &Pubkey, ctx: Context<Burn>, args: BurnArgs) -> ProgramRe
             burn_nonfungible(&ctx, args)?;
         }
         TokenStandard::NonFungibleEdition => {
-            burn_nonfungible_edition(&ctx, &TokenStandard::NonFungibleEdition)?;
+            burn_nonfungible_edition(&ctx, false, &TokenStandard::NonFungibleEdition)?;
         }
         TokenStandard::ProgrammableNonFungible => {
             let token_record_info = ctx
@@ -264,7 +264,7 @@ fn burn_v1(program_id: &Pubkey, ctx: Context<Burn>, args: BurnArgs) -> ProgramRe
                 ctx.accounts.spl_token_program_info.clone(),
             )?;
 
-            burn_nonfungible_edition(&ctx, &TokenStandard::ProgrammableNonFungibleEdition)?;
+            burn_nonfungible_edition(&ctx, true, &TokenStandard::ProgrammableNonFungibleEdition)?;
 
             // Also close the token_record account.
             close_program_account(

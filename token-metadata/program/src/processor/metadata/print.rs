@@ -1,7 +1,16 @@
+use mpl_utils::token::get_mint_supply;
 use solana_program::{
-    account_info::AccountInfo, entrypoint::ProgramResult, program::invoke,
-    program_error::ProgramError, pubkey::Pubkey, sysvar,
+    account_info::AccountInfo,
+    entrypoint::ProgramResult,
+    program::invoke,
+    program_error::ProgramError,
+    program_pack::Pack,
+    pubkey::Pubkey,
+    rent::Rent,
+    system_instruction,
+    sysvar::{self, Sysvar},
 };
+use spl_token::state::Mint;
 
 use crate::{
     assertions::assert_keys_equal,
@@ -74,9 +83,54 @@ fn print_v1(_program_id: &Pubkey, ctx: Context<Print>, args: PrintArgs) -> Progr
         token_metadata_pda_info: edition_metadata_info,
     })?;
 
+    // if the account does not exist, we will allocate a new mint
+    if edition_mint_info.data_is_empty() {
+        // mint account must be a signer in the transaction
+        if !edition_mint_info.is_signer {
+            return Err(MetadataError::MintIsNotSigner.into());
+        }
+
+        invoke(
+            &system_instruction::create_account(
+                payer_info.key,
+                edition_mint_info.key,
+                Rent::get()?.minimum_balance(spl_token::state::Mint::LEN),
+                spl_token::state::Mint::LEN as u64,
+                &spl_token::ID,
+            ),
+            &[payer_info.clone(), edition_mint_info.clone()],
+        )?;
+
+        // initializing the mint account
+        invoke(
+            &spl_token::instruction::initialize_mint2(
+                token_program.key,
+                edition_mint_info.key,
+                edition_account_info.key,
+                Some(edition_account_info.key),
+                0,
+            )?,
+            &[edition_mint_info.clone(), edition_account_info.clone()],
+        )?;
+    } else {
+        // validates the existing mint account
+
+        let mint: Mint = assert_initialized(edition_mint_info)?;
+        // NonFungible assets must have decimals == 0 and supply no greater than 1
+        if mint.decimals > 0 || mint.supply > 1 {
+            return Err(MetadataError::InvalidMintForTokenStandard.into());
+        }
+    }
+
     // If the edition token account isn't already initialized, create it.
     // If it does exist, validate it.
     if edition_token_account_info.data_is_empty() {
+        // If the token account is empty, we need to double check the token isn't just in another account.
+        // We do this by checking supply == 0
+        let mint_supply = get_mint_supply(edition_mint_info)?;
+        if mint_supply > 0 {
+            return Err(MetadataError::InvalidTokenAccount.into());
+        }
         // if the token account is empty, we will initialize a new one but it must
         // be an ATA account
         assert_derivation(
@@ -92,7 +146,7 @@ fn print_v1(_program_id: &Pubkey, ctx: Context<Print>, args: PrintArgs) -> Progr
         // creating the associated token account
         invoke(
             &spl_associated_token_account::instruction::create_associated_token_account(
-                ctx.accounts.payer_info.key,
+                payer_info.key,
                 edition_token_account_owner_info.key,
                 edition_mint_info.key,
                 &spl_token::id(),
