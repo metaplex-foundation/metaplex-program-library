@@ -12,7 +12,7 @@ const createErrorFromCodeLookup: Map<number, () => ErrorWithCode> = new Map();
 const createErrorFromNameLookup: Map<string, () => ErrorWithCode> = new Map();
 
 /**
- * InstructionUnpackError: 'Failed to unpack instruction data'
+ * InstructionUnpackError: ''
  *
  * @category Errors
  * @category generated
@@ -21,7 +21,7 @@ export class InstructionUnpackErrorError extends Error {
   readonly code: number = 0x0;
   readonly name: string = 'InstructionUnpackError';
   constructor() {
-    super('Failed to unpack instruction data');
+    super('');
     if (typeof Error.captureStackTrace === 'function') {
       Error.captureStackTrace(this, InstructionUnpackErrorError);
     }
@@ -32,7 +32,7 @@ createErrorFromCodeLookup.set(0x0, () => new InstructionUnpackErrorError());
 createErrorFromNameLookup.set('InstructionUnpackError', () => new InstructionUnpackErrorError());
 
 /**
- * InstructionPackError: 'Failed to pack instruction data'
+ * InstructionPackError: ''
  *
  * @category Errors
  * @category generated
@@ -41,7 +41,7 @@ export class InstructionPackErrorError extends Error {
   readonly code: number = 0x1;
   readonly name: string = 'InstructionPackError';
   constructor() {
-    super('Failed to pack instruction data');
+    super('');
     if (typeof Error.captureStackTrace === 'function') {
       Error.captureStackTrace(this, InstructionPackErrorError);
     }
@@ -298,7 +298,7 @@ createErrorFromCodeLookup.set(0xd, () => new UriTooLongError());
 createErrorFromNameLookup.set('UriTooLong', () => new UriTooLongError());
 
 /**
- * UpdateAuthorityMustBeEqualToMetadataAuthorityAndSigner: 'Update authority must be equivalent to the metadata's authority and also signer of this transaction'
+ * UpdateAuthorityMustBeEqualToMetadataAuthorityAndSigner: ''
  *
  * @category Errors
  * @category generated
@@ -307,9 +307,7 @@ export class UpdateAuthorityMustBeEqualToMetadataAuthorityAndSignerError extends
   readonly code: number = 0xe;
   readonly name: string = 'UpdateAuthorityMustBeEqualToMetadataAuthorityAndSigner';
   constructor() {
-    super(
-      "Update authority must be equivalent to the metadata's authority and also signer of this transaction",
-    );
+    super('');
     if (typeof Error.captureStackTrace === 'function') {
       Error.captureStackTrace(this, UpdateAuthorityMustBeEqualToMetadataAuthorityAndSignerError);
     }
@@ -369,7 +367,7 @@ createErrorFromNameLookup.set(
 );
 
 /**
- * MaxEditionsMintedAlready: 'Maximum editions printed already'
+ * MaxEditionsMintedAlready: ''
  *
  * @category Errors
  * @category generated
@@ -378,7 +376,7 @@ export class MaxEditionsMintedAlreadyError extends Error {
   readonly code: number = 0x11;
   readonly name: string = 'MaxEditionsMintedAlready';
   constructor() {
-    super('Maximum editions printed already');
+    super('');
     if (typeof Error.captureStackTrace === 'function') {
       Error.captureStackTrace(this, MaxEditionsMintedAlreadyError);
     }
@@ -392,7 +390,7 @@ createErrorFromNameLookup.set(
 );
 
 /**
- * TokenMintToFailed: 'Token mint to failed'
+ * TokenMintToFailed: ''
  *
  * @category Errors
  * @category generated
@@ -401,7 +399,7 @@ export class TokenMintToFailedError extends Error {
   readonly code: number = 0x12;
   readonly name: string = 'TokenMintToFailed';
   constructor() {
-    super('Token mint to failed');
+    super('');
     if (typeof Error.captureStackTrace === 'function') {
       Error.captureStackTrace(this, TokenMintToFailedError);
     }
@@ -412,7 +410,7 @@ createErrorFromCodeLookup.set(0x12, () => new TokenMintToFailedError());
 createErrorFromNameLookup.set('TokenMintToFailed', () => new TokenMintToFailedError());
 
 /**
- * MasterRecordMismatch: 'The master edition record passed must match the master record on the edition given'
+ * MasterRecordMismatch: ''
  *
  * @category Errors
  * @category generated
@@ -421,7 +419,7 @@ export class MasterRecordMismatchError extends Error {
   readonly code: number = 0x13;
   readonly name: string = 'MasterRecordMismatch';
   constructor() {
-    super('The master edition record passed must match the master record on the edition given');
+    super('');
     if (typeof Error.captureStackTrace === 'function') {
       Error.captureStackTrace(this, MasterRecordMismatchError);
     }
@@ -432,7 +430,7 @@ createErrorFromCodeLookup.set(0x13, () => new MasterRecordMismatchError());
 createErrorFromNameLookup.set('MasterRecordMismatch', () => new MasterRecordMismatchError());
 
 /**
- * DestinationMintMismatch: 'The destination account does not have the right mint'
+ * DestinationMintMismatch: ''
  *
  * @category Errors
  * @category generated
@@ -441,7 +439,7 @@ export class DestinationMintMismatchError extends Error {
   readonly code: number = 0x14;
   readonly name: string = 'DestinationMintMismatch';
   constructor() {
-    super('The destination account does not have the right mint');
+    super('');
     if (typeof Error.captureStackTrace === 'function') {
       Error.captureStackTrace(this, DestinationMintMismatchError);
     }
@@ -452,7 +450,7 @@ createErrorFromCodeLookup.set(0x14, () => new DestinationMintMismatchError());
 createErrorFromNameLookup.set('DestinationMintMismatch', () => new DestinationMintMismatchError());
 
 /**
- * EditionAlreadyMinted: 'An edition can only mint one of its kind!'
+ * EditionAlreadyMinted: ''
  *
  * @category Errors
  * @category generated
@@ -461,7 +459,7 @@ export class EditionAlreadyMintedError extends Error {
   readonly code: number = 0x15;
   readonly name: string = 'EditionAlreadyMinted';
   constructor() {
-    super('An edition can only mint one of its kind!');
+    super('');
     if (typeof Error.captureStackTrace === 'function') {
       Error.captureStackTrace(this, EditionAlreadyMintedError);
     }
@@ -472,7 +470,7 @@ createErrorFromCodeLookup.set(0x15, () => new EditionAlreadyMintedError());
 createErrorFromNameLookup.set('EditionAlreadyMinted', () => new EditionAlreadyMintedError());
 
 /**
- * PrintingMintDecimalsShouldBeZero: 'Printing mint decimals should be zero'
+ * PrintingMintDecimalsShouldBeZero: ''
  *
  * @category Errors
  * @category generated
@@ -481,7 +479,7 @@ export class PrintingMintDecimalsShouldBeZeroError extends Error {
   readonly code: number = 0x16;
   readonly name: string = 'PrintingMintDecimalsShouldBeZero';
   constructor() {
-    super('Printing mint decimals should be zero');
+    super('');
     if (typeof Error.captureStackTrace === 'function') {
       Error.captureStackTrace(this, PrintingMintDecimalsShouldBeZeroError);
     }
@@ -495,7 +493,7 @@ createErrorFromNameLookup.set(
 );
 
 /**
- * OneTimePrintingAuthorizationMintDecimalsShouldBeZero: 'OneTimePrintingAuthorization mint decimals should be zero'
+ * OneTimePrintingAuthorizationMintDecimalsShouldBeZero: ''
  *
  * @category Errors
  * @category generated
@@ -504,7 +502,7 @@ export class OneTimePrintingAuthorizationMintDecimalsShouldBeZeroError extends E
   readonly code: number = 0x17;
   readonly name: string = 'OneTimePrintingAuthorizationMintDecimalsShouldBeZero';
   constructor() {
-    super('OneTimePrintingAuthorization mint decimals should be zero');
+    super('');
     if (typeof Error.captureStackTrace === 'function') {
       Error.captureStackTrace(this, OneTimePrintingAuthorizationMintDecimalsShouldBeZeroError);
     }
@@ -544,7 +542,7 @@ createErrorFromNameLookup.set(
 );
 
 /**
- * TokenBurnFailed: 'Token burn failed'
+ * TokenBurnFailed: ''
  *
  * @category Errors
  * @category generated
@@ -553,7 +551,7 @@ export class TokenBurnFailedError extends Error {
   readonly code: number = 0x19;
   readonly name: string = 'TokenBurnFailed';
   constructor() {
-    super('Token burn failed');
+    super('');
     if (typeof Error.captureStackTrace === 'function') {
       Error.captureStackTrace(this, TokenBurnFailedError);
     }
@@ -564,7 +562,7 @@ createErrorFromCodeLookup.set(0x19, () => new TokenBurnFailedError());
 createErrorFromNameLookup.set('TokenBurnFailed', () => new TokenBurnFailedError());
 
 /**
- * TokenAccountOneTimeAuthMintMismatch: 'The One Time authorization mint does not match that on the token account!'
+ * TokenAccountOneTimeAuthMintMismatch: ''
  *
  * @category Errors
  * @category generated
@@ -573,7 +571,7 @@ export class TokenAccountOneTimeAuthMintMismatchError extends Error {
   readonly code: number = 0x1a;
   readonly name: string = 'TokenAccountOneTimeAuthMintMismatch';
   constructor() {
-    super('The One Time authorization mint does not match that on the token account!');
+    super('');
     if (typeof Error.captureStackTrace === 'function') {
       Error.captureStackTrace(this, TokenAccountOneTimeAuthMintMismatchError);
     }
@@ -716,7 +714,7 @@ createErrorFromCodeLookup.set(0x20, () => new NotEnoughTokensError());
 createErrorFromNameLookup.set('NotEnoughTokens', () => new NotEnoughTokensError());
 
 /**
- * PrintingMintAuthorizationAccountMismatch: 'The mint on your authorization token holding account does not match your Printing mint!'
+ * PrintingMintAuthorizationAccountMismatch: ''
  *
  * @category Errors
  * @category generated
@@ -725,9 +723,7 @@ export class PrintingMintAuthorizationAccountMismatchError extends Error {
   readonly code: number = 0x21;
   readonly name: string = 'PrintingMintAuthorizationAccountMismatch';
   constructor() {
-    super(
-      'The mint on your authorization token holding account does not match your Printing mint!',
-    );
+    super('');
     if (typeof Error.captureStackTrace === 'function') {
       Error.captureStackTrace(this, PrintingMintAuthorizationAccountMismatchError);
     }
@@ -741,7 +737,7 @@ createErrorFromNameLookup.set(
 );
 
 /**
- * AuthorizationTokenAccountOwnerMismatch: 'The authorization token account has a different owner than the update authority for the master edition!'
+ * AuthorizationTokenAccountOwnerMismatch: ''
  *
  * @category Errors
  * @category generated
@@ -750,9 +746,7 @@ export class AuthorizationTokenAccountOwnerMismatchError extends Error {
   readonly code: number = 0x22;
   readonly name: string = 'AuthorizationTokenAccountOwnerMismatch';
   constructor() {
-    super(
-      'The authorization token account has a different owner than the update authority for the master edition!',
-    );
+    super('');
     if (typeof Error.captureStackTrace === 'function') {
       Error.captureStackTrace(this, AuthorizationTokenAccountOwnerMismatchError);
     }
@@ -766,7 +760,7 @@ createErrorFromNameLookup.set(
 );
 
 /**
- * Disabled: 'This feature is currently disabled.'
+ * Disabled: ''
  *
  * @category Errors
  * @category generated
@@ -775,7 +769,7 @@ export class DisabledError extends Error {
   readonly code: number = 0x23;
   readonly name: string = 'Disabled';
   constructor() {
-    super('This feature is currently disabled.');
+    super('');
     if (typeof Error.captureStackTrace === 'function') {
       Error.captureStackTrace(this, DisabledError);
     }
@@ -829,7 +823,7 @@ createErrorFromNameLookup.set(
 );
 
 /**
- * MustBeOneOfCreators: 'If using a creators array, you must be one of the creators listed'
+ * MustBeOneOfCreators: ''
  *
  * @category Errors
  * @category generated
@@ -838,7 +832,7 @@ export class MustBeOneOfCreatorsError extends Error {
   readonly code: number = 0x26;
   readonly name: string = 'MustBeOneOfCreators';
   constructor() {
-    super('If using a creators array, you must be one of the creators listed');
+    super('');
     if (typeof Error.captureStackTrace === 'function') {
       Error.captureStackTrace(this, MustBeOneOfCreatorsError);
     }
@@ -998,7 +992,7 @@ createErrorFromCodeLookup.set(0x2d, () => new ShareTotalMustBe100Error());
 createErrorFromNameLookup.set('ShareTotalMustBe100', () => new ShareTotalMustBe100Error());
 
 /**
- * ReservationExists: 'This reservation list already exists!'
+ * ReservationExists: ''
  *
  * @category Errors
  * @category generated
@@ -1007,7 +1001,7 @@ export class ReservationExistsError extends Error {
   readonly code: number = 0x2e;
   readonly name: string = 'ReservationExists';
   constructor() {
-    super('This reservation list already exists!');
+    super('');
     if (typeof Error.captureStackTrace === 'function') {
       Error.captureStackTrace(this, ReservationExistsError);
     }
@@ -1018,7 +1012,7 @@ createErrorFromCodeLookup.set(0x2e, () => new ReservationExistsError());
 createErrorFromNameLookup.set('ReservationExists', () => new ReservationExistsError());
 
 /**
- * ReservationDoesNotExist: 'This reservation list does not exist!'
+ * ReservationDoesNotExist: ''
  *
  * @category Errors
  * @category generated
@@ -1027,7 +1021,7 @@ export class ReservationDoesNotExistError extends Error {
   readonly code: number = 0x2f;
   readonly name: string = 'ReservationDoesNotExist';
   constructor() {
-    super('This reservation list does not exist!');
+    super('');
     if (typeof Error.captureStackTrace === 'function') {
       Error.captureStackTrace(this, ReservationDoesNotExistError);
     }
@@ -1038,7 +1032,7 @@ createErrorFromCodeLookup.set(0x2f, () => new ReservationDoesNotExistError());
 createErrorFromNameLookup.set('ReservationDoesNotExist', () => new ReservationDoesNotExistError());
 
 /**
- * ReservationNotSet: 'This reservation list exists but was never set with reservations'
+ * ReservationNotSet: ''
  *
  * @category Errors
  * @category generated
@@ -1047,7 +1041,7 @@ export class ReservationNotSetError extends Error {
   readonly code: number = 0x30;
   readonly name: string = 'ReservationNotSet';
   constructor() {
-    super('This reservation list exists but was never set with reservations');
+    super('');
     if (typeof Error.captureStackTrace === 'function') {
       Error.captureStackTrace(this, ReservationNotSetError);
     }
@@ -1058,7 +1052,7 @@ createErrorFromCodeLookup.set(0x30, () => new ReservationNotSetError());
 createErrorFromNameLookup.set('ReservationNotSet', () => new ReservationNotSetError());
 
 /**
- * ReservationAlreadyMade: 'This reservation list has already been set!'
+ * ReservationAlreadyMade: ''
  *
  * @category Errors
  * @category generated
@@ -1067,7 +1061,7 @@ export class ReservationAlreadyMadeError extends Error {
   readonly code: number = 0x31;
   readonly name: string = 'ReservationAlreadyMade';
   constructor() {
-    super('This reservation list has already been set!');
+    super('');
     if (typeof Error.captureStackTrace === 'function') {
       Error.captureStackTrace(this, ReservationAlreadyMadeError);
     }
@@ -1078,7 +1072,7 @@ createErrorFromCodeLookup.set(0x31, () => new ReservationAlreadyMadeError());
 createErrorFromNameLookup.set('ReservationAlreadyMade', () => new ReservationAlreadyMadeError());
 
 /**
- * BeyondMaxAddressSize: 'Provided more addresses than max allowed in single reservation'
+ * BeyondMaxAddressSize: ''
  *
  * @category Errors
  * @category generated
@@ -1087,7 +1081,7 @@ export class BeyondMaxAddressSizeError extends Error {
   readonly code: number = 0x32;
   readonly name: string = 'BeyondMaxAddressSize';
   constructor() {
-    super('Provided more addresses than max allowed in single reservation');
+    super('');
     if (typeof Error.captureStackTrace === 'function') {
       Error.captureStackTrace(this, BeyondMaxAddressSizeError);
     }
@@ -1118,7 +1112,7 @@ createErrorFromCodeLookup.set(0x33, () => new NumericalOverflowErrorError());
 createErrorFromNameLookup.set('NumericalOverflowError', () => new NumericalOverflowErrorError());
 
 /**
- * ReservationBreachesMaximumSupply: 'This reservation would go beyond the maximum supply of the master edition!'
+ * ReservationBreachesMaximumSupply: ''
  *
  * @category Errors
  * @category generated
@@ -1127,7 +1121,7 @@ export class ReservationBreachesMaximumSupplyError extends Error {
   readonly code: number = 0x34;
   readonly name: string = 'ReservationBreachesMaximumSupply';
   constructor() {
-    super('This reservation would go beyond the maximum supply of the master edition!');
+    super('');
     if (typeof Error.captureStackTrace === 'function') {
       Error.captureStackTrace(this, ReservationBreachesMaximumSupplyError);
     }
@@ -1141,7 +1135,7 @@ createErrorFromNameLookup.set(
 );
 
 /**
- * AddressNotInReservation: 'Address not in reservation!'
+ * AddressNotInReservation: ''
  *
  * @category Errors
  * @category generated
@@ -1150,7 +1144,7 @@ export class AddressNotInReservationError extends Error {
   readonly code: number = 0x35;
   readonly name: string = 'AddressNotInReservation';
   constructor() {
-    super('Address not in reservation!');
+    super('');
     if (typeof Error.captureStackTrace === 'function') {
       Error.captureStackTrace(this, AddressNotInReservationError);
     }
@@ -1207,7 +1201,7 @@ createErrorFromNameLookup.set(
 );
 
 /**
- * SpotMismatch: 'In initial reservation setting, spots remaining should equal total spots'
+ * SpotMismatch: ''
  *
  * @category Errors
  * @category generated
@@ -1216,7 +1210,7 @@ export class SpotMismatchError extends Error {
   readonly code: number = 0x38;
   readonly name: string = 'SpotMismatch';
   constructor() {
-    super('In initial reservation setting, spots remaining should equal total spots');
+    super('');
     if (typeof Error.captureStackTrace === 'function') {
       Error.captureStackTrace(this, SpotMismatchError);
     }
@@ -1247,7 +1241,7 @@ createErrorFromCodeLookup.set(0x39, () => new IncorrectOwnerError());
 createErrorFromNameLookup.set('IncorrectOwner', () => new IncorrectOwnerError());
 
 /**
- * PrintingWouldBreachMaximumSupply: 'printing these tokens would breach the maximum supply limit of the master edition'
+ * PrintingWouldBreachMaximumSupply: ''
  *
  * @category Errors
  * @category generated
@@ -1256,7 +1250,7 @@ export class PrintingWouldBreachMaximumSupplyError extends Error {
   readonly code: number = 0x3a;
   readonly name: string = 'PrintingWouldBreachMaximumSupply';
   constructor() {
-    super('printing these tokens would breach the maximum supply limit of the master edition');
+    super('');
     if (typeof Error.captureStackTrace === 'function') {
       Error.captureStackTrace(this, PrintingWouldBreachMaximumSupplyError);
     }
@@ -1310,7 +1304,7 @@ createErrorFromCodeLookup.set(0x3c, () => new DuplicateCreatorAddressError());
 createErrorFromNameLookup.set('DuplicateCreatorAddress', () => new DuplicateCreatorAddressError());
 
 /**
- * ReservationSpotsRemainingShouldMatchTotalSpotsAtStart: 'Reservation spots remaining should match total spots when first being created'
+ * ReservationSpotsRemainingShouldMatchTotalSpotsAtStart: ''
  *
  * @category Errors
  * @category generated
@@ -1319,7 +1313,7 @@ export class ReservationSpotsRemainingShouldMatchTotalSpotsAtStartError extends 
   readonly code: number = 0x3d;
   readonly name: string = 'ReservationSpotsRemainingShouldMatchTotalSpotsAtStart';
   constructor() {
-    super('Reservation spots remaining should match total spots when first being created');
+    super('');
     if (typeof Error.captureStackTrace === 'function') {
       Error.captureStackTrace(this, ReservationSpotsRemainingShouldMatchTotalSpotsAtStartError);
     }
@@ -1376,7 +1370,7 @@ createErrorFromCodeLookup.set(0x3f, () => new DataTypeMismatchError());
 createErrorFromNameLookup.set('DataTypeMismatch', () => new DataTypeMismatchError());
 
 /**
- * BeyondAlottedAddressSize: 'Beyond alotted address size in reservation!'
+ * BeyondAlottedAddressSize: ''
  *
  * @category Errors
  * @category generated
@@ -1385,7 +1379,7 @@ export class BeyondAlottedAddressSizeError extends Error {
   readonly code: number = 0x40;
   readonly name: string = 'BeyondAlottedAddressSize';
   constructor() {
-    super('Beyond alotted address size in reservation!');
+    super('');
     if (typeof Error.captureStackTrace === 'function') {
       Error.captureStackTrace(this, BeyondAlottedAddressSizeError);
     }
@@ -1399,7 +1393,7 @@ createErrorFromNameLookup.set(
 );
 
 /**
- * ReservationNotComplete: 'The reservation has only been partially alotted'
+ * ReservationNotComplete: ''
  *
  * @category Errors
  * @category generated
@@ -1408,7 +1402,7 @@ export class ReservationNotCompleteError extends Error {
   readonly code: number = 0x41;
   readonly name: string = 'ReservationNotComplete';
   constructor() {
-    super('The reservation has only been partially alotted');
+    super('');
     if (typeof Error.captureStackTrace === 'function') {
       Error.captureStackTrace(this, ReservationNotCompleteError);
     }
@@ -1419,7 +1413,7 @@ createErrorFromCodeLookup.set(0x41, () => new ReservationNotCompleteError());
 createErrorFromNameLookup.set('ReservationNotComplete', () => new ReservationNotCompleteError());
 
 /**
- * TriedToReplaceAnExistingReservation: 'You cannot splice over an existing reservation!'
+ * TriedToReplaceAnExistingReservation: ''
  *
  * @category Errors
  * @category generated
@@ -1428,7 +1422,7 @@ export class TriedToReplaceAnExistingReservationError extends Error {
   readonly code: number = 0x42;
   readonly name: string = 'TriedToReplaceAnExistingReservation';
   constructor() {
-    super('You cannot splice over an existing reservation!');
+    super('');
     if (typeof Error.captureStackTrace === 'function') {
       Error.captureStackTrace(this, TriedToReplaceAnExistingReservationError);
     }
@@ -1548,7 +1542,7 @@ createErrorFromCodeLookup.set(0x47, () => new InvalidEditionIndexError());
 createErrorFromNameLookup.set('InvalidEditionIndex', () => new InvalidEditionIndexError());
 
 /**
- * ReservationArrayShouldBeSizeOne: 'In the legacy system the reservation needs to be of size one for cpu limit reasons'
+ * ReservationArrayShouldBeSizeOne: ''
  *
  * @category Errors
  * @category generated
@@ -1557,7 +1551,7 @@ export class ReservationArrayShouldBeSizeOneError extends Error {
   readonly code: number = 0x48;
   readonly name: string = 'ReservationArrayShouldBeSizeOne';
   constructor() {
-    super('In the legacy system the reservation needs to be of size one for cpu limit reasons');
+    super('');
     if (typeof Error.captureStackTrace === 'function') {
       Error.captureStackTrace(this, ReservationArrayShouldBeSizeOneError);
     }
@@ -1637,7 +1631,7 @@ createErrorFromCodeLookup.set(0x4b, () => new RemovedError());
 createErrorFromNameLookup.set('Removed', () => new RemovedError());
 
 /**
- * MustBeBurned: 'This token use method is burn and there are no remaining uses, it must be burned'
+ * MustBeBurned: ''
  *
  * @category Errors
  * @category generated
@@ -1646,7 +1640,7 @@ export class MustBeBurnedError extends Error {
   readonly code: number = 0x4c;
   readonly name: string = 'MustBeBurned';
   constructor() {
-    super('This token use method is burn and there are no remaining uses, it must be burned');
+    super('');
     if (typeof Error.captureStackTrace === 'function') {
       Error.captureStackTrace(this, MustBeBurnedError);
     }
@@ -1944,7 +1938,7 @@ createErrorFromNameLookup.set(
 );
 
 /**
- * InvalidCollectionAuthorityRecord: 'This Collection Authority Record is invalid.'
+ * InvalidCollectionAuthorityRecord: ''
  *
  * @category Errors
  * @category generated
@@ -1953,7 +1947,7 @@ export class InvalidCollectionAuthorityRecordError extends Error {
   readonly code: number = 0x5a;
   readonly name: string = 'InvalidCollectionAuthorityRecord';
   constructor() {
-    super('This Collection Authority Record is invalid.');
+    super('');
     if (typeof Error.captureStackTrace === 'function') {
       Error.captureStackTrace(this, InvalidCollectionAuthorityRecordError);
     }
@@ -2007,7 +2001,7 @@ createErrorFromCodeLookup.set(0x5c, () => new InvalidDelegateError());
 createErrorFromNameLookup.set('InvalidDelegate', () => new InvalidDelegateError());
 
 /**
- * CannotAdjustVerifiedCreator: 'Creator can not be adjusted once they are verified.'
+ * CannotAdjustVerifiedCreator: ''
  *
  * @category Errors
  * @category generated
@@ -2016,7 +2010,7 @@ export class CannotAdjustVerifiedCreatorError extends Error {
   readonly code: number = 0x5d;
   readonly name: string = 'CannotAdjustVerifiedCreator';
   constructor() {
-    super('Creator can not be adjusted once they are verified.');
+    super('');
     if (typeof Error.captureStackTrace === 'function') {
       Error.captureStackTrace(this, CannotAdjustVerifiedCreatorError);
     }
@@ -2053,7 +2047,7 @@ createErrorFromNameLookup.set(
 );
 
 /**
- * CannotWipeVerifiedCreators: 'Can not wipe verified creators.'
+ * CannotWipeVerifiedCreators: ''
  *
  * @category Errors
  * @category generated
@@ -2062,7 +2056,7 @@ export class CannotWipeVerifiedCreatorsError extends Error {
   readonly code: number = 0x5f;
   readonly name: string = 'CannotWipeVerifiedCreators';
   constructor() {
-    super('Can not wipe verified creators.');
+    super('');
     if (typeof Error.captureStackTrace === 'function') {
       Error.captureStackTrace(this, CannotWipeVerifiedCreatorsError);
     }
@@ -2076,7 +2070,7 @@ createErrorFromNameLookup.set(
 );
 
 /**
- * NotAllowedToChangeSellerFeeBasisPoints: 'Not allowed to change seller fee basis points.'
+ * NotAllowedToChangeSellerFeeBasisPoints: ''
  *
  * @category Errors
  * @category generated
@@ -2085,7 +2079,7 @@ export class NotAllowedToChangeSellerFeeBasisPointsError extends Error {
   readonly code: number = 0x60;
   readonly name: string = 'NotAllowedToChangeSellerFeeBasisPoints';
   constructor() {
-    super('Not allowed to change seller fee basis points.');
+    super('');
     if (typeof Error.captureStackTrace === 'function') {
       Error.captureStackTrace(this, NotAllowedToChangeSellerFeeBasisPointsError);
     }
@@ -2165,7 +2159,7 @@ createErrorFromNameLookup.set(
 );
 
 /**
- * TokenCloseFailed: 'Token close failed'
+ * TokenCloseFailed: ''
  *
  * @category Errors
  * @category generated
@@ -2174,7 +2168,7 @@ export class TokenCloseFailedError extends Error {
   readonly code: number = 0x64;
   readonly name: string = 'TokenCloseFailed';
   constructor() {
-    super('Token close failed');
+    super('');
     if (typeof Error.captureStackTrace === 'function') {
       Error.captureStackTrace(this, TokenCloseFailedError);
     }
@@ -2394,7 +2388,7 @@ createErrorFromCodeLookup.set(0x6e, () => new MasterEditionHasPrintsError());
 createErrorFromNameLookup.set('MasterEditionHasPrints', () => new MasterEditionHasPrintsError());
 
 /**
- * BorshDeserializationError: 'Borsh Deserialization Error'
+ * BorshDeserializationError: ''
  *
  * @category Errors
  * @category generated
@@ -2403,7 +2397,7 @@ export class BorshDeserializationErrorError extends Error {
   readonly code: number = 0x6f;
   readonly name: string = 'BorshDeserializationError';
   constructor() {
-    super('Borsh Deserialization Error');
+    super('');
     if (typeof Error.captureStackTrace === 'function') {
       Error.captureStackTrace(this, BorshDeserializationErrorError);
     }
@@ -2483,7 +2477,7 @@ createErrorFromCodeLookup.set(0x72, () => new AlreadyVerifiedError());
 createErrorFromNameLookup.set('AlreadyVerified', () => new AlreadyVerifiedError());
 
 /**
- * AlreadyUnverified: 'Item is already unverified.'
+ * AlreadyUnverified: ''
  *
  * @category Errors
  * @category generated
@@ -2492,7 +2486,7 @@ export class AlreadyUnverifiedError extends Error {
   readonly code: number = 0x73;
   readonly name: string = 'AlreadyUnverified';
   constructor() {
-    super('Item is already unverified.');
+    super('');
     if (typeof Error.captureStackTrace === 'function') {
       Error.captureStackTrace(this, AlreadyUnverifiedError);
     }

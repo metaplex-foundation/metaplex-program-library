@@ -12,11 +12,11 @@ use thiserror::Error;
 #[derive(Clone, Debug, Eq, Error, FromPrimitive, PartialEq)]
 pub enum MetadataError {
     /// 0 Failed to unpack instruction data
-    #[error("Failed to unpack instruction data")]
+    #[error("")]
     InstructionUnpackError,
 
     /// Failed to pack instruction data
-    #[error("Failed to pack instruction data")]
+    #[error("")]
     InstructionPackError,
 
     /// Lamport balance below rent-exempt threshold.
@@ -68,7 +68,7 @@ pub enum MetadataError {
     UriTooLong,
 
     /// Update authority must be equivalent to the metadata's authority and also signer of this transaction
-    #[error("Update authority must be equivalent to the metadata's authority and also signer of this transaction")]
+    #[error("")]
     UpdateAuthorityMustBeEqualToMetadataAuthorityAndSigner,
 
     /// Mint given does not match mint on Metadata
@@ -80,32 +80,30 @@ pub enum MetadataError {
     EditionsMustHaveExactlyOneToken,
 
     /// Maximum editions printed already
-    #[error("Maximum editions printed already")]
+    #[error("")]
     MaxEditionsMintedAlready,
 
     /// Token mint to failed
-    #[error("Token mint to failed")]
+    #[error("")]
     TokenMintToFailed,
 
     /// The master edition record passed must match the master record on the edition given
-    #[error("The master edition record passed must match the master record on the edition given")]
+    #[error("")]
     MasterRecordMismatch,
 
     /// 20 - The destination account does not have the right mint
-    #[error("The destination account does not have the right mint")]
+    #[error("")]
     DestinationMintMismatch,
 
     /// An edition can only mint one of its kind!
-    #[error("An edition can only mint one of its kind!")]
+    #[error("")]
     EditionAlreadyMinted,
 
     /// Printing mint decimals should be zero
-    /// This error is unused, but kept for backwards compatibility
     #[error("")]
     PrintingMintDecimalsShouldBeZero,
 
     /// OneTimePrintingAuthorizationMint mint decimals should be zero
-    /// This error is unused, but kept for backwards compatibility
     #[error("")]
     OneTimePrintingAuthorizationMintDecimalsShouldBeZero,
 
@@ -114,11 +112,11 @@ pub enum MetadataError {
     EditionMintDecimalsShouldBeZero,
 
     /// Token burn failed
-    #[error("Token burn failed")]
+    #[error("")]
     TokenBurnFailed,
 
     /// The One Time authorization mint does not match that on the token account!
-    #[error("The One Time authorization mint does not match that on the token account!")]
+    #[error("")]
     TokenAccountOneTimeAuthMintMismatch,
 
     /// Derived key invalid
@@ -146,17 +144,15 @@ pub enum MetadataError {
     NotEnoughTokens,
 
     /// The mint on your authorization token holding account does not match your Printing mint!
-    #[error(
-        "The mint on your authorization token holding account does not match your Printing mint!"
-    )]
+    #[error("")]
     PrintingMintAuthorizationAccountMismatch,
 
     /// The authorization token account has a different owner than the update authority for the master edition!
-    #[error("The authorization token account has a different owner than the update authority for the master edition!")]
+    #[error("")]
     AuthorizationTokenAccountOwnerMismatch,
 
     /// This feature is currently disabled.
-    #[error("This feature is currently disabled.")]
+    #[error("")]
     Disabled,
 
     /// Creators list too long
@@ -168,7 +164,7 @@ pub enum MetadataError {
     CreatorsMustBeAtleastOne,
 
     /// If using a creators array, you must be one of the creators listed
-    #[error("If using a creators array, you must be one of the creators listed")]
+    #[error("")]
     MustBeOneOfCreators,
 
     /// This metadata does not have creators
@@ -200,23 +196,23 @@ pub enum MetadataError {
     ShareTotalMustBe100,
 
     /// This reservation list already exists!
-    #[error("This reservation list already exists!")]
+    #[error("")]
     ReservationExists,
 
     /// This reservation list does not exist!
-    #[error("This reservation list does not exist!")]
+    #[error("")]
     ReservationDoesNotExist,
 
     /// This reservation list exists but was never set with reservations
-    #[error("This reservation list exists but was never set with reservations")]
+    #[error("")]
     ReservationNotSet,
 
     /// This reservation list has already been set!
-    #[error("This reservation list has already been set!")]
+    #[error("")]
     ReservationAlreadyMade,
 
     /// 50 - Provided more addresses than max allowed in single reservation
-    #[error("Provided more addresses than max allowed in single reservation")]
+    #[error("")]
     BeyondMaxAddressSize,
 
     /// NumericalOverflowError
@@ -224,11 +220,11 @@ pub enum MetadataError {
     NumericalOverflowError,
 
     /// This reservation would go beyond the maximum supply of the master edition!
-    #[error("This reservation would go beyond the maximum supply of the master edition!")]
+    #[error("")]
     ReservationBreachesMaximumSupply,
 
     /// Address not in reservation!
-    #[error("Address not in reservation!")]
+    #[error("")]
     AddressNotInReservation,
 
     /// You cannot unilaterally verify another creator, they must sign
@@ -240,7 +236,7 @@ pub enum MetadataError {
     CannotUnverifyAnotherCreator,
 
     /// In initial reservation setting, spots remaining should equal total spots
-    #[error("In initial reservation setting, spots remaining should equal total spots")]
+    #[error("")]
     SpotMismatch,
 
     /// Incorrect account owner
@@ -248,7 +244,7 @@ pub enum MetadataError {
     IncorrectOwner,
 
     /// printing these tokens would breach the maximum supply limit of the master edition
-    #[error("printing these tokens would breach the maximum supply limit of the master edition")]
+    #[error("")]
     PrintingWouldBreachMaximumSupply,
 
     /// Data is immutable
@@ -260,7 +256,7 @@ pub enum MetadataError {
     DuplicateCreatorAddress,
 
     /// Reservation spots remaining should match total spots when first being created
-    #[error("Reservation spots remaining should match total spots when first being created")]
+    #[error("")]
     ReservationSpotsRemainingShouldMatchTotalSpotsAtStart,
 
     /// Invalid token program
@@ -272,15 +268,15 @@ pub enum MetadataError {
     DataTypeMismatch,
 
     /// Beyond alotted address size in reservation!
-    #[error("Beyond alotted address size in reservation!")]
+    #[error("")]
     BeyondAlottedAddressSize,
 
     /// The reservation has only been partially alotted
-    #[error("The reservation has only been partially alotted")]
+    #[error("")]
     ReservationNotComplete,
 
     /// You cannot splice over an existing reservation!
-    #[error("You cannot splice over an existing reservation!")]
+    #[error("")]
     TriedToReplaceAnExistingReservation,
 
     /// Invalid operation
@@ -304,7 +300,7 @@ pub enum MetadataError {
     InvalidEditionIndex,
 
     // In the legacy system the reservation needs to be of size one for cpu limit reasons
-    #[error("In the legacy system the reservation needs to be of size one for cpu limit reasons")]
+    #[error("")]
     ReservationArrayShouldBeSizeOne,
 
     /// Is Mutable can only be flipped to false
@@ -317,7 +313,7 @@ pub enum MetadataError {
     #[error("This instruction was deprecated in a previous release and is now removed")]
     Removed, //For the curious we cannot get rid of an instruction in the enum or move them or it will break our api, this is a friendly way to get rid of them
 
-    #[error("This token use method is burn and there are no remaining uses, it must be burned")]
+    #[error("")]
     MustBeBurned,
 
     #[error("This use method is invalid")]
@@ -361,7 +357,7 @@ pub enum MetadataError {
     InvalidUseAuthorityRecord,
 
     // 90
-    #[error("This Collection Authority Record is invalid.")]
+    #[error("")]
     InvalidCollectionAuthorityRecord,
 
     #[error("Metadata does not match the freeze authority on the mint")]
@@ -370,16 +366,16 @@ pub enum MetadataError {
     #[error("All tokens in this account have not been delegated to this user.")]
     InvalidDelegate,
 
-    #[error("Creator can not be adjusted once they are verified.")]
+    #[error("")]
     CannotAdjustVerifiedCreator,
 
     #[error("Verified creators cannot be removed.")]
     CannotRemoveVerifiedCreator,
 
-    #[error("Can not wipe verified creators.")]
+    #[error("")]
     CannotWipeVerifiedCreators,
 
-    #[error("Not allowed to change seller fee basis points.")]
+    #[error("")]
     NotAllowedToChangeSellerFeeBasisPoints,
 
     /// Edition override cannot be zero
@@ -394,7 +390,7 @@ pub enum MetadataError {
     RevokeCollectionAuthoritySignerIncorrect,
 
     // 100
-    #[error("Token close failed")]
+    #[error("")]
     TokenCloseFailed,
 
     /// 101 - Calling v1.3 function on unsized collection
@@ -438,7 +434,7 @@ pub enum MetadataError {
     MasterEditionHasPrints,
 
     /// 111 - Borsh Deserialization Error
-    #[error("Borsh Deserialization Error")]
+    #[error("")]
     BorshDeserializationError,
 
     /// 112 - Cannot update a verified colleciton in this command
@@ -454,7 +450,7 @@ pub enum MetadataError {
     AlreadyVerified,
 
     /// 115 - Item is already unverified.
-    #[error("Item is already unverified.")]
+    #[error("")]
     AlreadyUnverified,
 
     /// 116 - Not a Print Edition
