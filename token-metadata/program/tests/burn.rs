@@ -2939,6 +2939,51 @@ mod nft_edition {
     }
 
     #[tokio::test]
+    async fn update_authority_cannot_burn_edition() {
+        let mut context = program_test().start_with_context().await;
+
+        let original_nft = Metadata::new();
+        original_nft.create_v3_default(&mut context).await.unwrap();
+
+        let master_edition = MasterEditionV2::new(&original_nft);
+        master_edition
+            .create_v3(&mut context, Some(10))
+            .await
+            .unwrap();
+
+        // NFT is created with context payer as the update authority so we need to update this before
+        // creating the print edition, so it gets a copy of this new update authority.
+        let new_update_authority = Keypair::new();
+
+        original_nft
+            .change_update_authority(&mut context, new_update_authority.pubkey())
+            .await
+            .unwrap();
+
+        let print_edition = EditionMarker::new(&original_nft, &master_edition, 1);
+        print_edition.create(&mut context).await.unwrap();
+
+        // Metadata, Print Edition and token account exist.
+        assert!(print_edition.exists_on_chain(&mut context).await);
+
+        let default_args = BurnPrintArgs::default(&new_update_authority);
+
+        let args = BurnPrintArgs {
+            metadata: Some(print_edition.new_metadata_pubkey),
+            token: Some(print_edition.token.pubkey()),
+            master_edition_mint: Some(original_nft.mint.pubkey()),
+            master_edition_token: Some(original_nft.token.pubkey()),
+            master_edition: Some(master_edition.pubkey),
+            edition_marker: Some(print_edition.pubkey),
+            ..default_args
+        };
+
+        let err = print_edition.burn(&mut context, args).await.unwrap_err();
+
+        assert_custom_error!(err, MetadataError::InvalidAuthorityType);
+    }
+
+    #[tokio::test]
     pub async fn no_master_edition() {
         let mut context = program_test().start_with_context().await;
 
@@ -3444,6 +3489,12 @@ mod nft_edition {
             .await
             .unwrap();
 
+        let new_update_authority = Keypair::new();
+        other_nft
+            .change_update_authority(&mut context, new_update_authority.pubkey())
+            .await
+            .unwrap();
+
         let other_print_edition = EditionMarker::new(&other_nft, &other_master_edition, 1);
         other_print_edition.create(&mut context).await.unwrap();
 
@@ -3458,12 +3509,6 @@ mod nft_edition {
 
         let print_edition = EditionMarker::new(&our_nft, &master_edition, 1);
         print_edition.create(&mut context).await.unwrap();
-
-        let new_update_authority = Keypair::new();
-        other_nft
-            .change_update_authority(&mut context, new_update_authority.pubkey())
-            .await
-            .unwrap();
 
         let payer = &context.payer.dirty_clone();
 
