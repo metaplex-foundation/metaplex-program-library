@@ -4124,6 +4124,26 @@ createErrorFromCodeLookup.set(0xc0, () => new InvalidMetadataFlagsError());
 createErrorFromNameLookup.set('InvalidMetadataFlags', () => new InvalidMetadataFlagsError());
 
 /**
+ * InvalidTokenAccount: 'Incorrect Token Account'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidTokenAccountError extends Error {
+  readonly code: number = 0xc1;
+  readonly name: string = 'InvalidTokenAccount';
+  constructor() {
+    super('Incorrect Token Account');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidTokenAccountError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xc1, () => new InvalidTokenAccountError());
+createErrorFromNameLookup.set('InvalidTokenAccount', () => new InvalidTokenAccountError());
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated
