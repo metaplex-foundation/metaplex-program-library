@@ -92,7 +92,7 @@ mod print {
         match result {
             BanksClientError::TransactionError(TransactionError::InstructionError(
                 _,
-                InstructionError::MissingAccount,
+                InstructionError::IncorrectProgramId,
             )) => (),
             _ => panic!("Wrong error occurs while trying to use invalid token program"),
         }

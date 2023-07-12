@@ -816,6 +816,7 @@ pub enum MetadataInstruction {
     #[account(15, name="spl_ata_program", desc="SPL Associated Token Account program")]
     #[account(16, name="sysvar_instructions", desc="Instructions sysvar account")]
     #[account(17, name="system_program", desc="System program")]
+    #[args(initialize_mint: bool)]
     #[default_optional_accounts]
     Print(PrintArgs),
 }
