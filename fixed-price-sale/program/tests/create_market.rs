@@ -35,6 +35,7 @@ mod create_market {
             None,
             true,
             false,
+            1,
         )
         .await;
 
@@ -170,6 +171,7 @@ mod create_market {
             None,
             true,
             false,
+            1,
         )
         .await;
 
@@ -179,6 +181,7 @@ mod create_market {
             &store_keypair,
             &selling_resource_keypair,
             &selling_resource_owner_keypair,
+            Some(1),
         )
         .await;
 
@@ -213,6 +216,7 @@ mod create_market {
             None,
             true,
             false,
+            1,
         )
         .await;
 
@@ -324,6 +328,7 @@ mod create_market {
             None,
             true,
             false,
+            1,
         )
         .await;
 
@@ -438,6 +443,7 @@ mod create_market {
             None,
             true,
             false,
+            1,
         )
         .await;
 
@@ -539,6 +545,7 @@ mod create_market {
             None,
             true,
             false,
+            1,
         )
         .await;
 
@@ -651,6 +658,7 @@ mod create_market {
             None,
             true,
             false,
+            1,
         )
         .await;
 
@@ -749,6 +757,7 @@ mod create_market {
             None,
             true,
             false,
+            1,
         )
         .await;
 
@@ -854,6 +863,7 @@ mod create_market {
             None,
             true,
             false,
+            1,
         )
         .await;
 

@@ -48,9 +48,19 @@ pub mod fixed_price_sale {
         _trade_history_bump: u8,
         vault_owner_bump: u8,
     ) -> Result<()> {
+        ctx.accounts
+            .process(vault_owner_bump, None, ctx.remaining_accounts)
+    }
+
+    pub fn buy_v2<'info>(
+        ctx: Context<'_, '_, '_, 'info, Buy<'info>>,
+        _trade_history_bump: u8,
+        vault_owner_bump: u8,
+        edition_marker_number: u64,
+    ) -> Result<()> {
         ctx.accounts.process(
-            _trade_history_bump,
             vault_owner_bump,
+            Some(edition_marker_number),
             ctx.remaining_accounts,
         )
     }
@@ -210,6 +220,63 @@ pub struct CreateMarket<'info> {
 #[derive(Accounts)]
 #[instruction(trade_history:u8, vault_owner_bump: u8)]
 pub struct Buy<'info> {
+    #[account(mut, has_one=treasury_holder, has_one=selling_resource)]
+    market: Box<Account<'info, Market>>,
+    #[account(mut)]
+    selling_resource: Box<Account<'info, SellingResource>>,
+    #[account(mut)]
+    /// CHECK: checked in program
+    user_token_account: UncheckedAccount<'info>,
+    #[account(mut)]
+    user_wallet: Signer<'info>,
+    #[account(init_if_needed, seeds=[HISTORY_PREFIX.as_bytes(), user_wallet.key().as_ref(), market.key().as_ref()], bump, payer=user_wallet, space=TradeHistory::LEN)]
+    trade_history: Box<Account<'info, TradeHistory>>,
+    #[account(mut)]
+    /// CHECK: checked in program
+    treasury_holder: UncheckedAccount<'info>,
+    // Will be created by `mpl_token_metadata`
+    #[account(mut)]
+    /// CHECK: checked in program
+    new_metadata: UncheckedAccount<'info>,
+    // Will be created by `mpl_token_metadata`
+    #[account(mut)]
+    /// CHECK: checked in program
+    new_edition: UncheckedAccount<'info>,
+    #[account(mut, owner=mpl_token_metadata::id())]
+    /// CHECK: checked in program
+    master_edition: UncheckedAccount<'info>,
+    #[account(mut)]
+    new_mint: Box<Account<'info, Mint>>,
+    // Will be created by `mpl_token_metadata`
+    #[account(mut)]
+    /// CHECK: checked in program
+    edition_marker: UncheckedAccount<'info>,
+    #[account(mut, has_one=owner)]
+    vault: Box<Account<'info, TokenAccount>>,
+    #[account(seeds=[VAULT_OWNER_PREFIX.as_bytes(), selling_resource.resource.as_ref(), selling_resource.store.as_ref()], bump=vault_owner_bump)]
+    /// CHECK: checked in program
+    owner: UncheckedAccount<'info>,
+    #[account(mut, constraint = new_token_account.owner == user_wallet.key())]
+    new_token_account: Box<Account<'info, TokenAccount>>,
+    #[account(mut, owner=mpl_token_metadata::id())]
+    /// CHECK: checked in program
+    master_edition_metadata: UncheckedAccount<'info>,
+    clock: Sysvar<'info, Clock>,
+    rent: Sysvar<'info, Rent>,
+    /// CHECK: checked in program
+    token_metadata_program: UncheckedAccount<'info>,
+    token_program: Program<'info, Token>,
+    system_program: Program<'info, System>,
+    // if gatekeeper set for the collection these accounts also should be passed
+    // IMPORTANT: accounts should be passed strictly in this order
+    // user_collection_token_account: Account<'info, TokenAccount>
+    // token_account_mint: Account<'info, Mint>
+    // metadata_account: UncheckedAccount<'info>
+}
+
+#[derive(Accounts)]
+#[instruction(trade_history:u8, vault_owner_bump: u8)]
+pub struct BuyV2<'info> {
     #[account(mut, has_one=treasury_holder, has_one=selling_resource)]
     market: Box<Account<'info, Market>>,
     #[account(mut)]

@@ -9,6 +9,7 @@ use mpl_fixed_price_sale::{
     accounts as mpl_fixed_price_sale_accounts, instruction as mpl_fixed_price_sale_instruction,
     utils::{find_treasury_owner_address, find_vault_owner_address},
 };
+use solana_program::pubkey::Pubkey;
 use solana_program_test::ProgramTestContext;
 use solana_sdk::{
     commitment_config::CommitmentLevel,
@@ -38,7 +39,7 @@ pub async fn setup_store(context: &mut ProgramTestContext) -> (Keypair, Keypair)
     let admin_wallet = Keypair::new();
     let store_keypair = Keypair::new();
 
-    airdrop(context, &admin_wallet.pubkey(), 10_000_000_000).await;
+    airdrop(context, &admin_wallet.pubkey(), 1_000_000_000_000).await;
 
     let name = "Test store".to_string();
     let description = "Just a test store".to_string();
@@ -90,6 +91,7 @@ pub async fn setup_selling_resource(
     creators: Option<Vec<mpl_token_metadata::state::Creator>>,
     selling_resource_owner_creator: bool,
     is_mutable: bool,
+    max_supply: u64,
 ) -> (Keypair, Keypair, Keypair) {
     let selling_resource_keypair = Keypair::new();
     let selling_resource_owner_keypair = Keypair::new();
@@ -169,14 +171,14 @@ pub async fn setup_selling_resource(
         &actual_update_authority,
         admin_wallet,
         &metadata,
-        Some(1),
+        Some(max_supply),
     )
     .await;
 
     airdrop(
         context,
         &selling_resource_owner_keypair.pubkey(),
-        10_000_000_000,
+        1_000_000_000_000,
     )
     .await;
 
@@ -200,7 +202,7 @@ pub async fn setup_selling_resource(
     let data = mpl_fixed_price_sale_instruction::InitSellingResource {
         master_edition_bump,
         vault_owner_bump,
-        max_supply: Some(1),
+        max_supply: Some(max_supply),
     }
     .data();
 
@@ -239,6 +241,7 @@ pub async fn setup_market(
     store_keypair: &Keypair,
     selling_resource_keypair: &Keypair,
     selling_resource_owner_keypair: &Keypair,
+    user_limit: Option<u64>,
 ) -> Keypair {
     let market_keypair = Keypair::new();
 
@@ -271,7 +274,6 @@ pub async fn setup_market(
     let description = "Marktbeschreibung".to_string();
     let mutable = true;
     let price = 1_000_000;
-    let pieces_in_one_wallet = Some(1);
 
     let accounts = mpl_fixed_price_sale_accounts::CreateMarket {
         market: market_keypair.pubkey(),
@@ -291,7 +293,7 @@ pub async fn setup_market(
         description: description.to_owned(),
         mutable,
         price,
-        pieces_in_one_wallet,
+        pieces_in_one_wallet: user_limit,
         start_date: start_date as u64,
         end_date: None,
         gating_config: None,

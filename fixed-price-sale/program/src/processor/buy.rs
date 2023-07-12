@@ -12,16 +12,13 @@ use anchor_lang::{
     system_program::System,
 };
 use anchor_spl::token;
-use mpl_token_metadata::{
-    state::{Metadata, TokenMetadataAccount},
-    utils::get_supply_off_master_edition,
-};
+use mpl_token_metadata::state::{EditionMarker, Metadata, TokenMetadataAccount};
 
 impl<'info> Buy<'info> {
     pub fn process(
         &mut self,
-        _trade_history_bump: u8,
         vault_owner_bump: u8,
+        edition_marker_number: Option<u64>,
         remaining_accounts: &[AccountInfo<'info>],
     ) -> Result<()> {
         let market = &mut self.market;
@@ -45,10 +42,97 @@ impl<'info> Buy<'info> {
         let system_program = &self.system_program;
 
         let metadata_mint = selling_resource.resource;
-        // do supply +1 to increase master edition supply
-        let edition = get_supply_off_master_edition(&master_edition.to_account_info())?
-            .checked_add(1)
-            .ok_or(ErrorCode::MathOverflow)?;
+
+        // First we find the edition marker number. If it's passed in by the user, we use that and check that
+        // it matches the edition marker PDA passed in.
+
+        // Otherwise we start at 0 and loop until we find the right edition marker.
+
+        let edition_marker_number = if let Some(edition_marker_number) = edition_marker_number {
+            let edition_marker_number_str = edition_marker_number.to_string();
+
+            let pda = Pubkey::find_program_address(
+                &[
+                    "metadata".as_bytes(),
+                    mpl_token_metadata::ID.as_ref(),
+                    metadata_mint.as_ref(),
+                    "edition".as_bytes(),
+                    edition_marker_number_str.as_bytes(),
+                ],
+                &mpl_token_metadata::ID,
+            )
+            .0;
+
+            if pda != *edition_marker_info.key {
+                return Err(ErrorCode::InvalidEditionMarkerAccount.into());
+            }
+
+            edition_marker_number
+        } else {
+            let mut edition_marker_number = 0u64;
+
+            loop {
+                let edition_marker_number_str = edition_marker_number.to_string();
+                let pda = Pubkey::find_program_address(
+                    &[
+                        "metadata".as_bytes(),
+                        mpl_token_metadata::ID.as_ref(),
+                        metadata_mint.as_ref(),
+                        "edition".as_bytes(),
+                        edition_marker_number_str.as_bytes(),
+                    ],
+                    &mpl_token_metadata::ID,
+                )
+                .0;
+
+                if pda == *edition_marker_info.key {
+                    break;
+                }
+
+                edition_marker_number = edition_marker_number
+                    .checked_add(1)
+                    .ok_or(ErrorCode::MathOverflow)?;
+            }
+
+            edition_marker_number
+        };
+
+        // Now we calculate the edition number to be minted by finding the first available edition
+        // in order.
+
+        let is_first_marker = edition_marker_number == 0;
+
+        // Find the first available edition number in this edition marker.
+        let edition = if edition_marker_info.data_is_empty() {
+            // First Edition marker skips the first bit because editions start at 1.
+            if is_first_marker {
+                1
+            } else {
+                248u64
+                    .checked_mul(edition_marker_number)
+                    .ok_or(ErrorCode::MathOverflow)?
+            }
+        } else {
+            let marker = EditionMarker::from_account_info(edition_marker_info)?;
+
+            if let Some((index, bit)) = find_first_zero_bit(marker.ledger, is_first_marker) {
+                // 248 * edition_marker_number + (index * 8 + bit as usize) as u64
+
+                let relative_index = index
+                    .checked_mul(8)
+                    .ok_or(ErrorCode::MathOverflow)?
+                    .checked_add(bit as usize)
+                    .ok_or(ErrorCode::MathOverflow)? as u64;
+
+                248u64
+                    .checked_mul(edition_marker_number)
+                    .ok_or(ErrorCode::MathOverflow)?
+                    .checked_add(relative_index)
+                    .ok_or(ErrorCode::MathOverflow)?
+            } else {
+                return Err(ErrorCode::EditionMarkerFull.into());
+            }
+        };
 
         // Check, that `Market` is not in `Suspended` state
         if market.state == MarketState::Suspended {
@@ -141,7 +225,7 @@ impl<'info> Buy<'info> {
             &vault.to_account_info(),
             &master_edition_metadata.to_account_info(),
             &master_edition.to_account_info(),
-            &metadata_mint,
+            &selling_resource.resource,
             edition_marker_info,
             &token_program.to_account_info(),
             &system_program.to_account_info(),

@@ -39,6 +39,7 @@ mod resume_market {
             None,
             true,
             false,
+            1,
         )
         .await;
 
@@ -215,6 +216,7 @@ mod resume_market {
             None,
             true,
             false,
+            1,
         )
         .await;
 
@@ -387,6 +389,7 @@ mod resume_market {
             None,
             true,
             false,
+            1,
         )
         .await;
 
@@ -565,6 +568,7 @@ mod resume_market {
             None,
             true,
             false,
+            1,
         )
         .await;
 

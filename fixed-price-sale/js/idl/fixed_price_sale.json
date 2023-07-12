@@ -8,7 +8,10 @@
         {
           "name": "store",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "relations": [
+            "admin"
+          ]
         },
         {
           "name": "admin",
@@ -43,12 +46,36 @@
         {
           "name": "vault",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "relations": [
+            "owner"
+          ]
         },
         {
           "name": "owner",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "type": "string",
+                "value": "mt_vault"
+              },
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "account": "Mint",
+                "path": "resource_mint"
+              },
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "account": "Store",
+                "path": "store"
+              }
+            ]
+          }
         },
         {
           "name": "resourceToken",
@@ -124,7 +151,11 @@
         {
           "name": "market",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "relations": [
+            "treasury_holder",
+            "selling_resource"
+          ]
         },
         {
           "name": "sellingResource",
@@ -144,7 +175,27 @@
         {
           "name": "tradeHistory",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "type": "string",
+                "value": "history"
+              },
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "path": "user_wallet"
+              },
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "account": "Market",
+                "path": "market"
+              }
+            ]
+          }
         },
         {
           "name": "treasuryHolder",
@@ -179,12 +230,36 @@
         {
           "name": "vault",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "relations": [
+            "owner"
+          ]
         },
         {
           "name": "owner",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "type": "string",
+                "value": "mt_vault"
+              },
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "account": "SellingResource",
+                "path": "selling_resource.resource"
+              },
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "account": "SellingResource",
+                "path": "selling_resource.store"
+              }
+            ]
+          }
         },
         {
           "name": "newTokenAccount",
@@ -234,12 +309,182 @@
       ]
     },
     {
+      "name": "buyV2",
+      "accounts": [
+        {
+          "name": "market",
+          "isMut": true,
+          "isSigner": false,
+          "relations": [
+            "treasury_holder",
+            "selling_resource"
+          ]
+        },
+        {
+          "name": "sellingResource",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "userTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "userWallet",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "tradeHistory",
+          "isMut": true,
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "type": "string",
+                "value": "history"
+              },
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "path": "user_wallet"
+              },
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "account": "Market",
+                "path": "market"
+              }
+            ]
+          }
+        },
+        {
+          "name": "treasuryHolder",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "newMetadata",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "newEdition",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "masterEdition",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "newMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "editionMarker",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "vault",
+          "isMut": true,
+          "isSigner": false,
+          "relations": [
+            "owner"
+          ]
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "type": "string",
+                "value": "mt_vault"
+              },
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "account": "SellingResource",
+                "path": "selling_resource.resource"
+              },
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "account": "SellingResource",
+                "path": "selling_resource.store"
+              }
+            ]
+          }
+        },
+        {
+          "name": "newTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "masterEditionMetadata",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "clock",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMetadataProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "tradeHistoryBump",
+          "type": "u8"
+        },
+        {
+          "name": "vaultOwnerBump",
+          "type": "u8"
+        },
+        {
+          "name": "editionMarkerNumber",
+          "type": "u64"
+        }
+      ]
+    },
+    {
       "name": "closeMarket",
       "accounts": [
         {
           "name": "market",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "relations": [
+            "owner"
+          ]
         },
         {
           "name": "owner",
@@ -260,7 +505,10 @@
         {
           "name": "market",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "relations": [
+            "owner"
+          ]
         },
         {
           "name": "owner",
@@ -281,7 +529,10 @@
         {
           "name": "market",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "relations": [
+            "owner"
+          ]
         },
         {
           "name": "owner",
@@ -333,7 +584,10 @@
         {
           "name": "market",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "relations": [
+            "owner"
+          ]
         },
         {
           "name": "owner",
@@ -354,7 +608,12 @@
         {
           "name": "market",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "relations": [
+            "treasury_holder",
+            "selling_resource",
+            "treasury_mint"
+          ]
         },
         {
           "name": "sellingResource",
@@ -379,7 +638,28 @@
         {
           "name": "owner",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "type": "string",
+                "value": "holder"
+              },
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "account": "Market",
+                "path": "market.treasury_mint"
+              },
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "account": "Market",
+                "path": "market.selling_resource"
+              }
+            ]
+          }
         },
         {
           "name": "destination",
@@ -399,7 +679,27 @@
         {
           "name": "payoutTicket",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "type": "string",
+                "value": "payout_ticket"
+              },
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "account": "Market",
+                "path": "market"
+              },
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "path": "funder"
+              }
+            ]
+          }
         },
         {
           "name": "rent",
@@ -459,7 +759,10 @@
         {
           "name": "sellingResource",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "relations": [
+            "store"
+          ]
         },
         {
           "name": "mint",
@@ -474,7 +777,27 @@
         {
           "name": "owner",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "type": "string",
+                "value": "holder"
+              },
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "path": "mint"
+              },
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "account": "SellingResource",
+                "path": "selling_resource"
+              }
+            ]
+          }
         },
         {
           "name": "systemProgram",
@@ -535,7 +858,11 @@
         {
           "name": "market",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "relations": [
+            "selling_resource",
+            "treasury_holder"
+          ]
         },
         {
           "name": "treasuryHolder",
@@ -545,7 +872,10 @@
         {
           "name": "sellingResource",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "relations": [
+            "vault"
+          ]
         },
         {
           "name": "sellingResourceOwner",
@@ -555,7 +885,10 @@
         {
           "name": "vault",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "relations": [
+            "owner"
+          ]
         },
         {
           "name": "metadata",
@@ -565,7 +898,28 @@
         {
           "name": "owner",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "type": "string",
+                "value": "mt_vault"
+              },
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "account": "SellingResource",
+                "path": "selling_resource.resource"
+              },
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "account": "SellingResource",
+                "path": "selling_resource.store"
+              }
+            ]
+          }
         },
         {
           "name": "destination",
@@ -616,7 +970,21 @@
         {
           "name": "primaryMetadataCreators",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "type": "string",
+                "value": "primary_creators"
+              },
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "path": "metadata"
+              }
+            ]
+          }
         },
         {
           "name": "systemProgram",
@@ -1149,6 +1517,16 @@
       "code": 6043,
       "name": "WrongGatingToken",
       "msg": "Wrong gating token"
+    },
+    {
+      "code": 6044,
+      "name": "EditionMarkerFull",
+      "msg": "No available editions in edition marker"
+    },
+    {
+      "code": 6045,
+      "name": "InvalidEditionMarkerAccount",
+      "msg": "Invalid edition marker"
     }
   ],
   "metadata": {

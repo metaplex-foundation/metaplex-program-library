@@ -136,4 +136,10 @@ pub enum ErrorCode {
     // 6043
     #[msg("Wrong gating token")]
     WrongGatingToken,
+    // 6044
+    #[msg("No available editions in edition marker")]
+    EditionMarkerFull,
+    // 6045
+    #[msg("Invalid edition marker")]
+    InvalidEditionMarkerAccount,
 }

@@ -46,6 +46,7 @@ mod claim_resource {
                 None,
                 true,
                 true,
+                1,
             )
             .await;
 
@@ -506,6 +507,7 @@ mod claim_resource {
                 None,
                 true,
                 true,
+                1,
             )
             .await;
 
@@ -929,6 +931,7 @@ mod claim_resource {
                 None,
                 true,
                 true,
+                1,
             )
             .await;
 
