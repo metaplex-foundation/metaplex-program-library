@@ -324,30 +324,6 @@ impl EditionMarker {
         context: &mut ProgramTestContext,
     ) -> Result<(), BanksClientError> {
         let fake_token_program = Keypair::new();
-        // create_mint(
-        //     context,
-        //     &self.mint,
-        //     &context.payer.pubkey(),
-        //     Some(&context.payer.pubkey()),
-        //     0,
-        // )
-        // .await?;
-        // create_token_account(
-        //     context,
-        //     &self.token,
-        //     &self.mint.pubkey(),
-        //     &context.payer.pubkey(),
-        // )
-        // .await?;
-        // mint_tokens(
-        //     context,
-        //     &self.mint.pubkey(),
-        //     &self.token.pubkey(),
-        //     1,
-        //     &context.payer.pubkey(),
-        //     None,
-        // )
-        // .await?;
 
         let edition_marker_pda = Pubkey::find_program_address(
             &[
