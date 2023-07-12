@@ -210,6 +210,11 @@ fn print_v1(_program_id: &Pubkey, ctx: Context<Print>, args: PrintArgs) -> Progr
         _ => return Err(MetadataError::InvalidTokenStandard.into()),
     };
 
+    // Check that the new update authority is the same as the master edition.
+    if update_authority_info.key != &master_metadata.update_authority {
+        return Err(MetadataError::UpdateAuthorityIncorrect.into());
+    }
+
     process_mint_new_edition_from_master_edition_via_token_logic(
         &crate::ID,
         MintNewEditionFromMasterEditionViaTokenLogicArgs {

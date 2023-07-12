@@ -1087,7 +1087,13 @@ mod pnft_edition {
             .await
             .unwrap();
 
-        assert!(print_md.is_none());
+        // Token Metadata accounts may still be open because they are no longer being re-assigned
+        // to the system program immediately, but if they exist they should have a
+        // data length of 0.
+        if let Some(account) = print_md {
+            assert_eq!(account.data.len(), 0);
+        }
+
         assert!(token_account.is_none());
         assert!(print_edition_account.is_none());
     }
@@ -2756,7 +2762,13 @@ mod nft_edition {
             .await
             .unwrap();
 
-        assert!(print_md.is_none());
+        // Token Metadata accounts may still be open because they are no longer being re-assigned
+        // to the system program immediately, but if they exist they should have a
+        // data length of 0.
+        if let Some(account) = print_md {
+            assert_eq!(account.data.len(), 0);
+        }
+
         assert!(token_account.is_none());
         assert!(print_edition_account.is_none());
     }
