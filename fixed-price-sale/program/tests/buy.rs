@@ -7,7 +7,8 @@ mod buy {
         utils::{
             helpers::{
                 airdrop, buy_one, buy_setup, create_collection, create_master_nft, create_mint,
-                create_token_account, mint_to, unwrap_ignoring_io_error_in_ci, BuyManager,
+                create_token_account, fill_edition_marker, mint_to, unwrap_ignoring_io_error_in_ci,
+                BuyManager,
             },
             setup_functions::{setup_selling_resource, setup_store},
         },
@@ -21,7 +22,8 @@ mod buy {
         instruction as mpl_fixed_price_sale_instruction,
         state::{GatingConfig, SellingResource, TradeHistory},
         utils::{
-            find_trade_history_address, find_treasury_owner_address, find_vault_owner_address,
+            find_edition_marker_pda, find_trade_history_address, find_treasury_owner_address,
+            find_vault_owner_address,
         },
     };
     use mpl_token_metadata::{
@@ -4462,9 +4464,204 @@ mod buy {
             .unwrap();
     }
 
+    #[tokio::test]
+    async fn mint_from_multiple_pdas() {
+        setup_context!(context, mpl_fixed_price_sale, mpl_token_metadata);
+        let (admin_wallet, store_keypair) = setup_store(&mut context).await;
+
+        let edition_mint_amount = 1000;
+        let max_supply = 2 * edition_mint_amount;
+
+        let (selling_resource_keypair, selling_resource_owner_keypair, _vault) =
+            setup_selling_resource(
+                &mut context,
+                &admin_wallet,
+                &store_keypair,
+                100,
+                None,
+                true,
+                false,
+                max_supply,
+            )
+            .await;
+
+        airdrop(
+            &mut context,
+            &selling_resource_owner_keypair.pubkey(),
+            10_000_000_000_000,
+        )
+        .await;
+
+        let market_keypair = Keypair::new();
+
+        let treasury_mint_keypair = Keypair::new();
+        create_mint(
+            &mut context,
+            &treasury_mint_keypair,
+            &admin_wallet.pubkey(),
+            0,
+        )
+        .await;
+
+        let (treasury_owner, treasyry_owner_bump) = find_treasury_owner_address(
+            &treasury_mint_keypair.pubkey(),
+            &selling_resource_keypair.pubkey(),
+        );
+
+        let treasury_holder_keypair = Keypair::new();
+        create_token_account(
+            &mut context,
+            &treasury_holder_keypair,
+            &treasury_mint_keypair.pubkey(),
+            &treasury_owner,
+        )
+        .await;
+
+        let start_date = context
+            .banks_client
+            .get_sysvar::<Clock>()
+            .await
+            .unwrap()
+            .unix_timestamp
+            + 1;
+
+        let name = "Marktname".to_string();
+        let description = "Marktbeschreibung".to_string();
+        let mutable = true;
+        let price = 1_000;
+        let pieces_in_one_wallet = Some(edition_mint_amount);
+
+        // CreateMarket
+        let accounts = mpl_fixed_price_sale_accounts::CreateMarket {
+            market: market_keypair.pubkey(),
+            store: store_keypair.pubkey(),
+            selling_resource_owner: selling_resource_owner_keypair.pubkey(),
+            selling_resource: selling_resource_keypair.pubkey(),
+            mint: treasury_mint_keypair.pubkey(),
+            treasury_holder: treasury_holder_keypair.pubkey(),
+            owner: treasury_owner,
+            system_program: system_program::id(),
+        }
+        .to_account_metas(None);
+
+        let data = mpl_fixed_price_sale_instruction::CreateMarket {
+            _treasury_owner_bump: treasyry_owner_bump,
+            name: name.to_owned(),
+            description: description.to_owned(),
+            mutable,
+            price,
+            pieces_in_one_wallet,
+            start_date: start_date as u64,
+            end_date: None,
+            gating_config: None,
+        }
+        .data();
+
+        let instruction = Instruction {
+            program_id: mpl_fixed_price_sale::id(),
+            data,
+            accounts,
+        };
+
+        let tx = Transaction::new_signed_with_payer(
+            &[instruction],
+            Some(&context.payer.pubkey()),
+            &[
+                &context.payer,
+                &market_keypair,
+                &selling_resource_owner_keypair,
+            ],
+            context.last_blockhash,
+        );
+
+        context
+            .banks_client
+            .process_transaction_with_commitment(tx, CommitmentLevel::Confirmed)
+            .await
+            .unwrap();
+
+        let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
+        context.warp_to_slot(clock.slot + 1500).unwrap();
+
+        // Buy setup
+        let mut buy_manager = BuyManager {
+            context: &mut context,
+            selling_resource_keypair,
+            selling_resource: None,
+            market_keypair,
+            treasury_mint_keypair,
+            treasury_holder_keypair,
+            admin_wallet,
+            user_token_account: None,
+            trade_history: None,
+            trade_history_bump: None,
+            vault_owner_bump: None,
+            vault_owner: None,
+        };
+
+        buy_setup(&mut buy_manager).await.unwrap();
+
+        // Buy one from the first edition marker to initialize the account.
+        buy_one(&mut buy_manager, Some(0)).await.unwrap();
+
+        // Fill up the first edition marker so we can mint from the second.
+        // The supply will be incorrect but that doesn't matter for this test.
+        fill_edition_marker(&mut buy_manager, 0).await;
+
+        // We should be able to buy editions from the second edition marker
+        buy_one(&mut buy_manager, Some(1)).await.unwrap();
+        buy_one(&mut buy_manager, Some(1)).await.unwrap();
+
+        // Did it work?
+        let (edition_marker, _) = find_edition_marker_pda(
+            &buy_manager.selling_resource.as_ref().unwrap().resource,
+            248,
+        );
+
+        let edition_marker_account = buy_manager
+            .context
+            .banks_client
+            .get_account(edition_marker)
+            .await
+            .unwrap()
+            .unwrap();
+
+        // Key is correct.
+        assert_eq!(edition_marker_account.data[0], 7);
+        // First two editions are minted: 1100 0000 == 192
+        assert_eq!(edition_marker_account.data[1], 192);
+
+        // Fill the second edition marker
+        fill_edition_marker(&mut buy_manager, 1).await;
+
+        // Mint a couple from the third edition marker
+        buy_one(&mut buy_manager, Some(2)).await.unwrap();
+        buy_one(&mut buy_manager, Some(2)).await.unwrap();
+
+        // Did it work?
+        let (edition_marker, _) = find_edition_marker_pda(
+            &buy_manager.selling_resource.as_ref().unwrap().resource,
+            496,
+        );
+
+        let edition_marker_account = buy_manager
+            .context
+            .banks_client
+            .get_account(edition_marker)
+            .await
+            .unwrap()
+            .unwrap();
+
+        // Key is correct.
+        assert_eq!(edition_marker_account.data[0], 7);
+        // First two editions are minted: 1100 0000 == 192
+        assert_eq!(edition_marker_account.data[1], 192);
+    }
+
     #[ignore]
     #[tokio::test]
-    async fn multiple_marker_pdas() {
+    // Boutique test for running locally
+    async fn mint_many() {
         setup_context!(context, mpl_fixed_price_sale, mpl_token_metadata);
         let (admin_wallet, store_keypair) = setup_store(&mut context).await;
 
@@ -4601,7 +4798,7 @@ mod buy {
         buy_setup(&mut buy_manager).await.unwrap();
 
         for i in 1..=edition_mint_amount {
-            buy_one(&mut buy_manager).await.unwrap();
+            buy_one(&mut buy_manager, None).await.unwrap();
             if i % 5 == 0 {
                 let slot = buy_manager
                     .context

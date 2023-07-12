@@ -16,7 +16,8 @@ use solana_program::{clock::Clock, instruction::Instruction, system_instruction}
 use solana_program::{instruction::InstructionError, sysvar};
 use solana_program_test::*;
 use solana_sdk::{
-    commitment_config::CommitmentLevel, program_pack::Pack, transaction::Transaction,
+    account::AccountSharedData, commitment_config::CommitmentLevel, program_pack::Pack,
+    transaction::Transaction,
 };
 use solana_sdk::{transaction::TransactionError, transport::TransportError};
 use std::convert::TryFrom;
@@ -534,7 +535,10 @@ pub async fn buy_setup<'a>(manager: &mut BuyManager<'a>) -> Result<(), BanksClie
     Ok(())
 }
 
-pub async fn buy_one<'a>(manager: &mut BuyManager<'_>) -> Result<(), BanksClientError> {
+pub async fn buy_one<'a>(
+    manager: &mut BuyManager<'_>,
+    edition_marker: Option<u64>,
+) -> Result<(), BanksClientError> {
     let payer_pubkey = manager.context.payer.pubkey();
 
     mint_to(
@@ -598,10 +602,16 @@ pub async fn buy_one<'a>(manager: &mut BuyManager<'_>) -> Result<(), BanksClient
     let selling_resource =
         SellingResource::try_deserialize(&mut selling_resource_data.as_ref()).unwrap();
 
-    let supply = selling_resource.supply + 1;
+    let edition_num = if let Some(marker_num) = edition_marker {
+        marker_num * 248
+    } else {
+        selling_resource.supply + 1
+    };
 
-    let (edition_marker, _) =
-        find_edition_marker_pda(&manager.selling_resource.as_ref().unwrap().resource, supply);
+    let (edition_marker, _) = find_edition_marker_pda(
+        &manager.selling_resource.as_ref().unwrap().resource,
+        edition_num,
+    );
 
     let (new_metadata, _) = Pubkey::find_program_address(
         &[
@@ -743,10 +753,12 @@ pub async fn buy_one_v2<'a>(
     let selling_resource =
         SellingResource::try_deserialize(&mut selling_resource_data.as_ref()).unwrap();
 
-    let supply = selling_resource.supply + 1;
+    let edition_num = edition_marker_number * 248;
 
-    let (edition_marker, _) =
-        find_edition_marker_pda(&manager.selling_resource.as_ref().unwrap().resource, supply);
+    let (edition_marker, _) = find_edition_marker_pda(
+        &manager.selling_resource.as_ref().unwrap().resource,
+        edition_num,
+    );
 
     let (new_metadata, _) = Pubkey::find_program_address(
         &[
@@ -820,4 +832,25 @@ pub async fn buy_one_v2<'a>(
         .unwrap();
 
     Ok(())
+}
+
+pub async fn fill_edition_marker(manager: &mut BuyManager<'_>, number: u64) {
+    let (edition_marker, _) = find_edition_marker_pda(
+        &manager.selling_resource.as_ref().unwrap().resource,
+        248 * number,
+    );
+
+    let mut edition_marker_account = manager
+        .context
+        .banks_client
+        .get_account(edition_marker)
+        .await
+        .unwrap()
+        .unwrap();
+    edition_marker_account.data[1..].fill(255);
+
+    let shared_account: AccountSharedData = edition_marker_account.into();
+    manager
+        .context
+        .set_account(&edition_marker, &shared_account);
 }
