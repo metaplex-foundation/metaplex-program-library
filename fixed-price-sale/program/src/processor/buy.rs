@@ -70,9 +70,9 @@ impl<'info> Buy<'info> {
             edition_marker_number
         } else {
             let mut edition_marker_number = 0u64;
-            let edition_marker_number_str = edition_marker_number.to_string();
 
             loop {
+                let edition_marker_number_str = edition_marker_number.to_string();
                 let pda = Pubkey::find_program_address(
                     &[
                         "metadata".as_bytes(),
