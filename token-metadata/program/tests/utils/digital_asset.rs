@@ -130,7 +130,6 @@ impl DigitalAsset {
         }
 
         if let Some(edition) = self.edition {
-            println!("edition: {:?}", edition);
             builder.edition(edition);
         }
 

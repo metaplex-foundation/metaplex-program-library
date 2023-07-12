@@ -844,7 +844,7 @@ impl InstructionBuilder for super::builders::Update {
 ///
 ///   0. `[writable]` Edition Metadata
 ///   1. `[writable]` Edition
-///   2. `[writable]` Edition Mint
+///   2. `[writable, signer]` Edition Mint
 ///   3. `[]` Edition Token Account Owner
 ///   4. `[writable]` Edition Token Account
 ///   5. `[signer]` Edition Mint Authority
@@ -866,7 +866,7 @@ impl InstructionBuilder for super::builders::Print {
         let accounts = vec![
             AccountMeta::new(self.edition_metadata, false),
             AccountMeta::new(self.edition, false),
-            AccountMeta::new(self.edition_mint, false),
+            AccountMeta::new(self.edition_mint, self.initialize_mint),
             AccountMeta::new_readonly(self.edition_token_account_owner, false),
             AccountMeta::new(self.edition_token_account, false),
             AccountMeta::new_readonly(self.edition_mint_authority, true),

@@ -300,7 +300,8 @@ impl EditionMarker {
             .spl_token_program(spl_token::ID)
             .spl_ata_program(spl_associated_token_account::ID)
             .sysvar_instructions(sysvar::instructions::ID)
-            .system_program(system_program::ID);
+            .system_program(system_program::ID)
+            .initialize_mint(false);
 
         let tx = Transaction::new_signed_with_payer(
             &[builder.build(print_args).unwrap().instruction()],
@@ -323,30 +324,6 @@ impl EditionMarker {
         context: &mut ProgramTestContext,
     ) -> Result<(), BanksClientError> {
         let fake_token_program = Keypair::new();
-        create_mint(
-            context,
-            &self.mint,
-            &context.payer.pubkey(),
-            Some(&context.payer.pubkey()),
-            0,
-        )
-        .await?;
-        create_token_account(
-            context,
-            &self.token,
-            &self.mint.pubkey(),
-            &context.payer.pubkey(),
-        )
-        .await?;
-        mint_tokens(
-            context,
-            &self.mint.pubkey(),
-            &self.token.pubkey(),
-            1,
-            &context.payer.pubkey(),
-            None,
-        )
-        .await?;
 
         let edition_marker_pda = Pubkey::find_program_address(
             &[
@@ -383,12 +360,13 @@ impl EditionMarker {
             .spl_token_program(fake_token_program.pubkey())
             .spl_ata_program(spl_associated_token_account::ID)
             .sysvar_instructions(sysvar::instructions::ID)
-            .system_program(system_program::ID);
+            .system_program(system_program::ID)
+            .initialize_mint(true);
 
         let tx = Transaction::new_signed_with_payer(
             &[builder.build(print_args).unwrap().instruction()],
             Some(&context.payer.pubkey()),
-            &[&context.payer, &context.payer],
+            &[&context.payer, &self.mint],
             context.last_blockhash,
         );
 
