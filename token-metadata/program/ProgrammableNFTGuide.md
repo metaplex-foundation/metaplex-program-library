@@ -206,12 +206,12 @@ In general, the accounts will be added to the transaction following a pre-define
 5. payer
 ...
 ```
-When you are minting from a semi-fungible token, there is no need to pass a `masterEdition` account (semi-fungibles do not have a master edition account associated). If we simply omit the `masterEdition` account, the relative position of the remaining accounts (the accounts after the master edition) would change, resulting in the program logic to be inconsistent. One way to address this is to set another `PublicKey` value to represent a "not-set-value" to maintain the position but at the same time indicate that the master edition account was not set. This is accomplished by setting the Token Metadata program key as the `PublicKey` for any account that should be ommited. This is an efficient approach since:
+When you are minting from a semi-fungible token, there is no need to pass a `masterEdition` account (semi-fungibles do not have a master edition account associated). If we simply omit the `masterEdition` account, the relative position of the remaining accounts (the accounts after the master edition) would change, resulting in the program logic to be inconsistent. One way to address this is to set another `PublicKey` value to represent a "not-set-value" to maintain the position but at the same time indicate that the master edition account was not set. This is accomplished by setting the Token Metadata program key as the `PublicKey` for any account that should be omitted. This is an efficient approach since:
 1. The (Token Metadata) program id is already included in the transaction by default so adding another reference to it does not take the full 32 bytes of `PublicKey` – only a single byte is used in this case;
 2. The relative position of accounts is maintained since there is a public key value for the account;
-3. The program can easily determine if the account key represent a "valid" public key or a "not-set-value".
+3. The program can easily determine if the account key represents a "valid" public key or a "not-set-value".
 
-Using this approach, the same handler supports a positional optional account by just ommiting the `masterEdition`:
+Using this approach, the same handler supports a positional optional account by just omitting the `masterEdition`:
 ```javascript
 const mintAccounts: MintInstructionAccounts = {
     token,
@@ -402,7 +402,7 @@ More details of the Token Authorization Rules program, including examples, can b
 
 Several operations involving `pNFT` on Token Metadata are subject to Token Authorization Rules – depending on the rule configured, the operation will be authorized or not. The creator (`update authority`) of an asset has the flexibility to manage these rules through the [`ProgrammableConfig`](https://github.com/metaplex-foundation/metaplex-program-library/blob/ad5f39c465676299951c91f8cf9216812b884531/token-metadata/program/src/state/metadata.rs#L364-L380) on a Metadata account.
 
-The definition of an operation follow a pattern `Operation:Scenario`, where `Operation` is the top-level action being performed and `Scenario` is a sub-categorization of the operation type. For example, in the case of `Transfer:Owner`, the top-level action is a `Transfer` being performed by the `Owner`.
+The definition of an operation follows a pattern `Operation:Scenario`, where `Operation` is the top-level action being performed and `Scenario` is a sub-categorization of the operation type. For example, in the case of `Transfer:Owner`, the top-level action is a `Transfer` being performed by the `Owner`.
 
 The list of operations used in Token Metadata are:
 
@@ -456,7 +456,7 @@ cargo test-bpf
 
 ### JavaScript/TypeScript tests
 
-The JavaScript/TypeScript use [Amman](https://github.com/metaplex-foundation/amman) to start a local validatior. The first step required is to build the required programs:
+The JavaScript/TypeScript use [Amman](https://github.com/metaplex-foundation/amman) to start a local validator. The first step required is to build the required programs:
 
 * In the folder `$PROJECTS/mpl-token-auth-rules/program` execute:
   ```
