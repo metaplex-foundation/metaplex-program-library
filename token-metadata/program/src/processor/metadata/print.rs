@@ -129,7 +129,7 @@ fn print_v1(_program_id: &Pubkey, ctx: Context<Print>, args: PrintArgs) -> Progr
         // We do this by checking supply == 0
         let mint_supply = get_mint_supply(edition_mint_info)?;
         if mint_supply > 0 {
-            return Err(MetadataError::InvalidTokenAccount.into());
+            return Err(MetadataError::MintSupplyMustBeZero.into());
         }
         // if the token account is empty, we will initialize a new one but it must
         // be an ATA account

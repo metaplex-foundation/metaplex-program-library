@@ -759,10 +759,6 @@ pub enum MetadataError {
     /// 192
     #[error("")]
     InvalidMetadataFlags,
-
-    /// 193
-    #[error("Incorrect Token Account")]
-    InvalidTokenAccount,
 }
 
 impl PrintProgramError for MetadataError {
