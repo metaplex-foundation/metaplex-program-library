@@ -5,6 +5,9 @@ version = "0.3.0"
 description = "Created with Anchor"
 edition = "2018"
 license-file = "../../LICENSE"
+repository = "https://github.com/metaplex-foundation/metaplex-program-library"
+documentation = ""
+homepage = ""
 
 [lib]
 crate-type = ["cdylib", "lib"]
