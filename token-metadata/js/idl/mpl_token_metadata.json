@@ -6753,11 +6753,6 @@
       "code": 192,
       "name": "InvalidMetadataFlags",
       "msg": ""
-    },
-    {
-      "code": 193,
-      "name": "InvalidTokenAccount",
-      "msg": "Incorrect Token Account"
     }
   ],
   "metadata": {
