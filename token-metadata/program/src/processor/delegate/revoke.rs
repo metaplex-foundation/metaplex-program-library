@@ -213,7 +213,8 @@ fn revoke_persistent_delegate_v1(
 
     // programmables assets can have delegates from any role apart from `Standard`
     match metadata.token_standard {
-        Some(TokenStandard::ProgrammableNonFungible) => {
+        Some(TokenStandard::ProgrammableNonFungible)
+        | Some(TokenStandard::ProgrammableNonFungibleEdition) => {
             if matches!(role, TokenDelegateRole::Standard) {
                 return Err(MetadataError::InvalidDelegateRole.into());
             }
@@ -301,6 +302,7 @@ fn revoke_persistent_delegate_v1(
     if matches!(
         metadata.token_standard,
         Some(TokenStandard::ProgrammableNonFungible)
+            | Some(TokenStandard::ProgrammableNonFungibleEdition)
     ) {
         if let Some(master_edition_info) = ctx.accounts.master_edition_info {
             freeze(

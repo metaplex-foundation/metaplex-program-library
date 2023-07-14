@@ -52,6 +52,7 @@ pub fn process_create_metadata_accounts_logic(
     is_edition: bool,
     add_token_standard: bool,
     collection_details: Option<CollectionDetails>,
+    token_standard_override: Option<TokenStandard>,
 ) -> ProgramResult {
     let CreateMetadataAccountsLogicArgs {
         metadata_account_info,
@@ -160,18 +161,20 @@ pub fn process_create_metadata_accounts_logic(
         metadata.collection_details = None;
     }
 
-    if add_token_standard {
-        let token_standard = if is_edition {
-            TokenStandard::NonFungibleEdition
-        } else if mint_decimals == 0 {
-            TokenStandard::FungibleAsset
-        } else {
-            TokenStandard::Fungible
-        };
-        metadata.token_standard = Some(token_standard);
+    metadata.token_standard = if add_token_standard {
+        token_standard_override.or({
+            if is_edition {
+                Some(TokenStandard::NonFungibleEdition)
+            } else if mint_decimals == 0 {
+                Some(TokenStandard::FungibleAsset)
+            } else {
+                Some(TokenStandard::Fungible)
+            }
+        })
     } else {
-        metadata.token_standard = None;
-    }
+        None
+    };
+
     puff_out_data_fields(&mut metadata);
 
     let edition_seeds = &[

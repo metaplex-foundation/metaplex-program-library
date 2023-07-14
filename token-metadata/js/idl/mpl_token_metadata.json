@@ -1,5 +1,5 @@
 {
-  "version": "1.12.0",
+  "version": "1.12.2",
   "name": "mpl_token_metadata",
   "instructions": [
     {
@@ -3578,6 +3578,133 @@
         "type": "u8",
         "value": 54
       }
+    },
+    {
+      "name": "Print",
+      "accounts": [
+        {
+          "name": "editionMetadata",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "New Metadata key (pda of ['metadata', program id, mint id])"
+        },
+        {
+          "name": "edition",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "New Edition (pda of ['metadata', program id, mint id, 'edition'])"
+        },
+        {
+          "name": "editionMint",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Mint of new token - THIS WILL TRANSFER AUTHORITY AWAY FROM THIS KEY"
+        },
+        {
+          "name": "editionTokenAccountOwner",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Owner of the token account of new token"
+        },
+        {
+          "name": "editionTokenAccount",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Token account of new token"
+        },
+        {
+          "name": "editionMintAuthority",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "Mint authority of new mint"
+        },
+        {
+          "name": "editionTokenRecord",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Token record account",
+          "optional": true
+        },
+        {
+          "name": "masterEdition",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Master Record Edition V2 (pda of ['metadata', program id, master metadata mint id, 'edition'])"
+        },
+        {
+          "name": "editionMarkerPda",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Edition pda to mark creation - will be checked for pre-existence. (pda of ['metadata', program id, master metadata mint id, 'edition', edition_number]) where edition_number is NOT the edition number you pass in args but actually edition_number = floor(edition/EDITION_MARKER_BIT_SIZE)."
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "desc": "payer"
+        },
+        {
+          "name": "masterTokenAccountOwner",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "owner of token account containing master token"
+        },
+        {
+          "name": "masterTokenAccount",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "token account containing token from master metadata mint"
+        },
+        {
+          "name": "masterMetadata",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Master record metadata account"
+        },
+        {
+          "name": "updateAuthority",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "The update authority of the master edition."
+        },
+        {
+          "name": "splTokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Token program"
+        },
+        {
+          "name": "splAtaProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "SPL Associated Token Account program"
+        },
+        {
+          "name": "sysvarInstructions",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Instructions sysvar account"
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "System program"
+        }
+      ],
+      "args": [
+        {
+          "name": "printArgs",
+          "type": {
+            "defined": "PrintArgs"
+          }
+        }
+      ],
+      "defaultOptionalAccounts": true,
+      "discriminant": {
+        "type": "u8",
+        "value": 55
+      }
     }
   ],
   "accounts": [
@@ -3676,6 +3803,24 @@
                 31
               ]
             }
+          }
+        ]
+      }
+    },
+    {
+      "name": "EditionMarkerV2",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "key",
+            "type": {
+              "defined": "Key"
+            }
+          },
+          {
+            "name": "ledger",
+            "type": "bytes"
           }
         ]
       }
@@ -5226,6 +5371,23 @@
       }
     },
     {
+      "name": "PrintArgs",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "V1",
+            "fields": [
+              {
+                "name": "edition",
+                "type": "u64"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
       "name": "LockArgs",
       "type": {
         "kind": "enum",
@@ -5321,6 +5483,9 @@
           },
           {
             "name": "ProgrammableNonFungible"
+          },
+          {
+            "name": "ProgrammableNonFungibleEdition"
           }
         ]
       }
@@ -5368,6 +5533,9 @@
           },
           {
             "name": "MetadataDelegate"
+          },
+          {
+            "name": "EditionMarkerV2"
           }
         ]
       }

@@ -283,7 +283,8 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
     }
 
     match token_standard {
-        Some(TokenStandard::ProgrammableNonFungible) => {
+        Some(TokenStandard::ProgrammableNonFungible)
+        | Some(TokenStandard::ProgrammableNonFungibleEdition) => {
             // All pNFTs should have a token record passed in and existing.
             // The token delegate role may not be populated, however.
             let owner_token_record_info =

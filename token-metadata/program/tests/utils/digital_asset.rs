@@ -5,8 +5,9 @@ use mpl_token_metadata::{
             BurnBuilder, CreateBuilder, DelegateBuilder, LockBuilder, MintBuilder, RevokeBuilder,
             TransferBuilder, UnlockBuilder, UnverifyBuilder, UpdateBuilder, VerifyBuilder,
         },
-        BurnArgs, CreateArgs, DelegateArgs, InstructionBuilder, LockArgs, MetadataDelegateRole,
-        MintArgs, RevokeArgs, TransferArgs, UnlockArgs, UpdateArgs, VerificationArgs,
+        BurnArgs, CollectionDetailsToggle, CollectionToggle, CreateArgs, DelegateArgs,
+        InstructionBuilder, LockArgs, MetadataDelegateRole, MintArgs, RevokeArgs, RuleSetToggle,
+        TransferArgs, UnlockArgs, UpdateArgs, UsesToggle, VerificationArgs,
     },
     pda::{
         find_master_edition_account, find_metadata_account, find_metadata_delegate_record_account,
@@ -14,7 +15,7 @@ use mpl_token_metadata::{
     },
     processor::AuthorizationData,
     state::{
-        AssetData, Collection, CollectionDetails, Creator, Metadata, PrintSupply,
+        AssetData, Collection, CollectionDetails, Creator, MasterEditionV2, Metadata, PrintSupply,
         ProgrammableConfig, TokenDelegateRole, TokenMetadataAccount, TokenRecord, TokenStandard,
         CREATE_FEE, EDITION, EDITION_MARKER_BIT_SIZE, FEE_FLAG_SET, METADATA_FEE_FLAG_INDEX,
         PREFIX,
@@ -36,7 +37,7 @@ use spl_associated_token_account::{
 };
 use spl_token::state::Account;
 
-use super::{create_mint, create_token_account, get_account, mint_tokens};
+use super::{airdrop, create_mint, create_token_account, get_account, mint_tokens};
 
 pub const DEFAULT_NAME: &str = "Digital Asset";
 pub const DEFAULT_SYMBOL: &str = "DA";
@@ -129,7 +130,6 @@ impl DigitalAsset {
         }
 
         if let Some(edition) = self.edition {
-            println!("edition: {:?}", edition);
             builder.edition(edition);
         }
 
@@ -430,6 +430,43 @@ impl DigitalAsset {
         self.create(context, token_standard, authorization_rules)
             .await
             .unwrap();
+        // mints tokens
+        self.mint(context, authorization_rules, authorization_data, amount)
+            .await
+    }
+
+    pub async fn create_and_mint_with_supply(
+        &mut self,
+        context: &mut ProgramTestContext,
+        token_standard: TokenStandard,
+        authorization_rules: Option<Pubkey>,
+        authorization_data: Option<AuthorizationData>,
+        amount: u64,
+        print_supply: PrintSupply,
+    ) -> Result<(), BanksClientError> {
+        // creates the metadata
+
+        let creators = Some(vec![Creator {
+            address: context.payer.pubkey(),
+            share: 100,
+            verified: true,
+        }]);
+
+        self.create_advanced(
+            context,
+            token_standard,
+            String::from(DEFAULT_NAME),
+            String::from(DEFAULT_SYMBOL),
+            String::from(DEFAULT_URI),
+            500,
+            creators,
+            None,
+            None,
+            authorization_rules,
+            print_supply,
+        )
+        .await?;
+
         // mints tokens
         self.mint(context, authorization_rules, authorization_data, amount)
             .await
@@ -1135,6 +1172,17 @@ impl DigitalAsset {
         }
     }
 
+    pub async fn get_master_edition(&self, context: &mut ProgramTestContext) -> MasterEditionV2 {
+        let master_edition_account = context
+            .banks_client
+            .get_account(self.edition.unwrap())
+            .await
+            .unwrap()
+            .unwrap();
+
+        MasterEditionV2::safe_deserialize(&master_edition_account.data).unwrap()
+    }
+
     pub async fn is_pnft(&self, context: &mut ProgramTestContext) -> bool {
         let md = self.get_metadata(context).await;
         if let Some(standard) = md.token_standard {
@@ -1257,6 +1305,50 @@ impl DigitalAsset {
         assert!(token_record_account.is_none());
 
         Ok(())
+    }
+
+    pub async fn change_update_authority(
+        &self,
+        context: &mut ProgramTestContext,
+        new_update_authority: Pubkey,
+    ) -> Result<(), BanksClientError> {
+        airdrop(context, &new_update_authority, 1_000_000_000)
+            .await
+            .unwrap();
+
+        let mut builder = UpdateBuilder::new();
+        builder
+            .authority(context.payer.pubkey())
+            .metadata(self.metadata)
+            .payer(context.payer.pubkey())
+            .mint(self.mint.pubkey());
+
+        if let Some(master_edition) = self.edition {
+            builder.edition(master_edition);
+        }
+
+        let update_args = UpdateArgs::V1 {
+            new_update_authority: Some(new_update_authority),
+            data: None,
+            primary_sale_happened: None,
+            is_mutable: None,
+            collection: CollectionToggle::None,
+            collection_details: CollectionDetailsToggle::None,
+            uses: UsesToggle::None,
+            rule_set: RuleSetToggle::None,
+            authorization_data: None,
+        };
+
+        let update_ix = builder.build(update_args).unwrap().instruction();
+
+        let tx = Transaction::new_signed_with_payer(
+            &[update_ix],
+            Some(&context.payer.pubkey()),
+            &[&context.payer],
+            context.last_blockhash,
+        );
+
+        context.banks_client.process_transaction(tx).await
     }
 
     pub async fn assert_token_record_closed(

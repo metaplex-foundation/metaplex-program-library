@@ -162,6 +162,10 @@ pub fn process_instruction<'a>(
             verification::unverify(program_id, accounts, args)
         }
         MetadataInstruction::Collect => fee::process_collect_fees(program_id, accounts),
+        MetadataInstruction::Print(args) => {
+            msg!("IX: Print");
+            metadata::print(program_id, accounts, args)
+        }
         _ => {
             // pNFT accounts can only be used by the "new" API; before forwarding
             // the transaction to the "legacy" processor we determine whether we are
@@ -239,7 +243,6 @@ fn process_legacy_instruction<'a>(
                 program_id,
                 accounts,
                 args.edition,
-                false,
             )
         }
         MetadataInstruction::ConvertMasterEditionV1ToV2 => {

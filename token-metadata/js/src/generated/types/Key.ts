@@ -24,6 +24,7 @@ export enum Key {
   TokenOwnedEscrow,
   TokenRecord,
   MetadataDelegate,
+  EditionMarkerV2,
 }
 
 /**

@@ -5,6 +5,7 @@ use solana_program::{
 };
 
 use crate::utils::{
+    fee::{levy, set_fee_flag, LevyArgs},
     process_mint_new_edition_from_master_edition_via_token_logic,
     MintNewEditionFromMasterEditionViaTokenLogicArgs,
 };
@@ -13,7 +14,6 @@ pub fn process_mint_new_edition_from_master_edition_via_token<'a>(
     program_id: &'a Pubkey,
     accounts: &'a [AccountInfo<'a>],
     edition: u64,
-    ignore_owner_signer: bool,
 ) -> ProgramResult {
     let account_info_iter = &mut accounts.iter();
 
@@ -30,6 +30,12 @@ pub fn process_mint_new_edition_from_master_edition_via_token<'a>(
     let master_metadata_account_info = next_account_info(account_info_iter)?;
     let token_program_account_info = next_account_info(account_info_iter)?;
     let system_account_info = next_account_info(account_info_iter)?;
+
+    // Levy fees first, to fund the metadata account with rent + fee amount.
+    levy(LevyArgs {
+        payer_account_info,
+        token_metadata_pda_info: new_metadata_account_info,
+    })?;
 
     process_mint_new_edition_from_master_edition_via_token_logic(
         program_id,
@@ -49,6 +55,8 @@ pub fn process_mint_new_edition_from_master_edition_via_token<'a>(
             system_account_info,
         },
         edition,
-        ignore_owner_signer,
-    )
+    )?;
+
+    // Set fee flag after metadata account is created.
+    set_fee_flag(new_metadata_account_info)
 }
