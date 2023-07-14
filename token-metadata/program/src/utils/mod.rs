@@ -216,12 +216,16 @@ pub(crate) fn close_program_account<'a>(
         .ok_or(MetadataError::NumericalOverflowError)?;
     **account_info.lamports.borrow_mut() = remaining_lamports;
 
-    // Realloc the account data size to 0 bytes.
-    account_info.realloc(0, false)?;
-
-    // Only re-assign to the system program if it does not have fees on it.
+    // If the account does not have fees on it, we realloc the data length to zero
+    // and assign ownerhsip to the system program.
     if remaining_lamports == 0 {
+        account_info.realloc(0, false)?;
         account_info.assign(&solana_program::system_program::ID);
+    } else {
+        // Otherwise, we realloc to a data length of one and set the byte to 0 so the
+        // discriminator for the account is `Uninitialized`
+        account_info.realloc(1, false)?;
+        account_info.data.borrow_mut()[0] = 0;
     }
 
     Ok(())

@@ -37,12 +37,14 @@ test.only('Burn: NonFungible asset', async (t) => {
 
   await updateTx.assertSuccess(t);
 
-  // All three accounts are closed. Metadata account should have a data length of 0 but may be open if it contains fees.
+  // Metadata account should have a data length of 1 because it still contains fees. It's discriminator will be Unitialized.
+  // Edition and token accounts should be closed.
   const metadataAccount = await connection.getAccountInfo(metadata);
   const editionAccount = await connection.getAccountInfo(masterEdition);
   const tokenAccount = await connection.getAccountInfo(token);
 
-  t?.equal(metadataAccount.data.length, 0);
+  t?.equal(metadataAccount.data.length, 1);
+  t?.equal(metadataAccount.data[0], 0);
   t.equal(editionAccount, null);
   t.equal(tokenAccount, null);
 });
@@ -79,13 +81,15 @@ test('Burn: ProgrammableNonFungible asset', async (t) => {
 
   await updateTx.assertSuccess(t);
 
-  // All three accounts are closed.
+  // Metadata account should have a data length of 1 because it still contains fees. It's discriminator will be Unitialized.
+  // Edition, token, and token record accounts should be closed.
   const metadataAccount = await connection.getAccountInfo(metadata);
   const editionAccount = await connection.getAccountInfo(masterEdition);
   const tokenAccount = await connection.getAccountInfo(token);
   const tokenRecordAccount = await connection.getAccountInfo(tokenRecord);
 
-  t?.equal(metadataAccount.data.length, 0);
+  t?.equal(metadataAccount.data.length, 1);
+  t?.equal(metadataAccount.data[0], 0);
   t.equal(editionAccount, null);
   t.equal(tokenAccount, null);
   t.equal(tokenRecordAccount, null);

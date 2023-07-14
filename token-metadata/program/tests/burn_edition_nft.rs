@@ -74,9 +74,10 @@ mod burn_edition_nft {
 
         // Token Metadata accounts may still be open because they are no longer being re-assigned
         // to the system program immediately, but if they exist they should have a
-        // data length of 0.
+        // data length of 1 (just the disciriminator byte, set to Uninitialized).
+
         if let Some(account) = print_md {
-            assert_eq!(account.data.len(), 0);
+            assert_eq!(account.data.len(), 1);
         }
 
         assert!(token_account.is_none());
