@@ -121,18 +121,6 @@ pub fn mint_v1(program_id: &Pubkey, ctx: Context<Mint>, args: MintArgs) -> Progr
             return Err(MetadataError::MissingTokenOwnerAccount.into());
         };
 
-        // if the token account is empty, we will initialize a new one but it must
-        // be an ATA account
-        assert_derivation(
-            &spl_associated_token_account::ID,
-            ctx.accounts.token_info,
-            &[
-                token_owner_info.key.as_ref(),
-                spl_token::ID.as_ref(),
-                ctx.accounts.mint_info.key.as_ref(),
-            ],
-        )?;
-
         msg!("Init ATA");
 
         // creating the associated token account

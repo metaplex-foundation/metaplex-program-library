@@ -27,7 +27,7 @@ use crate::{
         TokenDelegateRole, TokenMetadataAccount, TokenRecord, TokenStandard,
     },
     utils::{
-        assert_derivation, auth_rules_validate, clear_close_authority, close_program_account,
+        auth_rules_validate, clear_close_authority, close_program_account,
         create_token_record_account, frozen_transfer, AuthRulesValidateParams,
         ClearCloseAuthorityParams,
     },
@@ -115,18 +115,6 @@ fn transfer_v1(program_id: &Pubkey, ctx: Context<Transfer>, args: TransferArgs) 
 
     // Check if the destination exists.
     if ctx.accounts.destination_info.data_is_empty() {
-        // if the token account is empty, we will initialize a new one but it must
-        // be a ATA account
-        assert_derivation(
-            &spl_associated_token_account::ID,
-            ctx.accounts.destination_info,
-            &[
-                ctx.accounts.destination_owner_info.key.as_ref(),
-                spl_token::ID.as_ref(),
-                ctx.accounts.mint_info.key.as_ref(),
-            ],
-        )?;
-
         // creating the associated token account
         invoke(
             &spl_associated_token_account::instruction::create_associated_token_account(

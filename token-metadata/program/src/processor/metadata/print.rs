@@ -22,7 +22,7 @@ use crate::{
         TOKEN_STANDARD_INDEX_EDITION,
     },
     utils::{
-        assert_derivation, assert_initialized, assert_owned_by, create_token_record_account,
+        assert_initialized, assert_owned_by, create_token_record_account,
         fee::{levy, set_fee_flag, LevyArgs},
         freeze, process_mint_new_edition_from_master_edition_via_token_logic,
         MintNewEditionFromMasterEditionViaTokenLogicArgs,
@@ -131,17 +131,6 @@ fn print_v1(_program_id: &Pubkey, ctx: Context<Print>, args: PrintArgs) -> Progr
         if mint_supply > 0 {
             return Err(MetadataError::MintSupplyMustBeZero.into());
         }
-        // if the token account is empty, we will initialize a new one but it must
-        // be an ATA account
-        assert_derivation(
-            &spl_associated_token_account::id(),
-            edition_token_account_info,
-            &[
-                edition_token_account_owner_info.key.as_ref(),
-                spl_token::id().as_ref(),
-                edition_mint_info.key.as_ref(),
-            ],
-        )?;
 
         // creating the associated token account
         invoke(
