@@ -108,7 +108,10 @@ pub(crate) fn burn_nonfungible(ctx: &Context<Burn>, args: BurnNonFungibleArgs) -
     )?;
 
     if let Some(collection_metadata_info) = ctx.accounts.collection_metadata_info {
-        if collection_metadata_info.data_is_empty() {
+        // If collection parent is burned or Uninitialized because it stores fees, we don't need to decrement the size.
+        if collection_metadata_info.data_is_empty()
+            || collection_metadata_info.data.borrow()[0] == 0
+        {
             let Collection {
                 key: expected_collection_mint,
                 ..

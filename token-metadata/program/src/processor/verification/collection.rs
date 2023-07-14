@@ -156,7 +156,8 @@ pub(crate) fn unverify_collection_v1(program_id: &Pubkey, ctx: Context<Unverify>
     };
 
     // If the collection parent metadata account has been burned then its data will be empty.
-    let parent_burned = collection_metadata_info.data_is_empty();
+    let parent_burned =
+        collection_metadata_info.data_is_empty() || collection_metadata_info.data.borrow()[0] == 0;
 
     let authority_response = if parent_burned {
         // If the collection parent is burned, we need to use an authority for the item rather than
