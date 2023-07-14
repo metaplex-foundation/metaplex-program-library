@@ -1962,7 +1962,7 @@ dependencies = [
 
 [[package]]
 name = "mpl-token-metadata"
-version = "1.12.2"
+version = "1.13.0"
 dependencies = [
  "arrayref",
  "async-trait",
