@@ -25,7 +25,6 @@ jobs:
       matrix:
         node:
           - name: "auctioneer"
-          - name: "bubblegum"
           - name: "candy-machine"
           - name: "auction-house"
           - name: "fixed-price-sale"
