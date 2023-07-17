@@ -10,7 +10,6 @@ body:
       options:
         - auction-house
         - auctioneer
-        - bubblegum
         - candy-machine
         - core
         - fixed-price-sale
