@@ -1,9 +1,15 @@
 use solana_program::{
-    account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
+    account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError, pubkey,
+    pubkey::Pubkey,
 };
-use spl_token::state::Account;
+use spl_token_2022::state::Account;
 
 use crate::assert_initialized;
+
+pub static SPL_TOKEN_PROGRAM_IDS: [Pubkey; 2] = [
+    pubkey!("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"),
+    pubkey!("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"),
+];
 
 pub trait ToTokenAccount {
     fn to_token_account(self) -> Account;
@@ -25,11 +31,14 @@ pub fn assert_token_program_matches_package(
     token_program_info: &AccountInfo,
     error: impl Into<ProgramError>,
 ) -> ProgramResult {
-    if *token_program_info.key != spl_token::id() {
-        return Err(error.into());
+    if SPL_TOKEN_PROGRAM_IDS
+        .iter()
+        .any(|program_id| program_id == token_program_info.key)
+    {
+        Ok(())
+    } else {
+        Err(error.into())
     }
-
-    Ok(())
 }
 
 /// Asserts that

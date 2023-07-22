@@ -16,7 +16,7 @@ pub fn spl_token_burn(params: TokenBurnParams<'_, '_>) -> ProgramResult {
         seeds.push(seed);
     }
     invoke_signed(
-        &spl_token::instruction::burn(
+        &spl_token_2022::instruction::burn(
             token_program.key,
             source.key,
             mint.key,
@@ -58,7 +58,7 @@ pub fn spl_token_close(params: TokenCloseParams<'_, '_>) -> ProgramResult {
         seeds.push(seed);
     }
     invoke_signed(
-        &spl_token::instruction::close_account(
+        &spl_token_2022::instruction::close_account(
             token_program.key,
             account.key,
             destination.key,
@@ -98,7 +98,7 @@ pub fn spl_token_mint_to(params: TokenMintToParams<'_, '_>) -> ProgramResult {
         seeds.push(seed);
     }
     invoke_signed(
-        &spl_token::instruction::mint_to(
+        &spl_token_2022::instruction::mint_to(
             token_program.key,
             mint.key,
             destination.key,
@@ -129,29 +129,34 @@ pub struct TokenMintToParams<'a: 'b, 'b> {
 
 pub fn spl_token_transfer(params: TokenTransferParams<'_, '_>) -> ProgramResult {
     let TokenTransferParams {
-        mint: _,
+        mint,
         source,
         destination,
         amount,
         authority,
         token_program,
         authority_signer_seeds,
+        decimals,
     } = params;
-    let mut seeds: Vec<&[&[u8]]> = vec![];
-    if let Some(seed) = authority_signer_seeds {
-        seeds.push(seed);
-    }
+    let seeds = if let Some(seeds) = authority_signer_seeds {
+        seeds
+    } else {
+        &[]
+    };
+
     invoke_signed(
-        &spl_token::instruction::transfer(
+        &spl_token_2022::instruction::transfer_checked(
             token_program.key,
             source.key,
+            mint.key,
             destination.key,
             authority.key,
             &[authority.key],
             amount,
+            decimals,
         )?,
         &[source, destination, authority],
-        seeds.as_slice(),
+        &[seeds],
     )
 }
 
@@ -172,4 +177,6 @@ pub struct TokenTransferParams<'a: 'b, 'b> {
     pub authority_signer_seeds: Option<&'b [&'b [u8]]>,
     /// token_program
     pub token_program: AccountInfo<'a>,
+    /// decimals
+    pub decimals: u8,
 }
