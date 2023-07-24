@@ -155,7 +155,7 @@ pub fn spl_token_transfer(params: TokenTransferParams<'_, '_>) -> ProgramResult 
             amount,
             decimals,
         )?,
-        &[source, destination, authority],
+        &[source, mint, destination, authority],
         &[seeds],
     )
 }
