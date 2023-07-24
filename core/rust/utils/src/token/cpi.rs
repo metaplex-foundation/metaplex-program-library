@@ -127,8 +127,58 @@ pub struct TokenMintToParams<'a: 'b, 'b> {
     pub token_program: AccountInfo<'a>,
 }
 
+#[allow(deprecated)]
 pub fn spl_token_transfer(params: TokenTransferParams<'_, '_>) -> ProgramResult {
     let TokenTransferParams {
+        source,
+        destination,
+        amount,
+        authority,
+        token_program,
+        authority_signer_seeds,
+        ..
+    } = params;
+    let seeds = if let Some(seeds) = authority_signer_seeds {
+        seeds
+    } else {
+        &[]
+    };
+
+    invoke_signed(
+        &spl_token_2022::instruction::transfer(
+            token_program.key,
+            source.key,
+            destination.key,
+            authority.key,
+            &[authority.key],
+            amount,
+        )?,
+        &[source, destination, authority],
+        &[seeds],
+    )
+}
+
+/// TokenTransferParams
+#[derive(Debug)]
+pub struct TokenTransferParams<'a: 'b, 'b> {
+    /// mint
+    pub mint: AccountInfo<'a>,
+    /// source
+    pub source: AccountInfo<'a>,
+    /// destination
+    pub destination: AccountInfo<'a>,
+    /// amount
+    pub amount: u64,
+    /// authority
+    pub authority: AccountInfo<'a>,
+    /// authority_signer_seeds
+    pub authority_signer_seeds: Option<&'b [&'b [u8]]>,
+    /// token_program
+    pub token_program: AccountInfo<'a>,
+}
+
+pub fn spl_token_transfer_checked(params: TokenTransferCheckedParams<'_, '_>) -> ProgramResult {
+    let TokenTransferCheckedParams {
         mint,
         source,
         destination,
@@ -162,7 +212,7 @@ pub fn spl_token_transfer(params: TokenTransferParams<'_, '_>) -> ProgramResult 
 
 /// TokenTransferParams
 #[derive(Debug)]
-pub struct TokenTransferParams<'a: 'b, 'b> {
+pub struct TokenTransferCheckedParams<'a: 'b, 'b> {
     /// mint
     pub mint: AccountInfo<'a>,
     /// source
