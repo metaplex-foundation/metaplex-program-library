@@ -1,1 +1,0 @@
-A macro file for creating instruction builders on vanilla Solana programs to be used by shank and solita.
