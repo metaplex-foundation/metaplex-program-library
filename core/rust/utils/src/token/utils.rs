@@ -2,6 +2,26 @@ use arrayref::{array_ref, array_refs};
 use solana_program::{
     account_info::AccountInfo, program_error::ProgramError, program_option::COption, pubkey::Pubkey,
 };
+use spl_token_2022::extension::{BaseState, StateWithExtensions};
+
+pub fn unpack<S: BaseState>(
+    account_data: &[u8],
+) -> Result<StateWithExtensions<'_, S>, ProgramError> {
+    StateWithExtensions::<S>::unpack(account_data)
+}
+
+pub fn unpack_initialized<S: BaseState>(
+    account_data: &[u8],
+    error: impl Into<ProgramError>,
+) -> Result<StateWithExtensions<'_, S>, ProgramError> {
+    let unpacked = unpack::<S>(account_data)?;
+
+    if unpacked.base.is_initialized() {
+        Ok(unpacked)
+    } else {
+        Err(error.into())
+    }
+}
 
 /// Unpacks COption from a slice, taken from token program
 fn unpack_coption_key(src: &[u8; 36]) -> Result<COption<Pubkey>, ProgramError> {
