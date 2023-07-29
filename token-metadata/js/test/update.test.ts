@@ -1275,7 +1275,7 @@ test('Update: Delegate Authority Role Not Allowed to Update Data', async (t) => 
     daManager.masterEdition,
   );
   updateTx.then((x) =>
-    x.assertLogs(t, [/Authority cannot apply all update args/i], {
+    x.assertLogs(t, [/custom program error: 0xb7/i], {
       txLabel: 'tx: Update',
     }),
   );
@@ -1351,7 +1351,7 @@ test('Update: Holder Authority Type Not Supported', async (t) => {
   );
 
   updateTx.then((x) =>
-    x.assertLogs(t, [/Auth type: Holder/i, /Feature not supported currently/i], {
+    x.assertLogs(t, [/Auth type: Holder/i, /custom program error: 0x91/i], {
       txLabel: 'tx: Update',
     }),
   );
