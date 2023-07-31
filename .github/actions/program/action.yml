@@ -20,3 +20,10 @@ runs:
 
     - uses: ./.github/actions/program/token-metadata-and-metaplex
       if: ${{ inputs.name == 'nft-packs' }}
+
+    - name: "Dump token metadata"
+      working-directory: ./${{ inputs.name }}/program
+      run: |
+        mkdir -p ../../test-programs
+        solana program dump -u https://api.mainnet-beta.solana.com metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s ../../test-programs/mpl_token_metadata.so
+      shell: bash

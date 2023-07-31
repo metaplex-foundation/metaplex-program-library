@@ -4,8 +4,8 @@
 # - ./.github/actions/install-solana
 # - ./.github/actions/install-rust
 
-name: Token Metadata and Metaplex Program Dependencies
-description: Dumps Token Metadata and Metaplex programs
+name: Metaplex Program Dependency
+description: Dumps Metaplex program
 runs:
   using: 'composite'
   steps:
@@ -13,6 +13,5 @@ runs:
     - name: Get Metaplex program
       run: |
         mkdir -p ./test-programs
-        solana program dump -u https://api.mainnet-beta.solana.com metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s ./test-programs/mpl_token_metadata.so
-        solana program dump -u https://api.mainnet-beta.solana.com p1exdMJcjVao65QdewkaZRUnU6VPSXhus9n2GzWfh98 ./test-programs/mpl_metaplex.so
+        solana program dump -u https://api.mainnet-beta.solana.com p1exdMJcjVao65QdewkaZRUnU6VPSXhus9n2GzWfh98 test-programs/mpl_metaplex.so
       shell: bash

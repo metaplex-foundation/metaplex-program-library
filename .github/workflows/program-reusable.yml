@@ -91,9 +91,6 @@ jobs:
         with:
           working-directory: ./${{ inputs.name }}/program
 
-      # Dump dependencies binaries
-      - uses: ./.github/actions/program/token-metadata-and-metaplex
-
       # Build deps
       - uses: ./.github/actions/program
         with:
