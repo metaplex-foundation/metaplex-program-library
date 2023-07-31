@@ -15,7 +15,6 @@ body:
         - hydra
         - nft-packs
         - token-entangler
-        - token-metadata
     validations:
       required: true
   - type: dropdown
