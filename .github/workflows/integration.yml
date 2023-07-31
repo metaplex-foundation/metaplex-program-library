@@ -26,7 +26,6 @@ jobs:
         node:
           - name: "fixed-price-sale"
           # - name: "hydra"
-          - name: "token-metadata"
     uses: ./.github/workflows/integration-reusable.yml
     with:
       name: ${{ matrix.node.name }}

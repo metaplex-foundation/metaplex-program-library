@@ -11,7 +11,4 @@ runs:
   steps:
     - uses: ./.github/actions/build-program
       with:
-        name: token-metadata
-    - uses: ./.github/actions/build-program
-      with:
         name: auction-house

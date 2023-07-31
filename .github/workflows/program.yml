@@ -32,7 +32,6 @@ jobs:
           - name: "hydra"
           - name: "nft-packs"
           - name: "token-entangler"
-          - name: "token-metadata"
 
     uses: ./.github/workflows/program-reusable.yml
     with:
