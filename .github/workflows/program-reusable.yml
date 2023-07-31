@@ -93,7 +93,6 @@ jobs:
 
       # Dump dependencies binaries
       - uses: ./.github/actions/program/token-metadata-and-metaplex
-        if: ${{ inputs.name == 'auctioneer' }}
 
       # Build deps
       - uses: ./.github/actions/program
