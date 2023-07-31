@@ -12,39 +12,11 @@ runs:
     - uses: actions/checkout@v3
 
     # Build and install deps
-    - uses: ./.github/actions/build-program
-      with:
-        name: token-metadata
-      if: ${{ inputs.name == 'auction-house' }}
-
     - uses: ./.github/actions/program/auctioneer
       if: ${{ inputs.name == 'auctioneer' }}
-
-    - uses: ./.github/actions/build-program
-      with:
-        name: token-metadata
-      if: ${{ inputs.name == 'candy-machine' }}
 
     - uses: ./.github/actions/program/token-metadata-and-metaplex
       if: ${{ inputs.name == 'fixed-price-sale' }}
 
-    - uses: ./.github/actions/build-program
-      with:
-        name: token-metadata
-      if: ${{ inputs.name == 'gumdrop' }}
-
-    - uses: ./.github/actions/build-program
-      with:
-        name: token-metadata
-      if: ${{ inputs.name == 'hydra' }}
-
     - uses: ./.github/actions/program/token-metadata-and-metaplex
       if: ${{ inputs.name == 'nft-packs' }}
-
-    - uses: ./.github/actions/build-program
-      with:
-        name: token-metadata
-      if: ${{ inputs.name == 'token-entangler' }}
-
-    - uses: ./.github/actions/program/token-auth-rules-and-rooster
-      if: ${{ inputs.name == 'token-metadata' }}

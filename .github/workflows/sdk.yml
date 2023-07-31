@@ -34,8 +34,6 @@ jobs:
           - name: "nft-packs"
             skip_test: true
           - name: "token-entangler"
-          - name: "token-metadata"
-            skip_test: true
 
     uses: ./.github/workflows/sdk-reusable.yml
     with:

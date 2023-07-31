@@ -78,16 +78,6 @@ jobs:
         if: ${{ env.CACHE != 'false' }}
 
       # Build Rust Programs
-      - uses: ./.github/actions/program
-        with:
-          name: token-metadata
-        if: ${{ inputs.build_token_metadata }}
-
-      - uses: ./.github/actions/build-program
-        with:
-          name: token-metadata
-        if: ${{ inputs.build_token_metadata }}
-
       - uses: ./.github/actions/build-program
         with:
           name: ${{ inputs.name }}
