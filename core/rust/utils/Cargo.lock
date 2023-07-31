@@ -820,7 +820,6 @@ name = "mpl-utils"
 version = "0.3.0"
 dependencies = [
  "arrayref",
- "borsh",
  "solana-program",
  "spl-token-2022",
 ]
