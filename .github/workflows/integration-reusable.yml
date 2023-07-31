@@ -77,6 +77,9 @@ jobs:
           key: program-${{ inputs.name }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
         if: ${{ env.CACHE != 'false' }}
 
+      # Dump program binaries
+      - uses: ./.github/actions/program/token-metadata-and-metaplex
+
       # Build Rust Programs
       - uses: ./.github/actions/build-program
         with:
