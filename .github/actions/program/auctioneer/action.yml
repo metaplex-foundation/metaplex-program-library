@@ -9,8 +9,6 @@ description: Builds the dependencies for the Auctioneer program test
 runs:
   using: 'composite'
   steps:
-    - uses: ./.github/actions/program/token-metadata-and-metaplex
-
     - uses: ./.github/actions/build-program
       with:
         name: auction-house

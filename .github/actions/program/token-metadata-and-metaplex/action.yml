@@ -5,7 +5,7 @@
 # - ./.github/actions/install-rust
 
 name: Token Metadata and Metaplex Program Dependencies
-description: Dumps the Token Metadata and Metaplex programs
+description: Dumps Token Metadata and Metaplex programs
 runs:
   using: 'composite'
   steps:
