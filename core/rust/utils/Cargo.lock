@@ -1052,7 +1052,7 @@ dependencies = [
 
 [[package]]
 name = "mpl-utils"
-version = "0.3.1"
+version = "0.3.2"
 dependencies = [
  "arrayref",
  "solana-program",
