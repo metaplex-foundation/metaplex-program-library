@@ -102,7 +102,7 @@ async fn bot_tax_on_gatekeeper_expire_token() {
     let gatekeeper_network = Keypair::new();
     let gatekeeper_authority = Keypair::new();
 
-    let client = RpcClient::new("https://metaplex.devnet.rpcpool.com".to_string());
+    let client = RpcClient::new("https://api.devnet.solana.com".to_string());
 
     let gateway_account_pubkey = GATEWAY_ACCOUNT_PUBKEY;
     let gateway_executable_pubkey =
@@ -240,7 +240,7 @@ async fn bot_tax_on_gatekeeper() {
     let gatekeeper_network = Keypair::new();
     let gatekeeper_authority = Keypair::new();
 
-    let client = RpcClient::new("https://metaplex.devnet.rpcpool.com".to_string());
+    let client = RpcClient::new("https://api.devnet.solana.com".to_string());
 
     let gateway_account_pubkey = GATEWAY_ACCOUNT_PUBKEY;
     let gateway_executable_pubkey =
