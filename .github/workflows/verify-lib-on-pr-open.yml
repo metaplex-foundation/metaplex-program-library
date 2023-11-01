@@ -83,7 +83,7 @@ jobs:
     needs: [get-changes-scope]
     # note: checking for empty string just doesn't work, so we explicitly return and check null in the case that there's nothing to verify
     if: ${{ needs.get-changes-scope.outputs.packages != 'null' }}
-    runs-on: buildjet-16vcpu-ubuntu-2204
+    runs-on: ubuntu-latest-16-cores
     steps:
       # branch should be the branch from which the PR is opened
       - uses: actions/checkout@v3

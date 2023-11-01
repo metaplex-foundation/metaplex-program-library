@@ -55,7 +55,7 @@ jobs:
 
   build-lint-and-test:
     name: Build Lint and Test
-    runs-on: buildjet-8vcpu-ubuntu-2204
+    runs-on: ubuntu-latest-16-cores
     needs: changes
     if: |
       inputs.changes == false ||
