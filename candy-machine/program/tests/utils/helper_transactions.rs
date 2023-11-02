@@ -27,6 +27,7 @@ use std::result::Result;
 pub fn candy_machine_program_test() -> ProgramTest {
     let mut program = ProgramTest::new("mpl_candy_machine", mpl_candy_machine::id(), None);
     program.add_program("mpl_token_metadata", mpl_token_metadata::id(), None);
+    program.set_compute_max_units(400_000);
     program
 }
 
