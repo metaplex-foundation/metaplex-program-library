@@ -12,6 +12,9 @@ runs:
     - uses: actions/checkout@v3
 
     # Build and install deps
+    - uses: ./.github/actions/program/auction-house
+      if: ${{ inputs.name == 'auction-house' }}
+
     - uses: ./.github/actions/program/auctioneer
       if: ${{ inputs.name == 'auctioneer' }}
 
@@ -21,7 +24,7 @@ runs:
     - uses: ./.github/actions/program/token-metadata-and-metaplex
       if: ${{ inputs.name == 'nft-packs' }}
 
-    - name: "Dump token metadata"
+    - name: 'Dump token metadata'
       working-directory: ./${{ inputs.name }}/program
       run: |
         mkdir -p ../../test-programs
