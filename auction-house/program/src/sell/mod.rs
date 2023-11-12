@@ -5,9 +5,22 @@ use crate::{constants::*, errors::*, utils::*, AuctionHouse, AuthorityScope, *};
 
 use mpl_token_auth_rules::payload::{Payload, PayloadType, SeedsVec};
 use mpl_token_metadata::{
-    instruction::{builders::DelegateBuilder, DelegateArgs, InstructionBuilder},
+    instruction::{
+        builders::{DelegateBuilder, LockV1Builder, UnlockV1Builder},
+        DelegateArgs, InstructionBuilder,
+        freeze_delegated_account, thaw_delegated_account,
+    },
     processor::AuthorizationData,
+    state::{Metadata, Edition},
 };
+
+use solana_program::{
+    program_pack::{IsInitialized, Pack},
+    borsh::{BorshDeserialize, try_from_slice_unchecked}, // Include BorshDeserialize
+};
+use spl_token::state::Account as TokenAccount; // For SPL token handling
+
+
 
 /// Accounts for the [`sell` handler](auction_house/fn.sell.html).
 #[derive(Accounts)]
@@ -453,6 +466,39 @@ fn sell_logic<'c, 'info>(
                 let auth_rules = next_account_info(remaining_accounts)?;
                 let sysvar_instructions = next_account_info(remaining_accounts)?;
 
+
+                // Deserialize the TokenRecord to check the locked state
+                let token_record_info = &token_record.to_account_info();
+                let token_record_data = &token_record_info.try_borrow_data()?;
+                let token_record: TokenRecord = BorshDeserialize::deserialize(&mut &token_record_data[..])?;
+
+                if token_record.state == TokenState::Locked && token_record.delegate == Some(*program_as_signer.key) {
+                    // Unlock the pNFT
+                    let unlock_ix = UnlockV1Builder::new()
+                        .authority(program_as_signer.key())
+                        .metadata(metadata.key())
+                        .edition(edition.key())
+                        .mint(token_mint.key())
+                        .token(token_account.key())
+                        .spl_token_program(token_program.key())
+                        .payer(wallet.key())
+                        .instruction();
+
+                    invoke(
+                        &unlock_ix,
+                        &[
+                            token_account_info.clone(),
+                            metadata.to_account_info(),
+                            edition.to_account_info(),
+                            token_mint.to_account_info(),
+                            program_as_signer.to_account_info(),
+                            token_program.to_account_info(),
+                            wallet.to_account_info(),
+                        ],
+                    )?;
+                }
+
+               
                 let delegate = DelegateBuilder::new()
                     .delegate_record(delegate_record.key())
                     .delegate(program_as_signer.key())
@@ -510,8 +556,79 @@ fn sell_logic<'c, 'info>(
                 ];
 
                 invoke(&delegate, &delegate_accounts)?;
+
+
+                 // Lock Logic after delegation
+                let lock_ix = LockV1Builder::new()
+                    .authority(program_as_signer.key())
+                    .metadata(metadata.key())
+                    .edition(edition.key())
+                    .mint(token_mint.key())
+                    .token(token_account.key())
+                    .spl_token_program(token_program.key())
+                    .payer(wallet.key())
+                    .instruction();
+
+                invoke(
+                    &lock_ix,
+                    &[
+                        token_account_info.clone(),
+                        metadata.to_account_info(),
+                        edition.to_account_info(),
+                        token_mint.to_account_info(),
+                        program_as_signer.to_account_info(),
+                        token_program.to_account_info(),
+                        wallet.to_account_info(),
+                    ],
+                )?;
             }
             Err(_) => {
+
+                // Thaw Logic (if necessary)
+                let token_account_info = &token_account.to_account_info();
+                let token_account_data = &token_account_info.try_borrow_data()?;
+                let token_account = TokenAccount::unpack(token_account_data)?;
+
+                if token_account.delegate == Some(*program_as_signer.key) && token_account.is_frozen() {
+                    // Thaw the standard NFT
+                    let thaw_ix = thaw_delegated_account(
+                        mpl_token_metadata::ID,
+                        token_account.key(),
+                        program_as_signer.key(),
+                        token_account.mint,
+                    );
+                    invoke(
+                        &thaw_ix,
+                        &[
+                            token_account_info.clone(),
+                            program_as_signer.to_account_info(),
+                        ],
+                    )?;
+                }
+
+
+                // Check if the standard NFT is frozen and if the program is the approved delegate
+                let token_account_info = &token_account.to_account_info();
+                let token_account_data = &token_account_info.try_borrow_data()?;
+                let token_account = TokenAccount::unpack(token_account_data)?;
+
+                if token_account.delegate == Some(*program_as_signer.key) && token_account.is_frozen() {
+                    // Thaw the standard NFT
+                    let thaw_ix = thaw_delegated_account(
+                        spl_token::ID,
+                        token_account.key(),
+                        program_as_signer.key(),
+                        token_account.mint,
+                    );
+                    invoke(
+                        &thaw_ix,
+                        &[
+                            token_account_info.clone(),
+                            program_as_signer.to_account_info(),
+                        ],
+                    )?;
+                }
+                // Delegate/Approve Logic
                 invoke(
                     &approve(
                         &token_program.key(),
@@ -529,6 +646,26 @@ fn sell_logic<'c, 'info>(
                         wallet.to_account_info(),
                     ],
                 )?;
+
+                // Freeze Logic (after delegation/approval)
+                if token_account.delegate == Some(*program_as_signer.key) {
+                    // Freeze the standard NFT
+                    let freeze_ix = token_metadata::instruction::freeze_delegated_account(
+                        token_metadata::ID,
+                        program_as_signer.key(),
+                        token_account.key(),
+                        test_master_edition.pubkey, // Replace with the actual master edition pubkey
+                        token_account.mint,
+                    );
+                    invoke(
+                        &freeze_ix,
+                        &[
+                            token_account_info.clone(),
+                            program_as_signer.to_account_info(),
+                            // Include other necessary account infos here
+                        ],
+                    )?;
+                }
             }
         }
     }
