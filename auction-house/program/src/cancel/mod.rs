@@ -1,9 +1,19 @@
-use anchor_lang::{prelude::*, solana_program::program::invoke, AnchorDeserialize};
+use anchor_lang::{prelude::*, solana_program::program::{invoke, pack::Pack}, AnchorDeserialize};
 use solana_program::program_memory::sol_memset;
+use solana_program::borsh::BorshDeserialize; // For deserialization
 
 use crate::{constants::*, errors::*, utils::*, AuctionHouse, AuthorityScope, *};
 
-use mpl_token_metadata::instruction::{builders::RevokeBuilder, InstructionBuilder, RevokeArgs};
+use mpl_token_metadata::{
+    instruction::{
+        builders::{RevokeBuilder, UnlockV1Builder}, // UnlockV1Builder for unlocking pNFTs
+        InstructionBuilder, RevokeArgs
+    },
+    state::{Metadata, Edition, TokenRecord}, // Assuming TokenRecord and other states are needed
+};
+use spl_token::instruction::{approve, revoke}; // For SPL token operations
+use spl_token::state::Account as TokenAccount; // For handling standard SPL token accounts
+
 
 /// Accounts for the [`cancel` handler](auction_house/fn.cancel.html).
 #[derive(Accounts)]
@@ -294,6 +304,37 @@ fn cancel_logic<'c, 'info>(
                 let sysvar_instructions = next_account_info(remaining_accounts)?;
                 let system_program = next_account_info(remaining_accounts)?;
 
+                 // Deserialize the TokenRecord to check the locked state
+                 let token_record_info = &token_record.to_account_info();
+                 let token_record_data = &token_record_info.try_borrow_data()?;
+                 let token_record: TokenRecord = BorshDeserialize::deserialize(&mut &token_record_data[..])?;
+ 
+                 if token_record.state == TokenState::Locked && token_record.delegate == Some(*program_as_signer.key) {
+                     // Unlock the pNFT
+                     let unlock_ix = UnlockV1Builder::new()
+                         .authority(program_as_signer.key())
+                         .metadata(metadata.key())
+                         .edition(edition.key())
+                         .mint(token_mint.key())
+                         .token(token_account.key())
+                         .spl_token_program(token_program.key())
+                         .payer(wallet.key())
+                         .instruction();
+ 
+                     invoke(
+                         &unlock_ix,
+                         &[
+                             token_account_info.clone(),
+                             metadata.to_account_info(),
+                             edition.to_account_info(),
+                             token_mint.to_account_info(),
+                             program_as_signer.to_account_info(),
+                             token_program.to_account_info(),
+                             wallet.to_account_info(),
+                         ],
+                     )?;
+                 }
+
                 let revoke = RevokeBuilder::new()
                     .delegate_record(delegate_record.key())
                     .delegate(program_as_signer.key())
@@ -335,6 +376,29 @@ fn cancel_logic<'c, 'info>(
                 invoke(&revoke, &revoke_accounts)?;
             }
             Err(_) => {
+
+                 // Thaw Logic (if necessary)
+                 let token_account_info = &token_account.to_account_info();
+                 let token_account_data = &token_account_info.try_borrow_data()?;
+                 let token_account = TokenAccount::unpack(token_account_data)?;
+ 
+                 if token_account.delegate == Some(*program_as_signer.key) && token_account.is_frozen() {
+                     // Thaw the standard NFT
+                     let thaw_ix = thaw_delegated_account(
+                         mpl_token_metadata::ID,
+                         token_account.key(),
+                         program_as_signer.key(),
+                         token_account.mint,
+                     );
+                     invoke(
+                         &thaw_ix,
+                         &[
+                             token_account_info.clone(),
+                             program_as_signer.to_account_info(),
+                         ],
+                     )?;
+                 }
+
                 invoke(
                     &revoke(
                         &token_program.key(),
