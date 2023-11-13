@@ -250,6 +250,7 @@ fn cancel_logic<'c, 'info>(
     let auction_house_fee_account = &accounts.auction_house_fee_account;
     let trade_state = &accounts.trade_state;
     let token_program = &accounts.token_program;
+    let token_account_info = token_account.to_account_info();
 
     let ts_bump = trade_state.try_borrow_data()?[0];
     assert_valid_trade_state(
@@ -298,7 +299,6 @@ fn cancel_logic<'c, 'info>(
                 let metadata = next_account_info(remaining_accounts)?;
                 let edition = next_account_info(remaining_accounts)?;
                 let token_record = next_account_info(remaining_accounts)?;
-                let token_mint = next_account_info(remaining_accounts)?;
                 let auth_rules_program = next_account_info(remaining_accounts)?;
                 let auth_rules = next_account_info(remaining_accounts)?;
                 let sysvar_instructions = next_account_info(remaining_accounts)?;
@@ -378,7 +378,6 @@ fn cancel_logic<'c, 'info>(
             Err(_) => {
 
                  // Thaw Logic (if necessary)
-                 let token_account_info = &token_account.to_account_info();
                  let token_account_data = &token_account_info.try_borrow_data()?;
                  let token_account = TokenAccount::unpack(token_account_data)?;
  

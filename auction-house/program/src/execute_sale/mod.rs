@@ -1060,7 +1060,7 @@ fn auctioneer_execute_sale_logic<'c, 'info>(
     let ata_program = &accounts.ata_program;
     let program_as_signer = &accounts.program_as_signer;
     let rent = &accounts.rent;
-
+    
     let metadata_clone = metadata.to_account_info();
     let escrow_clone = escrow_payment_account.to_account_info();
     let auction_house_clone = auction_house.to_account_info();
@@ -1377,12 +1377,46 @@ fn auctioneer_execute_sale_logic<'c, 'info>(
                 AuctionHouseError::PublicKeyMismatch
             );
 
+            let program_as_signer = next_account_info(remaining_accounts)?;
+            let metadata = next_account_info(remaining_accounts)?;
             let edition = next_account_info(remaining_accounts)?;
             let owner_tr = next_account_info(remaining_accounts)?;
             let destination_tr = next_account_info(remaining_accounts)?;
+            let token_mint = next_account_info(remaining_accounts)?;
             let auth_rules_program = next_account_info(remaining_accounts)?;
             let auth_rules = next_account_info(remaining_accounts)?;
             let sysvar_instructions = next_account_info(remaining_accounts)?;
+
+            // Deserialize the TokenRecord to check the locked state
+            let token_record_info = &owner_tr.to_account_info();
+            let token_record_data = &token_record_info.try_borrow_data()?;
+            let token_record: TokenRecord = BorshDeserialize::deserialize(&mut &token_record_data[..])?;
+
+            if token_record.state == TokenState::Locked && token_record.delegate == Some(*program_as_signer.key) {
+                // Unlock the pNFT
+                let unlock_ix = UnlockV1Builder::new()
+                    .authority(program_as_signer.key())
+                    .metadata(metadata.key())
+                    .edition(edition.key())
+                    .mint(token_mint.key())
+                    .token(token_account.key())
+                    .spl_token_program(token_program.key())
+                    .payer(wallet.key())
+                    .instruction();
+
+                invoke(
+                    &unlock_ix,
+                    &[
+                        token_account_info.clone(),
+                        metadata.to_account_info(),
+                        edition.to_account_info(),
+                        token_mint.to_account_info(),
+                        program_as_signer.to_account_info(),
+                        token_program.to_account_info(),
+                        wallet.to_account_info(),
+                    ],
+                )?;
+            }
 
             let mpl_transfer = TransferBuilder::new()
                 .token(*token_account.key)
@@ -1454,6 +1488,28 @@ fn auctioneer_execute_sale_logic<'c, 'info>(
             )?;
         }
         Err(_) => {
+
+            // Thaw Logic (if necessary)
+            let token_account_data = &token_account_clone.try_borrow_data()?;
+            let token_account = TokenAccount::unpack(token_account_data)?;
+
+            if token_account.delegate == Some(*program_as_signer.key) && token_account.is_frozen() {
+                // Thaw the standard NFT
+                let thaw_ix = thaw_delegated_account(
+                    mpl_token_metadata::ID,
+                    token_account.key(),
+                    program_as_signer.key(),
+                    token_account.mint,
+                );
+                invoke(
+                    &thaw_ix,
+                    &[
+                        token_account_clone.clone(),
+                        program_as_signer.to_account_info(),
+                    ],
+                )?;
+            }
+
             invoke_signed(
                 &spl_token::instruction::transfer(
                     token_program.key,
