@@ -9,7 +9,7 @@ function exists_in_list() {
 
 input=$1
 
-programs="auction-house auctioneer candy-machine candy-machine-core fixed-price-sale gumdrop hydra nft-packs token-entangler"
+programs="auction-house auctioneer candy-machine fixed-price-sale gumdrop hydra token-entangler"
 
 mkdir -p test-programs
 
@@ -28,10 +28,10 @@ then
         cargo build-bpf --bpf-out-dir ../../test-programs/
         cd ../../
     done
-        echo "building testing-utils"
-        cd core/rust/testing-utils
-        cargo build-bpf --bpf-out-dir ../../../test-programs/
-        cd ../../../
+    #echo "building testing-utils"
+    #cd core/rust/testing-utils
+    #cargo build-bpf --bpf-out-dir ../../../test-programs/
+    #cd ../../../
 elif [[ $input = "token-auth-rules" ]]
 then
     solana program dump -u https://api.mainnet-beta.solana.com auth9SigNpDKz4sJJ1DfCTuZrZNSAgh9sFD3rboVmgg ./test-programs/mpl_token_auth_rules.so

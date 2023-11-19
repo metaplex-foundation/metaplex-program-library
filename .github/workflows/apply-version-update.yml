@@ -120,7 +120,7 @@ jobs:
   update-pr-with-changes:
     needs: [ get-changes-scope, get-version-scope ]
     if: needs.get-version-scope.outputs.has-versioning == 'true' && needs.get-changes-scope.outputs.num-packages > 0
-    runs-on: buildjet-16vcpu-ubuntu-2204
+    runs-on: ubuntu-latest-16-cores
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/actions/install-linux-build-deps

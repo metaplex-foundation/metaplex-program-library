@@ -30,7 +30,6 @@ jobs:
           - name: "fixed-price-sale"
           - name: "gumdrop"
           - name: "hydra"
-          - name: "nft-packs"
           - name: "token-entangler"
 
     uses: ./.github/workflows/program-reusable.yml

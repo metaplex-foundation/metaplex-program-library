@@ -1,0 +1,17 @@
+# Implicit dependencies
+# - actions/checkout@v3
+# - ./.github/actions/install-linux-build-deps
+# - ./.github/actions/install-solana
+# - ./.github/actions/install-rust
+
+name: Auction House Program Dependencies
+description: Builds the dependencies for the Auction House program test
+runs:
+  using: 'composite'
+  steps:
+    # Get Token Auth Rules program
+    - name: Get Token Auth Rules
+      run: |
+        mkdir -p test-programs
+        solana program dump -u https://api.mainnet-beta.solana.com auth9SigNpDKz4sJJ1DfCTuZrZNSAgh9sFD3rboVmgg test-programs/mpl_token_auth_rules.so
+      shell: bash
