@@ -1,7 +1,7 @@
 use solana_program::{
     account_info::AccountInfo,
     entrypoint::ProgramResult,
-    log::sol_log,
+    msg,
     program_error::ProgramError,
     program_pack::{IsInitialized, Pack},
     pubkey::Pubkey,
@@ -10,12 +10,9 @@ use solana_program::{
 
 pub fn assert_signer(account_info: &AccountInfo) -> ProgramResult {
     if !account_info.is_signer {
-        sol_log(
-            format!(
-                "signer assertion failed for {key}: not signer",
-                key = account_info.key,
-            )
-            .as_str(),
+        msg!(
+            "signer assertion failed for {key}: not signer",
+            key = account_info.key,
         );
         Err(ProgramError::MissingRequiredSignature)
     } else {
@@ -29,12 +26,9 @@ pub fn assert_initialized<T: Pack + IsInitialized>(
 ) -> Result<T, ProgramError> {
     let account: T = T::unpack_unchecked(&account_info.data.borrow())?;
     if !account.is_initialized() {
-        sol_log(
-            format!(
-                "initialized assertion failed for {key}: not initialized",
-                key = account_info.key,
-            )
-            .as_str(),
+        msg!(
+            "initialized assertion failed for {key}: not initialized",
+            key = account_info.key,
         );
         Err(error.into())
     } else {
@@ -48,14 +42,11 @@ pub fn assert_owned_by(
     error: impl Into<ProgramError>,
 ) -> ProgramResult {
     if account.owner != owner {
-        sol_log(
-            format!(
-                "owner assertion failed for {key}: expected {expected}, got {actual}",
-                key = account.key,
-                expected = owner,
-                actual = account.owner
-            )
-            .as_str(),
+        msg!(
+            "owner assertion failed for {key}: expected {expected}, got {actual}",
+            key = account.key,
+            expected = owner,
+            actual = account.owner
         );
         Err(error.into())
     } else {
@@ -71,16 +62,13 @@ pub fn assert_derivation(
 ) -> Result<u8, ProgramError> {
     let (key, bump) = Pubkey::find_program_address(path, program_id);
     if key != *account.key {
-        sol_log(
-            format!(
-                "derivation assertion failed for {actual_key}:\n
+        msg!(
+            "derivation assertion failed for {actual_key}:\n
                 \x20   expected {key} with program {program_id}, path {path:?}",
-                actual_key = account.key,
-                key = key,
-                program_id = program_id,
-                path = path,
-            )
-            .as_str(),
+            actual_key = account.key,
+            key = key,
+            program_id = program_id,
+            path = path,
         );
         return Err(error.into());
     }
@@ -93,14 +81,11 @@ pub fn assert_rent_exempt(
     error: impl Into<ProgramError>,
 ) -> ProgramResult {
     if !rent.is_exempt(account_info.lamports(), account_info.data_len()) {
-        sol_log(
-            format!(
+        msg!(
                 "rent exempt assertion failed for {key}: has {balance} lamports, requires at least {min} lamports",
                 key = account_info.key,
                 balance = account_info.lamports(),
                 min = rent.minimum_balance(account_info.data_len()),
-            )
-            .as_str(),
         );
         Err(error.into())
     } else {
