@@ -63,7 +63,7 @@ pub fn assert_derivation(
     let (key, bump) = Pubkey::find_program_address(path, program_id);
     if key != *account.key {
         msg!(
-            "derivation assertion failed for {actual_key}:\n
+            "derivation assertion failed for {actual_key}:
                 \x20   expected {key} with program {program_id}, path {path:?}",
             actual_key = account.key,
             key = key,
