@@ -10,10 +10,7 @@ use solana_program::{
 
 pub fn assert_signer(account_info: &AccountInfo) -> ProgramResult {
     if !account_info.is_signer {
-        msg!(
-            "signer assertion failed for {key}: not signer",
-            key = account_info.key,
-        );
+        msg!("{key} is not a signer", key = account_info.key,);
         Err(ProgramError::MissingRequiredSignature)
     } else {
         Ok(())
@@ -26,10 +23,7 @@ pub fn assert_initialized<T: Pack + IsInitialized>(
 ) -> Result<T, ProgramError> {
     let account: T = T::unpack_unchecked(&account_info.data.borrow())?;
     if !account.is_initialized() {
-        msg!(
-            "initialized assertion failed for {key}: not initialized",
-            key = account_info.key,
-        );
+        msg!("{key} is not initialized", key = account_info.key,);
         Err(error.into())
     } else {
         Ok(account)
@@ -43,7 +37,7 @@ pub fn assert_owned_by(
 ) -> ProgramResult {
     if account.owner != owner {
         msg!(
-            "owner assertion failed for {key}: expected {expected}, got {actual}",
+            "invalid owner for {key}: expected {expected}, got {actual}",
             key = account.key,
             expected = owner,
             actual = account.owner
@@ -82,10 +76,10 @@ pub fn assert_rent_exempt(
 ) -> ProgramResult {
     if !rent.is_exempt(account_info.lamports(), account_info.data_len()) {
         msg!(
-                "rent exempt assertion failed for {key}: has {balance} lamports, requires at least {min} lamports",
-                key = account_info.key,
-                balance = account_info.lamports(),
-                min = rent.minimum_balance(account_info.data_len()),
+            "{key} is not rent-exempt: has {balance} lamports, requires {min} lamports",
+            key = account_info.key,
+            balance = account_info.lamports(),
+            min = rent.minimum_balance(account_info.data_len()),
         );
         Err(error.into())
     } else {
