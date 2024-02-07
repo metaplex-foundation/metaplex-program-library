@@ -7,6 +7,8 @@ use solana_program::{
     rent::Rent,
 };
 
+use crate::cmp_pubkeys;
+
 pub fn assert_signer(account_info: &AccountInfo) -> ProgramResult {
     if !account_info.is_signer {
         Err(ProgramError::MissingRequiredSignature)
@@ -36,6 +38,18 @@ pub fn assert_owned_by(
         Err(error.into())
     } else {
         Ok(())
+    }
+}
+
+pub fn assert_owner_in(
+    account: &AccountInfo,
+    owners: &[Pubkey],
+    error: impl Into<ProgramError>,
+) -> ProgramResult {
+    if owners.iter().any(|owner| cmp_pubkeys(owner, account.owner)) {
+        Ok(())
+    } else {
+        Err(error.into())
     }
 }
 
