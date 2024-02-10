@@ -456,7 +456,7 @@ fn main() -> Result<(), error::Error> {
             }
         };
 
-    // Send builded transactions
+    // Send built transactions
     if let Some(txs_bundle) = txs_data {
         for (tx, ui_info) in txs_bundle {
             client.send_and_confirm_transaction(&tx)?;
