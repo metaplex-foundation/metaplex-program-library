@@ -65,17 +65,28 @@ pub fn resize_or_reallocate_account_raw<'a>(
 ) -> ProgramResult {
     let rent = Rent::get()?;
     let new_minimum_balance = rent.minimum_balance(new_size);
+    let current_ta_lamports = target_account.lamports();
+    let account_infos = &[
+        funding_account.clone(),
+        target_account.clone(),
+        system_program.clone(),
+    ];
 
-    let lamports_diff = new_minimum_balance.saturating_sub(target_account.lamports());
-    invoke(
-        &system_instruction::transfer(funding_account.key, target_account.key, lamports_diff),
-        &[
-            funding_account.clone(),
-            target_account.clone(),
-            system_program.clone(),
-        ],
-    )?;
-
+    // account will be shrunk
+    if target_account.data_len() > new_size {
+        let lamports_diff = new_minimum_balance.saturating_sub(current_ta_lamports);
+        invoke(
+            &system_instruction::transfer(funding_account.key, target_account.key, lamports_diff),
+            account_infos,
+        )?;
+    } else {
+        // account will be extended
+        let excess_lamports = current_ta_lamports.saturating_sub(new_minimum_balance);
+        invoke(
+            &system_instruction::transfer(target_account.key, funding_account.key, excess_lamports),
+            account_infos,
+        )?;
+    }
     target_account.realloc(new_size, false)?;
 
     Ok(())
