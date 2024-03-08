@@ -83,7 +83,7 @@ pub fn resize_or_reallocate_account_raw<'a>(
             &system_instruction::transfer(funding_account.key, target_account.key, lamports_diff),
             account_infos,
         )?;
-    } else if target_account.owner == system_program.owner {
+    } else if target_account.owner == system_program.key {
         invoke(
             &system_instruction::transfer(target_account.key, funding_account.key, lamports_diff),
             account_infos,
