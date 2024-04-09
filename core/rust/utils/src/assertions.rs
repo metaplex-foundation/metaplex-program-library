@@ -66,6 +66,19 @@ pub fn assert_derivation(
     Ok(bump)
 }
 
+pub fn assert_derivation_with_bump(
+    program_id: &Pubkey,
+    account: &AccountInfo,
+    path: &[&[u8]],
+    error: impl Into<ProgramError>,
+) -> Result<(), ProgramError> {
+    let key = Pubkey::create_program_address(path, program_id)?;
+    if key != *account.key {
+        return Err(error.into());
+    }
+    Ok(())
+}
+
 pub fn assert_rent_exempt(
     rent: &Rent,
     account_info: &AccountInfo,
