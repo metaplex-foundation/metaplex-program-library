@@ -15,12 +15,14 @@ path = "src/lib.rs"
 
 [dependencies]
 arrayref = "0.3.6"
-solana-program = ">= 1.14.13, < 1.17"
-spl-token-2022 = { version = ">= 0.6.0, < 0.9", features = ["no-entrypoint"], optional = true }
+solana-program = ">= 1.14.13, < 1.19"
+spl-token-2022 = { version = ">= 0.6.0, < 0.9", features = [
+    "no-entrypoint",
+], optional = true }
 
 [features]
 spl-token = ["spl-token-2022"]
 default = ["spl-token"]
 
 [profile.release]
-overflow-checks = true     # Enable integer overflow checks.
+overflow-checks = true # Enable integer overflow checks.
