@@ -45,7 +45,11 @@ pub fn sign_metadata(ctx: Context<SignMetadata>) -> Result<()> {
     )
     .metadata(&ctx.accounts.metadata)
     .authority(&holding_account)
-    .invoke()
+    .invoke_signed(&[&[
+        "fanout-native-account".as_bytes(),
+        ctx.accounts.fanout.key().as_ref(),
+        &[ctx.bumps.holding_account],
+    ]])
     .map_err(|e| {
         error::Error::ProgramError(Box::new(ProgramErrorWithOrigin {
             program_error: e,
