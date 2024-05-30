@@ -74,7 +74,7 @@ pub fn set_for_token_member_stake(ctx: Context<SetForTokenMemberStake>, shares: 
     fanout.total_shares = membership_mint.supply;
     fanout.total_members = fanout.total_members.checked_add(1).or_arith_error()?;
     membership_voucher.shares = shares;
-    membership_voucher.bump_seed = *ctx.bumps.get("membership_voucher").unwrap();
+    membership_voucher.bump_seed = ctx.bumps.membership_voucher;
     let cpi_program = ctx.accounts.token_program.to_account_info();
     let accounts = anchor_spl::token::Transfer {
         from: ctx.accounts.membership_mint_token_account.to_account_info(),

@@ -7,7 +7,8 @@ use anchor_lang::{
     solana_program::{instruction::Instruction, program_memory::sol_memcmp, pubkey::PUBKEY_BYTES},
 };
 use anchor_spl::token::TokenAccount;
-use mpl_token_metadata::state::{Metadata, TokenMetadataAccount};
+use mpl_token_metadata::accounts::Metadata;
+
 
 pub fn cmp_pubkeys(a: &Pubkey, b: &Pubkey) -> bool {
     sol_memcmp(a.as_ref(), b.as_ref(), PUBKEY_BYTES) == 0
@@ -117,7 +118,7 @@ pub fn assert_valid_metadata(
     metadata_account: &AccountInfo,
     mint: &AccountInfo,
 ) -> Result<Metadata> {
-    let meta = Metadata::from_account_info(metadata_account)?;
+    let meta = Metadata::from_bytes(&metadata_account.data.borrow())?;
     if !cmp_pubkeys(&meta.mint, mint.key) {
         return Err(HydraError::InvalidMetadata.into());
     }
