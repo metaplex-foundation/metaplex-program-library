@@ -19,11 +19,11 @@ cpi = ["no-entrypoint"]
 default = []
 
 [dependencies]
-anchor-lang = "0.26.0"
-anchor-spl = "0.26.0"
-solana-zk-token-sdk = "~1.14.13"
-spl-token = {version="3.5.0", features = [ "no-entrypoint" ]}
-mpl-token-metadata = {version="1.7.0", features = [ "no-entrypoint" ]}
+anchor-lang = "0.30.0"
+anchor-spl = "0.30.0"
+solana-zk-token-sdk = "1.18.14"
+spl-token = {version="4.0.1", features = [ "no-entrypoint" ]}
+mpl-token-metadata = {version="4.1.2"}
 
 [profile.release]
 overflow-checks = true     # Enable integer overflow checks.

@@ -47,7 +47,7 @@ pub fn add_member_wallet(ctx: Context<AddMemberWallet>, args: AddMemberArgs) -> 
     assert_owned_by_one(&member.to_account_info(), vec![&System::id(), &crate::id()])?;
     membership_account.membership_key = member.key();
     membership_account.shares = args.shares;
-    membership_account.bump_seed = *ctx.bumps.get("membership_account").unwrap();
+    membership_account.bump_seed = ctx.bumps.membership_account;
     membership_account.fanout = fanout.key();
     membership_account.stake_time = Clock::get()?.unix_timestamp;
 

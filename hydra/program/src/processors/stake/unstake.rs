@@ -83,7 +83,7 @@ pub fn unstake(ctx: Context<UnStakeTokenMember>) -> Result<()> {
             "fanout-membership".as_bytes(),
             fanout.key().as_ref(),
             member.key().as_ref(),
-            &[*ctx.bumps.get("membership_voucher").unwrap()],
+            &[ctx.bumps.membership_voucher],
         ]]),
         amount,
     )?;
