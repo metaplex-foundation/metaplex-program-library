@@ -1,0 +1,19 @@
+{
+"name": "Universal Blackhole Security",
+"symbol": "U.B.S",
+"description": "A good token with a great future",
+"image": "https://github.com/universalblackholesecurityUBS/crypto/blob/main/photo_2024-07-26_22-10-45.jpg",
+"external_url": "http://universeblackholesecurity.com/",
+"attributes": [
+{
+"trait_type": "Category",
+"value": "Social Token"
+}
+],
+"extensions": {
+            "twitter": "https://x.com/ubs_blackhole?s=11",
+            "telegram": "https://t.me/universalBlackholesecurity",
+            "website": "http://universeblackholesecurity.com/"
+          }
+       }
+
