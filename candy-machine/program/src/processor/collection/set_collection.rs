@@ -1,9 +1,7 @@
 use anchor_lang::prelude::*;
 use mpl_token_metadata::{
-    assertions::collection::assert_master_edition,
-    instruction::approve_collection_authority,
-    state::{Metadata, TokenMetadataAccount},
-    utils::create_or_allocate_account_raw,
+    assertions::collection::assert_master_edition, instruction::approve_collection_authority,
+    state::Metadata, utils::create_or_allocate_account_raw,
 };
 use solana_program::program::invoke;
 
@@ -42,7 +40,13 @@ pub struct SetCollection<'info> {
 
 pub fn handle_set_collection(ctx: Context<SetCollection>) -> Result<()> {
     let mint = ctx.accounts.mint.to_account_info();
-    let metadata: Metadata = Metadata::from_account_info(&ctx.accounts.metadata.to_account_info())?;
+    let data = &ctx.accounts.metadata.data.borrow_mut();
+    if ctx.accounts.metadata.data_is_empty()
+        || data[0] != mpl_token_metadata::state::Key::MetadataV1 as u8
+    {
+        return Err(CandyError::InvalidMetadataAccount.into());
+    }
+    let metadata = Metadata::deserialize(&mut data.as_ref())?;
     if !cmp_pubkeys(&metadata.update_authority, &ctx.accounts.authority.key()) {
         return err!(CandyError::IncorrectCollectionAuthority);
     }

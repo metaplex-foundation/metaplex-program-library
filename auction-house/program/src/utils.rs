@@ -15,7 +15,7 @@ use anchor_lang::{
 };
 use anchor_spl::token::{Mint, Token, TokenAccount};
 use arrayref::array_ref;
-use mpl_token_metadata::state::{Metadata, TokenMetadataAccount};
+use mpl_token_metadata::state::Metadata;
 use spl_token::{instruction::initialize_account2, state::Account as SplAccount};
 use std::{convert::TryInto, slice::Iter};
 
@@ -379,7 +379,12 @@ pub fn pay_creator_fees<'a>(
     size: u64,
     is_native: bool,
 ) -> Result<u64> {
-    let metadata = Metadata::from_account_info(metadata_info)?;
+    let data = &metadata_info.data.borrow_mut();
+    if metadata_info.data_is_empty() || data[0] != mpl_token_metadata::state::Key::MetadataV1 as u8
+    {
+        return Err(AuctionHouseError::MetadataDoesntExist.into());
+    }
+    let metadata = Metadata::deserialize(&mut data.as_ref())?;
     let fees = metadata.data.seller_fee_basis_points;
     let total_fee = (fees as u128)
         .checked_mul(size as u128)

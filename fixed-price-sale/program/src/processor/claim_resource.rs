@@ -69,8 +69,11 @@ impl<'info> ClaimResource<'info> {
         ]];
 
         // Update primary sale flag
-        let metadata_state: mpl_token_metadata::state::Metadata =
-            mpl_token_metadata::state::Metadata::from_account_info(metadata)?;
+        let data = &metadata.data.borrow_mut();
+        if metadata.data_is_empty() || data[0] != mpl_token_metadata::state::Key::MetadataV1 as u8 {
+            return Err(ErrorCode::InvalidMetadataAccount.into());
+        }
+        let metadata_state = mpl_token_metadata::state::Metadata::deserialize(&mut data.as_ref())?;
         if !metadata_state.primary_sale_happened {
             mpl_update_primary_sale_happened_via_token(
                 &metadata.to_account_info(),

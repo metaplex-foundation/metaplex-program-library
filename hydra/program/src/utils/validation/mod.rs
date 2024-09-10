@@ -117,7 +117,13 @@ pub fn assert_valid_metadata(
     metadata_account: &AccountInfo,
     mint: &AccountInfo,
 ) -> Result<Metadata> {
-    let meta = Metadata::from_account_info(metadata_account)?;
+    let data = &metadata_account.data.borrow_mut();
+    if metadata_account.data_is_empty()
+        || data[0] != mpl_token_metadata::state::Key::MetadataV1 as u8
+    {
+        return Err(HydraError::InvalidMetadata.into());
+    }
+    let meta = mpl_token_metadata::state::Metadata::deserialize(&mut data.as_ref())?;
     if !cmp_pubkeys(&meta.mint, mint.key) {
         return Err(HydraError::InvalidMetadata.into());
     }

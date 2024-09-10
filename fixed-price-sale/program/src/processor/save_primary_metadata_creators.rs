@@ -1,6 +1,5 @@
 use crate::{error::ErrorCode, state::Creator, utils::*, SavePrimaryMetadataCreators};
 use anchor_lang::prelude::*;
-use mpl_token_metadata::state::TokenMetadataAccount;
 
 impl<'info> SavePrimaryMetadataCreators<'info> {
     pub fn process(
@@ -11,8 +10,11 @@ impl<'info> SavePrimaryMetadataCreators<'info> {
         let metadata = &self.metadata;
         let admin = &self.admin;
         let secondary_metadata_creators = &mut self.primary_metadata_creators;
-        let metadata_state: mpl_token_metadata::state::Metadata =
-            mpl_token_metadata::state::Metadata::from_account_info(metadata)?;
+        let data = &metadata.data.borrow_mut();
+        if metadata.data_is_empty() || data[0] != mpl_token_metadata::state::Key::MetadataV1 as u8 {
+            return Err(ErrorCode::InvalidMetadataAccount.into());
+        }
+        let metadata_state = mpl_token_metadata::state::Metadata::deserialize(&mut data.as_ref())?;
 
         if creators.len() > MAX_PRIMARY_CREATORS_LEN {
             return Err(ErrorCode::CreatorsIsGtThanAvailable.into());
