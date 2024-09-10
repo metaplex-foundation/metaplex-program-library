@@ -380,8 +380,7 @@ pub fn pay_creator_fees<'a>(
     is_native: bool,
 ) -> Result<u64> {
     let data = &metadata_info.data.borrow_mut();
-    if metadata_info.data_is_empty() || data[0] != mpl_token_metadata::state::Key::MetadataV1 as u8
-    {
+    if data.is_empty() || data[0] != mpl_token_metadata::state::Key::MetadataV1 as u8 {
         return Err(AuctionHouseError::MetadataDoesntExist.into());
     }
     let metadata = Metadata::deserialize(&mut data.as_ref())?;

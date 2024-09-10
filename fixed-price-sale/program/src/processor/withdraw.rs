@@ -60,7 +60,7 @@ impl<'info> Withdraw<'info> {
 
         // Obtain right creators according to sale type
         let data = &metadata.data.borrow_mut();
-        if metadata.data_is_empty() || data[0] != mpl_token_metadata::state::Key::MetadataV1 as u8 {
+        if data.is_empty() || data[0] != mpl_token_metadata::state::Key::MetadataV1 as u8 {
             return Err(ErrorCode::InvalidMetadataAccount.into());
         }
         let metadata = mpl_token_metadata::state::Metadata::deserialize(&mut data.as_ref())?;

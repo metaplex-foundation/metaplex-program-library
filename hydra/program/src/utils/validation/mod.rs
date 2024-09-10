@@ -118,9 +118,7 @@ pub fn assert_valid_metadata(
     mint: &AccountInfo,
 ) -> Result<Metadata> {
     let data = &metadata_account.data.borrow_mut();
-    if metadata_account.data_is_empty()
-        || data[0] != mpl_token_metadata::state::Key::MetadataV1 as u8
-    {
+    if data.is_empty() || data[0] != mpl_token_metadata::state::Key::MetadataV1 as u8 {
         return Err(HydraError::InvalidMetadata.into());
     }
     let meta = mpl_token_metadata::state::Metadata::deserialize(&mut data.as_ref())?;

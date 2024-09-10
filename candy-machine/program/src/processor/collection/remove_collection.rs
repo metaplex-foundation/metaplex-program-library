@@ -33,9 +33,7 @@ pub fn handle_remove_collection(ctx: Context<RemoveCollection>) -> Result<()> {
     candy_machine.assert_not_minted(error!(CandyError::NoChangingCollectionDuringMint))?;
 
     let data = &ctx.accounts.metadata.data.borrow_mut();
-    if ctx.accounts.metadata.data_is_empty()
-        || data[0] != mpl_token_metadata::state::Key::MetadataV1 as u8
-    {
+    if data.is_empty() || data[0] != mpl_token_metadata::state::Key::MetadataV1 as u8 {
         return Err(CandyError::InvalidMetadataAccount.into());
     }
     let metadata = Metadata::deserialize(&mut data.as_ref())?;
