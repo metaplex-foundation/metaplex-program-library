@@ -9,7 +9,6 @@ use anchor_spl::{
     associated_token::{self, get_associated_token_address},
     token,
 };
-use mpl_token_metadata::state::TokenMetadataAccount;
 
 impl<'info> Withdraw<'info> {
     pub fn process(
