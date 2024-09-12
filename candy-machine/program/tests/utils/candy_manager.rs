@@ -1028,7 +1028,7 @@ impl CandyManager {
         }
 
         let sol_fees = {
-            let mut fees = 5000 + 5616720 + 2853600 + 10000000;
+            let mut fees = 5000 + 5115600 + 1030080 + 10000000;
             if self.freeze_info.set {
                 let freeze_pda = self.get_freeze_pda(context).await;
                 fees += freeze_pda.freeze_fee;

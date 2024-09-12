@@ -1,12 +1,12 @@
 use anchor_lang::prelude::*;
 use mpl_token_metadata::{
-    assertions::collection::assert_master_edition, instruction::approve_collection_authority,
-    state::Metadata, utils::create_or_allocate_account_raw,
+    instruction::approve_collection_authority, state::Metadata,
+    utils::create_or_allocate_account_raw,
 };
 use solana_program::program::invoke;
 
 use crate::{
-    cmp_pubkeys,
+    assert_master_edition, cmp_pubkeys,
     constants::{COLLECTIONS_FEATURE_INDEX, COLLECTION_PDA_SIZE},
     set_feature_flag, CandyError, CandyMachine, CollectionPDA,
 };
@@ -40,11 +40,13 @@ pub struct SetCollection<'info> {
 
 pub fn handle_set_collection(ctx: Context<SetCollection>) -> Result<()> {
     let mint = ctx.accounts.mint.to_account_info();
-    let data = &ctx.accounts.metadata.data.borrow_mut();
-    if data.is_empty() || data[0] != mpl_token_metadata::state::Key::MetadataV1 as u8 {
-        return Err(CandyError::InvalidMetadataAccount.into());
-    }
-    let metadata = Metadata::deserialize(&mut data.as_ref())?;
+    let metadata = {
+        let data = &ctx.accounts.metadata.data.borrow_mut();
+        if data.is_empty() || data[0] != mpl_token_metadata::state::Key::MetadataV1 as u8 {
+            return Err(CandyError::InvalidMetadataAccount.into());
+        }
+        Metadata::deserialize(&mut data.as_ref())?
+    };
     if !cmp_pubkeys(&metadata.update_authority, &ctx.accounts.authority.key()) {
         return err!(CandyError::IncorrectCollectionAuthority);
     }

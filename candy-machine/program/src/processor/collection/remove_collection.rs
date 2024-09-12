@@ -1,5 +1,7 @@
 use anchor_lang::prelude::*;
-use mpl_token_metadata::{instruction::revoke_collection_authority, state::Metadata};
+use mpl_token_metadata::{
+    assertions::metadata, instruction::revoke_collection_authority, state::Metadata,
+};
 use solana_program::program::invoke;
 
 use crate::{
@@ -32,11 +34,13 @@ pub fn handle_remove_collection(ctx: Context<RemoveCollection>) -> Result<()> {
     let candy_machine = &mut ctx.accounts.candy_machine;
     candy_machine.assert_not_minted(error!(CandyError::NoChangingCollectionDuringMint))?;
 
-    let data = &ctx.accounts.metadata.data.borrow_mut();
-    if data.is_empty() || data[0] != mpl_token_metadata::state::Key::MetadataV1 as u8 {
-        return Err(CandyError::InvalidMetadataAccount.into());
-    }
-    let metadata = Metadata::deserialize(&mut data.as_ref())?;
+    let metadata = {
+        let data = &ctx.accounts.metadata.data.borrow_mut();
+        if data.is_empty() || data[0] != mpl_token_metadata::state::Key::MetadataV1 as u8 {
+            return Err(CandyError::InvalidMetadataAccount.into());
+        }
+        Metadata::deserialize(&mut data.as_ref())?
+    };
     if !cmp_pubkeys(&metadata.update_authority, &ctx.accounts.authority.key()) {
         return err!(CandyError::IncorrectCollectionAuthority);
     };

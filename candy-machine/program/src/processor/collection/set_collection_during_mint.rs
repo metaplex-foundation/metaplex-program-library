@@ -108,9 +108,13 @@ pub fn handle_set_collection_during_mint(ctx: Context<SetCollectionDuringMint>) 
         return Ok(());
     }
 
-    let collection_metadata: Metadata =
-        Metadata::safe_deserialize(&ctx.accounts.collection_metadata.data.borrow_mut())?;
-
+    let collection_metadata: Metadata = {
+        let data = ctx.accounts.collection_metadata.data.borrow_mut();
+        if data.is_empty() || data[0] != mpl_token_metadata::state::Key::MetadataV1 as u8 {
+            return err!(CandyError::InvalidMetadataAccount);
+        }
+        Metadata::deserialize(&mut data.as_ref())?
+    };
     let collection_instruction = if collection_metadata.collection_details.is_some() {
         if !ctx.accounts.collection_metadata.is_writable {
             return err!(CandyError::SizedCollectionMetadataMustBeMutable);
