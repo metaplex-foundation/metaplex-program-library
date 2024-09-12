@@ -373,7 +373,11 @@ impl<'info> Buy<'info> {
             user_token_acc.try_borrow_data()?.as_ref(),
         )?;
 
-        let metadata_data = Metadata::from_account_info(metadata)?;
+        let data = &metadata.data.borrow_mut();
+        if data.is_empty() || data[0] != mpl_token_metadata::state::Key::MetadataV1 as u8 {
+            return Err(ErrorCode::InvalidMetadataAccount.into());
+        }
+        let metadata_data = Metadata::deserialize(&mut data.as_ref())?;
 
         let token_metadata_program_key = mpl_token_metadata::id();
         let metadata_seeds = &[

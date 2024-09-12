@@ -11,7 +11,7 @@ use anchor_lang::{
 };
 use anchor_spl::token::Token;
 use arrayref::array_ref;
-use mpl_token_metadata::state::{Metadata, TokenMetadataAccount};
+use mpl_token_metadata::state::Metadata;
 use spl_associated_token_account::get_associated_token_address;
 use spl_token::{instruction::initialize_account2, state::Account};
 use std::{convert::TryInto, slice::Iter};
@@ -191,7 +191,15 @@ pub fn pay_creator_fees<'a>(
     size: u64,
     is_native: bool,
 ) -> Result<()> {
-    let metadata = Metadata::from_account_info(metadata_info)?;
+    let metadata = {
+        let data = &metadata_info.data.borrow();
+        if metadata_info.data_is_empty()
+            || data[0] != mpl_token_metadata::state::Key::MetadataV1 as u8
+        {
+            return Err(ErrorCode::MetadataDoesntExist.into());
+        }
+        Metadata::deserialize(&mut data.as_ref())?
+    };
     let total_fee = size as u128;
     match metadata.data.creators {
         Some(creators) => {

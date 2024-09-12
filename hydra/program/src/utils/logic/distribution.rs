@@ -80,7 +80,6 @@ pub fn distribute_mint<'info>(
     let mint = &fanout_mint;
     let fanout_for_mint_membership_voucher_unchecked = fanout_for_mint_membership_voucher;
     let fanout_mint_member_token_account_info = fanout_mint_member_token_account.to_account_info();
-    let fanout_for_mint = fanout_for_mint;
     let total_shares = fanout.total_shares as u64;
     assert_owned_by(fanout_for_mint, &crate::ID)?;
     assert_owned_by(&fanout_mint_member_token_account_info, &Token::id())?;

@@ -142,4 +142,7 @@ pub enum ErrorCode {
     // 6045
     #[msg("Invalid edition marker")]
     InvalidEditionMarkerAccount,
+    // 6046
+    #[msg("Invalid Metadata Account")]
+    InvalidMetadataAccount,
 }

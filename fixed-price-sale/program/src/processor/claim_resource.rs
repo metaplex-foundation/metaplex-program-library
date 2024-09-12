@@ -6,7 +6,6 @@ use crate::{
 };
 use anchor_lang::{prelude::*, solana_program::program_pack::Pack, system_program::System};
 use anchor_spl::token;
-use mpl_token_metadata::state::TokenMetadataAccount;
 
 impl<'info> ClaimResource<'info> {
     pub fn process(&mut self, vault_owner_bump: u8) -> Result<()> {
@@ -69,9 +68,17 @@ impl<'info> ClaimResource<'info> {
         ]];
 
         // Update primary sale flag
-        let metadata_state: mpl_token_metadata::state::Metadata =
-            mpl_token_metadata::state::Metadata::from_account_info(metadata)?;
-        if !metadata_state.primary_sale_happened {
+        let primary_sale_happened = {
+            let data = &metadata.data.borrow_mut();
+            if data.is_empty() || data[0] != mpl_token_metadata::state::Key::MetadataV1 as u8 {
+                return Err(ErrorCode::InvalidMetadataAccount.into());
+            }
+            let metadata_state =
+                mpl_token_metadata::state::Metadata::deserialize(&mut data.as_ref())?;
+            metadata_state.primary_sale_happened
+        };
+
+        if !primary_sale_happened {
             mpl_update_primary_sale_happened_via_token(
                 &metadata.to_account_info(),
                 &vault_owner.to_account_info(),
