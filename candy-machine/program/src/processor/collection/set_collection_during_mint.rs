@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use mpl_token_metadata::{
     instruction::{set_and_verify_collection, set_and_verify_sized_collection_item},
-    state::{Metadata, TokenMetadataAccount},
+    state::Metadata,
     utils::assert_derivation,
 };
 use solana_program::{
