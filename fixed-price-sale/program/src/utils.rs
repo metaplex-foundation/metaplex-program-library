@@ -8,7 +8,7 @@ use anchor_lang::{
 use mpl_token_metadata::state::EDITION_MARKER_BIT_SIZE;
 
 pub const NAME_MAX_LEN: usize = 40; // max len of a string buffer in bytes
-pub const NAME_DEFAULT_SIZE: usize = 4 + NAME_MAX_LEN; // max lenght of serialized string (str_len + <buffer>)
+pub const NAME_DEFAULT_SIZE: usize = 4 + NAME_MAX_LEN; // max length of serialized string (str_len + <buffer>)
 pub const DESCRIPTION_MAX_LEN: usize = 60;
 pub const DESCRIPTION_DEFAULT_SIZE: usize = 4 + DESCRIPTION_MAX_LEN;
 pub const HOLDER_PREFIX: &str = "holder";
