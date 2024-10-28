@@ -6,7 +6,7 @@ use solana_program::{
     program_error::ProgramError,
     pubkey::Pubkey,
     rent::Rent,
-    system_instruction,
+    system_instruction, system_program,
     sysvar::Sysvar,
 };
 
@@ -66,8 +66,7 @@ pub fn resize_or_reallocate_account_raw<'a>(
 ) -> ProgramResult {
     let rent = Rent::get()?;
     let new_minimum_balance = rent.minimum_balance(new_size);
-    let lamports_diff =
-        new_minimum_balance.abs_diff(target_account.lamports());
+    let lamports_diff = new_minimum_balance.abs_diff(target_account.lamports());
     if new_size == target_account.data_len() {
         return Ok(());
     }
@@ -111,8 +110,6 @@ pub fn close_account_raw<'a>(
         .unwrap();
     **src_account_info.lamports.borrow_mut() = 0;
 
-    let mut src_data = src_account_info.data.borrow_mut();
-    src_data.fill(0);
-
-    Ok(())
+    src_account_info.assign(&system_program::ID);
+    src_account_info.realloc(0, false).map_err(Into::into)
 }
