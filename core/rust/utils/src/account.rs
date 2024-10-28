@@ -66,8 +66,7 @@ pub fn resize_or_reallocate_account_raw<'a>(
 ) -> ProgramResult {
     let rent = Rent::get()?;
     let new_minimum_balance = rent.minimum_balance(new_size);
-    let lamports_diff =
-        new_minimum_balance.abs_diff(target_account.lamports());
+    let lamports_diff = new_minimum_balance.abs_diff(target_account.lamports());
     if new_size == target_account.data_len() {
         return Ok(());
     }
@@ -89,10 +88,13 @@ pub fn resize_or_reallocate_account_raw<'a>(
             account_infos,
         )?;
     } else {
-        (**target_account.try_borrow_mut_lamports()?)
+        let target_account_lamports = target_account.lamports();
+        (**target_account.try_borrow_mut_lamports()?) = target_account_lamports
             .checked_sub(lamports_diff)
             .ok_or(ProgramError::InvalidRealloc)?;
-        (**funding_account.try_borrow_mut_lamports()?)
+
+        let funding_account_lamports = funding_account.lamports();
+        (**funding_account.try_borrow_mut_lamports()?) = funding_account_lamports
             .checked_add(lamports_diff)
             .ok_or(ProgramError::InvalidRealloc)?;
     }
