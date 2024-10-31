@@ -6,7 +6,7 @@ use solana_program::{
     program_error::ProgramError,
     pubkey::Pubkey,
     rent::Rent,
-    system_instruction,
+    system_instruction, system_program,
     sysvar::Sysvar,
 };
 
@@ -108,13 +108,20 @@ pub fn close_account_raw<'a>(
     src_account_info: &AccountInfo<'a>,
 ) -> ProgramResult {
     let dest_starting_lamports = dest_account_info.lamports();
-    **dest_account_info.lamports.borrow_mut() = dest_starting_lamports
+    let mut dest_lamports_mut = dest_account_info
+        .lamports
+        .try_borrow_mut()
+        .map_err(|_| ProgramError::AccountBorrowFailed)?;
+    **dest_lamports_mut = dest_starting_lamports
         .checked_add(src_account_info.lamports())
-        .unwrap();
-    **src_account_info.lamports.borrow_mut() = 0;
+        .ok_or(ProgramError::InvalidRealloc)?;
 
-    let mut src_data = src_account_info.data.borrow_mut();
-    src_data.fill(0);
+    let mut src_lamports_mut = src_account_info
+        .lamports
+        .try_borrow_mut()
+        .map_err(|_| ProgramError::AccountBorrowFailed)?;
+    **src_lamports_mut = 0;
 
-    Ok(())
+    src_account_info.assign(&system_program::ID);
+    src_account_info.realloc(0, false).map_err(Into::into)
 }
