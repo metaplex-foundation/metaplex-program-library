@@ -107,7 +107,7 @@ pub fn close_account_raw<'a>(
     let dest_starting_lamports = dest_account_info.lamports();
     **dest_account_info.lamports.borrow_mut() = dest_starting_lamports
         .checked_add(src_account_info.lamports())
-        .unwrap();
+        .ok_or(ProgramError::InvalidRealloc)?;
     **src_account_info.lamports.borrow_mut() = 0;
 
     src_account_info.assign(&system_program::ID);
