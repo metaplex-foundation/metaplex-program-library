@@ -40,7 +40,7 @@ export const sendTransactionWithRetryWithKeypair = async (
     transaction.setSigners(...signers.map(s => s.publicKey));
   } else {
     transaction.setSigners(
-      // fee payed by the wallet owner
+      // fee paid by the wallet owner
       wallet.publicKey,
       ...signers.map(s => s.publicKey),
     );
