@@ -50,7 +50,7 @@ export async function* nftStorageUploadGenerator({
 }): AsyncGenerator<NftStorageBundleUploadResult> {
   // split asset keys into batches, each of which will be bundled into a CAR file and uploaded separately
   // default to 50 NFTs per "batch" if no batchSize is given.
-  // larger batches require fewer signatures and will be slightly faster overall if everything is sucessful,
+  // larger batches require fewer signatures and will be slightly faster overall if everything is successful,
   // but smaller batches will take less time to retry if there's an error during upload.
   batchSize = batchSize || 50;
   batchSize = Math.min(batchSize, NFTBundle.MAX_ENTRIES);
