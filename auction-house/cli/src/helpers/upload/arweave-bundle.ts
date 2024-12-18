@@ -744,7 +744,7 @@ export const withdrawBundlr = async (walletKeyPair: Keypair) => {
       } else if (withdrawResponse.status == 400) {
         log.info(withdrawResponse.data);
         log.info(
-          'Withdraw unsucessful. An additional attempt will be made after all files are uploaded.',
+          'Withdraw unsuccessful. An additional attempt will be made after all files are uploaded.',
         );
       }
     } catch (err) {
