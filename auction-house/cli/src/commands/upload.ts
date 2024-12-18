@@ -691,7 +691,7 @@ export async function upload({
   // Compile a sorted list of assets which need to be uploaded.
   const dedupedAssetKeys = getAssetKeysNeedingUpload(cache.items, files);
 
-  // Initialize variables that might be needed for uploded depending on storage
+  // Initialize variables that might be needed for uploaded depending on storage
   // type.
   // These will be needed anyway either to initialize the
   // Candy Machine Custom Program configuration, or to write the assets
