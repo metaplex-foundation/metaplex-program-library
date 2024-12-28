@@ -85,7 +85,7 @@ pub struct CancelRemainingAccounts<'info> {
     pub auth_rules: UncheckedAccount<'info>,
     ///CHECK: checked in cpi
     pub sysvar_instructions: UncheckedAccount<'info>,
-    ///CHECK: chekced in cpi
+    ///CHECK: checked in cpi
     pub system_program: UncheckedAccount<'info>,
 }
 
