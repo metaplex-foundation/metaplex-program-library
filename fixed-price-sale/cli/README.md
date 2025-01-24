@@ -1,6 +1,6 @@
 # mpl-fixed-price-sale-cli
 ## Overview
-This CLI utility provide ability to interact with on-chain `mpl-fixed-price-sale` program. Currently CLI has all features and all commands, that are supported by program, but also be updated as the `mpl-fixed-price-sale` is updated.
+This CLI utility provides the ability to interact with on-chain `mpl-fixed-price-sale` program. Currently CLI has all features and all commands, that are supported by program, but also be updated as the `mpl-fixed-price-sale` is updated.
 
 ## Commands
 - `Buy`
@@ -42,7 +42,7 @@ Few commands require input `.json` files, here we provide schema examples:
 ```
 
 ## Example
-This example demonstrate market creation. Follow step by step (assumed that you compiled executable binary and moved to working directory).
+This example demonstrates market creation. Follow step by step (assuming that you compiled executable binary and moved it to working directory).
 
 1. First of all we must create store:
     
