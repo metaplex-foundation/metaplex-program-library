@@ -18,7 +18,7 @@ Supports creation of "mystery" packages of NFTs that are not revealed until afte
     - save MasterEdition data(keys) so we can match Editions with this Master when users will open a pack
     - pack can have multiple different vouchers and every voucher has the same value and gives users the same amounts of cards from the pack
     - voucher is Edition in terms of Metaplex but in terms of nft-packs program it's PDA account with seeds [pack_key, "voucher", index] which stores some data
-    - we can add only voucher which we are own
+    - we can add only voucher which we own
     - to sum up, when we add voucher to the pack we save MasterEdition key to the pack and every user who has Edition from that MasterEdition owns a voucher for created pack and can open it
 - Activate
     - in activated state admin can't change any pack data
@@ -42,7 +42,7 @@ Supports creation of "mystery" packages of NFTs that are not revealed until afte
     - can be called only if pack is in deactivated state
     - allows changing pack `name`, `description`, `URI`(pack wallpaper) and `mutable` fields
 - Close pack
-    - can be called at any time if pack doesn't have redeem end date and if it has only after redeem end date
+    - can be called at any time if pack doesn't have to redeem end date and if it has only after redeem end date
     - if admin tries to call this instruction before redeem end date program will return `EndDateNotArrived` error
     - irreversible pack state changing
 - Delete card
