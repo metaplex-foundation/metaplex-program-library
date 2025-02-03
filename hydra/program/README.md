@@ -56,7 +56,7 @@ and deploy to the local validator.
 After accomplishing this your workflow to build new code will be:
 
 ```shell
-anchor build //Optional as the next commant runs anchor build for you
+anchor build //Optional as the next command, comment runs anchor build for you
 yarn run api:gen
 yarn run amman:start
 ```
