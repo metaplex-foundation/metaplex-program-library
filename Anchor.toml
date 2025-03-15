@@ -9,8 +9,8 @@ cluster = "localnet"
 wallet = "~/.config/solana/id.json"
 
 [programs.localnet]
-auction_house="hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk"
-bubblegum="BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY"
+auction_house = "hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk"
+bubblegum = "BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY"
 
 [[test.genesis]]
 address = "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
@@ -29,18 +29,14 @@ address = "SaLeTjyUa5wXHnGuewUSyJ5JWZaHwz3TxqUntCE9czo"
 program = "target/deploy/mpl_fixed_price_sale.so"
 
 [[test.genesis]]
-address = "gdrpGjVffourzkdDRrQmySw4aTHr8a3xmQzzxSwFD1a"
-program = "target/deploy/mpl_gumdrop.so"
-
-[[test.genesis]]
 address = "hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg"
 program = "target/deploy/mpl_hydra.so"
 
 [workspace]
 members = [
-  "token-entangler/program",
   "auction-house/program",
+  "bubblegum/program",
   "fixed-price-sale/program",
   "hydra/program",
-  "bubblegum/program",
+  "token-entangler/program",
 ]

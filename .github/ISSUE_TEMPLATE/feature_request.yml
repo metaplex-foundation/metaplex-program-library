@@ -1,6 +1,6 @@
 name: Feature request
 description: Request a new feature
-title: "[Feature]: "
+title: '[Feature]: '
 labels: [enhancement]
 body:
   - type: dropdown
@@ -13,7 +13,6 @@ body:
         - candy-machine
         - core
         - fixed-price-sale
-        - gumdrop
         - hydra
         - nft-packs
         - token-entangler
@@ -23,7 +22,9 @@ body:
     id: description
     attributes:
       label: Feature
-      description: A clear and concise description of what the problem is, or what feature you want to be implemented.
+      description:
+        A clear and concise description of what the problem is, or what feature you want to be
+        implemented.
       placeholder: I'm always frustrated when..., A good addition would be...
     validations:
       required: true
@@ -32,8 +33,8 @@ body:
     attributes:
       label: Standard Change?
       options:
-        - "No"
-        - "Yes"
+        - 'No'
+        - 'Yes'
       description: Does this feature change the Metaplex token standard in a fundamental way?
     validations:
       required: true
@@ -48,9 +49,13 @@ body:
     id: alternatives
     attributes:
       label: Alternative solutions or implementations
-      description: A clear and concise description of any alternative solutions or features you have considered.
+      description:
+        A clear and concise description of any alternative solutions or features you have
+        considered.
   - type: textarea
     id: additional-context
     attributes:
       label: Other context
-      description: Any other context, screenshots, or file uploads that help us understand your feature request.
+      description:
+        Any other context, screenshots, or file uploads that help us understand your feature
+        request.

@@ -2,9 +2,9 @@ name: Program Tests
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
   workflow_dispatch:
     inputs:
@@ -19,18 +19,17 @@ on:
 
 jobs:
   program-tests:
-    name: "Program: ${{ matrix.node.name }}"
+    name: 'Program: ${{ matrix.node.name }}'
     strategy:
       fail-fast: false
       matrix:
         node:
-          - name: "auctioneer"
-          - name: "candy-machine"
-          - name: "auction-house"
-          - name: "fixed-price-sale"
-          - name: "gumdrop"
-          - name: "hydra"
-          - name: "token-entangler"
+          - name: 'auctioneer'
+          - name: 'candy-machine'
+          - name: 'auction-house'
+          - name: 'fixed-price-sale'
+          - name: 'hydra'
+          - name: 'token-entangler'
 
     uses: ./.github/workflows/program-reusable.yml
     with:
