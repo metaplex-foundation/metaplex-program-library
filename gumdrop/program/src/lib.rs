@@ -373,7 +373,7 @@ pub mod gumdrop {
             GumdropError::OwnerMismatch
         );
         require!(
-            // This check is redudant, we should not be able to initialize a claim status account at the same key.
+            // This check is redundant, we should not be able to initialize a claim status account at the same key.
             !claim_status.is_claimed && claim_status.claimed_at == 0,
             GumdropError::DropAlreadyClaimed
         );
