@@ -384,7 +384,7 @@ createErrorFromCodeLookup.set(0x1781, () => new InvalidFanoutForMintError());
 createErrorFromNameLookup.set('InvalidFanoutForMint', () => new InvalidFanoutForMintError());
 
 /**
- * MustDistribute: 'This operation must be the instruction right after a distrobution on the same accounts.'
+ * MustDistribute: 'This operation must be the instruction right after a distribution on the same accounts.'
  *
  * @category Errors
  * @category generated
@@ -394,7 +394,7 @@ export class MustDistributeError extends Error {
   readonly name: string = 'MustDistribute';
   constructor() {
     super(
-      'This operation must be the instruction right after a distrobution on the same accounts.',
+      'This operation must be the instruction right after a distribution on the same accounts.',
     );
     if (typeof Error.captureStackTrace === 'function') {
       Error.captureStackTrace(this, MustDistributeError);
