@@ -1,4 +1,8 @@
 use anchor_lang::prelude::*;
+use mpl_token_metadata::{
+    error::MetadataError,
+    state::{MasterEditionV2, Metadata, TokenStandard},
+};
 use solana_program::{
     account_info::AccountInfo,
     clock::Clock,
@@ -231,6 +235,28 @@ pub fn punish_bots<'a>(
         &system_instruction::transfer(bot_account.key, payment_account.key, final_fee),
         &[bot_account, payment_account, system_program],
     )?;
+    Ok(())
+}
+
+pub fn assert_master_edition(
+    collection_data: &Metadata,
+    edition_account_info: &AccountInfo,
+) -> core::result::Result<(), ProgramError> {
+    let data = edition_account_info.try_borrow_data()?;
+    if data.is_empty() || data[0] != mpl_token_metadata::state::Key::MasterEditionV2 as u8 {
+        return Err(MetadataError::DataTypeMismatch.into());
+    }
+    let edition = MasterEditionV2::deserialize(&mut data.as_ref())
+        .map_err(|_err: std::io::Error| MetadataError::CollectionMustBeAUniqueMasterEdition)?;
+
+    match collection_data.token_standard {
+        Some(TokenStandard::NonFungible) | Some(TokenStandard::ProgrammableNonFungible) => (),
+        _ => return Err(MetadataError::CollectionMustBeAUniqueMasterEdition.into()),
+    }
+
+    if edition.max_supply != Some(0) {
+        return Err(MetadataError::CollectionMustBeAUniqueMasterEdition.into());
+    }
     Ok(())
 }
 

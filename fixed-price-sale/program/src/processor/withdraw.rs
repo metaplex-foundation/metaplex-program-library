@@ -9,7 +9,6 @@ use anchor_spl::{
     associated_token::{self, get_associated_token_address},
     token,
 };
-use mpl_token_metadata::state::TokenMetadataAccount;
 
 impl<'info> Withdraw<'info> {
     pub fn process(
@@ -59,8 +58,11 @@ impl<'info> Withdraw<'info> {
         )?;
 
         // Obtain right creators according to sale type
-        let metadata: mpl_token_metadata::state::Metadata =
-            mpl_token_metadata::state::Metadata::from_account_info(metadata)?;
+        let data = &metadata.data.borrow_mut();
+        if data.is_empty() || data[0] != mpl_token_metadata::state::Key::MetadataV1 as u8 {
+            return Err(ErrorCode::InvalidMetadataAccount.into());
+        }
+        let metadata = mpl_token_metadata::state::Metadata::deserialize(&mut data.as_ref())?;
         let actual_creators = if !metadata.primary_sale_happened {
             if remaining_accounts.is_empty() {
                 return Err(ErrorCode::PrimaryMetadataCreatorsNotProvided.into());

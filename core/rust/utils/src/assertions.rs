@@ -7,6 +7,8 @@ use solana_program::{
     rent::Rent,
 };
 
+use crate::cmp_pubkeys;
+
 pub fn assert_signer(account_info: &AccountInfo) -> ProgramResult {
     if !account_info.is_signer {
         Err(ProgramError::MissingRequiredSignature)
@@ -39,6 +41,18 @@ pub fn assert_owned_by(
     }
 }
 
+pub fn assert_owner_in(
+    account: &AccountInfo,
+    owners: &[Pubkey],
+    error: impl Into<ProgramError>,
+) -> ProgramResult {
+    if owners.iter().any(|owner| cmp_pubkeys(owner, account.owner)) {
+        Ok(())
+    } else {
+        Err(error.into())
+    }
+}
+
 pub fn assert_derivation(
     program_id: &Pubkey,
     account: &AccountInfo,
@@ -50,6 +64,19 @@ pub fn assert_derivation(
         return Err(error.into());
     }
     Ok(bump)
+}
+
+pub fn assert_derivation_with_bump(
+    program_id: &Pubkey,
+    account: &AccountInfo,
+    path: &[&[u8]],
+    error: impl Into<ProgramError>,
+) -> Result<(), ProgramError> {
+    let key = Pubkey::create_program_address(path, program_id)?;
+    if key != *account.key {
+        return Err(error.into());
+    }
+    Ok(())
 }
 
 pub fn assert_rent_exempt(

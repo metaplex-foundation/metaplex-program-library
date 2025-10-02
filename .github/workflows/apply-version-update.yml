@@ -108,7 +108,9 @@ jobs:
         shell: bash
 
       - name: Log processed content body
-        run: echo "${{ steps.process-content-body.outputs.content }}"
+        env:
+          CONTENT_BODY: ${{ steps.process-content-body.outputs.content }}
+        run: echo "$CONTENT_BODY"
         shell: bash
 
       - name: Parse version info from review

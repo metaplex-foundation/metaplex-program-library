@@ -110,4 +110,6 @@ pub enum CandyError {
     SizedCollectionMetadataMustBeMutable,
     #[msg("Cannot remove Hidden Settings.")]
     CannotSwitchFromHiddenSettings,
+    #[msg("Invalid Metadata Account")]
+    InvalidMetadataAccount,
 }

@@ -3,9 +3,10 @@ use solana_program::{
     entrypoint::ProgramResult,
     msg,
     program::{invoke, invoke_signed},
+    program_error::ProgramError,
     pubkey::Pubkey,
     rent::Rent,
-    system_instruction,
+    system_instruction, system_program,
     sysvar::Sysvar,
 };
 
@@ -65,20 +66,40 @@ pub fn resize_or_reallocate_account_raw<'a>(
 ) -> ProgramResult {
     let rent = Rent::get()?;
     let new_minimum_balance = rent.minimum_balance(new_size);
+    let lamports_diff = new_minimum_balance.abs_diff(target_account.lamports());
+    if new_size == target_account.data_len() {
+        return Ok(());
+    }
 
-    let lamports_diff = new_minimum_balance.saturating_sub(target_account.lamports());
-    invoke(
-        &system_instruction::transfer(funding_account.key, target_account.key, lamports_diff),
-        &[
-            funding_account.clone(),
-            target_account.clone(),
-            system_program.clone(),
-        ],
-    )?;
+    let account_infos = &[
+        funding_account.clone(),
+        target_account.clone(),
+        system_program.clone(),
+    ];
 
-    target_account.realloc(new_size, false)?;
+    if new_size > target_account.data_len() {
+        invoke(
+            &system_instruction::transfer(funding_account.key, target_account.key, lamports_diff),
+            account_infos,
+        )?;
+    } else if target_account.owner == system_program.key {
+        invoke(
+            &system_instruction::transfer(target_account.key, funding_account.key, lamports_diff),
+            account_infos,
+        )?;
+    } else {
+        let target_account_lamports = target_account.lamports();
+        (**target_account.try_borrow_mut_lamports()?) = target_account_lamports
+            .checked_sub(lamports_diff)
+            .ok_or(ProgramError::InvalidRealloc)?;
 
-    Ok(())
+        let funding_account_lamports = funding_account.lamports();
+        (**funding_account.try_borrow_mut_lamports()?) = funding_account_lamports
+            .checked_add(lamports_diff)
+            .ok_or(ProgramError::InvalidRealloc)?;
+    }
+
+    target_account.realloc(new_size, false)
 }
 
 /// Close src_account and transfer lamports to dst_account, lifted from Solana Cookbook
@@ -87,13 +108,20 @@ pub fn close_account_raw<'a>(
     src_account_info: &AccountInfo<'a>,
 ) -> ProgramResult {
     let dest_starting_lamports = dest_account_info.lamports();
-    **dest_account_info.lamports.borrow_mut() = dest_starting_lamports
+    let mut dest_lamports_mut = dest_account_info
+        .lamports
+        .try_borrow_mut()
+        .map_err(|_| ProgramError::AccountBorrowFailed)?;
+    **dest_lamports_mut = dest_starting_lamports
         .checked_add(src_account_info.lamports())
-        .unwrap();
-    **src_account_info.lamports.borrow_mut() = 0;
+        .ok_or(ProgramError::InvalidRealloc)?;
 
-    let mut src_data = src_account_info.data.borrow_mut();
-    src_data.fill(0);
+    let mut src_lamports_mut = src_account_info
+        .lamports
+        .try_borrow_mut()
+        .map_err(|_| ProgramError::AccountBorrowFailed)?;
+    **src_lamports_mut = 0;
 
-    Ok(())
+    src_account_info.assign(&system_program::ID);
+    src_account_info.realloc(0, false).map_err(Into::into)
 }

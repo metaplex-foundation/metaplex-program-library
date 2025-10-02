@@ -14,7 +14,8 @@ mod buy {
         },
     };
     use anchor_lang::{
-        error::ERROR_CODE_OFFSET, AccountDeserialize, InstructionData, ToAccountMetas,
+        error::ERROR_CODE_OFFSET, AccountDeserialize, AnchorDeserialize, InstructionData,
+        ToAccountMetas,
     };
     use mpl_fixed_price_sale::{
         accounts as mpl_fixed_price_sale_accounts,
@@ -26,10 +27,7 @@ mod buy {
             find_vault_owner_address,
         },
     };
-    use mpl_token_metadata::{
-        instruction::burn_edition_nft,
-        state::{MasterEditionV2, TokenMetadataAccount},
-    };
+    use mpl_token_metadata::{instruction::burn_edition_nft, state::MasterEditionV2};
     use solana_program::{clock::Clock, instruction::AccountMeta};
     use solana_program_test::*;
     use solana_sdk::{
@@ -4330,7 +4328,7 @@ mod buy {
             .unwrap()
             .unwrap();
         let master_edition_struct =
-            MasterEditionV2::safe_deserialize(&master_edition_account.data).unwrap();
+            MasterEditionV2::deserialize(&mut master_edition_account.data.as_slice()).unwrap();
 
         assert_eq!(master_edition_struct.supply, 1);
 
@@ -4365,7 +4363,7 @@ mod buy {
             .unwrap()
             .unwrap();
         let master_edition_struct =
-            MasterEditionV2::safe_deserialize(&master_edition_account.data).unwrap();
+            MasterEditionV2::deserialize(&mut master_edition_account.data.as_slice()).unwrap();
 
         assert_eq!(master_edition_struct.supply, 0);
         /* BURN ENDED */
