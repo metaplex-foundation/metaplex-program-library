@@ -1,0 +1,12 @@
+version: 2
+updates:
+  # We use pnpm for package management.
+  - package-ecosystem: 'npm'
+    # We only have a package.json in the root.
+    directory: '/'
+    # Check weekly to prevent too many PRs.
+    schedule:
+      interval: 'weekly'
+    allow:
+      # Starting slow by only checking our own packages for updates.
+      - dependency-name: '@metaplex-foundation/*'
