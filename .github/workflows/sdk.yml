@@ -2,9 +2,9 @@ name: SDK Tests
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
   workflow_dispatch:
     inputs:
@@ -19,21 +19,18 @@ on:
 
 jobs:
   sdk-tests:
-    name: "SDK: ${{ matrix.node.name }}"
+    name: 'SDK: ${{ matrix.node.name }}'
     strategy:
       fail-fast: false
       matrix:
         node:
-          - name: "auction-house"
-          - name: "candy-machine"
-          - name: "fixed-price-sale"
+          - name: 'auction-house'
+          - name: 'candy-machine'
+          - name: 'fixed-price-sale'
             skip_test: true
-          - name: "gumdrop"
-          # - name: "hydra"
-            # skip_test: true
-          - name: "nft-packs"
+          - name: 'nft-packs'
             skip_test: true
-          - name: "token-entangler"
+          - name: 'token-entangler'
 
     uses: ./.github/workflows/sdk-reusable.yml
     with:
