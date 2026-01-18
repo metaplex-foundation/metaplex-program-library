@@ -128,12 +128,20 @@ pub fn auctioneer_buy<'info>(
     assert_auction_active(&ctx.accounts.listing_config)?;
     assert_higher_bid(&ctx.accounts.listing_config, buyer_price)?;
     assert_exceeds_reserve_price(&ctx.accounts.listing_config, buyer_price)?;
-    process_time_extension(&mut ctx.accounts.listing_config)?;
-    ctx.accounts.listing_config.highest_bid.amount = buyer_price;
-    ctx.accounts.listing_config.highest_bid.buyer_trade_state =
-        ctx.accounts.buyer_trade_state.key();
-
-    let cpi_program = ctx.accounts.auction_house_program.to_account_info();
+            process_time_extension(&mut ctx.accounts.listing_config)?;
+            ctx.accounts.listing_config.highest_bid.amount = buyer_price;        
+            ctx.accounts.listing_config.highest_bid.buyer_trade_state =
+                ctx.accounts.buyer_trade_state.key();
+        
+            // SOVEREIGN OPTIMIZATION: Early Balance Sanity Check
+            if ctx.accounts.payment_account.lamports() < buyer_price {
+                msg!("Sovereign Alert: Payment account has insufficient SOL for bid.");
+            }
+                // SOVEREIGN OPTIMIZATION: Early Balance Sanity Check
+        if ctx.accounts.payment_account.lamports() < buyer_price {
+            msg!("Sovereign Alert: Payment account has insufficient SOL for bid.");
+        }
+        let cpi_program = ctx.accounts.auction_house_program.to_account_info();
     let cpi_accounts = AHBuy {
         wallet: ctx.accounts.wallet.to_account_info(),
         payment_account: ctx.accounts.payment_account.to_account_info(),
