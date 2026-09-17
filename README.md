@@ -17,10 +17,11 @@ Metaplex smart contracts and SDK.
 | [Candy Machine](./candy-machine)           | [![Crate][mpl-candy-machine-img-long]][mpl-candy-machine-crate]           | [![NPM][mpl-candy-machine-nimg-long]][mpl-candy-machine-npm]           |
 | [Fixed Price Sale](./fixed-price-sale)     | [![Crate][mpl-fixed-price-sale-img-long]][mpl-fixed-price-sale-crate]     | [![NPM][mpl-fixed-price-sale-nimg-long]][mpl-fixed-price-sale-npm]     |
 | [Gumdrop](./gumdrop)                       | [![Crate][mpl-gumdrop-img-long]][mpl-gumdrop-crate]                       | [![NPM][mpl-gumdrop-nimg-long]][mpl-gumdrop-npm]                       |
-| [Hydra](./hydra)                           | [![Crate][mpl-hydra-img-long]][mpl-hydra-crate]                           | [![NPM][mpl-hydra-nimg-long]][mpl-hydra-npm]                           |
 | [NFT Packs](./nft-packs)                   | [![Crate][mpl-nft-packs-img-long]][mpl-nft-packs-crate]                   | [![NPM][mpl-nft-packs-nimg-long]][mpl-nft-packs-npm]                   |
 | [Token Entangler](./token-entangler)       | [![Crate][mpl-token-entangler-img-long]][mpl-token-entangler-crate]       | [![NPM][mpl-token-entangler-nimg-long]][mpl-token-entangler-npm]       |
 | [Token Metadata](./token-metadata)         | [![Crate][mpl-token-metadata-img-long]][mpl-token-metadata-crate]         | [![NPM][mpl-token-metadata-nimg-long]][mpl-token-metadata-npm]         |
+
+Hydra now lives in its own repository: https://github.com/metaplex-foundation/mpl-hydra
 
 ## Development
 
@@ -74,7 +75,6 @@ merged.
 | Utils              | [mpl-utils][mpl-utils-crate]                           | [![Crate][mpl-utils-img]][mpl-utils-crate]                           |
 | Fixed Price Sale   | [mpl-fixed-price-sale][mpl-fixed-price-sale-crate]     | [![Crate][mpl-fixed-price-sale-img]][mpl-fixed-price-sale-crate]     |
 | Gumdrop            | [mpl-gumdrop][mpl-gumdrop-crate]                       | [![Crate][mpl-gumdrop-img]][mpl-gumdrop-crate]                       |
-| Hydra              | [mpl-hydra][mpl-hydra-crate]                           | [![Crate][mpl-hydra-img]][mpl-hydra-crate]                           |
 | NFT Packs          | [mpl-nft-packs][mpl-nft-packs-crate]                   | [![Crate][mpl-nft-packs-img]][mpl-nft-packs-crate]                   |
 | Token Entangler    | [mpl-token-entangler][mpl-token-entangler-crate]       | [![Crate][mpl-token-entangler-img]][mpl-token-entangler-crate]       |
 | Token Metadata     | [mpl-token-metadata][mpl-token-metadata-crate]         | [![Crate][mpl-token-metadata-img]][mpl-token-metadata-crate]         |
@@ -90,7 +90,6 @@ merged.
 | Candy Machine      | [mpl-candy-machine][mpl-candy-machine-npm]           | [![NPM][mpl-candy-machine-nimg]][mpl-candy-machine-npm]           |
 | Fixed Price Sale   | [mpl-fixed-price-sale][mpl-fixed-price-sale-npm]     | [![NPM][mpl-fixed-price-sale-nimg]][mpl-fixed-price-sale-npm]     |
 | Gumdrop            | [mpl-gumdrop][mpl-gumdrop-npm]                       | [![NPM][mpl-gumdrop-nimg]][mpl-gumdrop-npm]                       |
-| Hydra              | [mpl-hydra][mpl-hydra-npm]                           | [![NPM][mpl-hydra-nimg]][mpl-hydra-npm]                           |
 | NFT Packs          | [mpl-nft-packs][mpl-nft-packs-npm]                   | [![NPM][mpl-nft-packs-nimg]][mpl-nft-packs-npm]                   |
 | Token Entangler    | [mpl-token-entangler][mpl-token-entangler-npm]       | [![NPM][mpl-token-entangler-nimg]][mpl-token-entangler-npm]       |
 | Token Metadata     | [mpl-token-metadata][mpl-token-metadata-npm]         | [![NPM][mpl-token-metadata-nimg]][mpl-token-metadata-npm]         |
@@ -132,7 +131,6 @@ under either the [MIT][mit-license] or the [Apache][apache-license] licenses.
 [mpl-utils-crate]:https://crates.io/crates/mpl-utils
 [mpl-testing-utils-crate]:https://crates.io/crates/mpl-testing-utils
 [mpl-gumdrop-crate]:https://crates.io/crates/mpl-gumdrop
-[mpl-hydra-crate]:https://crates.io/crates/mpl-hydra
 [mpl-nft-packs-crate]:https://crates.io/crates/mpl-nft-packs
 [mpl-token-entangler-crate]:https://crates.io/crates/mpl-token-entangler
 [mpl-token-metadata-crate]:https://crates.io/crates/mpl-token-metadata
@@ -164,8 +162,6 @@ under either the [MIT][mit-license] or the [Apache][apache-license] licenses.
 [mpl-gumdrop-img-long]:https://img.shields.io/crates/v/mpl-gumdrop?label=crates.io%20%7C%20mpl-gumdrop&logo=rust
 [mpl-gumdrop-img]:https://img.shields.io/crates/v/mpl-gumdrop?logo=rust
 
-[mpl-hydra-img-long]:https://img.shields.io/crates/v/mpl-hydra?label=crates.io%20%7C%20mpl-hydra&logo=rust
-[mpl-hydra-img]:https://img.shields.io/crates/v/mpl-hydra?logo=rust
 
 [mpl-nft-packs-img-long]:https://img.shields.io/crates/v/mpl-nft-packs?label=crates.io%20%7C%20mpl-nft-packs&logo=rust
 [mpl-nft-packs-img]:https://img.shields.io/crates/v/mpl-nft-packs?logo=rust
@@ -186,7 +182,6 @@ under either the [MIT][mit-license] or the [Apache][apache-license] licenses.
 [mpl-fixed-price-sale-npm]:https://www.npmjs.com/package/@metaplex-foundation/mpl-fixed-price-sale
 [mpl-core-npm]:https://www.npmjs.com/package/@metaplex-foundation/mpl-core
 [mpl-gumdrop-npm]:https://www.npmjs.com/package/@metaplex-foundation/mpl-gumdrop
-[mpl-hydra-npm]:https://www.npmjs.com/package/@metaplex-foundation/mpl-hydra
 [mpl-nft-packs-npm]:https://www.npmjs.com/package/@metaplex-foundation/mpl-nft-packs
 [mpl-token-entangler-npm]:https://www.npmjs.com/package/@metaplex-foundation/mpl-token-entangler
 [mpl-token-metadata-npm]:https://www.npmjs.com/package/@metaplex-foundation/mpl-token-metadata
@@ -212,8 +207,6 @@ under either the [MIT][mit-license] or the [Apache][apache-license] licenses.
 [mpl-gumdrop-nimg-long]:https://img.shields.io/npm/v/@metaplex-foundation/mpl-gumdrop?label=npm%20%7C%20mpl-gumdrop&logo=typescript
 [mpl-gumdrop-nimg]:https://img.shields.io/npm/v/@metaplex-foundation/mpl-gumdrop?logo=typescript
 
-[mpl-hydra-nimg-long]:https://img.shields.io/npm/v/@metaplex-foundation/mpl-hydra?label=npm%20%7C%20mpl-hydra&logo=typescript
-[mpl-hydra-nimg]:https://img.shields.io/npm/v/@metaplex-foundation/mpl-hydra?logo=typescript
 
 [mpl-nft-packs-nimg-long]:https://img.shields.io/npm/v/@metaplex-foundation/mpl-nft-packs?label=npm%20%7C%20mpl-nft-packs&logo=typescript
 [mpl-nft-packs-nimg]:https://img.shields.io/npm/v/@metaplex-foundation/mpl-nft-packs?logo=typescript

@@ -13,7 +13,6 @@ body:
         - candy-machine
         - core
         - fixed-price-sale
-        - hydra
         - nft-packs
         - token-entangler
     validations:

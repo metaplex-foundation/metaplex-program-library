@@ -25,7 +25,6 @@ jobs:
       matrix:
         node:
           - name: "fixed-price-sale"
-          # - name: "hydra"
     uses: ./.github/workflows/integration-reusable.yml
     with:
       name: ${{ matrix.node.name }}
