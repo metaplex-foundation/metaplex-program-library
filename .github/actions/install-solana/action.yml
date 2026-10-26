@@ -1,32 +1,20 @@
 name: Install Solana
 
+# release.solana.com is no longer reachable, so this wraps the shared
+# metaplex-foundation/actions/install-solana action (used by mpl-core, genesis,
+# etc.) and always installs from the Anza release host. Anza only hosts
+# v1.17.25 and newer, which is why the pinned version is 1.17.x.
 inputs:
   solana_version:
-    description: Version of Solana to install
+    description: Version of Solana to install (must be hosted on release.anza.xyz)
     required: true
-    default: 1.14.13
+    default: 1.17.25
 
 runs:
   using: "composite"
   steps:
-#    - name: Cache Solana Install
-#      id: cache-solana-install
-#      uses: actions/cache@v3
-#      with:
-#        path: |
-#          ~/.cache/solana/
-#          ~/.local/share/solana/
-#        key: ${{ runner.os }}-Solana-v${{ inputs.solana_version  }}
-
-    - run: sh -c "$(curl -sSfL https://release.solana.com/v${{ inputs.solana_version }}/install)"
-      shell: bash
-
-    - name: Add Solana bin to Path
-      run: |
-        echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
-      shell: bash
-
-    - name: Verify Solana install
-      run: |
-        solana --version
-      shell: bash
+    - uses: metaplex-foundation/actions/install-solana@v1
+      with:
+        version: ${{ inputs.solana_version }}
+        base_url: https://release.anza.xyz
+        cache: "true"
