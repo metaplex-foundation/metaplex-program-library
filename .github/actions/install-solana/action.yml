@@ -46,6 +46,22 @@ runs:
         fi
       shell: bash
 
+    # The pre-1.16 toolchain (bpf-tools v1.29 cargo) links against OpenSSL 1.1,
+    # which Ubuntu 22.04+ runners no longer ship.
+    - name: Install OpenSSL 1.1 for legacy Solana toolchain
+      if: runner.os == 'Linux'
+      env:
+        SOLANA_VERSION: ${{ inputs.solana_version }}
+      run: |
+        legacy=$([ "$(printf '%s\n' 1.16.0 "$SOLANA_VERSION" | sort -V | head -n1)" != 1.16.0 ] && echo yes || true)
+        if [ -n "$legacy" ] && ! ldconfig -p | grep -q 'libssl.so.1.1 '; then
+          base=https://security.ubuntu.com/ubuntu/pool/main/o/openssl
+          deb=$(curl -sSfL "$base/" | grep -o 'libssl1\.1_1\.1\.1f-1ubuntu2[^"]*_amd64\.deb' | sort -uV | tail -1)
+          curl -sSfLo "$RUNNER_TEMP/libssl1.1.deb" "$base/$deb"
+          sudo DEBIAN_FRONTEND=noninteractive dpkg -i "$RUNNER_TEMP/libssl1.1.deb"
+        fi
+      shell: bash
+
     - name: Set Active Solana Version
       run: |
         mkdir -p "$HOME/.local/share/solana/install"
