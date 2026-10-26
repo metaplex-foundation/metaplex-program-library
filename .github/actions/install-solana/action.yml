@@ -56,7 +56,7 @@ runs:
         legacy=$([ "$(printf '%s\n' 1.16.0 "$SOLANA_VERSION" | sort -V | head -n1)" != 1.16.0 ] && echo yes || true)
         if [ -n "$legacy" ] && ! ldconfig -p | grep -q 'libssl.so.1.1 '; then
           base=https://security.ubuntu.com/ubuntu/pool/main/o/openssl
-          deb=$(curl -sSfL "$base/" | grep -o 'libssl1\.1_1\.1\.1f-1ubuntu2[^"]*_amd64\.deb' | sort -uV | tail -1)
+          deb=$(curl -sSfL "$base/" | grep -o 'libssl1\.1_1\.1\.1f-1ubuntu2\.[0-9]*_amd64\.deb' | sort -u -t. -k5,5n | tail -1)
           curl -sSfLo "$RUNNER_TEMP/libssl1.1.deb" "$base/$deb"
           sudo DEBIAN_FRONTEND=noninteractive dpkg -i "$RUNNER_TEMP/libssl1.1.deb"
         fi
