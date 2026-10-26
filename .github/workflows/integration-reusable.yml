@@ -45,6 +45,7 @@ jobs:
               - '${{ inputs.name }}/**'
             workflow:
               - '.github/workflows/integration-reusable.yml'
+              - '.github/actions/install-solana/**'
   build-and-test:
     name: Build and Test
     runs-on: ubuntu-latest-16-cores

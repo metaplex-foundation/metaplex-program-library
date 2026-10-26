@@ -43,6 +43,7 @@ jobs:
               - '${{ inputs.name }}/program/**'
             workflow:
               - '.github/workflows/program-reusable.yml'
+              - '.github/actions/install-solana/**'
             action:
               - '.github/actions/program/${{ inputs.name }}/action.yml'
       - uses: dorny/paths-filter@v2
