@@ -15,7 +15,7 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  SOLANA_VERSION: 1.17.25
+  SOLANA_VERSION: 1.14.13
   RUST_TOOLCHAIN: 1.65.0
   CACHE: ${{ inputs.cache }}
 
@@ -43,6 +43,7 @@ jobs:
               - '${{ inputs.name }}/program/**'
             workflow:
               - '.github/workflows/program-reusable.yml'
+              - '.github/actions/install-solana/**'
             action:
               - '.github/actions/program/${{ inputs.name }}/action.yml'
       - uses: dorny/paths-filter@v2

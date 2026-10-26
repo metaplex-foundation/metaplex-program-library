@@ -1,20 +1,60 @@
 name: Install Solana
 
-# release.solana.com is no longer reachable, so this wraps the shared
-# metaplex-foundation/actions/install-solana action (used by mpl-core, genesis,
-# etc.) and always installs from the Anza release host. Anza only hosts
-# v1.17.25 and newer, which is why the pinned version is 1.17.x.
+# release.solana.com no longer serves installers. Versions hosted by Anza
+# (v1.17.25+) are installed with the Anza installer, mirroring
+# metaplex-foundation/actions/install-solana. Older versions (this repo pins
+# 1.14.13) are not on Anza, so their prebuilt release tarball is fetched from
+# GitHub releases instead. The programs here depend on solana-program 1.14 and
+# must be built with the 1.14 toolchain: building them with the 1.17+
+# platform-tools breaks CPI ("Invoked an instruction with data that is too large").
 inputs:
   solana_version:
-    description: Version of Solana to install (must be hosted on release.anza.xyz)
+    description: Version of Solana to install
     required: true
-    default: 1.17.25
+    default: 1.14.13
+  cache:
+    description: Whether the downloaded Solana release should be cached
+    required: false
+    default: "true"
 
 runs:
   using: "composite"
   steps:
-    - uses: metaplex-foundation/actions/install-solana@v1
+    - name: Cache Solana
+      id: cache
+      if: inputs.cache == 'true'
+      uses: actions/cache@v4
       with:
-        version: ${{ inputs.solana_version }}
-        base_url: https://release.anza.xyz
-        cache: "true"
+        path: |
+          ~/.local/share/solana/install/releases/${{ inputs.solana_version }}
+          ~/.cache/solana
+        key: ${{ runner.os }}-solana-v${{ inputs.solana_version }}
+
+    - name: Install Solana
+      if: inputs.cache != 'true' || steps.cache.outputs.cache-hit != 'true'
+      env:
+        SOLANA_VERSION: ${{ inputs.solana_version }}
+      run: |
+        if curl -sSfIL "https://release.anza.xyz/v${SOLANA_VERSION}/install" >/dev/null 2>&1; then
+          sh -c "$(curl -sSfL https://release.anza.xyz/v${SOLANA_VERSION}/install)"
+        else
+          echo "v${SOLANA_VERSION} is not hosted by Anza; using the GitHub release tarball"
+          dest="$HOME/.local/share/solana/install/releases/${SOLANA_VERSION}"
+          mkdir -p "$dest"
+          curl -sSfL "https://github.com/solana-labs/solana/releases/download/v${SOLANA_VERSION}/solana-release-x86_64-unknown-linux-gnu.tar.bz2" \
+            | tar -xj -C "$dest"
+        fi
+      shell: bash
+
+    - name: Set Active Solana Version
+      run: |
+        mkdir -p "$HOME/.local/share/solana/install"
+        rm -f "$HOME/.local/share/solana/install/active_release"
+        ln -s "$HOME/.local/share/solana/install/releases/${{ inputs.solana_version }}/solana-release" "$HOME/.local/share/solana/install/active_release"
+        echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+      shell: bash
+
+    - name: Verify Solana install
+      run: |
+        solana --version
+      shell: bash
